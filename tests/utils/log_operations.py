@@ -19,10 +19,9 @@ import json
 import os
 import time
 
-from tests.st.func.datavisual.constants import SUMMARY_PREFIX
-from tests.st.func.datavisual.utils.log_generators.graph_log_generator import GraphLogGenerator
-from tests.st.func.datavisual.utils.log_generators.images_log_generator import ImagesLogGenerator
-from tests.st.func.datavisual.utils.log_generators.scalars_log_generator import ScalarsLogGenerator
+from .log_generators.graph_log_generator import GraphLogGenerator
+from .log_generators.images_log_generator import ImagesLogGenerator
+from .log_generators.scalars_log_generator import ScalarsLogGenerator
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 
@@ -39,6 +38,7 @@ class LogOperations:
         self._step_num = 3
         self._tag_num = 2
         self._time_count = 0
+        self._graph_base_path = os.path.join(os.path.dirname(__file__), "log_generators", "graph_base.json")
 
     def _get_steps(self):
         """Get steps."""
@@ -61,9 +61,7 @@ class LogOperations:
             metadata_dict["plugins"].update({plugin_name: list()})
             log_generator = log_generators.get(plugin_name)
             if plugin_name == PluginNameEnum.GRAPH.value:
-                graph_base_path = os.path.join(os.path.dirname(__file__),
-                                               os.pardir, "utils", "log_generators", "graph_base.json")
-                with open(graph_base_path, 'r') as load_f:
+                with open(self._graph_base_path, 'r') as load_f:
                     graph_dict = json.load(load_f)
                 values = log_generator.generate_log(file_path, graph_dict)
                 metadata_dict["actual_values"].update({plugin_name: values})
@@ -82,13 +80,13 @@ class LogOperations:
         self._time_count += 1
         return metadata_dict
 
-    def create_summary_logs(self, summary_base_dir, summary_dir_num, start_index=0):
+    def create_summary_logs(self, summary_base_dir, summary_dir_num, dir_prefix, start_index=0):
         """Create summary logs in summary_base_dir."""
         summary_metadata = dict()
         steps_list = self._get_steps()
         tag_name_list = self._get_tags()
         for i in range(start_index, summary_dir_num + start_index):
-            log_dir = os.path.join(summary_base_dir, f'{SUMMARY_PREFIX}{i}')
+            log_dir = os.path.join(summary_base_dir, f'{dir_prefix}{i}')
             os.makedirs(log_dir)
             train_id = log_dir.replace(summary_base_dir, ".")
 
@@ -120,3 +118,47 @@ class LogOperations:
         metadata_dict = self.create_summary(log_dir, steps_list, tag_name_list)
 
         return {train_id: metadata_dict}
+
+    def generate_log(self, plugin_name, log_dir, log_settings=None, valid=True):
+        """
+        Generate log for ut.
+
+        Args:
+            plugin_name (str): Plugin name, contains 'graph', 'image', and 'scalar'.
+            log_dir (str): Log path to write log.
+            log_settings (dict): Info about the log, e.g.:
+                {
+                    current_time (int): Timestamp in summary file name, not necessary.
+                    graph_base_path (str): Path of graph_bas.json, necessary for `graph`.
+                    steps (list[int]): Steps for `image` and `scalar`, default is [1].
+                    tag (str): Tag name, default is 'default_tag'.
+                }
+            valid (bool): If true, summary name will be valid.
+
+        Returns:
+            str, Summary log path.
+
+
+        """
+        if log_settings is None:
+            log_settings = dict()
+        current_time = log_settings.get('time', int(time.time()))
+        current_time = int(current_time)
+
+        log_generator = log_generators.get(plugin_name)
+        if valid:
+            temp_path = os.path.join(log_dir, '%s.%s' % ('test.summary', str(current_time)))
+        else:
+            temp_path = os.path.join(log_dir, '%s.%s' % ('test.invalid', str(current_time)))
+
+        if plugin_name == PluginNameEnum.GRAPH.value:
+            with open(self._graph_base_path, 'r') as load_f:
+                graph_dict = json.load(load_f)
+
+            graph_dict = log_generator.generate_log(temp_path, graph_dict)
+            return temp_path, graph_dict
+
+        steps_list = log_settings.get('steps', [1])
+        tag_name = log_settings.get('tag', 'default_tag')
+        metadata, values = log_generator.generate_log(temp_path, steps_list, tag_name)
+        return temp_path, metadata, values

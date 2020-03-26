@@ -18,7 +18,7 @@ import os
 import time
 
 from google.protobuf import json_format
-from tests.st.func.datavisual.utils.log_generators.log_generator import LogGenerator
+from .log_generator import LogGenerator
 
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
 
@@ -73,7 +73,7 @@ class GraphLogGenerator(LogGenerator):
 if __name__ == "__main__":
     graph_log_generator = GraphLogGenerator()
     test_file_name = '%s.%s.%s' % ('graph', 'summary', str(time.time()))
-    graph_base_path = os.path.join(os.path.dirname(__file__), os.pardir, "log_generators", "graph_base.json")
+    graph_base_path = os.path.join(os.path.dirname(__file__), os.pardir, "log_generators--", "graph_base.json")
     with open(graph_base_path, 'r') as load_f:
         graph = json.load(load_f)
     graph_log_generator.generate_log(test_file_name, graph)

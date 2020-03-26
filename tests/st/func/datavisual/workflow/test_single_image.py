@@ -20,8 +20,8 @@ Usage:
 """
 import pytest
 
-from tests.st.func.datavisual.utils import globals as gbl
-from tests.st.func.datavisual.utils.utils import get_url, get_image_tensor_from_bytes
+from .. import globals as gbl
+from .....utils.tools import get_url, get_image_tensor_from_bytes
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 

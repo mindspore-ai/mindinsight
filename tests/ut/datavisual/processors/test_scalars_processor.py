@@ -22,9 +22,9 @@ import tempfile
 from unittest.mock import Mock
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.log_operations import LogOperations
-from tests.ut.datavisual.utils.utils import check_loading_done, delete_files_or_dirs
+from ..mock import MockLogger
+from ....utils.log_operations import LogOperations
+from ....utils.tools import check_loading_done, delete_files_or_dirs
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.data_transform import data_manager
@@ -65,12 +65,11 @@ class TestScalarsProcessor:
         """Load scalar record."""
         summary_base_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp(dir=summary_base_dir)
-
         self._train_id = log_dir.replace(summary_base_dir, ".")
 
-        self._temp_path, self._scalars_metadata, self._scalars_values = LogOperations.generate_log(
+        log_operation = LogOperations()
+        self._temp_path, self._scalars_metadata, self._scalars_values = log_operation.generate_log(
             PluginNameEnum.SCALAR.value, log_dir, dict(step=self._steps_list, tag=self._tag_name))
-
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(summary_base_dir)])

@@ -23,7 +23,7 @@ import shutil
 import tempfile
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
+from ..mock import MockLogger
 
 from mindinsight.datavisual.common.exceptions import SummaryLogPathInvalid
 from mindinsight.datavisual.data_transform import data_loader

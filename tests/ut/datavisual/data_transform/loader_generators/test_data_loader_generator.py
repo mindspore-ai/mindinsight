@@ -14,7 +14,7 @@
 # ============================================================================
 """
 Function:
-    Test mindinsight.datavisual.data_transform.log_generators.data_loader_generator
+    Test mindinsight.datavisual.data_transform.loader_generators.data_loader_generator
 Usage:
     pytest tests/ut/datavisual
 """
@@ -26,7 +26,7 @@ import tempfile
 from unittest.mock import patch
 import pytest
 
-from tests.ut.datavisual.mock import MockLogger
+from ...mock import MockLogger
 
 from mindinsight.datavisual.data_transform.loader_generators import data_loader_generator
 from mindinsight.utils.exceptions import ParamValueError

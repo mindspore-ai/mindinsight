@@ -24,9 +24,9 @@ import time
 from unittest.mock import Mock
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.log_operations import LogOperations
-from tests.ut.datavisual.utils.utils import check_loading_done, delete_files_or_dirs
+from ..mock import MockLogger
+from ....utils.log_operations import LogOperations
+from ....utils.tools import check_loading_done, delete_files_or_dirs
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.data_transform import data_manager
@@ -70,17 +70,14 @@ class TestTrainTaskManager:
     @pytest.fixture(scope='function')
     def load_data(self):
         """Load data."""
+        log_operation = LogOperations()
         self._plugins_id_map = {'image': [], 'scalar': [], 'graph': []}
         self._events_names = []
         self._train_id_list = []
 
-        graph_base_path = os.path.join(os.path.dirname(__file__),
-                                       os.pardir, "utils", "log_generators", "graph_base.json")
-
         self._root_dir = tempfile.mkdtemp()
         for i in range(self._dir_num):
             dir_path = tempfile.mkdtemp(dir=self._root_dir)
-
             tmp_tag_name = self._tag_name + '_' + str(i)
             event_name = str(i) + "_name"
             train_id = dir_path.replace(self._root_dir, ".")
@@ -89,20 +86,17 @@ class TestTrainTaskManager:
             log_settings = dict(
                 steps=self._steps_list,
                 tag=tmp_tag_name,
-                graph_base_path=graph_base_path,
                 time=time.time())
-
             if i % 3 != 0:
-                LogOperations.generate_log(PluginNameEnum.IMAGE.value, dir_path, log_settings)
+                log_operation.generate_log(PluginNameEnum.IMAGE.value, dir_path, log_settings)
                 self._plugins_id_map['image'].append(train_id)
             if i % 3 != 1:
-                LogOperations.generate_log(PluginNameEnum.SCALAR.value, dir_path, log_settings)
+                log_operation.generate_log(PluginNameEnum.SCALAR.value, dir_path, log_settings)
                 self._plugins_id_map['scalar'].append(train_id)
             if i % 3 != 2:
-                LogOperations.generate_log(PluginNameEnum.GRAPH.value, dir_path, log_settings)
+                log_operation.generate_log(PluginNameEnum.GRAPH.value, dir_path, log_settings)
                 self._plugins_id_map['graph'].append(train_id)
             self._events_names.append(event_name)
-
             self._train_id_list.append(train_id)
 
         self._generated_path.append(self._root_dir)
