@@ -1,0 +1,89 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+htmlcov
+.trash
+
+.pytest_cache/
+# Distribution / packaging
+bin/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Editors/IDEs
+.idea/
+*.sublime-*
+*.swp
+*.save
+# test file
+.coverage
+
+.cache
+
+
+# project wide git ignore
+
+# Compiled artifacts
+*.so
+*.whl
+
+# Python backup files
+*.pyc
+
+# Emacs backup files
+*~
+*#
+.#*
+
+# Vim file artifacts
+.*.sw*
+
+# Makefile dummy artifacts
+.*-dummy
+
+# log files
+*.log
+
+# code coverage
+*.cov
+
+# Test result xml files
+report.xml
+*.pprof
+results.xml
+TESTS*.xml
+
+# local project settings
+.settings
+.project
+.gradle
+.idea
+
+# tox
+.tox/
+
+# vscode settings
+.vscode
+
+package-lock.json
+
+build/lib
+build/bdist.*
+
+output/
+!output/README.md
+
+third_party/securec/build

@@ -1,0 +1,182 @@
+/**
+ * Copyright 2019 Huawei Technologies Co., Ltd.All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import './variable.scss';
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+font,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-weight: inherit;
+  font-style: inherit;
+  font-family: $bodyFontFamily;
+  font-size: $bodyFontSize;
+  vertical-align: baseline;
+  box-sizing: border-box;
+}
+:focus {
+  outline: 0;
+}
+
+a,
+a:link,
+a:visited,
+a:hover,
+a:active {
+  text-decoration: none;
+}
+
+a {
+  color: $linkColor;
+}
+a:hover {
+  color: $linkActiveColor;
+}
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+th,
+td {
+  text-align: left;
+  font-weight: normal;
+}
+img,
+iframe {
+  border: none;
+  text-decoration: none;
+}
+ol,
+ul {
+  list-style: none;
+}
+input,
+textarea,
+select,
+button {
+  font-size: 100%;
+  font-family: inherit;
+}
+select {
+  margin: inherit;
+}
+hr {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: $bodyColor;
+  background-color: $bodyColor;
+  height: 1px;
+}
+
+html,
+body {
+  height: 100%;
+  background-color: $bodyBg;
+  font-family: $bodyFontFamily;
+  font-size: $bodyFontSize;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: $bodyColor;
+  box-sizing: border-box;
+}
+
+/* 
+ * Defines the width of the scroll bar and the width of the background, respectively corresponding to the dimensions of the horizontal and vertical scroll bars.
+ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/*
+ * Defines the shadow + rounded corners of the scroll bar.
+ */
+::-webkit-scrollbar-track {
+  background-color: #f5f5f5;
+}
+
+/*
+ * Defines the shadow + in the slider.
+ */
+::-webkit-scrollbar-thumb {
+  background-color: #dfe7f5;
+}
+.select-disable {
+  -moz-user-select: none; /* Firefox */
+  -webkit-user-select: none; /* webkitbrowser */
+  -ms-user-select: none; /* IE10 */
+  -khtml-user-select: none; /* Early browser */
+  user-select: none;
+}

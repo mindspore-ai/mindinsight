@@ -1,0 +1,7 @@
+recursive-include mindinsight *
+recursive-exclude * .git
+recursive-exclude * .gitignore
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co] *.swp
+recursive-exclude mindinsight/ui *
+recursive-include mindinsight/ui/dist *
