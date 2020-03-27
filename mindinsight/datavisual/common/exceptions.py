@@ -81,3 +81,12 @@ class NodeNotInGraphError(MindInsightException):
         super(NodeNotInGraphError, self).__init__(DataVisualErrors.NODE_NOT_IN_GRAPH_ERROR,
                                                   error_msg,
                                                   http_code=400)
+
+
+class MaxCountExceededException(MindInsightException):
+    """Count is out of limit."""
+    def __init__(self):
+        error_msg = "Count is out of limit."
+        super(MaxCountExceededException, self).__init__(DataVisualErrors.NODE_NOT_IN_GRAPH_ERROR,
+                                                        error_msg,
+                                                        http_code=400)

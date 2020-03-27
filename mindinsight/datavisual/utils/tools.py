@@ -20,6 +20,7 @@ import os
 from numbers import Number
 from urllib.parse import unquote
 
+from mindinsight.datavisual.common.exceptions import MaxCountExceededException
 from mindinsight.utils import exceptions
 
 _IMG_EXT_TO_MIMETYPE = {
@@ -153,3 +154,16 @@ def if_nan_inf_to_none(name, value):
     if math.isnan(value) or math.isinf(value):
         value = None
     return value
+
+
+class Counter:
+    """Count accumulator with limit checking."""
+    def __init__(self, max_count=None, init_count=0):
+        self._count = init_count
+        self._max_count = max_count
+
+    def add(self, value=1):
+        """Add value."""
+        if self._max_count is not None and self._count + value > self._max_count:
+            raise MaxCountExceededException()
+        self._count += value
