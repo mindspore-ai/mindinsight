@@ -1,0 +1,20 @@
+{
+  "nodes" : [
+    {
+      "attr" :
+      {
+        "output_names" : "dtype: DT_GRAPHS\nvalues {\n  dtype: DT_FLOAT64\n  str_val: \"output\"\n}\n",
+        "pad_mode" : "dtype: DT_FLOAT64\nstr_val: \"same\"\n"
+      },
+      "input" : {},
+      "name" : "Default/conv1-Conv2d/Conv2D1",
+      "output" : {},
+      "output_i" : 0,
+      "polymeric_input" : {},
+      "polymeric_output" : {},
+      "polymeric_scope_name" : "",
+      "subnode_count" : 0,
+      "type" : "Conv2D"
+    }
+  ]
+}
