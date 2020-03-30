@@ -509,7 +509,7 @@ export default {
         backgroundColor: 'white',
         parallelAxis: parallelAxis,
         parallel: {
-          top: 20,
+          top: 25,
           left: 50,
           right: 80,
           bottom: 10,
