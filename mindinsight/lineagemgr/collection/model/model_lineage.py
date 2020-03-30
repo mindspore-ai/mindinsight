@@ -168,7 +168,7 @@ class TrainLineage(Callback):
         train_lineage = AnalyzeObject.get_network_args(
             run_context_args, train_lineage
         )
-        
+
         train_dataset = run_context_args.get('train_dataset')
         callbacks = run_context_args.get('list_callback')
         list_callback = getattr(callbacks, '_callbacks', [])
@@ -601,7 +601,7 @@ class AnalyzeObject:
             loss = None
         else:
             loss = run_context_args.get('net_outputs')
-        
+
         if loss:
             log.info('Calculating loss...')
             loss_numpy = loss.asnumpy()
@@ -610,7 +610,7 @@ class AnalyzeObject:
             train_lineage[Metadata.loss] = loss
         else:
             train_lineage[Metadata.loss] = None
-        
+
         # Analyze classname of optimizer, loss function and training network.
         train_lineage[Metadata.optimizer] = type(optimizer).__name__ \
             if optimizer else None

@@ -48,7 +48,7 @@ class WithLossCell(Cell):
 
 class TrainOneStepWithLossScaleCell(Cell):
     """Mocked TrainOneStepWithLossScaleCell."""
-    def __init__(self, network, optimizer):
+    def __init__(self, network=None, optimizer=None):
         super(TrainOneStepWithLossScaleCell, self).__init__()
         self.network = network
         self.optimizer = optimizer

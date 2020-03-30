@@ -14,6 +14,6 @@
 # ============================================================================
 """Import the mocked mindspore."""
 import sys
-from .collection.model import mindspore
+from ...utils import mindspore
 
 sys.modules['mindspore'] = mindspore
