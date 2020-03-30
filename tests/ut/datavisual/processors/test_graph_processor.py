@@ -29,7 +29,7 @@ import pytest
 
 from ..mock import MockLogger
 from ....utils.log_operations import LogOperations
-from ....utils.tools import check_loading_done, delete_files_or_dirs
+from ....utils.tools import check_loading_done, delete_files_or_dirs, compare_result_with_file
 
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
@@ -103,12 +103,6 @@ class TestGraphProcessor:
         # wait for loading done
         check_loading_done(self._mock_data_manager, time_limit=5)
 
-    def compare_result_with_file(self, result, filename):
-        """Compare result with file which contain the expected results."""
-        with open(os.path.join(self.graph_results_dir, filename), 'r') as fp:
-            expected_results = json.load(fp)
-        assert result == expected_results
-
     def test_get_nodes_with_not_exist_train_id(self, load_graph_record):
         """Test getting nodes with not exist train id."""
         test_train_id = "not_exist_train_id"
@@ -152,7 +146,9 @@ class TestGraphProcessor:
         graph_processor = GraphProcessor(self._train_id,
                                          self._mock_data_manager)
         results = graph_processor.get_nodes(name, node_type)
-        self.compare_result_with_file(results, result_file)
+
+        expected_file_path = os.path.join(self.graph_results_dir, result_file)
+        compare_result_with_file(results, expected_file_path)
 
     @pytest.mark.parametrize("search_content, result_file", [
         (None, 'test_search_node_names_with_search_content_expected_results1.json'),
@@ -175,7 +171,8 @@ class TestGraphProcessor:
             expected_results = {'names': []}
             assert results == expected_results
         else:
-            self.compare_result_with_file(results, result_file)
+            expected_file_path = os.path.join(self.graph_results_dir, result_file)
+            compare_result_with_file(results, expected_file_path)
 
     @pytest.mark.parametrize("offset", [-100, -1])
     def test_search_node_names_with_negative_offset(self, load_graph_record, offset):
@@ -203,7 +200,8 @@ class TestGraphProcessor:
         results = graph_processor.search_node_names(test_search_content,
                                                     test_offset,
                                                     test_limit)
-        self.compare_result_with_file(results, result_file)
+        expected_file_path = os.path.join(self.graph_results_dir, result_file)
+        compare_result_with_file(results, expected_file_path)
 
     def test_search_node_names_with_wrong_limit(self, load_graph_record):
         """Test search node names with wrong limit."""
@@ -227,7 +225,8 @@ class TestGraphProcessor:
         graph_processor = GraphProcessor(self._train_id,
                                          self._mock_data_manager)
         results = graph_processor.search_single_node(name)
-        self.compare_result_with_file(results, result_file)
+        expected_file_path = os.path.join(self.graph_results_dir, result_file)
+        compare_result_with_file(results, expected_file_path)
 
 
     def test_search_single_node_with_not_exist_name(self, load_graph_record):
