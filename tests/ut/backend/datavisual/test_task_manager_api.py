@@ -21,10 +21,10 @@ Usage:
 from unittest.mock import patch
 
 import pytest
-from tests.ut.backend.datavisual.conftest import TRAIN_ROUTES
-from tests.ut.datavisual.utils.log_generators.images_log_generator import ImagesLogGenerator
-from tests.ut.datavisual.utils.log_generators.scalars_log_generator import ScalarsLogGenerator
-from tests.ut.datavisual.utils.utils import get_url
+from .conftest import TRAIN_ROUTES
+from ....utils.log_generators.images_log_generator import ImagesLogGenerator
+from ....utils.log_generators.scalars_log_generator import ScalarsLogGenerator
+from ....utils.tools import get_url
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.processors.train_task_manager import TrainTaskManager

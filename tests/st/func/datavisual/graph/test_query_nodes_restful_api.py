@@ -22,8 +22,8 @@ import os
 import json
 import pytest
 
-from tests.st.func.datavisual.utils import globals as gbl
-from tests.st.func.datavisual.utils.utils import get_url
+from .. import globals as gbl
+from .....utils.tools import get_url
 
 BASE_URL = '/v1/mindinsight/datavisual/graphs/nodes'
 

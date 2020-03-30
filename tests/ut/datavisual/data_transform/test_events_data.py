@@ -22,7 +22,7 @@ import threading
 from collections import namedtuple
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
+from ..mock import MockLogger
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform import events_data

@@ -21,8 +21,8 @@ Usage:
 from unittest.mock import Mock, patch
 
 import pytest
-from tests.ut.backend.datavisual.conftest import TRAIN_ROUTES
-from tests.ut.datavisual.utils.utils import get_url
+from .conftest import TRAIN_ROUTES
+from ....utils.tools import get_url
 
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor

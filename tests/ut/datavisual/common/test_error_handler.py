@@ -21,9 +21,9 @@ Usage:
 from unittest.mock import patch
 from werkzeug.exceptions import MethodNotAllowed, NotFound
 
-from tests.ut.backend.datavisual.conftest import TRAIN_ROUTES
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.utils import get_url
+from ...backend.datavisual.conftest import TRAIN_ROUTES
+from ..mock import MockLogger
+from ....utils.tools import get_url
 
 from mindinsight.datavisual.processors import scalars_processor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor

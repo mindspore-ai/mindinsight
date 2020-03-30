@@ -27,9 +27,9 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.log_operations import LogOperations
-from tests.ut.datavisual.utils.utils import check_loading_done, delete_files_or_dirs
+from ..mock import MockLogger
+from ....utils.log_operations import LogOperations
+from ....utils.tools import check_loading_done, delete_files_or_dirs
 
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
@@ -70,14 +70,10 @@ class TestGraphProcessor:
         """Load graph record."""
         summary_base_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp(dir=summary_base_dir)
-
         self._train_id = log_dir.replace(summary_base_dir, ".")
 
-        graph_base_path = os.path.join(os.path.dirname(__file__),
-                                       os.pardir, "utils", "log_generators", "graph_base.json")
-        self._temp_path, self._graph_dict = LogOperations.generate_log(
-            PluginNameEnum.GRAPH.value, log_dir, dict(graph_base_path=graph_base_path))
-
+        log_operation = LogOperations()
+        self._temp_path, self._graph_dict = log_operation.generate_log(PluginNameEnum.GRAPH.value, log_dir)
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager(
@@ -94,7 +90,8 @@ class TestGraphProcessor:
         log_dir = tempfile.mkdtemp(dir=summary_base_dir)
         self._train_id = log_dir.replace(summary_base_dir, ".")
 
-        self._temp_path, _, _ = LogOperations.generate_log(
+        log_operation = LogOperations()
+        self._temp_path, _, _ = log_operation.generate_log(
             PluginNameEnum.IMAGE.value, log_dir, dict(steps=self._steps_list, tag="image"))
 
         self._generated_path.append(summary_base_dir)

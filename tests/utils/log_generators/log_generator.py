@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Base log Generator."""
+"""Base class for log generators."""
 
 import struct
 from abc import abstractmethod
 
-from tests.ut.datavisual.utils import crc32
+from ...utils import crc32
 
 
 class LogGenerator:
@@ -73,3 +73,4 @@ class LogGenerator:
 
         with open(file_path, "ab") as f:
             f.write(write_event)
+            f.close()

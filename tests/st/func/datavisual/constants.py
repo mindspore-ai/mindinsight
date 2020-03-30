@@ -16,7 +16,7 @@
 import tempfile
 
 SUMMARY_BASE_DIR = tempfile.NamedTemporaryFile().name
-SUMMARY_PREFIX = "summary"
+SUMMARY_DIR_PREFIX = "summary"
 
 SUMMARY_DIR_NUM_FIRST = 5
 SUMMARY_DIR_NUM_SECOND = 11

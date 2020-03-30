@@ -27,8 +27,8 @@ from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.utils import check_loading_done
+from ..mock import MockLogger
+from ....utils.tools import check_loading_done
 
 from mindinsight.datavisual.common.enums import DataManagerStatus, PluginNameEnum
 from mindinsight.datavisual.data_transform import data_manager, ms_data_loader

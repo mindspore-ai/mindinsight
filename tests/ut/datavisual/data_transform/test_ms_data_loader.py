@@ -24,7 +24,7 @@ import shutil
 from unittest.mock import Mock
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
+from ..mock import MockLogger
 
 from mindinsight.datavisual.data_transform import ms_data_loader
 from mindinsight.datavisual.data_transform.ms_data_loader import MSDataLoader

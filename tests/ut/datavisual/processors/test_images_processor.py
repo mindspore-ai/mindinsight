@@ -22,9 +22,9 @@ import tempfile
 from unittest.mock import Mock
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.log_operations import LogOperations
-from tests.ut.datavisual.utils.utils import check_loading_done, delete_files_or_dirs
+from ..mock import MockLogger
+from ....utils.log_operations import LogOperations
+from ....utils.tools import check_loading_done, delete_files_or_dirs, get_image_tensor_from_bytes
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.data_transform import data_manager
@@ -73,12 +73,11 @@ class TestImagesProcessor:
         """
         summary_base_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp(dir=summary_base_dir)
-
         self._train_id = log_dir.replace(summary_base_dir, ".")
 
-        self._temp_path, self._images_metadata, self._images_values = LogOperations.generate_log(
+        log_operation = LogOperations()
+        self._temp_path, self._images_metadata, self._images_values = log_operation.generate_log(
             PluginNameEnum.IMAGE.value, log_dir, dict(steps=steps_list, tag=self._tag_name))
-
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(summary_base_dir)])
@@ -178,14 +177,10 @@ class TestImagesProcessor:
         test_step_index = 0
         test_step = self._steps_list[test_step_index]
 
-        image_processor = ImageProcessor(self._mock_data_manager)
-
-        results = image_processor.get_single_image(self._train_id, test_tag_name, test_step)
-
         expected_image_tensor = self._images_values.get(test_step)
-
-        image_generator = LogOperations.get_log_generator(PluginNameEnum.IMAGE.value)
-        recv_image_tensor = image_generator.get_image_tensor_from_bytes(results)
+        image_processor = ImageProcessor(self._mock_data_manager)
+        results = image_processor.get_single_image(self._train_id, test_tag_name, test_step)
+        recv_image_tensor = get_image_tensor_from_bytes(results)
 
         assert recv_image_tensor.any() == expected_image_tensor.any()
 
