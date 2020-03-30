@@ -306,7 +306,7 @@ export default {
         plugin_name: 'image',
         train_id: this.trainingJobId,
       };
-      RequestService.getSingleTrainJob(params)
+      RequestService.getSingleTrainJob(params, false)
           .then((res) => {
             if (!res || !res.data || !res.data.train_jobs) {
               this.initOver = true;
@@ -886,7 +886,7 @@ export default {
         plugin_name: 'image',
         train_id: this.trainingJobId,
       };
-      RequestService.getSingleTrainJob(params)
+      RequestService.getSingleTrainJob(params, true)
           .then((res) => {
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);

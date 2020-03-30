@@ -91,11 +91,14 @@ export default {
   },
 
   // query single train job list(image/scalar/graph)
-  getSingleTrainJob(params) {
+  getSingleTrainJob(params, isIgnoreError) {
     return axios({
       method: 'get',
       url: 'v1/mindinsight/datavisual/single-job',
       params: params,
+      headers: {
+        ignoreError: isIgnoreError,
+      },
     });
   },
 

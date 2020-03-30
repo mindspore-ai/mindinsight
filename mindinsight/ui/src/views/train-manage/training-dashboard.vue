@@ -369,7 +369,7 @@ export default {
         plugin_name: 'scalar',
         train_id: this.trainingJobId,
       };
-      RequestService.getSingleTrainJob(params)
+      RequestService.getSingleTrainJob(params, true)
           .then((res) => {
             if (
               !res ||
