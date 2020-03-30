@@ -598,13 +598,14 @@ export default {
       const tempOption = {
         legend: {
           data: legendData,
+          selectedMode: false,
           icon: 'circle',
           bottom: 0,
         },
         grid: {
           top: 20,
           bottom: 50,
-          left: 60,
+          left: 66,
           right: 60,
         },
         xAxis: [
@@ -1448,7 +1449,6 @@ export default {
       z-index: 999;
       line-height: 22px;
       display: flex;
-      margin-top: 18px;
       font-weight: 600;
       .tagNameLeft {
         text-align: left;
@@ -1533,7 +1533,7 @@ export default {
   // Public Style End
 
   #module-chart {
-    height: calc(100% - 60px);
+    height: calc(100% - 22px);
     canvas {
       cursor: pointer;
     }

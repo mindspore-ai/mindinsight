@@ -35,7 +35,6 @@ export default new Router({
       component: () => import('./views/train-manage/summary-manage.vue'),
     },
     {
-      name: 'training-dashboard',
       path: '/train-manage/training-dashboard',
       component: () => import('./views/train-manage/training-dashboard.vue'),
     },

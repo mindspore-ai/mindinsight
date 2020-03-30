@@ -764,7 +764,7 @@ export default {
               }
               const symbol = Math.abs(value);
               if (symbol.toString().length > 6) {
-                return value.toExponential(0);
+                return value.toExponential(4);
               } else if (value >= 1000 || value <= -1000) {
                 return parseFloat((value / 1000).toFixed(2)) + 'k';
               } else if (value > 0) {
@@ -776,7 +776,8 @@ export default {
           },
         },
         grid: {
-          left: 60,
+          left: 80,
+          right: 10,
         },
         animation: true,
         dataZoom: [
@@ -910,7 +911,6 @@ export default {
         },
         toolbox: {
           top: 20,
-          right: '10%',
 
           emphasis: {
             iconStyle: {
@@ -1728,7 +1728,7 @@ export default {
       }
       const symbol = Math.abs(value);
       if (symbol.toString().length > 6) {
-        return value.toExponential(2);
+        return value.toExponential(4);
       } else if (value > 0) {
         return value;
       } else {
@@ -2022,6 +2022,7 @@ export default {
     overflow-y: auto;
     display: flex;
     flex-wrap: wrap;
+    padding-right: 10px;
 
     .data-content {
       display: flex;
