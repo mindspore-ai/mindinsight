@@ -24,11 +24,12 @@ from unittest.mock import Mock
 import pytest
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
+from mindinsight.datavisual.common.exceptions import ScalarNotExistError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 from mindinsight.datavisual.utils import crc32
-from mindinsight.utils.exceptions import ParamValueError
 
 from ....utils.log_operations import LogOperations
 from ....utils.tools import check_loading_done, delete_files_or_dirs
@@ -84,11 +85,11 @@ class TestScalarsProcessor:
         """Get metadata list with not exist id."""
         test_train_id = 'not_exist_id'
         scalar_processor = ScalarsProcessor(self._mock_data_manager)
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(TrainJobNotExistError) as exc_info:
             scalar_processor.get_metadata_list(test_train_id, self._tag_name)
 
-        assert exc_info.value.error_code == '50540002'
-        assert "Can not find any data in loader pool about the train job." in exc_info.value.message
+        assert exc_info.value.error_code == '50545005'
+        assert "Train job is not exist. Detail: Can not find the given train job in cache." == exc_info.value.message
 
     @pytest.mark.usefixtures('load_scalar_record')
     def test_get_metadata_list_with_not_exist_tag(self):
@@ -97,10 +98,10 @@ class TestScalarsProcessor:
 
         scalar_processor = ScalarsProcessor(self._mock_data_manager)
 
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(ScalarNotExistError) as exc_info:
             scalar_processor.get_metadata_list(self._train_id, test_tag_name)
 
-        assert exc_info.value.error_code == '50540002'
+        assert exc_info.value.error_code == '5054500E'
         assert "Can not find any data in this train job by given tag." in exc_info.value.message
 
     @pytest.mark.usefixtures('load_scalar_record')

@@ -127,9 +127,8 @@ class TestSingleImage:
         assert response.status_code == 400
 
         response = response.get_json()
-        assert response['error_code'] == '50540002'
-        assert response['error_msg'] == "Invalid parameter value. Can not find any data " \
-                                        "in loader pool about the train job."
+        assert response['error_code'] == '50545005'
+        assert response['error_msg'] == "Train job is not exist. Detail: Can not find the given train job in cache."
 
     @pytest.mark.level1
     @pytest.mark.env_single
@@ -149,9 +148,9 @@ class TestSingleImage:
         assert response.status_code == 400
 
         response = response.get_json()
-        assert response['error_code'] == '50540002'
-        assert response['error_msg'] == "Invalid parameter value. Can not find any data " \
-                                        "in this train job by given tag."
+        assert response['error_code'] == '5054500D'
+        assert response['error_msg'] == "Image is not exist. Detail: Invalid parameter value. " \
+                                        "Can not find any data in this train job by given tag."
 
     @pytest.mark.level1
     @pytest.mark.env_single
@@ -170,9 +169,9 @@ class TestSingleImage:
         assert response.status_code == 400
 
         response = response.get_json()
-        assert response['error_code'] == '50540002'
-        assert response['error_msg'] == "Invalid parameter value. Can not find the step " \
-                                        "with given train job id and tag."
+        assert response['error_code'] == '5054500D'
+        assert response['error_msg'] == "Image is not exist. Detail: " \
+                                        "Can not find the step with given train job id and tag."
 
     @pytest.mark.level1
     @pytest.mark.env_single

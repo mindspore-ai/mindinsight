@@ -28,6 +28,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from mindinsight.datavisual.common.enums import DataManagerStatus, PluginNameEnum
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform import data_manager, ms_data_loader
 from mindinsight.datavisual.data_transform.data_loader import DataLoader
 from mindinsight.datavisual.data_transform.data_manager import DataManager
@@ -185,9 +186,10 @@ class TestDataManager:
         d_manager._status = DataManagerStatus.LOADING.value
         tag = 'image'
         train_job_01 = 'train_01'
-        with pytest.raises(ParamValueError):
+        with pytest.raises(TrainJobNotExistError) as ex_info:
             d_manager.list_tensors(train_job_01, tag)
         shutil.rmtree(summary_base_dir)
+        assert ex_info.value.message == 'Train job is not exist. Detail: Can not find the given train job in cache.'
 
     @patch.object(data_manager.DataLoaderGenerator, "generate_loaders")
     def test_caching(self, mock_generate_loaders):

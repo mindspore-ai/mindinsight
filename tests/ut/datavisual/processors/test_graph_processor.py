@@ -26,6 +26,7 @@ import pytest
 
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from mindinsight.datavisual.common.exceptions import GraphNotExistError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.data_manager import DataManager
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
@@ -102,16 +103,16 @@ class TestGraphProcessor:
     def test_get_nodes_with_not_exist_train_id(self):
         """Test getting nodes with not exist train id."""
         test_train_id = "not_exist_train_id"
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(exceptions.TrainJobNotExistError) as exc_info:
             GraphProcessor(test_train_id, self._mock_data_manager)
-        assert "Can not find the train job in data manager." in exc_info.value.message
+        assert "Train job is not exist. Detail: Can not find the train job in data manager." == exc_info.value.message
 
     @pytest.mark.usefixtures('load_graph_record')
     @patch.object(DataManager, 'get_train_job_by_plugin')
     def test_get_nodes_with_loader_is_none(self, mock_get_train_job_by_plugin):
         """Test get nodes with loader is None."""
         mock_get_train_job_by_plugin.return_value = None
-        with pytest.raises(exceptions.SummaryLogPathInvalid):
+        with pytest.raises(exceptions.TrainJobNotExistError):
             GraphProcessor(self._train_id, self._mock_data_manager)
 
         assert mock_get_train_job_by_plugin.called
@@ -223,7 +224,8 @@ class TestGraphProcessor:
     @pytest.mark.usefixtures('load_no_graph_record')
     def test_check_graph_status_no_graph(self):
         """Test checking graph status no graph."""
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(GraphNotExistError) as exc_info:
             GraphProcessor(self._train_id, self._mock_data_manager)
-        assert exc_info.value.message == "Invalid parameter value. Can not find any graph data " \
-                                         "in the train job."
+
+        assert exc_info.value.error_code == '5054500C'
+        assert exc_info.value.message == "Graph is not exist."

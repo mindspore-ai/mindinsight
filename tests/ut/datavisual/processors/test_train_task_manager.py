@@ -25,11 +25,11 @@ from unittest.mock import Mock
 import pytest
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.processors.train_task_manager import TrainTaskManager
 from mindinsight.datavisual.utils import crc32
-from mindinsight.utils.exceptions import ParamValueError
 
 from ....utils.log_operations import LogOperations
 from ....utils.tools import check_loading_done, delete_files_or_dirs
@@ -109,12 +109,11 @@ class TestTrainTaskManager:
         train_task_manager = TrainTaskManager(self._mock_data_manager)
         for plugin_name in PluginNameEnum.list_members():
             test_train_id = "not_exist_id"
-            with pytest.raises(ParamValueError) as exc_info:
+            with pytest.raises(TrainJobNotExistError) as exc_info:
                 _ = train_task_manager.get_single_train_task(plugin_name, test_train_id)
-            assert exc_info.type == ParamValueError
-            assert exc_info.value.message == "Invalid parameter value. Can not find " \
-                                             "the train job in data manager."
-            assert exc_info.value.error_code == '50540002'
+            assert exc_info.value.message == "Train job is not exist. " \
+                                             "Detail: Can not find the train job in data manager."
+            assert exc_info.value.error_code == '50545005'
 
     @pytest.mark.usefixtures('load_data')
     def test_get_single_train_task_with_params(self):

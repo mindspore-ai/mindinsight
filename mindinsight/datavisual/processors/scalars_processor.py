@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Scalar Processor APIs."""
+from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.datavisual.common.exceptions import ScalarNotExistError
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 
@@ -33,7 +35,10 @@ class ScalarsProcessor(BaseProcessor):
         """
         Validation.check_param_empty(train_id=train_id, tag=tag)
         job_response = []
-        tensors = self._data_manager.list_tensors(train_id, tag)
+        try:
+            tensors = self._data_manager.list_tensors(train_id, tag)
+        except ParamValueError as ex:
+            raise ScalarNotExistError(ex.message)
 
         for tensor in tensors:
             job_response.append({

@@ -30,6 +30,7 @@ from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common.enums import DataManagerStatus
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.utils.exceptions import MindInsightException
@@ -343,7 +344,7 @@ class DataManager:
         self._check_status_valid()
         loader_pool = self._get_snapshot_loader_pool()
         if not self._is_loader_in_loader_pool(train_id, loader_pool):
-            raise ParamValueError("Can not find any data in loader pool about the train job.")
+            raise TrainJobNotExistError("Can not find the given train job in cache.")
 
         data_loader = loader_pool[train_id].data_loader
         events_data = data_loader.get_events_data()
@@ -365,7 +366,7 @@ class DataManager:
             loader_pool (dict[str, LoaderStruct]): Refer to self._loader_pool.
 
         Raises:
-            ParamValueError: Can not found train job in data manager.
+            TrainJobNotExistError: Can not find train job in data manager.
         """
         is_exist = False
         if train_id in loader_pool:
@@ -375,7 +376,7 @@ class DataManager:
                 is_exist = True
                 break
         if not is_exist:
-            raise ParamValueError("Can not find the train job in data manager.")
+            raise TrainJobNotExistError("Can not find the train job in data manager.")
 
     def _is_loader_in_loader_pool(self, train_id, loader_pool):
         """
@@ -406,8 +407,7 @@ class DataManager:
         """Check if the status is valid to load data."""
 
         if self.status == DataManagerStatus.INIT.value:
-            raise exceptions.SummaryLogIsLoading("Data is being loaded, "
-                                                 "current status: %s." % self._status)
+            raise exceptions.SummaryLogIsLoading("Data is being loaded, current status: %s." % self._status)
 
     def get_single_train_job(self, train_id, manual_update=False):
         """
