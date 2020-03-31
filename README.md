@@ -1,3 +1,5 @@
+# Introduction
+
 MindInsight provides MindSpore with easy-to-use debugging and tuning capabilities. It 
 enables users to visualize the experiments. The features of MindInsight are as follows.
 
@@ -22,6 +24,7 @@ such as training data, model accuracy, etc.
 - [Contributing](#contributing)
 - [Release Notes](#release-notes)
 - [License](#license)
+
 
 # More about MindInsight
 
