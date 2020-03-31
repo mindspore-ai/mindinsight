@@ -19,12 +19,11 @@ Usage:
     pytest tests/st/func/datavisual
 """
 import os
-import json
 
 import pytest
 
 from .. import globals as gbl
-from .....utils.tools import get_url
+from .....utils.tools import get_url, compare_result_with_file
 
 BASE_URL = '/v1/mindinsight/datavisual/graphs/single-node'
 
@@ -33,12 +32,6 @@ class TestQuerySingleNode:
     """Test query single node restful APIs."""
 
     graph_results_dir = os.path.join(os.path.dirname(__file__), 'graph_results')
-
-    def compare_result_with_file(self, result, filename):
-        """Compare result with file which contain the expected results."""
-        with open(os.path.join(self.graph_results_dir, filename), 'r') as fp:
-            expected_results = json.load(fp)
-            assert result == expected_results
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -59,4 +52,5 @@ class TestQuerySingleNode:
         url = get_url(BASE_URL, params)
         response = client.get(url)
         assert response.status_code == 200
-        self.compare_result_with_file(response.get_json(), result_file)
+        file_path = os.path.join(self.graph_results_dir, result_file)
+        compare_result_with_file(response.get_json(), file_path)

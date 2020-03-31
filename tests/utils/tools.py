@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,13 @@ import io
 import os
 import shutil
 import time
+import json
+
 from urllib.parse import urlencode
+
 import numpy as np
 from PIL import Image
+
 from mindinsight.datavisual.common.enums import DataManagerStatus
 
 
@@ -69,3 +73,10 @@ def get_image_tensor_from_bytes(image_string):
     image_tensor = np.array(img)
 
     return image_tensor
+
+
+def compare_result_with_file(result, expected_file_path):
+    """Compare result with file which contain the expected results."""
+    with open(expected_file_path, 'r') as file:
+        expected_results = json.load(file)
+        assert result == expected_results
