@@ -62,14 +62,10 @@ class TestModelLineage(TestCase):
         self.assertTrue(f'Invalid value for raise_exception.' in str(context.exception))
 
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.ds')
-    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
-                'LineageSummary.record_dataset_graph')
-    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
-                'validate_summary_record')
-    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
-                'AnalyzeObject.get_optimizer_by_network')
-    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
-                'AnalyzeObject.analyze_optimizer')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.LineageSummary.record_dataset_graph')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_summary_record')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_optimizer_by_network')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_optimizer')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_network')
     def test_begin(self, *args):
         """Test TrainLineage.begin method."""
@@ -84,14 +80,10 @@ class TestModelLineage(TestCase):
         args[4].assert_called()
 
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.ds')
-    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
-                'LineageSummary.record_dataset_graph')
-    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
-                'validate_summary_record')
-    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
-                'AnalyzeObject.get_optimizer_by_network')
-    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
-                'AnalyzeObject.analyze_optimizer')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.LineageSummary.record_dataset_graph')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_summary_record')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_optimizer_by_network')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_optimizer')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_network')
     def test_begin_error(self, *args):
         """Test TrainLineage.begin method."""
@@ -124,15 +116,11 @@ class TestModelLineage(TestCase):
             train_lineage.begin(self.my_run_context(run_context))
         self.assertTrue('The parameter optimizer is invalid.' in str(context.exception))
 
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_model_size')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_model_size')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_file_path')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.LineageSummary.record_train_lineage')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_dataset')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_optimizer')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.LineageSummary.record_train_lineage')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_dataset')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_optimizer')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_network')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_train_run_context')
     @mock.patch('builtins.float')
@@ -160,15 +148,11 @@ class TestModelLineage(TestCase):
             train_lineage.end(self.run_context)
         self.assertTrue('Invalid TrainLineage run_context.' in str(context.exception))
 
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_model_size')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_model_size')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_file_path')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.LineageSummary.record_train_lineage')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_dataset')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_optimizer')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.LineageSummary.record_train_lineage')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_dataset')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_optimizer')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_network')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_train_run_context')
     @mock.patch('builtins.float')
@@ -188,15 +172,11 @@ class TestModelLineage(TestCase):
             train_lineage.end(self.my_run_context(self.run_context))
         self.assertTrue('End error in TrainLineage:' in str(context.exception))
 
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_model_size')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_model_size')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.get_file_path')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.LineageSummary.record_train_lineage')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_dataset')
-    @mock.patch(
-        'mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_optimizer')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.LineageSummary.record_train_lineage')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_dataset')
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.AnalyzeObject.analyze_optimizer')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_network')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_train_run_context')
     @mock.patch('builtins.float')

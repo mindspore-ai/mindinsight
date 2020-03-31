@@ -20,23 +20,44 @@ from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.lineagemgr.common.path_parser import SummaryPathParser
 
 
+MOCK_SUMMARY_DIRS = [
+    {
+        'relative_path': './relative_path0'
+    },
+    {
+        'relative_path': './'
+    },
+    {
+        'relative_path': './relative_path1'
+    }
+]
+MOCK_SUMMARIES = [
+    {
+        'file_name': 'file0',
+        'create_time': datetime.fromtimestamp(1582031970)
+    },
+    {
+        'file_name': 'file0_lineage',
+        'create_time': datetime.fromtimestamp(1582031970)
+    },
+    {
+        'file_name': 'file1',
+        'create_time': datetime.fromtimestamp(1582031971)
+    },
+    {
+        'file_name': 'file1_lineage',
+        'create_time': datetime.fromtimestamp(1582031971)
+    }
+]
+
+
 class TestSummaryPathParser(TestCase):
     """Test the class of SummaryPathParser."""
 
     @mock.patch.object(SummaryWatcher, 'list_summary_directories')
     def test_get_summary_dirs(self, *args):
         """Test the function of get_summary_dirs."""
-        args[0].return_value = [
-            {
-                'relative_path': './relative_path0'
-            },
-            {
-                'relative_path': './'
-            },
-            {
-                'relative_path': './relative_path1'
-            }
-        ]
+        args[0].return_value = MOCK_SUMMARY_DIRS
 
         expected_result = [
             '/path/to/base/relative_path0',
@@ -54,24 +75,7 @@ class TestSummaryPathParser(TestCase):
     @mock.patch.object(SummaryWatcher, 'list_summaries')
     def test_get_latest_lineage_summary(self, *args):
         """Test the function of get_latest_lineage_summary."""
-        args[0].return_value = [
-            {
-                'file_name': 'file0',
-                'create_time': datetime.fromtimestamp(1582031970)
-            },
-            {
-                'file_name': 'file0_lineage',
-                'create_time': datetime.fromtimestamp(1582031970)
-            },
-            {
-                'file_name': 'file1',
-                'create_time': datetime.fromtimestamp(1582031971)
-            },
-            {
-                'file_name': 'file1_lineage',
-                'create_time': datetime.fromtimestamp(1582031971)
-            }
-        ]
+        args[0].return_value = MOCK_SUMMARIES
         summary_dir = '/path/to/summary_dir'
         result = SummaryPathParser.get_latest_lineage_summary(summary_dir)
         self.assertEqual('/path/to/summary_dir/file1_lineage', result)
@@ -119,35 +123,8 @@ class TestSummaryPathParser(TestCase):
     @mock.patch.object(SummaryWatcher, 'list_summary_directories')
     def test_get_latest_lineage_summaries(self, *args):
         """Test the function of get_latest_lineage_summaries."""
-        args[0].return_value = [
-            {
-                'relative_path': './relative_path0'
-            },
-            {
-                'relative_path': './'
-            },
-            {
-                'relative_path': './relative_path1'
-            }
-        ]
-        args[1].return_value = [
-            {
-                'file_name': 'file0',
-                'create_time': datetime.fromtimestamp(1582031970)
-            },
-            {
-                'file_name': 'file0_lineage',
-                'create_time': datetime.fromtimestamp(1582031970)
-            },
-            {
-                'file_name': 'file1',
-                'create_time': datetime.fromtimestamp(1582031971)
-            },
-            {
-                'file_name': 'file1_lineage',
-                'create_time': datetime.fromtimestamp(1582031971)
-            }
-        ]
+        args[0].return_value = MOCK_SUMMARY_DIRS
+        args[1].return_value = MOCK_SUMMARIES
 
         expected_result = [
             '/path/to/base/relative_path0/file1_lineage',

@@ -15,6 +15,9 @@
 """The event data in querier test."""
 import json
 
+from ....utils.mindspore.dataset.engine.serializer_deserializer import \
+    SERIALIZED_PIPELINE
+
 EVENT_TRAIN_DICT_0 = {
     'wall_time': 1581499557.7017336,
     'train_lineage': {
@@ -373,49 +376,4 @@ EVENT_DATASET_DICT_0 = {
     }
 }
 
-DATASET_DICT_0 = {
-    'op_type': 'BatchDataset',
-    'op_module': 'minddata.dataengine.datasets',
-    'num_parallel_workers': None,
-    'drop_remainder': True,
-    'batch_size': 10,
-    'children': [
-        {
-            'op_type': 'MapDataset',
-            'op_module': 'minddata.dataengine.datasets',
-            'num_parallel_workers': None,
-            'input_columns': [
-                'label'
-            ],
-            'output_columns': [
-                None
-            ],
-            'operations': [
-                {
-                    'tensor_op_module': 'minddata.transforms.c_transforms',
-                    'tensor_op_name': 'OneHot',
-                    'num_classes': 10
-                }
-            ],
-            'children': [
-                {
-                    'op_type': 'MnistDataset',
-                    'shard_id': None,
-                    'num_shards': None,
-                    'op_module': 'minddata.dataengine.datasets',
-                    'dataset_dir': '/home/anthony/MindData/tests/dataset/data/testMnistData',
-                    'num_parallel_workers': None,
-                    'shuffle': None,
-                    'num_samples': 100,
-                    'sampler': {
-                        'sampler_module': 'minddata.dataengine.samplers',
-                        'sampler_name': 'RandomSampler',
-                        'replacement': True,
-                        'num_samples': 100
-                    },
-                    'children': []
-                }
-            ]
-        }
-    ]
-}
+DATASET_DICT_0 = SERIALIZED_PIPELINE

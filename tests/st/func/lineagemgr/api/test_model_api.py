@@ -33,6 +33,96 @@ from mindinsight.lineagemgr.common.exceptions.exceptions import \
 from ..conftest import BASE_SUMMARY_DIR, SUMMARY_DIR, SUMMARY_DIR_2, DATASET_GRAPH
 
 
+LINEAGE_INFO_RUN1 = {
+    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
+    'metric': {
+        'accuracy': 0.78
+    },
+    'hyper_parameters': {
+        'optimizer': 'Momentum',
+        'learning_rate': 0.11999999731779099,
+        'loss_function': 'SoftmaxCrossEntropyWithLogits',
+        'epoch': 14,
+        'parallel_mode': 'stand_alone',
+        'device_num': 2,
+        'batch_size': 32
+    },
+    'algorithm': {
+        'network': 'ResNet'
+    },
+    'train_dataset': {
+        'train_dataset_size': 731
+    },
+    'valid_dataset': {
+        'valid_dataset_size': 10240
+    },
+    'model': {
+        'path': '{"ckpt": "'
+                + BASE_SUMMARY_DIR + '/run1/CKPtest_model.ckpt"}',
+        'size': 64
+    },
+    'dataset_graph': DATASET_GRAPH
+}
+LINEAGE_FILTRATION_EXCEPT_RUN = {
+    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'except_run'),
+    'loss_function': 'SoftmaxCrossEntropyWithLogits',
+    'train_dataset_path': None,
+    'train_dataset_count': 1024,
+    'test_dataset_path': None,
+    'test_dataset_count': None,
+    'network': 'ResNet',
+    'optimizer': 'Momentum',
+    'learning_rate': 0.11999999731779099,
+    'epoch': 10,
+    'batch_size': 32,
+    'loss': 0.029999999329447746,
+    'model_size': 64,
+    'metric': {},
+    'dataset_graph': DATASET_GRAPH,
+    'dataset_mark': 2
+}
+LINEAGE_FILTRATION_RUN1 = {
+    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
+    'loss_function': 'SoftmaxCrossEntropyWithLogits',
+    'train_dataset_path': None,
+    'train_dataset_count': 731,
+    'test_dataset_path': None,
+    'test_dataset_count': 10240,
+    'network': 'ResNet',
+    'optimizer': 'Momentum',
+    'learning_rate': 0.11999999731779099,
+    'epoch': 14,
+    'batch_size': 32,
+    'loss': None,
+    'model_size': 64,
+    'metric': {
+        'accuracy': 0.78
+    },
+    'dataset_graph': DATASET_GRAPH,
+    'dataset_mark': 2
+}
+LINEAGE_FILTRATION_RUN2 = {
+    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run2'),
+    'loss_function': None,
+    'train_dataset_path': None,
+    'train_dataset_count': None,
+    'test_dataset_path': None,
+    'test_dataset_count': 10240,
+    'network': None,
+    'optimizer': None,
+    'learning_rate': None,
+    'epoch': None,
+    'batch_size': None,
+    'loss': None,
+    'model_size': None,
+    'metric': {
+        'accuracy': 2.7800000000000002
+    },
+    'dataset_graph': {},
+    'dataset_mark': 3
+}
+
+
 @pytest.mark.usefixtures("create_summary_dir")
 class TestModelApi(TestCase):
     """Test lineage information query interface."""
@@ -67,36 +157,7 @@ class TestModelApi(TestCase):
         total_res = get_summary_lineage(SUMMARY_DIR)
         partial_res1 = get_summary_lineage(SUMMARY_DIR, ['hyper_parameters'])
         partial_res2 = get_summary_lineage(SUMMARY_DIR, ['metric', 'algorithm'])
-        expect_total_res = {
-            'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
-            'metric': {
-                'accuracy': 0.78
-            },
-            'hyper_parameters': {
-                'optimizer': 'Momentum',
-                'learning_rate': 0.11999999731779099,
-                'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                'epoch': 14,
-                'parallel_mode': 'stand_alone',
-                'device_num': 2,
-                'batch_size': 32
-            },
-            'algorithm': {
-                'network': 'ResNet'
-            },
-            'train_dataset': {
-                'train_dataset_size': 731
-            },
-            'valid_dataset': {
-                'valid_dataset_size': 10240
-            },
-            'model': {
-                'path': '{"ckpt": "'
-                        + BASE_SUMMARY_DIR + '/run1/CKPtest_model.ckpt"}',
-                'size': 64
-            },
-            'dataset_graph': DATASET_GRAPH
-        }
+        expect_total_res = LINEAGE_INFO_RUN1
         expect_partial_res1 = {
             'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
             'hyper_parameters': {
@@ -139,7 +200,7 @@ class TestModelApi(TestCase):
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.platform_x86_cpu
     @pytest.mark.env_single
-    def test_get_summary_lineage_exception(self):
+    def test_get_summary_lineage_exception_1(self):
         """Test the interface of get_summary_lineage with exception."""
         # summary path does not exist
         self.assertRaisesRegex(
@@ -183,6 +244,14 @@ class TestModelApi(TestCase):
             keys=None
         )
 
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_get_summary_lineage_exception_2(self):
+        """Test the interface of get_summary_lineage with exception."""
         # keys is invalid
         self.assertRaisesRegex(
             LineageParamValueError,
@@ -250,64 +319,9 @@ class TestModelApi(TestCase):
         """Test the interface of filter_summary_lineage."""
         expect_result = {
             'object': [
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'except_run'),
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 1024,
-                    'test_dataset_path': None,
-                    'test_dataset_count': None,
-                    'network': 'ResNet',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 10,
-                    'batch_size': 32,
-                    'loss': 0.029999999329447746,
-                    'model_size': 64,
-                    'metric': {},
-                    'dataset_graph': DATASET_GRAPH,
-                    'dataset_mark': 2
-                },
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 731,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 10240,
-                    'network': 'ResNet',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 14,
-                    'batch_size': 32,
-                    'loss': None,
-                    'model_size': 64,
-                    'metric': {
-                        'accuracy': 0.78
-                    },
-                    'dataset_graph': DATASET_GRAPH,
-                    'dataset_mark': 2
-                },
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run2'),
-                    'loss_function': None,
-                    'train_dataset_path': None,
-                    'train_dataset_count': None,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 10240,
-                    'network': None,
-                    'optimizer': None,
-                    'learning_rate': None,
-                    'epoch': None,
-                    'batch_size': None,
-                    'loss': None,
-                    'model_size': None,
-                    'metric': {
-                        'accuracy': 2.7800000000000002
-                    },
-                    'dataset_graph': {},
-                    'dataset_mark': 3
-                }
+                LINEAGE_FILTRATION_EXCEPT_RUN,
+                LINEAGE_FILTRATION_RUN1,
+                LINEAGE_FILTRATION_RUN2
             ],
             'count': 3
         }
@@ -357,46 +371,8 @@ class TestModelApi(TestCase):
         }
         expect_result = {
             'object': [
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run2'),
-                    'loss_function': None,
-                    'train_dataset_path': None,
-                    'train_dataset_count': None,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 10240,
-                    'network': None,
-                    'optimizer': None,
-                    'learning_rate': None,
-                    'epoch': None,
-                    'batch_size': None,
-                    'loss': None,
-                    'model_size': None,
-                    'metric': {
-                        'accuracy': 2.7800000000000002
-                    },
-                    'dataset_graph': {},
-                    'dataset_mark': 3
-                },
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 731,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 10240,
-                    'network': 'ResNet',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 14,
-                    'batch_size': 32,
-                    'loss': None,
-                    'model_size': 64,
-                    'metric': {
-                        'accuracy': 0.78
-                    },
-                    'dataset_graph': DATASET_GRAPH,
-                    'dataset_mark': 2
-                }
+                LINEAGE_FILTRATION_RUN2,
+                LINEAGE_FILTRATION_RUN1
             ],
             'count': 2
         }
@@ -432,46 +408,8 @@ class TestModelApi(TestCase):
         }
         expect_result = {
             'object': [
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run2'),
-                    'loss_function': None,
-                    'train_dataset_path': None,
-                    'train_dataset_count': None,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 10240,
-                    'network': None,
-                    'optimizer': None,
-                    'learning_rate': None,
-                    'epoch': None,
-                    'batch_size': None,
-                    'loss': None,
-                    'model_size': None,
-                    'metric': {
-                        'accuracy': 2.7800000000000002
-                    },
-                    'dataset_graph': {},
-                    'dataset_mark': 3
-                },
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 731,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 10240,
-                    'network': 'ResNet',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 14,
-                    'batch_size': 32,
-                    'loss': None,
-                    'model_size': 64,
-                    'metric': {
-                        'accuracy': 0.78
-                    },
-                    'dataset_graph': DATASET_GRAPH,
-                    'dataset_mark': 2
-                }
+                LINEAGE_FILTRATION_RUN2,
+                LINEAGE_FILTRATION_RUN1
             ],
             'count': 2
         }
@@ -498,44 +436,8 @@ class TestModelApi(TestCase):
         }
         expect_result = {
             'object': [
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'except_run'),
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 1024,
-                    'test_dataset_path': None,
-                    'test_dataset_count': None,
-                    'network': 'ResNet',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 10,
-                    'batch_size': 32,
-                    'loss': 0.029999999329447746,
-                    'model_size': 64,
-                    'metric': {},
-                    'dataset_graph': DATASET_GRAPH,
-                    'dataset_mark': 2
-                },
-                {
-                    'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 731,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 10240,
-                    'network': 'ResNet',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 14,
-                    'batch_size': 32,
-                    'loss': None,
-                    'model_size': 64,
-                    'metric': {
-                        'accuracy': 0.78
-                    },
-                    'dataset_graph': DATASET_GRAPH,
-                    'dataset_mark': 2
-                }
+                LINEAGE_FILTRATION_EXCEPT_RUN,
+                LINEAGE_FILTRATION_RUN1
             ],
             'count': 2
         }
@@ -674,6 +576,14 @@ class TestModelApi(TestCase):
             search_condition
         )
 
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_filter_summary_lineage_exception_3(self):
+        """Test the abnormal execution of the filter_summary_lineage interface."""
         # the condition of offset is invalid
         search_condition = {
             'offset': 1.0
@@ -712,6 +622,14 @@ class TestModelApi(TestCase):
             search_condition
         )
 
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_filter_summary_lineage_exception_4(self):
+        """Test the abnormal execution of the filter_summary_lineage interface."""
         # the sorted_type not supported
         search_condition = {
             'sorted_name': 'summary_dir',
@@ -753,6 +671,14 @@ class TestModelApi(TestCase):
             search_condition
         )
 
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_filter_summary_lineage_exception_5(self):
+        """Test the abnormal execution of the filter_summary_lineage interface."""
         # the summary dir is invalid in search condition
         search_condition = {
             'summary_dir': {
@@ -811,7 +737,7 @@ class TestModelApi(TestCase):
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.platform_x86_cpu
     @pytest.mark.env_single
-    def test_filter_summary_lineage_exception_3(self):
+    def test_filter_summary_lineage_exception_6(self):
         """Test the abnormal execution of the filter_summary_lineage interface."""
         # gt > lt
         search_condition1 = {
