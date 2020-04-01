@@ -19,10 +19,11 @@ Usage:
     pytest tests/st/func/datavisual
 """
 import pytest
-from .. import globals as gbl
-from .....utils.tools import get_url
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
+
+from .....utils.tools import get_url
+from .. import globals as gbl
 
 BASE_URL = '/v1/mindinsight/datavisual/single-job'
 

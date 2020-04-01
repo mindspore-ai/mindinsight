@@ -15,8 +15,7 @@
 """The event data in querier test."""
 import json
 
-from ....utils.mindspore.dataset.engine.serializer_deserializer import \
-    SERIALIZED_PIPELINE
+from ....utils.mindspore.dataset.engine.serializer_deserializer import SERIALIZED_PIPELINE
 
 EVENT_TRAIN_DICT_0 = {
     'wall_time': 1581499557.7017336,

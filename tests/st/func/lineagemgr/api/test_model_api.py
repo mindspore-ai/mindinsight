@@ -26,12 +26,12 @@ from unittest import TestCase
 
 import pytest
 
-from mindinsight.lineagemgr import get_summary_lineage, filter_summary_lineage
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageParamSummaryPathError, LineageParamValueError, LineageParamTypeError, \
-    LineageSearchConditionParamError, LineageFileNotFoundError
-from ..conftest import BASE_SUMMARY_DIR, SUMMARY_DIR, SUMMARY_DIR_2, DATASET_GRAPH
+from mindinsight.lineagemgr import filter_summary_lineage, get_summary_lineage
+from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageFileNotFoundError, LineageParamSummaryPathError,
+                                                                 LineageParamTypeError, LineageParamValueError,
+                                                                 LineageSearchConditionParamError)
 
+from ..conftest import BASE_SUMMARY_DIR, DATASET_GRAPH, SUMMARY_DIR, SUMMARY_DIR_2
 
 LINEAGE_INFO_RUN1 = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),

@@ -22,18 +22,19 @@ import datetime
 import os
 import shutil
 import tempfile
-
 from unittest.mock import patch
-import pytest
 
-from ...mock import MockLogger
+import pytest
 
 from mindinsight.datavisual.data_transform.loader_generators import data_loader_generator
 from mindinsight.utils.exceptions import ParamValueError
 
+from ...mock import MockLogger
+
 
 class TestDataLoaderGenerator:
     """Test data_loader_generator."""
+
     @classmethod
     def setup_class(cls):
         data_loader_generator.logger = MockLogger
@@ -88,8 +89,9 @@ class TestDataLoaderGenerator:
         mock_data_loader.return_value = True
 
         loader_dict = generator.generate_loaders(loader_pool=dict())
-        expected_ids = [summary.get('relative_path')
-                        for summary in summaries[-data_loader_generator.MAX_DATA_LOADER_SIZE:]]
+        expected_ids = [
+            summary.get('relative_path') for summary in summaries[-data_loader_generator.MAX_DATA_LOADER_SIZE:]
+        ]
         assert sorted(loader_dict.keys()) == sorted(expected_ids)
 
         shutil.rmtree(summary_base_dir)

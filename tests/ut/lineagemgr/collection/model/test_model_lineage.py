@@ -16,18 +16,16 @@
 import os
 import shutil
 import unittest
-from unittest import mock, TestCase
+from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
-from mindinsight.lineagemgr.collection.model.model_lineage import TrainLineage, EvalLineage, \
-    AnalyzeObject
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageLogError, LineageGetModelFileError, MindInsightException
+from mindinsight.lineagemgr.collection.model.model_lineage import AnalyzeObject, EvalLineage, TrainLineage
+from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageGetModelFileError, LineageLogError,
+                                                                 MindInsightException)
 from mindspore.common.tensor import Tensor
-from mindspore.dataset.engine import MindDataset, Dataset
-from mindspore.nn import Optimizer, WithLossCell, TrainOneStepWithLossScaleCell, \
-    SoftmaxCrossEntropyWithLogits
-from mindspore.train.callback import RunContext, ModelCheckpoint, SummaryStep
+from mindspore.dataset.engine import Dataset, MindDataset
+from mindspore.nn import Optimizer, SoftmaxCrossEntropyWithLogits, TrainOneStepWithLossScaleCell, WithLossCell
+from mindspore.train.callback import ModelCheckpoint, RunContext, SummaryStep
 from mindspore.train.summary import SummaryRecord
 
 

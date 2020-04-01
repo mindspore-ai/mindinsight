@@ -21,13 +21,14 @@ Usage:
 from unittest.mock import patch
 
 import pytest
-from .conftest import TRAIN_ROUTES
-from ....utils.log_generators.images_log_generator import ImagesLogGenerator
-from ....utils.log_generators.scalars_log_generator import ScalarsLogGenerator
-from ....utils.tools import get_url
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.processors.train_task_manager import TrainTaskManager
+
+from ....utils.log_generators.images_log_generator import ImagesLogGenerator
+from ....utils.log_generators.scalars_log_generator import ScalarsLogGenerator
+from ....utils.tools import get_url
+from .conftest import TRAIN_ROUTES
 
 
 class TestTrainTask:
@@ -36,9 +37,7 @@ class TestTrainTask:
     _scalar_log_generator = ScalarsLogGenerator()
     _image_log_generator = ImagesLogGenerator()
 
-    @pytest.mark.parametrize(
-        "plugin_name",
-        ['no_plugin_name', 'not_exist_plugin_name'])
+    @pytest.mark.parametrize("plugin_name", ['no_plugin_name', 'not_exist_plugin_name'])
     def test_query_single_train_task_with_plugin_name_not_exist(self, client, plugin_name):
         """
         Parsing unavailable plugin name to single train task.

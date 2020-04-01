@@ -18,9 +18,10 @@ import os
 import time
 
 from google.protobuf import json_format
-from .log_generator import LogGenerator
 
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
+
+from .log_generator import LogGenerator
 
 
 class GraphLogGenerator(LogGenerator):

@@ -22,8 +22,7 @@ import tempfile
 import pytest
 
 from ....utils import mindspore
-from ....utils.mindspore.dataset.engine.serializer_deserializer import \
-    SERIALIZED_PIPELINE
+from ....utils.mindspore.dataset.engine.serializer_deserializer import SERIALIZED_PIPELINE
 
 sys.modules['mindspore'] = mindspore
 

@@ -18,9 +18,10 @@ import time
 
 import numpy as np
 from PIL import Image
-from .log_generator import LogGenerator
 
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
+
+from .log_generator import LogGenerator
 
 
 class ImagesLogGenerator(LogGenerator):
@@ -138,12 +139,7 @@ class ImagesLogGenerator(LogGenerator):
             images_metadata.append(image_metadata)
             images_values.update({step: image_tensor})
 
-            values = dict(
-                wall_time=wall_time,
-                step=step,
-                image=image_tensor,
-                tag=tag_name
-            )
+            values = dict(wall_time=wall_time, step=step, image=image_tensor, tag=tag_name)
 
             self._write_log_one_step(file_path, values)
 
