@@ -39,11 +39,11 @@ class Node:
         self._name = name
         self._type = ""
         self._attr = dict()
-        self._input = dict()
+        self._inputs = dict()
         self._output_i = -1
-        self._output = {}
-        self._polymeric_input = {}
-        self._polymeric_output = {}
+        self._outputs = {}
+        self._polymeric_inputs = {}
+        self._polymeric_outputs = {}
         self._polymeric_scope_name = ""
         self._subnode_count = 0
         self._name_scope = ""
@@ -55,11 +55,11 @@ class Node:
             'name': self._name,
             'type': self._type,
             'attr': self._attr,
-            'input': self._input,
+            'input': self._inputs,
             'output_i': self._output_i,
-            'output': self._output,
-            'polymeric_input': self._polymeric_input,
-            'polymeric_output': self._polymeric_output,
+            'output': self._outputs,
+            'polymeric_input': self._polymeric_inputs,
+            'polymeric_output': self._polymeric_outputs,
             'subnode_count': self._subnode_count,
             'polymeric_scope_name': self._polymeric_scope_name
         }
@@ -99,28 +99,32 @@ class Node:
         Update node attr.
 
         Args:
-            attr_dict (dict[str, str]): Format is {'<key>': '<value>'}.
+            attr_dict (dict[str, str]): The attr of node.
         """
         self._attr.update(attr_dict)
 
     @property
-    def input(self):
+    def inputs(self):
         """
         Get all input of current node.
 
         Returns:
             dict[str, dict], format is {'<src_name>': {'shape': [], 'edge_type', 'scope'}}.
         """
-        return self._input
+        return self._inputs
 
     def update_input(self, input_dict):
         """
         Update input.
 
         Args:
-            input_dict (dict[str, dict]): Format is {'<src_name>': {'shape': [], 'edge_type', 'scope'}}.
+            input_dict (dict[str, dict]): Key is a source node name, and the value is a dict.
+
+                - shape (list): The shape of input tensor.
+                - edge_type (str): The type of edge, optional value refer to `EdgeTypeEnum`.
+                - scope (str): The scope of this source node.
         """
-        self._input.update(input_dict)
+        self._inputs.update(input_dict)
 
     @property
     def output_i(self):
@@ -133,49 +137,51 @@ class Node:
         self._output_i = output_i
 
     @property
-    def polymeric_input(self):
+    def polymeric_inputs(self):
         """
         The polymeric input is the input of the polymeric nodes.
 
         Returns:
             dict[str, dict], format is {'<src_name>': {'edge_type': '<value>'}}.
         """
-        return self._polymeric_input
+        return self._polymeric_inputs
 
     def update_polymeric_input(self, polymeric_input):
         """The polymeric input is the input of the polymeric nodes."""
-        self._polymeric_input.update(polymeric_input)
+        self._polymeric_inputs.update(polymeric_input)
 
     @property
-    def output(self):
+    def outputs(self):
         """The output node of this node."""
-        return self._output
+        return self._outputs
 
     def update_output(self, output):
         """
         Update output node.
 
         Args:
-            output (dict[str, TypedDict('NodeType', {'type': str})]): Format
-                is {"<node_name>": {"type": "<node type>"}}.
+            output (dict[str, TypedDict('NodeType', {'type': str})]): Key is a dst node name, and value is a dict.
+
+                - type (str): The type of the dst node.
         """
-        self._output.update(output)
+        self._outputs.update(output)
 
     @property
-    def polymeric_output(self):
+    def polymeric_outputs(self):
         """Get polymeric output."""
-        return self._polymeric_output
+        return self._polymeric_outputs
 
     def update_polymeric_output(self, polymeric_output):
         """
         Update polymeric output.
 
         Args:
-            polymeric_output (dict[str, dict): Format is {dst_node.polymeric_scope_name:
-                                                {'edge_type': EdgeTypeEnum.DATA.value}}).
+            polymeric_output (dict[str, dict): Key is the polymeric scope name of dst name, and value is dict.
+
+                - edge_type (str): The edge type of the dst node.
 
         """
-        self._polymeric_output.update(polymeric_output)
+        self._polymeric_outputs.update(polymeric_output)
 
     @property
     def polymeric_scope_name(self):

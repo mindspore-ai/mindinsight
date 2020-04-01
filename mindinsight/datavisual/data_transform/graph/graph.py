@@ -206,8 +206,8 @@ class Graph:
             for name_tmp, node_tmp in group.items():
                 node_tmp.polymeric_scope_name = polymeric_node_name
                 self._polymeric_nodes.update({name_tmp: node_tmp})
-                polymeric_node.update_input(node_tmp.input)
-                polymeric_node.update_output(node_tmp.output)
+                polymeric_node.update_input(node_tmp.inputs)
+                polymeric_node.update_output(node_tmp.outputs)
 
             self._normal_nodes.update({polymeric_node_name: polymeric_node})
 
@@ -227,7 +227,7 @@ class Graph:
             for node_name, group_node in group.items():
                 node_list = []
                 is_in_group = False
-                for dst_name in group_node.output:
+                for dst_name in group_node.outputs:
                     node_tmp = self._leaf_nodes[dst_name]
                     node_list.append(node_tmp)
 
@@ -245,7 +245,7 @@ class Graph:
                     if node_tmp in group.values():
                         is_in_group = True
                         break
-                    for dst_name_tmp in node_tmp.output:
+                    for dst_name_tmp in node_tmp.outputs:
                         run_count += 1
                         node_tmp = self._leaf_nodes[dst_name_tmp]
                         if visit_nodes.get(dst_name_tmp):
@@ -273,23 +273,23 @@ class Graph:
     def _update_input_output(self):
         """We need to update input and output attribute after build polymeric node."""
         for node in self._normal_nodes.values():
-            for src_name, input_attr in node.input.items():
+            for src_name, input_attr in node.inputs.items():
                 if self._polymeric_nodes.get(src_name):
                     input_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
                     node.update_input({src_name: input_attr})
 
-            for dst_name, output_attr in node.output.items():
+            for dst_name, output_attr in node.outputs.items():
                 if self._polymeric_nodes.get(dst_name):
                     output_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
                     node.update_output({dst_name: output_attr})
 
         for node in self._polymeric_nodes.values():
-            for src_name, input_attr in node.input.items():
+            for src_name, input_attr in node.inputs.items():
                 if self._polymeric_nodes.get(src_name):
                     input_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
                     node.update_input({src_name: input_attr})
 
-            for dst_name, output_attr in node.output.items():
+            for dst_name, output_attr in node.outputs.items():
                 if self._polymeric_nodes.get(dst_name):
                     output_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
                     node.update_output({dst_name: output_attr})
@@ -297,21 +297,21 @@ class Graph:
     def _update_polymeric_input_output(self):
         """Calc polymeric input and output after build polymeric node."""
         for node in self._normal_nodes.values():
-            polymeric_input = self._calc_polymeric_attr(node, 'input')
+            polymeric_input = self._calc_polymeric_attr(node, 'inputs')
             node.update_polymeric_input(polymeric_input)
 
-            polymeric_output = self._calc_polymeric_attr(node, 'output')
+            polymeric_output = self._calc_polymeric_attr(node, 'outputs')
             node.update_polymeric_output(polymeric_output)
 
         for name, node in self._polymeric_nodes.items():
             polymeric_input = {}
-            for src_name in node.input:
+            for src_name in node.inputs:
                 output_name = self._calc_dummy_node_name(name, src_name)
                 polymeric_input.update({output_name: {'edge_type': EdgeTypeEnum.DATA.value}})
             node.update_polymeric_input(polymeric_input)
 
             polymeric_output = {}
-            for dst_name in node.output:
+            for dst_name in node.outputs:
                 polymeric_output = {}
                 output_name = self._calc_dummy_node_name(name, dst_name)
                 polymeric_output.update({output_name: {'edge_type': EdgeTypeEnum.DATA.value}})
@@ -410,12 +410,12 @@ class Graph:
 
                 # update the input and output of this to namescope node
                 name_scope_with_slash = name_scope + '/'
-                for src_name, input_attr in node.input.items():
+                for src_name, input_attr in node.inputs.items():
                     if src_name.startswith(name_scope_with_slash):
                         continue
                     name_scope_node.update_input({src_name: input_attr})
 
-                for dst_name, output_attr in node.output.items():
+                for dst_name, output_attr in node.outputs.items():
                     if dst_name.startswith(name_scope_with_slash):
                         continue
                     name_scope_node.update_output({dst_name: output_attr})
@@ -428,7 +428,7 @@ class Graph:
             nodes.extend(self._normal_nodes.values())
             nodes.extend(self._polymeric_nodes.values())
             for node in nodes:
-                attrs = ['input', 'output', 'polymeric_input', 'polymeric_output']
+                attrs = ['inputs', 'outputs', 'polymeric_inputs', 'polymeric_outputs']
                 for item in attrs:
                     tmp_dict = dict(getattr(node, item))
                     for name, value in tmp_dict.items():
