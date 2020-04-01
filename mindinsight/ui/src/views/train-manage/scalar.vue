@@ -268,7 +268,7 @@ export default {
         if (this.isTimeReload) {
           this.autoUpdateSamples();
         }
-        this.updateAllData();
+        this.updateAllData(false);
       }
     },
     /**
@@ -285,15 +285,8 @@ export default {
       }
     },
 
-    timeReloadValue(newVal) {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-      this.autoUpdateTimer = setInterval(() => {
-        this.$store.commit('clearToken');
-        this.updateAllData();
-      }, newVal * 1000);
+    timeReloadValue() {
+      this.autoUpdateSamples();
     },
   },
   destroyed() {
@@ -1519,14 +1512,15 @@ export default {
 
     /**
      * Updating Sliding Block Data
+     * @param {Boolean} ignoreError whether ignore error tip
      */
 
-    updateAllData() {
+    updateAllData(ignoreError) {
       const params = {
         plugin_name: 'scalar',
         train_id: this.trainingJobId,
       };
-      RequestService.getSingleTrainJob(params, true)
+      RequestService.getSingleTrainJob(params, ignoreError)
           .then((res) => {
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);
@@ -1600,7 +1594,7 @@ export default {
       }
       this.autoUpdateTimer = setInterval(() => {
         this.$store.commit('clearToken');
-        this.updateAllData();
+        this.updateAllData(true);
       }, this.timeReloadValue * 1000);
     },
 
