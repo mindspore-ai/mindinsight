@@ -18,19 +18,21 @@ This file is used to define the basic graph.
 import copy
 import time
 
+from enum import Enum
+
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common import exceptions
 from .node import NodeTypeEnum
 from .node import Node
 
 
-class EdgeTypeEnum:
+class EdgeTypeEnum(Enum):
     """Node edge type enum."""
-    control = 'control'
-    data = 'data'
+    CONTROL = 'control'
+    DATA = 'data'
 
 
-class DataTypeEnum:
+class DataTypeEnum(Enum):
     """Data type enum."""
     DT_TENSOR = 13
 
@@ -292,69 +294,64 @@ class Graph:
                     output_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
                     node.update_output({dst_name: output_attr})
 
-    def _calc_polymeric_input_output(self):
+    def _update_polymeric_input_output(self):
         """Calc polymeric input and output after build polymeric node."""
-        for name, node in self._normal_nodes.items():
-            polymeric_input = {}
-            for src_name in node.input:
-                src_node = self._polymeric_nodes.get(src_name)
-                if node.node_type == NodeTypeEnum.POLYMERIC_SCOPE.value:
-                    src_name = src_name if not src_node else src_node.polymeric_scope_name
-                    output_name = self._calc_dummy_node_name(name, src_name)
-                    polymeric_input.update({output_name: {'edge_type': EdgeTypeEnum.data}})
-                    continue
-
-                if not src_node:
-                    continue
-
-                if not node.name_scope and src_node.name_scope:
-                    # if current node is in first layer, and the src node is not in
-                    # the first layer, the src node will not be the polymeric input of current node.
-                    continue
-
-                if node.name_scope == src_node.name_scope \
-                        or node.name_scope.startswith(src_node.name_scope):
-                    polymeric_input.update(
-                        {src_node.polymeric_scope_name: {'edge_type': EdgeTypeEnum.data}})
-
+        for node in self._normal_nodes.values():
+            polymeric_input = self._calc_polymeric_attr(node, 'input')
             node.update_polymeric_input(polymeric_input)
 
-            polymeric_output = {}
-            for dst_name in node.output:
-                dst_node = self._polymeric_nodes.get(dst_name)
-
-                if node.node_type == NodeTypeEnum.POLYMERIC_SCOPE.value:
-                    dst_name = dst_name if not dst_node else dst_node.polymeric_scope_name
-                    output_name = self._calc_dummy_node_name(name, dst_name)
-                    polymeric_output.update({output_name: {'edge_type': EdgeTypeEnum.data}})
-                    continue
-
-                if not dst_node:
-                    continue
-
-                if not node.name_scope and dst_node.name_scope:
-                    continue
-
-                if node.name_scope == dst_node.name_scope \
-                        or node.name_scope.startswith(dst_node.name_scope):
-                    polymeric_output.update(
-                        {dst_node.polymeric_scope_name: {'edge_type': EdgeTypeEnum.data}})
-
+            polymeric_output = self._calc_polymeric_attr(node, 'output')
             node.update_polymeric_output(polymeric_output)
 
         for name, node in self._polymeric_nodes.items():
             polymeric_input = {}
             for src_name in node.input:
                 output_name = self._calc_dummy_node_name(name, src_name)
-                polymeric_input.update({output_name: {'edge_type': EdgeTypeEnum.data}})
+                polymeric_input.update({output_name: {'edge_type': EdgeTypeEnum.DATA.value}})
             node.update_polymeric_input(polymeric_input)
 
             polymeric_output = {}
             for dst_name in node.output:
                 polymeric_output = {}
                 output_name = self._calc_dummy_node_name(name, dst_name)
-                polymeric_output.update({output_name: {'edge_type': EdgeTypeEnum.data}})
+                polymeric_output.update({output_name: {'edge_type': EdgeTypeEnum.DATA.value}})
             node.update_polymeric_output(polymeric_output)
+
+    def _calc_polymeric_attr(self, node, attr):
+        """
+        Calc polymeric input or polymeric output after build polymeric node.
+
+        Args:
+            node (Node): Computes the polymeric input for a given node.
+            attr (str): The polymeric attr, optional value is `input` or `output`.
+
+        Returns:
+            dict, return polymeric input or polymeric output of the given node.
+        """
+        polymeric_attr = {}
+        for node_name in getattr(node, attr):
+            polymeric_node = self._polymeric_nodes.get(node_name)
+            if node.node_type == NodeTypeEnum.POLYMERIC_SCOPE.value:
+                node_name = node_name if not polymeric_node else polymeric_node.polymeric_scope_name
+                dummy_node_name = self._calc_dummy_node_name(node.name, node_name)
+                polymeric_attr.update({dummy_node_name: {'edge_type': EdgeTypeEnum.DATA.value}})
+                continue
+
+            if not polymeric_node:
+                continue
+
+            if not node.name_scope and polymeric_node.name_scope:
+                # If current node is in top-level layer, and the polymeric_node node is not in
+                # the top-level layer, the polymeric node will not be the polymeric input
+                # or polymeric output of current node.
+                continue
+
+            if node.name_scope == polymeric_node.name_scope \
+                    or node.name_scope.startswith(polymeric_node.name_scope + '/'):
+                polymeric_attr.update(
+                    {polymeric_node.polymeric_scope_name: {'edge_type': EdgeTypeEnum.DATA.value}})
+
+        return polymeric_attr
 
     def _calc_dummy_node_name(self, current_node_name, other_node_name):
         """

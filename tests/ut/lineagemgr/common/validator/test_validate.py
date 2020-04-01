@@ -15,38 +15,31 @@
 """Test the validate module."""
 from unittest import TestCase
 
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageParamValueError, LineageParamTypeError
-from mindinsight.lineagemgr.common.validator.model_parameter import \
-    SearchModelConditionParameter
-from mindinsight.lineagemgr.common.validator.validate import \
-    validate_search_model_condition
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, LineageParamValueError
+from mindinsight.lineagemgr.common.validator.model_parameter import SearchModelConditionParameter
+from mindinsight.lineagemgr.common.validator.validate import validate_search_model_condition
 from mindinsight.utils.exceptions import MindInsightException
 
 
 class TestValidateSearchModelCondition(TestCase):
     """Test the mothod of validate_search_model_condition."""
-    def test_validate_search_model_condition(self):
-        """Test the mothod of validate_search_model_condition."""
+    def test_validate_search_model_condition_param_type_error(self):
+        """Test the mothod of validate_search_model_condition with LineageParamTypeError."""
         condition = {
             'summary_dir': 'xxx'
         }
-        self.assertRaisesRegex(
-            LineageParamTypeError,
+        self._assert_raise_of_lineage_param_type_error(
             'The search_condition element summary_dir should be dict.',
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
+    def test_validate_search_model_condition_param_value_error(self):
+        """Test the mothod of validate_search_model_condition with LineageParamValueError."""
         condition = {
             'xxx': 'xxx'
         }
-        self.assertRaisesRegex(
-            LineageParamValueError,
+        self._assert_raise_of_lineage_param_value_error(
             'The search attribute not supported.',
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
@@ -55,22 +48,38 @@ class TestValidateSearchModelCondition(TestCase):
                 'xxx': 'xxx'
             }
         }
-        self.assertRaisesRegex(
-            LineageParamValueError,
+        self._assert_raise_of_lineage_param_value_error(
             "The compare condition should be in",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
         condition = {
+            1: {
+                "ge": 8.0
+            }
+        }
+        self._assert_raise_of_lineage_param_value_error(
+            "The search attribute not supported.",
+            condition
+        )
+
+        condition = {
+            'metric_': {
+                "ge": 8.0
+            }
+        }
+        self._assert_raise_of_lineage_param_value_error(
+            "The search attribute not supported.",
+            condition
+        )
+
+    def test_validate_search_model_condition_mindinsight_exception_1(self):
+        """Test the mothod of validate_search_model_condition with MindinsightException."""
+        condition = {
             "offset": 100001
         }
-        self.assertRaisesRegex(
-            MindInsightException,
+        self._assert_raise_of_mindinsight_exception(
             "Invalid input offset. 0 <= offset <= 100000",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
@@ -80,11 +89,9 @@ class TestValidateSearchModelCondition(TestCase):
             },
             'limit': 10
         }
-        self.assertRaisesRegex(
-            MindInsightException,
-            "The parameter summary_dir is invalid. It should be a dict and the value should be a string",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
+        self._assert_raise_of_mindinsight_exception(
+            "The parameter summary_dir is invalid. It should be a dict and "
+            "the value should be a string",
             condition
         )
 
@@ -93,11 +100,9 @@ class TestValidateSearchModelCondition(TestCase):
                 'in': 1.0
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
-            "The parameter learning_rate is invalid. It should be a dict and the value should be a float or a integer",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
+        self._assert_raise_of_mindinsight_exception(
+            "The parameter learning_rate is invalid. It should be a dict and "
+            "the value should be a float or a integer",
             condition
         )
 
@@ -106,24 +111,22 @@ class TestValidateSearchModelCondition(TestCase):
                 'lt': True
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
-            "The parameter learning_rate is invalid. It should be a dict and the value should be a float or a integer",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
+        self._assert_raise_of_mindinsight_exception(
+            "The parameter learning_rate is invalid. It should be a dict and "
+            "the value should be a float or a integer",
             condition
         )
 
+    def test_validate_search_model_condition_mindinsight_exception_2(self):
+        """Test the mothod of validate_search_model_condition with MindinsightException."""
         condition = {
             'learning_rate': {
                 'gt': [1.0]
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
-            "The parameter learning_rate is invalid. It should be a dict and the value should be a float or a integer",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
+        self._assert_raise_of_mindinsight_exception(
+            "The parameter learning_rate is invalid. It should be a dict and "
+            "the value should be a float or a integer",
             condition
         )
 
@@ -132,11 +135,9 @@ class TestValidateSearchModelCondition(TestCase):
                 'ge': 1
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
-            "The parameter loss_function is invalid. It should be a dict and the value should be a string",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
+        self._assert_raise_of_mindinsight_exception(
+            "The parameter loss_function is invalid. It should be a dict and "
+            "the value should be a string",
             condition
         )
 
@@ -145,12 +146,9 @@ class TestValidateSearchModelCondition(TestCase):
                 'in': 2
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
+        self._assert_raise_of_mindinsight_exception(
             "The parameter train_dataset_count is invalid. It should be a dict "
             "and the value should be a integer between 0",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
@@ -162,14 +160,14 @@ class TestValidateSearchModelCondition(TestCase):
                 'eq': 'xxx'
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
-            "The parameter network is invalid. It should be a dict and the value should be a string",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
+        self._assert_raise_of_mindinsight_exception(
+            "The parameter network is invalid. It should be a dict and "
+            "the value should be a string",
             condition
         )
 
+    def test_validate_search_model_condition_mindinsight_exception_3(self):
+        """Test the mothod of validate_search_model_condition with MindinsightException."""
         condition = {
             'batch_size': {
                 'lt': 2,
@@ -179,11 +177,8 @@ class TestValidateSearchModelCondition(TestCase):
                 'eq': 222
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
+        self._assert_raise_of_mindinsight_exception(
             "The parameter batch_size is invalid. It should be a non-negative integer.",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
@@ -192,12 +187,9 @@ class TestValidateSearchModelCondition(TestCase):
                 'lt': -2
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
+        self._assert_raise_of_mindinsight_exception(
             "The parameter test_dataset_count is invalid. It should be a dict "
             "and the value should be a integer between 0",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
@@ -206,11 +198,8 @@ class TestValidateSearchModelCondition(TestCase):
                 'lt': False
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
+        self._assert_raise_of_mindinsight_exception(
             "The parameter epoch is invalid. It should be a positive integer.",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
@@ -219,52 +208,22 @@ class TestValidateSearchModelCondition(TestCase):
                 "ge": ""
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
-            "The parameter learning_rate is invalid. It should be a dict and the value should be a float or a integer",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
+        self._assert_raise_of_mindinsight_exception(
+            "The parameter learning_rate is invalid. It should be a dict and "
+            "the value should be a float or a integer",
             condition
         )
 
+    def test_validate_search_model_condition_mindinsight_exception_4(self):
+        """Test the mothod of validate_search_model_condition with MindinsightException."""
         condition = {
             "train_dataset_count": {
                 "ge": 8.0
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
+        self._assert_raise_of_mindinsight_exception(
             "The parameter train_dataset_count is invalid. It should be a dict "
             "and the value should be a integer between 0",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
-            condition
-        )
-
-        condition = {
-            1: {
-                "ge": 8.0
-            }
-        }
-        self.assertRaisesRegex(
-            LineageParamValueError,
-            "The search attribute not supported.",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
-            condition
-        )
-
-        condition = {
-            'metric_': {
-                "ge": 8.0
-            }
-        }
-        LineageParamValueError('The search attribute not supported.')
-        self.assertRaisesRegex(
-            LineageParamValueError,
-            "The search attribute not supported.",
-            validate_search_model_condition,
-            SearchModelConditionParameter,
             condition
         )
 
@@ -273,11 +232,55 @@ class TestValidateSearchModelCondition(TestCase):
                 'ge': 'xxx'
             }
         }
-        self.assertRaisesRegex(
-            MindInsightException,
+        self._assert_raise_of_mindinsight_exception(
             "The parameter metric_attribute is invalid. "
             "It should be a dict and the value should be a float or a integer",
+            condition
+        )
+
+    def _assert_raise(self, exception, msg, condition):
+        """
+        Assert raise by unittest.
+
+        Args:
+            exception (Type): Exception class expected to be raised.
+            msg (msg): Expected error message.
+            condition (dict): The parameter of search condition.
+        """
+        self.assertRaisesRegex(
+            exception,
+            msg,
             validate_search_model_condition,
             SearchModelConditionParameter,
             condition
         )
+
+    def _assert_raise_of_mindinsight_exception(self, msg, condition):
+        """
+        Assert raise of MindinsightException by unittest.
+
+        Args:
+            msg (msg): Expected error message.
+            condition (dict): The parameter of search condition.
+        """
+        self._assert_raise(MindInsightException, msg, condition)
+
+    def _assert_raise_of_lineage_param_value_error(self, msg, condition):
+        """
+        Assert raise of LineageParamValueError by unittest.
+
+        Args:
+            msg (msg): Expected error message.
+            condition (dict): The parameter of search condition.
+        """
+        self._assert_raise(LineageParamValueError, msg, condition)
+
+    def _assert_raise_of_lineage_param_type_error(self, msg, condition):
+        """
+        Assert raise of LineageParamTypeError by unittest.
+
+        Args:
+            msg (msg): Expected error message.
+            condition (dict): The parameter of search condition.
+        """
+        self._assert_raise(LineageParamTypeError, msg, condition)

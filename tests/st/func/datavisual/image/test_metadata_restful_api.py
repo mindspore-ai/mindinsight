@@ -20,12 +20,12 @@ Usage:
 """
 import pytest
 
-from tests.st.func.datavisual.constants import MULTIPLE_TRAIN_ID, RESERVOIR_TRAIN_ID
-from tests.st.func.datavisual.utils import globals as gbl
-from tests.st.func.datavisual.utils.utils import get_url
-
 from mindinsight.conf import settings
 from mindinsight.datavisual.common.enums import PluginNameEnum
+
+from .....utils.tools import get_url
+from .. import globals as gbl
+from ..constants import MULTIPLE_TRAIN_ID, RESERVOIR_TRAIN_ID
 
 BASE_URL = '/v1/mindinsight/datavisual/image/metadata'
 

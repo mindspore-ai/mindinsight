@@ -18,12 +18,12 @@ from unittest import TestCase, mock
 from google.protobuf.json_format import ParseDict
 
 import mindinsight.datavisual.proto_files.mindinsight_summary_pb2 as summary_pb2
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageQuerierParamException, LineageParamTypeError, \
-    LineageSummaryAnalyzeException, LineageSummaryParseException
+from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageParamTypeError, LineageQuerierParamException,
+                                                                 LineageSummaryAnalyzeException,
+                                                                 LineageSummaryParseException)
 from mindinsight.lineagemgr.querier.querier import Querier
-from mindinsight.lineagemgr.summary.lineage_summary_analyzer import \
-    LineageInfo
+from mindinsight.lineagemgr.summary.lineage_summary_analyzer import LineageInfo
+
 from . import event_data
 
 
@@ -140,6 +140,98 @@ def get_lineage_infos():
     return lineage_infos
 
 
+LINEAGE_INFO_0 = {
+    'summary_dir': '/path/to/summary0',
+    **event_data.EVENT_TRAIN_DICT_0['train_lineage'],
+    'metric': event_data.METRIC_0,
+    'valid_dataset': event_data.EVENT_EVAL_DICT_0['evaluation_lineage']['valid_dataset'],
+    'dataset_graph': event_data.DATASET_DICT_0
+}
+LINEAGE_INFO_1 = {
+    'summary_dir': '/path/to/summary1',
+    **event_data.EVENT_TRAIN_DICT_1['train_lineage'],
+    'metric': event_data.METRIC_1,
+    'valid_dataset': event_data.EVENT_EVAL_DICT_1['evaluation_lineage']['valid_dataset'],
+    'dataset_graph': event_data.DATASET_DICT_0
+}
+LINEAGE_FILTRATION_0 = create_filtration_result(
+    '/path/to/summary0',
+    event_data.EVENT_TRAIN_DICT_0,
+    event_data.EVENT_EVAL_DICT_0,
+    event_data.METRIC_0,
+    event_data.DATASET_DICT_0
+)
+LINEAGE_FILTRATION_1 = create_filtration_result(
+    '/path/to/summary1',
+    event_data.EVENT_TRAIN_DICT_1,
+    event_data.EVENT_EVAL_DICT_1,
+    event_data.METRIC_1,
+    event_data.DATASET_DICT_0
+)
+LINEAGE_FILTRATION_2 = create_filtration_result(
+    '/path/to/summary2',
+    event_data.EVENT_TRAIN_DICT_2,
+    event_data.EVENT_EVAL_DICT_2,
+    event_data.METRIC_2,
+    event_data.DATASET_DICT_0
+)
+LINEAGE_FILTRATION_3 = create_filtration_result(
+    '/path/to/summary3',
+    event_data.EVENT_TRAIN_DICT_3,
+    event_data.EVENT_EVAL_DICT_3,
+    event_data.METRIC_3,
+    event_data.DATASET_DICT_0
+)
+LINEAGE_FILTRATION_4 = create_filtration_result(
+    '/path/to/summary4',
+    event_data.EVENT_TRAIN_DICT_4,
+    event_data.EVENT_EVAL_DICT_4,
+    event_data.METRIC_4,
+    event_data.DATASET_DICT_0
+)
+LINEAGE_FILTRATION_5 = {
+    "summary_dir": '/path/to/summary5',
+    "loss_function":
+        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['loss_function'],
+    "train_dataset_path": None,
+    "train_dataset_count":
+        event_data.EVENT_TRAIN_DICT_5['train_lineage']['train_dataset']['train_dataset_size'],
+    "test_dataset_path": None,
+    "test_dataset_count": None,
+    "network": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['network'],
+    "optimizer": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['optimizer'],
+    "learning_rate":
+        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['learning_rate'],
+    "epoch": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['epoch'],
+    "batch_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['batch_size'],
+    "loss": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['loss'],
+    "model_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['model']['size'],
+    "metric": {},
+    "dataset_graph": event_data.DATASET_DICT_0,
+    "dataset_mark": '2'
+}
+LINEAGE_FILTRATION_6 = {
+    "summary_dir": '/path/to/summary6',
+    "loss_function": None,
+    "train_dataset_path": None,
+    "train_dataset_count": None,
+    "test_dataset_path":
+        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_path'],
+    "test_dataset_count":
+        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_size'],
+    "network": None,
+    "optimizer": None,
+    "learning_rate": None,
+    "epoch": None,
+    "batch_size": None,
+    "loss": None,
+    "model_size": None,
+    "metric": event_data.METRIC_5,
+    "dataset_graph": event_data.DATASET_DICT_0,
+    "dataset_mark": '2'
+}
+
+
 class TestQuerier(TestCase):
     """Test the class of `Querier`."""
     @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_summary_infos')
@@ -169,31 +261,13 @@ class TestQuerier(TestCase):
 
     def test_get_summary_lineage_success_1(self):
         """Test the success of get_summary_lineage."""
-        expected_result = [
-            {
-                'summary_dir': '/path/to/summary0',
-                **event_data.EVENT_TRAIN_DICT_0['train_lineage'],
-                'metric': event_data.METRIC_0,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_0['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            }
-        ]
+        expected_result = [LINEAGE_INFO_0]
         result = self.single_querier.get_summary_lineage()
         self.assertListEqual(expected_result, result)
 
     def test_get_summary_lineage_success_2(self):
         """Test the success of get_summary_lineage."""
-        expected_result = [
-            {
-                'summary_dir': '/path/to/summary0',
-                **event_data.EVENT_TRAIN_DICT_0['train_lineage'],
-                'metric': event_data.METRIC_0,
-                'valid_dataset':
-                    event_data.EVENT_EVAL_DICT_0['evaluation_lineage'][
-                        'valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            }
-        ]
+        expected_result = [LINEAGE_INFO_0]
         result = self.single_querier.get_summary_lineage(
             summary_dir='/path/to/summary0'
         )
@@ -216,20 +290,8 @@ class TestQuerier(TestCase):
     def test_get_summary_lineage_success_4(self):
         """Test the success of get_summary_lineage."""
         expected_result = [
-            {
-                'summary_dir': '/path/to/summary0',
-                **event_data.EVENT_TRAIN_DICT_0['train_lineage'],
-                'metric': event_data.METRIC_0,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_0['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            },
-            {
-                'summary_dir': '/path/to/summary1',
-                **event_data.EVENT_TRAIN_DICT_1['train_lineage'],
-                'metric': event_data.METRIC_1,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_1['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            },
+            LINEAGE_INFO_0,
+            LINEAGE_INFO_1,
             {
                 'summary_dir': '/path/to/summary2',
                 **event_data.EVENT_TRAIN_DICT_2['train_lineage'],
@@ -274,15 +336,7 @@ class TestQuerier(TestCase):
 
     def test_get_summary_lineage_success_5(self):
         """Test the success of get_summary_lineage."""
-        expected_result = [
-            {
-                'summary_dir': '/path/to/summary1',
-                **event_data.EVENT_TRAIN_DICT_1['train_lineage'],
-                'metric': event_data.METRIC_1,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_1['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            }
-        ]
+        expected_result = [LINEAGE_INFO_1]
         result = self.multi_querier.get_summary_lineage(
             summary_dir='/path/to/summary1'
         )
@@ -341,20 +395,8 @@ class TestQuerier(TestCase):
         }
         expected_result = {
             'object': [
-                create_filtration_result(
-                    '/path/to/summary1',
-                    event_data.EVENT_TRAIN_DICT_1,
-                    event_data.EVENT_EVAL_DICT_1,
-                    event_data.METRIC_1,
-                    event_data.DATASET_DICT_0,
-                ),
-                create_filtration_result(
-                    '/path/to/summary2',
-                    event_data.EVENT_TRAIN_DICT_2,
-                    event_data.EVENT_EVAL_DICT_2,
-                    event_data.METRIC_2,
-                    event_data.DATASET_DICT_0
-                )
+                LINEAGE_FILTRATION_1,
+                LINEAGE_FILTRATION_2
             ],
             'count': 2,
         }
@@ -377,20 +419,8 @@ class TestQuerier(TestCase):
         }
         expected_result = {
             'object': [
-                create_filtration_result(
-                    '/path/to/summary2',
-                    event_data.EVENT_TRAIN_DICT_2,
-                    event_data.EVENT_EVAL_DICT_2,
-                    event_data.METRIC_2,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary3',
-                    event_data.EVENT_TRAIN_DICT_3,
-                    event_data.EVENT_EVAL_DICT_3,
-                    event_data.METRIC_3,
-                    event_data.DATASET_DICT_0
-                )
+                LINEAGE_FILTRATION_2,
+                LINEAGE_FILTRATION_3
             ],
             'count': 2,
         }
@@ -405,20 +435,8 @@ class TestQuerier(TestCase):
         }
         expected_result = {
             'object': [
-                create_filtration_result(
-                    '/path/to/summary2',
-                    event_data.EVENT_TRAIN_DICT_2,
-                    event_data.EVENT_EVAL_DICT_2,
-                    event_data.METRIC_2,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary3',
-                    event_data.EVENT_TRAIN_DICT_3,
-                    event_data.EVENT_EVAL_DICT_3,
-                    event_data.METRIC_3,
-                    event_data.DATASET_DICT_0
-                )
+                LINEAGE_FILTRATION_2,
+                LINEAGE_FILTRATION_3
             ],
             'count': 7,
         }
@@ -429,82 +447,13 @@ class TestQuerier(TestCase):
         """Test the success of filter_summary_lineage."""
         expected_result = {
             'object': [
-                create_filtration_result(
-                    '/path/to/summary0',
-                    event_data.EVENT_TRAIN_DICT_0,
-                    event_data.EVENT_EVAL_DICT_0,
-                    event_data.METRIC_0,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary1',
-                    event_data.EVENT_TRAIN_DICT_1,
-                    event_data.EVENT_EVAL_DICT_1,
-                    event_data.METRIC_1,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary2',
-                    event_data.EVENT_TRAIN_DICT_2,
-                    event_data.EVENT_EVAL_DICT_2,
-                    event_data.METRIC_2,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary3',
-                    event_data.EVENT_TRAIN_DICT_3,
-                    event_data.EVENT_EVAL_DICT_3,
-                    event_data.METRIC_3,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary4',
-                    event_data.EVENT_TRAIN_DICT_4,
-                    event_data.EVENT_EVAL_DICT_4,
-                    event_data.METRIC_4,
-                    event_data.DATASET_DICT_0
-                ),
-                {
-                    "summary_dir": '/path/to/summary5',
-                    "loss_function":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['loss_function'],
-                    "train_dataset_path": None,
-                    "train_dataset_count":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['train_dataset']['train_dataset_size'],
-                    "test_dataset_path": None,
-                    "test_dataset_count": None,
-                    "network": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['network'],
-                    "optimizer": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['optimizer'],
-                    "learning_rate":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['learning_rate'],
-                    "epoch": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['epoch'],
-                    "batch_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['batch_size'],
-                    "loss": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['loss'],
-                    "model_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['model']['size'],
-                    "metric": {},
-                    "dataset_graph": event_data.DATASET_DICT_0,
-                    "dataset_mark": '2'
-                },
-                {
-                    "summary_dir": '/path/to/summary6',
-                    "loss_function": None,
-                    "train_dataset_path": None,
-                    "train_dataset_count": None,
-                    "test_dataset_path":
-                        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_path'],
-                    "test_dataset_count":
-                        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_size'],
-                    "network": None,
-                    "optimizer": None,
-                    "learning_rate": None,
-                    "epoch": None,
-                    "batch_size": None,
-                    "loss": None,
-                    "model_size": None,
-                    "metric": event_data.METRIC_5,
-                    "dataset_graph": event_data.DATASET_DICT_0,
-                    "dataset_mark": '2'
-                }
+                LINEAGE_FILTRATION_0,
+                LINEAGE_FILTRATION_1,
+                LINEAGE_FILTRATION_2,
+                LINEAGE_FILTRATION_3,
+                LINEAGE_FILTRATION_4,
+                LINEAGE_FILTRATION_5,
+                LINEAGE_FILTRATION_6
             ],
             'count': 7,
         }
@@ -519,15 +468,7 @@ class TestQuerier(TestCase):
             }
         }
         expected_result = {
-            'object': [
-                create_filtration_result(
-                    '/path/to/summary4',
-                    event_data.EVENT_TRAIN_DICT_4,
-                    event_data.EVENT_EVAL_DICT_4,
-                    event_data.METRIC_4,
-                    event_data.DATASET_DICT_0
-                ),
-            ],
+            'object': [LINEAGE_FILTRATION_4],
             'count': 1,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
@@ -541,82 +482,13 @@ class TestQuerier(TestCase):
         }
         expected_result = {
             'object': [
-                create_filtration_result(
-                    '/path/to/summary0',
-                    event_data.EVENT_TRAIN_DICT_0,
-                    event_data.EVENT_EVAL_DICT_0,
-                    event_data.METRIC_0,
-                    event_data.DATASET_DICT_0
-                ),
-                {
-                    "summary_dir": '/path/to/summary5',
-                    "loss_function":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['loss_function'],
-                    "train_dataset_path": None,
-                    "train_dataset_count":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['train_dataset']['train_dataset_size'],
-                    "test_dataset_path": None,
-                    "test_dataset_count": None,
-                    "network": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['network'],
-                    "optimizer": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['optimizer'],
-                    "learning_rate":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['learning_rate'],
-                    "epoch": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['epoch'],
-                    "batch_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['batch_size'],
-                    "loss": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['loss'],
-                    "model_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['model']['size'],
-                    "metric": {},
-                    "dataset_graph": event_data.DATASET_DICT_0,
-                    "dataset_mark": '2'
-                },
-                create_filtration_result(
-                    '/path/to/summary1',
-                    event_data.EVENT_TRAIN_DICT_1,
-                    event_data.EVENT_EVAL_DICT_1,
-                    event_data.METRIC_1,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary2',
-                    event_data.EVENT_TRAIN_DICT_2,
-                    event_data.EVENT_EVAL_DICT_2,
-                    event_data.METRIC_2,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary3',
-                    event_data.EVENT_TRAIN_DICT_3,
-                    event_data.EVENT_EVAL_DICT_3,
-                    event_data.METRIC_3,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary4',
-                    event_data.EVENT_TRAIN_DICT_4,
-                    event_data.EVENT_EVAL_DICT_4,
-                    event_data.METRIC_4,
-                    event_data.DATASET_DICT_0
-                ),
-                {
-                    "summary_dir": '/path/to/summary6',
-                    "loss_function": None,
-                    "train_dataset_path": None,
-                    "train_dataset_count": None,
-                    "test_dataset_path":
-                        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_path'],
-                    "test_dataset_count":
-                        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_size'],
-                    "network": None,
-                    "optimizer": None,
-                    "learning_rate": None,
-                    "epoch": None,
-                    "batch_size": None,
-                    "loss": None,
-                    "model_size": None,
-                    "metric": event_data.METRIC_5,
-                    "dataset_graph": event_data.DATASET_DICT_0,
-                    "dataset_mark": '2'
-                }
+                LINEAGE_FILTRATION_0,
+                LINEAGE_FILTRATION_5,
+                LINEAGE_FILTRATION_1,
+                LINEAGE_FILTRATION_2,
+                LINEAGE_FILTRATION_3,
+                LINEAGE_FILTRATION_4,
+                LINEAGE_FILTRATION_6
             ],
             'count': 7,
         }
@@ -631,82 +503,13 @@ class TestQuerier(TestCase):
         }
         expected_result = {
             'object': [
-                {
-                    "summary_dir": '/path/to/summary6',
-                    "loss_function": None,
-                    "train_dataset_path": None,
-                    "train_dataset_count": None,
-                    "test_dataset_path":
-                        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_path'],
-                    "test_dataset_count":
-                        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_size'],
-                    "network": None,
-                    "optimizer": None,
-                    "learning_rate": None,
-                    "epoch": None,
-                    "batch_size": None,
-                    "loss": None,
-                    "model_size": None,
-                    "metric": event_data.METRIC_5,
-                    "dataset_graph": event_data.DATASET_DICT_0,
-                    "dataset_mark": '2'
-                },
-                create_filtration_result(
-                    '/path/to/summary4',
-                    event_data.EVENT_TRAIN_DICT_4,
-                    event_data.EVENT_EVAL_DICT_4,
-                    event_data.METRIC_4,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary3',
-                    event_data.EVENT_TRAIN_DICT_3,
-                    event_data.EVENT_EVAL_DICT_3,
-                    event_data.METRIC_3,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary2',
-                    event_data.EVENT_TRAIN_DICT_2,
-                    event_data.EVENT_EVAL_DICT_2,
-                    event_data.METRIC_2,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary1',
-                    event_data.EVENT_TRAIN_DICT_1,
-                    event_data.EVENT_EVAL_DICT_1,
-                    event_data.METRIC_1,
-                    event_data.DATASET_DICT_0
-                ),
-                create_filtration_result(
-                    '/path/to/summary0',
-                    event_data.EVENT_TRAIN_DICT_0,
-                    event_data.EVENT_EVAL_DICT_0,
-                    event_data.METRIC_0,
-                    event_data.DATASET_DICT_0
-                ),
-                {
-                    "summary_dir": '/path/to/summary5',
-                    "loss_function":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['loss_function'],
-                    "train_dataset_path": None,
-                    "train_dataset_count":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['train_dataset']['train_dataset_size'],
-                    "test_dataset_path": None,
-                    "test_dataset_count": None,
-                    "network": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['network'],
-                    "optimizer": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['optimizer'],
-                    "learning_rate":
-                        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['learning_rate'],
-                    "epoch": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['epoch'],
-                    "batch_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['batch_size'],
-                    "loss": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['loss'],
-                    "model_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['model']['size'],
-                    "metric": {},
-                    "dataset_graph": event_data.DATASET_DICT_0,
-                    "dataset_mark": '2'
-                }
+                LINEAGE_FILTRATION_6,
+                LINEAGE_FILTRATION_4,
+                LINEAGE_FILTRATION_3,
+                LINEAGE_FILTRATION_2,
+                LINEAGE_FILTRATION_1,
+                LINEAGE_FILTRATION_0,
+                LINEAGE_FILTRATION_5
             ],
             'count': 7,
         }
@@ -722,15 +525,7 @@ class TestQuerier(TestCase):
             }
         }
         expected_result = {
-            'object': [
-                create_filtration_result(
-                    '/path/to/summary4',
-                    event_data.EVENT_TRAIN_DICT_4,
-                    event_data.EVENT_EVAL_DICT_4,
-                    event_data.METRIC_4,
-                    event_data.DATASET_DICT_0
-                ),
-            ],
+            'object': [LINEAGE_FILTRATION_4],
             'count': 1,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
@@ -809,20 +604,8 @@ class TestQuerier(TestCase):
         querier = Querier(summary_path)
         querier._parse_failed_paths.append('/path/to/summary1/log1')
         expected_result = [
-            {
-                'summary_dir': '/path/to/summary0',
-                **event_data.EVENT_TRAIN_DICT_0['train_lineage'],
-                'metric': event_data.METRIC_0,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_0['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            },
-            {
-                'summary_dir': '/path/to/summary1',
-                **event_data.EVENT_TRAIN_DICT_1['train_lineage'],
-                'metric': event_data.METRIC_1,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_1['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            }
+            LINEAGE_INFO_0,
+            LINEAGE_INFO_1
         ]
         result = querier.get_summary_lineage()
         self.assertListEqual(expected_result, result)
@@ -842,17 +625,7 @@ class TestQuerier(TestCase):
         querier._parse_failed_paths.append('/path/to/summary1/log1')
 
         args[0].return_value = create_lineage_info(None, None, None)
-        expected_result = [
-            {
-                'summary_dir': '/path/to/summary0',
-                **event_data.EVENT_TRAIN_DICT_0['train_lineage'],
-                'metric': event_data.METRIC_0,
-                'valid_dataset':
-                    event_data.EVENT_EVAL_DICT_0['evaluation_lineage'][
-                        'valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            }
-        ]
+        expected_result = [LINEAGE_INFO_0]
         result = querier.get_summary_lineage()
         self.assertListEqual(expected_result, result)
         self.assertListEqual(

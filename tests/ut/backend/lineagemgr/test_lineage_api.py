@@ -20,8 +20,42 @@ from unittest import TestCase, mock
 from flask import Response
 
 from mindinsight.backend.application import APP
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageQuerySummaryDataError
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageQuerySummaryDataError
+
+LINEAGE_FILTRATION_BASE = {
+    'accuracy': None,
+    'mae': None,
+    'mse': None,
+    'loss_function': 'SoftmaxCrossEntropyWithLogits',
+    'train_dataset_path': None,
+    'train_dataset_count': 64,
+    'test_dataset_path': None,
+    'test_dataset_count': None,
+    'network': 'str',
+    'optimizer': 'Momentum',
+    'learning_rate': 0.11999999731779099,
+    'epoch': 12,
+    'batch_size': 32,
+    'loss': 0.029999999329447746,
+    'model_size': 128
+}
+LINEAGE_FILTRATION_RUN1 = {
+    'accuracy': 0.78,
+    'mae': None,
+    'mse': None,
+    'loss_function': 'SoftmaxCrossEntropyWithLogits',
+    'train_dataset_path': None,
+    'train_dataset_count': 64,
+    'test_dataset_path': None,
+    'test_dataset_count': 64,
+    'network': 'str',
+    'optimizer': 'Momentum',
+    'learning_rate': 0.11999999731779099,
+    'epoch': 14,
+    'batch_size': 32,
+    'loss': 0.029999999329447746,
+    'model_size': 128
+}
 
 
 class TestSearchModel(TestCase):
@@ -42,39 +76,11 @@ class TestSearchModel(TestCase):
             'object': [
                 {
                     'summary_dir': base_dir,
-                    'accuracy': None,
-                    'mae': None,
-                    'mse': None,
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 64,
-                    'test_dataset_path': None,
-                    'test_dataset_count': None,
-                    'network': 'str',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 12,
-                    'batch_size': 32,
-                    'loss': 0.029999999329447746,
-                    'model_size': 128
+                    **LINEAGE_FILTRATION_BASE
                 },
                 {
                     'summary_dir': os.path.join(base_dir, 'run1'),
-                    'accuracy': 0.78,
-                    'mae': None,
-                    'mse': None,
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 64,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 64,
-                    'network': 'str',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 14,
-                    'batch_size': 32,
-                    'loss': 0.029999999329447746,
-                    'model_size': 128
+                    **LINEAGE_FILTRATION_RUN1
                 }
             ],
             'count': 2
@@ -93,39 +99,11 @@ class TestSearchModel(TestCase):
             'object': [
                 {
                     'summary_dir': './',
-                    'accuracy': None,
-                    'mae': None,
-                    'mse': None,
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 64,
-                    'test_dataset_path': None,
-                    'test_dataset_count': None,
-                    'network': 'str',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 12,
-                    'batch_size': 32,
-                    'loss': 0.029999999329447746,
-                    'model_size': 128
+                    **LINEAGE_FILTRATION_BASE
                 },
                 {
                     'summary_dir': './run1',
-                    'accuracy': 0.78,
-                    'mae': None,
-                    'mse': None,
-                    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-                    'train_dataset_path': None,
-                    'train_dataset_count': 64,
-                    'test_dataset_path': None,
-                    'test_dataset_count': 64,
-                    'network': 'str',
-                    'optimizer': 'Momentum',
-                    'learning_rate': 0.11999999731779099,
-                    'epoch': 14,
-                    'batch_size': 32,
-                    'loss': 0.029999999329447746,
-                    'model_size': 128
+                    **LINEAGE_FILTRATION_RUN1
                 }
             ],
             'count': 2

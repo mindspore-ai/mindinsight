@@ -22,9 +22,6 @@ import tempfile
 from unittest.mock import Mock
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.log_operations import LogOperations
-from tests.ut.datavisual.utils.utils import check_loading_done, delete_files_or_dirs
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.data_transform import data_manager
@@ -32,6 +29,10 @@ from mindinsight.datavisual.data_transform.loader_generators.data_loader_generat
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
+
+from ....utils.log_operations import LogOperations
+from ....utils.tools import check_loading_done, delete_files_or_dirs
+from ..mock import MockLogger
 
 
 class TestScalarsProcessor:
@@ -65,12 +66,11 @@ class TestScalarsProcessor:
         """Load scalar record."""
         summary_base_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp(dir=summary_base_dir)
-
         self._train_id = log_dir.replace(summary_base_dir, ".")
 
-        self._temp_path, self._scalars_metadata, self._scalars_values = LogOperations.generate_log(
+        log_operation = LogOperations()
+        self._temp_path, self._scalars_metadata, self._scalars_values = log_operation.generate_log(
             PluginNameEnum.SCALAR.value, log_dir, dict(step=self._steps_list, tag=self._tag_name))
-
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(summary_base_dir)])
@@ -79,7 +79,8 @@ class TestScalarsProcessor:
         # wait for loading done
         check_loading_done(self._mock_data_manager, time_limit=5)
 
-    def test_get_metadata_list_with_not_exist_id(self, load_scalar_record):
+    @pytest.mark.usefixtures('load_scalar_record')
+    def test_get_metadata_list_with_not_exist_id(self):
         """Get metadata list with not exist id."""
         test_train_id = 'not_exist_id'
         scalar_processor = ScalarsProcessor(self._mock_data_manager)
@@ -89,7 +90,8 @@ class TestScalarsProcessor:
         assert exc_info.value.error_code == '50540002'
         assert "Can not find any data in loader pool about the train job." in exc_info.value.message
 
-    def test_get_metadata_list_with_not_exist_tag(self, load_scalar_record):
+    @pytest.mark.usefixtures('load_scalar_record')
+    def test_get_metadata_list_with_not_exist_tag(self):
         """Get metadata list with not exist tag."""
         test_tag_name = 'not_exist_tag_name'
 
@@ -101,7 +103,8 @@ class TestScalarsProcessor:
         assert exc_info.value.error_code == '50540002'
         assert "Can not find any data in this train job by given tag." in exc_info.value.message
 
-    def test_get_metadata_list_success(self, load_scalar_record):
+    @pytest.mark.usefixtures('load_scalar_record')
+    def test_get_metadata_list_success(self):
         """Get metadata list success."""
         test_tag_name = self._complete_tag_name
 

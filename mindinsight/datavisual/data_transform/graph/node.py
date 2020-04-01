@@ -172,7 +172,7 @@ class Node:
 
         Args:
             polymeric_output (dict[str, dict): Format is {dst_node.polymeric_scope_name:
-                                                {'edge_type': EdgeTypeEnum.data}}).
+                                                {'edge_type': EdgeTypeEnum.DATA.value}}).
 
         """
         self._polymeric_output.update(polymeric_output)

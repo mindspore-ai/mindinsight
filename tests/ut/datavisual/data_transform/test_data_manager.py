@@ -18,31 +18,28 @@ Function:
 Usage:
     pytest tests/ut/datavisual
 """
-import time
 import os
 import shutil
 import tempfile
+import time
 from unittest import mock
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.utils import check_loading_done
 
 from mindinsight.datavisual.common.enums import DataManagerStatus, PluginNameEnum
 from mindinsight.datavisual.data_transform import data_manager, ms_data_loader
 from mindinsight.datavisual.data_transform.data_loader import DataLoader
 from mindinsight.datavisual.data_transform.data_manager import DataManager
 from mindinsight.datavisual.data_transform.events_data import EventsData
-from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import \
-    DataLoaderGenerator
-from mindinsight.datavisual.data_transform.loader_generators.loader_generator import \
-    MAX_DATA_LOADER_SIZE
-from mindinsight.datavisual.data_transform.loader_generators.loader_struct import \
-    LoaderStruct
+from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
+from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
+from mindinsight.datavisual.data_transform.loader_generators.loader_struct import LoaderStruct
 from mindinsight.datavisual.data_transform.ms_data_loader import MSDataLoader
 from mindinsight.utils.exceptions import ParamValueError
+
+from ....utils.tools import check_loading_done
+from ..mock import MockLogger
 
 
 class TestDataManager:
@@ -101,11 +98,17 @@ class TestDataManager:
                                              "and loader pool size is '3'."
         shutil.rmtree(summary_base_dir)
 
-    @pytest.mark.parametrize('params',
-                             [{'reload_interval': '30'},
-                              {'reload_interval': -1},
-                              {'reload_interval': 30, 'max_threads_count': '20'},
-                              {'reload_interval': 30, 'max_threads_count': 0}])
+    @pytest.mark.parametrize('params', [{
+        'reload_interval': '30'
+    }, {
+        'reload_interval': -1
+    }, {
+        'reload_interval': 30,
+        'max_threads_count': '20'
+    }, {
+        'reload_interval': 30,
+        'max_threads_count': 0
+    }])
     def test_start_load_data_with_invalid_params(self, params):
         """Test start_load_data with invalid reload_interval or invalid max_threads_count."""
         summary_base_dir = tempfile.mkdtemp()

@@ -21,13 +21,14 @@ Usage:
 from unittest.mock import Mock, patch
 
 import pytest
-from tests.ut.backend.datavisual.conftest import TRAIN_ROUTES
-from tests.ut.datavisual.utils.utils import get_url
 
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
 from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
+
+from ....utils.tools import get_url
+from .conftest import TRAIN_ROUTES
 
 
 class TestTrainVisual:
@@ -95,14 +96,7 @@ class TestTrainVisual:
 
         assert response.status_code == 200
         response = response.get_json()
-        expected_response = {
-            "metadatas": [{
-                "height": 224,
-                "step": 1,
-                "wall_time": 1572058058.1175,
-                "width": 448
-            }]
-        }
+        expected_response = {"metadatas": [{"height": 224, "step": 1, "wall_time": 1572058058.1175, "width": 448}]}
         assert expected_response == response
 
     def test_single_image_with_params_miss(self, client):
@@ -254,8 +248,10 @@ class TestTrainVisual:
     @patch.object(GraphProcessor, 'get_nodes')
     def test_graph_nodes_success(self, mock_graph_processor, mock_graph_processor_1, client):
         """Test getting graph nodes successfully."""
+
         def mock_get_nodes(name, node_type):
             return dict(name=name, node_type=node_type)
+
         mock_graph_processor.side_effect = mock_get_nodes
 
         mock_init = Mock(return_value=None)
@@ -327,10 +323,7 @@ class TestTrainVisual:
         assert results['error_msg'] == "Invalid parameter value. 'offset' should " \
                                        "be greater than or equal to 0."
 
-    @pytest.mark.parametrize(
-        "limit",
-        [-1, 0, 1001]
-    )
+    @pytest.mark.parametrize("limit", [-1, 0, 1001])
     @patch.object(GraphProcessor, '__init__')
     def test_graph_node_names_with_invalid_limit(self, mock_graph_processor, client, limit):
         """Test getting graph node names with invalid limit."""
@@ -348,14 +341,10 @@ class TestTrainVisual:
         assert results['error_msg'] == "Invalid parameter value. " \
                                        "'limit' should in [1, 1000]."
 
-    @pytest.mark.parametrize(
-        " offset, limit",
-        [(0, 100), (1, 1), (0, 1000)]
-    )
+    @pytest.mark.parametrize(" offset, limit", [(0, 100), (1, 1), (0, 1000)])
     @patch.object(GraphProcessor, '__init__')
     @patch.object(GraphProcessor, 'search_node_names')
-    def test_graph_node_names_success(self, mock_graph_processor, mock_graph_processor_1, client,
-                                      offset, limit):
+    def test_graph_node_names_success(self, mock_graph_processor, mock_graph_processor_1, client, offset, limit):
         """
         Parsing unavailable params to get image metadata.
 
@@ -367,8 +356,10 @@ class TestTrainVisual:
         response status code: 200.
         response json: dict, contains search_content, offset, and limit.
         """
+
         def mock_search_node_names(search_content, offset, limit):
             return dict(search_content=search_content, offset=int(offset), limit=int(limit))
+
         mock_graph_processor.side_effect = mock_search_node_names
 
         mock_init = Mock(return_value=None)
@@ -376,15 +367,12 @@ class TestTrainVisual:
 
         test_train_id = "aaa"
         test_search_content = "bbb"
-        params = dict(train_id=test_train_id, search=test_search_content,
-                      offset=offset, limit=limit)
+        params = dict(train_id=test_train_id, search=test_search_content, offset=offset, limit=limit)
         url = get_url(TRAIN_ROUTES['graph_nodes_names'], params)
         response = client.get(url)
         assert response.status_code == 200
         results = response.get_json()
-        assert results == dict(search_content=test_search_content,
-                               offset=int(offset),
-                               limit=int(limit))
+        assert results == dict(search_content=test_search_content, offset=int(offset), limit=int(limit))
 
     def test_graph_search_single_node_with_params_is_wrong(self, client):
         """Test searching graph single node with params is wrong."""
@@ -427,8 +415,10 @@ class TestTrainVisual:
         response status code: 200.
         response json: name.
         """
+
         def mock_search_single_node(name):
             return name
+
         mock_graph_processor.side_effect = mock_search_single_node
 
         mock_init = Mock(return_value=None)

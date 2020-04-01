@@ -22,11 +22,12 @@ import threading
 from collections import namedtuple
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform import events_data
 from mindinsight.datavisual.data_transform.events_data import EventsData, TensorEvent, _Tensor
+
+from ..mock import MockLogger
 
 
 class MockReservoir:
@@ -34,8 +35,11 @@ class MockReservoir:
 
     def __init__(self, size):
         self.size = size
-        self._samples = [_Tensor('wall_time1', 1, 'value1'), _Tensor('wall_time2', 2, 'value2'),
-                         _Tensor('wall_time3', 3, 'value3')]
+        self._samples = [
+            _Tensor('wall_time1', 1, 'value1'),
+            _Tensor('wall_time2', 2, 'value2'),
+            _Tensor('wall_time3', 3, 'value3')
+        ]
 
     def samples(self):
         """Replace the samples function."""
@@ -63,11 +67,12 @@ class TestEventsData:
     def setup_method(self):
         """Mock original logger, init a EventsData object for use."""
         self._ev_data = EventsData()
-        self._ev_data._tags_by_plugin = {'plugin_name1': [f'tag{i}' for i in range(10)],
-                                         'plugin_name2': [f'tag{i}' for i in range(20, 30)]}
+        self._ev_data._tags_by_plugin = {
+            'plugin_name1': [f'tag{i}' for i in range(10)],
+            'plugin_name2': [f'tag{i}' for i in range(20, 30)]
+        }
         self._ev_data._tags_by_plugin_mutex_lock.update({'plugin_name1': threading.Lock()})
-        self._ev_data._reservoir_by_tag = {'tag0': MockReservoir(500),
-                                           'new_tag': MockReservoir(500)}
+        self._ev_data._reservoir_by_tag = {'tag0': MockReservoir(500), 'new_tag': MockReservoir(500)}
         self._ev_data._tags = [f'tag{i}' for i in range(settings.MAX_TAG_SIZE_PER_EVENTS_DATA)]
 
     def get_ev_data(self):
@@ -102,8 +107,7 @@ class TestEventsData:
         """Test add_tensor_event success."""
 
         ev_data = self.get_ev_data()
-        t_event = TensorEvent(wall_time=1, step=4, tag='new_tag', plugin_name='plugin_name1',
-                              value='value1')
+        t_event = TensorEvent(wall_time=1, step=4, tag='new_tag', plugin_name='plugin_name1', value='value1')
 
         ev_data.add_tensor_event(t_event)
         assert 'tag0' not in ev_data._tags
@@ -111,6 +115,5 @@ class TestEventsData:
         assert 'tag0' not in ev_data._tags_by_plugin['plugin_name1']
         assert 'tag0' not in ev_data._reservoir_by_tag
         assert 'new_tag' in ev_data._tags_by_plugin['plugin_name1']
-        assert ev_data._reservoir_by_tag['new_tag'].samples()[-1] == _Tensor(t_event.wall_time,
-                                                                             t_event.step,
+        assert ev_data._reservoir_by_tag['new_tag'].samples()[-1] == _Tensor(t_event.wall_time, t_event.step,
                                                                              t_event.value)

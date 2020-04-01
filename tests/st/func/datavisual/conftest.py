@@ -18,19 +18,21 @@ Description: This file is used for some common util.
 import os
 import shutil
 from unittest.mock import Mock
+
 import pytest
 from flask import Response
 
-from tests.st.func.datavisual import constants
-from tests.st.func.datavisual.utils.log_operations import LogOperations
-from tests.st.func.datavisual.utils.utils import check_loading_done
-from tests.st.func.datavisual.utils import globals as gbl
 from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.data_manager import DataManager
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
 from mindinsight.datavisual.utils import tools
+
+from ....utils.log_operations import LogOperations
+from ....utils.tools import check_loading_done
+from . import constants
+from . import globals as gbl
 
 summaries_metadata = None
 mock_data_manager = None
@@ -55,17 +57,21 @@ def init_summary_logs():
             os.mkdir(summary_base_dir, mode=mode)
         global summaries_metadata, mock_data_manager
         log_operations = LogOperations()
-        summaries_metadata = log_operations.create_summary_logs(summary_base_dir, constants.SUMMARY_DIR_NUM_FIRST)
+        summaries_metadata = log_operations.create_summary_logs(summary_base_dir, constants.SUMMARY_DIR_NUM_FIRST,
+                                                                constants.SUMMARY_DIR_PREFIX)
         mock_data_manager = DataManager([DataLoaderGenerator(summary_base_dir)])
         mock_data_manager.start_load_data(reload_interval=0)
         check_loading_done(mock_data_manager)
 
-        summaries_metadata.update(log_operations.create_summary_logs(
-            summary_base_dir, constants.SUMMARY_DIR_NUM_SECOND, constants.SUMMARY_DIR_NUM_FIRST))
-        summaries_metadata.update(log_operations.create_multiple_logs(
-            summary_base_dir, constants.MULTIPLE_DIR_NAME, constants.MULTIPLE_LOG_NUM))
-        summaries_metadata.update(log_operations.create_reservoir_log(
-            summary_base_dir, constants.RESERVOIR_DIR_NAME, constants.RESERVOIR_STEP_NUM))
+        summaries_metadata.update(
+            log_operations.create_summary_logs(summary_base_dir, constants.SUMMARY_DIR_NUM_SECOND,
+                                               constants.SUMMARY_DIR_NUM_FIRST))
+        summaries_metadata.update(
+            log_operations.create_multiple_logs(summary_base_dir, constants.MULTIPLE_DIR_NAME,
+                                                constants.MULTIPLE_LOG_NUM))
+        summaries_metadata.update(
+            log_operations.create_reservoir_log(summary_base_dir, constants.RESERVOIR_DIR_NAME,
+                                                constants.RESERVOIR_STEP_NUM))
         mock_data_manager.start_load_data(reload_interval=0)
 
         # Sleep 1 sec to make sure the status of mock_data_manager changed to LOADING.
@@ -73,7 +79,7 @@ def init_summary_logs():
 
         # Maximum number of loads is `MAX_DATA_LOADER_SIZE`.
         for i in range(len(summaries_metadata) - MAX_DATA_LOADER_SIZE):
-            summaries_metadata.pop("./%s%d" % (constants.SUMMARY_PREFIX, i))
+            summaries_metadata.pop("./%s%d" % (constants.SUMMARY_DIR_PREFIX, i))
 
         yield
     finally:

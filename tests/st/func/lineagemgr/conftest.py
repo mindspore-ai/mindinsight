@@ -21,7 +21,8 @@ import tempfile
 
 import pytest
 
-from .collection.model import mindspore
+from ....utils import mindspore
+from ....utils.mindspore.dataset.engine.serializer_deserializer import SERIALIZED_PIPELINE
 
 sys.modules['mindspore'] = mindspore
 
@@ -32,52 +33,7 @@ SUMMARY_DIR_3 = os.path.join(BASE_SUMMARY_DIR, 'except_run')
 
 COLLECTION_MODULE = 'TestModelLineage'
 API_MODULE = 'TestModelApi'
-DATASET_GRAPH = {
-    'op_type': 'BatchDataset',
-    'op_module': 'minddata.dataengine.datasets',
-    'num_parallel_workers': None,
-    'drop_remainder': True,
-    'batch_size': 10,
-    'children': [
-        {
-            'op_type': 'MapDataset',
-            'op_module': 'minddata.dataengine.datasets',
-            'num_parallel_workers': None,
-            'input_columns': [
-                'label'
-            ],
-            'output_columns': [
-                None
-            ],
-            'operations': [
-                {
-                    'tensor_op_module': 'minddata.transforms.c_transforms',
-                    'tensor_op_name': 'OneHot',
-                    'num_classes': 10
-                }
-            ],
-            'children': [
-                {
-                    'op_type': 'MnistDataset',
-                    'shard_id': None,
-                    'num_shards': None,
-                    'op_module': 'minddata.dataengine.datasets',
-                    'dataset_dir': '/home/anthony/MindData/tests/dataset/data/testMnistData',
-                    'num_parallel_workers': None,
-                    'shuffle': None,
-                    'num_samples': 100,
-                    'sampler': {
-                        'sampler_module': 'minddata.dataengine.samplers',
-                        'sampler_name': 'RandomSampler',
-                        'replacement': True,
-                        'num_samples': 100
-                    },
-                    'children': []
-                }
-            ]
-        }
-    ]
-}
+DATASET_GRAPH = SERIALIZED_PIPELINE
 
 def get_module_name(nodeid):
     """Get the module name from nodeid."""

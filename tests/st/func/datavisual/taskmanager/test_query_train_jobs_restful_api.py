@@ -20,8 +20,8 @@ Usage:
 """
 import pytest
 
-from tests.st.func.datavisual.constants import SUMMARY_DIR_NUM
-from tests.st.func.datavisual.utils.utils import get_url
+from ..constants import SUMMARY_DIR_NUM
+from .....utils.tools import get_url
 
 BASE_URL = '/v1/mindinsight/datavisual/train-jobs'
 

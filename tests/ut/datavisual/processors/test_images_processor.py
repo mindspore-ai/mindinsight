@@ -22,9 +22,6 @@ import tempfile
 from unittest.mock import Mock
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
-from tests.ut.datavisual.utils.log_operations import LogOperations
-from tests.ut.datavisual.utils.utils import check_loading_done, delete_files_or_dirs
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.data_transform import data_manager
@@ -32,6 +29,10 @@ from mindinsight.datavisual.data_transform.loader_generators.data_loader_generat
 from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
+
+from ....utils.log_operations import LogOperations
+from ....utils.tools import check_loading_done, delete_files_or_dirs, get_image_tensor_from_bytes
+from ..mock import MockLogger
 
 
 class TestImagesProcessor:
@@ -73,12 +74,11 @@ class TestImagesProcessor:
         """
         summary_base_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp(dir=summary_base_dir)
-
         self._train_id = log_dir.replace(summary_base_dir, ".")
 
-        self._temp_path, self._images_metadata, self._images_values = LogOperations.generate_log(
+        log_operation = LogOperations()
+        self._temp_path, self._images_metadata, self._images_values = log_operation.generate_log(
             PluginNameEnum.IMAGE.value, log_dir, dict(steps=steps_list, tag=self._tag_name))
-
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(summary_base_dir)])
@@ -102,7 +102,8 @@ class TestImagesProcessor:
         """Load image record."""
         self._init_data_manager(self._cross_steps_list)
 
-    def test_get_metadata_list_with_not_exist_id(self, load_image_record):
+    @pytest.mark.usefixtures('load_image_record')
+    def test_get_metadata_list_with_not_exist_id(self):
         """Test getting metadata list with not exist id."""
         test_train_id = 'not_exist_id'
         image_processor = ImageProcessor(self._mock_data_manager)
@@ -112,7 +113,8 @@ class TestImagesProcessor:
         assert exc_info.value.error_code == '50540002'
         assert "Can not find any data in loader pool about the train job." in exc_info.value.message
 
-    def test_get_metadata_list_with_not_exist_tag(self, load_image_record):
+    @pytest.mark.usefixtures('load_image_record')
+    def test_get_metadata_list_with_not_exist_tag(self):
         """Test get metadata list with not exist tag."""
         test_tag_name = 'not_exist_tag_name'
 
@@ -124,7 +126,8 @@ class TestImagesProcessor:
         assert exc_info.value.error_code == '50540002'
         assert "Can not find any data in this train job by given tag." in exc_info.value.message
 
-    def test_get_metadata_list_success(self, load_image_record):
+    @pytest.mark.usefixtures('load_image_record')
+    def test_get_metadata_list_success(self):
         """Test getting metadata list success."""
         test_tag_name = self._complete_tag_name
 
@@ -133,7 +136,8 @@ class TestImagesProcessor:
 
         assert results == self._images_metadata
 
-    def test_get_single_image_with_not_exist_id(self, load_image_record):
+    @pytest.mark.usefixtures('load_image_record')
+    def test_get_single_image_with_not_exist_id(self):
         """Test getting single image with not exist id."""
         test_train_id = 'not_exist_id'
         test_tag_name = self._complete_tag_name
@@ -146,7 +150,8 @@ class TestImagesProcessor:
         assert exc_info.value.error_code == '50540002'
         assert "Can not find any data in loader pool about the train job." in exc_info.value.message
 
-    def test_get_single_image_with_not_exist_tag(self, load_image_record):
+    @pytest.mark.usefixtures('load_image_record')
+    def test_get_single_image_with_not_exist_tag(self):
         """Test getting single image with not exist tag."""
         test_tag_name = 'not_exist_tag_name'
         test_step = self._steps_list[0]
@@ -159,7 +164,8 @@ class TestImagesProcessor:
         assert exc_info.value.error_code == '50540002'
         assert "Can not find any data in this train job by given tag." in exc_info.value.message
 
-    def test_get_single_image_with_not_exist_step(self, load_image_record):
+    @pytest.mark.usefixtures('load_image_record')
+    def test_get_single_image_with_not_exist_step(self):
         """Test getting single image with not exist step."""
         test_tag_name = self._complete_tag_name
         test_step = 10000
@@ -172,24 +178,22 @@ class TestImagesProcessor:
         assert exc_info.value.error_code == '50540002'
         assert "Can not find the step with given train job id and tag." in exc_info.value.message
 
-    def test_get_single_image_success(self, load_image_record):
+    @pytest.mark.usefixtures('load_image_record')
+    def test_get_single_image_success(self):
         """Test getting single image successfully."""
         test_tag_name = self._complete_tag_name
         test_step_index = 0
         test_step = self._steps_list[test_step_index]
 
-        image_processor = ImageProcessor(self._mock_data_manager)
-
-        results = image_processor.get_single_image(self._train_id, test_tag_name, test_step)
-
         expected_image_tensor = self._images_values.get(test_step)
-
-        image_generator = LogOperations.get_log_generator(PluginNameEnum.IMAGE.value)
-        recv_image_tensor = image_generator.get_image_tensor_from_bytes(results)
+        image_processor = ImageProcessor(self._mock_data_manager)
+        results = image_processor.get_single_image(self._train_id, test_tag_name, test_step)
+        recv_image_tensor = get_image_tensor_from_bytes(results)
 
         assert recv_image_tensor.any() == expected_image_tensor.any()
 
-    def test_reservoir_add_sample(self, load_more_than_limit_image_record):
+    @pytest.mark.usefixtures('load_more_than_limit_image_record')
+    def test_reservoir_add_sample(self):
         """Test adding sample in reservoir."""
         test_tag_name = self._complete_tag_name
 
@@ -206,7 +210,8 @@ class TestImagesProcessor:
                 cnt += 1
         assert len(self._more_steps_list) - cnt == 10
 
-    def test_reservoir_remove_sample(self, load_reservoir_remove_sample_image_record):
+    @pytest.mark.usefixtures('load_reservoir_remove_sample_image_record')
+    def test_reservoir_remove_sample(self):
         """
         Test removing sample in reservoir.
 

@@ -39,7 +39,7 @@ class MSGraph(Graph):
         self._build_leaf_nodes(graph_proto)
         self._build_polymeric_nodes()
         self._build_name_scope_nodes()
-        self._calc_polymeric_input_output()
+        self._update_polymeric_input_output()
         logger.info("Build graph end, normal node count: %s, polymeric node "
                     "count: %s.", len(self._normal_nodes), len(self._polymeric_nodes))
 
@@ -90,9 +90,9 @@ class MSGraph(Graph):
             node_name = leaf_node_id_map_name[node_def.name]
             node = self._leaf_nodes[node_name]
             for input_def in node_def.input:
-                edge_type = EdgeTypeEnum.data
+                edge_type = EdgeTypeEnum.DATA.value
                 if input_def.type == "CONTROL_EDGE":
-                    edge_type = EdgeTypeEnum.control
+                    edge_type = EdgeTypeEnum.CONTROL.value
 
                 if const_nodes_map.get(input_def.name):
                     const_node = copy.deepcopy(const_nodes_map[input_def.name])
@@ -218,7 +218,7 @@ class MSGraph(Graph):
         node = Node(name=const.key, node_id=const_node_id)
         node.node_type = NodeTypeEnum.CONST.value
         node.update_attr({const.key: str(const.value)})
-        if const.value.dtype == DataTypeEnum.DT_TENSOR:
+        if const.value.dtype == DataTypeEnum.DT_TENSOR.value:
             shape = []
             for dim in const.value.tensor_val.dims:
                 shape.append(dim)

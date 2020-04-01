@@ -19,15 +19,16 @@ Usage:
     pytest tests/ut/datavisual
 """
 import os
-import tempfile
 import shutil
+import tempfile
 from unittest.mock import Mock
 
 import pytest
-from tests.ut.datavisual.mock import MockLogger
 
 from mindinsight.datavisual.data_transform import ms_data_loader
 from mindinsight.datavisual.data_transform.ms_data_loader import MSDataLoader
+
+from ..mock import MockLogger
 
 # bytes of 3 scalar events
 SCALAR_RECORD = (b'\x1e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\t\x96\xe1\xeb)>}\xd7A\x10\x01*'
@@ -74,7 +75,8 @@ class TestMsDataLoader:
                                                 "we will reload all files in path {}.".format(summary_dir)
         shutil.rmtree(summary_dir)
 
-    def test_load_success_with_crc_pass(self, crc_pass):
+    @pytest.mark.usefixtures('crc_pass')
+    def test_load_success_with_crc_pass(self):
         """Test load success."""
         summary_dir = tempfile.mkdtemp()
         file1 = os.path.join(summary_dir, 'summary.01')
@@ -88,7 +90,8 @@ class TestMsDataLoader:
         tensors = ms_loader.get_events_data().tensors(tag[0])
         assert len(tensors) == 3
 
-    def test_load_with_crc_fail(self, crc_fail):
+    @pytest.mark.usefixtures('crc_fail')
+    def test_load_with_crc_fail(self):
         """Test when crc_fail and will not go to func _event_parse."""
         summary_dir = tempfile.mkdtemp()
         file2 = os.path.join(summary_dir, 'summary.02')
@@ -100,8 +103,10 @@ class TestMsDataLoader:
 
     def test_filter_event_files(self):
         """Test filter_event_files function ok."""
-        file_list = ['abc.summary', '123sumary0009abc', 'summary1234', 'aaasummary.5678',
-                     'summary.0012', 'hellosummary.98786', 'mysummary.123abce', 'summay.4567']
+        file_list = [
+            'abc.summary', '123sumary0009abc', 'summary1234', 'aaasummary.5678', 'summary.0012', 'hellosummary.98786',
+            'mysummary.123abce', 'summay.4567'
+        ]
         summary_dir = tempfile.mkdtemp()
         for file in file_list:
             with open(os.path.join(summary_dir, file), 'w'):
@@ -112,6 +117,7 @@ class TestMsDataLoader:
         assert sorted(res) == expected
 
         shutil.rmtree(summary_dir)
+
 
 def write_file(filename, record):
     """Write bytes strings to file."""
