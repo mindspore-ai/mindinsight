@@ -18,12 +18,12 @@ from unittest import TestCase, mock
 from google.protobuf.json_format import ParseDict
 
 import mindinsight.datavisual.proto_files.mindinsight_summary_pb2 as summary_pb2
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageQuerierParamException, LineageParamTypeError, \
-    LineageSummaryAnalyzeException, LineageSummaryParseException
+from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageParamTypeError, LineageQuerierParamException,
+                                                                 LineageSummaryAnalyzeException,
+                                                                 LineageSummaryParseException)
 from mindinsight.lineagemgr.querier.querier import Querier
-from mindinsight.lineagemgr.summary.lineage_summary_analyzer import \
-    LineageInfo
+from mindinsight.lineagemgr.summary.lineage_summary_analyzer import LineageInfo
+
 from . import event_data
 
 

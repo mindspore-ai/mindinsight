@@ -16,9 +16,10 @@
 import time
 
 import numpy as np
-from .log_generator import LogGenerator
 
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
+
+from .log_generator import LogGenerator
 
 
 class ScalarsLogGenerator(LogGenerator):

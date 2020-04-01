@@ -19,11 +19,11 @@ import json
 import os
 import time
 
+from mindinsight.datavisual.common.enums import PluginNameEnum
+
 from .log_generators.graph_log_generator import GraphLogGenerator
 from .log_generators.images_log_generator import ImagesLogGenerator
 from .log_generators.scalars_log_generator import ScalarsLogGenerator
-
-from mindinsight.datavisual.common.enums import PluginNameEnum
 
 log_generators = {
     PluginNameEnum.GRAPH.value: GraphLogGenerator(),
@@ -34,6 +34,7 @@ log_generators = {
 
 class LogOperations:
     """Log Operations."""
+
     def __init__(self):
         self._step_num = 3
         self._tag_num = 2

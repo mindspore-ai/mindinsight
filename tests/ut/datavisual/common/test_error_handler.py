@@ -19,14 +19,15 @@ Usage:
     pytest tests/ut/datavisual
 """
 from unittest.mock import patch
-from werkzeug.exceptions import MethodNotAllowed, NotFound
 
-from ...backend.datavisual.conftest import TRAIN_ROUTES
-from ..mock import MockLogger
-from ....utils.tools import get_url
+from werkzeug.exceptions import MethodNotAllowed, NotFound
 
 from mindinsight.datavisual.processors import scalars_processor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
+
+from ....utils.tools import get_url
+from ...backend.datavisual.conftest import TRAIN_ROUTES
+from ..mock import MockLogger
 
 
 class TestErrorHandler:

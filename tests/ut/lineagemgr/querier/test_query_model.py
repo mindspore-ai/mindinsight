@@ -15,11 +15,12 @@
 """Test the query_model module."""
 from unittest import TestCase
 
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageEventNotExistException, LineageEventFieldNotExistException
+from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageEventFieldNotExistException,
+                                                                 LineageEventNotExistException)
 from mindinsight.lineagemgr.querier.query_model import LineageObj
+
 from . import event_data
-from .test_querier import create_lineage_info, create_filtration_result
+from .test_querier import create_filtration_result, create_lineage_info
 
 
 class TestLineageObj(TestCase):

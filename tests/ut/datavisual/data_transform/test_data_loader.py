@@ -23,11 +23,12 @@ import shutil
 import tempfile
 
 import pytest
-from ..mock import MockLogger
 
 from mindinsight.datavisual.common.exceptions import SummaryLogPathInvalid
 from mindinsight.datavisual.data_transform import data_loader
 from mindinsight.datavisual.data_transform.data_loader import DataLoader
+
+from ..mock import MockLogger
 
 
 class TestDataLoader:
@@ -37,13 +38,13 @@ class TestDataLoader:
     def setup_class(cls):
         data_loader.logger = MockLogger
 
-    def setup_method(self, method):
+    def setup_method(self):
         self._summary_dir = tempfile.mkdtemp()
         if os.path.exists(self._summary_dir):
             shutil.rmtree(self._summary_dir)
         os.mkdir(self._summary_dir)
 
-    def teardown_method(self, method):
+    def teardown_method(self):
         if os.path.exists(self._summary_dir):
             shutil.rmtree(self._summary_dir)
 

@@ -20,10 +20,10 @@ Usage:
 """
 import pytest
 
-from .. import globals as gbl
-from .....utils.tools import get_url, get_image_tensor_from_bytes
-
 from mindinsight.datavisual.common.enums import PluginNameEnum
+
+from .....utils.tools import get_image_tensor_from_bytes, get_url
+from .. import globals as gbl
 
 TRAIN_JOB_URL = '/v1/mindinsight/datavisual/train-jobs'
 PLUGIN_URL = '/v1/mindinsight/datavisual/plugins'

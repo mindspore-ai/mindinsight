@@ -18,15 +18,11 @@ Function:
 Usage:
     pytest tests/ut/datavisual
 """
-import os
 import tempfile
 import time
 from unittest.mock import Mock
 
 import pytest
-from ..mock import MockLogger
-from ....utils.log_operations import LogOperations
-from ....utils.tools import check_loading_done, delete_files_or_dirs
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.data_transform import data_manager
@@ -34,6 +30,10 @@ from mindinsight.datavisual.data_transform.loader_generators.data_loader_generat
 from mindinsight.datavisual.processors.train_task_manager import TrainTaskManager
 from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
+
+from ....utils.log_operations import LogOperations
+from ....utils.tools import check_loading_done, delete_files_or_dirs
+from ..mock import MockLogger
 
 
 class TestTrainTaskManager:
@@ -83,10 +83,7 @@ class TestTrainTaskManager:
             train_id = dir_path.replace(self._root_dir, ".")
 
             # Pass timestamp to write to the same file.
-            log_settings = dict(
-                steps=self._steps_list,
-                tag=tmp_tag_name,
-                time=time.time())
+            log_settings = dict(steps=self._steps_list, tag=tmp_tag_name, time=time.time())
             if i % 3 != 0:
                 log_operation.generate_log(PluginNameEnum.IMAGE.value, dir_path, log_settings)
                 self._plugins_id_map['image'].append(train_id)
@@ -106,7 +103,8 @@ class TestTrainTaskManager:
 
         check_loading_done(self._mock_data_manager, time_limit=30)
 
-    def test_get_single_train_task_with_not_exists_train_id(self, load_data):
+    @pytest.mark.usefixtures('load_data')
+    def test_get_single_train_task_with_not_exists_train_id(self):
         """Test getting single train task with not exists train_id."""
         train_task_manager = TrainTaskManager(self._mock_data_manager)
         for plugin_name in PluginNameEnum.list_members():
@@ -118,7 +116,8 @@ class TestTrainTaskManager:
                                              "the train job in data manager."
             assert exc_info.value.error_code == '50540002'
 
-    def test_get_single_train_task_with_params(self, load_data):
+    @pytest.mark.usefixtures('load_data')
+    def test_get_single_train_task_with_params(self):
         """Test getting single train task with params."""
         train_task_manager = TrainTaskManager(self._mock_data_manager)
         for plugin_name in PluginNameEnum.list_members():
@@ -132,7 +131,8 @@ class TestTrainTaskManager:
                 else:
                     assert test_train_id not in self._plugins_id_map.get(plugin_name)
 
-    def test_get_plugins_with_train_id(self, load_data):
+    @pytest.mark.usefixtures('load_data')
+    def test_get_plugins_with_train_id(self):
         """Test getting plugins with train id."""
         train_task_manager = TrainTaskManager(self._mock_data_manager)
 

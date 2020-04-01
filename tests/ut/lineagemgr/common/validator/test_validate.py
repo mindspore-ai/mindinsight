@@ -15,12 +15,9 @@
 """Test the validate module."""
 from unittest import TestCase
 
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageParamValueError, LineageParamTypeError
-from mindinsight.lineagemgr.common.validator.model_parameter import \
-    SearchModelConditionParameter
-from mindinsight.lineagemgr.common.validator.validate import \
-    validate_search_model_condition
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, LineageParamValueError
+from mindinsight.lineagemgr.common.validator.model_parameter import SearchModelConditionParameter
+from mindinsight.lineagemgr.common.validator.validate import validate_search_model_condition
 from mindinsight.utils.exceptions import MindInsightException
 
 

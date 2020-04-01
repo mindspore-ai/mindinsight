@@ -20,9 +20,7 @@ from unittest import TestCase, mock
 from flask import Response
 
 from mindinsight.backend.application import APP
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageQuerySummaryDataError
-
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageQuerySummaryDataError
 
 LINEAGE_FILTRATION_BASE = {
     'accuracy': None,
