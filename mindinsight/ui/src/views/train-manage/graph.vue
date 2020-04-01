@@ -70,7 +70,7 @@ limitations under the License.
               <el-select @change="fileChange"
                          @visible-change="getSelectList"
                          :popper-append-to-body="false"
-                         class='search file-search'
+                         class='search'
                          v-model="fileSearchBox.value">
                 <el-option v-for="item in fileSearchBox.suggestions"
                            :key="item.value"
@@ -82,6 +82,7 @@ limitations under the License.
               <!-- Search box -->
               <Autocomplete class='search'
                             v-model="searchBox.value"
+                            :disabled="!fileSearchBox.value"
                             :fetch-suggestions="searchNodesNames"
                             :placeholder="$t('graph.inputNodeName')"
                             :popper-append-to-body="false"
@@ -373,6 +374,7 @@ export default {
       totalMemory: 16777216 * 2, // Memory size of the graph plug-in
       graphviz: null,
       graphvizTemp: null,
+      initOver: false,
     };
   },
   computed: {},
@@ -385,7 +387,7 @@ export default {
       return;
     }
     this.trainJobID = this.$route.query.train_id;
-    this.getDatavisualPlugins(this.queryGraphData);
+    this.getDatavisualPlugins();
     window.onresize = () => {
       if (this.graphDom.el) {
         this.initGraphRectData();
@@ -813,14 +815,14 @@ export default {
     },
     /**
      * To obtain datavisual plugins
-     * @param {Function} callback Call after get data visual plugins.
      */
-    getDatavisualPlugins(callback) {
+    getDatavisualPlugins() {
       const params = {
         train_id: this.trainJobID,
       };
       RequestService.getDatavisualPlugins(params)
           .then((res) => {
+            this.fileSearchBox.suggestions = [];
             if (
               !res ||
             !res.data ||
@@ -828,21 +830,27 @@ export default {
             !res.data.plugins.graph ||
             !res.data.plugins.graph.length
             ) {
+              this.initOver = true;
               return;
             }
-            this.fileSearchBox.suggestions = [];
             const tags = res.data.plugins.graph;
+            let hasFileSearchValue = false;
             tags.forEach((k) => {
               this.fileSearchBox.suggestions.push({
                 value: k,
               });
+              hasFileSearchValue = k === this.fileSearchBox.value || hasFileSearchValue;
             });
-            this.fileSearchBox.value = this.fileSearchBox.value || tags[0];
-            if (callback) {
-              callback();
+            if (!this.initOver) {
+              this.initOver = true;
+              this.fileSearchBox.value = tags.length ? tags[0] : '';
+              this.queryGraphData();
+            } else if(!hasFileSearchValue) {
+              this.fileSearchBox.value = '';
             }
           })
           .catch(() => {
+            this.initOver = true;
             this.loading.show = false;
           });
     },
