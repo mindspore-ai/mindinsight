@@ -19,7 +19,7 @@ SCRIPT_BASEDIR=$(
 )
 
 THIRD_PARTY_DIR=$(realpath "${SCRIPT_BASEDIR}/../../third_party")
-SECUREC_SOURCE_DIR="${THIRD_PARTY_DIR}/securec"
+BUILDDIR=$(dirname "$SCRIPT_BASEDIR")
 
 build_securec() {
     CMAKE=$(command -v cmake)
@@ -27,14 +27,19 @@ build_securec() {
         echo "Could not find cmake command"
         exit 1
     fi
-
-    cd "${SECUREC_SOURCE_DIR}" || exit
-    rm -rf build
-    mkdir build
-    cd build || exit
+    cd "$BUILDDIR" || exit
     ${CMAKE} ..
     make
-    cd - >/dev/null 2>&1 || exit
+}
+
+clean_securec() {
+    cd "$BUILDDIR" || exit
+    for file in *; do
+        if [ "$file" == build.sh ] || [ "$file" == scripts ] || [ "$file" == lib ]; then
+            continue
+        fi
+        rm -rf "$file"
+    done
 }
 
 build_crc32() {
@@ -72,9 +77,9 @@ build_crc32() {
     PYTHON_INCLUDE=$(echo "${PYBIND11_INCLUDES}" | awk '{print $1}' | sed "s/^-I//g")
     PYTHON_HEADERS=$(echo "${PYBIND11_INCLUDES}" | awk '{print $2}' | sed "s/^-I//g")
     ${CPP} -O2 -O3 -shared -std=c++11 -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 \
-      -Wno-maybe-uninitialized -Wno-unused-parameter -Wall -Wl,-z,relro,-z,now,-z,noexecstack \
-      -I"${THIRD_PARTY_DIR}" -I"${DATAVISUAL_DIR}/utils" -I"${PYTHON_INCLUDE}" -I"${PYTHON_HEADERS}" \
-      -o "${CRC32_SO_FILE}" crc32.cc "${SECUREC_SOURCE_DIR}/build/src/libsecurec.a"
+        -Wno-maybe-uninitialized -Wno-unused-parameter -Wall -Wl,-z,relro,-z,now,-z,noexecstack \
+        -I"${THIRD_PARTY_DIR}" -I"${DATAVISUAL_DIR}/utils" -I"${PYTHON_INCLUDE}" -I"${PYTHON_HEADERS}" \
+        -o "${CRC32_SO_FILE}" crc32.cc "$BUILDDIR/libsecurec.a"
 
     if [ ! -f "${CRC32_SO_FILE}" ]; then
         echo "crc so file does not exist, build failed"
@@ -88,3 +93,5 @@ build_securec
 
 cd "${SCRIPT_BASEDIR}" || exit
 build_crc32
+
+clean_securec

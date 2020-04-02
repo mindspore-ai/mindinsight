@@ -34,7 +34,10 @@ rename_wheel() {
 }
 
 build_wheel() {
-    PROJECT_BASEDIR=$(cd "$(dirname "$SCRIPT_BASEDIR")" || exit; pwd)
+    PROJECT_BASEDIR=$(
+        cd "$(dirname "$SCRIPT_BASEDIR")" || exit
+        pwd
+    )
     cd "${PROJECT_BASEDIR}" || exit
 
     if [ $# -gt 0 ]; then

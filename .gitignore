@@ -80,10 +80,9 @@ TESTS*.xml
 
 package-lock.json
 
-build/lib
-build/bdist.*
+build/*
+!build/scripts
+!build/build.sh
 
 output/
 !output/README.md
-
-third_party/securec/build
