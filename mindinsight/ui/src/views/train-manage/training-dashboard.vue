@@ -24,12 +24,12 @@ limitations under the License.
     </div>
     <div class="cl-dashboard-center">
       <div class="cl-dashboard-con-up"
-           :class="curPageArr.length ? '' : 'no-data-hover'"
+           :class="curPageArr.length && !wrongPlugin ? '' : 'no-data-hover'"
            @click="viewMoreScalars">
         <div class="cl-dashboard-title"> {{$t("trainingDashboard.trainingScalar")}}</div>
         <div class="cl-module">
           <div class="cl-scalar-tagName"
-               v-if="curPageArr.length">
+               v-if="curPageArr.length && !wrongPlugin">
             <div v-for="(sampleItem,index) in curPageArr"
                  :key="index"
                  :class="['tagNameLeft',index==1? 'tagNameRight':'']">
@@ -37,10 +37,10 @@ limitations under the License.
             </div>
           </div>
           <div id="module-chart"
-               v-if="curPageArr.length"
+               v-if="curPageArr.length && !wrongPlugin"
                key="chart-data"></div>
           <div class="no-data-img"
-               v-if="!curPageArr.length"
+               v-if="!curPageArr.length || wrongPlugin"
                key="no-chart-data">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
@@ -51,7 +51,7 @@ limitations under the License.
         </div>
       </div>
       <div class="cl-dashboard-con-up"
-           :class="firstFloorNodes.length ? '' : 'no-data-hover'"
+           :class="firstFloorNodes.length && !wrongPlugin ? '' : 'no-data-hover'"
            @click="jumpToGraph">
         <div class="cl-dashboard-title">
           {{$t("trainingDashboard.calculationChart")}}
@@ -59,9 +59,9 @@ limitations under the License.
         <div class="cl-module">
           <div id="graph"
                class="graph"
-               v-show="firstFloorNodes.length"></div>
+               v-show="firstFloorNodes.length && !wrongPlugin"></div>
           <div class="no-data-img"
-               v-show="!firstFloorNodes.length">
+               v-show="!firstFloorNodes.length || wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
             <p class='no-data-text'>
@@ -71,16 +71,16 @@ limitations under the License.
         </div>
       </div>
       <div class="cl-dashboard-con-up"
-           :class="showDatasetGraph ? '' : 'no-data-hover'"
+           :class="showDatasetGraph && !wrongPlugin ? '' : 'no-data-hover'"
            @click="jumpToDataMap">
         <div class="cl-dashboard-title"> {{$t("trainingDashboard.dataMap")}}</div>
         <div class="cl-module">
           <div id="dataMapGraph"
                class="graph"
-               v-show="showDatasetGraph"></div>
+               v-show="showDatasetGraph && !wrongPlugin"></div>
           <div class="no-data-img"
                key="no-chart-data"
-               v-show="!showDatasetGraph">
+               v-show="!showDatasetGraph || wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
             <p class='no-data-text'>
@@ -90,7 +90,7 @@ limitations under the License.
         </div>
       </div>
       <div class="cl-dashboard-con-up"
-           :class="originImageDataArr.length ? '' : 'no-data-hover'"
+           :class="originImageDataArr.length && !wrongPlugin ? '' : 'no-data-hover'"
            @click="linkToImage($event)">
         <div class="cl-dashboard-title">
           <div class="cl-dashboard-title-left"> {{$t("trainingDashboard.samplingData")}}</div>
@@ -104,15 +104,15 @@ limitations under the License.
         </div>
         <div class="cl-module">
           <div class="image-container"
-               :class="originImageDataArr.length ? '' : 'no-data-img'">
+               :class="originImageDataArr.length && !wrongPlugin ? '' : 'no-data-img'">
             <img class="sample-img select-disable"
                  :src="curImageShowSample.curImgUrl"
-                 v-if="originImageDataArr.length">
+                 v-if="originImageDataArr.length && !wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt=""
-                 v-if=" !originImageDataArr.length">
+                 v-if="!originImageDataArr.length || wrongPlugin">
             <p class='no-data-text'
-               v-if=" !originImageDataArr.length">
+               v-if=" !originImageDataArr.length || wrongPlugin">
               {{$t("public.noData")}}
             </p>
           </div>
@@ -157,6 +157,7 @@ export default {
       showDatasetGraph: false,
       datasetGraphviz: {},
       reloadStopTime: 1000,
+      wrongPlugin: false,
     };
   },
   computed: {
@@ -268,20 +269,30 @@ export default {
         train_id: this.trainingJobId,
         manual_update: fromInit || false,
       };
-      RequestService.getDatavisualPlugins(params).then((res) => {
-        if (!res || !res.data || !res.data.plugins) {
-          return;
-        }
-        const data = res.data.plugins;
-        const imageTags = data.image || [];
-        const scalarTags = data.scalar || [];
-        const graphIds = data.graph || [];
-        this.dealImageData(imageTags);
-        this.getScalarList(scalarTags);
-        if (!this.firstFloorNodes.length && graphIds.length) {
-          this.queryGraphData();
-        }
-      });
+      RequestService.getDatavisualPlugins(params)
+          .then((res) => {
+            this.wrongPlugin = false;
+            if (!res || !res.data || !res.data.plugins) {
+              return;
+            }
+            const data = res.data.plugins;
+            const imageTags = data.image || [];
+            const scalarTags = data.scalar || [];
+            const graphIds = data.graph || [];
+            this.dealImageData(imageTags);
+            this.getScalarList(scalarTags);
+            if (!this.firstFloorNodes.length && graphIds.length) {
+              this.queryGraphData();
+            }
+          })
+          .catch((error)=>{
+            if (!error.response || !error.response.data || !error.response.data.error_code) {
+              return;
+            }
+            if (error.response.data.error_code.toString() === '50545005') {
+              this.wrongPlugin = true;
+            }
+          });
     },
 
     /**
@@ -369,7 +380,7 @@ export default {
         plugin_name: 'scalar',
         train_id: this.trainingJobId,
       };
-      RequestService.getSingleTrainJob(params)
+      RequestService.getSingleTrainJob(params, true)
           .then((res) => {
             if (
               !res ||
@@ -598,13 +609,14 @@ export default {
       const tempOption = {
         legend: {
           data: legendData,
+          selectedMode: false,
           icon: 'circle',
           bottom: 0,
         },
         grid: {
           top: 20,
           bottom: 50,
-          left: 60,
+          left: 66,
           right: 60,
         },
         xAxis: [
@@ -1448,7 +1460,6 @@ export default {
       z-index: 999;
       line-height: 22px;
       display: flex;
-      margin-top: 18px;
       font-weight: 600;
       .tagNameLeft {
         text-align: left;
@@ -1533,7 +1544,7 @@ export default {
   // Public Style End
 
   #module-chart {
-    height: calc(100% - 60px);
+    height: calc(100% - 22px);
     canvas {
       cursor: pointer;
     }

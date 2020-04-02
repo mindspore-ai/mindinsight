@@ -564,7 +564,11 @@ export default {
           ajaxArr.push(this.addAjax(params, yIndex));
         });
 
-        Promise.all(ajaxArr)
+        Promise.all(ajaxArr.map(function(promiseItem) {
+          return promiseItem.catch(function(err) {
+            return err;
+          });
+        }))
             .then((res) => {
               if (!res) {
                 return;
@@ -701,7 +705,7 @@ export default {
             formatter(value) {
               const symbol = Math.abs(value);
               if (symbol.toString().length > 6) {
-                return value.toExponential(0);
+                return value.toExponential(4);
               } else if (value >= 1000 || value <= -1000) {
                 return parseFloat((value / 1000).toFixed(2)) + 'k';
               } else if (value > 0) {
@@ -752,8 +756,8 @@ export default {
           show: false,
         },
         grid: {
-          left: 60,
-          right: 60,
+          left: 80,
+          right: 80,
         },
         xAxis: [
           {
@@ -953,7 +957,7 @@ export default {
       }
       const symbol = Math.abs(value);
       if (symbol.toString().length > 6) {
-        return value.toExponential(2);
+        return value.toExponential(4);
       } else if (value > 0) {
         return value;
       } else {

@@ -49,41 +49,21 @@ axios.interceptors.response.use(
       const errorData = i18n.messages[i18n.locale].error;
 
       // error returned by backend
-      if (error.response && error.response.data) {
-        if (error.response.data.error_code) {
-        // error code judgment
-          if (error.response.data.error_code.toString() === '50540002') {
-            if (router.currentRoute.path === '/train-manage/graph') {
-              const errorMsg = i18n.messages[i18n.locale].graph;
-              Vue.prototype.$message.error(errorMsg[error.response.data.error_code]);
-            } else if (error.config.headers.ignoreError
-              || router.currentRoute.path === '/train-manage/training-dashboard') {
-              return Promise.reject(error);
-            } else if (router.currentRoute.path === '/model-traceback') {
-              const errorMsg = i18n.messages[i18n.locale].modelTraceback;
-              Vue.prototype.$message.error(errorMsg[error.response.data.error_code]);
-            } else if (errorData[error.response.data.error_code]) {
-              Vue.prototype.$message.error(errorData[error.response.data.error_code]);
-            }
-          } else if (error.response.data.error_code.toString() === '50545006') {
+      if (error.response && error.response.data && error.response.data.error_code) {
+        if (error.response.data.error_code.toString() === '50540005' ||
+        error.response.data.error_code.toString() === '50545006') {
+          if (error.config.headers.ignoreError ||
+            router.currentRoute.path === '/train-manage/training-dashboard') {
             return Promise.reject(error);
-          } else if (error.response.data.error_code.toString() === '50542216' &&
-          router.currentRoute.path === '/train-manage/training-dashboard'
-          ) {
-            return Promise.reject(error);
-          } else if (errorData[error.response.data.error_code]) {
-            Vue.prototype.$message.error(errorData[error.response.data.error_code]);
           }
-          // return error data
+        } else if ( error.response.data.error_code.toString() === '50542216' &&
+        router.currentRoute.path === '/train-manage/training-dashboard') {
           return Promise.reject(error);
-        } else {
-          if (error.response.data.status) {
-            if (errorData[error.response.data.status]) {
-              Vue.prototype.$message.error(errorData[error.response.data.status]);
-            }
-            return Promise.reject(error);
-          }
         }
+        if (errorData[error.response.data.error_code]) {
+          Vue.prototype.$message.error(errorData[error.response.data.error_code]);
+        }
+        return Promise.reject(error);
       } else {
       // error returned by browser
         if (error.code === 'ECONNABORTED' && /^timeout/.test(error.message)) {
@@ -98,7 +78,9 @@ axios.interceptors.response.use(
           return false;
         } else {
         // show network error
-          Vue.prototype.$message.error(i18n.messages[i18n.locale].public.netWorkError);
+          Vue.prototype.$message.error(
+              i18n.messages[i18n.locale].public.netWorkError,
+          );
           return Promise.reject(error);
         }
       }
