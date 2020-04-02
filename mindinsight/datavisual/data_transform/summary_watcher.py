@@ -21,6 +21,8 @@ from pathlib import Path
 
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common.validation import Validation
+from mindinsight.datavisual.utils.tools import Counter
+from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import FileSystemPermissionError
 
 
@@ -42,6 +44,7 @@ class SummaryWatcher:
 
         Args:
             summary_base_dir (str): Path of summary base directory.
+            overall (bool): Limit the total num of scanning if overall is False.
 
         Returns:
             list, list of summary directory info, each of which including the following attributes.
@@ -67,7 +70,11 @@ class SummaryWatcher:
             return []
 
         summary_dict = {}
-        scan_count = 0
+
+        if not overall:
+            counter = Counter(max_count=self.MAX_SCAN_COUNT)
+        else:
+            counter = Counter()
 
         try:
             entries = os.scandir(summary_base_dir)
@@ -78,6 +85,12 @@ class SummaryWatcher:
         for entry in entries:
             if len(summary_dict) == self.MAX_SUMMARY_DIR_COUNT:
                 break
+            try:
+                counter.add()
+            except ParamValueError:
+                logger.info('Stop further scanning due to overall is False and '
+                            'number of scanned files exceeds upper limit.')
+                break
             relative_path = os.path.join('.', '')
             if entry.is_symlink():
                 pass
@@ -85,30 +98,12 @@ class SummaryWatcher:
                 self._update_summary_dict(summary_dict, relative_path, entry)
             elif entry.is_dir():
                 full_path = os.path.realpath(os.path.join(summary_base_dir, entry.name))
-
                 try:
                     subdir_entries = os.scandir(full_path)
                 except PermissionError:
                     logger.warning('Path of %s under summary base directory is not accessible.', entry.name)
-                else:
-                    for subdir_entry in subdir_entries:
-                        if len(summary_dict) == self.MAX_SUMMARY_DIR_COUNT:
-                            break
-                        subdir_relative_path = os.path.join('.', entry.name)
-                        if subdir_entry.is_symlink():
-                            pass
-                        elif subdir_entry.is_file():
-                            self._update_summary_dict(summary_dict, subdir_relative_path, subdir_entry)
-
-                        scan_count += 1
-                        if not overall and scan_count >= self.MAX_SCAN_COUNT:
-                            break
-
-            scan_count += 1
-            if not overall and scan_count >= self.MAX_SCAN_COUNT:
-                logger.info('Stop further scanning due to overall is False and '
-                            'number of scanned files exceeds upper limit.')
-                break
+                    continue
+                self._scan_subdir_entries(summary_dict, subdir_entries, entry.name, counter)
 
         directories = [{
             'relative_path': key,
@@ -120,6 +115,32 @@ class SummaryWatcher:
         directories.sort(key=lambda x: (-int(x['update_time'].timestamp()), x['relative_path']))
 
         return directories
+
+    def _scan_subdir_entries(self, summary_dict, subdir_entries, entry_name, counter):
+        """
+        Scan subdir entries.
+
+        Args:
+            summary_dict (dict): Temporary data structure to hold summary directory info.
+            subdir_entries(DirEntry): Directory entry instance.
+            entry_name (str): Name of entry.
+            counter (Counter): An instance of CountLimiter.
+
+        """
+        for subdir_entry in subdir_entries:
+            if len(summary_dict) == self.MAX_SUMMARY_DIR_COUNT:
+                break
+            try:
+                counter.add()
+            except ParamValueError:
+                logger.info('Stop further scanning due to overall is False and '
+                            'number of scanned files exceeds upper limit.')
+                break
+            subdir_relative_path = os.path.join('.', entry_name)
+            if subdir_entry.is_symlink():
+                pass
+            elif subdir_entry.is_file():
+                self._update_summary_dict(summary_dict, subdir_relative_path, subdir_entry)
 
     def _contains_null_byte(self, **kwargs):
         """
