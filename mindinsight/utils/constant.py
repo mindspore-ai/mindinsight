@@ -50,7 +50,7 @@ class DataVisualErrors(Enum):
     """Enum definition for datavisual errors."""
     RESTFUL_API_NOT_EXIST = 1
     REQUEST_METHOD_NOT_ALLOWED = 2
-    SUMMARY_LOG_CONTENT_INVALID = 3
+    MAX_COUNT_EXCEEDED_ERROR = 3
     CRC_FAILED = 4
     TRAIN_JOB_NOT_EXIST = 5
     SUMMARY_LOG_PATH_INVALID = 6

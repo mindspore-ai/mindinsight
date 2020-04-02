@@ -22,7 +22,7 @@ from pathlib import Path
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.utils.tools import Counter
-from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.datavisual.common.exceptions import MaxCountExceededError
 from mindinsight.utils.exceptions import FileSystemPermissionError
 
 
@@ -87,7 +87,7 @@ class SummaryWatcher:
                 break
             try:
                 counter.add()
-            except ParamValueError:
+            except MaxCountExceededError:
                 logger.info('Stop further scanning due to overall is False and '
                             'number of scanned files exceeds upper limit.')
                 break
@@ -132,7 +132,7 @@ class SummaryWatcher:
                 break
             try:
                 counter.add()
-            except ParamValueError:
+            except MaxCountExceededError:
                 logger.info('Stop further scanning due to overall is False and '
                             'number of scanned files exceeds upper limit.')
                 break
