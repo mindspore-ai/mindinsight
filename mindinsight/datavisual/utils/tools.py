@@ -20,7 +20,7 @@ import os
 from numbers import Number
 from urllib.parse import unquote
 
-from mindinsight.datavisual.common.exceptions import MaxCountExceededException
+from mindinsight.datavisual.common.exceptions import MaxCountExceededError
 from mindinsight.utils import exceptions
 
 _IMG_EXT_TO_MIMETYPE = {
@@ -165,5 +165,5 @@ class Counter:
     def add(self, value=1):
         """Add value."""
         if self._max_count is not None and self._count + value > self._max_count:
-            raise MaxCountExceededException()
+            raise MaxCountExceededError()
         self._count += value
