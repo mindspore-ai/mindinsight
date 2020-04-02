@@ -564,7 +564,11 @@ export default {
           ajaxArr.push(this.addAjax(params, yIndex));
         });
 
-        Promise.all(ajaxArr)
+        Promise.all(ajaxArr.map(function(promiseItem) {
+          return promiseItem.catch(function(err) {
+            return err;
+          });
+        }))
             .then((res) => {
               if (!res) {
                 return;
