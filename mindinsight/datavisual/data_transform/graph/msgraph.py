@@ -138,7 +138,7 @@ class MSGraph(Graph):
         for name, node in self._leaf_nodes.items():
             if node.node_type == NodeTypeEnum.CONST.value:
                 continue
-            for src_name, input_attr in node.input.items():
+            for src_name, input_attr in node.inputs.items():
                 src_node = self._leaf_nodes[src_name]
                 if src_node.node_type == NodeTypeEnum.CONST.value:
                     continue

@@ -32,7 +32,7 @@ class SummaryWatcher:
     MAX_SUMMARY_DIR_COUNT = 999
 
     # scan at most 20000 files/directories (approximately 1 seconds)
-    # if overall=False in SummaryWatcher.list_summary_directories
+    # if overall is False in SummaryWatcher.list_summary_directories
     # to avoid long-time blocking
     MAX_SCAN_COUNT = 20000
 
