@@ -70,7 +70,7 @@ class TestGraphProcessor:
         self._train_id = log_dir.replace(summary_base_dir, ".")
 
         log_operation = LogOperations()
-        self._temp_path, self._graph_dict = log_operation.generate_log(PluginNameEnum.GRAPH.value, log_dir)
+        self._temp_path, self._graph_dict, _ = log_operation.generate_log(PluginNameEnum.GRAPH.value, log_dir)
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(summary_base_dir)])

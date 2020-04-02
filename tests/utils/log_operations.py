@@ -157,7 +157,7 @@ class LogOperations:
                 graph_dict = json.load(load_f)
 
             graph_dict = log_generator.generate_log(temp_path, graph_dict)
-            return temp_path, graph_dict
+            return temp_path, graph_dict, None
 
         steps_list = log_settings.get('steps', [1])
         tag_name = log_settings.get('tag', 'default_tag')
