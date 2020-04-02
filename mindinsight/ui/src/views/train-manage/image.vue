@@ -257,7 +257,7 @@ export default {
         if (this.isTimeReload) {
           this.autoUpdateSamples();
         }
-        this.updateAllData();
+        this.updateAllData(false);
       }
     },
     /**
@@ -274,7 +274,10 @@ export default {
         this.stopUpdateSamples();
       }
     },
-    timeReloadValue(newVal) {
+    /**
+     *The refresh time is changed
+     */
+    timeReloadValue() {
       this.autoUpdateSamples();
     },
   },
@@ -295,6 +298,10 @@ export default {
   mounted() {
     this.getCharMainContentwidth();
     this.getTagAndRunList();
+    // Automatic refresh
+    if (this.isTimeReload) {
+      this.autoUpdateSamples();
+    }
   },
 
   methods: {
@@ -306,7 +313,7 @@ export default {
         plugin_name: 'image',
         train_id: this.trainingJobId,
       };
-      RequestService.getSingleTrainJob(params)
+      RequestService.getSingleTrainJob(params, false)
           .then((res) => {
             if (!res || !res.data || !res.data.train_jobs) {
               this.initOver = true;
@@ -371,11 +378,6 @@ export default {
 
             // Obtains data on the current page
             this.getCurPageDataArr();
-
-            // Automatic refresh
-            if (this.isTimeReload) {
-              this.autoUpdateSamples();
-            }
           }, this.requestErrorCallback)
           .catch((e) => {
             this.$message.error(this.$t('public.dataError'));
@@ -445,8 +447,13 @@ export default {
                 ];
               }
               this.$forceUpdate();
-            })
-            .catch((e) => {});
+            }, (e) => {
+              sampleItem.totalStepNum = 0;
+              sampleItem.sliderValue = 0;
+              sampleItem.curStep = '';
+              sampleItem.curImgUrl = '';
+              sampleItem.curTime = '';
+            }).catch((e) => {});
       });
     },
     /**
@@ -880,13 +887,14 @@ export default {
     },
     /**
      * Update all data.
+     * @param {Boolean} ignoreError whether ignore error tip
      */
-    updateAllData() {
+    updateAllData(ignoreError) {
       const params = {
         plugin_name: 'image',
         train_id: this.trainingJobId,
       };
-      RequestService.getSingleTrainJob(params)
+      RequestService.getSingleTrainJob(params, ignoreError)
           .then((res) => {
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);
@@ -927,7 +935,7 @@ export default {
       }
       this.autoUpdateTimer = setInterval(() => {
         this.$store.commit('clearToken');
-        this.updateAllData();
+        this.updateAllData(true);
       }, this.timeReloadValue * 1000);
     },
     /**
