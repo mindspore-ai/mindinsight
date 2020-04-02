@@ -845,7 +845,7 @@ export default {
               this.initOver = true;
               this.fileSearchBox.value = tags.length ? tags[0] : '';
               this.queryGraphData();
-            } else if(!hasFileSearchValue) {
+            } else if (!hasFileSearchValue) {
               this.fileSearchBox.value = '';
             }
           })

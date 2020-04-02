@@ -268,7 +268,7 @@ export default {
         if (this.isTimeReload) {
           this.autoUpdateSamples();
         }
-        this.updateAllData();
+        this.updateAllData(false);
       }
     },
     /**
@@ -285,15 +285,8 @@ export default {
       }
     },
 
-    timeReloadValue(newVal) {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-      this.autoUpdateTimer = setInterval(() => {
-        this.$store.commit('clearToken');
-        this.updateAllData();
-      }, newVal * 1000);
+    timeReloadValue() {
+      this.autoUpdateSamples();
     },
   },
   destroyed() {
@@ -343,6 +336,11 @@ export default {
       this.getScalarsList();
 
       this.firstNum = 1;
+
+      // auto refresh
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
     });
   },
   methods: {
@@ -436,11 +434,6 @@ export default {
               // Refresh the chart data on the current page
               this.freshCurPageData();
             }
-
-            // auto refresh
-            if (this.isTimeReload) {
-              this.autoUpdateSamples();
-            }
           }, this.requestErrorCallback)
           .catch((e) => {
             this.$message.error(this.$t('public.dataError'));
@@ -506,20 +499,26 @@ export default {
 
       promiseArr.push(this.addPromise(params));
 
-      Promise.all(promiseArr)
+      Promise.all(promiseArr.map(function(promiseItem) {
+        return promiseItem.catch(function(err) {
+          return err;
+        });
+      }))
           .then((res) => {
           // error
             if (!res || !res.length) {
               return;
             }
-            if (sampleObject.charObj) {
-              sampleObject.charObj.showLoading();
-            }
             let scalarIndex = 0;
             let hasInvalidData = false;
             for (let i = 0; i < res.length; i++) {
               if (!res[i] || !res[i].data) {
+                sampleObject.charObj.clear();
                 return;
+              }
+
+              if (sampleObject.charObj) {
+                sampleObject.charObj.showLoading();
               }
 
               const resData = res[i].data;
@@ -1519,14 +1518,15 @@ export default {
 
     /**
      * Updating Sliding Block Data
+     * @param {Boolean} ignoreError whether ignore error tip
      */
 
-    updateAllData() {
+    updateAllData(ignoreError) {
       const params = {
         plugin_name: 'scalar',
         train_id: this.trainingJobId,
       };
-      RequestService.getSingleTrainJob(params, true)
+      RequestService.getSingleTrainJob(params, ignoreError)
           .then((res) => {
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);
@@ -1600,7 +1600,7 @@ export default {
       }
       this.autoUpdateTimer = setInterval(() => {
         this.$store.commit('clearToken');
-        this.updateAllData();
+        this.updateAllData(true);
       }, this.timeReloadValue * 1000);
     },
 
