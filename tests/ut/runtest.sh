@@ -29,7 +29,7 @@ IS_BUILD_CRC=""
 build_crc32() {
     echo "Start to check crc32."
     if [ -d "$CRC32_OUTPUT_DIR" ]; then
-        cd "$CRC32_OUTPUT_DIR"
+        cd "$CRC32_OUTPUT_DIR" || exit
         result=$(find . -maxdepth 1 -name "crc32*.so")
         if [ -z "$result" ]; then
             echo "Start to build crc32."
