@@ -13,29 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SCRIPT_BASEDIR=$(
-    cd "$(dirname "$0")" || exit
-    pwd
-)
+set -e
+
+SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
 
 build_ui() {
-    NPM=$(command -v npm)
-    if [ -z "${NPM}" ]; then
-        echo "Could not find npm command"
-        exit 1
+    cd "$(realpath "$SCRIPT_BASEDIR/../../mindinsight/ui")" || exit
+
+    if ! command -v npm; then
+        command npm
     fi
 
-    UI_SOURCE_DIR=$(realpath "${SCRIPT_BASEDIR}/../../mindinsight/ui")
-
-    cd "${UI_SOURCE_DIR}" || exit
     rm -rf dist
 
-    ${NPM} config set strict-ssl false
-    ${NPM} config set unsafe-perm true
-    ${NPM} config set user 0
+    npm config set strict-ssl false
+    npm config set unsafe-perm true
+    npm config set user 0
 
-    ${NPM} install
-    ${NPM} run build
+    npm install
+    npm run build
 
     if [ ! -f "dist/index.html" ]; then
         echo "dist does not have file index.html, build failed"
@@ -45,5 +41,4 @@ build_ui() {
     rm -rf node_modules
 }
 
-cd "${SCRIPT_BASEDIR}" || exit
 build_ui

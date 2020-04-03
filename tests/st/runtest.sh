@@ -14,16 +14,13 @@
 # limitations under the License.
 
 set -e
-shopt -s nullglob
 
-SCRIPT_BASEDIR=$(
-    cd "$(dirname "$0")" || exit
-    pwd
-)
-PROJECT_DIR=$(realpath "${SCRIPT_BASEDIR}/../../")
-CRC32_SCRIPT_PATH="${PROJECT_DIR}/build/scripts/crc32.sh"
-CRC32_OUTPUT_DIR="${PROJECT_DIR}/mindinsight/datavisual/utils/"
-ST_PATH="${PROJECT_DIR}/tests/st"
+SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
+
+PROJECT_DIR=$(realpath "$SCRIPT_BASEDIR/../../")
+CRC32_SCRIPT_PATH="$PROJECT_DIR/build/scripts/crc32.sh"
+CRC32_OUTPUT_DIR="$PROJECT_DIR/mindinsight/datavisual/utils/"
+ST_PATH="$PROJECT_DIR/tests/st"
 IS_BUILD_CRC=""
 
 PYTEST_MARK=""
@@ -60,7 +57,7 @@ check_opts() {
 build_crc32() {
     echo "Start to check crc32."
     if [ -d "$CRC32_OUTPUT_DIR" ]; then
-        cd "$CRC32_OUTPUT_DIR"
+        cd "$CRC32_OUTPUT_DIR" || exit
         result=$(find . -maxdepth 1 -name "crc32*.so")
         if [ -z "$result" ]; then
             echo "Start to build crc32."
@@ -74,7 +71,7 @@ build_crc32() {
 clean_crc32() {
     echo "Start to clean crc32."
     if [ -n "$IS_BUILD_CRC" ]; then
-        rm "$CRC32_OUTPUT_DIR"/crc32*.so -f
+        rm -f "$CRC32_OUTPUT_DIR"/crc32*.so
     fi
 }
 
@@ -93,7 +90,7 @@ after_run_test() {
 
 run_test() {
     echo "Start to run test."
-    cd "$PROJECT_DIR"
+    cd "$PROJECT_DIR" || exit
 
     for dir in "$ST_PATH"/*; do
         if [ ! -d "$dir" ] || [ "$dir" = "$ST_PATH/__pycache__" ]; then
