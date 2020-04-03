@@ -89,9 +89,8 @@ class TestPlugins:
         assert response.status_code == 400
 
         response = response.get_json()
-        assert response['error_code'] == '50540002'
-        assert response['error_msg'] == "Invalid parameter value. Can not find " \
-                                        "the train job in data manager."
+        assert response['error_code'] == '50545005'
+        assert response['error_msg'] == "Train job is not exist. Detail: Can not find the train job in data manager."
 
     @pytest.mark.level1
     @pytest.mark.env_single

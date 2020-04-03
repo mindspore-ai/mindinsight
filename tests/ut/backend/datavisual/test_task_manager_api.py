@@ -64,9 +64,9 @@ class TestTrainTask:
         assert response.status_code == 400
 
         response = response.get_json()
-        assert response['error_code'] == '50540002'
-        assert response['error_msg'] == "Invalid parameter value. 'plugin_name' " \
-                                        "only can be one of {}".format(plugin_name_list)
+        assert response['error_code'] == '5054500B'
+        assert response['error_msg'] == f"Plugin is not available. " \
+                                        f"Detail: 'plugin_name' only can be one of {plugin_name_list}"
 
     @patch.object(TrainTaskManager, 'get_single_train_task')
     def test_query_single_train_task_with_plugin_name_exists(self, mock_train_task_manager, client):

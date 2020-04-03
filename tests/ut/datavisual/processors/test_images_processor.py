@@ -24,6 +24,8 @@ from unittest.mock import Mock
 import pytest
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
+from mindinsight.datavisual.common.exceptions import ImageNotExistError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.processors.images_processor import ImageProcessor
@@ -107,11 +109,11 @@ class TestImagesProcessor:
         """Test getting metadata list with not exist id."""
         test_train_id = 'not_exist_id'
         image_processor = ImageProcessor(self._mock_data_manager)
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(TrainJobNotExistError) as exc_info:
             image_processor.get_metadata_list(test_train_id, self._tag_name)
 
-        assert exc_info.value.error_code == '50540002'
-        assert "Can not find any data in loader pool about the train job." in exc_info.value.message
+        assert exc_info.value.error_code == '50545005'
+        assert "Train job is not exist. Detail: Can not find the given train job in cache." == exc_info.value.message
 
     @pytest.mark.usefixtures('load_image_record')
     def test_get_metadata_list_with_not_exist_tag(self):
@@ -120,10 +122,10 @@ class TestImagesProcessor:
 
         image_processor = ImageProcessor(self._mock_data_manager)
 
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(ImageNotExistError) as exc_info:
             image_processor.get_metadata_list(self._train_id, test_tag_name)
 
-        assert exc_info.value.error_code == '50540002'
+        assert exc_info.value.error_code == '5054500D'
         assert "Can not find any data in this train job by given tag." in exc_info.value.message
 
     @pytest.mark.usefixtures('load_image_record')
@@ -144,11 +146,11 @@ class TestImagesProcessor:
         test_step = self._steps_list[0]
         image_processor = ImageProcessor(self._mock_data_manager)
 
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(TrainJobNotExistError) as exc_info:
             image_processor.get_single_image(test_train_id, test_tag_name, test_step)
 
-        assert exc_info.value.error_code == '50540002'
-        assert "Can not find any data in loader pool about the train job." in exc_info.value.message
+        assert exc_info.value.error_code == '50545005'
+        assert "Train job is not exist. Detail: Can not find the given train job in cache." == exc_info.value.message
 
     @pytest.mark.usefixtures('load_image_record')
     def test_get_single_image_with_not_exist_tag(self):
@@ -158,10 +160,10 @@ class TestImagesProcessor:
 
         image_processor = ImageProcessor(self._mock_data_manager)
 
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(ImageNotExistError) as exc_info:
             image_processor.get_single_image(self._train_id, test_tag_name, test_step)
 
-        assert exc_info.value.error_code == '50540002'
+        assert exc_info.value.error_code == '5054500D'
         assert "Can not find any data in this train job by given tag." in exc_info.value.message
 
     @pytest.mark.usefixtures('load_image_record')
@@ -172,11 +174,12 @@ class TestImagesProcessor:
 
         image_processor = ImageProcessor(self._mock_data_manager)
 
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(ImageNotExistError) as exc_info:
             image_processor.get_single_image(self._train_id, test_tag_name, test_step)
 
-        assert exc_info.value.error_code == '50540002'
-        assert "Can not find the step with given train job id and tag." in exc_info.value.message
+        assert exc_info.value.error_code == '5054500D'
+        assert "Image is not exist. " \
+               "Detail: Can not find the step with given train job id and tag." == exc_info.value.message
 
     @pytest.mark.usefixtures('load_image_record')
     def test_get_single_image_success(self):
@@ -206,7 +209,7 @@ class TestImagesProcessor:
 
             try:
                 image_processor.get_single_image(self._train_id, test_tag_name, test_step)
-            except ParamValueError:
+            except ImageNotExistError:
                 cnt += 1
         assert len(self._more_steps_list) - cnt == 10
 
@@ -233,7 +236,7 @@ class TestImagesProcessor:
             try:
                 image_processor.get_single_image(self._train_id, test_tag_name, test_step)
                 current_step_list.append(test_step)
-            except ParamValueError:
+            except ImageNotExistError:
                 not_found_step_list.append(test_step)
 
         assert current_step_list == [1, 2, 3, 4, 15]

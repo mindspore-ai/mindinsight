@@ -133,7 +133,7 @@ def get_train_id(request):
         try:
             train_id = unquote(train_id, errors='strict')
         except UnicodeDecodeError:
-            raise exceptions.ParamValueError('Unquote error with strict mode')
+            raise exceptions.UrlDecodeError('Unquote train id error with strict mode')
     return train_id
 
 

@@ -16,6 +16,7 @@
 from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.datavisual.common.validation import Validation
+from mindinsight.datavisual.common.exceptions import ImageNotExistError
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 
 
@@ -46,7 +47,10 @@ class ImageProcessor(BaseProcessor):
         """
         Validation.check_param_empty(train_id=train_id, tag=tag)
         result = []
-        tensors = self._data_manager.list_tensors(train_id, tag)
+        try:
+            tensors = self._data_manager.list_tensors(train_id, tag)
+        except ParamValueError as ex:
+            raise ImageNotExistError(ex.message)
 
         for tensor in tensors:
             # no tensor_proto in TensorEvent
@@ -75,7 +79,10 @@ class ImageProcessor(BaseProcessor):
         Validation.check_param_empty(train_id=train_id, tag=tag, step=step)
         step = to_int(step, "step")
 
-        tensors = self._data_manager.list_tensors(train_id, tag)
+        try:
+            tensors = self._data_manager.list_tensors(train_id, tag)
+        except ParamValueError as ex:
+            raise ImageNotExistError(ex.message)
 
         image = None
         for tensor in tensors:
@@ -87,6 +94,6 @@ class ImageProcessor(BaseProcessor):
                 break
 
         if image is None:
-            raise ParamValueError("Can not find the step with given train job id and tag.")
+            raise ImageNotExistError("Can not find the step with given train job id and tag.")
 
         return image

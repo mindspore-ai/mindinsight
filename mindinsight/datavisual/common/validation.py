@@ -16,6 +16,7 @@
 from numbers import Number
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import ParamMissError
+from mindinsight.datavisual.common.exceptions import PluginNotAvailableError
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.utils.tools import to_int
 
@@ -94,9 +95,8 @@ class Validation:
             plugin_name (str): The plugin name.
 
         Raises:
-            ParamValueError: When plugin name is not valid.
+            PluginNotAvailableError: When plugin name is not valid.
         """
         plugin_name_list = PluginNameEnum.list_members()
         if plugin_name not in plugin_name_list:
-            raise ParamValueError("'plugin_name' only can be one of {}"
-                                  "".format(plugin_name_list))
+            raise PluginNotAvailableError(f"'plugin_name' only can be one of {plugin_name_list}")

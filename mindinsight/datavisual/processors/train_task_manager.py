@@ -38,7 +38,7 @@ class TrainTaskManager(BaseProcessor):
         Validation.check_plugin_name(plugin_name=plugin_name)
         train_job = self._data_manager.get_train_job_by_plugin(train_id=train_id, plugin_name=plugin_name)
         if train_job is None:
-            raise exceptions.SummaryLogPathInvalid()
+            raise exceptions.TrainJobNotExistError()
         return dict(train_jobs=[train_job])
 
     def get_plugins(self, train_id, manual_update=True):

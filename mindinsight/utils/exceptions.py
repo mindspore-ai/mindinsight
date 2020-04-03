@@ -176,3 +176,12 @@ class UnknownError(MindInsightException):
             GeneralErrors.UNKNOWN_ERROR,
             error_msg,
             http_code=500)
+
+
+class UrlDecodeError(MindInsightException):
+    """Url decoding failed"""
+    def __init__(self, error_detail):
+        error_msg = f"Url decode failed. Detail: {error_detail}"
+        super(UrlDecodeError, self).__init__(GeneralErrors.URL_DECODE_ERROR,
+                                             error_msg,
+                                             http_code=400)

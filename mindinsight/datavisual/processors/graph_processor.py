@@ -40,9 +40,9 @@ class GraphProcessor(BaseProcessor):
 
         train_job = self._data_manager.get_train_job_by_plugin(train_id, PluginNameEnum.GRAPH.value)
         if train_job is None:
-            raise exceptions.SummaryLogPathInvalid()
+            raise exceptions.TrainJobNotExistError()
         if not train_job['tags']:
-            raise ParamValueError("Can not find any graph data in the train job.")
+            raise exceptions.GraphNotExistError()
 
         if tag is None:
             tag = train_job['tags'][0]

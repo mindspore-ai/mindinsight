@@ -90,3 +90,51 @@ class MaxCountExceededError(MindInsightException):
         super(MaxCountExceededError, self).__init__(DataVisualErrors.MAX_COUNT_EXCEEDED_ERROR,
                                                     error_msg,
                                                     http_code=400)
+
+
+class TrainJobNotExistError(MindInsightException):
+    """Can not find the given train job."""
+    def __init__(self, error_detail=None):
+        if error_detail is None:
+            error_msg = f"Train job is not exist."
+        else:
+            error_msg = f"Train job is not exist. Detail: {error_detail}"
+        super(TrainJobNotExistError, self).__init__(DataVisualErrors.TRAIN_JOB_NOT_EXIST,
+                                                    error_msg,
+                                                    http_code=400)
+
+
+class PluginNotAvailableError(MindInsightException):
+    """The given plugin is not available."""
+    def __init__(self, error_detail):
+        error_msg = f"Plugin is not available. Detail: {error_detail}"
+        super(PluginNotAvailableError, self).__init__(DataVisualErrors.PLUGIN_NOT_AVAILABLE,
+                                                      error_msg,
+                                                      http_code=400)
+
+
+class GraphNotExistError(MindInsightException):
+    """Can not found the given graph."""
+    def __init__(self):
+        error_msg = 'Graph is not exist.'
+        super(GraphNotExistError, self).__init__(DataVisualErrors.GRAPH_NOT_EXIST,
+                                                 error_msg,
+                                                 http_code=400)
+
+
+class ImageNotExistError(MindInsightException):
+    """Unable to get a image based on a given condition."""
+    def __init__(self, error_detail):
+        error_msg = f'Image is not exist. Detail: {error_detail}'
+        super(ImageNotExistError, self).__init__(DataVisualErrors.IMAGE_NOT_EXIST,
+                                                 error_msg,
+                                                 http_code=400)
+
+
+class ScalarNotExistError(MindInsightException):
+    """Unable to get scalar values based on a given condition."""
+    def __init__(self, error_detail):
+        error_msg = f'Scalar value is not exist. Detail: {error_detail}'
+        super(ScalarNotExistError, self).__init__(DataVisualErrors.SCALAR_NOT_EXIST,
+                                                  error_msg,
+                                                  http_code=400)
