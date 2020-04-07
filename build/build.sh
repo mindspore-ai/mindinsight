@@ -13,32 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SCRIPT_BASEDIR=$(
-    cd "$(dirname "$0")" || exit
-    pwd
-)
+set -e
+
+SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
+
+PROJECT_BASEDIR=$(dirname "$SCRIPT_BASEDIR")
 
 rename_wheel() {
+    cd "$PROJECT_BASEDIR/output" || exit
     VERSION="$1"
     PACKAGE_LIST=$(ls mindinsight-*-any.whl) || exit
-    for PACKAGE_ORIG in ${PACKAGE_LIST}; do
-        MINDINSIGHT_VERSION=$(echo "${PACKAGE_ORIG}" | awk -F"-" '{print $2}')
-        PYTHON_VERSION_NUM=$(echo "${VERSION}" | awk -F"." '{print $1$2}')
-        PYTHON_VERSION_TAG="cp${PYTHON_VERSION_NUM}"
+    for PACKAGE_ORIG in $PACKAGE_LIST; do
+        MINDINSIGHT_VERSION=$(echo "$PACKAGE_ORIG" | awk -F"-" '{print $2}')
+        PYTHON_VERSION_NUM=$(echo "$VERSION" | awk -F"." '{print $1$2}')
+        PYTHON_VERSION_TAG="cp$PYTHON_VERSION_NUM"
         PYTHON_ABI_TAG="cp${PYTHON_VERSION_NUM}m"
         OS_NAME=$(uname | tr '[:upper:]' '[:lower:]')
         MACHINE_TAG="${OS_NAME}_$(uname -i)"
-        PACKAGE_NEW="mindinsight-${MINDINSIGHT_VERSION}-${PYTHON_VERSION_TAG}-${PYTHON_ABI_TAG}-${MACHINE_TAG}.whl"
-        mv "${PACKAGE_ORIG}" "${PACKAGE_NEW}"
+        PACKAGE_NEW="mindinsight-$MINDINSIGHT_VERSION-$PYTHON_VERSION_TAG-$PYTHON_ABI_TAG-$MACHINE_TAG.whl"
+        mv "$PACKAGE_ORIG" "$PACKAGE_NEW"
     done
 }
 
 build_wheel() {
-    PROJECT_BASEDIR=$(
-        cd "$(dirname "$SCRIPT_BASEDIR")" || exit
-        pwd
-    )
-    cd "${PROJECT_BASEDIR}" || exit
+
+    cd "$PROJECT_BASEDIR" || exit
 
     if [ $# -gt 0 ]; then
         if [ "$1" = "clean" ]; then
@@ -54,43 +53,41 @@ build_wheel() {
     echo "start building mindinsight"
     clean_files
 
-    PYTHON=$(command -v python3 || command -v python)
-    if [ -z "${PYTHON}" ]; then
-        echo "Could not find python3 or python command"
-        exit 1
+    if command -v python3; then
+        PYTHON=python3
+    elif command -v python; then
+        PYTHON=python
+    else
+        command python3
     fi
-    PYTHON_VERSION=$(${PYTHON} -c "import platform; print(platform.python_version())" | grep '^3.*')
-    if [ -z "${PYTHON_VERSION}" ]; then
-        echo "Could not find Python 3"
+
+    if ! "$PYTHON" -c 'import sys; assert sys.version_info >= (3, 7)' &>/dev/null; then
+        echo "Python 3.7 or higher is required. You are running $("$PYTHON" -V)"
         exit 1
     fi
 
-    rm -f output
-    mkdir output
+    rm -rf output
 
-    ${PYTHON} setup.py bdist_wheel
+    "$PYTHON" setup.py bdist_wheel
     if [ ! -x "dist" ]; then
         echo "Build failed"
         exit 1
     fi
 
-    mv dist/mindinsight-*-any.whl output/
+    mv dist output
 
-    cd output || exit
-    rename_wheel "${PYTHON_VERSION}"
-    cd - >/dev/null 2>&1 || exit
+    rename_wheel "$("$PYTHON" -c 'import platform; print(platform.python_version())')"
 
     clean_files
 
-    echo "Build success, output directory is: ${PROJECT_BASEDIR}/output"
+    echo "Build success, output directory is: $PROJECT_BASEDIR/output"
 }
 
 clean_files() {
-    rm -rf third_party/build
+    cd "$PROJECT_BASEDIR" || exit
     rm -rf build/lib
     rm -rf build/bdist.*
     rm -rf mindinsight.egg-info
-    rm -rf dist
 }
 
 show_usage() {
@@ -120,5 +117,4 @@ check_opts() {
 
 check_opts "$@"
 
-cd "${SCRIPT_BASEDIR}" || exit
 build_wheel "$@"

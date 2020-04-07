@@ -14,16 +14,13 @@
 # limitations under the License.
 
 set -e
-shopt -s nullglob
 
-SCRIPT_BASEDIR=$(
-    cd "$(dirname "$0")" || exit
-    pwd
-)
-PROJECT_DIR=$(realpath "${SCRIPT_BASEDIR}/../../")
-CRC32_SCRIPT_PATH="${PROJECT_DIR}/build/scripts/crc32.sh"
-CRC32_OUTPUT_DIR="${PROJECT_DIR}/mindinsight/datavisual/utils/"
-UT_PATH="${PROJECT_DIR}/tests/ut"
+SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
+
+PROJECT_DIR=$(realpath "$SCRIPT_BASEDIR/../../")
+CRC32_SCRIPT_PATH="$PROJECT_DIR/build/scripts/crc32.sh"
+CRC32_OUTPUT_DIR="$PROJECT_DIR/mindinsight/datavisual/utils/"
+UT_PATH="$PROJECT_DIR/tests/ut"
 IS_BUILD_CRC=""
 
 build_crc32() {
@@ -43,7 +40,7 @@ build_crc32() {
 clean_crc32() {
     echo "Start to clean crc32."
     if [ -n "$IS_BUILD_CRC" ]; then
-        rm "$CRC32_OUTPUT_DIR"/crc32*.so -f
+        rm -f "$CRC32_OUTPUT_DIR"/crc32*.so
     fi
 }
 
@@ -62,7 +59,7 @@ after_run_test() {
 
 run_test() {
     echo "Start to run test."
-    cd "$PROJECT_DIR"
+    cd "$PROJECT_DIR" || exit
 
     pytest "$UT_PATH"
 

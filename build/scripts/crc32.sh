@@ -13,85 +13,75 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SCRIPT_BASEDIR=$(
-    cd "$(dirname "$0")" || exit
-    pwd
-)
+set -e
 
-THIRD_PARTY_DIR=$(realpath "${SCRIPT_BASEDIR}/../../third_party")
-BUILDDIR=$(dirname "$SCRIPT_BASEDIR")
+SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
+
+THIRD_PARTY_DIR=$(realpath "$SCRIPT_BASEDIR/../../third_party")
+BUILDDIR="$(dirname "$SCRIPT_BASEDIR")/build_securec"
 
 build_securec() {
-    CMAKE=$(command -v cmake)
-    if [ -z "${CMAKE}" ]; then
-        echo "Could not find cmake command"
-        exit 1
-    fi
+    rm -rf "$BUILDDIR"
+    mkdir "$BUILDDIR"
     cd "$BUILDDIR" || exit
-    ${CMAKE} ..
+    if ! command -v cmake; then
+        command cmake
+    fi
+    cmake ../..
     make
 }
 
 clean_securec() {
-    cd "$BUILDDIR" || exit
-    for file in *; do
-        if [ "$file" == build.sh ] || [ "$file" == scripts ] || [ "$file" == lib ]; then
-            continue
-        fi
-        rm -rf "$file"
-    done
+    rm -rf "$BUILDDIR"
 }
 
 build_crc32() {
-    CPP=$(command -v c++)
-    if [ -z "${CPP}" ]; then
-        echo "Could not find c++ command"
-        exit 1
-    fi
-
-    PYTHON=$(command -v python3 || command -v python)
-    if [ -z "${PYTHON}" ]; then
-        echo "Could not find python3 or python command"
-        exit 1
-    fi
-    PYTHON_VERSION=$(${PYTHON} -c "import platform; print(platform.python_version())" | grep '^3.*')
-    if [ -z "${PYTHON_VERSION}" ]; then
-        echo "Could not find Python 3"
-        exit 1
-    fi
-
-    DATAVISUAL_DIR=$(realpath "${SCRIPT_BASEDIR}/../../mindinsight/datavisual")
-    CRC32_SOURCE_DIR="${DATAVISUAL_DIR}/utils/crc32"
-    CRC32_OUTPUT_DIR="${DATAVISUAL_DIR}/utils"
+    DATAVISUAL_DIR=$(realpath "$SCRIPT_BASEDIR/../../mindinsight/datavisual")
+    CRC32_SOURCE_DIR="$DATAVISUAL_DIR/utils/crc32"
+    CRC32_OUTPUT_DIR="$DATAVISUAL_DIR/utils"
     CRC32_SO_FILE="crc32$(python3-config --extension-suffix)"
 
-    rm -f "${CRC32_SOURCE_DIR}/${CRC32_SO_FILE}"
-    rm -f "${CRC32_OUTPUT_DIR}/${CRC32_SO_FILE}"
-    cd "${CRC32_SOURCE_DIR}" || exit
-    PYBIND11_INCLUDES=$(${PYTHON} -m pybind11 --includes)
-    if [ -z "${PYBIND11_INCLUDES}" ]; then
-        echo "Could not find pybind11 module"
+    cd "$CRC32_SOURCE_DIR" || exit
+
+    if ! command -v c++; then
+        command c++
+    fi
+
+    if command -v python3; then
+        PYTHON=python3
+    elif command -v python; then
+        PYTHON=python
+    else
+        command python3
+    fi
+
+    if ! "$PYTHON" -c 'import sys; assert sys.version_info >= (3, 7)' &>/dev/null; then
+        echo "Python 3.7 or higher is required. You are running $("$PYTHON" -V)"
         exit 1
     fi
 
-    PYTHON_INCLUDE=$(echo "${PYBIND11_INCLUDES}" | awk '{print $1}' | sed "s/^-I//g")
-    PYTHON_HEADERS=$(echo "${PYBIND11_INCLUDES}" | awk '{print $2}' | sed "s/^-I//g")
-    ${CPP} -O2 -O3 -shared -std=c++11 -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 \
+    rm -f "$CRC32_SOURCE_DIR/$CRC32_SO_FILE"
+    rm -f "$CRC32_OUTPUT_DIR/$CRC32_SO_FILE"
+
+    PYBIND11_INCLUDES=$($PYTHON -m pybind11 --includes)
+    PYTHON_INCLUDE=$(echo "$PYBIND11_INCLUDES" | awk '{print $1}' | sed "s/^-I//g")
+    PYTHON_HEADERS=$(echo "$PYBIND11_INCLUDES" | awk '{print $2}' | sed "s/^-I//g")
+
+    c++ -O2 -O3 -shared -std=c++11 -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 \
         -Wno-maybe-uninitialized -Wno-unused-parameter -Wall -Wl,-z,relro,-z,now,-z,noexecstack \
-        -I"${THIRD_PARTY_DIR}" -I"${DATAVISUAL_DIR}/utils" -I"${PYTHON_INCLUDE}" -I"${PYTHON_HEADERS}" \
-        -o "${CRC32_SO_FILE}" crc32.cc "$BUILDDIR/libsecurec.a"
+        -I"$THIRD_PARTY_DIR" -I"$DATAVISUAL_DIR/utils" -I"$PYTHON_INCLUDE" -I"$PYTHON_HEADERS" \
+        -o "$CRC32_SO_FILE" crc32.cc "$BUILDDIR/libsecurec.a"
 
-    if [ ! -f "${CRC32_SO_FILE}" ]; then
-        echo "crc so file does not exist, build failed"
+    if [ ! -f "$CRC32_SO_FILE" ]; then
+        echo "$CRC32_SO_FILE file does not exist, build failed"
         exit 1
     fi
-    mv "${CRC32_SO_FILE}" "${CRC32_OUTPUT_DIR}"
+
+    mv "$CRC32_SO_FILE" "$CRC32_OUTPUT_DIR"
 }
 
-cd "${SCRIPT_BASEDIR}" || exit
 build_securec
 
-cd "${SCRIPT_BASEDIR}" || exit
 build_crc32
 
 clean_securec
