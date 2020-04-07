@@ -89,7 +89,7 @@ class TestScalarsProcessor:
             scalar_processor.get_metadata_list(test_train_id, self._tag_name)
 
         assert exc_info.value.error_code == '50545005'
-        assert "Train job is not exist. Detail: Can not find the given train job in cache." == exc_info.value.message
+        assert exc_info.value.message == "Train job is not exist. Detail: Can not find the given train job in cache."
 
     @pytest.mark.usefixtures('load_scalar_record')
     def test_get_metadata_list_with_not_exist_tag(self):

@@ -30,7 +30,6 @@ from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.utils import crc32
-from mindinsight.utils.exceptions import ParamValueError
 
 from ....utils.log_operations import LogOperations
 from ....utils.tools import check_loading_done, delete_files_or_dirs, get_image_tensor_from_bytes
@@ -113,7 +112,7 @@ class TestImagesProcessor:
             image_processor.get_metadata_list(test_train_id, self._tag_name)
 
         assert exc_info.value.error_code == '50545005'
-        assert "Train job is not exist. Detail: Can not find the given train job in cache." == exc_info.value.message
+        assert exc_info.value.message == "Train job is not exist. Detail: Can not find the given train job in cache."
 
     @pytest.mark.usefixtures('load_image_record')
     def test_get_metadata_list_with_not_exist_tag(self):
@@ -150,7 +149,7 @@ class TestImagesProcessor:
             image_processor.get_single_image(test_train_id, test_tag_name, test_step)
 
         assert exc_info.value.error_code == '50545005'
-        assert "Train job is not exist. Detail: Can not find the given train job in cache." == exc_info.value.message
+        assert exc_info.value.message == "Train job is not exist. Detail: Can not find the given train job in cache."
 
     @pytest.mark.usefixtures('load_image_record')
     def test_get_single_image_with_not_exist_tag(self):
@@ -178,8 +177,8 @@ class TestImagesProcessor:
             image_processor.get_single_image(self._train_id, test_tag_name, test_step)
 
         assert exc_info.value.error_code == '5054500D'
-        assert "Image is not exist. " \
-               "Detail: Can not find the step with given train job id and tag." == exc_info.value.message
+        assert exc_info.value.message == "Image is not exist. " \
+               "Detail: Can not find the step with given train job id and tag."
 
     @pytest.mark.usefixtures('load_image_record')
     def test_get_single_image_success(self):
