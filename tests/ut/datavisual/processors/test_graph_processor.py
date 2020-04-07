@@ -105,7 +105,7 @@ class TestGraphProcessor:
         test_train_id = "not_exist_train_id"
         with pytest.raises(exceptions.TrainJobNotExistError) as exc_info:
             GraphProcessor(test_train_id, self._mock_data_manager)
-        assert "Train job is not exist. Detail: Can not find the train job in data manager." == exc_info.value.message
+        assert exc_info.value.message == "Train job is not exist. Detail: Can not find the train job in data manager."
 
     @pytest.mark.usefixtures('load_graph_record')
     @patch.object(DataManager, 'get_train_job_by_plugin')
