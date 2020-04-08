@@ -21,7 +21,7 @@ THIRD_PARTY_DIR=$(realpath "$SCRIPT_BASEDIR/../../third_party")
 BUILDDIR="$(dirname "$SCRIPT_BASEDIR")/build_securec"
 
 build_securec() {
-    rm -rf "$BUILDDIR"
+    [ -n "$BUILDDIR" ] && rm -rf "$BUILDDIR"
     mkdir "$BUILDDIR"
     cd "$BUILDDIR" || exit
     if ! command -v cmake; then
@@ -32,7 +32,7 @@ build_securec() {
 }
 
 clean_securec() {
-    rm -rf "$BUILDDIR"
+    [ -n "$BUILDDIR" ] && rm -rf "$BUILDDIR"
 }
 
 build_crc32() {
