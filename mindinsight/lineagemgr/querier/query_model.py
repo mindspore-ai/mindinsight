@@ -38,6 +38,7 @@ FIELD_MAPPING = {
     "loss": Field('algorithm', 'loss'),
     "model_size": Field('model', 'size'),
     "dataset_mark": Field('dataset_mark', None),
+    "lineage_type": Field(None, None)
 }
 
 
@@ -75,6 +76,7 @@ class LineageObj:
     _name_dataset_graph = 'dataset_graph'
     _name_dataset_mark = 'dataset_mark'
     _name_user_defined = 'user_defined'
+    _name_model_lineage = 'model_lineage'
 
     def __init__(self, summary_dir, **kwargs):
         self._lineage_info = {
@@ -227,15 +229,6 @@ class LineageObj:
             result[key] = getattr(self, key)
         return result
 
-    def to_filtration_dict(self):
-        """
-        Returns the lineage information required by filtering interface.
-
-        Returns:
-            dict, the lineage information required by filtering interface.
-        """
-        return self._filtration_result
-
     def to_dataset_lineage_dict(self):
         """
         Returns the dataset part lineage information.
@@ -249,6 +242,22 @@ class LineageObj:
         }
 
         return dataset_lineage
+
+    def to_model_lineage_dict(self):
+        """
+        Returns the model part lineage information.
+
+        Returns:
+            dict, the model lineage information.
+        """
+        filtration_result = dict(self._filtration_result)
+        filtration_result.pop(self._name_dataset_graph)
+
+        model_lineage = dict()
+        model_lineage.update({self._name_summary_dir: filtration_result.pop(self._name_summary_dir)})
+        model_lineage.update({self._name_model_lineage: filtration_result})
+
+        return model_lineage
 
     def get_value_by_key(self, key):
         """

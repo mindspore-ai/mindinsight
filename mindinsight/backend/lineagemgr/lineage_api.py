@@ -27,23 +27,20 @@ from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 BLUEPRINT = Blueprint("lineage", __name__, url_prefix=settings.URL_PREFIX.rstrip("/"))
 
 
-@BLUEPRINT.route("/models/model_lineage", methods=["POST"])
-def search_model():
+@BLUEPRINT.route("/lineagemgr/lineages", methods=["POST"])
+def get_lineage():
     """
-    Get model lineage info.
-
-    Get model info by summary base dir return a model lineage information list of dict
-    contains model's all kinds of param and count of summary log.
+    Get lineage.
 
     Returns:
-        str, the model lineage information.
+        str, the lineage information.
 
     Raises:
         MindInsightException: If method fails to be called.
         ParamValueError: If parsing json data search_condition fails.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/models/model_lineage
+        >>> POST http://xxxx/v1/mindinsight/lineagemgr/lineages
     """
     search_condition = request.stream.read()
     try:
@@ -51,49 +48,16 @@ def search_model():
     except Exception:
         raise ParamValueError("Json data parse failed.")
 
-    model_lineage_info = _get_lineage_info(
-        lineage_type="model",
-        search_condition=search_condition
-    )
+    lineage_info = _get_lineage_info(search_condition=search_condition)
 
-    return jsonify(model_lineage_info)
+    return jsonify(lineage_info)
 
 
-@BLUEPRINT.route("/datasets/dataset_lineage", methods=["POST"])
-def get_datasets_lineage():
-    """
-    Get dataset lineage.
-
-    Returns:
-        str, the dataset lineage information.
-
-    Raises:
-        MindInsightException: If method fails to be called.
-        ParamValueError: If parsing json data search_condition fails.
-
-    Examples:
-        >>> POST http://xxxx/v1/minddata/datasets/dataset_lineage
-    """
-    search_condition = request.stream.read()
-    try:
-        search_condition = json.loads(search_condition if search_condition else "{}")
-    except Exception:
-        raise ParamValueError("Json data parse failed.")
-
-    dataset_lineage_info = _get_lineage_info(
-        lineage_type="dataset",
-        search_condition=search_condition
-    )
-
-    return jsonify(dataset_lineage_info)
-
-
-def _get_lineage_info(lineage_type, search_condition):
+def _get_lineage_info(search_condition):
     """
     Get lineage info for dataset or model.
 
     Args:
-        lineage_type (str): Lineage type, 'dataset' or 'model'.
         search_condition (dict): Search condition.
 
     Returns:
@@ -102,10 +66,6 @@ def _get_lineage_info(lineage_type, search_condition):
     Raises:
         MindInsightException: If method fails to be called.
     """
-    if 'lineage_type' in search_condition:
-        raise ParamValueError("Lineage type does not need to be assigned in a specific interface.")
-    if lineage_type == 'dataset':
-        search_condition.update({'lineage_type': 'dataset'})
     summary_base_dir = str(settings.SUMMARY_BASE_DIR)
     try:
         lineage_info = filter_summary_lineage(

@@ -82,22 +82,24 @@ def create_filtration_result(summary_dir, train_event_dict,
     """
     filtration_result = {
         "summary_dir": summary_dir,
-        "loss_function": train_event_dict['train_lineage']['hyper_parameters']['loss_function'],
-        "train_dataset_path": train_event_dict['train_lineage']['train_dataset']['train_dataset_path'],
-        "train_dataset_count": train_event_dict['train_lineage']['train_dataset']['train_dataset_size'],
-        "test_dataset_path": eval_event_dict['evaluation_lineage']['valid_dataset']['valid_dataset_path'],
-        "test_dataset_count": eval_event_dict['evaluation_lineage']['valid_dataset']['valid_dataset_size'],
-        "network": train_event_dict['train_lineage']['algorithm']['network'],
-        "optimizer": train_event_dict['train_lineage']['hyper_parameters']['optimizer'],
-        "learning_rate": train_event_dict['train_lineage']['hyper_parameters']['learning_rate'],
-        "epoch": train_event_dict['train_lineage']['hyper_parameters']['epoch'],
-        "batch_size": train_event_dict['train_lineage']['hyper_parameters']['batch_size'],
-        "loss": train_event_dict['train_lineage']['algorithm']['loss'],
-        "model_size": train_event_dict['train_lineage']['model']['size'],
-        "metric": metric_dict,
+        "model_lineage": {
+            "loss_function": train_event_dict['train_lineage']['hyper_parameters']['loss_function'],
+            "train_dataset_path": train_event_dict['train_lineage']['train_dataset']['train_dataset_path'],
+            "train_dataset_count": train_event_dict['train_lineage']['train_dataset']['train_dataset_size'],
+            "test_dataset_path": eval_event_dict['evaluation_lineage']['valid_dataset']['valid_dataset_path'],
+            "test_dataset_count": eval_event_dict['evaluation_lineage']['valid_dataset']['valid_dataset_size'],
+            "network": train_event_dict['train_lineage']['algorithm']['network'],
+            "optimizer": train_event_dict['train_lineage']['hyper_parameters']['optimizer'],
+            "learning_rate": train_event_dict['train_lineage']['hyper_parameters']['learning_rate'],
+            "epoch": train_event_dict['train_lineage']['hyper_parameters']['epoch'],
+            "batch_size": train_event_dict['train_lineage']['hyper_parameters']['batch_size'],
+            "loss": train_event_dict['train_lineage']['algorithm']['loss'],
+            "model_size": train_event_dict['train_lineage']['model']['size'],
+            "metric": metric_dict,
+            "dataset_mark": '2',
+            "user_defined": {}
+        },
         "dataset_graph": dataset_dict,
-        "dataset_mark": '2',
-        "user_defined": {}
     }
     return filtration_result
 
@@ -192,47 +194,50 @@ LINEAGE_FILTRATION_4 = create_filtration_result(
 )
 LINEAGE_FILTRATION_5 = {
     "summary_dir": '/path/to/summary5',
-    "loss_function":
-        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['loss_function'],
-    "train_dataset_path": None,
-    "train_dataset_count":
-        event_data.EVENT_TRAIN_DICT_5['train_lineage']['train_dataset']['train_dataset_size'],
-    "test_dataset_path": None,
-    "test_dataset_count": None,
-    "network": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['network'],
-    "optimizer": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['optimizer'],
-    "learning_rate":
-        event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['learning_rate'],
-    "epoch": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['epoch'],
-    "batch_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['batch_size'],
-    "loss": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['loss'],
-    "model_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['model']['size'],
-    "metric": {},
-    "dataset_graph": event_data.DATASET_DICT_0,
-    "dataset_mark": '2',
-    "user_defined": {}
-
+    "model_lineage": {
+        "loss_function":
+            event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['loss_function'],
+        "train_dataset_path": None,
+        "train_dataset_count":
+            event_data.EVENT_TRAIN_DICT_5['train_lineage']['train_dataset']['train_dataset_size'],
+        "test_dataset_path": None,
+        "test_dataset_count": None,
+        "network": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['network'],
+        "optimizer": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['optimizer'],
+        "learning_rate":
+            event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['learning_rate'],
+        "epoch": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['epoch'],
+        "batch_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['batch_size'],
+        "loss": event_data.EVENT_TRAIN_DICT_5['train_lineage']['algorithm']['loss'],
+        "model_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['model']['size'],
+        "metric": {},
+        "dataset_mark": '2',
+        "user_defined": {}
+    },
+    "dataset_graph": event_data.DATASET_DICT_0
 }
 LINEAGE_FILTRATION_6 = {
     "summary_dir": '/path/to/summary6',
-    "loss_function": None,
-    "train_dataset_path": None,
-    "train_dataset_count": None,
-    "test_dataset_path":
-        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_path'],
-    "test_dataset_count":
-        event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_size'],
-    "network": None,
-    "optimizer": None,
-    "learning_rate": None,
-    "epoch": None,
-    "batch_size": None,
-    "loss": None,
-    "model_size": None,
-    "metric": event_data.METRIC_5,
-    "dataset_graph": event_data.DATASET_DICT_0,
-    "dataset_mark": '2',
-    "user_defined": {}
+    "model_lineage": {
+        "loss_function": None,
+        "train_dataset_path": None,
+        "train_dataset_count": None,
+        "test_dataset_path":
+            event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_path'],
+        "test_dataset_count":
+            event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset']['valid_dataset_size'],
+        "network": None,
+        "optimizer": None,
+        "learning_rate": None,
+        "epoch": None,
+        "batch_size": None,
+        "loss": None,
+        "model_size": None,
+        "metric": event_data.METRIC_5,
+        "dataset_mark": '2',
+        "user_defined": {}
+    },
+    "dataset_graph": event_data.DATASET_DICT_0
 }
 
 

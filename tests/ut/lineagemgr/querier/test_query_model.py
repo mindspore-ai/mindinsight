@@ -108,8 +108,8 @@ class TestLineageObj(TestCase):
         result = self.lineage_obj.get_summary_info(filter_keys)
         self.assertDictEqual(expected_result, result)
 
-    def test_to_filtration_dict(self):
-        """Test the function of to_filtration_dict."""
+    def test_to_model_lineage_dict(self):
+        """Test the function of to_model_lineage_dict."""
         expected_result = create_filtration_result(
             self.summary_dir,
             event_data.EVENT_TRAIN_DICT_0,
@@ -117,8 +117,18 @@ class TestLineageObj(TestCase):
             event_data.METRIC_0,
             event_data.DATASET_DICT_0
         )
-        expected_result['dataset_mark'] = None
-        result = self.lineage_obj.to_filtration_dict()
+        expected_result['model_lineage']['dataset_mark'] = None
+        expected_result.pop('dataset_graph')
+        result = self.lineage_obj.to_model_lineage_dict()
+        self.assertDictEqual(expected_result, result)
+
+    def test_to_dataset_lineage_dict(self):
+        """Test the function of to_dataset_lineage_dict."""
+        expected_result = {
+            "summary_dir": self.summary_dir,
+            "dataset_graph": event_data.DATASET_DICT_0
+        }
+        result = self.lineage_obj.to_dataset_lineage_dict()
         self.assertDictEqual(expected_result, result)
 
     def test_get_value_by_key(self):

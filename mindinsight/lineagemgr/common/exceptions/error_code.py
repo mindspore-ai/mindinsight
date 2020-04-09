@@ -193,7 +193,7 @@ class LineageErrorMsg(Enum):
                                       "It should be a string."
 
     LINEAGE_PARAM_LINEAGE_TYPE_ERROR = "The parameter lineage_type is invalid. " \
-                                       "It should be None, 'dataset' or 'model'."
+                                       "It should be 'dataset' or 'model'."
 
     SUMMARY_ANALYZE_ERROR = "Failed to analyze summary log. {}"
     SUMMARY_VERIFICATION_ERROR = "Verification failed in summary analysis. {}"

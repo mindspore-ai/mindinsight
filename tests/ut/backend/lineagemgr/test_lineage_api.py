@@ -67,7 +67,7 @@ class TestSearchModel(TestCase):
         """Test init."""
         APP.response_class = Response
         self.app_client = APP.test_client()
-        self.url = '/v1/mindinsight/models/model_lineage'
+        self.url = '/v1/mindinsight/lineagemgr/lineages'
 
     @mock.patch('mindinsight.backend.lineagemgr.lineage_api.settings')
     @mock.patch('mindinsight.backend.lineagemgr.lineage_api.filter_summary_lineage')
@@ -78,11 +78,11 @@ class TestSearchModel(TestCase):
             'object': [
                 {
                     'summary_dir': base_dir,
-                    **LINEAGE_FILTRATION_BASE
+                    'model_lineage': LINEAGE_FILTRATION_BASE
                 },
                 {
                     'summary_dir': os.path.join(base_dir, 'run1'),
-                    **LINEAGE_FILTRATION_RUN1
+                    'model_lineage': LINEAGE_FILTRATION_RUN1
                 }
             ],
             'count': 2
@@ -101,11 +101,11 @@ class TestSearchModel(TestCase):
             'object': [
                 {
                     'summary_dir': './',
-                    **LINEAGE_FILTRATION_BASE
+                    'model_lineage': LINEAGE_FILTRATION_BASE
                 },
                 {
                     'summary_dir': './run1',
-                    **LINEAGE_FILTRATION_RUN1
+                    'model_lineage': LINEAGE_FILTRATION_RUN1
                 }
             ],
             'count': 2

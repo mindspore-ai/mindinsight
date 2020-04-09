@@ -20,7 +20,6 @@ Usage:
     The query module test should be run after lineagemgr/collection/model/test_model_lineage.py
     pytest lineagemgr
 """
-
 import os
 from unittest import TestCase
 
@@ -66,64 +65,70 @@ LINEAGE_INFO_RUN1 = {
 }
 LINEAGE_FILTRATION_EXCEPT_RUN = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'except_run'),
-    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-    'train_dataset_path': None,
-    'train_dataset_count': 1024,
-    'user_defined': {},
-    'test_dataset_path': None,
-    'test_dataset_count': None,
-    'network': 'ResNet',
-    'optimizer': 'Momentum',
-    'learning_rate': 0.11999999731779099,
-    'epoch': 10,
-    'batch_size': 32,
-    'loss': 0.029999999329447746,
-    'model_size': 64,
-    'metric': {},
-    'dataset_graph': DATASET_GRAPH,
-    'dataset_mark': 2
+    'model_lineage': {
+        'loss_function': 'SoftmaxCrossEntropyWithLogits',
+        'train_dataset_path': None,
+        'train_dataset_count': 1024,
+        'test_dataset_path': None,
+        'test_dataset_count': None,
+        'user_defined': {},
+        'network': 'ResNet',
+        'optimizer': 'Momentum',
+        'learning_rate': 0.11999999731779099,
+        'epoch': 10,
+        'batch_size': 32,
+        'loss': 0.029999999329447746,
+        'model_size': 64,
+        'metric': {},
+        'dataset_mark': 2
+    },
+    'dataset_graph': DATASET_GRAPH
 }
 LINEAGE_FILTRATION_RUN1 = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
-    'loss_function': 'SoftmaxCrossEntropyWithLogits',
-    'train_dataset_path': None,
-    'train_dataset_count': 731,
-    'test_dataset_path': None,
-    'user_defined': {},
-    'test_dataset_count': 10240,
-    'network': 'ResNet',
-    'optimizer': 'Momentum',
-    'learning_rate': 0.11999999731779099,
-    'epoch': 14,
-    'batch_size': 32,
-    'loss': None,
-    'model_size': 64,
-    'metric': {
-        'accuracy': 0.78
+    'model_lineage': {
+        'loss_function': 'SoftmaxCrossEntropyWithLogits',
+        'train_dataset_path': None,
+        'train_dataset_count': 731,
+        'test_dataset_path': None,
+        'test_dataset_count': 10240,
+        'user_defined': {},
+        'network': 'ResNet',
+        'optimizer': 'Momentum',
+        'learning_rate': 0.11999999731779099,
+        'epoch': 14,
+        'batch_size': 32,
+        'loss': None,
+        'model_size': 64,
+        'metric': {
+            'accuracy': 0.78
+        },
+        'dataset_mark': 2
     },
-    'dataset_graph': DATASET_GRAPH,
-    'dataset_mark': 2
+    'dataset_graph': DATASET_GRAPH
 }
 LINEAGE_FILTRATION_RUN2 = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run2'),
-    'loss_function': None,
-    'train_dataset_path': None,
-    'train_dataset_count': None,
-    'user_defined': {},
-    'test_dataset_path': None,
-    'test_dataset_count': 10240,
-    'network': None,
-    'optimizer': None,
-    'learning_rate': None,
-    'epoch': None,
-    'batch_size': None,
-    'loss': None,
-    'model_size': None,
-    'metric': {
-        'accuracy': 2.7800000000000002
+    'model_lineage': {
+        'loss_function': None,
+        'train_dataset_path': None,
+        'train_dataset_count': None,
+        'test_dataset_path': None,
+        'test_dataset_count': 10240,
+        'user_defined': {},
+        'network': None,
+        'optimizer': None,
+        'learning_rate': None,
+        'epoch': None,
+        'batch_size': None,
+        'loss': None,
+        'model_size': None,
+        'metric': {
+            'accuracy': 2.7800000000000002
+        },
+        'dataset_mark': 3
     },
-    'dataset_graph': {},
-    'dataset_mark': 3
+    'dataset_graph': {}
 }
 
 
@@ -149,6 +154,14 @@ class TestModelApi(TestCase):
 
         cls.empty_dir = os.path.join(BASE_SUMMARY_DIR, 'empty_dir')
         os.makedirs(cls.empty_dir)
+
+    def generate_lineage_object(self, lineage):
+        lineage = dict(lineage)
+        lineage_object = dict()
+        lineage_object.update({'summary_dir': lineage.pop('summary_dir')})
+        lineage_object.update({'dataset_graph': lineage.pop('dataset_graph')})
+        lineage_object.update({'model_lineage': lineage})
+        return lineage_object
 
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
@@ -337,7 +350,7 @@ class TestModelApi(TestCase):
         res = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
-            expect_objects[idx]['dataset_mark'] = res_object.get('dataset_mark')
+            expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
         assert expect_result == res
 
         expect_result = {
@@ -347,7 +360,7 @@ class TestModelApi(TestCase):
         res = filter_summary_lineage(self.dir_with_empty_lineage)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
-            expect_objects[idx]['dataset_mark'] = res_object.get('dataset_mark')
+            expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
         assert expect_result == res
 
     @pytest.mark.level0
@@ -385,7 +398,7 @@ class TestModelApi(TestCase):
         partial_res = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res.get('object')):
-            expect_objects[idx]['dataset_mark'] = res_object.get('dataset_mark')
+            expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
         assert expect_result == partial_res
 
     @pytest.mark.level0
@@ -423,7 +436,7 @@ class TestModelApi(TestCase):
         partial_res = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res.get('object')):
-            expect_objects[idx]['dataset_mark'] = res_object.get('dataset_mark')
+            expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
         assert expect_result == partial_res
 
     @pytest.mark.level0
@@ -439,7 +452,6 @@ class TestModelApi(TestCase):
                 'ge': 30
             },
             'sorted_name': 'metric/accuracy',
-            'lineage_type': None
         }
         expect_result = {
             'customized': event_data.CUSTOMIZED__0,
@@ -452,14 +464,16 @@ class TestModelApi(TestCase):
         partial_res1 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition1)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res1.get('object')):
-            expect_objects[idx]['dataset_mark'] = res_object.get('dataset_mark')
+            expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
         assert expect_result == partial_res1
 
         search_condition2 = {
             'batch_size': {
                 'lt': 30
             },
-            'lineage_type': 'model'
+            'lineage_type': {
+                'eq': 'model'
+            },
         }
         expect_result = {
             'customized': {},
@@ -469,7 +483,7 @@ class TestModelApi(TestCase):
         partial_res2 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition2)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res2.get('object')):
-            expect_objects[idx]['dataset_mark'] = res_object.get('dataset_mark')
+            expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
         assert expect_result == partial_res2
 
     @pytest.mark.level0
@@ -485,7 +499,9 @@ class TestModelApi(TestCase):
             'summary_dir': {
                 'in': [summary_dir]
             },
-            'lineage_type': 'dataset'
+            'lineage_type': {
+                'eq': 'dataset'
+            },
         }
         expect_result = {
             'customized': {},
@@ -705,15 +721,29 @@ class TestModelApi(TestCase):
             search_condition
         )
 
-        # the condition type not supported in summary dir
         search_condition = {
-            'summary_dir': {
-                'lt': '/xxx'
+            'lineage_type': {
+                'in': [
+                    'xxx'
+                ]
             }
         }
         self.assertRaisesRegex(
-            LineageParamSummaryPathError,
-            'Invalid operation of summary dir.',
+            LineageSearchConditionParamError,
+            "The parameter lineage_type is invalid. It should be 'dataset' or 'model'.",
+            filter_summary_lineage,
+            BASE_SUMMARY_DIR,
+            search_condition
+        )
+
+        search_condition = {
+            'lineage_type': {
+                'eq': None
+            }
+        }
+        self.assertRaisesRegex(
+            LineageSearchConditionParamError,
+            "The parameter lineage_type is invalid. It should be 'dataset' or 'model'.",
             filter_summary_lineage,
             BASE_SUMMARY_DIR,
             search_condition
@@ -779,3 +809,42 @@ class TestModelApi(TestCase):
         }
         partial_res2 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition2)
         assert expect_result == partial_res2
+
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_filter_summary_lineage_exception_7(self):
+        """Test the abnormal execution of the filter_summary_lineage interface."""
+        condition_keys = ["summary_dir", "lineage_type"]
+        for condition_key in condition_keys:
+            # the condition type not supported in summary_dir and lineage_type
+            search_condition = {
+                condition_key: {
+                    'lt': '/xxx'
+                }
+            }
+            self.assertRaisesRegex(
+                LineageSearchConditionParamError,
+                f'Invalid operation of {condition_key}.',
+                filter_summary_lineage,
+                BASE_SUMMARY_DIR,
+                search_condition
+            )
+
+            # more than one operation in summary_dir and lineage_type
+            search_condition = {
+                condition_key: {
+                    'in': ['/xxx', '/yyy'],
+                    'eq': '/zzz',
+                }
+            }
+            self.assertRaisesRegex(
+                LineageSearchConditionParamError,
+                f'More than one operation of {condition_key}.',
+                filter_summary_lineage,
+                BASE_SUMMARY_DIR,
+                search_condition
+            )

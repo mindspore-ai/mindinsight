@@ -262,8 +262,6 @@ def _convert_relative_path_to_abspath(summary_base_dir, search_condition):
         return search_condition
 
     summary_dir_condition = search_condition.get("summary_dir")
-    if not set(summary_dir_condition.keys()).issubset(['in', 'eq']):
-        raise LineageParamValueError("Invalid operation of summary dir.")
 
     if 'in' in summary_dir_condition:
         summary_paths = []
