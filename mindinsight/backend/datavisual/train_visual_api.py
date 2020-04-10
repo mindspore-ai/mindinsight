@@ -78,7 +78,7 @@ def scalar_metadata():
             one of which is an object containing items' wall_time, step and value.
     """
     tag = request.args.get("tag")
-    train_id = request.args.get("train_id")
+    train_id = get_train_id(request)
 
     processor = ScalarsProcessor(DATA_MANAGER)
     response = processor.get_metadata_list(train_id, tag)
