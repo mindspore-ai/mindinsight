@@ -96,7 +96,7 @@ show_usage() {
     echo "usage: build.sh [-h] [clean]"
     echo ""
     echo "options:"
-    echo "  -h          show usage info"
+    echo "  -h          show this help message and exit"
     echo "  clean       clean build files"
 }
 
