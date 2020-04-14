@@ -19,8 +19,6 @@ import struct
 
 from mindinsight.datavisual.utils import crc32
 
-KMASKDELTA = 0xa282ead8
-
 
 class EventWriter:
     """
@@ -86,10 +84,6 @@ class EventWriter:
         Returns:
             bytes, crc of content, 4 bytes.
         """
-        mask = (1 << 32) - 1
-
-        crc_value = crc32.MakeCrc32c(0, content, len(content))
-        crc_value = ((crc_value >> 15) | (crc_value << 17)) & mask
-        crc_value = (crc_value + KMASKDELTA) & mask
+        crc_value = crc32.GetMaskCrc32cValue(content, len(content))
 
         return struct.pack("<L", crc_value)

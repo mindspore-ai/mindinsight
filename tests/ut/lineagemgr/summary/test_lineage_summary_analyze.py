@@ -93,8 +93,7 @@ class TestSummaryAnalyzer(TestCase):
     def test_check_crc(self, *args):
         """Test _check_crc method."""
         args[0].return_value = None
-        args[1].GetValueFromStr.return_value = 1
-        args[1].GetMaskCrc32cValue.return_value = 2
+        args[1].CheckValueAgainstData.return_value = False
         source_str = b'\x01' * 10
         crc_str = b'\x00' * 4
         with self.assertRaisesRegex(LineageVerificationException, "The CRC verification failed."):

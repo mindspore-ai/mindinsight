@@ -17,9 +17,8 @@
 #include "crc32/crc32.h"
 #include <stdint.h>
 
-const unsigned int CRC_TABLE_SIZE = 256;
 
-static const uint32 crc_table_o32[CRC_TABLE_SIZE] = {
+static const uint32_t crc_table_o32[CRC_TABLE_SIZE] = {
   0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4, 0xC79A971F, 0x35F1141C, 0x26A1E7E8, 0xD4CA64EB, 0x8AD958CF,
   0x78B2DBCC, 0x6BE22838, 0x9989AB3B, 0x4D43CFD0, 0xBF284CD3, 0xAC78BF27, 0x5E133C24, 0x105EC76F, 0xE235446C,
   0xF165B798, 0x030E349B, 0xD7C45070, 0x25AFD373, 0x36FF2087, 0xC494A384, 0x9A879FA0, 0x68EC1CA3, 0x7BBCEF57,
@@ -50,7 +49,7 @@ static const uint32 crc_table_o32[CRC_TABLE_SIZE] = {
   0xE03E9C81, 0x34F4F86A, 0xC69F7B69, 0xD5CF889D, 0x27A40B9E, 0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E,
   0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351};
 
-static const uint32 crc_table_o40[CRC_TABLE_SIZE] = {
+static const uint32_t crc_table_o40[CRC_TABLE_SIZE] = {
   0x00000000, 0x13A29877, 0x274530EE, 0x34E7A899, 0x4E8A61DC, 0x5D28F9AB, 0x69CF5132, 0x7A6DC945, 0x9D14C3B8,
   0x8EB65BCF, 0xBA51F356, 0xA9F36B21, 0xD39EA264, 0xC03C3A13, 0xF4DB928A, 0xE7790AFD, 0x3FC5F181, 0x2C6769F6,
   0x1880C16F, 0x0B225918, 0x714F905D, 0x62ED082A, 0x560AA0B3, 0x45A838C4, 0xA2D13239, 0xB173AA4E, 0x859402D7,
@@ -81,7 +80,7 @@ static const uint32 crc_table_o40[CRC_TABLE_SIZE] = {
   0x707D86E7, 0x0A104FA2, 0x19B2D7D5, 0x2D557F4C, 0x3EF7E73B, 0xD98EEDC6, 0xCA2C75B1, 0xFECBDD28, 0xED69455F,
   0x97048C1A, 0x84A6146D, 0xB041BCF4, 0xA3E32483};
 
-static const uint32 crc_table_o48[CRC_TABLE_SIZE] = {
+static const uint32_t crc_table_o48[CRC_TABLE_SIZE] = {
   0x00000000, 0xA541927E, 0x4F6F520D, 0xEA2EC073, 0x9EDEA41A, 0x3B9F3664, 0xD1B1F617, 0x74F06469, 0x38513EC5,
   0x9D10ACBB, 0x773E6CC8, 0xD27FFEB6, 0xA68F9ADF, 0x03CE08A1, 0xE9E0C8D2, 0x4CA15AAC, 0x70A27D8A, 0xD5E3EFF4,
   0x3FCD2F87, 0x9A8CBDF9, 0xEE7CD990, 0x4B3D4BEE, 0xA1138B9D, 0x045219E3, 0x48F3434F, 0xEDB2D131, 0x079C1142,
@@ -112,7 +111,7 @@ static const uint32 crc_table_o48[CRC_TABLE_SIZE] = {
   0x378AB177, 0x437AD51E, 0xE63B4760, 0x0C158713, 0xA954156D, 0xE5F54FC1, 0x40B4DDBF, 0xAA9A1DCC, 0x0FDB8FB2,
   0x7B2BEBDB, 0xDE6A79A5, 0x3444B9D6, 0x91052BA8};
 
-static const uint32 crc_table_o56[CRC_TABLE_SIZE] = {
+static const uint32_t crc_table_o56[CRC_TABLE_SIZE] = {
   0x00000000, 0xDD45AAB8, 0xBF672381, 0x62228939, 0x7B2231F3, 0xA6679B4B, 0xC4451272, 0x1900B8CA, 0xF64463E6,
   0x2B01C95E, 0x49234067, 0x9466EADF, 0x8D665215, 0x5023F8AD, 0x32017194, 0xEF44DB2C, 0xE964B13D, 0x34211B85,
   0x560392BC, 0x8B463804, 0x924680CE, 0x4F032A76, 0x2D21A34F, 0xF06409F7, 0x1F20D2DB, 0xC2657863, 0xA047F15A,
@@ -143,7 +142,7 @@ static const uint32 crc_table_o56[CRC_TABLE_SIZE] = {
   0xA565BA57, 0xBC65029D, 0x6120A825, 0x0302211C, 0xDE478BA4, 0x31035088, 0xEC46FA30, 0x8E647309, 0x5321D9B1,
   0x4A21617B, 0x9764CBC3, 0xF54642FA, 0x2803E842};
 
-static const uint32 crc_table_o64[CRC_TABLE_SIZE] = {
+static const uint32_t crc_table_o64[CRC_TABLE_SIZE] = {
   0x00000000, 0x38116FAC, 0x7022DF58, 0x4833B0F4, 0xE045BEB0, 0xD854D11C, 0x906761E8, 0xA8760E44, 0xC5670B91,
   0xFD76643D, 0xB545D4C9, 0x8D54BB65, 0x2522B521, 0x1D33DA8D, 0x55006A79, 0x6D1105D5, 0x8F2261D3, 0xB7330E7F,
   0xFF00BE8B, 0xC711D127, 0x6F67DF63, 0x5776B0CF, 0x1F45003B, 0x27546F97, 0x4A456A42, 0x725405EE, 0x3A67B51A,
@@ -174,7 +173,7 @@ static const uint32 crc_table_o64[CRC_TABLE_SIZE] = {
   0x854ADB82, 0x2D3CD5C6, 0x152DBA6A, 0x5D1E0A9E, 0x650F6532, 0x081E60E7, 0x300F0F4B, 0x783CBFBF, 0x402DD013,
   0xE85BDE57, 0xD04AB1FB, 0x9879010F, 0xA0686EA3};
 
-static const uint32 crc_table_o72[CRC_TABLE_SIZE] = {
+static const uint32_t crc_table_o72[CRC_TABLE_SIZE] = {
   0x00000000, 0xEF306B19, 0xDB8CA0C3, 0x34BCCBDA, 0xB2F53777, 0x5DC55C6E, 0x697997B4, 0x8649FCAD, 0x6006181F,
   0x8F367306, 0xBB8AB8DC, 0x54BAD3C5, 0xD2F32F68, 0x3DC34471, 0x097F8FAB, 0xE64FE4B2, 0xC00C303E, 0x2F3C5B27,
   0x1B8090FD, 0xF4B0FBE4, 0x72F90749, 0x9DC96C50, 0xA975A78A, 0x4645CC93, 0xA00A2821, 0x4F3A4338, 0x7B8688E2,
@@ -205,7 +204,7 @@ static const uint32 crc_table_o72[CRC_TABLE_SIZE] = {
   0x63480154, 0xE501FDF9, 0x0A3196E0, 0x3E8D5D3A, 0xD1BD3623, 0x37F2D291, 0xD8C2B988, 0xEC7E7252, 0x034E194B,
   0x8507E5E6, 0x6A378EFF, 0x5E8B4525, 0xB1BB2E3C};
 
-static const uint32 crc_table_o80[CRC_TABLE_SIZE] = {
+static const uint32_t crc_table_o80[CRC_TABLE_SIZE] = {
   0x00000000, 0x68032CC8, 0xD0065990, 0xB8057558, 0xA5E0C5D1, 0xCDE3E919, 0x75E69C41, 0x1DE5B089, 0x4E2DFD53,
   0x262ED19B, 0x9E2BA4C3, 0xF628880B, 0xEBCD3882, 0x83CE144A, 0x3BCB6112, 0x53C84DDA, 0x9C5BFAA6, 0xF458D66E,
   0x4C5DA336, 0x245E8FFE, 0x39BB3F77, 0x51B813BF, 0xE9BD66E7, 0x81BE4A2F, 0xD27607F5, 0xBA752B3D, 0x02705E65,
@@ -236,7 +235,7 @@ static const uint32 crc_table_o80[CRC_TABLE_SIZE] = {
   0x96DC05CD, 0x8B39B544, 0xE33A998C, 0x5B3FECD4, 0x333CC01C, 0x60F48DC6, 0x08F7A10E, 0xB0F2D456, 0xD8F1F89E,
   0xC5144817, 0xAD1764DF, 0x15121187, 0x7D113D4F};
 
-static const uint32 crc_table_o88[CRC_TABLE_SIZE] = {
+static const uint32_t crc_table_o88[CRC_TABLE_SIZE] = {
   0x00000000, 0x493C7D27, 0x9278FA4E, 0xDB448769, 0x211D826D, 0x6821FF4A, 0xB3657823, 0xFA590504, 0x423B04DA,
   0x0B0779FD, 0xD043FE94, 0x997F83B3, 0x632686B7, 0x2A1AFB90, 0xF15E7CF9, 0xB86201DE, 0x847609B4, 0xCD4A7493,
   0x160EF3FA, 0x5F328EDD, 0xA56B8BD9, 0xEC57F6FE, 0x37137197, 0x7E2F0CB0, 0xC64D0D6E, 0x8F717049, 0x5435F720,
@@ -268,22 +267,22 @@ static const uint32 crc_table_o88[CRC_TABLE_SIZE] = {
   0xC451B7CC, 0x8D6DCAEB, 0x56294D82, 0x1F1530A5};
 
 // Use the 8 table to calc crc32c value
-inline void CRC32T8(uint32 *crc, const uint8_t **p) {
-  auto c = static_cast<uint32>(*crc ^ LE_LOAD32(*p));
+inline void CRC32T8(uint32_t *crc, const uint8_t **p) {
+  auto c = static_cast<uint32_t>(*crc ^ LE_LOAD32(*p));
   *p += 4;
-  *crc = crc_table_o88[c & 0xff] ^ crc_table_o80[(c >> 8) & 0xff] ^ crc_table_o72[(c >> 16) & 0xff] ^
-         crc_table_o64[(c >> 24) & 0xff];
-  c = static_cast<uint32>(LE_LOAD32(*p));
-  *crc = (*crc) ^ crc_table_o56[c & 0xff] ^ crc_table_o48[(c >> 8) & 0xff] ^ crc_table_o40[(c >> 16) & 0xff] ^
-         crc_table_o32[(c >> 24) & 0xff];
+  *crc = crc_table_o88[c & 0xFF] ^ crc_table_o80[(c >> 8) & 0xFF] ^ crc_table_o72[(c >> 16) & 0xFF] ^
+         crc_table_o64[(c >> 24) & 0xFF];
+  c = static_cast<uint32_t>(LE_LOAD32(*p));
+  *crc = (*crc) ^ crc_table_o56[c & 0xFF] ^ crc_table_o48[(c >> 8) & 0xFF] ^ crc_table_o40[(c >> 16) & 0xFF] ^
+         crc_table_o32[(c >> 24) & 0xFF];
   *p += 4;
 }
 
 // calc the crc32c value
-uint32 MakeCrc32c(uint32 init_crc, const char *data, size_t size) {
+uint32_t MakeCrc32c(uint32_t init_crc, const char *data, size_t size) {
   EXCEPT_CHECK_NULL(data);
-  uint32 crc = init_crc ^ 0xffffffffu;
-  const unsigned int OFFSET = 8;
+  uint32_t crc = init_crc ^ 0xFFFFFFFFU;
+  const long OFFSET = 8;
 
   // Get the origin begin and end address(not alignment)
   auto *bp = reinterpret_cast<const uint8_t *>(data);
@@ -299,7 +298,7 @@ uint32 MakeCrc32c(uint32 init_crc, const char *data, size_t size) {
   if (bp_align <= ep) {
     // Process bytes until finished or p is 4-byte aligned
     while (bp != bp_align) {
-      crc = crc_table_o32[(crc & 0xff) ^ (*bp++)] ^ (crc >> 8);
+      crc = crc_table_o32[(crc & 0xFF) ^ (*bp++)] ^ (crc >> 8);
     }
   }
 
@@ -310,7 +309,7 @@ uint32 MakeCrc32c(uint32 init_crc, const char *data, size_t size) {
 
   // Process the last not alignment bytes
   while (bp < ep) {
-    crc = crc_table_o32[(crc & 0xff) ^ (*bp++)] ^ (crc >> 8);
+    crc = crc_table_o32[(crc & 0xFF) ^ (*bp++)] ^ (crc >> 8);
   }
-  return crc ^ 0xffffffffu;
+  return crc ^ 0xFFFFFFFFU;
 }

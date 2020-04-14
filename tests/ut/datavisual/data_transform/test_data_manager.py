@@ -51,8 +51,7 @@ class TestDataManager:
     @pytest.fixture(scope="function")
     def crc_pass(self):
         """Mock the crc to pass the check."""
-        ms_data_loader.crc32.GetValueFromStr = Mock(return_value=0)
-        ms_data_loader.crc32.GetMaskCrc32cValue = Mock(return_value=0)
+        ms_data_loader.crc32.CheckValueAgainstData = Mock(return_value=True)
 
     def _make_path_and_file_list(self, dir_name):
         """Utils function for tests."""
