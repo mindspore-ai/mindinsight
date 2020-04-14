@@ -55,14 +55,12 @@ class TestMsDataLoader:
     @pytest.fixture(scope="function")
     def crc_pass(self):
         """Mock the crc to pass the check."""
-        ms_data_loader.crc32.GetValueFromStr = Mock(return_value=0)
-        ms_data_loader.crc32.GetMaskCrc32cValue = Mock(return_value=0)
+        ms_data_loader.crc32.CheckValueAgainstData = Mock(return_value=True)
 
     @pytest.fixture(scope="function")
     def crc_fail(self):
         """Mock the crc to fail the check."""
-        ms_data_loader.crc32.GetValueFromStr = Mock(return_value=0)
-        ms_data_loader.crc32.GetMaskCrc32cValue = Mock(return_value=1)
+        ms_data_loader.crc32.CheckValueAgainstData = Mock(return_value=False)
 
     def test_check_files_update_success_deleted_files(self):
         """Test new file list delete some files."""

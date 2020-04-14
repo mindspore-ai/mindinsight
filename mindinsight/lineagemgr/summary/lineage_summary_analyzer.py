@@ -137,8 +137,7 @@ class SummaryAnalyzer:
         Raises:
             LineageVerificationException: Raise when verification failed.
         """
-        if crc32.GetValueFromStr(crc_str) != \
-                crc32.GetMaskCrc32cValue(source_str, len(source_str)):
+        if not crc32.CheckValueAgainstData(crc_str, source_str, len(source_str)):
             log.error("The CRC verification failed.")
             raise LineageVerificationException("The CRC verification failed.")
 

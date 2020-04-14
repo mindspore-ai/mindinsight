@@ -17,38 +17,66 @@
 #ifndef DATAVISUAL_UTILS_CRC32_CRC32_H_
 #define DATAVISUAL_UTILS_CRC32_CRC32_H_
 
-#include <pybind11/pybind11.h>
-#include <stddef.h>
+#include "pybind11/pybind11.h"
+#include "securec/include/securec.h"
+#include <cstddef>
 #include <cstdint>
-#include "crc32/base.h"
+
+#define CRC_TABLE_SIZE 256
+#define RIGHT_SHIFT 15
+#define LEFT_SHIFT 17
 
 // Align n to (1 << m) byte boundary
 #define MEM_ALIGN(n, m) ((n + ((1 << m) - 1)) & ~((1 << m) - 1))
 
+// check the null point, Only log it in if(): The value is null
+#define EXCEPT_CHECK_NULL(value) \
+  do {                           \
+    if (value == nullptr) {      \
+      break;                     \
+    }                            \
+  } while (0)
+
+// implement common define function
+// Get the 32 bits align value
+inline uint32_t DecodeFixed32(const char* ptr) {
+  uint32_t result = 0;
+  if(EOK != memcpy_s(&result, sizeof(result), ptr, sizeof(result))) {
+    return result;
+  }
+  return result;
+}
+
+// Used to fetch a naturally-aligned 32-bit word in little endian byte-order
+inline uint32_t LE_LOAD32(const uint8_t* p) {
+  return DecodeFixed32(reinterpret_cast<const char*>(p));
+}
+
 // Masked for crc.
-static constexpr uint32 kMaskDelta = 0xa282ead8ul;
+static constexpr uint32_t kMaskDelta = 0xA282EAD8U;
 
 // Provide the Crc32c function
 
 // Calculate the crc32c value, use the 8 table method
-uint32 MakeCrc32c(uint32 init_crc, const char* data, size_t size);
+uint32_t MakeCrc32c(uint32_t init_crc, const char* data, size_t size);
 
-uint32 GetMaskCrc32cValue(const char* data, size_t n) {
-  auto crc = MakeCrc32c(0, data, n);
-  return crc;
+// A function return the crc32c value
+uint32_t GetMaskCrc32cValue(const char* data, size_t n) {
+  uint32_t crc = MakeCrc32c(0, data, n);
+  return ((crc >> RIGHT_SHIFT) | (crc << LEFT_SHIFT)) + kMaskDelta;
 }
 
-uint32 GetValueFromStr(const char* crc_str) {
-  uint32 crc = DecodeFixed32(crc_str);
-  uint32 rot = crc - kMaskDelta;
-  return ((rot >> 17) | (rot << 15));
+// A function check the crc32c value against data
+bool CheckValueAgainstData(const char* crc_str, const char* data, size_t size) {
+  uint32_t crc_new = GetMaskCrc32cValue(data, size);
+  uint32_t crc_old = DecodeFixed32(crc_str);
+  return crc_new == crc_old;
 }
 
 PYBIND11_MODULE(crc32, m) {
   m.doc() = "crc util";
-  m.def("MakeCrc32c", &MakeCrc32c, "A function calculating the crc32c value, use the 8 table method");
   m.def("GetMaskCrc32cValue", &GetMaskCrc32cValue, "A function return the crc32c value");
-  m.def("GetValueFromStr", &GetValueFromStr, "A function return the crc32c value from string");
+  m.def("CheckValueAgainstData", &CheckValueAgainstData, "A function check the crc32c value against data");
 }
 
 #endif  // DATAVISUAL_UTILS_CRC32_CRC32_H_

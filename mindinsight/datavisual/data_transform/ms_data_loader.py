@@ -184,7 +184,7 @@ class MSDataLoader:
             logger.warning("Check header size and crc, record truncated at offset %s, "
                            "file_path=%s.", file_handler.offset, file_handler.file_path)
             return None
-        if crc32.GetValueFromStr(header_crc_str) != crc32.GetMaskCrc32cValue(header_str, HEADER_SIZE):
+        if not crc32.CheckValueAgainstData(header_crc_str, header_str, HEADER_SIZE):
             raise exceptions.CRCFailedError()
 
         # read the event body if integrity of header is verified
@@ -202,7 +202,7 @@ class MSDataLoader:
             logger.warning("Check event crc, record truncated at offset %d, file_path: %s.",
                            file_handler.offset, file_handler.file_path)
             return None
-        if crc32.GetValueFromStr(event_crc_str) != crc32.GetMaskCrc32cValue(event_str, event_len):
+        if not crc32.CheckValueAgainstData(event_crc_str, event_str, event_len):
             raise exceptions.CRCFailedError()
 
         return event_str

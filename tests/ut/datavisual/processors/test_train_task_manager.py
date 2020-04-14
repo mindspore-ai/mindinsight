@@ -59,8 +59,7 @@ class TestTrainTaskManager:
         """
         Mock common environment for train task unittest.
         """
-        crc32.GetValueFromStr = Mock(return_value=0)
-        crc32.GetMaskCrc32cValue = Mock(return_value=0)
+        crc32.CheckValueAgainstData = Mock(return_value=True)
         data_manager.logger = MockLogger
 
     def teardown_class(self):
