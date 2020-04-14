@@ -29,7 +29,7 @@ limitations under the License.
         <div class="cl-dashboard-title"> {{$t("trainingDashboard.trainingScalar")}}</div>
         <div class="cl-module">
           <div class="cl-scalar-tagName"
-               v-if="curPageArr.length && !wrongPlugin">
+               v-show="curPageArr.length && !wrongPlugin">
             <div v-for="(sampleItem,index) in curPageArr"
                  :key="index"
                  :class="['tagNameLeft',index==1? 'tagNameRight':'']">
@@ -37,10 +37,10 @@ limitations under the License.
             </div>
           </div>
           <div id="module-chart"
-               v-if="curPageArr.length && !wrongPlugin"
+               v-show="curPageArr.length && !wrongPlugin"
                key="chart-data"></div>
           <div class="no-data-img"
-               v-if="!curPageArr.length || wrongPlugin"
+               v-show="!curPageArr.length || wrongPlugin"
                key="no-chart-data">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
@@ -107,12 +107,12 @@ limitations under the License.
                :class="originImageDataArr.length && !wrongPlugin ? '' : 'no-data-img'">
             <img class="sample-img select-disable"
                  :src="curImageShowSample.curImgUrl"
-                 v-if="originImageDataArr.length && !wrongPlugin">
+                 v-show="originImageDataArr.length && !wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt=""
-                 v-if="!originImageDataArr.length || wrongPlugin">
+                 v-show="!originImageDataArr.length || wrongPlugin">
             <p class='no-data-text'
-               v-if=" !originImageDataArr.length || wrongPlugin">
+               v-show=" !originImageDataArr.length || wrongPlugin">
               {{$t("public.noData")}}
             </p>
           </div>
@@ -615,7 +615,7 @@ export default {
         },
         grid: {
           top: 20,
-          bottom: 50,
+          bottom: 66,
           left: 66,
           right: 60,
         },

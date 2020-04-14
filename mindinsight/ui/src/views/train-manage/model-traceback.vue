@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div id='cl-model-traceback'>
+  <div id="cl-model-traceback">
     <div class="cl-model-right">
       <div class="checkbox-area"
            v-if="!noData && echart.allData.length">
@@ -22,33 +22,28 @@ limitations under the License.
                    @click="resetChart"
                    type="primary"
                    size="mini"
-                   plain>
-          {{$t('modelTraceback.showAllData')}}
-        </el-button>
+                   plain>{{ $t('modelTraceback.showAllData') }}</el-button>
         <div class="checkbox">
           <el-checkbox v-for="item in table.mandatoryColumn"
                        :key="item"
                        :label="item"
                        :checked="true"
                        :disabled="true"
-                       :class="table.optionsNotInCheckbox.includes(item)?'notShow': ''">
-            {{table.columnOptions[item].label}}
-          </el-checkbox>
-          <br>
+                       :class="table.optionsNotInCheckbox.includes(item) ? 'notShow' : ''">
+            {{ table.columnOptions[item].label }}</el-checkbox>
+          <br />
           <el-checkbox class="select-all"
                        v-model="table.selectAll"
                        :indeterminate="table.isIndeterminate"
-                       @change="checkboxSelectAll">
-            {{$t('scalar.selectAll')}}
-          </el-checkbox>
+                       @change="checkboxSelectAll">{{ $t('scalar.selectAll') }}</el-checkbox>
           <el-checkbox-group v-model="table.selectedColumn"
                              @change="columnSelectionChange">
             <el-checkbox v-for="item in table.optionalColumn"
                          :key="item"
                          :label="item"
-                         :class="table.optionsNotInCheckbox.includes(item)?'notShow': 'option'">
-              {{table.columnOptions[item].label}}
-            </el-checkbox>
+                         :class="
+                table.optionsNotInCheckbox.includes(item) ? 'notShow' : 'option'
+              ">{{ table.columnOptions[item].label }}</el-checkbox>
           </el-checkbox-group>
         </div>
       </div>
@@ -62,24 +57,30 @@ limitations under the License.
                   tooltip-effect="light"
                   height="calc(100% - 40px)"
                   @selection-change="selectionChange"
-                  @sort-change='sortChange'
+                  @sort-change="sortChange"
                   row-key="summary_dir">
           <el-table-column type="selection"
                            width="55"
                            v-if="table.data.length"
-                           :reserve-selection="true">
-          </el-table-column>
+                           :reserve-selection="true"></el-table-column>
           <el-table-column v-for="key in table.column"
                            :key="key"
                            :prop="key"
                            :label="table.columnOptions[key].label"
                            show-overflow-tooltip
-                           min-width='150'
-                           sortable='custom'>
+                           min-width="180"
+                           sortable="custom">
+            <template slot="header"
+                      slot-scope="scope">
+              <div class="custom-label"
+                   :title="scope.column.label">
+                {{ scope.column.label }}
+              </div>
+            </template>
             <template slot-scope="scope">
               <a v-if="key === 'summary_dir'"
-                 @click="jumpToTrainDashboard(scope.row[key])">{{scope.row[key]}}</a>
-              <span v-else> {{formatNumber(key, scope.row[key])}}</span>
+                 @click="jumpToTrainDashboard(scope.row[key])">{{ scope.row[key] }}</a>
+              <span v-else>{{ formatNumber(key, scope.row[key]) }}</span>
             </template>
           </el-table-column>
         </el-table>
@@ -87,17 +88,14 @@ limitations under the License.
                        :current-page="pagination.currentPage"
                        :page-size="pagination.pageSize"
                        :layout="pagination.layout"
-                       :total="pagination.total">
-        </el-pagination>
+                       :total="pagination.total"></el-pagination>
       </div>
       <div v-if="noData"
            class="no-data-page">
         <div class="no-data-img">
           <img :src="require('@/assets/images/nodata.png')"
-               alt="" />
-          <p class='no-data-text'>
-            {{$t("public.noData")}}
-          </p>
+               alt />
+          <p class="no-data-text">{{ $t('public.noData') }}</p>
         </div>
       </div>
     </div>
@@ -283,7 +281,6 @@ export default {
               (res) => {
                 if (res && res.data && res.data.object) {
                   const list = JSON.parse(JSON.stringify(res.data.object));
-                  const metricKeys = {};
                   list.forEach((i) => {
                     i.model_size = parseFloat(
                         ((i.model_size || 0) / 1024 / 1024).toFixed(2),
@@ -292,37 +289,64 @@ export default {
                     if (keys.length) {
                       keys.forEach((key) => {
                         if (i.metric[key] || i.metric[key] === 0) {
-                          const temp = 'metric_' + key;
-                          metricKeys[temp] = key;
+                          const temp = 'metric/' + key;
                           i[temp] = i.metric[key];
                         }
                       });
                       delete i.metric;
                     }
+                    const udkeys = Object.keys(i.user_defined || {});
+                    if (udkeys.length) {
+                      udkeys.forEach((key) => {
+                        if (i.user_defined[key] || i.user_defined[key] === 0) {
+                          const temp = 'user_defined/' + key;
+                          i[temp] = i.user_defined[key];
+                        }
+                      });
+                      delete i.user_defined;
+                    }
                   });
                   if (allData) {
-                    const obj = {};
-                    Object.keys(metricKeys).forEach((key) => {
-                      obj[key] = {
-                        label: metricKeys[key],
-                        required: true,
-                      };
-                    });
-
-                    this.table.columnOptions = Object.assign(
-                        {
-                          summary_dir: {
-                            label: this.$t('modelTraceback.summaryPath'),
-                            required: true,
-                          },
-                          dataset_mark: {
-                            label: this.$t('modelTraceback.dataProcess'),
-                            required: true,
-                          },
-                        },
-                        obj,
-                        this.table.columnOptions,
-                    );
+                    if (res.data.customized) {
+                      const customized = JSON.parse(
+                          JSON.stringify(res.data.customized),
+                      );
+                      const customizedKeys = Object.keys(customized);
+                      if (customizedKeys.length > 0) {
+                        const metricColumnOptions = {};
+                        const userDefinedColumnOptions = {};
+                        customizedKeys.forEach((key) => {
+                          const str = key.substring(0, key.indexOf('/'));
+                          if ('metric' === str) {
+                            metricColumnOptions[key] = customized[key];
+                          } else if ('user_defined' === str) {
+                            userDefinedColumnOptions[key] = customized[key];
+                          }
+                        });
+                        this.table.columnOptions = Object.assign(
+                            {
+                              summary_dir: {
+                                label: this.$t('modelTraceback.summaryPath'),
+                                required: true,
+                              },
+                              dataset_mark: {
+                                label: this.$t('modelTraceback.dataProcess'),
+                                required: true,
+                              },
+                            },
+                            metricColumnOptions,
+                            userDefinedColumnOptions,
+                            this.table.columnOptions,
+                        );
+                        customizedKeys.forEach((i) => {
+                          if (customized[i].type === 'int') {
+                            this.keysOfIntValue.push(i);
+                          } else if (customized[i].type === 'str') {
+                            this.keysOfStringValue.push(i);
+                          }
+                        });
+                      }
+                    }
 
                     this.noData = !!!res.data.object.length;
                     this.echart.allData = list;
@@ -438,11 +462,21 @@ export default {
                     if (keys.length) {
                       keys.forEach((key) => {
                         if (i.metric[key] || i.metric[key] === 0) {
-                          const temp = 'metric_' + key;
+                          const temp = 'metric/' + key;
                           i[temp] = i.metric[key];
                         }
                       });
                       delete i.metric;
+                    }
+                    const udkeys = Object.keys(i.user_defined || {});
+                    if (udkeys.length) {
+                      udkeys.forEach((key) => {
+                        if (i.user_defined[key] || i.user_defined[key] === 0) {
+                          const temp = 'user_defined/' + key;
+                          i[temp] = i.user_defined[key];
+                        }
+                      });
+                      delete i.user_defined;
                     }
                   });
                   this.table.data = list;
@@ -508,6 +542,9 @@ export default {
       const echartOption = {
         backgroundColor: 'white',
         parallelAxis: parallelAxis,
+        tooltip: {
+          trigger: 'axis',
+        },
         parallel: {
           top: 25,
           left: 50,
@@ -539,6 +576,9 @@ export default {
             },
             areaSelectStyle: {
               width: 40,
+            },
+            tooltip: {
+              show: true,
             },
             realtime: false,
           },
@@ -618,11 +658,21 @@ export default {
                         if (keys.length) {
                           keys.forEach((key) => {
                             if (i.metric[key] || i.metric[key] === 0) {
-                              const temp = 'metric_' + key;
+                              const temp = 'metric/' + key;
                               i[temp] = i.metric[key];
                             }
                           });
                           delete i.metric;
+                        }
+                        const udkeys = Object.keys(i.user_defined || {});
+                        if (udkeys.length) {
+                          udkeys.forEach((key) => {
+                            if (i.user_defined[key] || i.user_defined[key] === 0) {
+                              const temp = 'user_defined/' + key;
+                              i[temp] = i.user_defined[key];
+                            }
+                          });
+                          delete i.user_defined;
                         }
                       });
 
@@ -805,6 +855,11 @@ export default {
       height: calc(60% - 74px);
       padding: 12px 32px;
       position: relative;
+      .custom-label {
+        max-width: calc(100% - 25px);
+        padding: 0;
+        vertical-align: middle;
+      }
       a {
         cursor: pointer;
       }
