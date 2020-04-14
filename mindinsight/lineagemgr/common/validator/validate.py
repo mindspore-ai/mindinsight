@@ -349,12 +349,14 @@ def validate_condition(search_condition):
     if "sorted_name" in search_condition:
         sorted_name = search_condition.get("sorted_name")
         err_msg = "The sorted_name must be in {} or start with " \
-                  "`metric_`.".format(list(FIELD_MAPPING.keys()))
+                  "`metric/` or `user_defined/`.".format(list(FIELD_MAPPING.keys()))
         if not isinstance(sorted_name, str):
             log.error(err_msg)
             raise LineageParamValueError(err_msg)
-        if sorted_name not in FIELD_MAPPING and not (
-                sorted_name.startswith('metric_') and len(sorted_name) > 7):
+        if not (sorted_name in FIELD_MAPPING
+            or (sorted_name.startswith('metric/') and len(sorted_name) > 7)
+            or (sorted_name.startswith('user_defined/') and len(sorted_name) > 13)
+        ):
             log.error(err_msg)
             raise LineageParamValueError(err_msg)
 
@@ -393,3 +395,38 @@ def validate_path(summary_path):
         raise LineageDirNotExistError("The summary path does not exist or is not a dir.")
 
     return summary_path
+
+
+def validate_user_defined_info(user_defined_info):
+    """
+    Validate user defined info.
+
+    Args:
+        user_defined_info (dict): The user defined info.
+
+    Raises:
+        LineageParamTypeError: If the type of parameters is invalid.
+        LineageParamValueError: If user defined keys have been defined in lineage.
+
+    """
+    if not isinstance(user_defined_info, dict):
+        log.error("Invalid user defined info. It should be a dict.")
+        raise LineageParamTypeError("Invalid user defined info. It should be dict.")
+    for key, value in user_defined_info:
+        if not isinstance(key, str):
+            error_msg = "Dict key type {} is not supported in user defined info." \
+                        "Only str is permitted now.".format(type(key))
+            log.error(error_msg)
+            raise LineageParamTypeError(error_msg)
+        if not isinstance(key, (int, str, float)):
+            error_msg = "Dict value type {} is not supported in user defined info." \
+                        "Only str, int and float are permitted now.".format(type(value))
+            log.error(error_msg)
+            raise LineageParamTypeError(error_msg)
+
+    field_map = set(FIELD_MAPPING.keys())
+    user_defined_keys = set(user_defined_info.keys())
+    all_keys = field_map | user_defined_keys
+
+    if len(field_map) + len(user_defined_keys) != len(all_keys):
+        raise LineageParamValueError("There are some keys have defined in lineage.")

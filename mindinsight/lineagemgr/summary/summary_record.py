@@ -15,9 +15,9 @@
 """Record message to summary log."""
 import time
 
-from mindinsight.datavisual.proto_files.mindinsight_summary_pb2 import Event
+from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
 from mindinsight.lineagemgr.summary.event_writer import EventWriter
-from ._summary_adapter import package_dataset_graph
+from ._summary_adapter import package_dataset_graph, package_user_defined_info
 
 
 class LineageSummary:
@@ -50,9 +50,9 @@ class LineageSummary:
             run_context_args (dict): The train lineage info to log.
 
         Returns:
-            Event, the proto message event contains train lineage.
+            LineageEvent, the proto message event contains train lineage.
         """
-        train_lineage_event = Event()
+        train_lineage_event = LineageEvent()
         train_lineage_event.wall_time = time.time()
 
         # Init train_lineage message.
@@ -124,9 +124,9 @@ class LineageSummary:
             run_context_args (dict): The evaluation lineage info to log.
 
         Returns:
-            Event, the proto message event contains evaluation lineage.
+            LineageEvent, the proto message event contains evaluation lineage.
         """
-        train_lineage_event = Event()
+        train_lineage_event = LineageEvent()
         train_lineage_event.wall_time = time.time()
 
         # Init evaluation_lineage message.
@@ -164,4 +164,19 @@ class LineageSummary:
         """
         self.event_writer.write_event_to_file(
             package_dataset_graph(dataset_graph).SerializeToString()
+        )
+
+    def record_user_defined_info(self, user_dict):
+        """
+        Write user defined info to summary log.
+
+        Note:
+            The type of references must be dict, the value should be
+            int32, float, string. Nested dict is not supported now.
+
+        Args:
+            user_dict (dict): The value user defined to be recorded.
+        """
+        self.event_writer.write_event_to_file(
+            package_user_defined_info(user_dict).SerializeToString()
         )

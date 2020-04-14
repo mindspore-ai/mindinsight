@@ -17,7 +17,7 @@ from unittest import TestCase, mock
 
 from google.protobuf.json_format import ParseDict
 
-import mindinsight.datavisual.proto_files.mindinsight_summary_pb2 as summary_pb2
+import mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 as summary_pb2
 from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageParamTypeError, LineageQuerierParamException,
                                                                  LineageSummaryAnalyzeException,
                                                                  LineageSummaryParseException)
@@ -40,19 +40,19 @@ def create_lineage_info(train_event_dict, eval_event_dict, dataset_event_dict):
         namedtuple, parsed lineage info.
     """
     if train_event_dict is not None:
-        train_event = summary_pb2.Event()
+        train_event = summary_pb2.LineageEvent()
         ParseDict(train_event_dict, train_event)
     else:
         train_event = None
 
     if eval_event_dict is not None:
-        eval_event = summary_pb2.Event()
+        eval_event = summary_pb2.LineageEvent()
         ParseDict(eval_event_dict, eval_event)
     else:
         eval_event = None
 
     if dataset_event_dict is not None:
-        dataset_event = summary_pb2.Event()
+        dataset_event = summary_pb2.LineageEvent()
         ParseDict(dataset_event_dict, dataset_event)
     else:
         dataset_event = None
@@ -97,6 +97,7 @@ def create_filtration_result(summary_dir, train_event_dict,
         "metric": metric_dict,
         "dataset_graph": dataset_dict,
         "dataset_mark": '2',
+        "user_defined": {}
     }
     return filtration_result
 
@@ -208,7 +209,9 @@ LINEAGE_FILTRATION_5 = {
     "model_size": event_data.EVENT_TRAIN_DICT_5['train_lineage']['model']['size'],
     "metric": {},
     "dataset_graph": event_data.DATASET_DICT_0,
-    "dataset_mark": '2'
+    "dataset_mark": '2',
+    "user_defined": {}
+
 }
 LINEAGE_FILTRATION_6 = {
     "summary_dir": '/path/to/summary6',
@@ -228,12 +231,14 @@ LINEAGE_FILTRATION_6 = {
     "model_size": None,
     "metric": event_data.METRIC_5,
     "dataset_graph": event_data.DATASET_DICT_0,
-    "dataset_mark": '2'
+    "dataset_mark": '2',
+    "user_defined": {}
 }
 
 
 class TestQuerier(TestCase):
     """Test the class of `Querier`."""
+    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_user_defined_info')
     @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_summary_infos')
     def setUp(self, *args):
         """Initialization before test case execution."""
@@ -242,6 +247,7 @@ class TestQuerier(TestCase):
             event_data.EVENT_EVAL_DICT_0,
             event_data.EVENT_DATASET_DICT_0
         )
+        args[1].return_value = []
 
         single_summary_path = '/path/to/summary0/log0'
         self.single_querier = Querier(single_summary_path)
@@ -394,6 +400,7 @@ class TestQuerier(TestCase):
             'sorted_name': 'summary_dir'
         }
         expected_result = {
+            'customized': event_data.CUSTOMIZED_0,
             'object': [
                 LINEAGE_FILTRATION_1,
                 LINEAGE_FILTRATION_2
@@ -418,6 +425,7 @@ class TestQuerier(TestCase):
             'sorted_type': 'descending'
         }
         expected_result = {
+            'customized': event_data.CUSTOMIZED_0,
             'object': [
                 LINEAGE_FILTRATION_2,
                 LINEAGE_FILTRATION_3
@@ -434,6 +442,7 @@ class TestQuerier(TestCase):
             'offset': 1
         }
         expected_result = {
+            'customized': event_data.CUSTOMIZED_0,
             'object': [
                 LINEAGE_FILTRATION_2,
                 LINEAGE_FILTRATION_3
@@ -446,6 +455,7 @@ class TestQuerier(TestCase):
     def test_filter_summary_lineage_success_4(self):
         """Test the success of filter_summary_lineage."""
         expected_result = {
+            'customized': event_data.CUSTOMIZED_0,
             'object': [
                 LINEAGE_FILTRATION_0,
                 LINEAGE_FILTRATION_1,
@@ -468,6 +478,7 @@ class TestQuerier(TestCase):
             }
         }
         expected_result = {
+            'customized': event_data.CUSTOMIZED_0,
             'object': [LINEAGE_FILTRATION_4],
             'count': 1,
         }
@@ -477,10 +488,11 @@ class TestQuerier(TestCase):
     def test_filter_summary_lineage_success_6(self):
         """Test the success of filter_summary_lineage."""
         condition = {
-            'sorted_name': 'metric_accuracy',
+            'sorted_name': 'metric/accuracy',
             'sorted_type': 'ascending'
         }
         expected_result = {
+            'customized': event_data.CUSTOMIZED_0,
             'object': [
                 LINEAGE_FILTRATION_0,
                 LINEAGE_FILTRATION_5,
@@ -498,10 +510,11 @@ class TestQuerier(TestCase):
     def test_filter_summary_lineage_success_7(self):
         """Test the success of filter_summary_lineage."""
         condition = {
-            'sorted_name': 'metric_accuracy',
+            'sorted_name': 'metric/accuracy',
             'sorted_type': 'descending'
         }
         expected_result = {
+            'customized': event_data.CUSTOMIZED_1,
             'object': [
                 LINEAGE_FILTRATION_6,
                 LINEAGE_FILTRATION_4,
@@ -519,12 +532,13 @@ class TestQuerier(TestCase):
     def test_filter_summary_lineage_success_8(self):
         """Test the success of filter_summary_lineage."""
         condition = {
-            'metric_accuracy': {
+            'metric/accuracy': {
                 'lt': 1.0000006,
                 'gt': 1.0000004
             }
         }
         expected_result = {
+            'customized': event_data.CUSTOMIZED_0,
             'object': [LINEAGE_FILTRATION_4],
             'count': 1,
         }
@@ -538,6 +552,7 @@ class TestQuerier(TestCase):
             'offset': 3
         }
         expected_result = {
+            'customized': {},
             'object': [],
             'count': 7,
         }
@@ -594,11 +609,13 @@ class TestQuerier(TestCase):
         with self.assertRaises(LineageSummaryParseException):
             Querier(summary_path)
 
+    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_user_defined_info')
     @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_summary_infos')
     def test_parse_fail_summary_logs_1(self, *args):
         """Test the function of parsing fail summary logs."""
         lineage_infos = get_lineage_infos()
         args[0].side_effect = lineage_infos
+        args[1].return_value = []
 
         summary_path = ['/path/to/summary0/log0']
         querier = Querier(summary_path)
@@ -611,6 +628,7 @@ class TestQuerier(TestCase):
         self.assertListEqual(expected_result, result)
         self.assertListEqual([], querier._parse_failed_paths)
 
+    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_user_defined_info')
     @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_summary_infos')
     def test_parse_fail_summary_logs_2(self, *args):
         """Test the function of parsing fail summary logs."""
@@ -619,6 +637,7 @@ class TestQuerier(TestCase):
             event_data.EVENT_EVAL_DICT_0,
             event_data.EVENT_DATASET_DICT_0,
         )
+        args[1].return_value = []
 
         summary_path = ['/path/to/summary0/log0']
         querier = Querier(summary_path)

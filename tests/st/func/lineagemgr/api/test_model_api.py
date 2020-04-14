@@ -32,7 +32,8 @@ from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageFileNotF
                                                                  LineageSearchConditionParamError)
 
 from ..conftest import BASE_SUMMARY_DIR, DATASET_GRAPH, SUMMARY_DIR, SUMMARY_DIR_2
-
+from .....ut.lineagemgr.querier import event_data
+from os import environ
 LINEAGE_INFO_RUN1 = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
     'metric': {
@@ -68,6 +69,7 @@ LINEAGE_FILTRATION_EXCEPT_RUN = {
     'loss_function': 'SoftmaxCrossEntropyWithLogits',
     'train_dataset_path': None,
     'train_dataset_count': 1024,
+    'user_defined': {},
     'test_dataset_path': None,
     'test_dataset_count': None,
     'network': 'ResNet',
@@ -87,6 +89,7 @@ LINEAGE_FILTRATION_RUN1 = {
     'train_dataset_path': None,
     'train_dataset_count': 731,
     'test_dataset_path': None,
+    'user_defined': {},
     'test_dataset_count': 10240,
     'network': 'ResNet',
     'optimizer': 'Momentum',
@@ -106,6 +109,7 @@ LINEAGE_FILTRATION_RUN2 = {
     'loss_function': None,
     'train_dataset_path': None,
     'train_dataset_count': None,
+    'user_defined': {},
     'test_dataset_path': None,
     'test_dataset_count': 10240,
     'network': None,
@@ -318,6 +322,7 @@ class TestModelApi(TestCase):
     def test_filter_summary_lineage(self):
         """Test the interface of filter_summary_lineage."""
         expect_result = {
+            'customized': event_data.CUSTOMIZED__0,
             'object': [
                 LINEAGE_FILTRATION_EXCEPT_RUN,
                 LINEAGE_FILTRATION_RUN1,
@@ -360,16 +365,17 @@ class TestModelApi(TestCase):
                     SUMMARY_DIR_2
                 ]
             },
-            'metric_accuracy': {
+            'metric/accuracy': {
                 'lt': 3.0,
                 'gt': 0.5
             },
-            'sorted_name': 'metric_accuracy',
+            'sorted_name': 'metric/accuracy',
             'sorted_type': 'descending',
             'limit': 3,
             'offset': 0
         }
         expect_result = {
+            'customized': event_data.CUSTOMIZED__0,
             'object': [
                 LINEAGE_FILTRATION_RUN2,
                 LINEAGE_FILTRATION_RUN1
@@ -397,16 +403,17 @@ class TestModelApi(TestCase):
                     './run2'
                 ]
             },
-            'metric_accuracy': {
+            'metric/accuracy': {
                 'lt': 3.0,
                 'gt': 0.5
             },
-            'sorted_name': 'metric_accuracy',
+            'sorted_name': 'metric/accuracy',
             'sorted_type': 'descending',
             'limit': 3,
             'offset': 0
         }
         expect_result = {
+            'customized': event_data.CUSTOMIZED__0,
             'object': [
                 LINEAGE_FILTRATION_RUN2,
                 LINEAGE_FILTRATION_RUN1
@@ -431,10 +438,11 @@ class TestModelApi(TestCase):
             'batch_size': {
                 'ge': 30
             },
-            'sorted_name': 'metric_accuracy',
+            'sorted_name': 'metric/accuracy',
             'lineage_type': None
         }
         expect_result = {
+            'customized': event_data.CUSTOMIZED__0,
             'object': [
                 LINEAGE_FILTRATION_EXCEPT_RUN,
                 LINEAGE_FILTRATION_RUN1
@@ -454,6 +462,7 @@ class TestModelApi(TestCase):
             'lineage_type': 'model'
         }
         expect_result = {
+            'customized': {},
             'object': [],
             'count': 0
         }
@@ -479,6 +488,7 @@ class TestModelApi(TestCase):
             'lineage_type': 'dataset'
         }
         expect_result = {
+            'customized': {},
             'object': [
                 {
                     'summary_dir': summary_dir,
@@ -659,13 +669,13 @@ class TestModelApi(TestCase):
 
         # the search condition type error
         search_condition = {
-            'metric_accuracy': {
+            'metric/accuracy': {
                 'lt': 'xxx'
             }
         }
         self.assertRaisesRegex(
             LineageSearchConditionParamError,
-            'The parameter metric_accuracy is invalid.',
+            'The parameter metric/accuracy is invalid.',
             filter_summary_lineage,
             BASE_SUMMARY_DIR,
             search_condition
@@ -741,12 +751,13 @@ class TestModelApi(TestCase):
         """Test the abnormal execution of the filter_summary_lineage interface."""
         # gt > lt
         search_condition1 = {
-            'metric_accuracy': {
+            'metric/accuracy': {
                 'gt': 1,
                 'lt': 0.5
             }
         }
         expect_result = {
+            'customized': {},
             'object': [],
             'count': 0
         }
@@ -762,6 +773,7 @@ class TestModelApi(TestCase):
             'offset': 4
         }
         expect_result = {
+            'customized': {},
             'object': [],
             'count': 1
         }

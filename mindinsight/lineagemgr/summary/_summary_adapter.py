@@ -15,8 +15,9 @@
 """The converter between proto format event of lineage and dict."""
 import time
 
-from mindinsight.datavisual.proto_files.mindinsight_summary_pb2 import Event
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError
+from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent, UserDefinedInfo
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError,\
+    LineageParamValueError
 from mindinsight.lineagemgr.common.log import logger as log
 
 
@@ -28,9 +29,9 @@ def package_dataset_graph(graph):
         graph (dict): Dataset graph.
 
     Returns:
-        Event, the proto message event contains dataset graph.
+        LineageEvent, the proto message event contains dataset graph.
     """
-    dataset_graph_event = Event()
+    dataset_graph_event = LineageEvent()
     dataset_graph_event.wall_time = time.time()
 
     dataset_graph = dataset_graph_event.dataset_graph
@@ -291,3 +292,57 @@ def _organize_parameter(parameter):
     parameter_result.update(result_str_list_para)
 
     return parameter_result
+
+
+def package_user_defined_info(user_dict):
+    """
+    Package user defined info.
+
+    Args:
+        user_dict(dict): User defined info dict.
+
+    Returns:
+        LineageEvent, the proto message event contains user defined info.
+
+    """
+    user_event = LineageEvent()
+    user_event.wall_time = time.time()
+    user_defined_info = user_event.user_defined_info
+    _package_user_defined_info(user_dict, user_defined_info)
+
+    return user_event
+
+
+def _package_user_defined_info(user_defined_dict, user_defined_message):
+    """
+    Setting attribute in user defined proto message.
+
+    Args:
+        user_defined_dict (dict): User define info dict.
+        user_defined_message (LineageEvent): Proto message of user defined info.
+
+    Raises:
+        LineageParamValueError: When the value is out of range.
+        LineageParamTypeError: When given a type not support yet.
+    """
+    for key, value in user_defined_dict.items():
+        if not isinstance(key, str):
+            raise LineageParamTypeError("The key must be str.")
+
+        if isinstance(value, int):
+            attr_name = "map_int32"
+        elif isinstance(value, float):
+            attr_name = "map_double"
+        elif isinstance(value, str):
+            attr_name = "map_str"
+        else:
+            error_msg = "Value type {} is not supported in user defined event package." \
+                        "Only str, int and float are permitted now.".format(type(value))
+            log.error(error_msg)
+            raise LineageParamTypeError(error_msg)
+
+        add_user_defined_info = user_defined_message.user_info.add()
+        try:
+            getattr(add_user_defined_info, attr_name)[key] = value
+        except ValueError:
+            raise LineageParamValueError("Value is out of range or not be supported yet.")

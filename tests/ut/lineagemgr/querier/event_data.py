@@ -188,6 +188,22 @@ METRIC_0 = {
     'mse': 3.00000001
 }
 
+CUSTOMIZED__0 = {
+    'metric/accuracy': {'label': 'metric/accuracy', 'required': True, 'type': 'float'},
+}
+
+CUSTOMIZED_0 = {
+    **CUSTOMIZED__0,
+    'metric/mae': {'label': 'metric/mae', 'required': True, 'type': 'float'},
+    'metric/mse': {'label': 'metric/mse', 'required': True, 'type': 'float'}
+}
+
+CUSTOMIZED_1 = {
+    'metric/accuracy': {'label': 'metric/accuracy', 'required': True, 'type': 'NoneType'},
+    'metric/mae': {'label': 'metric/mae', 'required': True, 'type': 'float'},
+    'metric/mse': {'label': 'metric/mse', 'required': True, 'type': 'float'}
+}
+
 METRIC_1 = {
     'accuracy': 1.0000002,
     'mae': 2.00000002,

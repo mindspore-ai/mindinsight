@@ -16,7 +16,7 @@
 from unittest import mock, TestCase
 from unittest.mock import MagicMock
 
-from mindinsight.datavisual.proto_files.mindinsight_summary_pb2 import Event
+from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageVerificationException, \
     LineageSummaryAnalyzeException
 from mindinsight.lineagemgr.common.log import logger as log
@@ -57,7 +57,7 @@ class TestSummaryAnalyzer(TestCase):
 
     @mock.patch.object(SummaryAnalyzer, '_read_header')
     @mock.patch.object(SummaryAnalyzer, '_read_body')
-    @mock.patch.object(Event, 'FromString')
+    @mock.patch.object(LineageEvent, 'FromString')
     def test_read_event(self, *args):
         """Test read_event method."""
         args[2].return_value = 10

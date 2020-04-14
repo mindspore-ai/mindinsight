@@ -17,7 +17,9 @@ import struct
 from collections import namedtuple
 from enum import Enum
 
-from mindinsight.datavisual.proto_files.mindinsight_summary_pb2 import Event
+from google.protobuf.json_format import MessageToDict
+
+from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
 from mindinsight.datavisual.utils import crc32
 from mindinsight.lineagemgr.common.exceptions.exceptions import MindInsightException, \
     LineageVerificationException, LineageSummaryAnalyzeException
@@ -87,11 +89,11 @@ class SummaryAnalyzer:
         Read event.
 
         Returns:
-            Event, the event body.
+            LineageEvent, the event body.
         """
         body_size = self._read_header()
         body_str = self._read_body(body_size)
-        event = Event().FromString(body_str)
+        event = LineageEvent().FromString(body_str)
         return event
 
     def _read_header(self):
@@ -206,3 +208,51 @@ class LineageSummaryAnalyzer(SummaryAnalyzer):
             raise LineageSummaryAnalyzeException()
 
         return lineage_info
+
+    @staticmethod
+    def get_user_defined_info(file_path):
+        """
+        Get user defined info.
+        Args:
+            file_path (str): The file path of summary log.
+
+        Returns:
+            list, the list of dict format user defined information
+                which converted from proto message.
+        """
+        all_user_message = []
+        summary_analyzer = SummaryAnalyzer(file_path)
+
+        for event in summary_analyzer.load_events():
+            if event.HasField("user_defined_info"):
+                user_defined_info = MessageToDict(
+                    event,
+                    preserving_proto_field_name=True
+                ).get("user_defined_info")
+                user_dict = LineageSummaryAnalyzer._get_dict_from_proto(user_defined_info)
+                all_user_message.append(user_dict)
+
+        return all_user_message
+
+    @staticmethod
+    def _get_dict_from_proto(user_defined_info):
+        """
+        Convert the proto message UserDefinedInfo to its dict format.
+
+        Args:
+            user_defined_info (UserDefinedInfo): The proto message of user defined info.
+
+        Returns:
+            dict, the converted dict.
+        """
+        user_dict = dict()
+        proto_dict = user_defined_info.get("user_info")
+        for proto_item in proto_dict:
+            if proto_item and isinstance(proto_item, dict):
+                key, value = list(list(proto_item.values())[0].items())[0]
+                if isinstance(value, dict):
+                    user_dict[key] = LineageSummaryAnalyzer._get_dict_from_proto(value)
+                else:
+                    user_dict[key] = value
+
+        return user_dict

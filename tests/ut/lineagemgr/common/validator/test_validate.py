@@ -228,12 +228,12 @@ class TestValidateSearchModelCondition(TestCase):
         )
 
         condition = {
-            'metric_attribute': {
+            'metric/attribute': {
                 'ge': 'xxx'
             }
         }
         self._assert_raise_of_mindinsight_exception(
-            "The parameter metric_attribute is invalid. "
+            "The parameter metric/attribute is invalid. "
             "It should be a dict and the value should be a float or a integer",
             condition
         )
