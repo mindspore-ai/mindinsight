@@ -21,7 +21,7 @@ PROJECT_BASEDIR=$(dirname "$SCRIPT_BASEDIR")
 
 rename_wheel() {
     cd "$PROJECT_BASEDIR/output" || exit
-    VERSION="$1"
+    VERSION="$("$PYTHON" -c 'import platform; print(platform.python_version())')"
     PACKAGE_LIST=$(ls mindinsight-*-any.whl) || exit
     for PACKAGE_ORIG in $PACKAGE_LIST; do
         MINDINSIGHT_VERSION=$(echo "$PACKAGE_ORIG" | awk -F"-" '{print $2}')
@@ -32,6 +32,14 @@ rename_wheel() {
         MACHINE_TAG="${OS_NAME}_$(uname -i)"
         PACKAGE_NEW="mindinsight-$MINDINSIGHT_VERSION-$PYTHON_VERSION_TAG-$PYTHON_ABI_TAG-$MACHINE_TAG.whl"
         mv "$PACKAGE_ORIG" "$PACKAGE_NEW"
+    done
+}
+
+write_checksum() {
+    cd "$PROJECT_BASEDIR/output" || exit
+    PACKAGE_LIST=$(ls mindinsight-*.whl) || exit
+    for PACKAGE_NAME in $PACKAGE_LIST; do
+        sha256sum -b "$PACKAGE_NAME" >"$PACKAGE_NAME.sha256"
     done
 }
 
@@ -76,8 +84,8 @@ build_wheel() {
 
     mv dist output
 
-    rename_wheel "$("$PYTHON" -c 'import platform; print(platform.python_version())')"
-
+    rename_wheel
+    write_checksum
     clean_files
 
     echo "Build success, output directory is: $PROJECT_BASEDIR/output"
