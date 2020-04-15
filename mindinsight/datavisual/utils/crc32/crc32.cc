@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#include "crc32/crc32.h"
-#include <stdint.h>
+#include "crc32.h"
 
 
 static const uint32_t crc_table_o32[CRC_TABLE_SIZE] = {
@@ -280,9 +279,8 @@ inline void CRC32T8(uint32_t *crc, const uint8_t **p) {
 
 // calc the crc32c value
 uint32_t MakeCrc32c(uint32_t init_crc, const char *data, size_t size) {
-  EXCEPT_CHECK_NULL(data);
   uint32_t crc = init_crc ^ 0xFFFFFFFFU;
-  const long OFFSET = 8;
+  const int OFFSET = 8;
 
   // Get the origin begin and end address(not alignment)
   auto *bp = reinterpret_cast<const uint8_t *>(data);

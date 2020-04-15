@@ -63,13 +63,11 @@ build_crc32() {
     rm -f "$CRC32_SOURCE_DIR/$CRC32_SO_FILE"
     rm -f "$CRC32_OUTPUT_DIR/$CRC32_SO_FILE"
 
-    PYBIND11_INCLUDES=$($PYTHON -m pybind11 --includes)
-    PYTHON_INCLUDE=$(echo "$PYBIND11_INCLUDES" | awk '{print $1}' | sed "s/^-I//g")
-    PYTHON_HEADERS=$(echo "$PYBIND11_INCLUDES" | awk '{print $2}' | sed "s/^-I//g")
+    read -ra PYBIND11_INCLUDES <<<"$($PYTHON -m pybind11 --includes)"
 
     c++ -O2 -O3 -shared -std=c++11 -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 \
         -Wno-maybe-uninitialized -Wno-unused-parameter -Wall -Wl,-z,relro,-z,now,-z,noexecstack \
-        -I"$THIRD_PARTY_DIR" -I"$DATAVISUAL_DIR/utils" -I"$PYTHON_INCLUDE" -I"$PYTHON_HEADERS" \
+        -I"$THIRD_PARTY_DIR/securec/include" "${PYBIND11_INCLUDES[0]}" "${PYBIND11_INCLUDES[1]}" \
         -o "$CRC32_SO_FILE" crc32.cc "$BUILDDIR/libsecurec.a"
 
     if [ ! -f "$CRC32_SO_FILE" ]; then
