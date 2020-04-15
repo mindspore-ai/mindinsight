@@ -236,7 +236,7 @@ class Querier:
 
         See `ConditionType` and `ExpressionType` class for the rule of filtering
         and sorting. The filtering and sorting fields are defined in
-        `FIELD_MAPPING` or prefixed with `metric_`.
+        `FIELD_MAPPING` or prefixed with `metric/` or 'user_defined/'.
 
         If the condition is `None`, all model lineage information will be
         returned.
@@ -288,7 +288,7 @@ class Querier:
 
         if condition is None:
             condition = {}
-        result = list(filter(_filter, self._lineage_objects))
+        results = list(filter(_filter, self._lineage_objects))
 
         if ConditionParam.SORTED_NAME.value in condition:
             sorted_name = condition.get(ConditionParam.SORTED_NAME.value)
@@ -299,19 +299,33 @@ class Querier:
                 )
             sorted_type = condition.get(ConditionParam.SORTED_TYPE.value)
             reverse = sorted_type == 'descending'
-            result = sorted(
-                result, key=functools.cmp_to_key(_cmp), reverse=reverse
+            results = sorted(
+                results, key=functools.cmp_to_key(_cmp), reverse=reverse
             )
 
-        offset_result = self._handle_limit_and_offset(condition, result)
+        offset_results = self._handle_limit_and_offset(condition, results)
+
+        customized = dict()
+        for offset_result in offset_results:
+            for obj_name in ["metric", "user_defined"]:
+                obj = getattr(offset_result, obj_name)
+                if obj and isinstance(obj, dict):
+                    for key, value in obj.items():
+                        label = obj_name + "/" + key
+                        customized[label] = dict()
+                        customized[label]["label"] = label
+                        # user defined info is default displayed
+                        customized[label]["required"] = True
+                        customized[label]["type"] = type(value).__name__
 
         search_type = condition.get(ConditionParam.LINEAGE_TYPE.value)
         lineage_info = {
+            'customized': customized,
             'object': [
                 item.to_dataset_lineage_dict() if search_type == LineageType.DATASET.value
-                else item.to_filtration_dict() for item in offset_result
+                else item.to_filtration_dict() for item in offset_results
             ],
-            'count': len(result)
+            'count': len(results)
         }
 
         return lineage_info
@@ -326,7 +340,8 @@ class Querier:
         Returns:
             bool, `True` if the field name is valid, else `False`.
         """
-        return field_name not in FIELD_MAPPING and not field_name.startswith('metric_')
+        return field_name not in FIELD_MAPPING and \
+               not field_name.startswith(('metric/', 'user_defined/'))
 
     def _handle_limit_and_offset(self, condition, result):
         """
@@ -397,11 +412,13 @@ class Querier:
         log_dir = os.path.dirname(log_path)
         try:
             lineage_info = LineageSummaryAnalyzer.get_summary_infos(log_path)
+            user_defined_info = LineageSummaryAnalyzer.get_user_defined_info(log_path)
             lineage_obj = LineageObj(
                 log_dir,
                 train_lineage=lineage_info.train_lineage,
                 evaluation_lineage=lineage_info.eval_lineage,
-                dataset_graph=lineage_info.dataset_graph
+                dataset_graph=lineage_info.dataset_graph,
+                user_defined_info=user_defined_info
             )
             self._lineage_objects.append(lineage_obj)
             self._add_dataset_mark()

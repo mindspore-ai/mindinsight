@@ -23,7 +23,8 @@ from mindinsight.utils.exceptions import \
     MindInsightException
 from mindinsight.lineagemgr.common.validator.validate import validate_train_run_context, \
     validate_eval_run_context, validate_file_path, validate_network, \
-    validate_int_params, validate_summary_record, validate_raise_exception
+    validate_int_params, validate_summary_record, validate_raise_exception,\
+    validate_user_defined_info
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors, LineageErrorMsg
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
     LineageGetModelFileError, LineageLogError
@@ -71,7 +72,7 @@ class TrainLineage(Callback):
         >>> lineagemgr = TrainLineage(summary_record=summary_writer)
         >>> model.train(epoch_num, dataset, callbacks=[model_ckpt, summary_callback, lineagemgr])
     """
-    def __init__(self, summary_record, raise_exception=False):
+    def __init__(self, summary_record, raise_exception=False, user_defined_info=None):
         super(TrainLineage, self).__init__()
         try:
             validate_raise_exception(raise_exception)
@@ -85,6 +86,11 @@ class TrainLineage(Callback):
             self.lineage_log_path = summary_log_path + '_lineage'
 
             self.initial_learning_rate = None
+
+            self.user_defined_info = user_defined_info
+            if user_defined_info:
+                validate_user_defined_info(user_defined_info)
+
         except MindInsightException as err:
             log.error(err)
             if raise_exception:
@@ -103,6 +109,10 @@ class TrainLineage(Callback):
             MindInsightException: If validating parameter fails.
         """
         log.info('Initialize training lineage collection...')
+
+        if self.user_defined_info:
+            lineage_summary = LineageSummary(summary_log_path=self.lineage_log_path)
+            lineage_summary.record_user_defined_info(self.user_defined_info)
 
         if not isinstance(run_context, RunContext):
             error_msg = f'Invalid TrainLineage run_context.'
@@ -239,7 +249,7 @@ class EvalLineage(Callback):
         >>> lineagemgr = EvalLineage(summary_record=summary_writer)
         >>> model.eval(epoch_num, dataset, callbacks=[model_ckpt, summary_callback, lineagemgr])
     """
-    def __init__(self, summary_record, raise_exception=False):
+    def __init__(self, summary_record, raise_exception=False, user_defined_info=None):
         super(EvalLineage, self).__init__()
         try:
             validate_raise_exception(raise_exception)
@@ -251,6 +261,11 @@ class EvalLineage(Callback):
             summary_log_path = summary_record.full_file_name
             validate_file_path(summary_log_path)
             self.lineage_log_path = summary_log_path + '_lineage'
+
+            self.user_defined_info = user_defined_info
+            if user_defined_info:
+                validate_user_defined_info(user_defined_info)
+
         except MindInsightException as err:
             log.error(err)
             if raise_exception:
@@ -269,6 +284,10 @@ class EvalLineage(Callback):
             MindInsightException: If validating parameter fails.
             LineageLogError: If recording lineage information fails.
         """
+        if self.user_defined_info:
+            lineage_summary = LineageSummary(summary_log_path=self.lineage_log_path)
+            lineage_summary.record_user_defined_info(self.user_defined_info)
+
         if not isinstance(run_context, RunContext):
             error_msg = f'Invalid EvalLineage run_context.'
             log.error(error_msg)

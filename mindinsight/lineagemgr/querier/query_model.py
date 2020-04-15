@@ -57,6 +57,8 @@ class LineageObj:
 
             - dataset_graph (Event): Dataset graph object.
 
+            - user_defined_info (Event): User defined info object.
+
     Raises:
         LineageEventNotExistException: If train and evaluation event not exist.
         LineageEventFieldNotExistException: If the special event field not exist.
@@ -72,16 +74,19 @@ class LineageObj:
     _name_valid_dataset = 'valid_dataset'
     _name_dataset_graph = 'dataset_graph'
     _name_dataset_mark = 'dataset_mark'
+    _name_user_defined = 'user_defined'
 
     def __init__(self, summary_dir, **kwargs):
         self._lineage_info = {
             self._name_summary_dir: summary_dir
         }
+        user_defined_info_list = kwargs.get('user_defined_info', [])
         train_lineage = kwargs.get('train_lineage')
         evaluation_lineage = kwargs.get('evaluation_lineage')
         dataset_graph = kwargs.get('dataset_graph')
         if not any([train_lineage, evaluation_lineage, dataset_graph]):
             raise LineageEventNotExistException()
+        self._parse_user_defined_info(user_defined_info_list)
         self._parse_train_lineage(train_lineage)
         self._parse_evaluation_lineage(evaluation_lineage)
         self._parse_dataset_graph(dataset_graph)
@@ -106,6 +111,16 @@ class LineageObj:
             dict, the metric information.
         """
         return self._lineage_info.get(self._name_metric)
+
+    @property
+    def user_defined(self):
+        """
+        Get user defined information.
+
+        Returns:
+            dict, the user defined information.
+        """
+        return self._lineage_info.get(self._name_user_defined)
 
     @property
     def hyper_parameters(self):
@@ -237,19 +252,22 @@ class LineageObj:
 
     def get_value_by_key(self, key):
         """
-        Get the value based on the key in `FIELD_MAPPING` or the key prefixed with `metric_`.
+        Get the value based on the key in `FIELD_MAPPING` or
+            the key prefixed with `metric/` or `user_defined/`.
 
         Args:
-            key (str): The key in `FIELD_MAPPING` or prefixed with `metric_`.
+            key (str): The key in `FIELD_MAPPING`
+                or prefixed with `metric/` or `user_defined/`.
 
         Returns:
             object, the value.
         """
-        if key.startswith('metric_'):
-            metric_key = key.split('_', 1)[1]
-            metric = self._filtration_result.get(self._name_metric)
-            if metric:
-                return metric.get(metric_key)
+        if key.startswith(('metric/', 'user_defined/')):
+            key_name, sub_key = key.split('/', 1)
+            sub_value_name = self._name_metric if key_name == 'metric' else self._name_user_defined
+            sub_value = self._filtration_result.get(sub_value_name)
+            if sub_value:
+                return sub_value.get(sub_key)
         return self._filtration_result.get(key)
 
     def _organize_filtration_result(self):
@@ -267,6 +285,8 @@ class LineageObj:
                     if field.sub_name else base_attr
         # add metric into filtration result
         result[self._name_metric] = self.metric
+
+        result[self._name_user_defined] = self.user_defined
         # add dataset_graph into filtration result
         result[self._name_dataset_graph] = getattr(self, self._name_dataset_graph)
         return result
@@ -342,3 +362,15 @@ class LineageObj:
             if event_dict is None:
                 raise LineageEventFieldNotExistException(self._name_evaluation_lineage)
             self._lineage_info[self._name_dataset_graph] = event_dict if event_dict else {}
+
+    def _parse_user_defined_info(self, user_defined_info_list):
+        """
+        Parse user defined info.
+
+        Args:
+            user_defined_info_list (list): user defined info list.
+        """
+        user_defined_infos = dict()
+        for user_defined_info in user_defined_info_list:
+            user_defined_infos.update(user_defined_info)
+        self._lineage_info[self._name_user_defined] = user_defined_infos

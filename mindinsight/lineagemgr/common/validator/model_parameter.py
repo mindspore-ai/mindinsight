@@ -226,7 +226,7 @@ class SearchModelConditionParameter(Schema):
             if not isinstance(attr, str):
                 raise LineageParamValueError('The search attribute not supported.')
 
-            if attr not in FIELD_MAPPING and not attr.startswith('metric_'):
+            if attr not in FIELD_MAPPING and not attr.startswith(('metric/','user_defined/')):
                 raise LineageParamValueError('The search attribute not supported.')
 
             if not isinstance(condition, dict):
@@ -238,7 +238,7 @@ class SearchModelConditionParameter(Schema):
                     raise LineageParamValueError("The compare condition should be in "
                                                  "('eq', 'lt', 'gt', 'le', 'ge', 'in').")
 
-            if attr.startswith('metric_'):
+            if attr.startswith('metric/'):
                 if len(attr) == 7:
                     raise LineageParamValueError(
                         'The search attribute not supported.'
