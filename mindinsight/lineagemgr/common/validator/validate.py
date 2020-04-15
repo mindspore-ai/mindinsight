@@ -412,7 +412,7 @@ def validate_user_defined_info(user_defined_info):
     if not isinstance(user_defined_info, dict):
         log.error("Invalid user defined info. It should be a dict.")
         raise LineageParamTypeError("Invalid user defined info. It should be dict.")
-    for key, value in user_defined_info:
+    for key, value in user_defined_info.items():
         if not isinstance(key, str):
             error_msg = "Dict key type {} is not supported in user defined info." \
                         "Only str is permitted now.".format(type(key))

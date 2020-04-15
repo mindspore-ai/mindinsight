@@ -498,8 +498,8 @@ export default {
       for (let i = oldTagListLength - 1; i >= 0; i--) {
         if (!newTagDictionaries[this.tagOperateList[i].label]) {
           dataRemoveFlag = true;
-          this.tagOperateList.splice(i, 1);
           delete this.oriDataDictionaries[this.tagOperateList[i].label];
+          this.tagOperateList.splice(i, 1);
         }
       }
       // Delete the old data from the image list and update the dictionary
