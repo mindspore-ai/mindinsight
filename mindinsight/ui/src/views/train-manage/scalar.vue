@@ -212,9 +212,6 @@ export default {
       propsList: [], // dataList props
       smoothValue: 0, // Initial smoothness of the slider
       smoothSliderValueTimer: null, // Smoothness slider timer
-      // Number of predefined colors
-      defColorCount: CommonProperty.commonColorArr.length,
-      curAvlColorIndexArr: [], // color subscript
       DomIdIndex: 0, // DomId num
       originDataArr: [], // Original data
       curPageArr: [], // data of the current page
@@ -329,9 +326,6 @@ export default {
       // Adding a Listener
       this.getCharMainContentwidth();
 
-      // Initialize available colors
-      this.initAvlColorArr();
-
       // Initializing Data
       this.getScalarsList();
 
@@ -367,52 +361,45 @@ export default {
             const tempTagList = [];
             const dataList = [];
             const propsList = [];
-            const data = res.data.train_jobs;
-            data.forEach((runObj, runObjectIndex) => {
-              const colorIndex = this.curAvlColorIndexArr.length
-              ? this.curAvlColorIndexArr.shift()
-              : this.defColorCount - 1;
-              const runNmeColor = CommonProperty.commonColorArr[colorIndex];
-              runObj.tags.forEach((tagObj) => {
+            const data = res.data.train_jobs[0];
+            const runNmeColor = CommonProperty.commonColorArr[0];
+            data.tags.forEach((tagObj) => {
               // Add the tag list
-                this.multiSelectedTagNames[tagObj] = true;
-                tempTagList.push({
-                  label: tagObj,
-                  checked: true,
-                  show: true,
-                });
-                const sampleIndex = dataList.length;
-                this.curFilterTagIndexArr.push(sampleIndex);
-
-                // Adding Chart Data
-                dataList.push({
-                  tagName: tagObj,
-                  runNames: [runObj.name],
-                  colors: [runNmeColor],
-                  runId: [runObj.id],
-                  show: false,
-                  updateFlag: false,
-                  dataRemove: false,
-                  fullScreen: false,
-                  sampleIndex: sampleIndex,
-                  domId: 'prDom' + this.DomIdIndex,
-                  charData: {
-                    oriData: [],
-                    charOption: {},
-                  },
-                  zoomData: [null, null],
-                  zoomDataTimer: null,
-                  charObj: null,
-                });
-
-                propsList.push({
-                  tagName: tagObj,
-                  runNames: [runObj.name],
-                  runId: [runObj.id],
-                  colors: [],
-                });
-                this.DomIdIndex++;
+              this.multiSelectedTagNames[tagObj] = true;
+              tempTagList.push({
+                label: tagObj,
+                checked: true,
+                show: true,
               });
+              const sampleIndex = dataList.length;
+              this.curFilterTagIndexArr.push(sampleIndex);
+
+              // Adding Chart Data
+              dataList.push({
+                tagName: tagObj,
+                runNames: data.name,
+                colors: runNmeColor,
+                show: false,
+                updateFlag: false,
+                dataRemove: false,
+                fullScreen: false,
+                sampleIndex: sampleIndex,
+                domId: 'prDom' + this.DomIdIndex,
+                charData: {
+                  oriData: [],
+                  charOption: {},
+                },
+                zoomData: [null, null],
+                zoomDataTimer: null,
+                charObj: null,
+              });
+
+              propsList.push({
+                tagName: tagObj,
+                runNames: data.name,
+                colors: '',
+              });
+              this.DomIdIndex++;
             });
             this.tagOperateList = tempTagList;
             this.tagPropsList = JSON.parse(JSON.stringify(tempTagList));
@@ -485,15 +472,11 @@ export default {
         return;
       }
       sampleObject.updateFlag = true;
-      const runCount = sampleObject.runId.length;
-      if (runCount === 0) {
-        return;
-      }
 
       const promiseArr = [];
 
       const params = {
-        train_id: sampleObject.runId[0],
+        train_id: this.trainingJobId,
         tag: sampleObject.tagName,
       };
 
@@ -629,48 +612,47 @@ export default {
       let returnFlag = false;
       const seriesData = [];
       const oriData = sampleObject.charData.oriData;
-      sampleObject.runNames.forEach((runName, runNameIndex) => {
-        const curBackName = runName + this.backendString;
-        const dataObj = {
-          name: runName,
-          data: [],
-          type: 'line',
-          showSymbol: false,
-          lineStyle: {
-            color: sampleObject.colors[runNameIndex],
-          },
-        };
-        const dataObjBackend = {
-          name: curBackName,
-          data: [],
-          type: 'line',
-          smooth: 0,
-          symbol: 'none',
-          lineStyle: {
-            color: sampleObject.colors[runNameIndex],
-            opacity: 0.2,
-          },
-        };
-        const curOriData = oriData[runNameIndex];
+      const runName=sampleObject.runNames;
+      const curBackName = runName + this.backendString;
+      const dataObj = {
+        name: runName,
+        data: [],
+        type: 'line',
+        showSymbol: false,
+        lineStyle: {
+          color: sampleObject.colors,
+        },
+      };
+      const dataObjBackend = {
+        name: curBackName,
+        data: [],
+        type: 'line',
+        smooth: 0,
+        symbol: 'none',
+        lineStyle: {
+          color: sampleObject.colors,
+          opacity: 0.2,
+        },
+      };
+      const curOriData = oriData[0];
 
-        if (curOriData) {
-          if (sampleObject.log) {
-            dataObj.data = this.formateSmoothData(
-                curOriData.logData[this.curBenchX],
-            );
-            dataObjBackend.data = curOriData.logData[this.curBenchX];
-          } else {
-            dataObj.data = this.formateSmoothData(
-                curOriData.valueData[this.curBenchX],
-            );
-            dataObjBackend.data = curOriData.valueData[this.curBenchX];
-          }
+      if (curOriData) {
+        if (sampleObject.log) {
+          dataObj.data = this.formateSmoothData(
+              curOriData.logData[this.curBenchX],
+          );
+          dataObjBackend.data = curOriData.logData[this.curBenchX];
         } else {
-          returnFlag = true;
+          dataObj.data = this.formateSmoothData(
+              curOriData.valueData[this.curBenchX],
+          );
+          dataObjBackend.data = curOriData.valueData[this.curBenchX];
         }
+      } else {
+        returnFlag = true;
+      }
 
-        seriesData.push(dataObj, dataObjBackend);
-      });
+      seriesData.push(dataObj, dataObjBackend);
       if (returnFlag) {
         return;
       }
@@ -884,7 +866,7 @@ export default {
                   });
                   strBody +=
                     `<tr><td style="border-radius:50%;width:15px;height:15px;vertical-align: middle;` +
-                    `margin-right: 5px;background-color:${sampleObject.colors[curIndex]};` +
+                    `margin-right: 5px;background-color:${sampleObject.colors};` +
                     `display:inline-block;"></td><td>${parma.seriesName}</td>` +
                     `<td>${that.formateYaxisValue(parma.value[1])}</td>` +
                     `<td>${that.formateYaxisValue(
@@ -1292,16 +1274,6 @@ export default {
       window.addEventListener('resize', this.resizeCallback, false);
     },
 
-    /**
-     * Initialize the color array
-     */
-
-    initAvlColorArr() {
-      const length = this.defColorCount;
-      for (let i = 0; i < length; i++) {
-        this.curAvlColorIndexArr.push(i);
-      }
-    },
 
     /**
      * Clear data
@@ -1368,16 +1340,13 @@ export default {
       const tagList = []; // tag list
       let dataRemoveFlag = false;
       // Obtains the current tag and run list
-      oriData.forEach((runObj, runIndex) => {
-        runObj.tags.forEach((tagObj) => {
-          let sameTagIndex = tagList.indexOf(tagObj);
-          if (sameTagIndex === -1) {
-            sameTagIndex = tagList.length;
-            tagList.push(tagObj);
-          }
-        });
+      oriData.tags.forEach((tagObj) => {
+        let sameTagIndex = tagList.indexOf(tagObj);
+        if (sameTagIndex === -1) {
+          sameTagIndex = tagList.length;
+          tagList.push(tagObj);
+        }
       });
-
       // Delete the tag that does not exist
       const oldTagListLength = this.tagOperateList.length;
       for (let i = oldTagListLength - 1; i >= 0; i--) {
@@ -1419,59 +1388,44 @@ export default {
         return false;
       }
       let dataAddFlag = false;
-      oriData.forEach((runObj) => {
-        const colorIndex = this.curAvlColorIndexArr.length
-          ? this.curAvlColorIndexArr.shift()
-          : this.defColorCount - 1;
-        const runColor = CommonProperty.commonColorArr[colorIndex];
-        runObj.tags.forEach((tagObj) => {
-          let sameTagIndex = -1;
-          this.tagOperateList.some((tagItem, tagIndex) => {
-            if (tagItem.label === tagObj) {
-              sameTagIndex = tagIndex;
-              return true;
-            }
-          });
-          if (sameTagIndex === -1) {
-            this.tagOperateList.push({
-              label: tagObj,
-              checked: true,
-              show: false,
-            });
-            const sampleIndex = this.originDataArr.length;
-            dataAddFlag = true;
-            this.originDataArr.push({
-              tagName: tagObj,
-              runNames: [runObj.name],
-              runId: [runObj.id],
-              colors: [runColor],
-              show: false,
-              updateFlag: false,
-              dataRemove: false,
-              fullScreen: false,
-              sampleIndex: sampleIndex,
-              domId: 'prDom' + this.DomIdIndex,
-              charData: {
-                oriData: [],
-                charOption: {},
-              },
-              zoomData: [null, null],
-              zoomDataTimer: null,
-              charObj: null,
-            });
-            this.DomIdIndex++;
-          } else {
-            const sameSampleObj = this.originDataArr[sameTagIndex];
-            if (
-              sameSampleObj &&
-              sameSampleObj.runNames.indexOf(runObj.name) === -1
-            ) {
-              sameSampleObj.runNames.push(runObj.name);
-              sameSampleObj.runId.push(runObj.id);
-              sameSampleObj.colors.push(runColor);
-            }
+      // oriData.forEach((runObj) => {
+      const runColor = CommonProperty.commonColorArr[0];
+      oriData.tags.forEach((tagObj) => {
+        let sameTagIndex = -1;
+        this.tagOperateList.some((tagItem, tagIndex) => {
+          if (tagItem.label === tagObj) {
+            sameTagIndex = tagIndex;
+            return true;
           }
         });
+        if (sameTagIndex === -1) {
+          this.tagOperateList.push({
+            label: tagObj,
+            checked: true,
+            show: false,
+          });
+          const sampleIndex = this.originDataArr.length;
+          dataAddFlag = true;
+          this.originDataArr.push({
+            tagName: tagObj,
+            runNames: oriData.name,
+            colors: runColor,
+            show: false,
+            updateFlag: false,
+            dataRemove: false,
+            fullScreen: false,
+            sampleIndex: sampleIndex,
+            domId: 'prDom' + this.DomIdIndex,
+            charData: {
+              oriData: [],
+              charOption: {},
+            },
+            zoomData: [null, null],
+            zoomDataTimer: null,
+            charObj: null,
+          });
+          this.DomIdIndex++;
+        }
       });
 
       return dataAddFlag;
@@ -1540,7 +1494,7 @@ export default {
               this.clearAllData();
               return;
             }
-            const data = res.data.train_jobs;
+            const data = res.data.train_jobs[0];
 
             // Delete the data that does not exist
             const tagRemoveFlag = this.removeNonexistentData(data);
@@ -1561,23 +1515,20 @@ export default {
             const tempTagList = [];
             const propsList = [];
 
-            data.forEach((runObj, runObjectIndex) => {
             // Initial chart data
-              runObj.tags.forEach((tagObj) => {
+            data.tags.forEach((tagObj) => {
               // Check whether the tag with the same name exists
-                tempTagList.push({
-                  label: tagObj,
-                  checked: true,
-                  show: true,
-                });
+              tempTagList.push({
+                label: tagObj,
+                checked: true,
+                show: true,
+              });
 
-                // Add the tag list.
-                propsList.push({
-                  tagName: tagObj,
-                  runNames: [runObj.name],
-                  runId: [runObj.id],
-                  colors: [],
-                });
+              // Add the tag list.
+              propsList.push({
+                tagName: tagObj,
+                runNames: data.name,
+                colors: '',
               });
             });
             this.tagPropsList = tempTagList;
@@ -1796,18 +1747,12 @@ export default {
 
         if (this.abort) {
           this.curPageArr.forEach((sampleObject) => {
-            let runCount = sampleObject.runNames.length;
-            sampleObject.runNames.forEach((runName, runNameIndex) => {
-              runCount--;
-              if (runCount === 0) {
-                this.$nextTick(() => {
-                  // Draw chart
-                  if (!this.compare) {
-                    this.updateOrCreateChar(sampleObject.sampleIndex);
-                  } else {
-                    this.abort = true;
-                  }
-                });
+            this.$nextTick(() => {
+              // Draw chart
+              if (!this.compare) {
+                this.updateOrCreateChar(sampleObject.sampleIndex);
+              } else {
+                this.abort = true;
               }
             });
           });

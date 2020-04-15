@@ -553,12 +553,8 @@ export default {
 
       if (this.curPageArr.length > 0) {
         this.curPageArr.forEach((sampleObject, yIndex) => {
-          const runCount = sampleObject.runId.length;
-          if (runCount === 0) {
-            return;
-          }
           const params = {
-            train_id: sampleObject.runId[0],
+            train_id: this.trainingJobId,
             tag: sampleObject.tagName,
           };
           ajaxArr.push(this.addAjax(params, yIndex));
@@ -574,14 +570,11 @@ export default {
                 return;
               }
               this.curPageArr.forEach((sampleObject, yIndex) => {
-                sampleObject.runNames.forEach((runName, runNameIndex) => {
-                  sampleObject.colors.push(
+                sampleObject.colors=
                   CommonProperty.commonColorArr[this.colorNum]
                     ? CommonProperty.commonColorArr[this.colorNum]
-                    : CommonProperty.commonColorArr[this.defColorCount - 1],
-                  );
-                  this.colorNum++;
-                });
+                    : CommonProperty.commonColorArr[this.defColorCount - 1];
+                this.colorNum++;
               });
               this.colorNum = 0;
               for (let i = 0; i < res.length; i++) {
@@ -600,9 +593,8 @@ export default {
                   color: CommonProperty.commonColorArr[this.colorNum]
                   ? CommonProperty.commonColorArr[this.colorNum]
                   : CommonProperty.commonColorArr[this.defColorCount - 1],
-                  runName: this.returnRunName(this.trainingJobId),
-                  curBackName:
-                  this.returnRunName(this.trainingJobId) + this.backendString,
+                  runName: this.trainingJobId,
+                  curBackName: this.trainingJobId + this.backendString,
                   tagName: res[i].params.tag,
                 };
                 let relativeTimeBench = 0;
@@ -639,22 +631,6 @@ export default {
       }
     },
 
-    /**
-     * return run name
-     * @param {String} id
-     * @return {String}
-     */
-
-    returnRunName(id) {
-      if (!id) {
-        return;
-      }
-      let runName = '';
-      if (this.curPageArr[0].runNames[0]) {
-        runName = this.curPageArr[0].runNames[0];
-      }
-      return runName;
-    },
 
     /**
      * add request

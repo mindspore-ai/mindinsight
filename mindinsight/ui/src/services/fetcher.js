@@ -50,7 +50,7 @@ axios.interceptors.response.use(
 
       // error returned by backend
       if (error.response && error.response.data && error.response.data.error_code) {
-        if (error.response.data.error_code.toString() === '50540005' ||
+        if (error.response.data.error_code.toString() === '50545005' ||
         error.response.data.error_code.toString() === '50545006') {
           if (error.config.headers.ignoreError ||
             router.currentRoute.path === '/train-manage/training-dashboard') {

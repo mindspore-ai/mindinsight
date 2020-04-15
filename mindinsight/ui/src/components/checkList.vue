@@ -1,0 +1,381 @@
+<!--
+Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<template>
+  <div class="cl-checklist-container">
+    <!-- Select tag -->
+    <div class="select-content">
+      <div class="title mr24">{{$t("components.tagSelectTitle")}}</div>
+      <!-- Select all -->
+      <div class="select-all mr24"
+           @click="listSelectAll">
+        <span class="multiCheckBox-border multi-check-border"
+              :class="operateSelectAll ? 'checkbox-checked':'checkbox-unchecked'"></span>
+        <span class="label-item select-disable">{{$t("components.selectAll")}}</span>
+      </div>
+      <!-- Tag search box -->
+      <el-input class="search-input-item"
+                v-model="searchInput"
+                @input="listFilter"
+                v-if="listFullScreen"
+                :placeholder="$t('components.tagFilterPlaceHolder')"></el-input>
+      <!-- Tag list -->
+      <div class="select-item-content"
+           v-if="!listFullScreen"
+           ref="selectItemContent">
+        <div class="select-item"
+             v-for="(item, itemIndex) in checkListArr"
+             :key="itemIndex"
+             @click="listItemClick(item)"
+             v-show="item.show">
+          <span class="multiCheckBox-border multi-check-border"
+                :class="item.checked ? 'checkbox-checked':'checkbox-unchecked'"></span>
+          <span class="label-item">
+            <el-tooltip effect="dark"
+                        popper-class="tooltip-show-content"
+                        :content="item.label"
+                        placement="top">
+              <span class="select-disable">{{item.label}}</span>
+            </el-tooltip>
+          </span>
+        </div>
+      </div>
+      <!-- Tag expansion/collapse button -->
+      <div class="select-content-open select-disable"
+           @click="toggleListFullScreen"
+           v-if="overRowFlag || searchInput"
+           v-show="!listFullScreen">{{$t("components.open")}}</div>
+      <div class="select-content-open select-disable"
+           @click="toggleListFullScreen"
+           v-if="overRowFlag || listFullScreen"
+           v-show="listFullScreen">{{$t("components.close")}}</div>
+    </div>
+    <div class="select-content-all"
+         v-if="listFullScreen">
+      <div class="select-item"
+           v-for="(item, itemIndex) in checkListArr"
+           :key="itemIndex"
+           @click="listItemClick(item)"
+           v-show="item.show">
+        <span class="multiCheckBox-border multi-check-border"
+              :class="item.checked ? 'checkbox-checked' : 'checkbox-unchecked'"></span>
+        <span class="label-item">
+          <el-tooltip effect="dark"
+                      popper-class="tooltip-show-content"
+                      :content="item.label"
+                      placement="top">
+            <span class="select-disable">{{item.label}}</span>
+          </el-tooltip>
+        </span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    checkListArr: Array,
+  },
+  data() {
+    return {
+      listFullScreen: false, // Indicates whether to expand the selection list.
+      overRowFlag: false, // Check whether the list contains more than one line.
+      searchInputTimer: null, // Timer for filtering.
+      searchInput: '', // Regular input value of the search.
+      valiableSearchInput: '', // Last valid input for tag retrieval.
+      multiSelectedItemNames: {}, // Dictionary for storing the name of the selected tags.
+      operateSelectAll: true, // Indicates whether to select all tags.
+      perSelectItemMarginBottom: 1, // Outer margin of the bottom of each selection box.
+    };
+  },
+  computed: {},
+  watch: {},
+  mounted() {
+    this.init();
+  },
+  methods: {
+    /**
+     * Initialize
+     */
+    init() {
+      this.$nextTick(() => {
+        this.resizeCallback();
+      });
+      window.addEventListener('resize', this.resizeCallback, false);
+    },
+    /**
+     * The callback of window size changes listener
+     */
+    resizeCallback() {
+      // Calculating the display of the Expand Folding Button
+      const selectItemContent = this.$refs.selectItemContent;
+      if (selectItemContent) {
+        this.overRowFlag =
+          selectItemContent.clientHeight <
+          selectItemContent.scrollHeight - this.perSelectItemMarginBottom;
+      }
+    },
+    /**
+     * Click select all
+     */
+    listSelectAll() {
+      this.operateSelectAll = !this.operateSelectAll;
+      this.multiSelectedItemNames = {};
+      // Setting the status of list items
+      if (this.operateSelectAll) {
+        this.checkListArr.forEach((listItem) => {
+          if (listItem.show) {
+            listItem.checked = true;
+            this.multiSelectedItemNames[listItem.label] = true;
+          }
+        });
+      } else {
+        this.checkListArr.forEach((listItem) => {
+          if (listItem.show) {
+            listItem.checked = false;
+          }
+        });
+      }
+      // Returns a dictionary containing selected items.
+      this.$emit('selectedChange', this.multiSelectedItemNames);
+    },
+    /**
+     * Tag Filter
+     */
+    listFilter() {
+      if (this.searchInputTimer) {
+        clearTimeout(this.searchInputTimer);
+        this.searchInputTimer = null;
+      }
+      this.searchInputTimer = setTimeout(() => {
+        let reg;
+        try {
+          reg = new RegExp(this.searchInput);
+        } catch (e) {
+          this.$message.warning(this.$t('public.regIllegal'));
+          return;
+        }
+        this.valiableSearchInput = this.searchInput;
+        this.multiSelectedItemNames = {};
+        let itemSelectAll = true;
+        // Filter the tags that do not meet the conditions in the operation bar and hide them
+        this.checkListArr.forEach((listItem) => {
+          if (reg.test(listItem.label)) {
+            listItem.show = true;
+            if (listItem.checked) {
+              this.multiSelectedItemNames[listItem.label] = true;
+            } else {
+              itemSelectAll = false;
+            }
+          } else {
+            listItem.show = false;
+          }
+        });
+        // Update the selected status of the Select All button
+        this.operateSelectAll = itemSelectAll;
+        this.$emit('selectedChange', this.multiSelectedItemNames);
+      }, 200);
+    },
+    /**
+     * Item click event
+     * @param {Object} listItem Current item object
+     */
+    listItemClick(listItem) {
+      if (!listItem) {
+        return;
+      }
+      listItem.checked = !listItem.checked;
+      // Refreshes the selected status of the current label option
+      if (listItem.checked) {
+        this.multiSelectedItemNames[listItem.label] = true;
+      } else {
+        if (this.multiSelectedItemNames[listItem.label]) {
+          delete this.multiSelectedItemNames[listItem.label];
+        }
+      }
+      // Update the selected status of the Select All button
+      let itemSelectAll = true;
+      this.checkListArr.some((curListItem) => {
+        if (curListItem.show && !curListItem.checked) {
+          itemSelectAll = false;
+          return true;
+        }
+      });
+      this.operateSelectAll = itemSelectAll;
+      // Return a dictionary containing selected items.
+      this.$emit('selectedChange', this.multiSelectedItemNames);
+    },
+    /**
+     * Expand or collapse the list of items.
+     */
+    toggleListFullScreen() {
+      this.listFullScreen = !this.listFullScreen;
+      if (!this.listFullScreen) {
+        this.$nextTick(() => {
+          this.resizeCallback();
+        });
+      }
+    },
+    /**
+     * Updates the dictionary of selected tags.
+     * @return {Object} Dictionary containing selected tags
+     */
+    updateSelectedDic() {
+      let reg;
+      try {
+        reg = new RegExp(this.searchInput);
+      } catch (e) {
+        reg = new RegExp(this.valiableSearchInput);
+      }
+      this.multiSelectedItemNames = {};
+      let itemSelectAll = true;
+      this.checkListArr.forEach((listItem) => {
+        if (reg.test(listItem.label)) {
+          listItem.show = true;
+          if (listItem.checked) {
+            this.multiSelectedItemNames[listItem.label] = true;
+          } else {
+            itemSelectAll = false;
+          }
+        } else {
+          listItem.show = false;
+        }
+      });
+      this.operateSelectAll = itemSelectAll;
+      this.resizeCallback();
+      return this.multiSelectedItemNames;
+    },
+  },
+  destroyed() {
+    // Remove the listener of window size change
+    window.removeEventListener('resize', this.resizeCallback);
+    // Remove filter timer
+    if (this.searchInputTimer) {
+      clearTimeout(this.searchInputTimer);
+      this.searchInputTimer = null;
+    }
+  },
+};
+</script>
+<style lang="scss">
+.cl-checklist-container {
+  width: 100%;
+  height: 100%;
+  .select-content {
+    display: flex;
+    align-items: center;
+    .title {
+      font-size: 14px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .select-all {
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .select-item-content {
+      display: flex;
+      height: 16px;
+      flex-wrap: wrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .select-content-open {
+      flex: 1;
+      text-align: right;
+      font-size: 14px;
+      color: #00a5a7;
+      cursor: pointer;
+      min-width: 60px;
+    }
+  }
+  .select-content-all {
+    max-height: 150px;
+    padding-left: 72px;
+    overflow-x: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    .label-item {
+      line-height: 14px;
+    }
+    .select-item {
+      height: 25px;
+      margin-top: 25px;
+    }
+  }
+  .select-item {
+    margin-right: 20px;
+    flex-shrink: 0;
+    margin-bottom: 1px;
+    cursor: pointer;
+    .label-item {
+      width: 100px;
+      display: block;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      text-align: left;
+    }
+  }
+  .multiCheckBox-border {
+    width: 16px;
+    height: 16px;
+    display: block;
+    margin-right: 20px;
+    cursor: pointer;
+    float: left;
+  }
+  .checkbox-checked {
+    background-image: url('../assets/images/mult-select.png');
+  }
+  .checkbox-unchecked {
+    background-image: url('../assets/images/mult-unselect.png');
+  }
+  .label-item {
+    font-size: 14px;
+    line-height: 14px;
+    vertical-align: middle;
+    .el-tooltip {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      text-align: left;
+      height: 16px;
+    }
+    span {
+      font-size: 14px;
+      line-height: 14px;
+      display: block;
+    }
+  }
+  .mr24 {
+    margin-right: 24px;
+  }
+  .select-disable {
+    -moz-user-select: none; /*Firefox*/
+    -webkit-user-select: none; /*webkitbrowser*/
+    -ms-user-select: none; /*IE10*/
+    -khtml-user-select: none; /*Early browser*/
+    user-select: none;
+  }
+  .search-input-item {
+    width: 261px;
+  }
+}
+.tooltip-show-content {
+  max-width: 50%;
+}
+</style>

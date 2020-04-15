@@ -42,21 +42,6 @@ router.beforeEach((to, from, next) => {
 // forbidden showing production tip
 Vue.config.productionTip = false;
 
-/**
- * Check whether the input string contains special characters
- * @param {String} strurl
- * @return {Boolen}
- */
-function justSql(strurl) {
-  const reA = /select|create|alert|update|delete|truncate/i;
-  const reB = /join|union|exec|insert|drop|count|'|"|;|>|</i;
-  const reAll = new RegExp(reA.source + reB.source, 'i');
-  if (reAll.test(strurl)) {
-    return true;
-  } else {
-    return false;
-  }
-}
 
 /**
  * Check the browser version
@@ -83,20 +68,16 @@ function isBrowserSupport() {
 }
 
 window.onload = function(e) {
-  if (justSql(location.hash.toLowerCase())) {
-    location.href = location.origin;
-  } else {
-    if (isBrowserSupport()) {
-      Vue.prototype.$warmBrowser = true;
-    }
-    // Instantiation
-    setTimeout(() => {
-      new Vue({
-        router,
-        store,
-        i18n,
-        render: (h) => h(App),
-      }).$mount('#app');
-    }, 100);
+  if (isBrowserSupport()) {
+    Vue.prototype.$warmBrowser = true;
   }
+  // Instantiation
+  setTimeout(() => {
+    new Vue({
+      router,
+      store,
+      i18n,
+      render: (h) => h(App),
+    }).$mount('#app');
+  }, 100);
 };

@@ -850,6 +850,7 @@ export default {
             }
           })
           .catch(() => {
+            this.fileSearchBox.suggestions = [];
             this.initOver = true;
             this.loading.show = false;
           });
