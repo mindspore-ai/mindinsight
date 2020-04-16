@@ -354,9 +354,8 @@ def validate_condition(search_condition):
             log.error(err_msg)
             raise LineageParamValueError(err_msg)
         if not (sorted_name in FIELD_MAPPING
-            or (sorted_name.startswith('metric/') and len(sorted_name) > 7)
-            or (sorted_name.startswith('user_defined/') and len(sorted_name) > 13)
-        ):
+                or (sorted_name.startswith('metric/') and len(sorted_name) > 7)
+                or (sorted_name.startswith('user_defined/') and len(sorted_name) > 13)):
             log.error(err_msg)
             raise LineageParamValueError(err_msg)
 

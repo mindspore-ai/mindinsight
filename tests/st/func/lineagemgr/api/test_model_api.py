@@ -30,10 +30,9 @@ from mindinsight.lineagemgr import filter_summary_lineage, get_summary_lineage
 from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageFileNotFoundError, LineageParamSummaryPathError,
                                                                  LineageParamTypeError, LineageParamValueError,
                                                                  LineageSearchConditionParamError)
-
 from ..conftest import BASE_SUMMARY_DIR, DATASET_GRAPH, SUMMARY_DIR, SUMMARY_DIR_2
 from .....ut.lineagemgr.querier import event_data
-from os import environ
+
 LINEAGE_INFO_RUN1 = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
     'metric': {
