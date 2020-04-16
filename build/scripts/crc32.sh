@@ -67,7 +67,7 @@ build_crc32() {
 
     c++ -O2 -O3 -shared -std=c++11 -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 \
         -Wno-maybe-uninitialized -Wno-unused-parameter -Wall -Wl,-z,relro,-z,now,-z,noexecstack \
-        -I"$THIRD_PARTY_DIR/securec/include" "${PYBIND11_INCLUDES[0]}" "${PYBIND11_INCLUDES[1]}" \
+        -I"$THIRD_PARTY_DIR" "${PYBIND11_INCLUDES[0]}" "${PYBIND11_INCLUDES[1]}" \
         -o "$CRC32_SO_FILE" crc32.cc "$BUILDDIR/libsecurec.a"
 
     if [ ! -f "$CRC32_SO_FILE" ]; then
