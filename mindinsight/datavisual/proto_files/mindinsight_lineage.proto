@@ -32,16 +32,16 @@ message LineageEvent {
     string version = 3;
 
     // Train lineage
-    TrainLineage train_lineage = 4;
+    TrainLineage train_lineage = 6;
 
     // Evaluation lineage
-    EvaluationLineage evaluation_lineage = 5;
+    EvaluationLineage evaluation_lineage = 7;
 
     // Dataset graph
-    DatasetGraph dataset_graph = 6;
+    DatasetGraph dataset_graph = 9;
 
     // User defined info
-    UserDefinedInfo user_defined_info = 7;
+    UserDefinedInfo user_defined_info = 10;
   }
 }
 
