@@ -105,10 +105,14 @@ class ExpressionType(enum.Enum):
                                                    cls.LE.value, cls.GE.value]:
             return False
 
-        if except_key == cls.IN.value:
-            state = operator.contains(except_value, actual_value)
-        else:
-            state = getattr(operator, except_key)(actual_value, except_value)
+        try:
+            if except_key == cls.IN.value:
+                state = operator.contains(except_value, actual_value)
+            else:
+                state = getattr(operator, except_key)(actual_value, except_value)
+        except TypeError:
+            # actual_value can not compare with except_value
+            return False
         return state
 
 
@@ -280,8 +284,12 @@ class Querier:
             elif value2 is None:
                 cmp_result = 1
             else:
-                cmp_result = (value1 > value2) - (value1 < value2)
-
+                try:
+                    cmp_result = (value1 > value2) - (value1 < value2)
+                except TypeError:
+                    type1 = str(type(value1))
+                    type2 = str(type(value2))
+                    cmp_result = (type1 > type2) - (type1 < type2)
             return cmp_result
 
         self._parse_fail_summary_logs()
