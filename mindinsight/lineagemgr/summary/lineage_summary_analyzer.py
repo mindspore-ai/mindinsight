@@ -18,6 +18,7 @@ from collections import namedtuple
 from enum import Enum
 
 from google.protobuf.json_format import MessageToDict
+from google.protobuf.message import DecodeError
 
 from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
 from mindinsight.datavisual.utils import crc32
@@ -202,7 +203,7 @@ class LineageSummaryAnalyzer(SummaryAnalyzer):
         analyzer = cls(file_path)
         try:
             lineage_info = analyzer.get_latest_info()
-        except (MindInsightException, IOError) as err:
+        except (MindInsightException, IOError, DecodeError) as err:
             log.error("Failed to get lineage information.")
             log.exception(err)
             raise LineageSummaryAnalyzeException()
