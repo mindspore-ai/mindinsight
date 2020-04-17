@@ -14,7 +14,7 @@
 # ============================================================================
 """Define schema of model lineage input parameters."""
 from marshmallow import Schema, fields, ValidationError, pre_load, validates
-from marshmallow.validate import Range, OneOf
+from marshmallow.validate import Range
 
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrorMsg, \
     LineageErrors
@@ -129,10 +129,7 @@ class SearchModelConditionParameter(Schema):
     offset = fields.Int(validate=lambda n: 0 <= n <= 100000)
     sorted_name = fields.Str()
     sorted_type = fields.Str(allow_none=True)
-    lineage_type = fields.Str(
-        validate=OneOf(enum_to_list(LineageType)),
-        allow_none=True
-    )
+    lineage_type = fields.Dict()
 
     @staticmethod
     def check_dict_value_type(data, value_type):
@@ -174,53 +171,79 @@ class SearchModelConditionParameter(Schema):
 
     @validates("loss_function")
     def check_loss_function(self, data):
+        """Check loss function."""
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("train_dataset_path")
     def check_train_dataset_path(self, data):
+        """Check train dataset path."""
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("train_dataset_count")
     def check_train_dataset_count(self, data):
+        """Check train dataset count."""
         SearchModelConditionParameter.check_dict_value_type(data, int)
 
     @validates("test_dataset_path")
     def check_test_dataset_path(self, data):
+        """Check test dataset path."""
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("test_dataset_count")
     def check_test_dataset_count(self, data):
+        """Check test dataset count."""
         SearchModelConditionParameter.check_dict_value_type(data, int)
 
     @validates("network")
     def check_network(self, data):
+        """Check network."""
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("optimizer")
     def check_optimizer(self, data):
+        """Check optimizer."""
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("epoch")
     def check_epoch(self, data):
+        """Check epoch."""
         SearchModelConditionParameter.check_dict_value_type(data, int)
 
     @validates("batch_size")
     def check_batch_size(self, data):
+        """Check batch size."""
         SearchModelConditionParameter.check_dict_value_type(data, int)
 
     @validates("model_size")
     def check_model_size(self, data):
+        """Check model size."""
         SearchModelConditionParameter.check_dict_value_type(data, int)
 
     @validates("summary_dir")
     def check_summary_dir(self, data):
+        """Check summary dir."""
         SearchModelConditionParameter.check_dict_value_type(data, str)
+
+    @validates("lineage_type")
+    def check_lineage_type(self, data):
+        """Check lineage type."""
+        SearchModelConditionParameter.check_dict_value_type(data, str)
+        recv_types = []
+        for key, value in data.items():
+            if key == "in":
+                recv_types = value
+            else:
+                recv_types.append(value)
+
+        lineage_types = enum_to_list(LineageType)
+        if not set(recv_types).issubset(lineage_types):
+            raise ValidationError("Given lineage type should be one of %s." % lineage_types)
 
     @pre_load
     def check_comparision(self, data, **kwargs):
         """Check comparision for all parameters in schema."""
         for attr, condition in data.items():
-            if attr in ["limit", "offset", "sorted_name", "sorted_type", "lineage_type"]:
+            if attr in ["limit", "offset", "sorted_name", "sorted_type"]:
                 continue
 
             if not isinstance(attr, str):
@@ -232,6 +255,13 @@ class SearchModelConditionParameter(Schema):
             if not isinstance(condition, dict):
                 raise LineageParamTypeError("The search_condition element {} should be dict."
                                             .format(attr))
+
+            if attr in ["summary_dir", "lineage_type"]:
+                if not set(condition.keys()).issubset(['in', 'eq']):
+                    raise LineageParamValueError("Invalid operation of %s." % attr)
+                if len(condition.keys()) > 1:
+                    raise LineageParamValueError("More than one operation of %s." % attr)
+                continue
 
             for key in condition.keys():
                 if key not in ["eq", "lt", "gt", "le", "ge", "in"]:

@@ -23,6 +23,7 @@ from mindinsight.lineagemgr.common.exceptions.exceptions import \
     LineageEventNotExistException, LineageQuerierParamException, \
     LineageSummaryParseException, LineageEventFieldNotExistException
 from mindinsight.lineagemgr.common.log import logger
+from mindinsight.lineagemgr.common.utils import enum_to_list
 from mindinsight.lineagemgr.querier.query_model import LineageObj, FIELD_MAPPING
 from mindinsight.lineagemgr.summary.lineage_summary_analyzer import \
     LineageSummaryAnalyzer
@@ -326,17 +327,45 @@ class Querier:
                         customized[label]["required"] = True
                         customized[label]["type"] = type(value).__name__
 
-        search_type = condition.get(ConditionParam.LINEAGE_TYPE.value)
+        lineage_types = condition.get(ConditionParam.LINEAGE_TYPE.value)
+        lineage_types = self._get_lineage_types(lineage_types)
+
+        object_items = []
+        for item in offset_results:
+            lineage_object = dict()
+            if LineageType.MODEL.value in lineage_types:
+                lineage_object.update(item.to_model_lineage_dict())
+            if LineageType.DATASET.value in lineage_types:
+                lineage_object.update(item.to_dataset_lineage_dict())
+            object_items.append(lineage_object)
+
         lineage_info = {
             'customized': customized,
-            'object': [
-                item.to_dataset_lineage_dict() if search_type == LineageType.DATASET.value
-                else item.to_filtration_dict() for item in offset_results
-            ],
+            'object': object_items,
             'count': len(results)
         }
 
         return lineage_info
+
+    def _get_lineage_types(self, lineage_type_param):
+        """
+        Get lineage types.
+
+        Args:
+            lineage_type_param (dict): A dict contains "in" or "eq".
+
+        Returns:
+            list, lineage type.
+
+        """
+        # lineage_type_param is None or an empty dict
+        if not lineage_type_param:
+            return enum_to_list(LineageType)
+
+        if lineage_type_param.get("in") is not None:
+            return lineage_type_param.get("in")
+
+        return [lineage_type_param.get("eq")]
 
     def _is_valid_field(self, field_name):
         """

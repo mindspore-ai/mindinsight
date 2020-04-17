@@ -131,18 +131,6 @@ class TestModel(TestCase):
         self.assertDictEqual(
             result, search_condition
         )
-        search_condition = {
-            'summary_dir': {
-                'gt': 3
-            }
-        }
-        self.assertRaisesRegex(
-            LineageParamValueError,
-            'Invalid operation of summary dir',
-            _convert_relative_path_to_abspath,
-            summary_base_dir,
-            search_condition
-        )
 
 
 class TestFilterAPI(TestCase):
