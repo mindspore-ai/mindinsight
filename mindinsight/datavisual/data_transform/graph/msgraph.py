@@ -57,14 +57,23 @@ class MSGraph(Graph):
         const_nodes_map = {}
 
         for node_def in graph_proto.node:
+            if not node_def.name:
+                logger.warning("Finding a node with an empty name will not save it.")
+                continue
             node = self._parse_graph_proto_node(node_def)
             leaf_node_id_map_name.update({node.node_id: node.name})
 
         for parameter in graph_proto.parameters:
+            if not parameter.name:
+                logger.warning("Finding a parameter with an empty name will not save it.")
+                continue
             node = self._parse_graph_proto_parameter(parameter)
             const_nodes_map.update({node.name: node})
 
         for i, const in enumerate(graph_proto.const_vals):
+            if not const.key:
+                logger.warning("Finding a const with an empty key will not save it.")
+                continue
             node_id = 'const_{}'.format(i)
             node = self._parse_graph_proto_const(const, node_id)
             const_nodes_map.update({const.key: node})
@@ -160,7 +169,8 @@ class MSGraph(Graph):
         Returns:
             Node, a `Node` object.
         """
-        node_name = '/'.join([node_def.scope, node_def.op_type])+node_def.name
+        node_name = '/'.join([node_def.scope, node_def.op_type]) + node_def.name \
+            if node_def.scope else node_def.op_type + node_def.name
         node = Node(name=node_name, node_id=node_def.name)
         node.node_type = node_def.op_type
         logger.debug("Foreach graph proto nodes, node id: %s, node name: %s, node def name: %s, "
