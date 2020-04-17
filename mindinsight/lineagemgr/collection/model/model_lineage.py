@@ -56,6 +56,8 @@ class TrainLineage(Callback):
         raise_exception (bool): Whether to raise exception when error occurs in
             TrainLineage. If True, raise exception. If False, catch exception
             and continue. Default: False.
+        user_defined_info (dict): User defined information. Only flatten dict with
+            str key and int/float/str value is supported. Default: None.
 
     Raises:
         MindInsightException: If validating parameter fails.
@@ -233,6 +235,8 @@ class EvalLineage(Callback):
         raise_exception (bool): Whether to raise exception when error occurs in
             EvalLineage. If True, raise exception. If False, catch exception
             and continue. Default: False.
+        user_defined_info (dict): User defined information. Only flatten dict with
+            str key and int/float/str value is supported. Default: None.
 
     Raises:
         MindInsightException: If validating parameter fails.
