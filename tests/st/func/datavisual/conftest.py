@@ -65,6 +65,7 @@ def init_summary_logs():
 
         summaries_metadata.update(
             log_operations.create_summary_logs(summary_base_dir, constants.SUMMARY_DIR_NUM_SECOND,
+                                               constants.SUMMARY_DIR_PREFIX,
                                                constants.SUMMARY_DIR_NUM_FIRST))
         summaries_metadata.update(
             log_operations.create_multiple_logs(summary_base_dir, constants.MULTIPLE_DIR_NAME,

@@ -138,3 +138,12 @@ class ScalarNotExistError(MindInsightException):
         super(ScalarNotExistError, self).__init__(DataVisualErrors.SCALAR_NOT_EXIST,
                                                   error_msg,
                                                   http_code=400)
+
+
+class HistogramNotExistError(MindInsightException):
+    """Unable to get histogram values based on a given condition."""
+    def __init__(self, error_detail):
+        error_msg = f'Histogram value is not exist. Detail: {error_detail}'
+        super(HistogramNotExistError, self).__init__(DataVisualErrors.HISTOGRAM_NOT_EXIST,
+                                                     error_msg,
+                                                     http_code=400)

@@ -24,6 +24,7 @@ from flask import jsonify
 from mindinsight.conf import settings
 from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.datavisual.utils.tools import if_nan_inf_to_none
+from mindinsight.datavisual.processors.histogram_processor import HistogramProcessor
 from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
@@ -144,6 +145,22 @@ def graph_search_single_node():
     graph_process = GraphProcessor(train_id, DATA_MANAGER, tag)
     resp = graph_process.search_single_node(name)
     return jsonify(resp)
+
+
+@BLUEPRINT.route("/datavisual/histograms", methods=["GET"])
+def histogram():
+    """
+    Interface to obtain histogram data.
+
+    Returns:
+        Response, which contains a JSON object.
+    """
+    tag = request.args.get("tag", default=None)
+    train_id = get_train_id(request)
+
+    processor = HistogramProcessor(DATA_MANAGER)
+    response = processor.get_histograms(train_id, tag)
+    return jsonify(response)
 
 
 def init_module(app):

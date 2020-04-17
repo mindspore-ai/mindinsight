@@ -62,3 +62,4 @@ class DataVisualErrors(Enum):
     GRAPH_NOT_EXIST = 12
     IMAGE_NOT_EXIST = 13
     SCALAR_NOT_EXIST = 14
+    HISTOGRAM_NOT_EXIST = 15

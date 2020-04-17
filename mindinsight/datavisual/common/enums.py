@@ -37,3 +37,4 @@ class PluginNameEnum(BaseEnum):
     IMAGE = 'image'
     SCALAR = 'scalar'
     GRAPH = 'graph'
+    HISTOGRAM = 'histogram'
