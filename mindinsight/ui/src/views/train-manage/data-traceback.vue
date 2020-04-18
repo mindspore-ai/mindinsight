@@ -14,27 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div id='cl-data-traceback'>
+  <div id="cl-data-traceback">
     <div class="cl-data-right">
       <!-- select area -->
-      <div class="data-checkbox-area"
-           v-show="totalSeries && totalSeries.length">
+      <div class="data-checkbox-area">
         <!-- show all data button -->
         <el-button class="reset-btn custom-btn"
                    @click="echartShowAllData"
                    type="primary"
                    size="mini"
-                   plain>
-          {{$t('modelTraceback.showAllData')}}
+                   plain
+                   v-show="(summaryDirList&&!summaryDirList.length)||(totalSeries&&totalSeries.length)">
+          {{ $t('modelTraceback.showAllData') }}
         </el-button>
+        <div v-show="totalSeries&&totalSeries.length&&(!summaryDirList||(summaryDirList&&summaryDirList.length))">
         <div class="fixed-checkbox-group">
           <el-checkbox v-for="item in fixedSeries"
                        :key="item.id"
                        :checked="item.checked"
                        :disabled="true">
-            {{item.name}}
+            {{ item.name }}
           </el-checkbox>
-          <br>
+          <br />
         </div>
         <div class="data-checkbox">
           <!-- check box -->
@@ -43,7 +44,7 @@ limitations under the License.
                          :indeterminate="isIndeterminate"
                          class="select-all"
                          @change="handleCheckAllChange">
-              {{$t('scalar.selectAll')}}
+              {{ $t('scalar.selectAll') }}
             </el-checkbox>
           </div>
           <div class="checkbox-scroll">
@@ -52,35 +53,25 @@ limitations under the License.
                            @change="handleCheckedSeriesChange()"
                            v-model="item.checked"
                            :key="item.id">
-                {{item.name}}
+                {{ item.name }}
               </el-checkbox>
             </div>
           </div>
-
+        </div>
         </div>
       </div>
       <!-- echart drawing area -->
       <div id="data-echart"></div>
-      <div v-if="echartNoData"
-           class="echart-no-data">
-        <div class="echart-no-data-container">
-          <img :src="require('@/assets/images/nodata.png')"
-               alt="" />
-          <p class='no-data-text'>
-            {{$t("public.noData")}}
-          </p>
-        </div>
-      </div>
-
       <!-- table area -->
       <div class="table-container"
-           v-show="lineagedata.serData && !!lineagedata.serData.length">
+           v-show="!echartNoData&&lineagedata.serData && !!lineagedata.serData.length">
         <el-table ref="table"
                   :data="table.data"
                   tooltip-effect="light"
                   height="calc(100% - 54px)"
-                  row-key='summaryDir'
-                  @selection-change="handleSelectionChange">
+                  row-key="summary_dir"
+                  @selection-change="handleSelectionChange"
+                  @sort-change="tableSortChange">
           <el-table-column type="selection"
                            width="55"
                            :reserve-selection="true">
@@ -89,32 +80,33 @@ limitations under the License.
                            :key="key"
                            :prop="key"
                            :label="table.columnOptions[key].label"
-                           min-width='200'
+                           :sortable='sortArray.includes(table.columnOptions[key].label)?"custom":false'
+                           min-width="200"
                            show-overflow-tooltip>
+            <template slot="header" slot-scope="scope">
+              <div class="custom-label" :title="scope.column.label">
+                {{scope.column.label}}
+                </div>
+            </template>
             <template slot-scope="scope">
               <span class="icon-container"
-                    v-show='table.columnOptions[key].label===text'>
+                    v-show="table.columnOptions[key].label === text">
                 <el-tooltip effect="light"
                             :content="$t('dataTraceback.dataTraceTips')"
                             placement="top"
-                            v-show='scope.row.children'>
+                            v-show="scope.row.children">
                   <i class="el-icon-warning"></i>
                 </el-tooltip>
               </span>
               <span @click="jumpToTrainDashboard(scope.row[key])"
-                    v-if='table.columnOptions[key].label===text'
-                    class="href-color"> {{scope.row[key]}} </span>
-              <span v-else-if="table.columnOptions[key].label===repeatTitle
-              ||table.columnOptions[key].label===shuffleTitle
-              ||table.columnOptions[key].label===batchNode
-              ||scope.row[key]===emptyObject
-              ||!scope.row[key]">
-                {{scope.row[key]}}
+                    v-if="table.columnOptions[key].label === text"
+                    class="href-color">
+                {{ scope.row[key] }}
               </span>
               <span v-else
                     @click="showDialogData(scope.row[key], scope)"
                     class="click-span">
-                {{scope.row[key]}}
+                {{formatNumber(key, scope.row[key]) }}
               </span>
             </template>
           </el-table-column>
@@ -126,14 +118,23 @@ limitations under the License.
                        :total="pagination.total">
         </el-pagination>
       </div>
-      <div v-show="(!lineagedata.serData || !lineagedata.serData.length) && initOver"
+      <div v-show="((!lineagedata.serData || !lineagedata.serData.length) && initOver)
+         ||(echartNoData&&(lineagedata.serData&&!!lineagedata.serData.length))"
            class="no-data-page">
         <div class="no-data-img">
           <img :src="require('@/assets/images/nodata.png')"
                alt="" />
-          <p class='no-data-text'>
-            {{$t("public.noData")}}
+          <p class="no-data-text"
+           v-show="!summaryDirList||(summaryDirList&&summaryDirList.length)&&!lineagedata.serData">
+            {{ $t('public.noData') }}
           </p>
+           <div v-show="echartNoData&&(lineagedata.serData&&!!lineagedata.serData.length)">
+              <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
+          </div>
+          <div v-show="summaryDirList&&!summaryDirList.length">
+             <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
+              <p class="no-data-text">{{ $t('dataTraceback.noDataTips') }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -142,13 +143,13 @@ limitations under the License.
                width="50%"
                :close-on-click-modal="false"
                class="details-data-list">
-      <div class="details-data-title">{{detailsDataTitle}}</div>
+      <div class="details-data-title">{{ detailsDataTitle }}</div>
       <el-table :data="detailsDataList"
                 row-key="id"
                 lazy
                 tooltip-effect="light"
                 :load="loadDataListChildren"
-                :tree-props="{children: 'children', hasChildren: 'hasChildren'}">
+                :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
         <el-table-column width="50" />
         <el-table-column prop="key"
                          width="180"
@@ -158,7 +159,7 @@ limitations under the License.
                          show-overflow-tooltip
                          label="Value">
           <template slot-scope="scope">
-            {{scope.row.value}}
+            {{ scope.row.value }}
           </template>
         </el-table-column>
       </el-table>
@@ -173,6 +174,16 @@ export default {
   data() {
     return {
       initOver: false, // Page initialization completed.
+      dataCheckedSummary: [],
+      selectedBarList: [],
+      customizedColumnOptions: [],
+      // Set the type of customized
+      customizedTypeObject: [],
+      // Value of the vertical axis query interface brought by model source tracing
+      modelObjectArray: [],
+      summaryDirList: undefined,
+      // Table filter condition
+      tableFilter: {},
       echartNoData: false,
       // Encapsulate the data returned by the background interface.
       lineagedata: {},
@@ -196,7 +207,6 @@ export default {
       shuffleTitle: 'Shuffle',
       repeatTitle: 'Repeat',
       categoryType: 'category',
-      emptyObject: '{}',
       objectType: 'object',
       type: {
         batch: 'BatchDataset',
@@ -230,12 +240,68 @@ export default {
         layout: 'total, prev, pager, next, jumper',
       },
       // Summary path column
-      summaryList: ['summaryDir'],
+      dirPathList: ['summary_dir'],
+      // Options that support sorting
+      sortArray: [
+        this.$t('modelTraceback.summaryPath'),
+        'loss',
+        this.$t('modelTraceback.network'),
+        this.$t('modelTraceback.optimizer'),
+        this.$t('modelTraceback.trainingSampleNum'),
+        this.$t('modelTraceback.testSampleNum'),
+        this.$t('modelTraceback.learningRate'),
+        'epoch',
+        'steps',
+        this.$t('modelTraceback.modelSize'),
+        this.$t('modelTraceback.lossFunc'),
+      ],
+      numberTypeIdList: [
+        'train_dataset_count',
+        'test_dataset_count',
+        'epoch',
+        'batch_size',
+        'model_size',
+        'loss',
+        'learning_rate',
+      ],
       table: {
         columnOptions: {
-          summaryDir: {
+          summary_dir: {
             label: this.$t('modelTraceback.summaryPath'),
             required: true,
+          },
+          dataset_mark: {
+            label: this.$t('modelTraceback.dataProcess'),
+          },
+          model_size: {
+            label: this.$t('modelTraceback.modelSize'),
+          },
+          network: {
+            label: this.$t('modelTraceback.network'),
+          },
+          loss: {
+            label: 'loss',
+          },
+          optimizer: {
+            label: this.$t('modelTraceback.optimizer'),
+          },
+          train_dataset_count: {
+            label: this.$t('modelTraceback.trainingSampleNum'),
+          },
+          test_dataset_count: {
+            label: this.$t('modelTraceback.testSampleNum'),
+          },
+          learning_rate: {
+            label: this.$t('modelTraceback.learningRate'),
+          },
+          epoch: {
+            label: 'epoch',
+          },
+          batch_size: {
+            label: 'steps',
+          },
+          loss_function: {
+            label: this.$t('modelTraceback.lossFunc'),
           },
         },
         // All options of the column in the table
@@ -262,7 +328,24 @@ export default {
      * init
      */
     init() {
-      this.getDatasetLineage();
+      this.customizedColumnOptions=this.$store.state.customizedColumnOptions||[];
+      this.table.columnOptions=Object.assign(this.table.columnOptions, this.customizedColumnOptions);
+      // Obtain the value of summary_dir from the store,
+      this.summaryDirList=this.$store.state.summaryDirList;
+      this.selectedBarList=this.$store.state.selectedBarList;
+      if (this.selectedBarList&&this.selectedBarList.length) {
+        this.tableFilter={};
+      } else {
+        this.tableFilter.lineage_type={in: ['dataset']};
+      }
+      const params={};
+      if (this.summaryDirList) {
+        this.tableFilter.summary_dir={in: this.summaryDirList};
+      } else {
+        this.tableFilter.summary_dir=undefined;
+      }
+      params.body=Object.assign({}, this.tableFilter);
+      this.queryLineagesData(params);
     },
 
     /*
@@ -270,7 +353,29 @@ export default {
      */
     initChart() {
       const parallelAxis = [];
+      const selectedBarList=this.$store.state.selectedBarList;
       const data = [];
+      const arrayTemp=[];
+      if (selectedBarList&&selectedBarList.length) {
+        selectedBarList.forEach((item)=>{
+          const value=this.customizedTypeObject[item];
+          if (value&&value.type=='float') {
+            arrayTemp.push({
+              name: item,
+              id: item,
+              type: 'float',
+              checked: true,
+            });
+          } else {
+            arrayTemp.push({
+              name: this.table.columnOptions[item].label,
+              id: item,
+              checked: true,
+            });
+          }
+        });
+      }
+      const totalBarArray=arrayTemp.concat(this.checkedSeries);
       this.echart.showData.forEach((val, i) => {
         const item = {
           lineStyle: {
@@ -280,25 +385,40 @@ export default {
           },
           value: [],
         };
-        this.checkedSeries.forEach((obj) => {
+        totalBarArray.forEach((obj) => {
           item.value.push(val[obj.id]);
         });
         data.push(item);
       });
 
-      this.checkedSeries.forEach((content, i) => {
+      totalBarArray.forEach((content, i) => {
         const obj = {dim: i, name: content.name, id: content.id};
         if (
           content.name === this.repeatTitle ||
           content.name === this.shuffleTitle
         ) {
           obj.scale = true;
+          obj.minInterval=1;
+          this.setColorOfSelectedBar(selectedBarList, obj);
+        } else if (
+          this.numberTypeIdList.includes(content.id)||
+          (content.type&&content.type=='float')
+        ) {
+          obj.scale=true;
+          this.setColorOfSelectedBar(selectedBarList, obj);
         } else {
-          // Character string
+          // String type
           obj.type = this.categoryType;
           obj.axisLabel = {
             show: false,
           };
+          this.setColorOfSelectedBar(selectedBarList, obj);
+          if (content.id==='dataset_mark') {
+            obj.axisLabel={
+              show: false,
+            };
+          }
+
           const values = {};
           this.echart.showData.forEach((i) => {
             if (i[content.id] || i[content.id] === 0) {
@@ -325,7 +445,6 @@ export default {
             areaSelectStyle: {
               width: 40,
             },
-            minInterval: 1,
             tooltip: {
               show: true,
             },
@@ -370,17 +489,59 @@ export default {
               return i[key] >= range[0] && i[key] <= range[1];
             });
           }
-          this.echart.showData = this.echart.brushData;
-          this.initChart();
-
-          this.pagination.currentPage = 1;
-          this.pagination.total = this.echart.brushData.length;
-          this.table.data = this.echart.brushData.slice(
-              (this.pagination.currentPage - 1) * this.pagination.pageSize,
-              this.pagination.currentPage * this.pagination.pageSize,
-          );
+          const tempList = this.echart.brushData;
+          const summaryList=[];
+          tempList.forEach((item)=>{
+            summaryList.push(item.summary_dir);
+          });
+          // The summaryList value could not be saved in the destroy state.
+          this.dataCheckedSummary=[];
+          this.$store.commit('setSummaryDirList', summaryList);
+          if (!tempList.length) {
+            this.summaryDirList=[];
+            this.lineagedata.serData=undefined;
+            document.querySelector('#data-echart').style.display='none';
+          } else {
+            this.echart.showData = this.echart.brushData;
+            this.initChart();
+            this.pagination.currentPage = 1;
+            this.pagination.total = this.echart.brushData.length;
+            this.table.data = this.echart.brushData.slice(
+                (this.pagination.currentPage - 1) * this.pagination.pageSize,
+                this.pagination.currentPage * this.pagination.pageSize,
+            );
+          }
         }
       });
+    },
+    /**
+     * Set the color of the model tracing axis.
+    * @param {Array} selectedBarList
+    * @param {Object} obj
+     */
+    setColorOfSelectedBar(selectedBarList, obj) {
+      if (selectedBarList&&obj.dim<selectedBarList.length) {
+        obj.nameTextStyle={
+          color: '#00a5a7',
+        };
+        obj.axisLabel={
+          show: true,
+          textStyle: {
+            color: '#00a5a7',
+          },
+        };
+        obj.axisLine={
+          show: true,
+          lineStyle: {
+            color: '#00a5a7',
+          },
+        };
+      } else {
+        // Text color
+        obj.nameTextStyle={
+          color: 'black',
+        };
+      }
     },
 
     /**
@@ -397,17 +558,86 @@ export default {
     },
 
     /**
+     * Formatting Data
+     * @param {String} key
+     * @param {String} value
+     * @return {Object}
+     */
+    formatNumber(key, value) {
+      if (isNaN(value) || !value) {
+        return value;
+      } else {
+        if (key === 'accuracy') {
+          return this.toFixedFun(value * 100, 2) + '%';
+        } else if (key === 'learning_rate') {
+          let temp = value.toPrecision(3);
+          let row = 0;
+          while (temp < 1) {
+            temp = temp * 10;
+            row += 1;
+          }
+          temp = this.toFixedFun(temp, 2);
+          return `${temp}${row ? `e-${row}` : ''}`;
+        } else if (key === 'model_size') {
+          return value + 'MB';
+        } else {
+          if (value < 1000) {
+            return Math.round(value * Math.pow(10, 2)) / Math.pow(10, 2);
+          } else {
+            const reg = /(?=(\B)(\d{3})+$)/g;
+            return (value + '').replace(reg, ',');
+          }
+        }
+      }
+    },
+
+    /**
+     * Keep the number with n decimal places.
+     * @param {Number} num
+     * @param {Number} pow Number of decimal places
+     * @return {Number}
+     */
+    toFixedFun(num, pow) {
+      if (isNaN(num) || isNaN(pow) || !num || !pow) {
+        return num;
+      }
+      return Math.round(num * Math.pow(10, pow)) / Math.pow(10, pow);
+    },
+
+    /**
      * The detailed information is displayed in the dialog box.
      * @param {String} val
      * @param {Object} scope
      */
     showDialogData(val, scope) {
+      if (typeof val!=='string'||val=='{}') {
+        return;
+      } else {
+        const isJson=this.isJSON(val);
+        if (!isJson) {
+          return;
+        }
+      }
       this.rowName = `${scope.column.property}${this.$t(
           'dataTraceback.details',
       )}`;
       this.detailsDialogVisible = true;
-      this.detailsDataTitle = scope.row.summaryDir;
+      this.detailsDataTitle = scope.row.summary_dir;
       this.detailsDataList = this.formateJsonString(val);
+    },
+
+    /**
+     * Checks whether the value is a JSON character string.
+     *  @param {String} val
+     * @return {Boolean}
+     */
+    isJSON(val) {
+      try {
+        JSON.parse(val);
+        return true;
+      } catch (e) {
+        return false;
+      }
     },
 
     /**
@@ -426,20 +656,75 @@ export default {
 
     /**
      * Method of invoking the interface
+     * @param {Object} params
      */
-    getDatasetLineage() {
-      RequestService.getDatasetLineage()
+    queryLineagesData(params) {
+      RequestService.queryLineagesData(params)
           .then(
               (res) => {
                 this.initOver = true;
                 if (!res || !res.data) {
                   return;
                 }
+                this.customizedTypeObject=res.data.customized;
+                const key=Object.keys(this.customizedTypeObject);
+                if (key.length) {
+                  this.sortArray=this.sortArray.concat(key);
+                }
+                // Model source tracing filtering parameters
+                this.selectedBarList=this.$store.state.selectedBarList;
+                if ( this.selectedBarList&& this.selectedBarList.length) {
+                  const tempList = JSON.parse(JSON.stringify(res.data.object));
+                  const list=[];
+                  const metricKeys={};
+                  tempList.forEach((item)=>{
+                    if (item.model_lineage) {
+                      const i=JSON.parse(JSON.stringify(item.model_lineage));
+                      i.model_size=parseFloat(((i.model_size||0)/1024/1024).toFixed(2));
+                      const keys=Object.keys(i.metric||{});
+                      if (keys.length) {
+                        keys.forEach((key)=>{
+                          if (i.metric[key]||i.metric[key]===0) {
+                            const temp='metric/'+key;
+                            metricKeys[temp]=key;
+                            i[temp]=i.metric[key];
+                          }
+                        });
+                        delete i.metric;
+                      }
+                      const udkeys=Object.keys(i.user_defined||{});
+                      if (udkeys.length) {
+                        udkeys.forEach((key)=>{
+                          if (i.user_defined[key]||i.user_defined[key]===0) {
+                            const temp='user_defined/'+key;
+                            i[temp]=i.user_defined[key];
+                          }
+                        });
+                        delete i.user_defined;
+                      }
+                      list.push(i);
+                    }
+                  });
+                  this.modelObjectArray=[];
+                  for (let i=0; i<list.length; i++) {
+                    const modelObject={};
+                    for (let j=0; j<this.selectedBarList.length; j++) {
+                      const tempObject=list[i];
+                      const key=this.selectedBarList[j];
+                      modelObject[key]=tempObject[key];
+                    }
+                    this.modelObjectArray.push(modelObject);
+                  }
+                }
+
                 this.fixedSeries = [];
                 this.noFixedSeries = [];
                 this.checkedSeries = [];
                 this.lineagedata = this.formateOriginData(res.data);
                 this.totalSeries = this.lineagedata.fullNodeList;
+                if (!this.totalSeries.length) {
+                  this.echartNoData=true;
+                }
                 this.totalSeries.forEach((nodeItem) => {
                   if (this.createType[nodeItem.name]) {
                     nodeItem.checked = true;
@@ -463,18 +748,24 @@ export default {
                 this.echart.showData = this.echart.brushData;
                 if (this.totalSeries.length) {
                   document.querySelector('#data-echart').style.display = 'block';
-                } else {
-                  this.echartNoData = true;
                 }
-
+                this.setEchartValue();
+                this.initChart();
                 // Total number of pages in the table
-                this.pagination.total = this.lineagedata.serData.length;
+                this.pagination.total =res.data.count;
                 // Data encapsulation of the table
                 this.setTableData();
-                this.table.column = this.summaryList.concat(
-                    this.checkedSeries.map((i) => i.id),
-                );
-                this.initChart();
+                if (this.selectedBarList) {
+                  const resultArray=this.hideDataMarkTableData();
+                  this.table.column=this.dirPathList.concat(
+                      resultArray,
+                      this.checkedSeries.map((i)=> i.id),
+                  );
+                } else {
+                  this.table.column = this.dirPathList.concat(
+                      this.checkedSeries.map((i) => i.id),
+                  );
+                }
               },
               (error) => {
                 this.initOver = true;
@@ -515,13 +806,18 @@ export default {
      */
     echartShowAllData() {
       // The first page is displayed.
+      this.initOver=false;
+      this.echartNoData=false;
       this.pagination.currentPage = 1;
-      this.echart.brushData = this.lineagedata.serData;
-      this.echart.showData = this.echart.brushData;
-      this.initChart();
+      this.$store.commit('setSummaryDirList', undefined);
+      this.$store.commit('setSelectedBarList', []);
+      if (this.parallelEchart) {
+        this.parallelEchart.clear();
+      }
+      document.querySelector('#data-echart').style.display='block';
       this.$refs.table.clearSelection();
-      this.setTableData();
-      this.pagination.total = this.echart.brushData.length;
+      this.init();
+      this.parallelEchart.resize();
     },
 
     /**
@@ -535,11 +831,34 @@ export default {
       this.$forceUpdate();
       this.getCheckedSerList();
       // Value assignment in the table column
-      this.table.column = this.summaryList.concat(
-          this.checkedSeries.map((i) => i.id),
-      );
+      if (this.selectedBarList) {
+        const resultArray=this.hideDataMarkTableData();
+        this.table.column=this.dirPathList.concat(
+            resultArray,
+            this.checkedSeries.map((i)=>i.id),
+        );
+      } else {
+        this.table.column = this.dirPathList.concat(
+            this.checkedSeries.map((i) => i.id),
+        );
+      }
+
       this.isIndeterminate = false;
       this.initChart();
+    },
+
+    /**
+     * The table column data is deleted from the data processing result.
+     * @return {Array}
+     */
+    hideDataMarkTableData() {
+      const result=[];
+      this.selectedBarList.forEach((item)=>{
+        if ( item !== 'dataset_mark') {
+          result.push(item);
+        }
+      });
+      return result;
     },
 
     /**
@@ -549,9 +868,19 @@ export default {
       this.$forceUpdate();
       this.getCheckedSerList();
       // Value assignment in the table column
-      this.table.column = this.summaryList.concat(
-          this.checkedSeries.map((i) => i.id),
-      );
+      // Value assignment in the table column
+      if (this.selectedBarList) {
+        const resultArray=this.hideDataMarkTableData();
+        this.table.column=this.dirPathList.concat(
+            resultArray,
+            this.checkedSeries.map((i)=>i.id),
+        );
+      } else {
+        this.table.column = this.dirPathList.concat(
+            this.checkedSeries.map((i) => i.id),
+        );
+      }
+
       this.isIndeterminate =
         this.checkedSeries.length > this.fixedSeries.length && !this.checkAll;
       this.initChart();
@@ -562,12 +891,38 @@ export default {
      * @param {Object} val
      */
     handleSelectionChange(val) {
+      // summary_dir cannot be stored here.If it is not selected ,it cannot be stroed correctly.
+      this.dataCheckedSummary=val;
       if (val.length) {
         this.echart.showData = val;
       } else {
         this.echart.showData = this.echart.brushData;
       }
       this.initChart();
+    },
+
+    setEchartValue() {
+      if (this.modelObjectArray.length) {
+        const list=this.echart.showData;
+        for (let i=0; i<list.length; i++) {
+          const temp=this.modelObjectArray[i];
+          this.echart.showData[i]=Object.assign(this.echart.showData[i], temp);
+        }
+      }
+    },
+
+    /**
+     * Sort by path parameter
+     * @param {Object} data
+     */
+    tableSortChange(data) {
+      const params={};
+      const tempParam={
+        sorted_name: data.prop,
+        sorted_type: data.order,
+      };
+      params.body=Object.assign({}, tempParam, this.tableFilter);
+      this.queryLineagesData(params);
     },
 
     /**
@@ -666,7 +1021,7 @@ export default {
           curDataObj[nodeItem.id] = nodeItem.value;
         });
         curDataObj.children = objectData.children;
-        curDataObj.summaryDir = objectData.summary_dir;
+        curDataObj.summary_dir = objectData.summary_dir;
         serData.push(curDataObj);
       });
       const formateData = {
@@ -775,6 +1130,13 @@ export default {
    * Destroy the page
    */
   destroyed() {
+    if (this.dataCheckedSummary&&this.dataCheckedSummary.length) {
+      const summaryDirList=[];
+      this.dataCheckedSummary.forEach((item)=>{
+        summaryDirList.push(item.summary_dir);
+      });
+      this.$store.commit('setSummaryDirList', summaryDirList);
+    }
     if (this.parallelEchart) {
       window.removeEventListener('resize', this.resizeChart, false);
       this.parallelEchart.clear();
@@ -792,7 +1154,7 @@ export default {
   .no-data-page {
     width: 100%;
     height: 100%;
-    padding-top: 200px;
+    padding-top: 184px;
   }
   .no-data-img {
     background: #fff;
@@ -803,20 +1165,14 @@ export default {
     img {
       max-width: 100%;
     }
+    p{
+      font-size:16px;
+      padding-top:10px
+    }
   }
   .no-data-text {
     font-size: 16px;
     padding-top: 10px;
-  }
-  .echart-no-data {
-    width: 100%;
-    height: 48%;
-    text-align: center;
-    display: table;
-  }
-  .echart-no-data-container {
-    display: table-cell;
-    vertical-align: middle;
   }
 
   .cl-data-right {
@@ -829,6 +1185,7 @@ export default {
     .data-checkbox-area {
       position: relative;
       margin: 24px 32px 12px;
+      height:62px;
       .reset-btn {
         position: absolute;
         right: 0px;
@@ -882,6 +1239,11 @@ export default {
       height: calc(60% - 90px);
       margin: 2px 32px 0;
       position: relative;
+      .custom-label{
+        max-width:calc(100% - 25px);
+        padding:0;
+        vertical-align:middle;
+      }
       .el-icon-warning {
         font-size: 16px;
       }

@@ -25,19 +25,11 @@ export default {
     });
   },
 
-  // query dataset lineage
-  getDatasetLineage() {
+  // NEW API for model and data source tracing
+  queryLineagesData(params) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/datasets/dataset_lineage',
-    });
-  },
-
-  // query model versions
-  queryModelVersions(params) {
-    return axios({
-      method: 'post',
-      url: 'v1/mindinsight/models/model_lineage',
+      url: '/v1/mindinsight/lineagemgr/lineages',
       data: params.body,
     });
   },

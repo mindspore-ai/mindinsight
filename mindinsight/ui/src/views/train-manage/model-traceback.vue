@@ -16,14 +16,18 @@ limitations under the License.
 <template>
   <div id="cl-model-traceback">
     <div class="cl-model-right">
-      <div class="checkbox-area"
-           v-if="!noData && echart.allData.length">
+      <div class="checkbox-area">
         <el-button class="reset-btn custom-btn"
                    @click="resetChart"
                    type="primary"
                    size="mini"
-                   plain>{{ $t('modelTraceback.showAllData') }}</el-button>
-        <div class="checkbox">
+                   plain
+                   v-if="(!noData && echart.allData.length) ||
+                   (noData && summaryDirList && !summaryDirList.length)">
+          {{ $t('modelTraceback.showAllData') }}</el-button>
+        <div class="checkbox"
+             v-if="!noData && echart.allData.length &&
+                   (!summaryDirList ||(summaryDirList && summaryDirList.length))">
           <el-checkbox v-for="item in table.mandatoryColumn"
                        :key="item"
                        :label="item"
@@ -61,7 +65,7 @@ limitations under the License.
                   row-key="summary_dir">
           <el-table-column type="selection"
                            width="55"
-                           v-if="table.data.length"
+                           v-if="table.data && table.data.length"
                            :reserve-selection="true"></el-table-column>
           <el-table-column v-for="key in table.column"
                            :key="key"
@@ -95,7 +99,13 @@ limitations under the License.
         <div class="no-data-img">
           <img :src="require('@/assets/images/nodata.png')"
                alt />
-          <p class="no-data-text">{{ $t('public.noData') }}</p>
+          <p class="no-data-text"
+             v-show="!summaryDirList || (summaryDirList && summaryDirList.length)">
+            {{ $t('public.noData') }}</p>
+          <div v-show="summaryDirList && !summaryDirList.length">
+            <p class="no-data-text">{{ $t('modelTraceback.noDataFound') }}</p>
+            <p class="no-data-text">{{ $t('modelTraceback.noDataTips') }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -111,7 +121,76 @@ export default {
   watch: {},
   data() {
     return {
-      table: {
+      table: {},
+      summaryDirList: undefined,
+      checkedSummary: [],
+      keysOfStringValue: [
+        'summary_dir',
+        'network',
+        'optimizer',
+        'loss_function',
+        'train_dataset_path',
+        'test_dataset_path',
+        'dataset_mark',
+      ], // All keys whose values are character strings
+      keysOfIntValue: [
+        'train_dataset_count',
+        'test_dataset_count',
+        'epoch',
+        'batch_size',
+      ], // All keys whose values are int
+      echart: {
+        chart: null,
+        allData: [],
+        brushData: [],
+        showData: [],
+      },
+      pagination: {
+        currentPage: 1,
+        pageSize: 8,
+        total: 0,
+        layout: 'total, prev, pager, next, jumper',
+        pageChange: {},
+      },
+      chartFilter: {}, // chart filter condition
+      tableFilter: {lineage_type: {in: ['model']}}, // table filter condition
+      sortInfo: {
+        sorted_name: 'summary_dir',
+        sorted_type: null,
+      },
+      showTable: false,
+      noData: false,
+    };
+  },
+  computed: {},
+  mounted() {
+    this.$store.commit('setSelectedBarList', []);
+    this.getStoreList();
+    this.pagination.pageChange = (page) => {
+      this.pagination.currentPage = page;
+      this.queryLineagesData(false);
+    };
+    this.$nextTick(() => {
+      this.init();
+    });
+  },
+  methods: {
+    getStoreList() {
+      this.summaryDirList = this.$store.state.summaryDirList;
+      if (this.summaryDirList) {
+        this.tableFilter.summary_dir = {
+          in: this.summaryDirList,
+        };
+      } else {
+        this.tableFilter.summary_dir = undefined;
+      }
+    },
+
+    /**
+     * Initialization
+     */
+    init() {
+      this.table = {
         columnOptions: {
           train_dataset_path: {
             label: this.$t('modelTraceback.trainSetPath'),
@@ -180,61 +259,8 @@ export default {
         selectedColumn: [],
         selectAll: false, // Whether to select all columns
         indeterminate: false,
-      },
-      keysOfStringValue: [
-        'summary_dir',
-        'network',
-        'optimizer',
-        'loss_function',
-        'train_dataset_path',
-        'test_dataset_path',
-        'dataset_mark',
-      ], // All keys whose values are character strings
-      keysOfIntValue: [
-        'train_dataset_count',
-        'test_dataset_count',
-        'epoch',
-        'batch_size',
-      ], // All keys whose values are int
-      echart: {
-        chart: null,
-        allData: [],
-        brushData: [],
-        showData: [],
-      },
-      pagination: {
-        currentPage: 1,
-        pageSize: 8,
-        total: 0,
-        layout: 'total, prev, pager, next, jumper',
-        pageChange: {},
-      },
-      chartFilter: {}, // chart filter condition
-      tableFilter: {}, // table filter condition
-      sortInfo: {
-        sorted_name: 'summary_dir',
-        sorted_type: null,
-      },
-      showTable: false,
-      noData: false,
-    };
-  },
-  computed: {},
-  mounted() {
-    this.pagination.pageChange = (page) => {
-      this.pagination.currentPage = page;
-      this.queryModelVersions(false);
-    };
-    this.$nextTick(() => {
-      this.init();
-    });
-  },
-  methods: {
-    /**
-     * Initialization
-     */
-    init() {
-      this.queryModelVersions(true);
+      };
+      this.queryLineagesData(true);
     },
     /**
      * Column initialization
@@ -261,83 +287,68 @@ export default {
      * Querying All Model Version Information
      * @param {Boolean} allData Indicates whether to query all data
      */
-    queryModelVersions(allData) {
-      const params = {};
+    queryLineagesData(allData) {
+      const params = {
+        body: {},
+      };
+      const tempParam = {
+        sorted_name: this.sortInfo.sorted_name,
+        sorted_type: this.sortInfo.sorted_type,
+      };
       if (!allData) {
-        const tempParam = {
-          limit: this.pagination.pageSize,
-          offset: this.pagination.currentPage - 1,
-          sorted_name: this.sortInfo.sorted_name,
-          sorted_type: this.sortInfo.sorted_type,
+        this.summaryDirList = this.$store.state.summaryDirList;
+        this.tableFilter.summary_dir = {
+          in: this.summaryDirList,
         };
-        if (Object.keys(this.chartFilter).length > 0) {
-          params.body = Object.assign({}, tempParam, this.chartFilter);
-        } else {
-          params.body = tempParam;
-        }
+
+        tempParam.limit = this.pagination.pageSize;
+        tempParam.offset = this.pagination.currentPage - 1;
+        params.body = Object.assign(params.body, this.chartFilter);
       }
-      RequestService.queryModelVersions(params)
+      params.body = Object.assign(params.body, tempParam, this.tableFilter);
+
+      RequestService.queryLineagesData(params)
           .then(
               (res) => {
                 if (res && res.data && res.data.object) {
-                  const list = JSON.parse(JSON.stringify(res.data.object));
-                  list.forEach((i) => {
-                    i.model_size = parseFloat(
-                        ((i.model_size || 0) / 1024 / 1024).toFixed(2),
-                    );
-                    const keys = Object.keys(i.metric || {});
-                    if (keys.length) {
-                      keys.forEach((key) => {
-                        if (i.metric[key] || i.metric[key] === 0) {
-                          const temp = 'metric/' + key;
-                          i[temp] = i.metric[key];
-                        }
-                      });
-                      delete i.metric;
-                    }
-                    const udkeys = Object.keys(i.user_defined || {});
-                    if (udkeys.length) {
-                      udkeys.forEach((key) => {
-                        if (i.user_defined[key] || i.user_defined[key] === 0) {
-                          const temp = 'user_defined/' + key;
-                          i[temp] = i.user_defined[key];
-                        }
-                      });
-                      delete i.user_defined;
+                  const tempList = JSON.parse(JSON.stringify(res.data.object));
+                  const list = [];
+                  tempList.forEach((item) => {
+                    if (item.model_lineage) {
+                      item.model_lineage.summary_dir = item.summary_dir;
+                      const i = JSON.parse(JSON.stringify(item.model_lineage));
+                      i.model_size = parseFloat(
+                          ((i.model_size || 0) / 1024 / 1024).toFixed(2),
+                      );
+                      const keys = Object.keys(i.metric || {});
+                      if (keys.length) {
+                        keys.forEach((key) => {
+                          if (i.metric[key] || i.metric[key] === 0) {
+                            const temp = 'metric/' + key;
+                            i[temp] = i.metric[key];
+                          }
+                        });
+                        delete i.metric;
+                      }
+                      const udkeys = Object.keys(i.user_defined || {});
+                      if (udkeys.length) {
+                        udkeys.forEach((key) => {
+                          if (i.user_defined[key] || i.user_defined[key] === 0) {
+                            const temp = 'user_defined/' + key;
+                            i[temp] = i.user_defined[key];
+                          }
+                        });
+                        delete i.user_defined;
+                      }
+                      list.push(i);
                     }
                   });
                   if (allData) {
+                    let customized = {};
                     if (res.data.customized) {
-                      const customized = JSON.parse(
-                          JSON.stringify(res.data.customized),
-                      );
+                      customized = JSON.parse(JSON.stringify(res.data.customized));
                       const customizedKeys = Object.keys(customized);
                       if (customizedKeys.length > 0) {
-                        const metricColumnOptions = {};
-                        const userDefinedColumnOptions = {};
-                        customizedKeys.forEach((key) => {
-                          const str = key.substring(0, key.indexOf('/'));
-                          if ('metric' === str) {
-                            metricColumnOptions[key] = customized[key];
-                          } else if ('user_defined' === str) {
-                            userDefinedColumnOptions[key] = customized[key];
-                          }
-                        });
-                        this.table.columnOptions = Object.assign(
-                            {
-                              summary_dir: {
-                                label: this.$t('modelTraceback.summaryPath'),
-                                required: true,
-                              },
-                              dataset_mark: {
-                                label: this.$t('modelTraceback.dataProcess'),
-                                required: true,
-                              },
-                            },
-                            metricColumnOptions,
-                            userDefinedColumnOptions,
-                            this.table.columnOptions,
-                        );
                         customizedKeys.forEach((i) => {
                           if (customized[i].type === 'int') {
                             this.keysOfIntValue.push(i);
@@ -347,10 +358,24 @@ export default {
                         });
                       }
                     }
+                    this.table.columnOptions = Object.assign(
+                        {
+                          summary_dir: {
+                            label: this.$t('modelTraceback.summaryPath'),
+                            required: true,
+                          },
+                          dataset_mark: {
+                            label: this.$t('modelTraceback.dataProcess'),
+                            required: true,
+                          },
+                        },
+                        customized,
+                        this.table.columnOptions,
+                    );
+                    this.$store.commit('customizedColumnOptions', customized);
 
-                    this.noData = !!!res.data.object.length;
-                    this.echart.allData = list;
-                    this.echart.showData = this.echart.brushData = this.echart.allData;
+                    this.noData = !res.data.object.length;
+                    this.echart.showData = this.echart.brushData = this.echart.allData = list;
                     Object.keys(this.table.columnOptions).forEach((i) => {
                       const flag = list.some((val) => {
                         return val[i] || val[i] === 0;
@@ -422,6 +447,7 @@ export default {
     selectionChange(list = []) {
       this.echart.showData = list.length ? list : this.echart.brushData;
       this.initChart();
+      this.checkedSummary = list;
       const summaryDirFilter = [];
       this.echart.showData.forEach((i) => {
         summaryDirFilter.push(i.summary_dir);
@@ -437,6 +463,7 @@ export default {
     sortChange(column) {
       this.sortInfo.sorted_name = column.prop;
       this.sortInfo.sorted_type = column.order;
+      this.getStoreList();
       const tempParam = {
         limit: this.pagination.pageSize,
         offset: 0,
@@ -444,39 +471,47 @@ export default {
         sorted_type: this.sortInfo.sorted_type,
       };
       const params = {};
-      if (Object.keys(this.chartFilter).length > 0) {
-        params.body = Object.assign({}, tempParam, this.chartFilter);
-      } else {
-        params.body = tempParam;
-      }
-      RequestService.queryModelVersions(params)
+      params.body = Object.assign(
+          {},
+          tempParam,
+          this.tableFilter,
+          this.chartFilter || {},
+      );
+      RequestService.queryLineagesData(params)
           .then(
               (res) => {
                 if (res && res.data && res.data.object) {
-                  const list = JSON.parse(JSON.stringify(res.data.object));
-                  list.forEach((i) => {
-                    i.model_size = parseFloat(
-                        ((i.model_size || 0) / 1024 / 1024).toFixed(2),
-                    );
-                    const keys = Object.keys(i.metric || {});
-                    if (keys.length) {
-                      keys.forEach((key) => {
-                        if (i.metric[key] || i.metric[key] === 0) {
-                          const temp = 'metric/' + key;
-                          i[temp] = i.metric[key];
-                        }
-                      });
-                      delete i.metric;
-                    }
-                    const udkeys = Object.keys(i.user_defined || {});
-                    if (udkeys.length) {
-                      udkeys.forEach((key) => {
-                        if (i.user_defined[key] || i.user_defined[key] === 0) {
-                          const temp = 'user_defined/' + key;
-                          i[temp] = i.user_defined[key];
-                        }
-                      });
-                      delete i.user_defined;
+                  const tempList = JSON.parse(JSON.stringify(res.data.object));
+                  const list = [];
+
+                  tempList.forEach((item) => {
+                    if (item.model_lineage) {
+                      item.model_lineage.summary_dir = item.summary_dir;
+                      const i = JSON.parse(JSON.stringify(item.model_lineage));
+                      i.model_size = parseFloat(
+                          ((i.model_size || 0) / 1024 / 1024).toFixed(2),
+                      );
+                      const keys = Object.keys(i.metric || {});
+                      if (keys.length) {
+                        keys.forEach((key) => {
+                          if (i.metric[key] || i.metric[key] === 0) {
+                            const temp = 'metric/' + key;
+                            i[temp] = i.metric[key];
+                          }
+                        });
+                        delete i.metric;
+                      }
+                      const udkeys = Object.keys(i.user_defined || {});
+                      if (udkeys.length) {
+                        udkeys.forEach((key) => {
+                          if (i.user_defined[key] || i.user_defined[key] === 0) {
+                            const temp = 'user_defined/' + key;
+                            i[temp] = i.user_defined[key];
+                          }
+                        });
+                        delete i.user_defined;
+                      }
+                      list.push(i);
                     }
                   });
                   this.table.data = list;
@@ -607,6 +642,18 @@ export default {
       // select use api
       this.echart.chart.on('axisareaselected', (params) => {
         const key = params.parallelAxisId;
+        const list = this.$store.state.selectedBarList || [];
+        const selectedAxisId = params.parallelAxisId;
+        if (list.length) {
+          list.forEach((item, index) => {
+            if (item == selectedAxisId) {
+              list.splice(index, 1);
+            }
+          });
+        }
+        list.push(selectedAxisId);
+        this.$store.commit('setSelectedBarList', list);
+
         let range = params.intervals[0] || [];
         const [axisData] = parallelAxis.filter((i) => {
           return i.id === key;
@@ -645,36 +692,49 @@ export default {
               this.tableFilter,
               this.sortInfo,
           );
-          RequestService.queryModelVersions(filterParams)
+          RequestService.queryLineagesData(filterParams)
               .then(
                   (res) => {
                     if (res && res.data && res.data.object) {
-                      const list = JSON.parse(JSON.stringify(res.data.object));
-                      list.forEach((i) => {
-                        i.model_size = parseFloat(
-                            ((i.model_size || 0) / 1024 / 1024).toFixed(2),
-                        );
-                        const keys = Object.keys(i.metric || {});
-                        if (keys.length) {
-                          keys.forEach((key) => {
-                            if (i.metric[key] || i.metric[key] === 0) {
-                              const temp = 'metric/' + key;
-                              i[temp] = i.metric[key];
-                            }
-                          });
-                          delete i.metric;
-                        }
-                        const udkeys = Object.keys(i.user_defined || {});
-                        if (udkeys.length) {
-                          udkeys.forEach((key) => {
-                            if (i.user_defined[key] || i.user_defined[key] === 0) {
-                              const temp = 'user_defined/' + key;
-                              i[temp] = i.user_defined[key];
-                            }
-                          });
-                          delete i.user_defined;
+                      const tempList = JSON.parse(JSON.stringify(res.data.object));
+                      const list = [];
+                      const summaryDirList = [];
+                      tempList.forEach((item) => {
+                        if (item.model_lineage) {
+                          item.model_lineage.summary_dir = item.summary_dir;
+                          const i = JSON.parse(JSON.stringify(item.model_lineage));
+                          i.model_size = parseFloat(
+                              ((i.model_size || 0) / 1024 / 1024).toFixed(2),
+                          );
+                          const keys = Object.keys(i.metric || {});
+                          if (keys.length) {
+                            keys.forEach((key) => {
+                              if (i.metric[key] || i.metric[key] === 0) {
+                                const temp = 'metric/' + key;
+                                i[temp] = i.metric[key];
+                              }
+                            });
+                            delete i.metric;
+                          }
+                          summaryDirList.push(i.summary_dir);
+
+                          const udkeys = Object.keys(i.user_defined || {});
+                          if (udkeys.length) {
+                            udkeys.forEach((key) => {
+                              if (
+                                i.user_defined[key] ||
+                            i.user_defined[key] === 0
+                              ) {
+                                const temp = 'user_defined/' + key;
+                                i[temp] = i.user_defined[key];
+                              }
+                            });
+                            delete i.user_defined;
+                          }
+                          list.push(i);
                         }
                       });
+                      this.$store.commit('setSummaryDirList', summaryDirList);
 
                       this.echart.showData = this.echart.brushData = list;
                       this.initChart();
@@ -686,6 +746,11 @@ export default {
                       this.pagination.currentPage = 1;
                       this.pagination.total = this.echart.brushData.length;
                       this.$refs.table.clearSelection();
+                    } else {
+                      this.summaryDirList = [];
+                      this.$store.commit('setSummaryDirList', []);
+                      this.noData = true;
+                      this.checkedSummary = summaryDirList;
                     }
                   },
                   (error) => {},
@@ -698,13 +763,20 @@ export default {
      * Resetting the Eechart
      */
     resetChart() {
+      this.summaryDirList = undefined;
+      this.$store.commit('setSummaryDirList', undefined);
+      this.$store.commit('setSelectedBarList', []);
+      this.noData = false;
+      this.showTable = false;
       this.chartFilter = {};
-      this.tableFilter = {};
+      this.tableFilter.summary_dir = undefined;
       this.pagination.currentPage = 1;
-      this.echart.showData = this.echart.brushData = this.echart.allData;
-      this.queryModelVersions(false);
+      this.echart.allData = [];
+      if (this.echart.chart) {
+        this.echart.chart.clear();
+      }
+      this.init();
       this.$refs.table.clearSelection();
-      this.initChart();
     },
     /**
      * Select all columns in the table.
@@ -785,6 +857,13 @@ export default {
     },
   },
   destroyed() {
+    if (this.checkedSummary.length) {
+      const tempList = [];
+      this.checkedSummary.forEach((item) => {
+        tempList.push(item.summary_dir);
+      });
+      this.$store.commit('setSummaryDirList', tempList);
+    }
     if (this.echart.chart) {
       window.removeEventListener('resize', this.resizeChart, false);
       this.echart.chart.clear();
@@ -820,6 +899,8 @@ export default {
     .checkbox-area {
       margin: 24px 32px 16px;
       position: relative;
+      min-height: 42px;
+      max-height: 66px;
       .checkbox {
         width: calc(100% - 264px);
         max-height: 66px;
@@ -848,7 +929,7 @@ export default {
       }
     }
     #echart {
-      height: 40%;
+      height: 39%;
     }
     .table-container {
       background-color: white;
