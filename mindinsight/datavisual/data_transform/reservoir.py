@@ -16,7 +16,9 @@
 
 import random
 import threading
+import math
 
+from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.utils.exceptions import ParamValueError
 
 
@@ -106,3 +108,118 @@ class Reservoir:
                         round(self._sample_counter * sample_remaining_rate))
 
         return remove_size
+
+
+class _VisualRange:
+    """Simple helper class to merge visual ranges."""
+    def __init__(self):
+        self._max = 0.0
+        self._min = 0.0
+        self._updated = False
+
+    def update(self, max_val: float, min_val: float) -> None:
+        """
+        Merge visual range with given range.
+
+        Args:
+            max_val (float): Max value of given range.
+            min_val (float): Min value of given range.
+
+        """
+        if not self._updated:
+            self._max = max_val
+            self._min = min_val
+            self._updated = True
+            return
+
+        if max_val > self._max:
+            self._max = max_val
+
+        if min_val < self._min:
+            self._min = min_val
+
+    @property
+    def max(self):
+        """Gets max value of current range."""
+        return self._max
+
+    @property
+    def min(self):
+        """Gets min value of current range."""
+        return self._min
+
+
+class HistogramReservoir(Reservoir):
+    """
+    Reservoir for histogram, which needs updating range over all steps.
+
+    Args:
+        size (int): Container Size. If the size is 0, the container is not limited.
+    """
+    def __init__(self, size):
+        super().__init__(size)
+
+    def samples(self):
+        """Return all stored samples."""
+        with self._mutex:
+            # calc visual range
+            visual_range = _VisualRange()
+            max_count = 0
+            for sample in self._samples:
+                histogram = sample.value
+                if histogram.count == 0:
+                    # ignore empty tensor
+                    continue
+                max_count = max(histogram.count, max_count)
+                visual_range.update(histogram.max, histogram.min)
+
+            bins = self._calc_bins(max_count)
+
+            # update visual range
+            for sample in self._samples:
+                histogram = sample.value
+                histogram.set_visual_range(visual_range.max, visual_range.min, bins)
+
+            return list(self._samples)
+
+    def _calc_bins(self, count):
+        """
+        Calculates experience-based optimal bins number.
+
+        To suppress re-sample bias, there should be enough number in each bin. So we calc bin numbers according to
+        count. For very small count(1 - 10), we assign carefully chosen number. For large count, we tried to make
+        sure there are 9-10 numbers in each bucket on average. Too many bins will also distract users, so we set max
+        number of bins to 30.
+        """
+        number_per_bucket = 10
+        max_bins = 30
+
+        if not count:
+            return 1
+        if count <= 5:
+            return 2
+        if count <= 10:
+            return 3
+        if count <= 280:
+            # note that math.ceil(281/10) + 1 = 30
+            return math.ceil(count / number_per_bucket) + 1
+
+        return max_bins
+
+
+class ReservoirFactory:
+    """Factory class to get reservoir instances."""
+    def create_reservoir(self, plugin_name: str, size: int) -> Reservoir:
+        """
+        Creates reservoir for given plugin name.
+
+        Args:
+            plugin_name (str): Plugin name
+            size (int): Container Size. If the size is 0, the container is not limited.
+
+        Returns:
+            Reservoir, reservoir instance for given plugin name.
+        """
+        if plugin_name == PluginNameEnum.HISTOGRAM.value:
+            return HistogramReservoir(size)
+        return Reservoir(size)

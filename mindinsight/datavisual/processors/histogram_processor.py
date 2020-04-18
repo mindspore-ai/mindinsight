@@ -53,9 +53,8 @@ class HistogramProcessor(BaseProcessor):
 
         histograms = []
         for tensor in tensors:
-            buckets = []
-            for bucket in tensor.value.buckets:
-                buckets.append([bucket.left, bucket.width, bucket.count])
+            histogram = tensor.value
+            buckets = histogram.buckets()
             histograms.append({
                 "wall_time": tensor.wall_time,
                 "step": tensor.step,
