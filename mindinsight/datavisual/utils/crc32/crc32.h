@@ -20,7 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 #include "pybind11/pybind11.h"
-#include "securec.h"
+#include "securec/include/securec.h"
 
 #define CRC_TABLE_SIZE 256
 #define RIGHT_SHIFT 15
