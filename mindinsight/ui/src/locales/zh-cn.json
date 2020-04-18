@@ -43,13 +43,18 @@
     "lossFunc": "损失函数",
     "learningRate": "学习率",
     "modelSize": "模型大小",
-    "dataProcess": "数据处理"
+    "dataProcess": "数据处理",
+    "noDataFound":"暂无满足筛选条件的数据",
+    "noDataTips":"请点击“显示全量数据”按钮查看全量数据"
+
   },
   "dataTraceback": {
     "details": "详情",
     "key": "KEY",
     "value": "VALUE",
-    "dataTraceTips": "该数据涉及合并操作"
+    "dataTraceTips": "该数据涉及合并操作",
+    "noDataFound":"暂无满足筛选条件的数据",
+    "noDataTips":"请点击“显示全量数据”按钮查看全量数据"
   },
   "trainingDashboard": {
     "trainingDashboardTitle": "训练看板",

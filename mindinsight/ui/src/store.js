@@ -27,8 +27,9 @@ export default new Vuex.Store({
     // Scheduled reload flag
     isTimeReload: localStorage.isTimeReload === 'false' ? false : true,
     // reload time
-    timeReloadValue: localStorage.timeReloadValue ? localStorage.timeReloadValue : 3,
-
+    timeReloadValue: localStorage.timeReloadValue
+      ? localStorage.timeReloadValue
+      : 3,
   },
   mutations: {
     // set cancelTokenArr
@@ -46,6 +47,15 @@ export default new Vuex.Store({
     setIsReload: (state, val) => {
       state.isReload = val;
     },
+    setSummaryDirList: (state, val) => {
+      state.summaryDirList = val;
+    },
+    setSelectedBarList: (state, val) => {
+      state.selectedBarList = val;
+    },
+    customizedColumnOptions: (state, val) => {
+      state.customizedColumnOptions = val;
+    },
     // set isTimeReload
     setIsTimeReload: (state, val) => {
       state.isTimeReload = val;
@@ -53,7 +63,6 @@ export default new Vuex.Store({
     setTimeReloadValue: (state, val) => {
       state.timeReloadValue = val;
     },
-
   },
   actions: {},
 });
