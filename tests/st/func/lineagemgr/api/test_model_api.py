@@ -635,18 +635,6 @@ class TestModelApi(TestCase):
             search_condition
         )
 
-        # the sorted_name not supported
-        search_condition = {
-            'sorted_name': 'xxx'
-        }
-        self.assertRaisesRegex(
-            LineageSearchConditionParamError,
-            'The sorted_name must be in',
-            filter_summary_lineage,
-            BASE_SUMMARY_DIR,
-            search_condition
-        )
-
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -715,56 +703,6 @@ class TestModelApi(TestCase):
         self.assertRaisesRegex(
             LineageParamSummaryPathError,
             'The summary path is invalid.',
-            filter_summary_lineage,
-            BASE_SUMMARY_DIR,
-            search_condition
-        )
-
-        search_condition = {
-            'lineage_type': {
-                'in': [
-                    'xxx'
-                ]
-            }
-        }
-        self.assertRaisesRegex(
-            LineageSearchConditionParamError,
-            "The parameter lineage_type is invalid. It should be 'dataset' or 'model'.",
-            filter_summary_lineage,
-            BASE_SUMMARY_DIR,
-            search_condition
-        )
-
-        search_condition = {
-            'lineage_type': {
-                'eq': None
-            }
-        }
-        self.assertRaisesRegex(
-            LineageSearchConditionParamError,
-            "The parameter lineage_type is invalid. It should be 'dataset' or 'model'.",
-            filter_summary_lineage,
-            BASE_SUMMARY_DIR,
-            search_condition
-        )
-
-        search_condition = {
-            'sorted_name': 'metric_'
-        }
-        self.assertRaisesRegex(
-            LineageSearchConditionParamError,
-            'The sorted_name must be in',
-            filter_summary_lineage,
-            BASE_SUMMARY_DIR,
-            search_condition
-        )
-
-        search_condition = {
-            'sorted_name': 1
-        }
-        self.assertRaisesRegex(
-            LineageSearchConditionParamError,
-            'The sorted_name must be in',
             filter_summary_lineage,
             BASE_SUMMARY_DIR,
             search_condition
@@ -843,6 +781,48 @@ class TestModelApi(TestCase):
             self.assertRaisesRegex(
                 LineageSearchConditionParamError,
                 f'More than one operation of {condition_key}.',
+                filter_summary_lineage,
+                BASE_SUMMARY_DIR,
+                search_condition
+            )
+
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_filter_summary_lineage_exception_8(self):
+        invalid_lineage_types = ['xxx', None]
+        for lineage_type in invalid_lineage_types:
+            search_condition = {
+                'lineage_type': {
+                    'in': lineage_type
+                }
+            }
+            self.assertRaisesRegex(
+                LineageSearchConditionParamError,
+                "The parameter lineage_type is invalid. It should be 'dataset' or 'model'.",
+                filter_summary_lineage,
+                BASE_SUMMARY_DIR,
+                search_condition
+            )
+
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_filter_summary_lineage_exception_9(self):
+        invalid_sorted_names = ['xxx', 'metric_', 1]
+        for sorted_name in invalid_sorted_names:
+            search_condition = {
+                'sorted_name': sorted_name
+            }
+            self.assertRaisesRegex(
+                LineageSearchConditionParamError,
+                'The sorted_name must be in',
                 filter_summary_lineage,
                 BASE_SUMMARY_DIR,
                 search_condition
