@@ -118,6 +118,7 @@ def run_script(script):
 
 class EggInfo(egg_info):
     """Egg info."""
+
     def run(self):
         self.build_dependencies()
 
@@ -142,6 +143,7 @@ class EggInfo(egg_info):
 
 class BuildPy(build_py):
     """Build py files."""
+
     def run(self):
         mindinsight_lib_dir = os.path.join(os.path.dirname(__file__), 'build', 'lib', 'mindinsight')
         shutil.rmtree(mindinsight_lib_dir, ignore_errors=True)
@@ -153,6 +155,7 @@ class BuildPy(build_py):
 
 class Install(install):
     """Install."""
+
     def run(self):
         super().run()
 
@@ -168,23 +171,49 @@ if __name__ == '__main__':
         sys.stderr.write('Python version should be at least 3.7\r\n')
         sys.exit(1)
 
-    setup(name='mindinsight',
-          version=get_version(),
-          author='MindInsight Team',
-          description=get_description(),
-          license='Apache 2.0',
-          keywords='mindinsight',
-          install_requires=get_install_requires(),
-          packages=['mindinsight'],
-          platforms=[get_os()],
-          include_package_data=True,
-          cmdclass={
-              'egg_info': EggInfo,
-              'build_py': BuildPy,
-              'install': Install,
-          },
-          entry_points={
-              'console_scripts': [
-                  'mindinsight=mindinsight.utils.command:main',
-              ],
-          })
+    setup(
+        name='mindinsight',
+        version=get_version(),
+        author='The MindSpore Authors',
+        author_email='contact@mindspore.cn',
+        url='https://www.mindspore.cn',
+        download_url='https://gitee.com/mindspore/mindinsight/tags',
+        project_urls={
+            'Sources': 'https://gitee.com/mindspore/mindinsight',
+            'Issue Tracker': 'https://gitee.com/mindspore/mindinsight/issues',
+        },
+        description=get_description(),
+        packages=['mindinsight'],
+        platforms=[get_os()],
+        include_package_data=True,
+        cmdclass={
+            'egg_info': EggInfo,
+            'build_py': BuildPy,
+            'install': Install,
+        },
+        entry_points={
+            'console_scripts': [
+                'mindinsight=mindinsight.utils.command:main',
+            ],
+        },
+        python_requires='>=3.7',
+        install_requires=get_install_requires(),
+        classifiers=[
+            'Development Status :: 4 - Beta',
+            'Environment :: Console',
+            'Environment :: Web Environment',
+            'Intended Audience :: Science/Research',
+            'Intended Audience :: Developers',
+            'License :: OSI Approved :: Apache Software License',
+            'Programming Language :: Python :: 3 :: Only',
+            'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
+            'Topic :: Scientific/Engineering',
+            'Topic :: Scientific/Engineering :: Artificial Intelligence',
+            'Topic :: Software Development',
+            'Topic :: Software Development :: Libraries',
+            'Topic :: Software Development :: Libraries :: Python Modules',
+        ],
+        license='Apache 2.0',
+        keywords='mindinsight',
+    )
