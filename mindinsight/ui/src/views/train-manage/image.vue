@@ -28,9 +28,9 @@ limitations under the License.
       </div>
       <!-- Selecting an operation area -->
       <div class="cl-img-operate-content">
-        <checkListComponents ref="checkListComponents"
+        <multiselectGroupComponents ref="multiselectGroupComponents"
                              :checkListArr="tagOperateList"
-                             @selectedChange="tagSelectedChanged"></checkListComponents>
+                             @selectedChange="tagSelectedChanged"></multiselectGroupComponents>
       </div>
       <!-- Sliding block area -->
       <div class="cl-img-slider-operate-content">
@@ -124,7 +124,7 @@ limitations under the License.
 </template>
 
 <script>
-import checkListComponents from '../../components/checkList.vue';
+import multiselectGroupComponents from '../../components/multiselectGroup.vue';
 import RequestService from '../../services/request-service';
 import {basePath} from '@/services/fetcher';
 export default {
@@ -279,7 +279,7 @@ export default {
             this.initOver = true;
 
             this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.checkListComponents.updateSelectedDic();
+              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
               // Obtains data on the current page
               this.updateTagInPage();
             });
@@ -583,7 +583,7 @@ export default {
             // Check whether new data exists and add it
             const dataAddFlag = this.checkNewDataAndComplete(oriData);
             this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.checkListComponents.updateSelectedDic();
+              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
               this.updateTagInPage(!dataRemoveFlag && !dataAddFlag);
             });
           }, this.requestErrorCallback)
@@ -624,7 +624,7 @@ export default {
     },
   },
   components: {
-    checkListComponents,
+    multiselectGroupComponents,
   },
 };
 </script>
