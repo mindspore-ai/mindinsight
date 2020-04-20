@@ -234,6 +234,16 @@ class MSDataLoader:
                                                value=value.image)
                     self._events_data.add_tensor_event(tensor_event)
 
+                if value.HasField('histogram'):
+                    histogram_msg = value.histogram
+                    tag = '{}/{}'.format(value.tag, PluginNameEnum.HISTOGRAM.value)
+                    tensor_event = TensorEvent(wall_time=event.wall_time,
+                                                step=event.step,
+                                                tag=tag,
+                                                plugin_name=PluginNameEnum.HISTOGRAM.value,
+                                                value=histogram_msg)
+                    self._events_data.add_tensor_event(tensor_event)
+
         if event.HasField('graph_def'):
             graph_proto = event.graph_def
             graph = MSGraph()
