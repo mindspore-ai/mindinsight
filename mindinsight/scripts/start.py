@@ -15,6 +15,7 @@
 """Start mindinsight service."""
 
 import os
+import sys
 import argparse
 from importlib import import_module
 
@@ -183,19 +184,19 @@ class Command(BaseCommand):
         """
         for key, value in args.__dict__.items():
             if value is not None:
-                self.logger.info('%s = %s', key, value)
+                self.logfile.info('%s = %s', key, value)
 
         try:
             self.check_port()
         except PortNotAvailableError as error:
-            print(error.message)
-            self.logger.error(error.message)
-            return
+            self.console.error(error.message)
+            self.logfile.error(error.message)
+            sys.exit(1)
 
         run_module = import_module('mindinsight.backend.run')
         run_module.start()
 
-        self.logger.info('Start mindinsight done.')
+        self.logfile.info('Start mindinsight done.')
 
     def check_port(self):
         """Check port."""

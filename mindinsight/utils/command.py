@@ -30,7 +30,11 @@ class BaseCommand:
     name = ''
     description = ''
 
-    logger = None
+    # logger for console output instead of built-in print
+    console = None
+
+    # logger for log file recording in case audit is required
+    logfile = None
 
     def add_arguments(self, parser):
         """
@@ -64,21 +68,28 @@ class BaseCommand:
         Args:
             args (Namespace): parsed arguments to hold customized parameters.
         """
+        error = None
         try:
             self.update_settings(args)
-        except MindInsightException as error:
-            print(error.message)
-        else:
-            self.logger = setup_logger('scripts', self.name)
-            self.run(args)
+        except MindInsightException as e:
+            error = e
+
+        self.console = setup_logger('mindinsight', 'console', console=True, logfile=False, formatter='%(message)s')
+        if error is not None:
+            self.console.error(error.message)
+            sys.exit(1)
+
+        self.logfile = setup_logger('scripts', self.name, console=False, logfile=True)
+        self.run(args)
 
 
 def main():
     """Entry point for mindinsight CLI."""
 
+    console = setup_logger('mindinsight', 'console', console=True, logfile=False, formatter='%(message)s')
     if (sys.version_info.major, sys.version_info.minor) < (3, 7):
-        print('Python version should be at least 3.7')
-        return
+        console.error('Python version should be at least 3.7')
+        sys.exit(1)
 
     permissions = os.R_OK | os.W_OK | os.X_OK
 
