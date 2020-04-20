@@ -146,7 +146,7 @@ def get_logger(sub_module, log_name):
     return logging.getLogger(name='{}.{}'.format(sub_module, log_name))
 
 
-def setup_logger(sub_module, log_name, console=False, logfile=True, **kwargs):
+def setup_logger(sub_module, log_name, **kwargs):
     """
     Setup logger with sub module name and log file name.
 
@@ -189,12 +189,12 @@ def setup_logger(sub_module, log_name, console=False, logfile=True, **kwargs):
     if not formatter:
         formatter = settings.LOG_FORMAT
 
-    if console:
+    if kwargs.get('console', True):
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.formatter = MindInsightFormatter(sub_module, formatter)
         logger.addHandler(console_handler)
 
-    if logfile:
+    if kwargs.get('logfile', True):
         max_bytes = kwargs.get('maxBytes', settings.LOG_ROTATING_MAXBYTES)
 
         if not isinstance(max_bytes, int) or not max_bytes > 0:

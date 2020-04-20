@@ -15,6 +15,7 @@
 """Stop mindinsight service."""
 
 import os
+import sys
 import argparse
 import signal
 import getpass
@@ -96,10 +97,10 @@ class Command(BaseCommand):
         port, pid = args.port, args.pid
         if not pid:
             msg = f'No mindinsight service found for port {port}'
-            print(msg)
-            return
+            self.console.error(msg)
+            sys.exit(1)
 
-        self.logger.info('Stop mindinsight with port %s and pid %s.', port, pid)
+        self.logfile.info('Stop mindinsight with port %s and pid %s.', port, pid)
 
         process = psutil.Process(pid)
         child_pids = [child.pid for child in process.children()]
@@ -108,8 +109,8 @@ class Command(BaseCommand):
         try:
             os.kill(pid, signal.SIGKILL)
         except PermissionError:
-            print('kill pid %s failed due to permission error' % pid)
-            return
+            self.console.info('kill pid %s failed due to permission error' % pid)
+            sys.exit(1)
 
         # cleanup gunicorn worker processes
         for child_pid in child_pids:
@@ -119,9 +120,9 @@ class Command(BaseCommand):
                 pass
 
         for hook in HookUtils.instance().hooks():
-            hook.on_shutdown(self.logger)
+            hook.on_shutdown(self.logfile)
 
-        print('Stop mindinsight service successfully')
+        self.console.info('Stop mindinsight service successfully')
 
     def get_process(self, port):
         """
