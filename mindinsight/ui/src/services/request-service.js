@@ -114,4 +114,11 @@ export default {
       params: params,
     });
   },
+  getHistogramData(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/datavisual/histograms',
+      params: params,
+    });
+  },
 };
