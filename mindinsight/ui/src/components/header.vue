@@ -38,6 +38,7 @@ limitations under the License.
     <div class="cl-header-right"
          v-if="this.$route.path.indexOf('/scalar') > 0
          || this.$route.path.indexOf('/image') > 0
+         || this.$route.path.indexOf('/histogram') > 0
          || this.$route.path.indexOf('/training-dashboard') > 0">
       <!-- automatic refresh switch -->
       <el-switch v-model="isTimeReload"

@@ -809,16 +809,60 @@ export default {
               _this.$t('scalar.absoluteTime') +
               '</td></tr>';
             let strBody = '';
+            const runArr=[];
+            const detialArr=[];
+            let curStep=null;
             let dataCount = 0;
             params.forEach((parma) => {
               if (parma.componentIndex % 2 === 0) {
+                let addFlag=true;
                 const curIndex = parseInt(parma.componentIndex / 2);
-                let curSerieOriData;
+                const curSerieOriData=_this.charData[curIndex]
+                 ? _this.charData[curIndex].valueData
+                 : null;
 
-                if (_this.charData[curIndex]) {
-                  curSerieOriData = _this.charData[curIndex].valueData;
+                if (!curSerieOriData) {
+                  return;
+                }
+                if (curStep===null) {
+                  curStep=curSerieOriData.stepData[parma.dataIndex][0];
+                } else {
+                  if (
+                    curSerieOriData.stepData[parma.dataIndex][0]===curStep
+                  ) {
+                    const sameRunIndex=[];
+                    runArr.forEach((runName, index)=>{
+                      if (parma.seriesName === runName) {
+                        sameRunIndex.push(index);
+                      }
+                    });
+                    if (sameRunIndex.length) {
+                      sameRunIndex.forEach((sameIndex) => {
+                        if (
+                          detialArr[sameIndex] &&
+                          detialArr[sameIndex].value ===
+                            curSerieOriData.stepData[parma.dataIndex][1] &&
+                          detialArr[sameIndex].wallTime ===
+                            curSerieOriData.absData[parma.dataIndex][0]
+                        ) {
+                          addFlag = false;
+                        }
+                      });
+                    }
+                  } else {
+                    addFlag = false;
+                  }
+                }
 
+                if (addFlag) {
                   dataCount++;
+                  runArr.push(parma.seriesName);
+                  detialArr.push({
+                    value: curSerieOriData.stepData[parma.dataIndex][1],
+                    step: curSerieOriData.stepData[parma.dataIndex][0],
+                    wallTime: curSerieOriData.absData[parma.dataIndex][0],
+                    dataIndex: parma.dataIndex,
+                  });
                   strBody +=
                     `<td style="border-radius:50%;width:15px;height:15px;vertical-align: middle;` +
                     `margin-right: 5px;background-color:` +
