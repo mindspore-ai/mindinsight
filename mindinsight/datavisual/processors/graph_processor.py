@@ -23,6 +23,7 @@ from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.datavisual.common.exceptions import NodeNotInGraphError
 
 
 class GraphProcessor(BaseProcessor):
@@ -95,15 +96,15 @@ class GraphProcessor(BaseProcessor):
                 '' % (NodeTypeEnum.NAME_SCOPE.value, NodeTypeEnum.POLYMERIC_SCOPE.value))
 
         if name and not self._graph.exist_node(name):
-            raise ParamValueError("The node name is not in graph.")
+            raise NodeNotInGraphError(node_name=name, node_type=node_type)
         nodes = []
         if node_type == NodeTypeEnum.NAME_SCOPE.value:
             nodes = self._graph.get_normal_nodes(name)
 
         if node_type == NodeTypeEnum.POLYMERIC_SCOPE.value:
             if not name:
-                raise ParamValueError('The node name "%s" not in graph, node type is %s.' %
-                                      (name, node_type))
+                raise NodeNotInGraphError(node_name=name, node_type=node_type)
+
             polymeric_scope_name = name
             nodes = self._graph.get_polymeric_nodes(polymeric_scope_name)
 

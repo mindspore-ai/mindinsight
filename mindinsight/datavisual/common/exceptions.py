@@ -76,8 +76,11 @@ class SummaryLogIsLoading(MindInsightException):
 
 class NodeNotInGraphError(MindInsightException):
     """Can not find node in graph error."""
-    def __init__(self):
-        error_msg = "Can not find node in graph by given node name."
+    def __init__(self, node_name, node_type=None):
+        if node_type is not None:
+            error_msg = f"Can not find node in graph by the given node name. node name: {node_name}, type: {node_type}."
+        else:
+            error_msg = f"Can not find node in graph by the given node name. node name: {node_name}."
         super(NodeNotInGraphError, self).__init__(DataVisualErrors.NODE_NOT_IN_GRAPH_ERROR,
                                                   error_msg,
                                                   http_code=400)

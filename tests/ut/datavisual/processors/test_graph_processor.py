@@ -27,6 +27,7 @@ import pytest
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.exceptions import GraphNotExistError
+from mindinsight.datavisual.common.exceptions import NodeNotInGraphError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.data_manager import DataManager
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
@@ -120,14 +121,11 @@ class TestGraphProcessor:
     @pytest.mark.parametrize("name, node_type", [("not_exist_name", "name_scope"), ("", "polymeric_scope")])
     def test_get_nodes_with_not_exist_name(self, name, node_type):
         """Test getting nodes with not exist name."""
-        with pytest.raises(ParamValueError) as exc_info:
+        with pytest.raises(NodeNotInGraphError) as exc_info:
             graph_processor = GraphProcessor(self._train_id, self._mock_data_manager)
             graph_processor.get_nodes(name, node_type)
 
-        if name:
-            assert "The node name is not in graph." in exc_info.value.message
-        else:
-            assert f'The node name "{name}" not in graph, node type is {node_type}.' in exc_info.value.message
+        assert 'Can not find node in graph by the given node name' in exc_info.value.message
 
     @pytest.mark.usefixtures('load_graph_record')
     @pytest.mark.parametrize(

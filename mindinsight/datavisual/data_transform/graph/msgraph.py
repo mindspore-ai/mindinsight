@@ -82,7 +82,7 @@ class MSGraph(Graph):
         self._calc_output()
 
         logger.info("Build leaf nodes end, normal nodes count: %s, group count: %s, "
-                    "left node count: %s.", len(self._normal_nodes), len(self._node_groups),
+                    "leaf nodes count: %s.", len(self._normal_nodes), len(self._node_groups),
                     len(self._leaf_nodes))
 
     def _calc_input(self, leaf_node_id_map_name, graph_proto, const_nodes_map):
