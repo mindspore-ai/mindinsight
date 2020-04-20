@@ -51,6 +51,24 @@ limitations under the License.
         </div>
       </div>
       <div class="cl-dashboard-con-up"
+           :class="!!histogramTag ? '' : 'no-data-hover'"
+           @click="viewMoreHistogram">
+        <div class="cl-dashboard-title">{{$t("histogram.titleText")}}</div>
+        <div class="cl-module">
+          <div id="distribution-chart"
+               v-show="!!histogramTag"></div>
+          <div class="no-data-img"
+               key="no-chart-data"
+               v-show="!histogramTag">
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+            <p class='no-data-text'>
+              {{$t("public.noData")}}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="cl-dashboard-con-up"
            :class="firstFloorNodes.length && !wrongPlugin ? '' : 'no-data-hover'"
            @click="jumpToGraph">
         <div class="cl-dashboard-title">
@@ -118,6 +136,16 @@ limitations under the License.
           </div>
         </div>
       </div>
+      <div class="cl-dashboard-con-up no-data-hover">
+        <div class="comming-soon-content">
+          <div class="comming-soon-container">
+            <img :src="require('@/assets/images/comming-soon.png')" />
+            <p class='comming-soon-text'>
+              {{$t("public.stayTuned")}}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -126,11 +154,10 @@ limitations under the License.
 import RequestService from '@/services/request-service';
 import {basePath} from '@/services/fetcher';
 import CommonProperty from '@/common/common-property.js';
-import {select, selectAll} from 'd3';
+import {select, selectAll, format, precisionRound} from 'd3';
 import 'd3-graphviz';
-const d3 = {select, selectAll};
+const d3 = {select, selectAll, format, precisionRound};
 import echarts from 'echarts';
-
 export default {
   data() {
     return {
@@ -139,7 +166,9 @@ export default {
       defColorCount: CommonProperty.commonColorArr.length, // default color
       colorNum: 0,
       charObj: null,
-      valDistChar: null,
+      histogramObj: null,
+      histogramOption: {},
+      histogramData: {},
       charOption: {},
       charData: [],
       originImageDataArr: [], // List of all image data.
@@ -147,6 +176,7 @@ export default {
       imageRandomLoopCount: 0,
       imageBasePath: '/v1/mindinsight/datavisual/image/single-image?', // Relative path header of the picture
       autoUpdateTimer: null, // Automatic refresh timer
+      histogramTag: '', // Label of the currently displayed histogram.
       allGraphData: {}, // graph Original input data
       graphviz: null,
       firstFloorNodes: [], // ID array of the first layer node.
@@ -158,6 +188,7 @@ export default {
       datasetGraphviz: {},
       reloadStopTime: 1000,
       wrongPlugin: false,
+      fileTag: '',
     };
   },
   computed: {
@@ -236,8 +267,8 @@ export default {
         if (this.charObj) {
           this.charObj.resize();
         }
-        if (this.valDistChar) {
-          this.valDistChar.resize();
+        if (this.histogramObj) {
+          this.histogramObj.resize();
         }
       }, 500);
     },
@@ -279,14 +310,23 @@ export default {
             const imageTags = data.image || [];
             const scalarTags = data.scalar || [];
             const graphIds = data.graph || [];
+            if (graphIds.length) {
+              this.fileTag = graphIds[0];
+            }
+            const histogramTags = data.histogram || [];
+            this.getHistogramTag(histogramTags);
             this.dealImageData(imageTags);
             this.getScalarList(scalarTags);
             if (!this.firstFloorNodes.length && graphIds.length) {
               this.queryGraphData();
             }
           })
-          .catch((error)=>{
-            if (!error.response || !error.response.data || !error.response.data.error_code) {
+          .catch((error) => {
+            if (
+              !error.response ||
+            !error.response.data ||
+            !error.response.data.error_code
+            ) {
               return;
             }
             if (error.response.data.error_code.toString() === '50545005') {
@@ -304,6 +344,20 @@ export default {
       }
       this.$router.push({
         path: '/train-manage/scalar',
+        query: {
+          train_id: this.trainingJobId,
+        },
+      });
+    },
+    /**
+     * Viewing more histogram information
+     */
+    viewMoreHistogram() {
+      if (!this.histogramTag) {
+        return;
+      }
+      this.$router.push({
+        path: '/train-manage/histogram',
         query: {
           train_id: this.trainingJobId,
         },
@@ -711,6 +765,223 @@ export default {
       this.originImageDataArr = dataList;
       this.getSampleRandomly();
     },
+    getHistogramTag(tagList) {
+      if (!tagList) {
+        return;
+      }
+      if (!this.histogramTag || tagList.indexOf(this.histogramTag) === -1) {
+        this.histogramTag = tagList[0] || '';
+      }
+      if (!this.histogramTag) {
+        return;
+      }
+      const params = {
+        train_id: this.trainingJobId,
+        tag: this.histogramTag,
+      };
+      // tag
+      RequestService.getHistogramData(params).then((res) => {
+        if (
+          !res ||
+          !res.data ||
+          !res.data.histograms ||
+          !res.data.histograms.length
+        ) {
+          return;
+        }
+        const data = res.data;
+        this.histogramData = this.formOriData(data);
+        const charOption = this.formatDataToChar();
+        this.updateHistogramSampleData(charOption);
+      });
+    },
+    formOriData(dataItem) {
+      const chartData = [];
+      dataItem.histograms.forEach((histogram, index) => {
+        const chartItem = {
+          wall_time: histogram.wall_time,
+          step: histogram.step,
+          items: [],
+        };
+        const chartArr = [];
+        histogram.buckets.forEach((bucket) => {
+          const xData = bucket[0] + bucket[1] / 2;
+          const filter = chartArr.filter((k) => k[0] === xData);
+          if (!filter.length) {
+            chartArr.push([
+              histogram.wall_time,
+              histogram.step,
+              xData,
+              Math.floor(bucket[2]),
+            ]);
+          }
+        });
+        chartArr.sort((a, b) => a[0] - b[0]);
+        if (chartArr.length) {
+          const minItem = chartArr[0][2];
+          const maxItem = chartArr[chartArr.length - 1][2];
+          const chartAll = [
+            [histogram.wall_time, histogram.step, minItem, 0],
+          ].concat(chartArr, [
+            [histogram.wall_time, histogram.step, maxItem, 0],
+          ]);
+          chartItem.items = chartAll;
+          chartData.push(chartItem);
+        }
+      });
+      return {tag: dataItem.tag, train_id: dataItem.train_id, chartData};
+    },
+    formatDataToChar() {
+      const dataItem = this.histogramData;
+      const title = dataItem.tag;
+      const seriesData = [];
+      let maxStep = -Infinity;
+      let minStep = Infinity;
+      let maxX = -Infinity;
+      let minX = Infinity;
+      let maxZ = -Infinity;
+      let minZ = Infinity;
+      if (dataItem.chartData && dataItem.chartData.length) {
+        dataItem.chartData.forEach((histogram) => {
+          const seriesItem = [];
+          maxStep = Math.max(maxStep, histogram.step);
+          minStep = Math.min(minStep, histogram.step);
+          histogram.items.sort((a, b) => a[0] - b[0]);
+          histogram.items.forEach((bucket) => {
+            seriesItem.push(bucket[2], histogram.step, bucket[3]);
+            maxX = Math.max(maxX, bucket[2]);
+            minX = Math.min(minX, bucket[2]);
+            minZ = Math.min(minZ, bucket[3]);
+            maxZ = Math.max(maxZ, bucket[3]);
+          });
+          seriesData.push(seriesItem);
+        });
+      }
+      return {
+        title,
+        seriesData,
+        maxStep,
+        minStep,
+        maxX,
+        minX,
+        maxZ,
+        minZ,
+      };
+    },
+    formatCharOption(charOption) {
+      const option = {
+        textStyle: {fontFamily: 'Merriweather Sans'},
+        title: {
+          text: charOption.title || '',
+          textStyle: {fontSize: '16', fontWeight: '600'},
+          bottom: 6,
+          left: 'center',
+        },
+        grid: {
+          left: 15,
+          top: 126,
+          right: 40,
+          bottom: 60,
+        },
+        color: ['#346E69'],
+        xAxis: {
+          max: charOption.maxX,
+          min: charOption.minX,
+          axisLine: {onZero: false},
+          axisLabel: {
+            fontSize: '11',
+            formatter: function(value) {
+              return Math.round(value * 100) / 100;
+            },
+          },
+          splitLine: {show: false},
+        },
+        yAxis: {
+          position: 'right',
+          axisLine: {onZero: false, show: false},
+          splitLine: {show: true},
+          inverse: true,
+          axisTick: {show: false},
+          axisLabel: {
+            fontSize: '11',
+          },
+        },
+        visualMap: {
+          type: 'continuous',
+          show: false,
+          min: charOption.minStep,
+          max: charOption.maxStep,
+          dimension: 1,
+          range: [charOption.minStep, charOption.maxStep],
+          inRange: {
+            colorLightness: [0.3, 0.9],
+          },
+        },
+        series: [
+          {
+            type: 'custom',
+            dimensions: ['x', 'y'],
+            renderItem: (params, api) => {
+              const points = this.makePolyPoints(
+                  params.dataIndex,
+                  api.coord,
+                  params.coordSys.y - 10,
+                  charOption,
+              );
+
+              return {
+                type: 'polyline',
+                silent: true,
+                shape: {
+                  points,
+                },
+                style: api.style({
+                  stroke: '#bbb',
+                  lineWidth: 1,
+                }),
+              };
+            },
+            data: charOption.seriesData,
+          },
+        ],
+      };
+      return option;
+    },
+    /**
+     * update sample data
+     * @param {Object} charOption data
+     */
+    updateHistogramSampleData(charOption) {
+      this.histogramOption = this.formatCharOption(charOption);
+      setTimeout(() => {
+        if (!this.histogramObj) {
+          this.histogramObj = echarts.init(
+              document.getElementById('distribution-chart'),
+              null,
+          );
+        }
+        this.histogramObj.setOption(this.histogramOption, true);
+      }, 100);
+    },
+    getValue(seriesData, dataIndex, i) {
+      return seriesData[dataIndex][i];
+    },
+    makePolyPoints(dataIndex, getCoord, yValueMapHeight, charOption) {
+      const points = [];
+      const rawData = charOption.seriesData;
+      const maxZ = charOption.maxZ;
+      const minZ = charOption.minZ;
+      for (let i = 0; i < rawData[dataIndex].length; ) {
+        const x = this.getValue(rawData, dataIndex, i++);
+        const y = this.getValue(rawData, dataIndex, i++);
+        const z = this.getValue(rawData, dataIndex, i++);
+        const pt = getCoord([x, y]);
+        // linear map in z axis
+        pt[1] -= ((z - minZ) / (maxZ - minZ)) * yValueMapHeight;
+        points.push(pt);
+      }
+      return points;
+    },
     /**
      * errorScalar
      * @param {Object} error Error Object
@@ -886,6 +1157,7 @@ export default {
       const params = {
         train_id: this.trainingJobId,
         type: 'name_scope',
+        tag: this.fileTag,
       };
       RequestService.queryGraphData(params)
           .then(
@@ -1436,7 +1708,7 @@ export default {
     cursor: pointer;
     overflow: hidden;
     height: calc(50% - 2px);
-    width: calc(50% - 2px);
+    width: calc(33.3% - 2px);
     margin: 1px;
     float: left;
   }
@@ -1524,6 +1796,20 @@ export default {
     }
   }
 
+  .comming-soon-content {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    .comming-soon-container {
+      position: relative;
+      top: calc(50% - 88px);
+      .comming-soon-text {
+        color: #000000;
+        font-size: 16px;
+      }
+    }
+  }
+
   .no-data-hover {
     cursor: not-allowed;
   }
@@ -1545,6 +1831,12 @@ export default {
 
   #module-chart {
     height: calc(100% - 22px);
+    canvas {
+      cursor: pointer;
+    }
+  }
+  #distribution-chart {
+    height: 100%;
     canvas {
       cursor: pointer;
     }
