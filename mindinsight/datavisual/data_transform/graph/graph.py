@@ -21,7 +21,7 @@ import time
 from enum import Enum
 
 from mindinsight.datavisual.common.log import logger
-from mindinsight.datavisual.common import exceptions
+from mindinsight.datavisual.common.exceptions import NodeNotInGraphError
 from .node import NodeTypeEnum
 from .node import Node
 
@@ -151,7 +151,7 @@ class Graph:
         """
         if node_name and self._polymeric_nodes.get(node_name) is None \
                 and self._normal_nodes.get(node_name) is None:
-            raise exceptions.NodeNotInGraphError()
+            raise NodeNotInGraphError(node_name=node_name)
 
         response = {}
         nodes = self.get_normal_nodes()
