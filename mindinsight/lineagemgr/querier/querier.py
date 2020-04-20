@@ -318,13 +318,14 @@ class Querier:
         for offset_result in offset_results:
             for obj_name in ["metric", "user_defined"]:
                 obj = getattr(offset_result, obj_name)
+                require = True if obj_name == "metric" else False
                 if obj and isinstance(obj, dict):
                     for key, value in obj.items():
-                        label = obj_name + "/" + key
+                        label = f'{obj_name}/{key}'
                         customized[label] = dict()
                         customized[label]["label"] = label
-                        # user defined info is default displayed
-                        customized[label]["required"] = True
+                        # user defined info is not displayed by default
+                        customized[label]["required"] = require
                         customized[label]["type"] = type(value).__name__
 
         lineage_types = condition.get(ConditionParam.LINEAGE_TYPE.value)

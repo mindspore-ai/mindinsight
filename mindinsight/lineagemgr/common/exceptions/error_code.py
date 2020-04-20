@@ -83,6 +83,8 @@ class LineageErrors(LineageErrorCodes):
     LINEAGE_SEARCH_CONDITION_PARAM_ERROR = 24 | _MODEL_LINEAGE_API_ERROR_MASK
     LINEAGE_PARAM_LINEAGE_TYPE_ERROR = 25 | _MODEL_LINEAGE_API_ERROR_MASK
 
+    # Dataset lineage error codes.
+    LINEAGE_PARAM_DATASET_MARK_ERROR = 0 | _DATASET_LINEAGE_ERROR_MASK
 
     SUMMARY_ANALYZE_ERROR = 0 | _SUMMARY_ANALYZE_ERROR_MASK
     SUMMARY_VERIFICATION_ERROR = 1 | _SUMMARY_ANALYZE_ERROR_MASK
@@ -156,26 +158,27 @@ class LineageErrorMsg(Enum):
                                       " 'eq', 'lt', 'gt', 'ge', 'le', 'in'."
 
     LINEAGE_PARAM_SUMMARY_DIR_ERROR = "The parameter summary_dir is invalid. It should be a dict and the value " \
-                                      "should be a string"
+                                      "should be a string."
 
     LINEAGE_TRAIN_DATASET_PATH_ERROR = "The parameter train_dataset_path is invalid." \
-                                       " It should be a dict and the value should be a string"
+                                       " It should be a dict and the value should be a string."
 
     LINEAGE_TRAIN_DATASET_COUNT_ERROR = "The parameter train_dataset_count is invalid. It should be a dict " \
-                                        "and the value should be a integer between 0 and pow(2, 63) -1"
+                                        "and the value should be a integer between 0 and pow(2, 63) -1."
 
     LINEAGE_TEST_DATASET_PATH_ERROR = "The parameter test_dataset_path is invalid. " \
-                                      "It should be a dict and the value should be a string"
+                                      "It should be a dict and the value should be a string."
 
     LINEAGE_TEST_DATASET_COUNT_ERROR = "The parameter test_dataset_count is invalid. It should be a dict " \
-                                       "and the value should be a integer between 0 and pow(2, 63) -1"
+                                       "and the value should be a integer between 0 and pow(2, 63) -1."
 
-    LINEAGE_NETWORK_ERROR = "The parameter network is invalid. It should be a dict and the value should be a string"
+    LINEAGE_NETWORK_ERROR = "The parameter network is invalid. It should be a dict and the value should be a string."
 
-    LINEAGE_OPTIMIZER_ERROR = "The parameter optimizer is invalid. It should be a dict and the value should be a string"
+    LINEAGE_OPTIMIZER_ERROR = "The parameter optimizer is invalid. " \
+                              "It should be a dict and the value should be a string."
 
     LINEAGE_LOSS_FUNCTION_ERROR = "The parameter loss_function is invalid. " \
-                                  "It should be a dict and the value should be a string"
+                                  "It should be a dict and the value should be a string."
 
     LINEAGE_LOSS_ERROR = "The parameter loss is invalid. " \
                          "It should be a float."
@@ -184,7 +187,7 @@ class LineageErrorMsg(Enum):
                                "It should be an integer between 0 and pow(2, 63) -1."
 
     LINEAGE_LEARNING_RATE_ERROR = "The parameter learning_rate is invalid. " \
-                                  "It should be a dict and the value should be a float or a integer"
+                                  "It should be a dict and the value should be a float or a integer."
 
     LINEAGE_PARAM_SORTED_NAME_ERROR = "The parameter sorted_name is invalid. " \
                                       "It should be a string."
@@ -194,6 +197,9 @@ class LineageErrorMsg(Enum):
 
     LINEAGE_PARAM_LINEAGE_TYPE_ERROR = "The parameter lineage_type is invalid. " \
                                        "It should be 'dataset' or 'model'."
+
+    LINEAGE_PARAM_DATASET_MARK_ERROR = "The parameter dataset_mark is invalid. " \
+                                       "It should be a string."
 
     SUMMARY_ANALYZE_ERROR = "Failed to analyze summary log. {}"
     SUMMARY_VERIFICATION_ERROR = "Verification failed in summary analysis. {}"

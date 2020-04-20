@@ -755,7 +755,7 @@ class TestModelApi(TestCase):
     @pytest.mark.env_single
     def test_filter_summary_lineage_exception_7(self):
         """Test the abnormal execution of the filter_summary_lineage interface."""
-        condition_keys = ["summary_dir", "lineage_type"]
+        condition_keys = ["summary_dir", "lineage_type", "loss_function", "optimizer", "network", "dataset_mark"]
         for condition_key in condition_keys:
             # the condition type not supported in summary_dir and lineage_type
             search_condition = {
@@ -765,7 +765,7 @@ class TestModelApi(TestCase):
             }
             self.assertRaisesRegex(
                 LineageSearchConditionParamError,
-                f'Invalid operation of {condition_key}.',
+                f'The parameter {condition_key} is invalid. Its operation should be `in` or `eq`.',
                 filter_summary_lineage,
                 BASE_SUMMARY_DIR,
                 search_condition
@@ -780,7 +780,7 @@ class TestModelApi(TestCase):
             }
             self.assertRaisesRegex(
                 LineageSearchConditionParamError,
-                f'More than one operation of {condition_key}.',
+                f'The parameter {condition_key} is invalid. More than one operation.',
                 filter_summary_lineage,
                 BASE_SUMMARY_DIR,
                 search_condition
@@ -793,11 +793,12 @@ class TestModelApi(TestCase):
     @pytest.mark.platform_x86_cpu
     @pytest.mark.env_single
     def test_filter_summary_lineage_exception_8(self):
+        """Test the abnormal execution of the filter_summary_lineage interface."""
         invalid_lineage_types = ['xxx', None]
         for lineage_type in invalid_lineage_types:
             search_condition = {
                 'lineage_type': {
-                    'in': lineage_type
+                    'eq': lineage_type
                 }
             }
             self.assertRaisesRegex(
@@ -815,6 +816,7 @@ class TestModelApi(TestCase):
     @pytest.mark.platform_x86_cpu
     @pytest.mark.env_single
     def test_filter_summary_lineage_exception_9(self):
+        """Test the abnormal execution of the filter_summary_lineage interface."""
         invalid_sorted_names = ['xxx', 'metric_', 1]
         for sorted_name in invalid_sorted_names:
             search_condition = {
