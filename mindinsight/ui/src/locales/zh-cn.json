@@ -46,8 +46,9 @@
     "modelSize": "模型大小",
     "dataProcess": "数据处理",
     "noDataFound":"暂无满足筛选条件的数据",
-    "noDataTips":"请点击“显示全量数据”按钮查看全量数据"
-
+    "noDataTips":"请点击“显示全量数据”按钮查看全量数据",
+    "userDefined": "自定义数据",
+    "metric": "度量指标"
   },
   "dataTraceback": {
     "details": "详情",
@@ -102,21 +103,21 @@
   },
   "histogram": {
     "titleText": "参数分布图",
-    "xAxisTitle": "水平轴",
-    "viewType": "直方图模式",
+    "xAxisTitle": "纵轴",
+    "viewType": "视角",
     "centerValue": "中心值",
     "step": "步骤",
     "relativeTime": "相对时间",
     "absoluteTime": "绝对时间",
-    "overlay": "覆盖",
-    "offset": "偏移",
+    "overlay": "正视",
+    "offset": "俯视",
     "fullScreen": "切换全屏"
   },
   "dataMap": {
-    "titleText": "数据图可视"
+    "titleText": "数据图"
   },
   "graph": {
-    "titleText": "计算图可视",
+    "titleText": "计算图",
     "downloadPic": "下载",
     "nodeInfo": "节点信息",
     "legend": "图例",
