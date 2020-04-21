@@ -16,18 +16,17 @@ limitations under the License.
 <template>
   <div id="cl-model-traceback">
     <div class="cl-model-right">
-      <div class="checkbox-area">
-        <el-button class="reset-btn custom-btn"
-                   @click="resetChart"
-                   type="primary"
-                   size="mini"
-                   plain
-                   v-if="(!noData && echart.allData.length) ||
-                   (noData && summaryDirList && !summaryDirList.length)">
-          {{ $t('modelTraceback.showAllData') }}</el-button>
+      <div class="top-area">
         <div class="checkbox"
+             :style="{'max-height': haveCustomizedParams ? '88px' : '66px',
+        'min-height': haveCustomizedParams ? '63px' : '42px'}"
              v-if="!noData && echart.allData.length &&
-                   (!summaryDirList ||(summaryDirList && summaryDirList.length))">
+                   (!summaryDirList || (summaryDirList && summaryDirList.length))">
+          <div class="label-legend"
+               v-if="haveCustomizedParams">
+            <div>[U]: {{$t('modelTraceback.userDefined')}}</div>
+            <div>[M]: {{$t('modelTraceback.metric')}}</div>
+          </div>
           <el-checkbox v-for="item in table.mandatoryColumn"
                        :key="item"
                        :label="item"
@@ -45,11 +44,21 @@ limitations under the License.
             <el-checkbox v-for="item in table.optionalColumn"
                          :key="item"
                          :label="item"
-                         :class="
-                table.optionsNotInCheckbox.includes(item) ? 'notShow' : 'option'
-              ">{{ table.columnOptions[item].label }}</el-checkbox>
+                         :class="table.optionsNotInCheckbox.includes(item) ? 'notShow' : 'option'">
+              {{ table.columnOptions[item].label }}</el-checkbox>
           </el-checkbox-group>
         </div>
+        <div class="btns">
+          <el-button class="custom-btn"
+                     @click="resetChart"
+                     type="primary"
+                     size="mini"
+                     plain
+                     v-if="(!noData && echart.allData.length) ||
+                   (noData && summaryDirList && !summaryDirList.length)">
+            {{ $t('modelTraceback.showAllData') }}</el-button>
+        </div>
+
       </div>
       <div id="echart"
            v-show="!noData"></div>
@@ -71,6 +80,7 @@ limitations under the License.
                            :key="key"
                            :prop="key"
                            :label="table.columnOptions[key].label"
+                           :fixed="table.columnOptions[key].label===text?true:false"
                            show-overflow-tooltip
                            min-width="180"
                            sortable="custom">
@@ -123,6 +133,7 @@ export default {
     return {
       table: {},
       summaryDirList: undefined,
+      text: this.$t('modelTraceback.summaryPath'),
       checkedSummary: [],
       keysOfStringValue: [
         'summary_dir',
@@ -160,6 +171,11 @@ export default {
       },
       showTable: false,
       noData: false,
+      haveCustomizedParams: false,
+      replaceStr: {
+        metric: 'metric/',
+        userDefined: 'user_defined/',
+      },
     };
   },
   computed: {},
@@ -311,51 +327,32 @@ export default {
           .then(
               (res) => {
                 if (res && res.data && res.data.object) {
-                  const tempList = JSON.parse(JSON.stringify(res.data.object));
-                  const list = [];
-                  tempList.forEach((item) => {
-                    if (item.model_lineage) {
-                      item.model_lineage.summary_dir = item.summary_dir;
-                      const i = JSON.parse(JSON.stringify(item.model_lineage));
-                      i.model_size = parseFloat(
-                          ((i.model_size || 0) / 1024 / 1024).toFixed(2),
-                      );
-                      const keys = Object.keys(i.metric || {});
-                      if (keys.length) {
-                        keys.forEach((key) => {
-                          if (i.metric[key] || i.metric[key] === 0) {
-                            const temp = 'metric/' + key;
-                            i[temp] = i.metric[key];
-                          }
-                        });
-                        delete i.metric;
-                      }
-                      const udkeys = Object.keys(i.user_defined || {});
-                      if (udkeys.length) {
-                        udkeys.forEach((key) => {
-                          if (i.user_defined[key] || i.user_defined[key] === 0) {
-                            const temp = 'user_defined/' + key;
-                            i[temp] = i.user_defined[key];
-                          }
-                        });
-                        delete i.user_defined;
-                      }
-                      list.push(i);
-                    }
-                  });
+                  const list = this.setDataOfModel(res.data.object);
                   if (allData) {
                     let customized = {};
                     if (res.data.customized) {
                       customized = JSON.parse(JSON.stringify(res.data.customized));
                       const customizedKeys = Object.keys(customized);
-                      if (customizedKeys.length > 0) {
+                      if (customizedKeys.length) {
                         customizedKeys.forEach((i) => {
                           if (customized[i].type === 'int') {
                             this.keysOfIntValue.push(i);
                           } else if (customized[i].type === 'str') {
                             this.keysOfStringValue.push(i);
                           }
+                          if (i.startsWith(this.replaceStr.userDefined)) {
+                            customized[i].label = customized[i].label.replace(
+                                this.replaceStr.userDefined,
+                                '[U]',
+                            );
+                          } else if (i.startsWith(this.replaceStr.metric)) {
+                            customized[i].label = customized[i].label.replace(
+                                this.replaceStr.metric,
+                                '[M]',
+                            );
+                          }
                         });
+                        this.haveCustomizedParams = true;
                       }
                     }
                     this.table.columnOptions = Object.assign(
@@ -377,6 +374,7 @@ export default {
                     this.noData = !res.data.object.length;
                     this.echart.showData = this.echart.brushData = this.echart.allData = list;
                     Object.keys(this.table.columnOptions).forEach((i) => {
+                      this.table.columnOptions[i].selected = true;
                       const flag = list.some((val) => {
                         return val[i] || val[i] === 0;
                       });
@@ -415,19 +413,71 @@ export default {
           )
           .catch(() => {});
     },
+
+    /**
+     * Selected data in the table
+     * @param {Array} data
+     * @return {Array}
+     */
+    setDataOfModel(data = []) {
+      const modelLineageList = [];
+      data.forEach((item) => {
+        if (item.model_lineage) {
+          item.model_lineage.summary_dir = item.summary_dir;
+          const modelData = JSON.parse(JSON.stringify(item.model_lineage));
+          modelData.model_size = parseFloat(
+              ((modelData.model_size || 0) / 1024 / 1024).toFixed(2),
+          );
+          const keys = Object.keys(modelData.metric || {});
+          if (keys.length) {
+            keys.forEach((key) => {
+              if (modelData.metric[key] || modelData.metric[key] === 0) {
+                const temp = this.replaceStr.metric + key;
+                modelData[temp] = modelData.metric[key];
+              }
+            });
+            delete modelData.metric;
+          }
+          const udkeys = Object.keys(modelData.user_defined || {});
+          if (udkeys.length) {
+            udkeys.forEach((key) => {
+              if (
+                modelData.user_defined[key] ||
+                modelData.user_defined[key] === 0
+              ) {
+                const temp = this.replaceStr.userDefined + key;
+                modelData[temp] = modelData.user_defined[key];
+              }
+            });
+            delete modelData.user_defined;
+          }
+          modelLineageList.push(modelData);
+        }
+      });
+      return modelLineageList;
+    },
+
     /**
      * The column options in the table are changed.
      */
     columnSelectionChange() {
+      this.table.optionalColumn.forEach((key) => {
+        this.table.columnOptions[key].selected = false;
+      });
+      this.table.selectedColumn.forEach((key) => {
+        this.table.columnOptions[key].selected = true;
+      });
+
       const columnCount =
         Object.keys(this.table.columnOptions).length -
         this.table.optionsNotInCheckbox.length;
 
-      this.table.column = this.table.mandatoryColumn
-          .concat(this.table.selectedColumn)
-          .filter((i) => {
-            return !this.table.optionsNotInTable.includes(i);
-          });
+      this.table.column = Object.keys(this.table.columnOptions).filter((i) => {
+        return (
+          this.table.columnOptions[i].selected &&
+          !this.table.optionsNotInTable.includes(i)
+        );
+      });
 
       this.table.selectAll =
         this.table.selectedColumn
@@ -481,39 +531,7 @@ export default {
           .then(
               (res) => {
                 if (res && res.data && res.data.object) {
-                  const tempList = JSON.parse(JSON.stringify(res.data.object));
-                  const list = [];
-
-                  tempList.forEach((item) => {
-                    if (item.model_lineage) {
-                      item.model_lineage.summary_dir = item.summary_dir;
-                      const i = JSON.parse(JSON.stringify(item.model_lineage));
-                      i.model_size = parseFloat(
-                          ((i.model_size || 0) / 1024 / 1024).toFixed(2),
-                      );
-                      const keys = Object.keys(i.metric || {});
-                      if (keys.length) {
-                        keys.forEach((key) => {
-                          if (i.metric[key] || i.metric[key] === 0) {
-                            const temp = 'metric/' + key;
-                            i[temp] = i.metric[key];
-                          }
-                        });
-                        delete i.metric;
-                      }
-                      const udkeys = Object.keys(i.user_defined || {});
-                      if (udkeys.length) {
-                        udkeys.forEach((key) => {
-                          if (i.user_defined[key] || i.user_defined[key] === 0) {
-                            const temp = 'user_defined/' + key;
-                            i[temp] = i.user_defined[key];
-                          }
-                        });
-                        delete i.user_defined;
-                      }
-                      list.push(i);
-                    }
-                  });
+                  const list = this.setDataOfModel(res.data.object);
                   this.table.data = list;
                   this.pagination.total = res.data.count || 0;
                   this.pagination.currentPage = 0;
@@ -527,11 +545,12 @@ export default {
      * Initializing the Eechart
      */
     initChart() {
-      const chartAxis = this.table.mandatoryColumn
-          .concat(this.table.selectedColumn)
-          .filter((i) => {
-            return !this.table.optionsNotInEchart.includes(i);
-          });
+      const chartAxis = Object.keys(this.table.columnOptions).filter((i) => {
+        return (
+          this.table.columnOptions[i].selected &&
+          !this.table.optionsNotInEchart.includes(i)
+        );
+      });
       const data = [];
       this.echart.showData.forEach((i, index) => {
         const item = {
@@ -566,6 +585,33 @@ export default {
             obj.axisLabel = {
               show: false,
             };
+          } else {
+            obj.axisLabel = {
+              formatter: function(val) {
+                const strs = val.split('');
+                let str = '';
+                if (val.length > 100) {
+                  return val.substring(0, 12) + '...';
+                } else {
+                  if (chartAxis.length < 10) {
+                    for (let i = 0, s = ''; (s = strs[i++]); ) {
+                      str += s;
+                      if (!(i % 16)) {
+                        str += '\n';
+                      }
+                    }
+                  } else {
+                    for (let i = 0, s = ''; (s = strs[i++]); ) {
+                      str += s;
+                      if (!(i % 12)) {
+                        str += '\n';
+                      }
+                    }
+                  }
+                  return str;
+                }
+              },
+            };
           }
         }
         if (this.keysOfIntValue.includes(key)) {
@@ -583,7 +629,7 @@ export default {
         parallel: {
           top: 25,
           left: 50,
-          right: 80,
+          right: 100,
           bottom: 10,
           parallelAxisDefault: {
             type: 'value',
@@ -695,45 +741,14 @@ export default {
           RequestService.queryLineagesData(filterParams)
               .then(
                   (res) => {
-                    if (res && res.data && res.data.object) {
-                      const tempList = JSON.parse(JSON.stringify(res.data.object));
-                      const list = [];
-                      const summaryDirList = [];
-                      tempList.forEach((item) => {
-                        if (item.model_lineage) {
-                          item.model_lineage.summary_dir = item.summary_dir;
-                          const i = JSON.parse(JSON.stringify(item.model_lineage));
-                          i.model_size = parseFloat(
-                              ((i.model_size || 0) / 1024 / 1024).toFixed(2),
-                          );
-                          const keys = Object.keys(i.metric || {});
-                          if (keys.length) {
-                            keys.forEach((key) => {
-                              if (i.metric[key] || i.metric[key] === 0) {
-                                const temp = 'metric/' + key;
-                                i[temp] = i.metric[key];
-                              }
-                            });
-                            delete i.metric;
-                          }
-                          summaryDirList.push(i.summary_dir);
-
-                          const udkeys = Object.keys(i.user_defined || {});
-                          if (udkeys.length) {
-                            udkeys.forEach((key) => {
-                              if (
-                                i.user_defined[key] ||
-                            i.user_defined[key] === 0
-                              ) {
-                                const temp = 'user_defined/' + key;
-                                i[temp] = i.user_defined[key];
-                              }
-                            });
-                            delete i.user_defined;
-                          }
-                          list.push(i);
-                        }
-                      });
+                    if (
+                      res &&
+                  res.data &&
+                  res.data.object &&
+                  res.data.object.length
+                    ) {
+                      const list = this.setDataOfModel(res.data.object);
+                      const summaryDirList = list.map((i) => i.summary_dir);
                       this.$store.commit('setSummaryDirList', summaryDirList);
 
                       this.echart.showData = this.echart.brushData = list;
@@ -749,8 +764,8 @@ export default {
                     } else {
                       this.summaryDirList = [];
                       this.$store.commit('setSummaryDirList', []);
+                      this.checkedSummary = [];
                       this.noData = true;
-                      this.checkedSummary = summaryDirList;
                     }
                   },
                   (error) => {},
@@ -783,6 +798,9 @@ export default {
      * @param {Boolean} value Select All
      */
     checkboxSelectAll(value) {
+      this.table.optionalColumn.forEach((key) => {
+        this.table.columnOptions[key].selected = value;
+      });
       this.table.selectedColumn = value ? this.table.optionalColumn : [];
       this.table.column = this.table.mandatoryColumn
           .concat(value ? this.table.optionalColumn : [])
@@ -826,22 +844,20 @@ export default {
       if (isNaN(value) || !value) {
         return value;
       } else {
-        if (key === 'accuracy') {
-          return this.toFixedFun(value * 100, 2) + '%';
-        } else if (key === 'learning_rate') {
-          let temp = value.toPrecision(3);
+        if (key === 'learning_rate') {
+          let temp = value.toPrecision(4);
           let row = 0;
           while (temp < 1) {
             temp = temp * 10;
             row += 1;
           }
-          temp = this.toFixedFun(temp, 2);
+          temp = this.toFixedFun(temp, 4);
           return `${temp}${row ? `e-${row}` : ''}`;
         } else if (key === 'model_size') {
           return value + 'MB';
         } else {
           if (value < 1000) {
-            return Math.round(value * Math.pow(10, 2)) / Math.pow(10, 2);
+            return Math.round(value * Math.pow(10, 4)) / Math.pow(10, 4);
           } else {
             const reg = /(?=(\B)(\d{3})+$)/g;
             return (value + '').replace(reg, ',');
@@ -885,28 +901,24 @@ export default {
     -webkit-box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     overflow: hidden;
-    .custom-btn {
-      border: 1px solid #00a5a7;
-      border-radius: 2px;
-      background-color: white;
-      color: #00a5a7;
-    }
-    .custom-btn:hover {
-      color: #00a5a7;
-      background: #e9f7f7;
-    }
 
-    .checkbox-area {
+    .top-area {
       margin: 24px 32px 16px;
-      position: relative;
-      min-height: 42px;
-      max-height: 66px;
+      display: flex;
+      justify-content: flex-end;
       .checkbox {
-        width: calc(100% - 264px);
-        max-height: 66px;
         overflow: auto;
-        .mgr30 {
-          margin-right: 30px;
+        flex-grow: 1;
+        .label-legend {
+          height: 19px;
+          margin-bottom: 4px;
+          div {
+            display: inline-block;
+            font-size: 12px;
+          }
+          div + div {
+            margin-left: 30px;
+          }
         }
         .notShow {
           display: none;
@@ -921,11 +933,18 @@ export default {
           margin-right: 30px;
         }
       }
-
-      .reset-btn {
-        position: absolute;
-        right: 0;
-        bottom: 0;
+      .btns {
+        margin-left: 20px;
+        .custom-btn {
+          border: 1px solid #00a5a7;
+          border-radius: 2px;
+          background-color: white;
+          color: #00a5a7;
+        }
+        .custom-btn:hover {
+          color: #00a5a7;
+          background: #e9f7f7;
+        }
       }
     }
     #echart {
