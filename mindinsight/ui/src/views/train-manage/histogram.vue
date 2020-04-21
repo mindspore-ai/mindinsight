@@ -34,17 +34,6 @@ limitations under the License.
       </div>
       <!-- Area for selecting a view type -->
       <div class="cl-histogram-view-type-select-content">
-        <div class="view-title">{{$t('histogram.xAxisTitle')}}</div>
-        <el-radio-group v-model="curAxisName"
-                        fill="#00A5A7"
-                        text-color="#FFFFFF"
-                        size="small"
-                        :disabled="curViewName === 0"
-                        @change="timeTypeChange">
-          <el-radio-button :label=0>{{$t('histogram.step')}}</el-radio-button>
-          <el-radio-button :label=1>{{$t('histogram.relativeTime')}}</el-radio-button>
-          <el-radio-button :label=2>{{$t('histogram.absoluteTime')}}</el-radio-button>
-        </el-radio-group>
         <div class="view-title">{{$t('histogram.viewType')}}</div>
         <el-radio-group v-model="curViewName"
                         fill="#00A5A7"
@@ -53,6 +42,19 @@ limitations under the License.
                         @change="viewTypeChange">
           <el-radio-button :label=0>{{$t('histogram.overlay')}}</el-radio-button>
           <el-radio-button :label=1>{{$t('histogram.offset')}}</el-radio-button>
+        </el-radio-group>
+        <div class="view-title"
+             v-if="!!curViewName">{{$t('histogram.xAxisTitle')}}</div>
+        <el-radio-group v-model="curAxisName"
+                        fill="#00A5A7"
+                        text-color="#FFFFFF"
+                        size="small"
+                        v-if="!!curViewName"
+                        :disabled="curViewName === 0"
+                        @change="timeTypeChange">
+          <el-radio-button :label=0>{{$t('histogram.step')}}</el-radio-button>
+          <el-radio-button :label=1>{{$t('histogram.relativeTime')}}</el-radio-button>
+          <el-radio-button :label=2>{{$t('histogram.absoluteTime')}}</el-radio-button>
         </el-radio-group>
       </div>
       <!-- Content display area -->
@@ -207,6 +209,13 @@ export default {
       clearInterval(this.autoUpdateTimer);
       this.autoUpdateTimer = null;
     }
+    if (this.curPageArr.length) {
+      this.curPageArr.forEach((item) => {
+        if (item.zr) {
+          item.zr.off('mouseout', 'mousemove');
+        }
+      });
+    }
     // Stop refreshing
     if (this.isReloading) {
       this.$store.commit('setIsReload', false);
@@ -289,6 +298,7 @@ export default {
                 dataList.push({
                   tagName: tagName,
                   sampleIndex: sampleIndex,
+                  zr: null,
                   show: false,
                   fullScreen: false,
                   domId: `${tagName}`,
@@ -368,7 +378,6 @@ export default {
     },
     updateCurPageSamples(sampleIndex) {
       const item = this.originDataArr[sampleIndex];
-      const promiseArr = [];
       if (!item || !item.tagName) {
         return;
       }
@@ -376,39 +385,16 @@ export default {
         train_id: this.trainingJobId,
         tag: item.tagName,
       };
-      promiseArr.push(this.addPromise(params));
-      Promise.all(
-          promiseArr.map(function(promiseItem) {
-            return promiseItem.catch(function(err) {
-              return err;
-            });
-          }),
-      ).then((res) => {
-        if (!res || !res.length || !res[0].data) {
+      RequestService.getHistogramData(params).then((res) => {
+        if (!res || !res.data) {
           return;
         }
-        const data = res[0].data;
+        const data = JSON.parse(JSON.stringify(res.data));
         this.originDataArr[sampleIndex].charData.oriData = this.formOriData(
             data,
         );
         const charOption = this.formatDataToChar(sampleIndex);
         this.updateSampleData(sampleIndex, charOption);
-      });
-    },
-    addPromise(params) {
-      return new Promise((resolve, reject) => {
-        RequestService.getHistogramData(params)
-            .then((res) => {
-              if (res) {
-                res.params = params;
-                resolve(res);
-              }
-            })
-            .catch((error) => {
-              if (error) {
-                reject(error);
-              }
-            });
       });
     },
     /**
@@ -604,9 +590,10 @@ export default {
           const sampleIndex = this.originDataArr.length;
           this.originDataArr.push({
             tagName: tagName,
+            sampleIndex: sampleIndex,
+            zr: null,
             show: false,
             fullScreen: false,
-            sampleIndex: sampleIndex,
             domId: `${tagName}`,
             charData: {
               oriData: [],
@@ -644,7 +631,10 @@ export default {
       setTimeout(() => {
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
       }, 10);
-      const zr = sampleObject.charObj.getZr();
+      if (sampleObject.zr) {
+        sampleObject.zr.off('mouseout', 'mousemove');
+      }
+      sampleObject.zr = sampleObject.charObj.getZr();
       const p = Math.max(0, d3.precisionRound(0.01, 1.01) - 1);
       const yValueFormat = d3.format('.' + p + 'e');
       const chartData = sampleObject.charData.oriData.chartData;
@@ -751,216 +741,202 @@ export default {
           yIndex,
         };
       }
-      zr.on('mouseout', (e) => {
-        if (!rawData || !rawData.length) {
-          return;
-        }
-        this.chartTipFlag = false;
-        this.removeTooltip(sampleIndex);
-      });
-      zr.on('mousemove', (e) => {
-        if (!rawData || !rawData.length) {
-          return;
-        }
-        this.removeTooltip(sampleIndex);
-        curViewName = this.curViewName;
-        const unit = 's';
-        const nearestIndex = findNearestValue([e.offsetX, e.offsetY]);
-        if (
-          nearestIndex &&
-          nearestIndex.yIndex !== null &&
-          nearestIndex.binIndex !== null
-        ) {
-          const {binIndex, yIndex} = nearestIndex;
-          const gridRect = sampleObject.charObj
-              .getModel()
-              .getComponent('grid', 0)
-              .coordinateSystem.getRect();
-          const gridRectY = gridRect.y - 10;
-          let linePoints = [];
-          if (curViewName === 1 && yIndex !== null) {
-            linePoints = this.makePolyPoints(
-                yIndex,
-                getCoord,
-                gridRectY,
-                charOption,
-            );
-          } else if (
-            curViewName === 0 &&
-            chartData[yIndex] &&
-            chartData[yIndex].items
-          ) {
-            chartData[yIndex].items.forEach((item) => {
-              linePoints.push(
-                  sampleObject.charObj.convertToPixel('grid', [item[2], item[3]]),
-              );
-            });
-          }
-          this.zrDrawElement.hoverLine = new echarts.graphic.Polyline({
-            silent: true,
-            shape: {
-              points: linePoints.slice(1, -1),
-            },
-            z: 999,
-          });
-          zr.add(this.zrDrawElement.hoverLine);
-          this.zrDrawElement.tooltip = new echarts.graphic.Text({});
-          let itemX;
-          const x = chartData[yIndex].items[binIndex][2];
-          let z = 0;
-          chartData.forEach((dataItem, index) => {
-            const y = dataItem.step;
-            const pt = getCoord([x, y]);
-            if (index === yIndex) {
-              z = chartData[yIndex].items[binIndex][3];
-            } else {
-              const items = dataItem.items;
-              for (let k = 1; k < items.length - 1; k++) {
-                const nextX = items[k + 1][2];
-                const nextZ = items[k + 1][3];
-                if (items[k][2] === x) {
-                  z = items[k][3];
-                  break;
-                } else if (items[k][2] < x && nextX > x) {
-                  const proportionX = (x - items[k][2]) / (nextX - items[k][2]);
-                  z = (nextZ - items[k][3]) * proportionX + items[k][3];
-                  break;
-                }
-              }
-            }
-            itemX = pt[0];
-            const circleOption = {
-              z: 1000,
-            };
-            if (curViewName === 1) {
-              pt[1] -=
-                ((z - charOption.minZ) / (charOption.maxZ - charOption.minZ)) *
-                gridRectY;
-              circleOption.shape = {
-                cx: itemX,
-                cy: pt[1],
-                r: 2,
-              };
-            } else {
-              circleOption.shape = {
-                cx: 0,
-                cy: 0,
-                r: 2,
-              };
-              circleOption.position = sampleObject.charObj.convertToPixel(
-                  'grid',
-                  [x, z],
-              );
-            }
-            const dot = new echarts.graphic.Circle(circleOption);
-            zr.add(dot);
-            this.zrDrawElement.hoverDots.push(dot);
-          });
-
-          const hoveredItem = chartData[yIndex];
-          this.zrDrawElement.tooltip = new echarts.graphic.Text({});
-          if (!this.chartTipFlag) {
-            this.chartTipFlag = true;
-          }
-          if (!hoveredItem || !hoveredItem.items[binIndex]) {
+      if (sampleObject.zr) {
+        sampleObject.zr.on('mouseout', (e) => {
+          if (!rawData || !rawData.length) {
             return;
           }
-          let htmlStr = '';
-          const hoveredAxis = hoveredItem.items[binIndex][3];
-          htmlStr = `<td>${
-            hoveredAxis.toString().length >= 6
-              ? yValueFormat(hoveredAxis)
-              : hoveredAxis
-          }</td><td style="text-align:center;">${hoveredItem.step}</td><td>${(
-            hoveredItem.relative_time / 1000
-          ).toFixed(3)}${unit}</td><td>${this.dealrelativeTime(
-              new Date(hoveredItem.wall_time).toString(),
-          )}</td>`;
-          const dom = document.querySelector('#tipTr');
-          dom.innerHTML = htmlStr;
-          if (!sampleObject.fullScreen) {
-            const chartWidth = document.querySelectorAll('.sample-content')[
-                sampleIndex
-            ].clientWidth;
-            const chartHeight = document.querySelectorAll('.sample-content')[
-                sampleIndex
-            ].clientHeight;
-            const left = document.querySelectorAll('.sample-content')[
-                sampleIndex
-            ].offsetLeft;
-            const top = document.querySelectorAll('.sample-content')[
-                sampleIndex
-            ].offsetTop;
-            const echartTip = document.querySelector('#echartTip');
-            echartTip.style.top = `${top + chartHeight - 60}px`;
-            if (left > echartTip.clientWidth) {
-              echartTip.style.left = `${left - echartTip.clientWidth}px`;
-            } else {
-              echartTip.style.left = `${left + chartWidth}px`;
-            }
-          } else {
-            const width = document.querySelector('#echartTip').clientWidth;
-            const height = document.querySelector('#echartTip').clientHeight;
-            const screenWidth = document.body.scrollWidth;
-            const screenHeight = document.body.scrollHeight;
-            const scrollTop = document.querySelector(
-                '.cl-histogram-show-data-content',
-            ).scrollTop;
-            const offsetTop = document.querySelector(
-                '.cl-histogram-show-data-content',
-            ).offsetTop;
-            if (
-              height + e.event.y + 20 > screenHeight &&
-              screenHeight > height
-            ) {
-              document.querySelector('#echartTip').style.top = `${e.event.y +
-                scrollTop -
-                height -
-                20 -
-                offsetTop}px`;
-            } else {
-              document.querySelector('#echartTip').style.top = `${e.event.y +
-                scrollTop +
-                20 -
-                offsetTop}px`;
-            }
-            if (width + e.event.x + 50 > screenWidth && screenWidth > width) {
-              document.querySelector('#echartTip').style.left = `${e.event.x -
-                width -
-                20}px`;
-            } else {
-              document.querySelector('#echartTip').style.left = `${e.event.x +
-                20}px`;
-            }
+          this.chartTipFlag = false;
+          this.removeTooltip(sampleIndex);
+        });
+        sampleObject.zr.on('mousemove', (e) => {
+          if (!rawData || !rawData.length) {
+            return;
           }
+          this.removeTooltip(sampleIndex);
+          curViewName = this.curViewName;
+          const unit = 's';
+          const nearestIndex = findNearestValue([e.offsetX, e.offsetY]);
+          if (
+            nearestIndex &&
+            nearestIndex.yIndex !== null &&
+            nearestIndex.binIndex !== null
+          ) {
+            const {binIndex, yIndex} = nearestIndex;
+            const gridRect = sampleObject.charObj
+                .getModel()
+                .getComponent('grid', 0)
+                .coordinateSystem.getRect();
+            const gridRectY = gridRect.y - 10;
+            let linePoints = [];
+            if (curViewName === 1 && yIndex !== null) {
+              linePoints = this.makePolyPoints(
+                  yIndex,
+                  getCoord,
+                  gridRectY,
+                  charOption,
+              );
+            } else if (
+              curViewName === 0 &&
+              chartData[yIndex] &&
+              chartData[yIndex].items
+            ) {
+              chartData[yIndex].items.forEach((item) => {
+                linePoints.push(
+                    sampleObject.charObj.convertToPixel('grid', [
+                      item[2],
+                      item[3],
+                    ]),
+                );
+              });
+            }
+            this.zrDrawElement.hoverLine = new echarts.graphic.Polyline({
+              silent: true,
+              shape: {
+                points: linePoints.slice(1, -1),
+              },
+              z: 999,
+            });
+            sampleObject.zr.add(this.zrDrawElement.hoverLine);
+            this.zrDrawElement.tooltip = new echarts.graphic.Text({});
+            let itemX;
+            const x = chartData[yIndex].items[binIndex][2];
+            let z = 0;
+            chartData.forEach((dataItem, index) => {
+              const y = dataItem.step;
+              const pt = getCoord([x, y]);
+              if (index === yIndex) {
+                z = chartData[yIndex].items[binIndex][3];
+              } else {
+                const items = dataItem.items;
+                for (let k = 1; k < items.length - 1; k++) {
+                  const nextX = items[k + 1][2];
+                  const nextZ = items[k + 1][3];
+                  if (items[k][2] === x) {
+                    z = items[k][3];
+                    break;
+                  } else if (items[k][2] < x && nextX > x) {
+                    const proportionX =
+                      (x - items[k][2]) / (nextX - items[k][2]);
+                    z = (nextZ - items[k][3]) * proportionX + items[k][3];
+                    break;
+                  }
+                }
+              }
+              itemX = pt[0];
+              const circleOption = {
+                z: 1000,
+              };
+              if (curViewName === 1) {
+                pt[1] -=
+                  ((z - charOption.minZ) /
+                    (charOption.maxZ - charOption.minZ)) *
+                  gridRectY;
+                circleOption.shape = {
+                  cx: itemX,
+                  cy: pt[1],
+                  r: 2,
+                };
+              } else {
+                circleOption.shape = {
+                  cx: 0,
+                  cy: 0,
+                  r: 2,
+                };
+                circleOption.position = sampleObject.charObj.convertToPixel(
+                    'grid',
+                    [x, z],
+                );
+              }
+              const dot = new echarts.graphic.Circle(circleOption);
+              sampleObject.zr.add(dot);
+              this.zrDrawElement.hoverDots.push(dot);
+            });
 
-          this.zrDrawElement.tooltipX = new echarts.graphic.Text({
-            position: [itemX, gridRect.y + gridRect.height],
-            style: {
-              fontFamily: 'Merriweather Sans',
-              text: Math.round(x * 1000) / 1000,
-              textFill: '#fff',
-              textAlign: 'center',
-              fontSize: 12,
-              textBackgroundColor: '#333',
-              textBorderWidth: 2,
-              textPadding: [5, 7],
-              rich: {},
-            },
-            z: 2000,
-          });
-          zr.add(this.zrDrawElement.tooltipX);
-          if (curViewName === 1 && linePoints && linePoints.length) {
-            this.zrDrawElement.tooltipY = new echarts.graphic.Text({
-              position: [
-                gridRect.x + gridRect.width,
-                linePoints[linePoints.length - 1][1],
-              ],
+            const hoveredItem = chartData[yIndex];
+            this.zrDrawElement.tooltip = new echarts.graphic.Text({});
+            if (!this.chartTipFlag) {
+              this.chartTipFlag = true;
+            }
+            if (!hoveredItem || !hoveredItem.items[binIndex]) {
+              return;
+            }
+            let htmlStr = '';
+            const hoveredAxis = hoveredItem.items[binIndex][3];
+            htmlStr = `<td>${
+              hoveredAxis.toString().length >= 6
+                ? yValueFormat(hoveredAxis)
+                : hoveredAxis
+            }</td><td style="text-align:center;">${hoveredItem.step}</td><td>${(
+              hoveredItem.relative_time / 1000
+            ).toFixed(3)}${unit}</td><td>${this.dealrelativeTime(
+                new Date(hoveredItem.wall_time).toString(),
+            )}</td>`;
+            const dom = document.querySelector('#tipTr');
+            dom.innerHTML = htmlStr;
+            if (!sampleObject.fullScreen) {
+              const chartWidth = document.querySelectorAll('.sample-content')[
+                  sampleIndex
+              ].clientWidth;
+              const chartHeight = document.querySelectorAll('.sample-content')[
+                  sampleIndex
+              ].clientHeight;
+              const left = document.querySelectorAll('.sample-content')[
+                  sampleIndex
+              ].offsetLeft;
+              const top = document.querySelectorAll('.sample-content')[
+                  sampleIndex
+              ].offsetTop;
+              const echartTip = document.querySelector('#echartTip');
+              echartTip.style.top = `${top + chartHeight - 60}px`;
+              if (left > echartTip.clientWidth) {
+                echartTip.style.left = `${left - echartTip.clientWidth}px`;
+              } else {
+                echartTip.style.left = `${left + chartWidth}px`;
+              }
+            } else {
+              const width = document.querySelector('#echartTip').clientWidth;
+              const height = document.querySelector('#echartTip').clientHeight;
+              const screenWidth = document.body.scrollWidth;
+              const screenHeight = document.body.scrollHeight;
+              const scrollTop = document.querySelector(
+                  '.cl-histogram-show-data-content',
+              ).scrollTop;
+              const offsetTop = document.querySelector(
+                  '.cl-histogram-show-data-content',
+              ).offsetTop;
+              if (
+                height + e.event.y + 20 > screenHeight &&
+                screenHeight > height
+              ) {
+                document.querySelector('#echartTip').style.top = `${e.event.y +
+                  scrollTop -
+                  height -
+                  20 -
+                  offsetTop}px`;
+              } else {
+                document.querySelector('#echartTip').style.top = `${e.event.y +
+                  scrollTop +
+                  20 -
+                  offsetTop}px`;
+              }
+              if (width + e.event.x + 50 > screenWidth && screenWidth > width) {
+                document.querySelector('#echartTip').style.left = `${e.event.x -
+                  width -
+                  20}px`;
+              } else {
+                document.querySelector('#echartTip').style.left = `${e.event.x +
+                  20}px`;
+              }
+            }
+
+            this.zrDrawElement.tooltipX = new echarts.graphic.Text({
+              position: [itemX, gridRect.y + gridRect.height],
               style: {
                 fontFamily: 'Merriweather Sans',
-                text: hoveredItem.step,
+                text: Math.round(x * 1000) / 1000,
                 textFill: '#fff',
-                textVerticalAlign: 'middle',
+                textAlign: 'center',
                 fontSize: 12,
                 textBackgroundColor: '#333',
                 textBorderWidth: 2,
@@ -969,10 +945,31 @@ export default {
               },
               z: 2000,
             });
-            zr.add(this.zrDrawElement.tooltipY);
+            sampleObject.zr.add(this.zrDrawElement.tooltipX);
+            if (curViewName === 1 && linePoints && linePoints.length) {
+              this.zrDrawElement.tooltipY = new echarts.graphic.Text({
+                position: [
+                  gridRect.x + gridRect.width,
+                  linePoints[linePoints.length - 1][1],
+                ],
+                style: {
+                  fontFamily: 'Merriweather Sans',
+                  text: hoveredItem.step,
+                  textFill: '#fff',
+                  textVerticalAlign: 'middle',
+                  fontSize: 12,
+                  textBackgroundColor: '#333',
+                  textBorderWidth: 2,
+                  textPadding: [5, 7],
+                  rich: {},
+                },
+                z: 2000,
+              });
+              sampleObject.zr.add(this.zrDrawElement.tooltipY);
+            }
           }
-        }
-      });
+        });
+      }
     },
     dealrelativeTime(time) {
       const arr = time.split(' ');
@@ -985,26 +982,27 @@ export default {
      */
     removeTooltip(sampleIndex) {
       const sampleObject = this.originDataArr[sampleIndex];
-      if (sampleObject.charObj) {
-        const zr = sampleObject.charObj.getZr();
+      if (sampleObject.zr) {
         if (this.zrDrawElement.hoverLine) {
-          zr.remove(this.zrDrawElement.hoverLine);
+          sampleObject.zr.remove(this.zrDrawElement.hoverLine);
         }
         if (this.zrDrawElement.tooltip) {
-          zr.remove(this.zrDrawElement.tooltip);
+          sampleObject.zr.remove(this.zrDrawElement.tooltip);
         }
         if (this.zrDrawElement.tooltipY) {
-          zr.remove(this.zrDrawElement.tooltipY);
+          sampleObject.zr.remove(this.zrDrawElement.tooltipY);
         }
         if (
           this.zrDrawElement.hoverDots &&
           this.zrDrawElement.hoverDots.length
         ) {
-          this.zrDrawElement.hoverDots.forEach((dot) => zr.remove(dot));
+          this.zrDrawElement.hoverDots.forEach((dot) =>
+            sampleObject.zr.remove(dot),
+          );
           this.zrDrawElement.hoverDots.length = 0;
         }
         if (this.zrDrawElement.tooltipX) {
-          zr.remove(this.zrDrawElement.tooltipX);
+          sampleObject.zr.remove(this.zrDrawElement.tooltipX);
         }
       }
     },
@@ -1115,6 +1113,8 @@ export default {
       };
     },
     formatCharOption(sampleIndex, charOption) {
+      const colorMin = '#346E69';
+      const colorMax = '#EBFFFD';
       const sampleObject = this.originDataArr[sampleIndex];
       const fullScreenFun = this.toggleFullScreen;
       const curAxisName = this.curAxisName;
@@ -1125,9 +1125,9 @@ export default {
           textStyle: {
             fontSize: '16',
             fontWeight: '600',
-            bottom: 6,
-            left: 'center',
           },
+          bottom: 6,
+          left: 'center',
         },
         grid: {
           left: 15,
@@ -1135,7 +1135,6 @@ export default {
           right: 40,
           bottom: 60,
         },
-        color: ['#346E69'],
         xAxis: {
           max: charOption.maxX,
           min: charOption.minX,
@@ -1244,10 +1243,15 @@ export default {
           dimension: 1,
           range: [charOption.minStep, charOption.maxStep],
           inRange: {
-            colorLightness: [0.3, 0.9],
+            color: [colorMin, colorMax],
           },
         };
       } else if (this.curViewName === 0) {
+        option.color = this.getGrientColor(
+            colorMin,
+            colorMax,
+            charOption.seriesData.length,
+        );
         option.series = [];
         charOption.seriesData.forEach((k) => {
           option.series.push({
@@ -1261,6 +1265,66 @@ export default {
         });
       }
       return option;
+    },
+    formatColor(str) {
+      if (!str) {
+        return;
+      }
+      const colorReg = /^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+      let colorStr = str.toLowerCase().slice(1);
+      if (colorReg.test(colorStr)) {
+        let colorStrNew = '';
+        if (colorStr.length === 3) {
+          for (let i = 0; i < 3; i++) {
+            colorStrNew += colorStrNew
+                .slice(i, i + 1)
+                .concat(colorStrNew.slice(i, i + 1));
+          }
+          colorStr = colorStrNew;
+        }
+        const colorFormat = [];
+        for (let i = 0; i < 6; i += 2) {
+          colorFormat.push(parseInt(`0x${colorStr.slice(i, i + 2)}`));
+        }
+        return colorFormat;
+      } else {
+        return colorStr;
+      }
+    },
+    formatColorToHex(rgb) {
+      const regRgb = /^(rgb|RGB)/g;
+      if (regRgb.test(rgb)) {
+        const colorSplit = rgb.replace(/(?:(|)|rgb|RGB)*/g, '').split(',');
+        let hexStr = '';
+        for (let i = 0; i < colorSplit.length; i++) {
+          let hexItem = Number(colorSplit[i]).toString(16);
+          hexItem = hexItem < 10 ? `0${hexItem}` : hexItem;
+          if (hexItem === '0') {
+            hexItem += hexItem;
+          }
+          hexStr += hexItem;
+        }
+        if (hexStr.length !== 6) {
+          hexStr = rgb;
+        }
+        return hexStr;
+      }
+    },
+    getGrientColor(startColor, endColor, step) {
+      const startRgb = this.formatColor(startColor);
+      const endRgb = this.formatColor(endColor);
+      const gapRgbR = (endRgb[0] - startRgb[0]) / step;
+      const gapRgbG = (endRgb[1] - startRgb[1]) / step;
+      const gapRgbB = (endRgb[2] - startRgb[2]) / step;
+      const colorResult = [];
+      for (let i = 0; i < step; i++) {
+        const sR = parseInt(gapRgbR * i + startRgb[0]);
+        const sG = parseInt(gapRgbG * i + startRgb[1]);
+        const sB = parseInt(gapRgbB * i + startRgb[2]);
+        const hex = this.formatColorToHex(`rgb(${sR},${sG},${sB})`);
+        colorResult.push(hex);
+      }
+      return colorResult;
     },
     toggleFullScreen(sampleIndex) {
       const sampleObject = this.originDataArr[sampleIndex];
@@ -1370,7 +1434,9 @@ export default {
       padding: 24px 32px;
       text-align: right;
     }
+    // No data available.
     .image-noData {
+      // Set the width and white on the right.
       width: 100%;
       height: 450px;
       display: flex;

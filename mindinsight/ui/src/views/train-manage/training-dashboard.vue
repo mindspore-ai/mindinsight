@@ -51,15 +51,15 @@ limitations under the License.
         </div>
       </div>
       <div class="cl-dashboard-con-up"
-           :class="!!histogramTag ? '' : 'no-data-hover'"
+           :class="!!histogramTag && !wrongPlugin ? '' : 'no-data-hover'"
            @click="viewMoreHistogram">
         <div class="cl-dashboard-title">{{$t("histogram.titleText")}}</div>
         <div class="cl-module">
           <div id="distribution-chart"
-               v-show="!!histogramTag"></div>
+               v-show="!!histogramTag && !wrongPlugin"></div>
           <div class="no-data-img"
                key="no-chart-data"
-               v-show="!histogramTag">
+               v-show="!histogramTag || wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
             <p class='no-data-text'>
@@ -769,15 +769,18 @@ export default {
       if (!tagList) {
         return;
       }
+      let histogramTag = '';
       if (!this.histogramTag || tagList.indexOf(this.histogramTag) === -1) {
-        this.histogramTag = tagList[0] || '';
+        histogramTag = tagList[0] || '';
+      } else {
+        histogramTag = this.histogramTag;
       }
-      if (!this.histogramTag) {
+      if (!histogramTag) {
         return;
       }
       const params = {
         train_id: this.trainingJobId,
-        tag: this.histogramTag,
+        tag: histogramTag,
       };
       // tag
       RequestService.getHistogramData(params).then((res) => {
@@ -790,6 +793,7 @@ export default {
           return;
         }
         const data = res.data;
+        this.histogramTag = histogramTag;
         this.histogramData = this.formOriData(data);
         const charOption = this.formatDataToChar();
         this.updateHistogramSampleData(charOption);
@@ -873,7 +877,7 @@ export default {
         textStyle: {fontFamily: 'Merriweather Sans'},
         title: {
           text: charOption.title || '',
-          textStyle: {fontSize: '16', fontWeight: '600'},
+          textStyle: {fontSize: '12', fontWeight: '400'},
           bottom: 6,
           left: 'center',
         },
