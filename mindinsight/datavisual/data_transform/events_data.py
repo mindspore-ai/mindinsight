@@ -93,7 +93,9 @@ class EventsData:
         with self._reservoir_mutex_lock:
             if tag not in self._reservoir_by_tag:
                 reservoir_size = self._get_reservoir_size(tensor_event.plugin_name)
-                self._reservoir_by_tag[tag] = reservoir.Reservoir(reservoir_size)
+                self._reservoir_by_tag[tag] = reservoir.ReservoirFactory().create_reservoir(
+                    plugin_name, reservoir_size
+                )
 
         tensor = _Tensor(wall_time=tensor_event.wall_time,
                          step=tensor_event.step,
