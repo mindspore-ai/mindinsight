@@ -27,8 +27,12 @@ import pytest
 
 from mindinsight.datavisual.data_transform import ms_data_loader
 from mindinsight.datavisual.data_transform.ms_data_loader import MSDataLoader
+from mindinsight.datavisual.data_transform.ms_data_loader import _PbParser
+from mindinsight.datavisual.data_transform.events_data import TensorEvent
+from mindinsight.datavisual.common.enums import PluginNameEnum
 
 from ..mock import MockLogger
+from ....utils.log_generators.graph_pb_generator import create_graph_pb_file
 
 # bytes of 3 scalar events
 SCALAR_RECORD = (b'\x1e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\t\x96\xe1\xeb)>}\xd7A\x10\x01*'
@@ -69,9 +73,9 @@ class TestMsDataLoader:
         summary_dir = tempfile.mkdtemp()
         ms_loader = MSDataLoader(summary_dir)
         ms_loader._check_files_deleted(new_file_list, old_file_list)
+        shutil.rmtree(summary_dir)
         assert MockLogger.log_msg['warning'] == "There are some files has been deleted, " \
                                                 "we will reload all files in path {}.".format(summary_dir)
-        shutil.rmtree(summary_dir)
 
     @pytest.mark.usefixtures('crc_pass')
     def test_load_success_with_crc_pass(self):
@@ -96,8 +100,8 @@ class TestMsDataLoader:
         write_file(file2, SCALAR_RECORD)
         ms_loader = MSDataLoader(summary_dir)
         ms_loader.load()
-        assert 'Check crc faild and ignore this file' in str(MockLogger.log_msg['warning'])
         shutil.rmtree(summary_dir)
+        assert 'Check crc faild and ignore this file' in str(MockLogger.log_msg['warning'])
 
     def test_filter_event_files(self):
         """Test filter_event_files function ok."""
@@ -112,9 +116,83 @@ class TestMsDataLoader:
         ms_loader = MSDataLoader(summary_dir)
         res = ms_loader.filter_valid_files()
         expected = sorted(['aaasummary.5678', 'summary.0012', 'hellosummary.98786', 'mysummary.123abce'])
+        shutil.rmtree(summary_dir)
         assert sorted(res) == expected
 
+    def test_load_single_pb_file(self):
+        """Test load pb file success."""
+        filename = 'ms_output.pb'
+        summary_dir = tempfile.mkdtemp()
+        create_graph_pb_file(output_dir=summary_dir, filename=filename)
+        ms_loader = MSDataLoader(summary_dir)
+        ms_loader.load()
+        events_data = ms_loader.get_events_data()
+        plugins = events_data.list_tags_by_plugin(PluginNameEnum.GRAPH.value)
         shutil.rmtree(summary_dir)
+        assert len(plugins) == 1
+        assert plugins[0] == filename
+
+
+class TestPbParser:
+    """Test pb parser"""
+    _summary_dir = ''
+
+    def setup_method(self):
+        self._summary_dir = tempfile.mkdtemp()
+
+    def teardown_method(self):
+        shutil.rmtree(self._summary_dir)
+
+    def test_parse_pb_file(self):
+        """Test parse pb file success."""
+        filename = 'ms_output.pb'
+        create_graph_pb_file(output_dir=self._summary_dir, filename=filename)
+        parser = _PbParser(self._summary_dir)
+        tensor_event = parser.parse_pb_file(filename)
+        assert isinstance(tensor_event, TensorEvent)
+
+    def test_is_parse_pb_file(self):
+        """Test parse an older file."""
+        filename = 'ms_output.pb'
+        create_graph_pb_file(output_dir=self._summary_dir, filename=filename)
+        parser = _PbParser(self._summary_dir)
+        result = parser._is_parse_pb_file(filename)
+        assert result
+
+        filename = 'ms_output_older.pb'
+        file_path = create_graph_pb_file(output_dir=self._summary_dir, filename=filename)
+        atime = 1
+        mtime = 1
+        os.utime(file_path, (atime, mtime))
+        result = parser._is_parse_pb_file(filename)
+        assert not result
+
+    def test_sort_pb_file_by_mtime(self):
+        """Test sort pb files."""
+        filenames = ['abc.pb', 'bbc.pb']
+        for file in filenames:
+            create_graph_pb_file(output_dir=self._summary_dir, filename=file)
+        parser = _PbParser(self._summary_dir)
+
+        sorted_filenames = parser.sort_pb_files(filenames)
+        assert filenames == sorted_filenames
+
+    def test_sort_pb_file_by_filename(self):
+        """Test sort pb file by file name."""
+        filenames = ['aaa.pb', 'bbb.pb', 'ccc.pb']
+        for file in filenames:
+            create_graph_pb_file(output_dir=self._summary_dir, filename=file)
+
+        atime, mtime = (3, 3)
+        os.utime(os.path.realpath(os.path.join(self._summary_dir, 'aaa.pb')), (atime, mtime))
+        atime, mtime = (1, 1)
+        os.utime(os.path.realpath(os.path.join(self._summary_dir, 'bbb.pb')), (atime, mtime))
+        os.utime(os.path.realpath(os.path.join(self._summary_dir, 'ccc.pb')), (atime, mtime))
+
+        expected_filenames = ['bbb.pb', 'ccc.pb', 'aaa.pb']
+        parser = _PbParser(self._summary_dir)
+        sorted_filenames = parser.sort_pb_files(filenames)
+        assert expected_filenames == sorted_filenames
 
 
 def write_file(filename, record):

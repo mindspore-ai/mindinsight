@@ -96,9 +96,16 @@ class MSGraph(Graph):
         """
         logger.debug("Start to calc input.")
         for node_def in graph_proto.node:
+            if not node_def.name:
+                logger.debug("The node name is empty, ignore it.")
+                continue
             node_name = leaf_node_id_map_name[node_def.name]
             node = self._leaf_nodes[node_name]
             for input_def in node_def.input:
+                if not input_def.name:
+                    logger.warning("The input node name is empty, ignore it. node name: %s.", node_name)
+                    continue
+
                 edge_type = EdgeTypeEnum.DATA.value
                 if input_def.type == "CONTROL_EDGE":
                     edge_type = EdgeTypeEnum.CONTROL.value

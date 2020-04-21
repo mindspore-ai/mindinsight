@@ -59,7 +59,7 @@ class MSDataLoader:
         self._latest_summary_filename = ''
         self._latest_summary_file_size = 0
         self._summary_file_handler = None
-        self._latest_pb_file_mtime = 0
+        self._pb_parser = _PbParser(summary_dir)
 
     def get_events_data(self):
         """Return events data read from log file."""
@@ -347,14 +347,58 @@ class MSDataLoader:
             list[str], filename list.
         """
         pb_filenames = self._filter_pb_files(filenames)
-        pb_filenames = sorted(pb_filenames, key=lambda file: FileHandler.file_stat(
-            FileHandler.join(self._summary_dir, file)).mtime)
+        pb_filenames = self._pb_parser.sort_pb_files(pb_filenames)
         for filename in pb_filenames:
-            mtime = FileHandler.file_stat(FileHandler.join(self._summary_dir, filename)).mtime
-            if mtime <= self._latest_pb_file_mtime:
+            tensor_event = self._pb_parser.parse_pb_file(filename)
+            if tensor_event is None:
                 continue
-            self._latest_pb_file_mtime = mtime
-            self._parse_pb_file(filename)
+            self._events_data.add_tensor_event(tensor_event)
+
+
+class _PbParser:
+    """This class is used to parse pb file."""
+
+    def __init__(self, summary_dir):
+        self._latest_filename = ''
+        self._latest_mtime = 0
+        self._summary_dir = summary_dir
+
+    def parse_pb_file(self, filename):
+        """
+        Parse single pb file.
+
+        Args:
+            filename (str): The file path of pb file.
+        Returns:
+            TensorEvent, if load pb file and build graph success, will return tensor event, else return None.
+        """
+        if not self._is_parse_pb_file(filename):
+            return None
+
+        try:
+            tensor_event = self._parse_pb_file(filename)
+            return tensor_event
+        except UnknownError:
+            # Parse pb file failed, so return None.
+            return None
+
+    def sort_pb_files(self, filenames):
+        """Sort by creating time increments and filenames increments."""
+        filenames = sorted(filenames, key=lambda file: (
+            FileHandler.file_stat(FileHandler.join(self._summary_dir, file)).mtime, file))
+        return filenames
+
+    def _is_parse_pb_file(self, filename):
+        """Determines whether the file should be loaded。"""
+        mtime = FileHandler.file_stat(FileHandler.join(self._summary_dir, filename)).mtime
+
+        if mtime < self._latest_mtime or \
+                (mtime == self._latest_mtime and filename <= self._latest_filename):
+            return False
+
+        self._latest_mtime = mtime
+        self._latest_filename = filename
+        return True
 
     def _parse_pb_file(self, filename):
         """
@@ -362,6 +406,9 @@ class MSDataLoader:
 
         Args:
             filename (str): The file path of pb file.
+
+        Returns:
+            TensorEvent, if load pb file and build graph success, will return tensor event, else return None.
         """
         file_path = FileHandler.join(self._summary_dir, filename)
         logger.info("Start to load graph from pb file, file path: %s.", file_path)
@@ -371,13 +418,24 @@ class MSDataLoader:
             model_proto.ParseFromString(filehandler.read())
         except ParseError:
             logger.warning("The given file is not a valid pb file, file path: %s.", file_path)
-            return
+            return None
 
         graph = MSGraph()
-        graph.build_graph(model_proto.graph)
+
+        try:
+            graph.build_graph(model_proto.graph)
+        except Exception as ex:
+            # Normally, there are no exceptions, and it is only possible for users on the MindSpore side
+            # to dump other non-default graphs.
+            logger.error("Build graph failed, file path: %s.", file_path)
+            logger.exception(ex)
+            raise UnknownError(str(ex))
+
         tensor_event = TensorEvent(wall_time=FileHandler.file_stat(file_path),
                                    step=0,
                                    tag=filename,
                                    plugin_name=PluginNameEnum.GRAPH.value,
                                    value=graph)
-        self._events_data.add_tensor_event(tensor_event)
+
+        logger.info("Build graph success, file path: %s.", file_path)
+        return tensor_event
