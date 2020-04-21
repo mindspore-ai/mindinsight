@@ -82,7 +82,7 @@ class TestMsDataLoader:
         ms_loader = MSDataLoader(summary_dir)
         ms_loader._latest_summary_filename = 'summary.00'
         ms_loader.load()
-        assert ms_loader._latest_summary_filename == 'summary.01'
+        shutil.rmtree(summary_dir)
         assert ms_loader._latest_summary_file_size == RECORD_LEN
         tag = ms_loader.get_events_data().list_tags_by_plugin('scalar')
         tensors = ms_loader.get_events_data().tensors(tag[0])

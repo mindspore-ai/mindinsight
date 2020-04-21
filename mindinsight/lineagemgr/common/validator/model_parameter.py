@@ -129,6 +129,7 @@ class SearchModelConditionParameter(Schema):
     offset = fields.Int(validate=lambda n: 0 <= n <= 100000)
     sorted_name = fields.Str()
     sorted_type = fields.Str(allow_none=True)
+    dataset_mark = fields.Dict()
     lineage_type = fields.Dict()
 
     @staticmethod
@@ -137,7 +138,7 @@ class SearchModelConditionParameter(Schema):
         for key, value in data.items():
             if key == "in":
                 if not isinstance(value, (list, tuple)):
-                    raise ValidationError("In operation's value must be list or tuple.")
+                    raise ValidationError("The value of `in` operation must be list or tuple.")
             else:
                 if not isinstance(value, value_type):
                     raise ValidationError("Wrong value type.")
@@ -153,11 +154,19 @@ class SearchModelConditionParameter(Schema):
         for key, value in data.items():
             if key == "in":
                 if not isinstance(value, (list, tuple)):
-                    raise ValidationError("In operation's value must be list or tuple.")
+                    raise ValidationError("The value of `in` operation must be list or tuple.")
             else:
                 if isinstance(value, bool) or \
                         (not isinstance(value, float) and not isinstance(value, int)):
                     raise ValidationError("Wrong value type.")
+
+    @staticmethod
+    def check_operation(data):
+        """Check input param's compare operation."""
+        if not set(data.keys()).issubset(['in', 'eq']):
+            raise ValidationError("Its operation should be `in` or `eq`.")
+        if len(data.keys()) > 1:
+            raise ValidationError("More than one operation.")
 
     @validates("loss")
     def check_loss(self, data):
@@ -172,11 +181,13 @@ class SearchModelConditionParameter(Schema):
     @validates("loss_function")
     def check_loss_function(self, data):
         """Check loss function."""
+        SearchModelConditionParameter.check_operation(data)
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("train_dataset_path")
     def check_train_dataset_path(self, data):
         """Check train dataset path."""
+        SearchModelConditionParameter.check_operation(data)
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("train_dataset_count")
@@ -187,6 +198,7 @@ class SearchModelConditionParameter(Schema):
     @validates("test_dataset_path")
     def check_test_dataset_path(self, data):
         """Check test dataset path."""
+        SearchModelConditionParameter.check_operation(data)
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("test_dataset_count")
@@ -197,11 +209,13 @@ class SearchModelConditionParameter(Schema):
     @validates("network")
     def check_network(self, data):
         """Check network."""
+        SearchModelConditionParameter.check_operation(data)
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("optimizer")
     def check_optimizer(self, data):
         """Check optimizer."""
+        SearchModelConditionParameter.check_operation(data)
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("epoch")
@@ -222,11 +236,19 @@ class SearchModelConditionParameter(Schema):
     @validates("summary_dir")
     def check_summary_dir(self, data):
         """Check summary dir."""
+        SearchModelConditionParameter.check_operation(data)
+        SearchModelConditionParameter.check_dict_value_type(data, str)
+
+    @validates("dataset_mark")
+    def check_dataset_mark(self, data):
+        """Check dataset mark."""
+        SearchModelConditionParameter.check_operation(data)
         SearchModelConditionParameter.check_dict_value_type(data, str)
 
     @validates("lineage_type")
     def check_lineage_type(self, data):
         """Check lineage type."""
+        SearchModelConditionParameter.check_operation(data)
         SearchModelConditionParameter.check_dict_value_type(data, str)
         recv_types = []
         for key, value in data.items():
@@ -243,7 +265,7 @@ class SearchModelConditionParameter(Schema):
     def check_comparision(self, data, **kwargs):
         """Check comparision for all parameters in schema."""
         for attr, condition in data.items():
-            if attr in ["limit", "offset", "sorted_name", "sorted_type"]:
+            if attr in ["limit", "offset", "sorted_name", "sorted_type", 'lineage_type']:
                 continue
 
             if not isinstance(attr, str):
@@ -255,13 +277,6 @@ class SearchModelConditionParameter(Schema):
             if not isinstance(condition, dict):
                 raise LineageParamTypeError("The search_condition element {} should be dict."
                                             .format(attr))
-
-            if attr in ["summary_dir", "lineage_type"]:
-                if not set(condition.keys()).issubset(['in', 'eq']):
-                    raise LineageParamValueError("Invalid operation of %s." % attr)
-                if len(condition.keys()) > 1:
-                    raise LineageParamValueError("More than one operation of %s." % attr)
-                continue
 
             for key in condition.keys():
                 if key not in ["eq", "lt", "gt", "le", "ge", "in"]:

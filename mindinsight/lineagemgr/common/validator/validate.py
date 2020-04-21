@@ -63,6 +63,7 @@ SEARCH_MODEL_ERROR_MAPPING = {
     'model_size': LineageErrors.LINEAGE_PARAM_MODEL_SIZE_ERROR,
     'sorted_name': LineageErrors.LINEAGE_PARAM_SORTED_NAME_ERROR,
     'sorted_type': LineageErrors.LINEAGE_PARAM_SORTED_TYPE_ERROR,
+    'dataset_mark': LineageErrors.LINEAGE_PARAM_DATASET_MARK_ERROR,
     'lineage_type': LineageErrors.LINEAGE_PARAM_LINEAGE_TYPE_ERROR
 }
 
@@ -97,6 +98,7 @@ SEARCH_MODEL_ERROR_MSG_MAPPING = {
     'model_size': LineageErrorMsg.LINEAGE_MODEL_SIZE_ERROR.value,
     'sorted_name': LineageErrorMsg.LINEAGE_PARAM_SORTED_NAME_ERROR.value,
     'sorted_type': LineageErrorMsg.LINEAGE_PARAM_SORTED_TYPE_ERROR.value,
+    'dataset_mark': LineageErrorMsg.LINEAGE_PARAM_DATASET_MARK_ERROR.value,
     'lineage_type': LineageErrorMsg.LINEAGE_PARAM_LINEAGE_TYPE_ERROR.value
 }
 
@@ -238,10 +240,14 @@ def validate_search_model_condition(schema, data):
         MindInsightException: If the parameters are invalid.
     """
     error = schema().validate(data)
-    for error_key in error.keys():
+    for (error_key, error_msgs) in error.items():
         if error_key in SEARCH_MODEL_ERROR_MAPPING.keys():
             error_code = SEARCH_MODEL_ERROR_MAPPING.get(error_key)
             error_msg = SEARCH_MODEL_ERROR_MSG_MAPPING.get(error_key)
+            for err_msg in error_msgs:
+                if 'operation' in err_msg.lower():
+                    error_msg = f'The parameter {error_key} is invalid. {err_msg}'
+                    break
             log.error(error_msg)
             raise MindInsightException(error=error_code, message=error_msg)
 
@@ -417,7 +423,7 @@ def validate_user_defined_info(user_defined_info):
                         "Only str is permitted now.".format(type(key))
             log.error(error_msg)
             raise LineageParamTypeError(error_msg)
-        if not isinstance(key, (int, str, float)):
+        if not isinstance(value, (int, str, float)):
             error_msg = "Dict value type {} is not supported in user defined info." \
                         "Only str, int and float are permitted now.".format(type(value))
             log.error(error_msg)

@@ -37,8 +37,7 @@ FIELD_MAPPING = {
     "batch_size": Field('hyper_parameters', 'batch_size'),
     "loss": Field('algorithm', 'loss'),
     "model_size": Field('model', 'size'),
-    "dataset_mark": Field('dataset_mark', None),
-    "lineage_type": Field(None, None)
+    "dataset_mark": Field('dataset_mark', None)
 }
 
 

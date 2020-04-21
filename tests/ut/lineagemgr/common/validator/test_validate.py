@@ -101,8 +101,7 @@ class TestValidateSearchModelCondition(TestCase):
             }
         }
         self._assert_raise_of_mindinsight_exception(
-            "The parameter learning_rate is invalid. It should be a dict and "
-            "the value should be a float or a integer",
+            "The value of `in` operation must be list or tuple.",
             condition
         )
 
@@ -136,8 +135,8 @@ class TestValidateSearchModelCondition(TestCase):
             }
         }
         self._assert_raise_of_mindinsight_exception(
-            "The parameter loss_function is invalid. It should be a dict and "
-            "the value should be a string",
+            "The parameter loss_function is invalid. "
+            "Its operation should be `in` or `eq`.",
             condition
         )
 
@@ -147,8 +146,7 @@ class TestValidateSearchModelCondition(TestCase):
             }
         }
         self._assert_raise_of_mindinsight_exception(
-            "The parameter train_dataset_count is invalid. It should be a dict "
-            "and the value should be a integer between 0",
+            "The value of `in` operation must be list or tuple.",
             condition
         )
 
@@ -161,8 +159,8 @@ class TestValidateSearchModelCondition(TestCase):
             }
         }
         self._assert_raise_of_mindinsight_exception(
-            "The parameter network is invalid. It should be a dict and "
-            "the value should be a string",
+            "The parameter network is invalid. "
+            "Its operation should be `in` or `eq`.",
             condition
         )
 

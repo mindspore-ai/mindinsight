@@ -95,14 +95,15 @@ def filter_summary_lineage(summary_base_dir, search_condition=None):
     Users can filter and sort all lineage information according to the search
     condition. The supported filter fields include `summary_dir`, `network`,
     etc. The filter conditions include `eq`, `lt`, `gt`, `le`, `ge` and `in`.
-    At the same time, the combined use of these fields and conditions is
-    supported. If you want to sort based on filter fields, the field of
-    `sorted_name` and `sorted_type` should be specified.
+    If the value type of filter condition is `str`, such as summary_dir and
+    lineage_type, then its key can only be `in` and `eq`. At the same time,
+    the combined use of these fields and conditions is supported. If you want
+    to sort based on filter fields, the field of `sorted_name` and `sorted_type`
+    should be specified.
 
     Users can use `lineage_type` to decide what kind of lineage information to
-    query. If the `lineage_type` is `dataset`, the query result is only the
-    lineage information related to data augmentation. If the `lineage_type` is
-    `model` or `None`, the query result is all lineage information.
+    query. If the `lineage_type` is not defined, the query result is all lineage
+    information.
 
     Users can paginate query result based on `offset` and `limit`. The `offset`
     refers to page number. The `limit` refers to the number in one page.
@@ -147,6 +148,15 @@ def filter_summary_lineage(summary_base_dir, search_condition=None):
 
             - dataset_mark (dict): The filter condition of dataset mark.
 
+            - lineage_type (dict): The filter condition of lineage type. It decides
+              what kind of lineage information to query. Its value can be `dataset`
+              or `model`, e.g., {'in': ['dataset', 'model']}, {'eq': 'model'}, etc.
+              If its values contain `dataset`, the query result will contain the
+              lineage information related to data augmentation. If its values contain
+              `model`, the query result will contain model lineage information.
+              If it is not defined or it is a dict like {'in': ['dataset', 'model']},
+              the query result is all lineage information.
+
             - offset (int): Page number, the value range is [0, 100000].
 
             - limit (int): The number in one page, the value range is [1, 100].
@@ -156,14 +166,8 @@ def filter_summary_lineage(summary_base_dir, search_condition=None):
             - sorted_type (str): Specify sort order. It can be `ascending` or
               `descending`.
 
-            - lineage_type (str): It decides what kind of lineage information to
-              query. It can be `dataset` or `model`. If it is `dataset`,
-              the query result is only the lineage information related to data
-              augmentation. If it is `model` or `None`, the query result is all
-              lineage information.
-
     Returns:
-        dict, all lineage information under summary base directory according to
+        dict, lineage information under summary base directory according to
         search condition.
 
     Raises:
@@ -196,7 +200,9 @@ def filter_summary_lineage(summary_base_dir, search_condition=None):
         >>>     'sorted_type': 'descending',
         >>>     'limit': 3,
         >>>     'offset': 0,
-        >>>     'lineage_type': 'model'
+        >>>     'lineage_type': {
+        >>>         'eq': 'model'
+        >>>     }
         >>> }
         >>> summary_lineage = filter_summary_lineage(summary_base_dir)
         >>> summary_lineage_filter = filter_summary_lineage(summary_base_dir, search_condition)
