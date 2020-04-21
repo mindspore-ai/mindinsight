@@ -30,7 +30,7 @@ build_ui() {
     npm config set unsafe-perm true
     npm config set user 0
 
-    npm install
+    npm install --loglevel=error
     npm run build
 
     if [ ! -f "dist/index.html" ]; then
