@@ -54,5 +54,6 @@ TRAIN_ROUTES = dict(
     graph_single_node='/v1/mindinsight/datavisual/graphs/single-node',
     image_metadata='/v1/mindinsight/datavisual/image/metadata',
     image_single_image='/v1/mindinsight/datavisual/image/single-image',
-    scalar_metadata='/v1/mindinsight/datavisual/scalar/metadata'
+    scalar_metadata='/v1/mindinsight/datavisual/scalar/metadata',
+    histograms='/v1/mindinsight/datavisual/histograms'
 )

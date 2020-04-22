@@ -26,6 +26,7 @@ from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
 from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
+from mindinsight.datavisual.processors.histogram_processor import HistogramProcessor
 
 from ....utils.tools import get_url
 from .conftest import TRAIN_ROUTES
@@ -432,3 +433,42 @@ class TestTrainVisual:
         assert response.status_code == 200
         results = response.get_json()
         assert results == test_name
+
+    def test_histograms_with_params_miss(self, client):
+        """Parsing missing params to get histogram data."""
+        params = dict()
+        url = get_url(TRAIN_ROUTES['histograms'], params)
+        response = client.get(url)
+        results = response.get_json()
+        assert response.status_code == 400
+        assert results['error_code'] == '50540003'
+        assert results['error_msg'] == "Param missing. 'train_id' is required."
+
+        train_id = "aa"
+        params = dict(train_id=train_id)
+        url = get_url(TRAIN_ROUTES['histograms'], params)
+        response = client.get(url)
+        results = response.get_json()
+        assert response.status_code == 400
+        assert results['error_code'] == '50540003'
+        assert results['error_msg'] == "Param missing. 'tag' is required."
+
+    @patch.object(HistogramProcessor, 'get_histograms')
+    def test_histograms_success(self, mock_histogram_processor, client):
+        """Parsing available params to get histogram data."""
+        test_train_id = "aa"
+        test_tag = "bb"
+        expect_resp = {
+            'histograms': [{'buckets': [[1, 2, 3]]}],
+            'train_id': test_train_id,
+            'tag': test_tag
+        }
+        get_histograms = Mock(return_value=expect_resp)
+        mock_histogram_processor.side_effect = get_histograms
+
+        params = dict(train_id=test_train_id, tag=test_tag)
+        url = get_url(TRAIN_ROUTES['histograms'], params)
+        response = client.get(url)
+        assert response.status_code == 200
+        results = response.get_json()
+        assert results == expect_resp
