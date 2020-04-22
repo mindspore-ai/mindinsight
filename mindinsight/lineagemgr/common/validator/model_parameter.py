@@ -123,6 +123,7 @@ class SearchModelConditionParameter(Schema):
     learning_rate = fields.Dict()
     epoch = fields.Dict()
     batch_size = fields.Dict()
+    device_num = fields.Dict()
     loss = fields.Dict()
     model_size = fields.Dict()
     limit = fields.Int(validate=lambda n: 0 < n <= 100)
@@ -226,6 +227,11 @@ class SearchModelConditionParameter(Schema):
     @validates("batch_size")
     def check_batch_size(self, data):
         """Check batch size."""
+        SearchModelConditionParameter.check_dict_value_type(data, int)
+
+    @validates("device_num")
+    def check_device_num(self, data):
+        """Check device num."""
         SearchModelConditionParameter.check_dict_value_type(data, int)
 
     @validates("model_size")

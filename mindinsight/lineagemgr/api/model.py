@@ -142,6 +142,8 @@ def filter_summary_lineage(summary_base_dir, search_condition=None):
 
             - batch_size (dict): The filter condition of batch size.
 
+            - device_num (dict): The filter condition of device num.
+
             - loss (dict): The filter condition of loss.
 
             - model_size (dict): The filter condition of model size.
