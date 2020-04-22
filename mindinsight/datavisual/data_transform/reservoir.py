@@ -156,8 +156,6 @@ class HistogramReservoir(Reservoir):
     Args:
         size (int): Container Size. If the size is 0, the container is not limited.
     """
-    def __init__(self, size):
-        super().__init__(size)
 
     def samples(self):
         """Return all stored samples."""
