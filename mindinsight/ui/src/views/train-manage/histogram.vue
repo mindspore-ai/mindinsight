@@ -90,6 +90,7 @@ limitations under the License.
             <div class="chars-container">
               <div class="char-item-content"
                    :id="sampleItem.domId"></div>
+              <div class="tag-title">{{sampleItem.tagName}}</div>
             </div>
           </div>
         </div>
@@ -213,6 +214,7 @@ export default {
       this.curPageArr.forEach((item) => {
         if (item.zr) {
           item.zr.off('mouseout', 'mousemove');
+          item.zr = null;
         }
       });
     }
@@ -354,6 +356,10 @@ export default {
       if (!noPageDataNumChange) {
         this.curPageArr.forEach((sampleItem) => {
           sampleItem.show = false;
+          if (sampleItem.zr) {
+            sampleItem.zr.off('mouseout', 'mousemove');
+            sampleItem.zr = null;
+          }
         });
       }
       // This interface is used to obtain the current page group and hide the current page group.
@@ -437,6 +443,12 @@ export default {
      * Clear data
      */
     clearAllData() {
+      this.originDataArr.forEach((item) => {
+        if (item.zr) {
+          item.zr.off('mouseout', 'mousemove');
+          item.zr = null;
+        }
+      });
       this.tagList = [];
       this.originDataArr = [];
       this.curFullTagDic = {};
@@ -631,117 +643,118 @@ export default {
       setTimeout(() => {
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
       }, 10);
-      if (sampleObject.zr) {
-        sampleObject.zr.off('mouseout', 'mousemove');
-      }
-      sampleObject.zr = sampleObject.charObj.getZr();
-      const p = Math.max(0, d3.precisionRound(0.01, 1.01) - 1);
-      const yValueFormat = d3.format('.' + p + 'e');
-      const chartData = sampleObject.charData.oriData.chartData;
-      const rawData = charOption.seriesData;
-      /**
-       * get convert point
-       * @param {Array} pt value
-       * @return {Array}
-       */
-      function getCoord(pt) {
-        return sampleObject.charObj.convertToPixel('grid', pt);
-      }
-      /**
-       * find nearest value
-       * @param {Array} eventPoint value
-       * @return {Object}
-       */
-      function findNearestValue(eventPoint) {
-        if (
-          !eventPoint ||
-          !eventPoint.length ||
-          !sampleObject ||
-          !sampleObject.charObj
-        ) {
-          return;
+      if (!sampleObject.zr) {
+        sampleObject.zr = sampleObject.charObj.getZr();
+        const p = Math.max(0, d3.precisionRound(0.01, 1.01) - 1);
+        const yValueFormat = d3.format('.' + p + 'e');
+        const chartData = sampleObject.charData.oriData.chartData;
+        const rawData = charOption.seriesData;
+        /**
+         * get convert point
+         * @param {Array} pt value
+         * @return {Array}
+         */
+        function getCoord(pt) {
+          return sampleObject.charObj.convertToPixel('grid', pt);
         }
-        const value = sampleObject.charObj.convertFromPixel('grid', eventPoint);
-        let binIndex = null;
-        let yIndex = null;
-        let nearestX = Infinity;
-        let nearestY = -Infinity;
-        let nearestYData = Infinity;
-        if (!sampleObject.charData.oriData || !value || !value.length) {
-          return;
-        }
-        const gridRect = sampleObject.charObj
-            .getModel()
-            .getComponent('grid', 0)
-            .coordinateSystem.getRect();
-        const gridRectY = gridRect.y - 10;
-        const x = value[0];
-        chartData.forEach((dataItem, i) => {
-          let distY;
-          let yAxis;
-          for (let k = 0; k < dataItem.items.length - 1; k++) {
-            const item = dataItem.items[k];
-            const itemNext = dataItem.items[k + 1];
-            const nextX = itemNext[2];
-            const nextZ = itemNext[3];
-            if (item.length >= 4) {
-              if (item[2] < x && nextX >= x) {
-                const proportionX = (x - item[2]) / (nextX - item[2]);
-                yAxis = (nextZ - item[3]) * proportionX + item[3];
-                distY = Math.abs(value[1] - yAxis);
-                break;
+        /**
+         * find nearest value
+         * @param {Array} eventPoint value
+         * @return {Object}
+         */
+        function findNearestValue(eventPoint) {
+          if (
+            !eventPoint ||
+            !eventPoint.length ||
+            !sampleObject ||
+            !sampleObject.charObj
+          ) {
+            return;
+          }
+          const value = sampleObject.charObj.convertFromPixel(
+              'grid',
+              eventPoint,
+          );
+          let binIndex = null;
+          let yIndex = null;
+          let nearestX = Infinity;
+          let nearestY = -Infinity;
+          let nearestYData = Infinity;
+          if (!sampleObject.charData.oriData || !value || !value.length) {
+            return;
+          }
+          const gridRect = sampleObject.charObj
+              .getModel()
+              .getComponent('grid', 0)
+              .coordinateSystem.getRect();
+          const gridRectY = gridRect.y - 10;
+          const x = value[0];
+          chartData.forEach((dataItem, i) => {
+            let distY;
+            let yAxis;
+            for (let k = 0; k < dataItem.items.length - 1; k++) {
+              const item = dataItem.items[k];
+              const itemNext = dataItem.items[k + 1];
+              const nextX = itemNext[2];
+              const nextZ = itemNext[3];
+              if (item.length >= 4) {
+                if (item[2] < x && nextX >= x) {
+                  const proportionX = (x - item[2]) / (nextX - item[2]);
+                  yAxis = (nextZ - item[3]) * proportionX + item[3];
+                  distY = Math.abs(value[1] - yAxis);
+                  break;
+                }
               }
             }
-          }
-          if (curViewName === 0 && distY < nearestYData) {
-            nearestYData = distY;
-            yIndex = i;
-          } else if (curViewName === 1) {
-            const pt = getCoord([x, dataItem.step]);
-            const ptStep = pt[1];
-            pt[1] -=
-              ((yAxis - charOption.minZ) /
-                (charOption.maxZ - charOption.minZ)) *
-              gridRectY;
-            if (
-              eventPoint[1] > pt[1] &&
-              eventPoint[1] < ptStep &&
-              ptStep > nearestY
-            ) {
-              nearestY = ptStep;
+            if (curViewName === 0 && distY < nearestYData) {
+              nearestYData = distY;
               yIndex = i;
+            } else if (curViewName === 1) {
+              const pt = getCoord([x, dataItem.step]);
+              const ptStep = pt[1];
+              pt[1] -=
+                ((yAxis - charOption.minZ) /
+                  (charOption.maxZ - charOption.minZ)) *
+                gridRectY;
+              if (
+                eventPoint[1] > pt[1] &&
+                eventPoint[1] < ptStep &&
+                ptStep > nearestY
+              ) {
+                nearestY = ptStep;
+                yIndex = i;
+              }
             }
+          });
+          if (yIndex === null && curViewName === 1) {
+            chartData.forEach((item, index) => {
+              if (item.step > value[1]) {
+                yIndex = yIndex === null ? index : Math.min(yIndex, index);
+              }
+            });
           }
-        });
-        if (yIndex === null && curViewName === 1) {
-          chartData.forEach((item, index) => {
-            if (item.step > value[1]) {
-              yIndex = yIndex === null ? index : Math.min(yIndex, index);
-            }
-          });
+          if (yIndex !== null) {
+            const yData = chartData[yIndex].items;
+            yData.forEach((ele, index) => {
+              const distX = Math.abs(ele[2] - value[0]);
+              if (distX < nearestX) {
+                nearestX = distX;
+                binIndex = index;
+              }
+            });
+            binIndex =
+              binIndex === 0
+                ? 1
+                : binIndex === yData.length - 1
+                ? yData.length - 2
+                : binIndex;
+          }
+          return {
+            binIndex,
+            yIndex,
+          };
         }
-        if (yIndex !== null) {
-          const yData = chartData[yIndex].items;
-          yData.forEach((ele, index) => {
-            const distX = Math.abs(ele[2] - value[0]);
-            if (distX < nearestX) {
-              nearestX = distX;
-              binIndex = index;
-            }
-          });
-          binIndex =
-            binIndex === 0
-              ? 1
-              : binIndex === yData.length - 1
-              ? yData.length - 2
-              : binIndex;
-        }
-        return {
-          binIndex,
-          yIndex,
-        };
-      }
-      if (sampleObject.zr) {
+        sampleObject.zr.off('mouseout', 'mousemove');
         sampleObject.zr.on('mouseout', (e) => {
           if (!rawData || !rawData.length) {
             return;
@@ -933,7 +946,6 @@ export default {
             this.zrDrawElement.tooltipX = new echarts.graphic.Text({
               position: [itemX, gridRect.y + gridRect.height],
               style: {
-                fontFamily: 'Merriweather Sans',
                 text: Math.round(x * 1000) / 1000,
                 textFill: '#fff',
                 textAlign: 'center',
@@ -947,14 +959,17 @@ export default {
             });
             sampleObject.zr.add(this.zrDrawElement.tooltipX);
             if (curViewName === 1 && linePoints && linePoints.length) {
+              let text = '';
+              if (yIndex) {
+                text = this.yAxisFormatter(sampleIndex, yIndex);
+              }
               this.zrDrawElement.tooltipY = new echarts.graphic.Text({
                 position: [
                   gridRect.x + gridRect.width,
                   linePoints[linePoints.length - 1][1],
                 ],
                 style: {
-                  fontFamily: 'Merriweather Sans',
-                  text: hoveredItem.step,
+                  text: text,
                   textFill: '#fff',
                   textVerticalAlign: 'middle',
                   fontSize: 12,
@@ -1067,7 +1082,6 @@ export default {
     },
     formatDataToChar(dataIndex) {
       const dataItem = this.originDataArr[dataIndex].charData.oriData;
-      const title = this.originDataArr[dataIndex].tagName;
       const seriesData = [];
       let maxStep = -Infinity;
       let minStep = Infinity;
@@ -1101,7 +1115,6 @@ export default {
         });
       }
       return {
-        title,
         seriesData,
         maxStep,
         minStep,
@@ -1119,20 +1132,10 @@ export default {
       const fullScreenFun = this.toggleFullScreen;
       const curAxisName = this.curAxisName;
       const option = {
-        textStyle: {fontFamily: 'Merriweather Sans'},
-        title: {
-          text: charOption.title || '',
-          textStyle: {
-            fontSize: '16',
-            fontWeight: '600',
-          },
-          bottom: 6,
-          left: 'center',
-        },
         grid: {
           left: 15,
           top: 60,
-          right: 40,
+          right: 50,
           bottom: 60,
         },
         xAxis: {
@@ -1216,24 +1219,7 @@ export default {
         option.yAxis.inverse = true;
         const that = this;
         option.yAxis.axisLabel.formatter = function(value) {
-          let data = '';
-          const filter = sampleObject.charData.oriData.chartData.filter(
-              (k) => k.step === value,
-          );
-          if (filter.length) {
-            if (curAxisName === 2) {
-              data = sampleObject.fullScreen
-                ? that.dealrelativeTime(
-                    new Date(filter[0].wall_time).toString(),
-                )
-                : [];
-            } else if (curAxisName === 1) {
-              data = (filter[0].relative_time / 1000).toFixed(3);
-            } else {
-              data = filter[0].step;
-            }
-          }
-          return data;
+          return that.yAxisFormatter(sampleIndex, value);
         };
         option.visualMap = {
           type: 'continuous',
@@ -1265,6 +1251,25 @@ export default {
         });
       }
       return option;
+    },
+    yAxisFormatter(sampleIndex, value) {
+      const sampleObject = this.originDataArr[sampleIndex];
+      let data = '';
+      const filter = sampleObject.charData.oriData.chartData.filter(
+          (k) => k.step === value,
+      );
+      if (filter.length) {
+        if (this.curAxisName === 2) {
+          data = sampleObject.fullScreen
+            ? this.dealrelativeTime(new Date(filter[0].wall_time).toString())
+            : [];
+        } else if (this.curAxisName === 1) {
+          data = `${(filter[0].relative_time / 3600).toFixed(3)}h`;
+        } else {
+          data = filter[0].step;
+        }
+      }
+      return data;
     },
     formatColor(str) {
       if (!str) {
@@ -1331,6 +1336,7 @@ export default {
       if (!sampleObject) {
         return;
       }
+      this.removeTooltip(sampleIndex);
       sampleObject.fullScreen = !sampleObject.fullScreen;
       if (sampleObject.fullScreen) {
         if (this.curAxisName === 2) {
@@ -1425,7 +1431,13 @@ export default {
           position: relative;
           .char-item-content {
             width: 100%;
-            height: 100%;
+            height: calc(100% - 26px);
+          }
+          .tag-title {
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
           }
         }
       }

@@ -903,7 +903,7 @@ export default {
     overflow: hidden;
 
     .top-area {
-      margin: 24px 32px 16px;
+      margin: 24px 32px 12px;
       display: flex;
       justify-content: flex-end;
       .checkbox {
@@ -935,6 +935,7 @@ export default {
       }
       .btns {
         margin-left: 20px;
+        padding-top: 12px;
         .custom-btn {
           border: 1px solid #00a5a7;
           border-radius: 2px;
@@ -953,7 +954,7 @@ export default {
     .table-container {
       background-color: white;
       height: calc(60% - 74px);
-      padding: 12px 32px;
+      padding: 2px 32px;
       position: relative;
       .custom-label {
         max-width: calc(100% - 25px);
