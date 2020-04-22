@@ -35,6 +35,7 @@ FIELD_MAPPING = {
     "learning_rate": Field('hyper_parameters', 'learning_rate'),
     "epoch": Field('hyper_parameters', 'epoch'),
     "batch_size": Field('hyper_parameters', 'batch_size'),
+    "device_num": Field('hyper_parameters', 'device_num'),
     "loss": Field('algorithm', 'loss'),
     "model_size": Field('model', 'size'),
     "dataset_mark": Field('dataset_mark', None),
