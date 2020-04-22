@@ -55,8 +55,11 @@ limitations under the License.
            @click="viewMoreHistogram">
         <div class="cl-dashboard-title">{{$t("histogram.titleText")}}</div>
         <div class="cl-module">
-          <div id="distribution-chart"
-               v-show="!!histogramTag && !wrongPlugin"></div>
+          <div id="histogram-char-container"
+               v-show="!!histogramTag && !wrongPlugin">
+            <div id="distribution-chart"></div>
+            <div class="tag-text">{{histogramTag}}</div>
+          </div>
           <div class="no-data-img"
                key="no-chart-data"
                v-show="!histogramTag || wrongPlugin">
@@ -670,7 +673,7 @@ export default {
         grid: {
           top: 20,
           bottom: 66,
-          left: 66,
+          left: 60,
           right: 60,
         },
         xAxis: [
@@ -837,7 +840,6 @@ export default {
     },
     formatDataToChar() {
       const dataItem = this.histogramData;
-      const title = dataItem.tag;
       const seriesData = [];
       let maxStep = -Infinity;
       let minStep = Infinity;
@@ -862,7 +864,6 @@ export default {
         });
       }
       return {
-        title,
         seriesData,
         maxStep,
         minStep,
@@ -874,13 +875,6 @@ export default {
     },
     formatCharOption(charOption) {
       const option = {
-        textStyle: {fontFamily: 'Merriweather Sans'},
-        title: {
-          text: charOption.title || '',
-          textStyle: {fontSize: '12', fontWeight: '400'},
-          bottom: 6,
-          left: 'center',
-        },
         grid: {
           left: 15,
           top: 126,
@@ -1840,9 +1834,19 @@ export default {
     }
   }
   #distribution-chart {
-    height: 100%;
+    height: calc(100% - 19px);
     canvas {
       cursor: pointer;
+    }
+  }
+  .histogram-char-container {
+    height: 100%;
+    width: 100%;
+    cursor: pointer;
+    .tag-text {
+      font-size: 12px;
+      font-weight: 400;
+      text-align: center;
     }
   }
 
