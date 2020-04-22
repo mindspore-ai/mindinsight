@@ -174,6 +174,10 @@ class HistogramReservoir(Reservoir):
                 max_count = max(histogram.count, max_count)
                 visual_range.update(histogram.max, histogram.min)
 
+            if visual_range.max == visual_range.min and not max_count:
+                logger.warning("Max equals to min, however, count is zero. Please check mindspore "
+                               "does write max and min values to histogram summary file.")
+
             bins = calc_histogram_bins(max_count)
 
             # update visual range

@@ -120,6 +120,13 @@ class HistogramContainer:
 
         It's caller's duty to ensure input is valid.
 
+        Why we need visual range for histograms? Miss aligned buckets between steps might miss-lead users about the
+        trend of a tensor. Because for given tensor, if you have thinner buckets, count of every bucket might get
+        low, however, if you have thicker buckets, count of every bucket might get high.  If there are the above two
+        kinds of histogram in one graph, user might think the histogram with thicker buckets has more values. This is
+        miss-leading. So we need to unify buckets across steps. Visual range for histogram is a technology for unifying
+        buckets.
+
         Args:
             max_val (float): Max value for visual histogram.
             min_val (float): Min value for visual histogram.
