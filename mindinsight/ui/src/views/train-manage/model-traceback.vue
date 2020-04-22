@@ -82,7 +82,7 @@ limitations under the License.
                            :label="table.columnOptions[key].label"
                            :fixed="table.columnOptions[key].label===text?true:false"
                            show-overflow-tooltip
-                           min-width="180"
+                           min-width="150"
                            sortable="custom">
             <template slot="header"
                       slot-scope="scope">
@@ -246,6 +246,10 @@ export default {
           },
           batch_size: {
             label: 'steps',
+            required: false,
+          },
+          device_num: {
+            label: this.$t('modelTraceback.deviceNum'),
             required: false,
           },
           model_size: {

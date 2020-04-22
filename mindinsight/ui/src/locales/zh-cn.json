@@ -48,7 +48,8 @@
     "noDataFound":"暂无满足筛选条件的数据",
     "noDataTips":"请点击“显示全量数据”按钮查看全量数据",
     "userDefined": "自定义数据",
-    "metric": "度量指标"
+    "metric": "度量指标",
+    "deviceNum": "device数目"
   },
   "dataTraceback": {
     "details": "详情",
