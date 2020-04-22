@@ -807,7 +807,7 @@ export default {
       dataItem.histograms.forEach((histogram, index) => {
         const chartItem = {
           wall_time: histogram.wall_time,
-          step: histogram.step,
+          step: `${histogram.step}`,
           items: [],
         };
         const chartArr = [];
@@ -817,7 +817,7 @@ export default {
           if (!filter.length) {
             chartArr.push([
               histogram.wall_time,
-              histogram.step,
+              `${histogram.step}`,
               xData,
               Math.floor(bucket[2]),
             ]);
@@ -828,9 +828,9 @@ export default {
           const minItem = chartArr[0][2];
           const maxItem = chartArr[chartArr.length - 1][2];
           const chartAll = [
-            [histogram.wall_time, histogram.step, minItem, 0],
+            [histogram.wall_time, `${histogram.step}`, minItem, 0],
           ].concat(chartArr, [
-            [histogram.wall_time, histogram.step, maxItem, 0],
+            [histogram.wall_time, `${histogram.step}`, maxItem, 0],
           ]);
           chartItem.items = chartAll;
           chartData.push(chartItem);
@@ -847,9 +847,11 @@ export default {
       let minX = Infinity;
       let maxZ = -Infinity;
       let minZ = Infinity;
+      const gridData = [];
       if (dataItem.chartData && dataItem.chartData.length) {
         dataItem.chartData.forEach((histogram) => {
           const seriesItem = [];
+          gridData.push(histogram.step);
           maxStep = Math.max(maxStep, histogram.step);
           minStep = Math.min(minStep, histogram.step);
           histogram.items.sort((a, b) => a[0] - b[0]);
@@ -871,17 +873,35 @@ export default {
         minX,
         maxZ,
         minZ,
+        gridData,
       };
     },
     formatCharOption(charOption) {
+      const colorMin = '#346E69';
+      const colorMax = '#EBFFFD';
+      const colorArr = this.getGrientColor(
+          colorMin,
+          colorMax,
+          charOption.seriesData.length,
+      );
+      const seriesData = [];
+      charOption.seriesData.forEach((item, dataIndex) => {
+        const dataItem = {
+          name: item[1],
+          value: item,
+          itemStyle: {
+            color: colorArr[dataIndex],
+          },
+        };
+        seriesData.push(dataItem);
+      });
       const option = {
         grid: {
           left: 15,
-          top: 126,
+          top: 120,
           right: 40,
-          bottom: 60,
+          bottom: 43,
         },
-        color: ['#346E69'],
         xAxis: {
           max: charOption.maxX,
           min: charOption.minX,
@@ -895,6 +915,7 @@ export default {
           splitLine: {show: false},
         },
         yAxis: {
+          type: 'category',
           position: 'right',
           axisLine: {onZero: false, show: false},
           splitLine: {show: true},
@@ -902,17 +923,6 @@ export default {
           axisTick: {show: false},
           axisLabel: {
             fontSize: '11',
-          },
-        },
-        visualMap: {
-          type: 'continuous',
-          show: false,
-          min: charOption.minStep,
-          max: charOption.maxStep,
-          dimension: 1,
-          range: [charOption.minStep, charOption.maxStep],
-          inRange: {
-            colorLightness: [0.3, 0.9],
           },
         },
         series: [
@@ -939,11 +949,71 @@ export default {
                 }),
               };
             },
-            data: charOption.seriesData,
+            data: seriesData,
           },
         ],
       };
       return option;
+    },
+    formatColor(str) {
+      if (!str) {
+        return;
+      }
+      const colorReg = /^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+      let colorStr = str.toLowerCase().slice(1);
+      if (colorReg.test(colorStr)) {
+        let colorStrNew = '';
+        if (colorStr.length === 3) {
+          for (let i = 0; i < 3; i++) {
+            colorStrNew += colorStrNew
+                .slice(i, i + 1)
+                .concat(colorStrNew.slice(i, i + 1));
+          }
+          colorStr = colorStrNew;
+        }
+        const colorFormat = [];
+        for (let i = 0; i < 6; i += 2) {
+          colorFormat.push(parseInt(`0x${colorStr.slice(i, i + 2)}`));
+        }
+        return colorFormat;
+      } else {
+        return colorStr;
+      }
+    },
+    formatColorToHex(rgb) {
+      const regRgb = /^(rgb|RGB)/g;
+      if (regRgb.test(rgb)) {
+        const colorSplit = rgb.replace(/(?:(|)|rgb|RGB)*/g, '').split(',');
+        let hexStr = '';
+        for (let i = 0; i < colorSplit.length; i++) {
+          let hexItem = Number(colorSplit[i]).toString(16);
+          hexItem = hexItem < 10 ? `0${hexItem}` : hexItem;
+          if (hexItem === '0') {
+            hexItem += hexItem;
+          }
+          hexStr += hexItem;
+        }
+        if (hexStr.length !== 6) {
+          hexStr = rgb;
+        }
+        return hexStr;
+      }
+    },
+    getGrientColor(startColor, endColor, step) {
+      const startRgb = this.formatColor(startColor);
+      const endRgb = this.formatColor(endColor);
+      const gapRgbR = (endRgb[0] - startRgb[0]) / step;
+      const gapRgbG = (endRgb[1] - startRgb[1]) / step;
+      const gapRgbB = (endRgb[2] - startRgb[2]) / step;
+      const colorResult = [];
+      for (let i = 0; i < step; i++) {
+        const sR = parseInt(gapRgbR * i + startRgb[0]);
+        const sG = parseInt(gapRgbG * i + startRgb[1]);
+        const sB = parseInt(gapRgbB * i + startRgb[2]);
+        const hex = this.formatColorToHex(`rgb(${sR},${sG},${sB})`);
+        colorResult.push(hex);
+      }
+      return colorResult;
     },
     /**
      * update sample data
