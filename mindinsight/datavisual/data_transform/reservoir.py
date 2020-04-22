@@ -16,10 +16,11 @@
 
 import random
 import threading
-import math
 
+from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.datavisual.utils.utils import calc_histogram_bins
 
 
 class Reservoir:
@@ -173,38 +174,19 @@ class HistogramReservoir(Reservoir):
                 max_count = max(histogram.count, max_count)
                 visual_range.update(histogram.max, histogram.min)
 
-            bins = self._calc_bins(max_count)
+            bins = calc_histogram_bins(max_count)
 
             # update visual range
+            logger.info("Visual histogram: min %s, max %s, bins %s, max_count %s.",
+                        visual_range.min,
+                        visual_range.max,
+                        bins,
+                        max_count)
             for sample in self._samples:
                 histogram = sample.value
                 histogram.set_visual_range(visual_range.max, visual_range.min, bins)
 
             return list(self._samples)
-
-    def _calc_bins(self, count):
-        """
-        Calculates experience-based optimal bins number.
-
-        To suppress re-sample bias, there should be enough number in each bin. So we calc bin numbers according to
-        count. For very small count(1 - 10), we assign carefully chosen number. For large count, we tried to make
-        sure there are 9-10 numbers in each bucket on average. Too many bins will also distract users, so we set max
-        number of bins to 30.
-        """
-        number_per_bucket = 10
-        max_bins = 30
-
-        if not count:
-            return 1
-        if count <= 5:
-            return 2
-        if count <= 10:
-            return 3
-        if count <= 280:
-            # note that math.ceil(281/10) + 1 = 30
-            return math.ceil(count / number_per_bucket) + 1
-
-        return max_bins
 
 
 class ReservoirFactory:
