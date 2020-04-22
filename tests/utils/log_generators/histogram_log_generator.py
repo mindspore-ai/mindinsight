@@ -62,6 +62,9 @@ class HistogramLogGenerator(LogGenerator):
             bucket.width = width
             bucket.count = count
 
+        value.histogram.min = values.get("min", -1)
+        value.histogram.max = values.get("max", -1)
+
         return histogram_event
 
     def generate_log(self, file_path, steps_list, tag_name):
@@ -91,6 +94,8 @@ class HistogramLogGenerator(LogGenerator):
             buckets = []
             leftmost = list(np.random.randn(11))
             leftmost.sort()
+            min_val = leftmost[0]
+            max_val = leftmost[-1]
             for i in range(10):
                 left = leftmost[i]
                 width = leftmost[i+1] - left
@@ -98,7 +103,7 @@ class HistogramLogGenerator(LogGenerator):
                 bucket = [left, width, count]
                 buckets.append(bucket)
 
-            histogram.update({'buckets': buckets})
+            histogram.update({'buckets': buckets, "min": min_val, "max": max_val})
             histogram_metadata.append(histogram)
 
             self._write_log_one_step(file_path, histogram)
