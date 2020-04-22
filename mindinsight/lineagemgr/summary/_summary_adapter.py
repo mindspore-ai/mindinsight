@@ -327,7 +327,9 @@ def _package_user_defined_info(user_defined_dict, user_defined_message):
     """
     for key, value in user_defined_dict.items():
         if not isinstance(key, str):
-            raise LineageParamTypeError("The key must be str.")
+            error_msg = f"Invalid key type in user defined info. The {key}'s type" \
+                        f"'{type(key).__name__}' is not supported. It should be str."
+            log.error(error_msg)
 
         if isinstance(value, int):
             attr_name = "map_int32"
@@ -336,13 +338,12 @@ def _package_user_defined_info(user_defined_dict, user_defined_message):
         elif isinstance(value, str):
             attr_name = "map_str"
         else:
-            error_msg = "Value type {} is not supported in user defined event package." \
-                        "Only str, int and float are permitted now.".format(type(value))
-            log.error(error_msg)
-            raise LineageParamTypeError(error_msg)
+            attr_name = "attr_name"
 
         add_user_defined_info = user_defined_message.user_info.add()
         try:
             getattr(add_user_defined_info, attr_name)[key] = value
-        except ValueError:
-            raise LineageParamValueError("Value is out of range or not be supported yet.")
+        except AttributeError:
+            error_msg = f"Invalid value type in user defined info. The {value}'s type" \
+                        f"'{type(value).__name__}' is not supported. It should be float, int or str."
+            log.error(error_msg)

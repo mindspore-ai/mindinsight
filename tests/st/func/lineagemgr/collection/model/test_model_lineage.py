@@ -94,6 +94,25 @@ class TestModelLineage(TestCase):
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.platform_x86_cpu
     @pytest.mark.env_single
+    def test_train_begin_with_user_defined_info(self):
+        """Test TrainLineage with nested user defined info."""
+        user_defined_info = {"info": {"version": "v1"}}
+        train_callback = TrainLineage(
+            self.summary_record,
+            False,
+            user_defined_info
+        )
+        train_callback.begin(RunContext(self.run_context))
+        assert train_callback.initial_learning_rate == 0.12
+        lineage_log_path = self.summary_record.full_file_name + '_lineage'
+        assert os.path.isfile(lineage_log_path) is True
+
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
     @mock.patch.object(AnalyzeObject, 'get_file_size')
     def test_training_end(self, *args):
         """Test the end function in TrainLineage."""
