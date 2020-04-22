@@ -109,7 +109,7 @@ class Command(BaseCommand):
         try:
             os.kill(pid, signal.SIGKILL)
         except PermissionError:
-            self.console.info('kill pid %s failed due to permission error' % pid)
+            self.console.info('kill pid %s failed due to permission error', pid)
             sys.exit(1)
 
         # cleanup gunicorn worker processes
