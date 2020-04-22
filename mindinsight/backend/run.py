@@ -231,7 +231,7 @@ def start():
 
     log_size = _get_file_size(errorlog_abspath)
 
-    stdout = setup_logger('mindinsight', 'stdout', console=True, logfile=False, formatter='%(message)s')
+    console = setup_logger('mindinsight', 'console', console=True, logfile=False, formatter='%(message)s')
 
     # start server
     process = subprocess.Popen(
@@ -243,15 +243,15 @@ def start():
     )
     _, stderr = process.communicate()
     if stderr:
-        stdout.error(stderr.decode())
+        console.error(stderr.decode())
 
     # wait command success to end when gunicorn running in daemon.
     if gunicorn_conf.daemon and process.wait() == 0:
         state_result = _check_server_start_stat(errorlog_abspath, log_size)
         # print gunicorn start state to stdout
-        stdout.info('Web address: http://{}:{}'.format(settings.HOST, settings.PORT))
+        console.info('Web address: http://%s:%s', settings.HOST, settings.PORT)
         for line in state_result["prompt_message"]:
-            stdout.info(line)
+            console.info(line)
 
 
 if __name__ == '__main__':
