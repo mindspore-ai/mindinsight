@@ -42,7 +42,7 @@ class HistogramContainer:
         self._visual_min = self._min
         # default bin number
         self._visual_bins = 10
-        self._count = self._msg.count
+        self._count = sum(bucket[2] for bucket in self._original_buckets)
         # Note that tuple is immutable, so sharing tuple is often safe.
         self._re_sampled_buckets = self._original_buckets
 
