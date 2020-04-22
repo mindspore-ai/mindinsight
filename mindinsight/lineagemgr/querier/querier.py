@@ -318,7 +318,7 @@ class Querier:
         for offset_result in offset_results:
             for obj_name in ["metric", "user_defined"]:
                 obj = getattr(offset_result, obj_name)
-                require = True if obj_name == "metric" else False
+                require = bool(obj_name == "metric")
                 if obj and isinstance(obj, dict):
                     for key, value in obj.items():
                         label = f'{obj_name}/{key}'

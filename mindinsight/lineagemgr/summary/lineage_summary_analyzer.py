@@ -207,6 +207,10 @@ class LineageSummaryAnalyzer(SummaryAnalyzer):
             log.error("Failed to get lineage information.")
             log.exception(err)
             raise LineageSummaryAnalyzeException()
+        except Exception as err:
+            log.error("Failed to get lineage information.")
+            log.exception(err)
+            raise LineageSummaryAnalyzeException()
 
         return lineage_info
 
