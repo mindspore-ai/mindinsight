@@ -76,6 +76,7 @@ LINEAGE_FILTRATION_EXCEPT_RUN = {
         'learning_rate': 0.11999999731779099,
         'epoch': 10,
         'batch_size': 32,
+        'device_num': 2,
         'loss': 0.029999999329447746,
         'model_size': 64,
         'metric': {},
@@ -97,6 +98,7 @@ LINEAGE_FILTRATION_RUN1 = {
         'learning_rate': 0.11999999731779099,
         'epoch': 14,
         'batch_size': 32,
+        'device_num': 2,
         'loss': None,
         'model_size': 64,
         'metric': {
@@ -120,6 +122,7 @@ LINEAGE_FILTRATION_RUN2 = {
         'learning_rate': None,
         'epoch': None,
         'batch_size': None,
+        'device_num': None,
         'loss': None,
         'model_size': None,
         'metric': {
