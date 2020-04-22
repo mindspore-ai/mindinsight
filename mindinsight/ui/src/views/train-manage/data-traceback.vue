@@ -255,6 +255,7 @@ export default {
         this.$t('modelTraceback.learningRate'),
         'epoch',
         'steps',
+        this.$t('modelTraceback.deviceNum'),
         this.$t('modelTraceback.modelSize'),
         this.$t('modelTraceback.lossFunc'),
       ],
@@ -266,6 +267,7 @@ export default {
         'model_size',
         'loss',
         'learning_rate',
+        'device_num',
       ],
       table: {
         columnOptions: {
@@ -302,6 +304,9 @@ export default {
           },
           batch_size: {
             label: 'steps',
+          },
+          device_num: {
+            label: this.$t('modelTraceback.deviceNum'),
           },
           loss_function: {
             label: this.$t('modelTraceback.lossFunc'),

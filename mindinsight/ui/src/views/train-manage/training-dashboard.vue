@@ -55,7 +55,7 @@ limitations under the License.
            @click="viewMoreHistogram">
         <div class="cl-dashboard-title">{{$t("histogram.titleText")}}</div>
         <div class="cl-module">
-          <div id="histogram-char-container"
+          <div class="histogram-char-container"
                v-show="!!histogramTag && !wrongPlugin">
             <div id="distribution-chart"></div>
             <div class="tag-text">{{histogramTag}}</div>
