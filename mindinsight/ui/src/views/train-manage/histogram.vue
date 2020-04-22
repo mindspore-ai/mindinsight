@@ -640,9 +640,7 @@ export default {
             null,
         );
       }
-      setTimeout(() => {
-        sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
-      }, 10);
+      sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
       if (!sampleObject.zr) {
         sampleObject.zr = sampleObject.charObj.getZr();
         const p = Math.max(0, d3.precisionRound(0.01, 1.01) - 1);
@@ -848,13 +846,13 @@ export default {
                 circleOption.shape = {
                   cx: itemX,
                   cy: pt[1],
-                  r: 2,
+                  r: 1.5,
                 };
               } else {
                 circleOption.shape = {
                   cx: 0,
                   cy: 0,
-                  r: 2,
+                  r: 1.5,
                 };
                 circleOption.position = sampleObject.charObj.convertToPixel(
                     'grid',
@@ -1049,7 +1047,7 @@ export default {
         const chartItem = {
           wall_time: histogram.wall_time,
           relative_time: histogram.wall_time - wallTimeInit,
-          step: histogram.step,
+          step: `${histogram.step}`,
           items: [],
         };
         const chartArr = [];
@@ -1059,7 +1057,7 @@ export default {
           if (!filter.length) {
             chartArr.push([
               histogram.wall_time,
-              histogram.step,
+              `${histogram.step}`,
               xData,
               Math.floor(bucket[2]),
             ]);
@@ -1070,9 +1068,9 @@ export default {
           const minItem = chartArr[0][2];
           const maxItem = chartArr[chartArr.length - 1][2];
           const chartAll = [
-            [histogram.wall_time, histogram.step, minItem, 0],
+            [histogram.wall_time, `${histogram.step}`, minItem, 0],
           ].concat(chartArr, [
-            [histogram.wall_time, histogram.step, maxItem, 0],
+            [histogram.wall_time, `${histogram.step}`, maxItem, 0],
           ]);
           chartItem.items = chartAll;
           chartData.push(chartItem);
@@ -1093,11 +1091,7 @@ export default {
       if (dataItem.chartData && dataItem.chartData.length) {
         dataItem.chartData.forEach((histogram) => {
           const seriesItem = [];
-          girdData.push([
-            histogram.step,
-            histogram.relative_time,
-            histogram.wall_time,
-          ]);
+          girdData.push(histogram.step);
           maxStep = Math.max(maxStep, histogram.step);
           minStep = Math.min(minStep, histogram.step);
           histogram.items.forEach((bucket) => {
@@ -1128,6 +1122,11 @@ export default {
     formatCharOption(sampleIndex, charOption) {
       const colorMin = '#346E69';
       const colorMax = '#EBFFFD';
+      const colorArr = this.getGrientColor(
+          colorMin,
+          colorMax,
+          charOption.seriesData.length,
+      );
       const sampleObject = this.originDataArr[sampleIndex];
       const fullScreenFun = this.toggleFullScreen;
       const curAxisName = this.curAxisName;
@@ -1185,6 +1184,17 @@ export default {
         },
       };
       if (this.curViewName === 1) {
+        const seriesData = [];
+        charOption.seriesData.forEach((item, dataIndex) => {
+          const dataItem = {
+            name: item[1],
+            value: item,
+            itemStyle: {
+              color: colorArr[dataIndex],
+            },
+          };
+          seriesData.push(dataItem);
+        });
         option.series = [
           {
             type: 'custom',
@@ -1209,9 +1219,11 @@ export default {
                 }),
               };
             },
-            data: charOption.seriesData,
+            data: seriesData,
           },
         ];
+        option.yAxis.data = charOption.girdData;
+        option.yAxis.type = 'category';
         option.grid.top = 126;
         if (curAxisName === 2 && sampleObject.fullScreen) {
           option.grid.right = 140;
@@ -1221,23 +1233,8 @@ export default {
         option.yAxis.axisLabel.formatter = function(value) {
           return that.yAxisFormatter(sampleIndex, value);
         };
-        option.visualMap = {
-          type: 'continuous',
-          show: false,
-          min: charOption.minStep,
-          max: charOption.maxStep,
-          dimension: 1,
-          range: [charOption.minStep, charOption.maxStep],
-          inRange: {
-            color: [colorMin, colorMax],
-          },
-        };
       } else if (this.curViewName === 0) {
-        option.color = this.getGrientColor(
-            colorMin,
-            colorMax,
-            charOption.seriesData.length,
-        );
+        option.color = colorArr;
         option.series = [];
         charOption.seriesData.forEach((k) => {
           option.series.push({
