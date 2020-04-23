@@ -1132,7 +1132,7 @@ export default {
       const curAxisName = this.curAxisName;
       const option = {
         grid: {
-          left: 15,
+          left: 24,
           top: 60,
           right: 50,
           bottom: 60,
@@ -1144,7 +1144,11 @@ export default {
           axisLabel: {
             fontSize: '11',
             formatter: function(value) {
-              return Math.round(value * 100) / 100;
+              if (value.toString().length > 6) {
+                return value.toExponential(3);
+              } else {
+                return Math.round(value * 1000) / 1000;
+              }
             },
           },
           splitLine: {show: false},

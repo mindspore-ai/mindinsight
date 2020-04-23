@@ -525,7 +525,11 @@ export default {
       width: auto;
       height: auto;
       padding: 0;
+      .data-map-container {
+        width: 100%;
+      }
       #sidebar {
+        top: 32px;
         .node-info-con {
           height: calc(100% - 280px);
         }
