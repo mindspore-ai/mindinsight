@@ -81,7 +81,9 @@ class LineageErrors(LineageErrorCodes):
     LINEAGE_FILE_NOT_FOUND_ERROR = 22 | _MODEL_LINEAGE_API_ERROR_MASK
     LINEAGE_PARAM_SUMMARY_PATH_ERROR = 23 | _MODEL_LINEAGE_API_ERROR_MASK
     LINEAGE_SEARCH_CONDITION_PARAM_ERROR = 24 | _MODEL_LINEAGE_API_ERROR_MASK
+
     LINEAGE_PARAM_LINEAGE_TYPE_ERROR = 25 | _MODEL_LINEAGE_API_ERROR_MASK
+    LINEAGE_PARAM_DEVICE_NUM_ERROR = 26 | _MODEL_LINEAGE_API_ERROR_MASK
 
     # Dataset lineage error codes.
     LINEAGE_PARAM_DATASET_MARK_ERROR = 0 | _DATASET_LINEAGE_ERROR_MASK
@@ -145,6 +147,8 @@ class LineageErrorMsg(Enum):
     PARAM_EVAL_METRICS_ERROR = "The parameter metrics is invalid. It should be a dictionary."
 
     PARAM_BATCH_SIZE_ERROR = "The parameter batch_size is invalid. It should be a non-negative integer."
+
+    PARAM_DEVICE_NUM_ERROR = "The parameter device_num is invalid. It should be a non-negative integer."
 
     PARAM_CALLBACK_LIST_ERROR = "The parameter list_callback is invalid. It should be an instance of " \
                                 "mindspore.train.callback._ListCallback."
