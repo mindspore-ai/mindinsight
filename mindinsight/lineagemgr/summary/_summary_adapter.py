@@ -16,8 +16,7 @@
 import time
 
 from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, \
-    LineageParamValueError
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError
 from mindinsight.lineagemgr.common.log import logger as log
 
 
