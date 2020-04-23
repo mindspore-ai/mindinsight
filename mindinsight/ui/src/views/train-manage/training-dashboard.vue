@@ -21,12 +21,6 @@ limitations under the License.
       <div class="cl-dashboard-top-title">
         {{$t('trainingDashboard.trainingDashboardTitle')}}
       </div>
-      <div class="path-message">
-        <span>{{$t("symbols.leftbracket")}}</span>
-        <span>{{$t("trainingDashboard.summaryDirPath")}}</span>
-        <span>{{summaryPath}}</span>
-        <span>{{$t("symbols.rightbracket")}}</span>
-      </div>
     </div>
     <div class="cl-dashboard-center">
       <div class="cl-dashboard-con-up"
@@ -172,7 +166,6 @@ export default {
     return {
       // training job id
       trainingJobId: '',
-      summaryPath: '',
       defColorCount: CommonProperty.commonColorArr.length, // default color
       colorNum: 0,
       charObj: null,
@@ -291,7 +284,6 @@ export default {
     init() {
       if (this.$route.query && this.$route.query.id) {
         this.trainingJobId = this.$route.query.id;
-        this.summaryPath = decodeURIComponent(this.trainingJobId);
       } else {
         this.trainingJobId = '';
         this.$message.error(this.$t('trainingDashboard.invalidId'));
@@ -1728,12 +1720,6 @@ export default {
     height: 56px;
     vertical-align: middle;
     background: #ffffff;
-    .path-message {
-      display: inline-block;
-      line-height: 20px;
-      padding: 18px 16px;
-      font-weight: bold;
-    }
     .cl-dashboard-top-title {
       float: left;
       color: #000000;
