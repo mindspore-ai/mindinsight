@@ -207,6 +207,7 @@ export default {
       },
       // echart parallel line coordinate system
       parallelEchart: null,
+      deviceNum: 'device_num',
       shuffleTitle: 'Shuffle',
       repeatTitle: 'Repeat',
       categoryType: 'category',
@@ -406,7 +407,8 @@ export default {
         const obj = {dim: i, name: content.name, id: content.id};
         if (
           content.name === this.repeatTitle ||
-          content.name === this.shuffleTitle
+          content.name === this.shuffleTitle ||
+          content.id === this.deviceNum
         ) {
           obj.scale = true;
           obj.minInterval = 1;

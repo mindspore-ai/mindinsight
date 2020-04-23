@@ -511,6 +511,7 @@ export default {
           cursor: pointer;
           width: 12px;
           height: 12px;
+          z-index: 999;
           display: inline-block;
           background-image: url('../../assets/images/full-screen.png');
         }
@@ -529,7 +530,6 @@ export default {
         width: 100%;
       }
       #sidebar {
-        top: 32px;
         .node-info-con {
           height: calc(100% - 280px);
         }

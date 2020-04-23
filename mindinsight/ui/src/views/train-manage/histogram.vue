@@ -212,10 +212,7 @@ export default {
     }
     if (this.curPageArr.length) {
       this.curPageArr.forEach((item) => {
-        if (item.zr) {
-          item.zr.off('mouseout', 'mousemove');
-          item.zr = null;
-        }
+        this.clearZrData(item);
       });
     }
     // Stop refreshing
@@ -296,18 +293,15 @@ export default {
                   checked: true,
                   show: true,
                 });
-                const sampleIndex = dataList.length;
                 dataList.push({
                   tagName: tagName,
-                  sampleIndex: sampleIndex,
                   zr: null,
                   show: false,
                   fullScreen: false,
                   domId: `${tagName}`,
-                  charData: {
-                    oriData: [],
-                    charOption: {},
-                  },
+                  oriData: {},
+                  charOption: {},
+                  chartData: [],
                   charObj: null,
                 });
               }
@@ -356,10 +350,7 @@ export default {
       if (!noPageDataNumChange) {
         this.curPageArr.forEach((sampleItem) => {
           sampleItem.show = false;
-          if (sampleItem.zr) {
-            sampleItem.zr.off('mouseout', 'mousemove');
-            sampleItem.zr = null;
-          }
+          this.clearZrData(sampleItem);
         });
       }
       // This interface is used to obtain the current page group and hide the current page group.
@@ -379,28 +370,23 @@ export default {
     },
     freshCurPageData() {
       this.curPageArr.forEach((item, index) => {
-        this.updateCurPageSamples(item.sampleIndex);
-      });
-    },
-    updateCurPageSamples(sampleIndex) {
-      const item = this.originDataArr[sampleIndex];
-      if (!item || !item.tagName) {
-        return;
-      }
-      const params = {
-        train_id: this.trainingJobId,
-        tag: item.tagName,
-      };
-      RequestService.getHistogramData(params).then((res) => {
-        if (!res || !res.data) {
+        if (!item || !item.tagName) {
           return;
         }
-        const data = JSON.parse(JSON.stringify(res.data));
-        this.originDataArr[sampleIndex].charData.oriData = this.formOriData(
-            data,
-        );
-        const charOption = this.formatDataToChar(sampleIndex);
-        this.updateSampleData(sampleIndex, charOption);
+        const params = {
+          train_id: this.trainingJobId,
+          tag: item.tagName,
+        };
+        RequestService.getHistogramData(params).then((res) => {
+          if (!res || !res.data) {
+            return;
+          }
+          const data = JSON.parse(JSON.stringify(res.data));
+          item.chartData = this.formOriData(data);
+          this.formatDataToChar(item);
+          this.updateSampleData(item);
+          this.sampleEventBind(item);
+        });
       });
     },
     /**
@@ -408,9 +394,8 @@ export default {
      * @param {Number} val Current mode
      */
     timeTypeChange(val) {
-      this.curPageArr.forEach((k) => {
-        const charOption = this.formatDataToChar(k.sampleIndex);
-        this.updateSampleData(k.sampleIndex, charOption);
+      this.curPageArr.forEach((item) => {
+        this.updateSampleData(item);
       });
     },
     /**
@@ -418,9 +403,9 @@ export default {
      * @param {Number} val Current mode
      */
     viewTypeChange(val) {
-      this.curPageArr.forEach((k) => {
-        const charOption = this.formatDataToChar(k.sampleIndex);
-        this.updateSampleData(k.sampleIndex, charOption);
+      this.curPageArr.forEach((item) => {
+        this.formatDataToChar(item);
+        this.updateSampleData(item);
       });
     },
     /**
@@ -444,10 +429,7 @@ export default {
      */
     clearAllData() {
       this.originDataArr.forEach((item) => {
-        if (item.zr) {
-          item.zr.off('mouseout', 'mousemove');
-          item.zr = null;
-        }
+        this.clearZrData(item);
       });
       this.tagList = [];
       this.originDataArr = [];
@@ -574,6 +556,8 @@ export default {
       for (let i = oldSampleLength - 1; i >= 0; i--) {
         if (!newTagDictionaries[this.originDataArr[i].tagName]) {
           dataRemoveFlag = true;
+          this.clearZrData(this.originDataArr[i]);
+          this.originDataArr[i].charObj.clear();
           this.originDataArr.splice(i, 1);
         }
       }
@@ -599,18 +583,15 @@ export default {
             checked: true,
             show: false,
           });
-          const sampleIndex = this.originDataArr.length;
           this.originDataArr.push({
             tagName: tagName,
-            sampleIndex: sampleIndex,
             zr: null,
             show: false,
             fullScreen: false,
             domId: `${tagName}`,
-            charData: {
-              oriData: [],
-              charOption: {},
-            },
+            oriData: {},
+            charOption: {},
+            chartData: [],
             charObj: null,
           });
           this.curFullTagDic[tagName] = true;
@@ -621,381 +602,369 @@ export default {
     },
     /**
      * update sample data
-     * @param {Number} sampleIndex index
-     * @param {Object} charOption data
+     * @param {Object} sampleObject sampleObject
      */
-    updateSampleData(sampleIndex, charOption) {
-      let curViewName = this.curViewName;
-      const sampleObject = this.originDataArr[sampleIndex];
-      sampleObject.charData = sampleObject.charData
-        ? sampleObject.charData
-        : {};
-      sampleObject.charData.charOption = this.formatCharOption(
-          sampleIndex,
-          charOption,
-      );
+    updateSampleData(sampleObject) {
+      sampleObject.charOption = this.formatCharOption(sampleObject);
       if (!sampleObject.charObj) {
         sampleObject.charObj = echarts.init(
             document.getElementById(sampleObject.domId),
             null,
         );
       }
-      sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
+      this.removeTooltip(sampleObject);
+      sampleObject.charObj.setOption(sampleObject.charOption, true);
+    },
+    sampleEventBind(sampleObject) {
       if (!sampleObject.zr) {
         sampleObject.zr = sampleObject.charObj.getZr();
-        const p = Math.max(0, d3.precisionRound(0.01, 1.01) - 1);
-        const yValueFormat = d3.format('.' + p + 'e');
-        const chartData = sampleObject.charData.oriData.chartData;
-        const rawData = charOption.seriesData;
-        /**
-         * get convert point
-         * @param {Array} pt value
-         * @return {Array}
-         */
-        function getCoord(pt) {
-          return sampleObject.charObj.convertToPixel('grid', pt);
-        }
-        /**
-         * find nearest value
-         * @param {Array} eventPoint value
-         * @return {Object}
-         */
-        function findNearestValue(eventPoint) {
-          if (
-            !eventPoint ||
-            !eventPoint.length ||
-            !sampleObject ||
-            !sampleObject.charObj
-          ) {
-            return;
-          }
-          const value = sampleObject.charObj.convertFromPixel(
-              'grid',
-              eventPoint,
-          );
-          let binIndex = null;
-          let yIndex = null;
-          let nearestX = Infinity;
-          let nearestY = -Infinity;
-          let nearestYData = Infinity;
-          if (!sampleObject.charData.oriData || !value || !value.length) {
-            return;
-          }
-          const gridRect = sampleObject.charObj
-              .getModel()
-              .getComponent('grid', 0)
-              .coordinateSystem.getRect();
-          const gridRectY = gridRect.y - 10;
-          const x = value[0];
-          chartData.forEach((dataItem, i) => {
-            let distY;
-            let yAxis;
-            for (let k = 0; k < dataItem.items.length - 1; k++) {
-              const item = dataItem.items[k];
-              const itemNext = dataItem.items[k + 1];
-              const nextX = itemNext[2];
-              const nextZ = itemNext[3];
-              if (item.length >= 4) {
-                if (item[2] < x && nextX >= x) {
-                  const proportionX = (x - item[2]) / (nextX - item[2]);
-                  yAxis = (nextZ - item[3]) * proportionX + item[3];
-                  distY = Math.abs(value[1] - yAxis);
-                  break;
-                }
-              }
-            }
-            if (curViewName === 0 && distY < nearestYData) {
-              nearestYData = distY;
-              yIndex = i;
-            } else if (curViewName === 1) {
-              const pt = getCoord([x, dataItem.step]);
-              const ptStep = pt[1];
-              pt[1] -=
-                ((yAxis - charOption.minZ) /
-                  (charOption.maxZ - charOption.minZ)) *
-                gridRectY;
-              if (
-                eventPoint[1] > pt[1] &&
-                eventPoint[1] < ptStep &&
-                ptStep > nearestY
-              ) {
-                nearestY = ptStep;
-                yIndex = i;
-              }
-            }
-          });
-          if (yIndex === null && curViewName === 1) {
-            chartData.forEach((item, index) => {
-              if (item.step > value[1]) {
-                yIndex = yIndex === null ? index : Math.min(yIndex, index);
-              }
-            });
-          }
-          if (yIndex !== null) {
-            const yData = chartData[yIndex].items;
-            yData.forEach((ele, index) => {
-              const distX = Math.abs(ele[2] - value[0]);
-              if (distX < nearestX) {
-                nearestX = distX;
-                binIndex = index;
-              }
-            });
-            binIndex =
-              binIndex === 0
-                ? 1
-                : binIndex === yData.length - 1
-                ? yData.length - 2
-                : binIndex;
-          }
-          return {
-            binIndex,
-            yIndex,
-          };
-        }
         sampleObject.zr.off('mouseout', 'mousemove');
         sampleObject.zr.on('mouseout', (e) => {
-          if (!rawData || !rawData.length) {
-            return;
-          }
+          this.removeTooltip(sampleObject);
           this.chartTipFlag = false;
-          this.removeTooltip(sampleIndex);
         });
         sampleObject.zr.on('mousemove', (e) => {
-          if (!rawData || !rawData.length) {
-            return;
+          this.removeTooltip(sampleObject);
+          this.mousemoveEvent(sampleObject, e);
+        });
+      }
+    },
+    mousemoveEvent(sampleObject, e) {
+      const unit = 's';
+      const nearestIndex = this.findNearestValue(sampleObject, [
+        e.offsetX,
+        e.offsetY,
+      ]);
+      if (
+        nearestIndex &&
+        nearestIndex.yIndex !== null &&
+        nearestIndex.binIndex !== null
+      ) {
+        const {binIndex, yIndex} = nearestIndex;
+        const chartData = sampleObject.chartData;
+        const hoveredItem = chartData[yIndex];
+        const p = Math.max(0, d3.precisionRound(0.01, 1.01) - 1);
+        const yValueFormat = d3.format(`.${p}e`);
+        const gridRect = sampleObject.charObj
+            .getModel()
+            .getComponent('grid', 0)
+            .coordinateSystem.getRect();
+        const gridRectY = gridRect.y - 10;
+        let linePoints = [];
+        if (!hoveredItem || !hoveredItem.items[binIndex]) {
+          return;
+        }
+        if (!this.chartTipFlag) {
+          this.chartTipFlag = true;
+        }
+        if (this.curViewName === 1 && yIndex !== null) {
+          linePoints = this.makePolyPoints(
+              yIndex,
+              this.getCoord,
+              gridRectY,
+              sampleObject,
+          );
+        } else if (this.curViewName === 0 && hoveredItem.items) {
+          hoveredItem.items.forEach((item) => {
+            linePoints.push(this.getCoord([item[2], item[3]], sampleObject));
+          });
+        }
+
+        this.zrDrawElement.hoverLine = new echarts.graphic.Polyline({
+          silent: true,
+          shape: {
+            points: linePoints.slice(1, -1),
+          },
+          z: 999,
+        });
+        sampleObject.zr.add(this.zrDrawElement.hoverLine);
+
+        this.zrDrawElement.tooltip = new echarts.graphic.Text({});
+        let itemX;
+        const x = hoveredItem.items[binIndex][2];
+        let z = 0;
+        chartData.forEach((dataItem, index) => {
+          const y = dataItem.step;
+          const pt = this.getCoord([x, y], sampleObject);
+          if (index === yIndex) {
+            z = hoveredItem.items[binIndex][3];
+          } else {
+            const items = dataItem.items;
+            for (let k = 1; k < items.length - 1; k++) {
+              const nextX = items[k + 1][2];
+              const nextZ = items[k + 1][3];
+              if (items[k][2] === x) {
+                z = items[k][3];
+                break;
+              } else if (items[k][2] < x && nextX > x) {
+                const proportionX = (x - items[k][2]) / (nextX - items[k][2]);
+                z = (nextZ - items[k][3]) * proportionX + items[k][3];
+                break;
+              }
+            }
           }
-          this.removeTooltip(sampleIndex);
-          curViewName = this.curViewName;
-          const unit = 's';
-          const nearestIndex = findNearestValue([e.offsetX, e.offsetY]);
+          itemX = pt[0];
+          const circleOption = {
+            z: 1000,
+          };
+          if (this.curViewName === 1) {
+            pt[1] -=
+              ((z - sampleObject.oriData.minZ) /
+                (sampleObject.oriData.maxZ - sampleObject.oriData.minZ)) *
+              gridRectY;
+            circleOption.shape = {
+              cx: itemX,
+              cy: pt[1],
+              r: 1.5,
+            };
+          } else {
+            circleOption.shape = {
+              cx: 0,
+              cy: 0,
+              r: 1.5,
+            };
+            circleOption.position = sampleObject.charObj.convertToPixel(
+                'grid',
+                [x, z],
+            );
+          }
+          const dot = new echarts.graphic.Circle(circleOption);
+          sampleObject.zr.add(dot);
+          this.zrDrawElement.hoverDots.push(dot);
+        });
+        this.zrDrawElement.tooltip = new echarts.graphic.Text({});
+
+        let htmlStr = '';
+        const hoveredAxis = hoveredItem.items[binIndex][3];
+        htmlStr = `<td>${
+          hoveredAxis.toString().length >= 6
+            ? yValueFormat(hoveredAxis)
+            : hoveredAxis
+        }</td><td style="text-align:center;">${hoveredItem.step}</td><td>${(
+          hoveredItem.relative_time / 1000
+        ).toFixed(3)}${unit}</td><td>${this.dealrelativeTime(
+            new Date(hoveredItem.wall_time).toString(),
+        )}</td>`;
+        const dom = document.querySelector('#tipTr');
+        dom.innerHTML = htmlStr;
+        if (!sampleObject.fullScreen) {
+          const chartWidth = document.getElementById(sampleObject.domId)
+              .parentNode.parentNode.clientWidth;
+          const chartHeight = document.getElementById(sampleObject.domId)
+              .parentNode.parentNode.clientHeight;
+          const left = document.getElementById(sampleObject.domId).parentNode
+              .parentNode.offsetLeft;
+          const top = document.getElementById(sampleObject.domId).parentNode
+              .parentNode.offsetTop;
+          const echartTip = document.querySelector('#echartTip');
+          echartTip.style.top = `${top + chartHeight - 60}px`;
+          if (left > echartTip.clientWidth) {
+            echartTip.style.left = `${left - echartTip.clientWidth}px`;
+          } else {
+            echartTip.style.left = `${left + chartWidth}px`;
+          }
+        } else {
+          const width = document.querySelector('#echartTip').clientWidth;
+          const height = document.querySelector('#echartTip').clientHeight;
+          const screenWidth = document.body.scrollWidth;
+          const screenHeight = document.body.scrollHeight;
+          const scrollTop = document.querySelector(
+              '.cl-histogram-show-data-content',
+          ).scrollTop;
+          const offsetTop = document.querySelector(
+              '.cl-histogram-show-data-content',
+          ).offsetTop;
+          if (height + e.event.y + 20 > screenHeight && screenHeight > height) {
+            document.querySelector('#echartTip').style.top = `${e.event.y +
+              scrollTop -
+              height -
+              20 -
+              offsetTop}px`;
+          } else {
+            document.querySelector('#echartTip').style.top = `${e.event.y +
+              scrollTop +
+              20 -
+              offsetTop}px`;
+          }
+          if (width + e.event.x + 50 > screenWidth && screenWidth > width) {
+            document.querySelector('#echartTip').style.left = `${e.event.x -
+              width -
+              20}px`;
+          } else {
+            document.querySelector('#echartTip').style.left = `${e.event.x +
+              20}px`;
+          }
+        }
+
+        this.zrDrawElement.tooltipX = new echarts.graphic.Text({
+          position: [itemX, gridRect.y + gridRect.height],
+          style: {
+            text: Math.round(x * 1000) / 1000,
+            textFill: '#fff',
+            textAlign: 'center',
+            fontSize: 12,
+            textBackgroundColor: '#333',
+            textBorderWidth: 2,
+            textPadding: [5, 7],
+            rich: {},
+          },
+          z: 2000,
+        });
+        sampleObject.zr.add(this.zrDrawElement.tooltipX);
+        if (this.curViewName === 1 && linePoints && linePoints.length) {
+          let text = '';
+          if (yIndex !== null) {
+            text = this.yAxisFormatter(sampleObject, hoveredItem.step);
+          }
+          this.zrDrawElement.tooltipY = new echarts.graphic.Text({
+            position: [
+              gridRect.x + gridRect.width,
+              linePoints[linePoints.length - 1][1],
+            ],
+            style: {
+              text: text,
+              textFill: '#fff',
+              textVerticalAlign: 'middle',
+              fontSize: 12,
+              textBackgroundColor: '#333',
+              textBorderWidth: 2,
+              textPadding: [5, 7],
+              rich: {},
+            },
+            z: 2000,
+          });
+          sampleObject.zr.add(this.zrDrawElement.tooltipY);
+        }
+      }
+    },
+    /**
+     * get convert point
+     * @param {Array} pt value
+     * @param {Object} sampleObject sampleObject
+     * @return {Array}
+     */
+    getCoord(pt, sampleObject) {
+      return sampleObject.charObj.convertToPixel('grid', pt);
+    },
+    /**
+     * find nearest value
+     * @param {Object} sampleObject sampleObject
+     * @param {Array} eventPoint value
+     * @return {Object}
+     */
+    findNearestValue(sampleObject, eventPoint) {
+      if (
+        !eventPoint ||
+        !eventPoint.length ||
+        !sampleObject ||
+        !sampleObject.charObj ||
+        !sampleObject.oriData
+      ) {
+        return;
+      }
+      const value = sampleObject.charObj.convertFromPixel('grid', eventPoint);
+      if (!value || !value.length) {
+        return;
+      }
+      let binIndex = null;
+      let yIndex = null;
+      let nearestX = Infinity;
+      let nearestY = -Infinity;
+      let nearestYData = Infinity;
+      const gridRect = sampleObject.charObj
+          .getModel()
+          .getComponent('grid', 0)
+          .coordinateSystem.getRect();
+      const gridRectY = gridRect.y - 10;
+      const x = value[0];
+      sampleObject.chartData.forEach((dataItem, i) => {
+        let distY;
+        let yAxis;
+        for (let k = 0; k < dataItem.items.length - 1; k++) {
+          const item = dataItem.items[k];
+          const itemNext = dataItem.items[k + 1];
+          const nextX = itemNext[2];
+          const nextZ = itemNext[3];
+          if (item.length >= 4) {
+            if (item[2] < x && nextX >= x) {
+              const proportionX = (x - item[2]) / (nextX - item[2]);
+              yAxis = (nextZ - item[3]) * proportionX + item[3];
+              distY = Math.abs(value[1] - yAxis);
+              break;
+            }
+          }
+        }
+        if (this.curViewName === 0 && distY < nearestYData) {
+          nearestYData = distY;
+          yIndex = i;
+        } else if (this.curViewName === 1) {
+          const pt = this.getCoord([x, dataItem.step], sampleObject);
+          const ptStep = pt[1];
+          pt[1] -=
+            ((yAxis - sampleObject.oriData.minZ) /
+              (sampleObject.oriData.maxZ - sampleObject.oriData.minZ)) *
+            gridRectY;
           if (
-            nearestIndex &&
-            nearestIndex.yIndex !== null &&
-            nearestIndex.binIndex !== null
+            eventPoint[1] > pt[1] &&
+            eventPoint[1] < ptStep &&
+            ptStep > nearestY
           ) {
-            const {binIndex, yIndex} = nearestIndex;
-            const gridRect = sampleObject.charObj
-                .getModel()
-                .getComponent('grid', 0)
-                .coordinateSystem.getRect();
-            const gridRectY = gridRect.y - 10;
-            let linePoints = [];
-            if (curViewName === 1 && yIndex !== null) {
-              linePoints = this.makePolyPoints(
-                  yIndex,
-                  getCoord,
-                  gridRectY,
-                  charOption,
-              );
-            } else if (
-              curViewName === 0 &&
-              chartData[yIndex] &&
-              chartData[yIndex].items
-            ) {
-              chartData[yIndex].items.forEach((item) => {
-                linePoints.push(
-                    sampleObject.charObj.convertToPixel('grid', [
-                      item[2],
-                      item[3],
-                    ]),
-                );
-              });
-            }
-            this.zrDrawElement.hoverLine = new echarts.graphic.Polyline({
-              silent: true,
-              shape: {
-                points: linePoints.slice(1, -1),
-              },
-              z: 999,
-            });
-            sampleObject.zr.add(this.zrDrawElement.hoverLine);
-            this.zrDrawElement.tooltip = new echarts.graphic.Text({});
-            let itemX;
-            const x = chartData[yIndex].items[binIndex][2];
-            let z = 0;
-            chartData.forEach((dataItem, index) => {
-              const y = dataItem.step;
-              const pt = getCoord([x, y]);
-              if (index === yIndex) {
-                z = chartData[yIndex].items[binIndex][3];
-              } else {
-                const items = dataItem.items;
-                for (let k = 1; k < items.length - 1; k++) {
-                  const nextX = items[k + 1][2];
-                  const nextZ = items[k + 1][3];
-                  if (items[k][2] === x) {
-                    z = items[k][3];
-                    break;
-                  } else if (items[k][2] < x && nextX > x) {
-                    const proportionX =
-                      (x - items[k][2]) / (nextX - items[k][2]);
-                    z = (nextZ - items[k][3]) * proportionX + items[k][3];
-                    break;
-                  }
-                }
-              }
-              itemX = pt[0];
-              const circleOption = {
-                z: 1000,
-              };
-              if (curViewName === 1) {
-                pt[1] -=
-                  ((z - charOption.minZ) /
-                    (charOption.maxZ - charOption.minZ)) *
-                  gridRectY;
-                circleOption.shape = {
-                  cx: itemX,
-                  cy: pt[1],
-                  r: 1.5,
-                };
-              } else {
-                circleOption.shape = {
-                  cx: 0,
-                  cy: 0,
-                  r: 1.5,
-                };
-                circleOption.position = sampleObject.charObj.convertToPixel(
-                    'grid',
-                    [x, z],
-                );
-              }
-              const dot = new echarts.graphic.Circle(circleOption);
-              sampleObject.zr.add(dot);
-              this.zrDrawElement.hoverDots.push(dot);
-            });
-
-            const hoveredItem = chartData[yIndex];
-            this.zrDrawElement.tooltip = new echarts.graphic.Text({});
-            if (!this.chartTipFlag) {
-              this.chartTipFlag = true;
-            }
-            if (!hoveredItem || !hoveredItem.items[binIndex]) {
-              return;
-            }
-            let htmlStr = '';
-            const hoveredAxis = hoveredItem.items[binIndex][3];
-            htmlStr = `<td>${
-              hoveredAxis.toString().length >= 6
-                ? yValueFormat(hoveredAxis)
-                : hoveredAxis
-            }</td><td style="text-align:center;">${hoveredItem.step}</td><td>${(
-              hoveredItem.relative_time / 1000
-            ).toFixed(3)}${unit}</td><td>${this.dealrelativeTime(
-                new Date(hoveredItem.wall_time).toString(),
-            )}</td>`;
-            const dom = document.querySelector('#tipTr');
-            dom.innerHTML = htmlStr;
-            if (!sampleObject.fullScreen) {
-              const chartWidth = document.querySelectorAll('.sample-content')[
-                  sampleIndex
-              ].clientWidth;
-              const chartHeight = document.querySelectorAll('.sample-content')[
-                  sampleIndex
-              ].clientHeight;
-              const left = document.querySelectorAll('.sample-content')[
-                  sampleIndex
-              ].offsetLeft;
-              const top = document.querySelectorAll('.sample-content')[
-                  sampleIndex
-              ].offsetTop;
-              const echartTip = document.querySelector('#echartTip');
-              echartTip.style.top = `${top + chartHeight - 60}px`;
-              if (left > echartTip.clientWidth) {
-                echartTip.style.left = `${left - echartTip.clientWidth}px`;
-              } else {
-                echartTip.style.left = `${left + chartWidth}px`;
-              }
-            } else {
-              const width = document.querySelector('#echartTip').clientWidth;
-              const height = document.querySelector('#echartTip').clientHeight;
-              const screenWidth = document.body.scrollWidth;
-              const screenHeight = document.body.scrollHeight;
-              const scrollTop = document.querySelector(
-                  '.cl-histogram-show-data-content',
-              ).scrollTop;
-              const offsetTop = document.querySelector(
-                  '.cl-histogram-show-data-content',
-              ).offsetTop;
-              if (
-                height + e.event.y + 20 > screenHeight &&
-                screenHeight > height
-              ) {
-                document.querySelector('#echartTip').style.top = `${e.event.y +
-                  scrollTop -
-                  height -
-                  20 -
-                  offsetTop}px`;
-              } else {
-                document.querySelector('#echartTip').style.top = `${e.event.y +
-                  scrollTop +
-                  20 -
-                  offsetTop}px`;
-              }
-              if (width + e.event.x + 50 > screenWidth && screenWidth > width) {
-                document.querySelector('#echartTip').style.left = `${e.event.x -
-                  width -
-                  20}px`;
-              } else {
-                document.querySelector('#echartTip').style.left = `${e.event.x +
-                  20}px`;
-              }
-            }
-
-            this.zrDrawElement.tooltipX = new echarts.graphic.Text({
-              position: [itemX, gridRect.y + gridRect.height],
-              style: {
-                text: Math.round(x * 1000) / 1000,
-                textFill: '#fff',
-                textAlign: 'center',
-                fontSize: 12,
-                textBackgroundColor: '#333',
-                textBorderWidth: 2,
-                textPadding: [5, 7],
-                rich: {},
-              },
-              z: 2000,
-            });
-            sampleObject.zr.add(this.zrDrawElement.tooltipX);
-            if (curViewName === 1 && linePoints && linePoints.length) {
-              let text = '';
-              if (yIndex) {
-                text = this.yAxisFormatter(sampleIndex, yIndex);
-              }
-              this.zrDrawElement.tooltipY = new echarts.graphic.Text({
-                position: [
-                  gridRect.x + gridRect.width,
-                  linePoints[linePoints.length - 1][1],
-                ],
-                style: {
-                  text: text,
-                  textFill: '#fff',
-                  textVerticalAlign: 'middle',
-                  fontSize: 12,
-                  textBackgroundColor: '#333',
-                  textBorderWidth: 2,
-                  textPadding: [5, 7],
-                  rich: {},
-                },
-                z: 2000,
-              });
-              sampleObject.zr.add(this.zrDrawElement.tooltipY);
-            }
+            nearestY = ptStep;
+            yIndex = i;
+          }
+        }
+      });
+      if (yIndex === null && this.curViewName === 1) {
+        sampleObject.chartData.forEach((item, index) => {
+          if (index > value[1]) {
+            yIndex = yIndex === null ? index : Math.min(yIndex, index);
           }
         });
       }
+      if (yIndex !== null) {
+        const yData = sampleObject.chartData[yIndex].items;
+        yData.forEach((ele, index) => {
+          const distX = Math.abs(ele[2] - value[0]);
+          if (distX < nearestX) {
+            nearestX = distX;
+            binIndex = index;
+          }
+        });
+        binIndex =
+          binIndex === 0
+            ? 1
+            : binIndex === yData.length - 1
+            ? yData.length - 2
+            : binIndex;
+      }
+      return {
+        binIndex,
+        yIndex,
+      };
     },
     dealrelativeTime(time) {
       const arr = time.split(' ');
       const str = arr[0] + ' ' + arr[1] + ' ' + arr[2] + ',' + ' ' + arr[4];
       return str;
     },
+    clearZrData(sampleObject) {
+      if (sampleObject && sampleObject.zr) {
+        this.removeTooltip(sampleObject);
+        sampleObject.zr.off('mouseout', 'mousemove');
+        sampleObject.zr = null;
+      }
+    },
     /**
      * remove tooltip
-     * @param {Number} sampleIndex sampleIndex
+     * @param {Number} sampleObject sampleObject
      */
-    removeTooltip(sampleIndex) {
-      const sampleObject = this.originDataArr[sampleIndex];
-      if (sampleObject.zr) {
+    removeTooltip(sampleObject) {
+      if (sampleObject && sampleObject.zr) {
+        if (this.zrDrawElement.hoverDots) {
+          this.zrDrawElement.hoverDots.forEach((dot) =>
+            sampleObject.zr.remove(dot),
+          );
+        }
         if (this.zrDrawElement.hoverLine) {
           sampleObject.zr.remove(this.zrDrawElement.hoverLine);
         }
@@ -1005,15 +974,6 @@ export default {
         if (this.zrDrawElement.tooltipY) {
           sampleObject.zr.remove(this.zrDrawElement.tooltipY);
         }
-        if (
-          this.zrDrawElement.hoverDots &&
-          this.zrDrawElement.hoverDots.length
-        ) {
-          this.zrDrawElement.hoverDots.forEach((dot) =>
-            sampleObject.zr.remove(dot),
-          );
-          this.zrDrawElement.hoverDots.length = 0;
-        }
         if (this.zrDrawElement.tooltipX) {
           sampleObject.zr.remove(this.zrDrawElement.tooltipX);
         }
@@ -1022,16 +982,16 @@ export default {
     getValue(seriesData, dataIndex, i) {
       return seriesData[dataIndex][i];
     },
-    makePolyPoints(dataIndex, getCoord, yValueMapHeight, charOption) {
+    makePolyPoints(dataIndex, getCoord, yValueMapHeight, sampleObject) {
       const points = [];
-      const rawData = charOption.seriesData;
-      const maxZ = charOption.maxZ;
-      const minZ = charOption.minZ;
+      const rawData = sampleObject.oriData.seriesData;
+      const maxZ = sampleObject.oriData.maxZ;
+      const minZ = sampleObject.oriData.minZ;
       for (let i = 0; i < rawData[dataIndex].length; ) {
         const x = this.getValue(rawData, dataIndex, i++);
         const y = this.getValue(rawData, dataIndex, i++);
         const z = this.getValue(rawData, dataIndex, i++);
-        const pt = getCoord([x, y]);
+        const pt = getCoord([x, y], sampleObject);
         // linear map in z axis
         pt[1] -= ((z - minZ) / (maxZ - minZ)) * yValueMapHeight;
         points.push(pt);
@@ -1044,10 +1004,11 @@ export default {
         ? dataItem.histograms[0].wall_time
         : 0;
       dataItem.histograms.forEach((histogram, index) => {
+        const step = histogram.step.toString();
         const chartItem = {
           wall_time: histogram.wall_time,
           relative_time: histogram.wall_time - wallTimeInit,
-          step: `${histogram.step}`,
+          step: step,
           items: [],
         };
         const chartArr = [];
@@ -1057,7 +1018,7 @@ export default {
           if (!filter.length) {
             chartArr.push([
               histogram.wall_time,
-              `${histogram.step}`,
+              step,
               xData,
               Math.floor(bucket[2]),
             ]);
@@ -1068,32 +1029,26 @@ export default {
           const minItem = chartArr[0][2];
           const maxItem = chartArr[chartArr.length - 1][2];
           const chartAll = [
-            [histogram.wall_time, `${histogram.step}`, minItem, 0],
-          ].concat(chartArr, [
-            [histogram.wall_time, `${histogram.step}`, maxItem, 0],
-          ]);
+            [histogram.wall_time, step, minItem, 0],
+          ].concat(chartArr, [[histogram.wall_time, step, maxItem, 0]]);
           chartItem.items = chartAll;
           chartData.push(chartItem);
         }
       });
-      return {tag: dataItem.tag, train_id: dataItem.train_id, chartData};
+      return chartData;
     },
-    formatDataToChar(dataIndex) {
-      const dataItem = this.originDataArr[dataIndex].charData.oriData;
+    formatDataToChar(item) {
+      const chartData = item.chartData;
       const seriesData = [];
-      let maxStep = -Infinity;
-      let minStep = Infinity;
       let maxX = -Infinity;
       let minX = Infinity;
       let maxZ = -Infinity;
       let minZ = Infinity;
-      const girdData = [];
-      if (dataItem.chartData && dataItem.chartData.length) {
-        dataItem.chartData.forEach((histogram) => {
+      const gridData = [];
+      if (chartData && chartData.length) {
+        chartData.forEach((histogram) => {
           const seriesItem = [];
-          girdData.push(histogram.step);
-          maxStep = Math.max(maxStep, histogram.step);
-          minStep = Math.min(minStep, histogram.step);
+          gridData.push(histogram.step);
           histogram.items.forEach((bucket) => {
             if (this.curViewName === 0) {
               seriesItem.push([bucket[2], bucket[3]]);
@@ -1108,26 +1063,24 @@ export default {
           seriesData.push(seriesItem);
         });
       }
-      return {
+      item.oriData = {
         seriesData,
-        maxStep,
-        minStep,
         maxX,
         minX,
         maxZ,
         minZ,
-        girdData,
+        gridData,
       };
     },
-    formatCharOption(sampleIndex, charOption) {
+    formatCharOption(sampleObject) {
       const colorMin = '#346E69';
       const colorMax = '#EBFFFD';
+      const oriData = sampleObject.oriData;
       const colorArr = this.getGrientColor(
           colorMin,
           colorMax,
-          charOption.seriesData.length,
+          oriData.seriesData.length,
       );
-      const sampleObject = this.originDataArr[sampleIndex];
       const fullScreenFun = this.toggleFullScreen;
       const curAxisName = this.curAxisName;
       const option = {
@@ -1138,13 +1091,13 @@ export default {
           bottom: 60,
         },
         xAxis: {
-          max: charOption.maxX,
-          min: charOption.minX,
+          max: oriData.maxX,
+          min: oriData.minX,
           axisLine: {onZero: false},
           axisLabel: {
             fontSize: '11',
             formatter: function(value) {
-              if (value.toString().length > 6) {
+              if (value.toString().length >= 6) {
                 return value.toExponential(3);
               } else {
                 return Math.round(value * 1000) / 1000;
@@ -1158,6 +1111,7 @@ export default {
           axisLine: {onZero: false, show: false},
           splitLine: {show: true},
           axisTick: {show: false},
+          boundaryGap: false,
           axisLabel: {
             fontSize: '11',
           },
@@ -1181,7 +1135,7 @@ export default {
               },
               icon: CommonProperty.fullScreenIcon,
               onclick() {
-                fullScreenFun(sampleIndex);
+                fullScreenFun(sampleObject);
               },
             },
           },
@@ -1189,7 +1143,7 @@ export default {
       };
       if (this.curViewName === 1) {
         const seriesData = [];
-        charOption.seriesData.forEach((item, dataIndex) => {
+        oriData.seriesData.forEach((item, dataIndex) => {
           const dataItem = {
             name: item[1],
             value: item,
@@ -1208,7 +1162,7 @@ export default {
                   params.dataIndex,
                   api.coord,
                   params.coordSys.y - 10,
-                  charOption,
+                  sampleObject,
               );
 
               return {
@@ -1226,7 +1180,7 @@ export default {
             data: seriesData,
           },
         ];
-        option.yAxis.data = charOption.girdData;
+        option.yAxis.data = oriData.gridData;
         option.yAxis.type = 'category';
         option.grid.top = 126;
         if (curAxisName === 2 && sampleObject.fullScreen) {
@@ -1235,12 +1189,12 @@ export default {
         option.yAxis.inverse = true;
         const that = this;
         option.yAxis.axisLabel.formatter = function(value) {
-          return that.yAxisFormatter(sampleIndex, value);
+          return that.yAxisFormatter(sampleObject, value);
         };
       } else if (this.curViewName === 0) {
         option.color = colorArr;
         option.series = [];
-        charOption.seriesData.forEach((k) => {
+        oriData.seriesData.forEach((k) => {
           option.series.push({
             type: 'line',
             symbol: 'none',
@@ -1253,12 +1207,9 @@ export default {
       }
       return option;
     },
-    yAxisFormatter(sampleIndex, value) {
-      const sampleObject = this.originDataArr[sampleIndex];
+    yAxisFormatter(sampleObject, value) {
       let data = '';
-      const filter = sampleObject.charData.oriData.chartData.filter(
-          (k) => k.step === value,
-      );
+      const filter = sampleObject.chartData.filter((k) => k.step === value);
       if (filter.length) {
         if (this.curAxisName === 2) {
           data = sampleObject.fullScreen
@@ -1332,22 +1283,21 @@ export default {
       }
       return colorResult;
     },
-    toggleFullScreen(sampleIndex) {
-      const sampleObject = this.originDataArr[sampleIndex];
+    toggleFullScreen(sampleObject) {
       if (!sampleObject) {
         return;
       }
-      this.removeTooltip(sampleIndex);
+      this.removeTooltip(sampleObject);
       sampleObject.fullScreen = !sampleObject.fullScreen;
       if (sampleObject.fullScreen) {
         if (this.curAxisName === 2) {
           sampleObject.charObj.setOption({grid: {right: 140}});
         }
-        sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
+        sampleObject.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#3E98C5';
       } else {
         sampleObject.charObj.setOption({grid: {right: 40}});
-        sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
+        sampleObject.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#6D7278';
       }
       setTimeout(() => {
