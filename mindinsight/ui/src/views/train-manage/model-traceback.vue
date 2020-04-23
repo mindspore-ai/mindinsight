@@ -149,6 +149,7 @@ export default {
         'test_dataset_count',
         'epoch',
         'batch_size',
+        'device_num',
       ], // All keys whose values are int
       echart: {
         chart: null,

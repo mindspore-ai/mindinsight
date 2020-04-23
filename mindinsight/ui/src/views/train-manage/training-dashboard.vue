@@ -21,6 +21,12 @@ limitations under the License.
       <div class="cl-dashboard-top-title">
         {{$t('trainingDashboard.trainingDashboardTitle')}}
       </div>
+      <div class="path-message">
+        <span>{{$t("symbols.leftbracket")}}</span>
+        <span>{{$t("trainingDashboard.summaryDirPath")}}</span>
+        <span>{{summaryPath}}</span>
+        <span>{{$t("symbols.rightbracket")}}</span>
+      </div>
     </div>
     <div class="cl-dashboard-center">
       <div class="cl-dashboard-con-up"
@@ -166,12 +172,14 @@ export default {
     return {
       // training job id
       trainingJobId: '',
+      summaryPath: '',
       defColorCount: CommonProperty.commonColorArr.length, // default color
       colorNum: 0,
       charObj: null,
       histogramObj: null,
       histogramOption: {},
-      histogramData: {},
+      histogramData: [],
+      histogramOriData: {},
       charOption: {},
       charData: [],
       originImageDataArr: [], // List of all image data.
@@ -283,6 +291,7 @@ export default {
     init() {
       if (this.$route.query && this.$route.query.id) {
         this.trainingJobId = this.$route.query.id;
+        this.summaryPath = decodeURIComponent(this.trainingJobId);
       } else {
         this.trainingJobId = '';
         this.$message.error(this.$t('trainingDashboard.invalidId'));
@@ -795,19 +804,20 @@ export default {
         ) {
           return;
         }
-        const data = res.data;
+        const data = JSON.parse(JSON.stringify(res.data));
         this.histogramTag = histogramTag;
         this.histogramData = this.formOriData(data);
-        const charOption = this.formatDataToChar();
-        this.updateHistogramSampleData(charOption);
+        this.formatDataToChar();
+        this.updateHistogramSampleData();
       });
     },
     formOriData(dataItem) {
       const chartData = [];
       dataItem.histograms.forEach((histogram, index) => {
+        const step = histogram.step.toString();
         const chartItem = {
           wall_time: histogram.wall_time,
-          step: `${histogram.step}`,
+          step: step,
           items: [],
         };
         const chartArr = [];
@@ -817,7 +827,7 @@ export default {
           if (!filter.length) {
             chartArr.push([
               histogram.wall_time,
-              `${histogram.step}`,
+              step,
               xData,
               Math.floor(bucket[2]),
             ]);
@@ -828,33 +838,26 @@ export default {
           const minItem = chartArr[0][2];
           const maxItem = chartArr[chartArr.length - 1][2];
           const chartAll = [
-            [histogram.wall_time, `${histogram.step}`, minItem, 0],
-          ].concat(chartArr, [
-            [histogram.wall_time, `${histogram.step}`, maxItem, 0],
-          ]);
+            [histogram.wall_time, step, minItem, 0],
+          ].concat(chartArr, [[histogram.wall_time, step, maxItem, 0]]);
           chartItem.items = chartAll;
           chartData.push(chartItem);
         }
       });
-      return {tag: dataItem.tag, train_id: dataItem.train_id, chartData};
+      return chartData;
     },
     formatDataToChar() {
-      const dataItem = this.histogramData;
+      const chartData = this.histogramData;
       const seriesData = [];
-      let maxStep = -Infinity;
-      let minStep = Infinity;
       let maxX = -Infinity;
       let minX = Infinity;
       let maxZ = -Infinity;
       let minZ = Infinity;
       const gridData = [];
-      if (dataItem.chartData && dataItem.chartData.length) {
-        dataItem.chartData.forEach((histogram) => {
+      if (chartData && chartData.length) {
+        chartData.forEach((histogram) => {
           const seriesItem = [];
           gridData.push(histogram.step);
-          maxStep = Math.max(maxStep, histogram.step);
-          minStep = Math.min(minStep, histogram.step);
-          histogram.items.sort((a, b) => a[0] - b[0]);
           histogram.items.forEach((bucket) => {
             seriesItem.push(bucket[2], histogram.step, bucket[3]);
             maxX = Math.max(maxX, bucket[2]);
@@ -865,10 +868,8 @@ export default {
           seriesData.push(seriesItem);
         });
       }
-      return {
+      this.histogramOriData = {
         seriesData,
-        maxStep,
-        minStep,
         maxX,
         minX,
         maxZ,
@@ -876,16 +877,17 @@ export default {
         gridData,
       };
     },
-    formatCharOption(charOption) {
+    formatCharOption() {
       const colorMin = '#346E69';
       const colorMax = '#EBFFFD';
+      const oriData = this.histogramOriData;
       const colorArr = this.getGrientColor(
           colorMin,
           colorMax,
-          charOption.seriesData.length,
+          oriData.seriesData.length,
       );
       const seriesData = [];
-      charOption.seriesData.forEach((item, dataIndex) => {
+      oriData.seriesData.forEach((item, dataIndex) => {
         const dataItem = {
           name: item[1],
           value: item,
@@ -903,13 +905,13 @@ export default {
           bottom: 43,
         },
         xAxis: {
-          max: charOption.maxX,
-          min: charOption.minX,
+          max: oriData.maxX,
+          min: oriData.minX,
           axisLine: {onZero: false},
           axisLabel: {
             fontSize: '11',
             formatter: function(value) {
-              if (value.toString().length > 6) {
+              if (value.toString().length >= 6) {
                 return value.toExponential(3);
               } else {
                 return Math.round(value * 1000) / 1000;
@@ -925,6 +927,7 @@ export default {
           splitLine: {show: true},
           inverse: true,
           axisTick: {show: false},
+          boundaryGap: false,
           axisLabel: {
             fontSize: '11',
           },
@@ -938,7 +941,6 @@ export default {
                   params.dataIndex,
                   api.coord,
                   params.coordSys.y - 10,
-                  charOption,
               );
 
               return {
@@ -1021,10 +1023,9 @@ export default {
     },
     /**
      * update sample data
-     * @param {Object} charOption data
      */
-    updateHistogramSampleData(charOption) {
-      this.histogramOption = this.formatCharOption(charOption);
+    updateHistogramSampleData() {
+      this.histogramOption = this.formatCharOption();
       setTimeout(() => {
         if (!this.histogramObj) {
           this.histogramObj = echarts.init(
@@ -1038,11 +1039,11 @@ export default {
     getValue(seriesData, dataIndex, i) {
       return seriesData[dataIndex][i];
     },
-    makePolyPoints(dataIndex, getCoord, yValueMapHeight, charOption) {
+    makePolyPoints(dataIndex, getCoord, yValueMapHeight) {
       const points = [];
-      const rawData = charOption.seriesData;
-      const maxZ = charOption.maxZ;
-      const minZ = charOption.minZ;
+      const rawData = this.histogramOriData.seriesData;
+      const maxZ = this.histogramOriData.maxZ;
+      const minZ = this.histogramOriData.minZ;
       for (let i = 0; i < rawData[dataIndex].length; ) {
         const x = this.getValue(rawData, dataIndex, i++);
         const y = this.getValue(rawData, dataIndex, i++);
@@ -1727,6 +1728,12 @@ export default {
     height: 56px;
     vertical-align: middle;
     background: #ffffff;
+    .path-message {
+      display: inline-block;
+      line-height: 20px;
+      padding: 18px 16px;
+      font-weight: bold;
+    }
     .cl-dashboard-top-title {
       float: left;
       color: #000000;
