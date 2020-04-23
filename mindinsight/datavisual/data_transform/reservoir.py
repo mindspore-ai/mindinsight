@@ -157,10 +157,22 @@ class HistogramReservoir(Reservoir):
     Args:
         size (int): Container Size. If the size is 0, the container is not limited.
     """
+    def __init__(self, size):
+        super().__init__(size)
+        # Marker to avoid redundant calc for unchanged histograms.
+        self._visual_range_up_to_date = False
+
+    def add_sample(self, sample):
+        """Adds sample, see parent class for details."""
+        super().add_sample(sample)
+        self._visual_range_up_to_date = False
 
     def samples(self):
         """Return all stored samples."""
         with self._mutex:
+            if self._visual_range_up_to_date:
+                return list(self._samples)
+
             # calc visual range
             visual_range = _VisualRange()
             max_count = 0
@@ -179,15 +191,17 @@ class HistogramReservoir(Reservoir):
             bins = calc_histogram_bins(max_count)
 
             # update visual range
-            logger.info("Visual histogram: min %s, max %s, bins %s, max_count %s.",
-                        visual_range.min,
-                        visual_range.max,
-                        bins,
-                        max_count)
+            logger.debug(
+                "Visual histogram: min %s, max %s, bins %s, max_count %s.",
+                visual_range.min,
+                visual_range.max,
+                bins,
+                max_count)
             for sample in self._samples:
                 histogram = sample.value
                 histogram.set_visual_range(visual_range.max, visual_range.min, bins)
 
+            self._visual_range_up_to_date = True
             return list(self._samples)
 
 
