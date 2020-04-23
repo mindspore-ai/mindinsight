@@ -799,7 +799,10 @@ export default {
         this.zrDrawElement.tooltipX = new echarts.graphic.Text({
           position: [itemX, gridRect.y + gridRect.height],
           style: {
-            text: Math.round(x * 1000) / 1000,
+            text:
+              x.toString().length >= 6
+                ? x.toExponential(3)
+                : Math.round(x * 1000) / 1000,
             textFill: '#fff',
             textAlign: 'center',
             fontSize: 12,
