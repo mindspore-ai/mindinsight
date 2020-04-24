@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "./crc32.h"
+#include "datavisual/utils/crc32/crc32.h"
 
 
 static const uint32_t crc_table_o32[CRC_TABLE_SIZE] = {
