@@ -223,7 +223,8 @@ class MSDataLoader:
                                                step=event.step,
                                                tag=tag,
                                                plugin_name=PluginNameEnum.SCALAR.value,
-                                               value=value.scalar_value)
+                                               value=value.scalar_value,
+                                               filename=self._latest_summary_filename)
                     self._events_data.add_tensor_event(tensor_event)
 
                 if value.HasField('image'):
@@ -232,7 +233,8 @@ class MSDataLoader:
                                                step=event.step,
                                                tag=tag,
                                                plugin_name=PluginNameEnum.IMAGE.value,
-                                               value=value.image)
+                                               value=value.image,
+                                               filename=self._latest_summary_filename)
                     self._events_data.add_tensor_event(tensor_event)
 
                 if value.HasField('histogram'):
@@ -242,7 +244,8 @@ class MSDataLoader:
                                                step=event.step,
                                                tag=tag,
                                                plugin_name=PluginNameEnum.HISTOGRAM.value,
-                                               value=histogram_msg)
+                                               value=histogram_msg,
+                                               filename=self._latest_summary_filename)
                     self._events_data.add_tensor_event(tensor_event)
 
         if event.HasField('graph_def'):
@@ -253,7 +256,8 @@ class MSDataLoader:
                                        step=event.step,
                                        tag=self._latest_summary_filename,
                                        plugin_name=PluginNameEnum.GRAPH.value,
-                                       value=graph)
+                                       value=graph,
+                                       filename=self._latest_summary_filename)
 
             try:
                 graph_tags = self._events_data.list_tags_by_plugin(PluginNameEnum.GRAPH.value)
@@ -436,7 +440,8 @@ class _PbParser:
                                    step=0,
                                    tag=filename,
                                    plugin_name=PluginNameEnum.GRAPH.value,
-                                   value=graph)
+                                   value=graph,
+                                   filename=filename)
 
         logger.info("Build graph success, file path: %s.", file_path)
         return tensor_event

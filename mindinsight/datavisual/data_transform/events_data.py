@@ -23,9 +23,9 @@ from mindinsight.conf import settings
 
 
 # Type of the tensor event from external component
-_Tensor = collections.namedtuple('_Tensor', ['wall_time', 'step', 'value'])
+_Tensor = collections.namedtuple('_Tensor', ['wall_time', 'step', 'value', 'filename'])
 TensorEvent = collections.namedtuple(
-    'TensorEvent', ['wall_time', 'step', 'tag', 'plugin_name', 'value'])
+    'TensorEvent', ['wall_time', 'step', 'tag', 'plugin_name', 'value', 'filename'])
 
 # config for `EventsData`
 _DEFAULT_STEP_SIZES_PER_TAG = settings.DEFAULT_STEP_SIZES_PER_TAG
@@ -99,10 +99,11 @@ class EventsData:
 
         tensor = _Tensor(wall_time=tensor_event.wall_time,
                          step=tensor_event.step,
-                         value=tensor_event.value)
+                         value=tensor_event.value,
+                         filename=tensor_event.filename)
 
         if self._is_out_of_order_step(tensor_event.step, tensor_event.tag):
-            self.purge_reservoir_data(tensor_event.step, self._reservoir_by_tag[tag])
+            self.purge_reservoir_data(tensor_event.filename, tensor_event.step, self._reservoir_by_tag[tag])
 
         self._reservoir_by_tag[tag].add_sample(tensor)
 
@@ -176,7 +177,7 @@ class EventsData:
         return False
 
     @staticmethod
-    def purge_reservoir_data(start_step, tensor_reservoir):
+    def purge_reservoir_data(filename, start_step, tensor_reservoir):
         """
         Purge all tensor event that are out-of-order step after the given start step.
 
@@ -188,7 +189,8 @@ class EventsData:
         Returns:
             int, the number of items removed.
         """
-        cnt_out_of_order = tensor_reservoir.remove_sample(lambda x: x.step < start_step)
+        cnt_out_of_order = tensor_reservoir.remove_sample(
+            lambda x: x.step < start_step or (x.step > start_step and x.filename == filename))
 
         return cnt_out_of_order
 

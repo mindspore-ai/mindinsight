@@ -23,6 +23,24 @@ from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.datavisual.utils.utils import calc_histogram_bins
 
 
+def binary_search(samples, target):
+    """Binary search target in samples."""
+    left = 0
+    right = len(samples) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if target < samples[mid].step:
+            right = mid - 1
+        elif target > samples[mid].step:
+            left = mid + 1
+        else:
+            return mid
+
+    # if right is -1, it is less than the first one.
+    # if list is [1, 2, 4], target is 3, right will be 1, so wo will insert by 2.
+    return right + 1
+
+
 class Reservoir:
     """
     A container based on Reservoir Sampling algorithm.
@@ -68,17 +86,27 @@ class Reservoir:
         """
         with self._mutex:
             if len(self._samples) < self._samples_max_size or self._samples_max_size == 0:
-                self._samples.append(sample)
+                self._add_sample(sample)
             else:
                 # Use the Reservoir Sampling algorithm to replace the old sample.
-                rand_int = self._sample_selector.randint(
-                    0, self._sample_counter)
+                rand_int = self._sample_selector.randint(0, self._sample_counter)
                 if rand_int < self._samples_max_size:
                     self._samples.pop(rand_int)
-                    self._samples.append(sample)
                 else:
-                    self._samples[-1] = sample
+                    self._samples = self._samples[:-1]
+                self._add_sample(sample)
             self._sample_counter += 1
+
+    def _add_sample(self, sample):
+        """Search the index and add sample."""
+        if not self._samples or sample.step > self._samples[-1].step:
+            self._samples.append(sample)
+            return
+        index = binary_search(self._samples, sample.step)
+        if index == len(self._samples):
+            self._samples.append(sample)
+        else:
+            self._samples.insert(index, sample)
 
     def remove_sample(self, filter_fun):
         """
