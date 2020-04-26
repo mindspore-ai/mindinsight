@@ -1010,6 +1010,10 @@ export default {
           source = node.name;
           for (let i = 0; i < Math.min(5, keys.length); i++) {
             target = keys[i];
+            isConst = !!(
+              this.allGraphData[keys[i]] &&
+              this.allGraphData[keys[i]].type === 'Const'
+            );
             const nodeStr = isConst
               ? `shape="circle";width="0.14";height="0.14";fixedsize=true;` +
                 `label="${target.split('/').pop()}\n\n\n";`

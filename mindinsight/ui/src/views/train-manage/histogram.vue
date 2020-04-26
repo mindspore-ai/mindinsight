@@ -138,6 +138,8 @@ export default {
       zrDrawElement: {hoverDots: []},
       chartTipFlag: false,
       charResizeTimer: null,
+      changeAxisTimer: null,
+      changeViewTimer: null,
     };
   },
   computed: {
@@ -394,19 +396,29 @@ export default {
      * @param {Number} val Current mode
      */
     timeTypeChange(val) {
-      this.curPageArr.forEach((item) => {
-        this.updateSampleData(item);
-      });
+      if (this.changeAxisTimer) {
+        clearTimeout(this.changeAxisTimer);
+      }
+      this.changeAxisTimer = setTimeout(() => {
+        this.curPageArr.forEach((item) => {
+          this.updateSampleData(item);
+        });
+      }, 500);
     },
     /**
      * The view display type is changed
      * @param {Number} val Current mode
      */
     viewTypeChange(val) {
-      this.curPageArr.forEach((item) => {
-        this.formatDataToChar(item);
-        this.updateSampleData(item);
-      });
+      if (this.changeViewTimer) {
+        clearTimeout(this.changeViewTimer);
+      }
+      this.changeViewTimer = setTimeout(() => {
+        this.curPageArr.forEach((item) => {
+          this.formatDataToChar(item);
+          this.updateSampleData(item);
+        });
+      }, 200);
     },
     /**
      * Update the data list based on the filtered tags
@@ -996,7 +1008,9 @@ export default {
         const z = this.getValue(rawData, dataIndex, i++);
         const pt = getCoord([x, y], sampleObject);
         // linear map in z axis
-        pt[1] -= ((z - minZ) / (maxZ - minZ)) * yValueMapHeight;
+        if (maxZ !== minZ) {
+          pt[1] -= ((z - minZ) / (maxZ - minZ)) * yValueMapHeight;
+        }
         points.push(pt);
       }
       return points;
