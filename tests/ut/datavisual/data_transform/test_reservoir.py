@@ -27,10 +27,14 @@ class TestHistogramReservoir:
         sample1.value.count = 1
         sample1.value.max = 102
         sample1.value.min = 101
+        sample1.step = 2
+        sample1.filename = 'filename'
         sample2 = mock.MagicMock()
         sample2.value.count = 2
         sample2.value.max = 102
         sample2.value.min = 101
+        sample2.step = 1
+        sample2.filename = 'filename'
         my_reservoir.add_sample(sample1)
         my_reservoir.add_sample(sample2)
         samples = my_reservoir.samples()
