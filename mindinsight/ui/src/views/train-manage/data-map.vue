@@ -46,6 +46,9 @@ limitations under the License.
               <div :title="$t('graph.fullScreen')"
                    class="full-screen-button"
                    @click="fullScreen = !fullScreen"></div>
+              <div :title="$t('graph.fitScreen')"
+                   class="fit-screen"
+                   @click="fit()"></div>
             </div>
             <!-- Right column -->
             <div id="sidebar"
@@ -340,6 +343,7 @@ export default {
      * Initialization method executed after the graph rendering is complete
      */
     startApp() {
+      this.initZooming();
       const nodes = d3.selectAll('g.node, g.cluster');
       nodes.on('click', (target, index, nodesList) => {
         this.selectNodeInfo(target);
@@ -347,9 +351,109 @@ export default {
         nodes.classed('selected', false);
         d3.select(`g[id="${selectedNode.id}"]`).classed('selected', true);
       });
-      d3.select('svg').on('dblclick.zoom', null);
     },
 
+    /**
+     * Initializing the Zoom Function of a Graph
+     */
+    initZooming() {
+      const graphDom = document.querySelector('#graph0');
+      const graphBox = graphDom.getBBox();
+      const padding = 4;
+      const pointer = {
+        start: {
+          x: 0,
+          y: 0,
+        },
+        end: {
+          x: 0,
+          y: 0,
+        },
+      };
+      const zoom = d3
+          .zoom()
+          .on('start', (target) => {
+            pointer.start.x = event.x;
+            pointer.start.y = event.y;
+          })
+          .on('zoom', (target) => {
+            const transformData = this.getTransformData(graphDom);
+            let tempStr = '';
+            let change = {};
+            let scale = transformData.scale[0];
+            const graphRect = graphDom.getBoundingClientRect();
+            const mapping = {
+              width: graphBox.width / graphRect.width,
+              height: graphBox.height / graphRect.height,
+            };
+            if (event.type === 'mousemove') {
+              pointer.end.x = event.x;
+              pointer.end.y = event.y;
+              change = {
+                x: (pointer.end.x - pointer.start.x) * mapping.width * scale,
+                y: (pointer.end.y - pointer.start.y) * mapping.height * scale,
+              };
+              pointer.start.x = pointer.end.x;
+              pointer.start.y = pointer.end.y;
+            } else if (event.type === 'wheel') {
+              const wheelDelta = event.wheelDelta;
+              const rate = Math.abs(wheelDelta / 100);
+              scale =
+              wheelDelta > 0
+                ? transformData.scale[0] * rate
+                : transformData.scale[0] / rate;
+              scale = Math.max(this.scaleRange[0], scale);
+              scale = Math.min(this.scaleRange[1], scale);
+              change = {
+                x:
+                (graphRect.x + padding / mapping.width - event.x) *
+                mapping.width *
+                (scale - transformData.scale[0]),
+                y:
+                (graphRect.bottom - padding / mapping.height - event.y) *
+                mapping.height *
+                (scale - transformData.scale[0]),
+              };
+            }
+            tempStr = `translate(${transformData.translate[0] +
+            change.x},${transformData.translate[1] +
+            change.y}) scale(${scale})`;
+            graphDom.setAttribute('transform', tempStr);
+          });
+
+      const svg = d3.select('svg');
+      svg.on('.zoom', null);
+      svg.call(zoom);
+      svg.on('dblclick.zoom', null);
+    },
+    /**
+     * Obtains the transform data of a node.
+     * @param {Object} node Node dom data
+     * @return {Object} transform data of a node
+     */
+    getTransformData(node) {
+      if (!node) {
+        return [];
+      }
+      const transformData = node.getAttribute('transform');
+      const attrObj = {};
+      if (transformData) {
+        const lists = transformData.trim().split(' ');
+        lists.forEach((item) => {
+          const index1 = item.indexOf('(');
+          const index2 = item.indexOf(')');
+          const name = item.substring(0, index1);
+          const params = item
+              .substring(index1 + 1, index2)
+              .split(',')
+              .map((i) => {
+                return parseFloat(i) || 0;
+              });
+          attrObj[name] = params;
+        });
+      }
+      return attrObj;
+    },
     /**
      * Process the selected node information.
      * @param {Object} target Selected Object
@@ -396,6 +500,15 @@ export default {
           }
         });
       }
+    },
+    /**
+     * Adapt to the screen
+     */
+    fit() {
+      const graphDom = document.getElementById('graph0');
+      const box = graphDom.getBBox();
+      const str = `translate(${-box.x},${-box.y}) scale(1)`;
+      graphDom.setAttribute('transform', str);
     },
     /**
      * Collapse on the right
@@ -511,9 +624,20 @@ export default {
           cursor: pointer;
           width: 12px;
           height: 12px;
-          z-index: 999;
+          z-index:999;
           display: inline-block;
           background-image: url('../../assets/images/full-screen.png');
+        }
+        .fit-screen {
+          position: absolute;
+          width: 16px;
+          height: 14px;
+          right: 32px;
+          top: 10px;
+          z-index:999;
+          cursor: pointer;
+          display: inline-block;
+          background-image: url('../../assets/images/fit.png');
         }
       }
     }
