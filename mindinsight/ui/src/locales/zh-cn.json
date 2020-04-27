@@ -45,8 +45,8 @@
     "learningRate": "学习率",
     "modelSize": "模型大小",
     "dataProcess": "数据处理",
-    "noDataFound":"暂无满足筛选条件的数据",
-    "noDataTips":"请点击“显示全量数据”按钮查看全量数据",
+    "noDataFound": "暂无满足筛选条件的数据",
+    "noDataTips": "请点击“显示全量数据”按钮查看全量数据",
     "userDefined": "自定义数据",
     "metric": "度量指标",
     "deviceNum": "device数目"
@@ -56,8 +56,8 @@
     "key": "KEY",
     "value": "VALUE",
     "dataTraceTips": "该数据涉及合并操作",
-    "noDataFound":"暂无满足筛选条件的数据",
-    "noDataTips":"请点击“显示全量数据”按钮查看全量数据"
+    "noDataFound": "暂无满足筛选条件的数据",
+    "noDataTips": "请点击“显示全量数据”按钮查看全量数据"
   },
   "trainingDashboard": {
     "trainingDashboardTitle": "训练看板",
@@ -66,7 +66,8 @@
     "trainingScalar": "训练标量信息",
     "samplingData": "数据抽样",
     "imagesampleSwitch": "切换标签",
-    "invalidId": "无效的训练作业"
+    "invalidId": "无效的训练作业",
+    "summaryDirPath": "summary路径："
   },
   "scalar": {
     "titleText": "标量",
@@ -120,6 +121,7 @@
   "graph": {
     "titleText": "计算图",
     "downloadPic": "下载",
+    "fitScreen": "适应屏幕",
     "nodeInfo": "节点信息",
     "legend": "图例",
     "nameSpace": "命名空间",
