@@ -72,6 +72,10 @@ class Bucket:
 
 
 class HistogramContainer:
+
+    # Max quantity of original buckets.
+    MAX_ORIGINAL_BUCKETS_COUNT = 90
+
     """
     Histogram data container.
 
@@ -113,6 +117,11 @@ class HistogramContainer:
     def original_msg(self):
         """Gets original proto message."""
         return self._msg
+
+    @property
+    def original_buckets_count(self):
+        """Gets original buckets quantity."""
+        return len(self._original_buckets)
 
     def set_visual_range(self, max_val: float, min_val: float, bins: int) -> None:
         """
