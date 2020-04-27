@@ -216,9 +216,8 @@ class TestImagesProcessor:
         """
         Test removing sample in reservoir.
 
-        If step list is [1, 3, 5, 7, 9, 2, 3, 4, 15],
-        and then [3, 5, 7, 9] will be deleted.
-        Results will be [1, 2, 3, 4, 15].
+        If step list is [1, 3, 5, 7, 9, 2, 3, 4, 15] in one summary,
+        Results will be [1, 2, 3, 4, 5, 7, 9, 15].
         """
         test_tag_name = self._complete_tag_name
 
@@ -237,5 +236,4 @@ class TestImagesProcessor:
             except ImageNotExistError:
                 not_found_step_list.append(test_step)
 
-        assert current_step_list == [1, 2, 3, 4, 15]
-        assert not_found_step_list == [5, 7, 9]
+        assert current_step_list == [1, 2, 3, 4, 5, 7, 9, 15]

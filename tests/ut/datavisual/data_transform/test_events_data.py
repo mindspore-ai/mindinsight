@@ -36,9 +36,9 @@ class MockReservoir:
     def __init__(self, size):
         self.size = size
         self._samples = [
-            _Tensor('wall_time1', 1, 'value1'),
-            _Tensor('wall_time2', 2, 'value2'),
-            _Tensor('wall_time3', 3, 'value3')
+            _Tensor('wall_time1', 1, 'value1', 'filename1'),
+            _Tensor('wall_time2', 2, 'value2', 'filename2'),
+            _Tensor('wall_time3', 3, 'value3', 'filename3')
         ]
 
     def samples(self):
@@ -107,7 +107,8 @@ class TestEventsData:
         """Test add_tensor_event success."""
 
         ev_data = self.get_ev_data()
-        t_event = TensorEvent(wall_time=1, step=4, tag='new_tag', plugin_name='plugin_name1', value='value1')
+        t_event = TensorEvent(wall_time=1, step=4, tag='new_tag',
+                              plugin_name='plugin_name1', value='value1', filename='filename')
 
         ev_data.add_tensor_event(t_event)
         assert 'tag0' not in ev_data._tags
@@ -116,4 +117,54 @@ class TestEventsData:
         assert 'tag0' not in ev_data._reservoir_by_tag
         assert 'new_tag' in ev_data._tags_by_plugin['plugin_name1']
         assert ev_data._reservoir_by_tag['new_tag'].samples()[-1] == _Tensor(t_event.wall_time, t_event.step,
-                                                                             t_event.value)
+                                                                             t_event.value, 'filename')
+
+    def test_add_tensor_event_out_of_order(self):
+        """Test add_tensor_event success for out_of_order summaries."""
+        wall_time = 1
+        value = '1'
+        tag = 'tag'
+        plugin_name = 'scalar'
+        file1 = 'file1'
+        ev_data = EventsData()
+        steps = [i for i in range(2, 10)]
+        for step in steps:
+            t_event = TensorEvent(wall_time=1, step=step, tag=tag,
+                                  plugin_name=plugin_name, value=value, filename=file1)
+            ev_data.add_tensor_event(t_event)
+
+        t_event = TensorEvent(wall_time=1, step=1, tag=tag,
+                              plugin_name=plugin_name, value=value, filename=file1)
+        ev_data.add_tensor_event(t_event)
+
+        # Current steps should be: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        assert len(ev_data._reservoir_by_tag[tag].samples()) == len(steps) + 1
+
+        file2 = 'file2'
+        new_steps_1 = [5, 10]
+        for step in new_steps_1:
+            t_event = TensorEvent(wall_time=1, step=step, tag=tag,
+                                  plugin_name=plugin_name, value=value, filename=file2)
+            ev_data.add_tensor_event(t_event)
+            assert ev_data._reservoir_by_tag[tag].samples()[-1] == _Tensor(wall_time, step, value, file2)
+
+        # Current steps should be: [1, 2, 3, 4, 5, 10]
+        steps = [1, 2, 3, 4, 5, 10]
+        samples = ev_data._reservoir_by_tag[tag].samples()
+        for i in range(len(samples)):
+            filename = file1 if samples[i].step < 5 else file2
+            assert samples[i] == _Tensor(wall_time, steps[i], value, filename)
+
+        new_steps_2 = [7, 11, 3]
+        for step in new_steps_2:
+            t_event = TensorEvent(wall_time=1, step=step, tag=tag,
+                                  plugin_name=plugin_name, value=value, filename=file2)
+            ev_data.add_tensor_event(t_event)
+
+        # Current steps should be: [1, 2, 3, 5, 7, 10, 11], file2: [3, 5, 7, 10, 11]
+        steps = [1, 2, 3, 5, 7, 10, 11]
+        new_steps_2.extend(new_steps_1)
+        samples = ev_data._reservoir_by_tag[tag].samples()
+        for i in range(len(samples)):
+            filename = file2 if samples[i].step in new_steps_2 else file1
+            assert samples[i] == _Tensor(wall_time, steps[i], value, filename)
