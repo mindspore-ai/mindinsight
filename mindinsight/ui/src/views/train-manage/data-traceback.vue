@@ -509,6 +509,7 @@ export default {
           });
           // The summaryList value could not be saved in the destroy state.
           this.dataCheckedSummary = [];
+          this.tableFilter.summary_dir = {in: summaryList};
           this.$store.commit('setSummaryDirList', summaryList);
           if (!tempList.length) {
             this.summaryDirList = [];
@@ -967,6 +968,7 @@ export default {
         sorted_name: data.prop,
         sorted_type: data.order,
       };
+      this.pagination.currentPage = 1;
       params.body = Object.assign({}, tempParam, this.tableFilter);
       this.queryLineagesData(params);
     },

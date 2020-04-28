@@ -222,6 +222,14 @@ export default {
       this.$store.commit('setIsReload', false);
       this.isReloading = false;
     }
+    if (this.changeAxisTimer) {
+      clearTimeout(this.changeAxisTimer);
+      this.changeAxisTimer = null;
+    }
+    if (this.changeViewTimer) {
+      clearTimeout(this.changeViewTimer);
+      this.changeViewTimer = null;
+    }
   },
   mounted() {
     this.init();
@@ -398,6 +406,7 @@ export default {
     timeTypeChange(val) {
       if (this.changeAxisTimer) {
         clearTimeout(this.changeAxisTimer);
+        this.changeAxisTimer = null;
       }
       this.changeAxisTimer = setTimeout(() => {
         this.curPageArr.forEach((item) => {
@@ -412,6 +421,7 @@ export default {
     viewTypeChange(val) {
       if (this.changeViewTimer) {
         clearTimeout(this.changeViewTimer);
+        this.changeViewTimer = null;
       }
       this.changeViewTimer = setTimeout(() => {
         this.curPageArr.forEach((item) => {
