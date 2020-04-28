@@ -244,6 +244,10 @@ export default {
       clearInterval(this.autoUpdateTimer);
       this.autoUpdateTimer = null;
     }
+    if (this.axisBenchChangeTimer) {
+      clearTimeout(this.axisBenchChangeTimer);
+      this.axisBenchChangeTimer = null;
+    }
   },
   mounted() {
     // Adding a Listener
@@ -642,7 +646,7 @@ export default {
         },
         grid: {
           left: 80,
-          right: 10,
+          right: sampleObject.fullScreen ? 80 : 10,
         },
         animation: true,
         dataZoom: [
