@@ -239,14 +239,19 @@ class MSDataLoader:
 
                 if value.HasField('histogram'):
                     histogram_msg = HistogramContainer(value.histogram)
-                    tag = '{}/{}'.format(value.tag, PluginNameEnum.HISTOGRAM.value)
-                    tensor_event = TensorEvent(wall_time=event.wall_time,
-                                               step=event.step,
-                                               tag=tag,
-                                               plugin_name=PluginNameEnum.HISTOGRAM.value,
-                                               value=histogram_msg,
-                                               filename=self._latest_summary_filename)
-                    self._events_data.add_tensor_event(tensor_event)
+                    # Drop steps if original_buckets_count exceeds HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT
+                    # to avoid time-consuming re-sample process.
+                    if histogram_msg.original_buckets_count > HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT:
+                        logger.warning('original_buckets_count exceeds HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT')
+                    else:
+                        tag = '{}/{}'.format(value.tag, PluginNameEnum.HISTOGRAM.value)
+                        tensor_event = TensorEvent(wall_time=event.wall_time,
+                                                   step=event.step,
+                                                   tag=tag,
+                                                   plugin_name=PluginNameEnum.HISTOGRAM.value,
+                                                   value=histogram_msg,
+                                                   filename=self._latest_summary_filename)
+                        self._events_data.add_tensor_event(tensor_event)
 
         if event.HasField('graph_def'):
             graph_proto = event.graph_def
