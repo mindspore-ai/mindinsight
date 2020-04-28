@@ -29,7 +29,7 @@ TensorEvent = collections.namedtuple(
 
 # config for `EventsData`
 _DEFAULT_STEP_SIZES_PER_TAG = settings.DEFAULT_STEP_SIZES_PER_TAG
-
+_MAX_DELETED_TAGS_SIZE = settings.MAX_TAG_SIZE_PER_EVENTS_DATA * 100
 CONFIG = {
     'max_total_tag_sizes': settings.MAX_TAG_SIZE_PER_EVENTS_DATA,
     'max_tag_sizes_per_plugin':
@@ -60,6 +60,7 @@ class EventsData:
         self._max_step_sizes_per_tag = self._config['max_step_sizes_per_tag']
 
         self._tags = list()
+        self._deleted_tags = set()
         self._reservoir_by_tag = {}
         self._reservoir_mutex_lock = threading.Lock()
 
@@ -82,6 +83,8 @@ class EventsData:
         if tag not in set(self._tags):
             deleted_tag = self._check_tag_out_of_spec(plugin_name)
             if deleted_tag is not None:
+                if tag in self._deleted_tags:
+                    return
                 self.delete_tensor_event(deleted_tag)
 
             self._tags.append(tag)
@@ -114,6 +117,8 @@ class EventsData:
         Args:
             tag (str): The tag name.
         """
+        if len(self._deleted_tags) < _MAX_DELETED_TAGS_SIZE:
+            self._deleted_tags.add(tag)
         self._tags.remove(tag)
         for plugin_name, lock in self._tags_by_plugin_mutex_lock.items():
             with lock:
