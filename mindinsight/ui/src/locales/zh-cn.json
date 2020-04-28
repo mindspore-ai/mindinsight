@@ -67,7 +67,8 @@
     "samplingData": "数据抽样",
     "imagesampleSwitch": "切换标签",
     "invalidId": "无效的训练作业",
-    "summaryDirPath": "summary路径："
+    "summaryDirPath": "summary路径：",
+    "mixedItemMessage": "该参数含有多种类型数据，无法筛选展示"
   },
   "scalar": {
     "titleText": "标量",

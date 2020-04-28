@@ -525,7 +525,7 @@ export default {
         `<svg xmlns="http://www.w3.org/2000/svg" ` +
         `xmlns:xlink="http://www.w3.org/1999/xlink" ` +
         `width="${bbox.width}" height="${bbox.height}" ` +
-        `viewBox="${viewBoxSize}">${CommonProperty.graphDownloadStyle}<g>${svgXml}</g></svg>`;
+        `viewBox="${viewBoxSize}">${CommonProperty.dataMapDownloadStyle}<g>${svgXml}</g></svg>`;
 
       // Write the svg stream encoded by base64 to the image object.
       const src = `data:image/svg+xml;base64,
