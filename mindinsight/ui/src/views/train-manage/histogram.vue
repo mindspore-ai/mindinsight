@@ -755,7 +755,7 @@ export default {
         }</td><td style="text-align:center;">${hoveredItem.step}</td><td>${(
           hoveredItem.relative_time / 1000
         ).toFixed(3)}${unit}</td><td>${this.dealrelativeTime(
-            new Date(hoveredItem.wall_time).toString(),
+            new Date(hoveredItem.wall_time * 1000).toString(),
         )}</td>`;
         const dom = document.querySelector('#tipTr');
         dom.innerHTML = htmlStr;
@@ -1230,7 +1230,7 @@ export default {
       if (filter.length) {
         if (this.curAxisName === 2) {
           data = sampleObject.fullScreen
-            ? this.dealrelativeTime(new Date(filter[0].wall_time).toString())
+            ? this.dealrelativeTime(new Date(filter[0].wall_time * 1000).toString())
             : [];
         } else if (this.curAxisName === 1) {
           data = `${(filter[0].relative_time / 3600).toFixed(3)}h`;
