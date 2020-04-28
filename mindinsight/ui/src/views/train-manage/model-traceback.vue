@@ -151,6 +151,7 @@ export default {
         'batch_size',
         'device_num',
       ], // All keys whose values are int
+      keysOfMixed: [],
       echart: {
         chart: null,
         allData: [],
@@ -166,10 +167,7 @@ export default {
       },
       chartFilter: {}, // chart filter condition
       tableFilter: {lineage_type: {in: ['model']}}, // table filter condition
-      sortInfo: {
-        sorted_name: 'summary_dir',
-        sorted_type: null,
-      },
+      sortInfo: {},
       showTable: false,
       noData: false,
       haveCustomizedParams: false,
@@ -281,6 +279,7 @@ export default {
         selectAll: false, // Whether to select all columns
         indeterminate: false,
       };
+      this.keysOfMixed = [];
       this.queryLineagesData(true);
     },
     /**
@@ -324,10 +323,15 @@ export default {
 
         tempParam.limit = this.pagination.pageSize;
         tempParam.offset = this.pagination.currentPage - 1;
-        params.body = Object.assign(params.body, this.chartFilter);
+        params.body = Object.assign(
+            params.body,
+            this.chartFilter,
+            tempParam,
+            this.tableFilter,
+        );
+      } else {
+        params.body = Object.assign(params.body, this.tableFilter);
       }
-      params.body = Object.assign(params.body, tempParam, this.tableFilter);
-
       RequestService.queryLineagesData(params)
           .then(
               (res) => {
@@ -343,6 +347,10 @@ export default {
                           if (customized[i].type === 'int') {
                             this.keysOfIntValue.push(i);
                           } else if (customized[i].type === 'str') {
+                            this.keysOfStringValue.push(i);
+                          } else if (customized[i].type === 'mixed') {
+                            // list of type mixed
+                            this.keysOfMixed.push(i);
                             this.keysOfStringValue.push(i);
                           }
                           if (i.startsWith(this.replaceStr.userDefined)) {
@@ -568,7 +576,16 @@ export default {
         };
 
         chartAxis.forEach((key) => {
-          item.value.push(i[key]);
+          if (
+            (i[key] || i[key] == 0) &&
+            this.keysOfMixed &&
+            this.keysOfMixed.length &&
+            this.keysOfMixed.includes(key)
+          ) {
+            item.value.push(i[key].toString());
+          } else {
+            item.value.push(i[key]);
+          }
         });
         data.push(item);
       });
@@ -581,7 +598,7 @@ export default {
           const values = {};
           this.echart.showData.forEach((i) => {
             if (i[key] || i[key] === 0) {
-              values[i[key]] = i[key];
+              values[i[key].toString()] = i[key].toString();
             }
           });
           obj.type = 'category';
@@ -693,6 +710,15 @@ export default {
       // select use api
       this.echart.chart.on('axisareaselected', (params) => {
         const key = params.parallelAxisId;
+        if (
+          this.keysOfMixed &&
+          this.keysOfMixed.length &&
+          this.keysOfMixed.includes(key)
+        ) {
+          this.$message.error(this.$t('modelTraceback.mixedItemMessage'));
+          this.initChart();
+          return;
+        }
         const list = this.$store.state.selectedBarList || [];
         const selectedAxisId = params.parallelAxisId;
         if (list.length) {
@@ -741,6 +767,12 @@ export default {
               {},
               this.chartFilter,
               this.tableFilter,
+          );
+          const tableParams = {};
+          tableParams.body = Object.assign(
+              {},
+              this.chartFilter,
+              this.tableFilter,
               this.sortInfo,
           );
           RequestService.queryLineagesData(filterParams)
@@ -752,20 +784,47 @@ export default {
                   res.data.object &&
                   res.data.object.length
                     ) {
+                      let customized = {};
+                      customized = JSON.parse(JSON.stringify(res.data.customized));
+                      const customizedKeys = Object.keys(customized);
+                      if (customizedKeys.length) {
+                        this.keysOfStringValue = [
+                          'summary_dir',
+                          'network',
+                          'optimizer',
+                          'loss_function',
+                          'train_dataset_path',
+                          'test_dataset_path',
+                          'dataset_mark',
+                        ];
+                        this.keysOfIntValue = [
+                          'train_dataset_count',
+                          'test_dataset_count',
+                          'epoch',
+                          'batch_size',
+                          'device_num',
+                        ];
+                        this.keysOfMixed = [];
+                        customizedKeys.forEach((i) => {
+                          if (customized[i].type === 'int') {
+                            this.keysOfIntValue.push(i);
+                          } else if (customized[i].type === 'str') {
+                            this.keysOfStringValue.push(i);
+                          } else if (customized[i].type === 'mixed') {
+                            // list of type mixed
+                            this.keysOfMixed.push(i);
+                            this.keysOfStringValue.push(i);
+                          }
+                        });
+                      }
+
                       const list = this.setDataOfModel(res.data.object);
                       const summaryDirList = list.map((i) => i.summary_dir);
                       this.$store.commit('setSummaryDirList', summaryDirList);
 
                       this.echart.showData = this.echart.brushData = list;
                       this.initChart();
-
-                      this.table.data = this.echart.brushData.slice(
-                          0,
-                          this.pagination.pageSize,
-                      );
-                      this.pagination.currentPage = 1;
-                      this.pagination.total = this.echart.brushData.length;
-                      this.$refs.table.clearSelection();
+                      this.getTableList(tableParams);
                     } else {
                       this.summaryDirList = [];
                       this.$store.commit('setSummaryDirList', []);
@@ -780,6 +839,26 @@ export default {
       });
     },
     /**
+     * Get table data
+     * @param {Object} tableParams
+     */
+    getTableList(tableParams) {
+      RequestService.queryLineagesData(tableParams)
+          .then(
+              (res) => {
+                if (res && res.data && res.data.object && res.data.object.length) {
+                  const list = this.setDataOfModel(res.data.object);
+                  this.table.data = list.slice(0, this.pagination.pageSize);
+                  this.pagination.currentPage = 1;
+                  this.pagination.total = this.echart.brushData.length;
+                  this.$refs.table.clearSelection();
+                }
+              },
+              (error) => {},
+          )
+          .catch(() => {});
+    },
+    /**
      * Resetting the Eechart
      */
     resetChart() {
@@ -790,6 +869,7 @@ export default {
       this.showTable = false;
       this.chartFilter = {};
       this.tableFilter.summary_dir = undefined;
+      this.sortInfo = {};
       this.pagination.currentPage = 1;
       this.echart.allData = [];
       if (this.echart.chart) {
