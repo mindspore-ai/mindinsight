@@ -96,4 +96,14 @@ export default {
     '.edge.highlighted path {stroke: red;}.edge.highlighted polygon {' +
     'stroke: red;fill: red;}' +
     '.edge.highlighted marker path {fill: red;}</style>',
+  dataMapDownloadStyle: '<style> #graph0 > polygon { fill: transparent; }' +
+    '.node, .cluster { cursor: pointer; }' +
+    '.selected { polygon, ellipse { stroke: red !important; stroke-width: 2px; } }' +
+    '.CreatDataset > polygon, .Operator > ellipse { stroke: #58a4e0; fill: #d1ebff; }' +
+    '.cluster > polygon { fill: #c1f5d5; stroke: #56b077; }' +
+    '.RepeatDataset > polygon { stroke: #fdca5a; fill: #fff2d4; }' +
+    '.ShuffleDataset > polygon { stroke: #f79666; fill: #fed78e; }' +
+    '.BatchDataset > polygon { stroke: #fa8e5a; fill: #ffcfb8; }' +
+    '.edge { path { stroke: rgb(167, 167, 167); }' +
+    'polygon { fill: rgb(167, 167, 167); stroke: rgb(167, 167, 167); } }</style>',
 };
