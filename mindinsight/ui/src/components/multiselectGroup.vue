@@ -99,6 +99,7 @@ export default {
       multiSelectedItemNames: {}, // Dictionary for storing the name of the selected tags.
       operateSelectAll: true, // Indicates whether to select all tags.
       perSelectItemMarginBottom: 1, // Outer margin of the bottom of each selection box.
+      searching: false,
     };
   },
   computed: {},
@@ -156,11 +157,13 @@ export default {
      * Tag Filter
      */
     listFilter() {
+      this.searching = true;
       if (this.searchInputTimer) {
         clearTimeout(this.searchInputTimer);
         this.searchInputTimer = null;
       }
       this.searchInputTimer = setTimeout(() => {
+        this.searching = false;
         let reg;
         try {
           reg = new RegExp(this.searchInput);
@@ -234,6 +237,9 @@ export default {
      * @return {Object} Dictionary containing selected tags
      */
     updateSelectedDic() {
+      if (this.searching) {
+        return this.multiSelectedItemNames;
+      }
       let reg;
       try {
         reg = new RegExp(this.searchInput);
