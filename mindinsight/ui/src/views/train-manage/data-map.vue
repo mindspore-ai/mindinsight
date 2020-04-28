@@ -49,6 +49,9 @@ limitations under the License.
               <div :title="$t('graph.fitScreen')"
                    class="fit-screen"
                    @click="fit()"></div>
+              <div :title="$t('graph.downloadPic')"
+                   class="download-button"
+                   @click="downLoadSVG"></div>
             </div>
             <!-- Right column -->
             <div id="sidebar"
@@ -141,6 +144,7 @@ limitations under the License.
 
 <script>
 import RequestService from '../../services/request-service';
+import CommonProperty from '@/common/common-property.js';
 import {select, selectAll, zoom} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom};
@@ -511,6 +515,27 @@ export default {
       graphDom.setAttribute('transform', str);
     },
     /**
+     * Download svg
+     */
+    downLoadSVG() {
+      const svgXml = document.querySelector('#graph #graph0').innerHTML;
+      const bbox = document.getElementById('graph0').getBBox();
+      const viewBoxSize = `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`;
+      const encodeStr =
+        `<svg xmlns="http://www.w3.org/2000/svg" ` +
+        `xmlns:xlink="http://www.w3.org/1999/xlink" ` +
+        `width="${bbox.width}" height="${bbox.height}" ` +
+        `viewBox="${viewBoxSize}">${CommonProperty.graphDownloadStyle}<g>${svgXml}</g></svg>`;
+
+      // Write the svg stream encoded by base64 to the image object.
+      const src = `data:image/svg+xml;base64,
+      ${window.btoa(unescape(encodeURIComponent(encodeStr)))}`;
+      const a = document.createElement('a');
+      a.href = src; // Export the information in the canvas as image data.
+      a.download = 'dataMap'; // Set the download name.
+      a.click(); // Click to trigger download.
+    },
+    /**
      * Collapse on the right
      */
     toggleRight() {
@@ -624,7 +649,7 @@ export default {
           cursor: pointer;
           width: 12px;
           height: 12px;
-          z-index:999;
+          z-index: 999;
           display: inline-block;
           background-image: url('../../assets/images/full-screen.png');
         }
@@ -634,10 +659,23 @@ export default {
           height: 14px;
           right: 32px;
           top: 10px;
-          z-index:999;
+          z-index: 999;
           cursor: pointer;
           display: inline-block;
           background-image: url('../../assets/images/fit.png');
+        }
+        .download-button {
+          position: absolute;
+          width: 16px;
+          height: 14px;
+          right: 54px;
+          top: 10px;
+          z-index: 999;
+          cursor: pointer;
+          display: inline-block;
+          background-image: url('../../assets/images/download.png');
+          background-size: 14px 14px;
+          background-repeat: no-repeat;
         }
       }
     }
