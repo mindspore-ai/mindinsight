@@ -70,13 +70,13 @@ def _package_current_dataset(operation, message):
         message (Operation): Operation proto message.
     """
     for key, value in operation.items():
-        if key == "operations":
+        if value and key == "operations":
             for operator in value:
                 _package_enhancement_operation(
                     operator,
                     message.operations.add()
                 )
-        elif key == "sampler":
+        elif value and key == "sampler":
             _package_enhancement_operation(
                 value,
                 message.sampler
@@ -93,7 +93,6 @@ def _package_enhancement_operation(operation, message):
         operation (dict): Enhancement operation.
         message (Operation): Enhancement operation proto message.
     """
-
     for key, value in operation.items():
         if isinstance(value, list):
             if all(isinstance(ele, int) for ele in value):
