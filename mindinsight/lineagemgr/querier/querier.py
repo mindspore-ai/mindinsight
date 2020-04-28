@@ -288,8 +288,8 @@ class Querier:
                 try:
                     cmp_result = (value1 > value2) - (value1 < value2)
                 except TypeError:
-                    type1 = str(type(value1))
-                    type2 = str(type(value2))
+                    type1 = type(value1).__name__
+                    type2 = type(value2).__name__
                     cmp_result = (type1 > type2) - (type1 < type2)
             return cmp_result
 
@@ -314,19 +314,7 @@ class Querier:
 
         offset_results = self._handle_limit_and_offset(condition, results)
 
-        customized = dict()
-        for offset_result in offset_results:
-            for obj_name in ["metric", "user_defined"]:
-                obj = getattr(offset_result, obj_name)
-                require = bool(obj_name == "metric")
-                if obj and isinstance(obj, dict):
-                    for key, value in obj.items():
-                        label = f'{obj_name}/{key}'
-                        customized[label] = dict()
-                        customized[label]["label"] = label
-                        # user defined info is not displayed by default
-                        customized[label]["required"] = require
-                        customized[label]["type"] = type(value).__name__
+        customized = self._organize_customized(offset_results)
 
         lineage_types = condition.get(ConditionParam.LINEAGE_TYPE.value)
         lineage_types = self._get_lineage_types(lineage_types)
@@ -347,6 +335,41 @@ class Querier:
         }
 
         return lineage_info
+
+    def _organize_customized(self, offset_results):
+        """Organize customized."""
+        customized = dict()
+        for offset_result in offset_results:
+            for obj_name in ["metric", "user_defined"]:
+                self._organize_customized_item(customized, offset_result, obj_name)
+
+        # If types contain numbers and string, it will be "mixed".
+        # If types contain "int" and "float", it will be "float".
+        for key, value in customized.items():
+            types = value["type"]
+            if len(types) == 1:
+                customized[key]["type"] = list(types)[0]
+            elif types.issubset(["int", "float"]):
+                customized[key]["type"] = "float"
+            else:
+                customized[key]["type"] = "mixed"
+        return customized
+
+    def _organize_customized_item(self, customized, offset_result, obj_name):
+        """Organize customized item."""
+        obj = getattr(offset_result, obj_name)
+        require = bool(obj_name == "metric")
+        if obj and isinstance(obj, dict):
+            for key, value in obj.items():
+                label = f'{obj_name}/{key}'
+                current_type = type(value).__name__
+                if customized.get(label) is None:
+                    customized[label] = dict()
+                    customized[label]["label"] = label
+                    # user defined info is not displayed by default
+                    customized[label]["required"] = require
+                    customized[label]["type"] = set()
+                customized[label]["type"].add(current_type)
 
     def _get_lineage_types(self, lineage_type_param):
         """
