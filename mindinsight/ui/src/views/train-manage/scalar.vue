@@ -34,10 +34,9 @@ limitations under the License.
       <!--operation area -->
       <div class="cl-eval-operate-content"
            v-show="!compare">
-           <multiselectGroupComponents ref="multiselectGroupComponents"
-           :checkListArr="tagOperateList"
-           @selectedChange="tagSelectedChanged"
-           ></multiselectGroupComponents>
+        <multiselectGroupComponents ref="multiselectGroupComponents"
+                                    :checkListArr="tagOperateList"
+                                    @selectedChange="tagSelectedChanged"></multiselectGroupComponents>
       </div>
       <!-- Slider -->
       <div class="cl-eval-slider-operate-content"
@@ -56,14 +55,12 @@ limitations under the License.
         <el-slider v-model="smoothValue"
                    :step="0.01"
                    :max="0.99"
-                   @input="updataInputValue"
-                   ></el-slider>
+                   @input="updataInputValue"></el-slider>
 
-                   <el-input v-model="smoothValueNumber"
-                   class="w60"
-                   @input="smoothValueChange"
-                   @blur="smoothValueBlur"
-                   ></el-input>
+        <el-input v-model="smoothValueNumber"
+                  class="w60"
+                  @input="smoothValueChange"
+                  @blur="smoothValueBlur"></el-input>
       </div>
       <!-- Content display -->
       <div class="cl-eval-show-data-content"
@@ -290,7 +287,7 @@ export default {
             const runNmeColor = CommonProperty.commonColorArr[0];
             data.tags.forEach((tagObj) => {
               if (!this.oriDataDictionaries[tagObj]) {
-                this.oriDataDictionaries[tagObj]=true;
+                this.oriDataDictionaries[tagObj] = true;
                 // Add the tag list
                 tempTagList.push({
                   label: tagObj,
@@ -337,7 +334,7 @@ export default {
             this.initOver = true;
 
             this.$nextTick(() => {
-              this.multiSelectedTagNames=this.$refs.multiselectGroupComponents.updateSelectedDic();
+              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
 
               // Obtains data on the current page
               this.updateTagInPage();
@@ -365,10 +362,10 @@ export default {
       const curPageArr = [];
 
       for (let i = startIndex; i < endIndex; i++) {
-        const sampleItem=this.curFilterSamples[i];
+        const sampleItem = this.curFilterSamples[i];
         if (sampleItem) {
-          sampleItem.updateFlag=true;
-          sampleItem.show=true;
+          sampleItem.updateFlag = true;
+          sampleItem.show = true;
           curPageArr.push(sampleItem);
         }
       }
@@ -381,109 +378,109 @@ export default {
      * Load the data on the current page
      */
     updateCurPageSamples() {
-      this.curPageArr.forEach((sampleObject)=>{
-        const sampleIndex=sampleObject.sampleIndex;
+      this.curPageArr.forEach((sampleObject) => {
+        const sampleIndex = sampleObject.sampleIndex;
         if (!sampleObject) {
           return;
         }
         sampleObject.updateFlag = true;
-
 
         const params = {
           train_id: this.trainingJobId,
           tag: sampleObject.tagName,
         };
 
-        RequestService.getScalarsSample(params).then((res)=>{
-        // error
-          if (!res || !res.data || !res.data.metadatas) {
-            if (sampleObject.charObj) {
-              sampleObject.charObj.clear();
-            }
-            return;
-          }
-          let hasInvalidData = false;
+        RequestService.getScalarsSample(params)
+            .then((res) => {
+            // error
+              if (!res || !res.data || !res.data.metadatas) {
+                if (sampleObject.charObj) {
+                  sampleObject.charObj.clear();
+                }
+                return;
+              }
+              let hasInvalidData = false;
 
-          if (sampleObject.charObj) {
-            sampleObject.charObj.showLoading();
-          }
+              if (sampleObject.charObj) {
+                sampleObject.charObj.showLoading();
+              }
 
-          const resData = res.data;
+              const resData = res.data;
 
-          const tempObject = {
-            valueData: {
-              stepData: [],
-              absData: [],
-              relativeData: [],
-            },
-            logData: {
-              stepData: [],
-              absData: [],
-              relativeData: [],
-            },
-          };
-          let relativeTimeBench = 0;
-          if (resData.metadatas.length) {
-            relativeTimeBench = resData.metadatas[0].wall_time;
-          }
+              const tempObject = {
+                valueData: {
+                  stepData: [],
+                  absData: [],
+                  relativeData: [],
+                },
+                logData: {
+                  stepData: [],
+                  absData: [],
+                  relativeData: [],
+                },
+              };
+              let relativeTimeBench = 0;
+              if (resData.metadatas.length) {
+                relativeTimeBench = resData.metadatas[0].wall_time;
+              }
 
-          // Initializing Chart Data
-          resData.metadatas.forEach((metaData) => {
-            if (metaData.value === null && !hasInvalidData) {
-              hasInvalidData = true;
-            }
-            tempObject.valueData.stepData.push([
-              metaData.step,
-              metaData.value,
-            ]);
-            tempObject.valueData.absData.push([
-              metaData.wall_time,
-              metaData.value,
-            ]);
-            tempObject.valueData.relativeData.push([
-              metaData.wall_time - relativeTimeBench,
-              metaData.value,
-            ]);
-            const logValue = metaData.value >= 0 ? metaData.value : '';
-            tempObject.logData.stepData.push([metaData.step, logValue]);
-            tempObject.logData.absData.push([metaData.wall_time, logValue]);
-            tempObject.logData.relativeData.push([
-              metaData.wall_time - relativeTimeBench,
-              logValue,
-            ]);
-          });
+              // Initializing Chart Data
+              resData.metadatas.forEach((metaData) => {
+                if (metaData.value === null && !hasInvalidData) {
+                  hasInvalidData = true;
+                }
+                tempObject.valueData.stepData.push([
+                  metaData.step,
+                  metaData.value,
+                ]);
+                tempObject.valueData.absData.push([
+                  metaData.wall_time,
+                  metaData.value,
+                ]);
+                tempObject.valueData.relativeData.push([
+                  metaData.wall_time - relativeTimeBench,
+                  metaData.value,
+                ]);
+                const logValue = metaData.value >= 0 ? metaData.value : '';
+                tempObject.logData.stepData.push([metaData.step, logValue]);
+                tempObject.logData.absData.push([metaData.wall_time, logValue]);
+                tempObject.logData.relativeData.push([
+                  metaData.wall_time - relativeTimeBench,
+                  logValue,
+                ]);
+              });
 
-          sampleObject.charData.oriData[0] = tempObject;
+              sampleObject.charData.oriData[0] = tempObject;
 
-          if (hasInvalidData) {
-            this.$set(sampleObject, 'invalidData', true);
-          }
-          sampleObject.charData.charOption = this.formateCharOption(
-              sampleIndex,
-          );
+              if (hasInvalidData) {
+                this.$set(sampleObject, 'invalidData', true);
+              }
+              sampleObject.charData.charOption = this.formateCharOption(
+                  sampleIndex,
+              );
 
-          this.$forceUpdate();
+              this.$forceUpdate();
 
-          this.$nextTick(() => {
-            if (sampleObject.charObj) {
-              sampleObject.charObj.hideLoading();
-            }
+              this.$nextTick(() => {
+                if (sampleObject.charObj) {
+                  sampleObject.charObj.hideLoading();
+                }
 
-            // Draw chart
-            if (!this.compare) {
-              this.updateOrCreateChar(sampleIndex);
-            } else {
-              this.abort = true;
-            }
-          });
-        }).catch((e)=>{
-          if (sampleObject.charObj) {
-            sampleObject.charObj.clear();
-          }
-        });
+                // Draw chart
+                if (!this.compare) {
+                  this.updateOrCreateChar(sampleIndex);
+                } else {
+                  this.abort = true;
+                }
+              });
+            })
+            .catch((e) => {
+              if (sampleObject.charObj) {
+                sampleObject.charObj.clear();
+              }
+            });
       });
     },
-
 
     /**
      * Formatting Chart Data
@@ -499,7 +496,7 @@ export default {
       let returnFlag = false;
       const seriesData = [];
       const oriData = sampleObject.charData.oriData;
-      const runName=sampleObject.runNames;
+      const runName = sampleObject.runNames;
       const curBackName = runName + this.backendString;
       const dataObj = {
         name: runName,
@@ -886,9 +883,11 @@ export default {
       if (sampleObject.fullScreen) {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#3E98C5';
+        sampleObject.charData.charOption.grid.right = 80;
       } else {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#6D7278';
+        sampleObject.charData.charOption.grid.right = 10;
       }
       sampleObject.updateFlag = true;
 
@@ -901,14 +900,13 @@ export default {
       }, 0);
     },
 
-
     /**
      * Update Chart by tag
      * @param {Boolean} noPageDataNumChange No new data is added or deleted
      */
 
     updateTagInPage(noPageDataNumChange) {
-      const curFilterSamples=[];
+      const curFilterSamples = [];
       // Obtains the chart subscript
       this.originDataArr.forEach((sampleItem) => {
         if (this.multiSelectedTagNames[sampleItem.tagName]) {
@@ -1012,12 +1010,11 @@ export default {
       if (!selectedItemDict) {
         return;
       }
-      this.multiSelectedTagNames=selectedItemDict;
+      this.multiSelectedTagNames = selectedItemDict;
       // Reset to the first page
-      this.pageIndex=0;
+      this.pageIndex = 0;
       this.updateTagInPage();
     },
-
 
     /**
      *window resize
@@ -1050,7 +1047,7 @@ export default {
       this.tagOperateList = [];
       this.pageIndex = 0;
       this.originDataArr = [];
-      this.oriDataDictionaries={};
+      this.oriDataDictionaries = {};
       this.curPageArr = [];
       this.tagPropsList = [];
       this.propsList = [];
@@ -1090,10 +1087,10 @@ export default {
       if (!oriData) {
         return false;
       }
-      const newTagDictionaries={}; // Index of the tag in the new data
+      const newTagDictionaries = {}; // Index of the tag in the new data
       let dataRemoveFlag = false;
       oriData.tags.forEach((tagName) => {
-        newTagDictionaries[tagName]=true;
+        newTagDictionaries[tagName] = true;
       });
       // Delete the tag that does not exist
       const oldTagListLength = this.tagOperateList.length;
@@ -1132,7 +1129,7 @@ export default {
       const runColor = CommonProperty.commonColorArr[0];
       oriData.tags.forEach((tagObj) => {
         if (!this.oriDataDictionaries[tagObj]) {
-          this.oriDataDictionaries[tagObj]=true;
+          this.oriDataDictionaries[tagObj] = true;
           this.tagOperateList.push({
             label: tagObj,
             checked: true,
@@ -1198,7 +1195,7 @@ export default {
             const tagAddFlag = this.checkNewDataAndComplete(data);
 
             this.$nextTick(() => {
-              this.multiSelectedTagNames=this.$refs.multiselectGroupComponents.updateSelectedDic();
+              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
               this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
 
               this.resizeCallback();
@@ -1209,7 +1206,7 @@ export default {
 
             // Initial chart data
             data.tags.forEach((tagObj) => {
-              // Check whether the tag with the same name exists
+            // Check whether the tag with the same name exists
               tempTagList.push({
                 label: tagObj,
                 checked: true,
@@ -1266,7 +1263,7 @@ export default {
       if (this.firstNum === 0) {
         return;
       }
-      this.smoothValueNumber=Number(val);
+      this.smoothValueNumber = Number(val);
       if (this.smoothSliderValueTimer) {
         clearTimeout(this.smoothSliderValueTimer);
         this.smoothSliderValueTimer = null;
@@ -1279,26 +1276,26 @@ export default {
 
     smoothValueChange(val) {
       if (!isNaN(val)) {
-        if (Number(val)===0) {
-          this.smoothValue=0;
+        if (Number(val) === 0) {
+          this.smoothValue = 0;
         }
-        if (Number(val)<0) {
-          this.smoothValue=0;
-          this.smoothValueNumber=0;
+        if (Number(val) < 0) {
+          this.smoothValue = 0;
+          this.smoothValueNumber = 0;
         }
-        if (Number(val)>0) {
-          if (Number(val)>0.99) {
-            this.smoothValue=0.99;
-            this.smoothValueNumber=0.99;
+        if (Number(val) > 0) {
+          if (Number(val) > 0.99) {
+            this.smoothValue = 0.99;
+            this.smoothValueNumber = 0.99;
           } else {
-            this.smoothValue=Number(val);
+            this.smoothValue = Number(val);
           }
         }
       }
     },
 
     smoothValueBlur() {
-      this.smoothValueNumber=this.smoothValue;
+      this.smoothValueNumber = this.smoothValue;
     },
 
     /**
