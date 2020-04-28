@@ -151,9 +151,9 @@ class TestEventsData:
         # Current steps should be: [1, 2, 3, 4, 5, 10]
         steps = [1, 2, 3, 4, 5, 10]
         samples = ev_data._reservoir_by_tag[tag].samples()
-        for i in range(len(samples)):
-            filename = file1 if samples[i].step < 5 else file2
-            assert samples[i] == _Tensor(wall_time, steps[i], value, filename)
+        for step, sample in zip(steps, samples):
+            filename = file1 if sample.step < 5 else file2
+            assert sample == _Tensor(wall_time, step, value, filename)
 
         new_steps_2 = [7, 11, 3]
         for step in new_steps_2:
@@ -165,6 +165,6 @@ class TestEventsData:
         steps = [1, 2, 3, 5, 7, 10, 11]
         new_steps_2.extend(new_steps_1)
         samples = ev_data._reservoir_by_tag[tag].samples()
-        for i in range(len(samples)):
-            filename = file2 if samples[i].step in new_steps_2 else file1
-            assert samples[i] == _Tensor(wall_time, steps[i], value, filename)
+        for step, sample in zip(steps, samples):
+            filename = file2 if sample.step in new_steps_2 else file1
+            assert sample == _Tensor(wall_time, step, value, filename)
