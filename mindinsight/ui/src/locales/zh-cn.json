@@ -49,7 +49,8 @@
     "noDataTips": "请点击“显示全量数据”按钮查看全量数据",
     "userDefined": "自定义数据",
     "metric": "度量指标",
-    "deviceNum": "device数目"
+    "deviceNum": "device数目",
+    "mixedItemMessage": "该参数含有多种类型数据，无法筛选展示"
   },
   "dataTraceback": {
     "details": "详情",
@@ -67,8 +68,7 @@
     "samplingData": "数据抽样",
     "imagesampleSwitch": "切换标签",
     "invalidId": "无效的训练作业",
-    "summaryDirPath": "summary路径：",
-    "mixedItemMessage": "该参数含有多种类型数据，无法筛选展示"
+    "summaryDirPath": "summary路径："
   },
   "scalar": {
     "titleText": "标量",
