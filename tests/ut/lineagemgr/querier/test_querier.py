@@ -463,7 +463,7 @@ class TestQuerier(TestCase):
     def test_filter_summary_lineage_success_4(self):
         """Test the success of filter_summary_lineage."""
         expected_result = {
-            'customized': event_data.CUSTOMIZED_0,
+            'customized': event_data.CUSTOMIZED_2,
             'object': [
                 LINEAGE_FILTRATION_0,
                 LINEAGE_FILTRATION_1,
@@ -500,7 +500,7 @@ class TestQuerier(TestCase):
             'sorted_type': 'ascending'
         }
         expected_result = {
-            'customized': event_data.CUSTOMIZED_0,
+            'customized': event_data.CUSTOMIZED_2,
             'object': [
                 LINEAGE_FILTRATION_0,
                 LINEAGE_FILTRATION_5,
@@ -522,7 +522,7 @@ class TestQuerier(TestCase):
             'sorted_type': 'descending'
         }
         expected_result = {
-            'customized': event_data.CUSTOMIZED_1,
+            'customized': event_data.CUSTOMIZED_2,
             'object': [
                 LINEAGE_FILTRATION_6,
                 LINEAGE_FILTRATION_4,
