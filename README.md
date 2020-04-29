@@ -68,6 +68,11 @@ training process, such as loss value and accuracy rate of each iteration.
 
 Two scalar curves can be combined and displayed in one chart. 
 
+### Parameter distribution
+
+The GUI of MindInsight displays the distribution change tendency of a tensor such as weight
+or gradient during the entire training process.
+
 ### Image visualization
 
 The GUI of MindInsight displays both original images and enhanced images during the entire 
