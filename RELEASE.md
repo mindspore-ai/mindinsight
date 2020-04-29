@@ -10,12 +10,11 @@ Now you can use [`HistogramSummary`](https://www.mindspore.cn/api/zh-CN/master/a
 * Model and dataset tracking linkage support
 
 ## Bugfixes 
-* Fix graph bug when node name is empty.([#I1EQ5H](https://gitee.com/mindspore/mindinsight/issues/I1EQ5H?from=project-issue))
-* Fix sha256 checksum missing bug.([#I1EHVK](https://gitee.com/mindspore/mindinsight/issues/I1EHVK?from=project-issue))
-* Fix start/stop command exit-code incorrect.([#I1EY3F](https://gitee.com/mindspore/mindinsight/issues/I1EY3F?from=project-issue))
-* Reduce cyclomatic complexity of list_summary_directories.
-([#I1DANB](https://gitee.com/mindspore/mindinsight/issues/I1DANB?from=project-issue))
-* Fix unsafe functions and duplication files and redundant codes.([#I1DDGF]https://gitee.com/mindspore/mindinsight/issues/I1DDGF?from=project-issue))
+* Reduce cyclomatic complexity of `list_summary_directories` ([!11](https://gitee.com/mindspore/mindinsight/pulls/11)).
+* Fix unsafe functions and duplication files and redundant codes ([!14](https://gitee.com/mindspore/mindinsight/pulls/14)).
+* Fix sha256 checksum missing bug ([!24](https://gitee.com/mindspore/mindinsight/pulls/24)).
+* Fix graph bug when node name is empty ([!34](https://gitee.com/mindspore/mindinsight/pulls/34)).
+* Fix start/stop command exit-code incorrect ([!44](https://gitee.com/mindspore/mindinsight/pulls/44)).
 
 ## Thanks to our Contributors
 Thanks goes to these wonderful people:
