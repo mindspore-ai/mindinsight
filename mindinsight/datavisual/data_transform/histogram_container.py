@@ -72,16 +72,16 @@ class Bucket:
 
 
 class HistogramContainer:
-
-    # Max quantity of original buckets.
-    MAX_ORIGINAL_BUCKETS_COUNT = 90
-
     """
     Histogram data container.
 
     Args:
         histogram_message (Summary.Histogram): Histogram message in summary file.
     """
+
+    # Max quantity of original buckets.
+    MAX_ORIGINAL_BUCKETS_COUNT = 90
+
     def __init__(self, histogram_message: Summary.Histogram):
         self._msg = histogram_message
         original_buckets = [Bucket(bucket.left, bucket.width, bucket.count) for bucket in self._msg.buckets]
