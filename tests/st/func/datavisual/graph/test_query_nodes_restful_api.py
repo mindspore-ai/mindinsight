@@ -40,22 +40,17 @@ class TestQueryNodes:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.usefixtures("init_summary_logs")
-    @pytest.mark.parametrize("node_name, node_type, result_file", [
-        ('', "name_scope", "test_query_nodes_success_result2.json"),
-        ("Default", "name_scope", "test_query_nodes_success_result1.json"),
-        ("Default/bn1/Reshape_1_[12]", "polymeric_scope", "test_query_nodes_success_result3.json")
+    @pytest.mark.parametrize("node_name, result_file", [
+        ('', "test_query_nodes_success_result1.json"),
+        ("Default", "test_query_nodes_success_result2.json"),
+        ("Default/bn1/Reshape[12]_1", "test_query_nodes_success_result3.json")
     ])
-    def test_query_namescope_success(self, client, node_name, node_type, result_file):
+    def test_list_node_success(self, client, node_name, result_file):
         """Query the name scope node."""
         train_id = gbl.get_train_ids()[0]
 
-        if node_name:
-            params = dict(train_id=train_id,
-                          type=node_type,
-                          name=node_name)
-        else:
-            params = dict(train_id=train_id,
-                          type=node_type)
+        params = dict(train_id=train_id,
+                      name=node_name)
         url = get_url(BASE_URL, params)
         response = client.get(url)
         assert response.status_code == 200

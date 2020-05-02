@@ -15,13 +15,13 @@
 """
 This file is used to define the basic graph.
 """
-import copy
-import time
-
 from enum import Enum
+from collections import defaultdict
 
-from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common.exceptions import NodeNotInGraphError
+from mindinsight.datavisual.common.log import logger
+from mindinsight.utils.exceptions import ParamMissError
+from mindinsight.utils.exceptions import ParamValueError
 from .node import NodeTypeEnum
 from .node import Node
 
@@ -32,27 +32,38 @@ class EdgeTypeEnum(Enum):
     DATA = 'data'
 
 
-class DataTypeEnum(Enum):
-    """Data type enum."""
-    DT_TENSOR = 13
-
-
 class Graph:
     """The `Graph` object is used to describe a graph file."""
-    MIN_POLYMERIC_NODE_COUNT = 5
+    # Limit the size of a single attribute value per node to avoid storing too much data
+    MAX_NODE_ATTRIBUTE_VALUE_BYTES = 1024
+
+    # In the same scope, the number of children of the same type exceeds this threshold, and we will combine them.
+    MIN_GROUP_NODE_COUNT = 5
 
     def __init__(self):
-        # Store nodes contain leaf nodes, name scope node, except polymeric nodes
-        self._normal_nodes = {}
+        # Used to cache all nodes, and the key is node name, value is `Node` object.
+        self._normal_node_map = {}
+        self._node_id_map_name = {}
 
-        # Store polymeric nodes.
-        self._polymeric_nodes = {}
+        # The additional caching of Const and Parameter is to handle the Const
+        # and Parameter nodes separately later.
+        self._const_node_temp_cache = {}
+        self._parameter_node_temp_cache = {}
 
-        # Store all nodes resolved from the file.
-        self._leaf_nodes = {}
+    def build_graph(self, proto_data):
+        """This method is used to build the graph."""
 
-        # The format of node groups is {'group_name': {'node_name': <Node>}}
-        self._node_groups = {}
+        # Notice:
+        # The following methods are interdependent and cannot be switched at will.
+        self._parse_data(proto_data)
+        self._add_variable_nodes(NodeTypeEnum.PARAMETER.value)
+        self._build_aggregation_scope_nodes()
+        self._process_independent_layout()
+        self._build_name_scope_nodes()
+
+        # Since const nodes are not aggregated, adding them at the end can save a lot of computation.
+        self._add_variable_nodes(NodeTypeEnum.CONST.value)
+        self._calc_subnode_count()
 
     def exist_node(self, name):
         """
@@ -62,52 +73,27 @@ class Graph:
             name (str): The node name.
 
         Returns:
-            bool, if node is exist will return True.
+            bool, if node exists, will return True.
 
         """
-        if self._normal_nodes.get(name) is None:
+        if name is None:
             return False
-        return True
+        return self._is_node_exist(node_name=name)
 
-    def get_normal_nodes(self, namescope=None):
+    def list_node_by_scope(self, scope=None):
         """
-        Get nodes by namescope.
+        List nodes by the scope of nodes. The scope of a node is the same as its parent node name.
 
         Args:
-            namescope (str): A namescope of nodes.
-
-        Returns:
-            list[dict], a list object contain `Node` object.
-
-        """
-        nodes = []
-        if namescope is None:
-            for name, node in self._normal_nodes.items():
-                if '/' not in name:
-                    # Get first layer nodes
-                    nodes.append(node.to_dict())
-            return nodes
-
-        namescope = namescope + '/'
-        for name, node in self._normal_nodes.items():
-            if name.startswith(namescope) and '/' not in name.split(namescope)[1]:
-                nodes.append(node.to_dict())
-
-        return nodes
-
-    def get_polymeric_nodes(self, polymeric_scope):
-        """
-        Get polymeric nodes by polymeric scope.
-
-        Args:
-            polymeric_scope (str): The polymeric scope name of nodes.
+            scope (str): A scope of nodes.
 
         Returns:
             list[dict], a list object contain `Node` object.
         """
+        scope = "" if scope is None else scope
         nodes = []
-        for node in self._polymeric_nodes.values():
-            if node.polymeric_scope_name == polymeric_scope:
+        for node in self._normal_node_map.values():
+            if node.scope == scope:
                 nodes.append(node.to_dict())
         return nodes
 
@@ -117,21 +103,18 @@ class Graph:
 
         Args:
             content (Union[str, None]): This content can be the key content of the node to search,
-                if None, will get all node names.
+                                        if None, will get all node names.
             offset (int): An offset for page. Ex, offset is 0, mean current page is 1.
             limit (int): An offset for page. Ex, offset is 0, mean current page is 1.
 
         Returns:
             list[str], a list of node names.
         """
-        all_names = []
-        all_names.extend(list(self._normal_nodes.keys()))
-        all_names.extend(list(self._polymeric_nodes.keys()))
         if content is not None:
             content = content.lower()
-            catch_names = [name for name in all_names if content in name.lower()]
+            catch_names = [name for name in self._normal_node_map if content in name.lower()]
         else:
-            catch_names = all_names
+            catch_names = list(self._normal_node_map)
         catch_names = sorted(catch_names)
         real_offset = offset * limit
         return catch_names[real_offset:real_offset+limit]
@@ -149,304 +132,419 @@ class Graph:
                                'scope_name': '<Node scope>',
                                'children': {<item_object>}}
         """
-        if node_name and self._polymeric_nodes.get(node_name) is None \
-                and self._normal_nodes.get(node_name) is None:
+        if node_name and not self.exist_node(name=node_name):
             raise NodeNotInGraphError(node_name=node_name)
 
         response = {}
-        nodes = self.get_normal_nodes()
+        nodes = self.list_node_by_scope()
         response.update({
             'nodes': nodes,
             'scope_name': '',
             'children': {}
         })
 
-        names = node_name.split('/')
         children = response['children']
-        for i in range(1, len(names)+1):
-            if i == len(names):
-                polymeric_node = self._polymeric_nodes.get(node_name)
-                if polymeric_node:
-                    polymeric_scope = polymeric_node.polymeric_scope_name
-                    nodes = self.get_polymeric_nodes(polymeric_scope)
-                    children.update({'nodes': nodes,
-                                     'scope_name': polymeric_scope,
-                                     'children': {}})
-                break
 
-            name_scope = '/'.join(names[:i])
-            nodes = self.get_normal_nodes(name_scope)
+        index = node_name.find('/')
+        while index != -1:
+            scope = node_name[:index]
+            nodes = self.list_node_by_scope(scope)
             children.update({
                 'nodes': nodes,
-                'scope_name': name_scope,
+                'scope_name': scope,
                 'children': {}
             })
             children = children['children']
 
+            index = node_name.find('/', index+1)
+
         return response
 
-    def _build_polymeric_nodes(self):
-        """Build polymeric node."""
-        logger.debug("Start to build polymeric nodes")
-
-        self._find_polymeric_nodes()
-
-        group_count_map = {}
-        for group_name, group in self._node_groups.items():
-            name = group_name.split('/')[-1]
-            count = group_count_map.get(name, 0)
-            count += 1
-            group_count_map[name] = count
-            polymeric_node_name = group_name + '_{}_[{}]'.format(count, len(group))
-            polymeric_node = Node(polymeric_node_name, node_id=polymeric_node_name)
-            polymeric_node.node_type = NodeTypeEnum.POLYMERIC_SCOPE.value
-            polymeric_node.name_scope = '/'.join(group_name.split('/')[:-1])
-            polymeric_node.subnode_count = len(group)
-
-            for name_tmp, node_tmp in group.items():
-                node_tmp.polymeric_scope_name = polymeric_node_name
-                self._polymeric_nodes.update({name_tmp: node_tmp})
-                polymeric_node.update_input(node_tmp.inputs)
-                polymeric_node.update_output(node_tmp.outputs)
-
-            self._normal_nodes.update({polymeric_node_name: polymeric_node})
-
-        self._update_input_output()
-
-    def _find_polymeric_nodes(self):
-        """Find polymeric nodes from node groups."""
-        node_groups = copy.deepcopy(self._node_groups)
-        for group_name, group in node_groups.items():
-            if len(group) < self.MIN_POLYMERIC_NODE_COUNT:
-                self._normal_nodes.update(group)
-                self._node_groups.pop(group_name)
-                continue
-
-            move_node_names = []
-            is_move_group = False
-            for node_name, group_node in group.items():
-                node_list = []
-                is_in_group = False
-                for dst_name in group_node.outputs:
-                    node_tmp = self._leaf_nodes[dst_name]
-                    node_list.append(node_tmp)
-
-                start = time.time()
-                run_count = 0
-                visit_nodes = {}
-                while node_list:
-                    # Iterate to find if the output of the node in the group causes a loop
-                    # example: there is a group A, and node_a is a Node in group.
-                    # if there is a loop in node_a, like A/node_a -> B/node_b -> A/node_b
-                    # we will remove the node_a from group A.
-                    node_tmp = node_list[0]
-                    node_list = node_list[1:]
-                    visit_nodes.update({node_tmp.name: True})
-                    if node_tmp in group.values():
-                        is_in_group = True
-                        break
-                    for dst_name_tmp in node_tmp.outputs:
-                        run_count += 1
-                        node_tmp = self._leaf_nodes[dst_name_tmp]
-                        if visit_nodes.get(dst_name_tmp):
-                            continue
-                        node_list.append(node_tmp)
-                logger.debug("Find group %s node end, is_in_group: %s, use time: %s, "
-                             "run count: %s.", group_name, is_in_group,
-                             time.time() - start, run_count)
-
-                if is_in_group:
-                    move_node_names.append(node_name)
-
-                if (len(group) - len(move_node_names)) < self.MIN_POLYMERIC_NODE_COUNT:
-                    is_move_group = True
-                    break
-
-            if is_move_group:
-                self._normal_nodes.update(group)
-                self._node_groups.pop(group_name)
-            else:
-                for name_tmp in move_node_names:
-                    node_tmp = self._node_groups[group_name].pop(name_tmp)
-                    self._normal_nodes.update({name_tmp: node_tmp})
-
-    def _update_input_output(self):
-        """We need to update input and output attribute after build polymeric node."""
-        for node in self._normal_nodes.values():
-            for src_name, input_attr in node.inputs.items():
-                if self._polymeric_nodes.get(src_name):
-                    input_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
-                    node.update_input({src_name: input_attr})
-
-            for dst_name, output_attr in node.outputs.items():
-                if self._polymeric_nodes.get(dst_name):
-                    output_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
-                    node.update_output({dst_name: output_attr})
-
-        for node in self._polymeric_nodes.values():
-            for src_name, input_attr in node.inputs.items():
-                if self._polymeric_nodes.get(src_name):
-                    input_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
-                    node.update_input({src_name: input_attr})
-
-            for dst_name, output_attr in node.outputs.items():
-                if self._polymeric_nodes.get(dst_name):
-                    output_attr['scope'] = NodeTypeEnum.POLYMERIC_SCOPE.value
-                    node.update_output({dst_name: output_attr})
-
-    def _update_polymeric_input_output(self):
-        """Calc polymeric input and output after build polymeric node."""
-        for node in self._normal_nodes.values():
-            polymeric_input = self._calc_polymeric_attr(node, 'inputs')
-            node.update_polymeric_input(polymeric_input)
-
-            polymeric_output = self._calc_polymeric_attr(node, 'outputs')
-            node.update_polymeric_output(polymeric_output)
-
-        for name, node in self._polymeric_nodes.items():
-            polymeric_input = {}
-            for src_name in node.inputs:
-                output_name = self._calc_dummy_node_name(name, src_name)
-                polymeric_input.update({output_name: {'edge_type': EdgeTypeEnum.DATA.value}})
-            node.update_polymeric_input(polymeric_input)
-
-            polymeric_output = {}
-            for dst_name in node.outputs:
-                polymeric_output = {}
-                output_name = self._calc_dummy_node_name(name, dst_name)
-                polymeric_output.update({output_name: {'edge_type': EdgeTypeEnum.DATA.value}})
-            node.update_polymeric_output(polymeric_output)
-
-    def _calc_polymeric_attr(self, node, attr):
+    def _parse_data(self, proto_data):
         """
-        Calc polymeric input or polymeric output after build polymeric node.
+        This method will parse the data and create basic nodes to store in the cache.
 
-        Args:
-            node (Node): Computes the polymeric input for a given node.
-            attr (str): The polymeric attr, optional value is `input` or `output`.
-
-        Returns:
-            dict, return polymeric input or polymeric output of the given node.
+        The graph is then built based on the cache.
         """
-        polymeric_attr = {}
-        for node_name in getattr(node, attr):
-            polymeric_node = self._polymeric_nodes.get(node_name)
-            if node.node_type == NodeTypeEnum.POLYMERIC_SCOPE.value:
-                node_name = node_name if not polymeric_node else polymeric_node.polymeric_scope_name
-                dummy_node_name = self._calc_dummy_node_name(node.name, node_name)
-                polymeric_attr.update({dummy_node_name: {'edge_type': EdgeTypeEnum.DATA.value}})
-                continue
-
-            if not polymeric_node:
-                continue
-
-            if not node.name_scope and polymeric_node.name_scope:
-                # If current node is in top-level layer, and the polymeric_node node is not in
-                # the top-level layer, the polymeric node will not be the polymeric input
-                # or polymeric output of current node.
-                continue
-
-            if node.name_scope == polymeric_node.name_scope \
-                    or node.name_scope.startswith(polymeric_node.name_scope + '/'):
-                polymeric_attr.update(
-                    {polymeric_node.polymeric_scope_name: {'edge_type': EdgeTypeEnum.DATA.value}})
-
-        return polymeric_attr
-
-    def _calc_dummy_node_name(self, current_node_name, other_node_name):
-        """
-        Calc dummy node name.
-
-        Args:
-            current_node_name (str): The name of current node.
-            other_node_name (str): The target dummy node name.
-
-        Returns:
-            str, the dummy node name.
-        """
-        name_tmp = other_node_name
-        if self._polymeric_nodes.get(other_node_name):
-            name_tmp = self._polymeric_nodes[other_node_name].polymeric_scope_name
-        name_tmp_list = name_tmp.split('/')
-        current_name_list = current_node_name.split('/')
-        index = 0
-        min_len = min(len(name_tmp_list), len(current_name_list))
-        for i in range(min_len):
-            index = i
-            if name_tmp_list[index] != current_name_list[index]:
-                break
-        dummy_node_name = '/'.join(name_tmp_list[:index+1])
-        return dummy_node_name
+        raise NotImplementedError("Before you can build a graph, you need to parse the data.")
 
     def _build_name_scope_nodes(self):
-        """Build name scope node by every node name."""
-        normal_nodes = dict(self._normal_nodes)
+        """
+        Build name scope node by every node name.
 
-        rename_node_names = {}
-        for name, node in normal_nodes.items():
-            name_list = name.split('/')
-            for i in range(1, len(name_list)):
-                name_scope = '/'.join(name_list[:i])
-                name_scope_node = self._normal_nodes.get(name_scope)
-                if name_scope_node is None:
-                    name_scope_node = Node(name_scope, node_id=name_scope)
-                    name_scope_node.node_type = NodeTypeEnum.NAME_SCOPE.value
-                    name_scope_node.name_scope = '/'.join(name_list[:i-1])
-                elif name_scope_node.node_type != NodeTypeEnum.NAME_SCOPE.value:
-                    # The name of this node conflicts with namescope, so rename this node
-                    old_name = name_scope_node.name
-                    old_names = name_scope_node.name.split('/')
-                    old_names[-1] = f'({old_names[-1]})'
-                    new_name = '/'.join(old_names)
-                    name_scope_node.name = new_name
-                    self._normal_nodes.pop(old_name)
-                    self._normal_nodes.update({new_name: name_scope_node})
-                    rename_node_names.update({old_name: new_name})
+        We create the name scope node by the slash('/') in the node name.
+        For example, if a node name is "Default/add", we generate a scope named 'Default' based on slash('/') and
+        create a name scope node named 'Default'.
+        """
+        logger.info("Start to build name scope nodes.")
+        scope_node_map = {}
+        for name, node in self._normal_node_map.items():
+            index = name.find('/')
+            pre_index = None
+            while index > 0:
+                scope = name[:index]
+                scope_node = scope_node_map.get(scope)
+                if scope_node is None:
+                    if self._is_node_exist(node_name=scope):
+                        exist_node = self._get_normal_node(node_name=scope)
+                        if exist_node.type == NodeTypeEnum.AGGREGATION_SCOPE.value:
+                            # This scope is aggregation scope, so we don't have to do anything.
+                            pre_index = index
+                            index = name.find('/', pre_index + 1)
+                            continue
 
-                    # create new namescope
-                    name_scope_node = Node(name_scope, node_id=name_scope)
-                    name_scope_node.node_type = NodeTypeEnum.NAME_SCOPE.value
-                    name_scope_node.name_scope = '/'.join(name_list[:i-1])
+                        # We find a node name that conflicts with the current scope and rename the node
+                        self._update_conflict_node(conflict_name=scope)
 
-                # update the input and output of this to namescope node
-                name_scope_with_slash = name_scope + '/'
-                for src_name, input_attr in node.inputs.items():
-                    if src_name.startswith(name_scope_with_slash):
+                    # We create a node for current scope.
+                    scope_node = Node(scope, node_id=scope)
+                    scope_node.type = NodeTypeEnum.NAME_SCOPE.value
+                    scope_node.scope = '' if pre_index is None else name[:pre_index]
+                    scope_node_map.update({scope_node.name: scope_node})
+
+                # Inherit input and output from sub nodes.
+                self._inherit_input_output_from_subnode(scope_node, subnode_list=[node])
+
+                pre_index = index
+                index = name.find('/', pre_index+1)
+
+        # Cache all the scope node to normal node dict
+        for node in scope_node_map.values():
+            self._cache_node(node)
+
+    def _update_conflict_node(self, conflict_name):
+        conflict_node = self._get_normal_node(node_name=conflict_name)
+        base_name = conflict_name.split('/')[-1]
+        new_name = Node.create_node_name(scope=conflict_node.scope, base_name=base_name)
+        self._update_node_name_of_cache(conflict_node, new_name, update_parent=True)
+
+    def _inherit_input_output_from_subnode(self, parent_node, subnode_list, filtered_type=None):
+        """
+        Adds the input and output of all direct child nodes to the current node.
+
+        Args:
+            parent_node (Node): The nodes that inherit the input and output of the child nodes.
+            subnode_list (list[Node]): A list of child nodes that are inherited from the input and output.
+            filtered_type (set(str)): Filter some input and output that do not require inheritance
+                                      based on the node type. Default is filter const node.
+
+        Note:
+            - Only the inputs and outputs of the external scope are inherited.
+            - Before add_const_node method, if the input is a const,
+              the scope of the const node is not startswith the name of parent node.
+              So in this scenario, we need to filter the const nodes.
+        """
+        filtered_type = {NodeTypeEnum.CONST.value} if filtered_type is None else filtered_type
+        for method in ['input', 'output', 'proxy_input', 'proxy_output']:
+            for node in subnode_list:
+                for item_name, item_attr in getattr(node, method).items():
+                    target_node = self._get_normal_node(node_name=item_name)
+                    if item_name.startswith(f'{parent_node.name}/'):
+                        # Own scope, ignore
                         continue
-                    name_scope_node.update_input({src_name: input_attr})
 
-                for dst_name, output_attr in node.outputs.items():
-                    if dst_name.startswith(name_scope_with_slash):
+                    if target_node.type in filtered_type:
                         continue
-                    name_scope_node.update_output({dst_name: output_attr})
 
-                self._normal_nodes.update({name_scope: name_scope_node})
+                    getattr(parent_node, f'add_{method}')(item_name, item_attr)
 
-        if rename_node_names:
-            # If existing nodes are renamed, the inputs and outputs of all nodes need to be refreshed
-            nodes = []
-            nodes.extend(self._normal_nodes.values())
-            nodes.extend(self._polymeric_nodes.values())
-            for node in nodes:
-                attrs = ['inputs', 'outputs', 'polymeric_inputs', 'polymeric_outputs']
-                for item in attrs:
-                    tmp_dict = dict(getattr(node, item))
-                    for name, value in tmp_dict.items():
-                        new_name = rename_node_names.get(name, False)
-                        if new_name:
-                            getattr(node, item).pop(name)
-                            getattr(node, f'update_{item}')({new_name: value})
+    def _build_aggregation_scope_nodes(self):
+        """
+        Under the same scope, the number of nodes of the same type will be aggregated after exceeding the set threshold.
 
-        self._calc_subnode_count()
+        Note:
+            The threshold value refers to the `MIN_GROUP_NODE_COUNT`.
+        """
+        logger.info("Start to build aggregation scope nodes.")
+        group_node_map, filtered_group_names = self._find_group_nodes()
+
+        # create merge scope nodes
+        aggregation_scope_node_map = {}
+        for i, group_name in enumerate(filtered_group_names):
+            slash_index = group_name.rfind('/')
+            if slash_index != -1:
+                scope, op_type = group_name[:slash_index], group_name[slash_index+1:]
+            else:
+                scope, op_type = '', group_name
+
+            count = len(group_node_map.get(group_name))
+            aggregation_node_name = Node.create_node_name(scope=scope, base_name=f'{op_type}[{count}]_{i}')
+            aggregation_scope_node = Node(name=aggregation_node_name, node_id=aggregation_node_name)
+            aggregation_scope_node.subnode_count = count
+            aggregation_scope_node.scope = scope
+            aggregation_scope_node.type = NodeTypeEnum.AGGREGATION_SCOPE.value
+
+            # Update the name and scope of all children nodes
+            for node in group_node_map[group_name]:
+                base_name = node.name.split('/')[-1]
+                new_name = Node.create_node_name(scope=aggregation_node_name, base_name=base_name)
+                node.scope = aggregation_node_name
+
+                # Since the name scope has not been created, there is no need to update the parent node.
+                self._update_node_name_of_cache(node, new_name, update_parent=False)
+
+            # Cache this node
+            self._cache_node(aggregation_scope_node)
+            aggregation_scope_node_map.update({group_name: aggregation_scope_node})
+
+        # Adds the input and output of all direct child nodes to the current node.
+        for group_name, node in aggregation_scope_node_map.items():
+            self._inherit_input_output_from_subnode(node, group_node_map[group_name])
+
+    def _find_group_nodes(self):
+        """
+        Find nodes that can be grouped into a group.
+
+        For direct child nodes in a scope, we divide them into multiple groups by node type.
+        However, we will exclude several types of child nodes,
+        because these types of nodes are not operational nodes.
+        """
+        exclude_types = {
+            NodeTypeEnum.CONST.value,
+            NodeTypeEnum.NAME_SCOPE.value,
+        }
+
+        group_node_map = defaultdict(list)
+        for node in self._normal_node_map.values():
+            if node.type in exclude_types:
+                continue
+            group_name = Node.create_node_name(scope=node.scope, base_name=node.type)
+            group_node_map[group_name].append(node)
+
+        # filter can group scope.
+        filtered_group_names = []
+        for name, nodes in group_node_map.items():
+            if len(nodes) < self.MIN_GROUP_NODE_COUNT:
+                continue
+            filtered_group_names.append(name)
+
+        return group_node_map, filtered_group_names
+
+    def _add_variable_nodes(self, node_type):
+        """
+        We create the Const nodes or Parameter nodes in this method.
+
+        Args:
+            node_type (str): Decide which type of node to add.
+                             Optional is `NodeTypeEnum.CONST.value` and `NodeTypeEnum.PARAMETER.value`.
+
+        Note:
+            This method relies on the presence of data in the const cache or parameter cache.
+        """
+        logger.info("Start to add %s nodes to each scope in graph.", node_type)
+        node_map = {}
+        for node in self._normal_node_map.values():
+            for src_name, input_attr in dict(node.input).items():
+
+                if node_type == NodeTypeEnum.CONST.value and not self._const_node_temp_cache.get(src_name):
+                    continue
+
+                if node_type == NodeTypeEnum.PARAMETER.value and not self._parameter_node_temp_cache.get(src_name):
+                    continue
+
+                variable_name = Node.create_node_name(scope=node.scope, base_name=src_name)
+                if node_map.get(variable_name):
+                    # There is no need to create the node repeatedly
+                    variable_node = node_map.get(variable_name)
+                else:
+                    cache_node = self._get_normal_node(node_name=src_name)
+                    variable_node = Node(name=variable_name, node_id=variable_name)
+                    Node.copy_node_without_input_output(cache_node, variable_node)
+                    variable_node.scope = node.scope
+
+                variable_node.add_output(dst_name=node.name, output_attr=input_attr)
+                node_map.update({variable_name: variable_node})
+
+                node.delete_input(src_name)
+                node.add_input(variable_name, input_attr)
+
+        for node in node_map.values():
+            self._cache_node(node)
+
+        # Remove nodes that are not used in the cache.
+        if node_type == NodeTypeEnum.CONST.value:
+            unused_names = set(self._const_node_temp_cache) - set(node_map)
+        elif node_type == NodeTypeEnum.PARAMETER.value:
+            unused_names = set(self._parameter_node_temp_cache) - set(node_map)
+        else:
+            raise ParamValueError("The node type should be const or parameter.")
+
+        self._delete_nodes_of_cache(unused_names)
 
     def _calc_subnode_count(self):
-        """Calc the sub node count of scope node."""
-        name_scope_mapping = {}
-        for node in self._normal_nodes.values():
-            if node.name_scope:
-                count = name_scope_mapping.get(node.name_scope, 0)
-                name_scope_mapping[node.name_scope] = count + 1
+        """Calc all the direct sub node count."""
+        subnode_count_map = defaultdict(int)
+        for node in self._normal_node_map.values():
+            if not node.scope:
+                continue
 
-        for name_scope, count in name_scope_mapping.items():
-            node = self._normal_nodes[name_scope]
+            if not self._is_node_exist(node_name=node.scope):
+                logger.warning("Can not find a scope node by the given name(%s), "
+                               "the name scope nodes may not have been created.", node.scope)
+                continue
+            subnode_count_map[node.scope] = subnode_count_map[node.scope] + 1
+
+        for name, count in subnode_count_map.items():
+            node = self._get_normal_node(node_name=name)
             node.subnode_count = count
+
+    def _get_normal_node(self, node_id=None, node_name=None):
+        """Query node by node id or node name."""
+        if node_id is not None:
+            name = self._node_id_map_name.get(node_id)
+            node = self._normal_node_map.get(name)
+            return node
+
+        if node_name is not None:
+            return self._normal_node_map.get(node_name)
+
+        raise ParamMissError('Method requires an argument that is not None.')
+
+    def _is_node_exist(self, node_id=None, node_name=None):
+        """Check node is exist."""
+        if node_id is not None:
+            return bool(self._node_id_map_name.get(node_id))
+
+        if node_name is not None:
+            return bool(self._normal_node_map.get(node_name))
+
+        raise ParamMissError('Method requires an argument that is not None.')
+
+    @property
+    def normal_node_count(self):
+        """Get the normal node count."""
+        return len(self._normal_node_map)
+
+    def _cache_node(self, node):
+        """Store the node in the cache."""
+        # Notice:
+        # The additional caching of Const and Parameter is to handle the Const and Parameter nodes separately later.
+        if node.type == NodeTypeEnum.CONST.value:
+            self._const_node_temp_cache.update({node.name: node})
+        if node.type == NodeTypeEnum.PARAMETER.value:
+            self._parameter_node_temp_cache.update({node.name: node})
+
+        self._normal_node_map.update({node.name: node})
+        self._node_id_map_name.update({node.node_id: node.name})
+
+    def _delete_nodes_of_cache(self, node_names):
+        """Delete node from cache."""
+        logger.debug("These nodes will be removed from the cache, node names: %s.", str(node_names))
+        for name in node_names:
+
+            if self._parameter_node_temp_cache.get(name):
+                self._parameter_node_temp_cache.pop(name)
+            if self._const_node_temp_cache.get(name):
+                self._const_node_temp_cache.pop(name)
+
+            node = self._get_normal_node(node_name=name)
+            self._normal_node_map.pop(name)
+            self._node_id_map_name.pop(node.node_id)
+
+    def _update_node_name_of_cache(self, node, new_name, update_parent=False):
+        """
+        Update a node name which is stored in cache.
+
+        Args:
+            node (Node): The node that will be renamed.
+            new_name (str): The new name.
+            update_parent (bool): Determines whether the input and output of the parent node need to be updated.
+        """
+        logger.debug('Update node name of cache, node(%s), new name is %s.', str(node), new_name)
+        origin_name = node.name
+        node.name = new_name
+
+        # Find all nodes that need to modify the input and input
+        update_node_map = {}
+        for method in ['input', 'output', 'proxy_input', 'proxy_output']:
+            for target_name in getattr(node, method):
+                target_node = self._get_normal_node(node_name=target_name)
+                if target_node is None:
+                    message = f"Node should not be None, name: {target_name}, {method}: {list(getattr(node, method))}."
+                    logger.error(message)
+                    continue
+
+                update_node_map.update({target_name: target_node})
+
+                if not update_parent:
+                    continue
+
+                slash_index = target_name.find('/')
+                while slash_index != -1:
+                    scope_name = target_name[:slash_index]
+                    slash_index = target_name.find('/', slash_index+1)
+
+                    if update_node_map.get(scope_name):
+                        continue
+
+                    scope_node = self._get_normal_node(node_name=scope_name)
+                    update_node_map.update({scope_name: scope_node})
+
+        # Update the input and output of the nodes
+        for target_node in update_node_map.values():
+            for method in ['input', 'output', 'proxy_input', 'proxy_output']:
+                attr_temp = getattr(target_node, method).get(origin_name)
+                if attr_temp is None:
+                    # This method does not have this node, so it is skipped
+                    continue
+
+                # Delete the old attribute and update new name to source node or destination node.
+                getattr(target_node, f'delete_{method}')(origin_name)
+                getattr(target_node, f'add_{method}')(new_name, attr_temp)
+
+        # Delete the origin node in cache.
+        self._delete_nodes_of_cache(node_names=[origin_name])
+        self._cache_node(node)
+
+    def _process_independent_layout(self):
+        """Handle separate layout nodes."""
+        independent_layout_node_map = {}
+        for node in self._normal_node_map.values():
+            base_name = node.name.split('/')[-1]
+            if node.type == NodeTypeEnum.AGGREGATION_SCOPE.value and NodeTypeEnum.PARAMETER.value in base_name:
+                independent_layout_node_map[node.name] = node
+
+        # Find all sub nodes
+        subnode_map = defaultdict(list)
+        for node in self._normal_node_map.values():
+            if independent_layout_node_map.get(node.scope):
+                subnode_map[node.scope].append(node)
+
+        # Notice:
+        # The following processing is only done for the parameter node, other types of nodes are not processed.
+        # Later, when you need to extend to other nodes, the code needs to be adjusted.
+        for scope_node in independent_layout_node_map.values():
+            scope_node.independent_layout = True
+
+            method = 'output'
+            for target_name, target_attr in dict(getattr(scope_node, method)).items():
+                proxy_attr = dict(edge_type=target_attr['edge_type'])
+
+                target_node = self._get_normal_node(node_name=target_name)
+                getattr(target_node, 'add_proxy_input')(scope_node.name, proxy_attr)
+
+                # Note:
+                # If the source node and the destination node are not in the same scope,
+                # the proxy node is presented as scope in order to simplify the flow of the display data.
+                # For example, the data flow is parameter[5]_1 -> add[5]_1/add1
+                # we create a scope proxy node(add[5]_1) for parameter[5]_1,
+                # so there is a proxy data flow parameter[5]_1 -> add[5]_1 instead of parameter[5]_1 -> add[5]_1/add1.
+                if target_node.scope == scope_node.scope:
+                    getattr(scope_node, f'add_proxy_{method}')(target_name, proxy_attr)
+                else:
+                    target_scope_node = self._get_normal_node(node_name=target_node.scope)
+                    getattr(scope_node, f'add_proxy_{method}')(target_node.scope, proxy_attr)
+                    getattr(target_scope_node, 'add_proxy_input')(scope_node.name, proxy_attr)
+
+            for subnode in subnode_map[scope_node.name]:
+                for target_name, target_attr in dict(getattr(subnode, method)).items():
+                    proxy_attr = dict(edge_type=target_attr['edge_type'])
+                    target_node = self._get_normal_node(node_name=target_name)
+                    if target_node.scope == scope_node.scope:
+                        getattr(subnode, f'add_proxy_{method}')(target_name, proxy_attr)
+                    else:
+                        getattr(subnode, f'add_proxy_{method}')(target_node.scope, proxy_attr)
+
+                    input_attr = getattr(target_node, 'input')[subnode.name]
+                    input_attr['independent_layout'] = True
+                    target_node.add_input(subnode.name, input_attr)
