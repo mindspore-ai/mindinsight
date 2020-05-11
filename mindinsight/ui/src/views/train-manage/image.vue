@@ -345,9 +345,9 @@ export default {
                     sampleItem.curImgUrl =
                   `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
                   `&tag=${sampleItem.tagName}&step=${curSampleData.step}&wt=${curSampleData.wall_time}`;
-                    sampleItem.curTime = new Date(
+                    sampleItem.curTime = this.dealrelativeTime(new Date(
                         curSampleData.wall_time * 1000,
-                    ).toLocaleString();
+                    ).toString());
                     sampleItem.curImageSize = [
                       curSampleData.width,
                       curSampleData.height,
@@ -385,9 +385,9 @@ export default {
       sampleItem.curImgUrl =
         `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
         `&tag=${sampleItem.tagName}&step=${curStepData.step}&wt=${curStepData.wall_time}`;
-      sampleItem.curTime = new Date(
+      sampleItem.curTime = this.dealrelativeTime(new Date(
           curStepData.wall_time * 1000,
-      ).toLocaleString();
+      ).toString());
       sampleItem.curImageSize = [curStepData.width, curStepData.height];
     },
     /**
@@ -621,6 +621,17 @@ export default {
           id: this.trainingJobId,
         },
       });
+    },
+    /**
+     * Format Absolute Time
+     * @param {String} time string
+     * @return {string} str
+     */
+
+    dealrelativeTime(time) {
+      const arr = time.split(' ');
+      const str = arr[0] + ' ' + arr[1] + ' ' + arr[2] + ',' + ' ' + arr[4];
+      return str;
     },
   },
   components: {
