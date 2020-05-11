@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Datavisual."""
+"""Trigger data manager load."""
 
-from mindinsight.backend.datavisual.static_resource_api import init_module as static_init_module
-from mindinsight.backend.datavisual.task_manager_api import init_module as task_init_module
-from mindinsight.backend.datavisual.train_visual_api import init_module as train_init_module
+from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
+from mindinsight.datavisual.common.log import logger
+from mindinsight.conf import settings
+from mindinsight.lineagemgr.cache_item_updater import LineageCacheItemUpdater
 
 
 def init_module(app):
@@ -27,6 +28,8 @@ def init_module(app):
         app (Flask): An instance of Flask.
 
     """
-    static_init_module(app)
-    task_init_module(app)
-    train_init_module(app)
+    # Just to suppress pylint warning about unused arg.
+    logger.debug("App: %s", type(app))
+    DATA_MANAGER.register_brief_cache_item_updater(LineageCacheItemUpdater())
+    DATA_MANAGER.start_load_data(reload_interval=int(settings.RELOAD_INTERVAL),
+                                 max_threads_count=int(settings.MAX_THREADS_COUNT))

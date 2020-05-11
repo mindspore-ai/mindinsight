@@ -25,7 +25,6 @@ from flask import Response
 from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.data_manager import DataManager
-from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
 from mindinsight.datavisual.utils import tools
 
@@ -59,7 +58,7 @@ def init_summary_logs():
         log_operations = LogOperations()
         summaries_metadata = log_operations.create_summary_logs(summary_base_dir, constants.SUMMARY_DIR_NUM_FIRST,
                                                                 constants.SUMMARY_DIR_PREFIX)
-        mock_data_manager = DataManager([DataLoaderGenerator(summary_base_dir)])
+        mock_data_manager = DataManager(summary_base_dir)
         mock_data_manager.start_load_data(reload_interval=0)
         check_loading_done(mock_data_manager)
 

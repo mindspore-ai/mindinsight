@@ -30,7 +30,6 @@ from mindinsight.datavisual.common.exceptions import GraphNotExistError
 from mindinsight.datavisual.common.exceptions import NodeNotInGraphError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.data_manager import DataManager
-from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
 from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
@@ -74,7 +73,7 @@ class TestGraphProcessor:
         self._temp_path, self._graph_dict, _ = log_operation.generate_log(PluginNameEnum.GRAPH.value, log_dir)
         self._generated_path.append(summary_base_dir)
 
-        self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(summary_base_dir)])
+        self._mock_data_manager = data_manager.DataManager(summary_base_dir)
         self._mock_data_manager.start_load_data(reload_interval=0)
 
         # wait for loading done
@@ -93,7 +92,7 @@ class TestGraphProcessor:
 
         self._generated_path.append(summary_base_dir)
 
-        self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(summary_base_dir)])
+        self._mock_data_manager = data_manager.DataManager(summary_base_dir)
         self._mock_data_manager.start_load_data(reload_interval=0)
 
         # wait for loading done

@@ -27,7 +27,6 @@ from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.common.exceptions import ScalarNotExistError
 from mindinsight.datavisual.data_transform import data_manager
-from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 from mindinsight.datavisual.utils import crc32
 
@@ -73,7 +72,7 @@ class TestScalarsProcessor:
             PluginNameEnum.SCALAR.value, log_dir, dict(step=self._steps_list, tag=self._tag_name))
         self._generated_path.append(summary_base_dir)
 
-        self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(summary_base_dir)])
+        self._mock_data_manager = data_manager.DataManager(summary_base_dir)
         self._mock_data_manager.start_load_data(reload_interval=0)
 
         # wait for loading done
