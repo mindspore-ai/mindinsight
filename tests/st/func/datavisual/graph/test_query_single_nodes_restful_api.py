@@ -41,7 +41,7 @@ class TestQuerySingleNode:
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.usefixtures("init_summary_logs")
     @pytest.mark.parametrize("node_name, result_file", [
-        ('Default/bn1/Reshape1', "test_query_single_node_success_result1.json")
+        ('Default/bn1', "test_query_single_node_success_result1.json")
     ])
     def test_query_single_node_success(self, client, node_name, result_file):
         """Query single node."""

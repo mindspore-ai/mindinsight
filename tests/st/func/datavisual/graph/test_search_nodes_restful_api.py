@@ -41,7 +41,7 @@ class TestSearchNodes:
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.usefixtures("init_summary_logs")
     @pytest.mark.parametrize("search_content, offset, limit, result_file", [
-        ('Default/bn1/Reshape', 0, 1000, "test_search_nodes_success_result1.json")
+        ('Default/bn1', 0, 1000, "test_search_nodes_success_result1.json")
     ])
     def test_search_nodes_success(self, client, search_content, offset, limit, result_file):
         """Search node with parameters: offset is 0, limit is 1000."""

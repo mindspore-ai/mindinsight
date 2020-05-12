@@ -1,0 +1,640 @@
+{
+  "node": [
+    {
+      "input": [
+        {
+          "name": "data",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "1",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "1",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "2",
+      "opType": "Add",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "2",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "3",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "3",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "4",
+      "opType": "Add",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "4",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "5",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "5",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "6",
+      "opType": "Add",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "6",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "7",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "7",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "8",
+      "opType": "Add",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "8",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "9",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "9",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "10",
+      "opType": "Add",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "9",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "11",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "9",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "12",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "9",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "13",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "9",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "14",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "14",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "15",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": [
+        {
+          "name": "15",
+          "type": "DATA_EDGE"
+        }
+      ],
+      "name": "16",
+      "opType": "Conv2D",
+      "scope": "Default",
+      "attribute": [
+        {
+          "name": "output_names",
+          "value": {
+            "dtype": "DT_GRAPHS",
+            "values": [
+              {
+                "dtype": "DT_FLOAT64",
+                "strVal": "output"
+              }
+            ]
+          }
+        }
+      ],
+      "outputType": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "name": "849_848_847_424_1_construct",
+  "parameters": [
+    {
+      "name": "data",
+      "type": {
+        "dataType": "DT_STRING",
+        "tensorType": {
+          "elemType": "DT_FLOAT16",
+          "shape": {
+            "dim": [
+              {
+                "size": "1"
+              },
+              {
+                "size": "3"
+              },
+              {
+                "size": "224"
+              },
+              {
+                "size": "224"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

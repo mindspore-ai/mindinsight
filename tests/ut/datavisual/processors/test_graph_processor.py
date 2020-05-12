@@ -118,26 +118,27 @@ class TestGraphProcessor:
         assert mock_get_train_job_by_plugin.called
 
     @pytest.mark.usefixtures('load_graph_record')
-    @pytest.mark.parametrize("name, node_type", [("not_exist_name", "name_scope"), ("", "polymeric_scope")])
-    def test_get_nodes_with_not_exist_name(self, name, node_type):
+    @pytest.mark.parametrize("name", ["not_exist_name"])
+    def test_get_nodes_with_not_exist_name(self, name):
         """Test getting nodes with not exist name."""
         with pytest.raises(NodeNotInGraphError) as exc_info:
             graph_processor = GraphProcessor(self._train_id, self._mock_data_manager)
-            graph_processor.get_nodes(name, node_type)
+            graph_processor.list_nodes(name)
 
         assert 'Can not find node in graph by the given node name' in exc_info.value.message
 
     @pytest.mark.usefixtures('load_graph_record')
     @pytest.mark.parametrize(
-        "name, node_type, result_file",
-        [(None, 'name_scope', 'test_get_nodes_success_expected_results1.json'),
-         ('Default/conv1-Conv2d', 'name_scope', 'test_get_nodes_success_expected_results2.json'),
-         ('Default/bn1/Reshape_1_[12]', 'polymeric_scope', 'test_get_nodes_success_expected_results3.json')])
-    def test_get_nodes_success(self, name, node_type, result_file):
+        "name, result_file",
+        [(None, 'test_get_nodes_success_expected_results1.json'),
+         ('Default/conv1-Conv2d', 'test_get_nodes_success_expected_results2.json'),
+         ('Default/bn1/Reshape[12]_1', 'test_get_nodes_success_expected_results3.json'),
+         ('Default/bn1-BatchNorm2d', 'test_get_nodes_success_expected_results4.json'),
+         ])
+    def test_get_nodes_success(self, name, result_file):
         """Test getting nodes successfully."""
-
         graph_processor = GraphProcessor(self._train_id, self._mock_data_manager)
-        results = graph_processor.get_nodes(name, node_type)
+        results = graph_processor.list_nodes(name)
 
         expected_file_path = os.path.join(self.graph_results_dir, result_file)
         compare_result_with_file(results, expected_file_path)

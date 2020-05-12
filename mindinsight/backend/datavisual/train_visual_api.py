@@ -102,12 +102,11 @@ def graph_nodes():
 
     """
     name = request.args.get('name', default=None)
-    node_type = request.args.get('type', default='name_scope')
     tag = request.args.get("tag", default=None)
     train_id = get_train_id(request)
 
     graph_process = GraphProcessor(train_id, DATA_MANAGER, tag)
-    response = graph_process.get_nodes(name=name, node_type=node_type)
+    response = graph_process.list_nodes(scope=name)
     return jsonify(response)
 
 

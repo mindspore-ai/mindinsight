@@ -22,7 +22,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
 from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
@@ -227,47 +226,27 @@ class TestTrainVisual:
         assert results['error_msg'] == "Param missing. 'train_id' is required."
 
     @patch.object(GraphProcessor, '__init__')
-    def test_graph_nodes_with_type_is_invalid(self, mock_graph_processor, client):
-        """Test getting graph nodes with invalid type."""
-        mock_init = Mock(return_value=None)
-        mock_graph_processor.side_effect = mock_init
-
-        node_type = "invalid_node_type"
-        params = dict(train_id='aaa', type=node_type)
-        url = get_url(TRAIN_ROUTES['graph_nodes'], params)
-
-        response = client.get(url)
-        results = response.get_json()
-        assert response.status_code == 400
-        assert results['error_code'] == '50540002'
-        assert results['error_msg'] == "Invalid parameter value. The node type " \
-                                       "is not support, only either %s or %s." \
-                                       "" % (NodeTypeEnum.NAME_SCOPE.value,
-                                             NodeTypeEnum.POLYMERIC_SCOPE.value)
-
-    @patch.object(GraphProcessor, '__init__')
-    @patch.object(GraphProcessor, 'get_nodes')
-    def test_graph_nodes_success(self, mock_graph_processor, mock_graph_processor_1, client):
+    @patch.object(GraphProcessor, 'list_nodes')
+    def test_graph_nodes_success(self, mock_list_nodes_func, mock_init_func, client):
         """Test getting graph nodes successfully."""
 
-        def mock_get_nodes(name, node_type):
-            return dict(name=name, node_type=node_type)
+        def mock_list_nodes(scope):
+            return dict(scope=scope)
 
-        mock_graph_processor.side_effect = mock_get_nodes
+        mock_list_nodes_func.side_effect = mock_list_nodes
 
         mock_init = Mock(return_value=None)
-        mock_graph_processor_1.side_effect = mock_init
+        mock_init_func.side_effect = mock_init
 
         test_train_id = 'aaa'
         test_node_name = 'bbb'
-        test_node_type = NodeTypeEnum.NAME_SCOPE.value
-        params = dict(train_id=test_train_id, name=test_node_name, type=test_node_type)
+        params = dict(train_id=test_train_id, name=test_node_name)
         url = get_url(TRAIN_ROUTES['graph_nodes'], params)
 
         response = client.get(url)
         assert response.status_code == 200
         results = response.get_json()
-        assert results == dict(name=test_node_name, node_type=test_node_type)
+        assert results == dict(scope=test_node_name)
 
     def test_graph_node_names_with_train_id_is_none(self, client):
         """Test getting graph node names with train id is none."""

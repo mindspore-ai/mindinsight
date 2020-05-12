@@ -13,236 +13,135 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the MindSpore graph."""
-import re
-import copy
+import time
 
 from mindinsight.datavisual.common.log import logger
+from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
 from .node import Node
 from .node import NodeTypeEnum
 from .graph import Graph
 from .graph import EdgeTypeEnum
-from .graph import DataTypeEnum
 
 
 class MSGraph(Graph):
-    """The object describes the MindSpore graph, and it is defined in the anf_if proto file."""
+    """The object describes the MindSpore graph, and it is defined in the anf_ir proto file."""
 
-    def build_graph(self, graph_proto):
+    def build_graph(self, proto_data):
         """
-        Build graph by graph proto which refer to `anf_ir_pb2.GraphProto`, and set status to loading.
+        Build graph by graph proto which refer to `anf_ir_pb2.GraphProto`.
 
         Args:
-            graph_proto (anf_ir_pb2.GraphProto): Refer to `anf_ir_pb2.GraphProto`.
+            proto_data (anf_ir_pb2.GraphProto): Refer to `anf_ir_pb2.GraphProto`.
         """
-        logger.info("Start to build graph.")
+        logger.info("Start to build graph, graph name: %s.", proto_data.name)
+        start_time = time.time()
 
-        self._build_leaf_nodes(graph_proto)
-        self._build_polymeric_nodes()
-        self._build_name_scope_nodes()
-        self._update_polymeric_input_output()
-        logger.info("Build graph end, normal node count: %s, polymeric node "
-                    "count: %s.", len(self._normal_nodes), len(self._polymeric_nodes))
+        super(MSGraph, self).build_graph(proto_data)
 
-    def _build_leaf_nodes(self, graph_proto):
+        precision = 6
+        time_consuming = round(time.time()-start_time, precision)
+        logger.info("Build graph end, all node count: %s, const count: %s, parameter count: %s, time-consuming: %s s.",
+                    self.normal_node_count, len(self._const_node_temp_cache),
+                    len(self._parameter_node_temp_cache), time_consuming)
+
+    def _parse_data(self, proto_data):
         """
-        Build leaf node from graph proto.
-
-        Left node will contain operation node, parameter node, const node.
+        The proto data is parsed and all nodes are stored in the specified structure.
 
         Args:
-            graph_proto (anf_ir_pb2.model_proto.graph): Refer to anf_ir_pb2.model_proto.graph.
+            proto_data (anf_ir_pb2.GraphProto): Refer to anf_ir_pb2.GraphProto object.
         """
-        logger.info("Start to build leaf nodes.")
-        leaf_node_id_map_name = {}
-        const_nodes_map = {}
+        logger.info("Start to parse graph proto data.")
 
-        for node_def in graph_proto.node:
-            if not node_def.name:
+        self._parse_op_nodes(proto_data.node)
+        self._parse_parameters(proto_data.parameters)
+        self._parse_consts(proto_data.const_vals)
+
+        self._update_input_after_create_node()
+        self._update_output_after_create_node()
+
+        logger.info("Parse proto data end, normal node count(only contain op node, "
+                    "parameter, const): %s.", self.normal_node_count)
+
+    def _parse_op_nodes(self, node_protos):
+        """
+        Parse `anf_ir_pb2.NodeProto` object, and create a normal node.
+
+        Args:
+            node_protos (list[anf_ir_pb2.NodeProto]): Refer to anf_ir_pb2.NodeProto.
+        """
+        logger.debug("Start to parse op nodes from proto.")
+        for node_proto in node_protos:
+            if not node_proto.name:
                 logger.warning("Finding a node with an empty name will not save it.")
                 continue
-            node = self._parse_graph_proto_node(node_def)
-            leaf_node_id_map_name.update({node.node_id: node.name})
 
-        for parameter in graph_proto.parameters:
+            node_name = Node.create_node_name(scope=node_proto.scope,
+                                              base_name=f'{node_proto.op_type}{node_proto.name}')
+            node = Node(name=node_name, node_id=node_proto.name)
+            node.type = node_proto.op_type
+            logger.debug("Foreach graph proto nodes, node id: %s, node name: %s, node def name: %s, "
+                         "input count: %s", node.node_id, node.name, node_proto.name, len(node_proto.input))
+
+            self._parse_attributes(node_proto.attribute, node)
+            self._parse_inputs(node_proto.input, node)
+
+            node.output_i = node_proto.output_i
+            node.scope = node_proto.scope
+            node.output_shape = self._get_shape_by_parse_type_proto(node_proto.output_type)
+            node.output_data_type = self._get_data_type_by_parse_type_proto(node_proto.output_type)
+
+            self._cache_node(node)
+
+    def _parse_parameters(self, parameter_protos):
+        """
+        Parse `anf_ir_pb2.ParameterProto` object, and create a parameter node.
+
+        Args:
+            parameter_protos (list[anf_ir_pb2.ParameterProto]): Refer to anf_ir_pb2.ParameterProto.
+        """
+        logger.debug("Start to parse parameters from proto.")
+        for parameter in parameter_protos:
             if not parameter.name:
                 logger.warning("Finding a parameter with an empty name will not save it.")
                 continue
-            node = self._parse_graph_proto_parameter(parameter)
-            const_nodes_map.update({node.name: node})
+            node = Node(name=parameter.name, node_id=parameter.name)
+            node.type = NodeTypeEnum.PARAMETER.value
+            node.output_shape = self._get_shape_by_parse_type_proto(parameter.type)
+            attr = dict(
+                type=self._get_data_type_by_parse_type_proto(parameter.type),
+                shape=str(self._get_shape_by_parse_type_proto(parameter.type))
+            )
+            node.add_attr(attr)
 
-        for i, const in enumerate(graph_proto.const_vals):
+            self._cache_node(node)
+            logger.debug("Foreach graph proto parameters, node id: %s, node name: %s, "
+                         "node def name: %s", node.node_id, node.name, parameter.name)
+
+    def _parse_consts(self, consts):
+        """
+        Parse `anf_ir_pb2.NameValueProto` object, and create a const node.
+
+        Args:
+            consts (list[anf_ir_pb2.NameValueProto]): Refer to `anf_ir_pb2.NameValueProto` object.
+        """
+        logger.debug("Start to parse consts from proto.")
+        for const in consts:
             if not const.key:
                 logger.warning("Finding a const with an empty key will not save it.")
                 continue
-            node_id = 'const_{}'.format(i)
-            node = self._parse_graph_proto_const(const, node_id)
-            const_nodes_map.update({const.key: node})
+            node = Node(name=const.key, node_id=const.key)
+            node.type = NodeTypeEnum.CONST.value
+            node.add_attr({const.key: str(const.value)})
+            if const.value.dtype == DataType.DT_TENSOR:
+                shape = []
+                for dim in const.value.tensor_val.dims:
+                    shape.append(dim)
+                node.output_shape = shape
 
-        self._calc_input(leaf_node_id_map_name, graph_proto, const_nodes_map)
-        self._calc_output()
+            self._cache_node(node)
 
-        logger.info("Build leaf nodes end, normal nodes count: %s, group count: %s, "
-                    "leaf nodes count: %s.", len(self._normal_nodes), len(self._node_groups),
-                    len(self._leaf_nodes))
-
-    def _calc_input(self, leaf_node_id_map_name, graph_proto, const_nodes_map):
-        """
-        Calc input for every leaf node.
-
-        Args:
-            leaf_node_id_map_name (dict[str, str]): Format is {'node_id': 'node_name'}.
-            graph_proto (anf_ir_pb2.model_proto.graph): See anf_ir_pb2.model_proto.graph.
-            const_nodes_map (dict[str, Node]): Format is {'node name': <Const node>}.
-        """
-        logger.debug("Start to calc input.")
-        for node_def in graph_proto.node:
-            if not node_def.name:
-                logger.debug("The node name is empty, ignore it.")
-                continue
-            node_name = leaf_node_id_map_name[node_def.name]
-            node = self._leaf_nodes[node_name]
-            for input_def in node_def.input:
-                if not input_def.name:
-                    logger.warning("The input node name is empty, ignore it. node name: %s.", node_name)
-                    continue
-
-                edge_type = EdgeTypeEnum.DATA.value
-                if input_def.type == "CONTROL_EDGE":
-                    edge_type = EdgeTypeEnum.CONTROL.value
-
-                if const_nodes_map.get(input_def.name):
-                    const_node = copy.deepcopy(const_nodes_map[input_def.name])
-                    src_name = '{}/{}'.format(node.name_scope, input_def.name)
-                    if not self._normal_nodes.get(src_name):
-                        const_node.name = src_name
-                        const_node.name_scope = node.name_scope
-                        self._normal_nodes.update({src_name: const_node})
-                        self._leaf_nodes.update({src_name: const_node})
-                    src_node = self._leaf_nodes.get(src_name)
-                else:
-                    src_name = leaf_node_id_map_name.get(input_def.name)
-                    if not src_name:
-                        logger.warning("The input_def name '%s' in node '%s' is invalid, "
-                                       "will be ignore.", input_def.name, node_name)
-                        continue
-
-                    src_node = self._leaf_nodes.get(src_name)
-                    if src_node is None:
-                        logger.warning("The input '%s' in node '%s' is not in "
-                                       "leaf nodes.", src_name, node_name)
-                        continue
-
-                input_item = {
-                    src_name: {
-                        "shape": src_node.shape,
-                        "edge_type": edge_type,
-                        "scope": NodeTypeEnum.NAME_SCOPE.value
-                    }
-                }
-                node.update_input(input_item)
-
-            if self._normal_nodes.get(node_name):
-                self._normal_nodes[node_name] = node
-            else:
-                group_name = self._create_group_name(node.name_scope, node.node_type, node.name)
-                self._node_groups[group_name][node.name] = node
-
-    def _calc_output(self):
-        """Calc output of every node."""
-        logger.debug("Start to calc output.")
-
-        for name, node in self._leaf_nodes.items():
-            if node.node_type == NodeTypeEnum.CONST.value:
-                continue
-            for src_name, input_attr in node.inputs.items():
-                src_node = self._leaf_nodes[src_name]
-                if src_node.node_type == NodeTypeEnum.CONST.value:
-                    continue
-
-                if self._normal_nodes.get(src_name):
-                    self._normal_nodes[src_name].update_output({name: input_attr})
-                else:
-                    group_name = self._create_group_name(src_node.name_scope,
-                                                         src_node.node_type, src_node.name)
-                    self._node_groups[group_name][src_name].update_output({name: input_attr})
-
-    def _parse_graph_proto_node(self, node_def):
-        """
-        Parse `anf_ir_pb2.model_proto.graph.node_def`, and create a a node.
-
-        Args:
-            node_def (anf_ir_pb2.model_proto.graph.node_def): Refer to anf_ir_pb2.model_proto.graph.node_def.
-
-        Returns:
-            Node, a `Node` object.
-        """
-        node_name = '/'.join([node_def.scope, node_def.op_type]) + node_def.name \
-            if node_def.scope else node_def.op_type + node_def.name
-        node = Node(name=node_name, node_id=node_def.name)
-        node.node_type = node_def.op_type
-        logger.debug("Foreach graph proto nodes, node id: %s, node name: %s, node def name: %s, "
-                     "input count: %s", node.node_id, node.name, node_def.name, len(node_def.input))
-
-        for attr in node_def.attribute:
-            node.update_attr({attr.name: str(attr.value)})
-
-        node.output_i = node_def.output_i
-        node.name_scope = node_def.scope
-
-        output_type = node_def.output_type
-        shape = self._parse_type_proto(output_type)
-        node.shape = shape
-
-        self._leaf_nodes.update({node.name: node})
-        group_name = self._create_group_name(node.name_scope, node.node_type, node.name)
-        if group_name is not None:
-            node_dict = self._node_groups.get(group_name, {})
-            node_dict.update({node.name: node})
-            self._node_groups.update({group_name: node_dict})
-        else:
-            self._normal_nodes.update({node.name: node})
-
-        return node
-
-    def _parse_graph_proto_parameter(self, parameter):
-        """
-        Parse anf_ir_pb2.model_proto.graph.parameter, and create a parameter node.
-
-        Args:
-            parameter (anf_ir_pb2.model_proto.graph.parameter): Refer to anf_ir_pb2.model_proto.graph.parameter.
-
-        Returns:
-            Node, a `Node` object.
-        """
-        node = Node(name=parameter.name, node_id=parameter.name)
-        node.node_type = NodeTypeEnum.PARAMETER.value
-        node.shape = self._parse_type_proto(parameter.type)
-        logger.debug("Foreach graph proto parameters, node id: %s, node name: %s, "
-                     "node def name: %s", node.node_id, node.name, parameter.name)
-        return node
-
-    def _parse_graph_proto_const(self, const, const_node_id):
-        """
-        Parse anf_ir_pb2.model_proto.graph.const, and create a const node.
-
-        Args:
-            const (anf_ir_pb2.model_proto.graph.const): Refer to anf_ir_pb2.model_proto.graph.const
-            const_node_id (str): The id of the new const node, it should be unique in graph.
-
-        Returns:
-            Node, a `Node` object.
-        """
-        node = Node(name=const.key, node_id=const_node_id)
-        node.node_type = NodeTypeEnum.CONST.value
-        node.update_attr({const.key: str(const.value)})
-        if const.value.dtype == DataTypeEnum.DT_TENSOR.value:
-            shape = []
-            for dim in const.value.tensor_val.dims:
-                shape.append(dim)
-            node.shape = shape
-        return node
-
-    def _parse_type_proto(self, type_proto):
+    def _get_shape_by_parse_type_proto(self, type_proto):
         """
         Parse proto's `message TypeProto` to get shape information.
 
@@ -260,32 +159,113 @@ class MSGraph(Graph):
                 shapes.append(dim.size)
         if type_proto.HasField('sequence_type'):
             for elem_type in type_proto.sequence_type.elem_types:
-                shapes.append(self._parse_type_proto(elem_type))
+                shapes.append(self._get_shape_by_parse_type_proto(elem_type))
         return shapes
 
-    def _create_group_name(self, name_scope, node_type, node_name):
+    def _get_data_type_by_parse_type_proto(self, type_proto):
         """
-        Create group name by node name, name scope, node type.
+        Get data type by parse type proto object.
 
-        Only nodes that conform to the rules are aggregated.
+        The name of the DataType, refer to `anf_ir_pb2.DataType` object.
+        If data type is tensor or tuple, the data name we return is `data_type[element_type, element_type]`.
 
         Args:
-            name_scope (str): The node name scope.
-            node_type (str): The node type.
-            node_name (str): The node name.
+            type_proto (anf_ir_pb2.TypeProto): Refer to anf_ir_pb2.TypeProto.
 
         Returns:
-            Optional[str], if match the rules will return a group name, else return None.
+            str, the data type.
+
         """
-        group_types = ['Reshape', 'Variable']
-        pattern_names = r'.*?/Cast-op\d+'
+        data_type_name = self._get_data_type_name_by_value(type_proto, type_proto.data_type, field_name='data_type')
+        if type_proto.data_type == DataType.DT_TENSOR:
+            tensor_type_proto = type_proto.tensor_type
+            value = type_proto.tensor_type.elem_type
+            elem_type_name = self._get_data_type_name_by_value(tensor_type_proto, value, field_name='elem_type')
+            return f'{data_type_name}[{elem_type_name}]'
 
-        if node_type in group_types:
-            group_name = name_scope + '/' + node_type if name_scope else node_type
-            return group_name
+        if type_proto.data_type == DataType.DT_TUPLE:
+            data_types = []
+            for elem_type in type_proto.sequence_type.elem_types:
+                data_types.append(self._get_data_type_by_parse_type_proto(elem_type))
+            return f'{data_type_name}{str(data_types)}'
 
-        if node_type == 'FrameworkOp' and re.search(pattern_names, node_name):
-            group_name = name_scope + '/' + 'Cast-op' if name_scope else 'Cast-op'
-            return group_name
+        return data_type_name
 
-        return None
+    def _parse_inputs(self, input_protos, node):
+        """
+        Parse `anf_ir_pb2.InputProto` object.
+
+        Args:
+            input_protos (list[anf_ir_pb2.InputProto]): Refer to `anf_ir_pb2.InputProto` object.
+            node (Node): Refer to `Node` object, it is used to log message and update input.
+        """
+        for input_proto in input_protos:
+            if not input_proto.name:
+                logger.warning("The name in input proto of node(%s) is empty, will ignore.", node.name)
+                continue
+
+            edge_type = EdgeTypeEnum.DATA.value if not input_proto.type else EdgeTypeEnum.CONTROL.value
+
+            # Notice:
+            # 1. The name in the input proto is the node id of the Node object.
+            # 2. In the current step, the shape of source node cannot be obtained,
+            #    so it is set to empty list by default, and the next step will update it.
+            # 3. Same with scope, set the default value first.
+            input_attr = {
+                "shape": [],
+                "edge_type": edge_type,
+                "independent_layout": False,
+                'data_type': ''
+            }
+
+            node.add_input(src_name=input_proto.name, input_attr=input_attr)
+
+    def _parse_attributes(self, attributes, node):
+        """
+        Parse `anf_ir_pb2.AttributeProto` object., and Filters large attribute values.
+
+        Args:
+            attributes (list[anf_ir_pb2.AttributeProto]): Refer to `anf_ir_pb2.AttributeProto` object.
+            node (Node): Refer to `Node` object, it is used to log message and update attr.
+        """
+        for attr in attributes:
+            if attr.value.ByteSize() > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:
+                message = f"The attribute value of node({node.name}) " \
+                          f"is over {self.MAX_NODE_ATTRIBUTE_VALUE_BYTES} Bytes, will ignore."
+                logger.info(message)
+                continue
+            node.add_attr({attr.name: str(attr.value)})
+
+    def _update_input_after_create_node(self):
+        """Update the input of node after create node."""
+        for node in self._normal_node_map.values():
+            for src_node_id, input_attr in dict(node.input).items():
+                node.delete_input(src_node_id)
+                if not self._is_node_exist(node_id=src_node_id):
+                    message = f"The input node could not be found by node id({src_node_id}) " \
+                              f"while updating the input of the node({node})"
+                    logger.warning(message)
+
+                    continue
+
+                src_node = self._get_normal_node(node_id=src_node_id)
+                input_attr['shape'] = src_node.output_shape
+                input_attr['data_type'] = src_node.output_data_type
+                node.add_input(src_name=src_node.name, input_attr=input_attr)
+
+    def _update_output_after_create_node(self):
+        """Update the output of node after create node."""
+        # Constants and parameter should not exist for input and output.
+        filtered_node = {NodeTypeEnum.CONST.value, NodeTypeEnum.PARAMETER.value}
+        for node in self._normal_node_map.values():
+            for src_name, input_attr in node.input.items():
+                src_node = self._get_normal_node(node_name=src_name)
+                if src_node.type in filtered_node:
+                    continue
+
+                src_node.add_output(node.name, input_attr)
+
+    @staticmethod
+    def _get_data_type_name_by_value(data_type, value, field_name='data_type'):
+        """Get the data type name by the enum value, data_type refer to `DataType` object."""
+        return data_type.DESCRIPTOR.fields_by_name[field_name].enum_type.values_by_number[value].name

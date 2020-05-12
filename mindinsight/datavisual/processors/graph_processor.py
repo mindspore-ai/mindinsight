@@ -20,9 +20,7 @@ and the status of graph will be checked before calling `Graph` object.
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.validation import Validation
-from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
-from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.datavisual.common.exceptions import NodeNotInGraphError
 
 
@@ -51,13 +49,12 @@ class GraphProcessor(BaseProcessor):
         tensors = self._data_manager.list_tensors(train_id, tag=tag)
         self._graph = tensors[0].value
 
-    def get_nodes(self, name, node_type):
+    def list_nodes(self, scope):
         """
         Get the nodes of every layer in graph.
 
         Args:
-            name (str): The name of a node.
-            node_type (Any): The type of node, either 'name_scope' or 'polymeric'.
+            scope (str): The name of a scope.
 
         Returns:
             TypedDict('Nodes', {'nodes': list[Node]}), format is {'nodes': [<Node object>]}.
@@ -81,33 +78,19 @@ class GraphProcessor(BaseProcessor):
                             }
                           },
                           "output_i" : -1,
-                          "polymeric_input" : {},
-                          "polymeric_output" : {},
-                          "polymeric_scope_name" : "",
+                          "proxy_input" : {},
+                          "proxy_output" : {},
+                          "independent_layout" : False,
                           "subnode_count" : 0,
                           "type" : "Data"
                         }
                       ]
                     }
         """
-        if node_type not in [NodeTypeEnum.NAME_SCOPE.value, NodeTypeEnum.POLYMERIC_SCOPE.value]:
-            raise ParamValueError(
-                'The node type is not support, only either %s or %s.'
-                '' % (NodeTypeEnum.NAME_SCOPE.value, NodeTypeEnum.POLYMERIC_SCOPE.value))
+        if scope and not self._graph.exist_node(scope):
+            raise NodeNotInGraphError(node_name=scope)
 
-        if name and not self._graph.exist_node(name):
-            raise NodeNotInGraphError(node_name=name, node_type=node_type)
-        nodes = []
-        if node_type == NodeTypeEnum.NAME_SCOPE.value:
-            nodes = self._graph.get_normal_nodes(name)
-
-        if node_type == NodeTypeEnum.POLYMERIC_SCOPE.value:
-            if not name:
-                raise NodeNotInGraphError(node_name=name, node_type=node_type)
-
-            polymeric_scope_name = name
-            nodes = self._graph.get_polymeric_nodes(polymeric_scope_name)
-
+        nodes = self._graph.list_node_by_scope(scope=scope)
         return {'nodes': nodes}
 
     def search_node_names(self, search_content, offset, limit):

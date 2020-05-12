@@ -51,7 +51,7 @@
           "type": "DATA_EDGE"
         }
       ],
-      "name": "1",
+      "name": "55",
       "opType": "Conv2D",
       "scope": "Default/conv1-Conv2d",
       "attribute": [
@@ -149,7 +149,7 @@
           "type": "DATA_EDGE"
         }
       ],
-      "name": "53",
+      "name": "56",
       "opType": "tuple_getitem",
       "scope": "Default/bn1-BatchNorm2d",
       "outputType": {
@@ -354,7 +354,7 @@
     {
       "input": [
         {
-          "name": "x11",
+          "name": "56",
           "type": "DATA_EDGE"
         }
       ],
@@ -585,7 +585,7 @@
     {
       "input": [
         {
-          "name": "x",
+          "name": "55",
           "type": "DATA_EDGE"
         }
       ],
