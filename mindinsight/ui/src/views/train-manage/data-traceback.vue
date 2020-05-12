@@ -381,8 +381,10 @@ export default {
             id: item,
             checked: true,
           };
-          if (value && value.type == 'float') {
+          if (value && value.type === 'float') {
             obj.type = 'float';
+          } else if (value && value.type === 'int') {
+            obj.type = 'int';
           }
           arrayTemp.push(obj);
         });
@@ -408,14 +410,15 @@ export default {
         if (
           content.name === this.repeatTitle ||
           content.name === this.shuffleTitle ||
-          content.id === this.deviceNum
+          content.id === this.deviceNum ||
+          (content.type && content.type === 'int')
         ) {
           obj.scale = true;
           obj.minInterval = 1;
           this.setColorOfSelectedBar(selectedBarList, obj);
         } else if (
           this.numberTypeIdList.includes(content.id) ||
-          (content.type && content.type == 'float')
+          (content.type && content.type === 'float')
         ) {
           obj.scale = true;
           this.setColorOfSelectedBar(selectedBarList, obj);
