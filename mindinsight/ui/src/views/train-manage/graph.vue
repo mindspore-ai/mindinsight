@@ -221,7 +221,7 @@ limitations under the License.
                     </li>
                   </ul>
                   <div class="items"
-                       v-if="selectedNode.info && selectedNode.info.output_i !== -1">
+                       v-if="selectedNode.info && selectedNode.info.output_i !== 0">
                     <div class="label item">{{ $t('graph.outputs_i') }}</div>
                     <span class="value">{{ selectedNode.info.output_i }}</span>
                   </div>
@@ -248,56 +248,64 @@ limitations under the License.
                       <img :src="require('@/assets/images/name-scope.png')"
                            alt="" />
                     </div>
-                    <div>{{ $t('graph.nameSpace') }}</div>
+                    <div class="legend-text"
+                         :title="$t('graph.nameSpace')">{{ $t('graph.nameSpace') }}</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
                       <img :src="require('@/assets/images/operator-node.png')"
                            alt="" />
                     </div>
-                    <div>{{ $t('graph.operatorNode') }}</div>
+                    <div class="legend-text"
+                         :title="$t('graph.operatorNode')">{{ $t('graph.operatorNode') }}</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
                       <img :src="require('@/assets/images/virtual-node.png')"
                            alt="" />
                     </div>
-                    <div>{{ $t('graph.virtualNode') }}</div>
+                    <div class="legend-text"
+                         :title="$t('graph.virtualNode')">{{ $t('graph.virtualNode') }}</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
                       <img :src="require('@/assets/images/polymetric.png')"
                            alt="" />
                     </div>
-                    <div>{{ $t('graph.polymetric') }}</div>
+                    <div class="legend-text"
+                         :title="$t('graph.polymetric')">{{ $t('graph.polymetric') }}</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
                       <img :src="require('@/assets/images/constant-node.png')"
                            alt="" />
                     </div>
-                    <div>{{ $t('graph.constantNode') }}</div>
+                    <div class="legend-text"
+                         :title="$t('graph.constantNode')">{{ $t('graph.constantNode') }}</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
                       <img :src="require('@/assets/images/const.png')"
                            alt="" />
                     </div>
-                    <div>{{ $t('graph.virtualConstantNode') }}</div>
+                    <div class="legend-text"
+                         :title="$t('graph.virtualConstantNode')">{{ $t('graph.virtualConstantNode') }}</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
                       <img :src="require('@/assets/images/data-flow.png')"
                            alt="" />
                     </div>
-                    <div>{{ $t('graph.dataFlowEdge') }}</div>
+                    <div class="legend-text"
+                         :title="$t('graph.dataFlowEdge')">{{ $t('graph.dataFlowEdge') }}</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
                       <img :src="require('@/assets/images/control-dep.png')"
                            alt="" />
                     </div>
-                    <div>{{ $t('graph.controllDepEdge') }}</div>
+                    <div class="legend-text"
+                         :title="$t('graph.controllDepEdge')">{{ $t('graph.controllDepEdge') }}</div>
                   </div>
                 </div>
               </div>
@@ -320,11 +328,8 @@ export default {
   data() {
     return {
       clickScope: {}, // Information about the node that is clicked for the first time.
-      smallContainer: {}, // Basic information about the thumbnail container
-      smallMap: {}, // Basic information about the svg small image container
-      graphHTML: {}, // Basic information about graph
-      smallResize: {}, // The container of display area box.
-      insideBox: {}, // Basic information about the display area box
+      smallResize: {el: '#small-resize'}, // The container of display area box.
+      insideBox: {el: '#inside-box'}, // Basic information about the display area box
       graphDom: {}, // Basic information about graph0 in svg
       graphSmall: {}, // Basic information about graph0 in the thumbnail
       svg: {}, // Basic information about svg
@@ -389,16 +394,18 @@ export default {
     this.trainJobID = this.$route.query.train_id;
     this.getDatavisualPlugins();
     window.onresize = () => {
-      if (this.graphDom.el) {
+      const graphDom = document.querySelector('#graph #graph0');
+      if (graphDom) {
         this.initGraphRectData();
       }
     };
   },
   destroyed() {
     window.onresize = document.onmousemove = document.onmouseup = null;
-    if (this.smallContainer && this.smallContainer.el) {
-      this.smallContainer.el.onmousedown = this.smallContainer.el.onmouseup = null;
-      this.smallContainer.el.onmousewheel = null;
+    const smallContainer = document.querySelector('#small-container');
+    if (smallContainer) {
+      smallContainer.onmousedown = smallContainer.onmouseup = null;
+      smallContainer.onmousewheel = null;
     }
   },
   methods: {
@@ -470,7 +477,7 @@ export default {
               .querySelector(`#graph g[id="${name}"]`)
               .attributes.class.value.indexOf('plain') === -1;
         const unfoldFlag =
-          (nodeClass.includes('polymeric') ||
+          (nodeClass.includes('aggregation') ||
             nodeClass.includes('cluster') ||
             this.selectedNode.more) &&
           (!this.clickScope.id ||
@@ -512,7 +519,8 @@ export default {
       let startX = 0;
       let startY = 0;
       let drag = {};
-      this.graphDom.eld3 = d3.select('#graph0');
+      const graphDomd3 = d3.select('#graph0');
+      const graphDom = document.querySelector('#graph #graph0');
       const zoom = d3
           .zoom()
           .on('start', (d) => {
@@ -556,8 +564,8 @@ export default {
                   Math.min(drag.k * Math.pow(2, lg), this.scaleRange[1]),
               );
 
-              this.graphDom.offsetLeft = this.graphDom.el.getBoundingClientRect().left;
-              this.graphDom.offsetTop = this.graphDom.el.getBoundingClientRect().top;
+              this.graphDom.offsetLeft = graphDom.getBoundingClientRect().left;
+              this.graphDom.offsetTop = graphDom.getBoundingClientRect().top;
               // Zoom in on the mouse.
               const axis = {};
               axis.x = event.x - this.graphDom.offsetLeft;
@@ -577,15 +585,15 @@ export default {
                 (this.svg.viewHeight / this.graphDom.initHeight);
               this.insideBox.scale = 1 / drag.k;
             }
-            this.graphDom.eld3.attr(
+            graphDomd3.attr(
                 'transform',
                 `translate(${drag.x},${drag.y}) scale(${drag.k})`,
             );
             graphd.attributes.transform = `scale(${drag.k}, ${drag.k}) rotate(0) translate(${drag.x} ${drag.y})`;
             graphd.translation.x = drag.x;
             graphd.translation.y = drag.y;
-            this.graphDom.width = this.graphDom.el.getBoundingClientRect().width;
-            this.graphDom.height = this.graphDom.el.getBoundingClientRect().height;
+            this.graphDom.width = graphDom.getBoundingClientRect().width;
+            this.graphDom.height = graphDom.getBoundingClientRect().height;
             this.bigMapPositionChange();
           })
           .on('end', (d) => {
@@ -595,10 +603,10 @@ export default {
             this.graphDom.transform = drag;
           });
       // Large Map Displacement and Amplification Operation
-      this.svg.eld3 = d3.select('svg');
-      this.svg.eld3.on('.zoom', null);
-      this.svg.eld3.call(zoom);
-      this.svg.eld3.on('dblclick.zoom', null);
+      const svgD3 = d3.select('svg');
+      svgD3.on('.zoom', null);
+      svgD3.call(zoom);
+      svgD3.on('dblclick.zoom', null);
     },
     /**
      * Double-click the processing to be performed on the node to expand or narrow the namespace or aggregation node.
@@ -689,35 +697,26 @@ export default {
       const maxShowHeight = graph.offsetHeight * 1.5;
       const graphDom = document.querySelector(`#${id} #graph0`);
       const box = graphDom.getBBox();
-      const graphTransformData = this.getTransformData(graphDom);
       let transformStr = '';
       if (box.width > maxShowWidth || box.height > maxShowHeight) {
+        const graphTransformData = this.getTransformData(graphDom);
         const scale = Math.max(
             box.width / maxShowWidth,
             box.height / maxShowHeight,
         );
         const translate = {x: (box.width - maxShowWidth) / 2};
-        graphTransformData.forEach((i) => {
-          if (i.name === 'scale') {
-            transformStr += `${i.name}(${scale}) `;
-          } else if (i.name === 'translate') {
-            if (this.selectedNode.name) {
-              transformStr += `${i.name}(${i.value[0]},${i.value[1]}) `;
-            } else {
-              transformStr += `${i.name}(${translate.x},${i.value[1]}) `;
-            }
-          }
+
+        if (!this.selectedNode.name) {
+          graphTransformData.translate[0] = translate.x;
+        }
+        graphTransformData.scale[0] = scale;
+        Object.keys(graphTransformData).forEach((key) => {
+          transformStr += `${key}(${graphTransformData[key].join(',')}) `;
         });
       } else {
-        graphTransformData.forEach((i) => {
-          if (i.name === 'scale') {
-            transformStr += `${i.name}(${1}) `;
-          } else if (i.name === 'translate') {
-            transformStr += `${i.name}(${-box.x},${-box.y}) `;
-          }
-        });
+        transformStr = `translate(${-box.x},${-box.y}) scale(1)`;
       }
-      graphDom.setAttribute('transform', transformStr);
+      graphDom.setAttribute('transform', transformStr.trim());
     },
     /**
      * Expand a namespace.
@@ -751,13 +750,12 @@ export default {
      */
     queryGraphData(name) {
       const namescopeChildLimit = 3500;
-      const type = this.allGraphData[name]
-        ? this.allGraphData[name].type
-        : 'name_scope';
+      const independentLayout = this.allGraphData[name]
+        ? this.allGraphData[name].independent_layout
+        : false;
       const params = {
         name: name,
         train_id: this.trainJobID,
-        type: type,
         tag: this.fileSearchBox.value,
       };
       this.loading.info = this.$t('graph.queryLoading');
@@ -773,16 +771,16 @@ export default {
                   ? this.nodesCountLimit
                   : namescopeChildLimit;
                     if (
-                      type !== 'polymetric_scope' &&
+                      !independentLayout &&
                   response.data.nodes.length > nodesCountLimit
                     ) {
                       this.$message.error(this.$t('graph.tooManyNodes'));
                       this.packageDataToObject(name, false);
                       this.loading.show = false;
                     } else {
-                      const nodes = this.dealPolymericNodes(
+                      const nodes = this.dealAggregationNodes(
                           JSON.parse(JSON.stringify(response.data.nodes)),
-                          type,
+                          name,
                       );
                       if (nodes && nodes.length) {
                         this.packageDataToObject(name, true, nodes);
@@ -806,8 +804,8 @@ export default {
                   this.loading.show = false;
                 },
             )
-        // A non-Google Chrome browser may not work properly.
             .catch(() => {
+            // A non-Google Chrome browser may not work properly.
               this.loading.show = false;
               this.$bus.$emit('showWarmText', true);
             });
@@ -839,7 +837,8 @@ export default {
               this.fileSearchBox.suggestions.push({
                 value: k,
               });
-              hasFileSearchValue = k === this.fileSearchBox.value || hasFileSearchValue;
+              hasFileSearchValue =
+              k === this.fileSearchBox.value || hasFileSearchValue;
             });
             if (!this.initOver) {
               this.initOver = true;
@@ -858,25 +857,23 @@ export default {
     /**
      * Process the data returned by the background interface.
      * @param {Array} nodes Current node array
-     * @param {String} type Type of the node to be expanded.
+     * @param {String} name Node name
      * @return {Array} Node array
      */
-    dealPolymericNodes(nodes, type) {
+    dealAggregationNodes(nodes, name) {
       // A maximum of 10 subnodes can be displayed on an aggregation node.
-      const polymerticNodeLimit = 10;
-      if (
-        type === 'polymeric_scope' &&
-        nodes &&
-        nodes.length > polymerticNodeLimit
-      ) {
-        const polymerticNodeName = nodes[0].polymeric_scope_name;
-        const nodesLength = nodes.length;
+      const aggregationNodeLimit = 10;
+      const independentLayout =
+        name && this.allGraphData[name]
+          ? this.allGraphData[name].independent_layout
+          : false;
+      if (independentLayout && nodes && nodes.length > aggregationNodeLimit) {
         // The selected node must be included.
         let startIndex = 0;
         if (this.selectedNode.more) {
           startIndex = this.selectedNode.moreDirection
             ? Math.max(0, nodes.length - this.selectedNode.moreStart)
-            : Math.max(0, this.selectedNode.moreStart - polymerticNodeLimit);
+            : Math.max(0, this.selectedNode.moreStart - aggregationNodeLimit);
         } else {
           let nodeIndex = 0;
           nodes.some((node, index) => {
@@ -894,31 +891,29 @@ export default {
         // aggregation node, a simulation node needs to be generated to replace other nodes.
         const ellipsisNum = Math.max(
             0,
-            nodes.length - polymerticNodeLimit - startIndex,
+            nodes.length - aggregationNodeLimit - startIndex,
         );
-        nodes = nodes.slice(startIndex, startIndex + polymerticNodeLimit);
+        nodes = nodes.slice(startIndex, startIndex + aggregationNodeLimit);
         if (startIndex !== 0) {
           const ellipsisNodeL = {
-            name: `${polymerticNodeName}/left/${startIndex} more...`,
+            name: `${name}/left/${startIndex} more...`,
             attr: {},
             input: {},
             output: {},
-            polymeric_input: {},
-            polymeric_output: {},
-            polymeric_scope_name: {},
+            proxy_input: {},
+            proxy_output: {},
             type: '',
           };
           nodes.splice(0, 0, ellipsisNodeL);
         }
-        if (startIndex + polymerticNodeLimit < nodesLength) {
+        if (startIndex + aggregationNodeLimit < nodes.length) {
           const ellipsisNode = {
-            name: `${polymerticNodeName}/right/${ellipsisNum} more...`,
+            name: `${name}/right/${ellipsisNum} more...`,
             attr: {},
             input: {},
             output: {},
-            polymeric_input: {},
-            polymeric_output: {},
-            polymeric_scope_name: {},
+            proxy_input: {},
+            proxy_output: {},
             type: '',
           };
           nodes.push(ellipsisNode);
@@ -946,14 +941,14 @@ export default {
       nodes.forEach((node) => {
         const name = node.name.split('/').pop();
         // Different types of nodes are generated for different data types.
-        if (node.type === 'polymeric_scope') {
+        if (node.type === 'aggregation_scope') {
           tempStr +=
-            `<${node.name}>[id="${node.name}";shape="octagon";` +
-            `label="${name}";class="polymeric";` +
+            `<${node.name}>[id="${node.name}";` +
+            `label="${name}";class="aggregation";` +
             `${
               node.isUnfold
-                ? `width=${node.size[0]};height=${node.size[1]};fixedsize=true;`
-                : ''
+                ? `shape="polygon";width=${node.size[0]};height=${node.size[1]};fixedsize=true;`
+                : 'shape="octagon";'
             }];`;
         } else if (node.type === 'name_scope') {
           const fillColor = CommonProperty.graphColorArr[this.curColorIndex];
@@ -980,7 +975,7 @@ export default {
         // The ID of the omitted aggregation node is analogNodesInput||analogNodeOutput^nodeId.
         // After the namespace or aggregation node is expanded, the virtual node does not need to be displayed.
         if (!this.allGraphData[node.name].isUnfold) {
-          let keys = Object.keys(node.polymeric_input || {});
+          let keys = Object.keys(node.proxy_input || {});
           let target = node.name;
           let source = '';
           let isConst = false;
@@ -1006,7 +1001,7 @@ export default {
               `class="plain";];`;
           }
 
-          keys = Object.keys(node.polymeric_output || {});
+          keys = Object.keys(node.proxy_output || {});
           source = node.name;
           for (let i = 0; i < Math.min(5, keys.length); i++) {
             target = keys[i];
@@ -1047,13 +1042,13 @@ export default {
       const analogNodesOutputId = `analogNodesOutputOf${name}`;
       let needAnalogInput = false;
       let needAnalogOutput = false;
-      const isUnfoldPolymetricScope = name
-        ? this.allGraphData[name].type === 'polymeric_scope'
+      const unfoldIndependentScope = name
+        ? this.allGraphData[name].independent_layout
         : false;
       nodes.forEach((node) => {
         // No input cable is required for the aggregation node and nodes in the aggregation node without namescoope.
         // When only aggregation nodes are encapsulated, input cables do not need to be considered.
-        if (!isUnfoldPolymetricScope) {
+        if (!unfoldIndependentScope) {
           const input = node.input || {};
           const keys = Object.keys(input);
           keys.forEach((key) => {
@@ -1062,20 +1057,21 @@ export default {
               // aggregation node. It can only connect to the outer namespace of the aggregation node.
               // If there is no namespace in the outer layer, you do not need to connect cables.
               // Other connections are normal.
-              const temp =
-                input[key].scope === 'polymeric_scope'
-                  ? key.substring(0, key.lastIndexOf('/'))
-                  : key;
+              let temp = key;
+              if (input[key].independent_layout) {
+                const list = key.split('/');
+                list.splice(list.length - 2, 2);
+                temp = list.join('/');
+              }
               const source =
                 this.findChildNamescope(temp, name) ||
                 (temp ? analogNodesInputId : '');
-              const target =
-                node.type === 'polymeric_scope' || node.polymeric_scope_name
-                  ? `${node.name.substring(
-                      0,
-                      node.name.lastIndexOf('/'),
-                  )}_unfold`
-                  : node.name;
+              let target = node.name;
+              if (node.independent_layout) {
+                const list = node.name.split('/');
+                list.splice(list.length - 2, 2);
+                target = `${list.join('/')}_unfold`;
+              }
               // The namespace is not nested.
               if (
                 source &&
@@ -1089,6 +1085,7 @@ export default {
                     target: target,
                     shape: input[key].shape,
                     edge_type: input[key].edge_type,
+                    data_type: input[key].data_type,
                     count: 1,
                   };
                   edges.push(obj);
@@ -1103,6 +1100,7 @@ export default {
                       target: target,
                       shape: input[key].shape,
                       edge_type: input[key].edge_type,
+                      data_type: input[key].data_type,
                       count: 1,
                     };
                     edges.push(obj);
@@ -1116,14 +1114,9 @@ export default {
           // the line connected to the namespace is connected to the virtual input and output node of the namespace.
           // The aggregation node and its subnodes do not need to consider the situation where the output is connected
           // to the virtual output node.
-          if (!(node.type === 'polymeric_scope' || node.polymeric_scope_name)) {
+          if (!node.independent_layout) {
             Object.keys(node.output || {}).forEach((key) => {
-              if (
-                !(
-                  node.output[key].scope === 'polymeric_scope' &&
-                  d3.select(`#graph g[id="${key}"]`).size()
-                )
-              ) {
+              if (!node.output[key].independent_layout) {
                 const source = node.name;
                 const target =
                   this.findChildNamescope(key, name) || analogNodesOutputId;
@@ -1131,13 +1124,14 @@ export default {
                   if (
                     name &&
                     !target.startsWith(`${name}/`) &&
-                    source.replace('_unfold', '') !== name
+                    source !== name
                   ) {
                     const obj = {
                       source: source,
                       target: analogNodesOutputId,
-                      shape: [],
+                      shape: node.output[key].shape,
                       edge_type: node.output[key].edge_type,
+                      data_type: node.output[key].data_type,
                       count: 1,
                     };
                     edges.push(obj);
@@ -1151,18 +1145,16 @@ export default {
         // Virtual node data
         // The expanded namespace or aggregation node does not need to display virtual nodes.
         if (!this.allGraphData[node.name].isUnfold) {
-          let keys = Object.keys(node.polymeric_input || {});
+          let keys = Object.keys(node.proxy_input || {});
           for (let i = 0; i < Math.min(5, keys.length); i++) {
             const target = node.name;
             const source = keys[i];
             const obj = {
               source: `${source}^${target}`,
               target: target,
-              shape: [],
-              edge_type:
-                node.type !== 'polymeric_scope' && !node.polymeric_scope_name
-                  ? 'polymeric'
-                  : '',
+              shape: node.proxy_input[keys[i]].shape,
+              edge_type: node.proxy_input[keys[i]].edge_type,
+              data_type: node.proxy_input[keys[i]].data_type,
               count: 1,
             };
             edges.push(obj);
@@ -1172,27 +1164,23 @@ export default {
               source: `analogNodesInput^${node.name}`,
               target: node.name,
               shape: [],
-              edge_type:
-                node.type !== 'polymeric_scope' && !node.polymeric_scope_name
-                  ? 'polymeric'
-                  : '',
+              edge_type: '',
+              data_type: '',
               count: 1,
             };
             edges.push(obj);
           }
 
-          keys = Object.keys(node.polymeric_output || {});
+          keys = Object.keys(node.proxy_output || {});
           for (let i = 0; i < Math.min(5, keys.length); i++) {
             const source = node.name;
             const target = keys[i];
             const obj = {
               source: source,
               target: `${target}^${source}`,
-              shape: [],
-              edge_type:
-                node.type !== 'polymeric_scope' && !node.polymeric_scope_name
-                  ? 'polymeric'
-                  : '',
+              shape: node.proxy_output[keys[i]].shape,
+              edge_type: node.proxy_output[keys[i]].edge_type,
+              data_type: node.proxy_output[keys[i]].data_type,
               count: 1,
             };
             edges.push(obj);
@@ -1202,10 +1190,8 @@ export default {
               source: node.name,
               target: `analogNodesOutput^${node.name}`,
               shape: [],
-              edge_type:
-                node.type !== 'polymeric_scope' && !node.polymeric_scope_name
-                  ? 'polymeric'
-                  : '',
+              edge_type: '',
+              data_type: '',
               count: 1,
             };
             edges.push(obj);
@@ -1214,7 +1200,7 @@ export default {
       });
 
       // Add the virtual input/output node. The aggregation node does not need to be configured.
-      if (name && this.allGraphData[name].type !== 'polymeric_scope') {
+      if (name && !this.allGraphData[name].independent_layout) {
         if (needAnalogInput) {
           tempStr +=
             `{rank=min;<${analogNodesInputId}>[shape="circle";` +
@@ -1258,7 +1244,7 @@ export default {
           if (flag) {
             label = `tuple(${edge.shape.length} items)`;
           } else {
-            label = edge.shape.join('×');
+            label = `${edge.data_type} ${edge.shape.join('×')}`;
           }
         }
       } else {
@@ -1329,9 +1315,11 @@ export default {
     dealNamescopeTempGraph(name) {
       const type = this.allGraphData[name].type;
       const classText =
-        type === 'polymeric_scope' ? 'node cluster polymeric' : 'node cluster';
-      const idStr = 'div#graphTemp g#graph0 ';
-      let fillColor = type === 'polymeric_scope' ? '#fff2d4' : '#ffe4d6';
+        type === 'aggregation_scope'
+          ? 'node cluster aggregation'
+          : 'node cluster';
+      const idStr = '#graphTemp #graph0 ';
+      let fillColor = type === 'aggregation_scope' ? '#fff2d4' : '#ffe4d6';
       const curColorIndex = (name.split('/').length - 1) % 4;
       if (type === 'name_scope') {
         fillColor = CommonProperty.graphColorArr[curColorIndex];
@@ -1350,13 +1338,13 @@ export default {
       g.append('title').text(name);
       g.node().appendChild(
           d3
-              .select('div#graphTemp g#graph0>text')
+              .select('#graphTemp #graph0>text')
               .attr('y', boxTemp.y - 10)
               .node(),
       );
       // Move all the subnodes of the namespace to the created namespace node.
       Array.prototype.forEach.call(
-          g.node().parentElement.querySelectorAll('g'),
+          document.querySelector(idStr).querySelectorAll('g'),
           (node) => {
             if (node.id !== g.node().id) {
             // The title of all virtual nodes needs to be reset.
@@ -1404,8 +1392,7 @@ export default {
       const domList = document.querySelector('#graphTemp #graph0').children;
       for (let i = 0; i < domList.length; i++) {
         if (domList[i].id !== `${name}_unfold`) {
-          domList[i].remove();
-          i--;
+          domList[i--].remove();
         }
       }
 
@@ -1434,7 +1421,7 @@ export default {
         const nodeData = this.allGraphData[i];
         const flag =
           (nodeData.type === 'name_scope' ||
-            nodeData.type === 'polymeric_scope') &&
+            nodeData.type === 'aggregation_scope') &&
           nodeData.isUnfold;
         if (flag) {
           // Place the dom character string in graphTemp and then move it to the corresponding node of subgraphTemp.
@@ -1550,7 +1537,10 @@ export default {
                   '',
               )}`,
           )
-          .attr('class', `edge${edge.edge_type === 'polymeric' ? ' hide' : ''}`);
+          .attr(
+              'class',
+              `edge${edge.edge_type === 'aggregation' ? ' hide' : ''}`,
+          );
       g.append('title').text(text);
       // Because the edges need to be highlighted, marker requires one side of each side.
       const marker = g.append(`marker`);
@@ -1632,62 +1622,55 @@ export default {
     /**
      * Obtains the transform data of a node.
      * @param {Object} node Node dom data
-     * @return {Array} transform data of a node
+     * @return {Object} transform data of a node
      */
     getTransformData(node) {
       if (!node) {
         return [];
       }
       const transformData = node.getAttribute('transform');
-      const attrList = [];
+      const attrObj = [];
       if (transformData) {
         const lists = transformData.trim().split(' ');
         lists.forEach((item) => {
-          const index1 = item.indexOf('(');
-          const index2 = item.indexOf(')');
-          const params = item
-              .substring(index1 + 1, index2)
-              .split(',')
-              .map((i) => {
-                return parseFloat(i) || 0;
-              });
-          const obj = {
-            name: item.substring(0, index1),
-            value: params,
-          };
-          attrList.push(obj);
+          item = item.trim();
+          if (item) {
+            const index1 = item.indexOf('(');
+            const index2 = item.indexOf(')');
+            const params = item
+                .substring(index1 + 1, index2)
+                .split(',')
+                .map((i) => {
+                  return parseFloat(i) || 0;
+                });
+            attrObj[item.substring(0, index1)] = params;
+          }
         });
       }
-      return attrList;
+      return attrObj;
     },
     /**
      * Selecting a node
      * @param {String} dblclick Click Type
      */
     selectNode(dblclick) {
+      const graphDom = document.querySelector('#graph #graph0');
       window.getSelection().removeAllRanges();
       d3.selectAll(
           '.node polygon, .node ellipse, .node rect, .node path',
       ).classed('selected', false);
       const path = this.selectedNode.name.split('^');
       const node = {};
-      node.eld3 =
-        d3.select(`#graph g[id="${path[0]}_unfold"]`).node() &&
-        dblclick !== 'fold'
-          ? d3.select(`#graph g[id="${path[0]}_unfold"]`)
-          : d3.select(`#graph g[id="${path[0]}"]`);
-      node.el =
-        d3.select(`#graph g[id="${path[0]}_unfold"]`).node() &&
-        dblclick !== 'fold'
-          ? d3.select(`#graph g[id="${path[0]}_unfold"]`).node()
-          : d3.select(`#graph g[id="${path[0]}"]`).node();
-      this.graphDom.el.style.transition = '';
+      let id = path[0].replace('_unfold', '');
+      id = this.allGraphData[id].isUnfold ? `${id}_unfold` : id;
+      node.eld3 = d3.select(`#graph g[id="${id}"]`);
+      node.el = node.eld3.node();
+      graphDom.style.transition = '';
       if ((dblclick || path.length > 1) && node.el) {
-        node.el.style.display = 'block';
         this.selectNodePosition(node, dblclick);
       }
       node.eld3
-          .select('polygon, rect, Mrecord, ellipse, path', 'octagon')
+          .select('polygon, rect, Mrecord, ellipse, path')
           .classed('selected', true);
       this.setNodeData();
     },
@@ -1759,12 +1742,12 @@ export default {
         this.selectedNode.title = select[0].name.replace('_unfold', '');
         this.selectedNode.type =
           select[0].type === 'name_scope' ||
-          select[0].type === 'polymeric_scope'
+          select[0].type === 'aggregation_scope'
             ? ''
             : select[0].type;
         this.selectedNode.countShow =
           select[0].type === 'name_scope' ||
-          select[0].type === 'polymeric_scope';
+          select[0].type === 'aggregation_scope';
         this.selectedNode.count = select[0].subnode_count;
         Object.keys(select[0].attr).forEach((key) => {
           this.selectedNode.info.Attributes.push({
@@ -1817,6 +1800,7 @@ export default {
      * @param {Boolean} dblclick Double-click
      */
     selectNodePosition(node, dblclick) {
+      const graphDom = document.querySelector('#graph #graph0');
       node.offsetLeft = node.el.getBoundingClientRect().left;
       node.offsetTop = node.el.getBoundingClientRect().top;
       node.initWidth = node.el.getBoundingClientRect().width;
@@ -1840,7 +1824,7 @@ export default {
           screenChange.y * (this.svg.viewHeight / this.graphDom.initHeight),
         k: this.graphDom.transform.k,
       };
-      this.graphDom.el.attributes.transform.value = `translate(${this.graphDom.transform.x},
+      graphDom.attributes.transform.value = `translate(${this.graphDom.transform.x},
       ${this.graphDom.transform.y}) scale(${this.graphDom.transform.k})`;
       const transition =
         dblclick === 'unfoldScope'
@@ -1850,10 +1834,10 @@ export default {
               Math.abs(screenChange.y) * 2,
               800,
           );
-      this.graphDom.el.style.transition = `${transition / 1000}s`;
-      this.graphDom.el.style['transition-timing-function'] = 'linear';
+      graphDom.style.transition = `${transition / 1000}s`;
+      graphDom.style['transition-timing-function'] = 'linear';
       setTimeout(() => {
-        this.graphDom.el.style.transition = '';
+        graphDom.style.transition = '';
       }, transition);
       let end = 0;
       this.bigMapPositionChange();
@@ -1904,13 +1888,13 @@ export default {
 
       if (!node.isUnfold) {
         // Connects to the edge of a virtual node.
-        let keys = Object.keys(node.polymeric_input || {});
+        let keys = Object.keys(node.proxy_input || {});
         for (let i = 0; i < Math.min(5, keys.length); i++) {
           const nameTemp = `${keys[i]}^${node.name}`;
           edges[`${nameTemp}->${node.name}`] = {
             source: nameTemp,
             target: node.name,
-            edge_type: node.polymeric_input[keys[i]].edge_type || '',
+            edge_type: node.proxy_input[keys[i]].edge_type || '',
           };
         }
         if (keys.length > 5) {
@@ -1921,13 +1905,13 @@ export default {
             edge_type: '',
           };
         }
-        keys = Object.keys(node.polymeric_output || {});
+        keys = Object.keys(node.proxy_output || {});
         for (let i = 0; i < Math.min(5, keys.length); i++) {
           const nameTemp = `${keys[i]}^${node.name}`;
           edges[`${node.name}->${nameTemp}`] = {
             source: node.name,
             target: nameTemp,
-            edge_type: node.polymeric_output[keys[i]].edge_type || '',
+            edge_type: node.proxy_output[keys[i]].edge_type || '',
           };
         }
         if (keys.length > 5) {
@@ -2021,10 +2005,7 @@ export default {
       }
       if (subPsth && this.allGraphData[subPsth]) {
         // The virtual node and its subnodes need to return their namespaces.
-        if (
-          this.allGraphData[subPsth].type === 'polymeric_scope' ||
-          this.allGraphData[subPsth].polymeric_scope_name
-        ) {
+        if (this.allGraphData[subPsth].independent_layout) {
           subPsth = subPsth
               .split('/')
               .slice(0, -1)
@@ -2066,19 +2047,12 @@ export default {
           });
         } else {
           // Close the namespace and delete all child node data.
-          const type = this.allGraphData[name].type;
-          this.allGraphData[name].children.forEach((key) => {
+          const allChildren = Object.keys(this.allGraphData).filter((key) => {
+            return key.startsWith(`${name}/`);
+          });
+          allChildren.forEach((key) => {
             delete this.allGraphData[key];
           });
-          // For an aggregation node, because the aggregation node has only one layer,
-          // you can directly read the children attribute of the aggregation node object to precisely locate the node.
-          if (type !== 'polymeric_scope') {
-            Object.keys(this.allGraphData).forEach((key) => {
-              if (key.startsWith(`${name}/`)) {
-                delete this.allGraphData[key];
-              }
-            });
-          }
 
           this.allGraphData[name].isUnfold = false;
           this.allGraphData[name].children = [];
@@ -2256,7 +2230,7 @@ export default {
             });
           } else {
             // Normal expansion
-            const nodes = this.dealPolymericNodes(
+            const nodes = this.dealAggregationNodes(
                 data.nodes,
                 this.allGraphData[data.scope_name].type,
             );
@@ -2299,41 +2273,37 @@ export default {
      */
     initGraphRectData() {
       // graph attribute
-      delete this.graphHTML.el;
-      this.graphHTML.el = document.querySelector('#graph');
+      const graphHtml = document.querySelector('#graph');
 
       // svg attribute
-      delete this.svg.el;
-      this.svg.el = this.graphHTML.el.querySelector('svg');
-      if (!this.svg.el) {
+      const svg = graphHtml.querySelector('#graph svg');
+      if (!svg) {
         return;
       }
-      this.svg.initWidth = this.svg.el.getBoundingClientRect().width; // svg width
-      this.svg.initHeight = this.svg.el.getBoundingClientRect().height; // svg high
-      this.svg.offsetLeft = this.svg.el.getBoundingClientRect().left; // svg Distance to the left of the window
-      this.svg.offsetTop = this.svg.el.getBoundingClientRect().top; // svg Distance from the upper part of the window
+      const svgRect = svg.getBoundingClientRect();
+      this.svg.initWidth = svgRect.width; // svg width
+      this.svg.initHeight = svgRect.height; // svg high
+      this.svg.offsetLeft = svgRect.left; // svg Distance to the left of the window
+      this.svg.offsetTop = svgRect.top; // svg Distance from the upper part of the window
       this.svg.viewWidth = parseFloat(
-          this.svg.el.attributes.viewBox.value.split(' ')[2],
+          svg.attributes.viewBox.value.split(' ')[2],
       ); // svg viewbox width
       this.svg.viewHeight = parseFloat(
-          this.svg.el.attributes.viewBox.value.split(' ')[3],
+          svg.attributes.viewBox.value.split(' ')[3],
       ); // The viewbox of the svg is high.
 
       // Attributes of smallContainer
-      delete this.smallContainer.el;
-      this.smallContainer.el = document.querySelector('#small-container');
+      const smallContainer = document.querySelector('#small-container');
 
       // Attributes of smallMap
-      delete this.smallMap.el;
-      this.smallMap.el = document.querySelector('#small-map');
+      const smallMap = document.querySelector('#small-map');
 
       // Reset the length and width of the smallResize and locate the fault.
-      delete this.smallResize.el;
-      this.smallResize.el = document.querySelector('#small-resize');
+      const smallResize = document.querySelector('#small-resize');
       this.smallResize.width = this.smallResize.initWidth =
-        this.smallContainer.el.offsetWidth - 2; // Initial width of the thumbnail frame
+        smallContainer.offsetWidth - 2; // Initial width of the thumbnail frame
       this.smallResize.height = this.smallResize.initHeight =
-        this.smallContainer.el.offsetHeight - 2; // The initial height of the thumbnail frame is high.
+        smallContainer.offsetHeight - 2; // The initial height of the thumbnail frame is high.
       this.smallResize.left = this.smallResize.top = 0;
       if (Object.keys(this.allGraphData).length) {
         if (
@@ -2355,35 +2325,30 @@ export default {
       }
       this.styleSet(this.smallResize, true);
       // Distance between the thumbnail frame and the upper part of the window
-      this.smallResize.offsetLeft = this.smallResize.el.getBoundingClientRect().left;
+      this.smallResize.offsetLeft = smallResize.getBoundingClientRect().left;
       // Distance between the thumbnail frame and the upper part of the window
-      this.smallResize.offsetTop = this.smallResize.el.getBoundingClientRect().top;
+      this.smallResize.offsetTop = smallResize.getBoundingClientRect().top;
 
-      delete this.insideBox.el;
-      this.insideBox.el = document.querySelector('#inside-box');
+      const insideBox = document.querySelector('#inside-box');
       // graph0 information
-      delete this.graphDom.el;
-      this.graphDom.el = this.graphHTML.el.querySelector('#graph0');
-      this.smallMap.el.innerHTML = this.graphHTML.el.innerHTML;
-      if (!this.graphDom.el) {
+      const graphDom = graphHtml.querySelector('#graph #graph0');
+      smallMap.innerHTML = graphHtml.innerHTML;
+      if (!graphDom) {
         document.onmousemove = document.onmouseup = null;
-        if (this.smallContainer && this.smallContainer.el) {
-          this.smallContainer.el.onmousedown = this.smallContainer.el.onmouseup = null;
-          this.smallContainer.el.onmousewheel = null;
+        if (smallContainer) {
+          smallContainer.onmousedown = smallContainer.onmouseup = null;
+          smallContainer.onmousewheel = null;
         }
         this.insideBox.width = this.smallResize.width;
         this.insideBox.height = this.smallResize.height;
         this.insideBox.top = this.insideBox.left = 0;
         this.styleSet(this.insideBox, true);
-        this.insideBox.el.style.cursor = 'not-allowed';
+        insideBox.style.cursor = 'not-allowed';
       } else {
         let transformString = '';
-        if (
-          this.graphDom.el.attributes &&
-          this.graphDom.el.attributes.transform
-        ) {
+        if (graphDom.attributes && graphDom.attributes.transform) {
           // transform information of graph
-          transformString = this.graphDom.el.attributes.transform.nodeValue.split(
+          transformString = graphDom.attributes.transform.nodeValue.split(
               /[(,)]/,
           );
         } else {
@@ -2394,7 +2359,7 @@ export default {
           x: parseFloat(transformString[1]),
           y: parseFloat(transformString[2]),
         };
-        this.graphDom.el.childNodes.forEach((k) => {
+        graphDom.childNodes.forEach((k) => {
           if (k.tagName === 'polygon') {
             this.graphDom.pointStartX = parseFloat(
                 k.attributes.points.nodeValue.split(/[\s,]/)[0],
@@ -2408,16 +2373,14 @@ export default {
         this.graphDom.initTranslateY =
           this.svg.viewHeight - this.graphDom.pointStartY; // Initial y of graph
         this.graphDom.initTranslateX = -this.graphDom.pointStartX; // Initial x of graph
-        this.graphDom.width = this.graphDom.el.getBoundingClientRect().width;
-        this.graphDom.height = this.graphDom.el.getBoundingClientRect().height;
+        this.graphDom.width = graphDom.getBoundingClientRect().width;
+        this.graphDom.height = graphDom.getBoundingClientRect().height;
         this.graphDom.initWidth =
           this.graphDom.width / this.graphDom.transform.k; // Initial width of the graph
         this.graphDom.initHeight =
           this.graphDom.height / this.graphDom.transform.k; // Initial height of the graph
         delete this.graphSmall.el;
-        this.graphSmall.el = this.smallMap.el.getElementsByClassName(
-            'graph',
-        )[0];
+        this.graphSmall.el = smallMap.getElementsByClassName('graph')[0];
         this.graphSmall.el.attributes.transform.value = `translate(${this.graphDom.initTranslateX},
          ${this.graphDom.initTranslateY}) scale(${this.graphDom.initScale})`;
 
@@ -2430,10 +2393,8 @@ export default {
         this.graphSmall.initWidth = this.graphSmall.el.getBoundingClientRect().width;
         this.graphSmall.initHeight = this.graphSmall.el.getBoundingClientRect().height;
         // Size control of the shadow frame
-        delete this.insideBox.el;
-        this.insideBox.el = document.querySelector('#inside-box');
         this.insideBox.scale = 1 / this.graphDom.transform.k; // Enlarged value of the shadow frame
-        this.insideBox.el.style.cursor = 'move';
+        insideBox.style.cursor = 'move';
         this.bigMapPositionChange();
 
         // Small image location change event
@@ -2450,21 +2411,21 @@ export default {
           }
         };
 
-        this.smallContainer.el.onmousedown = (e) => {
+        smallContainer.onmousedown = (e) => {
           this.clickSmall = e.button;
           this.eventSmall.x = e.pageX - this.smallResize.offsetLeft;
           this.eventSmall.y = e.pageY - this.smallResize.offsetTop;
         };
 
         // Mouse lifting event
-        this.smallContainer.el.onmouseup = (e) => {
+        smallContainer.onmouseup = (e) => {
           if (this.clickSmall === -1) {
             this.insideBoxPositionChange(e);
           }
         };
 
         // Mouse wheel event
-        this.smallContainer.el.onmousewheel = (e) => {
+        smallContainer.onmousewheel = (e) => {
           e = e || window.event;
           const b = e.wheelDelta ? e.wheelDelta : e.detail;
           if (
@@ -2548,23 +2509,26 @@ export default {
         x: this.graphDom.initTranslateX - leftSmall,
         y: this.graphDom.initTranslateY - topSmall,
       };
-      if (this.graphDom.eld3) {
-        this.graphDom.eld3.attr(
+      const graphDomd3 = d3.select('#graph0');
+      const graphDom = document.querySelector('#graph #graph0');
+      if (graphDomd3) {
+        graphDomd3.attr(
             'transform',
             `translate(${this.graphDom.transform.x},${this.graphDom.transform.y}) scale(${this.graphDom.transform.k})`,
         );
-        this.graphDom.width = this.graphDom.el.getBoundingClientRect().width;
-        this.graphDom.height = this.graphDom.el.getBoundingClientRect().height;
+        this.graphDom.width = graphDom.getBoundingClientRect().width;
+        this.graphDom.height = graphDom.getBoundingClientRect().height;
       }
     },
     /**
      * Displacement of the small map when the large picture is changed
      */
     bigMapPositionChange() {
+      const graphDom = document.querySelector('#graph #graph0');
       this.graphDom.top =
-        this.graphDom.el.getBoundingClientRect().top - this.svg.offsetTop;
+        graphDom.getBoundingClientRect().top - this.svg.offsetTop;
       this.graphDom.left =
-        this.graphDom.el.getBoundingClientRect().left - this.svg.offsetLeft;
+        graphDom.getBoundingClientRect().left - this.svg.offsetLeft;
       this.insideBox.left = parseFloat(
           (
             this.graphSmall.initLeft -
@@ -2588,11 +2552,12 @@ export default {
      * @param {Boolean} sizeChange Whether to change the width and height
      */
     styleSet(el, sizeChange) {
-      el.el.style.left = `${el.left}px`;
-      el.el.style.top = `${el.top}px`;
+      const dom = document.querySelector(el.el);
+      dom.style.left = `${el.left}px`;
+      dom.style.top = `${el.top}px`;
       if (sizeChange) {
-        el.el.style.width = `${el.width}px`;
-        el.el.style.height = `${el.height}px`;
+        dom.style.width = `${el.width}px`;
+        dom.style.height = `${el.height}px`;
       }
     },
     /**
@@ -2980,6 +2945,9 @@ export default {
           .pic {
             width: 45px;
             text-align: center;
+            display: inline-block;
+            padding-left: 20px;
+            vertical-align: middle;
             img {
               max-width: 45px;
               max-height: 15px;
@@ -2987,10 +2955,17 @@ export default {
               vertical-align: middle;
             }
           }
-          div {
+          .legend-text {
             display: inline-block;
             padding-left: 20px;
+            width: calc(100% - 45px);
             vertical-align: middle;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .legend-text:hover {
+            cursor: default;
           }
         }
       }
@@ -3098,11 +3073,11 @@ export default {
           }
         }
       }
-      .node.polymeric > polygon {
+      .node.aggregation > polygon {
         stroke: #fdca5a;
         fill: #ffe8b5;
       }
-      .node.cluster.polymeric > rect {
+      .node.cluster.aggregation > rect {
         stroke: #fdca5a;
         fill: #fff2d4;
         stroke-dasharray: 3, 3;
@@ -3130,6 +3105,9 @@ export default {
       .edge-point ellipse {
         stroke: #a7a7a7;
         fill: #a7a7a7;
+      }
+      text {
+        fill: black;
       }
     }
     // No data available.
