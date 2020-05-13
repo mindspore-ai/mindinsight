@@ -134,7 +134,7 @@ export default {
       autoUpdateTimer: null, // Automatic refresh timer
       brightness: 50, // Brightness
       contrast: 50, // Contrast
-      trainingJobId: this.$route.query.id, // ID of the current training job
+      trainingJobId: this.$route.query.train_id, // ID of the current training job
       multiSelectedTagNames: {}, // Dictionary for storing the name of the selected tags
       curFilterSamples: [], // List of images that meet the current filter criteria
       tagOperateList: [], // Tag list
@@ -221,6 +221,13 @@ export default {
     }
   },
   mounted() {
+    if (!this.$route.query || !this.$route.query.train_id) {
+      this.$message.error(this.$t('trainingDashboard.invalidId'));
+      document.title = this.$t('images.titleText') + '-MindInsight';
+      return;
+    }
+    document.title = decodeURIComponent(this.$route.query.train_id) +'-' + this.$t('images.titleText') +
+      '-MindInsight';
     this.getTagList();
     // Automatic refresh
     if (this.isTimeReload) {

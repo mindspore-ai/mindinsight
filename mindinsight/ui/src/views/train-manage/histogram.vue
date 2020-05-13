@@ -254,6 +254,13 @@ export default {
      * Initialize
      */
     init() {
+      if (!this.$route.query || !this.$route.query.train_id) {
+        this.$message.error(this.$t('trainingDashboard.invalidId'));
+        document.title = this.$t('histogram.titleText') + '-MindInsight';
+        return;
+      }
+      document.title = decodeURIComponent(this.$route.query.train_id) +'-' + this.$t('histogram.titleText') +
+      '-MindInsight';
       this.getOriginData();
       if (this.isTimeReload) {
         this.autoUpdateSamples();

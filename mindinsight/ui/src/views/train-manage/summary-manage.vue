@@ -58,8 +58,7 @@ limitations under the License.
             <!--operate   -->
             <el-table-column prop="operate"
                              :label="$t('summaryManage.operation')"
-                             show-overflow-tooltip
-                             width="150">
+                             width="170">
               <template slot-scope="scope">
                 <el-button type="text"
                            class="cursor-type"
@@ -106,6 +105,7 @@ export default {
   destroyed() {},
   activated() {},
   mounted() {
+    document.title = this.$t('summaryManage.summaryList') + '-MindInsight';
     this.$nextTick(() => {
       this.init();
     });
