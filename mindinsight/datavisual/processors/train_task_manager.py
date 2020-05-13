@@ -18,6 +18,7 @@ from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
+from mindinsight.datavisual.data_transform.data_manager import DATAVISUAL_PLUGIN_KEY, DATAVISUAL_CACHE_KEY
 
 
 class TrainTaskManager(BaseProcessor):
@@ -53,13 +54,24 @@ class TrainTaskManager(BaseProcessor):
             dict, refer to restful api.
         """
         Validation.check_param_empty(train_id=train_id)
-        train_job = self._data_manager.get_single_train_job(train_id, manual_update=manual_update)
-        if not train_job:
+
+        if manual_update:
+            self._data_manager.cache_train_job(train_id)
+
+        train_job = self._data_manager.get_train_job(train_id)
+
+        try:
+            data_visual_content = train_job.get_detail(DATAVISUAL_CACHE_KEY)
+            plugins = data_visual_content.get(DATAVISUAL_PLUGIN_KEY)
+        except exceptions.TrainJobDetailNotInCacheError:
+            plugins = []
+
+        if not plugins:
             default_result = dict()
             for plugin_name in PluginNameEnum.list_members():
                 default_result.update({plugin_name: list()})
             return dict(plugins=default_result)
 
         return dict(
-            plugins=train_job['tag_mapping']
+            plugins=plugins
         )

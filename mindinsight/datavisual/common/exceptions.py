@@ -150,3 +150,12 @@ class HistogramNotExistError(MindInsightException):
         super(HistogramNotExistError, self).__init__(DataVisualErrors.HISTOGRAM_NOT_EXIST,
                                                      error_msg,
                                                      http_code=400)
+
+
+class TrainJobDetailNotInCacheError(MindInsightException):
+    """Detail info of given train job is not in cache."""
+    def __init__(self, error_detail="no detail provided."):
+        error_msg = f'Detail info of the given train job is not in cache. Detail: {error_detail}'
+        super().__init__(DataVisualErrors.TRAIN_JOB_DETAIL_NOT_IN_CACHE,
+                         error_msg,
+                         http_code=400)

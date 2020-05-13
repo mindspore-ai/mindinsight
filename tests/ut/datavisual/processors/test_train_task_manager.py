@@ -27,7 +27,6 @@ import pytest
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform import data_manager
-from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.datavisual.processors.train_task_manager import TrainTaskManager
 from mindinsight.datavisual.utils import crc32
 
@@ -97,7 +96,7 @@ class TestTrainTaskManager:
 
         self._generated_path.append(self._root_dir)
 
-        self._mock_data_manager = data_manager.DataManager([DataLoaderGenerator(self._root_dir)])
+        self._mock_data_manager = data_manager.DataManager(self._root_dir)
         self._mock_data_manager.start_load_data(reload_interval=0)
 
         check_loading_done(self._mock_data_manager, time_limit=30)
