@@ -15,8 +15,11 @@
 """Lineage utils."""
 from functools import wraps
 
+from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
-    LineageGetModelFileError, LineageLogError
+    LineageGetModelFileError, LineageLogError, LineageParamValueError, LineageDirNotExistError, \
+    LineageParamSummaryPathError
+from mindinsight.lineagemgr.common.validator.validate import validate_path
 from mindinsight.utils.exceptions import MindInsightException
 
 
@@ -54,3 +57,14 @@ def try_except(logger):
 
         return wrapper
     return try_except_decorate
+
+
+def normalize_summary_dir(summary_dir):
+    """Normalize summary dir."""
+    try:
+        summary_dir = validate_path(summary_dir)
+    except (LineageParamValueError, LineageDirNotExistError) as error:
+        log.error(str(error))
+        log.exception(error)
+        raise LineageParamSummaryPathError(str(error.message))
+    return summary_dir

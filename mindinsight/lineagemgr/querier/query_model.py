@@ -298,6 +298,7 @@ class LineageObj:
         result[self._name_user_defined] = self.user_defined
         # add dataset_graph into filtration result
         result[self._name_dataset_graph] = getattr(self, self._name_dataset_graph)
+
         return result
 
     def _parse_train_lineage(self, train_lineage):

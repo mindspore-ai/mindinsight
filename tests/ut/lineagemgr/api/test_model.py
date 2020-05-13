@@ -29,12 +29,12 @@ class TestModel(TestCase):
     """Test the function of get_summary_lineage and filter_summary_lineage."""
 
     @mock.patch('mindinsight.lineagemgr.api.model.Querier')
-    @mock.patch('mindinsight.lineagemgr.api.model.SummaryPathParser.get_latest_lineage_summary')
+    @mock.patch('mindinsight.lineagemgr.api.model.LineageParser')
     @mock.patch('os.path.isdir')
-    def test_get_summary_lineage_success(self, isdir_mock, latest_summary_mock, qurier_mock):
+    def test_get_summary_lineage_success(self, isdir_mock, parser_mock, qurier_mock):
         """Test the function of get_summary_lineage."""
         isdir_mock.return_value = True
-        latest_summary_mock.return_value = '/path/to/summary_dir/a_MS_lineage'
+        parser_mock.return_value = MagicMock()
 
         mock_querier = MagicMock()
         qurier_mock.return_value = mock_querier
@@ -53,7 +53,7 @@ class TestModel(TestCase):
             invalid_path
         )
 
-    @mock.patch('mindinsight.lineagemgr.api.model.validate_path')
+    @mock.patch('mindinsight.lineagemgr.common.utils.validate_path')
     @mock.patch.object(SummaryPathParser, 'get_latest_lineage_summary')
     def test_get_summary_lineage_failed2(self, mock_summary, mock_valid):
         """Test get_summary_lineage failed."""
@@ -66,29 +66,19 @@ class TestModel(TestCase):
             '/path/to/summary_dir'
         )
 
-    @mock.patch('mindinsight.lineagemgr.api.model.validate_path')
-    @mock.patch('mindinsight.lineagemgr.api.model.Querier')
+    @mock.patch('mindinsight.lineagemgr.lineage_parser.LineageParser._parse_summary_log')
+    @mock.patch('mindinsight.lineagemgr.common.utils.validate_path')
     @mock.patch.object(SummaryPathParser, 'get_latest_lineage_summary')
     def test_get_summary_lineage_failed3(self,
                                          mock_summary,
-                                         mock_querier,
-                                         mock_valid):
+                                         mock_valid,
+                                         mock_paser):
         """Test get_summary_lineage failed."""
         mock_summary.return_value = '/path/to/summary/file'
-        mock_querier.return_value.get_summary_lineage.side_effect = \
-            LineageSummaryParseException()
         mock_valid.return_value = '/path/to/summary_dir'
-        res = get_summary_lineage('/path/to/summary_dir')
-        assert res == {}
-
-        mock_querier.side_effect = LineageQuerierParamException(
-            ['keys'], 'key')
-        self.assertRaisesRegex(
-            LineageQuerySummaryDataError,
-            'Get summary lineage failed',
-            get_summary_lineage,
-            '/path/to/summary_dir'
-        )
+        mock_paser.return_value = None
+        result = get_summary_lineage('/path/to/summary_dir')
+        assert {} == result
 
     @mock.patch('mindinsight.lineagemgr.api.model.validate_path')
     def test_convert_relative_path_to_abspath(self, validate_path_mock):
@@ -135,13 +125,13 @@ class TestModel(TestCase):
 
 class TestFilterAPI(TestCase):
     """Test the function of filter_summary_lineage."""
-
+    @mock.patch('mindinsight.lineagemgr.api.model.LineageOrganizer')
     @mock.patch('mindinsight.lineagemgr.api.model.Querier')
-    @mock.patch('mindinsight.lineagemgr.api.model.SummaryPathParser.get_latest_lineage_summaries')
+    @mock.patch('mindinsight.lineagemgr.lineage_parser.SummaryPathParser.get_latest_lineage_summary')
     @mock.patch('mindinsight.lineagemgr.api.model._convert_relative_path_to_abspath')
-    @mock.patch('mindinsight.lineagemgr.api.model.validate_path')
+    @mock.patch('mindinsight.lineagemgr.api.model.normalize_summary_dir')
     def test_filter_summary_lineage(self, validate_path_mock, convert_path_mock,
-                                    latest_summary_mock, qurier_mock):
+                                    latest_summary_mock, qurier_mock, organizer_mock):
         """Test the function of filter_summary_lineage."""
         convert_path_mock.return_value = {
             'summary_dir': {
@@ -151,6 +141,8 @@ class TestFilterAPI(TestCase):
                 'gt': 2.0
             }
         }
+        organizer_mock = MagicMock()
+        organizer_mock.super_lineage_objs = None
         validate_path_mock.return_value = True
         latest_summary_mock.return_value = ['/path/to/summary_base_dir/summary_dir']
         mock_querier = MagicMock()
@@ -172,7 +164,7 @@ class TestFilterAPI(TestCase):
         )
 
     @mock.patch('mindinsight.lineagemgr.api.model.validate_condition')
-    @mock.patch('mindinsight.lineagemgr.api.model.validate_path')
+    @mock.patch('mindinsight.lineagemgr.api.model.normalize_summary_dir')
     def test_invalid_search_condition(self, mock_path, mock_valid):
         """Test filter_summary_lineage with invalid invalid param."""
         mock_path.return_value = None
@@ -188,7 +180,7 @@ class TestFilterAPI(TestCase):
 
     @mock.patch('mindinsight.lineagemgr.api.model.validate_search_model_condition')
     @mock.patch('mindinsight.lineagemgr.api.model.validate_condition')
-    @mock.patch('mindinsight.lineagemgr.api.model.validate_path')
+    @mock.patch('mindinsight.lineagemgr.common.utils.validate_path')
     @mock.patch('mindinsight.lineagemgr.api.model._convert_relative_path_to_abspath')
     def test_failed_to_convert_path(self, mock_convert, *args):
         """Test filter_summary_lineage with invalid invalid param."""
@@ -205,23 +197,24 @@ class TestFilterAPI(TestCase):
     @mock.patch('mindinsight.lineagemgr.api.model._convert_relative_path_to_abspath')
     @mock.patch('mindinsight.lineagemgr.api.model.validate_search_model_condition')
     @mock.patch('mindinsight.lineagemgr.api.model.validate_condition')
-    @mock.patch('mindinsight.lineagemgr.api.model.validate_path')
-    @mock.patch.object(SummaryPathParser, 'get_latest_lineage_summaries')
+    @mock.patch('mindinsight.lineagemgr.api.model.normalize_summary_dir')
+    @mock.patch.object(SummaryPathParser, 'get_latest_lineage_summary')
     def test_failed_to_get_summary_filesh(self, mock_parse, *args):
         """Test filter_summary_lineage with invalid invalid param."""
-        mock_parse.return_value = []
-        args[0].return_value = None
+        path = '/path/to/summary/dir'
+        mock_parse.return_value = None
+        args[0].return_value = path
         self.assertRaisesRegex(
             LineageFileNotFoundError,
             'There is no summary log file under summary_base_dir.',
             filter_summary_lineage,
-            '/path/to/summary/dir'
+            path
         )
 
     @mock.patch('mindinsight.lineagemgr.api.model._convert_relative_path_to_abspath')
     @mock.patch('mindinsight.lineagemgr.api.model.validate_search_model_condition')
     @mock.patch('mindinsight.lineagemgr.api.model.validate_condition')
-    @mock.patch('mindinsight.lineagemgr.api.model.validate_path')
+    @mock.patch('mindinsight.lineagemgr.api.model.normalize_summary_dir')
     @mock.patch.object(SummaryPathParser, 'get_latest_lineage_summaries')
     @mock.patch('mindinsight.lineagemgr.api.model.Querier')
     def test_failed_to_querier(self, mock_query, mock_parse, *args):

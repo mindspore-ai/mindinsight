@@ -70,7 +70,7 @@ class TestSearchModel(TestCase):
         self.url = '/v1/mindinsight/lineagemgr/lineages'
 
     @mock.patch('mindinsight.backend.lineagemgr.lineage_api.settings')
-    @mock.patch('mindinsight.backend.lineagemgr.lineage_api.filter_summary_lineage')
+    @mock.patch('mindinsight.backend.lineagemgr.lineage_api.general_filter_summary_lineage')
     def test_search_model_success(self, *args):
         """Test the success of model_success."""
         base_dir = '/path/to/test_lineage_summary_dir_base'
@@ -113,7 +113,7 @@ class TestSearchModel(TestCase):
         self.assertDictEqual(expect_result, response.get_json())
 
     @mock.patch('mindinsight.backend.lineagemgr.lineage_api.settings')
-    @mock.patch('mindinsight.backend.lineagemgr.lineage_api.filter_summary_lineage')
+    @mock.patch('mindinsight.backend.lineagemgr.lineage_api.general_filter_summary_lineage')
     def test_search_model_fail(self, *args):
         """Test the function of model_lineage with exception."""
         response = self.app_client.post(self.url, data='xxx')

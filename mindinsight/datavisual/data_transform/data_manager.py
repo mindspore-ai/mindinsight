@@ -21,10 +21,10 @@ It can read events data through the DataLoader.
 This module also acts as a thread pool manager.
 """
 import abc
+import datetime
 import enum
 import threading
 import time
-import datetime
 import os
 from typing import Iterable, Optional
 
@@ -77,9 +77,19 @@ class _BasicTrainJob:
         return self._abs_summary_dir
 
     @property
+    def summary_base_dir(self):
+        """Get summary base directory path."""
+        return self._abs_summary_base_dir
+
+    @property
     def train_id(self):
         """Get train id."""
         return self._train_id
+
+    @property
+    def update_time(self):
+        """Get update time."""
+        return self._update_time
 
 
 class CachedTrainJob:
@@ -99,6 +109,7 @@ class CachedTrainJob:
         self._content = {}
 
         self._cache_status = _CacheStatus.NOT_IN_CACHE
+        self._key_locks = {}
 
     @property
     def cache_status(self):
@@ -124,6 +135,11 @@ class CachedTrainJob:
         """Get summary directory path."""
         return self._basic_info.summary_dir
 
+    @property
+    def summary_base_dir(self):
+        """Get summary base directory path."""
+        return self._basic_info.summary_base_dir
+
     def set(self, key, value):
         """Set value to cache."""
         self._content[key] = value
@@ -144,6 +160,12 @@ class CachedTrainJob:
     def basic_info(self, value):
         """Set basic train job info."""
         self._basic_info = value
+
+    def lock_key(self, key):
+        """Threading lock with given key."""
+        if key not in self._key_locks:
+            self._key_locks[key] = threading.Lock()
+        return self._key_locks[key]
 
 
 class TrainJob:
@@ -324,6 +346,11 @@ class _BriefCacheManager(_BaseCacheManager):
         for updater in self._updaters.values():
             for cache_item in self._cache_items.values():
                 updater.update_item(cache_item)
+
+    @property
+    def cache_items(self):
+        """Get cache items."""
+        return self._cache_items
 
 
 # Key for plugin tags.
@@ -740,6 +767,11 @@ class DataManager:
         self._detail_cache = _DetailCacheManager(loader_generators)
         self._brief_cache = _BriefCacheManager()
 
+    @property
+    def summary_base_dir(self):
+        """Get summary base dir."""
+        return self._summary_base_dir
+
     def start_load_data(self,
                         reload_interval=settings.RELOAD_INTERVAL,
                         max_threads_count=MAX_DATA_LOADER_SIZE):
@@ -954,6 +986,14 @@ class DataManager:
     def register_brief_cache_item_updater(self, updater: BaseCacheItemUpdater):
         """Register brief cache item updater for brief cache manager."""
         self._brief_cache.register_cache_item_updater(updater)
+
+    def get_brief_cache(self):
+        """Get brief cache."""
+        return self._brief_cache
+
+    def get_brief_train_job(self, train_id):
+        """Get brief train job."""
+        return self._brief_cache.get_train_job(train_id)
 
 
 DATA_MANAGER = DataManager(settings.SUMMARY_BASE_DIR)

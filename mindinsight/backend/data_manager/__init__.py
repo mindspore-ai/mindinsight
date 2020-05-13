@@ -14,9 +14,10 @@
 # ============================================================================
 """Trigger data manager load."""
 
-from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
-from mindinsight.datavisual.common.log import logger
 from mindinsight.conf import settings
+from mindinsight.datavisual.common.log import logger
+from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
+from mindinsight.lineagemgr.cache_item_updater import LineageCacheItemUpdater
 
 
 def init_module(app):
@@ -29,6 +30,6 @@ def init_module(app):
     """
     # Just to suppress pylint warning about unused arg.
     logger.debug("App: %s", type(app))
-    # Register cache item updater here, before start load data.
+    DATA_MANAGER.register_brief_cache_item_updater(LineageCacheItemUpdater())
     DATA_MANAGER.start_load_data(reload_interval=int(settings.RELOAD_INTERVAL),
                                  max_threads_count=int(settings.MAX_THREADS_COUNT))

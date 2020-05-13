@@ -23,7 +23,7 @@ from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamMiss
 from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.validator.validate_path import safe_normalize_path
 from mindinsight.lineagemgr.querier.query_model import FIELD_MAPPING
-from mindinsight.utils.exceptions import MindInsightException
+from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 
 try:
     from mindspore.nn import Cell
@@ -437,3 +437,26 @@ def validate_user_defined_info(user_defined_info):
 
     if len(field_map) + len(user_defined_keys) != len(all_keys):
         raise LineageParamValueError("There are some keys have defined in lineage.")
+
+
+def validate_train_id(relative_path):
+    """
+    Check if train_id is valid.
+
+    Args:
+        relative_path (str): Train ID of a summary directory, e.g. './log1'.
+
+    Returns:
+        bool, if train id is valid, return True.
+
+    """
+    if not relative_path.startswith('./'):
+        log.warning("The relative_path does not start with './'.")
+        raise ParamValueError(
+            "Summary dir should be relative path starting with './'."
+        )
+    if len(relative_path.split("/")) > 2:
+        log.warning("The relative_path contains multiple '/'.")
+        raise ParamValueError(
+            "Summary dir should be relative path starting with './'."
+        )
