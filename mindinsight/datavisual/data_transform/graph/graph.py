@@ -215,7 +215,7 @@ class Graph:
     def _update_conflict_node(self, conflict_name):
         conflict_node = self._get_normal_node(node_name=conflict_name)
         base_name = conflict_name.split('/')[-1]
-        new_name = Node.create_node_name(scope=conflict_node.scope, base_name=base_name)
+        new_name = Node.create_node_name(scope=conflict_node.scope, base_name=f'({base_name})')
         self._update_node_name_of_cache(conflict_node, new_name, update_parent=True)
 
     def _inherit_input_output_from_subnode(self, parent_node, subnode_list, filtered_type=None):
@@ -478,6 +478,12 @@ class Graph:
                         continue
 
                     scope_node = self._get_normal_node(node_name=scope_name)
+                    if scope_node is None:
+                        message = f"Can not find the scope node by scope name({scope_name}), " \
+                                  f"may be this scope node has not been built."
+                        logger.debug(message)
+                        continue
+
                     update_node_map.update({scope_name: scope_node})
 
         # Update the input and output of the nodes
