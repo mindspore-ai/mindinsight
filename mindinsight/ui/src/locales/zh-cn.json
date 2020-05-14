@@ -129,7 +129,6 @@
     "operatorNode": "算子节点",
     "virtualNode": "虚拟节点",
     "constantNode": "常量节点",
-    "virtualConstantNode": "虚拟常量节点",
     "polymetric": "聚合节点",
     "dataFlowEdge": "数据流向边",
     "controllDepEdge": "控制依赖边",
@@ -145,7 +144,19 @@
     "queryLoading": "正在加载图，请稍候。",
     "fullScreen": "全屏",
     "tooManyNodes": "节点太多，打开失败",
-    "inputNodeName": "请输入节点名称"
+    "inputNodeName": "请输入节点名称",
+    "guide": "用户指南",
+    "guideTitle1": "1/3 主要功能介绍",
+    "guideTitle2": "2/3 节点类型介绍",
+    "guideTitle3": "3/3 边介绍",
+    "guideContent11": "1. 在计算图展示区域可以查看计算图，可以通过滚轮对计算图放大和缩小，可以鼠标点击后拖拽。",
+    "guideContent12": "2. 支持全屏展示计算图，或者将当前页面保存成SVG文件。",
+    "guideContent13": "3. 在右边的功能区中，可以切换查看不同文件的计算图，或者在计算图中进行节点搜索。",
+    "guideContent14": "4. 在节点信息的输入和输出中，可以选择并点击跳转到该节点。",
+    "guideContent2": "计算图主要由命名空间节点，算子节点，虚拟节点，聚合节点，常量节点等几种类型节点构成。其中 \"Default\" 表示正向传播，\"Gradients\" 表示反向传播。",
+    "guideContent3": "计算图中存在数据边和控制边。其中数据边表示数据的输入，控制边表示节点之间执行依赖关系。",
+    "next": "下一步",
+    "finish": "完成"
   },
   "components": {
     "tagSelectTitle": "标签选择",

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="301px" height="95px" viewBox="0 0 301 95" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>编组 10</title>
+    <desc>Created with Sketch.</desc>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="编组-10">
+            <g id="编组-9" transform="translate(3.000000, 3.000000)">
+                <g id="编组-8" fill="#EDF3FF" fill-opacity="0.8" fill-rule="nonzero" opacity="0.504191">
+                    <g id="编组-5">
+                        <path d="M5,0 L290,0 C292.761424,-5.07265313e-16 295,2.23857625 295,5 L295,84 C295,86.7614237 292.761424,89 290,89 L5,89 C2.23857625,89 3.38176876e-16,86.7614237 0,84 L0,5 C-3.38176876e-16,2.23857625 2.23857625,5.07265313e-16 5,0 Z" id="矩形"></path>
+                    </g>
+                </g>
+                <polygon id="矩形" fill="#E6ECFB" fill-rule="nonzero" points="14 10 282 10 282 63 14 63"></polygon>
+                <polygon id="路径-3" stroke="#6882DA" stroke-width="2" points="56.5035461 35.5 107.5 21.5 149.652482 36.5 108.5 51.5"></polygon>
+                <polyline id="路径-4" stroke="#A6B6EA" stroke-width="2" points="106.12766 35.5 146 21.5 192.29078 21.5 239.503546 35.5 150 51.5"></polyline>
+                <line x1="106.12766" y1="35.5" x2="108.5" y2="51.5" id="路径-6" stroke="#6882DA" stroke-width="2" stroke-dasharray="2,2"></line>
+                <path d="M146,21.5 L194,34.5 L149.652482,37 L150,51.5" id="路径-5" stroke="#6882DA" stroke-width="2" stroke-dasharray="2,2"></path>
+                <rect id="矩形" fill="#A6B6EA" fill-rule="nonzero" x="18" y="14" width="22.8085106" height="3" rx="1.5"></rect>
+                <rect id="矩形-copy-16" fill="#F7FAFF" fill-rule="nonzero" x="143" y="49" width="13.3049645" height="5" rx="1.5"></rect>
+                <rect id="矩形-copy-17" fill="#F7FAFF" fill-rule="nonzero" x="182.787234" y="19" width="19.0070922" height="5" rx="1.5"></rect>
+                <rect id="矩形-copy-17备份" fill="#F7FAFF" fill-rule="nonzero" x="230" y="33" width="19.0070922" height="5" rx="1.5"></rect>
+                <rect id="矩形-copy-17备份-2" fill="#F7FAFF" fill-rule="nonzero" x="47" y="33" width="19.0070922" height="5" rx="1.5"></rect>
+                <ellipse id="椭圆形" fill="#F7FAFF" fill-rule="nonzero" cx="107.5" cy="21.5" rx="11.5" ry="2.5"></ellipse>
+                <ellipse id="椭圆形" fill="#F7FAFF" fill-rule="nonzero" cx="146" cy="21.5" rx="7" ry="2.5"></ellipse>
+                <ellipse id="椭圆形备份-2" fill="#F7FAFF" fill-rule="nonzero" cx="150" cy="36.5" rx="5" ry="2.5"></ellipse>
+                <ellipse id="椭圆形备份-3" fill="#F7FAFF" fill-rule="nonzero" cx="194" cy="34.5" rx="7" ry="2.5"></ellipse>
+                <ellipse id="椭圆形备份-4" fill="#F7FAFF" fill-rule="nonzero" cx="108.5" cy="51.5" rx="8.5" ry="2.5"></ellipse>
+                <rect id="矩形" fill="#F7FAFF" fill-rule="nonzero" x="99" y="33" width="14.2553191" height="5" rx="1.5"></rect>
+                <rect id="矩形" fill="#A6B6EA" fill-rule="nonzero" x="138" y="70" width="20" height="8" rx="2"></rect>
+                <line x1="147.652482" y1="63" x2="147.652482" y2="68.5" id="路径-10" stroke="#6882DA" stroke-width="2"></line>
+                <polygon id="矩形" fill="#6882DA" points="145 67 150 67 147.5 70"></polygon>
+            </g>
+            <rect id="矩形" x="0" y="0" width="301" height="95"></rect>
+        </g>
+    </g>
+</svg>
