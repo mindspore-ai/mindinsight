@@ -179,6 +179,7 @@ export default {
   },
   computed: {},
   mounted() {
+    document.title = this.$t('summaryManage.modelTraceback') + '-MindInsight';
     this.$store.commit('setSelectedBarList', []);
     this.getStoreList();
     this.pagination.pageChange = (page) => {

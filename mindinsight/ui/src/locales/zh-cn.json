@@ -21,10 +21,10 @@
     "timeSecond": "秒"
   },
   "summaryManage": {
-    "summaryList": "Summary列表",
-    "currentFolder": "当前文件夹：",
+    "summaryList": "训练列表",
+    "currentFolder": "训练日志根路径：",
     "sorting": "序号",
-    "summaryPath": "summary路径",
+    "summaryPath": "训练日志路径",
     "createTime": "创建时间",
     "updateTime": "更新时间",
     "operation": "操作",
@@ -33,7 +33,7 @@
     "dataTraceback": "数据溯源"
   },
   "modelTraceback": {
-    "summaryPath": "summary路径",
+    "summaryPath": "训练日志路径",
     "trainSetPath": "训练集路径",
     "testSetPath": "测试集路径",
     "trainingSampleNum": "训练样本数量",
@@ -68,7 +68,7 @@
     "samplingData": "数据抽样",
     "imagesampleSwitch": "切换标签",
     "invalidId": "无效的训练作业",
-    "summaryDirPath": "summary路径："
+    "summaryDirPath": "训练日志路径："
   },
   "scalar": {
     "titleText": "标量",

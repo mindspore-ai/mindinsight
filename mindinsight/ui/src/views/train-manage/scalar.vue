@@ -250,6 +250,13 @@ export default {
     }
   },
   mounted() {
+    if (!this.$route.query || !this.$route.query.train_id) {
+      this.$message.error(this.$t('trainingDashboard.invalidId'));
+      document.title = this.$t('scalar.titleText') + '-MindInsight';
+      return;
+    }
+    document.title = decodeURIComponent(this.$route.query.train_id) +'-' + this.$t('scalar.titleText') +
+      '-MindInsight';
     // Adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
 

@@ -292,7 +292,9 @@ export default {
       if (this.$route.query && this.$route.query.id) {
         this.trainingJobId = this.$route.query.id;
         this.summaryPath = decodeURIComponent(this.trainingJobId);
+        document.title = this.summaryPath + '-' + this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
       } else {
+        document.title = this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
         this.trainingJobId = '';
         this.$message.error(this.$t('trainingDashboard.invalidId'));
       }
@@ -1186,7 +1188,7 @@ export default {
       this.$router.push({
         path: '/train-manage/image',
         query: {
-          id: this.trainingJobId,
+          train_id: this.trainingJobId,
         },
       });
     },

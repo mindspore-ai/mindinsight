@@ -389,9 +389,15 @@ export default {
     if (!this.$route.query || !this.$route.query.train_id) {
       this.trainJobID = '';
       this.$message.error(this.$t('trainingDashboard.invalidId'));
+      document.title = this.$t('graph.titleText') + '-MindInsight';
       return;
     }
     this.trainJobID = this.$route.query.train_id;
+    document.title =
+      decodeURIComponent(this.trainJobID) +
+      '-' +
+      this.$t('graph.titleText') +
+      '-MindInsight';
     this.getDatavisualPlugins();
     window.onresize = () => {
       const graphDom = document.querySelector('#graph #graph0');
@@ -927,7 +933,7 @@ export default {
      */
     packageGraphData() {
       const initSetting =
-        'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
+        'node[style="filled";fontsize="10px"];edge[fontsize="4px";];';
       return `digraph {${initSetting}${this.packageNodes()}${this.packageEdges()}}`;
     },
     /**
@@ -1477,7 +1483,7 @@ export default {
       const nodeStr = this.packageNodes(name);
       const edgeStr = this.packageEdges(name);
       const initSetting =
-        `node[style="filled";fontsize="10px";];` + `edge[fontsize="6px";];`;
+        `node[style="filled";fontsize="10px";];` + `edge[fontsize="4px";];`;
       const dotStr =
         `digraph {${initSetting}label="${name.split('/').pop()}";` +
         `${nodeStr}${edgeStr}}`;
@@ -1537,10 +1543,7 @@ export default {
                   '',
               )}`,
           )
-          .attr(
-              'class',
-              `edge${edge.edge_type === 'aggregation' ? ' hide' : ''}`,
-          );
+          .attr('class', 'edge');
       g.append('title').text(text);
       // Because the edges need to be highlighted, marker requires one side of each side.
       const marker = g.append(`marker`);
@@ -1571,7 +1574,7 @@ export default {
       g.append('text')
           .attr('text-anchor', 'middle')
           .attr('font-family', 'Times,serif')
-          .attr('font-size', '6px')
+          .attr('font-size', '4px')
           .attr('fill', '#000000')
           .attr('x', (points[0].x + points[1].x) / 2)
           .attr('y', (points[0].y + points[1].y) / 2)
@@ -3095,12 +3098,6 @@ export default {
         stroke: #56b077;
         fill: #c1f5d5;
         stroke-dasharray: 1.5, 1.5;
-      }
-      .hide {
-        visibility: hidden;
-      }
-      .show {
-        visibility: visible;
       }
       .edge-point ellipse {
         stroke: #a7a7a7;

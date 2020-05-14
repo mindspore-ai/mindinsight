@@ -332,6 +332,7 @@ export default {
   },
   computed: {},
   mounted() {
+    document.title = this.$t('summaryManage.dataTraceback') + '-MindInsight';
     this.$nextTick(() => {
       this.init();
     });
