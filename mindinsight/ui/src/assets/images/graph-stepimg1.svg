@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="296px" height="91px" viewBox="0 0 296 91" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>编组 24</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <rect id="path-1" x="0" y="0" width="264.132893" height="69" rx="2"></rect>
+    </defs>
+    <g id="引导页" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="编组-24">
+            <g id="编组-20">
+                <g id="编组-12">
+                    <rect id="矩形" fill-opacity="0.8" fill="#EDF3FF" fill-rule="nonzero" opacity="0.513020833" x="0" y="0" width="296" height="91"></rect>
+                    <g id="编组-15" transform="translate(17.000000, 16.000000)">
+                        <g id="编组-9">
+                            <g id="矩形">
+                                <mask id="mask-2" fill="white">
+                                    <use xlink:href="#path-1"></use>
+                                </mask>
+                                <use id="蒙版" fill="#DDE6FF" xlink:href="#path-1"></use>
+                                <g id="编组-17" mask="url(#mask-2)">
+                                    <g transform="translate(10.329219, 9.000000)"></g>
+                                </g>
+                            </g>
+                            <g id="编组-8" transform="translate(10.329219, 8.000000)">
+                                <g id="编组-11">
+                                    <rect id="矩形" fill="#FFFFFF" fill-rule="nonzero" x="0" y="0" width="134.279851" height="57" rx="1"></rect>
+                                    <g id="编组-2" transform="translate(29.512055, 7.000000)">
+                                        <path d="M35.4144661,15 C53.5759033,13.5145556 64.3969902,10.847889 67.8777268,7" id="路径-3" stroke="#E1E9FF"></path>
+                                        <path d="M35.4144661,15 C38.5024271,18.9230769 43.4211029,21.9230769 50.1704937,24" id="路径-5" stroke="#E1E9FF"></path>
+                                        <path d="M35.4144661,15 C28.6977869,21 23.7791111,24 20.6584386,24" id="路径-7" stroke="#E1E9FF"></path>
+                                        <path d="M50.1704937,24 C64.4508747,25 72.8126236,25.25 75.2557405,24.75" id="路径-6" stroke="#E1E9FF"></path>
+                                        <path d="M35.4144661,15 C17.2492874,13.8319275 6.92006809,12.1652608 4.42680827,10" id="路径-4" stroke="#E1E9FF"></path>
+                                        <path d="M4.42680827,10 C16.0581322,4.03277918 22.9442784,1.40378251 25.0852468,2.11301" id="路径-8" stroke="#E1E9FF"></path>
+                                        <ellipse id="椭圆形" fill="#AEBCEB" fill-rule="nonzero" cx="36.1522675" cy="14.5" rx="6.6402124" ry="2.5"></ellipse>
+                                        <ellipse id="椭圆形备份" fill="#AEBCEB" fill-rule="nonzero" cx="70.0911309" cy="5" rx="5.16460964" ry="2"></ellipse>
+                                        <ellipse id="椭圆形备份-6" fill="#AEBCEB" fill-rule="nonzero" cx="25.8230482" cy="2" rx="5.16460964" ry="2"></ellipse>
+                                        <ellipse id="椭圆形备份-3" fill="#AEBCEB" fill-rule="nonzero" cx="50.9082951" cy="24" rx="5.16460964" ry="2"></ellipse>
+                                        <ellipse id="椭圆形备份-5" fill="#AEBCEB" fill-rule="nonzero" cx="19.9206372" cy="24" rx="5.16460964" ry="2"></ellipse>
+                                        <ellipse id="椭圆形备份-4" fill="#AEBCEB" fill-rule="nonzero" cx="75.2557405" cy="25" rx="2.95120551" ry="1"></ellipse>
+                                        <ellipse id="椭圆形备份-2" fill="#AEBCEB" fill-rule="nonzero" cx="5.16460964" cy="10" rx="5.16460964" ry="2"></ellipse>
+                                        <line x1="35.4144661" y1="34" x2="35.4144661" y2="38" id="路径-9" stroke="#E1E9FF"></line>
+                                        <polygon id="矩形" fill="#E1E9FF" points="30.9876579 36 39.8412744 36 35.4144661 39"></polygon>
+                                    </g>
+                                    <g id="编组-7" transform="translate(7.378014, 31.000000)">
+                                        <g id="编组-10" transform="translate(28.123253, 4.235294)"></g>
+                                        <g id="主机-(2)"></g>
+                                    </g>
+                                </g>
+                            </g>
+                            <g id="编组-11" transform="translate(78.206946, 39.000000)">
+                                <g id="编组-7">
+                                    <g id="编组-10" transform="translate(26.647650, 4.294118)"></g>
+                                    <g id="主机-(2)"></g>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                    <path d="M27.5,20 L38.5,20 C38.7761424,20 39,20.2238576 39,20.5 C39,20.7761424 38.7761424,21 38.5,21 L27.5,21 C27.2238576,21 27,20.7761424 27,20.5 C27,20.2238576 27.2238576,20 27.5,20 Z" id="矩形备份-29复制备份" fill="#6882DA" fill-rule="nonzero"></path>
+                    <rect id="矩形备份" fill="#E1E9FF" fill-rule="nonzero" x="104" y="41" width="9" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-3" fill="#E1E9FF" fill-rule="nonzero" x="86" y="53" width="9" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-5" fill="#E1E9FF" fill-rule="nonzero" x="101" y="51" width="9" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-2" fill="#E1E9FF" fill-rule="nonzero" x="72" y="41" width="10" height="1" rx="0.5"></rect>
+                    <polygon id="Path" fill="#6882DA" fill-rule="nonzero" points="240.749138 45.4941667 236.64241 47.85025 236.027576 49 244 45.4900833 236 42 236.625048 43.148"></polygon>
+                    <path d="M196.558106,44 C194.592539,44 193,44.8954984 193,46 L193.97274,46 C194.021521,45.181672 195.10043,44.5450161 196.560976,44.5450161 C197.654232,44.5450161 198.747489,44.9212219 199.074605,45.6366559 L198.176471,45.6366559 L198.176471,46 L200.116212,46 L201,45.0916399 L200.440459,44.9099678 L199.946915,45.3890675 C199.487805,44.5836013 198.144907,44 196.558106,44 Z" id="Path" fill="#FFFFFF" fill-rule="nonzero"></path>
+                    <path d="M196.439024,48.4549839 C195.345768,48.4549839 194.252511,48.0787781 193.925395,47.3633441 L194.823529,47.3633441 L194.823529,47 L192.883788,47 L192,47.9083601 L192.559541,48.0900322 L193.053085,47.6109325 C193.512195,48.4163987 194.855093,49 196.441894,49 C198.407461,49 200,48.1045016 200,47 L199.02439,47 C198.97561,47.818328 197.8967,48.4549839 196.439024,48.4549839 Z" id="Path" fill="#FFFFFF" fill-rule="nonzero"></path>
+                    <path d="M2,0 L294,0 C295.104569,-2.02906125e-16 296,0.8954305 296,2 L296,10 L296,10 L0,10 L0,2 C-1.3527075e-16,0.8954305 0.8954305,2.02906125e-16 2,0 Z" id="矩形" fill="#F0F4FF" fill-rule="nonzero" opacity="0.7"></path>
+                </g>
+            </g>
+            <rect id="矩形" fill="#6882DA" fill-rule="nonzero" x="85" y="70" width="17" height="7" rx="2"></rect>
+            <g id="编组-19" transform="translate(190.000000, 33.000000)">
+                <g id="编组-18" transform="translate(20.959493, 5.151786)"></g>
+                <g id="编组-16" transform="translate(0.429624, 6.276786)"></g>
+                <g id="地球-(2)" transform="translate(56.219313, 0.964286)"></g>
+            </g>
+            <g id="编组-23" transform="translate(180.000000, 24.000000)">
+                <rect id="矩形备份-12" fill="#FFFFFF" fill-rule="nonzero" x="0" y="0" width="89.5676047" height="27" rx="1"></rect>
+                <rect id="矩形备份-4" stroke="#E1E9FF" x="4.85483871" y="3.5" width="80.2903226" height="20"></rect>
+                <g id="编组-22" transform="translate(0.000000, 29.000000)" fill-rule="nonzero">
+                    <path d="M1,3.63797881e-12 L88.5676047,3.63797881e-12 C89.1198894,3.63002892e-12 89.5676047,0.44771525 89.5676047,1 L89.5676047,27 C89.5676047,27.5522847 89.1198894,28 88.5676047,28 L1,28 C0.44771525,28 6.76353751e-17,27.5522847 0,27 L0,1 C-6.76353751e-17,0.44771525 0.44771525,3.63808026e-12 1,3.63797881e-12 Z" id="矩形备份-28" fill="#FFFFFF"></path>
+                    <rect id="矩形备份-29" fill="#E1E9FF" x="4.63280714" y="10" width="69.4921071" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-32" fill="#E1E9FF" x="4.63280714" y="23" width="69.4921071" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-33" fill="#E1E9FF" x="4.63280714" y="7" width="43.5483871" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-34" fill="#E1E9FF" x="4.63280714" y="20" width="33.3870968" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-30" fill="#6882DA" x="4.35483871" y="3" width="10.1612903" height="1" rx="0.5"></rect>
+                    <rect id="矩形备份-31" fill="#6882DA" x="4.35483871" y="16" width="10.1612903" height="1" rx="0.5"></rect>
+                </g>
+            </g>
+            <rect id="矩形" stroke="#E1E9FF" x="37.5" y="28.5" width="116" height="36"></rect>
+        </g>
+    </g>
+</svg>

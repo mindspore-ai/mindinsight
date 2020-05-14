@@ -17,23 +17,65 @@ limitations under the License.
 <template>
   <!--cl-graph-manage -->
   <div class="cl-graph-manage">
-    <div class='graph-p32'>
+    <div class="graph-p32">
+      <div class="guide-content"
+           v-if="guide.show">
+        <el-popover placement="top-start"
+                    ref="popover"
+                    :style="{ position: 'absolute', top: guide.top, left: guide.left }"
+                    :title="guide.title"
+                    width="370"
+                    v-model="guide.show">
+          <i class="el-icon-close"
+             @click="closeUserGuide"></i>
+          <div v-for="item in guide.content"
+               :key="item"
+               class="guide-span">{{ item }}</div>
+          <img :src="require(`@/assets/images/graph-stepimg${guide.step}.svg`)" />
+          <el-button type="primary"
+                     @click="guideNext">{{
+            guide.step === 3 ? $t('graph.finish') : $t('graph.next')
+          }}</el-button>
+        </el-popover>
+        <div class="step"
+             v-show="guide.step == 1">
+          <img src="@/assets/images/graph-step1.png"
+               alt="" />
+        </div>
+        <div class="step"
+             v-show="guide.step == 2">
+          <img src="@/assets/images/graph-step2.png"
+               alt="" />
+        </div>
+        <div class="step"
+             v-show="guide.step == 3">
+          <img src="@/assets/images/graph-step3.png"
+               alt="" />
+        </div>
+      </div>
       <div class="cl-title cl-graph-title">
-        <div class="cl-title-left">{{$t('graph.titleText')}}</div>
+        <div class="cl-title-left">
+          {{ $t('graph.titleText') }}
+          <span @click="showUserGuide"
+                class="guide">
+            <i class="guide-icon"></i>
+            {{$t('graph.guide')}}
+          </span>
+        </div>
         <div class="cl-title-right">
           <div class="cl-close-btn"
                @click="jumpToTrainDashboard">
-            <img src="@/assets/images/close-page.png">
+            <img src="@/assets/images/close-page.png" />
           </div>
         </div>
       </div>
       <div class="cl-content">
         <div id="graphs">
           <div class="cl-graph"
-               :class="fullScreen? 'full-screen':''">
+               :class="fullScreen ? 'full-screen' : ''">
             <!-- graph -->
             <div class="graph-container"
-                 :class="rightShow?'':'all'">
+                 :class="rightShow ? '' : 'all'">
               <!-- No data is displayed. -->
               <div class="image-noData"
                    v-if="!loading.show && !Object.keys(allGraphData).length">
@@ -41,7 +83,7 @@ limitations under the License.
                   <img :src="require('@/assets/images/nodata.png')"
                        alt="" />
                 </div>
-                <div class="noData-text">{{$t("public.noData")}}</div>
+                <div class="noData-text">{{ $t('public.noData') }}</div>
               </div>
               <!-- Operation button column -->
               <div class="operate-button-list">
@@ -64,13 +106,13 @@ limitations under the License.
                  :class="rightShow ? '' : 'right-hide'">
               <div class="toggle-right"
                    @click="toggleRight">
-                <i :class="rightShow?'icon-toggle':'icon-toggle icon-left'"></i>
+                <i :class="rightShow ? 'icon-toggle' : 'icon-toggle icon-left'"></i>
               </div>
               <!-- Search box -->
               <el-select @change="fileChange"
                          @visible-change="getSelectList"
                          :popper-append-to-body="false"
-                         class='search'
+                         class="search"
                          v-model="fileSearchBox.value">
                 <el-option v-for="item in fileSearchBox.suggestions"
                            :key="item.value"
@@ -80,7 +122,7 @@ limitations under the License.
                 </el-option>
               </el-select>
               <!-- Search box -->
-              <Autocomplete class='search'
+              <Autocomplete class="search"
                             v-model="searchBox.value"
                             :disabled="!fileSearchBox.value"
                             :fetch-suggestions="searchNodesNames"
@@ -99,7 +141,11 @@ limitations under the License.
                 </div>
               </div>
               <!-- Node information -->
-              <div :class="showLegend?'node-info-con node-info-container':'node-info-con node-info-container-long'">
+              <div :class="
+                  showLegend
+                    ? 'node-info-con node-info-container'
+                    : 'node-info-con node-info-container-long'
+                ">
                 <div class="title">
                   {{ $t('graph.nodeInfo') }}
                   <img :src="require('@/assets/images/all-drop-down.png')"
@@ -112,11 +158,13 @@ limitations under the License.
                        alt="" />
                 </div>
                 <div class="node-info"
-                     v-show='selectedNode.show'>
+                     v-show="selectedNode.show">
                   <div class="items">
                     <div class="label item">{{ $t('graph.name') }}</div>
-                    <div class="value"><span class="cl-display-block"
-                            @dblclick="nodeNameClick">{{ selectedNode.title }}</span></div>
+                    <div class="value">
+                      <span class="cl-display-block"
+                            @dblclick="nodeNameClick">{{ selectedNode.title }}</span>
+                    </div>
                   </div>
                   <div class="items"
                        v-if="selectedNode.countShow">
@@ -130,51 +178,73 @@ limitations under the License.
                   </div>
                   <div class="items itemHeight"
                        v-if="!selectedNode.countShow">
-                    <div class="item">{{ $t('graph.attr') }} ({{ selectedNode.info.Attributes.length }})</div>
+                    <div class="item">
+                      {{ $t('graph.attr') }} ({{
+                        selectedNode.info.Attributes.length
+                      }})
+                    </div>
                   </div>
                   <ul v-if="selectedNode.info && !selectedNode.countShow"
                       class="item-content hover"
-                      :class="selectedNode.info.Attributes.length>2 ?
-                      'item-min2':selectedNode.info.Attributes.length>0?'item-min':''">
+                      :class="
+                      selectedNode.info.Attributes.length > 2
+                        ? 'item-min2'
+                        : selectedNode.info.Attributes.length > 0
+                        ? 'item-min'
+                        : ''
+                    ">
                     <li v-for="item in selectedNode.info.Attributes"
                         :key="item.name">
                       <div class="key">
                         {{ item.name }}
                       </div>
                       <div class="input cl-input-value">
-                        <pre>{{item.value}}</pre>
+                        <pre>{{ item.value }}</pre>
                       </div>
                     </li>
                   </ul>
                   <div class="items itemHeight">
-                    <div class="item">{{ $t('graph.inputs') }} (
-                      {{ selectedNode.info.input.length + selectedNode.info.inputControl.length }})</div>
+                    <div class="item">
+                      {{ $t('graph.inputs') }} (
+                      {{
+                        selectedNode.info.input.length +
+                          selectedNode.info.inputControl.length
+                      }})
+                    </div>
                   </div>
                   <ul v-if="selectedNode.info"
                       class="item-content hover"
-                      :class="selectedNode.info.input.length>1?'item-min2':
-                      selectedNode.info.input.length>0?'item-min':''">
+                      :class="
+                      selectedNode.info.input.length > 1
+                        ? 'item-min2'
+                        : selectedNode.info.input.length > 0
+                        ? 'item-min'
+                        : ''
+                    ">
                     <li v-for="item in selectedNode.info.input"
                         :key="item.$index"
-                        @click="querySingleNode({value: item.name})"
+                        @click="querySingleNode({ value: item.name })"
                         class="pointer">
                       <div class="input">{{ item.name }}</div>
                       <div class="size">{{ item.value }}</div>
                       <div class="clear"></div>
                     </li>
                     <li class="control-list"
-                        v-if="selectedNode.info && selectedNode.info.inputControl.length">
+                        v-if="
+                        selectedNode.info &&
+                          selectedNode.info.inputControl.length
+                      ">
                       <div class="dependence-title"
                            @click="toggleControl('input')"
-                           :class="selectedNode.showControl.input?'':'hide'">
+                           :class="selectedNode.showControl.input ? '' : 'hide'">
                         <img :src="require('@/assets/images/all-uptake.png')"
                              alt="" />
-                        {{ $t('graph.controlDependencies')}}
+                        {{ $t('graph.controlDependencies') }}
                       </div>
                       <ul v-show="selectedNode.showControl.input">
                         <li v-for="item in selectedNode.info.inputControl"
                             :key="item.$index"
-                            @click="querySingleNode({value: item.name})"
+                            @click="querySingleNode({ value: item.name })"
                             class="pointer">
                           <div class="input">{{ item.name }}</div>
                           <div class="size">{{ item.value }}</div>
@@ -184,34 +254,47 @@ limitations under the License.
                     </li>
                   </ul>
                   <div class="items">
-                    <div class="item">{{ $t('graph.outputs') }} (
-                      {{ selectedNode.info.output.length + selectedNode.info.outputControl.length }})</div>
+                    <div class="item">
+                      {{ $t('graph.outputs') }} (
+                      {{
+                        selectedNode.info.output.length +
+                          selectedNode.info.outputControl.length
+                      }})
+                    </div>
                   </div>
                   <ul v-if="selectedNode.info"
                       class="item-content hover"
-                      :class="selectedNode.info.output.length>1?
-                      'item-min2':selectedNode.info.output.length>0?'item-min':''">
+                      :class="
+                      selectedNode.info.output.length > 1
+                        ? 'item-min2'
+                        : selectedNode.info.output.length > 0
+                        ? 'item-min'
+                        : ''
+                    ">
                     <li v-for="item in selectedNode.info.output"
                         :key="item.$index"
-                        @click="querySingleNode({value: item.name})"
+                        @click="querySingleNode({ value: item.name })"
                         class="pointer">
                       <div class="input">{{ item.name }}</div>
                       <div class="size">{{ item.value }}</div>
                       <div class="clear"></div>
                     </li>
                     <li class="control-list"
-                        v-if="selectedNode.info && selectedNode.info.outputControl.length">
+                        v-if="
+                        selectedNode.info &&
+                          selectedNode.info.outputControl.length
+                      ">
                       <div class="dependence-title"
                            @click="toggleControl('output')"
-                           :class="selectedNode.showControl.output?'':'hide'">
+                           :class="selectedNode.showControl.output ? '' : 'hide'">
                         <img :src="require('@/assets/images/all-uptake.png')"
                              alt="" />
-                        {{ $t('graph.controlDependencies')}}
+                        {{ $t('graph.controlDependencies') }}
                       </div>
                       <ul v-show="selectedNode.showControl.output">
                         <li v-for="item in selectedNode.info.outputControl"
                             :key="item.$index"
-                            @click="querySingleNode({value: item.name})"
+                            @click="querySingleNode({ value: item.name })"
                             class="pointer">
                           <div class="input">{{ item.name }}</div>
                           <div class="size">{{ item.value }}</div>
@@ -249,23 +332,9 @@ limitations under the License.
                            alt="" />
                     </div>
                     <div class="legend-text"
-                         :title="$t('graph.nameSpace')">{{ $t('graph.nameSpace') }}</div>
-                  </div>
-                  <div class="legend-item">
-                    <div class="pic">
-                      <img :src="require('@/assets/images/operator-node.png')"
-                           alt="" />
+                         :title="$t('graph.nameSpace')">
+                      {{ $t('graph.nameSpace') }}
                     </div>
-                    <div class="legend-text"
-                         :title="$t('graph.operatorNode')">{{ $t('graph.operatorNode') }}</div>
-                  </div>
-                  <div class="legend-item">
-                    <div class="pic">
-                      <img :src="require('@/assets/images/virtual-node.png')"
-                           alt="" />
-                    </div>
-                    <div class="legend-text"
-                         :title="$t('graph.virtualNode')">{{ $t('graph.virtualNode') }}</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
@@ -273,7 +342,29 @@ limitations under the License.
                            alt="" />
                     </div>
                     <div class="legend-text"
-                         :title="$t('graph.polymetric')">{{ $t('graph.polymetric') }}</div>
+                         :title="$t('graph.polymetric')">
+                      {{ $t('graph.polymetric') }}
+                    </div>
+                  </div>
+                  <div class="legend-item">
+                    <div class="pic">
+                      <img :src="require('@/assets/images/virtual-node.png')"
+                           alt="" />
+                    </div>
+                    <div class="legend-text"
+                         :title="$t('graph.virtualNode')">
+                      {{ $t('graph.virtualNode') }}
+                    </div>
+                  </div>
+                  <div class="legend-item">
+                    <div class="pic">
+                      <img :src="require('@/assets/images/operator-node.png')"
+                           alt="" />
+                    </div>
+                    <div class="legend-text"
+                         :title="$t('graph.operatorNode')">
+                      {{ $t('graph.operatorNode') }}
+                    </div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
@@ -281,23 +372,20 @@ limitations under the License.
                            alt="" />
                     </div>
                     <div class="legend-text"
-                         :title="$t('graph.constantNode')">{{ $t('graph.constantNode') }}</div>
-                  </div>
-                  <div class="legend-item">
-                    <div class="pic">
-                      <img :src="require('@/assets/images/const.png')"
-                           alt="" />
+                         :title="$t('graph.constantNode')">
+                      {{ $t('graph.constantNode') }}
                     </div>
-                    <div class="legend-text"
-                         :title="$t('graph.virtualConstantNode')">{{ $t('graph.virtualConstantNode') }}</div>
                   </div>
+                  <br>
                   <div class="legend-item">
                     <div class="pic">
                       <img :src="require('@/assets/images/data-flow.png')"
                            alt="" />
                     </div>
                     <div class="legend-text"
-                         :title="$t('graph.dataFlowEdge')">{{ $t('graph.dataFlowEdge') }}</div>
+                         :title="$t('graph.dataFlowEdge')">
+                      {{ $t('graph.dataFlowEdge') }}
+                    </div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
@@ -305,7 +393,9 @@ limitations under the License.
                            alt="" />
                     </div>
                     <div class="legend-text"
-                         :title="$t('graph.controllDepEdge')">{{ $t('graph.controllDepEdge') }}</div>
+                         :title="$t('graph.controllDepEdge')">
+                      {{ $t('graph.controllDepEdge') }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -380,10 +470,40 @@ export default {
       graphviz: null,
       graphvizTemp: null,
       initOver: false,
+      guide: {
+        show: false,
+        step: 1,
+        top: '0%',
+        left: '0%',
+        content: [
+          this.$t('graph.guideContent11'),
+          this.$t('graph.guideContent12'),
+          this.$t('graph.guideContent13'),
+          this.$t('graph.guideContent14'),
+        ],
+        title: '',
+      },
     };
   },
   computed: {},
-  watch: {},
+  watch: {
+    guide: {
+      handler(newVal) {
+        if (newVal.step === 1) {
+          this.guide.top = '20%';
+          this.guide.left = '48%';
+        } else if (newVal.step === 2) {
+          this.guide.top = '47%';
+          this.guide.left = '62%';
+        } else if (newVal.step === 3) {
+          this.guide.top = '45%';
+          this.guide.left = '52%';
+        }
+        this.guide.title = this.$t(`graph.guideTitle${newVal.step}`);
+      },
+      deep: true,
+    },
+  },
   mounted() {
     // Judging from the training job overview.
     if (!this.$route.query || !this.$route.query.train_id) {
@@ -392,6 +512,12 @@ export default {
       document.title = this.$t('graph.titleText') + '-MindInsight';
       return;
     }
+    const showGuide = window.localStorage.getItem('graphShowGuide');
+    if (!showGuide) {
+      this.guide.show = true;
+      window.localStorage.setItem('graphShowGuide', true);
+    }
+
     this.trainJobID = this.$route.query.train_id;
     document.title =
       decodeURIComponent(this.trainJobID) +
@@ -415,6 +541,36 @@ export default {
     }
   },
   methods: {
+    showUserGuide() {
+      this.guide.content = [
+        this.$t('graph.guideContent11'),
+        this.$t('graph.guideContent12'),
+        this.$t('graph.guideContent13'),
+        this.$t('graph.guideContent14'),
+      ];
+      this.guide.show = true;
+      this.guide.step = 1;
+    },
+    closeUserGuide() {
+      this.guide.show = false;
+    },
+    guideNext() {
+      if (this.guide.step < 3) {
+        this.guide.step++;
+        switch (this.guide.step) {
+          case 2:
+            this.guide.content = [this.$t('graph.guideContent2')];
+            break;
+          case 3:
+            this.guide.content = [this.$t('graph.guideContent3')];
+            break;
+          default:
+            break;
+        }
+      } else if (this.guide.step >= 3) {
+        this.guide.show = false;
+      }
+    },
     /**
      * Initializing the graph
      * @param {String} dot dot statement encapsulated in graph data
@@ -933,7 +1089,7 @@ export default {
      */
     packageGraphData() {
       const initSetting =
-        'node[style="filled";fontsize="10px"];edge[fontsize="4px";];';
+        'node[style="filled";fontsize="10px"];edge[fontsize="5px";];';
       return `digraph {${initSetting}${this.packageNodes()}${this.packageEdges()}}`;
     },
     /**
@@ -1058,20 +1214,14 @@ export default {
           const input = node.input || {};
           const keys = Object.keys(input);
           keys.forEach((key) => {
-            if (input[key]) {
+            if (input[key] && !input[key].independent_layout) {
               // Cannot connect to the sub-nodes in the aggregation node and cannot be directly connected to the
               // aggregation node. It can only connect to the outer namespace of the aggregation node.
               // If there is no namespace in the outer layer, you do not need to connect cables.
               // Other connections are normal.
-              let temp = key;
-              if (input[key].independent_layout) {
-                const list = key.split('/');
-                list.splice(list.length - 2, 2);
-                temp = list.join('/');
-              }
               const source =
-                this.findChildNamescope(temp, name) ||
-                (temp ? analogNodesInputId : '');
+                this.findChildNamescope(key, name) ||
+                (key ? analogNodesInputId : '');
               let target = node.name;
               if (node.independent_layout) {
                 const list = node.name.split('/');
@@ -1483,7 +1633,7 @@ export default {
       const nodeStr = this.packageNodes(name);
       const edgeStr = this.packageEdges(name);
       const initSetting =
-        `node[style="filled";fontsize="10px";];` + `edge[fontsize="4px";];`;
+        `node[style="filled";fontsize="10px";];` + `edge[fontsize="5px";];`;
       const dotStr =
         `digraph {${initSetting}label="${name.split('/').pop()}";` +
         `${nodeStr}${edgeStr}}`;
@@ -1574,7 +1724,7 @@ export default {
       g.append('text')
           .attr('text-anchor', 'middle')
           .attr('font-family', 'Times,serif')
-          .attr('font-size', '4px')
+          .attr('font-size', '5px')
           .attr('fill', '#000000')
           .attr('x', (points[0].x + points[1].x) / 2)
           .attr('y', (points[0].y + points[1].y) / 2)
@@ -1866,7 +2016,7 @@ export default {
       const output = node.output || {};
       const name = this.findExsitNode(node.name);
       // Connects to the edge of the actual node.
-      if (name) {
+      if (name && !node.independent_layout) {
         Object.keys(input).forEach((key) => {
           const source = this.findExsitNode(key);
           if (source) {
@@ -2656,9 +2806,77 @@ export default {
   .cl-graph-title {
     height: 56px;
     line-height: 56px;
+    .guide {
+      cursor: pointer;
+      margin-left: 16px;
+      line-height: 20px;
+      display: inline-block;
+      .guide-icon {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        vertical-align: -2.5px;
+        margin-right: 4px;
+        background: url('../../assets/images/guideIcon.svg');
+      }
+    }
+    .guide:hover {
+      color: #00a5a7;
+      .guide-icon {
+        background: url('../../assets/images/guideIconHover.svg');
+      }
+    }
   }
   .graph-p32 {
     height: 100%;
+    position: relative;
+    .guide-content {
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      background-color: #c6c8cc;
+      z-index: 9999;
+      .step {
+        height: 100%;
+        background-repeat: round;
+        img {
+          height: 100%;
+          width: 100%;
+        }
+      }
+      .guide-span {
+        font-size: 12px;
+        color: #575d6c;
+        line-height: 18px;
+        text-align: left;
+        display: inline-block;
+      }
+      .el-popover {
+        .el-icon-close {
+          cursor: pointer;
+          position: absolute;
+          right: 10px;
+          top: 13px;
+          font-size: 20px;
+        }
+        .el-icon-close:hover {
+          color: #00a5a7;
+        }
+      }
+      .el-popover__title {
+        font-size: 16px;
+        color: #252b3a;
+        line-height: 24px;
+      }
+      .el-button {
+        display: block;
+        float: right;
+        height: 28px;
+        line-height: 27px;
+        border-radius: 0;
+        padding: 0 20px;
+      }
+    }
   }
   .cl-content {
     height: calc(100% - 50px);
