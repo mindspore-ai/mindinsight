@@ -537,6 +537,7 @@ class Graph:
                     getattr(target_scope_node, 'add_proxy_input')(scope_node.name, proxy_attr)
 
             for subnode in subnode_map[scope_node.name]:
+                subnode.independent_layout = True
                 for target_name, target_attr in dict(getattr(subnode, method)).items():
                     proxy_attr = dict(edge_type=target_attr['edge_type'])
                     target_node = self._get_normal_node(node_name=target_name)
