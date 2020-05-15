@@ -759,17 +759,17 @@ class DataManager:
         self._reload_interval = reload_interval
         self._max_threads_count = max_threads_count
 
-        thread = threading.Thread(target=self._reload_data,
+        thread = threading.Thread(target=self._reload_data_in_thread,
                                   name='start_load_data_thread')
         thread.daemon = True
         thread.start()
 
-    def _reload_data(self):
+    def _reload_data_in_thread(self):
         """This function periodically loads the data."""
         # Let gunicorn load other modules first.
         time.sleep(1)
         while True:
-            self._load_data()
+            self._load_data_in_thread()
 
             if not self._reload_interval:
                 break
@@ -782,10 +782,18 @@ class DataManager:
         This function needs to be used after `start_load_data` function.
         """
         logger.debug("start to reload data")
-        thread = threading.Thread(target=self._load_data,
+        thread = threading.Thread(target=self._load_data_in_thread,
                                   name='reload_data_thread')
         thread.daemon = False
         thread.start()
+
+    def _load_data_in_thread(self):
+        """Log (but not swallow) exceptions in thread to help debugging."""
+        try:
+            self._load_data()
+        except Exception as exc:
+            logger.exception(exc)
+            raise
 
     def _load_data(self):
         """This function will load data once and ignore it if the status is loading."""
