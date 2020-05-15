@@ -31,7 +31,10 @@ limitations under the License.
           <div v-for="item in guide.content"
                :key="item"
                class="guide-span">{{ item }}</div>
-          <img :src="require(`@/assets/images/graph-stepimg${guide.step}.svg`)" />
+          <div class="step-pic">
+            <img :src="require(`@/assets/images/graph-stepimg${guide.step}.svg`)" />
+          </div>
+
           <el-button type="primary"
                      @click="guideNext">{{
             guide.step === 3 ? $t('graph.finish') : $t('graph.next')
@@ -39,17 +42,17 @@ limitations under the License.
         </el-popover>
         <div class="step"
              v-show="guide.step == 1">
-          <img src="@/assets/images/graph-step1.png"
+          <img src="@/assets/images/graph-step1.svg"
                alt="" />
         </div>
         <div class="step"
              v-show="guide.step == 2">
-          <img src="@/assets/images/graph-step2.png"
+          <img src="@/assets/images/graph-step2.svg"
                alt="" />
         </div>
         <div class="step"
              v-show="guide.step == 3">
-          <img src="@/assets/images/graph-step3.png"
+          <img src="@/assets/images/graph-step3.svg"
                alt="" />
         </div>
       </div>
@@ -1030,6 +1033,7 @@ export default {
           ? this.allGraphData[name].independent_layout
           : false;
       if (independentLayout && nodes && nodes.length > aggregationNodeLimit) {
+        const nodesLength = nodes.length;
         // The selected node must be included.
         let startIndex = 0;
         if (this.selectedNode.more) {
@@ -1068,7 +1072,7 @@ export default {
           };
           nodes.splice(0, 0, ellipsisNodeL);
         }
-        if (startIndex + aggregationNodeLimit < nodes.length) {
+        if (startIndex + aggregationNodeLimit < nodesLength) {
           const ellipsisNode = {
             name: `${name}/right/${ellipsisNum} more...`,
             attr: {},
@@ -2808,9 +2812,11 @@ export default {
     line-height: 56px;
     .guide {
       cursor: pointer;
-      margin-left: 16px;
+      margin-left: 10px;
       line-height: 20px;
       display: inline-block;
+      line-height: 18px;
+      font-size: 12px;
       .guide-icon {
         display: inline-block;
         width: 16px;
@@ -2836,11 +2842,14 @@ export default {
       position: absolute;
       background-color: #c6c8cc;
       z-index: 9999;
+      .step-pic {
+        text-align: center;
+        margin-top: 8px;
+      }
       .step {
         height: 100%;
         background-repeat: round;
         img {
-          height: 100%;
           width: 100%;
         }
       }
@@ -2867,6 +2876,7 @@ export default {
         font-size: 16px;
         color: #252b3a;
         line-height: 24px;
+        font-weight: bold;
       }
       .el-button {
         display: block;
