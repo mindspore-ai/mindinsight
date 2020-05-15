@@ -85,14 +85,14 @@ export default {
     '.node {cursor: pointer;}.node:hover > path,.node:hover > ellipse,' +
     '.node:hover > polygon,.node:hover > rect {stroke-width: 2px;}' +
     '.edge path {stroke: rgb(167, 167, 167);}.edge polygon {fill: rgb(167, 167, 167);}' +
-    '.node.polymeric > polygon {stroke: #fdca5a;fill: #ffe8b5;}.node.cluster.polymeric > ' +
+    '.node.aggregation > polygon {stroke: #fdca5a;fill: #ffe8b5;}.node.cluster.aggregation > ' +
     'rect {stroke: #fdca5a;fill: #fff2d4;stroke-dasharray: 3, 3;}' +
     '.node.cluster > rect:hover {stroke: #f45c5e;}.node > polygon {stroke: #f45c5e;fill: #ffba99;}' +
     '.node > ellipse {stroke: #58a4e0;fill: #d1ebff;}.node > path {stroke: #56b077;fill: #c1f5d5;' +
     'stroke-dasharray: 3, 3;}' +
     '.hide {visibility: hidden;}.show {visibility: visible;}' +
     '.edgePoint ellipse{stroke:#a7a7a7;' +
-    'fill:#a7a7a7;}' +
+    'fill:#a7a7a7;}text {fill: black;}' +
     '.edge.highlighted path {stroke: red;}.edge.highlighted polygon {' +
     'stroke: red;fill: red;}' +
     '.edge.highlighted marker path {fill: red;}</style>',
