@@ -87,7 +87,6 @@ class TestMsDataLoader:
         ms_loader._latest_summary_filename = 'summary.00'
         ms_loader.load()
         shutil.rmtree(summary_dir)
-        assert ms_loader._latest_summary_file_size == RECORD_LEN
         tag = ms_loader.get_events_data().list_tags_by_plugin('scalar')
         tensors = ms_loader.get_events_data().tensors(tag[0])
         assert len(tensors) == 3
@@ -138,9 +137,11 @@ class TestPbParser:
     _summary_dir = ''
 
     def setup_method(self):
+        """Run before method."""
         self._summary_dir = tempfile.mkdtemp()
 
     def teardown_method(self):
+        """Run after method."""
         shutil.rmtree(self._summary_dir)
 
     def test_parse_pb_file(self):
@@ -148,24 +149,24 @@ class TestPbParser:
         filename = 'ms_output.pb'
         create_graph_pb_file(output_dir=self._summary_dir, filename=filename)
         parser = _PbParser(self._summary_dir)
-        tensor_event = parser.parse_pb_file(filename)
+        tensor_event = parser._parse_pb_file(filename)
         assert isinstance(tensor_event, TensorEvent)
 
-    def test_is_parse_pb_file(self):
-        """Test parse an older file."""
+    def test_set_latest_file(self):
+        """Test set latest file."""
         filename = 'ms_output.pb'
         create_graph_pb_file(output_dir=self._summary_dir, filename=filename)
         parser = _PbParser(self._summary_dir)
-        result = parser._is_parse_pb_file(filename)
-        assert result
+        is_latest = parser._set_latest_file(filename)
+        assert is_latest
 
         filename = 'ms_output_older.pb'
         file_path = create_graph_pb_file(output_dir=self._summary_dir, filename=filename)
         atime = 1
         mtime = 1
         os.utime(file_path, (atime, mtime))
-        result = parser._is_parse_pb_file(filename)
-        assert not result
+        is_latest = parser._set_latest_file(filename)
+        assert not is_latest
 
     def test_sort_pb_file_by_mtime(self):
         """Test sort pb files."""
@@ -174,7 +175,7 @@ class TestPbParser:
             create_graph_pb_file(output_dir=self._summary_dir, filename=file)
         parser = _PbParser(self._summary_dir)
 
-        sorted_filenames = parser.sort_pb_files(filenames)
+        sorted_filenames = parser.sort_files(filenames)
         assert filenames == sorted_filenames
 
     def test_sort_pb_file_by_filename(self):
@@ -191,7 +192,7 @@ class TestPbParser:
 
         expected_filenames = ['bbb.pb', 'ccc.pb', 'aaa.pb']
         parser = _PbParser(self._summary_dir)
-        sorted_filenames = parser.sort_pb_files(filenames)
+        sorted_filenames = parser.sort_files(filenames)
         assert expected_filenames == sorted_filenames
 
 
