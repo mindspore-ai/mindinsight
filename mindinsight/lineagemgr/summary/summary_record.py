@@ -13,11 +13,13 @@
 # limitations under the License.
 # ============================================================================
 """Record message to summary log."""
+import os
 import time
 
 from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
+from mindinsight.lineagemgr.common.validator.validate import validate_file_path
 from mindinsight.lineagemgr.summary.event_writer import EventWriter
-from ._summary_adapter import package_dataset_graph, package_user_defined_info
+from ._summary_adapter import package_dataset_graph, package_user_defined_info, get_lineage_file_name
 
 
 class LineageSummary:
@@ -26,20 +28,24 @@ class LineageSummary:
     Recording train lineage and evaluation lineage to summary log.
 
     Args:
-        summary_log_path (str): Summary log path.
+        lineage_log_dir (str): lineage log dir.
         override (bool): If override the summary log exist.
 
     Raises:
-        IOError: Write to summary log failed or file_path is a dir.
+        IOError: Write to summary log failed.
 
     Examples:
-        >>> summary_log_path = "./test.log"
         >>> train_lineage = {"train_network": "ResNet"}
-        >>> lineage_summary = LineageSummary(summary_log_path=summary_log_path)
+        >>> lineage_summary = LineageSummary(lineage_log_dir="./")
         >>> lineage_summary.record_train_lineage(train_lineage)
     """
-    def __init__(self, summary_log_path=None, override=False):
-        self.event_writer = EventWriter(summary_log_path, override)
+    def __init__(self,
+                 lineage_log_dir=None,
+                 override=False):
+        lineage_log_name = get_lineage_file_name()
+        self.lineage_log_path = os.path.join(lineage_log_dir, lineage_log_name)
+        validate_file_path(self.lineage_log_path)
+        self.event_writer = EventWriter(self.lineage_log_path, override)
 
     @staticmethod
     def package_train_message(run_context_args):

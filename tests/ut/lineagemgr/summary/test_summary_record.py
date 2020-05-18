@@ -64,7 +64,7 @@ class TestSummaryRecord(TestCase):
     def test_record_train_lineage(self, write_file):
         """Test record_train_lineage."""
         write_file.return_value = True
-        lineage_summray = LineageSummary(summary_log_path="test.log")
+        lineage_summray = LineageSummary(lineage_log_dir="test.log")
         lineage_summray.record_train_lineage(self.run_context_args)
 
     def test_package_evaluation_message(self):
@@ -76,5 +76,5 @@ class TestSummaryRecord(TestCase):
     def test_record_eval_lineage(self, write_file):
         """Test record_eval_lineage."""
         write_file.return_value = True
-        lineage_summray = LineageSummary(summary_log_path="test.log")
+        lineage_summray = LineageSummary(lineage_log_dir="test.log")
         lineage_summray.record_evaluation_lineage(self.eval_args)

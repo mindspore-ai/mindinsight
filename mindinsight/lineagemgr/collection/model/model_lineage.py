@@ -29,7 +29,7 @@ from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors, L
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
     LineageGetModelFileError, LineageLogError
 from mindinsight.lineagemgr.common.log import logger as log
-from mindinsight.lineagemgr.common.utils import try_except
+from mindinsight.lineagemgr.common.utils import try_except, make_directory
 from mindinsight.lineagemgr.common.validator.model_parameter import RunContextArgs, \
     EvalParameter
 from mindinsight.lineagemgr.collection.model.base import Metadata
@@ -50,9 +50,12 @@ class TrainLineage(Callback):
     Collect lineage of a training job.
 
     Args:
-        summary_record (SummaryRecord): SummaryRecord is used to record
-            the summary value, and summary_record is an instance of SummaryRecord,
-            see mindspore.train.summary.SummaryRecord.
+        summary_record (Union[SummaryRecord, str]): The `SummaryRecord` object which
+            is used to record the summary value(see mindspore.train.summary.SummaryRecord),
+            or a log dir(as a `str`) to be passed to `LineageSummary` to create
+            a lineage summary recorder. It should be noted that instead of making
+            use of summary_record to record lineage info directly, we obtain
+            log dir from it then create a new summary file to write lineage info.
         raise_exception (bool): Whether to raise exception when error occurs in
             TrainLineage. If True, raise exception. If False, catch exception
             and continue. Default: False.
@@ -74,18 +77,25 @@ class TrainLineage(Callback):
         >>> lineagemgr = TrainLineage(summary_record=summary_writer)
         >>> model.train(epoch_num, dataset, callbacks=[model_ckpt, summary_callback, lineagemgr])
     """
-    def __init__(self, summary_record, raise_exception=False, user_defined_info=None):
+    def __init__(self,
+                 summary_record,
+                 raise_exception=False,
+                 user_defined_info=None):
         super(TrainLineage, self).__init__()
         try:
             validate_raise_exception(raise_exception)
             self.raise_exception = raise_exception
 
-            validate_summary_record(summary_record)
-            self.summary_record = summary_record
+            if isinstance(summary_record, str):
+                # make directory if not exist
+                self.lineage_log_dir = make_directory(summary_record)
+            else:
+                validate_summary_record(summary_record)
+                summary_log_path = summary_record.full_file_name
+                validate_file_path(summary_log_path)
+                self.lineage_log_dir = os.path.dirname(summary_log_path)
 
-            summary_log_path = summary_record.full_file_name
-            validate_file_path(summary_log_path)
-            self.lineage_log_path = summary_log_path + '_lineage'
+            self.lineage_summary = LineageSummary(self.lineage_log_dir)
 
             self.initial_learning_rate = None
 
@@ -113,8 +123,7 @@ class TrainLineage(Callback):
         log.info('Initialize training lineage collection...')
 
         if self.user_defined_info:
-            lineage_summary = LineageSummary(summary_log_path=self.lineage_log_path)
-            lineage_summary.record_user_defined_info(self.user_defined_info)
+            self.lineage_summary.record_user_defined_info(self.user_defined_info)
 
         if not isinstance(run_context, RunContext):
             error_msg = f'Invalid TrainLineage run_context.'
@@ -147,8 +156,7 @@ class TrainLineage(Callback):
         dataset_graph_dict = json.loads(dataset_graph_json_str)
         log.info('Logging dataset graph...')
         try:
-            lineage_summary = LineageSummary(self.lineage_log_path)
-            lineage_summary.record_dataset_graph(dataset_graph=dataset_graph_dict)
+            self.lineage_summary.record_dataset_graph(dataset_graph=dataset_graph_dict)
         except Exception as error:
             error_msg = f'Dataset graph log error in TrainLineage begin: {error}'
             log.error(error_msg)
@@ -210,8 +218,7 @@ class TrainLineage(Callback):
 
         log.info('Logging lineage information...')
         try:
-            lineage_summary = LineageSummary(self.lineage_log_path)
-            lineage_summary.record_train_lineage(train_lineage)
+            self.lineage_summary.record_train_lineage(train_lineage)
         except IOError as error:
             error_msg = f'End error in TrainLineage: {error}'
             log.error(error_msg)
@@ -228,10 +235,12 @@ class EvalLineage(Callback):
     """
     Collect lineage of an evaluation job.
 
-    Args:
-        summary_record (SummaryRecord): SummaryRecord is used to record
-            the summary value, and summary_record is an instance of SummaryRecord,
-            see mindspore.train.summary.SummaryRecord.
+        summary_record (Union[SummaryRecord, str]): The `SummaryRecord` object which
+            is used to record the summary value(see mindspore.train.summary.SummaryRecord),
+            or a log dir(as a `str`) to be passed to `LineageSummary` to create
+            a lineage summary recorder. It should be noted that instead of making
+            use of summary_record to record lineage info directly, we obtain
+            log dir from it then create a new summary file to write lineage info.
         raise_exception (bool): Whether to raise exception when error occurs in
             EvalLineage. If True, raise exception. If False, catch exception
             and continue. Default: False.
@@ -253,18 +262,25 @@ class EvalLineage(Callback):
         >>> lineagemgr = EvalLineage(summary_record=summary_writer)
         >>> model.eval(epoch_num, dataset, callbacks=[model_ckpt, summary_callback, lineagemgr])
     """
-    def __init__(self, summary_record, raise_exception=False, user_defined_info=None):
+    def __init__(self,
+                 summary_record,
+                 raise_exception=False,
+                 user_defined_info=None):
         super(EvalLineage, self).__init__()
         try:
             validate_raise_exception(raise_exception)
             self.raise_exception = raise_exception
 
-            validate_summary_record(summary_record)
-            self.summary_record = summary_record
+            if isinstance(summary_record, str):
+                # make directory if not exist
+                self.lineage_log_dir = make_directory(summary_record)
+            else:
+                validate_summary_record(summary_record)
+                summary_log_path = summary_record.full_file_name
+                validate_file_path(summary_log_path)
+                self.lineage_log_dir = os.path.dirname(summary_log_path)
 
-            summary_log_path = summary_record.full_file_name
-            validate_file_path(summary_log_path)
-            self.lineage_log_path = summary_log_path + '_lineage'
+            self.lineage_summary = LineageSummary(self.lineage_log_dir)
 
             self.user_defined_info = user_defined_info
             if user_defined_info:
@@ -289,8 +305,7 @@ class EvalLineage(Callback):
             LineageLogError: If recording lineage information fails.
         """
         if self.user_defined_info:
-            lineage_summary = LineageSummary(summary_log_path=self.lineage_log_path)
-            lineage_summary.record_user_defined_info(self.user_defined_info)
+            self.lineage_summary.record_user_defined_info(self.user_defined_info)
 
         if not isinstance(run_context, RunContext):
             error_msg = f'Invalid EvalLineage run_context.'
@@ -312,8 +327,7 @@ class EvalLineage(Callback):
 
         log.info('Logging evaluation job lineage...')
         try:
-            lineage_summary = LineageSummary(self.lineage_log_path)
-            lineage_summary.record_evaluation_lineage(eval_lineage)
+            self.lineage_summary.record_evaluation_lineage(eval_lineage)
         except IOError as error:
             error_msg = f'End error in EvalLineage: {error}'
             log.error(error_msg)
