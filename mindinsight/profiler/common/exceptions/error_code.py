@@ -41,6 +41,11 @@ class ProfilerErrors(ProfilerMgrErrors):
     # analyser error code
     COLUMN_NOT_EXIST_ERROR = 0 | _ANALYSER_MASK
     ANALYSER_NOT_EXIST_ERROR = 1 | _ANALYSER_MASK
+    DEVICE_ID_ERROR = 2 | _ANALYSER_MASK
+    OP_TYPE_ERROR = 3 | _ANALYSER_MASK
+    GROUP_CONDITION_ERROR = 4 | _ANALYSER_MASK
+    SORT_CONDITION_ERROR = 5 | _ANALYSER_MASK
+    FILTER_CONDITION_ERROR = 6 | _ANALYSER_MASK
 
 
 @unique
@@ -61,3 +66,8 @@ class ProfilerErrorMsg(Enum):
     # analyser error msg
     COLUMN_NOT_EXIST_ERROR = 'The column {} does not exist.'
     ANALYSER_NOT_EXIST_ERROR = 'The analyser {} does not exist.'
+    DEIVICE_ID_ERROR = 'The device_id in search_condition error, {}'
+    FILTER_CONDITION_ERROR = 'The filter_condition in search_condition error, {}'
+    OP_TYPE_ERROR = 'The op_type in search_condition error, {}'
+    GROUP_CONDITION_ERROR = 'The group_condition in search_condition error, {}'
+    SORT_CONDITION_ERROR = 'The sort_condition in search_condition error, {}'
