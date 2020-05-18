@@ -193,6 +193,8 @@ class Command(BaseCommand):
             self.logfile.error(error.message)
             sys.exit(1)
 
+        self.console.info('Workspace: %s', os.path.realpath(settings.WORKSPACE))
+
         run_module = import_module('mindinsight.backend.run')
         run_module.start()
 

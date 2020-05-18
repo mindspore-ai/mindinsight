@@ -22,7 +22,6 @@ import shlex
 
 from gunicorn.glogging import Logger
 
-from mindinsight.backend.config import gunicorn_conf
 from mindinsight.backend.config import WEB_CONFIG_DIR
 from mindinsight.conf import settings
 from mindinsight.utils.log import setup_logger
@@ -241,12 +240,16 @@ def start():
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
-    _, stderr = process.communicate()
-    if stderr:
-        console.error(stderr.decode())
 
-    # wait command success to end when gunicorn running in daemon.
-    if gunicorn_conf.daemon and process.wait() == 0:
+    # sleep 1 second for gunicorn appplication to load modules
+    time.sleep(1)
+
+    # check if gunicorn application is running
+    if process.poll() is not None:
+        _, stderr = process.communicate()
+        for line in stderr.decode().split('\n'):
+            console.error(line)
+    else:
         state_result = _check_server_start_stat(errorlog_abspath, log_size)
         # print gunicorn start state to stdout
         console.info('Web address: http://%s:%s', settings.HOST, settings.PORT)

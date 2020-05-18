@@ -30,7 +30,7 @@ worker_connections = 1000
 
 timeout = 30
 graceful_timeout = 30
-daemon = True
+daemon = False
 
 captureoutput = True
 
