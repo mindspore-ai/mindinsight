@@ -24,6 +24,7 @@ build_ui() {
         command npm
     fi
 
+    rm -f package-lock.json
     rm -rf dist
 
     npm config set strict-ssl false
