@@ -16,17 +16,11 @@
 import enum
 import functools
 import operator
-import os
 
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageParamTypeError, LineageSummaryAnalyzeException, \
-    LineageEventNotExistException, LineageQuerierParamException, \
-    LineageSummaryParseException, LineageEventFieldNotExistException
-from mindinsight.lineagemgr.common.log import logger
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageQuerierParamException, LineageParamTypeError
 from mindinsight.lineagemgr.common.utils import enum_to_list
-from mindinsight.lineagemgr.querier.query_model import LineageObj, FIELD_MAPPING
-from mindinsight.lineagemgr.summary.lineage_summary_analyzer import \
-    LineageSummaryAnalyzer
+from mindinsight.lineagemgr.lineage_parser import SuperLineageObj
+from mindinsight.lineagemgr.querier.query_model import FIELD_MAPPING
 
 
 @enum.unique
@@ -173,20 +167,24 @@ class Querier:
     See the method `filter_summary_lineage` for supported fields.
 
     Args:
-        summary_path (Union[str, list[str]]): The single summary log path or
-            a list of summary log path.
+        super_lineage_objs (dict): A dict of <summary_dir, SuperLineageObject>.
 
     Raises:
         LineageParamTypeError: If the input parameter type is invalid.
         LineageQuerierParamException: If the input parameter value is invalid.
         LineageSummaryParseException: If all summary logs parsing failed.
     """
-    def __init__(self, summary_path):
-        self._lineage_objects = []
-        self._index_map = {}
-        self._parse_failed_paths = []
-        self._parse_summary_logs(summary_path)
-        self._size = len(self._lineage_objects)
+    def __init__(self, super_lineage_objs):
+        self._super_lineage_objs = self._check_objs(super_lineage_objs)
+
+    def _check_objs(self, super_lineage_objs):
+        if super_lineage_objs is None:
+            raise LineageQuerierParamException(
+                'querier_init_param', 'The querier init param is empty.'
+            )
+        if not isinstance(super_lineage_objs, dict):
+            raise LineageParamTypeError("Init param should be a dict.")
+        return super_lineage_objs
 
     def get_summary_lineage(self, summary_dir=None, filter_keys=None):
         """
@@ -209,7 +207,6 @@ class Querier:
         Returns:
             list[dict], summary lineage information.
         """
-        self._parse_fail_summary_logs()
 
         if filter_keys is None:
             filter_keys = LineageFilterKey.get_key_list()
@@ -222,20 +219,20 @@ class Querier:
 
         if summary_dir is None:
             result = [
-                item.get_summary_info(filter_keys) for item in self._lineage_objects
+                item.lineage_obj.get_summary_info(filter_keys) for item in self._super_lineage_objs.values()
             ]
-        else:
-            index = self._index_map.get(summary_dir)
-            if index is None:
-                raise LineageQuerierParamException(
-                    'summary_dir',
-                    'Summary dir {} does not exist.'.format(summary_dir)
-                )
-            lineage_obj = self._lineage_objects[index]
+        elif summary_dir in self._super_lineage_objs:
+            lineage_obj = self._super_lineage_objs[summary_dir].lineage_obj
             result = [lineage_obj.get_summary_info(filter_keys)]
+        else:
+            raise LineageQuerierParamException(
+                'summary_dir',
+                'Summary dir {} does not exist.'.format(summary_dir)
+            )
+
         return result
 
-    def filter_summary_lineage(self, condition=None):
+    def filter_summary_lineage(self, condition=None, added=False):
         """
         Filter and sort lineage information based on the specified condition.
 
@@ -253,7 +250,7 @@ class Querier:
         Returns:
             dict, filtered and sorted model lineage information.
         """
-        def _filter(lineage_obj: LineageObj):
+        def _filter(super_lineage_obj: SuperLineageObj):
             for condition_key, condition_value in condition.items():
                 if ConditionParam.is_condition_type(condition_key):
                     continue
@@ -263,7 +260,7 @@ class Querier:
                         'The field {} not supported'.format(condition_key)
                     )
 
-                value = lineage_obj.get_value_by_key(condition_key)
+                value = super_lineage_obj.lineage_obj.get_value_by_key(condition_key)
                 for exp_key, exp_value in condition_value.items():
                     if not ExpressionType.is_valid_exp(exp_key):
                         raise LineageQuerierParamException(
@@ -274,9 +271,9 @@ class Querier:
                         return False
             return True
 
-        def _cmp(obj1: LineageObj, obj2: LineageObj):
-            value1 = obj1.get_value_by_key(sorted_name)
-            value2 = obj2.get_value_by_key(sorted_name)
+        def _cmp(obj1: SuperLineageObj, obj2: SuperLineageObj):
+            value1 = obj1.lineage_obj.get_value_by_key(sorted_name)
+            value2 = obj2.lineage_obj.get_value_by_key(sorted_name)
 
             if value1 is None and value2 is None:
                 cmp_result = 0
@@ -293,11 +290,14 @@ class Querier:
                     cmp_result = (type1 > type2) - (type1 < type2)
             return cmp_result
 
-        self._parse_fail_summary_logs()
-
         if condition is None:
             condition = {}
-        results = list(filter(_filter, self._lineage_objects))
+
+        self._add_dataset_mark()
+        super_lineage_objs = list(self._super_lineage_objs.values())
+        super_lineage_objs.sort(key=lambda x: x.update_time, reverse=True)
+
+        results = list(filter(_filter, super_lineage_objs))
 
         if ConditionParam.SORTED_NAME.value in condition:
             sorted_name = condition.get(ConditionParam.SORTED_NAME.value)
@@ -323,9 +323,11 @@ class Querier:
         for item in offset_results:
             lineage_object = dict()
             if LineageType.MODEL.value in lineage_types:
-                lineage_object.update(item.to_model_lineage_dict())
+                lineage_object.update(item.lineage_obj.to_model_lineage_dict())
             if LineageType.DATASET.value in lineage_types:
-                lineage_object.update(item.to_dataset_lineage_dict())
+                lineage_object.update(item.lineage_obj.to_dataset_lineage_dict())
+            if added:
+                lineage_object.update({"added_info": item.added_info})
             object_items.append(lineage_object)
 
         lineage_info = {
@@ -341,7 +343,7 @@ class Querier:
         customized = dict()
         for offset_result in offset_results:
             for obj_name in ["metric", "user_defined"]:
-                self._organize_customized_item(customized, offset_result, obj_name)
+                self._organize_customized_item(customized, offset_result.lineage_obj, obj_name)
 
         # If types contain numbers and string, it will be "mixed".
         # If types contain "int" and "float", it will be "float".
@@ -410,10 +412,10 @@ class Querier:
 
         Args:
             condition (dict): Filter and sort condition.
-            result (list[LineageObj]): Filtered and sorted result.
+            result (list[SuperLineageObj]): Filtered and sorted result.
 
         Returns:
-            list[LineageObj], paginated result.
+            list[SuperLineageObj], paginated result.
         """
         offset = 0
         limit = 10
@@ -428,87 +430,12 @@ class Querier:
             offset_result = result[offset * limit: limit * (offset + 1)]
         return offset_result
 
-    def _parse_summary_logs(self, summary_path):
-        """
-        Parse summary logs.
-
-        Args:
-            summary_path (Union[str, list[str]]): The single summary log path or
-                a list of summary log path.
-        """
-        if not summary_path:
-            raise LineageQuerierParamException(
-                'summary_path', 'The summary path is empty.'
-            )
-        if isinstance(summary_path, str):
-            self._parse_summary_log(summary_path, 0)
-        elif isinstance(summary_path, list):
-            index = 0
-            for path in summary_path:
-                parse_result = self._parse_summary_log(path, index)
-                if parse_result:
-                    index += 1
-        else:
-            raise LineageParamTypeError('Summary path is not str or list.')
-
-        if self._parse_failed_paths:
-            logger.info('Parse failed paths: %s', str(self._parse_failed_paths))
-
-        if not self._lineage_objects:
-            raise LineageSummaryParseException()
-
-    def _parse_summary_log(self, log_path, index: int, is_save_fail_path=True):
-        """
-        Parse the single summary log.
-
-        Args:
-            log_path (str): The single summary log path.
-            index (int): TrainInfo instance index in the train info list.
-            is_save_fail_path (bool): Set whether to save the failed summary
-                path. Default: True.
-
-        Returns:
-            bool, `True` if parse summary log success, else `False`.
-        """
-        log_dir = os.path.dirname(log_path)
-        try:
-            lineage_info = LineageSummaryAnalyzer.get_summary_infos(log_path)
-            user_defined_info = LineageSummaryAnalyzer.get_user_defined_info(log_path)
-            lineage_obj = LineageObj(
-                log_dir,
-                train_lineage=lineage_info.train_lineage,
-                evaluation_lineage=lineage_info.eval_lineage,
-                dataset_graph=lineage_info.dataset_graph,
-                user_defined_info=user_defined_info
-            )
-            self._lineage_objects.append(lineage_obj)
-            self._add_dataset_mark()
-            self._index_map[log_dir] = index
-            return True
-        except (LineageSummaryAnalyzeException,
-                LineageEventNotExistException,
-                LineageEventFieldNotExistException):
-            if is_save_fail_path:
-                self._parse_failed_paths.append(log_path)
-            return False
-
-    def _parse_fail_summary_logs(self):
-        """Parse fail summary logs."""
-        if self._parse_failed_paths:
-            failed_paths = []
-            for path in self._parse_failed_paths:
-                parse_result = self._parse_summary_log(path, self._size, False)
-                if parse_result:
-                    self._size += 1
-                else:
-                    failed_paths.append(path)
-            self._parse_failed_paths = failed_paths
-
     def _add_dataset_mark(self):
         """Add dataset mark into LineageObj."""
         # give a dataset mark for each dataset graph in lineage information
         marked_dataset_group = {'1': None}
-        for lineage in self._lineage_objects:
+        for super_lineage_obj in self._super_lineage_objs.values():
+            lineage = super_lineage_obj.lineage_obj
             dataset_mark = '0'
             for dataset_graph_mark, marked_dataset_graph in marked_dataset_group.items():
                 if marked_dataset_graph == lineage.dataset_graph:

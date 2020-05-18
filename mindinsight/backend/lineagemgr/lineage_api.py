@@ -20,9 +20,10 @@ from flask import Blueprint, jsonify, request
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.utils.tools import get_train_id
-from mindinsight.lineagemgr import filter_summary_lineage, get_summary_lineage
-from mindinsight.lineagemgr.common.validator.validate import validate_path
+from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
+from mindinsight.lineagemgr.api.model import general_filter_summary_lineage, general_get_summary_lineage
 from mindinsight.utils.exceptions import MindInsightException, ParamValueError
+from mindinsight.lineagemgr.cache_item_updater import update_lineage_object
 
 BLUEPRINT = Blueprint("lineage", __name__, url_prefix=settings.URL_PREFIX.rstrip("/"))
 
@@ -68,8 +69,10 @@ def _get_lineage_info(search_condition):
     """
     summary_base_dir = str(settings.SUMMARY_BASE_DIR)
     try:
-        lineage_info = filter_summary_lineage(
-            summary_base_dir, search_condition)
+        lineage_info = general_filter_summary_lineage(
+            data_manager=DATA_MANAGER,
+            search_condition=search_condition,
+            added=True)
 
         lineages = lineage_info['object']
 
@@ -91,6 +94,30 @@ def _get_lineage_info(search_condition):
     return lineage_info
 
 
+@BLUEPRINT.route("/lineagemgr/lineages", methods=["PUT"])
+def update_lineage():
+    """
+    Get lineage.
+
+    Returns:
+        str, update the lineage information about cache and tag.
+
+    Raises:
+        MindInsightException: If method fails to be called.
+
+    Examples:
+        >>> PUT http://xxxx/v1/mindinsight/lineagemgr/lineages?train_id=./run1
+    """
+    train_id = get_train_id(request)
+    added_info = request.json
+    if not isinstance(added_info, dict):
+        raise ParamValueError("The request body should be a dict.")
+
+    update_lineage_object(DATA_MANAGER, train_id, added_info)
+
+    return jsonify({"status": "success"})
+
+
 @BLUEPRINT.route("/datasets/dataset_graph", methods=["GET"])
 def get_dataset_graph():
     """
@@ -109,18 +136,9 @@ def get_dataset_graph():
 
     summary_base_dir = str(settings.SUMMARY_BASE_DIR)
     summary_dir = get_train_id(request)
-    if summary_dir.startswith('/'):
-        validate_path(summary_dir)
-    elif summary_dir.startswith('./'):
-        summary_dir = os.path.join(summary_base_dir, summary_dir[2:])
-        summary_dir = validate_path(summary_dir)
-    else:
-        raise ParamValueError(
-            "Summary dir should be absolute path or "
-            "relative path that relate to summary base dir."
-        )
     try:
-        dataset_graph = get_summary_lineage(
+        dataset_graph = general_get_summary_lineage(
+            DATA_MANAGER,
             summary_dir=summary_dir,
             keys=['dataset_graph']
         )

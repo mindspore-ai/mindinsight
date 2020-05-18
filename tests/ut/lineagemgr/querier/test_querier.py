@@ -13,14 +13,15 @@
 # limitations under the License.
 # ============================================================================
 """Test the querier module."""
+import time
+
 from unittest import TestCase, mock
 
 from google.protobuf.json_format import ParseDict
 
 import mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 as summary_pb2
-from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageParamTypeError, LineageQuerierParamException,
-                                                                 LineageSummaryAnalyzeException,
-                                                                 LineageSummaryParseException)
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, LineageQuerierParamException
+from mindinsight.lineagemgr.lineage_parser import LineageOrganizer
 from mindinsight.lineagemgr.querier.querier import Querier
 from mindinsight.lineagemgr.summary.lineage_summary_analyzer import LineageInfo
 
@@ -246,8 +247,11 @@ LINEAGE_FILTRATION_6 = {
 
 class TestQuerier(TestCase):
     """Test the class of `Querier`."""
-    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_user_defined_info')
-    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_summary_infos')
+
+    @mock.patch('mindinsight.lineagemgr.lineage_parser.SummaryPathParser.get_latest_lineage_summary')
+    @mock.patch('mindinsight.lineagemgr.lineage_parser.SummaryWatcher.list_summary_directories')
+    @mock.patch('mindinsight.lineagemgr.lineage_parser.LineageSummaryAnalyzer.get_user_defined_info')
+    @mock.patch('mindinsight.lineagemgr.lineage_parser.LineageSummaryAnalyzer.get_summary_infos')
     def setUp(self, *args):
         """Initialization before test case execution."""
         args[0].return_value = create_lineage_info(
@@ -256,22 +260,22 @@ class TestQuerier(TestCase):
             event_data.EVENT_DATASET_DICT_0
         )
         args[1].return_value = []
+        args[3].return_value = 'path'
 
-        single_summary_path = '/path/to/summary0/log0'
-        self.single_querier = Querier(single_summary_path)
+        args[2].return_value = [{'relative_path': './', 'update_time': 1}]
+        single_summary_path = '/path/to/summary0'
+        lineage_objects = LineageOrganizer(summary_base_dir=single_summary_path).super_lineage_objs
+        self.single_querier = Querier(lineage_objects)
 
         lineage_infos = get_lineage_infos()
         args[0].side_effect = lineage_infos
-        summary_paths = [
-            '/path/to/summary0/log0',
-            '/path/to/summary1/log1',
-            '/path/to/summary2/log2',
-            '/path/to/summary3/log3',
-            '/path/to/summary4/log4',
-            '/path/to/summary5/log5',
-            '/path/to/summary6/log6'
-        ]
-        self.multi_querier = Querier(summary_paths)
+        summary_base_dir = '/path/to'
+        relative_dirs = []
+        for i in range(7):
+            relative_dirs.append(dict(relative_path=f'./summary{i}', update_time=time.time() - i))
+        args[2].return_value = relative_dirs
+        lineage_objects = LineageOrganizer(summary_base_dir=summary_base_dir).super_lineage_objs
+        self.multi_querier = Querier(lineage_objects)
 
     def test_get_summary_lineage_success_1(self):
         """Test the success of get_summary_lineage."""
@@ -282,9 +286,7 @@ class TestQuerier(TestCase):
     def test_get_summary_lineage_success_2(self):
         """Test the success of get_summary_lineage."""
         expected_result = [LINEAGE_INFO_0]
-        result = self.single_querier.get_summary_lineage(
-            summary_dir='/path/to/summary0'
-        )
+        result = self.single_querier.get_summary_lineage()
         self.assertListEqual(expected_result, result)
 
     def test_get_summary_lineage_success_3(self):
@@ -601,60 +603,12 @@ class TestQuerier(TestCase):
             condition=condition
         )
 
-    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_summary_infos')
-    def test_init_fail(self, *args):
+    def test_init_fail(self):
         """Test the function of init with exception."""
-        summary_path = {'xxx': 1}
+        obj_dict = 'a'
         with self.assertRaises(LineageParamTypeError):
-            Querier(summary_path)
+            Querier(obj_dict)
 
-        summary_path = None
+        obj_dict = None
         with self.assertRaises(LineageQuerierParamException):
-            Querier(summary_path)
-
-        args[0].side_effect = LineageSummaryAnalyzeException
-        summary_path = '/path/to/summary0/log0'
-        with self.assertRaises(LineageSummaryParseException):
-            Querier(summary_path)
-
-    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_user_defined_info')
-    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_summary_infos')
-    def test_parse_fail_summary_logs_1(self, *args):
-        """Test the function of parsing fail summary logs."""
-        lineage_infos = get_lineage_infos()
-        args[0].side_effect = lineage_infos
-        args[1].return_value = []
-
-        summary_path = ['/path/to/summary0/log0']
-        querier = Querier(summary_path)
-        querier._parse_failed_paths.append('/path/to/summary1/log1')
-        expected_result = [
-            LINEAGE_INFO_0,
-            LINEAGE_INFO_1
-        ]
-        result = querier.get_summary_lineage()
-        self.assertListEqual(expected_result, result)
-        self.assertListEqual([], querier._parse_failed_paths)
-
-    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_user_defined_info')
-    @mock.patch('mindinsight.lineagemgr.querier.querier.LineageSummaryAnalyzer.get_summary_infos')
-    def test_parse_fail_summary_logs_2(self, *args):
-        """Test the function of parsing fail summary logs."""
-        args[0].return_value = create_lineage_info(
-            event_data.EVENT_TRAIN_DICT_0,
-            event_data.EVENT_EVAL_DICT_0,
-            event_data.EVENT_DATASET_DICT_0,
-        )
-        args[1].return_value = []
-
-        summary_path = ['/path/to/summary0/log0']
-        querier = Querier(summary_path)
-        querier._parse_failed_paths.append('/path/to/summary1/log1')
-
-        args[0].return_value = create_lineage_info(None, None, None)
-        expected_result = [LINEAGE_INFO_0]
-        result = querier.get_summary_lineage()
-        self.assertListEqual(expected_result, result)
-        self.assertListEqual(
-            ['/path/to/summary1/log1'], querier._parse_failed_paths
-        )
+            Querier(obj_dict)

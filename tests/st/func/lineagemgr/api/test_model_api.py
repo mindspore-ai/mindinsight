@@ -356,6 +356,7 @@ class TestModelApi(TestCase):
         assert expect_result == res
 
         expect_result = {
+            'customized': {},
             'object': [],
             'count': 0
         }

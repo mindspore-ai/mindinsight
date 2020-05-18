@@ -16,15 +16,15 @@
 import os
 
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamValueError, \
-    LineageFileNotFoundError, LineageQuerySummaryDataError, LineageParamSummaryPathError, \
+    LineageQuerySummaryDataError, LineageParamSummaryPathError, \
     LineageQuerierParamException, LineageDirNotExistError, LineageSearchConditionParamError, \
     LineageParamTypeError, LineageSummaryParseException
 from mindinsight.lineagemgr.common.log import logger as log
-from mindinsight.lineagemgr.common.path_parser import SummaryPathParser
+from mindinsight.lineagemgr.common.utils import normalize_summary_dir
 from mindinsight.lineagemgr.common.validator.model_parameter import SearchModelConditionParameter
-from mindinsight.lineagemgr.common.validator.validate import validate_filter_key
-from mindinsight.lineagemgr.common.validator.validate import validate_search_model_condition, \
-    validate_condition, validate_path
+from mindinsight.lineagemgr.common.validator.validate import validate_filter_key, validate_search_model_condition, \
+    validate_condition, validate_path, validate_train_id
+from mindinsight.lineagemgr.lineage_parser import LineageParser, LineageOrganizer
 from mindinsight.lineagemgr.querier.querier import Querier
 from mindinsight.utils.exceptions import MindInsightException
 
@@ -58,33 +58,61 @@ def get_summary_lineage(summary_dir, keys=None):
         >>> summary_lineage_info = get_summary_lineage(summary_dir)
         >>> hyper_parameters = get_summary_lineage(summary_dir, keys=["hyper_parameters"])
     """
-    try:
-        summary_dir = validate_path(summary_dir)
-    except MindInsightException as error:
-        log.error(str(error))
-        log.exception(error)
-        raise LineageParamSummaryPathError(str(error.message))
+    return general_get_summary_lineage(summary_dir=summary_dir, keys=keys)
+
+
+def general_get_summary_lineage(data_manager=None, summary_dir=None, keys=None):
+    """
+    Get summary lineage from data_manager or parsing from summaries.
+
+    One of data_manager or summary_dir needs to be specified. Support getting
+    super_lineage_obj from data_manager or parsing summaries by summary_dir.
+
+    Args:
+        data_manager (DataManager): Data manager defined as
+            mindinsight.datavisual.data_transform.data_manager.DataManager
+        summary_dir (str): The summary directory. It contains summary logs for
+            one training.
+        keys (list[str]): The filter keys of lineage information. The acceptable
+            keys are `metric`, `user_defined`, `hyper_parameters`, `algorithm`,
+            `train_dataset`, `model`, `valid_dataset` and `dataset_graph`.
+            If it is `None`, all information will be returned. Default: None.
+
+    Returns:
+        dict, the lineage information for one training.
+
+    Raises:
+        LineageParamSummaryPathError: If summary path is invalid.
+        LineageQuerySummaryDataError: If querying summary data fails.
+        LineageFileNotFoundError: If the summary log file is not found.
+
+    """
+    default_result = {}
+    if data_manager is None and summary_dir is None:
+        raise LineageParamTypeError("One of data_manager or summary_dir needs to be specified.")
 
     if keys is not None:
         validate_filter_key(keys)
 
-    summary_path = SummaryPathParser.get_latest_lineage_summary(summary_dir)
-    if summary_path is None:
-        log.error('There is no summary log file under summary_dir.')
-        raise LineageFileNotFoundError(
-            'There is no summary log file under summary_dir.'
-        )
+    if data_manager is None:
+        normalize_summary_dir(summary_dir)
+
+    super_lineage_obj = None
+    if os.path.isabs(summary_dir):
+        super_lineage_obj = LineageParser(summary_dir).super_lineage_obj
+    elif data_manager is not None:
+        validate_train_id(summary_dir)
+        super_lineage_obj = LineageOrganizer(data_manager=data_manager).get_super_lineage_obj(summary_dir)
+
+    if super_lineage_obj is None:
+        return default_result
 
     try:
-        result = Querier(summary_path).get_summary_lineage(
-            summary_dir, filter_keys=keys)
-    except LineageSummaryParseException:
-        return {}
+        result = Querier({summary_dir: super_lineage_obj}).get_summary_lineage(summary_dir, keys)
     except (LineageQuerierParamException, LineageParamTypeError) as error:
         log.error(str(error))
         log.exception(error)
         raise LineageQuerySummaryDataError("Get summary lineage failed.")
-
     return result[0]
 
 
@@ -209,12 +237,30 @@ def filter_summary_lineage(summary_base_dir, search_condition=None):
         >>> summary_lineage = filter_summary_lineage(summary_base_dir)
         >>> summary_lineage_filter = filter_summary_lineage(summary_base_dir, search_condition)
     """
-    try:
-        summary_base_dir = validate_path(summary_base_dir)
-    except (LineageParamValueError, LineageDirNotExistError) as error:
-        log.error(str(error))
-        log.exception(error)
-        raise LineageParamSummaryPathError(str(error.message))
+    return general_filter_summary_lineage(summary_base_dir=summary_base_dir, search_condition=search_condition)
+
+
+def general_filter_summary_lineage(data_manager=None, summary_base_dir=None, search_condition=None, added=False):
+    """
+    Filter summary lineage from data_manager or parsing from summaries.
+
+    One of data_manager or summary_base_dir needs to be specified. Support getting
+    super_lineage_obj from data_manager or parsing summaries by summary_base_dir.
+
+    Args:
+        data_manager (DataManager): Data manager defined as
+            mindinsight.datavisual.data_transform.data_manager.DataManager
+        summary_base_dir (str): The summary base directory. It contains summary
+            directories generated by training.
+        search_condition (dict): The search condition.
+    """
+    if data_manager is None and summary_base_dir is None:
+        raise LineageParamTypeError("One of data_manager or summary_base_dir needs to be specified.")
+
+    if data_manager is None:
+        summary_base_dir = normalize_summary_dir(summary_base_dir)
+    else:
+        summary_base_dir = data_manager.summary_base_dir
 
     search_condition = {} if search_condition is None else search_condition
 
@@ -233,16 +279,11 @@ def filter_summary_lineage(summary_base_dir, search_condition=None):
         log.exception(error)
         raise LineageParamSummaryPathError(str(error.message))
 
-    summary_path = SummaryPathParser.get_latest_lineage_summaries(summary_base_dir)
-    if not summary_path:
-        log.error('There is no summary log file under summary_base_dir.')
-        raise LineageFileNotFoundError(
-            'There is no summary log file under summary_base_dir.'
-        )
-
     try:
-        result = Querier(summary_path).filter_summary_lineage(
-            condition=search_condition
+        lineage_objects = LineageOrganizer(data_manager, summary_base_dir).super_lineage_objs
+        result = Querier(lineage_objects).filter_summary_lineage(
+            condition=search_condition,
+            added=added
         )
     except LineageSummaryParseException:
         result = {'object': [], 'count': 0}
