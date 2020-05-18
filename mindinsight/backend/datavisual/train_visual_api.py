@@ -162,6 +162,17 @@ def histogram():
     return jsonify(response)
 
 
+@BLUEPRINT.route("/datavisual/scalars", methods=["GET"])
+def get_scalars():
+    """Get scalar data for given train_ids and tags."""
+    train_ids = request.args.getlist('train_id')
+    tags = request.args.getlist('tag')
+
+    processor = ScalarsProcessor(DATA_MANAGER)
+    scalars = processor.get_scalars(train_ids, tags)
+    return jsonify({'scalars': scalars})
+
+
 def init_module(app):
     """
     Init module entry.

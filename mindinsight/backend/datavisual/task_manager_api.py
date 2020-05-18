@@ -25,10 +25,11 @@ from flask import request
 from flask import jsonify
 
 from mindinsight.conf import settings
+from mindinsight.datavisual.common.validation import Validation
+from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.datavisual.utils.tools import str_to_bool
 from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.datavisual.processors.train_task_manager import TrainTaskManager
-from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
 
 
@@ -65,22 +66,29 @@ def query_train_jobs():
     offset = request.args.get("offset", default=0)
     limit = request.args.get("limit", default=10)
 
-    summary_watcher = SummaryWatcher()
-    total, directories = summary_watcher.list_summary_directories_by_pagination(
-        settings.SUMMARY_BASE_DIR, offset, limit)
+    offset = Validation.check_offset(offset=offset)
+    limit = Validation.check_limit(limit, min_value=1, max_value=SummaryWatcher.MAX_SUMMARY_DIR_COUNT)
 
-    train_jobs = [{
-        'train_id': directory['relative_path'],
-        'relative_path': directory['relative_path'],
-        'create_time': directory['create_time'].strftime('%Y-%m-%d %H:%M:%S'),
-        'update_time': directory['update_time'].strftime('%Y-%m-%d %H:%M:%S'),
-    } for directory in directories]
+    processor = TrainTaskManager(DATA_MANAGER)
+    total, train_jobs = processor.query_train_jobs(offset, limit)
 
     return jsonify({
         'name': os.path.basename(os.path.realpath(settings.SUMMARY_BASE_DIR)),
         'total': total,
         'train_jobs': train_jobs,
     })
+
+
+@BLUEPRINT.route("/datavisual/train-job-caches", methods=["POST"])
+def cache_train_jobs():
+    """ Cache train jobs."""
+    data = request.get_json(silent=True)
+    train_ids = data.get('train_ids', [])
+
+    processor = TrainTaskManager(DATA_MANAGER)
+    cache_result = processor.cache_train_jobs(train_ids)
+
+    return jsonify({'cache_result': cache_result})
 
 
 def init_module(app):

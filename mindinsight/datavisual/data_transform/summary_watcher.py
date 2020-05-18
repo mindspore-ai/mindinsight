@@ -31,6 +31,7 @@ class SummaryWatcher:
 
     SUMMARY_FILENAME_REGEX = r'summary\.(?P<timestamp>\d+)'
     PB_FILENAME_REGEX = r'\.pb$'
+    PROFILER_DIRECTORY_REGEX = r'^profiler$'
     MAX_SUMMARY_DIR_COUNT = 999
 
     # scan at most 20000 files/directories (approximately 1 seconds)
@@ -52,6 +53,8 @@ class SummaryWatcher:
                                         starting with "./".
                 - create_time (datetime): Creation time of summary file.
                 - update_time (datetime): Modification time of summary file.
+                - profiler (dict): profiler info, including profiler subdirectory path, profiler creation time and
+                                    profiler modification time.
 
         Examples:
             >>> from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
@@ -95,7 +98,7 @@ class SummaryWatcher:
             if entry.is_symlink():
                 pass
             elif entry.is_file():
-                self._update_summary_dict(summary_dict, relative_path, entry)
+                self._update_summary_dict(summary_dict, summary_base_dir, relative_path, entry)
             elif entry.is_dir():
                 full_path = os.path.realpath(os.path.join(summary_base_dir, entry.name))
                 try:
@@ -103,27 +106,39 @@ class SummaryWatcher:
                 except PermissionError:
                     logger.warning('Path of %s under summary base directory is not accessible.', entry.name)
                     continue
-                self._scan_subdir_entries(summary_dict, subdir_entries, entry.name, counter)
+                self._scan_subdir_entries(summary_dict, summary_base_dir, subdir_entries, entry.name, counter)
 
-        directories = [{
-            'relative_path': key,
-            'create_time': value['ctime'],
-            'update_time': value['mtime'],
-        } for key, value in summary_dict.items()]
+        directories = []
+        for key, value in summary_dict.items():
+            directory = {
+                'relative_path': key,
+                'profiler': None,
+                'create_time': value['ctime'],
+                'update_time': value['mtime'],
+            }
+            profiler = value.get('profiler')
+            if profiler is not None:
+                directory['profiler'] = {
+                    'directory': profiler['directory'],
+                    'create_time': profiler['ctime'],
+                    'update_time': profiler['mtime'],
+                }
+            directories.append(directory)
 
         # sort by update time in descending order and relative path in ascending order
         directories.sort(key=lambda x: (-int(x['update_time'].timestamp()), x['relative_path']))
 
         return directories
 
-    def _scan_subdir_entries(self, summary_dict, subdir_entries, entry_name, counter):
+    def _scan_subdir_entries(self, summary_dict, summary_base_dir, subdir_entries, entry_name, counter):
         """
         Scan subdir entries.
 
         Args:
             summary_dict (dict): Temporary data structure to hold summary directory info.
-            subdir_entries(DirEntry): Directory entry instance.
+            summary_base_dir (str): Path of summary base directory.
             entry_name (str): Name of entry.
+            subdir_entries(DirEntry): Directory entry instance.
             counter (Counter): An instance of CountLimiter.
 
         """
@@ -139,8 +154,7 @@ class SummaryWatcher:
             subdir_relative_path = os.path.join('.', entry_name)
             if subdir_entry.is_symlink():
                 pass
-            elif subdir_entry.is_file():
-                self._update_summary_dict(summary_dict, subdir_relative_path, subdir_entry)
+            self._update_summary_dict(summary_dict, summary_base_dir, subdir_relative_path, subdir_entry)
 
     def _contains_null_byte(self, **kwargs):
         """
@@ -194,39 +208,61 @@ class SummaryWatcher:
 
         return True
 
-    def _update_summary_dict(self, summary_dict, relative_path, entry):
+    def _update_summary_dict(self, summary_dict, summary_base_dir, relative_path, entry):
         """
         Update summary_dict with ctime and mtime.
 
         Args:
             summary_dict (dict): Temporary data structure to hold summary directory info.
+            summary_base_dir (str): Path of summary base directory.
             relative_path (str): Relative path of summary directory, referring to summary base directory,
                                 starting with "./" .
             entry (DirEntry): Directory entry instance needed to check with regular expression.
         """
-        summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
-        pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
-        if summary_pattern is None and pb_pattern is None:
-            return
-
-        if summary_pattern is not None:
-            timestamp = int(summary_pattern.groupdict().get('timestamp'))
-            try:
-                # extract created time from filename
-                ctime = datetime.datetime.fromtimestamp(timestamp).astimezone()
-            except OverflowError:
-                return
-        else:
-            ctime = datetime.datetime.fromtimestamp(entry.stat().st_ctime).astimezone()
-
-        # extract modified time from filesystem
+        ctime = datetime.datetime.fromtimestamp(entry.stat().st_ctime).astimezone()
         mtime = datetime.datetime.fromtimestamp(entry.stat().st_mtime).astimezone()
 
-        if relative_path not in summary_dict or summary_dict[relative_path]['ctime'] < ctime:
-            summary_dict[relative_path] = {
+        if entry.is_file():
+            summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
+            pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
+            if summary_pattern is None and pb_pattern is None:
+                return
+            if summary_pattern is not None:
+                timestamp = int(summary_pattern.groupdict().get('timestamp'))
+                try:
+                    # extract created time from filename
+                    ctime = datetime.datetime.fromtimestamp(timestamp).astimezone()
+                except OverflowError:
+                    return
+            if relative_path not in summary_dict:
+                summary_dict[relative_path] = {
+                    'ctime': ctime,
+                    'mtime': mtime,
+                    'profiler': None,
+                }
+            elif summary_dict[relative_path]['ctime'] < ctime:
+                summary_dict[relative_path].update({
+                    'ctime': ctime,
+                    'mtime': mtime,
+                })
+        elif entry.is_dir():
+            profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
+            full_dir_path = os.path.join(summary_base_dir, relative_path, entry.name)
+            if profiler_pattern is None or self._is_empty_directory(full_dir_path):
+                return
+
+            profiler = {
+                'directory': os.path.join('.', entry.name),
                 'ctime': ctime,
                 'mtime': mtime,
             }
+
+            if relative_path not in summary_dict:
+                summary_dict[relative_path] = {
+                    'ctime': ctime,
+                    'mtime': mtime,
+                    'profiler': profiler,
+                }
 
     def is_summary_directory(self, summary_base_dir, relative_path):
         """
@@ -259,14 +295,27 @@ class SummaryWatcher:
             raise FileSystemPermissionError('Path of summary base directory is not accessible.')
 
         for entry in entries:
-            if entry.is_symlink() or not entry.is_file():
+            if entry.is_symlink():
                 continue
+
             summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
-            pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
-            if summary_pattern or pb_pattern:
+            if summary_pattern is not None and entry.is_file():
                 return True
 
+            pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
+            if pb_pattern is not None and entry.is_file():
+                return True
+
+            profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
+            if profiler_pattern is not None and entry.is_dir():
+                full_path = os.path.realpath(os.path.join(summary_directory, entry.name))
+                if not self._is_empty_directory(full_path):
+                    return True
+
         return False
+
+    def _is_empty_directory(self, directory):
+        return not bool(os.listdir(directory))
 
     def list_summary_directories_by_pagination(self, summary_base_dir, offset=0, limit=10):
         """
