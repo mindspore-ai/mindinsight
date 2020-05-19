@@ -362,8 +362,9 @@ def validate_condition(search_condition):
             log.error(err_msg)
             raise LineageParamValueError(err_msg)
         if not (sorted_name in FIELD_MAPPING
-                or (sorted_name.startswith('metric/') and len(sorted_name) > 7)
-                or (sorted_name.startswith('user_defined/') and len(sorted_name) > 13)):
+                or (sorted_name.startswith('metric/') and len(sorted_name) > len('metric/'))
+                or (sorted_name.startswith('user_defined/') and len(sorted_name) > len('user_defined/'))
+                or sorted_name in ['tag']):
             log.error(err_msg)
             raise LineageParamValueError(err_msg)
 
@@ -460,3 +461,54 @@ def validate_train_id(relative_path):
         raise ParamValueError(
             "Summary dir should be relative path starting with './'."
         )
+
+
+def validate_range(name, value, min_value, max_value):
+    """
+    Check if value is in [min_value, max_value].
+
+    Args:
+        name (str): Value name.
+        value (Union[int, float]): Value to be check.
+        min_value (Union[int, float]): Min value.
+        max_value (Union[int, float]): Max value.
+
+    Raises:
+        LineageParamValueError, if value type is invalid or value is out of [min_value, max_value].
+
+    """
+    if not isinstance(value, (int, float)):
+        raise LineageParamValueError("Value should be int or float.")
+
+    if value < min_value or value > max_value:
+        raise LineageParamValueError("The %s should in [%d, %d]." % (name, min_value, max_value))
+
+
+def validate_added_info(added_info: dict):
+    """
+    Check if added_info is valid.
+
+    Args:
+        added_info (dict): The added info.
+
+    Raises:
+        bool, if added_info is valid, return True.
+
+    """
+    added_info_keys = ["tag", "remark"]
+    if not set(added_info.keys()).issubset(added_info_keys):
+        err_msg = "Keys must be in {}.".format(added_info_keys)
+        log.error(err_msg)
+        raise LineageParamValueError(err_msg)
+
+    for key, value in added_info.items():
+        if key == "tag":
+            if not isinstance(value, int):
+                raise LineageParamValueError("'tag' must be int.")
+            # tag should be in [0, 10].
+            validate_range("tag", value, min_value=0, max_value=10)
+        elif key == "remark":
+            if not isinstance(value, str):
+                raise LineageParamValueError("'remark' must be str.")
+            # length of remark should be in [0, 128].
+            validate_range("length of remark", len(value), min_value=0, max_value=128)

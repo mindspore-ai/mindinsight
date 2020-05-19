@@ -271,25 +271,6 @@ class Querier:
                         return False
             return True
 
-        def _cmp(obj1: SuperLineageObj, obj2: SuperLineageObj):
-            value1 = obj1.lineage_obj.get_value_by_key(sorted_name)
-            value2 = obj2.lineage_obj.get_value_by_key(sorted_name)
-
-            if value1 is None and value2 is None:
-                cmp_result = 0
-            elif value1 is None:
-                cmp_result = -1
-            elif value2 is None:
-                cmp_result = 1
-            else:
-                try:
-                    cmp_result = (value1 > value2) - (value1 < value2)
-                except TypeError:
-                    type1 = type(value1).__name__
-                    type2 = type(value2).__name__
-                    cmp_result = (type1 > type2) - (type1 < type2)
-            return cmp_result
-
         if condition is None:
             condition = {}
 
@@ -298,19 +279,7 @@ class Querier:
         super_lineage_objs.sort(key=lambda x: x.update_time, reverse=True)
 
         results = list(filter(_filter, super_lineage_objs))
-
-        if ConditionParam.SORTED_NAME.value in condition:
-            sorted_name = condition.get(ConditionParam.SORTED_NAME.value)
-            if self._is_valid_field(sorted_name):
-                raise LineageQuerierParamException(
-                    'condition',
-                    'The sorted name {} not supported.'.format(sorted_name)
-                )
-            sorted_type = condition.get(ConditionParam.SORTED_TYPE.value)
-            reverse = sorted_type == 'descending'
-            results = sorted(
-                results, key=functools.cmp_to_key(_cmp), reverse=reverse
-            )
+        results = self._sorted_results(results, condition)
 
         offset_results = self._handle_limit_and_offset(condition, results)
 
@@ -337,6 +306,55 @@ class Querier:
         }
 
         return lineage_info
+
+    def _sorted_results(self, results, condition):
+        """Get sorted results."""
+        def _cmp(value1, value2):
+            if value1 is None and value2 is None:
+                cmp_result = 0
+            elif value1 is None:
+                cmp_result = -1
+            elif value2 is None:
+                cmp_result = 1
+            else:
+                try:
+                    cmp_result = (value1 > value2) - (value1 < value2)
+                except TypeError:
+                    type1 = type(value1).__name__
+                    type2 = type(value2).__name__
+                    cmp_result = (type1 > type2) - (type1 < type2)
+            return cmp_result
+
+        def _cmp_added_info(obj1: SuperLineageObj, obj2: SuperLineageObj):
+            value1 = obj1.added_info.get(sorted_name)
+            value2 = obj2.added_info.get(sorted_name)
+            return _cmp(value1, value2)
+
+        def _cmp_super_lineage_obj(obj1: SuperLineageObj, obj2: SuperLineageObj):
+            value1 = obj1.lineage_obj.get_value_by_key(sorted_name)
+            value2 = obj2.lineage_obj.get_value_by_key(sorted_name)
+
+            return _cmp(value1, value2)
+
+        if ConditionParam.SORTED_NAME.value in condition:
+            sorted_name = condition.get(ConditionParam.SORTED_NAME.value)
+            sorted_type = condition.get(ConditionParam.SORTED_TYPE.value)
+            reverse = sorted_type == 'descending'
+            if sorted_name in ['tag']:
+                results = sorted(
+                    results, key=functools.cmp_to_key(_cmp_added_info), reverse=reverse
+                )
+                return results
+
+            if self._is_valid_field(sorted_name):
+                raise LineageQuerierParamException(
+                    'condition',
+                    'The sorted name {} not supported.'.format(sorted_name)
+                )
+            results = sorted(
+                results, key=functools.cmp_to_key(_cmp_super_lineage_obj), reverse=reverse
+            )
+        return results
 
     def _organize_customized(self, offset_results):
         """Organize customized."""
@@ -403,8 +421,8 @@ class Querier:
         Returns:
             bool, `True` if the field name is valid, else `False`.
         """
-        return field_name not in FIELD_MAPPING and \
-               not field_name.startswith(('metric/', 'user_defined/'))
+        return field_name not in FIELD_MAPPING \
+               and not field_name.startswith(('metric/', 'user_defined/'))
 
     def _handle_limit_and_offset(self, condition, result):
         """
