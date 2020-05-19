@@ -31,6 +31,7 @@ limitations under the License.
           <el-menu-item index="/summary-manage">{{$t("summaryManage.summaryList")}}</el-menu-item>
           <el-menu-item index="/model-traceback">{{$t("summaryManage.modelTraceback")}}</el-menu-item>
           <el-menu-item index="/data-traceback">{{$t("summaryManage.dataTraceback")}}</el-menu-item>
+          <el-menu-item index="/compare-plate">{{$t("summaryManage.comparePlate")}}</el-menu-item>
         </el-menu>
       </div>
     </div>
@@ -39,7 +40,8 @@ limitations under the License.
          v-if="this.$route.path.indexOf('/scalar') > 0
          || this.$route.path.indexOf('/image') > 0
          || this.$route.path.indexOf('/histogram') > 0
-         || this.$route.path.indexOf('/training-dashboard') > 0">
+         || this.$route.path.indexOf('/training-dashboard') > 0
+         || !this.$route.path.indexOf('/compare-plate')">
       <!-- automatic refresh switch -->
       <el-switch v-model="isTimeReload"
                  :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
