@@ -27,15 +27,19 @@ def update_lineage_object(data_manager, train_id, added_info: dict):
     """Update lineage objects about tag and remark."""
     validate_train_id(train_id)
     cache_item = data_manager.get_brief_train_job(train_id)
-    cached_added_info = cache_item.get(key=LINEAGE).added_info
+    lineage_item = cache_item.get(key=LINEAGE, raise_exception=False)
+    if lineage_item is None:
+        logger.warning("Cannot update the lineage for tran job %s, because it does not exist.", train_id)
+        raise ParamValueError("Cannot update the lineage for tran job %s, because it does not exist." % train_id)
+
+    cached_added_info = lineage_item.super_lineage_obj.added_info
     new_added_info = dict(cached_added_info)
 
     for key, value in added_info.items():
-        if key in ["tag", "remark"]:
-            new_added_info.update({key: value})
+        new_added_info.update({key: value})
 
     with cache_item.lock_key(LINEAGE):
-        cache_item.get(key=LINEAGE).added_info = new_added_info
+        cache_item.get(key=LINEAGE).super_lineage_obj.added_info = new_added_info
 
 
 class LineageCacheItemUpdater(BaseCacheItemUpdater):
@@ -44,8 +48,7 @@ class LineageCacheItemUpdater(BaseCacheItemUpdater):
     def update_item(self, cache_item: CachedTrainJob):
         """Update cache item in place."""
         summary_base_dir = cache_item.summary_base_dir
-        summary_dir = cache_item.summary_dir
-        update_time = cache_item.basic_info.update_time
+        summary_dir = cache_item.abs_summary_dir
 
         # The summary_base_dir and summary_dir have been normalized in data_manager.
         if summary_base_dir == summary_dir:
@@ -54,17 +57,31 @@ class LineageCacheItemUpdater(BaseCacheItemUpdater):
             relative_path = f'./{os.path.basename(summary_dir)}'
 
         try:
-            cached_added_info = cache_item.get(key=LINEAGE).added_info
-        except ParamValueError:
-            cached_added_info = None
-        try:
-            lineage_parser = LineageParser(summary_dir, update_time, cached_added_info)
-            super_lineage_obj = lineage_parser.super_lineage_obj
+            lineage_parser = self._lineage_parsing(cache_item)
         except LineageFileNotFoundError:
-            super_lineage_obj = None
+            with cache_item.lock_key(LINEAGE):
+                cache_item.delete(key=LINEAGE)
+            return
 
+        super_lineage_obj = lineage_parser.super_lineage_obj
         if super_lineage_obj is None:
             logger.warning("There is no lineage to update in tran job %s.", relative_path)
             return
-        with cache_item.lock_key(LINEAGE):
-            cache_item.set(key=LINEAGE, value=super_lineage_obj)
+
+        cache_item.set(key=LINEAGE, value=lineage_parser)
+
+    def _lineage_parsing(self, cache_item):
+        """Parse summaries and return lineage parser."""
+        summary_dir = cache_item.abs_summary_dir
+        update_time = cache_item.basic_info.update_time
+
+        cached_lineage_item = cache_item.get(key=LINEAGE, raise_exception=False)
+        if cached_lineage_item is None:
+            lineage_parser = LineageParser(summary_dir, update_time)
+        else:
+            lineage_parser = cached_lineage_item
+            with cache_item.lock_key(LINEAGE):
+                lineage_parser.update_time = update_time
+                lineage_parser.load()
+
+        return lineage_parser

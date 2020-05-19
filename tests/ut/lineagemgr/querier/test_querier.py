@@ -16,6 +16,7 @@
 import time
 
 from unittest import TestCase, mock
+from unittest.mock import MagicMock
 
 from google.protobuf.json_format import ParseDict
 
@@ -248,11 +249,12 @@ LINEAGE_FILTRATION_6 = {
 class TestQuerier(TestCase):
     """Test the class of `Querier`."""
 
-    @mock.patch('mindinsight.lineagemgr.lineage_parser.SummaryPathParser.get_latest_lineage_summary')
+    @mock.patch('mindinsight.lineagemgr.lineage_parser.SummaryPathParser.get_lineage_summaries')
     @mock.patch('mindinsight.lineagemgr.lineage_parser.SummaryWatcher.list_summary_directories')
     @mock.patch('mindinsight.lineagemgr.lineage_parser.LineageSummaryAnalyzer.get_user_defined_info')
     @mock.patch('mindinsight.lineagemgr.lineage_parser.LineageSummaryAnalyzer.get_summary_infos')
-    def setUp(self, *args):
+    @mock.patch('mindinsight.lineagemgr.lineage_parser.FileHandler')
+    def setUp(self, mock_file_handler, *args):
         """Initialization before test case execution."""
         args[0].return_value = create_lineage_info(
             event_data.EVENT_TRAIN_DICT_0,
@@ -260,7 +262,10 @@ class TestQuerier(TestCase):
             event_data.EVENT_DATASET_DICT_0
         )
         args[1].return_value = []
-        args[3].return_value = 'path'
+        args[3].return_value = ['path']
+        mock_file_handler = MagicMock()
+        mock_file_handler.size = 1
+
 
         args[2].return_value = [{'relative_path': './', 'update_time': 1}]
         single_summary_path = '/path/to/summary0'

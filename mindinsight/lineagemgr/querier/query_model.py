@@ -82,6 +82,30 @@ class LineageObj:
         self._lineage_info = {
             self._name_summary_dir: summary_dir
         }
+        self._filtration_result = None
+        self._init_lineage()
+        self.parse_and_update_lineage(**kwargs)
+
+    def _init_lineage(self):
+        """Init lineage info."""
+        # train
+        self._lineage_info[self._name_model] = {}
+        self._lineage_info[self._name_algorithm] = {}
+        self._lineage_info[self._name_hyper_parameters] = {}
+        self._lineage_info[self._name_train_dataset] = {}
+
+        # eval
+        self._lineage_info[self._name_metric] = {}
+        self._lineage_info[self._name_valid_dataset] = {}
+
+        # dataset graph
+        self._lineage_info[self._name_dataset_graph] = {}
+
+        # user defined
+        self._lineage_info[self._name_user_defined] = {}
+
+    def parse_and_update_lineage(self, **kwargs):
+        """Parse and update lineage."""
         user_defined_info_list = kwargs.get('user_defined_info', [])
         train_lineage = kwargs.get('train_lineage')
         evaluation_lineage = kwargs.get('evaluation_lineage')
@@ -92,6 +116,7 @@ class LineageObj:
         self._parse_train_lineage(train_lineage)
         self._parse_evaluation_lineage(evaluation_lineage)
         self._parse_dataset_graph(dataset_graph)
+
         self._filtration_result = self._organize_filtration_result()
 
     @property
@@ -309,10 +334,6 @@ class LineageObj:
             train_lineage (Event): Train lineage.
         """
         if train_lineage is None:
-            self._lineage_info[self._name_model] = {}
-            self._lineage_info[self._name_algorithm] = {}
-            self._lineage_info[self._name_hyper_parameters] = {}
-            self._lineage_info[self._name_train_dataset] = {}
             return
 
         event_dict = MessageToDict(
@@ -341,8 +362,6 @@ class LineageObj:
             evaluation_lineage (Event): Evaluation lineage.
         """
         if evaluation_lineage is None:
-            self._lineage_info[self._name_metric] = {}
-            self._lineage_info[self._name_valid_dataset] = {}
             return
 
         event_dict = MessageToDict(
@@ -364,9 +383,7 @@ class LineageObj:
         Args:
             dataset_graph (Event): Dataset graph.
         """
-        if dataset_graph is None:
-            self._lineage_info[self._name_dataset_graph] = {}
-        else:
+        if dataset_graph is not None:
             # convert message to dict
             event_dict = organize_graph(dataset_graph.dataset_graph)
             if event_dict is None:
@@ -380,6 +397,8 @@ class LineageObj:
         Args:
             user_defined_info_list (list): user defined info list.
         """
+        if not user_defined_info_list:
+            return
         user_defined_infos = dict()
         for user_defined_info in user_defined_info_list:
             user_defined_infos.update(user_defined_info)
