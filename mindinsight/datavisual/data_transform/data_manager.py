@@ -369,6 +369,10 @@ class _DetailCacheManager(_BaseCacheManager):
         self._max_threads_count = 30
         self._loader_generators = loader_generators
 
+    def has_content(self):
+        """Whether this cache manager has train jobs."""
+        return bool(self._loader_pool)
+
     def size(self):
         """
         Get the number of items in this cache manager.
