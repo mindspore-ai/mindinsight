@@ -33,19 +33,19 @@ MOCK_SUMMARY_DIRS = [
 ]
 MOCK_SUMMARIES = [
     {
-        'file_name': 'file0',
+        'file_name': 'file0.summary.1',
         'create_time': datetime.fromtimestamp(1582031970)
     },
     {
-        'file_name': 'file0_lineage',
+        'file_name': 'file0.summary.1_lineage',
         'create_time': datetime.fromtimestamp(1582031970)
     },
     {
-        'file_name': 'file1',
+        'file_name': 'file1.summary.2',
         'create_time': datetime.fromtimestamp(1582031971)
     },
     {
-        'file_name': 'file1_lineage',
+        'file_name': 'file1.summary.2_lineage',
         'create_time': datetime.fromtimestamp(1582031971)
     }
 ]
@@ -54,92 +54,54 @@ MOCK_SUMMARIES = [
 class TestSummaryPathParser(TestCase):
     """Test the class of SummaryPathParser."""
 
-    @mock.patch.object(SummaryWatcher, 'list_summary_directories')
-    def test_get_summary_dirs(self, *args):
-        """Test the function of get_summary_dirs."""
-        args[0].return_value = MOCK_SUMMARY_DIRS
-
-        expected_result = [
-            '/path/to/base/relative_path0',
-            '/path/to/base',
-            '/path/to/base/relative_path1'
-        ]
-        base_dir = '/path/to/base'
-        result = SummaryPathParser.get_summary_dirs(base_dir)
-        self.assertListEqual(expected_result, result)
-
-        args[0].return_value = []
-        result = SummaryPathParser.get_summary_dirs(base_dir)
-        self.assertListEqual([], result)
-
     @mock.patch.object(SummaryWatcher, 'list_summaries')
-    def test_get_latest_lineage_summary(self, *args):
-        """Test the function of get_latest_lineage_summary."""
+    def test_get_lineage_summaries(self, *args):
+        """Test the function of get_lineage_summaries."""
         args[0].return_value = MOCK_SUMMARIES
+        exp_result = ['file0.summary.1_lineage', 'file1.summary.2_lineage']
         summary_dir = '/path/to/summary_dir'
-        result = SummaryPathParser.get_latest_lineage_summary(summary_dir)
-        self.assertEqual('/path/to/summary_dir/file1_lineage', result)
+        result = SummaryPathParser.get_lineage_summaries(summary_dir)
+        self.assertEqual(exp_result, result)
 
         args[0].return_value = [
             {
-                'file_name': 'file0',
+                'file_name': 'file0.summary.1',
                 'create_time': datetime.fromtimestamp(1582031970)
             }
         ]
-        result = SummaryPathParser.get_latest_lineage_summary(summary_dir)
-        self.assertEqual(None, result)
+        result = SummaryPathParser.get_lineage_summaries(summary_dir)
+        self.assertEqual([], result)
 
         args[0].return_value = [
             {
-                'file_name': 'file0_lineage',
+                'file_name': 'file0.summary.1_lineage',
                 'create_time': datetime.fromtimestamp(1582031970)
             }
         ]
-        result = SummaryPathParser.get_latest_lineage_summary(summary_dir)
-        self.assertEqual(None, result)
+        result = SummaryPathParser.get_lineage_summaries(summary_dir)
+        self.assertEqual(['file0.summary.1_lineage'], result)
 
         args[0].return_value = [
             {
-                'file_name': 'file0_lineage',
+                'file_name': 'file0.summary.3_lineage',
                 'create_time': datetime.fromtimestamp(1582031970)
             },
             {
-                'file_name': 'file0_lineage_lineage',
+                'file_name': 'file0.summary.2_lineage_lineage',
                 'create_time': datetime.fromtimestamp(1582031970)
             },
             {
-                'file_name': 'file1_lineage',
+                'file_name': 'file1.summary.1_lineage',
                 'create_time': datetime.fromtimestamp(1582031971)
             },
             {
-                'file_name': 'file1_lineage_lineage',
+                'file_name': 'file1.summary.7_lineage_lineage',
                 'create_time': datetime.fromtimestamp(1582031971)
             }
         ]
-        result = SummaryPathParser.get_latest_lineage_summary(summary_dir)
-        self.assertEqual('/path/to/summary_dir/file1_lineage_lineage', result)
-
-    @mock.patch.object(SummaryWatcher, 'list_summaries')
-    @mock.patch.object(SummaryWatcher, 'list_summary_directories')
-    def test_get_latest_lineage_summaries(self, *args):
-        """Test the function of get_latest_lineage_summaries."""
-        args[0].return_value = MOCK_SUMMARY_DIRS
-        args[1].return_value = MOCK_SUMMARIES
-
-        expected_result = [
-            '/path/to/base/relative_path0/file1_lineage',
-            '/path/to/base/file1_lineage',
-            '/path/to/base/relative_path1/file1_lineage'
-        ]
-        base_dir = '/path/to/base'
-        result = SummaryPathParser.get_latest_lineage_summaries(base_dir)
-        self.assertListEqual(expected_result, result)
-
-        args[1].return_value = [
-            {
-                'file_name': 'file0_lineage',
-                'create_time': datetime.fromtimestamp(1582031970)
-            }
-        ]
-        result = SummaryPathParser.get_latest_lineage_summaries(base_dir)
-        self.assertListEqual([], result)
+        exp_result = ['file1.summary.1_lineage',
+                      'file0.summary.2_lineage_lineage',
+                      'file0.summary.3_lineage',
+                      'file1.summary.7_lineage_lineage']
+        result = SummaryPathParser.get_lineage_summaries(summary_dir, is_sorted=True)
+        self.assertEqual(exp_result, result)

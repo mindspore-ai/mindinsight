@@ -96,11 +96,8 @@ def general_get_summary_lineage(data_manager=None, summary_dir=None, keys=None):
 
     if data_manager is None:
         normalize_summary_dir(summary_dir)
-
-    super_lineage_obj = None
-    if os.path.isabs(summary_dir):
         super_lineage_obj = LineageParser(summary_dir).super_lineage_obj
-    elif data_manager is not None:
+    else:
         validate_train_id(summary_dir)
         super_lineage_obj = LineageOrganizer(data_manager=data_manager).get_super_lineage_obj(summary_dir)
 

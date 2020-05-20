@@ -204,11 +204,9 @@ class LineageSummaryAnalyzer(SummaryAnalyzer):
         try:
             lineage_info = analyzer.get_latest_info()
         except (MindInsightException, IOError, DecodeError) as err:
-            log.error("Failed to get lineage information.")
             log.exception(err)
             raise LineageSummaryAnalyzeException()
         except Exception as err:
-            log.error("Failed to get lineage information.")
             log.exception(err)
             raise LineageSummaryAnalyzeException()
 

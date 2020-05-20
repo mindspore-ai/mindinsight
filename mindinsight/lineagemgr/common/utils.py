@@ -14,7 +14,9 @@
 # ============================================================================
 """Lineage utils."""
 from functools import wraps
+import re
 
+from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
     LineageGetModelFileError, LineageLogError, LineageParamValueError, LineageDirNotExistError, \
@@ -68,3 +70,9 @@ def normalize_summary_dir(summary_dir):
         log.exception(error)
         raise LineageParamSummaryPathError(str(error.message))
     return summary_dir
+
+
+def get_timestamp(filename):
+    """Get timestamp from filename."""
+    timestamp = int(re.search(SummaryWatcher().SUMMARY_FILENAME_REGEX, filename)[1])
+    return timestamp

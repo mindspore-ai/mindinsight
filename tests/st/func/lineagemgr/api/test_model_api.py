@@ -111,26 +111,26 @@ LINEAGE_FILTRATION_RUN1 = {
 LINEAGE_FILTRATION_RUN2 = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run2'),
     'model_lineage': {
-        'loss_function': None,
+        'loss_function': "SoftmaxCrossEntropyWithLogits",
         'train_dataset_path': None,
-        'train_dataset_count': None,
+        'train_dataset_count': 1024,
         'test_dataset_path': None,
         'test_dataset_count': 10240,
         'user_defined': {},
-        'network': None,
-        'optimizer': None,
-        'learning_rate': None,
-        'epoch': None,
-        'batch_size': None,
-        'device_num': None,
-        'loss': None,
-        'model_size': None,
+        'network': "ResNet",
+        'optimizer': "Momentum",
+        'learning_rate': 0.11999999731779099,
+        'epoch': 10,
+        'batch_size': 32,
+        'device_num': 2,
+        'loss': 0.029999999329447746,
+        'model_size': 10,
         'metric': {
             'accuracy': 2.7800000000000002
         },
         'dataset_mark': 3
     },
-    'dataset_graph': {}
+    'dataset_graph': DATASET_GRAPH
 }
 
 
@@ -460,9 +460,10 @@ class TestModelApi(TestCase):
             'customized': event_data.CUSTOMIZED__0,
             'object': [
                 LINEAGE_FILTRATION_EXCEPT_RUN,
-                LINEAGE_FILTRATION_RUN1
+                LINEAGE_FILTRATION_RUN1,
+                LINEAGE_FILTRATION_RUN2
             ],
-            'count': 2
+            'count': 3
         }
         partial_res1 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition1)
         expect_objects = expect_result.get('object')
@@ -746,7 +747,7 @@ class TestModelApi(TestCase):
         expect_result = {
             'customized': {},
             'object': [],
-            'count': 1
+            'count': 2
         }
         partial_res2 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition2)
         assert expect_result == partial_res2

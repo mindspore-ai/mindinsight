@@ -72,7 +72,7 @@ class _BasicTrainJob:
         self._update_time = update_time
 
     @property
-    def summary_dir(self):
+    def abs_summary_dir(self):
         """Get summary directory path."""
         return self._abs_summary_dir
 
@@ -131,9 +131,9 @@ class CachedTrainJob:
         return self._last_access_time
 
     @property
-    def summary_dir(self):
+    def abs_summary_dir(self):
         """Get summary directory path."""
-        return self._basic_info.summary_dir
+        return self._basic_info.abs_summary_dir
 
     @property
     def summary_base_dir(self):
@@ -144,12 +144,33 @@ class CachedTrainJob:
         """Set value to cache."""
         self._content[key] = value
 
-    def get(self, key):
-        """Get value from cache."""
+    def delete(self, key):
+        """Delete key in cache."""
+        if key in self._content:
+            self._content.pop(key)
+
+    def get(self, key, raise_exception=True):
+        """
+        Get value from cache.
+
+        Args:
+            key (str): Key of content.
+            raise_exception (bool): If the key does not exist and
+                raise_exception is True, it will raise an Exception.
+
+        Returns:
+            Union[Object, None], Return value if key in content,
+                return False else if raise_exception is False.
+        Raises:
+            ParamValueError, if the key does not exist and raise_exception is True.
+
+        """
         try:
             return self._content[key]
         except KeyError:
-            raise ParamValueError("Invalid cache key({}).".format(key))
+            if raise_exception:
+                raise ParamValueError("Invalid cache key({}).".format(key))
+            return None
 
     @property
     def basic_info(self):
@@ -163,9 +184,7 @@ class CachedTrainJob:
 
     def lock_key(self, key):
         """Threading lock with given key."""
-        if key not in self._key_locks:
-            self._key_locks[key] = threading.Lock()
-        return self._key_locks[key]
+        return self._key_locks.setdefault(key, threading.Lock())
 
 
 class TrainJob:

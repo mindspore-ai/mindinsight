@@ -32,8 +32,7 @@ from mindinsight.lineagemgr import get_summary_lineage
 from mindinsight.lineagemgr.collection.model.model_lineage import TrainLineage, EvalLineage, \
     AnalyzeObject
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
-    LineageFileNotFoundError
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError
 from mindinsight.utils.exceptions import MindInsightException
 from mindspore.application.model_zoo.resnet import ResNet
 from mindspore.common.tensor import Tensor
@@ -343,5 +342,3 @@ class TestModelLineage(TestCase):
         full_file_name = summary_record.full_file_name
         assert full_file_name.endswith('_lineage')
         assert os.path.isfile(full_file_name)
-        with self.assertRaisesRegex(LineageFileNotFoundError, 'no summary log file'):
-            get_summary_lineage(summary_dir)

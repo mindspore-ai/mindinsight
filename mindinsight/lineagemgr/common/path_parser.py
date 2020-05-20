@@ -13,9 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """This file provides path resolution."""
-import os
-
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
+from mindinsight.lineagemgr.common.log import logger
+from mindinsight.lineagemgr.common.utils import get_timestamp
+from mindinsight.utils.exceptions import MindInsightException
 
 
 class SummaryPathParser:
@@ -29,121 +30,36 @@ class SummaryPathParser:
     _LINEAGE_SUMMARY_SUFFIX_LEN = len(LINEAGE_SUMMARY_SUFFIX)
 
     @staticmethod
-    def get_summary_dirs(summary_base_dir):
+    def get_lineage_summaries(summary_dir, is_sorted=False, reverse=True):
         """
-        Get summary dirs according to summary base dir.
-
-        Args:
-            summary_base_dir (str): Summary base dir.
-
-        Returns:
-            list[str], all summary dirs in summary base dir. The summary dir is
-            absolute path.
-        """
-        summary_watcher = SummaryWatcher()
-        relative_dirs = summary_watcher.list_summary_directories(
-            summary_base_dir=summary_base_dir
-        )
-        summary_dirs = list(
-            map(
-                lambda item: os.path.realpath(
-                    os.path.join(summary_base_dir, item.get('relative_path'))
-                ),
-                relative_dirs
-            )
-        )
-        return summary_dirs
-
-    @staticmethod
-    def get_latest_lineage_summary(summary_dir):
-        """
-        Get latest lineage summary log path according to summary dir.
+        Get lineage summaries according to summary dir.
 
         Args:
             summary_dir (str): Summary dir.
+            is_sorted (bool): If it is True, files will be sorted.
+            reverse (bool): If it is True, sort by timestamp increments and filename decrement.
 
         Returns:
-            Union[str, None], if the lineage summary log exist, return the path,
-            else return None. The lineage summary log path is absolute path.
-        """
-        summary_watcher = SummaryWatcher()
-        summaries = summary_watcher.list_summaries(summary_base_dir=summary_dir)
-        latest_file_name = SummaryPathParser._get_latest_lineage_file(summaries)
-        return os.path.join(summary_dir, latest_file_name) \
-            if latest_file_name is not None else None
-
-    @staticmethod
-    def get_latest_lineage_summaries(summary_base_dir):
-        """
-        Get all latest lineage summary logs in summary base dir.
-
-        Args:
-            summary_base_dir (str): Summary base dir.
-
-        Returns:
-            list[str], all latest lineage summary logs in summary base dir. The
-            lineage summary log is absolute path.
-        """
-        summary_watcher = SummaryWatcher()
-        relative_dirs = summary_watcher.list_summary_directories(
-            summary_base_dir=summary_base_dir
-        )
-        latest_summaries = []
-        for item in relative_dirs:
-            relative_dir = item.get('relative_path')
-            summaries = summary_watcher.list_summaries(
-                summary_base_dir=summary_base_dir,
-                relative_path=relative_dir
-            )
-            latest_file_name = SummaryPathParser._get_latest_lineage_file(
-                summaries
-            )
-            if latest_file_name is None:
-                continue
-            latest_file = os.path.realpath(
-                os.path.join(
-                    summary_base_dir,
-                    relative_dir,
-                    latest_file_name
-                )
-            )
-            latest_summaries.append(latest_file)
-        return latest_summaries
-
-    @staticmethod
-    def _get_latest_lineage_file(summaries):
-        """
-        Get latest lineage summary file.
-
-        If there is a file with the suffix `LINEAGE_SUMMARY_SUFFIX`, check
-        whether there is a file with the same name that does not include the
-        suffix `LINEAGE_SUMMARY_SUFFIX`. When both exist, the file is considered
-        to be a lineage summary log.
-
-        Args:
-            summaries (list[dict]): All summary logs info in summary dir.
-
-        Returns:
-            str, the latest lineage summary file name.
+            list, if the lineage summary log exist, return the file names, else return [].
         """
         try:
-            latest_summary = max(
-                summaries,
-                key=lambda summary: summary.get('create_time')
-            )
-        except ValueError:
-            return None
-        max_create_time = latest_summary.get('create_time')
-        summary_file_names = []
-        for summary in summaries:
-            if summary.get('create_time') == max_create_time:
-                summary_file_names.append(summary.get('file_name'))
+            summary_watcher = SummaryWatcher()
+            summaries = summary_watcher.list_summaries(summary_base_dir=summary_dir)
+        except MindInsightException as err:
+            logger.warning(str(err))
+            return []
+        summary_files = [summary.get('file_name') for summary in summaries]
+        lineage_files_name = list(filter(
+            lambda filename: (filename.endswith(SummaryPathParser.LINEAGE_SUMMARY_SUFFIX)), summary_files))
+        if is_sorted:
+            lineage_files_name = SummaryPathParser._sorted_summary_files(lineage_files_name, reverse)
 
-        latest_lineage_name = None
-        for name in summary_file_names:
-            if not name.endswith(SummaryPathParser.LINEAGE_SUMMARY_SUFFIX):
-                continue
-            ms_name = name[:-SummaryPathParser._LINEAGE_SUMMARY_SUFFIX_LEN]
-            if ms_name in summary_file_names:
-                latest_lineage_name = name
-        return latest_lineage_name
+        return lineage_files_name
+
+    @staticmethod
+    def _sorted_summary_files(summary_files, reverse):
+        """Sort by timestamp increments and filename decrement."""
+        sorted_files = sorted(summary_files,
+                              key=lambda filename: (-get_timestamp(filename), filename),
+                              reverse=reverse)
+        return sorted_files
