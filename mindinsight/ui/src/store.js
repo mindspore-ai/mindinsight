@@ -30,6 +30,8 @@ export default new Vuex.Store({
     timeReloadValue: localStorage.timeReloadValue
       ? localStorage.timeReloadValue
       : 3,
+    // multiSelevtGroup component count
+    multiSelectedGroupCount: 0,
   },
   mutations: {
     // set cancelTokenArr
@@ -62,6 +64,9 @@ export default new Vuex.Store({
     },
     setTimeReloadValue: (state, val) => {
       state.timeReloadValue = val;
+    },
+    multiSelectedGroupComponentNum(state) {
+      state.multiSelectedGroupCount++;
     },
   },
   actions: {},

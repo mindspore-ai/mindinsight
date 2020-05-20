@@ -17,7 +17,7 @@ limitations under the License.
   <div class="cl-checklist-container">
     <!-- Select tag -->
     <div class="select-content">
-      <div class="title mr24">{{$t("components.tagSelectTitle")}}</div>
+      <div class="title mr24">{{componentsLabel.title || $t("components.tagSelectTitle")}}</div>
       <!-- Select all -->
       <div class="select-all mr24"
            @click="listSelectAll">
@@ -30,16 +30,17 @@ limitations under the License.
                 v-model="searchInput"
                 @input="listFilter"
                 v-if="listFullScreen"
-                :placeholder="$t('components.tagFilterPlaceHolder')"></el-input>
+                :placeholder="componentsLabel.placeholder || $t('components.tagFilterPlaceHolder')"></el-input>
       <!-- Tag list -->
       <div class="select-item-content"
            v-if="!listFullScreen"
-           ref="selectItemContent">
+           :ref="itemId">
         <div class="select-item"
              v-for="(item, itemIndex) in checkListArr"
              :key="itemIndex"
              @click="listItemClick(item)"
-             v-show="item.show">
+             v-show="item.show"
+             :class="(isLimit && selectedNumber >= limitNum && !item.checked)?'item-disable':'item-able'">
           <span class="multiCheckBox-border multi-check-border"
                 :class="item.checked ? 'checkbox-checked':'checkbox-unchecked'"></span>
           <span class="label-item">
@@ -68,7 +69,8 @@ limitations under the License.
            v-for="(item, itemIndex) in checkListArr"
            :key="itemIndex"
            @click="listItemClick(item)"
-           v-show="item.show">
+           v-show="item.show"
+           :class="(isLimit && selectedNumber >= limitNum && !item.checked)?'item-disable':'item-able'">
         <span class="multiCheckBox-border multi-check-border"
               :class="item.checked ? 'checkbox-checked' : 'checkbox-unchecked'"></span>
         <span class="label-item">
@@ -88,6 +90,23 @@ limitations under the License.
 export default {
   props: {
     checkListArr: Array,
+    isLimit: {
+      type: Boolean,
+      default: false,
+    },
+    limitNum: {
+      type: Number,
+      default: 0,
+    },
+    componentsLabel: {
+      type: Object,
+      default() {
+        return {
+          title: '',
+          placeholder: '',
+        };
+      },
+    },
   },
   data() {
     return {
@@ -99,6 +118,8 @@ export default {
       multiSelectedItemNames: {}, // Dictionary for storing the name of the selected tags.
       operateSelectAll: true, // Indicates whether to select all tags.
       perSelectItemMarginBottom: 1, // Outer margin of the bottom of each selection box.
+      selectedNumber: 0, // Number of Selected items
+      itemId: '', // component Id
       searching: false,
     };
   },
@@ -112,6 +133,10 @@ export default {
      * Initialize
      */
     init() {
+      this.itemId =
+      `${new Date().getTime()}` +
+      `${this.$store.state.multiSelectedGroupCount}`;
+      this.$store.commit('multiSelectedGroupComponentNum');
       this.$nextTick(() => {
         this.resizeCallback();
       });
@@ -122,7 +147,7 @@ export default {
      */
     resizeCallback() {
       // Calculating the display of the Expand Folding Button
-      const selectItemContent = this.$refs.selectItemContent;
+      const selectItemContent = this.$refs[this.itemId];
       if (selectItemContent) {
         this.overRowFlag =
           selectItemContent.clientHeight <
@@ -137,15 +162,31 @@ export default {
       this.multiSelectedItemNames = {};
       // Setting the status of list items
       if (this.operateSelectAll) {
-        this.checkListArr.forEach((listItem) => {
-          if (listItem.show) {
-            listItem.checked = true;
-            this.multiSelectedItemNames[listItem.label] = true;
+        if (this.isLimit) {
+          const loopCount = this.checkListArr.length;
+          for (let i = 0; i < loopCount; i++) {
+            if (this.selectedNumber >= this.limitNum) {
+              break;
+            }
+            const listItem = this.checkListArr[i];
+            if (listItem.show) {
+              listItem.checked = true;
+              this.multiSelectedItemNames[listItem.label] = true;
+              this.selectedNumber++;
+            }
           }
-        });
+        } else {
+          this.checkListArr.forEach((listItem) => {
+            if (listItem.show) {
+              listItem.checked = true;
+              this.multiSelectedItemNames[listItem.label] = true;
+            }
+          });
+        }
       } else {
         this.checkListArr.forEach((listItem) => {
-          if (listItem.show) {
+          if (listItem.show && listItem.checked) {
+            this.selectedNumber--;
             listItem.checked = false;
           }
         });
@@ -188,6 +229,9 @@ export default {
           }
         });
         // Update the selected status of the Select All button
+        if (this.isLimit && !itemSelectAll) {
+          itemSelectAll = this.selectedNumber >= this.limitNum;
+        }
         this.operateSelectAll = itemSelectAll;
         this.$emit('selectedChange', this.multiSelectedItemNames);
       }, 200);
@@ -197,16 +241,23 @@ export default {
      * @param {Object} listItem Current item object
      */
     listItemClick(listItem) {
-      if (!listItem) {
+      if (
+        !listItem ||
+        (this.isLimit &&
+          this.selectedNumber >= this.limitNum &&
+          !listItem.checked)
+      ) {
         return;
       }
       listItem.checked = !listItem.checked;
       // Refreshes the selected status of the current label option
       if (listItem.checked) {
         this.multiSelectedItemNames[listItem.label] = true;
+        this.selectedNumber++;
       } else {
         if (this.multiSelectedItemNames[listItem.label]) {
           delete this.multiSelectedItemNames[listItem.label];
+          this.selectedNumber--;
         }
       }
       // Update the selected status of the Select All button
@@ -217,6 +268,9 @@ export default {
           return true;
         }
       });
+      if (this.isLimit && !itemSelectAll) {
+        itemSelectAll = this.selectedNumber >= this.limitNum;
+      }
       this.operateSelectAll = itemSelectAll;
       // Return a dictionary containing selected items.
       this.$emit('selectedChange', this.multiSelectedItemNames);
@@ -248,18 +302,43 @@ export default {
       }
       this.multiSelectedItemNames = {};
       let itemSelectAll = true;
-      this.checkListArr.forEach((listItem) => {
-        if (reg.test(listItem.label)) {
-          listItem.show = true;
-          if (listItem.checked) {
-            this.multiSelectedItemNames[listItem.label] = true;
+      if (this.isLimit) {
+        this.selectedNumber = 0;
+        const loopCount = this.checkListArr.length;
+        for (let i = 0; i < loopCount; i++) {
+          const listItem = this.checkListArr[i];
+          if (reg.test(listItem.label)) {
+            listItem.show = true;
+            if (this.selectedNumber >= this.limitNum) {
+              listItem.checked = false;
+              itemSelectAll = false;
+            } else if (listItem.checked) {
+              this.multiSelectedItemNames[listItem.label] = true;
+              this.selectedNumber++;
+            } else {
+              itemSelectAll = false;
+            }
           } else {
-            itemSelectAll = false;
+            listItem.show = false;
           }
-        } else {
-          listItem.show = false;
         }
-      });
+        if (!itemSelectAll && this.selectedNumber >= this.limitNum) {
+          itemSelectAll = true;
+        }
+      } else {
+        this.checkListArr.forEach((listItem) => {
+          if (reg.test(listItem.label)) {
+            listItem.show = true;
+            if (listItem.checked) {
+              this.multiSelectedItemNames[listItem.label] = true;
+            } else {
+              itemSelectAll = false;
+            }
+          } else {
+            listItem.show = false;
+          }
+        });
+      }
       this.operateSelectAll = itemSelectAll;
       this.resizeCallback();
       return this.multiSelectedItemNames;
@@ -326,7 +405,6 @@ export default {
     margin-right: 20px;
     flex-shrink: 0;
     margin-bottom: 1px;
-    cursor: pointer;
     .label-item {
       width: 100px;
       display: block;
@@ -336,12 +414,18 @@ export default {
       text-align: left;
     }
   }
+  .item-disable {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .item-able {
+    cursor: pointer;
+  }
   .multiCheckBox-border {
     width: 16px;
     height: 16px;
     display: block;
     margin-right: 20px;
-    cursor: pointer;
     float: left;
   }
   .checkbox-checked {

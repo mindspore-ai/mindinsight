@@ -91,8 +91,13 @@ limitations under the License.
       <el-slider v-model="smoothValue"
                  :step="0.01"
                  :max="0.99"
-                 @input="updataInputValue"
-                 show-input></el-slider>
+                 @input="updataInputValue"></el-slider>
+
+                 <el-input v-model="smoothValueNumber"
+                   class="w60"
+                   @input="smoothValueChange"
+                   @blur="smoothValueBlur"
+                   ></el-input>
     </div>
     <!-- Content display -->
     <div class="cl-eval-show-data-content"
@@ -159,6 +164,7 @@ export default {
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       smoothValue: 0, // Initial smoothness of the slider
+      smoothValueNumber: 0,
       smoothSliderValueTimer: null, // Smoothness slider timer
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
       backendString: 'scalarBackend', // Background layer suffix
@@ -452,17 +458,41 @@ export default {
      */
 
     updataInputValue() {
+      this.smoothValueNumber = Number(val);
       if (this.smoothSliderValueTimer) {
         clearTimeout(this.smoothSliderValueTimer);
         this.smoothSliderValueTimer = null;
       }
-
       if (Object.keys(this.multiSelectedTagNames).length > 0) {
         this.smoothSliderValueTimer = setTimeout(() => {
           // Change the smoothness
           this.setCharLineSmooth();
         }, 500);
       }
+    },
+
+    smoothValueChange(val) {
+      if (!isNaN(val)) {
+        if (Number(val) === 0) {
+          this.smoothValue = 0;
+        }
+        if (Number(val) < 0) {
+          this.smoothValue = 0;
+          this.smoothValueNumber = 0;
+        }
+        if (Number(val) > 0) {
+          if (Number(val) > 0.99) {
+            this.smoothValue = 0.99;
+            this.smoothValueNumber = 0.99;
+          } else {
+            this.smoothValue = Number(val);
+          }
+        }
+      }
+    },
+
+    smoothValueBlur() {
+      this.smoothValueNumber = this.smoothValue;
     },
 
     /**

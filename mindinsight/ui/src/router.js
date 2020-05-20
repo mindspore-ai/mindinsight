@@ -66,5 +66,9 @@ export default new Router({
       path: '/data-traceback',
       component: () => import('./views/train-manage/data-traceback.vue'),
     },
+    {
+      path: '/compare-plate',
+      component: () => import('./views/train-manage/compare-plate.vue'),
+    },
   ],
 });

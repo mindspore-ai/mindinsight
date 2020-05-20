@@ -28,7 +28,8 @@
     "createTime": "创建时间",
     "updateTime": "更新时间",
     "operation": "操作",
-    "viewDashboard": "查看训练看板",
+    "viewDashboard": "训练看板",
+    "viewProfiler": "性能分析",
     "modelTraceback": "模型溯源",
     "dataTraceback": "数据溯源"
   },
@@ -91,7 +92,8 @@
     "compareCancel": "取消合成",
     "open": "展开",
     "close": "折叠",
-    "invalidData": "存在无效数据"
+    "invalidData": "存在无效数据",
+    "restore":"还原"
   },
 
   "images": {
@@ -159,6 +161,8 @@
     "finish": "完成"
   },
   "components": {
+    "summaryTitle":"run选择",
+    "tagTitle":"tag选择",
     "tagSelectTitle": "标签选择",
     "selectAll": "全选",
     "tagFilterPlaceHolder": "请输入需要的标签(支持正则表达式)",
@@ -181,7 +185,7 @@
     "5054500D": "图片数据不存在，请刷新",
     "5054500E": "标量数据不存在，请刷新",
     "5054500F": "参数分布图数据不存在，请刷新",
-
+    "50545010": "请求的数据不在缓存中，请刷新",
     "50542082": "模型名称缺失",
     "50542085": "模型名称不合法",
     "50542215": "查询参数错误",

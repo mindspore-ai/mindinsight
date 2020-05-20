@@ -94,6 +94,43 @@ export default {
     });
   },
 
+  // query trainJob data
+  getTrainJobs(isIgnoreError) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/datavisual/train-jobs',
+      headers: {
+        ignoreError: isIgnoreError,
+      },
+    });
+  },
+
+  // set caches
+  trainJobsCaches(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/datavisual/train-job-caches',
+      data: params,
+    });
+  },
+
+  // query metedata
+  getSummarySample(params) {
+    const trainIdsStr=params.train_id;
+    const trainIdsArr=trainIdsStr.split('&');
+    let requestStr='';
+    trainIdsArr.forEach((item)=>{
+      if (item) {
+        requestStr+=`train_id=${encodeURIComponent(item)}&`;
+      }
+    });
+    requestStr+=`tag=${params.tag}`;
+    return axios({
+      method: 'get',
+      url: `v1/mindinsight/datavisual/scalars?${requestStr}`,
+    });
+  },
+
   // query image meta data
   getImageMetadatas(params) {
     return axios({
