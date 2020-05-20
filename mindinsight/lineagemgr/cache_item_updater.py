@@ -18,7 +18,7 @@ import os
 from mindinsight.datavisual.data_transform.data_manager import BaseCacheItemUpdater, CachedTrainJob
 from mindinsight.lineagemgr.common.log import logger
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageFileNotFoundError
-from mindinsight.lineagemgr.common.validator.validate import validate_train_id
+from mindinsight.lineagemgr.common.validator.validate import validate_train_id, validate_added_info
 from mindinsight.lineagemgr.lineage_parser import LineageParser, LINEAGE
 from mindinsight.utils.exceptions import ParamValueError
 
@@ -26,6 +26,7 @@ from mindinsight.utils.exceptions import ParamValueError
 def update_lineage_object(data_manager, train_id, added_info: dict):
     """Update lineage objects about tag and remark."""
     validate_train_id(train_id)
+    validate_added_info(added_info)
     cache_item = data_manager.get_brief_train_job(train_id)
     lineage_item = cache_item.get(key=LINEAGE, raise_exception=False)
     if lineage_item is None:
