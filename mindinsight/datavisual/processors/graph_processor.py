@@ -40,7 +40,7 @@ class GraphProcessor(BaseProcessor):
         train_job = self._data_manager.get_train_job_by_plugin(train_id, PluginNameEnum.GRAPH.value)
         if train_job is None:
             raise exceptions.TrainJobNotExistError()
-        if not train_job['tags']:
+        if not train_job['tags'] or (tag is not None and tag not in train_job['tags']):
             raise exceptions.GraphNotExistError()
 
         if tag is None:

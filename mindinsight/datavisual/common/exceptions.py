@@ -118,8 +118,8 @@ class PluginNotAvailableError(MindInsightException):
 
 class GraphNotExistError(MindInsightException):
     """Can not found the given graph."""
-    def __init__(self):
-        error_msg = 'Graph is not exist.'
+    def __init__(self, error_detail=None):
+        error_msg = 'Graph is not exist.' if error_detail is None else f'Graph is not exist. Detail: {error_detail}'
         super(GraphNotExistError, self).__init__(DataVisualErrors.GRAPH_NOT_EXIST,
                                                  error_msg,
                                                  http_code=400)
