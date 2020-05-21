@@ -41,7 +41,7 @@ class DataPreProcessParser:
         self._source_file_name = self._get_source_file()
 
     def _get_source_file(self):
-        """get hwts log file name, which was created by ada service"""
+        """get log file name, which was created by ada service"""
 
         return get_file_join_name(self._input_path, _source_file_target)
 
