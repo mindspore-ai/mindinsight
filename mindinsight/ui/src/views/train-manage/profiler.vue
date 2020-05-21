@@ -111,15 +111,15 @@
                              :label="item">
             </el-table-column>
           </el-table>
-          <el-table v-show="statisticType === 1 && opAllTypelList.opDetailCol && opAllTypelList.opDetailCol.length"
-                    :data="opAllTypelList.opDetailList"
+          <el-table v-show="statisticType === 1 && opAllTypeList.opDetailCol && opAllTypeList.opDetailCol.length"
+                    :data="opAllTypeList.opDetailList"
                     stripe
                     width="100%"
                     height="calc(100% - 114px)"
                     @cell-click="showInfoDetail"
-                    @sort-change="(...args)=>{coreDetailSortChange(opAllTypelList, ...args)}"
+                    @sort-change="(...args)=>{coreDetailSortChange(opAllTypeList, ...args)}"
                     tooltip-effect="light">
-            <el-table-column v-for="(item, $index) in opAllTypelList.opDetailCol"
+            <el-table-column v-for="(item, $index) in opAllTypeList.opDetailCol"
                              :property="item"
                              :key="$index"
                              :label="item"
@@ -128,12 +128,12 @@
             </el-table-column>
           </el-table>
           <el-pagination v-show="statisticType === 1"
-                         v-if="opAllTypelList.opDetailList.length"
-                         :current-page="opAllTypelList.opDetailPage.offset + 1"
-                         :page-size="opAllTypelList.opDetailPage.limit"
-                         @current-change="(...args)=>{opDetailPageChange(opAllTypelList, ...args)}"
+                         v-if="opAllTypeList.opDetailList.length"
+                         :current-page="opAllTypeList.opDetailPage.offset + 1"
+                         :page-size="opAllTypeList.opDetailPage.limit"
+                         @current-change="(...args)=>{opDetailPageChange(opAllTypeList, ...args)}"
                          layout="total, prev, pager, next, jumper"
-                         :total="opAllTypelList.pageTotal">
+                         :total="opAllTypeList.pageTotal">
           </el-pagination>
         </div>
         <div class="image-noData"
@@ -274,7 +274,7 @@ export default {
         },
       },
       opAllDetailCol: [],
-      opAllTypelList: {
+      opAllTypeList: {
         opDetailCol: [],
         opDetailList: [],
         pageTotal: 0,
@@ -292,7 +292,10 @@ export default {
       profile_dir: '',
       train_id: '',
       op_filter_condition: {},
-      op_sort_condition: {},
+      op_sort_condition: {
+        name: 'execution_time',
+        type: 'descending',
+      },
       initOver: false,
       objectType: 'object',
     };
@@ -336,10 +339,9 @@ export default {
       this.searchByTypeInput = '';
       this.searchByNameInput = '';
       this.op_filter_condition = {};
-      this.op_sort_condition = {};
       this.opTypeCol = [];
       this.opTypeList = [];
-      this.opAllTypelList = {
+      this.opAllTypeList = {
         opDetailCol: [],
         opDetailList: [],
         pageTotal: 0,
@@ -543,9 +545,9 @@ export default {
             op_name: {partial_match_str_in: [this.searchByNameInput]},
           };
         } else {
-          this.opAllTypelList.op_filter_condition = {};
+          this.opAllTypeList.op_filter_condition = {};
         }
-        this.getCoreDetailList(this.opAllTypelList);
+        this.getCoreDetailList(this.opAllTypeList);
       } else {
         this.op_filter_condition = {};
         if (this.searchByTypeInput) {
@@ -634,8 +636,8 @@ export default {
       });
     },
     coreTableChange() {
-      if (this.statisticType === 1 && !this.opAllTypelList.opDetailCol.length) {
-        this.getCoreDetailList(this.opAllTypelList);
+      if (this.statisticType === 1 && !this.opAllTypeList.opDetailCol.length) {
+        this.getCoreDetailList(this.opAllTypeList);
       }
     },
     cpuChartChange() {
