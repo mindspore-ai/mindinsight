@@ -112,6 +112,11 @@ class LineageObj:
         dataset_graph = kwargs.get('dataset_graph')
         if not any([train_lineage, evaluation_lineage, dataset_graph]):
             raise LineageEventNotExistException()
+
+        # If new train lineage, will clean the lineage saved before.
+        if train_lineage is not None or dataset_graph is not None:
+            self._init_lineage()
+
         self._parse_user_defined_info(user_defined_info_list)
         self._parse_train_lineage(train_lineage)
         self._parse_evaluation_lineage(evaluation_lineage)

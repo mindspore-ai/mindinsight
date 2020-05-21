@@ -497,8 +497,7 @@ def validate_added_info(added_info: dict):
     """
     added_info_keys = ["tag", "remark"]
     if not set(added_info.keys()).issubset(added_info_keys):
-        err_msg = "Keys must be in {}.".format(added_info_keys)
-        log.error(err_msg)
+        err_msg = "Keys of added_info must be in {}.".format(added_info_keys)
         raise LineageParamValueError(err_msg)
 
     for key, value in added_info.items():

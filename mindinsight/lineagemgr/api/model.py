@@ -90,6 +90,9 @@ def general_get_summary_lineage(data_manager=None, summary_dir=None, keys=None):
     default_result = {}
     if data_manager is None and summary_dir is None:
         raise LineageParamTypeError("One of data_manager or summary_dir needs to be specified.")
+    if data_manager is not None and summary_dir is None:
+        raise LineageParamTypeError("If data_manager is specified, the summary_dir needs to be "
+                                    "specified as relative path.")
 
     if keys is not None:
         validate_filter_key(keys)
