@@ -1,0 +1,1106 @@
+<template>
+  <div class="cl-profiler">
+    <div class="cl-card">
+      <span>{{ $t('profiler.currentCard') }}</span>
+      <el-select v-model="currentCard.value"
+                 @change="cardChange"
+                 :placeholder="$t('public.select')">
+        <el-option v-for="item in currentCard.option"
+                   :key="item.value"
+                   :label="item.value + $t('profiler.card')"
+                   :value="item.value">
+        </el-option>
+      </el-select>
+    </div>
+    <el-tabs v-model="apiType"
+             @tab-click="tabChange">
+      <el-tab-pane label="AI CORE"
+                   name="core">
+        <div class="cl-profiler-top"
+             v-if="coreCharts.data.length">
+          <div>
+            <span class="profiler-title">
+              {{$t('profiler.operatorTypeStatistics')}}
+            </span>
+            <el-radio-group class="chart-radio-group"
+                            v-model="coreCharts.type"
+                            @change="coreChartChange"
+                            fill="#00A5A7"
+                            text-color="#FFFFFF"
+                            size="small">
+              <el-radio-button :label="0">
+                {{$t('profiler.pie')}}
+              </el-radio-button>
+              <el-radio-button :label="1">
+                {{ $t('profiler.bar')}}
+              </el-radio-button>
+            </el-radio-group>
+          </div>
+          <div class="cl-profiler-echarts">
+            <div id="core-echarts"></div>
+          </div>
+        </div>
+        <div class="cl-profiler-bottom"
+             v-if="coreCharts.data.length">
+          <span class="profiler-title">
+            {{ $t('profiler.operatorStatistics') }}
+          </span>
+          <div>
+            <el-radio-group v-model="statisticType"
+                            @change="coreTableChange"
+                            fill="#00A5A7"
+                            text-color="#FFFFFF"
+                            size="small">
+              <el-radio-button :label="1">
+                {{$t('profiler.allOperator')}}
+              </el-radio-button>
+              <el-radio-button :label="0">
+                {{$t('profiler.ClassificationOperator')}}
+              </el-radio-button>
+            </el-radio-group>
+            <div class="cl-search-box">
+              <el-input v-model="searchByTypeInput"
+                        v-if="statisticType === 0"
+                        suffix-icon="el-icon-search"
+                        :placeholder="$t('profiler.searchByType')"
+                        @keyup.enter.native="searchOpCoreList()"></el-input>
+              <el-input v-model="searchByNameInput"
+                        v-if="statisticType === 1"
+                        suffix-icon="el-icon-search"
+                        :placeholder="$t('profiler.searchByName')"
+                        @keyup.enter.native="searchOpCoreList()"></el-input>
+            </div>
+          </div>
+          <el-table v-show="statisticType === 0 && opTypeCol && opTypeCol.length"
+                    :data="opTypeList"
+                    @expand-change="expandTypeItem"
+                    stripe
+                    height="calc(100% - 75px)"
+                    width="100%">
+            <el-table-column type="expand">
+              <template slot-scope="props">
+                <div class="expand-table">
+                  <el-table :data="props.row.opDetailList"
+                            stripe
+                            width="100%"
+                            tooltip-effect="light"
+                            @cell-click="showInfoDetail"
+                            @sort-change="(...args)=>{coreDetailSortChange(props.row, ...args)}">
+                    <el-table-column v-for="(ele, key) in props.row.opDetailCol"
+                                     :property="ele"
+                                     :key="key"
+                                     :sortable="ele === 'op_info' ? false : 'custom'"
+                                     show-overflow-tooltip
+                                     :label="ele">
+                    </el-table-column>
+                  </el-table>
+                  <el-pagination :current-page="props.row.opDetailPage.offset + 1"
+                                 :page-size="props.row.opDetailPage.limit"
+                                 @current-change="(...args)=>{opDetailPageChange(props.row, ...args)}"
+                                 layout="total, prev, pager, next, jumper"
+                                 :total="props.row.pageTotal">
+                  </el-pagination>
+                  <div class="clear"></div>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column v-for="(item, $index) in opTypeCol"
+                             :property="item"
+                             :key="$index"
+                             sortable
+                             :label="item">
+            </el-table-column>
+          </el-table>
+          <el-table v-show="statisticType === 1 && opAllTypelList.opDetailCol && opAllTypelList.opDetailCol.length"
+                    :data="opAllTypelList.opDetailList"
+                    stripe
+                    width="100%"
+                    height="calc(100% - 114px)"
+                    @cell-click="showInfoDetail"
+                    @sort-change="(...args)=>{coreDetailSortChange(opAllTypelList, ...args)}"
+                    tooltip-effect="light">
+            <el-table-column v-for="(item, $index) in opAllTypelList.opDetailCol"
+                             :property="item"
+                             :key="$index"
+                             :label="item"
+                             :sortable="item === 'op_info' ? false : 'custom'"
+                             show-overflow-tooltip>
+            </el-table-column>
+          </el-table>
+          <el-pagination v-show="statisticType === 1"
+                         v-if="opAllTypelList.opDetailList.length"
+                         :current-page="opAllTypelList.opDetailPage.offset + 1"
+                         :page-size="opAllTypelList.opDetailPage.limit"
+                         @current-change="(...args)=>{opDetailPageChange(opAllTypelList, ...args)}"
+                         layout="total, prev, pager, next, jumper"
+                         :total="opAllTypelList.pageTotal">
+          </el-pagination>
+        </div>
+        <div class="image-noData"
+             v-if="initOver && coreCharts.data.length === 0">
+          <div>
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+          </div>
+          <p>{{ $t("public.noData") }}</p>
+        </div>
+      </el-tab-pane>
+      <el-tab-pane label="AI CPU"
+                   class="cpu-tab"
+                   name="cpu">
+        <div class="cl-profiler-top"
+             v-if="cpuCharts.data.length">
+          <div>
+            <span class="profiler-title">
+              {{ $t('profiler.operatorTypeStatistics') }}
+            </span>
+          </div>
+          <div class="cl-profiler-echarts">
+            <div class
+                 id="cpu-echarts"></div>
+          </div>
+        </div>
+        <div class="cl-profiler-bottom"
+             v-if="cpuCharts.data.length">
+          <span class="profiler-title">
+            {{ $t('profiler.operatorStatistics') }}
+          </span>
+          <div class="cl-search-box">
+            <el-input v-model="searchByCPUNameInput"
+                      suffix-icon="el-icon-search"
+                      :placeholder="$t('profiler.searchByName')"
+                      @keyup.enter.native="searchOpCpuList()"></el-input>
+          </div>
+          <el-table v-show="opCpuList.opDetailCol && opCpuList.opDetailCol.length"
+                    :data="opCpuList.opDetailList"
+                    stripe
+                    width="100%"
+                    height="calc(100% - 82px)"
+                    tooltip-effect="light"
+                    @sort-change="(...args)=>{cpuDetailSortChange(opCpuList, ...args)}">
+            <el-table-column v-for="(item, $index) in opCpuList.opDetailCol"
+                             :property="item"
+                             :key="$index"
+                             :label="item"
+                             sortable="custom"
+                             show-overflow-tooltip>
+            </el-table-column>
+          </el-table>
+          <el-pagination v-if="opCpuList.opDetailList.length"
+                         :current-page="opCpuList.opDetailPage.offset + 1"
+                         :page-size="opCpuList.opDetailPage.limit"
+                         @current-change="(...args)=>{opCpuPageChange(opCpuList, ...args)}"
+                         layout="total, prev, pager, next, jumper"
+                         :total="opCpuList.pageTotal">
+          </el-pagination>
+        </div>
+        <div class="image-noData"
+             v-if="initOver && cpuCharts.data.length === 0">
+          <div>
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+          </div>
+          <p>{{$t("public.noData")}}</p>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
+    <el-dialog :title="rowName"
+               :visible.sync="detailsDialogVisible"
+               width="50%"
+               :close-on-click-modal="false"
+               class="details-data-list">
+      <div class="details-data-title">{{ detailsDataTitle }}</div>
+      <el-table :data="detailsDataList"
+                row-key="id"
+                lazy
+                tooltip-effect="light"
+                :load="loadDataListChildren"
+                :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
+        <el-table-column width="50" />
+        <el-table-column prop="key"
+                         width="180"
+                         label="Key"> </el-table-column>
+        <el-table-column prop="value"
+                         show-overflow-tooltip
+                         label="Value">
+          <template slot-scope="scope">
+            {{ scope.row.value }}
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import echarts from 'echarts';
+import requestService from '../../services/request-service';
+import CommonProperty from '../../common/common-property';
+
+export default {
+  data() {
+    return {
+      apiType: 'core',
+      currentCard: {value: '', option: []},
+      cpuCharts: {
+        type: 1,
+        id: 'cpu-echarts',
+        chartDom: null,
+        data: [],
+      },
+      coreCharts: {
+        type: 0,
+        id: 'core-echarts',
+        chartDom: null,
+        data: [],
+      },
+      statisticType: 0,
+      searchByTypeInput: '',
+      searchByNameInput: '',
+      searchByCPUNameInput: '',
+      opTypeCol: [],
+      opTypeList: [],
+      opCpuList: {
+        opDetailCol: [],
+        opDetailList: [],
+        pageTotal: 0,
+        opDetailPage: {
+          offset: 0,
+          limit: 20,
+        },
+        op_filter_condition: {},
+        op_sort_condition: {
+          name: 'total_time',
+          type: 'descending',
+        },
+      },
+      opAllDetailCol: [],
+      opAllTypelList: {
+        opDetailCol: [],
+        opDetailList: [],
+        pageTotal: 0,
+        opDetailPage: {
+          offset: 0,
+          limit: 8,
+        },
+        op_filter_condition: {},
+        op_sort_condition: {},
+      },
+      detailsDataTitle: '',
+      rowName: this.$t('dataTraceback.details'),
+      detailsDataList: [],
+      detailsDialogVisible: false,
+      profile_dir: '',
+      train_id: '',
+      op_filter_condition: {},
+      op_sort_condition: {},
+      initOver: false,
+      objectType: 'object',
+    };
+  },
+  destroyed() {
+    // Remove the listener of window size change
+    window.removeEventListener('resize', this.resizeCallback);
+  },
+  methods: {
+    init() {
+      this.getDeviceList();
+    },
+    cardChange() {
+      this.clearCpuData();
+      this.clearCoreData();
+      if (this.apiType === 'core') {
+        this.statisticType = 0;
+        this.getCoreTypeList();
+      } else if (this.apiType === 'cpu') {
+        this.getCpuList(true);
+      }
+    },
+    clearCpuData() {
+      this.searchByCPUNameInput = '';
+      this.opCpuList = {
+        opDetailCol: [],
+        opDetailList: [],
+        pageTotal: 0,
+        opDetailPage: {
+          offset: 0,
+          limit: 20,
+        },
+        op_filter_condition: {},
+        op_sort_condition: {
+          name: 'total_time',
+          type: 'descending',
+        },
+      };
+    },
+    clearCoreData() {
+      this.searchByTypeInput = '';
+      this.searchByNameInput = '';
+      this.op_filter_condition = {};
+      this.op_sort_condition = {};
+      this.opTypeCol = [];
+      this.opTypeList = [];
+      this.opAllTypelList = {
+        opDetailCol: [],
+        opDetailList: [],
+        pageTotal: 0,
+        opDetailPage: {
+          offset: 0,
+          limit: 8,
+        },
+        op_filter_condition: {},
+        op_sort_condition: {},
+      };
+    },
+    getDeviceList() {
+      const params = {
+        profile: this.profile_dir,
+        train_id: this.train_id,
+      };
+      requestService
+          .getProfilerDeviceData(params)
+          .then((res) => {
+            if (res && res.data) {
+              const deviceList = res.data;
+              if (deviceList.length) {
+                deviceList.forEach((k) => {
+                  this.currentCard.option.push({
+                    value: k,
+                  });
+                });
+                this.currentCard.value = this.currentCard.option[0].value;
+              }
+            } else {
+              this.currentCard.option = [];
+              this.currentCard.value = '';
+            }
+            this.getCoreTypeList();
+          })
+          .catch(() => {
+            this.initOver = true;
+          });
+    },
+    getCoreTypeList() {
+      const params = {};
+      params.params = {
+        profile: this.profile_dir,
+        train_id: this.train_id,
+      };
+      params.body = {
+        op_type: 'aicore_type',
+        device_id: this.currentCard.value,
+        filter_condition: this.op_filter_condition,
+        sort_condition: this.op_sort_condition,
+      };
+      requestService
+          .getProfilerOpData(params)
+          .then((res) => {
+            this.initOver = true;
+            this.opTypeList = [];
+            if (res && res.data) {
+              this.opTypeCol = res.data.col_name;
+              if (res.data.object) {
+                res.data.object.forEach((k) => {
+                  const object = {
+                    isExpanded: false,
+                    opDetailList: [],
+                    opDetailCol: [],
+                    opDetailPage: {
+                      offset: 0,
+                      limit: 8,
+                    },
+                    pageTotal: 0,
+                    op_filter_condition: {
+                      op_type: {
+                        in: [k[0]],
+                      },
+                    },
+                    op_sort_condition: {},
+                  };
+                  res.data.col_name.forEach((item, index) => {
+                    object[item] = k[index];
+                  });
+                  this.opTypeList.push(object);
+                });
+                if (
+                  !this.coreCharts.device_id ||
+                this.coreCharts.device_id !== this.currentCard.value
+                ) {
+                  this.coreCharts.device_id = this.currentCard.value;
+                  this.coreCharts.data = [];
+                  res.data.object.forEach((k) => {
+                    if (
+                      this.coreCharts.data &&
+                    this.coreCharts.data.length < 19
+                    ) {
+                      this.coreCharts.data.push({
+                        name: k[0],
+                        value: k[1],
+                        percent: k[3],
+                      });
+                    } else {
+                      if (!this.coreCharts.data[19]) {
+                        this.coreCharts.data[19] = {
+                          name: 'Other',
+                          value: 0,
+                          percent: 0,
+                        };
+                      }
+                      this.coreCharts.data[19].value += k[1];
+                      this.coreCharts.data[19].percent += k[3];
+                    }
+                  });
+                  this.setOption(this.coreCharts);
+                }
+              }
+            }
+          })
+          .catch(() => {
+            this.opTypeList = [];
+            this.initOver = true;
+          });
+    },
+    getCoreDetailList(row) {
+      const params = {};
+      params.params = {
+        profile: this.profile_dir,
+        train_id: this.train_id,
+      };
+      params.body = {
+        op_type: 'aicore_detail',
+        device_id: this.currentCard.value,
+        filter_condition: row.op_filter_condition,
+        sort_condition: row.op_sort_condition,
+        group_condition: row.opDetailPage,
+      };
+      requestService
+          .getProfilerOpData(params)
+          .then((res) => {
+            if (res && res.data) {
+              this.formatterDetailData(row, res.data);
+            }
+          })
+          .catch(() => {});
+    },
+    getCpuList() {
+      const params = {};
+      params.params = {
+        profile: this.profile_dir,
+        train_id: this.train_id,
+      };
+      params.body = {
+        op_type: 'aicpu',
+        device_id: this.currentCard.value,
+        filter_condition: this.opCpuList.op_filter_condition,
+        sort_condition: this.opCpuList.op_sort_condition,
+        group_condition: this.opCpuList.opDetailPage,
+      };
+      requestService
+          .getProfilerOpData(params)
+          .then((res) => {
+            this.initOver = true;
+            if (res && res.data) {
+              if (res.data.object) {
+                if (
+                  !this.cpuCharts.device_id ||
+                this.cpuCharts.device_id !== this.currentCard.value
+                ) {
+                  this.cpuCharts.device_id = this.currentCard.value;
+                  this.cpuCharts.data = [];
+                  res.data.object.forEach((k) => {
+                    this.cpuCharts.data.push({
+                      name: k[0],
+                      op_name: k[1],
+                      value: k[2],
+                    });
+                  });
+                  this.setOption(this.cpuCharts);
+                }
+                if (res.data.object.length > 8) {
+                  this.opCpuList.opDetailPage.limit = 8;
+                  res.data.object.splice(8);
+                }
+                this.formatterDetailData(this.opCpuList, res.data);
+              }
+            }
+          })
+          .catch(() => {
+            this.initOver = true;
+          });
+    },
+    opDetailPageChange(row, pageIndex) {
+      row.opDetailPage.offset = pageIndex - 1;
+      this.getCoreDetailList(row);
+    },
+    opCpuPageChange(row, pageIndex) {
+      row.opDetailPage.offset = pageIndex - 1;
+      this.getCpuList();
+    },
+    searchOpCoreList() {
+      if (this.statisticType) {
+        this.opAllTypeList.op_filter_condition = {};
+        if (this.searchByNameInput) {
+          this.opAllTypeList.op_filter_condition = {
+            op_name: {partial_match_str_in: [this.searchByNameInput]},
+          };
+        } else {
+          this.opAllTypelList.op_filter_condition = {};
+        }
+        this.getCoreDetailList(this.opAllTypelList);
+      } else {
+        this.op_filter_condition = {};
+        if (this.searchByTypeInput) {
+          this.op_filter_condition = {
+            op_type: {partial_match_str_in: [this.searchByTypeInput]},
+          };
+        } else {
+          this.op_filter_condition = {};
+        }
+        this.getCoreTypeList();
+      }
+    },
+    searchOpCpuList() {
+      this.opCpuList.op_filter_condition = {};
+      if (this.searchByCPUNameInput) {
+        this.opCpuList.op_filter_condition = {
+          op_name: {partial_match_str_in: [this.searchByCPUNameInput]},
+        };
+      } else {
+        this.opCpuList.op_filter_condition = {};
+      }
+      this.getCpuList();
+    },
+    coreDetailSortChange(row, column) {
+      row.op_sort_condition = {
+        name: column.prop,
+        type: column.order,
+      };
+      row.opDetailPage.offset = 0;
+      this.getCoreDetailList(row);
+    },
+    cpuDetailSortChange(row, column) {
+      row.op_sort_condition = {
+        name: column.prop,
+        type: column.order,
+      };
+      row.opDetailPage.offset = 0;
+      this.getCpuList();
+    },
+    formatterDetailData(row, detailsDataList) {
+      row.opDetailList = [];
+      row.opDetailCol = detailsDataList.col_name;
+      row.pageTotal = detailsDataList.size;
+      if (detailsDataList.object) {
+        detailsDataList.object.forEach((k) => {
+          const data = {};
+          detailsDataList.col_name.forEach((item, index) => {
+            if (item === 'op_info') {
+              data[item] = JSON.stringify(k[index]);
+            } else {
+              data[item] = k[index];
+            }
+          });
+          row.opDetailList.push(data);
+        });
+      }
+    },
+    expandTypeItem(row, data, data2) {
+      row.isExpanded = !row.isExpanded;
+      if (row.isExpanded) {
+        row.opDetailList = [];
+        row.opDetailCol = [];
+        row.opDetailPage.offset = 0;
+        row.pageTotal = 0;
+        this.getCoreDetailList(row);
+      }
+    },
+    tabChange() {
+      if (
+        this.apiType === 'cpu' &&
+        !this.cpuCharts.device_id !== this.currentCard.value
+      ) {
+        this.initOver = false;
+        this.clearCpuData();
+        this.getCpuList();
+      } else if (
+        this.apiType === 'core' &&
+        !this.coreCharts.device_id !== this.currentCard.value
+      ) {
+        this.initOver = false;
+        this.clearCoreData();
+        this.getCoreTypeList();
+      }
+      this.$nextTick(() => {
+        this.resizeCallback();
+      });
+    },
+    coreTableChange() {
+      if (this.statisticType === 1 && !this.opAllTypelList.opDetailCol.length) {
+        this.getCoreDetailList(this.opAllTypelList);
+      }
+    },
+    cpuChartChange() {
+      this.setOption(this.cpuCharts);
+    },
+    coreChartChange() {
+      this.setOption(this.coreCharts);
+    },
+    setOption(chart) {
+      const option = {};
+      if (chart.type === 0) {
+        option.legend = {
+          data: [],
+          orient: 'vertical',
+          icon: 'circle',
+          formatter: (params) => {
+            let legendStr = '';
+            for (let i = 0; i < chart.data.length; i++) {
+              if (chart.data[i].name === params) {
+                const name =
+                  chart.data[i].name.length > 10
+                    ? `${chart.data[i].name.slice(0, 10)}...`
+                    : chart.data[i].name;
+                legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[
+                    i
+                ].value.toFixed(3)}}\n{c|${chart.data[i].percent.toFixed(2)}%}`;
+              }
+            }
+            return legendStr;
+          },
+          itemWidth: 18,
+          itemHeight: 18,
+          padding: [0, 50, 0, 0],
+          top: '5%',
+          left: '37%',
+          textStyle: {
+            padding: [15, 0, 0, 0],
+            rich: {
+              a: {
+                width: 24,
+                align: 'center',
+                padding: [0, 10, 3, -26],
+                color: '#FFF',
+              },
+              b: {
+                padding: [0, 0, 3, 0],
+              },
+              c: {
+                width: '100%',
+                padding: [0, 0, 5, 10],
+                color: '#9EA4B3',
+                fontSize: 12,
+              },
+            },
+          },
+        };
+        option.tooltip = {
+          trigger: 'item',
+          formatter: (params) => {
+            return `${params.marker} ${params.data.name} ${params.percent}%`;
+          },
+        };
+        option.series = [
+          {
+            type: 'pie',
+            center: ['20%', '60%'],
+            data: chart.data,
+            radius: '60%',
+            lable: {
+              position: 'outer',
+              alignTo: 'none',
+              bleedMargin: 5,
+            },
+            itemStyle: {
+              normal: {
+                color: function(params) {
+                  return CommonProperty.pieColorArr[params.dataIndex];
+                },
+              },
+            },
+          },
+        ];
+        chart.data.forEach((item) => {
+          option.legend.data.push(item.name);
+        });
+      } else if (chart.type === 1) {
+        option.color = ['#6C92FA'];
+        option.tooltip = {
+          trigger: 'axis',
+        };
+        option.series = [
+          {
+            type: 'bar',
+            barWidth: 30,
+            data: [],
+          },
+        ];
+        option.xAxis = {
+          type: 'category',
+          axisLabel: {
+            interval: 1,
+          },
+          data: [],
+        };
+        option.grid = {
+          left: 30,
+          top: 20,
+          right: 0,
+          bottom: 30,
+        };
+        option.yAxis = {
+          type: 'value',
+        };
+        chart.data.forEach((item) => {
+          const name = this.apiType === 'cpu' ? item.op_name : item.name;
+          option.xAxis.data.push(name);
+          option.series[0].data.push(item.value);
+        });
+        if (this.apiType === 'cpu') {
+          option.xAxis.axisLabel.formatter = (params, dataIndex) => {
+            const xAxisValue = chart.data[dataIndex].op_name;
+            return xAxisValue.replace(/^.+\//g, '');
+          };
+        }
+      }
+      this.$nextTick(() => {
+        const cpuDom = document.getElementById(chart.id);
+        if (cpuDom) {
+          chart.chartDom = echarts.init(cpuDom, null);
+        } else {
+          if (chart.chartDom) {
+            chart.chartDom.clear();
+          }
+          return;
+        }
+        chart.chartDom.setOption(option, true);
+        chart.chartDom.resize();
+      }, 10);
+    },
+    showInfoDetail(cellData, column) {
+      if (column.property !== 'op_info' || !cellData || !cellData.op_info) {
+        return;
+      }
+      this.showDialogData(cellData.op_info, column);
+    },
+    /**
+     * The detailed information is displayed in the dialog box.
+     * @param {String} val
+     * @param {Object} column
+     */
+    showDialogData(val, column) {
+      this.detailsDataList = [];
+      if (typeof val !== 'string' || val == '{}') {
+        return;
+      } else {
+        const isJson = this.isJSON(val);
+        if (!isJson) {
+          return;
+        }
+      }
+      this.$nextTick(() => {
+        this.rowName = `${column.label}${this.$t('dataTraceback.details')}`;
+        this.detailsDialogVisible = true;
+        this.detailsDataList = this.formateJsonString(val);
+      });
+    },
+    /**
+     * Checks whether the value is a JSON character string.
+     * @param {String} val
+     * @return {Boolean}
+     */
+    isJSON(val) {
+      try {
+        JSON.parse(val);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+    /**
+     * Converts JSON strings.
+     * @param {String} str
+     * @return {Array}
+     */
+    formateJsonString(str) {
+      if (!str) {
+        return [];
+      }
+      const resultArr = [];
+      const dataObj = JSON.parse(str);
+      const keys = Object.keys(dataObj);
+      keys.forEach((key, index) => {
+        const tempData = {
+          id: index + 1,
+          hasChildren: false,
+          key: key,
+          value: '',
+        };
+        if (typeof dataObj[key] === this.objectType && dataObj[key] !== null) {
+          if (!(dataObj[key] instanceof Array)) {
+            tempData.hasChildren = true;
+            tempData.children = [];
+            Object.keys(dataObj[key]).forEach((k, j) => {
+              const item = {};
+              item.key = k;
+              item.value = dataObj[key][k];
+              item.id = (index + 1) * 10 + 1 + j;
+              tempData.children.push(item);
+            });
+          }
+          tempData.value = JSON.stringify(dataObj[key]);
+        } else {
+          tempData.value = dataObj[key];
+        }
+        resultArr.push(tempData);
+      });
+      return resultArr;
+    },
+    loadDataListChildren(tree, treeNode, resolve) {
+      setTimeout(() => {
+        resolve(tree.children);
+      });
+    },
+    /**
+     * window resize
+     */
+    resizeCallback() {
+      if (this.coreCharts.chartDom && this.apiType === 'core') {
+        this.coreCharts.chartDom.resize();
+      }
+      if (this.cpuCharts.chartDom && this.apiType === 'cpu') {
+        this.cpuCharts.chartDom.resize();
+      }
+    },
+  },
+  mounted() {
+    if (
+      this.$route.query &&
+      this.$route.query.profier_dir &&
+      this.$route.query.id
+    ) {
+      this.profile_dir = this.$route.query.profier_dir;
+      this.train_id = this.$route.query.id;
+      document.title =
+        decodeURIComponent(this.train_id) +
+        '-' +
+        this.$t('profiler.titleText') +
+        '-MindInsight';
+    } else {
+      document.title = this.$t('profiler.titleText') + '-MindInsight';
+    }
+    this.init();
+    window.addEventListener('resize', this.resizeCallback, false);
+  },
+};
+</script>
+<style lang="scss">
+.clear {
+  clear: both;
+}
+.el-tabs__item {
+  color: #6c7280;
+  font-size: 16px;
+  line-height: 36px;
+  height: 36px;
+}
+.el-tabs__item.is-active {
+  color: #00a5a7;
+  font-weight: bold;
+}
+.cl-profiler {
+  height: 100%;
+  overflow-y: auto;
+  width: 100%;
+  background: #fff;
+  padding: 10px 32px;
+  overflow: hidden;
+  .cl-card {
+    margin-bottom: 10px;
+    .el-select {
+      margin-left: 20px;
+    }
+  }
+  .el-tabs {
+    height: calc(100% - 42px);
+    .el-tabs__header {
+      margin-bottom: 10px;
+    }
+  }
+  .el-tabs__content {
+    height: calc(100% - 46px);
+  }
+  .el-tab-pane {
+    height: 100%;
+  }
+  .cl-search-box {
+    float: right;
+    margin-bottom: 10px;
+  }
+  .cl-profiler-top {
+    height: 36%;
+  }
+  .cl-profiler-bottom {
+    height: 64%;
+    padding-top: 10px;
+  }
+  .cpu-tab {
+    .cl-profiler-top {
+      height: calc(36% + 32px);
+    }
+    .cl-profiler-bottom {
+      height: calc(64% - 32px);
+    }
+  }
+  .profiler-title {
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 32px;
+    display: inline-block;
+  }
+  .cl-profiler-echarts {
+    width: 100%;
+    height: calc(100% - 32px);
+    display: inline-block;
+    position: relative;
+    overflow: auto;
+    #cpu-echarts,
+    #core-echarts {
+      width: 100%;
+      height: 100%;
+      min-width: 1300px;
+      min-height: 232px;
+    }
+  }
+  .chart-radio-group {
+    float: right;
+  }
+  .el-radio-group {
+    .el-radio-button--small .el-radio-button__inner {
+      height: 30px;
+      width: 70px;
+      font-size: 14px;
+      line-height: 10px;
+    }
+  }
+  .cl-profiler-bar {
+    display: inline-block;
+    width: calc(100% - 400px);
+    vertical-align: top;
+    height: 100%;
+    padding: 20px;
+  }
+  .cl-profiler-table-type {
+    display: inline-block;
+    width: calc(100% - 400px);
+    vertical-align: top;
+    height: 100%;
+  }
+  .el-pagination {
+    margin: 7px 0;
+    float: right;
+  }
+  .details-data-list {
+    .el-table {
+      th {
+        padding: 10px 0;
+        border-top: 1px solid #ebeef5;
+        .cell {
+          border-left: 1px solid #d9d8dd;
+          height: 14px;
+          line-height: 14px;
+        }
+      }
+      th:first-child {
+        .cell {
+          border-left: none;
+        }
+      }
+      th:nth-child(2),
+      td:nth-child(2) {
+        max-width: 30%;
+      }
+      td {
+        padding: 8px 0;
+      }
+    }
+    .el-table__row--level-0 td:first-child:after {
+      width: 20px;
+      height: 1px;
+      background: #ebeef5;
+      z-index: 11;
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      content: '';
+      display: block;
+    }
+    .el-table__row--level-1 {
+      td {
+        padding: 4px 0;
+        position: relative;
+      }
+      td:first-child::before {
+        width: 20px;
+        background: #fff;
+        border-right: 3px solid #7693e1;
+        z-index: 10;
+        position: absolute;
+        left: 0;
+        top: -1px;
+        bottom: 0px;
+        content: '';
+        display: block;
+      }
+    }
+
+    .el-table__row--level-1:first-child {
+      td:first-child::before {
+        bottom: 0;
+      }
+    }
+    .el-dialog__title {
+      font-weight: bold;
+    }
+    .el-dialog__body {
+      max-height: 500px;
+      padding-top: 10px;
+      overflow: auto;
+      .details-data-title {
+        margin-bottom: 20px;
+      }
+    }
+  }
+  .el-table__expanded-cell[class*='cell'] {
+    padding: 0;
+  }
+  .expand-table {
+    position: relative;
+    padding-left: 44px;
+  }
+  .expand-table::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: #f0fdfd;
+    width: 42px;
+    border-right: 2px #00a5a7 solid;
+  }
+  .el-radio-button:last-child .el-radio-button__inner,
+  .el-radio-button:first-child .el-radio-button__inner {
+    border-radius: 0;
+  }
+  .image-noData {
+    width: 100%;
+    height: 450px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    p {
+      font-size: 16px;
+      padding-top: 10px;
+    }
+  }
+}
+</style>
