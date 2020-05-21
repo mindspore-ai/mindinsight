@@ -58,12 +58,15 @@ limitations under the License.
             <!--operate   -->
             <el-table-column prop="operate"
                              :label="$t('summaryManage.operation')"
-                             width="170">
+                             width="220">
               <template slot-scope="scope">
-                <el-button type="text"
-                           class="cursor-type"
-                           @click.stop="goToTrainDashboard(scope.row)">
+                <el-button type="text" @click.stop="goToTrainDashboard(scope.row)">
                   {{$t('summaryManage.viewDashboard')}} </el-button>
+                <el-button type="text" class="operate-btn" v-if="scope.row.viewProfiler"
+                  @click.stop="goToProfiler(scope.row)">
+                  {{$t('summaryManage.viewProfiler')}} </el-button>
+                <el-button type="text" class="operate-btn" disabled :title="$t('summaryManage.disableProfilerTip')"
+                v-if="!scope.row.viewProfiler">{{$t('summaryManage.viewProfiler')}} </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -135,6 +138,7 @@ export default {
                     i.relative_path = i.relative_path ? i.relative_path : '--';
                     i.create_time = i.create_time ? i.create_time : '--';
                     i.update_time = i.update_time ? i.update_time : '--';
+                    i.viewProfiler = i.profiler_dir && i.profiler_dir.length;
                   });
                   this.currentFolder = res.data.name ? res.data.name : '--';
                   this.pagination.total = res.data.total;
@@ -169,6 +173,21 @@ export default {
         query: {id: trainId},
       });
       window.open(routeUrl.href, '_blank');
+    },
+    /**
+     * go to Profiler
+     * @param {Object} row select row
+     */
+    goToProfiler(row) {
+      const profilerDir = encodeURIComponent(row.profier_dir);
+      const trainId = encodeURIComponent(row.train_id);
+      this.$router.push({
+        path: '/profiler',
+        query: {
+          dir: profilerDir,
+          id: trainId,
+        },
+      });
     },
   },
   components: {},
@@ -211,6 +230,9 @@ export default {
   .pagination-content {
     margin-top: 16px;
     text-align: right;
+  }
+  .operate-btn {
+    margin-left: 20px;
   }
 }
 </style>

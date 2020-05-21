@@ -48,7 +48,8 @@ limitations under the License.
                         popper-class="tooltip-show-content"
                         :content="item.label"
                         placement="top">
-              <span class="select-disable">{{item.label}}</span>
+              <span class="select-disable"><i title="CACHING" v-if="item.loading"
+                   class="el-icon-loading"></i>{{item.label}}</span>
             </el-tooltip>
           </span>
         </div>
@@ -78,7 +79,8 @@ limitations under the License.
                       popper-class="tooltip-show-content"
                       :content="item.label"
                       placement="top">
-            <span class="select-disable">{{item.label}}</span>
+            <span class="select-disable">><i title="CACHING" v-if="item.loading"
+                 class="el-icon-loading"></i>{{item.label}}</span>
           </el-tooltip>
         </span>
       </div>
@@ -134,8 +136,8 @@ export default {
      */
     init() {
       this.itemId =
-      `${new Date().getTime()}` +
-      `${this.$store.state.multiSelectedGroupCount}`;
+        `${new Date().getTime()}` +
+        `${this.$store.state.multiSelectedGroupCount}`;
       this.$store.commit('multiSelectedGroupComponentNum');
       this.$nextTick(() => {
         this.resizeCallback();
@@ -412,6 +414,19 @@ export default {
       white-space: nowrap;
       overflow: hidden;
       text-align: left;
+      position: relative;
+      .loading-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.5);
+        i {
+          font-weight: bold;
+        }
+      }
     }
   }
   .item-disable {
