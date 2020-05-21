@@ -8,7 +8,17 @@
     "tagFilterPlaceHolder": "请输入需要的标签(支持正则表达式)",
     "dataError": "获取到的数据异常",
     "regIllegal": "请输入正确的检索条件",
-    "stayTuned": "敬请期待"
+    "stayTuned": "敬请期待",
+   
+    "select": "请选择",
+    "search": "请搜索",
+    "enter": "请输入",
+    "remark": "备注",
+    "sure": "确定",
+    "clear": "清空",
+    "cancel": "取消",
+    "selectAll": "全选",
+    "deselectAll": "取消全选"
   },
   "symbols": {
     "leftbracket": "(",
@@ -31,7 +41,9 @@
     "viewDashboard": "训练看板",
     "viewProfiler": "性能分析",
     "modelTraceback": "模型溯源",
-    "dataTraceback": "数据溯源"
+    "dataTraceback": "数据溯源",
+    "comparePlate": "对比看板",
+    "disableProfilerTip": "无profiler日志，无法查看性能分析"
   },
   "modelTraceback": {
     "summaryPath": "训练日志路径",
@@ -51,7 +63,19 @@
     "userDefined": "自定义数据",
     "metric": "度量指标",
     "deviceNum": "device数目",
-    "mixedItemMessage": "该参数含有多种类型数据，无法筛选展示"
+    "mixedItemMessage": "该参数含有多种类型数据，无法筛选展示",
+    "displayColumn": "请选择展示列",
+    "hide": "隐藏记录",
+    "unhide": "取消隐藏",
+    "hideData": "条数据",
+    "totalHide": "本页共隐藏{n}条数据",
+    "mustExist":"必选项",
+    "remarkValidation": "备注为英文字母、数字、中文、下划线、中划线、点的组合，长度范围为[1,128]字符",
+    "changeSuccess": "修改成功",
+    "metricLabel": "Metric",
+    "userDefinedLabel": "User Defined",
+    "hyperLabel": "Hyper",
+    "otherLabel": "其他"
   },
   "dataTraceback": {
     "details": "详情",
@@ -93,7 +117,7 @@
     "open": "展开",
     "close": "折叠",
     "invalidData": "存在无效数据",
-    "restore":"还原"
+    "restore": "还原"
   },
 
   "images": {
@@ -160,9 +184,22 @@
     "next": "下一步",
     "finish": "完成"
   },
+  "profiler": {
+    "titleText": "性能分析",
+    "currentCard": "当前卡片",
+    "pie": "饼图",
+    "bar": "柱状图",
+    "operatorStatistics": "算子统计",
+    "operatorTypeStatistics": "算子类别统计",
+    "allOperator": "全部",
+    "ClassificationOperator": "分类",
+    "card": "卡",
+    "searchByType": "请输入算子类型搜索",
+    "searchByName": "请输入算子名称搜索"
+  },
   "components": {
-    "summaryTitle":"run选择",
-    "tagTitle":"tag选择",
+    "summaryTitle":"训练作业选择",
+    "tagTitle":"标签选择",
     "tagSelectTitle": "标签选择",
     "selectAll": "全选",
     "tagFilterPlaceHolder": "请输入需要的标签(支持正则表达式)",

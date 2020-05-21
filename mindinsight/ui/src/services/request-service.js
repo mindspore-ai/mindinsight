@@ -33,6 +33,15 @@ export default {
       data: params.body,
     });
   },
+  // API for model and data source tracing
+  putLineagesData(params) {
+    return axios({
+      method: 'put',
+      url: '/v1/mindinsight/lineagemgr/lineages?train_id='+params.train_id,
+      data: params.body,
+    });
+  },
+
 
   // query summary list
   querySummaryList(params) {
@@ -155,6 +164,20 @@ export default {
     return axios({
       method: 'get',
       url: '/v1/mindinsight/datavisual/histograms',
+      params: params,
+    });
+  },
+  getProfilerDeviceData(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/profiler_device',
+      params: params,
+    });
+  },
+  getProfilerOpTypeList(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/profiler_device',
       params: params,
     });
   },

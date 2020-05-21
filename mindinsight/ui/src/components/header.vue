@@ -161,6 +161,8 @@ export default {
         } else {
           return '/' + str[1];
         }
+      } else if (this.$route.path === '/profiler') {
+        return '/summary-manage';
       } else {
         return this.$route.path;
       }
