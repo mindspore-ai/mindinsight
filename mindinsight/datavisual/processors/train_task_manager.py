@@ -14,11 +14,13 @@
 # ============================================================================
 """Train task manager."""
 
+from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 from mindinsight.datavisual.data_transform.data_manager import DATAVISUAL_PLUGIN_KEY, DATAVISUAL_CACHE_KEY
+from mindinsight.datavisual.data_transform.data_manager import CacheStatus
 
 
 class TrainTaskManager(BaseProcessor):
@@ -75,3 +77,78 @@ class TrainTaskManager(BaseProcessor):
         return dict(
             plugins=plugins
         )
+
+    def query_train_jobs(self, offset=0, limit=10):
+        """
+        Query train jobs.
+
+        Args:
+            offset (int): Specify page number. Default is 0.
+            limit (int): Specify page size. Default is 10.
+
+        Returns:
+            tuple, return quantity of total train jobs and list of train jobs specified by offset and limit.
+        """
+        brief_cache = self._data_manager.get_brief_cache()
+        brief_train_jobs = list(brief_cache.get_train_jobs().values())
+        brief_train_jobs.sort(key=lambda x: x.basic_info.update_time, reverse=True)
+        total = len(brief_train_jobs)
+
+        start = offset * limit
+        end = (offset + 1) * limit
+        train_jobs = []
+
+        train_ids = [train_job.basic_info.train_id for train_job in brief_train_jobs[start:end]]
+
+        for train_id in train_ids:
+            try:
+                train_job = self._data_manager.get_train_job(train_id)
+            except exceptions.TrainJobNotExistError:
+                logger.warning('Train job %s not existed', train_id)
+                continue
+
+            basic_info = train_job.get_basic_info()
+            train_job_item = dict(
+                train_id=basic_info.train_id,
+                relative_path=basic_info.train_id,
+                create_time=basic_info.create_time.strftime('%Y-%m-%d %H:%M:%S'),
+                update_time=basic_info.update_time.strftime('%Y-%m-%d %H:%M:%S'),
+                profiler_dir=basic_info.profiler_dir,
+                cache_status=train_job.cache_status.value,
+            )
+            plugins = self.get_plugins(train_id)
+            train_job_item.update(plugins)
+            train_jobs.append(train_job_item)
+
+        return total, train_jobs
+
+    def cache_train_jobs(self, train_ids):
+        """
+        Cache train jobs.
+
+        Args:
+            train_ids (list): Specify list of train_ids to be cached.
+
+        Returns:
+            dict, indicates train job ID and its current cache status.
+        """
+        brief_cache = self._data_manager.get_brief_cache()
+        brief_train_jobs = brief_cache.get_train_jobs()
+
+        for train_id in train_ids:
+            brief_train_job = brief_train_jobs.get(train_id)
+            if brief_train_job is None:
+                raise exceptions.TrainJobNotExistError(f'Train id {train_id} not exists')
+
+        cache_result = []
+        for train_id in train_ids:
+            brief_train_job = brief_train_jobs.get(train_id)
+            if brief_train_job.cache_status.value == CacheStatus.NOT_IN_CACHE.value:
+                self._data_manager.cache_train_job(train_id)
+
+            cache_result.append({
+                'train_id': train_id,
+                'cache_status': brief_train_job.cache_status.value,
+            })
+
+        return cache_result

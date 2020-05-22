@@ -13,7 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """Scalar Processor APIs."""
-from mindinsight.utils.exceptions import ParamValueError
+from urllib.parse import unquote
+
+from mindinsight.utils.exceptions import ParamValueError, UrlDecodeError
+from mindinsight.datavisual.utils.tools import if_nan_inf_to_none
 from mindinsight.datavisual.common.exceptions import ScalarNotExistError
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
@@ -46,3 +49,47 @@ class ScalarsProcessor(BaseProcessor):
                 'step': tensor.step,
                 'value': tensor.value})
         return dict(metadatas=job_response)
+
+    def get_scalars(self, train_ids, tags):
+        """
+        Get scalar data for given train_ids and tags.
+
+        Args:
+            train_ids (list): Specify list of train job ID.
+            tags (list): Specify list of tags.
+
+        Returns:
+            list[dict], a list of dictionaries containing the `wall_time`, `step`, `value` for each scalar.
+        """
+        for index, train_id in enumerate(train_ids):
+            try:
+                train_id = unquote(train_id, errors='strict')
+            except UnicodeDecodeError:
+                raise UrlDecodeError('Unquote train id error with strict mode')
+            else:
+                train_ids[index] = train_id
+
+        scalars = []
+        for train_id in train_ids:
+            for tag in tags:
+                try:
+                    tensors = self._data_manager.list_tensors(train_id, tag)
+                except ParamValueError:
+                    continue
+
+                scalar = {
+                    'train_id': train_id,
+                    'tag': tag,
+                    'values': [],
+                }
+
+                for tensor in tensors:
+                    scalar['values'].append({
+                        'wall_time': tensor.wall_time,
+                        'step': tensor.step,
+                        'value': if_nan_inf_to_none('scalar_value', tensor.value),
+                    })
+
+                scalars.append(scalar)
+
+        return scalars

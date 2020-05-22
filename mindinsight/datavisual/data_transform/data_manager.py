@@ -45,7 +45,7 @@ from mindinsight.utils.exceptions import ParamValueError
 
 
 @enum.unique
-class _CacheStatus(enum.Enum):
+class CacheStatus(enum.Enum):
     """Train job cache status."""
     NOT_IN_CACHE = "NOT_IN_CACHE"
     CACHING = "CACHING"
@@ -63,13 +63,15 @@ class _BasicTrainJob:
         abs_summary_dir (str): The canonical path of summary directory. It should be the return value of realpath().
         create_time (DateTime): The create time of summary directory.
         update_time (DateTime): The latest modify time of summary files directly in the summary directory.
+        profiler_dir (str): The relative path of profiler directory.
     """
-    def __init__(self, train_id, abs_summary_base_dir, abs_summary_dir, create_time, update_time):
+    def __init__(self, train_id, abs_summary_base_dir, abs_summary_dir, create_time, update_time, profiler_dir):
         self._train_id = train_id
         self._abs_summary_base_dir = abs_summary_base_dir
         self._abs_summary_dir = abs_summary_dir
         self._create_time = create_time
         self._update_time = update_time
+        self._profiler_dir = profiler_dir
 
     @property
     def abs_summary_dir(self):
@@ -85,6 +87,16 @@ class _BasicTrainJob:
     def train_id(self):
         """Get train id."""
         return self._train_id
+
+    @property
+    def profiler_dir(self):
+        """Get profiler directory path."""
+        return self._profiler_dir
+
+    @property
+    def create_time(self):
+        """Get create time."""
+        return self._create_time
 
     @property
     def update_time(self):
@@ -108,7 +120,7 @@ class CachedTrainJob:
         # Other cached content is stored here.
         self._content = {}
 
-        self._cache_status = _CacheStatus.NOT_IN_CACHE
+        self._cache_status = CacheStatus.NOT_IN_CACHE
         self._key_locks = {}
 
     @property
@@ -203,7 +215,7 @@ class TrainJob:
         self._brief = brief_train_job
         self._detail = detail_train_job
         if self._detail is None:
-            self._cache_status = _CacheStatus.NOT_IN_CACHE
+            self._cache_status = CacheStatus.NOT_IN_CACHE
         else:
             self._cache_status = self._detail.cache_status
 
@@ -240,6 +252,20 @@ class TrainJob:
             Any, cache content.
         """
         return self._brief.get(key)
+
+    def get_basic_info(self):
+        """
+        Get basic info.
+
+        Returns:
+            basic_info (_BasicTrainJob): Basic info about the train job.
+        """
+        return self._brief.basic_info
+
+    @property
+    def cache_status(self):
+        """Get cache status."""
+        return self._cache_status
 
 
 class BaseCacheItemUpdater(abc.ABC):
@@ -686,7 +712,7 @@ class _DetailCacheManager(_BaseCacheManager):
         train_job_obj.set(DATAVISUAL_CACHE_KEY, train_job)
 
         # Will assign real value in future.
-        train_job_obj.cache_status = _CacheStatus.CACHED
+        train_job_obj.cache_status = CacheStatus.CACHED
 
         return train_job_obj
 
@@ -863,6 +889,7 @@ class DataManager:
 
         basic_train_jobs = []
         for info in summaries_info:
+            profiler = info['profiler']
             basic_train_jobs.append(_BasicTrainJob(
                 train_id=info['relative_path'],
                 abs_summary_base_dir=self._summary_base_dir,
@@ -871,7 +898,8 @@ class DataManager:
                     info['relative_path']
                 )),
                 create_time=info['create_time'],
-                update_time=info['update_time']
+                update_time=info['update_time'],
+                profiler_dir=None if profiler is None else profiler['directory'],
             ))
 
         self._brief_cache.update_cache(basic_train_jobs)
