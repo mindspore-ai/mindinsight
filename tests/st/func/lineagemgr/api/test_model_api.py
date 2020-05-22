@@ -157,14 +157,6 @@ class TestModelApi(TestCase):
         cls.empty_dir = os.path.join(BASE_SUMMARY_DIR, 'empty_dir')
         os.makedirs(cls.empty_dir)
 
-    def generate_lineage_object(self, lineage):
-        lineage = dict(lineage)
-        lineage_object = dict()
-        lineage_object.update({'summary_dir': lineage.pop('summary_dir')})
-        lineage_object.update({'dataset_graph': lineage.pop('dataset_graph')})
-        lineage_object.update({'model_lineage': lineage})
-        return lineage_object
-
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
