@@ -58,7 +58,7 @@ limitations under the License.
                 <button type="text"
                         @click="deselectAll"
                         class="deselect-all-button"
-                        :class="[selectCheckAll?'checked-color':'button-text',
+                        :class="[!selectCheckAll?'checked-color':'button-text',
                            basearr.length>checkOptions.length ? 'btn-disabled' : '']"
                         :disabled="basearr.length>checkOptions.length">
                   {{ $t('public.deselectAll')}}
@@ -150,9 +150,15 @@ limitations under the License.
             </template>
           </el-table-column>
           <!-- remark column -->
-          <el-table-column :label="$t('public.remark')"
-                           fixed="right"
+          <el-table-column fixed="right"
                            width="220">
+            <template slot="header">
+              <div>
+                <div class="label-text">{{$t('public.remark')}}</div>
+                <br>
+                <div class="remark-tip">{{$t('modelTraceback.remarkTips')}}</div>
+              </div>
+            </template>
             <template slot-scope="scope">
               <!-- The system determines whether to display the pen icon and
               text box based on the values of editShow -->
@@ -660,7 +666,7 @@ export default {
     editRemarks(row) {
       row.editShow = false;
       row.isError = false;
-      this.beforeEditValue = row.network;
+      this.beforeEditValue = row.remark;
     },
 
     /**
@@ -691,7 +697,7 @@ export default {
      */
     cancelRemarksValue(row) {
       row.editShow = true;
-      row.network = this.beforeEditValue;
+      row.remark = this.beforeEditValue;
       row.isError = false;
     },
 
@@ -1768,6 +1774,17 @@ export default {
 };
 </script>
 <style lang="scss">
+.label-text {
+  line-height: 20px !important;
+  vertical-align: bottom;
+}
+.remark-tip {
+  line-height: 14px !important;
+  font-size: 12px;
+  white-space: pre-wrap !important;
+  vertical-align: bottom;
+  color: gray;
+}
 .el-color-dropdown__main-wrapper,
 .el-color-dropdown__value,
 .el-color-alpha-slider {
@@ -1846,7 +1863,7 @@ export default {
     padding: 4px;
     height: 30px;
     width: 30px;
-    border: 1px solid white;
+    border: 1px solid transparent;
   }
   .icon-image-container {
     margin: 16px 10px 18px;

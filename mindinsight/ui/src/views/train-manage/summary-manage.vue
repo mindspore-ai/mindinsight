@@ -179,7 +179,7 @@ export default {
      * @param {Object} row select row
      */
     goToProfiler(row) {
-      const profilerDir = encodeURIComponent(row.profier_dir);
+      const profilerDir = encodeURIComponent(row.profiler_dir);
       const trainId = encodeURIComponent(row.train_id);
       this.$router.push({
         path: '/profiler',
