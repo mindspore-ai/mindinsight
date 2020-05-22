@@ -27,44 +27,79 @@ limitations under the License.
                    v-show="(summaryDirList&&!summaryDirList.length)||(totalSeries&&totalSeries.length)">
           {{ $t('modelTraceback.showAllData') }}
         </el-button>
-        <div v-show="totalSeries&&totalSeries.length&&(!summaryDirList||(summaryDirList&&summaryDirList.length))">
-          <div class="fixed-checkbox-group">
-            <el-checkbox v-for="item in fixedSeries"
-                         :key="item.id"
-                         :checked="item.checked"
-                         :disabled="true">
-              {{ item.name }}
-            </el-checkbox>
-            <br />
+        <div class="select-container"
+             v-show="totalSeries&&totalSeries.length&&(!summaryDirList||(summaryDirList&&summaryDirList.length))">
+          <div class="display-column">
+            {{$t('modelTraceback.displayColumn')}}
           </div>
-          <div class="data-checkbox">
-            <!-- check box -->
-            <div class="check-box-div">
-              <el-checkbox v-model="checkAll"
-                           :indeterminate="isIndeterminate"
-                           class="select-all"
-                           @change="handleCheckAllChange">
-                {{ $t('scalar.selectAll') }}
-              </el-checkbox>
-            </div>
-            <div class="checkbox-scroll">
-              <div class="checkbox-group-div">
-                <el-checkbox v-for="item in noFixedSeries"
-                             @change="handleCheckedSeriesChange()"
-                             v-model="item.checked"
-                             :key="item.id">
-                  {{ item.name }}
-                </el-checkbox>
+          <div class="inline-block-set">
+            <!-- multiple collapse-tags -->
+            <el-select v-model="selectArrayValue"
+                       multiple
+                       collapse-tags
+                       @change="selectValueChange"
+                       :placeholder="$t('public.select')"
+                       @focus="selectinputFocus">
+              <div class="select-input-button">
+                <div class="select-inner-input">
+                  <el-input v-model="keyWord"
+                            v-on:input="myfilter"
+                            :placeholder="$t('public.search')">
+                  </el-input>
+                </div>
+                <el-button type="text"
+                           @click="allSelect"
+                           class="select-all-button"
+                           style="color:#606266;"
+                           :class="selectCheckAll?'checked-color':'button-text'"
+                           :disabled="basearr.length>checkOptions.length">
+                  {{ $t('public.selectAll')}}
+                </el-button>
+                <el-button type="text"
+                           @click="deselectAll"
+                           class="deselect-all-button"
+                           style="color:#606266;"
+                           :class="!selectCheckAll?'checked-color':'button-text'"
+                           :disabled="basearr.length>checkOptions.length">
+                  {{ $t('public.deselectAll')}}
+                </el-button>
               </div>
-            </div>
+              <el-option v-for="item in checkOptions"
+                         :key="item.value"
+                         :label="item.label"
+                         :value="item.value"
+                         :disabled="item.disabled"
+                         :title="item.disabled?$t('modelTraceback.mustExist'):''">
+              </el-option>
+
+            </el-select>
+
           </div>
         </div>
       </div>
       <!-- echart drawing area -->
-      <div id="data-echart"></div>
+      <div id="data-echart"
+           v-show="showEchartPic && !echartNoData"></div>
+      <div class="echart-nodata-container"
+           v-show="!showEchartPic && showTable"></div>
+      <div class="btns-container"
+           v-show="!echartNoData && showTable">
+        <el-button type="primary"
+                   size="mini"
+                   class="custom-btn"
+                   @click="hiddenRecords"
+                   plain>{{ $t('modelTraceback.hide')}}</el-button>
+        <el-button type="primary"
+                   size="mini"
+                   class="custom-btn"
+                   @click="unhideRecords"
+                   plain>
+          {{$t('modelTraceback.unhide')}}
+        </el-button>
+      </div>
       <!-- table area -->
       <div class="table-container"
-           v-show="!echartNoData&&lineagedata.serData && !!lineagedata.serData.length">
+           v-show="!echartNoData && showTable">
         <el-table ref="table"
                   :data="table.data"
                   tooltip-effect="light"
@@ -74,7 +109,8 @@ limitations under the License.
                   @sort-change="tableSortChange">
           <el-table-column type="selection"
                            width="55"
-                           :reserve-selection="true">
+                           :reserve-selection="true"
+                           v-show="!echartNoData && showTable">
           </el-table-column>
           <el-table-column v-for="key in table.column"
                            :key="key"
@@ -113,13 +149,111 @@ limitations under the License.
               </span>
             </template>
           </el-table-column>
+          <!-- remark column -->
+          <el-table-column :label="$t('public.remark')"
+                           fixed="right"
+                           width="220">
+            <template slot-scope="scope">
+              <!-- The system determines whether to display the pen icon and
+              text box based on the values of editShow -->
+              <div class="edit-text-container"
+                   v-show="scope.row.editShow">{{ scope.row.remark }}</div>
+              <div class="inline-block-set">
+                <i class="el-icon-edit"
+                   @click="editRemarks(scope.row)"
+                   v-show="scope.row.editShow"></i>
+                <el-input type="text"
+                          v-model="scope.row.remark"
+                          v-show="!scope.row.editShow"
+                          :placeholder="$t('public.enter')"
+                          class="remark-input-style"></el-input>
+                <i class="el-icon-check"
+                   @click="saveRemarksValue(scope.row)"
+                   v-show="!scope.row.editShow"></i>
+                <i class="el-icon-close"
+                   @click="cancelRemarksValue(scope.row)"
+                   v-show="!scope.row.editShow"></i>
+                <div class="validation-error"
+                     v-show="scope.row.isError">
+                  {{ $t('modelTraceback.remarkValidation')}}
+                </div>
+              </div>
+            </template>
+
+          </el-table-column>
+          <!-- tag column -->
+          <el-table-column label="tag"
+                           fixed="right"
+                           prop="tag"
+                           sortable="custom">
+            <template slot-scope="scope">
+              <div @click="showAllIcon(scope.row)"
+                   class="tag-icon-container">
+                <i v-if="!scope.row.tag"
+                   class="el-icon-arrow-down"></i>
+                <img :id="scope.row.summary_dir"
+                     v-if="scope.row.tag"
+                     :src="require('@/assets/images/icon'+scope.row.tag+'.svg')">
+                <img :id="scope.row.summary_dir"
+                     v-else
+                     src="">
+              </div>
+              <div v-show="scope.row.showIcon"
+                   id="icon-dialog"
+                   class="icon-dialog">
+                <div>
+                  <div class="icon-image-container">
+                    <div class="icon-image"
+                         :class="[item.number===scope.row.tag && scope.row.showIcon?'icon-border':'']"
+                         v-for="item in imageList"
+                         :key="item.number"
+                         @click="iconValueChange(scope.row,item.number,$event)
+                     ">
+                      <img :src="item.iconAdd">
+                    </div>
+                  </div>
+                  <div class="btn-container-margin">
+                    <el-button type="primary"
+                               size="mini"
+                               class="custom-btn"
+                               @click="iconChangeSave(scope.row)"
+                               plain>
+                      {{ $t('public.sure')}}
+                    </el-button>
+                    <el-button type="primary"
+                               size="mini"
+                               class="custom-btn"
+                               @click="clearIcon(scope.row)"
+                               plain>
+                      {{ $t('public.clear')}}
+                    </el-button>
+                    <el-button type="primary"
+                               size="mini"
+                               class="custom-btn"
+                               @click="cancelChangeIcon(scope.row)"
+                               plain>
+                      {{ $t('public.cancel')}}
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+
+            </template>
+
+          </el-table-column>
         </el-table>
-        <el-pagination @current-change="handleCurrentChange"
-                       :current-page="pagination.currentPage"
-                       :page-size="pagination.pageSize"
-                       :layout="pagination.layout"
-                       :total="pagination.total">
-        </el-pagination>
+        <div>
+          <div class="hide-count"
+               v-show="recordsNumber-showNumber">
+            {{ $t('modelTraceback.totalHide').replace(`{n}`,(recordsNumber-showNumber))}}
+          </div>
+          <el-pagination @current-change="handleCurrentChange"
+                         :current-page="pagination.currentPage"
+                         :page-size="pagination.pageSize"
+                         :layout="pagination.layout"
+                         :total="pagination.total">
+          </el-pagination>
+        </div>
       </div>
       <div v-show="((!lineagedata.serData || !lineagedata.serData.length) && initOver)
          ||(echartNoData&&(lineagedata.serData&&!!lineagedata.serData.length))"
@@ -136,7 +270,11 @@ limitations under the License.
           </div>
           <div v-show="summaryDirList&&!summaryDirList.length">
             <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
-            <p class="no-data-text">{{ $t('dataTraceback.noDataTips') }}</p>
+            <p class="no-data-text">
+              {{ $t('dataTraceback.click') }}
+              <b> {{ $t('modelTraceback.showAllDataBtn') }}</b>
+              {{ $t('dataTraceback.viewAllData') }}
+            </p>
           </div>
         </div>
       </div>
@@ -176,9 +314,68 @@ import Echarts from 'echarts';
 export default {
   data() {
     return {
+      iconValue: 0,
+      imageList: [
+        {
+          number: 1,
+          iconAdd: require('@/assets/images/icon1.svg'),
+        },
+        {
+          number: 2,
+          iconAdd: require('@/assets/images/icon2.svg'),
+        },
+        {
+          number: 3,
+          iconAdd: require('@/assets/images/icon3.svg'),
+        },
+        {
+          number: 4,
+          iconAdd: require('@/assets/images/icon4.svg'),
+        },
+        {
+          number: 5,
+          iconAdd: require('@/assets/images/icon5.svg'),
+        },
+        {
+          number: 6,
+          iconAdd: require('@/assets/images/icon6.svg'),
+        },
+        {
+          number: 7,
+          iconAdd: require('@/assets/images/icon7.svg'),
+        },
+        {
+          number: 8,
+          iconAdd: require('@/assets/images/icon8.svg'),
+        },
+        {
+          number: 9,
+          iconAdd: require('@/assets/images/icon9.svg'),
+        },
+        {
+          number: 10,
+          iconAdd: require('@/assets/images/icon10.svg'),
+        },
+      ],
+      selectCheckAll: true,
       initOver: false, // Page initialization completed.
       dataCheckedSummary: [],
       selectedBarList: [],
+      // The selected summarydir list to hide.
+      hidenDirChecked: [],
+      showTable: false,
+      hideRecord: false,
+      // Whether to display the echart
+      showEchartPic: true,
+      checkOptions: [],
+      basearr: [],
+      sortInfo: {},
+      keyWord: '',
+      // Number of data records returned by the interface.
+      recordsNumber: 0,
+      // Number of displayed records.
+      showNumber: 0,
+      selectArrayValue: [],
       customizedColumnOptions: [],
       // Set the type of customized
       customizedTypeObject: [],
@@ -225,7 +422,6 @@ export default {
         showData: [],
       },
       text: this.$t('modelTraceback.summaryPath'),
-      checkAll: false,
       // Selected option
       checkedSeries: [],
       // fixed option
@@ -234,8 +430,6 @@ export default {
       noFixedSeries: [],
       // Array of all options
       totalSeries: [],
-      // Setting the style attributes of all boxes
-      isIndeterminate: false,
       // Page data
       pagination: {
         currentPage: 1,
@@ -333,11 +527,378 @@ export default {
   computed: {},
   mounted() {
     document.title = this.$t('summaryManage.dataTraceback') + '-MindInsight';
+    document.addEventListener('click', this.blurFloat, true);
     this.$nextTick(() => {
       this.init();
     });
   },
   methods: {
+    blurFloat(event) {
+      const domArr = document.querySelectorAll('.icon-dialog');
+      const isActiveDom = event.path.some((item) => {
+        return item.className === 'icon-dialog';
+      });
+      if (!isActiveDom) {
+        domArr.forEach((item) => {
+          item.style.display = 'none';
+        });
+      }
+    },
+
+    /**
+     * Display of the icon dialog box
+     * @param {Object} row
+     */
+    showAllIcon(row) {
+      this.iconValue = 0;
+      if (row.showIcon) {
+        row.showIcon = false;
+        const classArr = document.querySelectorAll('.icon-border');
+        classArr.forEach((item) => {
+          item.classList.remove('icon-border');
+        });
+        return;
+      }
+      row.showIcon = true;
+      const e = window.event;
+      document.getElementById('icon-dialog').style.top = e.clientY + 'px';
+    },
+
+    iconValueChange(row, num, event) {
+      const classWrap = event.path.find((item) => {
+        return item.className === 'icon-dialog';
+      });
+      const classArr = classWrap.querySelectorAll('.icon-border');
+      classArr.forEach((item) => {
+        item.classList.remove('icon-border');
+      });
+      const htmDom = event.path.find((item) => {
+        return item.nodeName === 'DIV';
+      });
+      htmDom.classList.add('icon-border');
+      this.iconValue = num;
+    },
+
+    /**
+     * Save the modification of the icon
+     * @param {Object} row
+     */
+    iconChangeSave(row) {
+      row.showIcon = false;
+      if (row.tag === this.iconValue || this.iconValue === 0) {
+        return;
+      }
+      row.tag = this.iconValue;
+      const id = row.summary_dir;
+      document.getElementById(id).src = require('@/assets/images/icon' +
+        this.iconValue +
+        '.svg');
+
+      const params = {
+        train_id: row.summary_dir,
+        body: {
+          tag: row.tag,
+        },
+      };
+      this.putChangeToLineagesData(params);
+    },
+
+    /**
+     * clear icon
+     */
+
+    clearIcon(row) {
+      row.showIcon = false;
+      this.iconValue = 0;
+      row.tag = 0;
+      const params = {
+        train_id: row.summary_dir,
+        body: {
+          tag: row.tag,
+        },
+      };
+      this.putChangeToLineagesData(params);
+    },
+
+    /**
+     * cancelChangeIcon
+     * @param {Object} row
+     */
+
+    cancelChangeIcon(row) {
+      const classArr = document.querySelectorAll('.icon-border');
+      classArr.forEach((item) => {
+        item.classList.remove('icon-border');
+      });
+      row.showIcon = false;
+    },
+
+    /**
+     * Select all
+     */
+    allSelect() {
+      if (this.selectCheckAll) {
+        return;
+      }
+      this.selectArrayValue = [];
+      this.checkOptions.forEach((item) => {
+        this.selectArrayValue.push(item.value);
+      });
+
+      this.selectCheckAll = !this.selectCheckAll;
+      this.initChart();
+      const list = [];
+      this.checkOptions.forEach((item) => {
+        this.selectArrayValue.forEach((i) => {
+          if (i === item.value) {
+            list.push(i);
+          }
+        });
+      });
+
+      if (this.selectedBarList) {
+        const resultArray = this.hideDataMarkTableData();
+        this.table.column = this.dirPathList.concat(resultArray, list);
+      } else {
+        this.table.column = this.dirPathList.concat(list);
+      }
+    },
+
+    /**
+     * deselect all
+     */
+    deselectAll() {
+      this.selectArrayValue = [];
+      this.checkOptions.forEach((item) => {
+        if (item.disabled) {
+          this.selectArrayValue.push(item.value);
+        }
+      });
+      this.selectCheckAll = false;
+      this.initChart();
+      const list = [];
+      this.checkOptions.forEach((item) => {
+        this.selectArrayValue.forEach((i) => {
+          if (i === item.value) {
+            list.push(i);
+          }
+        });
+      });
+      if (this.selectedBarList) {
+        const resultArray = this.hideDataMarkTableData();
+        this.table.column = this.dirPathList.concat(resultArray, list);
+      } else {
+        this.table.column = this.dirPathList.concat(list);
+      }
+    },
+
+    /**
+     * Edit remarks
+     * @param {Object} row
+     */
+    editRemarks(row) {
+      row.editShow = false;
+      row.isError = false;
+      this.beforeEditValue = row.network;
+    },
+
+    /**
+     * Save remarks
+     * @param {Object} row
+     */
+    saveRemarksValue(row) {
+      const tagValidation = new RegExp('^[a-zA-Z0-9\u4e00-\u9fa5_.-]{1,128}$');
+      const result = row.remark.length ? tagValidation.test(row.remark) : true;
+      if (result) {
+        row.isError = false;
+        row.editShow = true;
+        const params = {
+          train_id: row.summary_dir,
+          body: {
+            remark: row.remark,
+          },
+        };
+        this.putChangeToLineagesData(params);
+      } else {
+        row.isError = true;
+      }
+    },
+
+    /**
+     * Cancel Save Editing
+     * @param {Object} row
+     */
+    cancelRemarksValue(row) {
+      row.editShow = true;
+      row.network = this.beforeEditValue;
+      row.isError = false;
+    },
+
+    /**
+     * After the remark or tag is modified,invoke the interface and save the modification
+     * @param {Object} params
+     */
+    putChangeToLineagesData(params) {
+      RequestService.putLineagesData(params)
+          .then(
+              (res) => {
+                if (res) {
+                  this.$message.success(this.$t('modelTraceback.changeSuccess'));
+                }
+              },
+              (error) => {},
+          )
+          .catch(() => {});
+    },
+
+    /**
+     * Hidden records
+     */
+    hiddenRecords() {
+      this.hideRecord = true;
+      if (this.dataCheckedSummary.length) {
+        this.dataCheckedSummary.forEach((i) => {
+          this.hidenDirChecked.push(i.summary_dir);
+        });
+      }
+      this.$store.commit('setHidenDirChecked', this.hidenDirChecked);
+      if (this.hidenDirChecked.length) {
+        const tempEchartData = this.echart.brushData.slice();
+        this.hidenDirChecked.forEach((dir) => {
+          tempEchartData.forEach((item, index) => {
+            if (item.summary_dir === dir) {
+              tempEchartData.splice(index, 1);
+            }
+          });
+        });
+        const tableTemp = this.table.data.slice();
+        this.hidenDirChecked.forEach((dir) => {
+          tableTemp.forEach((item, index) => {
+            if (item.summary_dir === dir) {
+              tableTemp.splice(index, 1);
+            }
+          });
+        });
+
+        this.dataCheckedSummary = [];
+        this.table.data = tableTemp;
+        this.showNumber = tableTemp.length;
+        this.echart.showData = tempEchartData;
+        this.$refs.table.clearSelection();
+
+        if (this.echart.showData.length > 0) {
+          this.initChart();
+        } else {
+          this.showEchartPic = false;
+        }
+      }
+      this.hideRecord = false;
+    },
+
+    /**
+     * Unhide
+     */
+    unhideRecords() {
+      this.showEchartPic = true;
+      this.$refs.table.clearSelection();
+      this.$store.commit('setHidenDirChecked', []);
+      if (this.hidenDirChecked.length) {
+        this.checkedSummary = [];
+        this.hidenDirChecked = [];
+      }
+      this.checkOptions = [];
+      this.selectArrayValue = [];
+      const params = {
+        body: {},
+      };
+      const tempParam = {
+        sorted_name: this.sortInfo.sorted_name,
+        sorted_type: this.sortInfo.sorted_type,
+      };
+      this.summaryDirList = this.$store.state.summaryDirList;
+      this.tableFilter.summary_dir = {
+        in: this.summaryDirList,
+      };
+      params.body = Object.assign(
+          params.body,
+          this.chartFilter,
+          tempParam,
+          this.tableFilter,
+      );
+      this.queryLineagesData(params);
+    },
+    /**
+     * Input search filtering in the select module
+     */
+    myfilter() {
+      const queryString = this.keyWord;
+      const restaurants = this.basearr;
+      const results = queryString
+        ? this.createFilter(queryString, restaurants)
+        : restaurants;
+      this.checkOptions = results;
+    },
+
+    /**
+     * Input search filtering in the select module
+     * @param {String} queryString
+     * @param {Array} restaurants
+     * @return {Array}
+     */
+    createFilter(queryString, restaurants) {
+      const list = [];
+      restaurants.forEach((item) => {
+        const object = {};
+        if (
+          item &&
+          item.label.toLowerCase().indexOf(queryString.toLowerCase()) >= 0
+        ) {
+          object.label = item.label;
+          object.value = item.value;
+          object.disabled = item.disabled;
+          list.push(object);
+        }
+      });
+      return list;
+    },
+
+    selectinputFocus() {
+      // the text box is restored to empty
+      this.keyWord = '';
+      this.checkOptions = this.basearr;
+    },
+
+    /**
+     * Select data in the table
+     */
+    selectValueChange() {
+      const templist = [];
+      this.basearr.forEach((item) => {
+        templist.push(item.label);
+      });
+      if (templist.length > this.selectArrayValue.length) {
+        this.selectCheckAll = false;
+      } else {
+        this.selectCheckAll = true;
+      }
+      this.initChart();
+      const list = [];
+      this.checkOptions.forEach((item) => {
+        this.selectArrayValue.forEach((i) => {
+          if (i === item.value) {
+            list.push(i);
+          }
+        });
+      });
+
+      if (this.selectedBarList) {
+        const resultArray = this.hideDataMarkTableData();
+        this.table.column = this.dirPathList.concat(resultArray, list);
+      } else {
+        this.table.column = this.dirPathList.concat(list);
+      }
+    },
+
     /**
      * init
      */
@@ -390,9 +951,21 @@ export default {
           arrayTemp.push(obj);
         });
       }
-      const totalBarArray = arrayTemp.concat(this.checkedSeries);
+      const list = [];
+      this.checkOptions.forEach((item) => {
+        this.selectArrayValue.forEach((i) => {
+          if (i === item.value) {
+            const obj = {};
+            obj.id = item.value;
+            obj.name = item.label;
+            list.push(obj);
+          }
+        });
+      });
+      const totalBarArray = arrayTemp.concat(list);
       this.echart.showData.forEach((val, i) => {
-        const item = {
+        let item = {};
+        item = {
           lineStyle: {
             normal: {
               color: CommonProperty.commonColorArr[i % 10],
@@ -487,6 +1060,8 @@ export default {
       window.addEventListener('resize', this.resizeChart, false);
 
       this.parallelEchart.on('axisareaselected', (params) => {
+        this.recordsNumber = 0;
+        this.showNumber = 0;
         const key = params.parallelAxisId;
         const range = params.intervals[0] || [];
         const [axisData] = parallelAxis.filter((i) => {
@@ -513,12 +1088,13 @@ export default {
           });
           // The summaryList value could not be saved in the destroy state.
           this.dataCheckedSummary = [];
-          this.tableFilter.summary_dir = {in: summaryList};
           this.$store.commit('setSummaryDirList', summaryList);
+          this.tableFilter.summary_dir = {in: summaryList};
           if (!tempList.length) {
             this.summaryDirList = [];
             this.lineagedata.serData = undefined;
-            document.querySelector('#data-echart').style.display = 'none';
+            this.showTable = false;
+            this.echartNoData = true;
           } else {
             this.echart.showData = this.echart.brushData;
             this.initChart();
@@ -528,6 +1104,7 @@ export default {
                 (this.pagination.currentPage - 1) * this.pagination.pageSize,
                 this.pagination.currentPage * this.pagination.pageSize,
             );
+            this.showTable = true;
           }
         }
       });
@@ -793,17 +1370,56 @@ export default {
                 if (this.noFixedSeries.length) {
                   this.setObjectValue(this.noFixedSeries, false);
                 }
+
+                const list1 = this.fixedSeries.concat(this.noFixedSeries);
+                list1.forEach((item, index) => {
+                  this.checkOptions[index] = {};
+                  this.basearr[index] = {};
+                  this.checkOptions[index].label = item.name;
+                  this.checkOptions[index].value = item.id;
+                  if (this.createType[item.name]) {
+                    this.checkOptions[index].disabled = true;
+                    this.basearr[index].disabled = true;
+                  }
+                  this.basearr[index].label = item.name;
+                  this.basearr[index].value = item.id;
+                });
+                this.checkOptions.forEach((item) => {
+                  this.selectArrayValue.push(item.value);
+                });
+                this.hidenDirChecked = this.$store.state.hidenDirChecked || [];
                 this.echart.brushData = this.lineagedata.serData;
-                this.echart.showData = this.echart.brushData;
-                if (this.totalSeries.length) {
-                  document.querySelector('#data-echart').style.display = 'block';
+
+                if (this.hidenDirChecked.length) {
+                  const listdada = this.lineagedata.serData.slice();
+                  this.hidenDirChecked.forEach((item) => {
+                    listdada.forEach((i, index) => {
+                      if (i.summary_dir === item) {
+                        listdada.splice(index, 1);
+                      }
+                    });
+                  });
+
+                  if (listdada.length) {
+                    this.showEchartPic = true;
+                  } else {
+                    this.showEchartPic = false;
+                  }
+                  this.echart.showData = listdada;
+                } else {
+                  this.echart.showData = this.echart.brushData;
+                  this.showEchartPic = true;
                 }
+
                 this.setEchartValue();
                 this.initChart();
                 // Total number of pages in the table
                 this.pagination.total = res.data.count;
                 // Data encapsulation of the table
-                this.setTableData();
+                let data = [];
+                data = this.setTableData();
+                this.table.data = data;
+                this.showTable = true;
                 if (this.selectedBarList) {
                   const resultArray = this.hideDataMarkTableData();
                   this.table.column = this.dirPathList.concat(
@@ -818,10 +1434,12 @@ export default {
               },
               (error) => {
                 this.initOver = true;
+                this.showEchartPic = false;
               },
           )
           .catch(() => {
             this.initOver = true;
+            this.showEchartPic = false;
           });
     },
 
@@ -835,11 +1453,6 @@ export default {
           this.checkedSeries.push(nodeItem);
         }
       });
-      if (this.checkedSeries.length == this.totalSeries.length) {
-        this.checkAll = true;
-      } else {
-        this.checkAll = false;
-      }
     },
 
     /**
@@ -857,43 +1470,18 @@ export default {
       // The first page is displayed.
       this.initOver = false;
       this.echartNoData = false;
+      this.showEchartPic = true;
+      // checkOptions initializate to an empty array
+      this.checkOptions = [];
+      this.selectArrayValue = [];
       this.pagination.currentPage = 1;
       this.$store.commit('setSummaryDirList', undefined);
       this.$store.commit('setSelectedBarList', []);
       if (this.parallelEchart) {
         this.parallelEchart.clear();
       }
-      document.querySelector('#data-echart').style.display = 'block';
       this.$refs.table.clearSelection();
       this.init();
-      this.parallelEchart.resize();
-    },
-
-    /**
-     * Select All
-     */
-    handleCheckAllChange() {
-      // Selected option
-      this.noFixedSeries.forEach((nodeItem) => {
-        nodeItem.checked = this.checkAll;
-      });
-      this.$forceUpdate();
-      this.getCheckedSerList();
-      // Value assignment in the table column
-      if (this.selectedBarList) {
-        const resultArray = this.hideDataMarkTableData();
-        this.table.column = this.dirPathList.concat(
-            resultArray,
-            this.checkedSeries.map((i) => i.id),
-        );
-      } else {
-        this.table.column = this.dirPathList.concat(
-            this.checkedSeries.map((i) => i.id),
-        );
-      }
-
-      this.isIndeterminate = false;
-      this.initChart();
     },
 
     /**
@@ -911,35 +1499,14 @@ export default {
     },
 
     /**
-     * The column options in the table are changed
-     */
-    handleCheckedSeriesChange() {
-      this.$forceUpdate();
-      this.getCheckedSerList();
-      // Value assignment in the table column
-      if (this.selectedBarList) {
-        const resultArray = this.hideDataMarkTableData();
-        this.table.column = this.dirPathList.concat(
-            resultArray,
-            this.checkedSeries.map((i) => i.id),
-        );
-      } else {
-        this.table.column = this.dirPathList.concat(
-            this.checkedSeries.map((i) => i.id),
-        );
-      }
-
-      this.isIndeterminate =
-        this.checkedSeries.length > this.fixedSeries.length && !this.checkAll;
-      this.initChart();
-    },
-
-    /**
      * Selected rows of tables
      * @param {Object} val
      */
     handleSelectionChange(val) {
       // summary_dir cannot be stored here.If it is not selected ,it cannot be stroed correctly.
+      if (this.hideRecord) {
+        return;
+      }
       this.dataCheckedSummary = val;
       if (val.length) {
         this.echart.showData = val;
@@ -967,11 +1534,15 @@ export default {
      * @param {Object} data
      */
     tableSortChange(data) {
+      this.sortInfo.sorted_name = data.prop;
+      this.sortInfo.sorted_type = data.order;
       const params = {};
       const tempParam = {
         sorted_name: data.prop,
         sorted_type: data.order,
       };
+      this.checkOptions = [];
+      this.selectArrayValue = [];
       this.pagination.currentPage = 1;
       params.body = Object.assign({}, tempParam, this.tableFilter);
       this.queryLineagesData(params);
@@ -983,20 +1554,34 @@ export default {
      */
     handleCurrentChange(val) {
       this.pagination.currentPage = val;
-      this.setTableData();
+      this.table.data = this.setTableData();
     },
 
     /**
      * Setting Table Data
+     * @return {Array}
      */
     setTableData() {
+      let data = [];
       // Table data encapsulation
       const pathData = JSON.parse(JSON.stringify(this.echart.brushData));
       // Obtain table data based on the page number and number of records.
-      this.table.data = pathData.slice(
+      data = pathData.slice(
           (this.pagination.currentPage - 1) * this.pagination.pageSize,
           this.pagination.currentPage * this.pagination.pageSize,
       );
+      this.recordsNumber = data.length;
+      if (this.hidenDirChecked.length) {
+        this.hidenDirChecked.forEach((dir) => {
+          data.forEach((item, index) => {
+            if (item.summary_dir === dir) {
+              data.splice(index, 1);
+            }
+          });
+        });
+      }
+      this.showNumber = data.length;
+      return data;
     },
 
     /**
@@ -1015,6 +1600,9 @@ export default {
           nodeList: [],
           children: false,
           summary_dir: object.summary_dir,
+          remark: object.added_info.remark ? object.added_info.remark : '',
+          tag: object.added_info.tag,
+          showIcon: false,
         };
         if (JSON.stringify(object.dataset_graph) !== '{}') {
           this.getSingleRunData(object.dataset_graph);
@@ -1038,7 +1626,14 @@ export default {
                 tempDic[nodeItem.name] = 0;
               }
               tempDic[nodeItem.name]++;
-              const tempId = `${nodeItem.name}${tempDic[nodeItem.name]}`;
+              let tempId = '';
+              const createKey = Object.keys(this.createType);
+              if (createKey.includes(nodeItem.name)) {
+                tempId = nodeItem.name;
+              } else {
+                tempId = `${nodeItem.name}${tempDic[nodeItem.name]}`;
+              }
+
               fullNodeList.splice(startIndex, 0, {
                 name: nodeItem.name,
                 id: tempId,
@@ -1057,11 +1652,20 @@ export default {
               tempDic[nodeItem.name] = 0;
             }
             tempDic[nodeItem.name]++;
-            fullNodeList.push({
-              name: nodeItem.name,
-              id: `${nodeItem.name}${tempDic[nodeItem.name]}`,
-            });
-            nodeItem.id = `${nodeItem.name}${tempDic[nodeItem.name]}`;
+            const createKey = Object.keys(this.createType);
+            if (createKey.includes(nodeItem.name)) {
+              fullNodeList.push({
+                name: nodeItem.name,
+                id: nodeItem.name,
+              });
+              nodeItem.id = nodeItem.name;
+            } else {
+              fullNodeList.push({
+                name: nodeItem.name,
+                id: `${nodeItem.name}${tempDic[nodeItem.name]}`,
+              });
+              nodeItem.id = `${nodeItem.name}${tempDic[nodeItem.name]}`;
+            }
           });
         }
       });
@@ -1074,6 +1678,15 @@ export default {
         });
         curDataObj.children = objectData.children;
         curDataObj.summary_dir = objectData.summary_dir;
+
+        // set remark value
+        curDataObj.remark = objectData.remark;
+        // set tag value
+        curDataObj.tag = objectData.tag;
+        curDataObj.showIcon = objectData.showIcon;
+        // set remark icon is show
+        curDataObj.editShow = true;
+        curDataObj.isError = false;
         serData.push(curDataObj);
       });
       const formateData = {
@@ -1199,20 +1812,100 @@ export default {
 };
 </script>
 <style lang="scss">
+.el-color-dropdown__main-wrapper,
+.el-color-dropdown__value,
+.el-color-alpha-slider {
+  display: none;
+}
+.el-select > .el-input {
+  width: 280px !important;
+  max-width: 500px !important;
+}
+.select-inner-input {
+  width: calc(100% - 140px);
+  margin: 2px 4px;
+  display: inline-block;
+}
+.select-input-button {
+  position: relative;
+}
+.el-select-group__title {
+  font-size: 14px;
+  font-weight: 700;
+}
+.el-select-dropdown__item.selected {
+  font-weight: 400;
+}
+.checked-color {
+  color: #00a5a7 !important;
+}
+.el-tag.el-tag--info .el-tag__close {
+  display: none;
+}
 #cl-data-traceback {
   height: 100%;
   overflow-y: auto;
   position: relative;
+  .inline-block-set {
+    display: inline-block;
+  }
+  .select-all-button {
+    padding: 4px 0;
+    display: inline-block;
+    position: absolute;
+    right: 70px;
+    padding: 5px;
+    height: 32px;
+  }
+  .deselect-all-button {
+    padding: 4px 0;
+    display: inline-block;
+    position: absolute;
+    right: 6px;
+    padding: 5px;
+    height: 32px;
+  }
+  .icon-border {
+    border: 1px solid #00a5a7 !important;
+  }
+  #icon-dialog {
+    z-index: 999;
+    border: 1px solid #d6c9c9;
+    position: fixed;
+    width: 326px;
+    height: 120px;
+    background-color: #efebeb;
+    right: 50px;
+    border-radius: 4px;
+  }
+  .icon-image {
+    display: inline-block;
+    padding: 4px;
+    height: 30px;
+    width: 30px;
+    border: 1px solid white;
+  }
+  .icon-image-container {
+    margin: 16px 10px 18px;
+  }
+  .tag-icon-container {
+    width: 22px;
+    height: 22px;
+    border: 1px solid #e6e6e6;
+    background-color: white;
+    cursor: pointer;
+    border-radius: 2px;
+  }
   .no-data-page {
     width: 100%;
     height: 100%;
-    padding-top: 184px;
+    padding-top: 254px;
   }
   .no-data-img {
     background: #fff;
     text-align: center;
     height: 100%;
-    width: 300px;
+    width: 310px;
     margin: auto;
     img {
       max-width: 100%;
@@ -1226,7 +1919,42 @@ export default {
     font-size: 16px;
     padding-top: 10px;
   }
-
+  .edit-text-container {
+    display: inline-block;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .btns-container {
+    padding: 14px 32px 4px;
+  }
+  .table-container .el-icon-edit {
+    margin-left: 5px;
+  }
+  .table-container i {
+    font-size: 18px;
+    margin: 0 2px;
+    color: #00a5a7;
+    cursor: pointer;
+  }
+  .table-container .el-icon-close {
+    color: #f56c6c;
+  }
+  .table-container .validation-error {
+    color: #ff0000;
+  }
+  .display-column {
+    display: inline-block;
+    padding-right: 6px;
+  }
+  .select-container {
+    padding: 10px 0;
+    display: inline-block;
+  }
+  .remark-input-style {
+    width: 140px;
+  }
   .cl-data-right {
     height: 100%;
     background-color: #ffffff;
@@ -1237,44 +1965,24 @@ export default {
     .data-checkbox-area {
       position: relative;
       margin: 24px 32px 12px;
-      height: 62px;
       .reset-btn {
         position: absolute;
         right: 0px;
         top: 12px;
       }
-      .data-checkbox {
-        width: calc(100% - 148px);
-        height: 38px;
-        overflow: hidden;
-      }
-      .checkbox-scroll {
-        height: 38px;
-        overflow: auto;
-      }
-      .check-box-div {
-        float: left;
-      }
-      .checkbox-group-div {
-        float: left;
-        width: calc(100% - 100px);
-      }
-      .fixed-checkbox-group {
-        width: calc(100% - 160px);
-        min-height: 24px;
-        max-height: 41px;
-        overflow: auto;
-      }
-      .select-all {
-        margin-right: 30px;
-      }
     }
     #data-echart {
-      height: 39%;
+      height: 34%;
       width: 100%;
-      display: none;
+      padding: 0 12px;
     }
-
+    .echart-nodata-container {
+      height: 34%;
+      width: 100%;
+    }
+    .btn-container-margin {
+      margin: 0 55px 10px;
+    }
     .custom-btn {
       border: 1px solid #00a5a7;
       border-radius: 2px;
@@ -1289,7 +1997,7 @@ export default {
     .table-container {
       background-color: white;
       height: calc(60% - 90px);
-      margin: 2px 32px 0;
+      margin: 6px 32px 0;
       position: relative;
       .custom-label {
         max-width: calc(100% - 25px);
@@ -1309,6 +2017,15 @@ export default {
       }
       .click-span {
         cursor: pointer;
+      }
+      .hide-count {
+        display: inline-block;
+        position: absolute;
+        right: 400px;
+        height: 32px;
+        line-height: 32px;
+        padding-top: 12px;
+        color: red;
       }
       .el-pagination {
         position: absolute;
