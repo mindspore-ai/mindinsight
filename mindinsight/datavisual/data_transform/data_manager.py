@@ -22,7 +22,6 @@ This module also acts as a thread pool manager.
 """
 import abc
 import datetime
-import enum
 import threading
 import time
 import os
@@ -34,6 +33,7 @@ from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.common import exceptions
+from mindinsight.datavisual.common.enums import CacheStatus
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common.enums import DataManagerStatus
 from mindinsight.datavisual.common.enums import PluginNameEnum
@@ -42,14 +42,6 @@ from mindinsight.datavisual.data_transform.loader_generators.loader_generator im
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.utils.exceptions import MindInsightException
 from mindinsight.utils.exceptions import ParamValueError
-
-
-@enum.unique
-class CacheStatus(enum.Enum):
-    """Train job cache status."""
-    NOT_IN_CACHE = "NOT_IN_CACHE"
-    CACHING = "CACHING"
-    CACHED = "CACHED"
 
 
 class _BasicTrainJob:
@@ -267,6 +259,11 @@ class TrainJob:
         """Get cache status."""
         return self._cache_status
 
+    @cache_status.setter
+    def cache_status(self, cache_status):
+        """Set cache status."""
+        self._cache_status = cache_status
+
 
 class BaseCacheItemUpdater(abc.ABC):
     """Abstract base class for other modules to update cache content."""
@@ -464,6 +461,11 @@ class _DetailCacheManager(_BaseCacheManager):
                 if loader is None:
                     raise TrainJobNotExistError(train_id)
 
+                # Update cache status loader to CACHING if loader is NOT_IN_CACHE
+                # before triggering the next interval.
+                if loader.cache_status == CacheStatus.NOT_IN_CACHE:
+                    loader.cache_status = CacheStatus.CACHING
+
                 self._add_loader(loader)
                 need_reload = True
 
@@ -520,7 +522,13 @@ class _DetailCacheManager(_BaseCacheManager):
                 if loader is None:
                     logger.debug("Loader %r has been deleted, will not load data.", loader_id)
                     return
+
             loader.data_loader.load()
+
+            # Update loader cache status to CACHED.
+            # Loader with cache status CACHED should remain the same cache status.
+            loader.cache_status = CacheStatus.CACHED
+
         except MindInsightException as ex:
             logger.warning("Data loader %r load data failed. "
                            "Delete data_loader. Detail: %s", loader_id, ex)
@@ -711,8 +719,7 @@ class _DetailCacheManager(_BaseCacheManager):
         train_job_obj = CachedTrainJob(basic_info=None)
         train_job_obj.set(DATAVISUAL_CACHE_KEY, train_job)
 
-        # Will assign real value in future.
-        train_job_obj.cache_status = CacheStatus.CACHED
+        train_job_obj.cache_status = loader.cache_status
 
         return train_job_obj
 

@@ -14,9 +14,9 @@
 # ============================================================================
 """Enums."""
 
-from enum import Enum
+import enum
 
-class BaseEnum(Enum):
+class BaseEnum(enum.Enum):
 
     @classmethod
     def list_members(cls):
@@ -38,3 +38,11 @@ class PluginNameEnum(BaseEnum):
     SCALAR = 'scalar'
     GRAPH = 'graph'
     HISTOGRAM = 'histogram'
+
+
+@enum.unique
+class CacheStatus(enum.Enum):
+    """Train job cache status."""
+    NOT_IN_CACHE = "NOT_IN_CACHE"
+    CACHING = "CACHING"
+    CACHED = "CACHED"
