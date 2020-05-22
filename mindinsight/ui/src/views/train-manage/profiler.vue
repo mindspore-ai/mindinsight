@@ -951,10 +951,10 @@ export default {
   mounted() {
     if (
       this.$route.query &&
-      this.$route.query.profier_dir &&
+      this.$route.query.dir &&
       this.$route.query.id
     ) {
-      this.profile_dir = this.$route.query.profier_dir;
+      this.profile_dir = this.$route.query.dir;
       this.train_id = this.$route.query.id;
       document.title =
         decodeURIComponent(this.train_id) +

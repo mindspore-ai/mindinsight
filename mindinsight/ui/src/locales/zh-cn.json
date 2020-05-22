@@ -75,7 +75,8 @@
     "metricLabel": "Metric",
     "userDefinedLabel": "User Defined",
     "hyperLabel": "Hyper",
-    "otherLabel": "其他"
+    "otherLabel": "其他",
+    "remarkTips": "提示：终止服务后备注及tag信息将被清除"
   },
   "dataTraceback": {
     "details": "详情",

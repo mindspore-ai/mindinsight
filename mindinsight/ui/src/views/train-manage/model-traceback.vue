@@ -215,9 +215,15 @@ limitations under the License.
             </template>
           </el-table-column>
           <!-- remark column -->
-          <el-table-column :label="$t('public.remark')"
-                           fixed="right"
+          <el-table-column fixed="right"
                            width="220">
+            <template slot="header">
+              <div>
+                <div class="label-text">{{$t('public.remark')}}</div>
+                <br>
+                <div class="remark-tip">{{$t('modelTraceback.remarkTips')}}</div>
+              </div>
+            </template>
             <template slot-scope="scope">
               <div class="edit-text-container"
                    v-show="scope.row.editShow">{{scope.row.remark}}</div>
@@ -266,7 +272,7 @@ limitations under the License.
                 <div>
                   <div class="icon-image-container">
                     <div class="icon-image"
-                         :class="[item.number==scope.row.tag&&scope.row.showIcon ? 'iconBorder':'']"
+                         :class="[item.number===scope.row.tag&&scope.row.showIcon ? 'iconBorder':'']"
                          v-for="item in imageList"
                          :key="item.number"
                          @click="iconValueChange(scope.row,item.number,$event)">
@@ -491,7 +497,7 @@ export default {
      */
     iconChangeSave(row) {
       row.showIcon = false;
-      if (row.tag == this.iconValue || this.iconValue == 0) {
+      if (row.tag === this.iconValue || this.iconValue === 0) {
         return;
       }
       row.tag = this.iconValue;
@@ -556,7 +562,7 @@ export default {
       allList.forEach((item) => {
         Object.keys(this.table.columnOptions).filter((i) => {
           const labelValue = this.table.columnOptions[i].label;
-          if (labelValue == item) {
+          if (labelValue === item) {
             this.table.columnOptions[i].selected = true;
           }
         });
@@ -591,7 +597,7 @@ export default {
       allList.forEach((item) => {
         Object.keys(this.table.columnOptions).filter((i) => {
           const labelValue = this.table.columnOptions[i].label;
-          if (labelValue == item) {
+          if (labelValue === item) {
             this.table.columnOptions[i].selected = true;
           }
         });
@@ -847,14 +853,14 @@ export default {
       const columnArray = [];
       const hyperArray = [];
       columnList.forEach((item) => {
-        if (item.indexOf('metric/') == 0) {
+        if (item.indexOf('metric/') === 0) {
           metricArray.push(item);
-        } else if (item.indexOf('user_defined/') == 0) {
+        } else if (item.indexOf('user_defined/') === 0) {
           userDefinedArray.push(item);
         } else if (
-          item == 'epoch' ||
-          item == 'batch_size' ||
-          item == 'learning_rate'
+          item === 'epoch' ||
+          item === 'batch_size' ||
+          item === 'learning_rate'
         ) {
           hyperArray.push(item);
         } else {
@@ -1065,12 +1071,12 @@ export default {
                       const tempEchartData = this.setDataOfModel(res.data.object);
                       this.hidenDirChecked.forEach((dir) => {
                         tempEchartData.forEach((item, index) => {
-                          if (item.summary_dir == dir) {
+                          if (item.summary_dir === dir) {
                             tempEchartData.splice(index, 1);
                           }
                         });
                       });
-                      if (tempEchartData.length == 0) {
+                      if (tempEchartData.length === 0) {
                         this.showEchartPic = false;
                       } else {
                         this.showEchartPic = true;
@@ -1111,7 +1117,7 @@ export default {
                     if (this.hidenDirChecked.length) {
                       this.hidenDirChecked.forEach((dir) => {
                         tempList.forEach((item, index) => {
-                          if (item.summary_dir == dir) {
+                          if (item.summary_dir === dir) {
                             tempList.splice(index, 1);
                           }
                         });
@@ -1249,7 +1255,7 @@ export default {
       allList.forEach((item) => {
         Object.keys(this.table.columnOptions).filter((i) => {
           const labelValue = this.table.columnOptions[i].label;
-          if (labelValue == item) {
+          if (labelValue === item) {
             this.table.columnOptions[i].selected = true;
           }
         });
@@ -1278,7 +1284,7 @@ export default {
         const tempEchartData = this.echart.brushData;
         this.hidenDirChecked.forEach((dir) => {
           tempEchartData.forEach((item, index) => {
-            if (item.summary_dir == dir) {
+            if (item.summary_dir === dir) {
               tempEchartData.splice(index, 1);
             }
           });
@@ -1286,7 +1292,7 @@ export default {
         const tableTemp = this.table.data;
         this.hidenDirChecked.forEach((dir) => {
           tableTemp.forEach((item, index) => {
-            if (item.summary_dir == dir) {
+            if (item.summary_dir === dir) {
               tableTemp.splice(index, 1);
             }
           });
@@ -1413,7 +1419,7 @@ export default {
 
         chartAxis.forEach((key) => {
           if (
-            (i[key] || i[key] == 0) &&
+            (i[key] || i[key] === 0) &&
             this.keysOfMixed &&
             this.keysOfMixed.length &&
             this.keysOfMixed.includes(key)
@@ -1562,7 +1568,7 @@ export default {
         const selectedAxisId = params.parallelAxisId;
         if (list.length) {
           list.forEach((item, index) => {
-            if (item == selectedAxisId) {
+            if (item === selectedAxisId) {
               list.splice(index, 1);
             }
           });
@@ -1823,6 +1829,17 @@ export default {
 };
 </script>
 <style lang="scss">
+.label-text {
+  line-height: 20px !important;
+  vertical-align: bottom;
+}
+.remark-tip {
+  line-height: 14px !important;
+  font-size: 12px;
+  white-space: pre-wrap !important;
+  vertical-align: bottom;
+  color: gray;
+}
 .el-color-dropdown__main-wrapper,
 .el-color-dropdown__value,
 .el-color-alpha-slider {
@@ -1904,7 +1921,7 @@ export default {
     padding: 4px;
     height: 30px;
     width: 30px;
-    border: 1px solid white;
+    border: 1px solid transparent;
   }
   .icon-image-container {
     margin: 16px 10px 18px;
