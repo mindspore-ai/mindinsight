@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="cl-scalar-manage">
+  <div class="cl-compare-manage">
 
-    <div class="scalar-bk">
-      <div class="cl-title cl-scalar-title">
+    <div class="compare-bk">
+      <div class="cl-title cl-compare-title">
         <div class="cl-title-left">
           {{$t("summaryManage.comparePlate")}}</div>
       </div>
@@ -141,10 +141,10 @@ export default {
           title: this.$t('components.summaryTitle'),
         },
         tag: {
-          title: this.$t('components.tagTitle'),
+          title: this.$t('components.tagSelectTitle'),
         },
       },
-      firstNum: 0, // First time
+      firstNum: 0, // First num
       isActive: 0, // Horizontal axis selected value
       initOver: false, // Indicates whether the initialization is complete.
       autoUpdateTimer: null, // Automatic refresh timer
@@ -171,6 +171,7 @@ export default {
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
+      cacheStatus: 'CACHING',
     };
   },
   computed: {
@@ -234,6 +235,12 @@ export default {
     // remove the size of a window and change the listener
     window.removeEventListener('resize', this.resizeCallback);
 
+    // remove axisBench value change timing
+    if (this.axisBenchChangeTimer) {
+      clearTimeout(this.axisBenchChangeTimer);
+      this.axisBenchChangeTimer = null;
+    }
+
     // remove slider value change timing
     if (this.smoothSliderValueTimer) {
       clearTimeout(this.smoothSliderValueTimer);
@@ -253,7 +260,7 @@ export default {
     }
   },
   mounted() {
-    document.title = this.$t('summaryManage.comparePlate') + '-MindInsight';
+    document.title = `${this.$t('summaryManage.comparePlate')} + -MindInsight`;
     this.$nextTick(() => {
       // Adding a Listener
       window.addEventListener('resize', this.resizeCallback, false);
@@ -305,7 +312,7 @@ export default {
                 show: true,
               });
 
-              if (summaryObj.cache_status==='CACHING') {
+              if (summaryObj.cache_status===this.cacheStatus) {
                 tempSummaryList.forEach((item)=>{
                   if (item.label=== summaryObj.train_id) {
                     item.loading=true;
@@ -1322,7 +1329,7 @@ export default {
           });
         }
 
-        if (summaryObj.cache_status==='CACHING') {
+        if (summaryObj.cache_status===this.cacheStatus) {
           this.summaryOperateList.forEach((item)=>{
             if (item.label=== summaryObj.train_id) {
               item.loading=true;
@@ -1657,7 +1664,7 @@ export default {
 };
 </script>
 <style lang="scss">
-.cl-scalar-manage {
+.cl-compare-manage {
   height: 100%;
 
   .w60 {
@@ -1668,13 +1675,13 @@ export default {
   .borderspacing3 {
     border-spacing: 3px;
   }
-  .scalar-bk {
+  .compare-bk {
     height: 100%;
     background-color: #fff;
     display: flex;
     flex-direction: column;
 
-    .cl-scalar-title {
+    .cl-compare-title {
       height: 56px;
       line-height: 56px;
     }

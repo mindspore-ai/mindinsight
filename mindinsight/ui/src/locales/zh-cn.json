@@ -198,8 +198,7 @@
     "searchByName": "请输入算子名称搜索"
   },
   "components": {
-    "summaryTitle":"训练作业选择",
-    "tagTitle":"标签选择",
+    "summaryTitle": "训练选择",
     "tagSelectTitle": "标签选择",
     "selectAll": "全选",
     "tagFilterPlaceHolder": "请输入需要的标签(支持正则表达式)",

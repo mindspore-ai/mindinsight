@@ -37,23 +37,24 @@ limitations under the License.
                               @input="myfilter"
                               :placeholder="$t('public.search')"></el-input>
                   </div>
-                  <el-button type="text"
-                             @click="allSelect"
-                             class="select-all-button"
-                             style="color:#606266"
-                             :class="selectCheckAll?'checked-color':'button-text'"
-                             :disabled="basearr.length>checkOptions.length">
+                  <button type="text"
+                          @click="allSelect"
+                          class="select-all-button"
+                          :class="[selectCheckAll?
+                          'checked-color':'button-text',
+                          basearr.length>checkOptions.length?'btn-disabled':'']"
+                          :disabled="basearr.length>checkOptions.length">
                     {{$t('public.selectAll')}}
-                  </el-button>
-
-                  <el-button type="text"
-                             @click="deselectAll"
-                             class="deselect-all-button"
-                             style="color:#606266"
-                             :class="!selectCheckAll?'checked-color':'button-text'"
-                             :disabled="basearr.length>checkOptions.length">
+                  </button>
+                  <button type="text"
+                          @click="deselectAll"
+                          class="deselect-all-button"
+                          :class="[!selectCheckAll?
+                               'checked-color':'button-text',
+                               basearr.length>checkOptions.length?'btn-disabled':'']"
+                          :disabled="basearr.length>checkOptions.length">
                     {{$t('public.deselectAll')}}
-                  </el-button>
+                  </button>
                 </div>
                 <el-option-group v-for="group in checkOptions"
                                  :key="group.label"
@@ -340,48 +341,7 @@ export default {
   data() {
     return {
       iconValue: 0,
-      imageList: [
-        {
-          number: 1,
-          iconAdd: require('@/assets/images/icon1.svg'),
-        },
-        {
-          number: 2,
-          iconAdd: require('@/assets/images/icon2.svg'),
-        },
-        {
-          number: 3,
-          iconAdd: require('@/assets/images/icon3.svg'),
-        },
-        {
-          number: 4,
-          iconAdd: require('@/assets/images/icon4.svg'),
-        },
-        {
-          number: 5,
-          iconAdd: require('@/assets/images/icon5.svg'),
-        },
-        {
-          number: 6,
-          iconAdd: require('@/assets/images/icon6.svg'),
-        },
-        {
-          number: 7,
-          iconAdd: require('@/assets/images/icon7.svg'),
-        },
-        {
-          number: 8,
-          iconAdd: require('@/assets/images/icon8.svg'),
-        },
-        {
-          number: 9,
-          iconAdd: require('@/assets/images/icon9.svg'),
-        },
-        {
-          number: 10,
-          iconAdd: require('@/assets/images/icon10.svg'),
-        },
-      ],
+      imageList: [],
       // Select all
       selectCheckAll: true,
       // Number of data records returned by the interface.
@@ -453,6 +413,13 @@ export default {
   },
   computed: {},
   mounted() {
+    this.imageList = [];
+    for (let i = 0; i < 10; i++) {
+      const obj = {};
+      obj.number = i + 1;
+      obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
+      this.imageList.push(obj);
+    }
     document.title = this.$t('summaryManage.modelTraceback') + '-MindInsight';
     document.addEventListener('click', this.blurFloat, true);
     this.$store.commit('setSelectedBarList', []);
@@ -844,6 +811,7 @@ export default {
       this.hyperOptions = [];
       this.otherTypeOptions = [];
       this.checkOptions = [];
+      this.basearr = [];
       this.selectArrayValue = [];
       // Obtain the hidden summary_dir list after initialization.
       this.hidenDirChecked = this.$store.state.hidenDirChecked || [];
@@ -1037,8 +1005,10 @@ export default {
                             otherType.label = this.table.columnOptions[item].label;
                             if (
                               otherType.value === 'loss' ||
-                          otherType.value === '网络' ||
-                          otherType.value === '优化器'
+                          otherType.value ===
+                            this.$t('modelTraceback.network') ||
+                          otherType.value ===
+                            this.$t('modelTraceback.optimizer')
                             ) {
                               otherType.disabled = true;
                             }
@@ -1887,6 +1857,29 @@ export default {
 .el-tag.el-tag--info .el-tag__close {
   display: none;
 }
+.btn-disabled {
+  cursor: not-allowed !important;
+}
+.select-all-button {
+  padding: 4px 0;
+  display: inline-block;
+  position: absolute;
+  right: 80px;
+  padding: 5px;
+  height: 32px;
+  border: none;
+  background: none;
+}
+.deselect-all-button {
+  padding: 4px 0;
+  display: inline-block;
+  position: absolute;
+  right: 10px;
+  padding: 5px;
+  height: 32px;
+  border: none;
+  background: none;
+}
 
 #cl-model-traceback {
   height: 100%;
@@ -1985,22 +1978,6 @@ export default {
   }
   .button-text {
     color: #606266 !important;
-  }
-  .select-all-button {
-    padding: 4px 0;
-    display: inline-block;
-    position: absolute;
-    right: 70px;
-    padding: 5px;
-    height: 32px;
-  }
-  .deselect-all-button {
-    padding: 4px 0;
-    display: inline-block;
-    position: absolute;
-    right: 6px;
-    padding: 5px;
-    height: 32px;
   }
 
   .cl-model-right {

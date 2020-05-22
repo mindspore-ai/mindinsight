@@ -47,22 +47,22 @@ limitations under the License.
                             :placeholder="$t('public.search')">
                   </el-input>
                 </div>
-                <el-button type="text"
-                           @click="allSelect"
-                           class="select-all-button"
-                           style="color:#606266;"
-                           :class="selectCheckAll?'checked-color':'button-text'"
-                           :disabled="basearr.length>checkOptions.length">
+                <button type="text"
+                        @click="allSelect"
+                        class="select-all-button"
+                        :class="[selectCheckAll?'checked-color':'button-text',
+                           basearr.length>checkOptions.length ? 'btn-disabled' : '']"
+                        :disabled="basearr.length>checkOptions.length">
                   {{ $t('public.selectAll')}}
-                </el-button>
-                <el-button type="text"
-                           @click="deselectAll"
-                           class="deselect-all-button"
-                           style="color:#606266;"
-                           :class="!selectCheckAll?'checked-color':'button-text'"
-                           :disabled="basearr.length>checkOptions.length">
+                </button>
+                <button type="text"
+                        @click="deselectAll"
+                        class="deselect-all-button"
+                        :class="[selectCheckAll?'checked-color':'button-text',
+                           basearr.length>checkOptions.length ? 'btn-disabled' : '']"
+                        :disabled="basearr.length>checkOptions.length">
                   {{ $t('public.deselectAll')}}
-                </el-button>
+                </button>
               </div>
               <el-option v-for="item in checkOptions"
                          :key="item.value"
@@ -71,9 +71,7 @@ limitations under the License.
                          :disabled="item.disabled"
                          :title="item.disabled?$t('modelTraceback.mustExist'):''">
               </el-option>
-
             </el-select>
-
           </div>
         </div>
       </div>
@@ -88,7 +86,9 @@ limitations under the License.
                    size="mini"
                    class="custom-btn"
                    @click="hiddenRecords"
-                   plain>{{ $t('modelTraceback.hide')}}</el-button>
+                   plain>
+          {{ $t('modelTraceback.hide')}}
+        </el-button>
         <el-button type="primary"
                    size="mini"
                    class="custom-btn"
@@ -179,7 +179,6 @@ limitations under the License.
                 </div>
               </div>
             </template>
-
           </el-table-column>
           <!-- tag column -->
           <el-table-column label="tag"
@@ -193,7 +192,7 @@ limitations under the License.
                    class="el-icon-arrow-down"></i>
                 <img :id="scope.row.summary_dir"
                      v-if="scope.row.tag"
-                     :src="require('@/assets/images/icon'+scope.row.tag+'.svg')">
+                     :src="require('@/assets/images/icon'+ scope.row.tag+'.svg')">
                 <img :id="scope.row.summary_dir"
                      v-else
                      src="">
@@ -207,8 +206,7 @@ limitations under the License.
                          :class="[item.number===scope.row.tag && scope.row.showIcon?'icon-border':'']"
                          v-for="item in imageList"
                          :key="item.number"
-                         @click="iconValueChange(scope.row,item.number,$event)
-                     ">
+                         @click="iconValueChange(scope.row,item.number,$event)">
                       <img :src="item.iconAdd">
                     </div>
                   </div>
@@ -237,9 +235,7 @@ limitations under the License.
                   </div>
                 </div>
               </div>
-
             </template>
-
           </el-table-column>
         </el-table>
         <div>
@@ -315,48 +311,8 @@ export default {
   data() {
     return {
       iconValue: 0,
-      imageList: [
-        {
-          number: 1,
-          iconAdd: require('@/assets/images/icon1.svg'),
-        },
-        {
-          number: 2,
-          iconAdd: require('@/assets/images/icon2.svg'),
-        },
-        {
-          number: 3,
-          iconAdd: require('@/assets/images/icon3.svg'),
-        },
-        {
-          number: 4,
-          iconAdd: require('@/assets/images/icon4.svg'),
-        },
-        {
-          number: 5,
-          iconAdd: require('@/assets/images/icon5.svg'),
-        },
-        {
-          number: 6,
-          iconAdd: require('@/assets/images/icon6.svg'),
-        },
-        {
-          number: 7,
-          iconAdd: require('@/assets/images/icon7.svg'),
-        },
-        {
-          number: 8,
-          iconAdd: require('@/assets/images/icon8.svg'),
-        },
-        {
-          number: 9,
-          iconAdd: require('@/assets/images/icon9.svg'),
-        },
-        {
-          number: 10,
-          iconAdd: require('@/assets/images/icon10.svg'),
-        },
-      ],
+      // icon list of tag
+      imageList: [],
       selectCheckAll: true,
       initOver: false, // Page initialization completed.
       dataCheckedSummary: [],
@@ -526,6 +482,13 @@ export default {
   },
   computed: {},
   mounted() {
+    this.imageList = [];
+    for (let i = 0; i < 10; i++) {
+      const obj = {};
+      obj.number = i + 1;
+      obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
+      this.imageList.push(obj);
+    }
     document.title = this.$t('summaryManage.dataTraceback') + '-MindInsight';
     document.addEventListener('click', this.blurFloat, true);
     this.$nextTick(() => {
@@ -544,7 +507,6 @@ export default {
         });
       }
     },
-
     /**
      * Display of the icon dialog box
      * @param {Object} row
@@ -621,10 +583,9 @@ export default {
     },
 
     /**
-     * cancelChangeIcon
+     * Cancel Save
      * @param {Object} row
      */
-
     cancelChangeIcon(row) {
       const classArr = document.querySelectorAll('.icon-border');
       classArr.forEach((item) => {
@@ -779,13 +740,11 @@ export default {
             }
           });
         });
-
         this.dataCheckedSummary = [];
         this.table.data = tableTemp;
         this.showNumber = tableTemp.length;
         this.echart.showData = tempEchartData;
         this.$refs.table.clearSelection();
-
         if (this.echart.showData.length > 0) {
           this.initChart();
         } else {
@@ -808,6 +767,7 @@ export default {
       }
       this.checkOptions = [];
       this.selectArrayValue = [];
+      this.basearr = [];
       const params = {
         body: {},
       };
@@ -869,7 +829,7 @@ export default {
     },
 
     /**
-     * Select data in the table
+     * Selected data in the table
      */
     selectValueChange() {
       const templist = [];
@@ -1221,7 +1181,7 @@ export default {
      * @param {Object} scope
      */
     showDialogData(val, scope) {
-      if (typeof val !== 'string' || val == '{}') {
+      if (typeof val !== 'string' || val === '{}') {
         return;
       } else {
         const isJson = this.isJSON(val);
@@ -1370,7 +1330,6 @@ export default {
                 if (this.noFixedSeries.length) {
                   this.setObjectValue(this.noFixedSeries, false);
                 }
-
                 const list1 = this.fixedSeries.concat(this.noFixedSeries);
                 list1.forEach((item, index) => {
                   this.checkOptions[index] = {};
@@ -1389,7 +1348,6 @@ export default {
                 });
                 this.hidenDirChecked = this.$store.state.hidenDirChecked || [];
                 this.echart.brushData = this.lineagedata.serData;
-
                 if (this.hidenDirChecked.length) {
                   const listdada = this.lineagedata.serData.slice();
                   this.hidenDirChecked.forEach((item) => {
@@ -1399,7 +1357,6 @@ export default {
                       }
                     });
                   });
-
                   if (listdada.length) {
                     this.showEchartPic = true;
                   } else {
@@ -1410,7 +1367,6 @@ export default {
                   this.echart.showData = this.echart.brushData;
                   this.showEchartPic = true;
                 }
-
                 this.setEchartValue();
                 this.initChart();
                 // Total number of pages in the table
@@ -1464,7 +1420,6 @@ export default {
 
     /**
      * reset echart data.Show all data
-     *
      */
     echartShowAllData() {
       // The first page is displayed.
@@ -1474,6 +1429,7 @@ export default {
       // checkOptions initializate to an empty array
       this.checkOptions = [];
       this.selectArrayValue = [];
+      this.basearr = [];
       this.pagination.currentPage = 1;
       this.$store.commit('setSummaryDirList', undefined);
       this.$store.commit('setSelectedBarList', []);
@@ -1543,6 +1499,7 @@ export default {
       };
       this.checkOptions = [];
       this.selectArrayValue = [];
+      this.basearr = [];
       this.pagination.currentPage = 1;
       params.body = Object.assign({}, tempParam, this.tableFilter);
       this.queryLineagesData(params);
@@ -1633,7 +1590,6 @@ export default {
               } else {
                 tempId = `${nodeItem.name}${tempDic[nodeItem.name]}`;
               }
-
               fullNodeList.splice(startIndex, 0, {
                 name: nodeItem.name,
                 id: tempId,
@@ -1842,28 +1798,35 @@ export default {
 .el-tag.el-tag--info .el-tag__close {
   display: none;
 }
+.select-all-button {
+  padding: 4px 0;
+  display: inline-block;
+  position: absolute;
+  right: 80px;
+  padding: 5px;
+  height: 32px;
+  border: none;
+  background: none;
+}
+.deselect-all-button {
+  padding: 4px 0;
+  display: inline-block;
+  position: absolute;
+  right: 10px;
+  padding: 5px;
+  height: 32px;
+  border: none;
+  background: none;
+}
+.btn-disabled {
+  cursor: not-allowed !important;
+}
 #cl-data-traceback {
   height: 100%;
   overflow-y: auto;
   position: relative;
   .inline-block-set {
     display: inline-block;
-  }
-  .select-all-button {
-    padding: 4px 0;
-    display: inline-block;
-    position: absolute;
-    right: 70px;
-    padding: 5px;
-    height: 32px;
-  }
-  .deselect-all-button {
-    padding: 4px 0;
-    display: inline-block;
-    position: absolute;
-    right: 6px;
-    padding: 5px;
-    height: 32px;
   }
   .icon-border {
     border: 1px solid #00a5a7 !important;
@@ -2076,9 +2039,9 @@ export default {
         position: relative;
       }
       td:first-child::before {
-        width: 20px;
-        background: #fff;
-        border-right: 3px solid #7693e1;
+        width: 42px;
+        background: #f0fdfd;
+        border-right: 2px #00a5a7 solid;
         z-index: 10;
         position: absolute;
         left: 0;
