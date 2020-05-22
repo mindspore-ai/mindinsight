@@ -209,7 +209,6 @@
                width="50%"
                :close-on-click-modal="false"
                class="details-data-list">
-      <div class="details-data-title">{{ detailsDataTitle }}</div>
       <el-table :data="detailsDataList"
                 row-key="id"
                 lazy
@@ -240,25 +239,25 @@ export default {
   data() {
     return {
       apiType: 'core',
-      currentCard: {value: '', option: []},
+      currentCard: {value: '', option: []}, // current device
       cpuCharts: {
         type: 1,
         id: 'cpu-echarts',
         chartDom: null,
         data: [],
-      },
+      }, // ai cpu chart
       coreCharts: {
         type: 0,
         id: 'core-echarts',
         chartDom: null,
         data: [],
-      },
-      statisticType: 0,
-      searchByTypeInput: '',
-      searchByNameInput: '',
-      searchByCPUNameInput: '',
-      opTypeCol: [],
-      opTypeList: [],
+      }, // ai core chart
+      statisticType: 0, // ai core table statistic type
+      searchByTypeInput: '', // search by ai core type name
+      searchByNameInput: '', // search by ai core detail name
+      searchByCPUNameInput: '', // search by ai cpu name
+      opTypeCol: [], // table headers list of operator type
+      opTypeList: [], // table list of operator type
       opCpuList: {
         opDetailCol: [],
         opDetailList: [],
@@ -272,8 +271,7 @@ export default {
           name: 'total_time',
           type: 'descending',
         },
-      },
-      opAllDetailCol: [],
+      }, // table data of operator cpu
       opAllTypeList: {
         opDetailCol: [],
         opDetailList: [],
@@ -284,18 +282,17 @@ export default {
         },
         op_filter_condition: {},
         op_sort_condition: {},
-      },
-      detailsDataTitle: '',
-      rowName: this.$t('dataTraceback.details'),
-      detailsDataList: [],
-      detailsDialogVisible: false,
-      profile_dir: '',
-      train_id: '',
-      op_filter_condition: {},
+      }, // table data of all operator details
+      rowName: this.$t('dataTraceback.details'), // dialog title
+      detailsDataList: [], // dialog table data
+      detailsDialogVisible: false, // show dialog
+      profile_dir: '', // profile directory
+      train_id: '', // train id
+      op_filter_condition: {}, // operator type filter
       op_sort_condition: {
         name: 'execution_time',
         type: 'descending',
-      },
+      }, // operator type filter
       initOver: false,
       objectType: 'object',
     };
@@ -308,16 +305,22 @@ export default {
     init() {
       this.getDeviceList();
     },
+    /**
+     * Current device change
+     */
     cardChange() {
-      this.clearCpuData();
-      this.clearCoreData();
       if (this.apiType === 'core') {
         this.statisticType = 0;
+        this.clearCoreData();
         this.getCoreTypeList();
       } else if (this.apiType === 'cpu') {
+        this.clearCpuData();
         this.getCpuList(true);
       }
     },
+    /**
+     * clear cpu data
+     */
     clearCpuData() {
       this.searchByCPUNameInput = '';
       this.opCpuList = {
@@ -335,6 +338,9 @@ export default {
         },
       };
     },
+    /**
+     * clear core data
+     */
     clearCoreData() {
       this.searchByTypeInput = '';
       this.searchByNameInput = '';
@@ -353,6 +359,9 @@ export default {
         op_sort_condition: {},
       };
     },
+    /**
+     * get device list
+     */
     getDeviceList() {
       const params = {
         profile: this.profile_dir,
@@ -381,6 +390,9 @@ export default {
             this.initOver = true;
           });
     },
+    /**
+     * get core list
+     */
     getCoreTypeList() {
       const params = {};
       params.params = {
@@ -461,6 +473,10 @@ export default {
             this.initOver = true;
           });
     },
+    /**
+     * get core detail list
+     * @param {Object} row type row
+     */
     getCoreDetailList(row) {
       const params = {};
       params.params = {
@@ -483,6 +499,9 @@ export default {
           })
           .catch(() => {});
     },
+    /**
+     * get cpu list
+     */
     getCpuList() {
       const params = {};
       params.params = {
@@ -529,14 +548,27 @@ export default {
             this.initOver = true;
           });
     },
+    /**
+     * operator detail list page change
+     * @param {Object} row table cell
+     * @param {Number} pageIndex current page
+     */
     opDetailPageChange(row, pageIndex) {
       row.opDetailPage.offset = pageIndex - 1;
       this.getCoreDetailList(row);
     },
+    /**
+     * cpu list page change
+     * @param {Object} row table cell
+     * @param {Number} pageIndex current page
+     */
     opCpuPageChange(row, pageIndex) {
       row.opDetailPage.offset = pageIndex - 1;
       this.getCpuList();
     },
+    /**
+     * get core list by search
+     */
     searchOpCoreList() {
       if (this.statisticType) {
         this.opAllTypeList.op_filter_condition = {};
@@ -560,6 +592,9 @@ export default {
         this.getCoreTypeList();
       }
     },
+    /**
+     * get cpu list by search
+     */
     searchOpCpuList() {
       this.opCpuList.op_filter_condition = {};
       if (this.searchByCPUNameInput) {
@@ -571,6 +606,11 @@ export default {
       }
       this.getCpuList();
     },
+    /**
+     * core detail sort
+     * @param {Object} row table cell
+     * @param {Object} column table cell
+     */
     coreDetailSortChange(row, column) {
       row.op_sort_condition = {
         name: column.prop,
@@ -579,6 +619,11 @@ export default {
       row.opDetailPage.offset = 0;
       this.getCoreDetailList(row);
     },
+    /**
+     * cpu detail sort
+     * @param {Object} row table cell
+     * @param {Object} column table cell
+     */
     cpuDetailSortChange(row, column) {
       row.op_sort_condition = {
         name: column.prop,
@@ -587,6 +632,11 @@ export default {
       row.opDetailPage.offset = 0;
       this.getCpuList();
     },
+    /**
+     * format detail data
+     * @param {Object} row table cell
+     * @param {Object} detailsDataList table detail
+     */
     formatterDetailData(row, detailsDataList) {
       row.opDetailList = [];
       row.opDetailCol = detailsDataList.col_name;
@@ -605,7 +655,11 @@ export default {
         });
       }
     },
-    expandTypeItem(row, data, data2) {
+    /**
+     * expand core type table
+     * @param {Object} row table cell
+     */
+    expandTypeItem(row) {
       row.isExpanded = !row.isExpanded;
       if (row.isExpanded) {
         row.opDetailList = [];
@@ -615,17 +669,20 @@ export default {
         this.getCoreDetailList(row);
       }
     },
+    /**
+     * tab change
+     */
     tabChange() {
       if (
         this.apiType === 'cpu' &&
-        !this.cpuCharts.device_id !== this.currentCard.value
+        this.cpuCharts.device_id !== this.currentCard.value
       ) {
         this.initOver = false;
         this.clearCpuData();
         this.getCpuList();
       } else if (
         this.apiType === 'core' &&
-        !this.coreCharts.device_id !== this.currentCard.value
+        this.coreCharts.device_id !== this.currentCard.value
       ) {
         this.initOver = false;
         this.clearCoreData();
@@ -635,17 +692,30 @@ export default {
         this.resizeCallback();
       });
     },
+    /**
+     * core table type change
+     */
     coreTableChange() {
       if (this.statisticType === 1 && !this.opAllTypeList.opDetailCol.length) {
         this.getCoreDetailList(this.opAllTypeList);
       }
     },
+    /**
+     * operator cpu chart change
+     */
     cpuChartChange() {
       this.setOption(this.cpuCharts);
     },
+    /**
+     * operator core chart change
+     */
     coreChartChange() {
       this.setOption(this.coreCharts);
     },
+    /**
+     * set chart option
+     * @param {Object} chart chart
+     */
     setOption(chart) {
       const option = {};
       if (chart.type === 0) {
@@ -743,7 +813,7 @@ export default {
           data: [],
         };
         option.grid = {
-          left: 30,
+          left: 50,
           top: 20,
           right: 0,
           bottom: 30,
@@ -777,6 +847,11 @@ export default {
         chart.chartDom.resize();
       }, 10);
     },
+    /**
+     * show operator info deteail
+     * @param {Object} cellData cell data
+     * @param {Object} column column
+     */
     showInfoDetail(cellData, column) {
       if (column.property !== 'op_info' || !cellData || !cellData.op_info) {
         return;
@@ -1041,9 +1116,9 @@ export default {
         position: relative;
       }
       td:first-child::before {
-        width: 20px;
-        background: #fff;
-        border-right: 3px solid #7693e1;
+        width: 42px;
+        background: #f0fdfd;
+        border-right: 2px #00a5a7 solid;
         z-index: 10;
         position: absolute;
         left: 0;

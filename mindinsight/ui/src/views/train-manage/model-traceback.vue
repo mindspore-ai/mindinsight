@@ -81,7 +81,7 @@ limitations under the License.
                      type="primary"
                      size="mini"
                      plain
-                     v-if="(!noData&&echart.allData.length) ||
+                     v-if="(!noData&&basearr.length) ||
                    (noData && summaryDirList && !summaryDirList.length)">
             {{ $t('modelTraceback.showAllData') }}</el-button>
         </div>
