@@ -55,6 +55,10 @@ export default new Vuex.Store({
     setSelectedBarList: (state, val) => {
       state.selectedBarList = val;
     },
+    // hide list of model traceback
+    setHidenDirChecked: (state, val) => {
+      state.hidenDirChecked = val;
+    },
     customizedColumnOptions: (state, val) => {
       state.customizedColumnOptions = val;
     },

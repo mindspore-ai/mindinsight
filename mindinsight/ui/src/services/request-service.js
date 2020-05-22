@@ -37,7 +37,7 @@ export default {
   putLineagesData(params) {
     return axios({
       method: 'put',
-      url: '/v1/mindinsight/lineagemgr/lineages?train_id='+params.train_id,
+      url: '/v1/mindinsight/lineagemgr/lineages?train_id=' + params.train_id,
       data: params.body,
     });
   },
@@ -125,15 +125,15 @@ export default {
 
   // query metedata
   getSummarySample(params) {
-    const trainIdsStr=params.train_id;
-    const trainIdsArr=trainIdsStr.split('&');
-    let requestStr='';
-    trainIdsArr.forEach((item)=>{
+    const trainIdsStr = params.train_id;
+    const trainIdsArr = trainIdsStr.split('&');
+    let requestStr = '';
+    trainIdsArr.forEach((item) => {
       if (item) {
-        requestStr+=`train_id=${encodeURIComponent(item)}&`;
+        requestStr += `train_id=${encodeURIComponent(item)}&`;
       }
     });
-    requestStr+=`tag=${params.tag}`;
+    requestStr += `tag=${params.tag}`;
     return axios({
       method: 'get',
       url: `v1/mindinsight/datavisual/scalars?${requestStr}`,
@@ -170,15 +170,16 @@ export default {
   getProfilerDeviceData(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/profiler_device',
+      url: '/v1/mindinsight/profile/devices',
       params: params,
     });
   },
-  getProfilerOpTypeList(params) {
+  getProfilerOpData(params) {
     return axios({
-      method: 'get',
-      url: '/v1/mindinsight/profiler_device',
-      params: params,
+      method: 'post',
+      url: '/v1/mindinsight/profile/ops/search',
+      params: params.params,
+      data: params.body,
     });
   },
 };
