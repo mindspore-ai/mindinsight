@@ -1673,6 +1673,14 @@ export default {
                           });
                         });
                       }
+                      if (!list.length) {
+                        this.noData = true;
+                        this.showEchartPic = false;
+                        this.summaryDirList = [];
+                        this.checkedSummary = [];
+                        this.$store.commit('setSummaryDirList', []);
+                        return;
+                      }
                       const summaryDirList = list.map((i) => i.summary_dir);
                       this.$store.commit('setSummaryDirList', summaryDirList);
                       this.echart.showData = this.echart.brushData = list;
