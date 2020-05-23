@@ -260,7 +260,7 @@ export default {
     }
   },
   mounted() {
-    document.title = `${this.$t('summaryManage.comparePlate')} + -MindInsight`;
+    document.title = `${this.$t('summaryManage.comparePlate')}-MindInsight`;
     this.$nextTick(() => {
       // Adding a Listener
       window.addEventListener('resize', this.resizeCallback, false);

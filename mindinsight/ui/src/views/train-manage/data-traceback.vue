@@ -151,11 +151,10 @@ limitations under the License.
           </el-table-column>
           <!-- remark column -->
           <el-table-column fixed="right"
-                           width="220">
+                           width="310">
             <template slot="header">
               <div>
                 <div class="label-text">{{$t('public.remark')}}</div>
-                <br>
                 <div class="remark-tip">{{$t('modelTraceback.remarkTips')}}</div>
               </div>
             </template>
@@ -1879,7 +1878,7 @@ export default {
   .no-data-page {
     width: 100%;
     height: 100%;
-    padding-top: 254px;
+    padding-top: 224px;
   }
   .no-data-img {
     background: #fff;
@@ -2001,7 +2000,7 @@ export default {
       .hide-count {
         display: inline-block;
         position: absolute;
-        right: 400px;
+        right: 450px;
         height: 32px;
         line-height: 32px;
         padding-top: 12px;

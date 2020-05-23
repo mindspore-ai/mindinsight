@@ -14,6 +14,29 @@
  * limitations under the License.
  */
 export default {
+  pieColorArr: [
+    '#6C92FA',
+    '#6CBFFF',
+    '#4EDED2',
+    '#7ADFA0',
+    '#A6DD82',
+    '#F6DF66',
+    '#FDCA5A',
+    '#FA8E5A',
+    '#F45C5E',
+    '#F3689A',
+    '#A97AF8',
+    '#3D58A6',
+    '#3673A3',
+    '#2C9990',
+    '#469965',
+    '#68994D',
+    '#A89636',
+    '#A8812C',
+    '#A6542D',
+    '#A34142',
+    '#664EA3',
+  ],
   commonColorArr: [
     '#6C92FA',
     '#FA8E5A',
