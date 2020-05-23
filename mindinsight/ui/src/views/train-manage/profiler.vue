@@ -147,7 +147,8 @@
       </el-tab-pane>
       <el-tab-pane label="AI CPU"
                    class="cpu-tab"
-                   name="cpu">
+                   name="cpu"
+                   v-if="false">
         <div class="cl-profiler-top"
              v-if="cpuCharts.data.length">
           <div>
