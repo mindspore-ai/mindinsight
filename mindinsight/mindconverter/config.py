@@ -67,7 +67,7 @@ class APIPt:
 
         Raises:
             ValueError: If can not use ast to parse or the required parse node not type of ast.Call,
-                or the given args_str not valid.
+            or the given args_str not valid.
         """
         # expr is REQUIRED to meet (**) format
         if not (len(args_str) >= 2 and args_str[0] == "(" and args_str[-1] == ")"):
@@ -222,6 +222,7 @@ class MappingHelper:
     def convert(self, call_name_pt: str, args_str_pt: str):
         """
         Convert code sentence to MindSpore code sentence.
+
         Args:
             call_name_pt (str): str of the call function, etc.
             args_str_pt (str): str of args for function, which starts with '(' and end with ')'.
@@ -336,11 +337,12 @@ def gen_explicit_map_one_delta(params_pt, args_pt, k_ms, k_pt):
 def load_json_file(file_path):
     """
     Load data from given json file path.
+
     Args:
         file_path (str): The file to load json data from.
 
     Returns:
-        list, the list data stored in file_path.
+        list(str), the list data stored in file_path.
     """
     with open(file_path, 'r', encoding='utf-8') as file:
         info = json.loads(file.read())

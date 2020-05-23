@@ -194,6 +194,7 @@ if __name__ == '__main__':
         entry_points={
             'console_scripts': [
                 'mindinsight=mindinsight.utils.command:main',
+                'mindconverter=mindinsight.mindconverter.cli:cli_entry',
             ],
         },
         python_requires='>=3.7',
