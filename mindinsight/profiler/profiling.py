@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""profiling api file."""
+"""Profiling api file."""
 import os
 import time
 from tabulate import tabulate
@@ -30,10 +30,33 @@ from mindinsight.profiler.common.validator.checkparam import \
 from mindinsight.profiler.common.log import logger
 from mindinsight.utils.exceptions import MindInsightException
 
-profiling_log_base_path = "/var/log/npu/profiling"
+PROFILING_LOG_BASE_PATH = "/var/log/npu/profiling"
+
 
 class Profiler:
-    """Performance profiling tool."""
+    """
+    Performance profiling API.
+
+    Enable MindSpore users to profile the neural network.
+
+    Args:
+         subgraph (str): Defines which subgraph to monitor and analyse, can be 'all', 'Default', 'Gradients'.
+         is_detail (bool): Whether to show profiling data for op_instance level, only show optype level if False.
+         is_show_op_path (bool): Whether to save the full path for each op instance.
+         output_path (str): Output data path.
+         optypes_to_deal (list): Op type names, the data of which optype should be collected and analysed,
+                                will deal with all op if null.
+         optypes_not_deal (list): Op type names, the data of which optype will not be collected and analysed.
+
+    Examples:
+        >>> from mindinsight.profiler import Profiler
+        >>> profiler = Profiler(subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data')
+        >>> model = Model(train_network)
+        >>> dataset = get_dataset()
+        >>> model.train(2, dataset)
+        >>> profiler.analyse()
+    """
+
     _base_profiling_container_path = "/var/log/npu/profiling/container"
     _hwts_output_filename_target = "output_format_data_hwts_"
     _opcompute_output_filename_target = "output_op_compute_time_"
@@ -41,19 +64,6 @@ class Profiler:
 
     def __init__(self, subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data',
                  optypes_to_deal='', optypes_not_deal='Variable', job_id=""):
-        """
-        Init profiling service, called berfore network training.
-
-        Args:
-             subgraph(str): which subgraph to monit and anlayse, can be 'all', 'Default', 'Gradients'.
-             is_detail(Bool): whether to show profiling data for op_instace level, only show optype level if False.
-             is_show_op_path(Bool): whether to save the full path for each op instace.
-             output_path(Bool): output data path.
-             optypes_to_deal(List): Op type names, the data of which optype should be collected and analysed,
-                                    will deal with all op if null.
-             optypes_not_deal(List): Op type names, the data of which optype will not be collected and analysed.
-        """
-
         dev_id = os.getenv('DEVICE_ID')
         if not dev_id:
             dev_id = "0"
@@ -82,9 +92,18 @@ class Profiler:
         self._start_time = int(time.time() * 10000000)
         logger.info("Profiling: profiling start time: %d", self._start_time)
 
-
     def analyse(self):
-        """Collect and analyze performance data, called after training or during training."""
+        """
+        Collect and analyse performance data, called after training or during training.
+
+        Examples:
+            >>> from mindinsight.profiler import Profiler
+            >>> profiler = Profiler(subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data')
+            >>> model = Model(train_network)
+            >>> dataset = get_dataset()
+            >>> model.train(2, dataset)
+            >>> profiler.analyse()
+        """
 
         try:
             from mindspore.communication.management import release
@@ -96,13 +115,13 @@ class Profiler:
 
         job_id = self._get_profiling_job_id()
         if not job_id:
-            msg = ("Fail to get profiling job, please check whether job dir was generated under path %s"\
-                   %profiling_log_base_path)
+            msg = ("Fail to get profiling job, please check whether job dir was generated under path %s" \
+                   % PROFILING_LOG_BASE_PATH)
             raise RuntimeError(msg)
 
         logger.info("Profiling: job id is %s ", job_id)
 
-        source_path = os.path.join(profiling_log_base_path, job_id)
+        source_path = os.path.join(PROFILING_LOG_BASE_PATH, job_id)
         # parse hwts.log.data.45.dev file, and get task profiling data
         hwts_output_filename = self._hwts_output_filename_target + self._dev_id + ".txt"
         hwts_output_filename = os.path.join(self._output_path, hwts_output_filename)
@@ -154,12 +173,12 @@ class Profiler:
             return self._profiling_job_id
 
         job_id = ""
-        cmd = "ls -t " + profiling_log_base_path + "|grep JOB|awk '{print $1}'"
+        cmd = "ls -t " + PROFILING_LOG_BASE_PATH + "|grep JOB|awk '{print $1}'"
         r = os.popen(cmd)
         profiling_job_dirs = r.readlines()
         r.close()
         for item in profiling_job_dirs:
-            path = os.path.join(profiling_log_base_path, item.strip())
+            path = os.path.join(PROFILING_LOG_BASE_PATH, item.strip())
             log_file = get_file_names(path, "host_start.log")
             if not log_file:
                 logger.error("Profiling: job path %s, host_start.log not exist.", path)
@@ -191,10 +210,10 @@ class Profiler:
         Parse host start log file, get the device id and start time of the job.
 
         Args:
-             input_file(str): the file path of the host start log file.
+             input_file (str): The file path of the host start log file.
 
         Returns:
-            dict: job start time and device id.
+            dict, job start time and device id.
         """
 
         item_dict = {}
@@ -207,7 +226,7 @@ class Profiler:
         return item_dict
 
     def _analyser_op_info(self):
-        """Analyser the operator information."""
+        """Analyse the operator information."""
         integrator = Integrator(self._output_path, self._dev_id)
         integrator.integrate()
 

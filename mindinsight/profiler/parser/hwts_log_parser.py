@@ -18,13 +18,14 @@ from tabulate import tabulate
 from mindinsight.profiler.common._utils import fwrite_format, get_file_join_name
 from mindinsight.profiler.common.log import logger
 
+
 class HWTSLogParser:
     """
     The Parser for hwts log files.
 
     Args:
-         _input_path(str): The profiling job path. Such as: '/var/log/npu/profiling/JOBAIFGJEJFEDCBAEADIFJAAAAAAAAAA".
-         output_filename(str): The output data path and name. Such as: './output_format_data_hwts_0.txt'.
+         _input_path (str): The profiling job path. Such as: '/var/log/npu/profiling/JOBAIFGJEJFEDCBAEADIFJAAAAAAAAAA".
+         output_filename (str): The output data path and name. Such as: './output_format_data_hwts_0.txt'.
     """
 
     _source_file_target = 'hwts.log.data.45.dev.profiler_default_tag'
@@ -53,7 +54,7 @@ class HWTSLogParser:
         Execute the parser, get result data, and write it to the output file.
 
         Returns:
-            bool: whether succeed to analyse hwts log.
+            bool, whether succeed to analyse hwts log.
         """
 
         content_format = ['QIIIIIIIIIIII', 'QIIQIIIIIIII', 'IIIIQIIIIIIII']
