@@ -15,4 +15,4 @@
 """Create a logger."""
 from mindinsight.utils.log import setup_logger
 
-logger = setup_logger("mindconverter", "mindconverter")
+logger = setup_logger("mindconverter", "mindconverter", console=False)
