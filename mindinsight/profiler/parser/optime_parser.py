@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""op compute time files parser"""
+"""Op compute time files parser."""
 from tabulate import tabulate
 from mindinsight.profiler.common._utils import fwrite_format
 
@@ -21,9 +21,9 @@ class OPComputeTimeParser:
     Join hwts info and framework info, get op time info, and output to the result file.
 
     Args:
-         hwts_output_file(str): The file path of hwts_output_file. Such as: './output_format_data_hwts_0.txt".
-         output_filename(str): The output data file path and name. Such as: './output_op_compute_time_0.txt'.
-         op_task_info(dict): The task and op relation info. format as: {taskid, [opname, streamid, block dim]}.
+         hwts_output_file (str): The file path of hwts_output_file. Such as: './output_format_data_hwts_0.txt".
+         output_filename (str): The output data file path and name. Such as: './output_op_compute_time_0.txt'.
+         op_task_info (dict): The task and op relation info. The format: {task_id, [opname, stream_id, block dim]}.
     """
 
     _dst_file_title = 'title:op compute time'
@@ -79,7 +79,7 @@ class OPComputeTimeParser:
 
             if op_start[1] == "Start" and op_end[1] == "End"\
                 and op_start[0] == op_end[0]:
-                # op_name, taskId, cycle counter, streamId
+                # op_name, task_id, cycle counter, stream_id
                 tmp_result_data.append([op_start[0], op_start[2], int(op_end[3]) - int(op_start[3]), op_start[4]])
                 cur_index += 2
             else:
@@ -102,7 +102,6 @@ class OPComputeTimeParser:
                 op_name_steamid_dict[item[0]] = item[-1]
                 op_name_task_dict[item[0]] = item[1]
                 op_name_count_dict[item[0]] = 1
-
 
         for op_name, time in op_name_time_dict.items():
             if op_name in op_name_steamid_dict.keys():
