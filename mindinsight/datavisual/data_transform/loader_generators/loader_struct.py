@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Loader struct."""
+from mindinsight.datavisual.common.enums import CacheStatus
 
 
 class LoaderStruct:
@@ -27,6 +28,7 @@ class LoaderStruct:
         self._path = path
         self._latest_update_time = latest_update_time
         self._data_loader = data_loader
+        self._cache_status = CacheStatus.NOT_IN_CACHE
 
     @property
     def loader_id(self):
@@ -48,10 +50,20 @@ class LoaderStruct:
         """Get data loader."""
         return self._data_loader
 
+    @property
+    def cache_status(self):
+        """Get cache status of loader."""
+        return self._cache_status
+
     @latest_update_time.setter
     def latest_update_time(self, latest_update_time):
         """Set the latest update time of loader."""
         self._latest_update_time = latest_update_time
+
+    @cache_status.setter
+    def cache_status(self, cache_status):
+        """Set cache status of loader."""
+        self._cache_status = cache_status
 
     def to_dict(self):
         """Transform LoaderStruct to dict."""

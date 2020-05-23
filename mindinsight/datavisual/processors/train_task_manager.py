@@ -17,10 +17,10 @@
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from mindinsight.datavisual.common.enums import CacheStatus
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 from mindinsight.datavisual.data_transform.data_manager import DATAVISUAL_PLUGIN_KEY, DATAVISUAL_CACHE_KEY
-from mindinsight.datavisual.data_transform.data_manager import CacheStatus
 
 
 class TrainTaskManager(BaseProcessor):
@@ -132,23 +132,22 @@ class TrainTaskManager(BaseProcessor):
         Returns:
             dict, indicates train job ID and its current cache status.
         """
-        brief_cache = self._data_manager.get_brief_cache()
-        brief_train_jobs = brief_cache.get_train_jobs()
-
-        for train_id in train_ids:
-            brief_train_job = brief_train_jobs.get(train_id)
-            if brief_train_job is None:
-                raise exceptions.TrainJobNotExistError(f'Train id {train_id} not exists')
-
         cache_result = []
         for train_id in train_ids:
-            brief_train_job = brief_train_jobs.get(train_id)
-            if brief_train_job.cache_status.value == CacheStatus.NOT_IN_CACHE.value:
-                self._data_manager.cache_train_job(train_id)
+            try:
+                train_job = self._data_manager.get_train_job(train_id)
+            except exceptions.TrainJobNotExistError:
+                logger.warning('Train job %s not existed', train_id)
+                continue
 
-            cache_result.append({
-                'train_id': train_id,
-                'cache_status': brief_train_job.cache_status.value,
-            })
+            if train_job.cache_status == CacheStatus.NOT_IN_CACHE:
+                self._data_manager.cache_train_job(train_id)
+                # Update loader cache status to CACHING for consistency in response.
+                train_job.cache_status = CacheStatus.CACHING
+
+            cache_result.append(dict(
+                train_id=train_id,
+                cache_status=train_job.cache_status.value,
+            ))
 
         return cache_result
