@@ -13,11 +13,17 @@
 # limitations under the License.
 # ============================================================================
 """The converter between proto format event of lineage and dict."""
+import socket
 import time
 
 from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError
 from mindinsight.lineagemgr.common.log import logger as log
+
+# Set the Event mark
+EVENT_FILE_NAME_MARK = "out.events."
+# Set lineage file mark
+LINEAGE_FILE_NAME_MARK = "_lineage"
 
 
 def package_dataset_graph(graph):
@@ -345,3 +351,21 @@ def _package_user_defined_info(user_defined_dict, user_defined_message):
             error_msg = f"Invalid value type in user defined info. The {value}'s type" \
                         f"'{type(value).__name__}' is not supported. It should be float, int or str."
             log.error(error_msg)
+
+
+def get_lineage_file_name():
+    """
+    Get lineage file name.
+
+    Lineage filename format is:
+    EVENT_FILE_NAME_MARK + "summary." + time(seconds) + "." + Hostname + lineage_suffix.
+
+    Returns:
+        str, the name of event log file.
+    """
+
+    time_second = str(int(time.time()))
+    hostname = socket.gethostname()
+    file_name = f'{EVENT_FILE_NAME_MARK}summary.{time_second}.{hostname}{LINEAGE_FILE_NAME_MARK}'
+
+    return file_name

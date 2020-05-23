@@ -15,6 +15,7 @@
 """MindSpore Mock Interface"""
 import os
 import time
+import socket
 
 
 class SummaryRecord:
@@ -22,13 +23,15 @@ class SummaryRecord:
 
     def __init__(self,
                  log_dir: str,
-                 file_prefix: str = "events.",
-                 file_suffix: str = ".MS",
+                 file_prefix: str = "events",
+                 file_suffix: str = "_MS",
                  create_time=int(time.time())):
         self.log_dir = log_dir
         self.prefix = file_prefix
         self.suffix = file_suffix
-        file_name = file_prefix + 'summary.' + str(create_time) + file_suffix
+        hostname = socket.gethostname()
+        file_name = f'{file_prefix}.out.events.summary.{str(create_time)}.{hostname}{file_suffix}'
+
         self.full_file_name = os.path.join(log_dir, file_name)
         permissions = os.R_OK | os.W_OK | os.X_OK
         mode = permissions << 6

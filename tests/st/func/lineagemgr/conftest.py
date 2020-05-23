@@ -53,6 +53,19 @@ def pytest_collection_modifyitems(items):
         if module_item is not None:
             module_item.append(item)
     ordered_items = split_items.get(COLLECTION_MODULE)
+    item_scenes = []
+    for item in ordered_items:
+        scenes = [
+            marker for marker in item.own_markers
+            if marker.name.startswith('scene')
+        ]
+        if scenes:
+            scene_mark = scenes[0].args[0]
+        else:
+            scene_mark = 0
+        item_scenes.append((item, scene_mark))
+    sorted_item_scenes = sorted(item_scenes, key=lambda x: x[1])
+    ordered_items = [item_scene[0] for item_scene in sorted_item_scenes]
     ordered_items.extend(split_items.get(API_MODULE))
     items[:] = ordered_items
 

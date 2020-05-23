@@ -13,14 +13,15 @@
 # limitations under the License.
 # ============================================================================
 """Lineage utils."""
-from functools import wraps
+import os
 import re
+from functools import wraps
 
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
-from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
-    LineageGetModelFileError, LineageLogError, LineageParamValueError, LineageDirNotExistError, \
-    LineageParamSummaryPathError
+    LineageGetModelFileError, LineageLogError, LineageParamValueError, LineageParamTypeError, \
+    LineageDirNotExistError, LineageParamSummaryPathError
+from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.validator.validate import validate_path
 from mindinsight.utils.exceptions import MindInsightException
 
@@ -76,3 +77,29 @@ def get_timestamp(filename):
     """Get timestamp from filename."""
     timestamp = int(re.search(SummaryWatcher().SUMMARY_FILENAME_REGEX, filename)[1])
     return timestamp
+
+
+def make_directory(path):
+    """Make directory."""
+    real_path = None
+    if path is None or not isinstance(path, str) or not path.strip():
+        log.error("Invalid input path: %r.", path)
+        raise LineageParamTypeError("Invalid path type")
+
+    # convert relative path to abs path
+    path = os.path.realpath(path)
+    log.debug("The abs path is %r", path)
+
+    # check path exist and its write permissions]
+    if os.path.exists(path):
+        real_path = path
+    else:
+        # All exceptions need to be caught because create directory maybe have some limit(permissions)
+        log.debug("The directory(%s) doesn't exist, will create it", path)
+        try:
+            os.makedirs(path, exist_ok=True)
+            real_path = path
+        except PermissionError as e:
+            log.error("No write permission on the directory(%r), error = %r", path, e)
+            raise LineageParamTypeError("No write permission on the directory.")
+    return real_path

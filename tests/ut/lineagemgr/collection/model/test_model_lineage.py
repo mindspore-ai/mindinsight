@@ -205,6 +205,7 @@ class TestModelLineage(TestCase):
             self.my_eval_module(self.my_summary_record(self.summary_log_path), raise_exception=2)
         self.assertTrue('Invalid value for raise_exception.' in str(context.exception))
 
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.make_directory')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
                 'AnalyzeObject.analyze_dataset')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_summary_record')
@@ -216,20 +217,24 @@ class TestModelLineage(TestCase):
         args[1].return_value = True
         args[2].return_value = True
         args[3].return_value = None
+        args[4].return_value = '/path/to/lineage/log/dir'
         args[0].return_value = None
         eval_lineage = self.my_eval_module(self.my_summary_record(self.summary_log_path))
         eval_lineage.end(self.my_run_context(self.run_context))
         args[0].assert_called()
 
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.make_directory')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_summary_record')
     def test_eval_end_except_run_context(self, *args):
         """Test EvalLineage.end method when run_context is invalid.."""
         args[0].return_value = True
+        args[1].return_value = '/path/to/lineage/log/dir'
         eval_lineage = self.my_eval_module(self.my_summary_record(self.summary_log_path), True)
         with self.assertRaises(Exception) as context:
             eval_lineage.end(self.run_context)
         self.assertTrue('Invalid EvalLineage run_context.' in str(context.exception))
 
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.make_directory')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
                 'AnalyzeObject.analyze_dataset')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_summary_record')
@@ -242,11 +247,13 @@ class TestModelLineage(TestCase):
         args[1].return_value = True
         args[2].return_value = True
         args[3].return_value = None
+        args[4].return_value = '/path/to/lineage/log/dir'
         eval_lineage = self.my_eval_module(self.my_summary_record(self.summary_log_path), True)
         with self.assertRaises(LineageLogError) as context:
             eval_lineage.end(self.my_run_context(self.run_context))
         self.assertTrue('End error in EvalLineage' in str(context.exception))
 
+    @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.make_directory')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
                 'AnalyzeObject.analyze_dataset')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.validate_summary_record')
@@ -259,6 +266,7 @@ class TestModelLineage(TestCase):
         args[1].return_value = True
         args[2].return_value = True
         args[3].return_value = None
+        args[4].return_value = '/path/to/lineage/log/dir'
         eval_lineage = self.my_eval_module(self.my_summary_record(self.summary_log_path), True)
         with self.assertRaises(LineageLogError) as context:
             eval_lineage.end(self.my_run_context(self.run_context))

@@ -14,7 +14,7 @@
 # ============================================================================
 """Validate the parameters."""
 import os
-
+import re
 from marshmallow import ValidationError
 
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors, LineageErrorMsg
@@ -30,6 +30,9 @@ try:
     from mindspore.train.summary import SummaryRecord
 except (ImportError, ModuleNotFoundError):
     log.warning('MindSpore Not Found!')
+
+# Named string regular expression
+_name_re = r"^\w+[0-9a-zA-Z\_\.]*$"
 
 TRAIN_RUN_CONTEXT_ERROR_MAPPING = {
     'optimizer': LineageErrors.PARAM_OPTIMIZER_ERROR,
@@ -511,3 +514,27 @@ def validate_added_info(added_info: dict):
                 raise LineageParamValueError("'remark' must be str.")
             # length of remark should be in [0, 128].
             validate_range("length of remark", len(value), min_value=0, max_value=128)
+
+
+def validate_str_by_regular(target, reg=None, flag=re.ASCII):
+    """
+    Validate string by given regular.
+
+    Args:
+        target: target string.
+        reg: pattern.
+        flag: pattern mode.
+
+    Raises:
+        LineageParamValueError, if string not match given pattern.
+
+    Returns:
+        bool, if target matches pattern, return True.
+
+    """
+    if reg is None:
+        reg = _name_re
+    if re.match(reg, target, flag) is None:
+        raise LineageParamValueError("'{}' is illegal, it should be match "
+                                     "regular'{}' by flags'{}'".format(target, reg, flag))
+    return True

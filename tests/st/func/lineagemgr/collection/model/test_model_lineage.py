@@ -73,6 +73,7 @@ class TestModelLineage(TestCase):
                     ]
         cls.run_context['list_callback'] = _ListCallback(callback)
 
+    @pytest.mark.scene_train(2)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -84,9 +85,10 @@ class TestModelLineage(TestCase):
         train_callback = TrainLineage(self.summary_record, True)
         train_callback.begin(RunContext(self.run_context))
         assert train_callback.initial_learning_rate == 0.12
-        lineage_log_path = self.summary_record.full_file_name + '_lineage'
+        lineage_log_path = train_callback.lineage_summary.lineage_log_path
         assert os.path.isfile(lineage_log_path) is True
 
+    @pytest.mark.scene_train(2)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -103,9 +105,28 @@ class TestModelLineage(TestCase):
         )
         train_callback.begin(RunContext(self.run_context))
         assert train_callback.initial_learning_rate == 0.12
-        lineage_log_path = self.summary_record.full_file_name + '_lineage'
+        lineage_log_path = train_callback.lineage_summary.lineage_log_path
         assert os.path.isfile(lineage_log_path) is True
 
+    @pytest.mark.scene_train(2)
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_train_lineage_with_log_dir(self):
+        """Test TrainLineage with log_dir."""
+        summary_dir = os.path.join(BASE_SUMMARY_DIR, 'log_dir')
+        train_callback = TrainLineage(summary_record=summary_dir)
+        train_callback.begin(RunContext(self.run_context))
+        assert summary_dir == train_callback.lineage_log_dir
+        lineage_log_path = train_callback.lineage_summary.lineage_log_path
+        assert os.path.isfile(lineage_log_path) is True
+        if os.path.exists(summary_dir):
+            shutil.rmtree(summary_dir)
+
+    @pytest.mark.scene_train(2)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -127,6 +148,7 @@ class TestModelLineage(TestCase):
         res = get_summary_lineage(SUMMARY_DIR)
         assert res.get('hyper_parameters', {}).get('epoch') == 14
 
+    @pytest.mark.scene_eval(3)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -142,6 +164,7 @@ class TestModelLineage(TestCase):
         eval_run_context['step_num'] = 32
         eval_callback.end(RunContext(eval_run_context))
 
+    @pytest.mark.scene_eval(3)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -168,6 +191,7 @@ class TestModelLineage(TestCase):
         assert res == expect_res
         shutil.rmtree(summary_dir)
 
+    @pytest.mark.scene_train(2)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -177,31 +201,30 @@ class TestModelLineage(TestCase):
     @mock.patch('os.path.getsize')
     def test_multiple_trains(self, *args):
         """
-        Callback TrainLineage and EvalLineage for mutltiple times.
+        Callback TrainLineage and EvalLineage for multiple times.
 
         Write TrainLineage and EvalLineage in different files under same directory.
         EvalLineage log file end with '_lineage'.
         """
         args[0].return_value = 10
         for i in range(2):
-            summary_record = SummaryRecord(SUMMARY_DIR_2,
-                                           create_time=int(time.time()) + i)
-            eval_record = SummaryRecord(SUMMARY_DIR_2,
-                                        file_prefix='events.eval.',
-                                        create_time=int(time.time() + 10) + i,
-                                        file_suffix='.MS_lineage')
+            summary_record = SummaryRecord(SUMMARY_DIR_2, create_time=int(time.time()))
+            eval_record = SummaryRecord(SUMMARY_DIR_2, create_time=int(time.time()) + 1)
             train_callback = TrainLineage(summary_record, True)
             train_callback.begin(RunContext(self.run_context))
             train_callback.end(RunContext(self.run_context))
+            time.sleep(1)
             eval_callback = EvalLineage(eval_record, True)
             eval_run_context = self.run_context
             eval_run_context['metrics'] = {'accuracy': 0.78 + i + 1}
             eval_run_context['valid_dataset'] = self.run_context['train_dataset']
             eval_run_context['step_num'] = 32
             eval_callback.end(RunContext(eval_run_context))
+            time.sleep(1)
         file_num = os.listdir(SUMMARY_DIR_2)
         assert len(file_num) == 8
 
+    @pytest.mark.scene_train(2)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -234,6 +257,7 @@ class TestModelLineage(TestCase):
         assert res.get('algorithm', {}).get('network') == 'ResNet'
         assert res.get('hyper_parameters', {}).get('optimizer') == 'Momentum'
 
+    @pytest.mark.scene_exception(1)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -246,7 +270,6 @@ class TestModelLineage(TestCase):
         full_file_name = summary_record.full_file_name
         assert os.path.isfile(full_file_name) is True
         assert os.path.isfile(full_file_name + "_lineage") is False
-
         train_callback = TrainLineage(summary_record, True)
         eval_callback = EvalLineage(summary_record, False)
         with self.assertRaises(LineageParamRunContextError):
@@ -256,6 +279,7 @@ class TestModelLineage(TestCase):
         assert len(file_num) == 1
         assert os.path.isfile(full_file_name + "_lineage") is False
 
+    @pytest.mark.scene_exception(1)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -276,6 +300,7 @@ class TestModelLineage(TestCase):
         assert len(file_num) == 1
         assert os.path.isfile(full_file_name + "_lineage") is False
 
+    @pytest.mark.scene_exception(1)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -300,6 +325,7 @@ class TestModelLineage(TestCase):
         assert os.path.isfile(full_file_name) is True
         assert os.path.getsize(full_file_name) == 0
 
+    @pytest.mark.scene_exception(1)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -317,7 +343,7 @@ class TestModelLineage(TestCase):
         summary_record = SummaryRecord(SUMMARY_DIR_3)
         train_callback = TrainLineage(summary_record, True)
         train_callback.begin(RunContext(self.run_context))
-        full_file_name = summary_record.full_file_name + "_lineage"
+        full_file_name = train_callback.lineage_summary.lineage_log_path
         file_size1 = os.path.getsize(full_file_name)
         train_callback.end(RunContext(self.run_context))
         file_size2 = os.path.getsize(full_file_name)
@@ -327,6 +353,7 @@ class TestModelLineage(TestCase):
         file_size3 = os.path.getsize(full_file_name)
         assert file_size3 == file_size2
 
+    @pytest.mark.scene_exception(1)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
@@ -338,7 +365,7 @@ class TestModelLineage(TestCase):
         summary_dir = os.path.join(BASE_SUMMARY_DIR, 'run4')
         if os.path.exists(summary_dir):
             shutil.rmtree(summary_dir)
-        summary_record = SummaryRecord(summary_dir, file_suffix='_MS_lineage')
+        summary_record = SummaryRecord(summary_dir, file_suffix='_MS_lineage_none')
         full_file_name = summary_record.full_file_name
-        assert full_file_name.endswith('_lineage')
+        assert full_file_name.endswith('_lineage_none')
         assert os.path.isfile(full_file_name)
