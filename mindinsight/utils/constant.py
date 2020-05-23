@@ -29,6 +29,7 @@ class MindInsightModules(Enum):
     GENERAL = 0
     LINEAGEMGR = 2
     DATAVISUAL = 5
+    PROFILERMGR = 6
 
 
 class GeneralErrors(Enum):
@@ -41,6 +42,10 @@ class GeneralErrors(Enum):
     FILE_SYSTEM_PERMISSION_ERROR = 8
     PORT_NOT_AVAILABLE_ERROR = 9
     URL_DECODE_ERROR = 10
+
+
+class ProfilerMgrErrors(Enum):
+    """Enum definition for profiler errors."""
 
 
 class LineageMgrErrors(Enum):
