@@ -137,6 +137,25 @@ def get_train_id(request):
     return train_id
 
 
+def get_profiler_dir(request):
+    """
+    Get train ID from requst query string and unquote content.
+
+    Args:
+        request (FlaskRequest): Http request instance.
+
+    Returns:
+        str, unquoted train ID.
+    """
+    profiler_dir = request.args.get('profile')
+    if profiler_dir is not None:
+        try:
+            profiler_dir = unquote(profiler_dir, errors='strict')
+        except UnicodeDecodeError:
+            raise exceptions.UrlDecodeError('Unquote profiler_dir error with strict mode')
+    return profiler_dir
+
+
 def if_nan_inf_to_none(name, value):
     """
     Transform value to None if it is NaN or Inf.

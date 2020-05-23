@@ -126,3 +126,58 @@ class ProfilerAnalyserNotExistException(MindInsightException):
             message=ProfilerErrorMsg.ANALYSER_NOT_EXIST_ERROR.value.format(msg),
             http_code=400
         )
+
+
+class ProfilerDeviceIdException(MindInsightException):
+    """The parameter device_id error in profiler module."""
+
+    def __init__(self, msg):
+        super(ProfilerDeviceIdException, self).__init__(
+            error=ProfilerErrors.DEVICE_ID_ERROR,
+            message=ProfilerErrorMsg.DEIVICE_ID_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
+class ProfilerOpTypeException(MindInsightException):
+    """The parameter op_type error in profiler module."""
+
+    def __init__(self, msg):
+        super(ProfilerOpTypeException, self).__init__(
+            error=ProfilerErrors.OP_TYPE_ERROR,
+            message=ProfilerErrorMsg.OP_TYPE_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
+class ProfilerSortConditionException(MindInsightException):
+    """The parameter sort_condition error in profiler module."""
+
+    def __init__(self, msg):
+        super(ProfilerSortConditionException, self).__init__(
+            error=ProfilerErrors.SORT_CONDITION_ERROR,
+            message=ProfilerErrorMsg.SORT_CONDITION_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
+class ProfilerFilterConditionException(MindInsightException):
+    """The parameter filer_condition error in profiler module."""
+
+    def __init__(self, msg):
+        super(ProfilerFilterConditionException, self).__init__(
+            error=ProfilerErrors.FILTER_CONDITION_ERROR,
+            message=ProfilerErrorMsg.FILTER_CONDITION_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
+class ProfilerGroupConditionException(MindInsightException):
+    """The parameter group_condition error in profiler module."""
+
+    def __init__(self, msg):
+        super(ProfilerGroupConditionException, self).__init__(
+            error=ProfilerErrors.GROUP_CONDITION_ERROR,
+            message=ProfilerErrorMsg.GROUP_CONDITION_ERROR.value.format(msg),
+            http_code=400
+        )
