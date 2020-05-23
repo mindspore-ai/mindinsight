@@ -272,7 +272,7 @@ limitations under the License.
                 <div>
                   <div class="icon-image-container">
                     <div class="icon-image"
-                         :class="[item.number===scope.row.tag&&scope.row.showIcon ? 'iconBorder':'']"
+                         :class="[item.number===scope.row.tag&&scope.row.showIcon ? 'icon-border':'']"
                          v-for="item in imageList"
                          :key="item.number"
                          @click="iconValueChange(scope.row,item.number,$event)">

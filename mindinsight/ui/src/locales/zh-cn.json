@@ -59,7 +59,9 @@
     "modelSize": "模型大小",
     "dataProcess": "数据处理",
     "noDataFound": "暂无满足筛选条件的数据",
-    "noDataTips": "请点击“显示全量数据”按钮查看全量数据",
+    "click": "请点击",
+    "showAllDataBtn": "“显示全量数据”",
+    "viewAllData": "按钮查看全量数据",
     "userDefined": "自定义数据",
     "metric": "度量指标",
     "deviceNum": "device数目",
@@ -84,7 +86,8 @@
     "value": "VALUE",
     "dataTraceTips": "该数据涉及合并操作",
     "noDataFound": "暂无满足筛选条件的数据",
-    "noDataTips": "请点击“显示全量数据”按钮查看全量数据"
+    "click": "请点击",
+    "viewAllData": "按钮查看全量数据"
   },
   "trainingDashboard": {
     "trainingDashboardTitle": "训练看板",
