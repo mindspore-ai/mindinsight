@@ -148,8 +148,11 @@ class Profiler:
         # parse DATA_PREPROCESS.dev.AICPU file, write output_data_preprocess_aicpu_x.txt
         output_data_preprocess_aicpu = self._aicpu_op_output_filename_target + self._dev_id + ".txt"
         output_data_preprocess_aicpu = os.path.join(self._output_path, output_data_preprocess_aicpu)
-        aicpu_data_parser = DataPreProcessParser(source_path, output_data_preprocess_aicpu)
-        aicpu_data_parser.execute()
+        try:
+            aicpu_data_parser = DataPreProcessParser(source_path, output_data_preprocess_aicpu)
+            aicpu_data_parser.execute()
+        except FileNotFoundError as err:
+            logger.exception(err)
 
         # analyse op compute time info
         try:
