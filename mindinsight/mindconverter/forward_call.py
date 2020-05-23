@@ -29,7 +29,7 @@ class ForwardCall(ast.NodeVisitor):
         self.module_name = os.path.basename(filename).replace('.py', '')
         self.name_stack = []
         self.forward_stack = []
-        self.calls = []
+        self.calls = set()
         self.process()
 
     def process(self):
@@ -68,7 +68,7 @@ class ForwardCall(ast.NodeVisitor):
             self.forward_stack.append(func_name)
 
         if node.name == 'forward':
-            self.calls.append(func_name)
+            self.calls.add(func_name)
 
         self.generic_visit(node)
 
@@ -85,12 +85,12 @@ class ForwardCall(ast.NodeVisitor):
         if isinstance(node.func, ast.Name):
             if func_name not in ['super', 'str', 'repr']:
                 if self.forward_stack:
-                    self.calls.append(func_name)
+                    self.calls.add(func_name)
                 self.visit(node.func)
         else:
             if self.forward_stack:
                 if 'self' in func_name:
-                    self.calls.append(f'{self.get_current_namespace()}.{func_name.split(".")[-1]}')
+                    self.calls.add(f'{self.get_current_namespace()}.{func_name.split(".")[-1]}')
                 else:
-                    self.calls.append(func_name)
+                    self.calls.add(func_name)
                 self.visit(node.func)
