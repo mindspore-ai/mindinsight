@@ -49,10 +49,12 @@ def get_profile_op_info():
         ParamValueError: If the search condition contains some errors.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/profile/op
+        >>> POST http://xxxx/v1/mindinsight/profile/ops/search
     """
     profiler_dir = get_profiler_dir(request)
     train_id = get_train_id(request)
+    if not profiler_dir or not train_id:
+        raise ParamValueError("No profiler_dir or train_id.")
 
     search_condition = request.stream.read()
     try:
@@ -90,10 +92,13 @@ def get_profile_device_list():
         ParamValueError: If the search condition contains some errors.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/profile/device_list
+        >>> POST http://xxxx/v1/mindinsight/profile/devices
     """
     profiler_dir = get_profiler_dir(request)
     train_id = get_train_id(request)
+    if not profiler_dir or not train_id:
+        raise ParamValueError("No profiler_dir or train_id.")
+
     profiler_dir_abs = os.path.join(settings.SUMMARY_BASE_DIR, train_id, profiler_dir)
     try:
         profiler_dir_abs = validate_and_normalize_path(profiler_dir_abs, "profiler")
