@@ -27,6 +27,10 @@ class Dataset:
         """Mocked get_dataset_size."""
         return self.dataset_size
 
+    def get_batch_size(self):
+        """Mocked get_batch_size"""
+        return 32
+
 
 class MindDataset(Dataset):
     """Mock the MindSpore MindDataset class."""

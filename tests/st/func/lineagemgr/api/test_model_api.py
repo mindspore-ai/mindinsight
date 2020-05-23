@@ -50,10 +50,10 @@ LINEAGE_INFO_RUN1 = {
         'network': 'ResNet'
     },
     'train_dataset': {
-        'train_dataset_size': 731
+        'train_dataset_size': 1024
     },
     'valid_dataset': {
-        'valid_dataset_size': 10240
+        'valid_dataset_size': 1024
     },
     'model': {
         'path': '{"ckpt": "'
@@ -89,9 +89,9 @@ LINEAGE_FILTRATION_RUN1 = {
     'model_lineage': {
         'loss_function': 'SoftmaxCrossEntropyWithLogits',
         'train_dataset_path': None,
-        'train_dataset_count': 731,
+        'train_dataset_count': 1024,
         'test_dataset_path': None,
-        'test_dataset_count': 10240,
+        'test_dataset_count': 1024,
         'user_defined': {},
         'network': 'ResNet',
         'optimizer': 'Momentum',
@@ -115,7 +115,7 @@ LINEAGE_FILTRATION_RUN2 = {
         'train_dataset_path': None,
         'train_dataset_count': 1024,
         'test_dataset_path': None,
-        'test_dataset_count': 10240,
+        'test_dataset_count': 1024,
         'user_defined': {},
         'network': "ResNet",
         'optimizer': "Momentum",
