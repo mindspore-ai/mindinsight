@@ -334,12 +334,14 @@ class TestAnalyzer(TestCase):
         )
         res1 = self.analyzer.analyze_dataset(dataset, {'step_num': 10, 'epoch': 2}, 'train')
         res2 = self.analyzer.analyze_dataset(dataset, {'step_num': 5}, 'valid')
+
+        # batch_size is mocked as 32.
         assert res1 == {'step_num': 10,
                         'train_dataset_path': '/path/to',
-                        'train_dataset_size': 50,
+                        'train_dataset_size': 320,
                         'epoch': 2}
         assert res2 == {'step_num': 5, 'valid_dataset_path': '/path/to',
-                        'valid_dataset_size': 50}
+                        'valid_dataset_size': 320}
 
     def test_get_dataset_path_dataset(self):
         """Test get_dataset_path method with Dataset."""

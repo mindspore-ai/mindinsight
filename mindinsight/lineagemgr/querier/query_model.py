@@ -82,7 +82,6 @@ class LineageObj:
         self._lineage_info = {
             self._name_summary_dir: summary_dir
         }
-        self._filtration_result = None
         self._init_lineage()
         self.parse_and_update_lineage(**kwargs)
 
