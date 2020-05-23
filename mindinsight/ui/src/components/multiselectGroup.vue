@@ -79,7 +79,7 @@ limitations under the License.
                       popper-class="tooltip-show-content"
                       :content="item.label"
                       placement="top">
-            <span class="select-disable">><i title="CACHING" v-if="item.loading"
+            <span class="select-disable"><i title="CACHING" v-if="item.loading"
                  class="el-icon-loading"></i>{{item.label}}</span>
           </el-tooltip>
         </span>
