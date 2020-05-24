@@ -39,7 +39,8 @@ try:
     from mindspore.train.callback import Callback, RunContext, ModelCheckpoint, SummaryStep
     from mindspore.nn import Cell, Optimizer
     from mindspore.nn.loss.loss import _Loss
-    from mindspore.dataset.engine import Dataset, MindDataset
+    from mindspore.dataset.engine import Dataset, ImageFolderDatasetV2, MnistDataset, Cifar10Dataset, Cifar100Dataset, \
+        VOCDataset, CelebADataset, MindDataset, ManifestDataset, TFRecordDataset, TextFileDataset
     import mindspore.dataset as ds
 except (ImportError, ModuleNotFoundError):
     log.warning('MindSpore Not Found!')
@@ -432,7 +433,7 @@ class AnalyzeObject:
             if hasattr(network, backbone_key):
                 backbone = getattr(network, backbone_key)
                 backbone_name = type(backbone).__name__
-        elif network is not None:
+        if backbone_name is None and network is not None:
             backbone_name = type(network).__name__
         return backbone_name
 
@@ -498,8 +499,8 @@ class AnalyzeObject:
         log.debug('dataset_batch_num: %d', batch_num)
         log.debug('dataset_batch_size: %d', batch_size)
         dataset_path = AnalyzeObject.get_dataset_path_wrapped(dataset)
-        if dataset_path:
-            dataset_path = '/'.join(dataset_path.split('/')[:-1])
+        if dataset_path and os.path.isfile(dataset_path):
+            dataset_path, _ = os.path.split(dataset_path)
 
         dataset_size = int(batch_num * batch_size)
         if dataset_type == 'train':
@@ -516,14 +517,24 @@ class AnalyzeObject:
         Get dataset path of MindDataset object.
 
         Args:
-            output_dataset (Union[MindDataset, Dataset]): See
-                mindspore.dataengine.datasets.Dataset.
+            output_dataset (Union[Dataset, ImageFolderDatasetV2, MnistDataset, Cifar10Dataset, Cifar100Dataset,
+                VOCDataset, CelebADataset, MindDataset, ManifestDataset, TFRecordDataset, TextFileDataset]):
+                See mindspore.dataengine.datasets.Dataset.
 
         Returns:
             str, dataset path.
         """
-        if isinstance(output_dataset, MindDataset):
+        dataset_dir_set = (ImageFolderDatasetV2, MnistDataset, Cifar10Dataset,
+                           Cifar100Dataset, VOCDataset, CelebADataset)
+        dataset_file_set = (MindDataset, ManifestDataset)
+        dataset_files_set = (TFRecordDataset, TextFileDataset)
+
+        if isinstance(output_dataset, dataset_file_set):
             return output_dataset.dataset_file
+        if isinstance(output_dataset, dataset_dir_set):
+            return output_dataset.dataset_dir
+        if isinstance(output_dataset, dataset_files_set):
+            return output_dataset.dataset_files[0]
         return self.get_dataset_path(output_dataset.input[0])
 
     @staticmethod
@@ -544,7 +555,7 @@ class AnalyzeObject:
                 dataset_path = AnalyzeObject().get_dataset_path(dataset)
             except IndexError:
                 dataset_path = None
-        validate_file_path(dataset_path, allow_empty=True)
+        dataset_path = validate_file_path(dataset_path, allow_empty=True)
         return dataset_path
 
     @staticmethod

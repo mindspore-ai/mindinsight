@@ -38,3 +38,75 @@ class MindDataset(Dataset):
     def __init__(self, dataset_size=None, dataset_file=None):
         super(MindDataset, self).__init__(dataset_size)
         self.dataset_file = dataset_file
+
+
+class ImageFolderDatasetV2(Dataset):
+    """Mock the MindSpore ImageFolderDatasetV2 class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(ImageFolderDatasetV2, self).__init__(dataset_size)
+        self.dataset_file = dataset_file
+
+
+class MnistDataset(Dataset):
+    """Mock the MindSpore MnistDataset class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(MnistDataset, self).__init__(dataset_size)
+        self.dataset_file = dataset_file
+
+
+class Cifar10Dataset(Dataset):
+    """Mock the MindSpore Cifar10Dataset class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(Cifar10Dataset, self).__init__(dataset_size)
+        self.dataset_file = dataset_file
+
+
+class Cifar100Dataset(Dataset):
+    """Mock the MindSpore Cifar100Dataset class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(Cifar100Dataset, self).__init__(dataset_size)
+        self.dataset_file = dataset_file
+
+
+class VOCDataset(Dataset):
+    """Mock the MindSpore VOCDataset class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(VOCDataset, self).__init__(dataset_size)
+        self.dataset_file = dataset_file
+
+
+class CelebADataset(Dataset):
+    """Mock the MindSpore CelebADataset class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(CelebADataset, self).__init__(dataset_size)
+        self.dataset_file = dataset_file
+
+
+class ManifestDataset(Dataset):
+    """Mock the MindSpore ManifestDataset class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(ManifestDataset, self).__init__(dataset_size)
+        self.dataset_file = dataset_file
+
+
+class TFRecordDataset(Dataset):
+    """Mock the MindSpore TFRecordDataset class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(TFRecordDataset, self).__init__(dataset_size)
+        self.dataset_file = dataset_file
+
+
+class TextFileDataset(Dataset):
+    """Mock the MindSpore TextFileDataset class."""
+
+    def __init__(self, dataset_size=None, dataset_file=None):
+        super(TextFileDataset, self).__init__(dataset_size)
+        self.dataset_file = dataset_file

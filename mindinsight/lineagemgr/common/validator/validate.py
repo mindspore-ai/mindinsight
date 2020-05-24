@@ -182,8 +182,8 @@ def validate_file_path(file_path, allow_empty=False):
     """
     try:
         if allow_empty and not file_path:
-            return
-        safe_normalize_path(file_path, raise_key='dataset_path', safe_prefixes=None)
+            return file_path
+        return safe_normalize_path(file_path, raise_key='dataset_path', safe_prefixes=None)
     except ValidationError as error:
         log.error(str(error))
         raise MindInsightException(error=LineageErrors.PARAM_FILE_PATH_ERROR,

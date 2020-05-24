@@ -13,5 +13,5 @@
 # limitations under the License.
 # ============================================================================
 """Mock mindspore.dataset.engine."""
-from .datasets import Dataset, MindDataset
+from .datasets import *
 from .serializer_deserializer import serialize
