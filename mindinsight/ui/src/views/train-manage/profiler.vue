@@ -667,6 +667,7 @@ export default {
         row.opDetailCol = [];
         row.opDetailPage.offset = 0;
         row.pageTotal = 0;
+        row.op_sort_condition = {name: 'execution_time', type: 'descending'};
         this.getCoreDetailList(row);
       }
     },
@@ -698,6 +699,10 @@ export default {
      */
     coreTableChange() {
       if (this.statisticType === 1 && !this.opAllTypeList.opDetailCol.length) {
+        this.opAllTypeList.op_sort_condition = {
+          name: 'execution_time',
+          type: 'descending',
+        };
         this.getCoreDetailList(this.opAllTypeList);
       }
     },

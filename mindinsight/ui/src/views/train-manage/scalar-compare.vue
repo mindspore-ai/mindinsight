@@ -457,7 +457,7 @@ export default {
      * updata smoothness
      */
 
-    updataInputValue() {
+    updataInputValue(val) {
       this.smoothValueNumber = Number(val);
       if (this.smoothSliderValueTimer) {
         clearTimeout(this.smoothSliderValueTimer);
