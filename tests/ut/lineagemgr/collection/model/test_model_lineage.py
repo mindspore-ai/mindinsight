@@ -323,11 +323,13 @@ class TestAnalyzer(TestCase):
         res = self.analyzer.get_dataset_path_wrapped(dataset)
         assert res == '/path/to/cifar10'
 
+    @mock.patch('os.path.isfile')
     @mock.patch('mindinsight.lineagemgr.collection.model.model_lineage.'
                 'AnalyzeObject.get_dataset_path_wrapped')
-    def test_analyze_dataset(self, mock_get_path):
+    def test_analyze_dataset(self, mock_get_path, mock_isfile):
         """Test analyze_dataset method."""
         mock_get_path.return_value = '/path/to/mindinsightset'
+        mock_isfile.return_value = True
         dataset = MindDataset(
             dataset_size=10,
             dataset_file='/path/to/mindinsightset'
