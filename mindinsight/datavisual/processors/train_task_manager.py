@@ -116,7 +116,17 @@ class TrainTaskManager(BaseProcessor):
                 profiler_dir=basic_info.profiler_dir,
                 cache_status=train_job.cache_status.value,
             )
-            plugins = self.get_plugins(train_id)
+
+            if train_job.cache_status == CacheStatus.CACHED:
+                plugins = self.get_plugins(train_id)
+            else:
+                plugins = dict(plugins={
+                    'graph': [],
+                    'scalar': [],
+                    'image': [],
+                    'histogram': [],
+                })
+
             train_job_item.update(plugins)
             train_jobs.append(train_job_item)
 

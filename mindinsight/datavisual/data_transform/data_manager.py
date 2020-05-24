@@ -618,7 +618,7 @@ class _DetailCacheManager(_BaseCacheManager):
             tag (str): The tag name.
 
         Returns:
-            NamedTuple, the tuple format is `collections.namedtuple('_Tensor', ['wall_time', 'event_step', 'value'])`.
+            list, the NameTuple format is `collections.namedtuple('_Tensor', ['wall_time', 'event_step', 'value'])`.
                 the value will contain the given tag data.
 
         """
@@ -627,13 +627,17 @@ class _DetailCacheManager(_BaseCacheManager):
             raise TrainJobNotExistError("Can not find the given train job in cache.")
 
         data_loader = loader_pool[train_id].data_loader
-        events_data = data_loader.get_events_data()
 
+        tensors = []
         try:
+            events_data = data_loader.get_events_data()
             tensors = events_data.tensors(tag)
         except KeyError:
             error_msg = "Can not find any data in this train job by given tag."
             raise ParamValueError(error_msg)
+        except AttributeError:
+            logger.debug("Train job %r has been deleted or it has not loaded data, "
+                         "and set tags to empty list.", train_id)
 
         return tensors
 
