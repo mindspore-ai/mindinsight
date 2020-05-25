@@ -81,6 +81,15 @@ class Profiler:
 
         os.environ['PROFILING_MODE'] = 'true'
         os.environ['PROFILING_OPTIONS'] = 'training_trace:task_trace'
+        # use context interface to open profiling, for the new mindspore version(after 2020.5.21)
+        try:
+            import mindspore.context as context
+            context.set_context(enable_profiling=True, profiling_options="training_trace:task_trace")
+        except ImportError:
+            logger.error("Profiling: fail to import context from mindspore.")
+        except ValueError as err:
+            logger.err("Profiling: fail to set context", err.message)
+
         os.environ['AICPU_PROFILING_MODE'] = 'true'
         os.environ['PROFILING_DIR'] = str(self._container_path)
         self._subgraph = check_subgraph(subgraph)
