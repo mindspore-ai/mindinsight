@@ -78,3 +78,44 @@ class TestProfilerRestfulApi(TestCase):
         result = response.get_json()
         del result["error_msg"]
         self.assertDictEqual(expect_result, result)
+
+        body_data = {"op_type": "aicore_type", "device_id": 1}
+        response = self.app_client.post(self.url, data=json.dumps(body_data))
+        self.assertEqual(400, response.status_code)
+        expect_result = {
+            'error_code': '50546182',
+        }
+        result = response.get_json()
+        del result["error_msg"]
+        self.assertDictEqual(expect_result, result)
+
+        body_data = {"op_type": "aicore_type", "device_id": "1", "group_condition": 1}
+        response = self.app_client.post(self.url, data=json.dumps(body_data))
+        self.assertEqual(400, response.status_code)
+        expect_result = {
+            'error_code': '50546184',
+        }
+        result = response.get_json()
+        del result["error_msg"]
+        self.assertDictEqual(expect_result, result)
+
+        body_data = {"op_type": "aicore_type", "device_id": "1", "sort_condition": {"type": 1}}
+        response = self.app_client.post(self.url, data=json.dumps(body_data))
+        self.assertEqual(400, response.status_code)
+        expect_result = {
+            'error_code': '50546185',
+        }
+        result = response.get_json()
+        del result["error_msg"]
+        self.assertDictEqual(expect_result, result)
+
+        body_data = {"op_type": "aicore_type", "device_id": "1",
+                     "filter_condition": {"op_type": {"in": ["1", 2]}}}
+        response = self.app_client.post(self.url, data=json.dumps(body_data))
+        self.assertEqual(400, response.status_code)
+        expect_result = {
+            'error_code': '50546186',
+        }
+        result = response.get_json()
+        del result["error_msg"]
+        self.assertDictEqual(expect_result, result)
