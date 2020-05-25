@@ -257,12 +257,11 @@ class SummaryWatcher:
                 'mtime': mtime,
             }
 
-            if relative_path not in summary_dict:
-                summary_dict[relative_path] = {
-                    'ctime': ctime,
-                    'mtime': mtime,
-                    'profiler': profiler,
-                }
+            summary_dict[relative_path] = {
+                'ctime': ctime,
+                'mtime': mtime,
+                'profiler': profiler,
+            }
 
     def is_summary_directory(self, summary_base_dir, relative_path):
         """
