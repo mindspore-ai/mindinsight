@@ -104,9 +104,10 @@ export default {
   },
 
   // query trainJob data
-  getTrainJobs(isIgnoreError) {
+  getTrainJobs(params, isIgnoreError) {
     return axios({
       method: 'get',
+      params: params,
       url: 'v1/mindinsight/datavisual/train-jobs',
       headers: {
         ignoreError: isIgnoreError,
