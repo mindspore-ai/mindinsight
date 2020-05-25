@@ -171,7 +171,7 @@ export default {
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
-      cacheStatus: 'CACHING',
+      cacheStatus: 'CACHING', // cache
     };
   },
   computed: {
@@ -284,7 +284,11 @@ export default {
      * Obtain the tag and summary list.
      */
     getScalarsList() {
-      RequestService.getTrainJobs()
+      const params={};
+      params.offset = 0;
+      params.limit = 999;
+
+      RequestService.getTrainJobs(params)
           .then((res) => {
           // error;
             if (
@@ -310,6 +314,8 @@ export default {
                 label: summaryObj.train_id,
                 checked: true,
                 show: true,
+                color: summaryNmeColor,
+                colorIndex: colorIndex,
               });
 
               if (summaryObj.cache_status===this.cacheStatus) {
@@ -1096,7 +1102,9 @@ export default {
         return;
       }
       this.multiSelectedSummaryNames=selectedItemDict;
-      this.autoUpdateSamples();
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
       this.trainJobsCaches();
       this.updateSummary();
     },
@@ -1203,13 +1211,6 @@ export default {
       }
       if (error.response && error.response.data) {
         this.clearAllData();
-      } else {
-        if (
-          !(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))
-        ) {
-          // Clear data
-          this.clearAllData();
-        }
       }
     },
 
@@ -1326,13 +1327,23 @@ export default {
             label: summaryObj.train_id,
             checked: false,
             show: false,
+            color: summaryColor,
+            colorIndex: colorIndex,
           });
+        } else {
+          summaryColor = this.summaryOperateList[sameSummaryIndex].color;
         }
 
         if (summaryObj.cache_status===this.cacheStatus) {
           this.summaryOperateList.forEach((item)=>{
             if (item.label=== summaryObj.train_id) {
               item.loading=true;
+            }
+          });
+        } else {
+          this.summaryOperateList.forEach((item)=>{
+            if (item.label=== summaryObj.train_id) {
+              item.loading=false;
             }
           });
         }
@@ -1395,7 +1406,10 @@ export default {
      */
 
     updateAllData(ignoreError) {
-      RequestService.getTrainJobs(ignoreError)
+      const params={};
+      params.offset = 0;
+      params.limit = 999;
+      RequestService.getTrainJobs(params, ignoreError)
           .then((res) => {
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);
@@ -1420,6 +1434,10 @@ export default {
 
             this.$nextTick(() => {
               this.multiSelectedTagNames = this.$refs.tagsGroup.updateSelectedDic();
+              this.multiSelectedSummaryNames = this.$refs.summaryGroup.updateSelectedDic();
+              this.$refs.summaryGroup.$forceUpdate();
+              this.$refs.tagsGroup.$forceUpdate();
+
               this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
               this.resizeCallback();
               this.trainJobsCaches();
