@@ -55,7 +55,7 @@ class DataLoader:
         Get events data from log file.
 
         Returns:
-            Optional[EventsData], None or events data.
+            EventsData, indiciates events data.
         """
         return self._loader.get_events_data()
 
