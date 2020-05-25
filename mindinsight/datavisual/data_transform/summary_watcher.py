@@ -64,20 +64,12 @@ class SummaryWatcher:
         if self._contains_null_byte(summary_base_dir=summary_base_dir):
             return []
 
-        if not os.path.exists(summary_base_dir):
-            logger.warning('Path of summary base directory not exists.')
-            return []
-
-        if not os.path.isdir(summary_base_dir):
-            logger.warning('Path of summary base directory is not a valid directory.')
+        relative_path = os.path.join('.', '')
+        if not self._is_valid_summary_directory(summary_base_dir, relative_path):
             return []
 
         summary_dict = {}
-
-        if not overall:
-            counter = Counter(max_count=self.MAX_SCAN_COUNT)
-        else:
-            counter = Counter()
+        counter = Counter(max_count=None if overall else self.MAX_SCAN_COUNT)
 
         try:
             entries = os.scandir(summary_base_dir)
@@ -94,19 +86,13 @@ class SummaryWatcher:
                 logger.info('Stop further scanning due to overall is False and '
                             'number of scanned files exceeds upper limit.')
                 break
-            relative_path = os.path.join('.', '')
             if entry.is_symlink():
                 pass
             elif entry.is_file():
                 self._update_summary_dict(summary_dict, summary_base_dir, relative_path, entry)
             elif entry.is_dir():
-                full_path = os.path.realpath(os.path.join(summary_base_dir, entry.name))
-                try:
-                    subdir_entries = os.scandir(full_path)
-                except PermissionError:
-                    logger.warning('Path of %s under summary base directory is not accessible.', entry.name)
-                    continue
-                self._scan_subdir_entries(summary_dict, summary_base_dir, subdir_entries, entry.name, counter)
+                entry_path = os.path.realpath(os.path.join(summary_base_dir, entry.name))
+                self._scan_subdir_entries(summary_dict, summary_base_dir, entry_path, entry.name, counter)
 
         directories = []
         for key, value in summary_dict.items():
@@ -130,18 +116,24 @@ class SummaryWatcher:
 
         return directories
 
-    def _scan_subdir_entries(self, summary_dict, summary_base_dir, subdir_entries, entry_name, counter):
+    def _scan_subdir_entries(self, summary_dict, summary_base_dir, entry_path, entry_name, counter):
         """
         Scan subdir entries.
 
         Args:
             summary_dict (dict): Temporary data structure to hold summary directory info.
             summary_base_dir (str): Path of summary base directory.
+            entry_path(str): Path entry.
             entry_name (str): Name of entry.
-            subdir_entries(DirEntry): Directory entry instance.
             counter (Counter): An instance of CountLimiter.
 
         """
+        try:
+            subdir_entries = os.scandir(entry_path)
+        except PermissionError:
+            logger.warning('Path of %s under summary base directory is not accessible.', entry_name)
+            return
+
         for subdir_entry in subdir_entries:
             if len(summary_dict) == self.MAX_SUMMARY_DIR_COUNT:
                 break
@@ -189,8 +181,6 @@ class SummaryWatcher:
         """
         summary_base_dir = os.path.realpath(summary_base_dir)
         summary_directory = os.path.realpath(os.path.join(summary_base_dir, relative_path))
-        if summary_base_dir == summary_directory:
-            return True
 
         if not os.path.exists(summary_directory):
             logger.warning('Path of summary directory not exists.')

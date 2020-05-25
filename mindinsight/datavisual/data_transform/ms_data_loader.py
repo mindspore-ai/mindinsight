@@ -386,48 +386,40 @@ class _SummaryParser(_Parser):
         Args:
             event (Event): Message event in summary proto, data read from file handler.
         """
+        plugins = {
+            'scalar_value': PluginNameEnum.SCALAR,
+            'image': PluginNameEnum.IMAGE,
+            'histogram': PluginNameEnum.HISTOGRAM,
+        }
+
         if event.HasField('summary'):
             for value in event.summary.value:
-                if value.HasField('scalar_value'):
-                    tag = '{}/{}'.format(value.tag, PluginNameEnum.SCALAR.value)
+                for plugin in plugins:
+                    if not value.HasField(plugin):
+                        continue
+                    plugin_name_enum = plugins[plugin]
+                    tensor_event_value = getattr(value, plugin)
+
+                    if plugin == 'histogram':
+                        tensor_event_value = HistogramContainer(tensor_event_value)
+                        # Drop steps if original_buckets_count exceeds HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT
+                        # to avoid time-consuming re-sample process.
+                        if tensor_event_value.original_buckets_count > HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT:
+                            logger.warning('original_buckets_count exceeds '
+                                           'HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT')
+                            continue
+
                     tensor_event = TensorEvent(wall_time=event.wall_time,
                                                step=event.step,
-                                               tag=tag,
-                                               plugin_name=PluginNameEnum.SCALAR.value,
-                                               value=value.scalar_value,
+                                               tag='{}/{}'.format(value.tag, plugin_name_enum.value),
+                                               plugin_name=plugin_name_enum.value,
+                                               value=tensor_event_value,
                                                filename=self._latest_filename)
                     self._events_data.add_tensor_event(tensor_event)
 
-                if value.HasField('image'):
-                    tag = '{}/{}'.format(value.tag, PluginNameEnum.IMAGE.value)
-                    tensor_event = TensorEvent(wall_time=event.wall_time,
-                                               step=event.step,
-                                               tag=tag,
-                                               plugin_name=PluginNameEnum.IMAGE.value,
-                                               value=value.image,
-                                               filename=self._latest_filename)
-                    self._events_data.add_tensor_event(tensor_event)
-
-                if value.HasField('histogram'):
-                    histogram_msg = HistogramContainer(value.histogram)
-                    # Drop steps if original_buckets_count exceeds HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT
-                    # to avoid time-consuming re-sample process.
-                    if histogram_msg.original_buckets_count > HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT:
-                        logger.warning('original_buckets_count exceeds HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT')
-                    else:
-                        tag = '{}/{}'.format(value.tag, PluginNameEnum.HISTOGRAM.value)
-                        tensor_event = TensorEvent(wall_time=event.wall_time,
-                                                   step=event.step,
-                                                   tag=tag,
-                                                   plugin_name=PluginNameEnum.HISTOGRAM.value,
-                                                   value=histogram_msg,
-                                                   filename=self._latest_filename)
-                        self._events_data.add_tensor_event(tensor_event)
-
-        if event.HasField('graph_def'):
-            graph_proto = event.graph_def
+        elif event.HasField('graph_def'):
             graph = MSGraph()
-            graph.build_graph(graph_proto)
+            graph.build_graph(event.graph_def)
             tensor_event = TensorEvent(wall_time=event.wall_time,
                                        step=event.step,
                                        tag=self._latest_filename,
@@ -439,6 +431,7 @@ class _SummaryParser(_Parser):
                 graph_tags = self._events_data.list_tags_by_plugin(PluginNameEnum.GRAPH.value)
             except KeyError:
                 graph_tags = []
+
             summary_tags = self.filter_files(graph_tags)
             for tag in summary_tags:
                 self._events_data.delete_tensor_event(tag)
