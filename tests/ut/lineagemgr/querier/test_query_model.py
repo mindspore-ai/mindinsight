@@ -21,6 +21,7 @@ from mindinsight.lineagemgr.querier.query_model import LineageObj
 
 from . import event_data
 from .test_querier import create_filtration_result, create_lineage_info
+from ....utils.tools import deal_float_for_dict
 
 
 class TestLineageObj(TestCase):
@@ -50,27 +51,31 @@ class TestLineageObj(TestCase):
             evaluation_lineage=lineage_info.eval_lineage
         )
 
+    def _assert_dict_equal(self, dict1, dict2):
+        deal_float_for_dict(dict1, dict2)
+        self.assertDictEqual(dict1, dict2)
+
     def test_property(self):
         """Test the function of getting property."""
         self.assertEqual(self.summary_dir, self.lineage_obj.summary_dir)
-        self.assertDictEqual(
+        self._assert_dict_equal(
             event_data.EVENT_TRAIN_DICT_0['train_lineage']['algorithm'],
             self.lineage_obj.algorithm
         )
-        self.assertDictEqual(
+        self._assert_dict_equal(
             event_data.EVENT_TRAIN_DICT_0['train_lineage']['model'],
             self.lineage_obj.model
         )
-        self.assertDictEqual(
+        self._assert_dict_equal(
             event_data.EVENT_TRAIN_DICT_0['train_lineage']['train_dataset'],
             self.lineage_obj.train_dataset
         )
-        self.assertDictEqual(
+        self._assert_dict_equal(
             event_data.EVENT_TRAIN_DICT_0['train_lineage']['hyper_parameters'],
             self.lineage_obj.hyper_parameters
         )
-        self.assertDictEqual(event_data.METRIC_0, self.lineage_obj.metric)
-        self.assertDictEqual(
+        self._assert_dict_equal(event_data.METRIC_0, self.lineage_obj.metric)
+        self._assert_dict_equal(
             event_data.EVENT_EVAL_DICT_0['evaluation_lineage']['valid_dataset'],
             self.lineage_obj.valid_dataset
         )
@@ -78,24 +83,24 @@ class TestLineageObj(TestCase):
     def test_property_eval_not_exist(self):
         """Test the function of getting property with no evaluation event."""
         self.assertEqual(self.summary_dir, self.lineage_obj.summary_dir)
-        self.assertDictEqual(
+        self._assert_dict_equal(
             event_data.EVENT_TRAIN_DICT_0['train_lineage']['algorithm'],
             self.lineage_obj_no_eval.algorithm
         )
-        self.assertDictEqual(
+        self._assert_dict_equal(
             event_data.EVENT_TRAIN_DICT_0['train_lineage']['model'],
             self.lineage_obj_no_eval.model
         )
-        self.assertDictEqual(
+        self._assert_dict_equal(
             event_data.EVENT_TRAIN_DICT_0['train_lineage']['train_dataset'],
             self.lineage_obj_no_eval.train_dataset
         )
-        self.assertDictEqual(
+        self._assert_dict_equal(
             event_data.EVENT_TRAIN_DICT_0['train_lineage']['hyper_parameters'],
             self.lineage_obj_no_eval.hyper_parameters
         )
-        self.assertDictEqual({}, self.lineage_obj_no_eval.metric)
-        self.assertDictEqual({}, self.lineage_obj_no_eval.valid_dataset)
+        self._assert_dict_equal({}, self.lineage_obj_no_eval.metric)
+        self._assert_dict_equal({}, self.lineage_obj_no_eval.valid_dataset)
 
     def test_get_summary_info(self):
         """Test the function of get_summary_info."""
@@ -106,7 +111,7 @@ class TestLineageObj(TestCase):
             'model': event_data.EVENT_TRAIN_DICT_0['train_lineage']['model']
         }
         result = self.lineage_obj.get_summary_info(filter_keys)
-        self.assertDictEqual(expected_result, result)
+        self._assert_dict_equal(expected_result, result)
 
     def test_to_model_lineage_dict(self):
         """Test the function of to_model_lineage_dict."""
@@ -120,7 +125,7 @@ class TestLineageObj(TestCase):
         expected_result['model_lineage']['dataset_mark'] = None
         expected_result.pop('dataset_graph')
         result = self.lineage_obj.to_model_lineage_dict()
-        self.assertDictEqual(expected_result, result)
+        self._assert_dict_equal(expected_result, result)
 
     def test_to_dataset_lineage_dict(self):
         """Test the function of to_dataset_lineage_dict."""
