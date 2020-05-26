@@ -35,7 +35,7 @@ class TestForwardCall:
                 self.fc3 = nn.Linear(84, 10)
 
             def forward(self, x):
-                out = self.forward1(out)
+                out = self.forward1(x)
                 return out
 
             def forward1(self, x):
@@ -57,7 +57,7 @@ class TestForwardCall:
         forward_call = ForwardCall("mock")
         forward_call.visit(ast.parse(self.source))
 
-        expect_calls = ['TestNet.forward1',
+        expect_calls = ['TestNet.forward',
                         'TestNet.forward1',
                         'F.relu',
                         'TestNet.conv1',
@@ -69,5 +69,7 @@ class TestForwardCall:
                         'TestNet.fc2',
                         'TestNet.fc3',
                         ]
-
-        assert [forward_call.calls].sort() == expect_calls.sort()
+        expect_calls.sort()
+        real_calls = list(forward_call.calls)
+        real_calls.sort()
+        assert real_calls == expect_calls
