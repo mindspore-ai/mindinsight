@@ -22,7 +22,7 @@ EVENT_TRAIN_DICT_0 = {
     'train_lineage': {
         'hyper_parameters': {
             'optimizer': 'ApplyMomentum0',
-            'learning_rate': 0.10000000149011612,
+            'learning_rate': 0.11,
             'loss_function': '',
             'epoch': 1,
             'parallel_mode': 'stand_alone0',
@@ -31,7 +31,7 @@ EVENT_TRAIN_DICT_0 = {
         },
         'algorithm': {
             'network': 'TrainOneStepCell0',
-            'loss': 2.3025848865509033
+            'loss': 2.3025841
         },
         'train_dataset': {
             'train_dataset_path': '',
@@ -49,7 +49,7 @@ EVENT_TRAIN_DICT_1 = {
     'train_lineage': {
         'hyper_parameters': {
             'optimizer': 'ApplyMomentum1',
-            'learning_rate': 0.20000000298023224,
+            'learning_rate': 0.2100001,
             'loss_function': 'loss_function1',
             'epoch': 1,
             'parallel_mode': 'stand_alone1',
@@ -58,7 +58,7 @@ EVENT_TRAIN_DICT_1 = {
         },
         'algorithm': {
             'network': 'TrainOneStepCell1',
-            'loss': 2.4025847911834717
+            'loss': 2.4025841
         },
         'train_dataset': {
             'train_dataset_path': '/path/to/train_dataset1',
@@ -76,7 +76,7 @@ EVENT_TRAIN_DICT_2 = {
     'train_lineage': {
         'hyper_parameters': {
             'optimizer': 'ApplyMomentum2',
-            'learning_rate': 0.30000001192092896,
+            'learning_rate': 0.3100001,
             'loss_function': 'loss_function2',
             'epoch': 2,
             'parallel_mode': 'stand_alone2',
@@ -85,7 +85,7 @@ EVENT_TRAIN_DICT_2 = {
         },
         'algorithm': {
             'network': 'TrainOneStepCell2',
-            'loss': 2.502584934234619
+            'loss': 2.5025841
         },
         'train_dataset': {
             'train_dataset_path': '/path/to/train_dataset2',
@@ -103,7 +103,7 @@ EVENT_TRAIN_DICT_3 = {
     'train_lineage': {
         'hyper_parameters': {
             'optimizer': 'ApplyMomentum3',
-            'learning_rate': 0.4000000059604645,
+            'learning_rate': 0.4,
             'loss_function': 'loss_function3',
             'epoch': 2,
             'parallel_mode': 'stand_alone3',
@@ -112,7 +112,7 @@ EVENT_TRAIN_DICT_3 = {
         },
         'algorithm': {
             'network': 'TrainOneStepCell3',
-            'loss': 2.6025848388671875
+            'loss': 2.6025841
         },
         'train_dataset': {
             'train_dataset_path': '/path/to/train_dataset3',
@@ -139,7 +139,7 @@ EVENT_TRAIN_DICT_4 = {
         },
         'algorithm': {
             'network': 'TrainOneStepCell4',
-            'loss': 2.702584981918335
+            'loss': 2.7025841
         },
         'train_dataset': {
             'train_dataset_path': '/path/to/train_dataset4',
@@ -166,7 +166,7 @@ EVENT_TRAIN_DICT_5 = {
         },
         'algorithm': {
             'network': 'TrainOneStepCell5',
-            'loss': 2.702584981918335
+            'loss': 2.7025841
         },
         'train_dataset': {
             'train_dataset_size': 35
@@ -211,33 +211,33 @@ CUSTOMIZED_2 = {
 }
 
 METRIC_1 = {
-    'accuracy': 1.0000002,
+    'accuracy': 1.2000002,
     'mae': 2.00000002,
     'mse': 3.00000002
 }
 
 METRIC_2 = {
-    'accuracy': 1.0000003,
-    'mae': 2.00000003,
-    'mse': 3.00000003
+    'accuracy': 1.3000003,
+    'mae': 2.30000003,
+    'mse': 3.30000003
 }
 
 METRIC_3 = {
-    'accuracy': 1.0000004,
-    'mae': 2.00000004,
-    'mse': 3.00000004
+    'accuracy': 1.4000004,
+    'mae': 2.40000004,
+    'mse': 3.40000004
 }
 
 METRIC_4 = {
-    'accuracy': 1.0000005,
-    'mae': 2.00000005,
-    'mse': 3.00000005
+    'accuracy': 1.5000005,
+    'mae': 2.50000005,
+    'mse': 3.50000005
 }
 
 METRIC_5 = {
-    'accuracy': 1.0000006,
-    'mae': 2.00000006,
-    'mse': 3.00000006
+    'accuracy': 1.7000006,
+    'mae': 2.60000006,
+    'mse': 3.60000006
 }
 
 EVENT_EVAL_DICT_0 = {
