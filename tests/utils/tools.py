@@ -81,3 +81,59 @@ def compare_result_with_file(result, expected_file_path):
     with open(expected_file_path, 'r') as file:
         expected_results = json.load(file)
         assert result == expected_results
+
+
+def deal_float_for_dict(res: dict, expected_res: dict):
+    """
+    Deal float rounded to five decimals in dict.
+
+    For example:
+        res:{
+                "model_lineages": {
+                    "metric": {"acc": 0.1234561}
+                }
+            }
+        expected_res:
+            {
+                "model_lineages": {
+                    "metric": {"acc": 0.1234562}
+                }
+            }
+    After:
+        res:{
+                "model_lineages": {
+                    "metric": {"acc": 0.12346}
+                }
+            }
+        expected_res:
+            {
+                "model_lineages": {
+                    "metric": {"acc": 0.12346}
+                }
+            }
+
+    Args:
+        res (dict）: e.g.
+            {
+                "model_lineages": {
+                    "metric": {"acc": 0.1234561}
+                }
+            }
+        expected_res (dict):
+            {
+                "model_lineages": {
+                    "metric": {"acc": 0.1234562}
+                }
+            }
+
+
+    """
+    decimal_num = 5
+    for key in res:
+        value = res[key]
+        expected_value = expected_res[key]
+        if isinstance(value, dict):
+            deal_float_for_dict(value, expected_value)
+        elif isinstance(value, float):
+            res[key] = round(value, decimal_num)
+            expected_res[key] = round(expected_value, decimal_num)
