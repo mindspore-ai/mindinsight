@@ -15,6 +15,7 @@
 """
 The parser for AI CPU preprocess data.
 """
+import os
 
 from tabulate import tabulate
 
@@ -50,7 +51,7 @@ class DataPreProcessParser:
     def execute(self):
         """Execute the parser, get result data, and write it to the output file."""
 
-        if self._source_file_name is None:
+        if not os.path.exists(self._source_file_name):
             logger.info("Did not find the aicpu profiling source file")
             return
 
