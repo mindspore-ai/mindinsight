@@ -17,6 +17,7 @@ import copy
 import importlib
 import inspect
 import os
+import re
 import stat
 
 from mindinsight.mindconverter.config import ALL_MAPPING
@@ -363,9 +364,19 @@ class Converter:
         for key, value in mapping.items():
             code = code.replace(key, value)
 
-        code = 'import mindspore.ops.operations as P\n' + code
-        code = 'import mindspore.nn as nn\n' + code
-        code = 'import mindspore\n' + code
+        source_lines = code.splitlines(keepends=True)
+        valid_line_num = 0
+
+        # find the first valid code line of the source
+        for num, source in enumerate(source_lines):
+            if re.search(r'^[a-z]\w+', source):
+                valid_line_num = num
+                break
+        source_lines.insert(valid_line_num, 'import mindspore.ops.operations as P\n')
+        source_lines.insert(valid_line_num, 'import mindspore.nn as nn\n')
+        source_lines.insert(valid_line_num, 'import mindspore\n')
+
+        code = ''.join(source_lines)
 
         self.convert_info += '||[Import Add] Add follow import sentences:\n'
         self.convert_info += 'import mindspore.ops.operations as P\n'
@@ -456,6 +467,6 @@ def main(files_config):
         module_name = '.'.join(in_file_split)
         convert_ins.convert(module_name, files_config['outfile_dir'], files_config['report_dir'])
 
-    in_module = files_config['in_module']
+    in_module = files_config.get('in_module')
     if in_module:
         convert_ins.convert(in_module, files_config['outfile_dir'], files_config['report_dir'])
