@@ -236,6 +236,7 @@ class EvalLineage(Callback):
     """
     Collect lineage of an evaluation job.
 
+    Args:
         summary_record (Union[SummaryRecord, str]): The `SummaryRecord` object which
             is used to record the summary value(see mindspore.train.summary.SummaryRecord),
             or a log dir(as a `str`) to be passed to `LineageSummary` to create
