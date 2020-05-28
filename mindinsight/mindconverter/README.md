@@ -4,11 +4,6 @@ MindConverter is a tool that converting PyTorch scripts to MindSpore scripts. Wi
 
 
 
-### System Requirements
-
-* PyTorch v1.5.0
-* MindSpore v0.2.0
-
 ### Installation
 
 This tool is part of MindInsight and accessible to users after installing MindInsight, no extra installation is needed.
@@ -24,8 +19,6 @@ mindconverter commandline usage:
 mindconverter [-h] [--version] --in_file IN_FILE [--output OUTPUT]
               [--report REPORT]
 
-MindConverter CLI entry point (version: 0.2.0)
-
 optional arguments:
   -h, --help         show this help message and exit
   --version          show program's version number and exit
@@ -36,13 +29,32 @@ optional arguments:
                      directorys
 ```
 
-Usage example:
+#### Use example:
+
+We have a collection of PyTorch model scripts
 ```buildoutcfg
-export PYTHONPATH=~/my_pt_proj/models
-mindconverter --in_file lenet.py
+~$ ls
+models
+~$ ls models
+lenet.py resnet.py vgg.py
 ```
 
-Since the conversion is not 100% flawless, we encourage users to checkout the reports when fixing issues of the converted scripts.
+Then we set the PYTHONPATH environment variable and convert alexnet.py
+```buildoutcfg
+~$ export PYTHONPATH=~/models
+~$ mindconverter --in_file models/lenet.py
+```
+
+Then we will see a conversion report and the output MindSpore script
+```buildoutcfg
+~$ ls
+lenet_report.txt models output
+~$ ls output
+lenet.py
+```
+
+Please checkout [models/lenet.py](../../tests/st/func/mindconverter/data/lenet_script.py) and [output/lenet.py](../../tests/st/func/mindconverter/data/lenet_converted.py) as the input/output example representatively.
+Since the conversion is not 100% flawless, we encourage users to checkout the report when fixing issues of the converted script.
 
 
 ### Unsupported Situation #1

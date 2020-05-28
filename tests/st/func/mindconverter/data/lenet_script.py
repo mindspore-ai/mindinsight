@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Test network script of LeNet."""
+"""Test network script of LeNet for ST test case data."""
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -28,11 +28,6 @@ class TestLeNet(nn.Module):
 
     def forward(self, input_x):
         """Callback method."""
-        out = self.forward1(input_x)
-        return out
-
-    def forward1(self, input_x):
-        """forward1 method."""
         out = F.relu(self.conv1(input_x))
         out = F.max_pool2d(out, 2)
         out = F.relu(self.conv2(out))
