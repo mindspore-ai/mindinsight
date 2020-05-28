@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Test network script of LeNet."""
+"""Test network script of LeNet for ST test case data."""
 import mindspore.nn as nn
 import mindspore.ops.operations as P
-# import torch.nn as nn
-# import torch.nn.functional as F
 
 
 class TestLeNet(nn.Cell):
@@ -30,11 +28,6 @@ class TestLeNet(nn.Cell):
 
     def construct(self, input_x):
         """Callback method."""
-        out = self.forward1(input_x)
-        return out
-
-    def forward1(self, input_x):
-        """forward1 method."""
         out = P.ReLU()(self.conv1(input_x))
         out = P.MaxPool(2, None, 'valid')(out)
         out = P.ReLU()(self.conv2(out))
