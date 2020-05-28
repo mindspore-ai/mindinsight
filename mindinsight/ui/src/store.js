@@ -32,6 +32,7 @@ export default new Vuex.Store({
       : 3,
     // multiSelevtGroup component count
     multiSelectedGroupCount: 0,
+    tableId: 0,
   },
   mutations: {
     // set cancelTokenArr
@@ -71,6 +72,9 @@ export default new Vuex.Store({
     },
     multiSelectedGroupComponentNum(state) {
       state.multiSelectedGroupCount++;
+    },
+    increaseTableId(state) {
+      state.tableId++;
     },
   },
   actions: {},
