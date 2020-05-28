@@ -25,6 +25,7 @@ from flask import request
 from flask import jsonify
 
 from mindinsight.conf import settings
+from mindinsight.utils.exceptions import ParamMissError
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.datavisual.utils.tools import str_to_bool
@@ -83,6 +84,9 @@ def query_train_jobs():
 def cache_train_jobs():
     """ Cache train jobs."""
     data = request.get_json(silent=True)
+    if data is None:
+        raise ParamMissError('train_ids')
+
     train_ids = data.get('train_ids', [])
 
     processor = TrainTaskManager(DATA_MANAGER)
