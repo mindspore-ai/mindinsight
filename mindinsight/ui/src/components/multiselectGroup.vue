@@ -171,7 +171,7 @@ export default {
               break;
             }
             const listItem = this.checkListArr[i];
-            if (listItem.show) {
+            if (listItem.show && !listItem.checked) {
               listItem.checked = true;
               this.multiSelectedItemNames[listItem.label] = true;
               this.selectedNumber++;
@@ -309,23 +309,24 @@ export default {
         const loopCount = this.checkListArr.length;
         for (let i = 0; i < loopCount; i++) {
           const listItem = this.checkListArr[i];
-          if (reg.test(listItem.label)) {
-            listItem.show = true;
+          if (listItem.checked) {
             if (this.selectedNumber >= this.limitNum) {
               listItem.checked = false;
-              itemSelectAll = false;
-            } else if (listItem.checked) {
+            } else {
               this.multiSelectedItemNames[listItem.label] = true;
               this.selectedNumber++;
-            } else {
-              itemSelectAll = false;
             }
+          }
+          if (reg.test(listItem.label)) {
+            listItem.show = true;
           } else {
             listItem.show = false;
           }
         }
-        if (!itemSelectAll && this.selectedNumber >= this.limitNum) {
+        if (this.selectedNumber >= this.limitNum) {
           itemSelectAll = true;
+        } else {
+          itemSelectAll = false;
         }
       } else {
         this.checkListArr.forEach((listItem) => {

@@ -24,11 +24,12 @@ limitations under the License.
                    type="primary"
                    size="mini"
                    plain
-                   v-show="(summaryDirList&&!summaryDirList.length)||(totalSeries&&totalSeries.length)">
+                   v-show="(summaryDirList && !summaryDirList.length)||(totalSeries && totalSeries.length)">
           {{ $t('modelTraceback.showAllData') }}
         </el-button>
         <div class="select-container"
-             v-show="totalSeries&&totalSeries.length&&(!summaryDirList||(summaryDirList&&summaryDirList.length))">
+             v-show="totalSeries && totalSeries.length &&
+              (!summaryDirList || (summaryDirList && summaryDirList.length))">
           <div class="display-column">
             {{$t('modelTraceback.displayColumn')}}
           </div>
@@ -50,17 +51,17 @@ limitations under the License.
                 <button type="text"
                         @click="allSelect"
                         class="select-all-button"
-                        :class="[selectCheckAll?'checked-color':'button-text',
-                           basearr.length>checkOptions.length ? 'btn-disabled' : '']"
-                        :disabled="basearr.length>checkOptions.length">
+                        :class="[selectCheckAll ? 'checked-color' : 'button-text',
+                           basearr.length > checkOptions.length ? 'btn-disabled' : '']"
+                        :disabled="basearr.length > checkOptions.length">
                   {{ $t('public.selectAll')}}
                 </button>
                 <button type="text"
                         @click="deselectAll"
                         class="deselect-all-button"
-                        :class="[!selectCheckAll?'checked-color':'button-text',
-                           basearr.length>checkOptions.length ? 'btn-disabled' : '']"
-                        :disabled="basearr.length>checkOptions.length">
+                        :class="[!selectCheckAll ? 'checked-color' : 'button-text',
+                           basearr.length > checkOptions.length ? 'btn-disabled' : '']"
+                        :disabled="basearr.length > checkOptions.length">
                   {{ $t('public.deselectAll')}}
                 </button>
               </div>
@@ -69,7 +70,7 @@ limitations under the License.
                          :label="item.label"
                          :value="item.value"
                          :disabled="item.disabled"
-                         :title="item.disabled?$t('modelTraceback.mustExist'):''">
+                         :title="item.disabled ? $t('modelTraceback.mustExist') : ''">
               </el-option>
             </el-select>
           </div>
@@ -79,7 +80,8 @@ limitations under the License.
       <div id="data-echart"
            v-show="showEchartPic && !echartNoData"></div>
       <div class="echart-nodata-container"
-           v-show="!showEchartPic && showTable"></div>
+           v-show="!showEchartPic && showTable && !(summaryDirList && !summaryDirList.length)">
+      </div>
       <div class="btns-container"
            v-show="!echartNoData && showTable">
         <el-button type="primary"
@@ -103,7 +105,7 @@ limitations under the License.
         <el-table ref="table"
                   :data="table.data"
                   tooltip-effect="light"
-                  height="calc(100% - 54px)"
+                  height="calc(100% - 40px)"
                   row-key="summary_dir"
                   @selection-change="handleSelectionChange"
                   @sort-change="tableSortChange">
@@ -116,8 +118,8 @@ limitations under the License.
                            :key="key"
                            :prop="key"
                            :label="table.columnOptions[key].label"
-                           :sortable="sortArray.includes(table.columnOptions[key].label)?'custom':false"
-                           :fixed="table.columnOptions[key].label===text?true:false"
+                           :sortable="sortArray.includes(table.columnOptions[key].label) ? 'custom' : false"
+                           :fixed="table.columnOptions[key].label === text?true:false"
                            min-width="200"
                            show-overflow-tooltip>
             <template slot="header"
@@ -151,7 +153,7 @@ limitations under the License.
           </el-table-column>
           <!-- remark column -->
           <el-table-column fixed="right"
-                           width="310">
+                           width="260">
             <template slot="header">
               <div>
                 <div class="label-text">{{$t('public.remark')}}</div>
@@ -208,10 +210,10 @@ limitations under the License.
                 <div>
                   <div class="icon-image-container">
                     <div class="icon-image"
-                         :class="[item.number===scope.row.tag && scope.row.showIcon?'icon-border':'']"
+                         :class="[item.number === scope.row.tag && scope.row.showIcon ? 'icon-border' : '']"
                          v-for="item in imageList"
                          :key="item.number"
-                         @click="iconValueChange(scope.row,item.number,$event)">
+                         @click="iconValueChange(scope.row, item.number, $event)">
                       <img :src="item.iconAdd">
                     </div>
                   </div>
@@ -243,33 +245,34 @@ limitations under the License.
             </template>
           </el-table-column>
         </el-table>
-        <div>
-          <div class="hide-count"
-               v-show="recordsNumber-showNumber">
-            {{ $t('modelTraceback.totalHide').replace(`{n}`,(recordsNumber-showNumber))}}
-          </div>
+        <div class="pagination-container">
           <el-pagination @current-change="handleCurrentChange"
                          :current-page="pagination.currentPage"
                          :page-size="pagination.pageSize"
                          :layout="pagination.layout"
                          :total="pagination.total">
           </el-pagination>
+          <div class="hide-count"
+               v-show="recordsNumber-showNumber">
+            {{ $t('modelTraceback.totalHide').replace(`{n}`, (recordsNumber-showNumber))}}
+          </div>
+          <div class="clear"></div>
         </div>
       </div>
       <div v-show="((!lineagedata.serData || !lineagedata.serData.length) && initOver)
-         ||(echartNoData&&(lineagedata.serData&&!!lineagedata.serData.length))"
+         ||(echartNoData && (lineagedata.serData && !!lineagedata.serData.length))"
            class="no-data-page">
         <div class="no-data-img">
           <img :src="require('@/assets/images/nodata.png')"
                alt="" />
           <p class="no-data-text"
-             v-show="!summaryDirList||(summaryDirList&&summaryDirList.length)&&!lineagedata.serData">
+             v-show="!summaryDirList || (summaryDirList && summaryDirList.length) && !lineagedata.serData">
             {{ $t('public.noData') }}
           </p>
-          <div v-show="echartNoData&&(lineagedata.serData&&!!lineagedata.serData.length)">
+          <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length)">
             <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
           </div>
-          <div v-show="summaryDirList&&!summaryDirList.length">
+          <div v-show="summaryDirList && !summaryDirList.length">
             <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
             <p class="no-data-text">
               {{ $t('dataTraceback.click') }}
@@ -494,7 +497,7 @@ export default {
       obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
       this.imageList.push(obj);
     }
-    document.title = this.$t('summaryManage.dataTraceback') + '-MindInsight';
+    document.title = `${this.$t('summaryManage.dataTraceback')}-MindInsight`;
     document.addEventListener('click', this.blurFloat, true);
     this.$nextTick(() => {
       this.init();
@@ -527,8 +530,8 @@ export default {
         return;
       }
       row.showIcon = true;
-      const e = window.event;
-      document.getElementById('icon-dialog').style.top = e.clientY + 'px';
+      document.getElementById('icon-dialog').style.top =
+        window.event.clientY + 'px';
     },
 
     iconValueChange(row, num, event) {
@@ -575,6 +578,13 @@ export default {
      */
 
     clearIcon(row) {
+      const classWrap = event.path.find((item) => {
+        return item.className === 'icon-dialog';
+      });
+      const classArr = classWrap.querySelectorAll('.icon-border');
+      classArr.forEach((item) => {
+        item.classList.remove('icon-border');
+      });
       row.showIcon = false;
       this.iconValue = 0;
       row.tag = 0;
@@ -848,7 +858,7 @@ export default {
       }
       this.initChart();
       const list = [];
-      this.checkOptions.forEach((item) => {
+      this.basearr.forEach((item) => {
         this.selectArrayValue.forEach((i) => {
           if (i === item.value) {
             list.push(i);
@@ -917,7 +927,7 @@ export default {
         });
       }
       const list = [];
-      this.checkOptions.forEach((item) => {
+      this.basearr.forEach((item) => {
         this.selectArrayValue.forEach((i) => {
           if (i === item.value) {
             const obj = {};
@@ -1061,6 +1071,9 @@ export default {
             this.showTable = false;
             this.echartNoData = true;
           } else {
+            const echartLength = this.echart.brushData.length;
+            this.recordsNumber = echartLength;
+            this.showNumber = echartLength;
             this.echart.showData = this.echart.brushData;
             this.initChart();
             this.pagination.currentPage = 1;
@@ -1431,6 +1444,7 @@ export default {
       this.initOver = false;
       this.echartNoData = false;
       this.showEchartPic = true;
+      this.selectCheckAll = true;
       // checkOptions initializate to an empty array
       this.checkOptions = [];
       this.selectArrayValue = [];
@@ -1733,7 +1747,9 @@ export default {
               const item = {};
               item.key = k;
               item.value = dataObj[key][k];
-              item.id = (index + 1) * 10 + 1 + j;
+              item.id =
+                `${new Date().getTime()}` + `${this.$store.state.tableId}`;
+              this.$store.commit('increaseTableId');
               tempData.children.push(item);
             });
           }
@@ -1775,14 +1791,15 @@ export default {
 <style lang="scss">
 .label-text {
   line-height: 20px !important;
-  vertical-align: bottom;
+  padding-top: 20px;
+  display: block !important;
 }
 .remark-tip {
-  line-height: 14px !important;
+  line-height: 20px !important;
   font-size: 12px;
   white-space: pre-wrap !important;
-  vertical-align: bottom;
   color: gray;
+  display: block !important;
 }
 .el-color-dropdown__main-wrapper,
 .el-color-dropdown__value,
@@ -1841,6 +1858,13 @@ export default {
   height: 100%;
   overflow-y: auto;
   position: relative;
+  .el-table th.is-leaf {
+    background: #f5f7fa;
+  }
+  .el-table td,
+  .el-table th.is-leaf {
+    border: 1px solid #ebeef5;
+  }
   .inline-block-set {
     display: inline-block;
   }
@@ -1878,7 +1902,7 @@ export default {
   .no-data-page {
     width: 100%;
     height: 100%;
-    padding-top: 224px;
+    padding-top: 200px;
   }
   .no-data-img {
     background: #fff;
@@ -1944,6 +1968,7 @@ export default {
     .data-checkbox-area {
       position: relative;
       margin: 24px 32px 12px;
+      height: 46px;
       .reset-btn {
         position: absolute;
         right: 0px;
@@ -1951,12 +1976,12 @@ export default {
       }
     }
     #data-echart {
-      height: 34%;
+      height: 32%;
       width: 100%;
       padding: 0 12px;
     }
     .echart-nodata-container {
-      height: 34%;
+      height: 32%;
       width: 100%;
     }
     .btn-container-margin {
@@ -1975,8 +2000,8 @@ export default {
 
     .table-container {
       background-color: white;
-      height: calc(60% - 90px);
-      margin: 6px 32px 0;
+      height: calc(68% - 130px);
+      padding: 6px 32px;
       position: relative;
       .custom-label {
         max-width: calc(100% - 25px);
@@ -1997,24 +2022,33 @@ export default {
       .click-span {
         cursor: pointer;
       }
+      .clear {
+        clear: both;
+      }
       .hide-count {
-        display: inline-block;
-        position: absolute;
-        right: 450px;
         height: 32px;
         line-height: 32px;
-        padding-top: 12px;
         color: red;
+        float: right;
+        margin-right: 10px;
       }
       .el-pagination {
-        position: absolute;
-        right: 0px;
+        float: right;
+        margin-right: 32px;
         bottom: 10px;
+      }
+      .pagination-container {
+        height: 40px;
       }
     }
   }
 
   .details-data-list {
+    .el-table td,
+    .el-table th.is-leaf {
+      border: none;
+      border-top: 1px solid #ebeef5;
+    }
     .el-table {
       th {
         padding: 10px 0;
