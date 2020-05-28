@@ -20,7 +20,7 @@ limitations under the License.
         <div class="select-box"
              v-if="!noData &&
              (!summaryDirList || (summaryDirList && summaryDirList.length))">
-          <div v-show="showTable&&!noData"
+          <div v-show="showTable && !noData"
                class="select-container">
             <!-- multiple collapse-tags -->
             <div class="display-column"> {{$t('modelTraceback.displayColumn')}}</div>
@@ -40,19 +40,18 @@ limitations under the License.
                   <button type="text"
                           @click="allSelect"
                           class="select-all-button"
-                          :class="[selectCheckAll?
-                          'checked-color':'button-text',
-                          basearr.length>checkOptions.length?'btn-disabled':'']"
-                          :disabled="basearr.length>checkOptions.length">
+                          :class="[selectCheckAll ? 'checked-color' : 'button-text',
+                          basearr.length > checkOptions.length ? 'btn-disabled' : '']"
+                          :disabled="basearr.length > checkOptions.length">
                     {{$t('public.selectAll')}}
                   </button>
                   <button type="text"
                           @click="deselectAll"
                           class="deselect-all-button"
                           :class="[!selectCheckAll?
-                               'checked-color':'button-text',
-                               basearr.length>checkOptions.length?'btn-disabled':'']"
-                          :disabled="basearr.length>checkOptions.length">
+                               'checked-color' : 'button-text',
+                               basearr.length > checkOptions.length ? 'btn-disabled' : '']"
+                          :disabled="basearr.length > checkOptions.length">
                     {{$t('public.deselectAll')}}
                   </button>
                 </div>
@@ -64,7 +63,7 @@ limitations under the License.
                              :label="item.label"
                              :value="item.value"
                              :disabled="item.disabled"
-                             :title="item.disabled?$t('modelTraceback.mustExist'):''">
+                             :title="item.disabled ? $t('modelTraceback.mustExist') : ''">
                   </el-option>
                 </el-option-group>
               </el-select>
@@ -82,19 +81,19 @@ limitations under the License.
                      type="primary"
                      size="mini"
                      plain
-                     v-if="(!noData&&basearr.length) ||
+                     v-if="(!noData && basearr.length) ||
                    (noData && summaryDirList && !summaryDirList.length)">
             {{ $t('modelTraceback.showAllData') }}</el-button>
         </div>
 
       </div>
       <div id="echart"
-           v-show="!noData&&showEchartPic"></div>
+           v-show="!noData && showEchartPic"></div>
       <div class="echart-no-data"
            v-show="!showEchartPic">
       </div>
       <div class="btns-container"
-           v-show="showTable&&!noData">
+           v-show="showTable && !noData">
         <el-button type="primary"
                    size="mini"
                    class="custom-btn"
@@ -118,7 +117,7 @@ limitations under the License.
           <el-table-column type="selection"
                            width="55"
                            :reserve-selection="true"
-                           v-show="showTable&&!noData">
+                           v-show="showTable && !noData">
           </el-table-column>
 
           <!--metric table column-->
@@ -188,7 +187,7 @@ limitations under the License.
                 </div>
               </template>
               <template slot-scope="scope">
-                <span>{{formatNumber(key,scope.row[key])}}</span>
+                <span>{{formatNumber(key, scope.row[key])}}</span>
               </template>
             </el-table-column>
           </el-table-column>
@@ -197,7 +196,7 @@ limitations under the License.
                            :key="key"
                            :prop="key"
                            :label="table.columnOptions[key].label"
-                           :fixed="table.columnOptions[key].label===text?true:false"
+                           :fixed="table.columnOptions[key].label === text ? true : false"
                            show-overflow-tooltip
                            min-width="150"
                            sortable="custom">
@@ -216,7 +215,7 @@ limitations under the License.
           </el-table-column>
           <!-- remark column -->
           <el-table-column fixed="right"
-                           width="310">
+                           width="260">
             <template slot="header">
               <div>
                 <div class="label-text">{{$t('public.remark')}}</div>
@@ -271,7 +270,7 @@ limitations under the License.
                 <div>
                   <div class="icon-image-container">
                     <div class="icon-image"
-                         :class="[item.number===scope.row.tag&&scope.row.showIcon ? 'icon-border':'']"
+                         :class="[item.number === scope.row.tag && scope.row.showIcon ? 'icon-border' : '']"
                          v-for="item in imageList"
                          :key="item.number"
                          @click="iconValueChange(scope.row,item.number,$event)">
@@ -300,17 +299,18 @@ limitations under the License.
             </template>
           </el-table-column>
         </el-table>
-        <div>
-          <div class="hide-count"
-               v-show="recordsNumber-showNumber">
-            {{$t('modelTraceback.totalHide').replace(`{n}`,(recordsNumber-showNumber))}}
-          </div>
+        <div class="pagination-container">
           <el-pagination @current-change="pagination.pageChange"
                          :current-page="pagination.currentPage"
                          :page-size="pagination.pageSize"
                          :layout="pagination.layout"
                          :total="pagination.total">
           </el-pagination>
+          <div class="hide-count"
+               v-show="recordsNumber-showNumber">
+            {{$t('modelTraceback.totalHide').replace(`{n}`, (recordsNumber-showNumber))}}
+          </div>
+          <div class="clear"></div>
         </div>
 
       </div>
@@ -425,7 +425,7 @@ export default {
       obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
       this.imageList.push(obj);
     }
-    document.title = this.$t('summaryManage.modelTraceback') + '-MindInsight';
+    document.title = `${this.$t('summaryManage.modelTraceback')}-MindInsight`;
     document.addEventListener('click', this.blurFloat, true);
     this.$store.commit('setSelectedBarList', []);
     this.getStoreList();
@@ -466,8 +466,8 @@ export default {
         return;
       }
       row.showIcon = true;
-      const e = window.event;
-      document.getElementById('icon-dialog').style.top = e.clientY + 'px';
+      document.getElementById('icon-dialog').style.top =
+        window.event.clientY + 'px';
     },
 
     /**
@@ -514,6 +514,13 @@ export default {
     },
     // clear icon
     clearIcon(row) {
+      const classWrap = event.path.find((item) => {
+        return item.className === 'icon-dialog';
+      });
+      const classArr = classWrap.querySelectorAll('.icon-border');
+      classArr.forEach((item) => {
+        item.classList.remove('icon-border');
+      });
       row.showIcon = false;
       this.iconValue = 0;
       row.tag = 0;
@@ -1345,10 +1352,11 @@ export default {
               this.echart.brushData = list;
               this.echart.showData = this.echart.brushData;
               this.initChart();
-              this.table.data = list.slice(
+              const showList = list.slice(
                   (this.pagination.currentPage - 1) * this.pagination.pageSize,
                   this.pagination.currentPage * this.pagination.pageSize,
               );
+              this.table.data = showList;
               this.recordsNumber = this.table.data.length;
               this.showNumber = this.table.data.length;
               this.pagination.total = res.data.count || 0;
@@ -1365,6 +1373,8 @@ export default {
     sortChange(column) {
       this.sortInfo.sorted_name = column.prop;
       this.sortInfo.sorted_type = column.order;
+      this.recordsNumber = 0;
+      this.showNumber = 0;
       this.getStoreList();
       const tempParam = {
         limit: this.pagination.pageSize,
@@ -1384,9 +1394,21 @@ export default {
               (res) => {
                 if (res && res.data && res.data.object) {
                   const list = this.setDataOfModel(res.data.object);
-                  this.table.data = list;
+                  const tempList = list.slice(0, this.pagination.pageSize);
+                  this.recordsNumber = tempList.length;
+                  if (this.hidenDirChecked.length) {
+                    this.hidenDirChecked.forEach((dir) => {
+                      tempList.forEach((item, index) => {
+                        if (item.summary_dir === dir) {
+                          tempList.splice(index, 1);
+                        }
+                      });
+                    });
+                  }
+                  this.showNumber = tempList.length;
+                  this.table.data = tempList;
                   this.pagination.total = res.data.count || 0;
-                  this.pagination.currentPage = 0;
+                  this.pagination.currentPage = 1;
                 }
               },
               (error) => {},
@@ -1741,6 +1763,7 @@ export default {
       this.$store.commit('setSelectedBarList', []);
       this.noData = false;
       this.showTable = false;
+      this.selectCheckAll = true;
       this.chartFilter = {};
       this.tableFilter.summary_dir = undefined;
       this.sortInfo = {};
@@ -1838,14 +1861,15 @@ export default {
 <style lang="scss">
 .label-text {
   line-height: 20px !important;
-  vertical-align: bottom;
+  padding-top: 20px;
+  display: block !important;
 }
 .remark-tip {
-  line-height: 14px !important;
+  line-height: 20px !important;
   font-size: 12px;
   white-space: pre-wrap !important;
-  vertical-align: bottom;
   color: gray;
+  display: block !important;
 }
 .el-color-dropdown__main-wrapper,
 .el-color-dropdown__value,
@@ -1943,6 +1967,7 @@ export default {
   .btns {
     margin-left: 20px;
     padding-top: 12px;
+    height: 46px;
   }
   .btn-container-margin {
     margin: 0 55px 10px;
@@ -2048,7 +2073,7 @@ export default {
     }
     .table-container {
       background-color: white;
-      height: calc(60% - 40px);
+      height: calc(68% - 130px);
       padding: 6px 32px;
       position: relative;
       .custom-label {
@@ -2059,20 +2084,23 @@ export default {
       a {
         cursor: pointer;
       }
+      .clear {
+        clear: both;
+      }
       .hide-count {
-        display: inline-block;
-        position: absolute;
-        right: 450px;
         height: 32px;
         line-height: 32px;
-        padding-top: 4px;
         color: red;
+        float: right;
+        margin-right: 10px;
       }
       .el-pagination {
+        float: right;
         margin-right: 32px;
-        position: absolute;
-        right: 0;
         bottom: 10px;
+      }
+      .pagination-container {
+        height: 40px;
       }
     }
     .no-data-page {
