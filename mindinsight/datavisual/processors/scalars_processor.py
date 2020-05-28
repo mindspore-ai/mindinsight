@@ -16,8 +16,10 @@
 from urllib.parse import unquote
 
 from mindinsight.utils.exceptions import ParamValueError, UrlDecodeError
+from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.utils.tools import if_nan_inf_to_none
 from mindinsight.datavisual.common.exceptions import ScalarNotExistError
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 
@@ -71,25 +73,44 @@ class ScalarsProcessor(BaseProcessor):
 
         scalars = []
         for train_id in train_ids:
-            for tag in tags:
-                try:
-                    tensors = self._data_manager.list_tensors(train_id, tag)
-                except ParamValueError:
-                    continue
+            scalars += self._get_train_scalars(train_id, tags)
 
-                scalar = {
-                    'train_id': train_id,
-                    'tag': tag,
-                    'values': [],
-                }
+        return scalars
 
-                for tensor in tensors:
-                    scalar['values'].append({
-                        'wall_time': tensor.wall_time,
-                        'step': tensor.step,
-                        'value': if_nan_inf_to_none('scalar_value', tensor.value),
-                    })
+    def _get_train_scalars(self, train_id, tags):
+        """
+        Get scalar data for given train_id and tags.
 
-                scalars.append(scalar)
+        Args:
+            train_id (str): Specify train job ID.
+            tags (list): Specify list of tags.
+
+        Returns:
+            list[dict], a list of dictionaries containing the `wall_time`, `step`, `value` for each scalar.
+        """
+        scalars = []
+        for tag in tags:
+            try:
+                tensors = self._data_manager.list_tensors(train_id, tag)
+            except ParamValueError:
+                continue
+            except TrainJobNotExistError:
+                logger.warning('Can not find the given train job in cache.')
+                return []
+
+            scalar = {
+                'train_id': train_id,
+                'tag': tag,
+                'values': [],
+            }
+
+            for tensor in tensors:
+                scalar['values'].append({
+                    'wall_time': tensor.wall_time,
+                    'step': tensor.step,
+                    'value': if_nan_inf_to_none('scalar_value', tensor.value),
+                })
+
+            scalars.append(scalar)
 
         return scalars
