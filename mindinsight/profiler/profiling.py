@@ -64,10 +64,22 @@ class Profiler:
 
     def __init__(self, subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data',
                  optypes_to_deal='', optypes_not_deal='Variable', job_id=""):
-        dev_id = os.getenv('DEVICE_ID')
+
+        # get device_id
+        try:
+            import mindspore.context as context
+            dev_id = context.get_context("device_id")
+        except ImportError:
+            logger.error("Profiling: fail to import context from mindspore.")
+        except ValueError as err:
+            logger.error("Profiling: fail to get context %s", err.message)
+
+        if not dev_id:
+            dev_id = os.getenv('DEVICE_ID')
         if not dev_id:
             dev_id = "0"
             logger.error("Fail to get DEVICE_ID, use 0 instead.")
+
         self._dev_id = dev_id
         self._container_path = os.path.join(self._base_profiling_container_path, dev_id)
         data_path = os.path.join(self._container_path, "data")
@@ -88,7 +100,7 @@ class Profiler:
         except ImportError:
             logger.error("Profiling: fail to import context from mindspore.")
         except ValueError as err:
-            logger.err("Profiling: fail to set context", err.message)
+            logger.error("Profiling: fail to set context, %s", err.message)
 
         os.environ['AICPU_PROFILING_MODE'] = 'true'
         os.environ['PROFILING_DIR'] = str(self._container_path)
