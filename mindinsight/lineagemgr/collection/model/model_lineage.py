@@ -285,8 +285,8 @@ class EvalLineage(Callback):
             self.lineage_summary = LineageSummary(self.lineage_log_dir)
 
             self.user_defined_info = user_defined_info
-            if user_defined_info:
-                validate_user_defined_info(user_defined_info)
+            if self.user_defined_info:
+                validate_user_defined_info(self.user_defined_info)
 
         except MindInsightException as err:
             log.error(err)

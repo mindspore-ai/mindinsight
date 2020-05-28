@@ -192,6 +192,12 @@ CUSTOMIZED__0 = {
     'metric/accuracy': {'label': 'metric/accuracy', 'required': True, 'type': 'float'},
 }
 
+CUSTOMIZED__1 = {
+    **CUSTOMIZED__0,
+    'user_defined/info': {'label': 'user_defined/info', 'required': False, 'type': 'str'},
+    'user_defined/version': {'label': 'user_defined/version', 'required': False, 'type': 'str'}
+}
+
 CUSTOMIZED_0 = {
     **CUSTOMIZED__0,
     'metric/mae': {'label': 'metric/mae', 'required': True, 'type': 'float'},
