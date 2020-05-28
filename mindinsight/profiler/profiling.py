@@ -65,20 +65,28 @@ class Profiler:
     def __init__(self, subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data',
                  optypes_to_deal='', optypes_not_deal='Variable', job_id=""):
 
-        # get device_id
+        # get device_id and device_target
+        device_target = ""
         try:
             import mindspore.context as context
-            dev_id = context.get_context("device_id")
+            dev_id = str(context.get_context("device_id"))
+            device_target = context.get_context("device_target")
         except ImportError:
             logger.error("Profiling: fail to import context from mindspore.")
         except ValueError as err:
             logger.error("Profiling: fail to get context %s", err.message)
 
         if not dev_id:
-            dev_id = os.getenv('DEVICE_ID')
+            dev_id = str(os.getenv('DEVICE_ID'))
         if not dev_id:
             dev_id = "0"
             logger.error("Fail to get DEVICE_ID, use 0 instead.")
+
+        if device_target and device_target != "Davinci" \
+            and device_target != "Ascend":
+            msg = ("Profiling: unsupport backend: %s" \
+                  % device_target)
+            raise RuntimeError(msg)
 
         self._dev_id = dev_id
         self._container_path = os.path.join(self._base_profiling_container_path, dev_id)
