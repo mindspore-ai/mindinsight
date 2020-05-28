@@ -25,6 +25,7 @@ build_ui() {
     fi
 
     rm -f package-lock.json
+    rm -rf node_modules
     rm -rf dist
     mkdir -p public/static/js
     cp ../../third_party/hpcc/graphvizlib.wasm public/static/js
@@ -40,8 +41,6 @@ build_ui() {
         echo "dist does not have file index.html, build failed"
         exit 1
     fi
-
-    rm -rf node_modules
 }
 
 build_ui

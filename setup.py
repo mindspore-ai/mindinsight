@@ -99,20 +99,11 @@ def run_script(script):
     cmd = '/bin/bash {}'.format(script)
     process = subprocess.Popen(
         shlex.split(cmd),
-        shell=False,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
+        shell=False
     )
 
-    while True:
-        line = process.stdout.readline()
-        if not line and process.poll() is not None:
-            break
-        if line:
-            sys.stdout.write(line.decode())
-
-    if process.returncode:
+    rc = process.wait()
+    if rc:
         sys.exit(1)
 
 
