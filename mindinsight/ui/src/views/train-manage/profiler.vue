@@ -61,12 +61,10 @@
             <div class="cl-search-box">
               <el-input v-model="searchByTypeInput"
                         v-if="statisticType === 0"
-                        suffix-icon="el-icon-search"
                         :placeholder="$t('profiler.searchByType')"
                         @keyup.enter.native="searchOpCoreList()"></el-input>
               <el-input v-model="searchByNameInput"
                         v-if="statisticType === 1"
-                        suffix-icon="el-icon-search"
                         :placeholder="$t('profiler.searchByName')"
                         @keyup.enter.native="searchOpCoreList()"></el-input>
             </div>
@@ -90,6 +88,8 @@
                                      :property="ele"
                                      :key="key"
                                      :sortable="ele === 'op_info' ? false : 'custom'"
+                                     :width="(ele==='execution_time'|| ele==='subgraph' ||
+                                      ele==='op_name'|| ele==='op_type')?'220':''"
                                      show-overflow-tooltip
                                      :label="ele">
                     </el-table-column>
@@ -124,6 +124,8 @@
                              :key="$index"
                              :label="item"
                              :sortable="item === 'op_info' ? false : 'custom'"
+                             :width="(item==='execution_time'|| item==='subgraph' ||
+                              item==='op_name'|| item==='op_type')?'220':''"
                              show-overflow-tooltip>
             </el-table-column>
           </el-table>
@@ -168,7 +170,6 @@
           </span>
           <div class="cl-search-box">
             <el-input v-model="searchByCPUNameInput"
-                      suffix-icon="el-icon-search"
                       :placeholder="$t('profiler.searchByName')"
                       @keyup.enter.native="searchOpCpuList()"></el-input>
           </div>
@@ -814,7 +815,8 @@ export default {
         option.xAxis = {
           type: 'category',
           axisLabel: {
-            interval: 1,
+            interval: 0,
+            rotate: -30,
           },
           data: [],
         };
@@ -822,7 +824,7 @@ export default {
           left: 50,
           top: 20,
           right: 0,
-          bottom: 30,
+          bottom: 50,
         };
         option.yAxis = {
           type: 'value',
@@ -925,7 +927,7 @@ export default {
               const item = {};
               item.key = k;
               item.value = dataObj[key][k];
-              item.id = (index + 1) * 10 + 1 + j;
+              item.id = item.key + Math.random();
               tempData.children.push(item);
             });
           }
@@ -955,20 +957,12 @@ export default {
     },
   },
   mounted() {
-    if (
-      this.$route.query &&
-      this.$route.query.dir &&
-      this.$route.query.id
-    ) {
+    if (this.$route.query && this.$route.query.dir && this.$route.query.id) {
       this.profile_dir = this.$route.query.dir;
       this.train_id = this.$route.query.id;
-      document.title =
-        decodeURIComponent(this.train_id) +
-        '-' +
-        this.$t('profiler.titleText') +
-        '-MindInsight';
+      document.title = `${ decodeURIComponent(this.train_id)}-${this.$t('profiler.titleText')}-MindInsight`;
     } else {
-      document.title = this.$t('profiler.titleText') + '-MindInsight';
+      document.title = `${this.$t('profiler.titleText')}-MindInsight`;
     }
     this.init();
     window.addEventListener('resize', this.resizeCallback, false);
