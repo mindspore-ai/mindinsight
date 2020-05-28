@@ -50,6 +50,8 @@ class Profiler:
 
     Examples:
         >>> from mindinsight.profiler import Profiler
+        >>> context.set_context(mode=context.GRAPH_MODE, device_target=“Ascend”,
+        >>>                     device_id=int(os.environ["DEVICE_ID"]))
         >>> profiler = Profiler(subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data')
         >>> model = Model(train_network)
         >>> dataset = get_dataset()
@@ -127,6 +129,8 @@ class Profiler:
 
         Examples:
             >>> from mindinsight.profiler import Profiler
+            >>> context.set_context(mode=context.GRAPH_MODE, device_target=“Ascend”,
+            >>>                     device_id=int(os.environ["DEVICE_ID"]))
             >>> profiler = Profiler(subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data')
             >>> model = Model(train_network)
             >>> dataset = get_dataset()
