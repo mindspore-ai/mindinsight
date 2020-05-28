@@ -92,7 +92,7 @@ LINEAGE_FILTRATION_RUN1 = {
         'train_dataset_count': 1024,
         'test_dataset_path': None,
         'test_dataset_count': 1024,
-        'user_defined': {},
+        'user_defined': {'info': 'info1', 'version': 'v1'},
         'network': 'ResNet',
         'optimizer': 'Momentum',
         'learning_rate': 0.11999999731779099,
@@ -329,7 +329,7 @@ class TestModelApi(TestCase):
     def test_filter_summary_lineage(self):
         """Test the interface of filter_summary_lineage."""
         expect_result = {
-            'customized': event_data.CUSTOMIZED__0,
+            'customized': event_data.CUSTOMIZED__1,
             'object': [
                 LINEAGE_FILTRATION_EXCEPT_RUN,
                 LINEAGE_FILTRATION_RUN1,
@@ -383,7 +383,7 @@ class TestModelApi(TestCase):
             'offset': 0
         }
         expect_result = {
-            'customized': event_data.CUSTOMIZED__0,
+            'customized': event_data.CUSTOMIZED__1,
             'object': [
                 LINEAGE_FILTRATION_RUN2,
                 LINEAGE_FILTRATION_RUN1
@@ -421,7 +421,7 @@ class TestModelApi(TestCase):
             'offset': 0
         }
         expect_result = {
-            'customized': event_data.CUSTOMIZED__0,
+            'customized': event_data.CUSTOMIZED__1,
             'object': [
                 LINEAGE_FILTRATION_RUN2,
                 LINEAGE_FILTRATION_RUN1
@@ -449,7 +449,7 @@ class TestModelApi(TestCase):
             'sorted_name': 'metric/accuracy',
         }
         expect_result = {
-            'customized': event_data.CUSTOMIZED__0,
+            'customized': event_data.CUSTOMIZED__1,
             'object': [
                 LINEAGE_FILTRATION_EXCEPT_RUN,
                 LINEAGE_FILTRATION_RUN1,
