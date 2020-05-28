@@ -124,6 +124,8 @@ class AicoreDetailAnalyser(BaseAnalyser):
         result = []
         for op_type in op_type_order:
             detail_infos = type_detail_cache.get(op_type)
+            if detail_infos is None:
+                continue
             detail_infos.sort(key=lambda item: item[2], reverse=True)
             result.extend(detail_infos)
 

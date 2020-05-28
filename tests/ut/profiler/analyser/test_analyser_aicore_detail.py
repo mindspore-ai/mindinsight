@@ -267,7 +267,7 @@ class TestAicoreDetailAnalyser(TestCase):
         result = self._analyser.query(condition)
         self.assertDictEqual(expect_result, result)
 
-    def test_query_and_sort_by_op_type(self):
+    def test_query_and_sort_by_op_type_1(self):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 5, 3, 4])
         expect_result = {
@@ -287,6 +287,31 @@ class TestAicoreDetailAnalyser(TestCase):
         result = self._analyser.query_and_sort_by_op_type(
             filter_condition, op_type_order
         )
+        self.assertDictEqual(expect_result, result)
+
+    def test_query_and_sort_by_op_type_2(self):
+        """Test the success of the querying and sorting function by operator type."""
+        detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 3, 4, 8, 6])
+        expect_result = {
+            'col_name': AicoreDetailAnalyser.__col_names__[0:4],
+            'object': [item[0:4] for item in detail_infos]
+        }
+
+        filter_condition = {
+            'op_type': {},
+            'subgraph': {
+                'in': ['Default']
+            },
+            'is_display_detail': False,
+            'is_display_full_op_name': False
+        }
+        op_type_order = [
+            'MatMul', 'AtomicAddrClean', 'Cast', 'Conv2D', 'TransData'
+        ]
+        result = self._analyser.query_and_sort_by_op_type(
+            filter_condition, op_type_order
+        )
+        print(result)
         self.assertDictEqual(expect_result, result)
 
     def test_col_names(self):
