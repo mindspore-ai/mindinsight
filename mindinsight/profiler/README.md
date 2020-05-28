@@ -12,16 +12,18 @@ The Profiler enables users to:
 To enable profiling on MindSpore, the MindInsight Profiler apis should be added to the script:
 
 1. Import MindInsight Profiler
-
+    ```
     from mindinsight.profiler import Profiler
-
-2. Initialize the Profiler before training
+    ```
+2. Initialize the Profiler after set context, and before the network initialization.  
 
     Example:
-    
+        
+        context.set_context(mode=context.GRAPH_MODE, device_target="Ascend", device_id=int(os.environ["DEVICE_ID"]))
         profiler = Profiler(output_path="./data", is_detail=True, is_show_op_path=False, subgraph='All')
-    
-    Parameters including：
+        net = Net()
+        
+    Parameters of Profiler including：
     
          subgraph (str): Defines which subgraph to monitor and analyse, can be 'all', 'Default', 'Gradients'.
          is_detail (bool): Whether to show profiling data for op_instance level, only show optype level if False.
@@ -31,9 +33,9 @@ To enable profiling on MindSpore, the MindInsight Profiler apis should be added 
                                 will deal with all op if null.
          optypes_not_deal (list): Op type names, the data of which optype will not be collected and analysed.
 
-3. Call Profiler.analyse() at the end of the program
+3. Call ```Profiler.analyse()``` at the end of the program
 
-    Profiler.analyse() will collect profiling data and generate the analysis results.
+    ```Profiler.analyse()``` will collect profiling data and generate the analysis results.
 
 After training, we can open MindInsight UI to analyse the performance.
 
