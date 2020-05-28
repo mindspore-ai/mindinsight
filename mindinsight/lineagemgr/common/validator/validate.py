@@ -410,7 +410,7 @@ def validate_path(summary_path):
 
 def validate_user_defined_info(user_defined_info):
     """
-    Validate user defined info.
+    Validate user defined info， delete the item if its key is in lineage.
 
     Args:
         user_defined_info (dict): The user defined info.
@@ -437,10 +437,13 @@ def validate_user_defined_info(user_defined_info):
 
     field_map = set(FIELD_MAPPING.keys())
     user_defined_keys = set(user_defined_info.keys())
-    all_keys = field_map | user_defined_keys
+    insertion = list(field_map & user_defined_keys)
 
-    if len(field_map) + len(user_defined_keys) != len(all_keys):
-        raise LineageParamValueError("There are some keys have defined in lineage.")
+    if insertion:
+        for key in insertion:
+            user_defined_info.pop(key)
+        raise LineageParamValueError("There are some keys have defined in lineage. "
+                                     "Duplicated key(s): %s. " % insertion)
 
 
 def validate_train_id(relative_path):

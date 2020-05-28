@@ -28,7 +28,7 @@ from unittest import mock, TestCase
 import numpy as np
 import pytest
 
-from mindinsight.lineagemgr import get_summary_lineage
+from mindinsight.lineagemgr import get_summary_lineage, filter_summary_lineage
 from mindinsight.lineagemgr.collection.model.model_lineage import TrainLineage, EvalLineage, \
     AnalyzeObject
 from mindinsight.lineagemgr.common.utils import make_directory
@@ -108,6 +108,36 @@ class TestModelLineage(TestCase):
         assert train_callback.initial_learning_rate == 0.12
         lineage_log_path = train_callback.lineage_summary.lineage_log_path
         assert os.path.isfile(lineage_log_path) is True
+
+    @pytest.mark.scene_train(2)
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_train_begin_with_user_defined_key_in_lineage(self):
+        """Test TrainLineage with nested user defined info."""
+        expected_res = {
+            "info": "info1",
+            "version": "v1"
+        }
+        user_defined_info = {
+            "info": "info1",
+            "version": "v1",
+            "network": "LeNet"
+        }
+        train_callback = TrainLineage(
+            self.summary_record,
+            False,
+            user_defined_info
+        )
+        train_callback.begin(RunContext(self.run_context))
+        assert train_callback.initial_learning_rate == 0.12
+        lineage_log_path = train_callback.lineage_summary.lineage_log_path
+        assert os.path.isfile(lineage_log_path) is True
+        res = filter_summary_lineage(os.path.dirname(lineage_log_path))
+        assert expected_res == res['object'][0]['model_lineage']['user_defined']
 
     @pytest.mark.scene_train(2)
     @pytest.mark.level0

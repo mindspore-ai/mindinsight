@@ -70,7 +70,7 @@ class TestModelApi(TestCase):
     def test_filter_summary_lineage(self):
         """Test the interface of filter_summary_lineage."""
         expect_result = {
-            'customized': event_data.CUSTOMIZED__0,
+            'customized': event_data.CUSTOMIZED__1,
             'object': [
                 LINEAGE_FILTRATION_EXCEPT_RUN,
                 LINEAGE_FILTRATION_RUN1,
