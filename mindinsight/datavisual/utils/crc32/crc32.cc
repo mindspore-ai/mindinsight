@@ -293,10 +293,10 @@ uint32_t MakeCrc32c(uint32_t init_crc, const char *data, size_t size) {
   auto *bp_align = reinterpret_cast<const uint8_t *>(MEM_ALIGN(pval, 2));
 
   // process the not alignment bits when size < 4 byte
-  if (bp_align <= ep) {
+  if (bp_align <= ep && bp < bp_align) {
     // Process bytes until finished or p is 4-byte aligned
     while (bp != bp_align) {
-      crc = crc_table_o32[(crc & 0xFF) ^ (*bp++)] ^ (crc >> 8);
+      crc = crc_table_o32[(crc ^ (*bp++)) & 0xFF] ^ (crc >> 8);
     }
   }
 
@@ -307,7 +307,7 @@ uint32_t MakeCrc32c(uint32_t init_crc, const char *data, size_t size) {
 
   // Process the last not alignment bytes
   while (bp < ep) {
-    crc = crc_table_o32[(crc & 0xFF) ^ (*bp++)] ^ (crc >> 8);
+    crc = crc_table_o32[(crc ^ (*bp++)) & 0xFF] ^ (crc >> 8);
   }
   return crc ^ 0xFFFFFFFFU;
 }
