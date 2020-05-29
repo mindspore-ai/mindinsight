@@ -463,7 +463,6 @@ NN_MAPPING = {
                                                                k_ms="keep_prob", k_pt="p")
                                    })
 }
-# set alias nn. = torch.nn.
 NN_MAPPING.update({"torch." + k: v for k, v in NN_MAPPING.items()})
 
 
@@ -513,7 +512,6 @@ F_MAPPING = {
                                      "gen_explicit_map": gen_explicit_map_f_max_pool2d
                                      }),
 }
-# set alias F = nn.functional = torch.nn.functional
 nn_functional_d = {"nn.functional." + k[2:]: v for k, v in F_MAPPING.items()}
 torch_nn_functional_d = {"torch.nn.functional." + k[2:]: v for k, v in F_MAPPING.items()}
 F_MAPPING.update(nn_functional_d)
@@ -584,7 +582,6 @@ ALL_MAPPING = {**NN_MAPPING, **F_MAPPING, **TORCH_DOT_MAPPING, **TENSOR_DOT_MAPP
 # ---------------------------- api list support or not support ----------------------------
 NN_LIST_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'nn_list.json'))
 NN_LIST = load_json_file(NN_LIST_PATH)
-# set alias nn. = torch.nn.
 NN_LIST += ["torch." + name for name in NN_LIST]
 NN_SUPPORTED = [x for x in NN_LIST if x in ALL_MAPPING]
 NN_UNSUPPORTED = [x for x in NN_LIST if x not in ALL_MAPPING]
@@ -592,7 +589,6 @@ NN_UNSUPPORTED = [x for x in NN_LIST if x not in ALL_MAPPING]
 
 F_LIST_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'f_list.json'))
 F_LIST = load_json_file(F_LIST_PATH)
-# set alias F = nn.functional = torch.nn.functional
 F_LIST += ["F." + name[len("torch.nn.functional."):] for name in F_LIST] + \
           [name[len("torch."):] for name in F_LIST]
 F_SUPPORTED = [x for x in F_LIST if x in ALL_MAPPING]
