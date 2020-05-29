@@ -116,3 +116,18 @@ class TestScalarsProcessor:
             assert recv_values.get('wall_time') == expected_values.get('wall_time')
             assert recv_values.get('step') == expected_values.get('step')
             assert abs(recv_values.get('value') - expected_values.get('value')) < 1e-6
+
+    @pytest.mark.usefixtures('load_scalar_record')
+    def test_get_scalars(self):
+        """Get scalars success."""
+        scalar_processor = ScalarsProcessor(self._mock_data_manager)
+        scalars = scalar_processor.get_scalars([self._train_id], [self._complete_tag_name])
+        scalar = scalars[0]
+
+        assert scalar['train_id'] == self._train_id
+        assert scalar['tag'] == self._complete_tag_name
+
+        for recv_values, expected_values in zip(scalar['values'], self._scalars_metadata):
+            assert recv_values.get('wall_time') == expected_values.get('wall_time')
+            assert recv_values.get('step') == expected_values.get('step')
+            assert abs(recv_values.get('value') - expected_values.get('value')) < 1e-6
