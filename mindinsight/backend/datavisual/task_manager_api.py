@@ -87,7 +87,9 @@ def cache_train_jobs():
     if data is None:
         raise ParamMissError('train_ids')
 
-    train_ids = data.get('train_ids', [])
+    train_ids = data.get('train_ids')
+    if train_ids is None:
+        raise ParamMissError('train_ids')
 
     processor = TrainTaskManager(DATA_MANAGER)
     cache_result = processor.cache_train_jobs(train_ids)
