@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """
-Profiler Module Introduction
+Profiler Module Introduction.
 
 This module provides Python APIs to enable the profiling of MindSpore neural networks.
 Users can import the mindinsight.profiler.Profiler, initialize the Profiler object to start profiling,
