@@ -48,6 +48,7 @@ limitations under the License.
                  timeReloadValue+$t('header.timeSecond')+$t('symbols.rightbracket')"
                  @change="timeReload"></el-switch>
       <i class="el-icon-edit"
+         :title="$t('header.timeReloadScope')"
          v-if="isTimeReload && !isShowInp"
          @click="editTime"></i>
 
