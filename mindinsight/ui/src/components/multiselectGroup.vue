@@ -162,6 +162,7 @@ export default {
     listSelectAll() {
       this.operateSelectAll = !this.operateSelectAll;
       this.multiSelectedItemNames = {};
+      this.selectedNumber = 0;
       // Setting the status of list items
       if (this.operateSelectAll) {
         if (this.isLimit) {
@@ -171,7 +172,7 @@ export default {
               break;
             }
             const listItem = this.checkListArr[i];
-            if (listItem.show && !listItem.checked) {
+            if ((listItem.show && !listItem.checked) || listItem.checked) {
               listItem.checked = true;
               this.multiSelectedItemNames[listItem.label] = true;
               this.selectedNumber++;
@@ -216,14 +217,17 @@ export default {
         }
         this.valiableSearchInput = this.searchInput;
         this.multiSelectedItemNames = {};
+        this.selectedNumber = 0;
         let itemSelectAll = true;
         // Filter the tags that do not meet the conditions in the operation bar and hide them
         this.checkListArr.forEach((listItem) => {
+          if (listItem.checked) {
+            this.multiSelectedItemNames[listItem.label] = true;
+            this.selectedNumber++;
+          }
           if (reg.test(listItem.label)) {
             listItem.show = true;
-            if (listItem.checked) {
-              this.multiSelectedItemNames[listItem.label] = true;
-            } else {
+            if (!listItem.checked) {
               itemSelectAll = false;
             }
           } else {
@@ -232,7 +236,7 @@ export default {
         });
         // Update the selected status of the Select All button
         if (this.isLimit && !itemSelectAll) {
-          itemSelectAll = this.selectedNumber >= this.limitNum;
+          itemSelectAll = this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length;
         }
         this.operateSelectAll = itemSelectAll;
         this.$emit('selectedChange', this.multiSelectedItemNames);
@@ -271,7 +275,7 @@ export default {
         }
       });
       if (this.isLimit && !itemSelectAll) {
-        itemSelectAll = this.selectedNumber >= this.limitNum;
+        itemSelectAll = this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length;
       }
       this.operateSelectAll = itemSelectAll;
       // Return a dictionary containing selected items.
@@ -323,7 +327,7 @@ export default {
             listItem.show = false;
           }
         }
-        if (this.selectedNumber >= this.limitNum) {
+        if (this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length) {
           itemSelectAll = true;
         } else {
           itemSelectAll = false;
