@@ -403,7 +403,5 @@ class LineageObj:
         """
         if not user_defined_info_list:
             return
-        user_defined_infos = dict()
         for user_defined_info in user_defined_info_list:
-            user_defined_infos.update(user_defined_info)
-        self._lineage_info[self._name_user_defined] = user_defined_infos
+            self._lineage_info[self._name_user_defined].update(user_defined_info)
