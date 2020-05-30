@@ -62,10 +62,14 @@
               <el-input v-model="searchByTypeInput"
                         v-if="statisticType === 0"
                         :placeholder="$t('profiler.searchByType')"
+                        clearable
+                        @clear="searchOpCoreList()"
                         @keyup.enter.native="searchOpCoreList()"></el-input>
               <el-input v-model="searchByNameInput"
                         v-if="statisticType === 1"
                         :placeholder="$t('profiler.searchByName')"
+                        clearable
+                        @clear="searchOpCoreList()"
                         @keyup.enter.native="searchOpCoreList()"></el-input>
             </div>
           </div>
@@ -171,6 +175,8 @@
           <div class="cl-search-box">
             <el-input v-model="searchByCPUNameInput"
                       :placeholder="$t('profiler.searchByName')"
+                      clearable
+                      @clear="searchOpCpuList()"
                       @keyup.enter.native="searchOpCpuList()"></el-input>
           </div>
           <el-table v-show="opCpuList.opDetailCol && opCpuList.opDetailCol.length"
