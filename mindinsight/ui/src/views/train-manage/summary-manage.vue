@@ -127,7 +127,7 @@ export default {
      * @param {Object} params page info param
      */
     querySummaryList(params) {
-      RequestService.querySummaryList(params)
+      RequestService.querySummaryList(params, false)
           .then(
               (res) => {
                 if (res && res.data && res.data.train_jobs) {

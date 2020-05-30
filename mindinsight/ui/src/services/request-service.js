@@ -42,13 +42,15 @@ export default {
     });
   },
 
-
   // query summary list
-  querySummaryList(params) {
+  querySummaryList(params, isIgnoreError) {
     return axios({
       method: 'get',
       url: '/v1/mindinsight/datavisual/train-jobs',
       params: params,
+      headers: {
+        ignoreError: isIgnoreError,
+      },
     });
   },
 
@@ -97,18 +99,6 @@ export default {
       method: 'get',
       url: 'v1/mindinsight/datavisual/single-job',
       params: params,
-      headers: {
-        ignoreError: isIgnoreError,
-      },
-    });
-  },
-
-  // query trainJob data
-  getTrainJobs(params, isIgnoreError) {
-    return axios({
-      method: 'get',
-      params: params,
-      url: 'v1/mindinsight/datavisual/train-jobs',
       headers: {
         ignoreError: isIgnoreError,
       },
