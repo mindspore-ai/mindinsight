@@ -133,7 +133,7 @@ def validate_sort_condition(search_condition, search_scope):
     if "type" in sort_condition:
         sorted_type_param = ['ascending', 'descending']
         sorted_type = sort_condition.get("type")
-        if sorted_type not in sorted_type_param:
+        if sorted_type and sorted_type not in sorted_type_param:
             err_msg = "The sorted type must be ascending or descending."
             log.error(err_msg)
             raise ProfilerSortConditionException(err_msg)
