@@ -405,8 +405,8 @@ class _SummaryParser(_Parser):
                         # Drop steps if original_buckets_count exceeds HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT
                         # to avoid time-consuming re-sample process.
                         if tensor_event_value.original_buckets_count > HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT:
-                            logger.warning('original_buckets_count exceeds '
-                                           'HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT')
+                            logger.info('original_buckets_count exceeds '
+                                        'HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT')
                             continue
 
                     tensor_event = TensorEvent(wall_time=event.wall_time,
