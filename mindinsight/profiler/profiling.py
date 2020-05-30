@@ -40,17 +40,17 @@ class Profiler:
     Enable MindSpore users to profile the performance of neural network.
 
     Args:
-         subgraph (str): Define which subgraph to monitor and analyse, can be 'all', 'Default', 'Gradients'.
-         is_detail (bool): Whether to show profiling data for op_instance level, only show optype level if False.
-         is_show_op_path (bool): Whether to save the full path for each op instance.
-         output_path (str): Output data path.
-         optypes_to_deal (list[str]): Op type names, the data of which optype should be collected and analysed,
-             will deal with all op if null.
-         optypes_not_deal (list[str]): Op type names, the data of which optype will not be collected and analysed.
+        subgraph (str): Define which subgraph to monitor and analyse, can be 'all', 'Default', 'Gradients'.
+        is_detail (bool): Whether to show profiling data for op_instance level, only show optype level if False.
+        is_show_op_path (bool): Whether to save the full path for each op instance.
+        output_path (str): Output data path.
+        optypes_to_deal (list[str]): Op type names, the data of which optype should be collected and analysed,
+            will deal with all op if null.
+        optypes_not_deal (list[str]): Op type names, the data of which optype will not be collected and analysed.
 
     Examples:
         >>> from mindinsight.profiler import Profiler
-        >>> context.set_context(mode=context.GRAPH_MODE, device_target=“Ascend”,
+        >>> context.set_context(mode=context.GRAPH_MODE, device_target="Ascend",
         >>>                     device_id=int(os.environ["DEVICE_ID"]))
         >>> profiler = Profiler(subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data')
         >>> model = Model(train_network)
@@ -128,7 +128,7 @@ class Profiler:
 
         Examples:
             >>> from mindinsight.profiler import Profiler
-            >>> context.set_context(mode=context.GRAPH_MODE, device_target=“Ascend”,
+            >>> context.set_context(mode=context.GRAPH_MODE, device_target="Ascend",
             >>>                     device_id=int(os.environ["DEVICE_ID"]))
             >>> profiler = Profiler(subgraph='all', is_detail=True, is_show_op_path=False, output_path='./data')
             >>> model = Model(train_network)
