@@ -20,7 +20,7 @@ To enable profiling on MindSpore, the MindInsight Profiler apis should be added 
     Example:
         
         context.set_context(mode=context.GRAPH_MODE, device_target="Ascend", device_id=int(os.environ["DEVICE_ID"]))
-        profiler = Profiler(output_path="./data", is_detail=True, is_show_op_path=False, subgraph='All')
+        profiler = Profiler(output_path="./data", is_detail=True, is_show_op_path=False, subgraph='all')
         net = Net()
         
     Parameters of Profiler including：
