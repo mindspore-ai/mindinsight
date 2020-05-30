@@ -75,7 +75,9 @@
           </div>
           <el-table v-show="statisticType === 0 && opTypeCol && opTypeCol.length"
                     :data="opTypeList"
+                    ref="expandTable"
                     @expand-change="expandTypeItem"
+                    @sort-change="opTypeSortChange"
                     stripe
                     height="calc(100% - 75px)"
                     width="100%">
@@ -84,6 +86,7 @@
                 <div class="expand-table">
                   <el-table :data="props.row.opDetailList"
                             stripe
+                            ref="expandChild"
                             width="100%"
                             tooltip-effect="light"
                             @cell-click="showInfoDetail"
@@ -303,6 +306,11 @@ export default {
       }, // operator type filter
       initOver: false,
       objectType: 'object',
+      curActiveRow: {
+        rowItem: null,
+        childProp: null,
+        childOrder: null,
+      },
     };
   },
   destroyed() {
@@ -329,6 +337,14 @@ export default {
     /**
      * clear cpu data
      */
+    opTypeSortChange() {
+      this.$nextTick(() => {
+        const item = this.$refs['expandChild'];
+        if (item && this.curActiveRow.rowItem) {
+          item.sort(this.curActiveRow.childProp, this.curActiveRow.childOrder);
+        }
+      });
+    },
     clearCpuData() {
       this.searchByCPUNameInput = '';
       this.opCpuList = {
@@ -443,6 +459,15 @@ export default {
                   });
                   this.opTypeList.push(object);
                 });
+                this.$nextTick(() => {
+                  const elementItem = this.$refs['expandTable'];
+                  if (elementItem) {
+                    elementItem.sort(
+                        this.op_sort_condition.name,
+                        this.op_sort_condition.type,
+                    );
+                  }
+                });
                 if (
                   !this.coreCharts.device_id ||
                 this.coreCharts.device_id !== this.currentCard.value
@@ -503,6 +528,20 @@ export default {
           .then((res) => {
             if (res && res.data) {
               this.formatterDetailData(row, res.data);
+              this.$nextTick(() => {
+                const item = this.$refs['expandChild'];
+                if (item) {
+                  this.curActiveRow = {
+                    rowItem: row,
+                    childProp: row.op_sort_condition.name,
+                    childOrder: row.op_sort_condition.type,
+                  };
+                  item.sort(
+                      row.op_sort_condition.name,
+                      row.op_sort_condition.type,
+                  );
+                }
+              });
             }
           })
           .catch(() => {});
@@ -597,6 +636,13 @@ export default {
         } else {
           this.op_filter_condition = {};
         }
+        if (this.curActiveRow.rowItem) {
+          this.curActiveRow = {
+            rowItem: null,
+            childProp: null,
+            childOrder: null,
+          };
+        }
         this.getCoreTypeList();
       }
     },
@@ -670,12 +716,30 @@ export default {
     expandTypeItem(row) {
       row.isExpanded = !row.isExpanded;
       if (row.isExpanded) {
+        if (this.curActiveRow.rowItem) {
+          this.curActiveRow.rowItem.isExpanded = false;
+          const item = this.$refs['expandTable'];
+          if (item) {
+            item.toggleRowExpansion(this.curActiveRow.rowItem, false);
+          }
+        }
+        this.curActiveRow = {
+          rowItem: row,
+          childProp: null,
+          childOrder: null,
+        };
         row.opDetailList = [];
         row.opDetailCol = [];
         row.opDetailPage.offset = 0;
         row.pageTotal = 0;
         row.op_sort_condition = {name: 'execution_time', type: 'descending'};
         this.getCoreDetailList(row);
+      } else {
+        this.curActiveRow = {
+          rowItem: null,
+          childProp: null,
+          childOrder: null,
+        };
       }
     },
     /**
