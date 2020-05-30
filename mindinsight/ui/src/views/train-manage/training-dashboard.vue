@@ -292,9 +292,14 @@ export default {
       if (this.$route.query && this.$route.query.id) {
         this.trainingJobId = this.$route.query.id;
         this.summaryPath = decodeURIComponent(this.trainingJobId);
-        document.title = this.summaryPath + '-' + this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
+        document.title =
+          this.summaryPath +
+          '-' +
+          this.$t('trainingDashboard.trainingDashboardTitle') +
+          '-MindInsight';
       } else {
-        document.title = this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
+        document.title =
+          this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
         this.trainingJobId = '';
         this.$message.error(this.$t('trainingDashboard.invalidId'));
       }
@@ -790,6 +795,7 @@ export default {
         histogramTag = this.histogramTag;
       }
       if (!histogramTag) {
+        this.histogramTag = histogramTag;
         return;
       }
       const params = {
@@ -797,21 +803,26 @@ export default {
         tag: histogramTag,
       };
       // tag
-      RequestService.getHistogramData(params).then((res) => {
-        if (
-          !res ||
-          !res.data ||
-          !res.data.histograms ||
-          !res.data.histograms.length
-        ) {
-          return;
-        }
-        const data = JSON.parse(JSON.stringify(res.data));
-        this.histogramTag = histogramTag;
-        this.histogramData = this.formOriData(data);
-        this.formatDataToChar();
-        this.updateHistogramSampleData();
-      });
+      RequestService.getHistogramData(params).then(
+          (res) => {
+            if (
+              !res ||
+            !res.data ||
+            !res.data.histograms ||
+            !res.data.histograms.length
+            ) {
+              return;
+            }
+            const data = JSON.parse(JSON.stringify(res.data));
+            this.histogramTag = histogramTag;
+            this.histogramData = this.formOriData(data);
+            this.formatDataToChar();
+            this.updateHistogramSampleData();
+          },
+          (e) => {
+            this.histogramTag = '';
+          },
+      );
     },
     formOriData(dataItem) {
       const chartData = [];

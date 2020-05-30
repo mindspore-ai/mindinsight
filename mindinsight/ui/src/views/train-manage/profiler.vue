@@ -121,6 +121,7 @@
           <el-table v-show="statisticType === 1 && opAllTypeList.opDetailCol && opAllTypeList.opDetailCol.length"
                     :data="opAllTypeList.opDetailList"
                     stripe
+                    ref="opAllTable"
                     width="100%"
                     height="calc(100% - 114px)"
                     @cell-click="showInfoDetail"
@@ -529,13 +530,18 @@ export default {
             if (res && res.data) {
               this.formatterDetailData(row, res.data);
               this.$nextTick(() => {
-                const item = this.$refs['expandChild'];
-                if (item) {
+                let item = null;
+                if (this.statisticType) {
+                  item = this.$refs['opAllTable'];
+                } else {
+                  item = this.$refs['expandChild'];
                   this.curActiveRow = {
                     rowItem: row,
                     childProp: row.op_sort_condition.name,
                     childOrder: row.op_sort_condition.type,
                   };
+                }
+                if (item) {
                   item.sort(
                       row.op_sort_condition.name,
                       row.op_sort_condition.type,
@@ -1030,7 +1036,7 @@ export default {
     if (this.$route.query && this.$route.query.dir && this.$route.query.id) {
       this.profile_dir = this.$route.query.dir;
       this.train_id = this.$route.query.id;
-      document.title = `${ decodeURIComponent(this.train_id)}-${this.$t('profiler.titleText')}-MindInsight`;
+      document.title = `${decodeURIComponent(this.train_id)}-${this.$t('profiler.titleText')}-MindInsight`;
     } else {
       document.title = `${this.$t('profiler.titleText')}-MindInsight`;
     }
