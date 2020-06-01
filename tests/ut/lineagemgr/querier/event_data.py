@@ -195,7 +195,8 @@ CUSTOMIZED__0 = {
 CUSTOMIZED__1 = {
     **CUSTOMIZED__0,
     'user_defined/info': {'label': 'user_defined/info', 'required': False, 'type': 'str'},
-    'user_defined/version': {'label': 'user_defined/version', 'required': False, 'type': 'str'}
+    'user_defined/version': {'label': 'user_defined/version', 'required': False, 'type': 'str'},
+    'user_defined/eval_version': {'label': 'user_defined/eval_version', 'required': False, 'type': 'str'}
 }
 
 CUSTOMIZED_0 = {
