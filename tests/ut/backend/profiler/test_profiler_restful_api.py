@@ -50,17 +50,14 @@ class TestProfilerRestfulApi(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertDictEqual(expect_result, response.get_json())
 
-    @mock.patch('mindinsight.backend.lineagemgr.lineage_api.settings')
     @mock.patch('mindinsight.profiler.analyser.base_analyser.BaseAnalyser.query')
     def test_ops_search_failed(self, *args):
         """Test the failed of ops/search."""
-        base_dir = '/path/to/test_profiler_base'
         expect_result = {
             'object': ["test"],
             'count': 1
         }
         args[0].return_value = expect_result
-        args[1].SUMMARY_BASE_DIR = base_dir
         response = self.app_client.post(self.url, data=json.dumps(1))
         self.assertEqual(400, response.status_code)
         expect_result = {
@@ -89,6 +86,14 @@ class TestProfilerRestfulApi(TestCase):
         del result["error_msg"]
         self.assertDictEqual(expect_result, result)
 
+    @mock.patch('mindinsight.profiler.analyser.base_analyser.BaseAnalyser.query')
+    def test_ops_search_search_condition_failed(self, *args):
+        """Test search condition error."""
+        expect_result = {
+            'object': ["test"],
+            'count': 1
+        }
+        args[0].return_value = expect_result
         body_data = {"op_type": "aicore_type", "device_id": "1", "group_condition": 1}
         response = self.app_client.post(self.url, data=json.dumps(body_data))
         self.assertEqual(400, response.status_code)
