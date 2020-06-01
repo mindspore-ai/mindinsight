@@ -141,3 +141,11 @@ class TestTrainTaskManager:
                     assert train_id in self._plugins_id_map.get(plugin_name)
                 else:
                     assert train_id not in self._plugins_id_map.get(plugin_name)
+
+    @pytest.mark.usefixtures('load_data')
+    def test_cache_train_jobs(self):
+        """Test caching train jobs with train ids."""
+        train_task_manager = TrainTaskManager(self._mock_data_manager)
+
+        cache_result = train_task_manager.cache_train_jobs(self._train_id_list)
+        assert len(self._train_id_list) == len(cache_result)
