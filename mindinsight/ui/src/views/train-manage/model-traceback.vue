@@ -48,8 +48,7 @@ limitations under the License.
                   <button type="text"
                           @click="deselectAll"
                           class="deselect-all-button"
-                          :class="[!selectCheckAll?
-                               'checked-color' : 'button-text',
+                          :class="[!selectCheckAll ? 'checked-color' : 'button-text',
                                basearr.length > checkOptions.length ? 'btn-disabled' : '']"
                           :disabled="basearr.length > checkOptions.length">
                     {{$t('public.deselectAll')}}
@@ -253,48 +252,16 @@ limitations under the License.
                            prop="tag"
                            sortable="custom">
             <template slot-scope="scope">
-              <div @click="showAllIcon(scope.row)"
+              <div @click="showAllIcon(scope.row,scope)"
                    class="tag-icon-container">
                 <i v-if="!scope.row.tag"
                    class="el-icon-arrow-down"></i>
                 <img :id="scope.row.summary_dir"
                      v-if="scope.row.tag"
-                     :src="require('@/assets/images/icon'+ scope.row.tag+'.svg')">
+                     :src="require('@/assets/images/icon' + scope.row.tag + '.svg')">
                 <img :id="scope.row.summary_dir"
                      v-else
-                     src="">
-              </div>
-              <div v-show="scope.row.showIcon"
-                   id="icon-dialog"
-                   class="icon-dialog">
-                <div>
-                  <div class="icon-image-container">
-                    <div class="icon-image"
-                         :class="[item.number === scope.row.tag && scope.row.showIcon ? 'icon-border' : '']"
-                         v-for="item in imageList"
-                         :key="item.number"
-                         @click="iconValueChange(scope.row,item.number,$event)">
-                      <img :src="item.iconAdd">
-                    </div>
-                  </div>
-                  <div class="btn-container-margin">
-                    <el-button type="primary"
-                               size="mini"
-                               class="custom-btn"
-                               @click="iconChangeSave(scope.row)"
-                               plain>{{$t('public.sure')}}</el-button>
-                    <el-button type="primary"
-                               size="mini"
-                               class="custom-btn"
-                               @click="clearIcon(scope.row)"
-                               plain>{{$t('public.clear')}}</el-button>
-                    <el-button type="primary"
-                               size="mini"
-                               class="custom-btn"
-                               @click="cancelChangeIcon(scope.row)"
-                               plain>{{$t('public.cancel')}}</el-button>
-                  </div>
-                </div>
+                     :src="''">
               </div>
             </template>
           </el-table-column>
@@ -333,6 +300,45 @@ limitations under the License.
         </div>
       </div>
     </div>
+    <!-- tag dialog -->
+    <div v-show="tagDialogShow"
+         id="tag-dialog"
+         class="icon-dialog">
+      <div>
+        <div class="icon-image-container">
+          <div class="icon-image"
+               v-for="item in imageList"
+               :key="item.number"
+               :class="[tagScope.row && item.number === tagScope.row.tag ? 'icon-border':'']"
+               @click="iconValueChange(tagScope.row, item.number, $event)">
+            <img :src="item.iconAdd">
+          </div>
+        </div>
+        <div class="btn-container-margin">
+          <el-button type="primary"
+                     size="mini"
+                     class="custom-btn"
+                     @click="iconChangeSave(tagScope.row)"
+                     plain>
+            {{$t('public.sure')}}
+          </el-button>
+          <el-button type="primary"
+                     size="mini"
+                     class="custom-btn"
+                     @click="clearIcon(tagScope.row)"
+                     plain>
+            {{$t('public.clear')}}
+          </el-button>
+          <el-button type="primary"
+                     size="mini"
+                     class="custom-btn"
+                     @click="cancelChangeIcon(tagScope.row)"
+                     plain>
+            {{$t('public.cancel')}}
+          </el-button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script>
@@ -345,6 +351,8 @@ export default {
   watch: {},
   data() {
     return {
+      tagDialogShow: false,
+      tagScope: {},
       iconValue: 0,
       imageList: [],
       // Select all
@@ -419,9 +427,9 @@ export default {
   computed: {},
   mounted() {
     this.imageList = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 1; i <= 10; i++) {
       const obj = {};
-      obj.number = i + 1;
+      obj.number = i;
       obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
       this.imageList.push(obj);
     }
@@ -444,30 +452,56 @@ export default {
         return item.className === 'icon-dialog';
       });
       if (!isActiveDom) {
+        this.removeIconBorder();
         domArr.forEach((item) => {
           item.style.display = 'none';
         });
+        this.tagDialogShow = false;
       }
     },
 
     /**
      * Display of the icon dialog box
      * @param {Object} row
+     * @param {Object} scope
      */
-    showAllIcon(row) {
-      this.iconValue = 0;
-      if (row.showIcon) {
-        row.showIcon = false;
-        const classArr = document.querySelectorAll('.icon-border');
+    showAllIcon(row, scope) {
+      this.iconValue = row.tag >= 0 ? row.tag : 0;
+      this.tagScope = scope;
+      if (this.tagDialogShow) {
+        this.tagDialogShow = false;
+        this.removeIconBorder();
+        return;
+      }
+      this.addIconBorder(row);
+      this.tagDialogShow = true;
+      document.getElementById('tag-dialog').style.top =
+        window.event.clientY - 130 + 'px';
+    },
 
+    /**
+     * Add icon border style
+     * @param {Object} row
+     */
+    addIconBorder(row) {
+      const iconImage = document.querySelectorAll('.icon-image');
+      iconImage.forEach((item, index) => {
+        if (index + 1 === row.tag) {
+          item.classList.add('icon-border');
+        }
+      });
+    },
+
+    /**
+     * Remove  icon border style
+     */
+    removeIconBorder() {
+      const classArr = document.querySelectorAll('.icon-border');
+      if (classArr.length) {
         classArr.forEach((item) => {
           item.classList.remove('icon-border');
         });
-        return;
       }
-      row.showIcon = true;
-      document.getElementById('icon-dialog').style.top =
-        window.event.clientY + 'px';
     },
 
     /**
@@ -495,24 +529,27 @@ export default {
      * @param {Object} row
      */
     iconChangeSave(row) {
-      row.showIcon = false;
+      this.tagDialogShow = false;
       if (row.tag === this.iconValue || this.iconValue === 0) {
         return;
       }
-      row.tag = this.iconValue;
+      this.tagScope.row.tag = this.iconValue;
       const id = row.summary_dir;
-      document.getElementById(id).src = require('@/assets/images/icon' +
-        this.iconValue +
-        '.svg');
+      const img = document.getElementById(id);
+      img.src = require('@/assets/images/icon' + this.iconValue + '.svg');
       const params = {
         train_id: row.summary_dir,
         body: {
-          tag: row.tag,
+          tag: this.tagScope.row.tag,
         },
       };
       this.putChangeToLineagesData(params);
     },
-    // clear icon
+
+    /**
+     * clear icon
+     * @param {Object} row
+     */
     clearIcon(row) {
       const classWrap = event.path.find((item) => {
         return item.className === 'icon-dialog';
@@ -521,13 +558,15 @@ export default {
       classArr.forEach((item) => {
         item.classList.remove('icon-border');
       });
-      row.showIcon = false;
+      this.tagDialogShow = false;
       this.iconValue = 0;
-      row.tag = 0;
+      this.tagScope.row.tag = 0;
+      const img = document.getElementById(row.summary_dir);
+      img.src = '';
       const params = {
         train_id: row.summary_dir,
         body: {
-          tag: row.tag,
+          tag: 0,
         },
       };
       this.putChangeToLineagesData(params);
@@ -537,11 +576,9 @@ export default {
      * @param {Object} row
      */
     cancelChangeIcon(row) {
-      const classArr = document.querySelectorAll('.icon-border');
-      classArr.forEach((item) => {
-        item.classList.remove('icon-border');
-      });
-      row.showIcon = false;
+      this.removeIconBorder();
+      this.addIconBorder(row);
+      this.tagDialogShow = false;
     },
 
     /**
@@ -1182,8 +1219,6 @@ export default {
           item.model_lineage.tag = item.added_info.tag
             ? item.added_info.tag
             : 0;
-          item.model_lineage.showIcon = false;
-
           const modelData = JSON.parse(JSON.stringify(item.model_lineage));
           modelData.model_size = parseFloat(
               ((modelData.model_size || 0) / 1024 / 1024).toFixed(2),
@@ -1937,15 +1972,25 @@ export default {
   .icon-border {
     border: 1px solid #00a5a7 !important;
   }
-  #icon-dialog {
+  #tag-dialog {
     z-index: 999;
     border: 1px solid #d6c9c9;
     position: fixed;
     width: 326px;
     height: 120px;
     background-color: #efebeb;
-    right: 50px;
+    right: 106px;
     border-radius: 4px;
+  }
+  .custom-btn {
+    border: 1px solid #00a5a7;
+    border-radius: 2px;
+    background-color: white;
+    color: #00a5a7;
+  }
+  .custom-btn:hover {
+    color: #00a5a7;
+    background: #e9f7f7;
   }
   .icon-image {
     display: inline-block;
@@ -1971,16 +2016,6 @@ export default {
   }
   .btn-container-margin {
     margin: 0 55px 10px;
-  }
-  .custom-btn {
-    border: 1px solid #00a5a7;
-    border-radius: 2px;
-    background-color: white;
-    color: #00a5a7;
-  }
-  .custom-btn:hover {
-    color: #00a5a7;
-    background: #e9f7f7;
   }
   .btns-container {
     padding: 14px 32px 4px;
