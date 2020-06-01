@@ -33,7 +33,7 @@ from ..api.test_model_api import LINEAGE_INFO_RUN1, LINEAGE_FILTRATION_EXCEPT_RU
     LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2
 from ..conftest import BASE_SUMMARY_DIR
 from .....ut.lineagemgr.querier import event_data
-from .....utils.tools import check_loading_done
+from .....utils.tools import check_loading_done, assert_equal_lineages
 
 
 @pytest.mark.usefixtures("create_summary_dir")
@@ -58,8 +58,7 @@ class TestModelApi(TestCase):
         """Test the interface of get_summary_lineage."""
         total_res = general_get_summary_lineage(data_manager=self._data_manger, summary_dir="./run1")
         expect_total_res = LINEAGE_INFO_RUN1
-
-        assert expect_total_res == total_res
+        assert_equal_lineages(expect_total_res, total_res, self.assertDictEqual)
 
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
@@ -86,7 +85,7 @@ class TestModelApi(TestCase):
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
-        assert expect_result == res
+        assert_equal_lineages(expect_result, res, self.assertDictEqual)
 
         expect_result = {
             'customized': {},
@@ -100,4 +99,4 @@ class TestModelApi(TestCase):
             }
         }
         res = general_filter_summary_lineage(data_manager=self._data_manger, search_condition=search_condition)
-        assert expect_result == res
+        assert_equal_lineages(expect_result, res, self.assertDictEqual)

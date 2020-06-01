@@ -83,9 +83,9 @@ def compare_result_with_file(result, expected_file_path):
         assert result == expected_results
 
 
-def deal_float_for_dict(res: dict, expected_res: dict):
+def deal_float_for_dict(res: dict, expected_res: dict, decimal_num=5):
     """
-    Deal float rounded to five decimals in dict.
+    Deal float rounded to specified decimals in dict.
 
     For example:
         res:{
@@ -125,10 +125,9 @@ def deal_float_for_dict(res: dict, expected_res: dict):
                     "metric": {"acc": 0.1234562}
                 }
             }
-
+        decimal_num (int): decimal rounded digits.
 
     """
-    decimal_num = 5
     for key in res:
         value = res[key]
         expected_value = expected_res[key]
@@ -137,3 +136,22 @@ def deal_float_for_dict(res: dict, expected_res: dict):
         elif isinstance(value, float):
             res[key] = round(value, decimal_num)
             expected_res[key] = round(expected_value, decimal_num)
+
+
+def _deal_float_for_list(list1, list2, decimal_num):
+    """Deal float for list1 and list2."""
+    index = 0
+    for _ in list1:
+        deal_float_for_dict(list1[index], list2[index], decimal_num)
+        index += 1
+
+
+def assert_equal_lineages(lineages1, lineages2, assert_func, decimal_num=2):
+    """Assert lineages."""
+    if isinstance(lineages1, list) and isinstance(lineages2, list):
+        _deal_float_for_list(lineages1, lineages2, decimal_num)
+    elif lineages1.get('object') is not None and lineages2.get('object') is not None:
+        _deal_float_for_list(lineages1['object'], lineages2['object'], decimal_num)
+    else:
+        deal_float_for_dict(lineages1, lineages2, decimal_num)
+    assert_func(lineages1, lineages2)
