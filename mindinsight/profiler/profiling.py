@@ -44,9 +44,10 @@ class Profiler:
         is_detail (bool): Whether to show profiling data for op_instance level, only show optype level if False.
         is_show_op_path (bool): Whether to save the full path for each op instance.
         output_path (str): Output data path.
-        optypes_to_deal (list[str]): Op type names, the data of which optype should be collected and analysed,
-            will deal with all op if null.
-        optypes_not_deal (list[str]): Op type names, the data of which optype will not be collected and analysed.
+        optypes_to_deal (str): Op type names, the data of which optype should be collected and analysed,
+            will deal with all op if null; Different op types should be seperated by comma.
+        optypes_not_deal (str): Op type names, the data of which optype will not be collected and analysed;
+            Different op types should be seperated by comma.
 
     Examples:
         >>> from mindinsight.profiler import Profiler
