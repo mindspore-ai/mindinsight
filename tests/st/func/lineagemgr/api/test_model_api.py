@@ -31,6 +31,7 @@ from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageFileNotF
                                                                  LineageSearchConditionParamError)
 from ..conftest import BASE_SUMMARY_DIR, DATASET_GRAPH, SUMMARY_DIR, SUMMARY_DIR_2
 from .....ut.lineagemgr.querier import event_data
+from .....utils.tools import assert_equal_lineages
 
 LINEAGE_INFO_RUN1 = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
@@ -39,7 +40,7 @@ LINEAGE_INFO_RUN1 = {
     },
     'hyper_parameters': {
         'optimizer': 'Momentum',
-        'learning_rate': 0.11999999731779099,
+        'learning_rate': 0.12,
         'loss_function': 'SoftmaxCrossEntropyWithLogits',
         'epoch': 14,
         'parallel_mode': 'stand_alone',
@@ -73,11 +74,11 @@ LINEAGE_FILTRATION_EXCEPT_RUN = {
         'user_defined': {},
         'network': 'ResNet',
         'optimizer': 'Momentum',
-        'learning_rate': 0.11999999731779099,
+        'learning_rate': 0.12,
         'epoch': 10,
         'batch_size': 32,
         'device_num': 2,
-        'loss': 0.029999999329447746,
+        'loss': 0.03,
         'model_size': 64,
         'metric': {},
         'dataset_mark': 2
@@ -92,10 +93,14 @@ LINEAGE_FILTRATION_RUN1 = {
         'train_dataset_count': 1024,
         'test_dataset_path': None,
         'test_dataset_count': 1024,
-        'user_defined': {'info': 'info1', 'version': 'v1'},
+        'user_defined': {
+            'info': 'info1',
+            'version': 'v1',
+            'eval_version': 'version2'
+        },
         'network': 'ResNet',
         'optimizer': 'Momentum',
-        'learning_rate': 0.11999999731779099,
+        'learning_rate': 0.12,
         'epoch': 14,
         'batch_size': 32,
         'device_num': 2,
@@ -119,14 +124,14 @@ LINEAGE_FILTRATION_RUN2 = {
         'user_defined': {},
         'network': "ResNet",
         'optimizer': "Momentum",
-        'learning_rate': 0.11999999731779099,
+        'learning_rate': 0.12,
         'epoch': 10,
         'batch_size': 32,
         'device_num': 2,
-        'loss': 0.029999999329447746,
+        'loss': 0.03,
         'model_size': 10,
         'metric': {
-            'accuracy': 2.7800000000000002
+            'accuracy': 2.78
         },
         'dataset_mark': 3
     },
@@ -173,7 +178,7 @@ class TestModelApi(TestCase):
             'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
             'hyper_parameters': {
                 'optimizer': 'Momentum',
-                'learning_rate': 0.11999999731779099,
+                'learning_rate': 0.12,
                 'loss_function': 'SoftmaxCrossEntropyWithLogits',
                 'epoch': 14,
                 'parallel_mode': 'stand_alone',
@@ -190,9 +195,9 @@ class TestModelApi(TestCase):
                 'network': 'ResNet'
             }
         }
-        assert expect_total_res == total_res
-        assert expect_partial_res1 == partial_res1
-        assert expect_partial_res2 == partial_res2
+        assert_equal_lineages(expect_total_res, total_res, self.assertDictEqual)
+        assert_equal_lineages(expect_partial_res1, partial_res1, self.assertDictEqual)
+        assert_equal_lineages(expect_partial_res2, partial_res2, self.assertDictEqual)
 
         # the lineage summary file is empty
         result = get_summary_lineage(self.dir_with_empty_lineage)
@@ -345,7 +350,7 @@ class TestModelApi(TestCase):
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
-        assert expect_result == res
+        assert_equal_lineages(expect_result, res, self.assertDictEqual)
 
         expect_result = {
             'customized': {},
@@ -356,7 +361,7 @@ class TestModelApi(TestCase):
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
-        assert expect_result == res
+        assert_equal_lineages(expect_result, res, self.assertDictEqual)
 
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
@@ -394,7 +399,7 @@ class TestModelApi(TestCase):
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
-        assert expect_result == partial_res
+        assert_equal_lineages(expect_result, partial_res, self.assertDictEqual)
 
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
@@ -432,7 +437,7 @@ class TestModelApi(TestCase):
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
-        assert expect_result == partial_res
+        assert_equal_lineages(expect_result, partial_res, self.assertDictEqual)
 
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
@@ -461,7 +466,7 @@ class TestModelApi(TestCase):
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res1.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
-        assert expect_result == partial_res1
+        assert_equal_lineages(expect_result, partial_res1, self.assertDictEqual)
 
         search_condition2 = {
             'batch_size': {
@@ -477,9 +482,6 @@ class TestModelApi(TestCase):
             'count': 0
         }
         partial_res2 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition2)
-        expect_objects = expect_result.get('object')
-        for idx, res_object in enumerate(partial_res2.get('object')):
-            expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
         assert expect_result == partial_res2
 
     @pytest.mark.level0
