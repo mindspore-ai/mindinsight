@@ -48,7 +48,8 @@ limitations under the License.
                         popper-class="tooltip-show-content"
                         :content="item.label"
                         placement="top">
-              <span class="select-disable"><i title="CACHING" v-if="item.loading"
+              <span class="select-disable"><i title="CACHING"
+                   v-if="item.loading"
                    class="el-icon-loading"></i>{{item.label}}</span>
             </el-tooltip>
           </span>
@@ -79,7 +80,8 @@ limitations under the License.
                       popper-class="tooltip-show-content"
                       :content="item.label"
                       placement="top">
-            <span class="select-disable"><i title="CACHING" v-if="item.loading"
+            <span class="select-disable"><i title="CACHING"
+                 v-if="item.loading"
                  class="el-icon-loading"></i>{{item.label}}</span>
           </el-tooltip>
         </span>
@@ -172,7 +174,12 @@ export default {
               break;
             }
             const listItem = this.checkListArr[i];
-            if ((listItem.show && !listItem.checked) || listItem.checked) {
+            if (listItem.checked) {
+              this.selectedNumber++;
+              if (listItem.show) {
+                this.multiSelectedItemNames[listItem.label] = true;
+              }
+            } else if (listItem.show) {
               listItem.checked = true;
               this.multiSelectedItemNames[listItem.label] = true;
               this.selectedNumber++;
@@ -222,13 +229,14 @@ export default {
         // Filter the tags that do not meet the conditions in the operation bar and hide them
         this.checkListArr.forEach((listItem) => {
           if (listItem.checked) {
-            this.multiSelectedItemNames[listItem.label] = true;
             this.selectedNumber++;
           }
           if (reg.test(listItem.label)) {
             listItem.show = true;
             if (!listItem.checked) {
               itemSelectAll = false;
+            } else {
+              this.multiSelectedItemNames[listItem.label] = true;
             }
           } else {
             listItem.show = false;
@@ -236,7 +244,9 @@ export default {
         });
         // Update the selected status of the Select All button
         if (this.isLimit && !itemSelectAll) {
-          itemSelectAll = this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length;
+          itemSelectAll =
+            this.selectedNumber >= this.limitNum ||
+            this.selectedNumber >= this.checkListArr.length;
         }
         this.operateSelectAll = itemSelectAll;
         this.$emit('selectedChange', this.multiSelectedItemNames);
@@ -275,7 +285,9 @@ export default {
         }
       });
       if (this.isLimit && !itemSelectAll) {
-        itemSelectAll = this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length;
+        itemSelectAll =
+          this.selectedNumber >= this.limitNum ||
+          this.selectedNumber >= this.checkListArr.length;
       }
       this.operateSelectAll = itemSelectAll;
       // Return a dictionary containing selected items.
@@ -307,9 +319,9 @@ export default {
         reg = new RegExp(this.valiableSearchInput);
       }
       this.multiSelectedItemNames = {};
+      this.selectedNumber = 0;
       let itemSelectAll = true;
       if (this.isLimit) {
-        this.selectedNumber = 0;
         const loopCount = this.checkListArr.length;
         for (let i = 0; i < loopCount; i++) {
           const listItem = this.checkListArr[i];
@@ -317,17 +329,22 @@ export default {
             if (this.selectedNumber >= this.limitNum) {
               listItem.checked = false;
             } else {
-              this.multiSelectedItemNames[listItem.label] = true;
               this.selectedNumber++;
             }
           }
           if (reg.test(listItem.label)) {
             listItem.show = true;
+            if (listItem.checked) {
+              this.multiSelectedItemNames[listItem.label] = true;
+            }
           } else {
             listItem.show = false;
           }
         }
-        if (this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length) {
+        if (
+          this.selectedNumber >= this.limitNum ||
+          this.selectedNumber >= this.checkListArr.length
+        ) {
           itemSelectAll = true;
         } else {
           itemSelectAll = false;
