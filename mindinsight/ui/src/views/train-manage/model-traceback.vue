@@ -176,7 +176,7 @@ limitations under the License.
                              :prop="key"
                              :label="table.columnOptions[key].label"
                              show-overflow-tooltip
-                             min-width="150"
+                             min-width="154"
                              sortable="custom">
               <template slot="header"
                         slot-scope="scope">
@@ -810,7 +810,7 @@ export default {
             required: false,
           },
           batch_size: {
-            label: 'steps',
+            label: 'steps_per_epoch',
             required: false,
           },
           device_num: {
