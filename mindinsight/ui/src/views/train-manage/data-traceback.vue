@@ -811,6 +811,9 @@ export default {
     unhideRecords() {
       this.showEchartPic = true;
       this.$refs.table.clearSelection();
+      if (this.parallelEchart) {
+        this.parallelEchart.clear();
+      }
       this.$store.commit('setHidenDirChecked', []);
       if (this.hidenDirChecked.length) {
         this.checkedSummary = [];
@@ -1421,8 +1424,11 @@ export default {
                   this.echart.showData = this.echart.brushData;
                   this.showEchartPic = true;
                 }
+                this.resizeChart();
                 this.setEchartValue();
-                this.initChart();
+                this.$nextTick(() => {
+                  this.initChart();
+                });
                 // Total number of pages in the table
                 this.pagination.total = res.data.count;
                 // Data encapsulation of the table
@@ -1469,7 +1475,13 @@ export default {
      *  The window size changes. Resizing Chart
      */
     resizeChart() {
-      this.parallelEchart.resize();
+      if (
+        document.getElementById('data-echart') &&
+        document.getElementById('data-echart').style.display !== 'none' &&
+        this.parallelEchart
+      ) {
+        this.parallelEchart.resize();
+      }
     },
 
     /**
