@@ -2989,7 +2989,7 @@ export default {
           padding: 0;
         }
         #inside-box {
-          background-color: #c0d3ff;
+          background-color: #5b88f1;
           position: absolute;
           /* Transparency */
           opacity: 0.3;
