@@ -1386,7 +1386,10 @@ export default {
               this.echart.allData = list;
               this.echart.brushData = list;
               this.echart.showData = this.echart.brushData;
-              this.initChart();
+              this.$nextTick(() => {
+                this.resizeChart();
+                this.initChart();
+              });
               const showList = list.slice(
                   (this.pagination.currentPage - 1) * this.pagination.pageSize,
                   this.pagination.currentPage * this.pagination.pageSize,
