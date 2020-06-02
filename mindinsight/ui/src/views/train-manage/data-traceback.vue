@@ -119,7 +119,7 @@ limitations under the License.
                            :prop="key"
                            :label="table.columnOptions[key].label"
                            :sortable="sortArray.includes(table.columnOptions[key].label) ? 'custom' : false"
-                           :fixed="table.columnOptions[key].label === text?true:false"
+                           :fixed="table.columnOptions[key].label === text ? true : false"
                            min-width="200"
                            show-overflow-tooltip>
             <template slot="header"
@@ -193,54 +193,16 @@ limitations under the License.
                            prop="tag"
                            sortable="custom">
             <template slot-scope="scope">
-              <div @click="showAllIcon(scope.row)"
+              <div @click="showAllIcon(scope.row,scope)"
                    class="tag-icon-container">
                 <i v-if="!scope.row.tag"
                    class="el-icon-arrow-down"></i>
                 <img :id="scope.row.summary_dir"
                      v-if="scope.row.tag"
-                     :src="require('@/assets/images/icon'+ scope.row.tag+'.svg')">
-                <img :id="scope.row.summary_dir"
-                     v-else
-                     src="">
-              </div>
-              <div v-show="scope.row.showIcon"
-                   id="icon-dialog"
-                   class="icon-dialog">
-                <div>
-                  <div class="icon-image-container">
-                    <div class="icon-image"
-                         :class="[item.number === scope.row.tag && scope.row.showIcon ? 'icon-border' : '']"
-                         v-for="item in imageList"
-                         :key="item.number"
-                         @click="iconValueChange(scope.row, item.number, $event)">
-                      <img :src="item.iconAdd">
-                    </div>
-                  </div>
-                  <div class="btn-container-margin">
-                    <el-button type="primary"
-                               size="mini"
-                               class="custom-btn"
-                               @click="iconChangeSave(scope.row)"
-                               plain>
-                      {{ $t('public.sure')}}
-                    </el-button>
-                    <el-button type="primary"
-                               size="mini"
-                               class="custom-btn"
-                               @click="clearIcon(scope.row)"
-                               plain>
-                      {{ $t('public.clear')}}
-                    </el-button>
-                    <el-button type="primary"
-                               size="mini"
-                               class="custom-btn"
-                               @click="cancelChangeIcon(scope.row)"
-                               plain>
-                      {{ $t('public.cancel')}}
-                    </el-button>
-                  </div>
-                </div>
+                     :src="require('@/assets/images/icon' + scope.row.tag + '.svg')">
+                <img v-else
+                     :id="scope.row.summary_dir"
+                     :src="''">
               </div>
             </template>
           </el-table-column>
@@ -309,6 +271,45 @@ limitations under the License.
         </el-table-column>
       </el-table>
     </el-dialog>
+    <!-- tag dialog -->
+    <div v-show="tagDialogShow"
+         id="tag-dialog"
+         class="icon-dialog">
+      <div>
+        <div class="icon-image-container">
+          <div class="icon-image"
+               v-for="item in imageList"
+               :key="item.number"
+               :class="[tagScope.row && item.number === tagScope.row.tag ? 'icon-border' : '']"
+               @click="iconValueChange(tagScope.row, item.number, $event)">
+            <img :src="item.iconAdd">
+          </div>
+        </div>
+        <div class="btn-container-margin">
+          <el-button type="primary"
+                     size="mini"
+                     class="custom-btn"
+                     @click="iconChangeSave(tagScope.row)"
+                     plain>
+            {{ $t('public.sure')}}
+          </el-button>
+          <el-button type="primary"
+                     size="mini"
+                     class="custom-btn"
+                     @click="clearIcon(tagScope.row)"
+                     plain>
+            {{ $t('public.clear')}}
+          </el-button>
+          <el-button type="primary"
+                     size="mini"
+                     class="custom-btn"
+                     @click="cancelChangeIcon(tagScope.row)"
+                     plain>
+            {{ $t('public.cancel')}}
+          </el-button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script>
@@ -318,6 +319,8 @@ import Echarts from 'echarts';
 export default {
   data() {
     return {
+      tagDialogShow: false,
+      tagScope: {},
       iconValue: 0,
       // icon list of tag
       imageList: [],
@@ -491,9 +494,9 @@ export default {
   computed: {},
   mounted() {
     this.imageList = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 1; i <= 10; i++) {
       const obj = {};
-      obj.number = i + 1;
+      obj.number = i;
       obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
       this.imageList.push(obj);
     }
@@ -510,30 +513,63 @@ export default {
         return item.className === 'icon-dialog';
       });
       if (!isActiveDom) {
+        this.removeIconBorder();
         domArr.forEach((item) => {
           item.style.display = 'none';
         });
+        this.tagDialogShow = false;
       }
     },
     /**
      * Display of the icon dialog box
      * @param {Object} row
+     * @param {Object} scope
      */
-    showAllIcon(row) {
-      this.iconValue = 0;
-      if (row.showIcon) {
-        row.showIcon = false;
-        const classArr = document.querySelectorAll('.icon-border');
+    showAllIcon(row, scope) {
+      this.tagScope = scope;
+      this.iconValue = row.tag >= 0 ? row.tag : 0;
+      if (this.tagDialogShow) {
+        this.tagDialogShow = false;
+        this.removeIconBorder();
+        return;
+      }
+      this.addIconBorder(row);
+      this.tagDialogShow = true;
+      document.getElementById('tag-dialog').style.top =
+        window.event.clientY - 130 + 'px';
+    },
+
+    /**
+     * Add icon border style
+     * @param {Object} row
+     */
+    addIconBorder(row) {
+      const iconImage = document.querySelectorAll('.icon-image');
+      iconImage.forEach((item, index) => {
+        if (index + 1 === row.tag) {
+          item.classList.add('icon-border');
+        }
+      });
+    },
+
+    /**
+     * Remove  icon border style
+     */
+    removeIconBorder() {
+      const classArr = document.querySelectorAll('.icon-border');
+      if (classArr.length) {
         classArr.forEach((item) => {
           item.classList.remove('icon-border');
         });
-        return;
       }
-      row.showIcon = true;
-      document.getElementById('icon-dialog').style.top =
-        window.event.clientY + 'px';
     },
 
+    /**
+     *  icon value change
+     * @param {Object} row
+     * @param {Number} num
+     * @param {Object} event
+     */
     iconValueChange(row, num, event) {
       const classWrap = event.path.find((item) => {
         return item.className === 'icon-dialog';
@@ -554,20 +590,19 @@ export default {
      * @param {Object} row
      */
     iconChangeSave(row) {
-      row.showIcon = false;
+      this.tagDialogShow = false;
       if (row.tag === this.iconValue || this.iconValue === 0) {
         return;
       }
-      row.tag = this.iconValue;
+      this.tagScope.row.tag = this.iconValue;
       const id = row.summary_dir;
-      document.getElementById(id).src = require('@/assets/images/icon' +
-        this.iconValue +
-        '.svg');
+      const img = document.getElementById(id);
+      img.src = require('@/assets/images/icon' + this.iconValue + '.svg');
 
       const params = {
         train_id: row.summary_dir,
         body: {
-          tag: row.tag,
+          tag: this.tagScope.row.tag,
         },
       };
       this.putChangeToLineagesData(params);
@@ -575,8 +610,8 @@ export default {
 
     /**
      * clear icon
+     * @param {Object} row
      */
-
     clearIcon(row) {
       const classWrap = event.path.find((item) => {
         return item.className === 'icon-dialog';
@@ -585,16 +620,19 @@ export default {
       classArr.forEach((item) => {
         item.classList.remove('icon-border');
       });
-      row.showIcon = false;
+      this.tagDialogShow = false;
       this.iconValue = 0;
-      row.tag = 0;
+      this.tagScope.row.tag = 0;
+      const img = document.getElementById(row.summary_dir);
+      img.src = '';
       const params = {
         train_id: row.summary_dir,
         body: {
-          tag: row.tag,
+          tag: 0,
         },
       };
       this.putChangeToLineagesData(params);
+      this.tagDialogShow = false;
     },
 
     /**
@@ -602,11 +640,9 @@ export default {
      * @param {Object} row
      */
     cancelChangeIcon(row) {
-      const classArr = document.querySelectorAll('.icon-border');
-      classArr.forEach((item) => {
-        item.classList.remove('icon-border');
-      });
-      row.showIcon = false;
+      this.removeIconBorder();
+      this.addIconBorder(row);
+      this.tagDialogShow = false;
     },
 
     /**
@@ -1578,7 +1614,6 @@ export default {
           summary_dir: object.summary_dir,
           remark: object.added_info.remark ? object.added_info.remark : '',
           tag: object.added_info.tag,
-          showIcon: false,
         };
         if (JSON.stringify(object.dataset_graph) !== '{}') {
           this.getSingleRunData(object.dataset_graph);
@@ -1658,7 +1693,6 @@ export default {
         curDataObj.remark = objectData.remark;
         // set tag value
         curDataObj.tag = objectData.tag;
-        curDataObj.showIcon = objectData.showIcon;
         // set remark icon is show
         curDataObj.editShow = true;
         curDataObj.isError = false;
@@ -1871,14 +1905,27 @@ export default {
   .icon-border {
     border: 1px solid #00a5a7 !important;
   }
-  #icon-dialog {
+  .btn-container-margin {
+    margin: 0 55px 10px;
+  }
+  .custom-btn {
+    border: 1px solid #00a5a7;
+    border-radius: 2px;
+    background-color: white;
+    color: #00a5a7;
+  }
+  .custom-btn:hover {
+    color: #00a5a7;
+    background: #e9f7f7;
+  }
+  #tag-dialog {
     z-index: 999;
     border: 1px solid #d6c9c9;
     position: fixed;
     width: 326px;
     height: 120px;
     background-color: #efebeb;
-    right: 50px;
+    right: 106px;
     border-radius: 4px;
   }
   .icon-image {
@@ -1984,20 +2031,6 @@ export default {
       height: 32%;
       width: 100%;
     }
-    .btn-container-margin {
-      margin: 0 55px 10px;
-    }
-    .custom-btn {
-      border: 1px solid #00a5a7;
-      border-radius: 2px;
-      background-color: white;
-      color: #00a5a7;
-    }
-    .custom-btn:hover {
-      color: #00a5a7;
-      background: #e9f7f7;
-    }
-
     .table-container {
       background-color: white;
       height: calc(68% - 130px);
