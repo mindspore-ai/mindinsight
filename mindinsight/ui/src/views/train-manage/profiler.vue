@@ -880,6 +880,9 @@ export default {
         option.color = ['#6C92FA'];
         option.tooltip = {
           trigger: 'axis',
+           formatter: (params)=>{
+            return `${params[0].name}<br/>${params[0].marker}${params[0].value.toFixed(4)}`;
+          },
         };
         option.series = [
           {
