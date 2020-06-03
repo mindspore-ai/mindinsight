@@ -27,23 +27,21 @@ limitations under the License.
 
         <!--summary select-->
         <div class="cl-eval-operate-component">
-           <multiSelectGroupComponents ref="summaryGroup"
-        :checkListArr="summaryOperateList"
-        :isLimit="true"
-        :limitNum="5"
-        @selectedChange="summarySelectedChanged"
-        :componentsLabel="componentsLabel.summary"
-        ></multiSelectGroupComponents>
+          <multiSelectGroupComponents ref="summaryGroup"
+                                      :checkListArr="summaryOperateList"
+                                      :isLimit="true"
+                                      :limitNum="5"
+                                      @selectedChange="summarySelectedChanged"
+                                      :componentsLabel="componentsLabel.summary"></multiSelectGroupComponents>
         </div>
 
-         <!--tag select-->
-         <div class="cl-eval-operate-component">
-            <multiSelectGroupComponents ref="tagsGroup"
-        :checkListArr="tagOperateList"
-        @selectedChange="tagSelectedChanged"
-        :componentsLabel="componentsLabel.tag"
-        ></multiSelectGroupComponents>
-         </div>
+        <!--tag select-->
+        <div class="cl-eval-operate-component">
+          <multiSelectGroupComponents ref="tagsGroup"
+                                      :checkListArr="tagOperateList"
+                                      @selectedChange="tagSelectedChanged"
+                                      :componentsLabel="componentsLabel.tag"></multiSelectGroupComponents>
+        </div>
 
       </div>
       <!-- Slider -->
@@ -62,13 +60,12 @@ limitations under the License.
         <el-slider v-model="smoothValue"
                    :step="0.01"
                    :max="0.99"
-                   @input="updataInputValue"
-                   ></el-slider>
+                   @input="updataInputValue"></el-slider>
 
-                   <el-input v-model="smoothValueNumber"
-                   class="w60"
-                   @input="smoothValueChange"
-                   @blur="smoothValueBlur"></el-input>
+        <el-input v-model="smoothValueNumber"
+                  class="w60"
+                  @input="smoothValueChange"
+                  @blur="smoothValueBlur"></el-input>
       </div>
       <!-- Content display -->
       <div class="cl-eval-show-data-content"
@@ -284,11 +281,11 @@ export default {
      * Obtain the tag and summary list.
      */
     getScalarsList() {
-      const params={};
+      const params = {};
       params.offset = 0;
       params.limit = 999;
 
-      RequestService.getTrainJobs(params)
+      RequestService.querySummaryList(params)
           .then((res) => {
           // error;
             if (
@@ -318,10 +315,10 @@ export default {
                 colorIndex: colorIndex,
               });
 
-              if (summaryObj.cache_status===this.cacheStatus) {
-                tempSummaryList.forEach((item)=>{
-                  if (item.label=== summaryObj.train_id) {
-                    item.loading=true;
+              if (summaryObj.cache_status === this.cacheStatus) {
+                tempSummaryList.forEach((item) => {
+                  if (item.label === summaryObj.train_id) {
+                    item.loading = true;
                   }
                 });
               }
@@ -339,7 +336,7 @@ export default {
 
                 if (!this.oriDataDictionaries[tagObj]) {
                 // Add the tag list
-                  this.oriDataDictionaries[tagObj]=true;
+                  this.oriDataDictionaries[tagObj] = true;
                   tempTagList.push({
                     label: tagObj,
                     checked: true,
@@ -386,11 +383,13 @@ export default {
             this.initOver = true;
 
             this.$nextTick(() => {
-              this.multiSelectedTagNames=this.$refs.tagsGroup.updateSelectedDic();
-              this.multiSelectedSummaryNames=this.$refs.summaryGroup.updateSelectedDic();
+              this.multiSelectedTagNames = this.$refs.tagsGroup.updateSelectedDic();
+              this.multiSelectedSummaryNames = this.$refs.summaryGroup.updateSelectedDic();
               this.updateTagInPage();
               this.resizeCallback();
-              this.trainJobsCaches();
+              if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
+                this.trainJobsCaches();
+              }
             });
           }, this.requestErrorCallback)
           .catch((e) => {
@@ -399,8 +398,8 @@ export default {
     },
 
     trainJobsCaches() {
-      const params={};
-      params.train_ids=Object.keys(this.multiSelectedSummaryNames);
+      const params = {};
+      params.train_ids = Object.keys(this.multiSelectedSummaryNames);
       RequestService.trainJobsCaches(params);
     },
 
@@ -437,12 +436,12 @@ export default {
      */
 
     updateCurPageSamples() {
-      this.curPageArr.forEach((sampleObject)=>{
+      this.curPageArr.forEach((sampleObject) => {
         if (!sampleObject) {
           return;
         }
         sampleObject.updateFlag = true;
-        const sampleIndex=sampleObject.sampleIndex;
+        const sampleIndex = sampleObject.sampleIndex;
         const summaryCount = sampleObject.summaryNames.length;
         if (summaryCount === 0) {
           return;
@@ -453,14 +452,13 @@ export default {
           tag: sampleObject.tagName,
         };
 
-        for (let i=0; i<summaryCount; i++) {
-          if (i===summaryCount-1) {
+        for (let i = 0; i < summaryCount; i++) {
+          if (i === summaryCount - 1) {
             params.train_id += sampleObject.summaryNames[i];
           } else {
-            params.train_id += sampleObject.summaryNames[i]+'&';
+            params.train_id += sampleObject.summaryNames[i] + '&';
           }
         }
-
 
         RequestService.getSummarySample(params)
             .then((res) => {
@@ -537,11 +535,9 @@ export default {
                 this.updateOrCreateChar(sampleIndex);
               });
             })
-            .catch((error) => {
-            });
+            .catch((error) => {});
       });
     },
-
 
     /**
      * Formatting Chart Data
@@ -717,7 +713,7 @@ export default {
         },
         grid: {
           left: 80,
-          right: sampleObject.fullScreen ? 80:10,
+          right: sampleObject.fullScreen ? 80 : 10,
         },
         animation: true,
         dataZoom: [
@@ -962,11 +958,11 @@ export default {
       if (sampleObject.fullScreen) {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#3E98C5';
-        sampleObject.charData.charOption.grid.right=80;
+        sampleObject.charData.charOption.grid.right = 80;
       } else {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#6D7278';
-        sampleObject.charData.charOption.grid.right=10;
+        sampleObject.charData.charOption.grid.right = 10;
       }
       sampleObject.updateFlag = true;
 
@@ -985,13 +981,13 @@ export default {
      */
 
     updateTagInPage(noPageDataNumChange) {
-      const curFilterSamples=[];
-      this.originDataArr.forEach((sampleItem)=>{
+      const curFilterSamples = [];
+      this.originDataArr.forEach((sampleItem) => {
         if (this.multiSelectedTagNames[sampleItem.tagName]) {
           curFilterSamples.push(sampleItem);
         }
       });
-      this.curFilterSamples=curFilterSamples;
+      this.curFilterSamples = curFilterSamples;
       this.getCurPageDataArr(noPageDataNumChange);
     },
 
@@ -1086,9 +1082,9 @@ export default {
       if (!selectedItemDict) {
         return;
       }
-      this.multiSelectedTagNames=selectedItemDict;
+      this.multiSelectedTagNames = selectedItemDict;
       // reset to the first page
-      this.pageIndex=0;
+      this.pageIndex = 0;
       this.updateTagInPage();
     },
 
@@ -1101,11 +1097,13 @@ export default {
       if (!selectedItemDict) {
         return;
       }
-      this.multiSelectedSummaryNames=selectedItemDict;
+      this.multiSelectedSummaryNames = selectedItemDict;
       if (this.isTimeReload) {
         this.autoUpdateSamples();
       }
-      this.trainJobsCaches();
+      if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
+        this.trainJobsCaches();
+      }
       this.updateSummary();
     },
 
@@ -1114,33 +1112,30 @@ export default {
      */
     updateSummary() {
       // update the data display area
-      this.originDataArr.forEach((sampleObject)=>{
+      this.originDataArr.forEach((sampleObject) => {
         if (sampleObject.charObj) {
-          sampleObject.updateFlag=true;
-          sampleObject.summaryNames.forEach((summaryName)=>{
+          sampleObject.updateFlag = true;
+          sampleObject.summaryNames.forEach((summaryName) => {
+            const sampleSelect =
+              sampleObject.charData.charOption.legend.selected;
+            if (!sampleSelect) {
+              return;
+            }
             if (this.multiSelectedSummaryNames[summaryName]) {
-              sampleObject.charData.charOption.legend.selected[
-                  summaryName
-              ]=true;
-              sampleObject.charData.charOption.legend.selected[
-                  summaryName+this.backendString
-              ]=true;
+              sampleSelect[summaryName] = true;
+              sampleSelect[summaryName + this.backendString] = true;
             } else {
-              sampleObject.charData.charOption.legend.selected[
-                  summaryName
-              ]=false;
-              sampleObject.charData.charOption.legend.selected[
-                  summaryName+this.backendString
-              ]=false;
+              sampleSelect[summaryName] = false;
+              sampleSelect[summaryName + this.backendString] = false;
             }
           });
         }
       });
 
-      setTimeout(()=>{
+      setTimeout(() => {
         // Refresh the current page chart
-        this.curPageArr.forEach((sampleObject)=>{
-          sampleObject.charData.charOption.animation=false;
+        this.curPageArr.forEach((sampleObject) => {
+          sampleObject.charData.charOption.animation = false;
           this.updateOrCreateChar(sampleObject.sampleIndex, true);
         });
       }, 0);
@@ -1151,6 +1146,9 @@ export default {
      */
 
     resizeCallback() {
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
       if (this.charResizeTimer) {
         clearTimeout(this.charResizeTimer);
         this.charResizeTimer = null;
@@ -1164,7 +1162,6 @@ export default {
         });
       }, 500);
     },
-
 
     /**
      * Initialize the color array
@@ -1192,7 +1189,7 @@ export default {
       this.tagOperateList = [];
       this.pageIndex = 0;
       this.originDataArr = [];
-      this.oriDataDictionaries={};
+      this.oriDataDictionaries = {};
       this.curPageArr = [];
     },
 
@@ -1213,7 +1210,6 @@ export default {
         this.clearAllData();
       }
     },
-
 
     /**
      * Delete the data that does not exist
@@ -1334,16 +1330,16 @@ export default {
           summaryColor = this.summaryOperateList[sameSummaryIndex].color;
         }
 
-        if (summaryObj.cache_status===this.cacheStatus) {
-          this.summaryOperateList.forEach((item)=>{
-            if (item.label=== summaryObj.train_id) {
-              item.loading=true;
+        if (summaryObj.cache_status === this.cacheStatus) {
+          this.summaryOperateList.forEach((item) => {
+            if (item.label === summaryObj.train_id) {
+              item.loading = true;
             }
           });
         } else {
-          this.summaryOperateList.forEach((item)=>{
-            if (item.label=== summaryObj.train_id) {
-              item.loading=false;
+          this.summaryOperateList.forEach((item) => {
+            if (item.label === summaryObj.train_id) {
+              item.loading = false;
             }
           });
         }
@@ -1399,17 +1395,16 @@ export default {
       return dataAddFlag;
     },
 
-
     /**
      * Updating all data
      * @param {Boolean} ignoreError whether ignore error tip
      */
 
     updateAllData(ignoreError) {
-      const params={};
+      const params = {};
       params.offset = 0;
       params.limit = 999;
-      RequestService.getTrainJobs(params, ignoreError)
+      RequestService.querySummaryList(params, ignoreError)
           .then((res) => {
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);
@@ -1417,10 +1412,12 @@ export default {
             }
 
             // Fault tolerance processing
-            if (!res ||
+            if (
+              !res ||
             !res.data ||
             !res.data.train_jobs ||
-            !res.data.train_jobs.length) {
+            !res.data.train_jobs.length
+            ) {
               this.clearAllData();
               return;
             }
@@ -1440,7 +1437,9 @@ export default {
 
               this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
               this.resizeCallback();
-              this.trainJobsCaches();
+              if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
+                this.trainJobsCaches();
+              }
             });
           }, this.requestErrorCallback)
           .catch((e) => {
@@ -1483,7 +1482,7 @@ export default {
       if (this.firstNum === 0) {
         return;
       }
-      this.smoothValueNumber=Number(val);
+      this.smoothValueNumber = Number(val);
       if (this.smoothSliderValueTimer) {
         clearTimeout(this.smoothSliderValueTimer);
         this.smoothSliderValueTimer = null;
@@ -1496,26 +1495,26 @@ export default {
 
     smoothValueChange(val) {
       if (!isNaN(val)) {
-        if (Number(val)===0) {
-          this.smoothValue=0;
+        if (Number(val) === 0) {
+          this.smoothValue = 0;
         }
-        if (Number(val)<0) {
-          this.smoothValue=0;
-          this.smoothValueNumber=0;
+        if (Number(val) < 0) {
+          this.smoothValue = 0;
+          this.smoothValueNumber = 0;
         }
-        if (Number(val)>0) {
-          if (Number(val)>0.99) {
-            this.smoothValue=0.99;
-            this.smoothValueNumber=0.99;
+        if (Number(val) > 0) {
+          if (Number(val) > 0.99) {
+            this.smoothValue = 0.99;
+            this.smoothValueNumber = 0.99;
           } else {
-            this.smoothValue=Number(val);
+            this.smoothValue = Number(val);
           }
         }
       }
     },
 
     smoothValueBlur() {
-      this.smoothValueNumber=this.smoothValue;
+      this.smoothValueNumber = this.smoothValue;
     },
 
     /**
@@ -1715,7 +1714,7 @@ export default {
     background: #ffffff;
 
     .cl-eval-operate-component {
-      margin-top:8px;
+      margin-top: 8px;
     }
   }
   .cl-eval-slider-operate-content {
