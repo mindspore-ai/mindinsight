@@ -1281,6 +1281,26 @@ export default {
     },
 
     /**
+     * get data of table
+     * @param {Object} params
+     */
+    queryTableLineagesData(params) {
+      RequestService.queryLineagesData(params)
+          .then(
+              (res) => {
+                if (!res || !res.data) {
+                  return;
+                }
+                this.lineagedata = this.formateOriginData(res.data);
+                const serData = this.lineagedata.serData;
+                this.table.data = JSON.parse(JSON.stringify(serData));
+              },
+              (error) => {},
+          )
+          .catch(() => {});
+    },
+
+    /**
      * Method of invoking the interface
      * @param {Object} params
      */
@@ -1578,7 +1598,28 @@ export default {
      */
     handleCurrentChange(val) {
       this.pagination.currentPage = val;
-      this.table.data = this.setTableData();
+      const data = this.setTableData();
+      const summaryDirList = [];
+      data.forEach((item) => {
+        summaryDirList.push(item.summary_dir);
+      });
+      const params = {
+        body: {},
+      };
+      const tempParam = {
+        sorted_name: this.sortInfo.sorted_name,
+        sorted_type: this.sortInfo.sorted_type,
+      };
+      this.tableFilter.summary_dir = {
+        in: summaryDirList,
+      };
+      params.body = Object.assign(
+          params.body,
+          this.chartFilter,
+          tempParam,
+          this.tableFilter,
+      );
+      this.queryTableLineagesData(params);
     },
 
     /**
