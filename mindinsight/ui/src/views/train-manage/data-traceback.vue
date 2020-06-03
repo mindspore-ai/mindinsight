@@ -1110,9 +1110,6 @@ export default {
             this.showTable = false;
             this.echartNoData = true;
           } else {
-            const echartLength = this.echart.brushData.length;
-            this.recordsNumber = echartLength;
-            this.showNumber = echartLength;
             this.echart.showData = this.echart.brushData;
             this.initChart();
             this.pagination.currentPage = 1;
@@ -1121,6 +1118,9 @@ export default {
                 (this.pagination.currentPage - 1) * this.pagination.pageSize,
                 this.pagination.currentPage * this.pagination.pageSize,
             );
+            const tableLength = this.table.data.length;
+            this.recordsNumber = tableLength;
+            this.showNumber = tableLength;
             this.showTable = true;
           }
         }
