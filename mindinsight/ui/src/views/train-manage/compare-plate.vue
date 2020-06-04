@@ -17,13 +17,15 @@ limitations under the License.
   <div class="cl-compare-manage">
 
     <div class="compare-bk">
-      <div class="cl-title cl-compare-title">
+      <div class="cl-title cl-compare-title"
+           v-show="originDataArr.length>0">
         <div class="cl-title-left">
           {{$t("summaryManage.comparePlate")}}</div>
       </div>
 
       <!--operation area -->
-      <div class="cl-eval-operate-content">
+      <div class="cl-eval-operate-content"
+           v-show="originDataArr.length>0">
 
         <!--summary select-->
         <div class="cl-eval-operate-component">
@@ -45,7 +47,8 @@ limitations under the License.
 
       </div>
       <!-- Slider -->
-      <div class="cl-eval-slider-operate-content">
+      <div class="cl-eval-slider-operate-content"
+           v-show="originDataArr.length>0">
         <div class="xaxis-title">{{$t('scalar.xAxisTitle')}}</div>
         <el-radio-group v-model="curAxisName"
                         fill="#00A5A7"
