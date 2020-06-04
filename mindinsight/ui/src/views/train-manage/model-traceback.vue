@@ -89,7 +89,7 @@ limitations under the License.
       <div id="echart"
            v-show="!noData && showEchartPic"></div>
       <div class="echart-no-data"
-           v-show="!showEchartPic">
+           v-show="!noData && !showEchartPic">
       </div>
       <div class="btns-container"
            v-show="showTable && !noData">
@@ -1198,7 +1198,9 @@ export default {
                 }
               },
           )
-          .catch(() => {});
+          .catch(() => {
+            this.noData = true;
+          });
     },
 
     /**
