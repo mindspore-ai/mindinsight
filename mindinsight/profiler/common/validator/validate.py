@@ -13,9 +13,14 @@
 # limitations under the License.
 # ============================================================================
 """Validate the profiler parameters."""
+import os
+import sys
+
+from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerParamTypeErrorException, \
     ProfilerDeviceIdException, ProfilerOpTypeException, \
-    ProfilerSortConditionException, ProfilerFilterConditionException, ProfilerGroupConditionException
+    ProfilerSortConditionException, ProfilerFilterConditionException, \
+    ProfilerGroupConditionException, ProfilerParamValueErrorException
 from mindinsight.profiler.common.log import logger as log
 
 AICORE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "precent"]
@@ -70,6 +75,7 @@ def validate_condition(search_condition):
 
     if "filter_condition" in search_condition:
         validate_filter_condition(search_condition)
+
 
 def validata_group_condition(search_condition):
     """
@@ -185,3 +191,44 @@ def validate_filter_condition(search_condition):
             validate_op_filter_condition(op_name_condition)
         if "op_type" not in filter_condition and "op_name" not in filter_condition:
             raise ProfilerFilterConditionException("The key of filter_condition is not support")
+
+
+def validate_and_set_job_id_env(job_id_env):
+    """
+    Validate the job id and set it in environment.
+
+    Args:
+        job_id_env (str): The id that to be set in environment parameter `JOB_ID`.
+
+    Returns:
+        int, the valid job id env.
+    """
+    if job_id_env is None:
+        return job_id_env
+    # get job_id_env in int type
+    valid_id = to_int(job_id_env, 'job_id_env')
+    # check the range of valid_id
+    if valid_id and 255 < valid_id < sys.maxsize:
+        os.environ['JOB_ID'] = job_id_env
+    else:
+        log.warning("Invalid job_id_env %s. The value should be int and between 255 and %s. Use"
+                    "default job id env instead.",
+                    job_id_env, sys.maxsize)
+    return valid_id
+
+
+def validate_ui_proc(proc_name):
+    """
+    Validate proc name in restful request.
+
+    Args:
+        proc_name (str): The proc name to query. Acceptable value is in
+        [`iteration_interval`, `fp_and_bp`, `tail`].
+
+    Raises:
+        ProfilerParamValueErrorException: If the proc_name is invalid.
+    """
+    accept_names = ['iteration_interval', 'fp_and_bp', 'tail']
+    if proc_name not in accept_names:
+        log.error("Invalid proc_name. The proc_name for restful api is in %s", accept_names)
+        raise ProfilerParamValueErrorException(f'proc_name should be in {accept_names}.')

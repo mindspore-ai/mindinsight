@@ -15,7 +15,13 @@
 """Validate the input path."""
 import os
 from typing import Union, List
+from urllib.parse import unquote
+
 from marshmallow import ValidationError
+
+from mindinsight.profiler.common.exceptions.exceptions import \
+    ProfilerParamValueErrorException
+from mindinsight.profiler.common.log import logger as log
 
 
 def safe_normalize_path(
@@ -117,3 +123,30 @@ def validate_and_normalize_path(
         raise ValidationError({raise_key: {"The path is invalid!"}})
 
     return normalized_path
+
+
+def validate_and_normalize_profiler_path(path):
+    """
+    Validate and normalize profiler path.
+
+    Args:
+        path (str): The path of summary directory.
+
+    Returns:
+        str, normalized path of profiler directory.
+    """
+    if not path:
+        raise ProfilerParamValueErrorException('The file dir does not exist.')
+    try:
+        unquote_path = unquote(path, errors='strict')
+    except UnicodeDecodeError:
+        raise ProfilerParamValueErrorException('Unquote error with strict mode')
+
+    profiler_dir = os.path.join(unquote_path, 'profiler')
+    try:
+        profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
+    except ValidationError:
+        log.error('profiler dir <%s> is invalid', unquote_path)
+        raise ProfilerParamValueErrorException('Profiler dir is invalid.')
+
+    return profiler_dir
