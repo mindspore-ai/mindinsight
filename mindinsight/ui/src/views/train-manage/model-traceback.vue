@@ -254,14 +254,12 @@ limitations under the License.
             <template slot-scope="scope">
               <div @click="showAllIcon(scope.row,scope)"
                    class="tag-icon-container">
-                <i v-if="!scope.row.tag"
-                   class="el-icon-arrow-down"></i>
-                <img :id="scope.row.summary_dir"
-                     v-if="scope.row.tag"
+                <img v-if="scope.row.tag"
+                     :class="'img' + scope.$index"
                      :src="require('@/assets/images/icon' + scope.row.tag + '.svg')">
-                <img :id="scope.row.summary_dir"
-                     v-else
-                     :src="''">
+                <img v-else
+                     :class="'img' + scope.$index"
+                     :src="require('@/assets/images/icon-down.svg')">
               </div>
             </template>
           </el-table-column>
@@ -318,14 +316,14 @@ limitations under the License.
           <el-button type="primary"
                      size="mini"
                      class="custom-btn"
-                     @click="iconChangeSave(tagScope.row)"
+                     @click="iconChangeSave(tagScope)"
                      plain>
             {{$t('public.sure')}}
           </el-button>
           <el-button type="primary"
                      size="mini"
                      class="custom-btn"
-                     @click="clearIcon(tagScope.row)"
+                     @click="clearIcon(tagScope)"
                      plain>
             {{$t('public.clear')}}
           </el-button>
@@ -526,19 +524,21 @@ export default {
     },
     /**
      * Save the modification of the icon.
-     * @param {Object} row
+     * @param {Object} scope
      */
-    iconChangeSave(row) {
+    iconChangeSave(scope) {
       this.tagDialogShow = false;
-      if (row.tag === this.iconValue || this.iconValue === 0) {
+      if (scope.row.tag === this.iconValue || this.iconValue === 0) {
         return;
       }
       this.tagScope.row.tag = this.iconValue;
-      const id = row.summary_dir;
-      const img = document.getElementById(id);
-      img.src = require('@/assets/images/icon' + this.iconValue + '.svg');
+      const imgDom = document.querySelectorAll('.img' + scope.$index);
+      imgDom.forEach((item) => {
+        item.src = require('@/assets/images/icon' + this.iconValue + '.svg');
+      });
+      this.$forceUpdate();
       const params = {
-        train_id: row.summary_dir,
+        train_id: scope.row.summary_dir,
         body: {
           tag: this.tagScope.row.tag,
         },
@@ -548,9 +548,9 @@ export default {
 
     /**
      * clear icon
-     * @param {Object} row
+     * @param {Object} scope
      */
-    clearIcon(row) {
+    clearIcon(scope) {
       const classWrap = event.path.find((item) => {
         return item.className === 'icon-dialog';
       });
@@ -561,10 +561,12 @@ export default {
       this.tagDialogShow = false;
       this.iconValue = 0;
       this.tagScope.row.tag = 0;
-      const img = document.getElementById(row.summary_dir);
-      img.src = '';
+      const imgDom = document.querySelectorAll('.img' + scope.$index);
+      imgDom.forEach((item) => {
+        item.src = require('@/assets/images/icon-down.svg');
+      });
       const params = {
-        train_id: row.summary_dir,
+        train_id: scope.row.summary_dir,
         body: {
           tag: 0,
         },
@@ -2058,10 +2060,9 @@ export default {
     width: 140px;
   }
   .tag-icon-container {
-    width: 22px;
-    height: 22px;
+    width: 21px;
+    height: 21px;
     border: 1px solid #e6e6e6;
-    background-color: white;
     cursor: pointer;
     border-radius: 2px;
   }
