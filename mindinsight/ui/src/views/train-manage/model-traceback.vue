@@ -313,27 +313,33 @@ limitations under the License.
           </div>
         </div>
         <div class="btn-container-margin">
-          <el-button type="primary"
-                     size="mini"
-                     class="custom-btn"
-                     @click="iconChangeSave(tagScope)"
-                     plain>
-            {{$t('public.sure')}}
-          </el-button>
-          <el-button type="primary"
-                     size="mini"
-                     class="custom-btn"
-                     @click="clearIcon(tagScope)"
-                     plain>
-            {{$t('public.clear')}}
-          </el-button>
-          <el-button type="primary"
-                     size="mini"
-                     class="custom-btn"
-                     @click="cancelChangeIcon(tagScope.row)"
-                     plain>
-            {{$t('public.cancel')}}
-          </el-button>
+          <div class="tag-button-container">
+            <el-button type="primary"
+                       size="mini"
+                       class="custom-btn"
+                       @click="iconChangeSave(tagScope)"
+                       plain>
+              {{$t('public.sure')}}
+            </el-button>
+          </div>
+          <div class="tag-button-container">
+            <el-button type="primary"
+                       size="mini"
+                       class="custom-btn"
+                       @click="clearIcon(tagScope)"
+                       plain>
+              {{$t('public.clear')}}
+            </el-button>
+          </div>
+          <div class="tag-button-container">
+            <el-button type="primary"
+                       size="mini"
+                       class="custom-btn"
+                       @click="cancelChangeIcon(tagScope.row)"
+                       plain>
+              {{$t('public.cancel')}}
+            </el-button>
+          </div>
         </div>
       </div>
     </div>
@@ -1975,7 +1981,9 @@ export default {
   height: 100%;
   overflow-y: auto;
   position: relative;
-
+  .el-table th.gutter {
+    display: table-cell !important;
+  }
   .icon-border {
     border: 1px solid #00a5a7 !important;
   }
@@ -2022,7 +2030,12 @@ export default {
     height: 46px;
   }
   .btn-container-margin {
-    margin: 0 55px 10px;
+    margin: 0 10%;
+  }
+  .tag-button-container {
+    display: inline-block;
+    width: 33.3%;
+    text-align: center;
   }
   .btns-container {
     padding: 14px 32px 4px;
