@@ -1,0 +1,119 @@
+{
+  ".view": {
+    "ms_api": [
+      "P.Reshape",
+      {
+        "x": "REQUIRED",
+        "shape": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".view",
+      {
+        "*shape": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "x": "call_name"
+    },
+    "gen_explicit_map": "tensor_dot_view_gen_explicit_map"
+  },
+  ".size": {
+    "ms_api": [
+      "P.Shape",
+      {
+        "x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".size",
+      {
+        "idx": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "x": "call_name"
+    }
+  },
+  ".flatten": {
+    "ms_api": [
+      "P.Flatten",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".flatten",
+      {
+        "start_dim": 0,
+        "end_dim": -1
+      }
+    ],
+    "ms2pt_mapping": {
+      "input": "call_name"
+    }
+  },
+  ".reshape": {
+    "ms_api": [
+      "P.Reshape",
+      {
+        "x": "REQUIRED",
+        "shape": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".reshape",
+      {
+        "*shape": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "x": "call_name"
+    },
+    "gen_explicit_map": "tensor_dot_reshape_gen_explicit_map"
+  },
+  ".mean": {
+    "ms_api": [
+      "P.ReduceMean",
+      {
+        "keep_dims": false,
+        "input": "REQUIRED",
+        "axis": []
+      }
+    ],
+    "pt_api": [
+      ".mean",
+      {
+        "dim": null,
+        "keepdim": false
+      }
+    ],
+    "ms2pt_mapping": {
+      "keep_dims": "keepdim",
+      "axis": "dim",
+      "input": "call_name"
+    }
+  },
+  ".squeeze": {
+    "ms_api": [
+      "P.ReduceMean",
+      {
+        "input": "REQUIRED",
+        "axis": []
+      },
+      [
+        "axis"
+      ]
+    ],
+    "pt_api": [
+      ".squeeze",
+      {
+        "dim": null
+      }
+    ],
+    "ms2pt_mapping": {
+      "axis": "dim",
+      "input": "call_name"
+    }
+  }
+}

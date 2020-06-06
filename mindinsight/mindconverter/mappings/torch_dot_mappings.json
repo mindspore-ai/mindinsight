@@ -1,0 +1,45 @@
+{
+  "torch.flatten": {
+    "ms_api": [
+      "P.Flatten",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      "torch.flatten",
+      {
+        "input": "REQUIRED",
+        "start_dim": 0,
+        "end_dim": -1
+      }
+    ],
+    "ms2pt_mapping": {
+      "input": "input"
+    }
+  },
+  "torch.cat": {
+    "ms_api": [
+      "P.Concat",
+      {
+        "axis": 0,
+        "input": "REQUIRED"
+      },
+      [
+        "axis"
+      ]
+    ],
+    "pt_api": [
+      "torch.cat",
+      {
+        "tensors": "REQUIRED",
+        "dim": 0,
+        "out": null
+      }
+    ],
+    "ms2pt_mapping": {
+      "input": "tensors",
+      "axis": "dim"
+    }
+  }
+}
