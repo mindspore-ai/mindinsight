@@ -41,5 +41,206 @@
       "input": "tensors",
       "axis": "dim"
     }
+  },
+  "torch.abs": {
+    "ms_api": [
+      "P.Abs",
+      {
+        "input_x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".abs",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    }
+  },
+  "torch.acos": {
+    "ms_api": [
+      "P.ACos",
+      {
+        "input_x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".acos",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    }
+  },
+  "torch.cos": {
+    "ms_api": [
+      "P.Cos",
+      {
+        "input_x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".cos",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    }
+  },
+  "torch.exp": {
+    "ms_api": [
+      "P.Exp",
+      {
+        "input_x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".exp",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    }
+  },
+  "torch.log": {
+    "ms_api": [
+      "P.Log",
+      {
+        "input_x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".log",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    }
+  },
+  "torch.pow": {
+    "ms_api": [
+      "P.Pow",
+      {
+        "input_x": "REQUIRED",
+        "input_y": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".pow",
+      {
+        "input": "REQUIRED",
+        "exponent": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input",
+      "input_y": "exponent"
+    }
+  },
+  "torch.div": {
+    "ms_api": [
+      "P.Div",
+      {
+        "input_x": "REQUIRED",
+        "input_y": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".div",
+      {
+        "input": "REQUIRED",
+        "other": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input",
+      "input_y": "other"
+    }
+  },
+  "torch.sin": {
+    "ms_api": [
+      "P.Sin",
+      {
+        "input_x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".sin",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    }
+  },
+  "torch.sqrt": {
+    "ms_api": [
+      "P.Sqrt",
+      {
+        "input_x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".sqrt",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    }
+  },
+  "torch.add": {
+    "ms_api": [
+      "P.TensorAdd",
+      {
+        "input_x": "REQUIRED",
+        "input_y": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".add",
+      {
+        "input": "REQUIRED",
+        "value": "REQUIRED",
+        "alpha": 1
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    },
+    "gen_explicit_map": "torch_dot_add_gen_explicit_map"
+  },
+  "torch.eye": {
+    "ms_api": [
+      "P.Eye",
+      {
+        "n": "REQUIRED",
+        "m": "REQUIRED",
+        "t": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".eye",
+      {
+        "n": "REQUIRED",
+        "m": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "n": "n"
+    },
+    "gen_explicit_map": "torch_dot_eye_gen_explicit_map"
   }
 }

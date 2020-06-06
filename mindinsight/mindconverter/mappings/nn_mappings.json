@@ -216,5 +216,118 @@
     ],
     "export_key": false,
     "gen_explicit_map": "gen_explicit_map_nn_sequential"
+  },
+  "nn.BatchNorm1d": {
+    "ms_api": [
+      "nn.BatchNorm1d",
+      {
+        "num_features": "REQUIRED",
+        "eps": 1e-05,
+        "momentum": 0.9,
+        "affine": true,
+        "gamma_init": "ones",
+        "beta_init": "zeros",
+        "moving_mean_init": "zeros",
+        "moving_var_init": "ones",
+        "use_batch_statistics": true
+      }
+    ],
+    "pt_api": [
+      "nn.BatchNorm1d",
+      {
+        "num_features": "REQUIRED",
+        "eps": 1e-05,
+        "momentum": 0.1,
+        "affine": true,
+        "track_running_stats": true
+      }
+    ],
+    "ms2pt_mapping": {
+      "num_features": "num_features",
+      "eps": "eps",
+      "affine": "affine",
+      "use_batch_statistics": "track_running_stats"
+    },
+    "gen_explicit_map": "nn_batchnorm1d_gen_explicit_map"
+  },
+  "nn.LayerNorm": {
+    "ms_api": [
+      "nn.LayerNorm",
+      {
+        "normalized_shape": "REQUIRED",
+        "begin_norm_axis": -1,
+        "begin_params_axis": -1,
+        "gamma_init": "ones",
+        "beta_init": "zeros",
+        "epsilon": 1e-07
+      }
+    ],
+    "pt_api": [
+      "nn.LayerNorm",
+      {
+        "normalized_shape": "REQUIRED",
+        "eps": 1e-05,
+        "elementwise_affine": true
+      }
+    ],
+    "ms2pt_mapping": {
+      "normalized_shape": "normalized_shape",
+      "epsilon": "eps"
+    }
+  },
+  "nn.LeakyReLU": {
+    "ms_api": [
+      "nn.LeakyReLU",
+      {
+        "alpha": 0.2
+      }
+    ],
+    "pt_api": [
+      "nn.LeakyReLU",
+      {
+        "negative_slope": 0.2,
+        "inplace": false
+      }
+    ],
+    "ms2pt_mapping": {
+      "alpha": "negative_slope"
+    }
+  },
+  "nn.PReLU": {
+    "ms_api": [
+      "nn.PReLU",
+      {
+        "channel": 1,
+        "w": 0.25
+      }
+    ],
+    "pt_api": [
+      "nn.PReLU",
+      {
+        "num_parameters": 1,
+        "init": 0.25
+      }
+    ],
+    "ms2pt_mapping": {
+      "channel": "num_parameters",
+      "w": "init"
+    }
+  },
+  "nn.Softmax": {
+    "ms_api": [
+      "nn.Softmax",
+      {
+        "axis": -1
+      }
+    ],
+    "pt_api": [
+      "nn.Softmax",
+      {
+        "dim": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "axis": "dim"
+    }
   }
 }

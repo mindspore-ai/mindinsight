@@ -99,8 +99,31 @@ def gen_explicit_map_nn_maxpool2d(params_pt, args_pt):
         pad_mode = "'same'"
     return {"pad_mode": pad_mode}
 
-tensor_dot_view_gen_explicit_map = lambda params_pt, args_pt: {"shape": "(" + args_pt["*shape"] + ",)"}
+
+def torch_dot_eye_gen_explicit_map(_, args_pt):
+    """
+    Generate explicit_map for torch.eye.
+
+    Args:
+        args_pt (dict): Args for APIPt.
+
+    Returns:
+        dict, map between frames.
+    """
+    explicit_map = {'t': 'mindspore.int32'}
+    if args_pt.get('m'):
+        explicit_map.update({'m': args_pt.get('m')})
+    else:
+        explicit_map.update({'m': args_pt.get('n')})
+    return explicit_map
+
+tensor_dot_permute_gen_explicit_map = lambda params_pt, args_pt: {"input_perm": "(" + args_pt["*dIms"] + ",)"}
+tensor_dot_repeat_gen_explicit_map = lambda params_pt, args_pt: {"multiples": "(" + args_pt["*sizes"] + ",)"}
 tensor_dot_reshape_gen_explicit_map = lambda params_pt, args_pt: {"shape": "(" + args_pt["*shape"] + ",)"}
+tensor_dot_view_gen_explicit_map = lambda params_pt, args_pt: {"shape": "(" + args_pt["*shape"] + ",)"}
 nn_conv2d_gen_explicit_map = lambda params_pt, args_pt: {"pad_mode": "'pad'"}
 nn_batchnorm2d_gen_explicit_map = partial(gen_explicit_map_one_delta, k_ms="momentum", k_pt="momentum")
+nn_batchnorm1d_gen_explicit_map = nn_batchnorm2d_gen_explicit_map
 nn_dropout_gen_explicit_map = partial(gen_explicit_map_one_delta, k_ms="keep_prob", k_pt="p")
+torch_dot_add_gen_explicit_map = lambda params_pt, args_pt:\
+    {"input_y": (args_pt['value'] + '*' + args_pt["alpha"]) if args_pt.get("alpha") else args_pt['value']}
