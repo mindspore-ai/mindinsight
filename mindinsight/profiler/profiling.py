@@ -16,11 +16,14 @@
 import os
 import time
 
+from marshmallow import ValidationError
 from tabulate import tabulate
 
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.integrator import Integrator
 from mindinsight.profiler.common._utils import get_file_names, fwrite_format
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException, \
+    ProfilerIOException
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.checkparam import \
     check_bool, check_subgraph
@@ -76,6 +79,7 @@ class Profiler:
                  optypes_to_deal='', optypes_not_deal='Variable', job_id=""):
         # get device_id and device_target
         device_target = ""
+        dev_id = ""
         try:
             import mindspore.context as context
             dev_id = str(context.get_context("device_id"))
@@ -83,7 +87,7 @@ class Profiler:
         except ImportError:
             logger.error("Profiling: fail to import context from mindspore.")
         except ValueError as err:
-            logger.error("Profiling: fail to get context, %s", err.message)
+            logger.error("Profiling: fail to get context, %s", err)
 
         if not dev_id:
             dev_id = os.getenv('DEVICE_ID')
@@ -185,7 +189,10 @@ class Profiler:
         # get op compute time from hwts data and framework data, write output_op_compute_time.txt
         opcompute_output_filename = self._opcompute_output_filename_target + self._dev_id + ".txt"
         opcompute_output_filename = os.path.join(self._output_path, opcompute_output_filename)
-        optime_parser = OPComputeTimeParser(hwts_output_filename, opcompute_output_filename, op_task_dict)
+        optime_parser = OPComputeTimeParser(
+            hwts_output_filename, opcompute_output_filename,
+            op_task_dict, self._output_path, self._dev_id
+        )
         optime_parser.execute()
 
         # parse DATA_PREPROCESS.dev.AICPU file, write output_data_preprocess_aicpu_x.txt
@@ -216,6 +223,9 @@ class Profiler:
         # analyse step trace info
         self._analyse_step_trace(source_path, framework_parser)
 
+        # analyse timeline info
+        self._analyse_timeline()
+
     def _analyse_step_trace(self, source_path, framework_parser):
         """
         Analyse step trace data and save the result.
@@ -240,7 +250,34 @@ class Profiler:
         parser.parse_and_save()
         # print parser result
         parser.show()
-        logger.info("Finish save the intermediate result %s", step_trace_intermediate_file_path)
+
+    def _analyse_timeline(self):
+        """
+        Analyse and parse timeline info.
+        """
+        # Get framework info
+        aicoredetail_analyser = AnalyserFactory.instance().get_analyser(
+            'aicore_detail', self._output_path, self._dev_id
+        )
+        framework_info = aicoredetail_analyser.query()
+
+        # Get all reduce info
+        step_trace_analyser = AnalyserFactory.instance().get_analyser(
+            'step_trace', self._output_path, self._dev_id
+        )
+        all_reduce_info = step_trace_analyser.query_for_all_reduce()
+
+        # Get timeline info
+        timeline_analyser = AnalyserFactory.instance().get_analyser(
+            'timeline', self._output_path, self._dev_id
+        )
+        timeline_analyser.add_framework_info(framework_info)
+        timeline_analyser.add_all_reduce_info(all_reduce_info)
+        try:
+            timeline_analyser.write_timeline()
+            timeline_analyser.write_timeline_summary()
+        except (ProfilerIOException, ProfilerFileNotFoundException, ValidationError) as err:
+            logger.warning('Fail to write timeline data: %s', err)
 
     def __del__(self):
         """Disable the profiling collection service, called after training."""
