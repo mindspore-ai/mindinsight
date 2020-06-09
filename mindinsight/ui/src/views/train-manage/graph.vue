@@ -183,20 +183,20 @@ limitations under the License.
                        v-if="!selectedNode.countShow">
                     <div class="item">
                       {{ $t('graph.attr') }} ({{
-                        selectedNode.info.Attributes.length
+                        selectedNode.info.attributes.length
                       }})
                     </div>
                   </div>
                   <ul v-if="selectedNode.info && !selectedNode.countShow"
                       class="item-content hover"
                       :class="
-                      selectedNode.info.Attributes.length > 2
+                      selectedNode.info.attributes.length > 2
                         ? 'item-min2'
-                        : selectedNode.info.Attributes.length > 0
+                        : selectedNode.info.attributes.length > 0
                         ? 'item-min'
                         : ''
                     ">
-                    <li v-for="item in selectedNode.info.Attributes"
+                    <li v-for="item in selectedNode.info.attributes"
                         :key="item.name">
                       <div class="key">
                         {{ item.name }}
@@ -421,15 +421,15 @@ export default {
   data() {
     return {
       clickScope: {}, // Information about the node that is clicked for the first time.
-      smallResize: {el: '#small-resize'}, // The container of display area box.
-      insideBox: {el: '#inside-box'}, // Basic information about the display area box
-      graphDom: {}, // Basic information about graph0 in svg
+      smallResize: {}, // The container of display area box.
+      insideBox: {}, // Basic information about the display area box
+      graph: {}, // Basic information about graph0 in svg
       graphSmall: {}, // Basic information about graph0 in the thumbnail
       svg: {}, // Basic information about svg
       eventSmall: {}, // Relative position of the thumbnail in the thumbnail click event
       // Which mouse button is triggered when the thumbnail is clicked. -1 indicates that no click event is triggered,
       // 0 indicates the left key, 1 indicates the middle key, and 2 means right key.
-      clickSmall: -1,
+      clickSmall: false,
       allGraphData: {}, // graph Original input data
       firstFloorNodes: [], // ID array of the first layer node.
       // Information about the selected node
@@ -439,7 +439,7 @@ export default {
           input: [],
           outputControl: [],
           output: [],
-          Attributes: [],
+          attributes: [],
         },
         showControl: {
           input: true,
@@ -486,6 +486,10 @@ export default {
         ],
         title: '',
       },
+      viewBox: {
+        max: 10000,
+        scale: {x: 1, y: 1},
+      },
     };
   },
   computed: {},
@@ -512,7 +516,7 @@ export default {
     if (!this.$route.query || !this.$route.query.train_id) {
       this.trainJobID = '';
       this.$message.error(this.$t('trainingDashboard.invalidId'));
-      document.title = this.$t('graph.titleText') + '-MindInsight';
+      document.title = `${this.$t('graph.titleText')}-MindInsight`;
       return;
     }
     const showGuide = window.localStorage.getItem('graphShowGuide');
@@ -522,24 +526,23 @@ export default {
     }
 
     this.trainJobID = this.$route.query.train_id;
-    document.title =
-      decodeURIComponent(this.trainJobID) +
-      '-' +
-      this.$t('graph.titleText') +
-      '-MindInsight';
+    document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t(
+        'graph.titleText',
+    )}-MindInsight`;
     this.getDatavisualPlugins();
     window.onresize = () => {
-      const graphDom = document.querySelector('#graph #graph0');
-      if (graphDom) {
+      if (this.graph.dom) {
+        this.initSvg();
         this.initGraphRectData();
       }
     };
   },
   destroyed() {
-    window.onresize = document.onmousemove = document.onmouseup = null;
+    window.onresize = document.onmouseup = null;
     const smallContainer = document.querySelector('#small-container');
     if (smallContainer) {
-      smallContainer.onmousedown = smallContainer.onmouseup = null;
+      smallContainer.onmousemove = null;
+      smallContainer.onmousedown = null;
       smallContainer.onmousewheel = null;
     }
   },
@@ -585,7 +588,10 @@ export default {
           .zoomScaleExtent(this.scaleRange)
           .dot(dot)
           .attributer(this.attributer)
-          .render(this.afterInitGraph);
+          .render(() => {
+            this.initSvg();
+            this.afterInitGraph();
+          });
       // Generate the dom of the submap.
       if (!d3.select('#graphTemp').size()) {
         d3.select('body')
@@ -601,210 +607,25 @@ export default {
             .attr('style', 'visibility: collapse');
       }
     },
-    /**
-     * Initialization method executed after the graph rendering is complete
-     */
-    startApp() {
-      const nodes = d3.selectAll('g.node, g.cluster');
-      nodes.on('click', (target, index, nodesList) => {
-        // The target value of the element converted from the HTML attribute of the variable is null.
-        const clickNode = nodesList[index];
-        const nodeId = clickNode.id;
-        const nodeClass = clickNode.classList.value;
-        setTimeout(() => {
-          this.clickScope = {
-            id: nodeId,
-            class: nodeClass,
-          };
-        }, 10);
-        setTimeout(() => {
-          this.clickScope = {};
-        }, 1000);
-        this.selectedNode.name = nodeId;
-        this.selectNode();
-        if (!event || !event.type || event.type !== 'click') {
-          return;
-        }
-        event.stopPropagation();
-        event.preventDefault();
-      });
-      // namespaces Expansion or Reduction
-      nodes.on('dblclick', (target, index, nodesList) => {
-        // The target of the element converted from the HTML attribute of the variable is empty and
-        // needs to be manually encapsulated.
-        const clickNode = nodesList[index];
-        const nodeId = clickNode.id;
-        const nodeClass = clickNode.classList.value;
-        let name = nodeId;
-        this.selectedNode.more =
-          name.indexOf('more') !== -1 &&
-          document
-              .querySelector(`#graph g[id="${name}"]`)
-              .attributes.class.value.indexOf('plain') === -1;
-        const unfoldFlag =
-          (nodeClass.includes('aggregation') ||
-            nodeClass.includes('cluster') ||
-            this.selectedNode.more) &&
-          (!this.clickScope.id ||
-            (this.clickScope.id && nodeId === this.clickScope.id));
-        if (this.selectedNode.more) {
-          this.selectedNode.moreDirection = name.indexOf('right') !== -1;
-          this.selectedNode.moreStart = parseInt(
-              name.match(/\d+/g)[name.match(/\d+/g).length - 1],
-          );
-          const id = document.querySelector(`#graph g[id="${name}"]`).parentNode
-              .attributes.id.value;
-          name = id.replace('_unfold', '');
-        }
-        if (unfoldFlag) {
-          this.dealDoubleClick(name);
-        } else if (this.clickScope.id) {
-          this.selectedNode.name = this.clickScope.id;
-          this.selectNode();
-        }
-        if (!event || !event.type || event.type !== 'dblclick') {
-          return;
-        }
-        event.stopPropagation();
-        event.preventDefault();
-      });
-      this.initZooming();
-      if (this.selectedNode.name) {
-        const type =
-          /_unfold$/.exec(this.selectedNode.name) || this.selectedNode.more
-            ? 'unfoldScope'
-            : 'fold';
-        this.selectNode(type);
+    initSvg() {
+      this.svg.dom = document.querySelector('#graph svg');
+      this.svg.rect = this.svg.dom.getBoundingClientRect();
+      const viewBoxData = this.svg.dom.getAttribute('viewBox').split(' ');
+      this.viewBox.scale.x = 1;
+      this.svg.originSize = {width: viewBoxData[2], height: viewBoxData[3]};
+      if (viewBoxData[2] > this.viewBox.max) {
+        this.viewBox.scale.x = viewBoxData[2] / this.viewBox.max;
+        viewBoxData[2] = this.viewBox.max;
       }
-    },
-    /**
-     * Initializing the graph zoom
-     */
-    initZooming() {
-      let startX = 0;
-      let startY = 0;
-      let drag = {};
-      const graphDomd3 = d3.select('#graph0');
-      const graphDom = document.querySelector('#graph #graph0');
-      const zoom = d3
-          .zoom()
-          .on('start', (d) => {
-          // Original translate parameter
-            if (!event || !event.x || !event.y) {
-              return;
-            }
-            startX = event.x;
-            startY = event.y;
-            if (!this.graphDom.transform.x || isNaN(this.graphDom.transform.x)) {
-              this.initGraphRectData();
-            }
-            drag = {
-              k: this.graphDom.transform.k,
-              x: this.graphDom.transform.x,
-              y: this.graphDom.transform.y,
-            };
-          })
-          .on('zoom', (d) => {
-            if (!event || !event.x || !event.y) {
-              return;
-            }
-            const graphd = d.children[1];
-            if (event.type === 'mousemove') {
-            // transform Value During Dragging
-              drag.x =
-              this.graphDom.transform.x +
-              ((event.x - startX) / this.graphDom.initWidth) *
-                this.svg.viewWidth;
-              drag.y =
-              this.graphDom.transform.y +
-              ((event.y - startY) / this.graphDom.initHeight) *
-                this.svg.viewHeight;
-            } else if (event.type === 'wheel') {
-            // Zooms in and zooms out the transform value.
-              const b = event.wheelDelta ? event.wheelDelta : event.detail;
-              const lg = b < 0 ? 1 + b / 100 : b > 0 ? b / 100 - 1 : 0;
-              const scale = drag.k;
-              drag.k = Math.max(
-                  this.scaleRange[0],
-                  Math.min(drag.k * Math.pow(2, lg), this.scaleRange[1]),
-              );
 
-              this.graphDom.offsetLeft = graphDom.getBoundingClientRect().left;
-              this.graphDom.offsetTop = graphDom.getBoundingClientRect().top;
-              // Zoom in on the mouse.
-              const axis = {};
-              axis.x = event.x - this.graphDom.offsetLeft;
-              axis.y =
-              this.graphDom.offsetTop +
-              this.graphDom.initHeight * scale -
-              event.y;
-              axis.smallX = (axis.x / scale) * drag.k;
-              axis.smallY = (axis.y / scale) * drag.k;
-              drag.x =
-              drag.x +
-              (axis.x - axis.smallX) *
-                (this.svg.viewWidth / this.graphDom.initWidth);
-              drag.y =
-              drag.y -
-              (axis.y - axis.smallY) *
-                (this.svg.viewHeight / this.graphDom.initHeight);
-              this.insideBox.scale = 1 / drag.k;
-            }
-            graphDomd3.attr(
-                'transform',
-                `translate(${drag.x},${drag.y}) scale(${drag.k})`,
-            );
-            graphd.attributes.transform = `scale(${drag.k}, ${drag.k}) rotate(0) translate(${drag.x} ${drag.y})`;
-            graphd.translation.x = drag.x;
-            graphd.translation.y = drag.y;
-            this.graphDom.width = graphDom.getBoundingClientRect().width;
-            this.graphDom.height = graphDom.getBoundingClientRect().height;
-            this.bigMapPositionChange();
-          })
-          .on('end', (d) => {
-            if (!drag || !drag.x || !drag.y || !drag.k) {
-              return;
-            }
-            this.graphDom.transform = drag;
-          });
-      // Large Map Displacement and Amplification Operation
-      const svgD3 = d3.select('svg');
-      svgD3.on('.zoom', null);
-      svgD3.call(zoom);
-      svgD3.on('dblclick.zoom', null);
-    },
-    /**
-     * Double-click the processing to be performed on the node to expand or narrow the namespace or aggregation node.
-     * @param {String} name Name of the current node (also the ID of the node)
-     */
-    dealDoubleClick(name) {
-      name = name.replace('_unfold', '');
-      if (this.allGraphData[name].isUnfold) {
-        this.selectedNode.name = name;
-        this.deleteNamespace(name);
-      } else {
-        this.queryGraphData(name);
+      this.viewBox.scale.y = 1;
+      if (viewBoxData[3] > this.viewBox.max) {
+        this.viewBox.scale.y = viewBoxData[3] / this.viewBox.max;
+        viewBoxData[3] = this.viewBox.max;
       }
-    },
-    /**
-     * Default method of the graph rendering adjustment. Set the node format.
-     * @param {Object} datum Object of the current rendering element.
-     * @param {Number} index Indicates the subscript of the current rendering element.
-     * @param {Array} nodes An array encapsulated with the current rendering element.
-     */
-    attributer(datum, index, nodes) {
-      const isChild =
-        datum.tag === 'ellipse' ||
-        datum.tag === 'circle' ||
-        (datum.tag === 'polygon' && datum.attributes.stroke !== 'transparent');
-      if (datum.tag === 'svg') {
-        const width = '100%';
-        const height = '100%';
-        datum.attributes.width = width;
-        datum.attributes.height = height;
-      } else if (isChild) {
-        datum.attributes.stroke = 'rgb(167, 167, 167)';
-      }
+      this.svg.dom.setAttribute('viewBox', viewBoxData.join(' '));
+      this.svg.viewWidth = viewBoxData[2];
+      this.svg.viewHeight = viewBoxData[3];
     },
     /**
      * Add the location attribute to each node to facilitate the obtaining of node location parameters.
@@ -853,6 +674,219 @@ export default {
       this.startApp();
     },
     /**
+     * Initialization method executed after the graph rendering is complete
+     */
+    startApp() {
+      const nodes = d3.selectAll('g.node, g.cluster');
+      nodes.on('click', (target, index, nodesList) => {
+        // The target value of the element converted from the HTML attribute of the variable is null.
+        const clickNode = nodesList[index];
+        const nodeId = clickNode.id;
+        const nodeClass = clickNode.classList.value;
+        setTimeout(() => {
+          this.clickScope = {
+            id: nodeId,
+            class: nodeClass,
+          };
+        }, 10);
+        setTimeout(() => {
+          this.clickScope = {};
+        }, 1000);
+        this.selectedNode.name = nodeId;
+        this.selectNode(false);
+        if (!event || !event.type || event.type !== 'click') {
+          return;
+        }
+        event.stopPropagation();
+        event.preventDefault();
+      });
+      // namespaces Expansion or Reduction
+      nodes.on('dblclick', (target, index, nodesList) => {
+        // The target of the element converted from the HTML attribute of the variable is empty and
+        // needs to be manually encapsulated.
+        const clickNode = nodesList[index];
+        const nodeId = clickNode.id;
+        const nodeClass = clickNode.classList.value;
+        let name = nodeId;
+        this.selectedNode.more =
+          name.indexOf('more...') !== -1 &&
+          document
+              .querySelector(`#graph g[id="${name}"]`)
+              .attributes.class.value.indexOf('plain') === -1;
+
+        const unfoldFlag =
+          (nodeClass.includes('aggregation') ||
+            nodeClass.includes('cluster') ||
+            this.selectedNode.more) &&
+          (!this.clickScope.id ||
+            (this.clickScope.id && nodeId === this.clickScope.id));
+
+        if (this.selectedNode.more) {
+          const changePage = name.includes('right') ? 1 : -1;
+          const parentId = document.querySelector(`#graph g[id="${name}"]`)
+              .parentNode.id;
+          name = parentId.replace('_unfold', '');
+          this.allGraphData[name].index += changePage;
+        }
+        if (unfoldFlag) {
+          this.dealDoubleClick(name);
+        } else if (this.clickScope.id) {
+          this.selectedNode.name = this.clickScope.id;
+          this.selectNode(false);
+        }
+        if (!event || !event.type || event.type !== 'dblclick') {
+          return;
+        }
+        event.stopPropagation();
+        event.preventDefault();
+      });
+      this.initZooming();
+      if (this.selectedNode.name) {
+        this.selectNode(true);
+      }
+    },
+    /**
+     * Initializing the graph zoom
+     */
+    initZooming() {
+      const graphBox = this.graph.dom.getBBox();
+      const padding = 4;
+      const minDistance = 20;
+      const pointer = {start: {x: 0, y: 0}, end: {x: 0, y: 0}};
+      const zoom = d3
+          .zoom()
+          .on('start', () => {
+            pointer.start.x = event.x;
+            pointer.start.y = event.y;
+          })
+          .on('zoom', () => {
+            const transformData = this.getTransformData(this.graph.dom);
+            let tempStr = '';
+            let change = {};
+            let scale = transformData.scale[0];
+            const graphRect = this.graph.dom.getBoundingClientRect();
+            const transRate = graphBox.width / graphRect.width;
+            if (event.type === 'mousemove') {
+              pointer.end.x = event.x;
+              pointer.end.y = event.y;
+              let tempX = pointer.end.x - pointer.start.x;
+              let tempY = pointer.end.y - pointer.start.y;
+              const paddingTrans = Math.max(
+                  (padding / transRate) * scale,
+                  minDistance,
+              );
+              if (
+                graphRect.left + paddingTrans + tempX >=
+              this.svg.rect.left + this.svg.rect.width
+              ) {
+                tempX = Math.min(tempX, 0);
+              }
+              if (
+                graphRect.left + graphRect.width - paddingTrans + tempX <=
+              this.svg.rect.left
+              ) {
+                tempX = Math.max(tempX, 0);
+              }
+              if (
+                graphRect.top + paddingTrans + tempY >=
+              this.svg.rect.top + this.svg.rect.height
+              ) {
+                tempY = Math.min(tempY, 0);
+              }
+              if (
+                graphRect.top + graphRect.height - paddingTrans + tempY <=
+              this.svg.rect.top
+              ) {
+                tempY = Math.max(tempY, 0);
+              }
+
+              change = {
+                x: tempX * transRate * scale,
+                y: tempY * transRate * scale,
+              };
+              pointer.start.x = pointer.end.x;
+              pointer.start.y = pointer.end.y;
+            } else if (event.type === 'wheel') {
+              const wheelDelta = event.wheelDelta;
+              const rate = Math.abs(wheelDelta / 100);
+              scale =
+              wheelDelta > 0
+                ? transformData.scale[0] * rate
+                : transformData.scale[0] / rate;
+
+              scale = Math.max(this.scaleRange[0], scale, this.graph.minScale);
+              scale = Math.min(this.scaleRange[1], scale);
+              change = {
+                x:
+                (graphRect.x + padding / transRate - event.x) *
+                transRate *
+                (scale - transformData.scale[0]),
+                y:
+                (graphRect.bottom - padding / transRate - event.y) *
+                transRate *
+                (scale - transformData.scale[0]),
+              };
+            }
+
+            this.graph.transform = {
+              x: transformData.translate[0] + change.x,
+              y: transformData.translate[1] + change.y,
+              k: scale,
+            };
+            this.graph.transRate =
+            graphRect.width / graphBox.width / this.graph.transform.k;
+
+            tempStr = `translate(${this.graph.transform.x},${this.graph.transform.y}) scale(${this.graph.transform.k})`;
+            this.graph.dom.setAttribute('transform', tempStr);
+            this.setInsideBoxData();
+            event.stopPropagation();
+            event.preventDefault();
+          });
+
+      const svg = d3.select('#graph svg');
+      svg.on('.zoom', null);
+      svg.call(zoom);
+      svg.on('dblclick.zoom', null);
+      svg.on('wheel.zoom', null);
+
+      const graph0 = d3.select('#graph #graph0');
+      graph0.on('.zoom', null);
+      graph0.call(zoom);
+    },
+    /**
+     * Double-click the processing to be performed on the node to expand or narrow the namespace or aggregation node.
+     * @param {String} name Name of the current node (also the ID of the node)
+     */
+    dealDoubleClick(name) {
+      name = name.replace('_unfold', '');
+      if (this.allGraphData[name].isUnfold) {
+        this.selectedNode.name = name;
+        this.deleteNamespace(name);
+      } else {
+        this.queryGraphData(name);
+      }
+    },
+    /**
+     * Default method of the graph rendering adjustment. Set the node format.
+     * @param {Object} datum Object of the current rendering element.
+     * @param {Number} index Indicates the subscript of the current rendering element.
+     * @param {Array} nodes An array encapsulated with the current rendering element.
+     */
+    attributer(datum, index, nodes) {
+      const isChild =
+        datum.tag === 'ellipse' ||
+        datum.tag === 'circle' ||
+        (datum.tag === 'polygon' && datum.attributes.stroke !== 'transparent');
+      if (datum.tag === 'svg') {
+        const width = '100%';
+        const height = '100%';
+        datum.attributes.width = width;
+        datum.attributes.height = height;
+      } else if (isChild) {
+        datum.attributes.stroke = 'rgb(167, 167, 167)';
+      }
+    },
+    /**
      * When the value of graph is too large, enlarge the value of graph.
      * Otherwise, the node cannot be clearly displayed.
      * @param {String} id Indicates the ID of the graph diagram.
@@ -864,11 +898,11 @@ export default {
       const graphDom = document.querySelector(`#${id} #graph0`);
       const box = graphDom.getBBox();
       let transformStr = '';
+      const graphTransformData = this.getTransformData(graphDom);
       if (box.width > maxShowWidth || box.height > maxShowHeight) {
-        const graphTransformData = this.getTransformData(graphDom);
         const scale = Math.max(
-            box.width / maxShowWidth,
-            box.height / maxShowHeight,
+            box.width / maxShowWidth / this.viewBox.scale.x,
+            box.height / maxShowHeight / this.viewBox.scale.y,
         );
         const translate = {x: (box.width - maxShowWidth) / 2};
 
@@ -876,12 +910,15 @@ export default {
           graphTransformData.translate[0] = translate.x;
         }
         graphTransformData.scale[0] = scale;
-        Object.keys(graphTransformData).forEach((key) => {
-          transformStr += `${key}(${graphTransformData[key].join(',')}) `;
-        });
       } else {
-        transformStr = `translate(${-box.x},${-box.y}) scale(1)`;
+        graphTransformData.translate = [-box.x, -box.y];
       }
+      if (id === 'graph' && this.selectedNode.more) {
+        graphTransformData.scale[0] = this.graph.transform.k;
+      }
+      Object.keys(graphTransformData).forEach((key) => {
+        transformStr += `${key}(${graphTransformData[key].join(',')}) `;
+      });
       graphDom.setAttribute('transform', transformStr.trim());
     },
     /**
@@ -890,24 +927,26 @@ export default {
      * @param {Boolean} toUnfold Expand the namespace.
      */
     layoutNamescope(name, toUnfold) {
-      const dotStr = this.packageNamescope(name);
-      this.graphvizTemp = d3
-          .select('#graphTemp')
-          .graphviz({useWorker: false, totalMemory: this.totalMemory})
-          .dot(dotStr)
-          .zoomScaleExtent(this.scaleRange)
-          .attributer((datum, index, nodes) => {
-            if (
-              datum.tag === 'polygon' &&
-            datum.attributes.stroke !== 'transparent'
-            ) {
-              datum.attributes.stroke = 'rgb(167, 167, 167)';
-            }
-          })
-          .render(() => {
-            this.fitGraph('graphTemp');
-            this.dealNamescopeTempGraph(name);
-          });
+      setTimeout(() => {
+        const dotStr = this.packageNamescope(name);
+        this.graphvizTemp = d3
+            .select('#graphTemp')
+            .graphviz({useWorker: false, totalMemory: this.totalMemory})
+            .dot(dotStr)
+            .zoomScaleExtent(this.scaleRange)
+            .attributer((datum, index, nodes) => {
+              if (
+                datum.tag === 'polygon' &&
+              datum.attributes.stroke !== 'transparent'
+              ) {
+                datum.attributes.stroke = 'rgb(167, 167, 167)';
+              }
+            })
+            .render(() => {
+              this.fitGraph('graphTemp');
+              this.dealNamescopeTempGraph(name);
+            });
+      }, 20);
     },
     /**
      * To obtain graph data, initialize and expand the namespace or aggregate nodes.
@@ -926,66 +965,64 @@ export default {
       };
       this.loading.info = this.$t('graph.queryLoading');
       this.loading.show = true;
-      setTimeout(() => {
-        RequestService.queryGraphData(params)
-            .then(
-                (response) => {
-                  if (response && response.data && response.data.nodes) {
-                    // If the namespace to be expanded is larger than the maximum number of subnodes,
-                    // an error is reported and the namespace is highlighted.
-                    const nodesCountLimit = name
-                  ? this.nodesCountLimit
-                  : namescopeChildLimit;
-                    if (
-                      !independentLayout &&
-                  response.data.nodes.length > nodesCountLimit
-                    ) {
-                      this.$message.error(this.$t('graph.tooManyNodes'));
-                      this.packageDataToObject(name, false);
-                      this.loading.show = false;
-                    } else {
-                      const nodes = this.dealAggregationNodes(
-                          JSON.parse(JSON.stringify(response.data.nodes)),
-                          name,
-                      );
-                      if (nodes && nodes.length) {
-                        this.packageDataToObject(name, true, nodes);
-                        // If the name is empty, it indicates the outermost layer.
-                        if (!name) {
-                          const dot = this.packageGraphData();
-                          this.initGraph(dot);
-                        } else {
-                          this.allGraphData[name].isUnfold = true;
-                          this.selectedNode.name = `${name}_unfold`;
-                          this.layoutNamescope(name, true);
-                        }
+      RequestService.queryGraphData(params)
+          .then(
+              (response) => {
+                if (response && response.data && response.data.nodes) {
+                  // If the namespace to be expanded is larger than the maximum number of subnodes,
+                  // an error is reported and the namespace is highlighted.
+                  const nodesCountLimit = name
+                ? this.nodesCountLimit
+                : namescopeChildLimit;
+                  if (
+                    !independentLayout &&
+                response.data.nodes.length > nodesCountLimit
+                  ) {
+                    this.$message.error(this.$t('graph.tooManyNodes'));
+                    this.packageDataToObject(name, false);
+                    this.loading.show = false;
+                  } else {
+                    const nodes = JSON.parse(JSON.stringify(response.data.nodes));
+                    if (nodes && nodes.length) {
+                      this.packageDataToObject(name, true, nodes);
+                      // If the name is empty, it indicates the outermost layer.
+                      if (!name) {
+                        const dot = this.packageGraphData();
+                        this.initGraph(dot);
                       } else {
-                        this.initGraphRectData();
-                        this.loading.show = false;
+                        if (this.allGraphData[name].type === 'aggregation_scope') {
+                          this.dealAggregationNodes(name);
+                        }
+                        this.allGraphData[name].isUnfold = true;
+                        this.selectedNode.name = `${name}_unfold`;
+                        this.layoutNamescope(name, true);
                       }
+                    } else {
+                      this.initGraphRectData();
+                      this.loading.show = false;
                     }
                   }
-                },
-                (error) => {
-                  this.loading.show = false;
-                },
-            )
-            .catch((error) => {
-            // A non-Google Chrome browser may not work properly.
-              this.loading.show = false;
-              if (error.includes('larger than maximum 65535 allowed')) {
-                this.$message.error(this.$t('graph.dataTooLarge'));
-              } else {
-                this.$bus.$emit('showWarmText', true);
-              }
-              if (name && this.allGraphData[name]) {
-                this.allGraphData[name].isUnfold = false;
-                this.allGraphData[name].children = [];
-                this.allGraphData[name].size = [];
-                this.allGraphData[name].html = '';
-              }
-            });
-      }, 50);
+                }
+              },
+              (error) => {
+                this.loading.show = false;
+              },
+          )
+          .catch((error) => {
+          // A non-Google Chrome browser may not work properly.
+            this.loading.show = false;
+            if (error && error.includes('larger than maximum 65535 allowed')) {
+              this.$message.error(this.$t('graph.dataTooLarge'));
+            } else {
+              this.$bus.$emit('showWarmText', true);
+            }
+            if (name && this.allGraphData[name]) {
+              this.allGraphData[name].isUnfold = false;
+              this.allGraphData[name].children = [];
+              this.allGraphData[name].size = [];
+              this.allGraphData[name].html = '';
+            }
+          });
     },
     /**
      * To obtain datavisual plugins
@@ -1032,88 +1069,84 @@ export default {
     },
     /**
      * Process the data returned by the background interface.
-     * @param {Array} nodes Current node array
      * @param {String} name Node name
-     * @return {Array} Node array
      */
-    dealAggregationNodes(nodes, name) {
+    dealAggregationNodes(name) {
       // A maximum of 10 subnodes can be displayed on an aggregation node.
       const aggregationNodeLimit = 10;
-      const independentLayout =
-        name && this.allGraphData[name]
-          ? this.allGraphData[name].independent_layout
-          : false;
-      if (independentLayout && nodes && nodes.length > aggregationNodeLimit) {
-        const nodesLength = nodes.length;
-        // The selected node must be included.
-        let startIndex = 0;
-        if (this.selectedNode.more) {
-          startIndex = this.selectedNode.moreDirection
-            ? Math.max(0, nodes.length - this.selectedNode.moreStart)
-            : Math.max(0, this.selectedNode.moreStart - aggregationNodeLimit);
+      const idsGroup = [];
+
+      this.allGraphData[name].children.forEach((key) => {
+        if (!this.allGraphData[key].grouped) {
+          const ids = this.getAssociatedNode(key, `${name}/`);
+          idsGroup.push(ids);
+        }
+      });
+
+      const idsList = [];
+      let temp = [];
+      for (let i = 0; i < idsGroup.length; i++) {
+        if (idsGroup[i].length > aggregationNodeLimit) {
+          idsList.push(idsGroup[i]);
         } else {
-          let nodeIndex = 0;
-          nodes.some((node, index) => {
-            if (node.name === this.selectedNode.name) {
-              nodeIndex = index;
-              return true;
-            } else {
-              return false;
-            }
-          });
-          // The selected node must be included.
-          startIndex = nodeIndex - (nodeIndex % 10);
+          if (temp.length + idsGroup[i].length <= aggregationNodeLimit) {
+            temp = temp.concat(idsGroup[i]);
+          } else {
+            idsList.push(temp);
+            temp = [].concat(idsGroup[i]);
+          }
         }
-        // If the number of subnodes of the aggregation node is greater than the maximum number of nodes on the
-        // aggregation node, a simulation node needs to be generated to replace other nodes.
-        const ellipsisNum = Math.max(
-            0,
-            nodes.length - aggregationNodeLimit - startIndex,
-        );
-        nodes = nodes.slice(startIndex, startIndex + aggregationNodeLimit);
-        if (startIndex !== 0) {
-          const ellipsisNodeL = {
-            name: `${name}/left/${startIndex} more...`,
-            attr: {},
-            input: {},
-            output: {},
-            proxy_input: {},
-            proxy_output: {},
-            type: '',
-          };
-          nodes.splice(0, 0, ellipsisNodeL);
-        }
-        if (startIndex + aggregationNodeLimit < nodesLength) {
-          const ellipsisNode = {
-            name: `${name}/right/${ellipsisNum} more...`,
-            attr: {},
-            input: {},
-            output: {},
-            proxy_input: {},
-            proxy_output: {},
-            type: '',
-          };
-          nodes.push(ellipsisNode);
+        if (i === idsGroup.length - 1) {
+          idsList.push(temp);
         }
       }
-      return nodes || [];
+
+      this.allGraphData[name].childIdsList = idsList;
+      this.allGraphData[name].index = 0;
+    },
+
+    getAssociatedNode(name, prefix) {
+      const node = this.allGraphData[name];
+      node.grouped = true;
+      let ids = [];
+      ids.push(node.name);
+      Object.keys(node.input).forEach((i) => {
+        if (i.startsWith(prefix)) {
+          if (!this.allGraphData[i].grouped) {
+            const idsTemp = this.getAssociatedNode(i, prefix);
+            ids = ids.concat(idsTemp);
+          }
+        }
+      });
+      Object.keys(node.output).forEach((i) => {
+        if (i.startsWith(prefix)) {
+          if (!this.allGraphData[i].grouped) {
+            const idsTemp = this.getAssociatedNode(i, prefix);
+            ids = ids.concat(idsTemp);
+          }
+        }
+      });
+      return ids;
     },
     /**
      * Encapsulates graph data into dot data.
      * @return {String} dot string for packing graph data
      */
     packageGraphData() {
+      const nodes = this.getChildNodesByName();
       const initSetting =
         'node[style="filled";fontsize="10px"];edge[fontsize="5px";];';
-      return `digraph {${initSetting}${this.packageNodes()}${this.packageEdges()}}`;
+      return `digraph {${initSetting}${this.packageNodes(
+          nodes,
+      )}${this.packageEdges(nodes)}}`;
     },
     /**
      * Encapsulates node data into dot data.
+     * @param {Array} nodes Nodes of the node to be expanded.
      * @param {String} name Name of the node to be expanded.
      * @return {String} dot String that are packed into all nodes
      */
-    packageNodes(name) {
-      const nodes = this.getChildNodesByName(name);
+    packageNodes(nodes, name) {
       let tempStr = '';
       nodes.forEach((node) => {
         const name = node.name.split('/').pop();
@@ -1207,11 +1240,11 @@ export default {
     },
     /**
      * Encapsulates node data into dot data.
+     * @param {Array} nodes Nodes of the node to be expanded.
      * @param {String} name Name of the node to be expanded.
      * @return {String} dot string packaged by all edges
      */
-    packageEdges(name) {
-      const nodes = this.getChildNodesByName(name);
+    packageEdges(nodes, name) {
       let tempStr = '';
       const edges = [];
       // Construct the input and output virtual nodes and optimize the connection.
@@ -1429,12 +1462,67 @@ export default {
      * @return {Array} Subnode array of the namespace.
      */
     getChildNodesByName(name) {
-      const nameList = name
-        ? this.allGraphData[name].children
-        : this.firstFloorNodes;
-      const nodes = nameList.map((i) => {
-        return this.allGraphData[i];
-      });
+      let nodes = [];
+      if (name) {
+        const node = this.allGraphData[name];
+        const nameList =
+          node.type === 'aggregation_scope'
+            ? node.childIdsList[node.index]
+            : node.children;
+
+        nodes = nameList.map((i) => {
+          return this.allGraphData[i];
+        });
+
+        if (node.type === 'aggregation_scope') {
+          const idsList = node.childIdsList;
+
+          if (idsList && idsList.length > 1) {
+            if (node.index > 0) {
+              let ellipsisNodesNumLeft = 0;
+              for (let j = 0; j < node.index; j++) {
+                ellipsisNodesNumLeft += idsList[j].length;
+              }
+
+              const ellipsisNodeL = {
+                name: `${name}/left/${ellipsisNodesNumLeft} more...`,
+                attr: {},
+                input: {},
+                output: {},
+                proxy_input: {},
+                proxy_output: {},
+                type: '',
+              };
+              this.allGraphData[ellipsisNodeL.name] = ellipsisNodeL;
+              nodes.unshift(ellipsisNodeL);
+            }
+
+            if (node.index < idsList.length - 1) {
+              let ellipsisNodesNumRight = 0;
+              for (let j = node.index + 1; j < idsList.length; j++) {
+                ellipsisNodesNumRight += idsList[j].length;
+              }
+
+              const ellipsisNodeR = {
+                name: `${name}/right/${ellipsisNodesNumRight} more...`,
+                attr: {},
+                input: {},
+                output: {},
+                proxy_input: {},
+                proxy_output: {},
+                type: '',
+              };
+              this.allGraphData[ellipsisNodeR.name] = ellipsisNodeR;
+              nodes.push(ellipsisNodeR);
+            }
+          }
+        }
+      } else {
+        nodes = this.firstFloorNodes.map((i) => {
+          return this.allGraphData[i];
+        });
+      }
+
       return nodes;
     },
     /**
@@ -1645,8 +1733,9 @@ export default {
      * @return {String} dot string that is used to package the data of the namespace.
      */
     packageNamescope(name) {
-      const nodeStr = this.packageNodes(name);
-      const edgeStr = this.packageEdges(name);
+      const nodes = this.getChildNodesByName(name);
+      const nodeStr = this.packageNodes(nodes, name);
+      const edgeStr = this.packageEdges(nodes, name);
       const initSetting =
         `node[style="filled";fontsize="10px";];` + `edge[fontsize="5px";];`;
       const dotStr =
@@ -1659,21 +1748,26 @@ export default {
      * @param {String} name The name of the namespace to be closed.
      */
     deleteNamespace(name) {
-      this.loading.info = this.$t('graph.queryLoading');
+      this.loading.info = this.$t('graph.searchLoading');
       this.loading.show = true;
-      setTimeout(() => {
+      if (!this.selectedNode.more) {
         this.packageDataToObject(name, false);
         this.layoutController(name);
-        if (this.selectedNode.more) {
-          this.queryGraphData(name);
-        }
-      }, 150);
+      } else {
+        this.allGraphData[name].isUnfold = true;
+        this.selectedNode.name = `${name}_unfold`;
+        this.layoutNamescope(name, true);
+      }
     },
     /**
      * Controls the invoking method of the next step.
      * @param {String} name Name of the namespace to be expanded.
      */
     layoutController(name) {
+      if (!this.loading.show) {
+        this.loading.info = this.$t('graph.searchLoading');
+        this.loading.show = true;
+      }
       if (name.includes('/')) {
         const subPath = name
             .split('/')
@@ -1794,7 +1888,7 @@ export default {
      */
     getTransformData(node) {
       if (!node) {
-        return [];
+        return {};
       }
       const transformData = node.getAttribute('transform');
       const attrObj = [];
@@ -1819,10 +1913,9 @@ export default {
     },
     /**
      * Selecting a node
-     * @param {String} dblclick Click Type
+     * @param {Boolean} needFocus Whether to focus on the node
      */
-    selectNode(dblclick) {
-      const graphDom = document.querySelector('#graph #graph0');
+    selectNode(needFocus = false) {
       window.getSelection().removeAllRanges();
       d3.selectAll(
           '.node polygon, .node ellipse, .node rect, .node path',
@@ -1833,14 +1926,36 @@ export default {
       id = this.allGraphData[id].isUnfold ? `${id}_unfold` : id;
       node.eld3 = d3.select(`#graph g[id="${id}"]`);
       node.el = node.eld3.node();
-      graphDom.style.transition = '';
-      if ((dblclick || path.length > 1) && node.el) {
-        this.selectNodePosition(node, dblclick);
+      this.graph.dom.style.transition = '';
+
+      const needDelay = path.length > 1;
+      if ((needFocus || needDelay) && node.el) {
+        this.selectNodePosition(id, needDelay);
       }
       node.eld3
-          .select('polygon, rect, Mrecord, ellipse, path')
+          .select('polygon, rect, ellipse, path')
           .classed('selected', true);
+      this.highlightProxyNodes(id.replace('_unfold', ''));
       this.setNodeData();
+    },
+    highlightProxyNodes(nodeId) {
+      const proxyNodes = d3
+          .selectAll('#graph g.node')
+          .nodes()
+          .filter((node) => {
+            const id = node.id.split('^')[0].replace('_unfold', '');
+            return id === nodeId;
+          });
+      const childTagType = ['polygon', 'ellipse', 'path', 'rect'];
+      proxyNodes.forEach((i) => {
+        if (i.childNodes) {
+          i.childNodes.forEach((k) => {
+            if (childTagType.includes(k.tagName)) {
+              k.setAttribute('class', 'selected');
+            }
+          });
+        }
+      });
     },
     /**
      * The node information of the selected node is displayed and highlighted.
@@ -1851,81 +1966,36 @@ export default {
         inputControl: [],
         output: [],
         outputControl: [],
-        Attributes: [],
+        attributes: [],
       };
       this.selectedNode.showControl = {
         input: true,
         output: true,
       };
+
       const path = this.selectedNode.name.split('^');
-      const select = this.allGraphData[path[0].replace('_unfold', '')]
-        ? [this.allGraphData[path[0].replace('_unfold', '')]]
-        : [];
-      const nodes = d3.selectAll('#graph g.node');
-      const node = d3.select(`#graph g[id="${this.selectedNode.name}"]`);
-      const text = node.select('text').node()
-        ? node.select('text').node().innerText ||
-          node.select('text').node().textContent ||
-          ''
-        : '';
-      const nodeId = node.node()
-        ? node
-            .node()
-            .id.replace(/_unfold$/g, '')
-            .split('^')
-        : [];
-      const filter = nodes.nodes().filter((k) => {
-        const nodeItem = d3.select(k);
-        const nodeText = nodeItem.select('text').node()
-          ? nodeItem.select('text').node().innerText ||
-            nodeItem.select('text').node().textContent ||
-            ''
-          : '';
-        let path = false;
-        nodeItem
-            .node()
-            .id.split('^')
-            .forEach((i) => {
-              path = nodeId.filter((j) => j === i).length ? true : path;
-            });
-        return nodeText === text && path;
-      });
-      filter.forEach((k) => {
-        if (k.childNodes) {
-          k.childNodes.forEach((i) => {
-            if (
-              i.tagName === 'polygon' ||
-              i.tagName === 'ellipse' ||
-              i.tagName === 'path' ||
-              i.tagName === 'rect'
-            ) {
-              i.setAttribute('class', 'selected');
-            }
-          });
-        }
-      });
-      if (select.length && select[0].name.indexOf('more') === -1) {
+      const selectedNode = this.allGraphData[path[0].replace('_unfold', '')];
+
+      if (selectedNode && !selectedNode.name.includes('more...')) {
         this.selectedNode.show = true;
-        this.selectedNode.name = select[0].name;
-        this.selectedNode.title = select[0].name.replace('_unfold', '');
+        this.selectedNode.name = selectedNode.name;
+        this.selectedNode.title = selectedNode.name.replace('_unfold', '');
         this.selectedNode.type =
-          select[0].type === 'name_scope' ||
-          select[0].type === 'aggregation_scope'
+          selectedNode.type === 'name_scope' ||
+          selectedNode.type === 'aggregation_scope'
             ? ''
-            : select[0].type;
+            : selectedNode.type;
         this.selectedNode.countShow =
-          select[0].type === 'name_scope' ||
-          select[0].type === 'aggregation_scope';
-        this.selectedNode.count = select[0].subnode_count;
-        Object.keys(select[0].attr).forEach((key) => {
-          this.selectedNode.info.Attributes.push({
-            name: key,
-            value: select[0].attr[key],
-          });
-        });
-        Object.keys(select[0].input).forEach((key) => {
-          const value = this.getEdgeLabel(select[0].input[key]);
-          if (select[0].input[key].edge_type !== 'control') {
+          selectedNode.type === 'name_scope' ||
+          selectedNode.type === 'aggregation_scope';
+        this.selectedNode.count = selectedNode.subnode_count;
+        this.selectedNode.info.attributes = JSON.parse(
+            JSON.stringify(selectedNode.attr),
+        );
+
+        Object.keys(selectedNode.input).forEach((key) => {
+          const value = this.getEdgeLabel(selectedNode.input[key]);
+          if (selectedNode.input[key].edge_type !== 'control') {
             this.selectedNode.info.input.push({
               name: key,
               value: value,
@@ -1937,24 +2007,25 @@ export default {
             });
           }
         });
-        Object.keys(select[0].output).forEach((key) => {
-          const value = this.getEdgeLabel(select[0].output[key]);
-          if (select[0].output[key].edge_type !== 'control') {
+
+        Object.keys(selectedNode.output).forEach((key) => {
+          const value = this.getEdgeLabel(selectedNode.output[key]);
+          if (selectedNode.output[key].edge_type !== 'control') {
             this.selectedNode.info.output.push({
               name: key,
-              scope: select[0].output[key].scope,
+              scope: selectedNode.output[key].scope,
               value: value,
             });
           } else {
             this.selectedNode.info.outputControl.push({
               name: key,
-              scope: select[0].output[key].scope,
+              scope: selectedNode.output[key].scope,
               value: value,
             });
           }
         });
-        this.selectedNode.info.output_i = select[0].output_i;
-        this.highLightEdges(select[0]);
+        this.selectedNode.info.output_i = selectedNode.output_i;
+        this.highLightEdges(selectedNode);
       } else {
         this.selectedNode.show = false;
         this.selectedNode.name = '';
@@ -1964,55 +2035,58 @@ export default {
     },
     /**
      * The position is offset to the current node in the center of the screen.
-     * @param {Object} node Selected Node
-     * @param {Boolean} dblclick Double-click
+     * @param {String} nodeId Selected Node id
+     * @param {Boolean} needDelay Delay required
      */
-    selectNodePosition(node, dblclick) {
-      const graphDom = document.querySelector('#graph #graph0');
-      node.offsetLeft = node.el.getBoundingClientRect().left;
-      node.offsetTop = node.el.getBoundingClientRect().top;
-      node.initWidth = node.el.getBoundingClientRect().width;
-      node.initHeight = node.el.getBoundingClientRect().height;
+    selectNodePosition(nodeId, needDelay) {
+      const nodeDom = document.querySelector(`#graph0 g[id="${nodeId}"]`);
+      const nodeRect = nodeDom.getBoundingClientRect();
+
+      const graph = {};
+      graph.rect = this.graph.dom.getBoundingClientRect();
+      graph.initWidth = graph.rect.width / this.graph.transform.k;
+      graph.initHeight = graph.rect.height / this.graph.transform.k;
+
       const screenChange = {
         x:
-          node.offsetLeft -
-          (this.svg.offsetLeft + this.svg.initWidth / 2) +
-          node.initWidth / 2,
+          nodeRect.left +
+          nodeRect.width / 2 -
+          (this.svg.rect.left + this.svg.rect.width / 2),
         y:
-          node.offsetTop -
-          (this.svg.offsetTop + this.svg.initHeight / 2) +
-          node.initHeight / 2,
+          nodeRect.top +
+          nodeRect.height / 2 -
+          (this.svg.rect.top + this.svg.rect.height / 2),
       };
-      this.graphDom.transform = {
-        x:
-          this.graphDom.transform.x -
-          screenChange.x * (this.svg.viewWidth / this.graphDom.initWidth),
-        y:
-          this.graphDom.transform.y -
-          screenChange.y * (this.svg.viewHeight / this.graphDom.initHeight),
-        k: this.graphDom.transform.k,
-      };
-      graphDom.attributes.transform.value = `translate(${this.graphDom.transform.x},
-      ${this.graphDom.transform.y}) scale(${this.graphDom.transform.k})`;
-      const transition =
-        dblclick === 'unfoldScope'
-          ? 0
-          : Math.min(
-              Math.abs(screenChange.x) * 2,
-              Math.abs(screenChange.y) * 2,
-              800,
-          );
-      graphDom.style.transition = `${transition / 1000}s`;
-      graphDom.style['transition-timing-function'] = 'linear';
+
+      this.graph.transform.x -=
+        screenChange.x * (this.svg.originSize.width / graph.initWidth);
+      this.graph.transform.y -=
+        screenChange.y * (this.svg.originSize.height / graph.initHeight);
+
+      this.graph.dom.setAttribute(
+          'transform',
+          `translate(${this.graph.transform.x},` +
+          `${this.graph.transform.y}) scale(${this.graph.transform.k})`,
+      );
+
+      const transitionTime = Math.min(
+          Math.abs(screenChange.x) * 2,
+          Math.abs(screenChange.y) * 2,
+        needDelay ? 800 : 0,
+      );
+
+      this.graph.dom.style.transition = `${transitionTime / 1000}s`;
+      this.graph.dom.style['transition-timing-function'] = 'linear';
+
       setTimeout(() => {
-        graphDom.style.transition = '';
-      }, transition);
+        this.graph.dom.style.transition = '';
+      }, transitionTime);
       let end = 0;
-      this.bigMapPositionChange();
+      this.setInsideBoxData();
       const timer = setInterval(() => {
-        this.bigMapPositionChange();
+        this.setInsideBoxData();
         end += 1;
-        if (end > transition) {
+        if (end > transitionTime) {
           clearInterval(timer);
         }
       }, 1);
@@ -2210,6 +2284,7 @@ export default {
             node.children = [];
             node.size = [];
             node.html = '';
+            node.grouped = false;
             this.allGraphData[node.name] = node;
             this.allGraphData[name].children.push(node.name);
           });
@@ -2249,7 +2324,7 @@ export default {
           input: [],
           outputControl: [],
           output: [],
-          Attributes: [],
+          attributes: [],
         },
         showControl: {
           input: true,
@@ -2322,11 +2397,40 @@ export default {
       this.selectedNode.more = false;
       // If a node exists on the map, select the node.
       if (this.allGraphData[option.value]) {
-        // If the namespace or aggregation node is expanded, you need to close it and select
-        if (!this.allGraphData[option.value].isUnfold) {
-          this.selectNode('unfold');
+        if (
+          d3
+              .select(`g[id="${option.value}"],g[id="${option.value}_unfold"]`)
+              .size()
+        ) {
+          // If the namespace or aggregation node is expanded, you need to close it and select
+          if (!this.allGraphData[option.value].isUnfold) {
+            this.selectNode(true);
+          } else {
+            this.dealDoubleClick(option.value);
+          }
         } else {
-          this.dealDoubleClick(option.value);
+          const parentId = option.value.substring(
+              0,
+              option.value.lastIndexOf('/'),
+          );
+          if (
+            this.allGraphData[parentId] &&
+            this.allGraphData[parentId].isUnfold
+          ) {
+            const aggregationNode = this.allGraphData[parentId];
+            if (aggregationNode) {
+              for (let i = 0; i < aggregationNode.childIdsList.length; i++) {
+                if (aggregationNode.childIdsList[i].includes(option.value)) {
+                  aggregationNode.index = i;
+                  break;
+                }
+              }
+            }
+            this.loading.info = this.$t('graph.searchLoading');
+            this.loading.show = true;
+            this.selectedNode.name = option.value;
+            this.layoutNamescope(parentId, true);
+          }
         }
       } else {
         // If the node does not exist and is not a subnode of the aggregation node,
@@ -2347,17 +2451,8 @@ export default {
             .then(
                 (response) => {
                   if (response && response.data && response.data.children) {
-                    const [data, nameScopeIsUnfold] = this.findStartUnfoldNode(
-                        response.data.children,
-                    );
+                    const data = this.findStartUnfoldNode(response.data.children);
                     if (data) {
-                      if (nameScopeIsUnfold) {
-                        // If the aggregation node is expanded but is not displayed on the diagram,
-                        // you need to zoom out the aggregated node, query the aggregation node again,
-                        // and intercept the node array again.
-                        this.dealDoubleClick(data.scope_name);
-                        this.selectedNode.name = option.value;
-                      }
                       this.dealAutoUnfoldNamescopesData(data);
                     }
                   }
@@ -2367,6 +2462,7 @@ export default {
                 },
             )
             .catch((e) => {
+              this.loading.show = false;
               this.$message.error(this.$t('public.dataError'));
             });
       }
@@ -2391,21 +2487,39 @@ export default {
           ) {
             this.selectedNode.name = data.scope_name;
             this.querySingleNode({value: data.scope_name});
-            this.selectNode('unfold');
+            this.selectNode(true);
             this.$message.error(this.$t('graph.tooManyNodes'));
             this.$nextTick(() => {
               this.loading.show = false;
             });
           } else {
             // Normal expansion
-            const nodes = this.dealAggregationNodes(
-                data.nodes,
-                this.allGraphData[data.scope_name].type,
-            );
+            const nodes = JSON.parse(JSON.stringify(data.nodes));
             this.packageDataToObject(data.scope_name, true, nodes);
+            if (
+              this.allGraphData[data.scope_name].type === 'aggregation_scope'
+            ) {
+              this.dealAggregationNodes(data.scope_name);
+              const aggregationNode = this.allGraphData[data.scope_name];
+              if (aggregationNode) {
+                for (let i = 0; i < aggregationNode.childIdsList.length; i++) {
+                  if (
+                    aggregationNode.childIdsList[i].includes(
+                        this.selectedNode.name,
+                    )
+                  ) {
+                    aggregationNode.index = i;
+                    break;
+                  }
+                }
+              }
+            }
+
             if (data.children.scope_name) {
               this.dealAutoUnfoldNamescopesData(data.children);
             } else {
+              this.loading.info = this.$t('graph.searchLoading');
+              this.loading.show = true;
               this.layoutNamescope(data.scope_name, true);
             }
           }
@@ -2415,7 +2529,7 @@ export default {
     /**
      * Queries the first layer namespace to be expanded for a search node.
      * @param {Object} data All data of the node and the namespace to which the node belongs
-     * @return {Array} First namespace to be expanded
+     * @return {Object} First namespace to be expanded
      */
     findStartUnfoldNode(data) {
       if (data && data.scope_name) {
@@ -2425,169 +2539,75 @@ export default {
               return node.name === this.selectedNode.name;
             })
           ) {
-            return [data, true];
+            return data;
           } else {
             return this.findStartUnfoldNode(data.children);
           }
         } else {
-          return [data, false];
+          return data;
         }
       } else {
-        return [null, null];
+        return null;
       }
     },
     /**
      * Initialize the svg, width and height of the small image, and transform information.
      */
     initGraphRectData() {
-      // graph attribute
-      const graphHtml = document.querySelector('#graph');
+      this.initSmallContainer();
 
-      // svg attribute
-      const svg = graphHtml.querySelector('#graph svg');
-      if (!svg) {
-        return;
-      }
-      const svgRect = svg.getBoundingClientRect();
-      this.svg.initWidth = svgRect.width; // svg width
-      this.svg.initHeight = svgRect.height; // svg high
-      this.svg.offsetLeft = svgRect.left; // svg Distance to the left of the window
-      this.svg.offsetTop = svgRect.top; // svg Distance from the upper part of the window
-      this.svg.viewWidth = parseFloat(
-          svg.attributes.viewBox.value.split(' ')[2],
-      ); // svg viewbox width
-      this.svg.viewHeight = parseFloat(
-          svg.attributes.viewBox.value.split(' ')[3],
-      ); // The viewbox of the svg is high.
-
-      // Attributes of smallContainer
-      const smallContainer = document.querySelector('#small-container');
-
-      // Attributes of smallMap
-      const smallMap = document.querySelector('#small-map');
-
-      // Reset the length and width of the smallResize and locate the fault.
-      const smallResize = document.querySelector('#small-resize');
-      this.smallResize.width = this.smallResize.initWidth =
-        smallContainer.offsetWidth - 2; // Initial width of the thumbnail frame
-      this.smallResize.height = this.smallResize.initHeight =
-        smallContainer.offsetHeight - 2; // The initial height of the thumbnail frame is high.
-      this.smallResize.left = this.smallResize.top = 0;
-      if (Object.keys(this.allGraphData).length) {
-        if (
-          this.svg.initWidth / this.svg.initHeight <
-          this.smallResize.initWidth / this.smallResize.initHeight
-        ) {
-          this.smallResize.width =
-            (this.smallResize.initHeight * this.svg.initWidth) /
-            this.svg.initHeight;
-          this.smallResize.left =
-            (this.smallResize.initWidth - this.smallResize.width) / 2;
-        } else {
-          this.smallResize.height =
-            (this.smallResize.initWidth * this.svg.initHeight) /
-            this.svg.initWidth;
-          this.smallResize.top =
-            (this.smallResize.initHeight - this.smallResize.height) / 2;
-        }
-      }
-      this.styleSet(this.smallResize, true);
-      // Distance between the thumbnail frame and the upper part of the window
-      this.smallResize.offsetLeft = smallResize.getBoundingClientRect().left;
-      // Distance between the thumbnail frame and the upper part of the window
-      this.smallResize.offsetTop = smallResize.getBoundingClientRect().top;
-
-      const insideBox = document.querySelector('#inside-box');
-      // graph0 information
-      const graphDom = graphHtml.querySelector('#graph #graph0');
-      smallMap.innerHTML = graphHtml.innerHTML;
-      if (!graphDom) {
-        document.onmousemove = document.onmouseup = null;
-        if (smallContainer) {
-          smallContainer.onmousedown = smallContainer.onmouseup = null;
-          smallContainer.onmousewheel = null;
-        }
+      if (!this.graph.dom) {
         this.insideBox.width = this.smallResize.width;
         this.insideBox.height = this.smallResize.height;
         this.insideBox.top = this.insideBox.left = 0;
-        this.styleSet(this.insideBox, true);
+        this.styleSet('#inside-box', this.insideBox);
         insideBox.style.cursor = 'not-allowed';
       } else {
         let transformString = '';
-        if (graphDom.attributes && graphDom.attributes.transform) {
+        const transTemp = this.graph.dom.attributes.transform || null;
+        if (transTemp) {
           // transform information of graph
-          transformString = graphDom.attributes.transform.nodeValue.split(
-              /[(,)]/,
-          );
+          transformString = transTemp.nodeValue.split(/[(,)]/);
         } else {
           transformString = ['translate', '0', '0', ' scale', '1'];
         }
-        this.graphDom.transform = {
+        this.graph.transform = {
           k: parseFloat(transformString[4]),
           x: parseFloat(transformString[1]),
           y: parseFloat(transformString[2]),
         };
-        graphDom.childNodes.forEach((k) => {
-          if (k.tagName === 'polygon') {
-            this.graphDom.pointStartX = parseFloat(
-                k.attributes.points.nodeValue.split(/[\s,]/)[0],
-            ); // Start point x
-            this.graphDom.pointStartY = parseFloat(
-                k.attributes.points.nodeValue.split(/[\s,]/)[1],
-            ); // Start point y
-          }
-        });
-        this.graphDom.initScale = 1; // Initial amplified value of graph
-        this.graphDom.initTranslateY =
-          this.svg.viewHeight - this.graphDom.pointStartY; // Initial y of graph
-        this.graphDom.initTranslateX = -this.graphDom.pointStartX; // Initial x of graph
-        this.graphDom.width = graphDom.getBoundingClientRect().width;
-        this.graphDom.height = graphDom.getBoundingClientRect().height;
-        this.graphDom.initWidth =
-          this.graphDom.width / this.graphDom.transform.k; // Initial width of the graph
-        this.graphDom.initHeight =
-          this.graphDom.height / this.graphDom.transform.k; // Initial height of the graph
-        delete this.graphSmall.el;
-        this.graphSmall.el = smallMap.getElementsByClassName('graph')[0];
-        this.graphSmall.el.attributes.transform.value = `translate(${this.graphDom.initTranslateX},
-         ${this.graphDom.initTranslateY}) scale(${this.graphDom.initScale})`;
 
-        this.graphSmall.initLeft =
-          this.graphSmall.el.getBoundingClientRect().left -
-          this.smallResize.offsetLeft;
-        this.graphSmall.initTop =
-          this.graphSmall.el.getBoundingClientRect().top -
-          this.smallResize.offsetTop;
-        this.graphSmall.initWidth = this.graphSmall.el.getBoundingClientRect().width;
-        this.graphSmall.initHeight = this.graphSmall.el.getBoundingClientRect().height;
-        // Size control of the shadow frame
-        this.insideBox.scale = 1 / this.graphDom.transform.k; // Enlarged value of the shadow frame
-        insideBox.style.cursor = 'move';
-        this.bigMapPositionChange();
+        const graphRect = this.graph.dom.getBoundingClientRect();
+        this.graph.transRate =
+          graphRect.width /
+          this.graph.dom.getBBox().width /
+          this.graph.transform.k;
+        this.graph.minScale =
+          Math.min(
+              this.svg.rect.width / 2 / graphRect.width,
+              this.svg.rect.height / 2 / graphRect.height,
+          ) * this.graph.transform.k;
 
-        // Small image location change event
-        document.onmousemove = (e) => {
-          if (this.clickSmall === 0) {
-            this.insideBoxPositionChange(e);
-          }
+        this.setInsideBoxData();
+      }
+      this.setSmallMapEvents();
+    },
+    setSmallMapEvents() {
+      // Attributes of smallContainer
+      const smallContainer = document.querySelector('#small-container');
+
+      if (this.graph.dom) {
+        smallContainer.onmousedown = (e) => {
+          this.clickSmall = true;
+          this.insideBoxPositionChange(e);
         };
 
         document.onmouseup = (e) => {
-          if (this.clickSmall === 0) {
-            this.insideBoxPositionChange(e);
-            this.clickSmall = -1;
-          }
+          this.clickSmall = false;
         };
 
-        smallContainer.onmousedown = (e) => {
-          this.clickSmall = e.button;
-          this.eventSmall.x = e.pageX - this.smallResize.offsetLeft;
-          this.eventSmall.y = e.pageY - this.smallResize.offsetTop;
-        };
-
-        // Mouse lifting event
-        smallContainer.onmouseup = (e) => {
-          if (this.clickSmall === -1) {
+        smallContainer.onmousemove = (e) => {
+          if (this.clickSmall) {
             this.insideBoxPositionChange(e);
           }
         };
@@ -2595,40 +2615,95 @@ export default {
         // Mouse wheel event
         smallContainer.onmousewheel = (e) => {
           e = e || window.event;
-          const b = e.wheelDelta ? e.wheelDelta : e.detail;
-          if (
-            !isNaN(this.graphDom.transform.k) &&
-            this.graphDom.transform.k !== 0
-          ) {
-            const lg = b < 0 ? Math.abs(b) / 100 - 1 : 1 - b / 100;
-            this.graphDom.transform = {
-              k: Math.max(
-                  this.scaleRange[0],
-                  Math.min(
-                      this.graphDom.transform.k * Math.pow(2, lg),
-                      this.scaleRange[1],
-                  ),
-              ),
-              x: this.graphDom.transform.x,
-              y: this.graphDom.transform.y,
-            };
-            this.insideBox.scale = 1 / this.graphDom.transform.k;
-            const width = this.insideBox.width;
-            const height = this.insideBox.height;
+          const wheelDelta = e.wheelDelta ? e.wheelDelta : e.detail;
+          if (!isNaN(this.graph.transform.k) && this.graph.transform.k !== 0) {
+            let rate =
+              wheelDelta > 0 ? wheelDelta / 100 : -1 / (wheelDelta / 100);
 
-            this.insideBox.left -=
-              (this.smallResize.width * this.insideBox.scale - width) / 2;
-            this.insideBox.top -=
-              (this.smallResize.height * this.insideBox.scale - height) / 2;
-            this.insideBox.height =
-              this.smallResize.height * this.insideBox.scale;
-            this.insideBox.width =
-              this.smallResize.width * this.insideBox.scale;
-            this.styleSet(this.insideBox, true);
+            let scaleTemp = this.graph.transform.k / rate;
+            if (scaleTemp <= this.graph.minScale) {
+              scaleTemp = this.graph.minScale;
+              rate = this.graph.transform.k / this.graph.minScale;
+            }
+
+            this.graph.transform.k = Math.max(
+                this.scaleRange[0],
+                Math.min(scaleTemp, this.scaleRange[1]),
+            );
+            this.insideBox.scale = 1 / this.graph.transform.k;
+
+            this.insideBox.left += (this.insideBox.width * (1 - rate)) / 2;
+            this.insideBox.top += (this.insideBox.height * (1 - rate)) / 2;
+
+            this.insideBox.height = this.insideBox.height * rate;
+            this.insideBox.width = this.insideBox.width * rate;
+
+            document
+                .querySelector('#graph0')
+                .setAttribute(
+                    'transform',
+                    `translate(${this.graph.transform.x},${this.graph.transform.y}) ` +
+                  `scale(${this.graph.transform.k})`,
+                );
+
+            this.styleSet('#inside-box', this.insideBox);
             this.graphChange();
           }
         };
+      } else {
+        document.onmouseup = null;
+        smallContainer.onmousemove = null;
+        smallContainer.onmousedown = null;
+        smallContainer.onmousewheel = null;
       }
+    },
+    initSmallContainer() {
+      this.graph.dom = document.querySelector('#graph #graph0');
+      // Attributes of smallContainer
+      const smallContainer = document.querySelector('#small-container');
+      // Reset the length and width of the smallResize and locate the fault.
+      const smallResize = document.querySelector('#small-resize');
+
+      this.smallResize.width = this.smallResize.initWidth =
+        smallContainer.offsetWidth - 2; // Initial width of the thumbnail frame
+      this.smallResize.height = this.smallResize.initHeight =
+        smallContainer.offsetHeight - 2; // The initial height of the thumbnail frame is high.
+      this.smallResize.left = this.smallResize.top = 0;
+      if (Object.keys(this.allGraphData).length) {
+        if (
+          this.svg.originSize.width / this.svg.originSize.height <
+          this.smallResize.initWidth / this.smallResize.initHeight
+        ) {
+          this.smallResize.width =
+            (this.smallResize.initHeight * this.svg.originSize.width) /
+            this.svg.originSize.height;
+          this.smallResize.left =
+            (this.smallResize.initWidth - this.smallResize.width) / 2;
+        } else {
+          this.smallResize.height =
+            (this.smallResize.initWidth * this.svg.originSize.height) /
+            this.svg.originSize.width;
+          this.smallResize.top =
+            (this.smallResize.initHeight - this.smallResize.height) / 2;
+        }
+      }
+      this.styleSet('#small-resize', this.smallResize);
+      // Distance between the thumbnail frame and the upper part of the window
+      this.smallResize.offsetLeft = smallResize.getBoundingClientRect().left;
+      // Distance between the thumbnail frame and the upper part of the window
+      this.smallResize.offsetTop = smallResize.getBoundingClientRect().top;
+
+      // Attributes of smallMap
+      const smallMap = document.querySelector('#small-map');
+      const svgOuterHtml =
+        `<svg xmlns="http://www.w3.org/2000/svg" ` +
+        `xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" ` +
+        `viewBox="0.00 0.00 ${this.svg.originSize.width} ${this.svg.originSize.height}"` +
+        `><g id="smallGraph" class="graph" transform="translate(4,${this.svg
+            .originSize.height - 4}) scale(1)"` +
+        `>${this.graph.dom.innerHTML}</g></svg>`;
+
+      smallMap.innerHTML = svgOuterHtml;
     },
     /**
      * Small image moving
@@ -2637,96 +2712,71 @@ export default {
     insideBoxPositionChange(e) {
       this.eventSmall.x = e.pageX - this.smallResize.offsetLeft;
       this.eventSmall.y = e.pageY - this.smallResize.offsetTop;
+
       this.insideBox.left =
         this.eventSmall.x - parseFloat(this.insideBox.width) / 2;
       this.insideBox.top =
         this.eventSmall.y - parseFloat(this.insideBox.height) / 2;
-      this.styleSet(this.insideBox, false);
+
+      this.styleSet('#inside-box', this.insideBox);
       this.graphChange();
     },
     /**
      * Displacement of the large picture when the small picture is changed
      */
     graphChange() {
-      if (!this.graphDom.transform.x || isNaN(this.graphDom.transform.x)) {
+      if (!this.graph.transform.x || isNaN(this.graph.transform.x)) {
         this.initGraphRectData();
       }
-      // left and top values in the shadow box when translate is set to the initial value only when the scale is changed
-      const topInit =
-        (this.graphSmall.initTop +
-          (this.graphSmall.initHeight *
-            (this.svg.viewHeight - Math.abs(this.graphDom.pointStartY))) /
-            this.svg.viewHeight) *
-        (1 - this.insideBox.scale);
-      const leftInit =
-        (this.graphSmall.initLeft +
-          (this.graphSmall.initWidth * Math.abs(this.graphDom.pointStartX)) /
-            this.svg.viewWidth) *
-        (1 - this.insideBox.scale);
-      // Move the translate value of the large image corresponding to the shadow frame.
-      const topSmall =
-        (((this.insideBox.top - topInit) * this.svg.viewHeight) /
-          this.graphSmall.initHeight) *
-        this.graphDom.transform.k;
-      const leftSmall =
-        (((this.insideBox.left - leftInit) * this.svg.viewWidth) /
-          this.graphSmall.initWidth) *
-        this.graphDom.transform.k;
-      this.graphDom.transform = {
-        k: this.graphDom.transform.k,
-        x: this.graphDom.initTranslateX - leftSmall,
-        y: this.graphDom.initTranslateY - topSmall,
+      const graphRect = this.graph.dom.getBoundingClientRect();
+
+      const graphSizeRate = this.svg.rect.width / this.insideBox.width;
+
+      const change = {
+        x:
+          (this.insideBox.left * graphSizeRate -
+            (this.svg.rect.left - graphRect.left)) /
+          this.graph.transRate,
+        y:
+          (this.insideBox.top * graphSizeRate -
+            (this.svg.rect.top - graphRect.top)) /
+          this.graph.transRate,
       };
-      const graphDomd3 = d3.select('#graph0');
-      const graphDom = document.querySelector('#graph #graph0');
-      if (graphDomd3) {
-        graphDomd3.attr(
-            'transform',
-            `translate(${this.graphDom.transform.x},${this.graphDom.transform.y}) scale(${this.graphDom.transform.k})`,
-        );
-        this.graphDom.width = graphDom.getBoundingClientRect().width;
-        this.graphDom.height = graphDom.getBoundingClientRect().height;
-      }
+
+      this.graph.transform.x -= change.x;
+      this.graph.transform.y -= change.y;
+
+      this.graph.dom.setAttribute(
+          'transform',
+          `translate(${this.graph.transform.x},${this.graph.transform.y}) ` +
+          `scale(${this.graph.transform.k})`,
+      );
     },
     /**
      * Displacement of the small map when the large picture is changed
      */
-    bigMapPositionChange() {
-      const graphDom = document.querySelector('#graph #graph0');
-      this.graphDom.top =
-        graphDom.getBoundingClientRect().top - this.svg.offsetTop;
-      this.graphDom.left =
-        graphDom.getBoundingClientRect().left - this.svg.offsetLeft;
-      this.insideBox.left = parseFloat(
-          (
-            this.graphSmall.initLeft -
-          (this.graphDom.left / this.graphDom.width) * this.graphSmall.initWidth
-          ).toFixed(3),
-      );
-      this.insideBox.top = parseFloat(
-          (
-            this.graphSmall.initTop -
-          (this.graphDom.top / this.graphDom.height) *
-            this.graphSmall.initHeight
-          ).toFixed(3),
-      );
-      this.insideBox.height = this.smallResize.height * this.insideBox.scale;
-      this.insideBox.width = this.smallResize.width * this.insideBox.scale;
-      this.styleSet(this.insideBox, true);
+    setInsideBoxData() {
+      const graphRect = this.graph.dom.getBoundingClientRect();
+      const transRate = graphRect.width / this.smallResize.width;
+
+      this.insideBox.left = (this.svg.rect.left - graphRect.left) / transRate;
+      this.insideBox.top = (this.svg.rect.top - graphRect.top) / transRate;
+
+      this.insideBox.width = this.svg.rect.width / transRate;
+      this.insideBox.height = this.svg.rect.height / transRate;
+      this.styleSet('#inside-box', this.insideBox);
     },
     /**
      * Setting the width and height of a node
-     * @param {Object} el dom node whose style needs to be modified
-     * @param {Boolean} sizeChange Whether to change the width and height
+     * @param {String} id dom id whose style needs to be modified
+     * @param {Object} domData data of dom
      */
-    styleSet(el, sizeChange) {
-      const dom = document.querySelector(el.el);
-      dom.style.left = `${el.left}px`;
-      dom.style.top = `${el.top}px`;
-      if (sizeChange) {
-        dom.style.width = `${el.width}px`;
-        dom.style.height = `${el.height}px`;
-      }
+    styleSet(id, domData) {
+      const dom = document.querySelector(id);
+      dom.style.left = `${domData.left}px`;
+      dom.style.top = `${domData.top}px`;
+      dom.style.width = `${domData.width}px`;
+      dom.style.height = `${domData.height}px`;
     },
     /**
      * Expansion and folding of control edges
@@ -2760,6 +2810,7 @@ export default {
     toggleRight() {
       this.rightShow = !this.rightShow;
       setTimeout(() => {
+        this.initSvg();
         this.initGraphRectData();
       }, 10);
     },
@@ -2769,6 +2820,7 @@ export default {
     toggleScreen() {
       this.fullScreen = !this.fullScreen;
       setTimeout(() => {
+        this.initSvg();
         this.initGraphRectData();
       }, 10);
     },
@@ -2824,7 +2876,6 @@ export default {
     .guide {
       cursor: pointer;
       margin-left: 10px;
-      line-height: 20px;
       display: inline-block;
       line-height: 18px;
       font-size: 12px;
