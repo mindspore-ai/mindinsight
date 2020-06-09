@@ -36,7 +36,9 @@ from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summar
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import UnknownError
+from mindinsight.datavisual.data_transform.histogram import Histogram
 from mindinsight.datavisual.data_transform.histogram_container import HistogramContainer
+from mindinsight.datavisual.data_transform.tensor_container import TensorContainer
 
 HEADER_SIZE = 8
 CRC_STR_SIZE = 4
@@ -390,6 +392,7 @@ class _SummaryParser(_Parser):
             'scalar_value': PluginNameEnum.SCALAR,
             'image': PluginNameEnum.IMAGE,
             'histogram': PluginNameEnum.HISTOGRAM,
+            'tensor': PluginNameEnum.TENSOR
         }
 
         if event.HasField('summary'):
@@ -404,10 +407,12 @@ class _SummaryParser(_Parser):
                         tensor_event_value = HistogramContainer(tensor_event_value)
                         # Drop steps if original_buckets_count exceeds HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT
                         # to avoid time-consuming re-sample process.
-                        if tensor_event_value.original_buckets_count > HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT:
+                        if tensor_event_value.histogram.original_buckets_count > Histogram.MAX_ORIGINAL_BUCKETS_COUNT:
                             logger.info('original_buckets_count exceeds '
                                         'HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT')
                             continue
+                    elif plugin == 'tensor':
+                        tensor_event_value = TensorContainer(tensor_event_value)
 
                     tensor_event = TensorEvent(wall_time=event.wall_time,
                                                step=event.step,

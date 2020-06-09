@@ -38,6 +38,7 @@ class PluginNameEnum(BaseEnum):
     SCALAR = 'scalar'
     GRAPH = 'graph'
     HISTOGRAM = 'histogram'
+    TENSOR = 'tensor'
 
 
 @enum.unique

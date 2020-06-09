@@ -25,6 +25,7 @@ from mindinsight.conf import settings
 from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.datavisual.utils.tools import if_nan_inf_to_none
 from mindinsight.datavisual.processors.histogram_processor import HistogramProcessor
+from mindinsight.datavisual.processors.tensor_processor import TensorProcessor
 from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
@@ -171,6 +172,25 @@ def get_scalars():
     processor = ScalarsProcessor(DATA_MANAGER)
     scalars = processor.get_scalars(train_ids, tags)
     return jsonify({'scalars': scalars})
+
+
+@BLUEPRINT.route("/datavisual/tensors", methods=["GET"])
+def get_tensors():
+    """
+    Interface to obtain tensor data.
+
+    Returns:
+        Response, which contains a JSON object.
+    """
+    train_ids = request.args.getlist('train_id')
+    tags = request.args.getlist('tag')
+    step = request.args.get("step", default=None)
+    dims = request.args.get("dims", default=None)
+    detail = request.args.get("detail", default=None)
+
+    processor = TensorProcessor(DATA_MANAGER)
+    response = processor.get_tensors(train_ids, tags, step, dims, detail)
+    return jsonify(response)
 
 
 def init_module(app):
