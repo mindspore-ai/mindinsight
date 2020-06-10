@@ -340,8 +340,20 @@ export default {
                   const tempData = res.data.metadatas;
                   sampleItem.sampleData = tempData;
                   const oldTotalStepNum = sampleItem.totalStepNum;
-                  sampleItem.totalStepNum = tempData.length - 1;
+                  if (tempData.length) {
+                    sampleItem.totalStepNum = tempData.length - 1;
+                  } else {
+                    sampleItem.totalStepNum = 0;
+                    sampleItem.sliderValue = 0;
+                    sampleItem.curStep = '';
+                    sampleItem.curImgUrl = '';
+                    sampleItem.curTime = '';
+                    return;
+                  }
                   if (sampleItem.sliderValue === oldTotalStepNum) {
+                    sampleItem.sliderValue = sampleItem.totalStepNum;
+                  }
+                  if (sampleItem.sliderValue > sampleItem.totalStepNum) {
                     sampleItem.sliderValue = sampleItem.totalStepNum;
                   }
                   const curSampleData =
