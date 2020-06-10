@@ -181,3 +181,14 @@ class ProfilerGroupConditionException(MindInsightException):
             message=ProfilerErrorMsg.GROUP_CONDITION_ERROR.value.format(msg),
             http_code=400
         )
+
+
+class ProfilerColumnNotSupportSortException(MindInsightException):
+    """The column does not support to sort error in profiler module."""
+
+    def __init__(self, msg):
+        super(ProfilerColumnNotSupportSortException, self).__init__(
+            error=ProfilerErrors.COLUMN_NOT_SUPPORT_SORT_ERROR,
+            message=ProfilerErrorMsg.COLUMN_NOT_SUPPORT_SORT_ERROR.value.format(msg),
+            http_code=400
+        )

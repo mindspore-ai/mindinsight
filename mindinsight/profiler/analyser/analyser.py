@@ -93,6 +93,7 @@ class AicoreDetailAnalyser(BaseAnalyser):
         self._none_filter_condition_key = [
             'is_display_detail', 'is_display_full_op_name'
         ]
+        self._none_sort_col_names = ['op_info']
 
     def query_and_sort_by_op_type(self, filter_condition, op_type_order: list):
         """

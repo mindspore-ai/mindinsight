@@ -24,7 +24,7 @@ from marshmallow import ValidationError
 from mindinsight.profiler.common.exceptions.exceptions import \
     ProfilerPathErrorException, ProfilerDirNotFoundException, \
     ProfilerFileNotFoundException, ProfilerDeviceIdMismatchException, \
-    ProfilerRawFileException
+    ProfilerRawFileException, ProfilerParamValueErrorException
 from mindinsight.profiler.common.validator.validate_path import \
     validate_and_normalize_path
 
@@ -222,6 +222,29 @@ class FrameworkParser:
         """Parse the framework files."""
         self._parse_graph_files_and_save(self._task_cache)
         del self._task_cache
+
+    def check_op_name(self, op_name, is_prefix=True):
+        """
+        Check whether the operator name exists.
+
+        Args:
+            op_name (str): The operator name or operator name prefix.
+            is_prefix (bool): `True` if the op_name is prefix, else `False`.
+                Default: True.
+
+        Returns:
+            bool, `True` if the operator name does exist in framework file, else
+            `False`.
+        """
+        if not op_name:
+            raise ProfilerParamValueErrorException('The op_name should exist.')
+        for full_op_name in self._task_id_full_op_name_dict.values():
+            if full_op_name:
+                if is_prefix and full_op_name.startswith(op_name):
+                    return True
+                if not is_prefix and op_name == full_op_name:
+                    return True
+        return False
 
     def _get_raw_profiling_path(self, profiling_id):
         """
