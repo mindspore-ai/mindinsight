@@ -20,7 +20,7 @@ from marshmallow import ValidationError
 
 from mindinsight.profiler.common.exceptions.exceptions import \
     ProfilerColumnNotExistException, ProfilerPathErrorException, \
-    ProfilerIOException
+    ProfilerIOException, ProfilerColumnNotSupportSortException
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.validate_path import \
     validate_and_normalize_path
@@ -50,6 +50,7 @@ class BaseAnalyser(ABC):
         self._display_col_names = None
         self._size = 0
         self._none_filter_condition_key = []
+        self._none_sort_col_names = []
 
         try:
             self._load()
@@ -150,6 +151,8 @@ class BaseAnalyser(ABC):
             index = self.__col_names__.index(sort_name)
         except ValueError:
             raise ProfilerColumnNotExistException(sort_name)
+        if self._none_sort_col_names and sort_name in self._none_sort_col_names:
+            raise ProfilerColumnNotSupportSortException(sort_name)
         self._result.sort(key=functools.cmp_to_key(_cmp), reverse=reverse)
 
     def _group(self, group_condition: dict):

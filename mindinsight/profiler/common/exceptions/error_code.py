@@ -46,6 +46,7 @@ class ProfilerErrors(ProfilerMgrErrors):
     GROUP_CONDITION_ERROR = 4 | _ANALYSER_MASK
     SORT_CONDITION_ERROR = 5 | _ANALYSER_MASK
     FILTER_CONDITION_ERROR = 6 | _ANALYSER_MASK
+    COLUMN_NOT_SUPPORT_SORT_ERROR = 7 | _ANALYSER_MASK
 
 
 @unique
@@ -71,3 +72,4 @@ class ProfilerErrorMsg(Enum):
     OP_TYPE_ERROR = 'The op_type in search_condition error, {}'
     GROUP_CONDITION_ERROR = 'The group_condition in search_condition error, {}'
     SORT_CONDITION_ERROR = 'The sort_condition in search_condition error, {}'
+    COLUMN_NOT_SUPPORT_SORT_ERROR = 'The column {} does not support to sort.'
