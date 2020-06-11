@@ -435,9 +435,14 @@ class FrameworkParser:
                     for graph_info in graph_file:
                         result = self._parse_one_row_graph_info(graph_info)
                         task_info = task_cache.get(result[0])
-                        task_info.extend(result)
-                        csv_writer.writerow(task_info)
-                        del task_cache[result[0]]
+                        if task_info:
+                            task_info.extend(result)
+                            csv_writer.writerow(task_info)
+                            del task_cache[result[0]]
+                        else:
+                            save_info = [None, None, None]
+                            save_info.extend(result)
+                            csv_writer.writerow(save_info)
 
             none_list = [None, None, None, None]
             for key, value in task_cache.items():
