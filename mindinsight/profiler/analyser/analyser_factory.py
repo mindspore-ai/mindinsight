@@ -15,7 +15,7 @@
 """The analyser factory."""
 import threading
 
-import mindinsight.profiler.analyser.analyser as analyser_module
+import mindinsight.profiler.analyser as analyser_module
 from mindinsight.profiler.common.exceptions.exceptions import \
     ProfilerAnalyserNotExistException
 
@@ -25,11 +25,12 @@ class AnalyserFactory:
     The analyser factory is used to create analyser special instance.
 
     Currently the factory supports creating `AicoreTypeAnalyser`,
-    `AicoreDetailAnalyser` and `AicpuAnalyser`. The `AicoreTypeAnalyser` is used
-    to analyze execution time according to AICORE operator type.
+    `AicoreDetailAnalyser`, `AicpuAnalyser` and `StepTraceAnalyser`.
+    The `AicoreTypeAnalyser` is used to analyze execution time according to AICORE operator type.
     The `AicoreDetailAnalyser` is used to analyze execution time according to
     all specific AICORE operator. The `AicpuAnalyser` is used to analyze
     execution time according to all specific AICPU operator.
+    The `StepTraceAnalyser` is used to analyze the execution time according to different process.
 
     Examples:
         >>> analyser = AnalyserFactory.instance().get_analyser(

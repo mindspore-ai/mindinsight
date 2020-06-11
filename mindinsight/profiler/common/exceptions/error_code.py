@@ -37,6 +37,8 @@ class ProfilerErrors(ProfilerMgrErrors):
     # parser error code
     DEVICE_ID_MISMATCH_ERROR = 0 | _PARSER_MASK
     RAW_FILE_ERROR = 1 | _PARSER_MASK
+    STEP_NUM_NOT_SUPPORTED_ERROR = 2 | _PARSER_MASK
+    JOB_ID_MISMATCH_ERROR = 3 | _PARSER_MASK
 
     # analyser error code
     COLUMN_NOT_EXIST_ERROR = 0 | _ANALYSER_MASK
@@ -47,6 +49,8 @@ class ProfilerErrors(ProfilerMgrErrors):
     SORT_CONDITION_ERROR = 5 | _ANALYSER_MASK
     FILTER_CONDITION_ERROR = 6 | _ANALYSER_MASK
     COLUMN_NOT_SUPPORT_SORT_ERROR = 7 | _ANALYSER_MASK
+
+
 
 
 @unique
@@ -63,6 +67,9 @@ class ProfilerErrorMsg(Enum):
     # parser error msg
     DEVICE_ID_MISMATCH_ERROR = 'The device ID mismatch.'
     RAW_FILE_ERROR = 'Raw file error. {}'
+    STEP_NUM_NOT_SUPPORTED_ERROR = 'The step num must be in {}'
+    JOB_ID_MISMATCH_ERROR = 'The job id in the parameter is not the same as ' \
+                            'in the training trace file. '
 
     # analyser error msg
     COLUMN_NOT_EXIST_ERROR = 'The column {} does not exist.'

@@ -192,3 +192,25 @@ class ProfilerColumnNotSupportSortException(MindInsightException):
             message=ProfilerErrorMsg.COLUMN_NOT_SUPPORT_SORT_ERROR.value.format(msg),
             http_code=400
         )
+
+
+class StepNumNotSupportedException(MindInsightException):
+    """The step number error in profiler module."""
+
+    def __init__(self, msg):
+        super(StepNumNotSupportedException, self).__init__(
+            error=ProfilerErrors.STEP_NUM_NOT_SUPPORTED_ERROR,
+            message=ProfilerErrorMsg.STEP_NUM_NOT_SUPPORTED_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
+class JobIdMismatchException(MindInsightException):
+    """The Job ID mismatch error in profiler module."""
+
+    def __init__(self):
+        super(JobIdMismatchException, self).__init__(
+            error=ProfilerErrors.JOB_ID_MISMATCH_ERROR,
+            message=ProfilerErrorMsg.JOB_ID_MISMATCH_ERROR.value,
+            http_code=400
+        )

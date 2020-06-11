@@ -15,22 +15,26 @@
 """Profiling api file."""
 import os
 import time
+
 from tabulate import tabulate
-from mindinsight.profiler.parser.hwts_log_parser import HWTSLogParser
-from mindinsight.profiler.parser.framework_parser import FrameworkParser
-from mindinsight.profiler.parser.optime_parser import OPComputeTimeParser
-from mindinsight.profiler.parser.aicpu_data_parser import DataPreProcessParser
+
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.integrator import Integrator
 from mindinsight.profiler.common._utils import get_file_names, fwrite_format
-from mindinsight.profiler.common.validator.validate_path import \
-    validate_and_normalize_path
+from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.checkparam import \
     check_bool, check_subgraph
-from mindinsight.profiler.common.log import logger
+from mindinsight.profiler.common.validator.validate_path import \
+    validate_and_normalize_path
+from mindinsight.profiler.parser.aicpu_data_parser import DataPreProcessParser
+from mindinsight.profiler.parser.framework_parser import FrameworkParser
+from mindinsight.profiler.parser.hwts_log_parser import HWTSLogParser
+from mindinsight.profiler.parser.optime_parser import OPComputeTimeParser
+from mindinsight.profiler.parser.step_trace_parser import StepTraceParser
 from mindinsight.utils.exceptions import MindInsightException
 
 PROFILING_LOG_BASE_PATH = "/var/log/npu/profiling"
+INIT_OP_NAME = 'Default/InitDataSetQueue'
 
 
 class Profiler:
@@ -87,7 +91,7 @@ class Profiler:
         if device_target and device_target != "Davinci" \
             and device_target != "Ascend":
             msg = ("Profiling: unsupport backend: %s" \
-                  % device_target)
+                   % device_target)
             raise RuntimeError(msg)
 
         self._dev_id = dev_id
@@ -120,6 +124,8 @@ class Profiler:
         self._detail = check_bool(is_detail, 'is_detail')
         self._withfullpath = check_bool(is_show_op_path, 'is_show_op_path')
         self._profiling_job_id = job_id
+        # add job id env through user input later
+        self._job_id_env = None
         self._start_time = int(time.time() * 10000000)
         logger.info("Profiling: profiling start time: %d", self._start_time)
 
@@ -192,6 +198,35 @@ class Profiler:
             self._analyser_op_info()
         except MindInsightException as err:
             logger.error(err.message)
+
+        # analyse step trace info
+        self._analyse_step_trace(source_path, framework_parser)
+
+    def _analyse_step_trace(self, source_path, framework_parser):
+        """
+        Analyse step trace data and save the result.
+
+        Args:
+            source_path (str): The directory that contains the step trace original data.
+            framework_parser (str): The framework parse instance.
+        """
+        logger.info("Begin to parse step trace.")
+        # construct output path
+        step_trace_intermediate_file_path = os.path.join(
+            self._output_path,
+            f'step_trace_raw_{self._dev_id}_detail_time.csv'
+        )
+        # whether keep the first step
+        skip_first_step_flag = framework_parser.check_op_name(INIT_OP_NAME)
+        # parser the step trace files and save the result to disk
+        parser = StepTraceParser(input_dir=source_path,
+                                 output_file_path=step_trace_intermediate_file_path,
+                                 job_id=self._job_id_env,
+                                 skip_first_step=skip_first_step_flag)
+        parser.parse_and_save()
+        # print parser result
+        parser.show()
+        logger.info("Finish save the intermediate result %s", step_trace_intermediate_file_path)
 
     def __del__(self):
         """Disable the profiling collection service, called after training."""

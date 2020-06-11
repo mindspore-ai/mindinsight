@@ -16,15 +16,16 @@
 import os
 import re
 
+
 def fwrite_format(output_data_path, data_source=None, is_print=False, is_start=False):
     """
     Write data to the output file.
 
     Args:
-         output_data_path(str): the output file path of the data.
-         data_source(list): the data to write.
-         is_print(bool): whether to print the data to stdout.
-         is_start(bool): Whether is the first line of the output file, will remove the old file if True."
+         output_data_path (str): The output file path of the data.
+         data_source (list): The data to write.
+         is_print (bool): whether to print the data to stdout.
+         is_start (bool): Whether is the first line of the output file, will remove the old file if True."
     """
 
     if is_start is True and os.path.exists(output_data_path):
@@ -48,16 +49,17 @@ def get_log_slice_id(file_name):
     index = re.findall(r'\d+', slice_list[0])
     return int(index[0])
 
+
 def get_file_join_name(input_path, file_name):
     """
     Search files under the special path, and will join all the files to one file.
 
     Args:
-        input_path(str): the source path, will search files under it.
-        file_name(str): the target of the filename, such as 'hwts.log.data.45.dev'.
+        input_path (str): The source path, will search files under it.
+        file_name (str): The target of the filename, such as 'hwts.log.data.45.dev'.
 
     Returns:
-        str: the join file name.
+        str, the join file name.
     """
     name_list = []
     file_join_name = ''
@@ -90,11 +92,11 @@ def get_file_names(input_path, file_name):
     Search files under the special path.
 
     Args:
-        input_path(str): the souce path, will serch files under it.
-        file_name(str): the target of the filename, such as 'host_start_log'.
+        input_path (str): The source path, will search files under it.
+        file_name (str): The target of the filename, such as 'host_start_log'.
 
     Returns:
-        list: file name list.
+        list, file name list.
     """
 
     input_path = os.path.realpath(input_path)
