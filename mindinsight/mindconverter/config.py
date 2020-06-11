@@ -337,7 +337,7 @@ F_MAPPING_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'mappi
 F_MAPPING = get_mapping_from_file(F_MAPPING_PATH)
 # update to add key starts with 'nn.functional.'
 NN_FUNCTIONAL_D = {"nn.functional." + k[len('F.'):]: v for k, v in F_MAPPING.items()}
-# update to add key starts with 'torch.nn.functiona.l'
+# update to add key starts with 'torch.nn.functional.'
 TORCH_NN_FUNCTIONAL_D = {"torch.nn.functional." + k[len('F.'):]: v for k, v in F_MAPPING.items()}
 F_MAPPING.update(NN_FUNCTIONAL_D)
 F_MAPPING.update(TORCH_NN_FUNCTIONAL_D)
@@ -392,5 +392,7 @@ ALL_UNSUPPORTED = NN_UNSUPPORTED + F_UNSUPPORTED + TORCH_DOT_UNSUPPORTED + TENSO
 UNSUPPORTED_WARN_INFOS = {
     "nn.AdaptiveAvgPool2d": "maybe could convert to P.ReduceMean",
     "F.adaptive_avg_pool2d": "maybe could convert to P.ReduceMean",
-    "F.dropout": "please use nn.Dropout in __init__()"
+    "F.dropout": "please use nn.Dropout in __init__()",
+    "torch.max": "try to use P.ArgMaxWithValue, notice that two values are returned by P.ArgMaxWithValue",
+    "torch.min": "try to use P.ArgMinWithValue, notice that two values are returned by P.ArgMinWithValue"
 }

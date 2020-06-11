@@ -104,5 +104,50 @@
       "input": "input"
     },
     "gen_explicit_map": null
+  },
+  "F.normalize": {
+    "ms_api": [
+      "P.L2Normalize",
+      {
+        "axis": 0,
+        "epsilon": 0.0001,
+        "input_x": "REQUIRED"
+      },
+      [
+        "axis",
+        "epsilon"
+      ]
+    ],
+    "pt_api": [
+      "F.normalize",
+      {
+        "input": "REQUIRED",
+        "p": 2,
+        "dim": 1,
+        "eps": 1e-12
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input",
+      "epsilon": "eps",
+      "axis": "dim"
+    }
+  },
+  "F.sigmoid": {
+    "ms_api": [
+      "P.Sigmoid",
+      {
+        "input_x": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      "F.sigmoid",
+      {
+        "input": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "input"
+    }
   }
 }

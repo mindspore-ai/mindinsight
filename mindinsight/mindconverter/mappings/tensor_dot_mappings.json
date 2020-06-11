@@ -115,5 +115,43 @@
       "axis": "dim",
       "input": "call_name"
     }
+  },
+  ".repeat": {
+    "ms_api": [
+      "P.Tile",
+      {
+        "input_x": "REQUIRED",
+        "multiples": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".repeat",
+      {
+        "*sizes": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "call_name"
+    },
+    "gen_explicit_map": "tensor_dot_repeat_gen_explicit_map"
+  },
+  ".permute": {
+    "ms_api": [
+      "P.Transpose",
+      {
+        "input_x": "REQUIRED",
+        "input_perm": "REQUIRED"
+      }
+    ],
+    "pt_api": [
+      ".permute",
+      {
+        "*dIms": "REQUIRED"
+      }
+    ],
+    "ms2pt_mapping": {
+      "input_x": "call_name"
+    },
+    "gen_explicit_map": "tensor_dot_permute_gen_explicit_map"
   }
 }
