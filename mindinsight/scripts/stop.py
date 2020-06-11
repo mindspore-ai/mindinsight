@@ -96,7 +96,7 @@ class Command(BaseCommand):
         """
         port, pid = args.port, args.pid
         if not pid:
-            msg = f'No mindinsight service found for port {port}'
+            msg = f'No mindinsight service started by current user found for port {port}'
             self.console.error(msg)
             sys.exit(1)
 
