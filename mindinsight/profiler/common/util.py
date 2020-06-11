@@ -135,6 +135,6 @@ def get_field_value(row_info, field_name, header, time_type='realtime'):
     value = row_info[field_index]
     value = to_int(value, field_name)
     if time_type == 'realtime':
-        value = value / per_ms_syscnt
+        value = round(value / per_ms_syscnt, 4)
 
     return value

@@ -55,7 +55,7 @@ class StepTraceParser:
     def output_file(self):
         """The property of step trace header."""
         file_name = self._output_path.rsplit('/', 2)
-        return file_name
+        return file_name[-1] if len(file_name) == 3 else ''
 
     def show(self):
         """The property of step trace info."""
@@ -65,7 +65,7 @@ class StepTraceParser:
             summary_info['total_steps'] = len(self._result) - 1
         print('\nStep trace summary info (unit: syscnt):')
         print(summary_info)
-        print('\nThe step trace parse result saves under {summary_dir}/%s' % self.output_file)
+        print('\nThe step trace parse result saves under ${summary_dir}/profiler/%s' % self.output_file)
 
     def parse_and_save(self):
         """Parse step trace files and save the result."""
@@ -76,7 +76,8 @@ class StepTraceParser:
         except MindInsightException as err:
             log.error("Failed to parse and save step trace files.")
             log.exception(err)
-        log.info("Finish to save intermediate result for step trace file.")
+        else:
+            log.info("Finish to save intermediate result for step trace file.")
 
     def _get_step_trace_file(self):
         """Get step trace file."""

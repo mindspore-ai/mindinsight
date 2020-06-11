@@ -43,8 +43,8 @@ class HWTSLogParser:
 
         file_name = get_file_join_name(self._input_path, self._source_file_target)
         if not file_name:
-            msg = ("Fail to find hwts log file, under directory %s" \
-                   %self._input_path)
+            msg = ("Fail to find hwts log file, under directory %s"
+                   % self._input_path)
             raise RuntimeError(msg)
 
         return file_name

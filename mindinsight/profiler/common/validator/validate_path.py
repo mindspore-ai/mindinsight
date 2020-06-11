@@ -125,28 +125,28 @@ def validate_and_normalize_path(
     return normalized_path
 
 
-def validate_and_normalize_profiler_path(path):
+def validate_and_normalize_profiler_path(summary_dir, summary_base_dir):
     """
     Validate and normalize profiler path.
 
     Args:
-        path (str): The path of summary directory.
+        summary_dir (str): The relative path of summary directory.
+        summary_base_dir (str): The summary base directory.
 
     Returns:
         str, normalized path of profiler directory.
     """
-    if not path:
+    if not summary_dir:
         raise ProfilerParamValueErrorException('The file dir does not exist.')
     try:
-        unquote_path = unquote(path, errors='strict')
+        unquote_path = unquote(summary_dir, errors='strict')
     except UnicodeDecodeError:
         raise ProfilerParamValueErrorException('Unquote error with strict mode')
-
-    profiler_dir = os.path.join(unquote_path, 'profiler')
+    profiler_dir = os.path.join(summary_base_dir, unquote_path, 'profiler')
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
     except ValidationError:
-        log.error('profiler dir <%s> is invalid', unquote_path)
+        log.error('profiler dir <%s> is invalid', profiler_dir)
         raise ProfilerParamValueErrorException('Profiler dir is invalid.')
 
     return profiler_dir

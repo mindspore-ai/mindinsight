@@ -121,7 +121,7 @@ def get_training_trace_graph():
         >>> GET http://xxxx/v1/mindinsight/profile/training-trace/graph
     """
     summary_dir = request.args.get("dir")
-    profiler_dir = validate_and_normalize_profiler_path(summary_dir)
+    profiler_dir = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     graph_type = request.args.get("type", default='0')
     graph_type = to_int(graph_type, 'graph_type')
     device_id = request.args.get("device_id", default='0')
@@ -150,7 +150,7 @@ def get_target_time_info():
         >>> GET http://xxxx/v1/mindinsight/profile/training-trace/target-time-info
     """
     summary_dir = request.args.get("dir")
-    profiler_dir = validate_and_normalize_profiler_path(summary_dir)
+    profiler_dir = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     proc_name = request.args.get("type")
     validate_ui_proc(proc_name)
     device_id = request.args.get("device_id", default='0')
