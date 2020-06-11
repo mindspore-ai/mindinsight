@@ -45,6 +45,7 @@ def get_security_headers():
         'frame-src': ["'self'"] + domain_white_list,
         'frame-ancestors': ["'self'"] + domain_white_list,
         'default-src': ["'self'"],
+        'script-src': ["'self'", "'unsafe-eval'"]
     }
 
     headers = {
