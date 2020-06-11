@@ -122,7 +122,24 @@
     "open": "展开",
     "close": "折叠",
     "invalidData": "存在无效数据",
-    "restore": "还原"
+    "restore": "还原",
+    "currentThreshold": "当前阈值",
+    "deleteThreshold": "删除阈值",
+    "setThreshold": "设置阈值",
+    "currentTag": "当前标签",
+    "filterCriteria": "筛选条件",
+    "placeHolderThreshold": "请输入阈值",
+    "or": "或",
+    "and": "且",
+    "greaterThan": "大于",
+    "lessThan": "小于",
+    "applyAllSelectTag": "应用到当前所选标签",
+    "placeHolderNumber": "请输入数值",
+    "sameCompare": "不能有相同的比较运算符",
+    "unreasonable": "逻辑不合理",
+    "info": "提示",
+    "isDelete": "是否删除当前阈值",
+    "noData": "无"
   },
 
   "images": {
