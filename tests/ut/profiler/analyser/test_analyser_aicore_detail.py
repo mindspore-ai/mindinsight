@@ -20,6 +20,7 @@ from unittest import TestCase
 
 from mindinsight.profiler.analyser.analyser import AicoreDetailAnalyser
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
+from tests.ut.profiler import PROFILER_DIR
 
 
 def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
@@ -34,9 +35,8 @@ def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
     Returns:
         list[list], the AICORE operator detail information.
     """
-    profiling_dir = os.path.join(os.path.dirname(__file__), 'resource')
-    framework_path = os.path.join(profiling_dir, 'framework_raw_0.csv')
-    detail_path = os.path.join(profiling_dir, 'aicore_intermediate_0_detail.csv')
+    framework_path = os.path.join(PROFILER_DIR, 'framework_raw_1.csv')
+    detail_path = os.path.join(PROFILER_DIR, 'aicore_intermediate_1_detail.csv')
 
     with open(framework_path, 'r') as fm_file, open(detail_path, 'r') as detail_file:
         fm_csv_reader = csv.reader(fm_file)
@@ -66,9 +66,8 @@ class TestAicoreDetailAnalyser(TestCase):
     """Test the class of `AicoreDetailAnalyser`."""
     def setUp(self) -> None:
         """Initialization before test case execution."""
-        profiling_dir = os.path.join(os.path.dirname(__file__), 'resource')
         self._analyser = AnalyserFactory.instance().get_analyser(
-            'aicore_detail', profiling_dir, '0'
+            'aicore_detail', PROFILER_DIR, '1'
         )
 
     def test_query_success_1(self):

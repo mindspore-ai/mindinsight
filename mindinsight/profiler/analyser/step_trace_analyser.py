@@ -226,7 +226,9 @@ class StepTraceAnalyser(BaseAnalyser):
             time_type (str): The value type. `systime` keeps the original value.
                 `realtime` transforms the value in millisecond. Default: `realtime`.
         """
-
+        if proc_name is None:
+            log.error('`proc_name` is required for query.')
+            raise ProfilerParamValueErrorException('`proc_name` is required for query.')
         if step_id is None:
             rows_info = self._data[:-1]
         else:
@@ -241,7 +243,7 @@ class StepTraceAnalyser(BaseAnalyser):
         mode = filter_condition.get('mode', 'step')
         self._validate_str_param(mode, ['step', 'proc'], 'mode')
 
-        step_id = filter_condition.get('step_id', 0)
+        step_id = filter_condition.get('step_id')
         self._validate_step_id(step_id)
 
         proc_name = filter_condition.get('proc_name')
@@ -252,7 +254,7 @@ class StepTraceAnalyser(BaseAnalyser):
 
     def _validate_step_id(self, step_id):
         """Validate step_id."""
-        if isinstance(step_id, int) and 0 <= step_id <= self._size:
+        if step_id is None or isinstance(step_id, int) and 0 <= step_id <= self._size:
             return
         log.error("Invalid step_id in request. step_id should be in [0, %d].", self._size)
         raise StepNumNotSupportedException([0, self._size])

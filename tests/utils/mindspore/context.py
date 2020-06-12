@@ -19,3 +19,10 @@ def get_context(key):
     """Get key in context."""
     context = {"device_id": 1}
     return context.get(key)
+
+
+def set_context(**kwargs):
+    """Set context"""
+    context = {}
+    for key, value in kwargs.items():
+        context[key] = value

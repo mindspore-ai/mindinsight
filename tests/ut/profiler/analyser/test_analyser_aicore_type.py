@@ -19,6 +19,7 @@ from unittest import TestCase
 
 from mindinsight.profiler.analyser.analyser import AicoreTypeAnalyser
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
+from tests.ut.profiler import PROFILER_DIR
 
 
 def get_type_infos(indexes=None, sort_name=None, sort_type=True):
@@ -33,9 +34,8 @@ def get_type_infos(indexes=None, sort_name=None, sort_type=True):
     Returns:
         list[list], the AICORE operator type information.
     """
-    profiling_dir = os.path.join(os.path.dirname(__file__), 'resource')
     aicore_type_path = os.path.join(
-        profiling_dir, 'aicore_intermediate_0_type.csv'
+        PROFILER_DIR, 'aicore_intermediate_1_type.csv'
     )
 
     with open(aicore_type_path, 'r') as aicore_type_path:
@@ -64,9 +64,8 @@ class TestAicoreTypeAnalyser(TestCase):
     """Test the class of `AicoreTypeAnalyser`."""
     def setUp(self) -> None:
         """Initialization before test case execution."""
-        profiling_dir = os.path.join(os.path.dirname(__file__), 'resource')
         self._analyser = AnalyserFactory.instance().get_analyser(
-            'aicore_type', profiling_dir, '0'
+            'aicore_type', PROFILER_DIR, '1'
         )
 
     def test_query_success_1(self):

@@ -26,6 +26,7 @@ from mindinsight.profiler.common.exceptions.exceptions import \
     ProfilerPathErrorException, ProfilerDirNotFoundException, \
     ProfilerFileNotFoundException
 from mindinsight.profiler.parser.framework_parser import FrameworkParser
+from tests.ut.profiler import PROFILER_DIR, RAW_DATA_BASE
 
 
 def get_framework_result(file_path):
@@ -50,7 +51,7 @@ class TestFrameworkParser:
     """Test the class of `FrameworkParser`."""
     def setup_method(self):
         """Initialization before test case execution."""
-        raw_dir = os.path.join(os.path.dirname(__file__), 'resource')
+        raw_dir = RAW_DATA_BASE
         FrameworkParser._raw_data_dir = raw_dir
 
         self._output_path_1 = tempfile.mkdtemp(prefix='test_framework_parser_')
@@ -88,9 +89,8 @@ class TestFrameworkParser:
 
     def test_parse(self):
         """Test the parse function."""
-        expect_framework_file = os.path.join(
-            os.path.dirname(__file__), 'resource', 'framework_raw_0.csv'
-        )
+        expect_framework_file = os.path.join(PROFILER_DIR, 'framework_raw_0.csv')
+        expect_framework_file = os.path.realpath(expect_framework_file)
         expect_result = get_framework_result(expect_framework_file)
 
         self._parser_1.parse()
