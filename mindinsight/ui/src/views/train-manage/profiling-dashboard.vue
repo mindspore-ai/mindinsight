@@ -195,10 +195,18 @@ export default {
       },
     };
   },
-  mounted() {},
+  mounted() {
+    setTimeout(() => {
+      this.$bus.$on('collapse', this.resizeTrace);
+    }, 500);
+  },
   watch: {
     '$parent.curDashboardInfo': {
       handler(newValue, oldValue) {
+        if (newValue.curCardNum === '') {
+          this.pieChart.noData = true;
+          this.svg.noData = true;
+        }
         if (newValue.query.dir && newValue.query.id && newValue.query.path) {
           this.summaryPath = newValue.query.dir;
           this.trainingJobId = newValue.query.id;
@@ -226,7 +234,6 @@ export default {
       this.queryTrainingTrace();
       this.initPieChart();
       window.addEventListener('resize', this.resizeTrace, false);
-      this.$bus.$on('resize', this.resizeTrace);
     },
     viewDetail(path) {
       this.$router.push({
@@ -393,10 +400,13 @@ export default {
                 svg.insertBefore(dashedLine, svg.querySelector('g'));
                 row.forEach((i) => {
                   if (i.duration) {
-                    const tempDom = i.name
-                      ? this.createRect(i, index)
-                      : this.createArrow(i, index);
-                    svg.insertBefore(tempDom, svg.querySelector('g'));
+                    if (i.name) {
+                      const tempDom = this.createRect(i, index);
+                      svg.insertBefore(tempDom, svg.querySelector('g'));
+                    } else {
+                      const tempDom = this.createArrow(i, index);
+                      svg.appendChild(tempDom);
+                    }
                   }
                 });
               }
@@ -488,7 +498,13 @@ export default {
       const text = document.createElementNS(this.svg.namespaceURI, 'text');
       text.textContent = `${data.duration.toFixed(4)}ms`;
       const textWidth = this.getTextWidth(text.textContent);
-      text.setAttribute('x', Math.max(0, (x2 - x1) / 2 + x1 - textWidth / 2));
+      text.setAttribute(
+          'x',
+          Math.min(
+              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth,
+              Math.max(0, (x2 - x1) / 2 + x1 - textWidth / 2),
+          ),
+      );
       text.setAttribute('y', y - 6);
       text.setAttribute('font-size', 12);
       text.setAttribute('fill', '#6c7280');
@@ -555,7 +571,7 @@ export default {
   },
   destroyed() {
     window.removeEventListener('resize', this.resizeTrace, false);
-    this.$bus.$off('resize');
+    this.$bus.$off('collapse');
   },
 };
 </script>

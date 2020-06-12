@@ -84,8 +84,9 @@ limitations under the License.
            class="chart-wrap">
         <div class="title">{{ item.name }}</div>
         <div class="rate-wrap">
-          <div v-if="item.timeSummary.total_time !== undefined">
-            <span>{{item.timeLabel}}:</span>{{item.timeSummary.total_time}}ms</div>
+          <div v-if="item.timeSummary.total_time !== undefined && item.timeSummary[item.rate] !== undefined">
+            <span>{{item.timeLabel}}:</span>
+            {{(item.timeSummary.total_time*parseFloat(item.timeSummary[item.rate])/100).toFixed(4)}}ms</div>
           <div v-if="item.timeSummary[item.rate] !== undefined">
             <span>{{item.rateLabel}}:</span>{{item.timeSummary[item.rate]}}</div>
           <div v-if="item.timeSummary.total_steps !== undefined">
@@ -205,13 +206,18 @@ export default {
     },
   },
   computed: {},
-  mounted() {},
+  mounted() {
+    setTimeout(() => {
+      this.$bus.$on('collapse', () => {
+        this.resizeTrace();
+        this.resizeEchart();
+      });
+    }, 500);
+  },
   methods: {
     init() {
       window.addEventListener('resize', this.resizeTrace, false);
-      this.$bus.$on('resize', this.resizeTrace);
       window.addEventListener('resize', this.resizeEchart, false);
-      this.$bus.$on('resize', this.resizeEchart);
       if (this.charts.length) {
         this.charts.forEach((val) => {
           val.clear();
@@ -395,10 +401,13 @@ export default {
               svg.insertBefore(dashedLine, svg.querySelector('g'));
               row.forEach((i) => {
                 if (i.duration) {
-                  const tempDom = i.name
-                    ? this.createRect(i, index)
-                    : this.createArrow(i, index);
-                  svg.insertBefore(tempDom, svg.querySelector('g'));
+                  if (i.name) {
+                    const tempDom = this.createRect(i, index);
+                    svg.insertBefore(tempDom, svg.querySelector('g'));
+                  } else {
+                    const tempDom = this.createArrow(i, index);
+                    svg.appendChild(tempDom);
+                  }
                 }
               });
             }
@@ -489,7 +498,13 @@ export default {
       const text = document.createElementNS(this.svg.namespaceURI, 'text');
       text.textContent = `${data.duration.toFixed(4)}ms`;
       const textWidth = this.getTextWidth(text.textContent);
-      text.setAttribute('x', Math.max(0, (x2 - x1) / 2 + x1 - textWidth / 2));
+      text.setAttribute(
+          'x',
+          Math.min(
+              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth,
+              Math.max(0, (x2 - x1) / 2 + x1 - textWidth / 2),
+          ),
+      );
       text.setAttribute('y', y - 6);
       text.setAttribute('font-size', 12);
       text.setAttribute('fill', '#6c7280');
@@ -559,7 +574,7 @@ export default {
   destroyed() {
     window.removeEventListener('resize', this.resizeTrace, false);
     window.removeEventListener('resize', this.resizeEchart, false);
-    this.$bus.$off('resize');
+    this.$bus.$off('collapse');
   },
 };
 </script>
