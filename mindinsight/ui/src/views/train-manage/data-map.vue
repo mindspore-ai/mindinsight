@@ -168,11 +168,11 @@ export default {
     if (!this.$route.query || !this.$route.query.train_id) {
       this.trainJobID = '';
       this.$message.error(this.$t('trainingDashboard.invalidId'));
-      document.title = this.$t('trainingDashboard.dataMap') + '-MindInsight';
+      document.title = `${this.$t('trainingDashboard.dataMap')}-MindInsight`;
       return;
     }
     this.trainJobID = this.$route.query.train_id;
-    document.title = decodeURIComponent(this.trainJobID) + '-' + this.$t('trainingDashboard.dataMap') + '-MindInsight';
+    document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t('trainingDashboard.dataMap')}-MindInsight`;
     this.$nextTick(() => {
       this.queryGraphData();
     });

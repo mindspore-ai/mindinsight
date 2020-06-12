@@ -146,10 +146,10 @@ limitations under the License.
         </div>
       </div>
       <div class="cl-dashboard-con-up no-data-hover">
-        <div class="comming-soon-content">
-          <div class="comming-soon-container">
-            <img :src="require('@/assets/images/comming-soon.png')" />
-            <p class='comming-soon-text'>
+        <div class="coming-soon-content">
+          <div class="coming-soon-container">
+            <img :src="require('@/assets/images/coming-soon.png')" />
+            <p class='coming-soon-text'>
               {{$t("public.stayTuned")}}
             </p>
           </div>
@@ -1888,14 +1888,14 @@ export default {
     }
   }
 
-  .comming-soon-content {
+  .coming-soon-content {
     width: 100%;
     height: 100%;
     text-align: center;
-    .comming-soon-container {
+    .coming-soon-container {
       position: relative;
       top: calc(50% - 88px);
-      .comming-soon-text {
+      .coming-soon-text {
         color: #000000;
         font-size: 16px;
       }
