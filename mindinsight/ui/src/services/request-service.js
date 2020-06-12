@@ -171,6 +171,30 @@ export default {
       url: '/v1/mindinsight/profile/ops/search',
       params: params.params,
       data: params.body,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  // query training trace
+  queryTrainingTrace(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/profile/training-trace/graph',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  targetTimeInfo(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/profile/training-trace/target-time-info',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
     });
   },
 };

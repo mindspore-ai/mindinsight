@@ -207,7 +207,7 @@
     "finish": "完成",
     "dataTooLarge": "节点和边的数量过多，导致打开失败"
   },
-  "profiler": {
+  "operator": {
     "titleText": "性能分析",
     "currentCard": "当前卡片",
     "pie": "饼图",
@@ -219,6 +219,54 @@
     "card": "卡",
     "searchByType": "请输入算子类型搜索",
     "searchByName": "请输入算子名称搜索"
+  },
+  "profiling": {
+    "profilingDashboard": "性能看板",
+    "selectStep": "请选择step",
+    "showAverage": "展示平均值",
+    "iterationGapTime": "迭代间隙时间",
+    "time": "时间",
+    "inputNum": "请输入卡编号",
+    "path": "路径",
+    "number": "卡编号",
+    "distribution": "分布图",
+    "queueEmptyRatio": "队列空比例",
+    "queueFullRatio": "队列满比例",
+    "dataQueueDis": "数据队列分布图",
+    "operatorTimeConAnalysis": "算子耗时分析",
+    "timeConStastic": "耗时统计",
+    "avgCost": "平均总耗时",
+    "getCost": "平均取数据耗时",
+    "pushCost": "平均push耗时",
+    "lterationGap": "迭代间隙",
+    "lterationTail": "迭代拖尾",
+    "propertion": "占比",
+    "title": "迭代间隙流程分析",
+    "dataDeal": "数据处理",
+    "dataQueue": "数据队列",
+    "errorTip": "个step出现异常",
+    "pipelineError": "Pipeline异常step",
+    "deviceQueueError": "device_queue_op异常step",
+    "getNextError": "get_next异常step",
+    "smartHelper":"小助手",
+    "suggestions":"优化建议",
+    "stepSelect":"Step选择",
+    "curCard":"当前卡片",
+    "stepTrace":"迭代轨迹",
+    "mindData":"数据准备",
+    "timeLine":"时间线",
+    "rankOfOperator":"算子耗时统计排名",
+    "stepTraceDetail":"迭代轨迹详情",
+    "viewDetail":"查看详情",
+    "stepNum":"耗时step数",
+    "iterGapTimeLabel":"迭代间隙时长",
+    "iterGapRateLabel":"迭代间隙占比",
+    "fpBpTimeLabel":"FP+BP时长",
+    "fpBpRateLabel":"FP+BP占比",
+    "tailTimeLabel":"迭代拖尾时长",
+    "tailRateLabel":"迭代拖尾占比",
+    "operatorDetail": "算子详情",
+    "times": "次"  
   },
   "components": {
     "summaryTitle": "训练选择",
@@ -233,7 +281,6 @@
     "50540001": "参数类型错误，请检查请求参数类型是否都符合要求",
     "50540002": "参数值错误，请检查请求参数值是否都符合要求",
     "50540003": "参数缺失必需的参数，请检查请求参数是否必填项都满足",
-
     "50545001": "API 路由资源不存在",
     "50545002": "请求API的HTTP方法错误",
     "50545005": "训练作业不存在",
@@ -250,6 +297,7 @@
     "50542215": "查询参数错误",
     "50542216": "Summary日志文件未找到",
     "50542217": "Summary日志路径错误",
-    "50542218": "筛选参数错误"
+    "50542218": "筛选参数错误",
+    "50546102": "step_id取值错误"
   }
 }

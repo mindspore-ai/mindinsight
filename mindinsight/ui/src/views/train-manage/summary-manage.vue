@@ -108,7 +108,7 @@ export default {
   destroyed() {},
   activated() {},
   mounted() {
-    document.title = this.$t('summaryManage.summaryList') + '-MindInsight';
+    document.title = `${this.$t('summaryManage.summaryList')}-MindInsight`;
     this.$nextTick(() => {
       this.init();
     });
@@ -181,13 +181,17 @@ export default {
     goToProfiler(row) {
       const profilerDir = encodeURIComponent(row.profiler_dir);
       const trainId = encodeURIComponent(row.train_id);
-      this.$router.push({
-        path: '/profiler',
+      const path = encodeURIComponent(row.relative_path);
+
+      const routeUrl = this.$router.resolve({
+        path: '/profiling',
         query: {
           dir: profilerDir,
           id: trainId,
+          path: path,
         },
       });
+      window.open(routeUrl.href, '_blank');
     },
   },
   components: {},

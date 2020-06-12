@@ -67,11 +67,27 @@ export default new Router({
       component: () => import('./views/train-manage/data-traceback.vue'),
     },
     {
-      path: '/profiler',
-      component: () => import('./views/train-manage/profiler.vue'),
-    }, {
       path: '/compare-plate',
       component: () => import('./views/train-manage/compare-plate.vue'),
+    },
+    {
+      path: '/profiling',
+      component: () => import('./views/train-manage/profiling.vue'),
+      redirect: '/profiling/profiling-dashboard',
+      children: [
+        {
+          path: 'profiling-dashboard',
+          component: () => import('./views/train-manage/profiling-dashboard.vue'),
+        },
+        {
+          path: 'step-trace',
+          component: () => import('./views/train-manage/step-trace.vue'),
+        },
+        {
+          path: 'operator',
+          component: () => import('./views/train-manage/operator.vue'),
+        },
+      ],
     },
   ],
 });

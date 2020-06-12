@@ -157,13 +157,11 @@ export default {
     getActive() {
       const str = this.$route.path.split('/');
       if (str.length > 2) {
-        if (str[1] === 'train-manage') {
+        if (str[1] === 'train-manage' || str[1] === 'profiling') {
           return '/summary-manage';
         } else {
           return '/' + str[1];
         }
-      } else if (this.$route.path === '/profiler') {
-        return '/summary-manage';
       } else {
         return this.$route.path;
       }
