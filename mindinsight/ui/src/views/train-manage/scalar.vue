@@ -89,9 +89,21 @@ limitations under the License.
               <div class="char-item-content"
                    :id="sampleItem.domId"></div>
             </div>
+
+            <div class="chartThreshold">
+              <div class="chartThresholdLeft">{{$t("scalar.currentThreshold")}}:{{sampleItem.pieceStr}}</div>
+              <div class="chartThresholdRight">
+                <span @click="setThreshold(sampleItem)"
+                      v-if="!thresholdLocal
+                || !thresholdLocal[decodeTrainingJobId]
+                || !thresholdLocal[decodeTrainingJobId][sampleItem.tagName]">
+                  {{$t("scalar.setThreshold")}}</span>
+                <span v-else
+                      @click="delThreshold(sampleItem)">{{$t("scalar.deleteThreshold")}}</span>
+              </div>
+            </div>
             <!-- tag name -->
-            <div class="tag-name"
-                 :title="sampleItem.tagName">{{sampleItem.tagName}}
+            <div class="tag-name">{{sampleItem.tagName}}
               <el-tooltip v-if="sampleItem.invalidData"
                           class="item"
                           effect="dark"
@@ -123,6 +135,91 @@ limitations under the License.
 
     </div>
 
+    <el-dialog :title="$t('scalar.setThreshold')"
+               :visible.sync="thresholdDialogVisible"
+               :close-on-click-modal="false"
+               @close="thresholdCancel"
+               width="1000px">
+      <div class="thresholdAll">
+        <div class="thresholdItem fs16">{{$t('scalar.currentTag')}}：</div>
+        <div class="thresholdItemWidth">
+          <el-tooltip class="item"
+                      effect="dark"
+                      :content="currentTagName"
+                      placement="top">
+            <span>{{currentTagName}}</span>
+          </el-tooltip>
+        </div>
+      </div>
+
+      <div class="thresholdAll">
+        <div class="thresholdItem fs16">{{$t('scalar.filterCriteria')}}：</div>
+        <div class="thresholdItem">
+          <el-select v-model="thresholdValue[0].filterCondition"
+                     class="smallSelect">
+            <el-option v-for="filterItem in filterOptions"
+                       :key="filterItem.value"
+                       :label="filterItem.label"
+                       :value="filterItem.value">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="thresholdItem">
+          <el-input v-model="thresholdValue[0].value"
+                    :placeholder="$t('scalar.placeHolderThreshold')"
+                    class="smallInput"
+                    clearable></el-input>
+        </div>
+        <div class="thresholdItem">
+          <el-select v-model="thresholdRelational"
+                     :placeholder="$t('public.select')"
+                     @change="relationalChange"
+                     clearable
+                     class="smallSelectTwo">
+            <el-option :label="$t('scalar.or')"
+                       :value="$t('scalar.or')">
+            </el-option>
+            <el-option :label="$t('scalar.and')"
+                       :value="$t('scalar.and')">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="thresholdItem"
+             v-show="thresholdRelational">
+          <el-select v-model="thresholdValue[1].filterCondition"
+                     class="smallSelect">
+            <el-option v-for="filterItem in filterOptions"
+                       :key="filterItem.value"
+                       :label="filterItem.label"
+                       :value="filterItem.value">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="thresholdItem"
+             v-show="thresholdRelational">
+          <el-input v-model="thresholdValue[1].value"
+                    :placeholder="$t('scalar.placeHolderThreshold')"
+                    class="smallInput"
+                    clearable></el-input>
+        </div>
+        <div class="thresholdItem thresholdError">{{thresholdErrorMsg}}</div>
+      </div>
+
+      <div class="thresholdAll">
+        <div class="thresholdItem fs16">{{$t('scalar.applyAllSelectTag')}}</div>
+        <div class="thresholdItem">
+          <el-switch v-model="thresholdSwitch"></el-switch>
+        </div>
+      </div>
+
+      <span slot="footer"
+            class="dialog-footer">
+        <el-button @click="thresholdCancel">{{$t('public.cancel')}}</el-button>
+        <el-button type="primary"
+                   @click="thresholdCommit">{{$t('public.sure')}}</el-button>
+      </span>
+    </el-dialog>
+
   </div>
 </template>
 <script>
@@ -142,7 +239,7 @@ export default {
       autoUpdateTimer: null, // Automatic refresh timer
       charResizeTimer: null, // Delay after the window size is changed
       multiSelectedTagNames: {}, // selected tag name
-      curFilterSamples: [], // list of chart that meet the current filter criteria
+      curFilterSamples: [], // List of chart that meet the current filter criteria
       tagOperateList: [], // Array selected by tag
       tagPropsList: [], // tag props
       propsList: [], // dataList props
@@ -164,6 +261,29 @@ export default {
       scalarCompare: this.$t('scalar')['comparison'],
       abort: false, // charts that have not been drawn.
       trainingJobId: this.$route.query.train_id, // ID of the current training job
+      thresholdDialogVisible: false,
+      currentTagName: '',
+      currentSample: {},
+      thresholdErrorMsg: '',
+      thresholdRelational: '',
+      thresholdValue: [
+        {filterCondition: this.$t('scalar.lessThan'), value: ''},
+        {filterCondition: this.$t('scalar.lessThan'), value: ''},
+      ],
+      filterOptions: [
+        {
+          value: this.$t('scalar.lessThan'),
+          label: this.$t('scalar.lessThan'),
+        },
+        {
+          value: this.$t('scalar.greaterThan'),
+          label: this.$t('scalar.greaterThan'),
+        },
+      ],
+      thresholdLocal: null,
+      thresholdSwitch: false,
+      thresholdColor: '#f00',
+      decodeTrainingJobId: '',
     };
   },
   computed: {
@@ -252,11 +372,12 @@ export default {
   mounted() {
     if (!this.$route.query || !this.$route.query.train_id) {
       this.$message.error(this.$t('trainingDashboard.invalidId'));
-      document.title = this.$t('scalar.titleText') + '-MindInsight';
+      document.title = `${this.$t('scalar.titleText')}-MindInsight`;
       return;
     }
-    document.title = decodeURIComponent(this.$route.query.train_id) +'-' + this.$t('scalar.titleText') +
-      '-MindInsight';
+    document.title = `${decodeURIComponent(
+        this.$route.query.train_id,
+    )}-${this.$t('scalar.titleText')}-MindInsight`;
     // Adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
 
@@ -264,6 +385,18 @@ export default {
     this.getScalarsList();
 
     this.firstNum = 1;
+
+    this.decodeTrainingJobId = decodeURIComponent(this.trainingJobId);
+
+    if (localStorage.getItem('thresholdCache')) {
+      try {
+        this.thresholdLocal = JSON.parse(
+            localStorage.getItem('thresholdCache'),
+        );
+      } catch (e) {
+        localStorage.removeItem('thresholdCache');
+      }
+    }
 
     // auto refresh
     if (this.isTimeReload) {
@@ -306,7 +439,6 @@ export default {
                   show: true,
                 });
                 const sampleIndex = dataList.length;
-
                 // Adding Chart Data
                 dataList.push({
                   tagName: tagObj,
@@ -346,7 +478,6 @@ export default {
 
             this.$nextTick(() => {
               this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-
               // Obtains data on the current page
               this.updateTagInPage();
               this.resizeCallback();
@@ -380,7 +511,6 @@ export default {
           curPageArr.push(sampleItem);
         }
       }
-
       this.curPageArr = curPageArr;
       this.updateCurPageSamples();
     },
@@ -388,6 +518,7 @@ export default {
     /**
      * Load the data on the current page
      */
+
     updateCurPageSamples() {
       this.curPageArr.forEach((sampleObject) => {
         const sampleIndex = sampleObject.sampleIndex;
@@ -506,6 +637,8 @@ export default {
       }
       let returnFlag = false;
       const seriesData = [];
+      const piecesData = [];
+      const markLineData = [];
       const oriData = sampleObject.charData.oriData;
       const runName = sampleObject.runNames;
       const curBackName = runName + this.backendString;
@@ -545,6 +678,73 @@ export default {
         }
       } else {
         returnFlag = true;
+      }
+
+      if (
+        this.thresholdLocal &&
+        this.thresholdLocal[this.decodeTrainingJobId] &&
+        this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
+      ) {
+        const tempStorgeArr = JSON.parse(
+            JSON.stringify(
+                this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName],
+            ),
+        );
+
+        let pieceStr = '';
+
+        if (tempStorgeArr.length === 1) {
+          if (tempStorgeArr[0].gt && tempStorgeArr[0].lt) {
+            pieceStr = `(${tempStorgeArr[0].gt},${tempStorgeArr[0].lt})`;
+          }
+
+          if (tempStorgeArr[0].gt && !tempStorgeArr[0].lt) {
+            pieceStr = `(${tempStorgeArr[0].gt},Infinity)`;
+          }
+          if (tempStorgeArr[0].lt && !tempStorgeArr[0].gt) {
+            pieceStr = `(-Infinity,${tempStorgeArr[0].lt})`;
+          }
+        }
+        if (tempStorgeArr.length === 2) {
+          if (tempStorgeArr[0].lt && tempStorgeArr[1].gt) {
+            pieceStr = `(-Infinity,${tempStorgeArr[0].lt}),(${tempStorgeArr[1].gt},Infinity)`;
+          }
+          if (tempStorgeArr[0].gt && tempStorgeArr[1].lt) {
+            pieceStr = `(-Infinity,${tempStorgeArr[1].lt}),(${tempStorgeArr[0].gt},Infinity)`;
+          }
+        }
+        sampleObject.pieceStr = pieceStr;
+
+        if (
+          (tempStorgeArr[0].lt && !tempStorgeArr[0].gt) ||
+          (!tempStorgeArr[0].lt && tempStorgeArr[0].gt)
+        ) {
+          const itemValue = tempStorgeArr[0]['lt'] || tempStorgeArr[0]['gt'];
+          tempStorgeArr.push({
+            value: tempStorgeArr[0]['lt'] ? itemValue + 1 : itemValue - 1,
+          });
+        }
+
+        tempStorgeArr.forEach((item) => {
+          if (item.lt) {
+            const markLineDataItem = {};
+            markLineDataItem.yAxis = item.lt;
+            markLineData.push(markLineDataItem);
+          }
+          if (item.gt) {
+            const markLineDataItem = {};
+            markLineDataItem.yAxis = item.gt;
+            markLineData.push(markLineDataItem);
+          }
+          item.color = this.thresholdColor;
+          piecesData.push(item);
+        });
+
+        dataObj.lineStyle.color = null;
+        dataObj.markLine = {
+          silent: true,
+          data: markLineData,
+        };
       }
 
       seriesData.push(dataObj, dataObjBackend);
@@ -653,7 +853,7 @@ export default {
         },
         grid: {
           left: 80,
-          right: sampleObject.fullScreen ? 80 : 10,
+          right: sampleObject.fullScreen ? 80 : 50,
         },
         animation: true,
         dataZoom: [
@@ -761,7 +961,11 @@ export default {
                   });
                   strBody +=
                     `<tr><td style="border-radius:50%;width:15px;height:15px;vertical-align: middle;` +
-                    `margin-right: 5px;background-color:${sampleObject.colors};` +
+                    `margin-right: 5px;background-color:${
+                      parma.color === that.thresholdColor
+                        ? that.thresholdColor
+                        : sampleObject.colors
+                    };` +
                     `display:inline-block;"></td><td>${parma.seriesName}</td>` +
                     `<td>${that.formateYaxisValue(parma.value[1])}</td>` +
                     `<td>${that.formateYaxisValue(
@@ -837,8 +1041,21 @@ export default {
             restore: {},
           },
         },
+        visualMap: {
+          show: false,
+          pieces: piecesData,
+          outOfRange: {
+            color: sampleObject.colors,
+          },
+        },
         series: seriesData,
       };
+
+      if (tempOption.visualMap.pieces.length > 0) {
+        tempOption.series.forEach((item) => {
+          item.lineStyle.color = null;
+        });
+      }
       return tempOption;
     },
 
@@ -898,7 +1115,7 @@ export default {
       } else {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#6D7278';
-        sampleObject.charData.charOption.grid.right = 10;
+        sampleObject.charData.charOption.grid.right = 50;
       }
       sampleObject.updateFlag = true;
 
@@ -924,9 +1141,7 @@ export default {
           curFilterSamples.push(sampleItem);
         }
       });
-
       this.curFilterSamples = curFilterSamples;
-
       // Obtains data on the current page
       this.getCurPageDataArr(noPageDataNumChange);
     },
@@ -1007,7 +1222,6 @@ export default {
 
     currentPageChange(pageIndex) {
       this.pageIndex = pageIndex - 1;
-
       // Load the data on the current page
       this.getCurPageDataArr();
     },
@@ -1123,7 +1337,6 @@ export default {
           this.originDataArr.splice(i, 1);
         }
       }
-
       return dataRemoveFlag;
     },
 
@@ -1169,7 +1382,6 @@ export default {
           this.DomIdIndex++;
         }
       });
-
       return dataAddFlag;
     },
 
@@ -1198,7 +1410,6 @@ export default {
               return;
             }
             const data = res.data.train_jobs[0];
-
             // Delete the data that does not exist
             const tagRemoveFlag = this.removeNonexistentData(data);
 
@@ -1208,13 +1419,11 @@ export default {
             this.$nextTick(() => {
               this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
               this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
-
               this.resizeCallback();
             });
 
             const tempTagList = [];
             const propsList = [];
-
             // Initial chart data
             data.tags.forEach((tagObj) => {
             // Check whether the tag with the same name exists
@@ -1501,6 +1710,394 @@ export default {
         },
       });
     },
+
+    /**
+     * set threshold
+     * @param {Object} sampleItem sampleItem
+     */
+
+    setThreshold(sampleItem) {
+      this.currentTagName = sampleItem.tagName;
+      this.currentSample = sampleItem;
+      this.thresholdDialogVisible = true;
+    },
+
+    delThreshold(sampleItem) {
+      this.$confirm(this.$t('scalar.isDelete'), this.$t('scalar.info'), {
+        confirmButtonText: this.$t('public.sure'),
+        cancelButtonText: this.$t('public.cancel'),
+        type: 'warning',
+      })
+          .then(() => {
+            delete this.thresholdLocal[this.decodeTrainingJobId][
+                sampleItem.tagName
+            ];
+
+            sampleItem.pieceStr = '';
+            const tempCharOption = sampleItem.charData.charOption;
+            tempCharOption.visualMap.pieces = [];
+            tempCharOption.series[0].lineStyle.color = sampleItem.colors;
+            tempCharOption.series[0].markLine = [];
+            if (this.isTimeReload) {
+              this.autoUpdateSamples();
+            }
+            sampleItem.charObj.setOption(tempCharOption, true);
+            localStorage.setItem(
+                'thresholdCache',
+                JSON.stringify(this.thresholdLocal),
+            );
+            this.$forceUpdate();
+          })
+          .catch(() => {});
+    },
+
+    thresholdValidate() {
+      const isValidate = true;
+
+      const valueFirst = this.thresholdValue[0].value;
+      const valueSec = this.thresholdValue[1].value;
+      const filterConditionFirst = this.thresholdValue[0].filterCondition;
+      const filterConditionSec = this.thresholdValue[1].filterCondition;
+
+      if (!this.thresholdRelational) {
+        if (!valueFirst) {
+          this.thresholdErrorMsg = this.$t('scalar.placeHolderThreshold');
+          this.isValidate = false;
+          return;
+        }
+
+        if (isNaN(valueFirst)) {
+          this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
+          this.isValidate = false;
+          return;
+        }
+      } else {
+        if (filterConditionFirst === filterConditionSec) {
+          this.thresholdErrorMsg = this.$t('scalar.sameCompare');
+          this.isValidate = false;
+          return;
+        }
+        if (!valueFirst || !valueSec) {
+          this.thresholdErrorMsg = this.$t('scalar.placeHolderThreshold');
+          this.isValidate = false;
+          return;
+        }
+        if (valueFirst === valueSec) {
+          this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+          this.isValidate = false;
+          return;
+        }
+
+        if (isNaN(valueFirst) || isNaN(valueSec)) {
+          this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
+          this.isValidate = false;
+          return;
+        }
+
+        if (this.thresholdRelational === this.$t('scalar.or')) {
+          if (
+            filterConditionFirst === this.$t('scalar.greaterThan') &&
+            Number(valueFirst) < Number(valueSec)
+          ) {
+            this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+            this.isValidate = false;
+            return;
+          }
+          if (
+            filterConditionFirst === this.$t('scalar.lessThan') &&
+            Number(valueFirst) > Number(valueSec)
+          ) {
+            this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+            this.isValidate = false;
+            return;
+          }
+        }
+
+        if (this.thresholdRelational === this.$t('scalar.and')) {
+          if (
+            filterConditionFirst === this.$t('scalar.greaterThan') &&
+            Number(valueFirst) > Number(valueSec)
+          ) {
+            this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+            this.isValidate = false;
+            return;
+          }
+          if (
+            filterConditionFirst === this.$t('scalar.lessThan') &&
+            Number(valueFirst) < Number(valueSec)
+          ) {
+            this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+            this.isValidate = false;
+            return;
+          }
+        }
+      }
+      return isValidate;
+    },
+
+    /**
+     * threshold commit
+     */
+
+    thresholdCommit() {
+      const isValidate = this.thresholdValidate();
+      if (isValidate) {
+        const chartPieces = [];
+        if (this.thresholdValue[0].value && this.thresholdValue[1].value) {
+          if (this.thresholdRelational === this.$t('scalar.or')) {
+            this.thresholdValue.forEach((item) => {
+              const chartPiecesData = {};
+              if (item.filterCondition === this.$t('scalar.greaterThan')) {
+                chartPiecesData.gt = Number(item.value);
+                chartPieces.push(chartPiecesData);
+              } else {
+                chartPiecesData.lt = Number(item.value);
+                chartPieces.push(chartPiecesData);
+              }
+            });
+          } else {
+            const tempArr = [];
+            const chartPiecesData = {};
+            this.thresholdValue.forEach((item) => {
+              tempArr.push(item.value);
+            });
+
+            if (tempArr[0] > tempArr[1]) {
+              chartPiecesData.gt = Number(tempArr[1]);
+              chartPiecesData.lt = Number(tempArr[0]);
+              chartPieces.push(chartPiecesData);
+            } else {
+              chartPiecesData.gt = Number(tempArr[0]);
+              chartPiecesData.lt = Number(tempArr[1]);
+              chartPieces.push(chartPiecesData);
+            }
+          }
+        } else {
+          this.thresholdValue.forEach((item) => {
+            const chartPiecesData = {};
+            if (!item.value) {
+              return;
+            }
+            if (item.filterCondition === this.$t('scalar.greaterThan')) {
+              chartPiecesData.gt = Number(item.value);
+              chartPieces.push(chartPiecesData);
+            }
+            if (item.filterCondition === this.$t('scalar.lessThan')) {
+              chartPiecesData.lt = Number(item.value);
+              chartPieces.push(chartPiecesData);
+            }
+          });
+        }
+
+        if (this.thresholdSwitch) {
+          this.originDataArr.forEach((sampleObject) => {
+            if (this.multiSelectedTagNames[sampleObject.tagName]) {
+              if (!this.thresholdLocal) {
+                this.thresholdLocal = {};
+                this.thresholdLocal[this.decodeTrainingJobId] = {};
+                this.thresholdLocal[this.decodeTrainingJobId][
+                    sampleObject.tagName
+                ] = chartPieces;
+              } else {
+                if (!this.thresholdLocal[this.decodeTrainingJobId]) {
+                  this.thresholdLocal[this.decodeTrainingJobId] = {};
+                  this.thresholdLocal[this.decodeTrainingJobId][
+                      sampleObject.tagName
+                  ] = chartPieces;
+                } else {
+                  this.thresholdLocal[this.decodeTrainingJobId][
+                      sampleObject.tagName
+                  ] = chartPieces;
+                }
+              }
+              localStorage.setItem(
+                  'thresholdCache',
+                  JSON.stringify(this.thresholdLocal),
+              );
+
+              let pieceStr = '';
+              if (chartPieces.length === 1) {
+                if (chartPieces[0].gt && chartPieces[0].lt) {
+                  pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
+                }
+                if (chartPieces[0].gt && !chartPieces[0].lt) {
+                  pieceStr = `(${chartPieces[0].gt},Infinity)`;
+                }
+                if (chartPieces[0].lt && !chartPieces[0].gt) {
+                  pieceStr = `(-Infinity,${chartPieces[0].lt})`;
+                }
+              }
+              if (chartPieces.length === 2) {
+                if (chartPieces[0].lt && chartPieces[1].gt) {
+                  pieceStr = `(-Infinity,${chartPieces[0].lt}),(${chartPieces[1].gt},Infinity)`;
+                }
+
+                if (chartPieces[0].gt && chartPieces[1].lt) {
+                  pieceStr = `(-Infinity,${chartPieces[1].lt}),(${chartPieces[0].gt},Infinity)`;
+                }
+              }
+
+              sampleObject.pieceStr = pieceStr;
+
+              const tempCharOption = sampleObject.charData.charOption;
+
+              const chartPiecesTemp = JSON.parse(JSON.stringify(chartPieces));
+
+              if (chartPiecesTemp.length === 1) {
+                const itemValue = chartPieces[0]['lt'] || chartPieces[0]['gt'];
+                chartPiecesTemp.push({
+                  value: chartPieces[0]['lt'] ? itemValue + 1 : itemValue - 1,
+                });
+              }
+
+              chartPiecesTemp.forEach((item) => {
+                item.color = this.thresholdColor;
+              });
+              tempCharOption.visualMap.pieces = chartPiecesTemp;
+
+              tempCharOption.visualMap.outOfRange = {
+                color: sampleObject.colors,
+              };
+
+              const markLineData = [];
+
+              chartPieces.forEach((item) => {
+                if (item.lt) {
+                  const markLineDataItem = {};
+                  markLineDataItem.yAxis = item.lt;
+                  markLineData.push(markLineDataItem);
+                }
+                if (item.gt) {
+                  const markLineDataItem = {};
+                  markLineDataItem.yAxis = item.gt;
+                  markLineData.push(markLineDataItem);
+                }
+              });
+
+              tempCharOption.series[0].lineStyle.color = null;
+              tempCharOption.series[0].markLine = {
+                silent: true,
+                data: markLineData,
+              };
+              sampleObject.charObj.setOption(tempCharOption, true);
+            }
+          });
+          this.thresholdDialogVisible = false;
+        } else {
+          if (!this.thresholdLocal) {
+            this.thresholdLocal = {};
+            this.thresholdLocal[this.decodeTrainingJobId] = {};
+            this.thresholdLocal[this.decodeTrainingJobId][
+                this.currentTagName
+            ] = chartPieces;
+          } else {
+            if (!this.thresholdLocal[this.decodeTrainingJobId]) {
+              this.thresholdLocal[this.decodeTrainingJobId] = {};
+              this.thresholdLocal[this.decodeTrainingJobId][
+                  this.currentTagName
+              ] = chartPieces;
+            } else {
+              this.thresholdLocal[this.decodeTrainingJobId][
+                  this.currentTagName
+              ] = chartPieces;
+            }
+          }
+
+          localStorage.setItem(
+              'thresholdCache',
+              JSON.stringify(this.thresholdLocal),
+          );
+
+          let pieceStr = '';
+          if (chartPieces.length === 1) {
+            if (chartPieces[0].gt && chartPieces[0].lt) {
+              pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
+            }
+            if (chartPieces[0].gt && !chartPieces[0].lt) {
+              pieceStr = `(${chartPieces[0].gt},Infinity)`;
+            }
+            if (chartPieces[0].lt && !chartPieces[0].gt) {
+              pieceStr = `(-Infinity,${chartPieces[0].lt})`;
+            }
+          }
+          if (chartPieces.length === 2) {
+            if (chartPieces[0].lt && chartPieces[1].gt) {
+              pieceStr = `(-Infinity,${chartPieces[0].lt}),(${chartPieces[1].gt},Infinity)`;
+            }
+
+            if (chartPieces[0].gt && chartPieces[1].lt) {
+              pieceStr = `(-Infinity,${chartPieces[1].lt}),(${chartPieces[0].gt},Infinity)`;
+            }
+          }
+
+          this.originDataArr.forEach((sampleItem) => {
+            if (sampleItem.tagName === this.currentTagName) {
+              sampleItem.pieceStr = pieceStr;
+            }
+          });
+
+          const tempCharOption = this.currentSample.charData.charOption;
+          if (chartPieces.length === 1) {
+            const itemValue = chartPieces[0]['lt'] || chartPieces[0]['gt'];
+            chartPieces.push({
+              value: chartPieces[0]['lt'] ? itemValue + 1 : itemValue - 1,
+            });
+          }
+          chartPieces.forEach((item) => {
+            item.color = this.thresholdColor;
+          });
+          tempCharOption.visualMap.pieces = chartPieces;
+          tempCharOption.visualMap.outOfRange = {
+            color: this.currentSample.colors,
+          };
+          const markLineData = [];
+          chartPieces.forEach((item) => {
+            if (item.lt) {
+              const markLineDataItem = {};
+              markLineDataItem.yAxis = item.lt;
+              markLineData.push(markLineDataItem);
+            }
+            if (item.gt) {
+              const markLineDataItem = {};
+              markLineDataItem.yAxis = item.gt;
+              markLineData.push(markLineDataItem);
+            }
+          });
+          tempCharOption.series[0].lineStyle.color = null;
+          tempCharOption.series[0].markLine = {
+            silent: true,
+            data: markLineData,
+          };
+          this.currentSample.charObj.setOption(tempCharOption, true);
+          this.thresholdDialogVisible = false;
+        }
+      }
+    },
+
+    /**
+     * relational change
+     */
+
+    relationalChange(val) {
+      if (!val) {
+        this.thresholdValue[1].value = '';
+      }
+    },
+
+    /**
+     * threshold cancel
+     */
+
+    thresholdCancel() {
+      this.thresholdValue[0].value = '';
+      this.thresholdValue[1].value = '';
+      this.thresholdErrorMsg = '';
+      this.currentTagName = '';
+      this.currentSample = {};
+      this.thresholdSwitch = false;
+      this.thresholdRelational = '';
+      this.thresholdDialogVisible = false;
+    },
   },
   components: {
     ScalarButton,
@@ -1513,9 +2110,28 @@ export default {
 .cl-scalar-manage {
   height: 100%;
 
+  .el-dialog__title {
+    line-height: 24px;
+    font-size: 18px;
+    color: #303133;
+    font-weight: bold;
+  }
+
   .w60 {
     width: 60px;
     margin-left: 20px;
+  }
+
+  .smallSelect {
+    width: 80px;
+  }
+
+  .smallSelectTwo {
+    width: 100px;
+  }
+
+  .smallInput {
+    width: 120px;
   }
 
   .scalar-btn {
@@ -1701,6 +2317,7 @@ export default {
       width: 100%;
       flex-wrap: wrap;
       min-height: 400px;
+      padding-left: 20px;
 
       .sample-content {
         width: 33.3%;
@@ -1708,7 +2325,8 @@ export default {
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
-        background-color: #fff;
+        padding-right: 20px;
+        margin-top: 20px;
       }
 
       .char-full-screen {
@@ -1719,8 +2337,34 @@ export default {
 
     .chars-container {
       flex: 1;
-      padding: 0 15px 0 15px;
       position: relative;
+      background-color: #edf0f5;
+      padding: 5px;
+    }
+
+    .chartThreshold {
+      height: 40px;
+      background-color: #edf0f5;
+      border-top: 1px solid #fff;
+      display: flex;
+      line-height: 40px;
+
+      .chartThresholdLeft {
+        flex: 1;
+        text-align: left;
+        padding-left: 5px;
+        font-size: 12px;
+        color: #6c7280;
+      }
+
+      .chartThresholdRight {
+        flex: 1;
+        text-align: right;
+        padding-right: 10px;
+        font-size: 12px;
+        cursor: pointer;
+        color: #00a5a7;
+      }
     }
     .tag-name {
       color: #333;
@@ -1729,6 +2373,7 @@ export default {
       text-overflow: ellipsis;
       font-weight: 600;
       text-align: center;
+      margin-top: 10px;
 
       i {
         color: #e6a23c;
@@ -1737,6 +2382,7 @@ export default {
     .char-item-content {
       width: 100%;
       height: 100%;
+      background-color: #fff;
     }
 
     .char-tip-table {
@@ -1786,6 +2432,35 @@ export default {
     display: inline-block;
     line-height: 20px;
     margin-left: 32px;
+  }
+
+  .thresholdAll {
+    display: flex;
+    line-height: 32px;
+    margin-bottom: 10px;
+
+    .thresholdItem {
+      margin-right: 10px;
+    }
+
+    .thresholdItemWidth {
+      width: 500px;
+      height: 32px;
+      margin-right: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .thresholdError {
+    color: #f56c6c;
+    text-align: center;
+  }
+
+  .fs16 {
+    font-size: 16px;
+    color: #6c7280;
+    width: 160px;
   }
 }
 .tooltip-show-content {
