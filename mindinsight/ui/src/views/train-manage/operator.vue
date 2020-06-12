@@ -313,10 +313,19 @@ export default {
   destroyed() {
     // Remove the listener of window size change
     window.removeEventListener('resize', this.resizeCallback);
+    this.$bus.$off('resize');
   },
   methods: {
     init() {
       this.getCoreTypeList();
+      this.$bus.$on('resize', this.resizeEchart);
+    },
+    resizeEchart() {
+      if (this.coreCharts.chartDom) {
+        setTimeout(() => {
+          this.coreCharts.chartDom.resize();
+        }, 200);
+      }
     },
     /**
      * Current device change

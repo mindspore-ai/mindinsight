@@ -91,7 +91,7 @@ limitations under the License.
             </div>
 
             <div class="chartThreshold">
-              <div class="chartThresholdLeft">{{$t("scalar.currentThreshold")}}:{{sampleItem.pieceStr}}</div>
+              <div class="chartThresholdLeft">{{$t("scalar.currentThreshold")}}：{{sampleItem.pieceStr || "-"}}</div>
               <div class="chartThresholdRight">
                 <span @click="setThreshold(sampleItem)"
                       v-if="!thresholdLocal
@@ -388,15 +388,7 @@ export default {
 
     this.decodeTrainingJobId = decodeURIComponent(this.trainingJobId);
 
-    if (localStorage.getItem('thresholdCache')) {
-      try {
-        this.thresholdLocal = JSON.parse(
-            localStorage.getItem('thresholdCache'),
-        );
-      } catch (e) {
-        localStorage.removeItem('thresholdCache');
-      }
-    }
+    this.getCache();
 
     // auto refresh
     if (this.isTimeReload) {
@@ -405,8 +397,51 @@ export default {
   },
   methods: {
     /**
+     * get localStorge
+     */
+
+    getCache() {
+      if (localStorage.getItem('thresholdCache')) {
+        try {
+          this.thresholdLocal = JSON.parse(
+              localStorage.getItem('thresholdCache'),
+          );
+          this.clearCache();
+        } catch (e) {
+          localStorage.removeItem('thresholdCache');
+          this.thresholdLocal = {};
+        }
+      } else {
+        this.thresholdLocal = {};
+      }
+    },
+
+    /**
+     * clear localStorge
+     */
+
+    clearCache() {
+      if (
+        this.thresholdLocal &&
+        this.thresholdLocal[this.decodeTrainingJobId]
+      ) {
+        if (
+          Object.keys(this.thresholdLocal[this.decodeTrainingJobId]).length ===
+          0
+        ) {
+          delete this.thresholdLocal[this.decodeTrainingJobId];
+          localStorage.setItem(
+              'thresholdCache',
+              JSON.stringify(this.thresholdLocal),
+          );
+        }
+      }
+    },
+
+    /**
      * Obtain the tag and run list.
      */
+
     getScalarsList() {
       const params = {
         plugin_name: 'scalar',
@@ -679,7 +714,7 @@ export default {
       } else {
         returnFlag = true;
       }
-
+      this.getCache();
       if (
         this.thresholdLocal &&
         this.thresholdLocal[this.decodeTrainingJobId] &&
@@ -692,7 +727,6 @@ export default {
         );
 
         let pieceStr = '';
-
         if (tempStorgeArr.length === 1) {
           if (tempStorgeArr[0].gt && tempStorgeArr[0].lt) {
             pieceStr = `(${tempStorgeArr[0].gt},${tempStorgeArr[0].lt})`;
@@ -745,6 +779,9 @@ export default {
           silent: true,
           data: markLineData,
         };
+      } else {
+        sampleObject.pieceStr = '';
+        dataObj.markLine = null;
       }
 
       seriesData.push(dataObj, dataObjBackend);
@@ -1152,6 +1189,9 @@ export default {
      */
 
     timeTypeChange(val) {
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
       if (this.axisBenchChangeTimer) {
         clearTimeout(this.axisBenchChangeTimer);
         this.axisBenchChangeTimer = null;
@@ -1235,6 +1275,9 @@ export default {
       if (!selectedItemDict) {
         return;
       }
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
       this.multiSelectedTagNames = selectedItemDict;
       // Reset to the first page
       this.pageIndex = 0;
@@ -1247,6 +1290,9 @@ export default {
 
     resizeCallback() {
       if (!this.compare) {
+        if (this.isTimeReload) {
+          this.autoUpdateSamples();
+        }
         if (this.charResizeTimer) {
           clearTimeout(this.charResizeTimer);
           this.charResizeTimer = null;
@@ -1539,6 +1585,10 @@ export default {
         return;
       }
 
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
+
       // Update the smoothness of initialized data
       this.curPageArr.forEach((sampleObject) => {
         if (sampleObject.charObj) {
@@ -1717,10 +1767,25 @@ export default {
      */
 
     setThreshold(sampleItem) {
+      this.getCache();
+      if (
+        this.thresholdLocal &&
+        this.thresholdLocal[this.decodeTrainingJobId] &&
+        this.thresholdLocal[this.decodeTrainingJobId][sampleItem.tagName]
+      ) {
+        delete this.thresholdLocal[this.decodeTrainingJobId][
+            sampleItem.tagName
+        ];
+      }
       this.currentTagName = sampleItem.tagName;
       this.currentSample = sampleItem;
       this.thresholdDialogVisible = true;
     },
+
+    /**
+     * delete threshold
+     * @param {Object} sampleItem sampleItem
+     */
 
     delThreshold(sampleItem) {
       this.$confirm(this.$t('scalar.isDelete'), this.$t('scalar.info'), {
@@ -1729,10 +1794,21 @@ export default {
         type: 'warning',
       })
           .then(() => {
-            delete this.thresholdLocal[this.decodeTrainingJobId][
-                sampleItem.tagName
-            ];
-
+            this.getCache();
+            if (
+              this.thresholdLocal &&
+            this.thresholdLocal[this.decodeTrainingJobId] &&
+            this.thresholdLocal[this.decodeTrainingJobId][sampleItem.tagName]
+            ) {
+              delete this.thresholdLocal[this.decodeTrainingJobId][
+                  sampleItem.tagName
+              ];
+              this.clearCache();
+              localStorage.setItem(
+                  'thresholdCache',
+                  JSON.stringify(this.thresholdLocal),
+              );
+            }
             sampleItem.pieceStr = '';
             const tempCharOption = sampleItem.charData.charOption;
             tempCharOption.visualMap.pieces = [];
@@ -1742,17 +1818,17 @@ export default {
               this.autoUpdateSamples();
             }
             sampleItem.charObj.setOption(tempCharOption, true);
-            localStorage.setItem(
-                'thresholdCache',
-                JSON.stringify(this.thresholdLocal),
-            );
             this.$forceUpdate();
           })
           .catch(() => {});
     },
 
+    /**
+     * threshold validate
+     */
+
     thresholdValidate() {
-      const isValidate = true;
+      let isValidate = true;
 
       const valueFirst = this.thresholdValue[0].value;
       const valueSec = this.thresholdValue[1].value;
@@ -1762,73 +1838,54 @@ export default {
       if (!this.thresholdRelational) {
         if (!valueFirst) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderThreshold');
-          this.isValidate = false;
-          return;
-        }
-
-        if (isNaN(valueFirst)) {
+          isValidate = false;
+        } else if (isNaN(valueFirst)) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
-          this.isValidate = false;
-          return;
+          isValidate = false;
         }
       } else {
         if (filterConditionFirst === filterConditionSec) {
           this.thresholdErrorMsg = this.$t('scalar.sameCompare');
-          this.isValidate = false;
-          return;
-        }
-        if (!valueFirst || !valueSec) {
+          isValidate = false;
+        } else if (!valueFirst || !valueSec) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderThreshold');
-          this.isValidate = false;
-          return;
-        }
-        if (valueFirst === valueSec) {
+          isValidate = false;
+        } else if (valueFirst === valueSec) {
           this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-          this.isValidate = false;
-          return;
-        }
-
-        if (isNaN(valueFirst) || isNaN(valueSec)) {
+          isValidate = false;
+        } else if (isNaN(valueFirst) || isNaN(valueSec)) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
-          this.isValidate = false;
-          return;
-        }
-
-        if (this.thresholdRelational === this.$t('scalar.or')) {
-          if (
-            filterConditionFirst === this.$t('scalar.greaterThan') &&
-            Number(valueFirst) < Number(valueSec)
-          ) {
-            this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-            this.isValidate = false;
-            return;
+          isValidate = false;
+        } else {
+          if (this.thresholdRelational === this.$t('scalar.or')) {
+            if (
+              filterConditionFirst === this.$t('scalar.greaterThan') &&
+              Number(valueFirst) < Number(valueSec)
+            ) {
+              this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+              isValidate = false;
+            } else if (
+              filterConditionFirst === this.$t('scalar.lessThan') &&
+              Number(valueFirst) > Number(valueSec)
+            ) {
+              this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+              isValidate = false;
+            }
           }
-          if (
-            filterConditionFirst === this.$t('scalar.lessThan') &&
-            Number(valueFirst) > Number(valueSec)
-          ) {
-            this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-            this.isValidate = false;
-            return;
-          }
-        }
-
-        if (this.thresholdRelational === this.$t('scalar.and')) {
-          if (
-            filterConditionFirst === this.$t('scalar.greaterThan') &&
-            Number(valueFirst) > Number(valueSec)
-          ) {
-            this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-            this.isValidate = false;
-            return;
-          }
-          if (
-            filterConditionFirst === this.$t('scalar.lessThan') &&
-            Number(valueFirst) < Number(valueSec)
-          ) {
-            this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-            this.isValidate = false;
-            return;
+          if (this.thresholdRelational === this.$t('scalar.and')) {
+            if (
+              filterConditionFirst === this.$t('scalar.greaterThan') &&
+              Number(valueFirst) > Number(valueSec)
+            ) {
+              this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+              isValidate = false;
+            } else if (
+              filterConditionFirst === this.$t('scalar.lessThan') &&
+              Number(valueFirst) < Number(valueSec)
+            ) {
+              this.thresholdErrorMsg = this.$t('scalar.unreasonable');
+              isValidate = false;
+            }
           }
         }
       }
@@ -1862,7 +1919,7 @@ export default {
               tempArr.push(item.value);
             });
 
-            if (tempArr[0] > tempArr[1]) {
+            if (Number(tempArr[0]) > Number(tempArr[1])) {
               chartPiecesData.gt = Number(tempArr[1]);
               chartPiecesData.lt = Number(tempArr[0]);
               chartPieces.push(chartPiecesData);
@@ -1877,12 +1934,10 @@ export default {
             const chartPiecesData = {};
             if (!item.value) {
               return;
-            }
-            if (item.filterCondition === this.$t('scalar.greaterThan')) {
+            } else if (item.filterCondition === this.$t('scalar.greaterThan')) {
               chartPiecesData.gt = Number(item.value);
               chartPieces.push(chartPiecesData);
-            }
-            if (item.filterCondition === this.$t('scalar.lessThan')) {
+            } else if (item.filterCondition === this.$t('scalar.lessThan')) {
               chartPiecesData.lt = Number(item.value);
               chartPieces.push(chartPiecesData);
             }
@@ -1919,20 +1974,16 @@ export default {
               if (chartPieces.length === 1) {
                 if (chartPieces[0].gt && chartPieces[0].lt) {
                   pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
-                }
-                if (chartPieces[0].gt && !chartPieces[0].lt) {
+                } else if (chartPieces[0].gt && !chartPieces[0].lt) {
                   pieceStr = `(${chartPieces[0].gt},Infinity)`;
-                }
-                if (chartPieces[0].lt && !chartPieces[0].gt) {
+                } else if (chartPieces[0].lt && !chartPieces[0].gt) {
                   pieceStr = `(-Infinity,${chartPieces[0].lt})`;
                 }
               }
               if (chartPieces.length === 2) {
                 if (chartPieces[0].lt && chartPieces[1].gt) {
                   pieceStr = `(-Infinity,${chartPieces[0].lt}),(${chartPieces[1].gt},Infinity)`;
-                }
-
-                if (chartPieces[0].gt && chartPieces[1].lt) {
+                } else if (chartPieces[0].gt && chartPieces[1].lt) {
                   pieceStr = `(-Infinity,${chartPieces[1].lt}),(${chartPieces[0].gt},Infinity)`;
                 }
               }
@@ -2012,20 +2063,16 @@ export default {
           if (chartPieces.length === 1) {
             if (chartPieces[0].gt && chartPieces[0].lt) {
               pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
-            }
-            if (chartPieces[0].gt && !chartPieces[0].lt) {
+            } else if (chartPieces[0].gt && !chartPieces[0].lt) {
               pieceStr = `(${chartPieces[0].gt},Infinity)`;
-            }
-            if (chartPieces[0].lt && !chartPieces[0].gt) {
+            } else if (chartPieces[0].lt && !chartPieces[0].gt) {
               pieceStr = `(-Infinity,${chartPieces[0].lt})`;
             }
           }
           if (chartPieces.length === 2) {
             if (chartPieces[0].lt && chartPieces[1].gt) {
               pieceStr = `(-Infinity,${chartPieces[0].lt}),(${chartPieces[1].gt},Infinity)`;
-            }
-
-            if (chartPieces[0].gt && chartPieces[1].lt) {
+            } else if (chartPieces[0].gt && chartPieces[1].lt) {
               pieceStr = `(-Infinity,${chartPieces[1].lt}),(${chartPieces[0].gt},Infinity)`;
             }
           }
@@ -2081,6 +2128,7 @@ export default {
     relationalChange(val) {
       if (!val) {
         this.thresholdValue[1].value = '';
+        this.thresholdErrorMsg = '';
       }
     },
 
@@ -2353,7 +2401,7 @@ export default {
         flex: 1;
         text-align: left;
         padding-left: 5px;
-        font-size: 12px;
+        font-size: 14px;
         color: #6c7280;
       }
 
@@ -2362,8 +2410,14 @@ export default {
         text-align: right;
         padding-right: 10px;
         font-size: 12px;
-        cursor: pointer;
         color: #00a5a7;
+
+        span {
+          width: 80px;
+          height: 39px;
+          display: inline-block;
+          cursor: pointer;
+        }
       }
     }
     .tag-name {
