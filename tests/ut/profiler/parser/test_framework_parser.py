@@ -51,13 +51,11 @@ class TestFrameworkParser:
     """Test the class of `FrameworkParser`."""
     def setup_method(self):
         """Initialization before test case execution."""
-        raw_dir = RAW_DATA_BASE
-        FrameworkParser._raw_data_dir = raw_dir
+        FrameworkParser._raw_data_dir = RAW_DATA_BASE
 
         self._output_path_1 = tempfile.mkdtemp(prefix='test_framework_parser_')
         self._parser_1 = FrameworkParser('JOB1', '0', self._output_path_1)
 
-        os.makedirs(os.path.join(raw_dir, 'JOB2'), exist_ok=True)
         self._output_path_2 = tempfile.mkdtemp(prefix='test_framework_parser_')
         self._parser_2 = FrameworkParser('JOB2', '0', self._output_path_2)
 
@@ -84,8 +82,8 @@ class TestFrameworkParser:
             '51522': 'Default/network-WithLossCell/_backbone-ResNet/'
                      'layer1-SequentialCell/0-ResidualBlock/conv1-Conv2d/Cast-op28'
         }
-        assert self._parser_1.to_task_id_full_op_name_dict(), expect_result
-        assert self._parser_2.to_task_id_full_op_name_dict(), expect_result
+        assert expect_result == self._parser_1.to_task_id_full_op_name_dict()
+        assert expect_result == self._parser_2.to_task_id_full_op_name_dict()
 
     def test_parse(self):
         """Test the parse function."""
@@ -135,6 +133,5 @@ class TestFrameworkParser:
 
         with pytest.raises(ProfilerFileNotFoundException) as exc_info:
             FrameworkParser('JOB1', '0')
-        print(exc_info.value)
         assert exc_info.value.error_code == '50546084'
         assert exc_info.value.message == 'The file <Framework> not found.'

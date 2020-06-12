@@ -26,14 +26,15 @@ from flask import request
 from marshmallow import ValidationError
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, unquote_args
-from mindinsight.datavisual.utils.tools import to_int
-from mindinsight.lineagemgr.common.validator.validate_path import validate_and_normalize_path
+from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, \
+    unquote_args, to_int
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
-from mindinsight.profiler.common.validator.validate import validate_condition, validate_ui_proc
-from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_profiler_path
+from mindinsight.profiler.common.validator.validate import validate_condition, \
+    validate_ui_proc, validate_minddata_pipeline_condition
+from mindinsight.profiler.common.validator.validate_path import \
+    validate_and_normalize_profiler_path, validate_and_normalize_path
 from mindinsight.utils.exceptions import ParamValueError
 
 BLUEPRINT = Blueprint("profile", __name__, url_prefix=settings.URL_PREFIX)
@@ -273,6 +274,92 @@ def get_profiler_abs_dir(requests):
         raise ParamValueError("Invalid profiler dir")
 
     return profiler_dir_abs
+
+
+@BLUEPRINT.route("/profile/minddata-pipeline/op-queue", methods=["POST"])
+def get_minddata_pipeline_op_queue_info():
+    """
+    Get minddata pipeline operator info and queue info.
+
+    Returns:
+        str, the operation information and queue information.
+
+    Raises:
+        ParamValueError: If the search condition contains some errors.
+
+    Examples:
+        >>> POST http://xxxx/v1/mindinsight/profile/minddata-pipeline/op-queue
+    """
+    profiler_dir = get_profiler_dir(request)
+    train_id = get_train_id(request)
+    if not profiler_dir or not train_id:
+        raise ParamValueError("No profiler_dir or train_id.")
+
+    profiler_dir_abs = os.path.join(
+        settings.SUMMARY_BASE_DIR, train_id, profiler_dir
+    )
+    try:
+        profiler_dir_abs = validate_and_normalize_path(
+            profiler_dir_abs, "profiler"
+        )
+    except ValidationError:
+        raise ParamValueError("Invalid profiler dir.")
+
+    condition = request.stream.read()
+    try:
+        condition = json.loads(condition) if condition else {}
+    except Exception:
+        raise ParamValueError("Json data parse failed.")
+    validate_minddata_pipeline_condition(condition)
+
+    device_id = condition.get("device_id", "0")
+    analyser = AnalyserFactory.instance().get_analyser(
+        'minddata_pipeline', profiler_dir_abs, device_id
+    )
+    op_info = analyser.query(condition)
+    return jsonify(op_info)
+
+
+@BLUEPRINT.route("/profile/minddata-pipeline/queue", methods=["GET"])
+def get_minddata_pipeline_queue_info():
+    """
+    Get the special minddata pipeline queue info.
+
+    Returns:
+        str, the queue information.
+
+    Raises:
+        ParamValueError: If the search condition contains some errors.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/minddata-pipeline/queue
+    """
+    profiler_dir = get_profiler_dir(request)
+    train_id = get_train_id(request)
+    if not profiler_dir or not train_id:
+        raise ParamValueError("No profiler_dir or train_id.")
+
+    profiler_dir_abs = os.path.join(
+        settings.SUMMARY_BASE_DIR, train_id, profiler_dir
+    )
+    try:
+        profiler_dir_abs = validate_and_normalize_path(
+            profiler_dir_abs, "profiler"
+        )
+    except ValidationError:
+        raise ParamValueError("Invalid profiler dir.")
+
+    device_id = request.args.get('device_id', default='0')
+    op_id = request.args.get('op_id', type=int)
+    if op_id is None:
+        raise ParamValueError("Invalid operator id or operator id does not exist.")
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'minddata_pipeline', profiler_dir_abs, device_id
+    )
+    op_queue_info = analyser.get_op_and_parent_op_info(op_id)
+    return jsonify(op_queue_info)
+
 
 def init_module(app):
     """

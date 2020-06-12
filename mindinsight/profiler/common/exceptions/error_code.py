@@ -49,6 +49,7 @@ class ProfilerErrors(ProfilerMgrErrors):
     SORT_CONDITION_ERROR = 5 | _ANALYSER_MASK
     FILTER_CONDITION_ERROR = 6 | _ANALYSER_MASK
     COLUMN_NOT_SUPPORT_SORT_ERROR = 7 | _ANALYSER_MASK
+    PIPELINE_OP_NOT_EXIST_ERROR = 8 | _ANALYSER_MASK
 
 
 
@@ -80,3 +81,4 @@ class ProfilerErrorMsg(Enum):
     GROUP_CONDITION_ERROR = 'The group_condition in search_condition error, {}'
     SORT_CONDITION_ERROR = 'The sort_condition in search_condition error, {}'
     COLUMN_NOT_SUPPORT_SORT_ERROR = 'The column {} does not support to sort.'
+    PIPELINE_OP_NOT_EXIST_ERROR = 'The minddata pipeline operator {} does not exist.'

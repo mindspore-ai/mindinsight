@@ -27,7 +27,7 @@ from mindinsight.profiler.common.util import query_latest_trace_time_file, get_f
 class StepTraceAnalyser(BaseAnalyser):
     """The analyser for analyzing training steps."""
 
-    __col_names__ = []
+    _col_names = []
     _attr_ui_name = 'name'
     _attr_ui_start = 'start'
     _attr_ui_duration = 'duration'
@@ -89,7 +89,7 @@ class StepTraceAnalyser(BaseAnalyser):
             self.__column__ = next(csv_reader)
             self._data = list(csv_reader)
         self._size = len(self._data) - 1
-        self._display_col_names = self.__col_names__[:]
+        self._display_col_names = self._col_names[:]
 
     def _filter(self, filter_condition):
         """

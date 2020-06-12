@@ -24,13 +24,9 @@ class AnalyserFactory:
     """
     The analyser factory is used to create analyser special instance.
 
-    Currently the factory supports creating `AicoreTypeAnalyser`,
-    `AicoreDetailAnalyser`, `AicpuAnalyser` and `StepTraceAnalyser`.
-    The `AicoreTypeAnalyser` is used to analyze execution time according to AICORE operator type.
-    The `AicoreDetailAnalyser` is used to analyze execution time according to
-    all specific AICORE operator. The `AicpuAnalyser` is used to analyze
-    execution time according to all specific AICPU operator.
-    The `StepTraceAnalyser` is used to analyze the execution time according to different process.
+    Depending on the analyser type, different analyzers can be created. Users
+    can use the created analyser to query and analyse profiling data, such as
+    operator information, step trace data and so on.
 
     Examples:
         >>> analyser = AnalyserFactory.instance().get_analyser(
@@ -72,6 +68,10 @@ class AnalyserFactory:
         analyser_class_name = ''.join([name.capitalize() for name in subnames])
         analyser_class_name += 'Analyser'
 
-        if not hasattr(analyser_module, analyser_class_name):
-            raise ProfilerAnalyserNotExistException(analyser_type)
-        return getattr(analyser_module, analyser_class_name)(*args)
+        analyser_sub_modules = dir(analyser_module)
+        for sub_module in analyser_sub_modules:
+            if sub_module.endswith('analyser') and sub_module != 'base_analyser':
+                analyser_sub_module = getattr(analyser_module, sub_module)
+                if hasattr(analyser_sub_module, analyser_class_name):
+                    return getattr(analyser_sub_module, analyser_class_name)(*args)
+        raise ProfilerAnalyserNotExistException(analyser_type)

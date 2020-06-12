@@ -12,10 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Unit test for profiler."""
-import os
-
-RAW_DATA_BASE = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../utils/resource'))
-RAW_DATA = os.path.realpath(os.path.join(RAW_DATA_BASE, 'JOB1'))
-RAW_DATA_JOB2 = os.path.realpath(os.path.join(RAW_DATA_BASE, 'JOB2'))
-PROFILER_DIR = os.path.realpath(os.path.join(RAW_DATA_BASE, 'profiler'))

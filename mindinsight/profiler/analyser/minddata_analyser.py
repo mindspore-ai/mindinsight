@@ -15,7 +15,7 @@
 """Data process analyser."""
 import os
 
-from mindinsight.profiler.analyser import BaseAnalyser
+from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 
 
 class MinddataAnalyser(BaseAnalyser):

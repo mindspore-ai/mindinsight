@@ -39,8 +39,11 @@ class BaseAnalyser(ABC):
         profiling_dir (str): The directory where the parsed profiling files
             are located.
         device_id (str): The device ID.
+
+    Raises:
+        ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    __col_names__ = []
+    _col_names = []
 
     def __init__(self, profiling_dir, device_id):
         self._profiling_dir = self._normalize_profiling_dir(profiling_dir)
@@ -61,7 +64,7 @@ class BaseAnalyser(ABC):
     @property
     def col_names(self):
         """The column names in the parsed profiling file."""
-        return self.__col_names__
+        return self._col_names
 
     @property
     def data(self):
@@ -87,7 +90,7 @@ class BaseAnalyser(ABC):
         group_condition = condition.get('group_condition')
 
         self._result = []
-        self._display_col_names = self.__col_names__[:]
+        self._display_col_names = self._col_names[:]
         self._filter(filter_condition)
         self._size = len(self._result)
         if sort_condition:
@@ -148,7 +151,7 @@ class BaseAnalyser(ABC):
         if not sort_name:
             return
         try:
-            index = self.__col_names__.index(sort_name)
+            index = self._col_names.index(sort_name)
         except ValueError:
             raise ProfilerColumnNotExistException(sort_name)
         if self._none_sort_col_names and sort_name in self._none_sort_col_names:
@@ -186,8 +189,8 @@ class BaseAnalyser(ABC):
         for condition_key, condition_value in condition.items():
             if condition_key in self._none_filter_condition_key:
                 continue
-            if condition_key in self.__col_names__:
-                index = self.__col_names__.index(condition_key)
+            if condition_key in self._col_names:
+                index = self._col_names.index(condition_key)
                 actual_value = item[index]
                 for exp_key, exp_value in condition_value.items():
                     if not self._is_match_condition(
