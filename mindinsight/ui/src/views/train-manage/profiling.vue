@@ -36,7 +36,8 @@ limitations under the License.
             {{$t("profiling.smartHelper")}}
           </div>
         </div>
-        <div class="collapse-btn" :class="{collapse:collapse}"
+        <div class="collapse-btn"
+             :class="{collapse:collapse}"
              @click="collapseLeft()">
         </div>
       </div>
@@ -121,8 +122,11 @@ export default {
     },
     collapseLeft() {
       this.collapse = !this.collapse;
-      this.$bus.$emit('resize');
+      this.$bus.$emit('collapse');
     },
+  },
+  destroyed() {
+    this.$bus.$off('collapse');
   },
 };
 </script>
