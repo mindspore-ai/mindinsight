@@ -15,3 +15,4 @@
 """Import analyser."""
 from .analyser import *
 from .step_trace_analyser import StepTraceAnalyser
+from .minddata_analyser import MinddataAnalyser

@@ -26,9 +26,11 @@ from flask import request
 from marshmallow import ValidationError
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, to_int
+from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, unquote_args
+from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.lineagemgr.common.validator.validate_path import validate_and_normalize_path
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
+from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 from mindinsight.profiler.common.validator.validate import validate_condition, validate_ui_proc
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_profiler_path
@@ -166,6 +168,111 @@ def get_target_time_info():
     target_time_info['summary'] = analyser.summary
     return jsonify(target_time_info)
 
+
+@BLUEPRINT.route("/profile/queue_info", methods=["GET"])
+def get_queue_info():
+    """
+    Get each type queue info.
+
+    Returns:
+        Response, the queue info.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/queue_info
+    """
+    profile_dir = get_profiler_abs_dir(request)
+
+    device_id = unquote_args(request, "device_id")
+    queue_type = unquote_args(request, "type")
+    queue_info = {}
+
+    minddata_analyser = AnalyserFactory.instance().get_analyser(
+        'minddata', profile_dir, device_id)
+    if queue_type == "get_next":
+        queue_info, _ = minddata_analyser.analyse_get_next_info(info_type="queue")
+    elif queue_type == "device_queue":
+        queue_info, _ = minddata_analyser.analyse_device_queue_info(info_type="queue")
+
+    return jsonify(queue_info)
+
+
+@BLUEPRINT.route("/profile/minddata_op", methods=["GET"])
+def get_time_info():
+    """
+    Get minddata operation info.
+
+    Returns:
+        Response, the minddata operation info.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/minddata_op
+    """
+    profile_dir = get_profiler_abs_dir(request)
+    device_id = unquote_args(request, "device_id")
+    op_type = unquote_args(request, "type")
+
+    time_info = {
+        'size': 0,
+        'info': [],
+        "summary": {"time_summary": {}},
+        "advise": {}
+    }
+    minddata_analyser = AnalyserFactory.instance().get_analyser(
+        'minddata', profile_dir, device_id)
+    if op_type == "get_next":
+        _, time_info = minddata_analyser.analyse_get_next_info(info_type="time")
+    elif op_type == "device_queue":
+        _, time_info = minddata_analyser.analyse_device_queue_info(info_type="time")
+
+    return jsonify(time_info)
+
+
+@BLUEPRINT.route("/profile/process_summary", methods=["GET"])
+def get_process_summary():
+    """
+    Get interval process summary.
+
+    Returns:
+        Response, the process summary.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/process_summary
+    """
+    profile_dir = get_profiler_abs_dir(request)
+    device_id = unquote_args(request, "device_id")
+
+    minddata_analyser = AnalyserFactory.instance().get_analyser(
+        'minddata', profile_dir, device_id)
+    get_next_queue_info, _ = minddata_analyser.analyse_get_next_info(info_type="queue")
+    device_queue_info, _ = minddata_analyser.analyse_device_queue_info(info_type="queue")
+
+    result = MinddataAnalyser.analyse_queue_summary(get_next_queue_info, device_queue_info)
+
+    return jsonify(result)
+
+
+def get_profiler_abs_dir(requests):
+    """
+    Get interval process summary.
+
+    Args:
+        requests (LocalProxy): The requests.
+
+    Returns:
+        str, the profiler abs dir.
+    """
+    profiler_dir = get_profiler_dir(requests)
+    train_id = get_train_id(requests)
+    if not profiler_dir or not train_id:
+        raise ParamValueError("No profiler_dir or train_id.")
+
+    profiler_dir_abs = os.path.join(settings.SUMMARY_BASE_DIR, train_id, profiler_dir)
+    try:
+        profiler_dir_abs = validate_and_normalize_path(profiler_dir_abs, "profiler")
+    except ValidationError:
+        raise ParamValueError("Invalid profiler dir")
+
+    return profiler_dir_abs
 
 def init_module(app):
     """

@@ -156,6 +156,26 @@ def get_profiler_dir(request):
     return profiler_dir
 
 
+def unquote_args(request, arg_name):
+    """
+    Get args from requst query string and unquote content.
+
+    Args:
+        request (FlaskRequest): Http request instance.
+        arg_name (str): The name of arg.
+
+    Returns:
+        str, unquoted arg.
+    """
+    arg_value = request.args.get(arg_name, "")
+    if arg_value is not None:
+        try:
+            arg_value = unquote(arg_value, errors='strict')
+        except UnicodeDecodeError:
+            raise exceptions.ParamValueError('Unquote error with strict mode')
+    return arg_value
+
+
 def if_nan_inf_to_none(name, value):
     """
     Transform value to None if it is NaN or Inf.
