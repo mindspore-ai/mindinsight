@@ -65,7 +65,8 @@ class StepTraceParser:
             summary_info['total_steps'] = len(self._result) - 1
         print('\nStep trace summary info (unit: syscnt):')
         print(summary_info)
-        print('\nThe step trace parse result saves under ${summary_dir}/profiler/%s' % self.output_file)
+        print('\nThe step trace parse result saves under ${summary_dir}/profiler/%s'
+              % self.output_file)
 
     def parse_and_save(self):
         """Parse step trace files and save the result."""
@@ -131,10 +132,6 @@ class StepTraceParser:
             self._construct_event_info(next_event, event_info)
             if event_info.get('end'):
                 yield event_info
-                event_info = {
-                    'start': event_info.get('end'),
-                    'reduce': {}
-                }
 
     def _get_trace_struct(self, bin_info):
         """Translate event info to StepTraceStruct."""
@@ -146,7 +143,7 @@ class StepTraceParser:
     def _construct_event_info(self, next_event, event_info):
         """Construct event info according to next_event."""
         min_job_id = 255
-        step_flag: bool = lambda tag: tag > min_job_id
+        step_flag: bool = lambda tag: tag > min_job_id or tag == 0
         end_flag: bool = lambda tag: tag == min_job_id
         fp_flag: bool = lambda tag: tag == 1
         bp_flag: bool = lambda tag: tag == 2
@@ -154,11 +151,10 @@ class StepTraceParser:
         def _on_step_event():
             """Handle step event."""
             self._validate_tag_id(tag_id)
-            if event_info.get('start'):
-                event_info['end'] = sys_count
-            else:
-                event_info['start'] = sys_count
-                event_info['reduce'] = {}
+            start_time = event_info.get('end', '-')
+            event_info.clear()
+            event_info['start'] = start_time
+            event_info['reduce'] = {}
 
         def _on_reduce_event():
             """Handle reduce event."""
@@ -198,7 +194,8 @@ class StepTraceParser:
         if not (start_time and end_time and fp_time and bp_time):
             log.warning("The step %d is missing basic time.", self._step_num)
             return
-
+        if start_time == '-':
+            start_time = fp_time
         row_data = {
             'step_num': self._step_num,
             'start_point': start_time,
@@ -215,7 +212,7 @@ class StepTraceParser:
         # save the row data
         if not self._header:
             self._header = list(row_data.keys())
-        row_data_list = [row_data[header_name] for header_name in self._header]
+        row_data_list = [row_data.get(header_name, 0) for header_name in self._header]
         self._result.append(row_data_list)
 
     @staticmethod
@@ -236,20 +233,19 @@ class StepTraceParser:
     def _record_average_info(self):
         """Calculate average info."""
         result_size = len(self._result)
-        if result_size < 2:
-            return
         # calculate average data for each column in result data
         average_data = [0] * len(self._header)
-        for row_info in self._result[1:]:
+        if result_size >= 2:
+            for row_info in self._result[1:]:
+                average_data = [
+                    Decimal(i) + Decimal(j) for i, j in zip(row_info, average_data)
+                ]
             average_data = [
-                Decimal(i) + Decimal(j) for i, j in zip(row_info, average_data)
+                round((item / (result_size - 1))) for item in average_data
             ]
-        average_data = [
-            round((item / (result_size - 1))) for item in average_data
-        ]
-        # change step num info in average_data to None
-        step_num_index = self._header.index('step_num')
-        average_data[step_num_index] = '-'
+            # change step num info in average_data to None
+            step_num_index = self._header.index('step_num')
+            average_data[step_num_index] = '-'
         self._result.append(average_data)
         log.info("Finish add average info for step trace.")
 
