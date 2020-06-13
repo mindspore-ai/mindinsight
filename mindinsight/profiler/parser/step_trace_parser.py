@@ -38,11 +38,12 @@ class StepTraceParser:
     Args:
         input_dir (str): The directory that contains original step trace data.
         output_file_path (str): The output file path.
+        job_id (int): The job id used to define the start of new step. Default: 0.
         skip_first_step (bool): Whether skip the first step or not.
     """
     _event_size = 20
 
-    def __init__(self, input_dir, output_file_path, job_id, skip_first_step=False):
+    def __init__(self, input_dir, output_file_path, job_id=0, skip_first_step=False):
         self._input_dir = input_dir
         self._output_path = output_file_path
         self._job_id = job_id

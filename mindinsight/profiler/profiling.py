@@ -125,7 +125,7 @@ class Profiler:
         self._withfullpath = check_bool(is_show_op_path, 'is_show_op_path')
         self._profiling_job_id = job_id
         # add job id env through user input later
-        self._job_id_env = None
+        self._job_id_env = 0
         self._start_time = int(time.time() * 10000000)
         logger.info("Profiling: profiling start time: %d", self._start_time)
 

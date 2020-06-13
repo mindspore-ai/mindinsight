@@ -140,8 +140,6 @@ class LogOperations:
 
         Returns:
             str, Summary log path.
-
-
         """
         if log_settings is None:
             log_settings = dict()
