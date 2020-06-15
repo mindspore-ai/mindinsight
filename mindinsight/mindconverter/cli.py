@@ -186,25 +186,23 @@ def cli_entry():
     mode = permissions << 6
     os.makedirs(args.output, mode=mode, exist_ok=True)
     os.makedirs(args.report, mode=mode, exist_ok=True)
-    _run(args.in_file, args.output, '', args.report)
+    _run(args.in_file, args.output, args.report)
 
 
-def _run(in_files, out_dir, in_module, report):
+def _run(in_files, out_dir, report):
     """
     Run converter command.
 
     Args:
         in_files (str): The file path or directory to convert.
         out_dir (str): The output directory to save converted file.
-        in_module (str): The module name to convert.
         report (str): The report file path.
     """
     files_config = {
         'root_path': in_files if in_files else '',
         'in_files': [],
         'outfile_dir': out_dir,
-        'report_dir': report,
-        'in_module': in_module
+        'report_dir': report
     }
     if os.path.isfile(in_files):
         files_config['root_path'] = os.path.dirname(in_files)

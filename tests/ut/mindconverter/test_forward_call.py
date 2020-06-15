@@ -15,7 +15,6 @@
 """Test forward_call module."""
 import ast
 import textwrap
-from unittest.mock import patch
 
 from mindinsight.mindconverter.forward_call import ForwardCall
 
@@ -50,12 +49,10 @@ class TestForwardCall:
                 return out
     """)
 
-    @patch.object(ForwardCall, 'process')
-    def test_process(self, mock_process):
+    def test_process(self):
         """Test the function of visit ast tree to find out forward functions."""
-        mock_process.return_value = None
-        forward_call = ForwardCall("mock")
-        forward_call.visit(ast.parse(self.source))
+        ast_tree = ast.parse(self.source)
+        forward_call = ForwardCall(ast_tree)
 
         expect_calls = ['TestNet.forward',
                         'TestNet.forward1',
@@ -70,6 +67,6 @@ class TestForwardCall:
                         'TestNet.fc3',
                         ]
         expect_calls.sort()
-        real_calls = list(forward_call.calls)
+        real_calls = list(forward_call.calls.keys())
         real_calls.sort()
         assert real_calls == expect_calls

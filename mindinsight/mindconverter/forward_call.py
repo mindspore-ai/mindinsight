@@ -14,7 +14,8 @@
 # ============================================================================
 """Find out forward functions of script file"""
 import ast
-import os
+
+import pasta
 
 
 class ForwardCall(ast.NodeVisitor):
@@ -24,73 +25,80 @@ class ForwardCall(ast.NodeVisitor):
     Find the sub functions called by the forward function in the script file.
     """
 
-    def __init__(self, filename):
-        self.filename = filename
-        self.module_name = os.path.basename(filename).replace('.py', '')
-        self.name_stack = []
-        self.forward_stack = []
-        self.calls = set()
+    def __init__(self, ast_tree):
+        self._tree = ast_tree
+        self._name_stack = []
+        self._forward_stack = []
+        self.calls = {}  # key is function name, value is forward function ast node.
+        self._function_list = {}  # key is function name, value is function ast node.
         self.process()
 
     def process(self):
-        """Parse the python source file to find the forward functions."""
-        with open(self.filename, 'rt', encoding='utf-8') as file:
-            content = file.read()
-        self.visit(ast.parse(content, self.filename))
+        """visit ast tree to find the forward functions."""
+        self.visit(self._tree)
+        # first visit to find out all functions, so restores all variables except _function_list
+        self._name_stack.clear()
+        self._forward_stack.clear()
+        self.calls.clear()
+        self.visit(self._tree)
 
     def get_current_namespace(self):
         """Get the namespace when visit the AST node"""
-        namespace = '.'.join(self.name_stack)
+        namespace = '.'.join(self._name_stack)
         return namespace
 
     @classmethod
-    def get_ast_node_name(cls, node):
-        """Get AST node name."""
-        if isinstance(node, ast.Attribute):
-            return f'{cls.get_ast_node_name(node.value)}.{node.attr}'
+    def get_call_name(cls, node):
+        """Get functional call name."""
+        if not isinstance(node, ast.Call):
+            return None
 
-        if isinstance(node, ast.Name):
-            return node.id
-
-        return node
+        return pasta.dump(node.func)
 
     def visit_ClassDef(self, node):
         """Callback function when visit AST tree"""
-        self.name_stack.append(node.name)
+        self._name_stack.append(node.name)
         self.generic_visit(node)
-        self.name_stack.pop()
+        self._name_stack.pop()
 
     def visit_FunctionDef(self, node):
         """Callback function when visit AST tree"""
+        namespace = self.get_current_namespace()
+        if namespace:
+            func_name = f'{namespace}.{node.name}'
+        else:
+            func_name = node.name
         func_name = f'{self.get_current_namespace()}.{node.name}'
         is_in_chain = func_name in self.calls or node.name == 'forward'
         if is_in_chain:
-            self.forward_stack.append(func_name)
+            self._forward_stack.append(func_name)
 
         if node.name == 'forward':
-            self.calls.add(func_name)
+            self.calls.update({func_name: node})
 
+        self._function_list.update({func_name: node})
         self.generic_visit(node)
 
         if is_in_chain:
-            self.forward_stack.pop()
+            self._forward_stack.pop()
 
     def visit_Call(self, node):
         """Callback function when visit AST tree"""
         for arg in node.args:
             self.visit(arg)
-        for kw in node.keywords:
-            self.visit(kw.value)
-        func_name = self.get_ast_node_name(node.func)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+        func_name = self.get_call_name(node)
         if isinstance(node.func, ast.Name):
             if func_name not in ['super', 'str', 'repr']:
-                if self.forward_stack:
-                    self.calls.add(func_name)
+                if self._forward_stack:
+                    self.calls.update({func_name: self._function_list.get(func_name)})
                 self.visit(node.func)
         else:
-            if self.forward_stack:
-                if 'self' in func_name:
-                    self.calls.add(f'{self.get_current_namespace()}.{func_name.split(".")[-1]}')
+            if self._forward_stack:
+                if func_name.startswith('self.'):
+                    whole_name = f'{self.get_current_namespace()}.{func_name.split(".")[-1]}'
+                    self.calls.update({whole_name: self._function_list.get(whole_name)})
                 else:
-                    self.calls.add(func_name)
+                    self.calls.update({func_name: self._function_list.get(func_name)})
                 self.visit(node.func)
