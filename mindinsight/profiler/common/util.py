@@ -21,6 +21,9 @@ import os
 
 from mindinsight.datavisual.utils.tools import to_int
 
+# one sys count takes 10 ns, 1 ms has 100000 system count
+PER_MS_SYSCNT = 100000
+
 
 def analyse_device_list_from_profiler_dir(profiler_dir):
     """
@@ -116,25 +119,28 @@ def calculate_percent(partial, total):
     return f'{percent}%'
 
 
+def to_millisecond(sys_count, limit=4):
+    """Translate system count to millisecond."""
+    return round(sys_count / PER_MS_SYSCNT, limit)
+
+
 def get_field_value(row_info, field_name, header, time_type='realtime'):
     """
     Extract basic info through row_info.
 
     Args:
         row_info (list): The list of data info in one row.
-        header (list[str]): The list of field names.
         field_name (str): The name in header.
+        header (list[str]): The list of field names.
         time_type (str): The type of value, `realtime` or `systime`. Default: `realtime`.
 
     Returns:
         dict, step trace info in dict format.
     """
-    # one sys count takes 10 ns, 1 ms has 100000 syscnt
-    per_ms_syscnt = 100000
     field_index = header.index(field_name)
     value = row_info[field_index]
     value = to_int(value, field_name)
     if time_type == 'realtime':
-        value = round(value / per_ms_syscnt, 4)
+        value = to_millisecond(value)
 
     return value

@@ -15,12 +15,13 @@
 """The StepTraceAnalyser analyser class."""
 import csv
 
+from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerParamValueErrorException, \
     ProfilerFileNotFoundException, StepNumNotSupportedException
 from mindinsight.profiler.common.log import logger as log
 from mindinsight.profiler.common.util import query_latest_trace_time_file, get_field_value, \
-    get_summary_for_step_trace
+    get_summary_for_step_trace, to_millisecond
 
 
 class StepTraceAnalyser(BaseAnalyser):
@@ -53,6 +54,7 @@ class StepTraceAnalyser(BaseAnalyser):
         if condition is None:
             condition = {}
         filter_condition = condition.get('filter_condition', {})
+        log.info("Receive query request. %s", filter_condition)
         self._validate_filter_condition(filter_condition)
         self._result = {'size': self._size}
         self._filter(filter_condition)
@@ -64,12 +66,14 @@ class StepTraceAnalyser(BaseAnalyser):
         Query for all reduce info.
 
         Returns:
-            list[dict], each item is the reduce info for one step, the reduce info is format like:
-                {stream_id: List[Tuple(start_point, end_point, duration, field_name)]}.
+            list[dict], reduce information. Each item is the reduce info for one step.
+            The reduce info is format like:
+            {stream_id: List[Tuple(start_point, end_point, duration, field_name)]}.
         """
         reduce_infos = []
         for row_info in self._data[:-1]:
-            reduce_info = self._get_reduce_time_in_order(row_info, 'systime')
+            row_info_dict = self._get_info_dict_from_row_data(row_info, 'systime')
+            reduce_info = self._get_reduce_time_in_order(row_info_dict)
             reduce_infos.append(reduce_info)
 
         return reduce_infos
@@ -117,11 +121,16 @@ class StepTraceAnalyser(BaseAnalyser):
 
     def _construct_time_point(self, name, start, duration):
         """Construct time point."""
-        point = {
-            self._attr_ui_name: name,
-            self._attr_ui_start: round(start, 4),
-            self._attr_ui_duration: round(duration, 4)
-        }
+        point = {}
+        if start >= 0 and duration >= 0:
+            point = {
+                self._attr_ui_name: name,
+                self._attr_ui_start: round(start, 4),
+                self._attr_ui_duration: round(duration, 4)
+            }
+        else:
+            log.warning("Not invalid point info: "
+                        "name: %s, start: %s, duration: %s", name, start, duration)
         return point
 
     def _get_step_details(self, step_id, time_type='realtime'):
@@ -137,59 +146,105 @@ class StepTraceAnalyser(BaseAnalyser):
         if step_id is None:
             step_id = 0
         row_info = self._data[step_id - 1]
-
-        start_point = get_field_value(row_info, 'start_point', self.__column__, time_type)
-        total = get_field_value(row_info, 'total', self.__column__, time_type)
-        iteration_interval = get_field_value(row_info, 'iteration_interval', self.__column__,
-                                             time_type)
-        fp_point = get_field_value(row_info, 'fp_point', self.__column__, time_type)
-        fp_and_bp = get_field_value(row_info, 'fp_and_bp', self.__column__, time_type)
-        bp_point = get_field_value(row_info, 'bp_point', self.__column__, time_type)
-        tail = get_field_value(row_info, 'tail', self.__column__, time_type)
+        row_info_dict = self._get_info_dict_from_row_data(row_info, time_type)
         # first line only contains total time
-        first_line = [self._construct_time_point('', 0, total)]
+        first_line = [self._construct_time_point('', 0, row_info_dict.get('total', 0))]
         # second line contains iteration_interval, fp_and_bp and tail
-        second_line = [
-            self._construct_time_point('', 0, iteration_interval),
-            self._construct_time_point('fp_and_bp', fp_point - start_point, fp_and_bp),
-            self._construct_time_point('', bp_point - start_point, tail),
-        ]
+        second_line = self._get_main_proc_points(row_info_dict)
         # construct reduces lines
-        reduce_lines = self._construct_reduce_lines(row_info, time_type)
+        reduce_lines = self._construct_reduce_lines(row_info_dict)
 
         graph = [first_line, second_line]
         graph.extend(reduce_lines)
         self._result['training_trace_graph'] = graph
 
-    def _get_reduce_time_in_order(self, row_info, time_type):
-        """Get reduce time in order."""
+    def _get_info_dict_from_row_data(self, row_info, time_type):
+        """
+        Get step info in dict format.
+
+        Args:
+            row_info (list[str]): Step info, the value is corresponding to `__column__`.
+            time_type (str): The value type. `systime` keeps the original value.
+                `realtime` transforms the value in millisecond. Default: `realtime`.
+
+        Returns:
+            dict, step trace information. The key is in `__column__`.
+        """
+        row_info_dict = {}
+        for key, value in zip(self.__column__, row_info):
+            if key == 'step_num':
+                continue
+            value = to_int(value, key)
+            row_info_dict[key] = to_millisecond(value) if time_type == 'realtime' else value
+        return row_info_dict
+
+    def _get_main_proc_points(self, row_info_dict):
+        """
+        Get iteration_interval, fp_and_bp and tail points.
+
+        Args:
+            row_info_dict (dict): Step trace information.
+
+        Returns:
+            list[dict], the list of time points.
+        """
+        start_point = row_info_dict.get('start_point', 0)
+        fp_point = row_info_dict.get('fp_point', 0)
+        bp_point = row_info_dict.get('bp_point', 0)
+        points = [
+            self._construct_time_point('', 0, row_info_dict.get('iteration_interval', 0)),
+            self._construct_time_point('fp_and_bp', fp_point - start_point,
+                                       row_info_dict.get('fp_and_bp', 0)),
+            self._construct_time_point('', bp_point - start_point, row_info_dict.get('tail', 0)),
+        ]
+        return points
+
+    def _get_reduce_time_in_order(self, row_info_dict):
+        """
+        Get reduce time in order.
+
+        Args:
+            row_info_dict (dict): Step trace information.
+
+        Returns:
+            dict, sorted reduce information. The reduce info is format like:
+            {stream_id: List[Tuple(start_point, end_point, duration, field_name)]}
+        """
         reduce_info = {}
         reduce_fields = [field_name for field_name in self.__column__
                          if field_name.startswith('stream_') and not field_name.endswith('point')]
         for reduce_field in reduce_fields:
+            reduce_start = row_info_dict.get(reduce_field + '_start_point', 0)
+            reduce_end = row_info_dict.get(reduce_field + '_end_point', 0)
+            reduce_duration = row_info_dict.get(reduce_field, 0)
+            if not (reduce_start and reduce_end and reduce_duration):
+                log.info("Reduce event missing value.")
+                continue
             cur_stream_id = reduce_field.split('_', 2)[1]
             cur_stream = reduce_info.get(cur_stream_id)
             if not cur_stream:
                 cur_stream = []
                 reduce_info[cur_stream_id] = cur_stream
-            reduce_start = get_field_value(
-                row_info, reduce_field + '_start_point', self.__column__, time_type)
-            reduce_end = get_field_value(
-                row_info, reduce_field + '_end_point', self.__column__, time_type)
-            reduce_duration = get_field_value(
-                row_info, reduce_field, self.__column__, time_type)
             cur_stream.append((reduce_start, reduce_end, reduce_duration, reduce_field))
         for _, reduce_events in reduce_info.items():
             reduce_events.sort(key=lambda elem: elem[1])
         return reduce_info
 
-    def _construct_reduce_lines(self, row_info, time_type):
-        """Contruct first line in detailed graph."""
+    def _construct_reduce_lines(self, row_info_dict):
+        """
+        Contruct first line in detailed graph.
+
+        Args:
+            row_info_dict (dict): Step trace information.
+
+        Returns:
+            list, list of reduce information of each stream. Each item is a list of time points.
+        """
         reduce_lines = []
-        start_point = get_field_value(row_info, 'start_point', self.__column__, time_type)
-        fp_point = get_field_value(row_info, 'fp_point', self.__column__, time_type)
-        end_point = get_field_value(row_info, 'end_point', self.__column__, time_type)
-        reduce_info = self._get_reduce_time_in_order(row_info, time_type)
+        start_point = row_info_dict.get('start_point', 0)
+        fp_point = row_info_dict.get('fp_point', 0)
+        end_point = row_info_dict.get('end_point', 0)
+        reduce_info = self._get_reduce_time_in_order(row_info_dict)
         # construct time point for each line
         for _, reduce_events in reduce_info.items():
             current_line = self._construct_reduce_line(
@@ -199,7 +254,19 @@ class StepTraceAnalyser(BaseAnalyser):
         return reduce_lines
 
     def _construct_reduce_line(self, start_point, end_point, fp_point, reduce_events):
-        """Construct list of time points for reduce line."""
+        """
+        Construct list of time points for reduce line.
+
+        Args:
+            start_point (int): The start point of current step.
+            end_point (int): The end point of current step.
+            fp_point (int): The fp point of current step.
+            reduce_events (list[Tuple]): The reduce information of current step. Each item
+                contains the start, end duration and name of one reduce event.
+
+        Returns:
+            list[dict], list of time points.
+        """
         current_line = []
         previous_start = fp_point
         for start, end, duration, field_name in reduce_events:
@@ -265,4 +332,4 @@ class StepTraceAnalyser(BaseAnalyser):
         if proc_name is None or isinstance(proc_name, str) and proc_name in accept_param:
             return
         log.error("Invalid param %s in request. Acceptable value is %s.", error_name, accept_param)
-        raise ProfilerParamValueErrorException("Invalid proc_name.")
+        raise ProfilerParamValueErrorException(f"Invalid {error_name}.")
