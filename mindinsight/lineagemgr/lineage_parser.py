@@ -79,7 +79,7 @@ class LineageParser:
         # get sorted lineage files
         lineage_files = SummaryPathParser.get_lineage_summaries(self._summary_dir, is_sorted=True)
         if not lineage_files:
-            logger.warning('There is no summary log file under summary_dir %s.', self._summary_dir)
+            logger.info('There is no summary log file under summary_dir %s.', self._summary_dir)
             raise LineageFileNotFoundError(
                 'There is no summary log file under summary_dir.'
             )
@@ -111,8 +111,8 @@ class LineageParser:
 
         deleted_files = set(cached_file_list) - set(file_list)
         if deleted_files:
-            logger.warning("There are some files has been deleted, "
-                           "all files will be reloaded in path %s.", self._summary_dir)
+            logger.info("There are some files has been deleted, "
+                        "all files will be reloaded in path %s.", self._summary_dir)
             self._init_variables()
 
     def _parse_summary_log(self):
@@ -199,7 +199,7 @@ class LineageOrganizer:
                 no_lineage_count += 1
 
         if no_lineage_count == len(relative_dirs):
-            logger.error('There is no summary log file under summary_base_dir.')
+            logger.info('There is no summary log file under summary_base_dir.')
             raise LineageFileNotFoundError(
                 'There is no summary log file under summary_base_dir.'
             )

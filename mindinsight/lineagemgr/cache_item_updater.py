@@ -66,7 +66,7 @@ class LineageCacheItemUpdater(BaseCacheItemUpdater):
 
         super_lineage_obj = lineage_parser.super_lineage_obj
         if super_lineage_obj is None:
-            logger.warning("There is no lineage to update in tran job %s.", relative_path)
+            logger.info("There is no lineage to update in tran job %s.", relative_path)
             return
 
         cache_item.set(key=LINEAGE, value=lineage_parser)
