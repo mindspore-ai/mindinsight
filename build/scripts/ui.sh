@@ -26,6 +26,8 @@ build_ui() {
 
     rm -f package-lock.json
     rm -rf dist
+    mkdir -p public/static/js
+    cp ../../third_party/hpcc/graphvizlib.wasm public/static/js
 
     npm config set strict-ssl false
     npm config set unsafe-perm true
