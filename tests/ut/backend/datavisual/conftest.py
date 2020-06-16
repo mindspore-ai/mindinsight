@@ -21,7 +21,7 @@ import pytest
 from flask import Response
 
 from mindinsight.backend import datavisual
-from mindinsight.datavisual import utils
+from mindinsight.datavisual.utils import tools
 
 
 @pytest.fixture
@@ -31,12 +31,10 @@ def client():
     mock_data_manager.start_load_data = Mock()
     datavisual.DATA_MANAGER = mock_data_manager
 
-    packages = ["mindinsight.backend.raw_dataset",
-                "mindinsight.backend.train_dataset",
-                "mindinsight.backend.data_visual"]
+    packages = ["mindinsight.backend.data_visual"]
 
     mock_obj = Mock(return_value=packages)
-    utils.find_app_package = mock_obj
+    tools.find_app_package = mock_obj
 
     from mindinsight.backend.application import APP
     APP.response_class = Response

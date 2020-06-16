@@ -41,7 +41,7 @@ from mindinsight.profiler.common.validator.validate_path import validate_and_nor
 from mindinsight.profiler.proposer.compose_proposer import ComposeProposal
 from mindinsight.utils.exceptions import ParamValueError
 
-BLUEPRINT = Blueprint("profile", __name__, url_prefix=settings.URL_PREFIX)
+BLUEPRINT = Blueprint("profile", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
 
 @BLUEPRINT.route("/profile/ops/search", methods=["POST"])

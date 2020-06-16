@@ -20,20 +20,18 @@ from flask import current_app
 from flask import send_from_directory
 from flask import Blueprint
 
+from mindinsight.conf import settings
 
-APP_PATH = os.path.realpath(os.path.dirname(sys.argv[0]))
-BLUEPRINT = Blueprint("static_resource", __name__)
+
+BLUEPRINT = Blueprint("static_resource", __name__, url_prefix=settings.URL_PATH_PREFIX)
 
 
 @BLUEPRINT.route("/", methods=["GET"])
 def index():
     """Interface to  return static index.html."""
-    return send_from_directory(get_index_resource_dir(), "index.html")
-
-
-def get_index_resource_dir():
-    """Interface to return index.html resource directory."""
-    return os.path.realpath(os.path.join(APP_PATH, current_app.static_folder, os.pardir))
+    app_path = os.path.realpath(os.path.dirname(sys.argv[0]))
+    index_resource_dir = os.path.realpath(os.path.join(app_path, current_app.static_folder, os.pardir))
+    return send_from_directory(index_resource_dir, "index.html")
 
 
 def init_module(app):

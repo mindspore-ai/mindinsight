@@ -252,7 +252,7 @@ def start():
     else:
         state_result = _check_server_start_stat(errorlog_abspath, log_size)
         # print gunicorn start state to stdout
-        console.info('Web address: http://%s:%s', settings.HOST, settings.PORT)
+        console.info('Web address: http://%s:%s%s', settings.HOST, settings.PORT, settings.URL_PATH_PREFIX)
         for line in state_result["prompt_message"]:
             console.info(line)
 

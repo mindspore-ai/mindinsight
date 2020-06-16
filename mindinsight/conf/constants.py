@@ -41,8 +41,8 @@ ENABLE_CORS = False
 
 SUPPORT_REQUEST_METHODS = {'POST', 'GET', 'PUT', 'DELETE'}
 
-# url prefix should not end with slash, correct format is /v1/url
-URL_PREFIX = '/v1/mindinsight'
+# api prefix should not end with slash, correct format is /v1/url
+API_PREFIX = '/v1/mindinsight'
 
 ####################################
 # Datavisual default settings.
