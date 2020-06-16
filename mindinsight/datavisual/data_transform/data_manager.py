@@ -42,6 +42,7 @@ from mindinsight.datavisual.data_transform.loader_generators.loader_generator im
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
 from mindinsight.utils.exceptions import MindInsightException
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.utils.exceptions import UnknownError
 
 
 class _BasicTrainJob:
@@ -861,7 +862,7 @@ class DataManager:
         # Let gunicorn load other modules first.
         time.sleep(1)
         while True:
-            self._load_data_in_thread()
+            self._load_data_in_thread_wrapper()
 
             if not self._reload_interval:
                 break
@@ -874,10 +875,18 @@ class DataManager:
         This function needs to be used after `start_load_data` function.
         """
         logger.debug("start to reload data")
-        thread = threading.Thread(target=self._load_data_in_thread,
+        thread = threading.Thread(target=self._load_data_in_thread_wrapper,
                                   name='reload_data_thread')
         thread.daemon = False
         thread.start()
+
+    def _load_data_in_thread_wrapper(self):
+        """Wrapper for load data in thread."""
+        try:
+            self._load_data_in_thread()
+        except MindInsightException as exc:
+            # Not raising the exception here to ensure that data reloading does not crash.
+            logger.warning(exc.message)
 
     def _load_data_in_thread(self):
         """Log (but not swallow) exceptions in thread to help debugging."""
@@ -885,7 +894,7 @@ class DataManager:
             self._load_data()
         except Exception as exc:
             logger.exception(exc)
-            raise
+            raise UnknownError('Load data thread error.')
 
     def _load_data(self):
         """This function will load data once and ignore it if the status is loading."""
