@@ -259,4 +259,4 @@ class StepTraceParser:
             csv_writer.writerow(self._header)
             for row_data in self._result:
                 csv_writer.writerow(row_data)
-        os.chmod(self._output_path, stat.S_IREAD | stat.S_IWRITE)
+        os.chmod(self._output_path, stat.S_IREAD)
