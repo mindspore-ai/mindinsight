@@ -17,7 +17,8 @@ limitations under the License.
   <div class="cl-scalar-manage">
 
     <div class="scalar-bk">
-      <div class="cl-title cl-scalar-title">
+      <div class="cl-title cl-scalar-title"
+           v-show="originDataArr.length>0">
         <div class="cl-title-left">{{$t("scalar.titleText")}}</div>
         <div class="cl-title-right">
           <ScalarButton class="scalar-btn"
@@ -33,14 +34,14 @@ limitations under the License.
 
       <!--operation area -->
       <div class="cl-eval-operate-content"
-           v-show="!compare">
+           v-show="!compare && originDataArr.length>0">
         <multiselectGroupComponents ref="multiselectGroupComponents"
                                     :checkListArr="tagOperateList"
                                     @selectedChange="tagSelectedChanged"></multiselectGroupComponents>
       </div>
       <!-- Slider -->
       <div class="cl-eval-slider-operate-content"
-           v-show="!compare">
+           v-show="!compare && originDataArr.length>0">
         <div class="xaxis-title">{{$t('scalar.xAxisTitle')}}</div>
         <el-radio-group v-model="curAxisName"
                         fill="#00A5A7"
@@ -725,6 +726,15 @@ export default {
                 this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName],
             ),
         );
+
+        tempStorgeArr.forEach((item) => {
+          if (item.lt) {
+            item.lt = Number(item.lt.toFixed(2));
+          }
+          if (item.gt) {
+            item.gt = Number(item.gt.toFixed(2));
+          }
+        });
 
         let pieceStr = '';
         if (tempStorgeArr.length === 1) {
@@ -1944,6 +1954,15 @@ export default {
           });
         }
 
+        chartPieces.forEach((item) => {
+          if (item.lt) {
+            item.lt = Number(item.lt.toFixed(2));
+          }
+          if (item.gt) {
+            item.gt = Number(item.gt.toFixed(2));
+          }
+        });
+
         if (this.thresholdSwitch) {
           this.originDataArr.forEach((sampleObject) => {
             if (this.multiSelectedTagNames[sampleObject.tagName]) {
@@ -2129,6 +2148,7 @@ export default {
       if (!val) {
         this.thresholdValue[1].value = '';
         this.thresholdErrorMsg = '';
+        this.thresholdValue[1].filterCondition = this.$t('scalar.lessThan');
       }
     },
 
@@ -2144,6 +2164,7 @@ export default {
       this.currentSample = {};
       this.thresholdSwitch = false;
       this.thresholdRelational = '';
+      this.thresholdValue[1].filterCondition = this.$t('scalar.lessThan');
       this.thresholdDialogVisible = false;
     },
   },
@@ -2163,6 +2184,10 @@ export default {
     font-size: 18px;
     color: #303133;
     font-weight: bold;
+  }
+
+  .w261 {
+    width: 261px;
   }
 
   .w60 {
@@ -2403,20 +2428,24 @@ export default {
         padding-left: 5px;
         font-size: 14px;
         color: #6c7280;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .chartThresholdRight {
-        flex: 1;
+        width: 120px;
         text-align: right;
         padding-right: 10px;
         font-size: 12px;
         color: #00a5a7;
+        flex-shrink: 0;
 
         span {
+          cursor: pointer;
           width: 80px;
           height: 39px;
           display: inline-block;
-          cursor: pointer;
         }
       }
     }
@@ -2452,6 +2481,7 @@ export default {
     .image-noData {
       width: 100%;
       height: 450px;
+      padding-top: 200px;
       display: flex;
       justify-content: center;
       align-items: center;
