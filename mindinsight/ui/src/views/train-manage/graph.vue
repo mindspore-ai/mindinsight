@@ -450,6 +450,7 @@ export default {
       trainJobID: '',
       frameSpace: 25, // Distance between the namespace border and the internal node
       nodesCountLimit: 1500, // Maximum number of sub-nodes in a namespace.
+      maxChainNum: 70,
       curColorIndex: 0,
       // Node search box
       searchBox: {
@@ -992,6 +993,16 @@ export default {
                       } else {
                         if (this.allGraphData[name].type === 'aggregation_scope') {
                           this.dealAggregationNodes(name);
+                          if (
+                            this.allGraphData[name].maxChainNum > this.maxChainNum
+                          ) {
+                            this.$message.error(this.$t('graph.tooManyChain'));
+                            this.allGraphData[name].isUnfold = true;
+                            this.selectedNode.name = name;
+                            this.loading.show = false;
+                            this.deleteNamespace(name);
+                            return;
+                          }
                         }
                         this.allGraphData[name].isUnfold = true;
                         this.selectedNode.name = `${name}_unfold`;
@@ -1075,12 +1086,15 @@ export default {
       // A maximum of 10 subnodes can be displayed on an aggregation node.
       const aggregationNodeLimit = 10;
       const idsGroup = [];
+      let maxChainNum = 1;
 
       this.allGraphData[name].children.forEach((key) => {
-        if (!this.allGraphData[key].grouped) {
-          const ids = this.getAssociatedNode(key, `${name}/`);
+        const ids = this.getAssociatedNode(key, `${name}/`);
+        if (ids.length) {
           idsGroup.push(ids);
         }
+        const chainNum = this.dealChainingData(key, `${name}/`);
+        maxChainNum = Math.max(...chainNum, maxChainNum);
       });
 
       const idsList = [];
@@ -1092,40 +1106,65 @@ export default {
           if (temp.length + idsGroup[i].length <= aggregationNodeLimit) {
             temp = temp.concat(idsGroup[i]);
           } else {
-            idsList.push(temp);
-            temp = [].concat(idsGroup[i]);
+            if (temp.length) {
+              idsList.push(temp);
+              temp = [].concat(idsGroup[i]);
+            }
           }
         }
-        if (i === idsGroup.length - 1) {
+        if (i === idsGroup.length - 1 && temp.length) {
           idsList.push(temp);
         }
       }
 
       this.allGraphData[name].childIdsList = idsList;
       this.allGraphData[name].index = 0;
+      this.allGraphData[name].maxChainNum = maxChainNum;
+    },
+
+    dealChainingData(name, prefix) {
+      const node = this.allGraphData[name];
+      if (!node.chained) {
+        node.chained = true;
+        let temp = [];
+        Object.keys(node.input).forEach((key) => {
+          if (key.includes(prefix)) {
+            temp = temp.concat(this.dealChainingData(key, prefix));
+          }
+        });
+
+        if (temp.length) {
+          node.chainNum = [...new Set(temp.map((i) => i + 1))];
+        }
+      }
+      return node.chainNum;
     },
 
     getAssociatedNode(name, prefix) {
       const node = this.allGraphData[name];
-      node.grouped = true;
       let ids = [];
-      ids.push(node.name);
-      Object.keys(node.input).forEach((i) => {
-        if (i.startsWith(prefix)) {
-          if (!this.allGraphData[i].grouped) {
-            const idsTemp = this.getAssociatedNode(i, prefix);
-            ids = ids.concat(idsTemp);
+
+      if (!node.grouped) {
+        node.grouped = true;
+        ids.push(node.name);
+        Object.keys(node.input).forEach((i) => {
+          if (i.startsWith(prefix)) {
+            if (!this.allGraphData[i].grouped) {
+              const idsTemp = this.getAssociatedNode(i, prefix);
+              ids = ids.concat(idsTemp);
+            }
           }
-        }
-      });
-      Object.keys(node.output).forEach((i) => {
-        if (i.startsWith(prefix)) {
-          if (!this.allGraphData[i].grouped) {
-            const idsTemp = this.getAssociatedNode(i, prefix);
-            ids = ids.concat(idsTemp);
+        });
+        Object.keys(node.output).forEach((i) => {
+          if (i.startsWith(prefix)) {
+            if (!this.allGraphData[i].grouped) {
+              const idsTemp = this.getAssociatedNode(i, prefix);
+              ids = ids.concat(idsTemp);
+            }
           }
-        }
-      });
+        });
+      }
+
       return ids;
     },
     /**
@@ -1157,7 +1196,8 @@ export default {
             `label="${name}";class="aggregation";` +
             `${
               node.isUnfold
-                ? `shape="polygon";width=${node.size[0]};height=${node.size[1]};fixedsize=true;`
+                ? `shape="polygon";width=${node.size[0]};` +
+                  `height=${node.size[1]};fixedsize=true;`
                 : 'shape="octagon";'
             }];`;
         } else if (node.type === 'name_scope') {
@@ -2285,6 +2325,8 @@ export default {
             node.size = [];
             node.html = '';
             node.grouped = false;
+            node.chained = false;
+            node.chainNum = [1];
             this.allGraphData[node.name] = node;
             this.allGraphData[name].children.push(node.name);
           });
@@ -2399,7 +2441,7 @@ export default {
       if (this.allGraphData[option.value]) {
         if (
           d3
-              .select(`g[id="${option.value}"],g[id="${option.value}_unfold"]`)
+              .select(`g[id="${option.value}"], g[id="${option.value}_unfold"]`)
               .size()
         ) {
           // If the namespace or aggregation node is expanded, you need to close it and select
@@ -2418,7 +2460,7 @@ export default {
             this.allGraphData[parentId].isUnfold
           ) {
             const aggregationNode = this.allGraphData[parentId];
-            if (aggregationNode) {
+            if (aggregationNode && aggregationNode.childIdsList) {
               for (let i = 0; i < aggregationNode.childIdsList.length; i++) {
                 if (aggregationNode.childIdsList[i].includes(option.value)) {
                   aggregationNode.index = i;
@@ -2487,7 +2529,6 @@ export default {
           ) {
             this.selectedNode.name = data.scope_name;
             this.querySingleNode({value: data.scope_name});
-            this.selectNode(true);
             this.$message.error(this.$t('graph.tooManyNodes'));
             this.$nextTick(() => {
               this.loading.show = false;
@@ -2512,6 +2553,19 @@ export default {
                     break;
                   }
                 }
+              }
+              if (
+                this.allGraphData[data.scope_name].maxChainNum >
+                this.maxChainNum
+              ) {
+                this.selectedNode.name = data.scope_name;
+                this.allGraphData[data.scope_name].isUnfold = false;
+                this.deleteNamespace(data.scope_name);
+                this.$message.error(this.$t('graph.tooManyChain'));
+                this.$nextTick(() => {
+                  this.loading.show = false;
+                });
+                return;
               }
             }
 
