@@ -98,7 +98,6 @@ class TestProfilerAnalyse(TestCase):
             {'name': 'stream_540_parallel_0', 'start': 118.3705, 'duration': 49.281},
             {'name': '', 'start': 167.6515, 'duration': 37.7294}]
 
-
     @pytest.mark.level0
     @pytest.mark.env_single
     @pytest.mark.platform_x86_cpu
