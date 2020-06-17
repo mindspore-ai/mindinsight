@@ -30,6 +30,7 @@ class MindInsightModules(Enum):
     LINEAGEMGR = 2
     DATAVISUAL = 5
     PROFILERMGR = 6
+    SCRIPTCONVERTER = 7
 
 
 class GeneralErrors(Enum):
@@ -69,3 +70,7 @@ class DataVisualErrors(Enum):
     SCALAR_NOT_EXIST = 14
     HISTOGRAM_NOT_EXIST = 15
     TRAIN_JOB_DETAIL_NOT_IN_CACHE = 16
+
+
+class ScriptConverterErrors(Enum):
+    """Enum definition for mindconverter errors."""
