@@ -29,6 +29,7 @@ from mindinsight.profiler.common.validator.validate_path import \
 from mindinsight.profiler.parser.aicpu_data_parser import DataPreProcessParser
 from mindinsight.profiler.parser.framework_parser import FrameworkParser
 from mindinsight.profiler.parser.hwts_log_parser import HWTSLogParser
+from mindinsight.profiler.parser.minddata_parser import MinddataParser
 from mindinsight.profiler.parser.optime_parser import OPComputeTimeParser
 from mindinsight.profiler.parser.step_trace_parser import StepTraceParser
 from mindinsight.utils.exceptions import MindInsightException
@@ -107,6 +108,7 @@ class Profiler:
 
         os.environ['PROFILING_MODE'] = 'true'
         os.environ['PROFILING_OPTIONS'] = 'training_trace:task_trace'
+        os.environ['MINDDATA_PROFILING_DIR'] = self._output_path
         # use context interface to open profiling, for the new mindspore version(after 2020.5.21)
         try:
             import mindspore.context as context
@@ -193,6 +195,9 @@ class Profiler:
         except FileNotFoundError as err:
             logger.exception(err)
 
+        # Parsing minddata AICPU profiling
+        MinddataParser.execute(source_path, self._output_path, self._dev_id)
+
         # analyse op compute time info
         try:
             self._analyser_op_info()
@@ -208,7 +213,7 @@ class Profiler:
 
         Args:
             source_path (str): The directory that contains the step trace original data.
-            framework_parser (str): The framework parse instance.
+            framework_parser (FrameworkParser): The framework parse instance.
         """
         logger.info("Begin to parse step trace.")
         # construct output path
