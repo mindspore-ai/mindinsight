@@ -205,7 +205,8 @@
     "guideContent3": "计算图中存在数据边和控制边。其中数据边表示数据的输入，控制边表示节点之间执行依赖关系。",
     "next": "下一步",
     "finish": "完成",
-    "dataTooLarge": "节点和边的数量过多，导致打开失败"
+    "dataTooLarge": "节点和边的数量过多，导致打开失败",
+    "tooManyChain": "直接子节点的深度超过70，不支持展开"
   },
   "operator": {
     "titleText": "性能分析",
