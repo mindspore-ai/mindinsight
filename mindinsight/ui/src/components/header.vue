@@ -152,6 +152,7 @@ export default {
           .toString()
           .replace(/[^\.\d]/g, '')
           .replace(/\./g, '');
+      this.newReloadValue = Number(this.newReloadValue);
     },
     // get active menu item
     getActive() {
