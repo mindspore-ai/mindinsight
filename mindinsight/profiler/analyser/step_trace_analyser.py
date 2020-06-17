@@ -192,10 +192,11 @@ class StepTraceAnalyser(BaseAnalyser):
         fp_point = row_info_dict.get('fp_point', 0)
         bp_point = row_info_dict.get('bp_point', 0)
         points = [
-            self._construct_time_point('', 0, row_info_dict.get('iteration_interval', 0)),
-            self._construct_time_point('fp_and_bp', fp_point - start_point,
-                                       row_info_dict.get('fp_and_bp', 0)),
-            self._construct_time_point('', bp_point - start_point, row_info_dict.get('tail', 0)),
+            self._construct_time_point(
+                'iteration_interval', 0, row_info_dict.get('iteration_interval', 0)),
+            self._construct_time_point(
+                'fp_and_bp', fp_point - start_point, row_info_dict.get('fp_and_bp', 0)),
+            self._construct_time_point('tail', bp_point - start_point, row_info_dict.get('tail', 0))
         ]
         return points
 
