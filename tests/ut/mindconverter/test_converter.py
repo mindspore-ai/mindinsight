@@ -64,6 +64,15 @@ class TestConverter:
         assert replaced_code == code.replace('nn.Softmax(dim=1)',
                                              '{}(axis=1)'.format(expected_ms_api_name))
 
+    def test_convert_api_nn_dropout(self):
+        """Test convert_api function work ok when convert api nn.Dropout"""
+        code = """nn.Dropout(0.3)"""
+        expected_ms_api_name = 'nn.Dropout'
+
+        replaced_code = self.converter_ins.convert_api(code)
+        assert replaced_code == code.replace('nn.Dropout(0.3)',
+                                             "{}(keep_prob=0.7)".format(expected_ms_api_name))
+
     # test convert_api with torch dot ops
     def test_convert_api_torch_dot_abs(self):
         """Test convert_api function work ok when convert api torch.abs"""
@@ -202,6 +211,33 @@ class TestConverter:
         assert replaced_code == code.replace('F.sigmoid(input)',
                                              '{}()(input)'.format(expected_ms_api_name))
 
+    def test_convert_api_f_max_pool2d(self):
+        """Test convert_api function work ok when convert api F.max_pool2d"""
+        code = """F.max_pool2d(out, 2)"""
+        expected_ms_api_name = 'P.MaxPool'
+
+        replaced_code = self.converter_ins.convert_api(code)
+        assert replaced_code == code.replace('F.max_pool2d(out, 2)',
+                                             "{}(2, 2, 'valid')(out)".format(expected_ms_api_name))
+
+    def test_convert_api_f_avg_pool2d_without_strides(self):
+        """Test convert_api function work ok when convert api F.avg_pool2d"""
+        code = """F.avg_pool2d(out, 2)"""
+        expected_ms_api_name = 'P.AvgPool'
+
+        replaced_code = self.converter_ins.convert_api(code)
+        assert replaced_code == code.replace('F.avg_pool2d(out, 2)',
+                                             "{}(2, 2, 'valid')(out)".format(expected_ms_api_name))
+
+    def test_convert_api_f_avg_pool2d_with_strides(self):
+        """Test convert_api function work ok when convert api F.avg_pool2d"""
+        code = """F.avg_pool2d(out, 2, 3)"""
+        expected_ms_api_name = 'P.AvgPool'
+
+        replaced_code = self.converter_ins.convert_api(code)
+        assert replaced_code == code.replace('F.avg_pool2d(out, 2, 3)',
+                                             "{}(2, 3, 'valid')(out)".format(expected_ms_api_name))
+
     # test convert_api with tensor dot ops
     def test_convert_api_tensor_dot_repeat(self):
         """Test convert_api function work ok when convert api .repeat"""
@@ -216,7 +252,6 @@ class TestConverter:
         """Test convert_api function work ok when convert api .permute"""
         code = "x.permute(2, 0, 1)"
         expected_ms_api_name = 'P.Transpose'
-
         replaced_code = self.converter_ins.convert_api(code)
         assert replaced_code == code.replace('x.permute(2, 0, 1)',
                                              '{}()(x, (2, 0, 1,))'.format(expected_ms_api_name))

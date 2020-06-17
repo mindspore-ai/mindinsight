@@ -71,9 +71,9 @@ class APIPt:
             or the given args_str not valid.
         """
         # expr is REQUIRED to meet (**) format
-        if not (len(args_str) >= 2 and args_str[0] == "(" and args_str[-1] == ")"):
-            raise ValueError('[{}] is think as args str, it should start with "(" and end with ")"'.format(args_str))
-
+        if not (len(args_str) >= 2 and args_str[0] == "(" and args_str.strip()[-1] == ")"):
+            raise ValueError('"{}" is think as args string, it should start with "(" and end with ")" without '
+                             'considering spaces'.format(args_str))
         try:
             ast_node = ast.parse("whatever_call_name" + args_str)
             call_node = ast_node.body[0].value
