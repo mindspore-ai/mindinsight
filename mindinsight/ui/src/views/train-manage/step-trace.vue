@@ -289,6 +289,7 @@ export default {
                   series: timeInfo,
                   tooltip: {
                     trigger: 'axis',
+                    confine: true,
                   },
                 };
                 if (type === 'iteration_interval') {
