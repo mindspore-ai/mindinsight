@@ -828,6 +828,7 @@ export default {
           formatter: (params) => {
             return `${params.marker} ${params.data.name} ${params.percent}%`;
           },
+          confine: true,
         };
         option.series = [
           {
@@ -856,6 +857,7 @@ export default {
         option.color = ['#6C92FA'];
         option.tooltip = {
           trigger: 'axis',
+          confine: true,
         };
         option.series = [
           {
