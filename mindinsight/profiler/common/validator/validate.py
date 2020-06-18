@@ -25,8 +25,8 @@ from mindinsight.profiler.common.log import logger as log
 
 AICORE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "precent"]
 AICORE_DETAIL_COL = ["op_name", "op_type", "execution_time", "subgraph", "full_op_name"]
-AICPU_COL = ["serial_number", "op_name", "total_time", "dispatch_time", "RunV2_start",
-             "compute_start", "memcpy_start", "memcpy_end", "RunV2_end"]
+AICPU_COL = ["serial_number", "op_type", "total_time", "dispatch_time", "run_start",
+             "run_end"]
 MINDDATA_PIPELINE_COL = [
     'op_id', 'op_type', 'num_workers', 'output_queue_average_size',
     'output_queue_length', 'output_queue_usage_rate', 'sample_interval',
