@@ -66,17 +66,15 @@ class TimelineAnalyser(BaseAnalyser):
             json, the content of timeline data.
         """
         # Search timeline json file under profiling dir.
-        file_path = None
-        for filename in os.listdir(self._profiling_dir):
-            if filename.startswith('timeline_display') and filename.endswith('.json'):
-                file_path = os.path.join(self._profiling_dir, filename)
-                logger.debug('Display file found.')
-                break
-            elif filename.startswith('timeline_detail') and filename.endswith('.json'):
-                file_path = os.path.join(self._profiling_dir, filename)
-                logger.debug('Original file found.')
-                break
+        timeline_filename = self._timeline_filename.format(self._device_id)
+        display_filename = self._display_filename.format(self._device_id)
+        file_list = [filename for filename in os.listdir(self._profiling_dir)
+                     if timeline_filename in filename or display_filename in filename]
 
+        # Check if there is a timeline json file for display
+        file_path = os.path.join(self._profiling_dir, display_filename)
+        if display_filename not in file_list:
+            file_path = os.path.join(self._profiling_dir, timeline_filename)
         file_path = validate_and_normalize_path(
             file_path, raise_key='Invalid timeline json path.'
         )
