@@ -209,8 +209,14 @@ class SummaryWatcher:
                                 starting with "./" .
             entry (DirEntry): Directory entry instance needed to check with regular expression.
         """
-        ctime = datetime.datetime.fromtimestamp(entry.stat().st_ctime).astimezone()
-        mtime = datetime.datetime.fromtimestamp(entry.stat().st_mtime).astimezone()
+        try:
+            stat = entry.stat()
+        except FileNotFoundError:
+            logger.warning('File %s not found', entry.name)
+            return
+
+        ctime = datetime.datetime.fromtimestamp(stat.st_ctime).astimezone()
+        mtime = datetime.datetime.fromtimestamp(stat.st_mtime).astimezone()
 
         if entry.is_file():
             summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
@@ -304,7 +310,13 @@ class SummaryWatcher:
         return False
 
     def _is_empty_directory(self, directory):
-        return not bool(os.listdir(directory))
+        try:
+            count = len(os.listdir(directory))
+        except FileNotFoundError:
+            logger.warning('Directory %s not found.', directory)
+            count = 0
+
+        return not bool(count)
 
     def list_summary_directories_by_pagination(self, summary_base_dir, offset=0, limit=10):
         """
@@ -388,8 +400,13 @@ class SummaryWatcher:
             except OverflowError:
                 continue
 
-            # extract modified time from filesystem
-            mtime = datetime.datetime.fromtimestamp(entry.stat().st_mtime).astimezone()
+            try:
+                stat = entry.stat()
+            except FileNotFoundError:
+                logger.warning('File %s not found.', entry.name)
+                continue
+
+            mtime = datetime.datetime.fromtimestamp(stat.st_mtime).astimezone()
 
             summaries.append({
                 'file_name': entry.name,
