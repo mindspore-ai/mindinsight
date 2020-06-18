@@ -491,8 +491,9 @@ export default {
     /**
      * get core detail list
      * @param {Object} row type row
+     * @param {Boolean} isSort if sort
      */
-    getCoreDetailList(row) {
+    getCoreDetailList(row, isSort) {
       const params = {};
       params.params = {
         profile: this.profile_dir,
@@ -518,10 +519,12 @@ export default {
                     childProp: row.op_sort_condition.name,
                     childOrder: row.op_sort_condition.type,
                   };
-                  item.sort(
-                      row.op_sort_condition.name,
-                      row.op_sort_condition.type,
-                  );
+                  if (isSort) {
+                    item.sort(
+                        row.op_sort_condition.name,
+                        row.op_sort_condition.type,
+                    );
+                  }
                 }
               });
             }
@@ -584,7 +587,7 @@ export default {
      */
     opDetailPageChange(row, pageIndex) {
       row.opDetailPage.offset = pageIndex - 1;
-      this.getCoreDetailList(row);
+      this.getCoreDetailList(row, false);
     },
     /**
      * cpu list page change
@@ -608,7 +611,7 @@ export default {
         } else {
           this.opAllTypeList.op_filter_condition = {};
         }
-        this.getCoreDetailList(this.opAllTypeList);
+        this.getCoreDetailList(this.opAllTypeList, false);
       } else {
         this.op_filter_condition = {};
         if (this.searchByTypeInput) {
@@ -653,7 +656,7 @@ export default {
         type: column.order,
       };
       row.opDetailPage.offset = 0;
-      this.getCoreDetailList(row);
+      this.getCoreDetailList(row, false);
     },
     /**
      * cpu detail sort
@@ -699,7 +702,6 @@ export default {
       row.isExpanded = !row.isExpanded;
       if (row.isExpanded) {
         if (this.curActiveRow.rowItem) {
-          this.curActiveRow.rowItem.isExpanded = false;
           const item = this.$refs['expandTable'];
           if (item) {
             item.toggleRowExpansion(this.curActiveRow.rowItem, false);
@@ -715,7 +717,7 @@ export default {
         row.opDetailPage.offset = 0;
         row.pageTotal = 0;
         row.op_sort_condition = {name: 'execution_time', type: 'descending'};
-        this.getCoreDetailList(row);
+        this.getCoreDetailList(row, true);
       } else {
         this.curActiveRow = {
           rowItem: null,
@@ -756,7 +758,7 @@ export default {
           name: 'execution_time',
           type: 'descending',
         };
-        this.getCoreDetailList(this.opAllTypeList);
+        this.getCoreDetailList(this.opAllTypeList, true);
       }
     },
     /**
