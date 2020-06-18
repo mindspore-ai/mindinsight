@@ -149,9 +149,12 @@ class TestProfilerAnalyse(TestCase):
         summary = analyser.summary
         assert summary == {
             'total_time': 205.3809,
-            'iteration_interval': '0.1%',
-            'fp_and_bp': '57.48%',
-            'tail': '42.42%',
+            'iteration_interval': 0.2038,
+            'iteration_interval_percent': '0.1%',
+            'fp_and_bp': 118.054,
+            'fp_and_bp_percent': '57.48%',
+            'tail': 87.1231,
+            'tail_percent': '42.42%',
             'total_steps': 322}
 
     @pytest.mark.level0

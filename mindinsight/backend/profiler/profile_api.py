@@ -31,6 +31,7 @@ from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, \
     unquote_args, to_int, get_device_id
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
 from mindinsight.profiler.proposer.compose_proposer import ComposeProposal
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 from mindinsight.profiler.common.validator.validate import validate_condition, \
@@ -131,9 +132,13 @@ def get_training_trace_graph():
     graph_type = to_int(graph_type, 'graph_type')
     device_id = request.args.get("device_id", default='0')
     _ = to_int(device_id, 'device_id')
+    graph_info = {}
+    try:
+        analyser = AnalyserFactory.instance().get_analyser(
+            'step_trace', profiler_dir, device_id)
+    except ProfilerFileNotFoundException:
+        return jsonify(graph_info)
 
-    analyser = AnalyserFactory.instance().get_analyser(
-        'step_trace', profiler_dir, device_id)
     graph_info = analyser.query({
         'filter_condition': {
             'mode': 'step',
