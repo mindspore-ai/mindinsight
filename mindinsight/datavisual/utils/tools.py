@@ -176,6 +176,27 @@ def unquote_args(request, arg_name):
     return arg_value
 
 
+def get_device_id(request):
+    """
+    Get device ID from requst query string and unquote content.
+
+    Args:
+        request (FlaskRequest): Http request instance.
+
+    Returns:
+        str, unquoted device ID.
+    """
+    device_id = request.args.get('device_id')
+    if device_id is not None:
+        try:
+            device_id = unquote(device_id, errors='strict')
+        except UnicodeDecodeError:
+            raise exceptions.UrlDecodeError('Unquote train id error with strict mode')
+    else:
+        device_id = "0"
+    return device_id
+
+
 def if_nan_inf_to_none(name, value):
     """
     Transform value to None if it is NaN or Inf.
@@ -197,6 +218,7 @@ def if_nan_inf_to_none(name, value):
 
 class Counter:
     """Count accumulator with limit checking."""
+
     def __init__(self, max_count=None, init_count=0):
         self._count = init_count
         self._max_count = max_count

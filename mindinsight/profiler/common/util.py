@@ -144,3 +144,8 @@ def get_field_value(row_info, field_name, header, time_type='realtime'):
         value = to_millisecond(value)
 
     return value
+
+def get_options(options):
+    if options is None:
+        options = {}
+    return options

@@ -23,13 +23,15 @@ import os
 from flask import Blueprint
 from flask import jsonify
 from flask import request
+from flask import Response
 from marshmallow import ValidationError
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, \
-    unquote_args, to_int
+    unquote_args, to_int, get_device_id
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
+from mindinsight.profiler.proposer.compose_proposer import ComposeProposal
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 from mindinsight.profiler.common.validator.validate import validate_condition, \
     validate_ui_proc, validate_minddata_pipeline_condition
@@ -274,6 +276,44 @@ def get_profiler_abs_dir(requests):
         raise ParamValueError("Invalid profiler dir")
 
     return profiler_dir_abs
+
+
+@BLUEPRINT.route("/profile/summary/propose", methods=["GET"])
+def get_profile_summary_proposal():
+    """
+    Get summary profiling proposal.
+
+    Returns:
+        str, the summary profiling proposal.
+
+    Raises:
+        ParamValueError: If the parameters contain some errors.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/summary/propose
+    """
+    profiler_dir = get_profiler_dir(request)
+    train_id = get_train_id(request)
+    device_id = get_device_id(request)
+    if not profiler_dir or not train_id:
+        raise ParamValueError("No profiler_dir or train_id.")
+
+    profiler_dir_abs = os.path.join(settings.SUMMARY_BASE_DIR, train_id, profiler_dir)
+    try:
+        profiler_dir_abs = validate_and_normalize_path(profiler_dir_abs, "profiler")
+    except ValidationError:
+        raise ParamValueError("Invalid profiler dir")
+
+    step_trace_condition = {"filter_condition": {"mode": "proc",
+                                                 "proc_name": "iteration_interval",
+                                                 "step_id": 0}}
+    options = {'step_trace': {"iter_interval": step_trace_condition}}
+
+    proposal_type_list = ['step_trace', 'minddata', 'minddata_pipeline', 'common']
+    proposal_obj = ComposeProposal(profiler_dir_abs, device_id, proposal_type_list)
+    proposal_info = proposal_obj.get_proposal(options)
+    # Use json.dumps for orderly return
+    return Response(json.dumps(proposal_info), mimetype='application/json')
 
 
 @BLUEPRINT.route("/profile/minddata-pipeline/op-queue", methods=["POST"])
