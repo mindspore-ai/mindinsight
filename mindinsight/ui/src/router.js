@@ -87,6 +87,10 @@ export default new Router({
           path: 'operator',
           component: () => import('./views/train-manage/operator.vue'),
         },
+        {
+          path: 'minddata',
+          component: () => import('./views/train-manage/minddata.vue'),
+        },
       ],
     },
   ],
