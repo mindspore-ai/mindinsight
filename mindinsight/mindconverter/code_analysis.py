@@ -193,13 +193,12 @@ class CodeAnalyzer(ast.NodeVisitor):
         for node_references in root_scope.external_references.values():
             for node_ref in node_references:
                 if node_ref.name_ref:
-                    # (from)import alias, node_ref.name_ref.id is alias name
-                    if node_ref.name_ref.definition.asname == node_ref.name_ref.id:
-                        external_name_ref[node_ref.name_ref.id] = node_ref
-                    # import without alias, node_ref.name_ref.definition.asname is None.
-                    # e.g., import a.b.c, reference maybe is a, a.b or a.b.c in the root_scope.external_references.
-                    # The reference a.b.c is really wanted.
-                    elif node_ref.name_ref.definition.name == node_ref.name_ref.id:
+                    # case1: (from)import alias, node_ref.name_ref.id is node_ref.name_ref.definition.asname.
+                    # case2: import without alias, node_ref.name_ref.definition.asname is None.
+                    #   e.g., import a.b.c, the reference definition id maybe is a, a.b or a.b.c.
+                    #   The reference id a.b.c is really wanted.
+                    if node_ref.name_ref.id in [node_ref.name_ref.definition.asname,
+                                                node_ref.name_ref.definition.name]:
                         external_name_ref[node_ref.name_ref.id] = node_ref
                     else:
                         pass
