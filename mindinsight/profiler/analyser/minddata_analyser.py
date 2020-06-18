@@ -21,6 +21,9 @@ from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 class MinddataAnalyser(BaseAnalyser):
     """The Minddata profiling analyser."""
 
+    DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD = 0.7
+    DEVICE_QUEUE_NOT_EMPTY_THRESHOLD = 0.95
+
     def analyse_get_next_info(self, info_type="all"):
         """
         Analyse the get_next operation info.
@@ -59,7 +62,7 @@ class MinddataAnalyser(BaseAnalyser):
                             one_step_cost_time = (float(node_info[2]) - float(node_info[1]))/1e3
                             time_list.append(one_step_cost_time)
                             total_cost += one_step_cost_time
-                if info_type in ["all", "time"]:
+                if info_type in ["all", "queue"]:
                     queue_info["size"] = len(queue_size_list)
                     queue_info["info"] = {"queue": queue_size_list}
                     queue_info["summary"] = {
@@ -100,12 +103,12 @@ class MinddataAnalyser(BaseAnalyser):
         queue_size_list = []
         empty_step, full_step = 0, 0
 
-        device_queue_file_name = "device_queue_profiling" + self._device_id + ".txt"
+        device_queue_file_name = "device_queue_profiling_" + self._device_id + ".txt"
         device_queue_file_path = MinddataAnalyser.find_target_file(self._profiling_dir, device_queue_file_name)
         feed_file_name = "dataset_iterator_profiling_" + self._device_id + ".txt"
         feed_file_path = MinddataAnalyser.find_target_file(self._profiling_dir, feed_file_name)
         if device_queue_file_path:
-            file_path = device_queue_file_name
+            file_path = device_queue_file_path
         elif not device_queue_file_path and feed_file_path:
             file_path = feed_file_path
         else:
@@ -169,15 +172,12 @@ class MinddataAnalyser(BaseAnalyser):
         Returns:
             dict, the summary of queue.
         """
-        if not get_next_queue_info and not device_queue_info:
-            return {}
-
-        get_next_queue_empty_count = 0
-        if get_next_queue_info:
+        if get_next_queue_info and device_queue_info:
             result = {"data_process": {"status": "normal"},
                       "device_queue_op": {"status": "normal"},
                       "tdt": {"status": "normal"},
                       "get_next": {"status": "normal"}}
+
             get_next_queue_empty_count = get_next_queue_info.get(
                 "summary", {}).get("queue_summary", {}).get("empty_queue", 0)
             result["get_next_queue_info"] = {
@@ -186,27 +186,49 @@ class MinddataAnalyser(BaseAnalyser):
                     "total_batch": get_next_queue_info.get("size")
                 }
             }
-        else:
+
+            device_queue_empty_count = device_queue_info.get(
+                "summary", {}).get("queue_summary", {}).get("empty_queue", 0)
+            device_queue_full_count = device_queue_info.get(
+                "summary", {}).get("queue_summary", {}).get("full_queue", 0)
+            result["device_queue_info"] = {
+                "summary": {
+                    "empty_batch_count": device_queue_empty_count,
+                    "full_batch_count": device_queue_full_count,
+                    "total_batch": device_queue_info.get("size")
+                }
+            }
+            if get_next_queue_empty_count:
+                if device_queue_empty_count > device_queue_info.get("size", 0)*\
+                        MinddataAnalyser.DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD:
+                    result["data_process"]["status"] = "warning"
+                elif device_queue_empty_count < device_queue_info.get("size", 0)*\
+                        MinddataAnalyser.DEVICE_QUEUE_NOT_EMPTY_THRESHOLD:
+                    result["tdt"]["status"] = "warning"
+                    result["device_queue_op"]["status"] = "warning"
+
+        elif device_queue_info and not get_next_queue_info:
             result = {"data_process": {"status": "normal"},
                       "fpbp": {"status": "normal"}}
 
-        device_queue_empty_count = device_queue_info.get(
-            "summary", {}).get("queue_summary", {}).get("empty_queue", 0)
-        device_queue_full_count = device_queue_info.get(
-            "summary", {}).get("queue_summary", {}).get("full_queue", 0)
-        result["device_queue_info"] = {
-            "summary": {
-                "empty_batch_count": device_queue_empty_count,
-                "full_batch_count": device_queue_full_count,
-                "total_batch": device_queue_info.get("size")
-            }
-        }
+            device_queue_empty_count = device_queue_info.get(
+                "summary", {}).get("queue_summary", {}).get("empty_queue", 0)
+            device_queue_full_count = device_queue_info.get(
+                "summary", {}).get("queue_summary", {}).get("full_queue", 0)
 
-        if not get_next_queue_info or (get_next_queue_info and get_next_queue_empty_count == 0):
+            result["device_queue_info"] = {
+                "summary": {
+                    "empty_batch_count": device_queue_empty_count,
+                    "full_batch_count": device_queue_full_count,
+                    "total_batch": device_queue_info.get("size")
+                }
+            }
+
             if device_queue_empty_count > device_queue_info.get("size", 0)*0.7:
                 result["data_process"]["status"] = "warning"
-            elif device_queue_empty_count < device_queue_info.get("size", 0)*0.9:
-                result["fpbp"]["status"] = "warning"
+
+        else:
+            result = {}
 
         return result
 
