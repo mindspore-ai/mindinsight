@@ -188,16 +188,23 @@ class FrameworkParser:
         'output_data_type', 'output_shape'
     ]
 
+    # if the task id is less than the task id threshold, The combination of
+    # task id and Stream id represents one operator, else the task id represents
+    # one operator
+    _task_id_threshold = 25000
+
     def __init__(self, profiling_id, device_id, output_path='./'):
         self._profiling_path = self._get_raw_profiling_path(profiling_id)
         self._backend_type = None
-        self._framework_path = {'graph': [], 'task': []}
+        self._framework_path = {'graph': [], 'task': [], 'point': []}
         self._search_file(profiling_id, device_id)
         self._device_id = device_id
         self._save_path = self._get_save_path(device_id, output_path)
         self._task_id_full_op_name_dict = {}
         self._task_cache = {}
+        self._point_info = {}
         self._parse_task_files()
+        self._parse_point_files()
 
     @property
     def save_path(self):
@@ -208,6 +215,16 @@ class FrameworkParser:
             str, the save path.
         """
         return self._save_path
+
+    @property
+    def point_info(self):
+        """
+        The property of the framework point information.
+
+        Returns:
+            dict, the framework point information.
+        """
+        return self._point_info
 
     def to_task_id_full_op_name_dict(self):
         """
@@ -282,7 +299,11 @@ class FrameworkParser:
         Raises:
             ProfilerFileNotFoundException: If the framework files are not found.
         """
-        self._search_file_from_job_path(device_id)
+        # first search in the JOB dir, and if not, search in the sub directory
+        # in the JOB
+        self._search_file_from_job_path(device_id, search_in_sub_path=False)
+        if self._backend_type is None:
+            self._search_file_from_job_path(device_id, search_in_sub_path=True)
         self._search_file_from_data_path(profiling_id, device_id)
 
         if self._backend_type is None:
@@ -290,19 +311,26 @@ class FrameworkParser:
         self._framework_path['graph'].sort()
         self._framework_path['task'].sort()
 
-    def _search_file_from_job_path(self, device_id):
+    def _search_file_from_job_path(self, device_id, search_in_sub_path=False):
         """
         Search framework files from job path.
 
         Args:
             device_id (str): The device ID.
+            search_in_sub_path (bool): `True` if search file in profiling dir,
+                else search in profiling sub dir. Default: False.
 
         Raises:
             ProfilerRawFileException: If the framework file type is inconsistent.
             ProfilerDeviceIdMismatchException: If the device id is mismatch
                 with framework in the raw dir.
         """
-        files = os.listdir(self._profiling_path)
+        profiling_dir = os.path.join(self._profiling_path, 'data') \
+            if search_in_sub_path else self._profiling_path
+        if not os.path.isdir(profiling_dir):
+            return
+
+        files = os.listdir(profiling_dir)
         for file in files:
             pattern = re.search(self._regex_framework, file)
             if not pattern or file.endswith('.done'):
@@ -325,11 +353,15 @@ class FrameworkParser:
                 self._backend_type = 'ge'
             if data_type.startswith('graph_desc_info'):
                 self._framework_path['graph'].append(
-                    os.path.join(self._profiling_path, file)
+                    os.path.join(profiling_dir, file)
                 )
             elif data_type.startswith('task_desc_info'):
                 self._framework_path['task'].append(
-                    os.path.join(self._profiling_path, file)
+                    os.path.join(profiling_dir, file)
+                )
+            elif data_type.startswith('point'):
+                self._framework_path['point'].append(
+                    os.path.join(profiling_dir, file)
                 )
 
     def _search_file_from_data_path(self, profiling_id, device_id):
@@ -384,6 +416,10 @@ class FrameworkParser:
                 self._framework_path['task'].append(
                     os.path.join(profiling_data_path, file)
                 )
+            elif data_type.startswith('point'):
+                self._framework_path['point'].append(
+                    os.path.join(profiling_data_path, file)
+                )
 
     def _get_save_path(self, device_id, output_path):
         """
@@ -418,7 +454,13 @@ class FrameworkParser:
                     infos = task_info.strip('\n').split(' ')
                     # key is op name, values is task id, stream id, block_dim
                     self._task_cache[infos[0]] = [infos[2], infos[3], infos[1]]
-                    self._task_id_full_op_name_dict[infos[2]] = infos[0]
+
+                    # if the task id is less than the task id threshold, the
+                    # stream id and task id correspond to an operator
+                    task_id = infos[2]
+                    if int(task_id) < self._task_id_threshold:
+                        task_id = '_'.join([infos[3], task_id])
+                    self._task_id_full_op_name_dict[task_id] = infos[0]
 
     def _parse_graph_files_and_save(self, task_cache):
         """
@@ -546,3 +588,11 @@ class FrameworkParser:
             else:
                 op_name = '+'.join([op_name, name_str.split('/')[-1]])
         return op_name
+
+    def _parse_point_files(self):
+        """Parse the framework point files."""
+        for path in self._framework_path['point']:
+            with open(path, 'r') as file:
+                for point_info in file:
+                    infos = point_info.strip('\n').split(' ')
+                    self._point_info[int(infos[0])] = infos[1]
