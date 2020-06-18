@@ -22,11 +22,6 @@ from tabulate import tabulate
 from mindinsight.profiler.common._utils import fwrite_format, get_file_join_name
 from mindinsight.profiler.common.log import logger
 
-_source_file_target = 'DATA_PREPROCESS.dev.AICPU'
-_dst_file_title = 'title:DATA_PREPROCESS AICPU'
-_dst_file_column_title = ['serial_number', 'node_name', 'total_time(us)', 'dispatch_time(us)',
-                          'RunV2_start', 'compute_start', 'memcpy_start', 'memcpy_end', 'RunV2_end']
-
 
 class DataPreProcessParser:
     """
@@ -38,15 +33,23 @@ class DataPreProcessParser:
 
     """
 
+    _source_file_target = 'DATA_PREPROCESS.dev.AICPU.'
+    _dst_file_title = 'title:DATA_PREPROCESS AICPU'
+    _dst_file_column_title = ['serial_number', 'node_type_name', 'total_time(us)',
+                              'dispatch_time(us)', 'run_start', 'run_end']
+
     def __init__(self, input_path, output_filename):
         self._input_path = input_path
         self._output_filename = output_filename
-        self._source_file_name = self._get_source_file()
+        self._source_file_name = self.get_source_file()
 
-    def _get_source_file(self):
+    def get_source_file(self):
         """Get log file name, which was created by ada service."""
-
-        return get_file_join_name(self._input_path, _source_file_target)
+        file_name = get_file_join_name(self._input_path, self._source_file_target)
+        if not file_name:
+            data_path = os.path.join(self._input_path, "data")
+            file_name = get_file_join_name(data_path, self._source_file_target)
+        return file_name
 
     def execute(self):
         """Execute the parser, get result data, and write it to the output file."""
@@ -62,41 +65,33 @@ class DataPreProcessParser:
 
         node_list = list()
         ai_cpu_total_time_summary = 0
-        # node serial number
+        # Node serial number.
         serial_number = 1
-        for i in range(len(ai_cpu_lines)-1):
+        for i in range(len(ai_cpu_lines) - 1):
             node_line = ai_cpu_lines[i]
-            thread_line = ai_cpu_lines[i+1]
+            thread_line = ai_cpu_lines[i + 1]
             if "Node" in node_line and "Thread" in thread_line:
-                # get the node data from node_line
-                node_name = node_line.split(',')[0].split(':')[-1]
-                run_v2_start = node_line.split(',')[1].split(':')[-1]
-                compute_start = node_line.split(',')[2].split(':')[-1]
-                mercy_start = node_line.split(',')[3].split(':')[-1]
-                mercy_end = node_line.split(',')[4].split(':')[-1]
-                run_v2_end = node_line.split(',')[5].split(':')[-1]
-                # get total_time and dispatch_time from thread line
+                # Get the node data from node_line
+                node_type_name = node_line.split(',')[0].split(':')[-1]
+                run_start = node_line.split(',')[1].split(':')[-1]
+                run_end = node_line.split(',')[2].split(':')[-1]
                 total_time = thread_line.split(',')[-1].split('=')[-1].split()[0]
                 dispatch_time = thread_line.split(',')[-2].split('=')[-1].split()[0]
-
-                node_data = [serial_number, node_name, total_time, dispatch_time, run_v2_start, compute_start,
-                             mercy_start, mercy_end, run_v2_end]
-
-                node_list.append(node_data)
-                # calculate the total time
+                node_list.append([serial_number, node_type_name, total_time,
+                                  dispatch_time, run_start, run_end])
+                # Calculate the total time.
                 ai_cpu_total_time_summary += int(total_time)
-                # increase node serial number
+                # Increase node serial number.
                 serial_number += 1
             elif "Node" in node_line and "Thread" not in thread_line:
-                node_name = node_line.split(',')[0].split(':')[-1]
-                logger.warning("The node:%s cannot find thread data", node_name)
-
-        node_list.append(["AI CPU Total Time(us):", ai_cpu_total_time_summary])
+                node_type_name = node_line.split(',')[0].split(':')[-1]
+                logger.warning("The node type:%s cannot find thread data", node_type_name)
 
         if node_list:
-            fwrite_format(self._output_filename, data_source=_dst_file_title, is_print=True,
+            node_list.append(["AI CPU Total Time(us):", ai_cpu_total_time_summary])
+            fwrite_format(self._output_filename, data_source=self._dst_file_title, is_print=True,
                           is_start=True)
             fwrite_format(self._output_filename,
-                          data_source=tabulate(node_list, _dst_file_column_title,
+                          data_source=tabulate(node_list, self._dst_file_column_title,
                                                tablefmt='simple'),
                           is_start=True, is_print=True)
