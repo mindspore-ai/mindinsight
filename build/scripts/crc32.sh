@@ -65,6 +65,10 @@ build_crc32() {
     rm -f "$CRC32_OUTPUT_DIR/$CRC32_SO_FILE"
 
     read -ra PYBIND11_INCLUDES <<<"$($PYTHON -m pybind11 --includes)"
+    if [ ! -n "${PYBIND11_INCLUDES[0]}" ]; then
+        echo "pybind11 is required"
+        exit 1
+    fi
 
     c++ -O2 -O3 -shared -std=c++11 -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 \
         -Wno-maybe-uninitialized -Wno-unused-parameter -Wall -Wl,-z,relro,-z,now,-z,noexecstack \
