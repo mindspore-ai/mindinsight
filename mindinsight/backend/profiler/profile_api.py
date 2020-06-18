@@ -401,6 +401,52 @@ def get_minddata_pipeline_queue_info():
     return jsonify(op_queue_info)
 
 
+@BLUEPRINT.route("/profile/timeline-summary", methods=["GET"])
+def get_timeline_summary():
+    """
+    Get timeline summary info.
+
+    Returns:
+        Response, the timeline summary info.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/timeline-summary
+    """
+    summary_dir = request.args.get("dir")
+    profiler_dir = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    device_id = request.args.get("device_id", default='0')
+    _ = to_int(device_id, 'device_id')
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'timeline', profiler_dir, device_id)
+    summary = analyser.get_timeline_summary()
+
+    return summary
+
+
+@BLUEPRINT.route("/profile/timeline", methods=["GET"])
+def get_timeline_detail():
+    """
+    Get timeline detail.
+
+    Returns:
+        Response, the detail information of timeline.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/timeline
+    """
+    summary_dir = request.args.get("dir")
+    profiler_dir = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    device_id = request.args.get("device_id", default='0')
+    _ = to_int(device_id, 'device_id')
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'timeline', profiler_dir, device_id)
+    timeline = analyser.get_display_timeline()
+
+    return jsonify(timeline)
+
+
 def init_module(app):
     """
     Init module entry.

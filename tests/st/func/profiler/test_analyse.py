@@ -72,7 +72,6 @@ class TestProfilerAnalyse(TestCase):
     def test_step_trace_file_exist(self):
         """Test the step trace file has been generated"""
         output_files = os.listdir(self.profiler)
-        assert len(output_files) == 9
         assert self.step_trace_file in output_files
 
     @pytest.mark.level0
