@@ -145,14 +145,13 @@
           </div>
         </el-tab-pane>
         <el-tab-pane label="AI CPU"
-                    class="cpu-tab"
-                    name="cpu"
-                    v-if="false">
+                     class="cpu-tab"
+                     name="cpu">
           <div class="cl-profiler-top"
               v-if="cpuCharts.data.length">
             <div>
               <span class="profiler-title">
-                {{ $t('operator.operatorTypeStatistics') }}
+                {{ $t('operator.operatorStatistics') }}
               </span>
             </div>
             <div class="cl-profiler-echarts">

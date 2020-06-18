@@ -9,7 +9,6 @@
     "dataError": "获取到的数据异常",
     "regIllegal": "请输入正确的检索条件",
     "stayTuned": "敬请期待",
-   
     "select": "请选择",
     "search": "请搜索",
     "enter": "请输入",
@@ -72,7 +71,7 @@
     "unhide": "取消隐藏",
     "hideData": "条数据",
     "totalHide": "本页共隐藏{n}条数据",
-    "mustExist":"必选项",
+    "mustExist": "必选项",
     "remarkValidation": "备注为英文字母、数字、中文、下划线、中划线、点的组合，长度范围为[1,128]字符",
     "changeSuccess": "修改成功",
     "metricLabel": "Metric",
@@ -142,7 +141,6 @@
     "isDelete": "是否删除当前阈值",
     "noData": "无"
   },
-
   "images": {
     "titleText": "图像",
     "tagSelectTitle": "标签选择",
@@ -232,43 +230,137 @@
     "path": "路径",
     "number": "卡编号",
     "distribution": "分布图",
-    "queueEmptyRatio": "队列空比例",
-    "queueFullRatio": "队列满比例",
+    "queueEmptyRatio": "队列空比例：",
+    "queueFullRatio": "队列满比例：",
     "dataQueueDis": "数据队列分布图",
     "operatorTimeConAnalysis": "算子耗时分析",
     "timeConStastic": "耗时统计",
-    "avgCost": "平均总耗时",
-    "getCost": "平均取数据耗时",
-    "pushCost": "平均push耗时",
+    "avgCost": "平均总耗时：",
+    "getCost": "平均取数据耗时：",
+    "pushCost": "平均推送数据耗时：",
     "lterationGap": "迭代间隙",
     "lterationTail": "迭代拖尾",
     "propertion": "占比",
+    "minddataTitle": "数据准备详情",
     "title": "迭代间隙流程分析",
     "dataDeal": "数据处理",
     "dataQueue": "数据队列",
     "errorTip": "个step出现异常",
-    "pipelineError": "Pipeline异常step",
-    "deviceQueueError": "device_queue_op异常step",
-    "getNextError": "get_next异常step",
-    "smartHelper":"小助手",
-    "suggestions":"优化建议",
-    "stepSelect":"Step选择",
-    "curCard":"当前卡片",
-    "stepTrace":"迭代轨迹",
-    "mindData":"数据准备",
-    "timeLine":"时间线",
-    "rankOfOperator":"算子耗时统计排名",
-    "stepTraceDetail":"迭代轨迹详情",
-    "viewDetail":"查看详情",
-    "stepNum":"耗时step数",
-    "iterGapTimeLabel":"迭代间隙时长",
-    "iterGapRateLabel":"迭代间隙占比",
-    "fpBpTimeLabel":"FP+BP时长",
-    "fpBpRateLabel":"FP+BP占比",
-    "tailTimeLabel":"迭代拖尾时长",
-    "tailRateLabel":"迭代拖尾占比",
+    "smartHelper": "小助手",
+    "suggestions": "优化建议",
+    "common-profiler_tutorial": {
+      "desc": "如何使用Profiler进行性能分析",
+      "anchor": [
+        "desc"
+      ],
+      "url": [
+        "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/visualization_tutorials.html"
+      ]
+    },
+    "step_trace-proposer_type_label": {
+      "desc": "迭代轨迹性能优化参考建议"
+    },
+    "step_trace-iter_interval": {
+      "desc": "在开启图模式和数据集下沉模式后，如果平均迭代间隙时间大于{n1}ms，则数据处理至计算图执行之间的流程可能存在优化空间。"
+    },
+    "common-proposer_type_label": {
+      "desc": "性能分析与优化指导"
+    },
+    "minddata_pipeline-proposer_type_label": {
+      "desc": "Minddata pipeline性能优化建议"
+    },
+    "minddata_pipeline-general": {
+      "desc": "Pipeline中的算子{n1}可能存在性能瓶颈，请用户重点关注。"
+    },
+    "minddata_pipeline-dataset_op": {
+      "desc": "对于算子{n1}，用户可以尝试调整num_parallel_workers参数。"
+    },
+    "minddata_pipeline-generator_op": {
+      "desc": "对于算子{n1}，用户可以尝试调整num_parallel_workers参数或优化训练脚本，如果性能没有得到优化，可以尝试替换为MindRecordDataset算子。"
+    },
+    "minddata_pipeline-map_op": {
+      "desc": "对于算子{n1}，用户可以尝试调整num_parallel_workers参数,如果使用的是Python的算子，可以尝试优化训练脚本。"
+    },
+    "minddata_pipeline-batch_op": {
+      "desc": "对于算子{n1}，用户可以尝试增加prefetch_size大小。"
+    },
+    "minddata_warning_op": {
+      "desc": "经过上述判断，算子{n1}可能存在优化空间。"
+    },
+    "minddata-proposer_type_label": {
+      "desc": "数据处理性能分析"
+    },
+    "minddata_device_queue": {
+      "desc": "主机侧队列为空比例{n1}/{n2}，为满比例{n3}/{n4}。"
+    },
+    "minddata_get_next_queue": {
+      "desc": "芯片侧队列为空比例{n1}/{n2}。"
+    },
+    "millisecond": "ms",
+    "stepSelect": "Step选择",
+    "curCard": "当前卡片",
+    "stepTrace": "迭代轨迹",
+    "mindData": "数据准备",
+    "timeLine": "时间线",
+    "rankOfOperator": "算子耗时统计排名",
+    "stepTraceDetail": "迭代轨迹详情",
+    "viewDetail": "查看详情",
+    "stepNum": "耗时step数",
+    "iterGapTimeLabel": "迭代间隙时长",
+    "iterGapRateLabel": "迭代间隙占比",
+    "fpBpTimeLabel": "前向+反向时长",
+    "fpBpRateLabel": "前向+反向占比",
+    "tailTimeLabel": "迭代拖尾时长",
+    "tailRateLabel": "迭代拖尾占比",
     "operatorDetail": "算子详情",
-    "times": "次"  
+    "times": "次",
+    "queueStep": "队列step分布图",
+    "queueInfo": "迭代间隙",
+    "pipeline": "数据处理",
+    "pipelineTopTitle": "算子间队列平均使用率",
+    "pipelineMiddleTitle": "算子间队列关系",
+    "deviceQueueOp": "数据发送",
+    "deviceQueueOpTip": "数据发送算子",
+    "getNext": "取数据算子",
+    "connectorQuene": "主机队列",
+    "getData": "数据获取",
+    "opTotalTime": "算子执行总时间：",
+    "streamNum": "执行流数量：",
+    "opNum": "算子数目：",
+    "opTimes": "算子执行总次数：",
+    "features": "功能介绍：",
+    "iterationInfo": "迭代轨迹展示的是每个step从上个迭代开始至该step结束的耗时信息，主体时间分为3部分：迭代间隙、前向+反向、迭代拖尾。",
+    "iterationGapInfo": "主要负责从数据队列中读取数据，如果该部分耗时较长，建议前往数据处理部分进一步分析；",
+    "fpbpTitle": "前向反向",
+    "fpbpInfo": "执行网络中的前向算子以及反向算子，承载了一个step主要的计算工作，如果该部分耗时较长，建议前往算子统计或时间线中进一步分析；",
+    "iterativeTailingTitle": "迭代拖尾",
+    "iterativeTailingInfo": "主要在多卡场景下执行参数聚合参数更新操作，如果该部分耗时较长，建议查看all_reduce耗时以及并行情况。",
+    "statistics": "统计信息：",
+    "totalTime": "总耗时：",
+    "totalSteps": "总step数：",
+    "fpbpTimeRatio": "前向+反向耗时占比：",
+    "iterationGapTimeRatio": "迭代间隙耗时占比：",
+    "iterativeTailingTimeRatio": "迭代拖尾耗时占比：",
+    "dataProcess": "该图展示了数据处理阶段的流程，数据通过数据处理阶段存入主机队列，再通过数据传输阶段存入芯片侧的数据队列，最终由数据传输算子get_next发送给前向训练使用。",
+    "dataProcessInfo": "综合分析该阶段的流程，通过判断主机队列和数据队列为空的情况就可以初步判断可能出现性能异常的阶段。",
+    "analysisOne": "1、如果迭代间隙较长，并且芯片侧的数据队列部分batch为空，那么可能由于数据处理和数据传输阶段导致的性能异常，参考2，反之则定位数据传输算子get_next内部问题；",
+    "analysisTwo": "2、如果通过1定位为数据处理、数据传输阶段异常，则查看主机队列情况，如果大概率为空，则可能为数据处理阶段导致异常，如果大概率不为空，则可能数据传输阶段异常；",
+    "higherAnalysis": "注：可结合下方算子耗时进行高阶分析",
+    "chipInfo": "芯片侧数据队列为空比例：",
+    "hostIsEmpty": "主机侧队列为空比例：",
+    "hostIsFull": "主机侧队列为满比例：",
+    "operatorInfo": "{msg1}、{msg2}算子信息",
+    "workersNum": "使用线程数",
+    "queueDeepChartTitle": "{msg}队列深度折线图",
+    "sampleInterval": "采样间隔",
+    "deep": "深度",
+    "queueTip1": "队列为满比例：",
+    "queueTip2": "队列为空比例：",
+    "totalCapacity": "总容量",
+    "averageCapacity": "平均使用容量",
+    "stepTraceMessage": "当前FP和BP为自动选点，如不合乎预期，请自行修改。",
+    "FPMessage": "FP起始算子：",
+    "BPMessage": "BP终止算子："
   },
   "components": {
     "summaryTitle": "训练选择",
@@ -299,7 +391,6 @@
     "50542215": "查询参数错误",
     "50542216": "Summary日志文件未找到",
     "50542217": "Summary日志路径错误",
-    "50542218": "筛选参数错误",
-    "50546102": "step_id取值错误"
+    "50542218": "筛选参数错误"
   }
 }

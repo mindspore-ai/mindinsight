@@ -25,11 +25,33 @@ limitations under the License.
                     :class="{disabled:svg.noData && svg.data.length === 0}">{{ $t('profiling.viewDetail') }}
               <i class="el-icon-d-arrow-right"></i></button>
           </div>
-          <div class="tip-icon"
-               v-show="false">
-            <el-tooltip content=""
-                        placement="top"
+          <div class="tip-icon">
+            <el-tooltip placement="bottom"
                         effect="light">
+              <div slot="content"
+                   class="tooltip-container">
+                <div>{{$t("profiling.features")}}</div>
+                <div>{{$t('profiling.iterationInfo')}}</div>
+                <div>
+                  <span>{{$t('profiling.queueInfo')}}&nbsp;</span>
+                  <span>{{$t('profiling.iterationGapInfo')}}</span>
+                </div>
+                <div>
+                  <span>{{$t('profiling.fpbpTitle')}}&nbsp;</span>
+                  <span>{{$t('profiling.fpbpInfo')}}</span>
+                </div>
+                <div>
+                  <span>{{$t('profiling.iterativeTailingTitle')}}&nbsp;</span>
+                  <span>{{$t('profiling.iterativeTailingInfo')}}</span>
+                </div>
+                <br />
+                <div>{{$t('profiling.statistics')}}</div>
+                <div>{{$t('profiling.totalTime')}}<span>{{totalTime}}{{$t('profiling.millisecond')}}</span></div>
+                <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
+                <div>{{$t('profiling.fpbpTimeRatio')}}<span>{{fpAndBp}}</span></div>
+                <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationInterval}}</span></div>
+                <div>{{$t('profiling.iterativeTailingTimeRatio')}}<span>{{tail}}</span></div>
+              </div>
               <i class="el-icon-info"></i>
             </el-tooltip>
           </div>
@@ -78,19 +100,144 @@ limitations under the License.
       <div class="minddata">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.mindData') }}</div>
-          <div class="view-detail"
-               v-if="false">
-            <button @click="viewDetail('minddata')">{{ $t('profiling.viewDetail') }}
+          <div class="view-detail">
+            <button @click="viewDetail('minddata')"
+                    :disabled="processSummary.noData"
+                    :class="{disabled:processSummary.noData}">
+              {{ $t('profiling.viewDetail') }}
               <i class="el-icon-d-arrow-right"></i></button>
           </div>
-        </div>
-        <div class="coming-soon-content">
-          <div class="coming-soon-container">
-            <img :src="require('@/assets/images/coming-soon.png')" />
-            <p class='coming-soon-text'>
-              {{$t("public.stayTuned")}}
-            </p>
+          <div class="tip-icon">
+            <el-tooltip placement="bottom"
+                        effect="light">
+              <div slot="content"
+                   class="tooltip-container">
+                <div>{{$t("profiling.features")}}</div>
+                <div>{{$t('profiling.dataProcess')}}</div>
+                <div>{{$t('profiling.dataProcessInfo')}}</div>
+                <div>{{$t('profiling.analysisOne')}}</div>
+                <div>{{$t('profiling.analysisTwo')}}</div>
+                <div v-show="deviceInfoShow||queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
+                <br />
+                <div v-show="deviceInfoShow||queueInfoShow">{{$t('profiling.statistics')}}</div>
+                <div v-show="queueInfoShow">{{$t('profiling.chipInfo')}}
+                  <span>{{queueInfoEmptyNum}}/{{queueInfoTotalNum}}</span>
+                </div>
+                <div v-show="deviceInfoShow">
+                  <div>{{$t('profiling.hostIsEmpty')}}
+                    <span>{{deviceInfoEmptyNum}}/{{deviceInfoTotalNum}}</span>
+                  </div>
+                  <div>{{$t('profiling.hostIsFull')}}
+                    <span>{{deviceInfoFullNum}}/{{deviceInfoTotalNum}}</span>
+                  </div>
+                </div>
+              </div>
+              <i class="el-icon-info"></i>
+            </el-tooltip>
           </div>
+        </div>
+        <div class="pipeline-container"
+             v-show="!processSummary.noData">
+          <div class="cell-container data-process">
+            <div class="title">
+              {{$t('profiling.pipeline')}}
+            </div>
+          </div>
+
+          <div class="queue-container">
+            <div class="img">
+              <div class="edge">
+                <img src="@/assets/images/data-flow.png"
+                     alt="" />
+              </div>
+              <div class="icon">
+                <img src="@/assets/images/queue.svg"
+                     alt=""
+                     clickKey="connector_queue" />
+              </div>
+              <div class="edge">
+                <img src="@/assets/images/data-flow.png"
+                     alt="" />
+              </div>
+            </div>
+            <div class="title">{{$t('profiling.connectorQuene')}}</div>
+            <div class="description">
+              <div class="item"
+                   v-if="processSummary.device.empty || processSummary.device.empty === 0">
+                {{$t('profiling.queueTip2')}}
+                <span class="num">
+                  {{processSummary.device.empty}}/{{processSummary.device.total}}
+                </span>
+              </div>
+              <div class="item"
+                   v-if="processSummary.device.full || processSummary.device.full === 0">
+                {{$t('profiling.queueTip1')}}
+                <span class="num">
+                  {{processSummary.device.empty}}/{{processSummary.device.total}}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cell-container device_queue_op"
+               clickKey="device_queue_op">
+            <div class="title">
+              {{$t('profiling.deviceQueueOp')}}
+            </div>
+            <div class="content">{{$t('profiling.deviceQueueOpTip')}} | TDT</div>
+          </div>
+
+          <div class="queue-container"
+               v-if="processSummary.count === 6">
+            <div class="img">
+              <div class="edge">
+                <img src="@/assets/images/data-flow.png"
+                     alt="" />
+              </div>
+              <div class="icon">
+                <img src="@/assets/images/queue.svg"
+                     clickKey="data_queue"
+                     alt="" />
+              </div>
+              <div class="edge">
+                <img src="@/assets/images/data-flow.png"
+                     alt="" />
+              </div>
+            </div>
+            <div class="title">{{$t('profiling.dataQueue')}}</div>
+            <div class="description">
+              <div class="item"
+                   v-if="processSummary.get_next.empty || processSummary.get_next.empty === 0">
+                {{$t('profiling.queueTip2')}}
+                <span class="num">
+                  {{processSummary.get_next.empty}}/{{processSummary.get_next.total}}
+                </span>
+              </div>
+              <div class="item"
+                   v-if="processSummary.get_next.full || processSummary.get_next.full === 0">
+                {{$t('profiling.queueTip1')}}
+                <span class="num">
+                  {{processSummary.get_next.empty}}/{{processSummary.get_next.total}}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cell-container get-next"
+               clickKey="get_next"
+               v-if="processSummary.count === 6">
+            <div class="title">
+              {{$t('profiling.getData')}}
+            </div>
+          </div>
+        </div>
+        <div class="image-noData"
+             v-if="processSummary.noData">
+          <div>
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+          </div>
+          <p>{{$t("public.noData")}}</p>
         </div>
       </div>
     </div>
@@ -140,18 +287,35 @@ limitations under the License.
       <div class="time-line">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.timeLine') }}</div>
-          <div class="view-detail"
-               v-show="false">
-            <a @click="toPerfetto()">{{ $t('profiling.viewDetail') }} <i class="el-icon-d-arrow-right"></i></a>
+          <div class="view-detail">
+            <button @click="toPerfetto()"
+                    :disabled="perfetto.waiting"
+                    :class="{disabled:perfetto.waiting}">{{ $t('profiling.viewDetail') }}
+              <i class="el-icon-d-arrow-right"></i></button>
           </div>
         </div>
-        <div class="coming-soon-content">
-          <div class="coming-soon-container">
-            <img :src="require('@/assets/images/coming-soon.png')" />
-            <p class='coming-soon-text'>
-              {{$t("public.stayTuned")}}
-            </p>
+        <div class="timeline-info"
+             v-if="!timelineInfo.noData">
+          <div class="info-line">
+            <span>{{$t('profiling.opTotalTime')}}</span><span>{{timelineInfo.totalTime}}ms</span>
           </div>
+          <div class="info-line">
+            <span>{{$t('profiling.streamNum')}}</span><span>{{timelineInfo.streamNum}}</span>
+          </div>
+          <div class="info-line">
+            <span>{{$t('profiling.opNum')}}</span><span>{{timelineInfo.opNum}}</span></div>
+          <div class="info-line">
+            <span>{{$t('profiling.opTimes')}}</span><span>{{timelineInfo.opTimes + $t('profiling.times')}}</span>
+          </div>
+
+        </div>
+        <div class="image-noData"
+             v-if="timelineInfo.noData">
+          <div>
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+          </div>
+          <p>{{$t("public.noData")}}</p>
         </div>
       </div>
     </div>
@@ -164,6 +328,18 @@ import CommonProperty from '../../common/common-property';
 export default {
   data() {
     return {
+      fpAndBp: '--',
+      iterationInterval: '--',
+      totalSteps: '--',
+      totalTime: '--',
+      tail: '--',
+      queueInfoShow: false,
+      deviceInfoShow: false,
+      queueInfoEmptyNum: '--',
+      queueInfoTotalNum: '--',
+      deviceInfoEmptyNum: '--',
+      deviceInfoTotalNum: '--',
+      deviceInfoFullNum: '--',
       svg: {
         data: [],
         svgPadding: 20,
@@ -192,6 +368,33 @@ export default {
         noData: false,
         topN: [],
         colorList: ['#6C92FA', '#6CBFFF', '#4EDED2', '#7ADFA0', '#A6DD82'],
+      },
+      perfetto: {
+        url: 'https://ui.perfetto.dev/#!',
+        data: null,
+        delay: 5000,
+        waiting: true,
+      },
+      timelineInfo: {
+        totalTime: 0,
+        streamNum: 0,
+        opNum: 0,
+        opTimes: 0,
+        noData: true,
+      },
+      processSummary: {
+        noData: true,
+        count: 6,
+        device: {
+          empty: 0,
+          full: 0,
+          total: 0,
+        },
+        get_next: {
+          empty: 0,
+          full: 0,
+          total: 0,
+        },
       },
     };
   },
@@ -231,9 +434,46 @@ export default {
   },
   methods: {
     init() {
+      this.queryTimeline();
       this.queryTrainingTrace();
+      this.getProccessSummary();
       this.initPieChart();
       window.addEventListener('resize', this.resizeTrace, false);
+    },
+    getProccessSummary() {
+      const params = {
+        train_id: this.trainingJobId,
+        profile: this.summaryPath,
+        device_id: this.currentCard,
+      };
+      RequestService.queryProcessSummary(params).then((resp) => {
+        if (resp && resp.data) {
+          const data = JSON.parse(JSON.stringify(resp.data));
+          this.processSummary.count = Object.keys(data).length;
+          this.dealProcess(data);
+
+          // 芯片侧
+          if (resp.data.get_next_queue_info) {
+            this.queueInfoShow = true;
+            this.queueInfoEmptyNum =
+              resp.data.get_next_queue_info.summary.empty_batch_count;
+            this.queueInfoTotalNum =
+              resp.data.get_next_queue_info.summary.total_batch;
+          }
+          // 主机侧
+          if (resp.data.device_queue_info) {
+            this.deviceInfoShow = true;
+            this.deviceInfoEmptyNum =
+              resp.data.device_queue_info.summary.empty_batch_count;
+            this.deviceInfoTotalNum =
+              resp.data.device_queue_info.summary.total_batch;
+            this.deviceInfoFullNum =
+              resp.data.device_queue_info.summary.full_batch_count;
+          }
+        } else {
+          this.dealProcess(null);
+        }
+      });
     },
     viewDetail(path) {
       this.$router.push({
@@ -250,13 +490,15 @@ export default {
       option.tooltip = {
         trigger: 'item',
         formatter: (params) => {
-          return `${params.marker} ${params.data.name} ${params.percent}%`;
+          return `${params.data.name}<br>${params.marker}${params.percent}%`;
         },
+        confine: true,
+        extraCssText: 'white-space:normal; word-break:break-word;',
       };
       option.series = [
         {
           type: 'pie',
-          center: ['50%', '50%'],
+          center: ['55%', '55%'],
           data: this.pieChart.data,
           radius: '50%',
           lable: {
@@ -370,6 +612,19 @@ export default {
               setTimeout(() => {
                 this.dealTraceData();
               }, 100);
+              if (res.data.summary) {
+                this.fpAndBp = res.data.summary.fp_and_bp;
+                this.iterationInterval = res.data.summary.iteration_interval;
+                this.totalSteps = res.data.summary.total_steps;
+                this.totalTime = res.data.summary.total_time;
+                this.tail = res.data.summary.tail;
+              } else {
+                this.fpAndBp = '--';
+                this.iterationInterval = '--';
+                this.totalSteps = '--';
+                this.totalTime = '--';
+                this.tail = '--';
+              }
             } else {
               document.querySelector('#trace').style.height = '0px';
               this.svg.noData = true;
@@ -568,6 +823,85 @@ export default {
       }
       return new Uint8Array(arr);
     },
+    toPerfetto() {
+      if (this.perfetto.data) {
+        const popupwin = window.open(this.perfetto.url);
+        setTimeout(() => {
+          const params = {
+            perfetto: {
+              title: '',
+              buffer: this.perfetto.data,
+            },
+          };
+          if (popupwin) {
+            popupwin.postMessage(params, this.perfetto.url);
+          }
+        }, this.perfetto.delay);
+      } else {
+        this.perfetto.waiting = true;
+      }
+    },
+    queryTimeline() {
+      const params = {
+        dir: this.relativePath,
+        device_id: this.currentCard,
+      };
+      RequestService.queryTimlineInfo(params)
+          .then((res) => {
+            if (res && res.data) {
+              this.timelineInfo.noData = false;
+              this.timelineInfo.totalTime = res.data.total_time.toFixed(4);
+              this.timelineInfo.streamNum = res.data.num_of_streams;
+              this.timelineInfo.opNum = res.data.num_of_ops;
+              this.timelineInfo.opTimes = res.data.op_exe_times;
+            } else {
+              this.timelineInfo.noData = true;
+            }
+          })
+          .catch(() => {
+            this.timelineInfo.noData = true;
+          });
+      this.perfetto.waiting = true;
+      RequestService.queryTimeline(params).then((res) => {
+        if (res && res.data) {
+          this.perfetto.data = this.stringToUint8Array(
+              JSON.stringify(res.data),
+          );
+          this.perfetto.waiting = false;
+        }
+      });
+    },
+    dealProcess(data) {
+      this.processSummary.device = {
+        empty: 0,
+        full: 0,
+        total: 0,
+      };
+      this.processSummary.get_next = {
+        empty: 0,
+        full: 0,
+        total: 0,
+      };
+      this.processSummary.noData = true;
+
+      if (data) {
+        if (data.device_queue_info && data.device_queue_info.summary) {
+          this.processSummary.device = {
+            empty: data.device_queue_info.summary.empty_batch_count,
+            full: data.device_queue_info.summary.full_batch_count,
+            total: data.device_queue_info.summary.total_batch,
+          };
+        }
+        if (data.get_next_queue_info && data.get_next_queue_info.summary) {
+          this.processSummary.get_next = {
+            empty: data.get_next_queue_info.summary.empty_batch_count,
+            full: data.get_next_queue_info.summary.full_batch_count,
+            total: data.get_next_queue_info.summary.total_batch,
+          };
+        }
+        this.processSummary.noData = false;
+      }
+    },
   },
   destroyed() {
     window.removeEventListener('resize', this.resizeTrace, false);
@@ -576,13 +910,20 @@ export default {
 };
 </script>
 <style lang="scss">
+.el-tooltip-popper {
+  max-width: 500px;
+}
+.tooltip-container {
+  line-height: 20px;
+  padding: 10px;
+}
 .pro-router-wrap {
   height: 100%;
   & > div {
     float: left;
     height: 100%;
     & > div {
-      border: 1px solid #ddd;
+      border: 1px solid #eee;
       border-radius: 4px;
     }
     .title-wrap {
@@ -594,8 +935,9 @@ export default {
       }
       .tip-icon {
         float: right;
-        margin-right: 18px;
+        margin-right: 10px;
         font-size: 20px;
+        color: #6c7280;
         .el-icon-warning {
           cursor: pointer;
           &:hover::before {
@@ -650,7 +992,7 @@ export default {
     }
   }
   .pro-router-left {
-    width: calc(100% - 350px);
+    width: calc(100% - 400px);
     padding-right: 15px;
     .step-trace {
       height: 45%;
@@ -667,10 +1009,101 @@ export default {
     }
     .minddata {
       height: calc(55% - 15px);
+      .pipeline-container {
+        width: 100%;
+        padding: 20px 20px;
+        height: calc(100% - 52px);
+        display: flex;
+        font-size: 0;
+        align-items: baseline;
+        .cell-container {
+          width: 20%;
+          padding: 20px 0;
+          border: 2px solid transparent;
+          .title {
+            font-size: 14px;
+            line-height: 20px;
+            padding: 0 0 0 20px;
+            font-weight: bold;
+          }
+          .content {
+            padding: 10px 20px 0px 20px;
+            font-size: 12px;
+          }
+        }
+        .data-process {
+          background-color: #e3f8eb;
+          .title {
+            border-left: 2px solid #00a5a7;
+          }
+        }
+        .device_queue_op {
+          background-color: #e1f2ff;
+          .title {
+            border-left: 2px solid #6cbfff;
+          }
+        }
+        .get-next {
+          background-color: #fef4dd;
+          .title {
+            border-left: 2px solid #fdca5a;
+          }
+        }
+        .queue-container {
+          width: 20%;
+          position: relative;
+          .img {
+            width: 100%;
+            height: 24px;
+            margin-top: 30px;
+            .edge {
+              width: calc(50% - 40px);
+              display: inline-block;
+              vertical-align: middle;
+              img {
+                width: 100%;
+              }
+            }
+            .icon {
+              padding: 0 20px;
+              display: inline-block;
+              vertical-align: middle;
+              img {
+                padding: 3px;
+                border: 2px solid transparent;
+              }
+            }
+          }
+
+          .title {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: bold;
+          }
+          .description {
+            position: absolute;
+            font-size: 12px;
+            line-height: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            width: 100%;
+            text-align: center;
+            .item {
+              font-size: 12px;
+              line-height: 16px;
+              white-space: normal;
+              .num {
+                color: #07a695;
+              }
+            }
+          }
+        }
+      }
     }
   }
   .pro-router-right {
-    width: 350px;
+    width: 400px;
     .op-time-consume {
       height: calc(60% - 15px);
       margin-bottom: 15px;
@@ -728,6 +1161,14 @@ export default {
     .time-line {
       height: 40%;
       overflow: hidden;
+      .timeline-info {
+        width: 100%;
+        height: calc(100% - 54px);
+        padding-left: 36px;
+      }
+      .info-line {
+        line-height: 30px;
+      }
     }
   }
   .op-time-content {

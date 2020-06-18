@@ -176,6 +176,14 @@ export default {
       },
     });
   },
+  // get data of helper
+  queryDataOfProfileHelper(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/profile/summary/propose',
+      params: params,
+    });
+  },
   // query training trace
   queryTrainingTrace(params) {
     return axios({
@@ -191,6 +199,77 @@ export default {
     return axios({
       method: 'get',
       url: '/v1/mindinsight/profile/training-trace/target-time-info',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  queryTimeline(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/profile/timeline',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  queryTimlineInfo(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/timeline-summary',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  queryOpQueue(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/profile/minddata-pipeline/op-queue',
+      params: params.params,
+      data: params.body,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  queryQueue(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/minddata-pipeline/queue',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  queryProcessSummary(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/process_summary',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  queueInfo(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/queue_info',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  minddataOp(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/minddata_op',
       params: params,
       headers: {
         ignoreError: true,
