@@ -29,9 +29,11 @@ class AicoreTypeAnalyser(BaseAnalyser):
         profiling_dir (str): The directory where the parsed profiling files are
             located.
         device_id (str): The device ID.
+
+    Raises:
+        ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    __col_names__ = ['op_type', 'execution_time', 'execution_frequency',
-                     'percent']
+    _col_names = ['op_type', 'execution_time', 'execution_frequency', 'percent']
     _file_name_aicore_type_time = 'aicore_intermediate_{}_type.csv'
 
     def _load(self):
@@ -82,9 +84,12 @@ class AicoreDetailAnalyser(BaseAnalyser):
         profiling_dir (str): The directory where the parsed profiling files are
             located.
         device_id (str): The device ID.
+
+    Raises:
+        ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    __col_names__ = ['op_name', 'op_type', 'execution_time', 'subgraph',
-                     'full_op_name', 'op_info']
+    _col_names = ['op_name', 'op_type', 'execution_time', 'subgraph',
+                  'full_op_name', 'op_info']
     _file_name_aicore_detail_time = 'aicore_intermediate_{}_detail.csv'
     _file_name_framework_info = 'framework_raw_{}.csv'
 
@@ -210,11 +215,11 @@ class AicoreDetailAnalyser(BaseAnalyser):
             is_display_full_op_name (bool): Whether to display the operator full
                 name.
         """
-        self._display_col_names = self.__col_names__[0:4]
+        self._display_col_names = self._col_names[0:4]
         if is_display_full_op_name:
-            self._display_col_names.append(self.__col_names__[4])
+            self._display_col_names.append(self._col_names[4])
         if is_display_detail:
-            self._display_col_names.append(self.__col_names__[5])
+            self._display_col_names.append(self._col_names[5])
 
     def _convert_framework_field_type(self, row):
         """
@@ -253,10 +258,13 @@ class AicpuAnalyser(BaseAnalyser):
         profiling_dir (str): The directory where the parsed profiling files are
             located.
         device_id (str): The device ID.
+
+    Raises:
+        ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    __col_names__ = ['serial_number', 'op_name', 'total_time', 'dispatch_time',
-                     'RunV2_start', 'compute_start', 'memcpy_start',
-                     'memcpy_end', 'RunV2_end']
+    _col_names = ['serial_number', 'op_name', 'total_time', 'dispatch_time',
+                  'RunV2_start', 'compute_start', 'memcpy_start', 'memcpy_end',
+                  'RunV2_end']
     _file_name_aicpu_time = 'aicpu_intermediate_{}.csv'
 
     def _load(self):

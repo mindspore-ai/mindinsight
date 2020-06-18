@@ -18,9 +18,11 @@ import json
 import os
 from unittest import TestCase
 
-from mindinsight.profiler.analyser.analyser import AicoreDetailAnalyser
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
+
+COL_NAMES = ['op_name', 'op_type', 'execution_time', 'subgraph', 'full_op_name',
+             'op_info']
 
 
 def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
@@ -56,7 +58,7 @@ def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
         result = cache
 
     if sort_name:
-        sort_index = AicoreDetailAnalyser.__col_names__.index(sort_name)
+        sort_index = COL_NAMES.index(sort_name)
         result.sort(key=lambda item: item[sort_index], reverse=sort_type)
 
     return result
@@ -73,7 +75,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_1(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__,
+            'col_name': COL_NAMES,
             'object': get_detail_infos(),
             'size': 10
         }
@@ -86,7 +88,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_2(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__,
+            'col_name': COL_NAMES,
             'object': get_detail_infos(indexes=[9]),
             'size': 1
         }
@@ -123,7 +125,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_3(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__,
+            'col_name': COL_NAMES,
             'object': get_detail_infos(sort_name='execution_time', sort_type=True),
             'size': 10
         }
@@ -137,7 +139,7 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__,
+            'col_name': COL_NAMES,
             'object': get_detail_infos(sort_name='op_name', sort_type=False),
             'size': 10
         }
@@ -153,7 +155,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_4(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__,
+            'col_name': COL_NAMES,
             'object': get_detail_infos(indexes=[2, 3]),
             'size': 10
         }
@@ -167,7 +169,7 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__,
+            'col_name': COL_NAMES,
             'object': [],
             'size': 10
         }
@@ -183,7 +185,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_5(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__,
+            'col_name': COL_NAMES,
             'object': get_detail_infos(
                 indexes=[1, 2], sort_name='execution_time', sort_type=True
             ),
@@ -207,7 +209,7 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__,
+            'col_name': COL_NAMES,
             'object': get_detail_infos(
                 indexes=[0, 1, 2, 8], sort_name='execution_time', sort_type=True
             ),
@@ -234,7 +236,7 @@ class TestAicoreDetailAnalyser(TestCase):
         detail_infos = get_detail_infos(indexes=[9])
 
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__[0:5],
+            'col_name': COL_NAMES[0:5],
             'object': [item[0:5] for item in detail_infos],
             'size': 1
         }
@@ -250,7 +252,7 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__[0:4],
+            'col_name': COL_NAMES[0:4],
             'object': [item[0:4] for item in detail_infos],
             'size': 1
         }
@@ -270,7 +272,7 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 5, 3, 4])
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__[0:4],
+            'col_name': COL_NAMES[0:4],
             'object': [item[0:4] for item in detail_infos]
         }
 
@@ -292,7 +294,7 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 3, 4, 8, 6])
         expect_result = {
-            'col_name': AicoreDetailAnalyser.__col_names__[0:4],
+            'col_name': COL_NAMES[0:4],
             'object': [item[0:4] for item in detail_infos]
         }
 
@@ -310,14 +312,11 @@ class TestAicoreDetailAnalyser(TestCase):
         result = self._analyser.query_and_sort_by_op_type(
             filter_condition, op_type_order
         )
-        print(result)
         self.assertDictEqual(expect_result, result)
 
     def test_col_names(self):
         """Test the querying column names function."""
-        self.assertListEqual(
-            AicoreDetailAnalyser.__col_names__, self._analyser.col_names
-        )
+        self.assertListEqual(COL_NAMES, self._analyser.col_names)
 
     def test_data(self):
         """Test the querying data function."""

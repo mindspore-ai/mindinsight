@@ -30,6 +30,8 @@ from mindinsight.profiler.parser.aicpu_data_parser import DataPreProcessParser
 from mindinsight.profiler.parser.framework_parser import FrameworkParser
 from mindinsight.profiler.parser.hwts_log_parser import HWTSLogParser
 from mindinsight.profiler.parser.minddata_parser import MinddataParser
+from mindinsight.profiler.parser.minddata_pipeline_parser import \
+    MinddataPipelineParser
 from mindinsight.profiler.parser.optime_parser import OPComputeTimeParser
 from mindinsight.profiler.parser.step_trace_parser import StepTraceParser
 from mindinsight.utils.exceptions import MindInsightException
@@ -198,11 +200,18 @@ class Profiler:
         # Parsing minddata AICPU profiling
         MinddataParser.execute(source_path, self._output_path, self._dev_id)
 
+        # parse minddata pipeline operator and queue
+        try:
+            pipeline_parser = MinddataPipelineParser(job_id, self._dev_id)
+            pipeline_parser.parse()
+        except MindInsightException as err:
+            logger.warning(err.message)
+
         # analyse op compute time info
         try:
             self._analyser_op_info()
         except MindInsightException as err:
-            logger.error(err.message)
+            logger.warning(err.message)
 
         # analyse step trace info
         self._analyse_step_trace(source_path, framework_parser)

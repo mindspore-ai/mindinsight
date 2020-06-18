@@ -27,6 +27,11 @@ AICORE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "precent"
 AICORE_DETAIL_COL = ["op_name", "op_type", "execution_time", "subgraph", "full_op_name"]
 AICPU_COL = ["serial_number", "op_name", "total_time", "dispatch_time", "RunV2_start",
              "compute_start", "memcpy_start", "memcpy_end", "RunV2_end"]
+MINDDATA_PIPELINE_COL = [
+    'op_id', 'op_type', 'num_workers', 'output_queue_average_size',
+    'output_queue_length', 'output_queue_usage_rate', 'sample_interval',
+    'parent_id'
+]
 
 
 def validate_condition(search_condition):
@@ -68,7 +73,7 @@ def validate_condition(search_condition):
         raise ProfilerOpTypeException("The op_type must in ['aicpu', 'aicore_type', 'aicore_detail']")
 
     if "group_condition" in search_condition:
-        validata_group_condition(search_condition)
+        validate_group_condition(search_condition)
 
     if "sort_condition" in search_condition:
         validate_sort_condition(search_condition, search_scope)
@@ -77,7 +82,7 @@ def validate_condition(search_condition):
         validate_filter_condition(search_condition)
 
 
-def validata_group_condition(search_condition):
+def validate_group_condition(search_condition):
     """
     Verify the group_condition in search_condition is valid or not.
 
@@ -91,7 +96,7 @@ def validata_group_condition(search_condition):
     if not isinstance(group_condition, dict):
         raise ProfilerGroupConditionException("The group condition must be dict.")
     if "limit" in group_condition:
-        limit = group_condition.get("limit", 0)
+        limit = group_condition.get("limit", 10)
         if isinstance(limit, bool) \
                 or not isinstance(group_condition.get("limit"), int):
             log.error("The limit must be int.")
@@ -145,6 +150,35 @@ def validate_sort_condition(search_condition, search_scope):
             raise ProfilerSortConditionException(err_msg)
 
 
+def validate_op_filter_condition(op_condition, value_type=str, value_type_msg='str'):
+    """
+    Verify the op_condition in filter_condition is valid or not.
+
+    Args:
+        op_condition (dict): The op_condition in search_condition.
+        value_type (type): The value type. Default: str.
+        value_type_msg (str): The value type message. Default: 'str'.
+
+    Raises:
+        ProfilerFilterConditionException: If the filter_condition param in search_condition is invalid.
+    """
+    filter_key = ["in", "not_in", "partial_match_str_in"]
+    if not isinstance(op_condition, dict):
+        raise ProfilerFilterConditionException("The filter condition value must be dict.")
+    for key, value in op_condition.items():
+        if not isinstance(key, str):
+            raise ProfilerFilterConditionException("The filter key must be str")
+        if not isinstance(value, list):
+            raise ProfilerFilterConditionException("The filter value must be list")
+        if key not in filter_key:
+            raise ProfilerFilterConditionException("The filter key must in {}.".format(filter_key))
+        for item in value:
+            if not isinstance(item, value_type):
+                raise ProfilerFilterConditionException(
+                    "The item in filter value must be {}.".format(value_type_msg)
+                )
+
+
 def validate_filter_condition(search_condition):
     """
     Verify the filter_condition in search_condition is valid or not.
@@ -155,33 +189,9 @@ def validate_filter_condition(search_condition):
     Raises:
         ProfilerFilterConditionException: If the filter_condition param in search_condition is invalid.
     """
-    def validate_op_filter_condition(op_condition):
-        """
-        Verify the op_condition in filter_condition is valid or not.
-
-        Args:
-            op_condition (dict): The op_condition in search_condition.
-
-        Raises:
-            ProfilerFilterConditionException: If the filter_condition param in search_condition is invalid.
-        """
-        if not isinstance(op_condition, dict):
-            raise ProfilerFilterConditionException("Wrong op_type filter condition.")
-        for key, value in op_condition.items():
-            if not isinstance(key, str):
-                raise ProfilerFilterConditionException("The filter key must be str")
-            if not isinstance(value, list):
-                raise ProfilerFilterConditionException("The filter value must be list")
-            if key not in filter_key:
-                raise ProfilerFilterConditionException("The filter key must in {}.".format(filter_key))
-            for item in value:
-                if not isinstance(item, str):
-                    raise ProfilerFilterConditionException("The item in filter value must be str")
-
     filter_condition = search_condition.get("filter_condition")
     if not isinstance(filter_condition, dict):
         raise ProfilerFilterConditionException("The filter condition must be dict.")
-    filter_key = ["in", "not_in", "partial_match_str_in"]
     if filter_condition:
         if "op_type" in filter_condition:
             op_type_condition = filter_condition.get("op_type")
@@ -232,3 +242,65 @@ def validate_ui_proc(proc_name):
     if proc_name not in accept_names:
         log.error("Invalid proc_name. The proc_name for restful api is in %s", accept_names)
         raise ProfilerParamValueErrorException(f'proc_name should be in {accept_names}.')
+
+
+def validate_minddata_pipeline_condition(condition):
+    """
+    Verify the minddata pipeline search condition is valid or not.
+
+    Args:
+        condition (dict): The minddata pipeline search condition.
+
+    Raises:
+        ProfilerParamTypeErrorException: If the type of the search condition is
+            invalid.
+        ProfilerDeviceIdException: If the device_id param in the search
+            condition is invalid.
+        ProfilerGroupConditionException: If the group_condition param in the
+            search condition is invalid.
+        ProfilerSortConditionException: If the sort_condition param in the
+            search condition is invalid.
+        ProfilerFilterConditionException: If the filter_condition param in the
+            search condition is invalid.
+    """
+    if not isinstance(condition, dict):
+        log.error("Invalid condition type, it should be dict.")
+        raise ProfilerParamTypeErrorException(
+            "Invalid condition type, it should be dict."
+        )
+
+    if "device_id" in condition:
+        device_id = condition.get("device_id")
+        if not isinstance(device_id, str):
+            raise ProfilerDeviceIdException(
+                "Invalid device_id type, it should be str."
+            )
+
+    if "group_condition" in condition:
+        validate_group_condition(condition)
+
+    if "sort_condition" in condition:
+        validate_sort_condition(condition, MINDDATA_PIPELINE_COL)
+
+    if "filter_condition" in condition:
+        filter_condition = condition.get('filter_condition')
+        if not isinstance(filter_condition, dict):
+            raise ProfilerFilterConditionException(
+                "The filter condition must be dict."
+            )
+        for key, value in filter_condition.items():
+            if key == 'op_id':
+                validate_op_filter_condition(
+                    value, value_type=int, value_type_msg='int'
+                )
+            elif key == 'op_type':
+                validate_op_filter_condition(value)
+            elif key == 'is_display_op_detail':
+                if not isinstance(key, bool):
+                    raise ProfilerFilterConditionException(
+                        "The condition must be bool."
+                    )
+            else:
+                raise ProfilerFilterConditionException(
+                    "The key {} of filter_condition is not support.".format(key)
+                )

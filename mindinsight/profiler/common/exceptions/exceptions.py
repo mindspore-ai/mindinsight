@@ -214,3 +214,14 @@ class JobIdMismatchException(MindInsightException):
             message=ProfilerErrorMsg.JOB_ID_MISMATCH_ERROR.value,
             http_code=400
         )
+
+
+class ProfilerPipelineOpNotExistException(MindInsightException):
+    """The minddata pipeline operator does not exist error in profiler module."""
+
+    def __init__(self, msg):
+        super(ProfilerPipelineOpNotExistException, self).__init__(
+            error=ProfilerErrors.PIPELINE_OP_NOT_EXIST_ERROR,
+            message=ProfilerErrorMsg.PIPELINE_OP_NOT_EXIST_ERROR.value.format(msg),
+            http_code=400
+        )
