@@ -245,16 +245,24 @@ class Profiler:
             self._output_path,
             f'step_trace_raw_{self._dev_id}_detail_time.csv'
         )
+        point_info_file_path = os.path.join(
+            self._output_path,
+            'step_trace_point_info.json'
+        )
         # whether keep the first step
         skip_first_step_flag = framework_parser.check_op_name(INIT_OP_NAME)
+        point_info = framework_parser.point_info
         # parser the step trace files and save the result to disk
         parser = StepTraceParser(input_dir=source_path,
                                  output_file_path=step_trace_intermediate_file_path,
                                  job_id=self._job_id_env,
                                  skip_first_step=skip_first_step_flag)
         parser.parse_and_save()
+        point_info = parser.record_point_info(point_info, point_info_file_path)
         # print parser result
         parser.show()
+        logger.info("Finish saving the intermediate result: %s", step_trace_intermediate_file_path)
+        logger.info("The point info is: %s", point_info)
 
     def _analyse_timeline(self):
         """

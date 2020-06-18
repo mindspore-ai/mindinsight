@@ -14,6 +14,7 @@
 # ============================================================================
 """The parser for step trace data."""
 import csv
+import json
 import os
 import stat
 import struct
@@ -41,6 +42,8 @@ class StepTraceParser:
         skip_first_step (bool): Whether skip the first step or not.
     """
     _event_size = 20
+    _fp_tag = 1
+    _bp_tag = 2
 
     def __init__(self, input_dir, output_file_path, job_id=0, skip_first_step=False):
         self._input_dir = input_dir
@@ -79,6 +82,30 @@ class StepTraceParser:
             raise ProfilerIOException()
         else:
             log.info("Finish to save intermediate result for step trace file.")
+
+    def record_point_info(self, point_info, output_path):
+        """
+        Record point info into json.
+
+        Args:
+            point_info (dict): The point info about tag id and relative op name.
+            output_path (str): The output path for saving point info.
+
+        Returns:
+            dict, parsed point info.
+        """
+        points = {
+            'fp_start': point_info.get(self._fp_tag, ''),
+            'bp_end': point_info.get(self._bp_tag, '')
+        }
+        try:
+            with open(output_path, 'w') as json_file:
+                json.dump(points, json_file)
+            os.chmod(output_path, stat.S_IREAD)
+        except (IOError, OSError) as err:
+            log.warning('Failed to save point info. %s', err)
+            raise ProfilerIOException
+        return points
 
     def _get_step_trace_files(self):
         """Get step trace files."""
@@ -169,8 +196,8 @@ class StepTraceParser:
         min_job_id = 255
         step_flag: bool = lambda tag: tag > min_job_id or tag == 0
         end_flag: bool = lambda tag: tag == min_job_id
-        fp_flag: bool = lambda tag: tag == 1
-        bp_flag: bool = lambda tag: tag == 2
+        fp_flag: bool = lambda tag: tag == self._fp_tag
+        bp_flag: bool = lambda tag: tag == self._bp_tag
 
         def _on_step_event():
             """Handle step event."""
