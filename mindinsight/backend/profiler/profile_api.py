@@ -21,23 +21,24 @@ import json
 import os
 
 from flask import Blueprint
+from flask import Response
 from flask import jsonify
 from flask import request
-from flask import Response
 from marshmallow import ValidationError
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, \
-    unquote_args, to_int, get_device_id
+from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, to_int, get_device_id
+from mindinsight.datavisual.utils.tools import unquote_args
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
-from mindinsight.profiler.proposer.compose_proposer import ComposeProposal
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
-from mindinsight.profiler.common.validator.validate import validate_condition, \
-    validate_ui_proc, validate_minddata_pipeline_condition
+from mindinsight.profiler.common.validator.validate import validate_condition, validate_ui_proc
+from mindinsight.profiler.common.validator.validate import validate_minddata_pipeline_condition
 from mindinsight.profiler.common.validator.validate_path import \
-    validate_and_normalize_profiler_path, validate_and_normalize_path
+    validate_and_normalize_path
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_profiler_path
+from mindinsight.profiler.proposer.compose_proposer import ComposeProposal
 from mindinsight.utils.exceptions import ParamValueError
 
 BLUEPRINT = Blueprint("profile", __name__, url_prefix=settings.URL_PREFIX)
