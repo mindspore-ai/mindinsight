@@ -209,7 +209,9 @@ class Profiler:
 
         # parse minddata pipeline operator and queue
         try:
-            pipeline_parser = MinddataPipelineParser(job_id, self._dev_id)
+            pipeline_parser = MinddataPipelineParser(
+                self._output_path, self._dev_id, self._output_path
+            )
             pipeline_parser.parse()
         except MindInsightException as err:
             logger.warning(err.message)

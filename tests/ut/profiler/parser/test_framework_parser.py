@@ -59,10 +59,14 @@ class TestFrameworkParser:
         self._output_path_2 = tempfile.mkdtemp(prefix='test_framework_parser_')
         self._parser_2 = FrameworkParser('JOB2', '0', self._output_path_2)
 
+        self._output_path_4 = tempfile.mkdtemp(prefix='test_framework_parser_')
+        self._parser_4 = FrameworkParser('JOB4', '0', self._output_path_4)
+
     def teardown_method(self) -> None:
         """Clear up after test case execution."""
         shutil.rmtree(self._output_path_1)
         shutil.rmtree(self._output_path_2)
+        shutil.rmtree(self._output_path_4)
         FrameworkParser._raw_data_dir = '/var/log/npu/profiling'
 
     def test_save_path(self):
@@ -72,6 +76,14 @@ class TestFrameworkParser:
 
         expect_result = os.path.join(self._output_path_2, 'framework_raw_0.csv')
         assert expect_result == self._parser_2.save_path
+
+    def test_point_info(self):
+        """Test the querying point info function."""
+        expect_result = {
+            1: 'Default/Cast-op6',
+            2: 'Default/TransData-op7'
+        }
+        assert expect_result == self._parser_4.point_info
 
     def test_to_task_id_full_op_name_dict(self):
         """Test the querying task id and full operator name dict function."""
@@ -84,6 +96,15 @@ class TestFrameworkParser:
         }
         assert expect_result == self._parser_1.to_task_id_full_op_name_dict()
         assert expect_result == self._parser_2.to_task_id_full_op_name_dict()
+
+        expect_result = {
+            '0_1': 'Default/Cast-op6',
+            '0_2': 'Default/TransData-op7',
+            '0_3': 'Default/network-WithLossCell/_backbone-ResNet/conv1-Conv2d/Cast-op5',
+            '0_4': 'Default/network-WithLossCell/_backbone-ResNet/layer1-SequentialCell/'
+                   '0-ResidualBlock/conv1-Conv2d/Cast-op28'
+        }
+        assert expect_result == self._parser_4.to_task_id_full_op_name_dict()
 
     def test_parse(self):
         """Test the parse function."""
