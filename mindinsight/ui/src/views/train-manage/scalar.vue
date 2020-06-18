@@ -493,6 +493,7 @@ export default {
                   zoomData: [null, null],
                   zoomDataTimer: null,
                   charObj: null,
+                  invalidData: false,
                 });
 
                 propsList.push({
@@ -633,6 +634,7 @@ export default {
               if (hasInvalidData) {
                 this.$set(sampleObject, 'invalidData', true);
               }
+
               sampleObject.charData.charOption = this.formateCharOption(
                   sampleIndex,
               );
@@ -738,44 +740,52 @@ export default {
 
         let pieceStr = '';
         if (tempStorgeArr.length === 1) {
-          if (tempStorgeArr[0].gt && tempStorgeArr[0].lt) {
+          if (!isNaN(tempStorgeArr[0].gt) && !isNaN(tempStorgeArr[0].lt)) {
             pieceStr = `(${tempStorgeArr[0].gt},${tempStorgeArr[0].lt})`;
-          }
-
-          if (tempStorgeArr[0].gt && !tempStorgeArr[0].lt) {
+          } else if (
+            !isNaN(tempStorgeArr[0].gt) &&
+            isNaN(tempStorgeArr[0].lt)
+          ) {
             pieceStr = `(${tempStorgeArr[0].gt},Infinity)`;
-          }
-          if (tempStorgeArr[0].lt && !tempStorgeArr[0].gt) {
+          } else if (
+            !isNaN(tempStorgeArr[0].lt) &&
+            isNaN(tempStorgeArr[0].gt)
+          ) {
             pieceStr = `(-Infinity,${tempStorgeArr[0].lt})`;
           }
         }
         if (tempStorgeArr.length === 2) {
-          if (tempStorgeArr[0].lt && tempStorgeArr[1].gt) {
+          if (!isNaN(tempStorgeArr[0].lt) && !isNaN(tempStorgeArr[1].gt)) {
             pieceStr = `(-Infinity,${tempStorgeArr[0].lt}),(${tempStorgeArr[1].gt},Infinity)`;
-          }
-          if (tempStorgeArr[0].gt && tempStorgeArr[1].lt) {
+          } else if (!isNaN(tempStorgeArr[0].gt) && !isNaN(tempStorgeArr[1].lt)) {
             pieceStr = `(-Infinity,${tempStorgeArr[1].lt}),(${tempStorgeArr[0].gt},Infinity)`;
           }
         }
+
         sampleObject.pieceStr = pieceStr;
 
-        if (
-          (tempStorgeArr[0].lt && !tempStorgeArr[0].gt) ||
-          (!tempStorgeArr[0].lt && tempStorgeArr[0].gt)
-        ) {
-          const itemValue = tempStorgeArr[0]['lt'] || tempStorgeArr[0]['gt'];
+        if (tempStorgeArr.length === 1) {
+          let itemValue;
+          if (tempStorgeArr[0]['lt'] || tempStorgeArr[0]['lt'] === 0) {
+            itemValue = tempStorgeArr[0]['lt'];
+          } else {
+            itemValue = tempStorgeArr[0]['gt'];
+          }
           tempStorgeArr.push({
-            value: tempStorgeArr[0]['lt'] ? itemValue + 1 : itemValue - 1,
+            value:
+              tempStorgeArr[0]['lt'] || tempStorgeArr[0]['lt'] === 0
+                ? itemValue + 1
+                : itemValue - 1,
           });
         }
 
         tempStorgeArr.forEach((item) => {
-          if (item.lt) {
+          if (item.lt || item.lt === 0) {
             const markLineDataItem = {};
             markLineDataItem.yAxis = item.lt;
             markLineData.push(markLineDataItem);
           }
-          if (item.gt) {
+          if (item.gt || item.gt === 0) {
             const markLineDataItem = {};
             markLineDataItem.yAxis = item.gt;
             markLineData.push(markLineDataItem);
@@ -1849,6 +1859,9 @@ export default {
         if (!valueFirst) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderThreshold');
           isValidate = false;
+        } else if (valueFirst.indexOf(' ') > -1) {
+          this.thresholdErrorMsg = this.$t('scalar.noSpace');
+          isValidate = false;
         } else if (isNaN(valueFirst)) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
           isValidate = false;
@@ -1859,6 +1872,9 @@ export default {
           isValidate = false;
         } else if (!valueFirst || !valueSec) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderThreshold');
+          isValidate = false;
+        } else if (valueFirst.indexOf(' ') > -1 || valueSec.indexOf(' ') > -1) {
+          this.thresholdErrorMsg = this.$t('scalar.noSpace');
           isValidate = false;
         } else if (valueFirst === valueSec) {
           this.thresholdErrorMsg = this.$t('scalar.unreasonable');
@@ -1908,6 +1924,7 @@ export default {
 
     thresholdCommit() {
       const isValidate = this.thresholdValidate();
+
       if (isValidate) {
         const chartPieces = [];
         if (this.thresholdValue[0].value && this.thresholdValue[1].value) {
@@ -1963,87 +1980,85 @@ export default {
           }
         });
 
+        let pieceStr = '';
+        if (chartPieces.length === 1) {
+          if (!isNaN(chartPieces[0].gt) && !isNaN(chartPieces[0].lt)) {
+            pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
+          } else if (
+            !isNaN(chartPieces[0].gt) &&
+            isNaN(chartPieces[0].lt)
+          ) {
+            pieceStr = `(${chartPieces[0].gt},Infinity)`;
+          } else if (
+            !isNaN(chartPieces[0].lt) &&
+            isNaN(chartPieces[0].gt)
+          ) {
+            pieceStr = `(-Infinity,${chartPieces[0].lt})`;
+          }
+        }
+        if (chartPieces.length === 2) {
+          if (!isNaN(chartPieces[0].lt) && !isNaN(chartPieces[1].gt)) {
+            pieceStr = `(-Infinity,${chartPieces[0].lt}),(${chartPieces[1].gt},Infinity)`;
+          } else if (!isNaN(chartPieces[0].gt) && !isNaN(chartPieces[1].lt)) {
+            pieceStr = `(-Infinity,${chartPieces[1].lt}),(${chartPieces[0].gt},Infinity)`;
+          }
+        }
+
+        if (!this.thresholdLocal) {
+          this.thresholdLocal = {};
+        }
+        if (!this.thresholdLocal[this.decodeTrainingJobId]) {
+          this.thresholdLocal[this.decodeTrainingJobId] = {};
+        }
+
+        const markLineData = [];
+
+        chartPieces.forEach((item) => {
+          if (item.lt || item.lt === 0) {
+            const markLineDataItem = {};
+            markLineDataItem.yAxis = item.lt;
+            markLineData.push(markLineDataItem);
+          }
+          if (item.gt || item.gt === 0) {
+            const markLineDataItem = {};
+            markLineDataItem.yAxis = item.gt;
+            markLineData.push(markLineDataItem);
+          }
+        });
+
+        const chartPiecesTemp = JSON.parse(JSON.stringify(chartPieces));
+
+        if (chartPiecesTemp.length === 1) {
+          let itemValue;
+          if (chartPiecesTemp[0]['lt'] || chartPiecesTemp[0]['lt'] === 0) {
+            itemValue = chartPiecesTemp[0]['lt'];
+          } else {
+            itemValue = chartPiecesTemp[0]['gt'];
+          }
+          chartPiecesTemp.push({
+            value:
+              chartPiecesTemp[0]['lt'] || chartPiecesTemp[0]['lt'] === 0
+                ? itemValue + 1
+                : itemValue - 1,
+          });
+        }
+
+        chartPiecesTemp.forEach((item) => {
+          item.color = this.thresholdColor;
+        });
+
         if (this.thresholdSwitch) {
           this.originDataArr.forEach((sampleObject) => {
             if (this.multiSelectedTagNames[sampleObject.tagName]) {
-              if (!this.thresholdLocal) {
-                this.thresholdLocal = {};
-                this.thresholdLocal[this.decodeTrainingJobId] = {};
-                this.thresholdLocal[this.decodeTrainingJobId][
-                    sampleObject.tagName
-                ] = chartPieces;
-              } else {
-                if (!this.thresholdLocal[this.decodeTrainingJobId]) {
-                  this.thresholdLocal[this.decodeTrainingJobId] = {};
-                  this.thresholdLocal[this.decodeTrainingJobId][
-                      sampleObject.tagName
-                  ] = chartPieces;
-                } else {
-                  this.thresholdLocal[this.decodeTrainingJobId][
-                      sampleObject.tagName
-                  ] = chartPieces;
-                }
-              }
-              localStorage.setItem(
-                  'thresholdCache',
-                  JSON.stringify(this.thresholdLocal),
-              );
-
-              let pieceStr = '';
-              if (chartPieces.length === 1) {
-                if (chartPieces[0].gt && chartPieces[0].lt) {
-                  pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
-                } else if (chartPieces[0].gt && !chartPieces[0].lt) {
-                  pieceStr = `(${chartPieces[0].gt},Infinity)`;
-                } else if (chartPieces[0].lt && !chartPieces[0].gt) {
-                  pieceStr = `(-Infinity,${chartPieces[0].lt})`;
-                }
-              }
-              if (chartPieces.length === 2) {
-                if (chartPieces[0].lt && chartPieces[1].gt) {
-                  pieceStr = `(-Infinity,${chartPieces[0].lt}),(${chartPieces[1].gt},Infinity)`;
-                } else if (chartPieces[0].gt && chartPieces[1].lt) {
-                  pieceStr = `(-Infinity,${chartPieces[1].lt}),(${chartPieces[0].gt},Infinity)`;
-                }
-              }
-
+              this.thresholdLocal[this.decodeTrainingJobId][
+                  sampleObject.tagName
+              ] = chartPieces;
               sampleObject.pieceStr = pieceStr;
-
               const tempCharOption = sampleObject.charData.charOption;
-
-              const chartPiecesTemp = JSON.parse(JSON.stringify(chartPieces));
-
-              if (chartPiecesTemp.length === 1) {
-                const itemValue = chartPieces[0]['lt'] || chartPieces[0]['gt'];
-                chartPiecesTemp.push({
-                  value: chartPieces[0]['lt'] ? itemValue + 1 : itemValue - 1,
-                });
-              }
-
-              chartPiecesTemp.forEach((item) => {
-                item.color = this.thresholdColor;
-              });
               tempCharOption.visualMap.pieces = chartPiecesTemp;
-
               tempCharOption.visualMap.outOfRange = {
                 color: sampleObject.colors,
               };
-
-              const markLineData = [];
-
-              chartPieces.forEach((item) => {
-                if (item.lt) {
-                  const markLineDataItem = {};
-                  markLineDataItem.yAxis = item.lt;
-                  markLineData.push(markLineDataItem);
-                }
-                if (item.gt) {
-                  const markLineDataItem = {};
-                  markLineDataItem.yAxis = item.gt;
-                  markLineData.push(markLineDataItem);
-                }
-              });
-
               tempCharOption.series[0].lineStyle.color = null;
               tempCharOption.series[0].markLine = {
                 silent: true,
@@ -2052,91 +2067,29 @@ export default {
               sampleObject.charObj.setOption(tempCharOption, true);
             }
           });
-          this.thresholdDialogVisible = false;
         } else {
-          if (!this.thresholdLocal) {
-            this.thresholdLocal = {};
-            this.thresholdLocal[this.decodeTrainingJobId] = {};
-            this.thresholdLocal[this.decodeTrainingJobId][
-                this.currentTagName
-            ] = chartPieces;
-          } else {
-            if (!this.thresholdLocal[this.decodeTrainingJobId]) {
-              this.thresholdLocal[this.decodeTrainingJobId] = {};
-              this.thresholdLocal[this.decodeTrainingJobId][
-                  this.currentTagName
-              ] = chartPieces;
-            } else {
-              this.thresholdLocal[this.decodeTrainingJobId][
-                  this.currentTagName
-              ] = chartPieces;
-            }
-          }
-
-          localStorage.setItem(
-              'thresholdCache',
-              JSON.stringify(this.thresholdLocal),
-          );
-
-          let pieceStr = '';
-          if (chartPieces.length === 1) {
-            if (chartPieces[0].gt && chartPieces[0].lt) {
-              pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
-            } else if (chartPieces[0].gt && !chartPieces[0].lt) {
-              pieceStr = `(${chartPieces[0].gt},Infinity)`;
-            } else if (chartPieces[0].lt && !chartPieces[0].gt) {
-              pieceStr = `(-Infinity,${chartPieces[0].lt})`;
-            }
-          }
-          if (chartPieces.length === 2) {
-            if (chartPieces[0].lt && chartPieces[1].gt) {
-              pieceStr = `(-Infinity,${chartPieces[0].lt}),(${chartPieces[1].gt},Infinity)`;
-            } else if (chartPieces[0].gt && chartPieces[1].lt) {
-              pieceStr = `(-Infinity,${chartPieces[1].lt}),(${chartPieces[0].gt},Infinity)`;
-            }
-          }
-
-          this.originDataArr.forEach((sampleItem) => {
-            if (sampleItem.tagName === this.currentTagName) {
-              sampleItem.pieceStr = pieceStr;
-            }
-          });
-
+          this.thresholdLocal[this.decodeTrainingJobId][
+              this.currentTagName
+          ] = chartPieces;
+          this.currentSample.pieceStr = pieceStr;
           const tempCharOption = this.currentSample.charData.charOption;
-          if (chartPieces.length === 1) {
-            const itemValue = chartPieces[0]['lt'] || chartPieces[0]['gt'];
-            chartPieces.push({
-              value: chartPieces[0]['lt'] ? itemValue + 1 : itemValue - 1,
-            });
-          }
-          chartPieces.forEach((item) => {
-            item.color = this.thresholdColor;
-          });
-          tempCharOption.visualMap.pieces = chartPieces;
+          tempCharOption.visualMap.pieces = chartPiecesTemp;
           tempCharOption.visualMap.outOfRange = {
             color: this.currentSample.colors,
           };
-          const markLineData = [];
-          chartPieces.forEach((item) => {
-            if (item.lt) {
-              const markLineDataItem = {};
-              markLineDataItem.yAxis = item.lt;
-              markLineData.push(markLineDataItem);
-            }
-            if (item.gt) {
-              const markLineDataItem = {};
-              markLineDataItem.yAxis = item.gt;
-              markLineData.push(markLineDataItem);
-            }
-          });
           tempCharOption.series[0].lineStyle.color = null;
           tempCharOption.series[0].markLine = {
             silent: true,
             data: markLineData,
           };
           this.currentSample.charObj.setOption(tempCharOption, true);
-          this.thresholdDialogVisible = false;
         }
+        localStorage.setItem(
+            'thresholdCache',
+            JSON.stringify(this.thresholdLocal),
+        );
+
+        this.thresholdDialogVisible = false;
       }
     },
 
@@ -2186,13 +2139,13 @@ export default {
     font-weight: bold;
   }
 
-  .w261 {
-    width: 261px;
-  }
-
   .w60 {
     width: 60px;
     margin-left: 20px;
+  }
+
+  .w261 {
+    width: 261px;
   }
 
   .smallSelect {

@@ -135,6 +135,7 @@
     "lessThan": "小于",
     "applyAllSelectTag": "应用到当前所选标签",
     "placeHolderNumber": "请输入数值",
+    "noSpace":"请勿输入空格",
     "sameCompare": "不能有相同的比较运算符",
     "unreasonable": "逻辑不合理",
     "info": "提示",
