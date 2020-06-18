@@ -214,7 +214,10 @@ class Profiler:
             logger.warning(err.message)
 
         # analyse step trace info
-        self._analyse_step_trace(source_path, framework_parser)
+        try:
+            self._analyse_step_trace(source_path, framework_parser)
+        except MindInsightException as err:
+            logger.warning(err.message)
 
     def _analyse_step_trace(self, source_path, framework_parser):
         """

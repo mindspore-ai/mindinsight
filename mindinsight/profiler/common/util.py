@@ -106,9 +106,12 @@ def get_summary_for_step_trace(average_info, header):
     tail = get_field_value(average_info, 'tail', header)
     summary = {
         'total_time': total_time,
-        'iteration_interval': calculate_percent(iteration_interval, total_time),
-        'fp_and_bp': calculate_percent(fp_and_bp, total_time),
-        'tail': calculate_percent(tail, total_time)
+        'iteration_interval': iteration_interval,
+        'iteration_interval_percent': calculate_percent(iteration_interval, total_time),
+        'fp_and_bp': fp_and_bp,
+        'fp_and_bp_percent': calculate_percent(fp_and_bp, total_time),
+        'tail': tail,
+        'tail_percent': calculate_percent(tail, total_time)
     }
     return summary
 
