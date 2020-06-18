@@ -17,10 +17,13 @@ import os
 
 from tabulate import tabulate
 from mindinsight.profiler.common._utils import fwrite_format
-from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException, \
+    ProfilerIOException
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 from mindinsight.profiler.parser.container import HWTSContainer
+
+TIMELINE_FILE_COLUMN_TITLE = 'op_name, stream_id, start_time(ms), duration(ms)'
 
 
 class OPComputeTimeParser:
@@ -35,8 +38,6 @@ class OPComputeTimeParser:
 
     _dst_file_title = 'title:op compute time'
     _dst_file_column_title = ['op_name', 'compute_time(ms)', 'stream_id']
-    _timeline_file_title = 'title:timeline info'
-    _timeline_file_column_title = ['op_name', 'stream_id', 'start_time', 'duration']
 
     def __init__(self, hwts_output_file, output_filename, op_task_info,
                  output_path, device_id):
@@ -167,10 +168,15 @@ class OPComputeTimeParser:
         file_path = validate_and_normalize_path(file_path, raise_key='Invalid file path of timeline data.')
 
         # write to file
-        fwrite_format(file_path, data_source=self._timeline_file_title, is_start=True)
-        fwrite_format(file_path, data_source=tabulate(
-            timeline_data, self._timeline_file_column_title, tablefmt='simple'
-        ))
+        try:
+            with open(file_path, 'w') as f_obj:
+                f_obj.write(TIMELINE_FILE_COLUMN_TITLE + '\n')
+                for timeline in timeline_data:
+                    timeline = [str(item) for item in timeline]
+                    f_obj.write(','.join(timeline) + '\n')
+        except (IOError, OSError) as err:
+            logger.error('Error occurred when writing intermediate timeline file: %s', err)
+            raise ProfilerIOException
 
     def _calculate_op_execution_time(self):
         """
