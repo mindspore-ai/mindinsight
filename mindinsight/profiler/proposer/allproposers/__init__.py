@@ -15,6 +15,8 @@
 """All proposers."""
 from mindinsight.profiler.proposer.allproposers.common_proposer import CommonProposer
 from mindinsight.profiler.proposer.allproposers.step_trace_proposer import StepTraceProposer
+from mindinsight.profiler.proposer.allproposers.minddata_pipeline_proposer import \
+    MinddataPipelineProposer
 
 
-__all__ = ["CommonProposer", "StepTraceProposer"]
+__all__ = ["CommonProposer", "StepTraceProposer", "MinddataPipelineProposer"]
