@@ -16,9 +16,7 @@
         "inplace": false
       }
     ],
-    "ms2pt_mapping": {
-      "keep_prob": "p"
-    },
+    "ms2pt_mapping": {},
     "gen_explicit_map": "nn_dropout_gen_explicit_map"
   },
   "nn.AvgPool2d": {
@@ -36,14 +34,13 @@
         "kernel_size": "REQUIRED",
         "stride": null,
         "padding": 0,
-        "dilation": 1,
-        "return_indices": false,
-        "ceil_mode": "False"
+        "ceil_mode": false,
+        "count_include_pad": true,
+        "divisor_override": null
       }
     ],
     "ms2pt_mapping": {
-      "kernel_size": "kernel_size",
-      "stride": "stride"
+      "kernel_size": "kernel_size"
     },
     "gen_explicit_map": "gen_explicit_map_nn_maxpool2d"
   },
@@ -68,8 +65,7 @@
       }
     ],
     "ms2pt_mapping": {
-      "kernel_size": "kernel_size",
-      "stride": "stride"
+      "kernel_size": "kernel_size"
     },
     "gen_explicit_map": "gen_explicit_map_nn_maxpool2d"
   },

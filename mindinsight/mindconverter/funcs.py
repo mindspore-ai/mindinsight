@@ -35,7 +35,14 @@ def gen_explicit_map_f_max_pool2d(params_pt, args_pt):
         padding = "'valid'"
     else:
         padding = "'same'"
-    return {"padding": padding}
+
+    if 'stride' in args_pt:
+        strides = args_pt['stride']
+    else:
+        strides = args_pt['kernel_size']
+
+    return {"padding": padding,
+            "strides": strides}
 
 
 def gen_explicit_map_nn_sequential(_, args_pt):
@@ -97,7 +104,14 @@ def gen_explicit_map_nn_maxpool2d(params_pt, args_pt):
         pad_mode = "'valid'"
     else:
         pad_mode = "'same'"
-    return {"pad_mode": pad_mode}
+
+    if 'stride' in args_pt:
+        stride = args_pt['stride']
+    else:
+        stride = args_pt['kernel_size']
+
+    return {"pad_mode": pad_mode,
+            "stride": stride}
 
 
 def torch_dot_eye_gen_explicit_map(_, args_pt):

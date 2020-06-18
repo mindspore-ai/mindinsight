@@ -21,14 +21,13 @@
         "kernel_size": "REQUIRED",
         "stride": null,
         "padding": 0,
-        "dilation": 1,
         "ceil_mode": false,
-        "return_indices": false
+        "count_include_pad": true,
+        "divisor_override": null
       }
     ],
     "ms2pt_mapping": {
       "ksize": "kernel_size",
-      "strides": "stride",
       "input": "input"
     },
     "gen_explicit_map": "gen_explicit_map_f_max_pool2d"
@@ -62,7 +61,6 @@
     ],
     "ms2pt_mapping": {
       "ksize": "kernel_size",
-      "strides": "stride",
       "input": "input"
     },
     "gen_explicit_map": "gen_explicit_map_f_max_pool2d"
