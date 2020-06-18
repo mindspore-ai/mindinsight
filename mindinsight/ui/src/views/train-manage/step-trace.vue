@@ -272,6 +272,7 @@ export default {
                     type: 'category',
                     data: this.steps.map((val, index) => index + 1),
                     name: 'step',
+                    max: this.steps.length,
                   },
                   yAxis: {
                     type: 'value',
