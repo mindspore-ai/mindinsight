@@ -715,3 +715,4 @@ class AstEditVisitor(ast.NodeVisitor):
     def visit_Attribute(self, node):
         """Callback function when visit AST tree"""
         self._check_isinstance_parameter(node)
+        self.generic_visit(node)
