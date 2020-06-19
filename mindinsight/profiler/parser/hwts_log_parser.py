@@ -13,8 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """The parser for hwts log file."""
+import os
 import struct
-from tabulate import tabulate
 from mindinsight.profiler.common._utils import fwrite_format, get_file_join_name
 from mindinsight.profiler.common.log import logger
 
@@ -30,8 +30,7 @@ class HWTSLogParser:
 
     _source_file_target = 'hwts.log.data.45.dev.profiler_default_tag'
     _dst_file_title = 'title:45 HWTS data'
-    _dst_file_column_title = ['Type', 'cnt', 'Core ID', 'Block ID', 'Task ID',
-                              'Cycle counter', 'Stream ID']
+    _dst_file_column_title = 'Type           cnt  Core_ID  Block_ID  Task_ID  Cycle_counter   Stream_ID'
 
     def __init__(self, input_path, output_filename):
         self._input_path = input_path
@@ -43,9 +42,11 @@ class HWTSLogParser:
 
         file_name = get_file_join_name(self._input_path, self._source_file_target)
         if not file_name:
-            msg = ("Fail to find hwts log file, under directory %s"
-                   % self._input_path)
-            raise RuntimeError(msg)
+            data_path = os.path.join(self._input_path, "data")
+            file_name = get_file_join_name(data_path, self._source_file_target)
+            if not file_name:
+                msg = ("Fail to find hwts log file, under profiling directory")
+                raise RuntimeError(msg)
 
         return file_name
 
@@ -60,7 +61,7 @@ class HWTSLogParser:
         content_format = ['QIIIIIIIIIIII', 'QIIQIIIIIIII', 'IIIIQIIIIIIII']
         log_type = ['Start of task', 'End of task', 'Start of block', 'End of block', 'Block PMU']
 
-        result_data = []
+        result_data = ""
 
         with open(self._source_flie_name, 'rb') as hwts_data:
             while True:
@@ -73,6 +74,7 @@ class HWTSLogParser:
                 byte_first_four = struct.unpack('BBHHH', line[0:8])
                 byte_first = bin(byte_first_four[0]).replace('0b', '').zfill(8)
                 ms_type = byte_first[-3:]
+                is_warn_res0_ov = byte_first[4]
                 cnt = int(byte_first[0:4], 2)
                 core_id = byte_first_four[1]
                 blk_id, task_id = byte_first_four[3], byte_first_four[4]
@@ -80,22 +82,28 @@ class HWTSLogParser:
                     result = struct.unpack(content_format[0], line[8:])
                     syscnt = result[0]
                     stream_id = result[1]
-                    result_data.append((log_type[int(ms_type, 2)], cnt, core_id, blk_id, task_id, syscnt, stream_id))
-
                 elif ms_type == '011':  # log type 3
                     result = struct.unpack(content_format[1], line[8:])
                     syscnt = result[0]
                     stream_id = result[1]
-                    result_data.append((log_type[int(ms_type, 2)], cnt, core_id, blk_id, task_id, syscnt, stream_id))
                 elif ms_type == '100':  # log type 4
                     result = struct.unpack(content_format[2], line[8:])
                     stream_id = result[2]
-                    result_data.append((log_type[int(ms_type, 2)], cnt, core_id, blk_id, task_id, total_cyc, stream_id))
+                    if is_warn_res0_ov == '0':
+                        syscnt = result[4]
+                    else:
+                        syscnt = None
                 else:
                     logger.info("Profiling: invalid hwts log record type %s", ms_type)
+                    continue
+
+                if int(task_id) < 25000:
+                    task_id = stream_id + "_" + task_id
+                result_data += ("%-14s %-4s %-8s %-9s %-8s %-15s %s\n" %(log_type[int(ms_type, 2)], cnt, core_id,
+                                                                         blk_id, task_id, syscnt, stream_id))
 
         fwrite_format(self._output_filename, data_source=self._dst_file_title, is_start=True)
-        fwrite_format(self._output_filename, data_source=tabulate(result_data,
-                                                                  self._dst_file_column_title,
-                                                                  tablefmt='simple'))
+        fwrite_format(self._output_filename, data_source=self._dst_file_column_title)
+        fwrite_format(self._output_filename, data_source=result_data)
+
         return True

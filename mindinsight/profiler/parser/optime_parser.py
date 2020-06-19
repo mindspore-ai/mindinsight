@@ -14,8 +14,6 @@
 # ============================================================================
 """Op compute time files parser."""
 import os
-
-from tabulate import tabulate
 from mindinsight.profiler.common._utils import fwrite_format
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException, \
     ProfilerIOException
@@ -24,7 +22,6 @@ from mindinsight.profiler.common.validator.validate_path import validate_and_nor
 from mindinsight.profiler.parser.container import HWTSContainer
 
 TIMELINE_FILE_COLUMN_TITLE = 'op_name, stream_id, start_time(ms), duration(ms)'
-
 
 class OPComputeTimeParser:
     """
@@ -37,7 +34,8 @@ class OPComputeTimeParser:
     """
 
     _dst_file_title = 'title:op compute time'
-    _dst_file_column_title = ['op_name', 'compute_time(ms)', 'stream_id']
+    _dst_file_column_title = 'op_name       compute_time(ms) stream_id'
+    _dst_file_column_title += '\n------------  ---------------  ---------'
 
     def __init__(self, hwts_output_file, output_filename, op_task_info,
                  output_path, device_id):
@@ -100,12 +98,15 @@ class OPComputeTimeParser:
             op_name_count_dict, op_name_task_dict, op_name_start_time
         )
 
-        result_data = []
+        result_data = ""
+        total_time = 0
         for op_name, time in op_name_time_dict.items():
             if op_name in op_name_stream_dict.keys():
                 stream_id = op_name_stream_dict[op_name]
                 avg_time = time / op_name_count_dict[op_name]
-                result_data.append([op_name, avg_time, stream_id])
+                total_time += avg_time
+                result_data += ("%s %s  %s\n" %(op_name, str(avg_time), stream_id))
+        result_data += ("total op  %s 0" %(str(total_time)))
 
         timeline_data = []
         for op_name, time in op_name_time_dict.items():
@@ -130,23 +131,15 @@ class OPComputeTimeParser:
             op name, average time, and stream id.
 
         Args:
-            result_data (list): The metadata to be written into the file.
-                [
-                    ['op_name_1', 'avg_time_1', 'stream_id_1'],
-                    ['op_name_2', 'avg_time_2', 'stream_id_2'],
-                    [...]
-                ]
+            result_data (str): The metadata to be written into the file.
+                    'op_name_1', 'avg_time_1', 'stream_id_1',
+                    'op_name_2', 'avg_time_2', 'stream_id_2',
+                    ...
         """
-        result_data.sort(key=lambda x: x[0])
-        total_time = 0
-        for item in result_data:
-            total_time += item[1]
-        result_data.append(["total op", total_time, 0])
 
         fwrite_format(self._output_filename, data_source=self._dst_file_title, is_start=True)
-        fwrite_format(self._output_filename, data_source=tabulate(result_data,
-                                                                  self._dst_file_column_title,
-                                                                  tablefmt='simple'))
+        fwrite_format(self._output_filename, data_source=self._dst_file_column_title)
+        fwrite_format(self._output_filename, data_source=result_data)
 
     def _write_timeline_data_into_file(self, timeline_data):
         """
