@@ -1838,7 +1838,7 @@ export default {
             sampleItem.pieceStr = '';
             const tempCharOption = sampleItem.charData.charOption;
             tempCharOption.visualMap.pieces = [];
-            tempCharOption.visualMap=false;
+            tempCharOption.visualMap = false;
             tempCharOption.series[0].lineStyle.color = sampleItem.colors;
             tempCharOption.series[0].markLine = [];
             if (this.isTimeReload) {
@@ -2055,18 +2055,21 @@ export default {
                   sampleObject.tagName
               ] = chartPieces;
               sampleObject.pieceStr = pieceStr;
-              const tempCharOption = sampleObject.charData.charOption;
-              tempCharOption.visualMap.pieces = chartPiecesTemp;
-              tempCharOption.visualMap.outOfRange = {
-                color: sampleObject.colors,
-              };
-              tempCharOption.series[0].lineStyle.color = null;
-              tempCharOption.series[0].markLine = {
-                precision: 5,
-                silent: true,
-                data: markLineData,
-              };
-              sampleObject.charObj.setOption(tempCharOption, true);
+
+              if (sampleObject.charObj) {
+                const tempCharOption = sampleObject.charData.charOption;
+                tempCharOption.visualMap.pieces = chartPiecesTemp;
+                tempCharOption.visualMap.outOfRange = {
+                  color: sampleObject.colors,
+                };
+                tempCharOption.series[0].lineStyle.color = null;
+                tempCharOption.series[0].markLine = {
+                  precision: 5,
+                  silent: true,
+                  data: markLineData,
+                };
+                sampleObject.charObj.setOption(tempCharOption, true);
+              }
             }
           });
         } else {
