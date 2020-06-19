@@ -73,11 +73,12 @@ class MinddataAnalyser(BaseAnalyser):
                 if len(node_info) > 2 and info_type in ["all", "time"]:
                     time_info["size"] = len(time_list)
                     time_info["info"] = {"get_next": time_list}
-                    time_info["summary"] = {
-                        "time_summary": {
-                            "avg_cost": "0" if not time_list else str(total_cost / len(time_list))
+                    if time_info["size"]:
+                        time_info["summary"] = {
+                            "time_summary": {
+                                "avg_cost": "0" if not time_list else str(total_cost / len(time_list))
+                            }
                         }
-                    }
 
         return queue_info, time_info
 
@@ -103,15 +104,7 @@ class MinddataAnalyser(BaseAnalyser):
         queue_size_list = []
         empty_step, full_step = 0, 0
 
-        device_queue_file_name = "device_queue_profiling_" + self._device_id + ".txt"
-        device_queue_file_path = MinddataAnalyser.find_target_file(self._profiling_dir, device_queue_file_name)
-        feed_file_name = "dataset_iterator_profiling_" + self._device_id + ".txt"
-        feed_file_path = MinddataAnalyser.find_target_file(self._profiling_dir, feed_file_name)
-        file_path = ""
-        if device_queue_file_path:
-            file_path = device_queue_file_path
-        elif not device_queue_file_path and feed_file_path:
-            file_path = feed_file_path
+        file_path = self.get_device_queue_file_path()
 
         if file_path:
             with open(file_path) as data_file:
@@ -145,9 +138,10 @@ class MinddataAnalyser(BaseAnalyser):
                 time_info["info"] = {"total_cost": total_time_list,
                                      "push_cost": push_time_list,
                                      "get_cost": get_time_list}
-                time_info["summary"] = {"time_summary": {"avg_cost": total_cost/time_info["size"]}}
-                time_info["summary"]["time_summary"]["get_cost"] = total_get/time_info["size"]
-                time_info["summary"]["time_summary"]["push_cost"] = total_push/time_info["size"]
+                if time_info["size"]:
+                    time_info["summary"] = {"time_summary": {"avg_cost": total_cost/time_info["size"]}}
+                    time_info["summary"]["time_summary"]["get_cost"] = total_get/time_info["size"]
+                    time_info["summary"]["time_summary"]["push_cost"] = total_push/time_info["size"]
 
             if info_type in ["all", "queue"]:
                 queue_size_list = MinddataAnalyser.sort_step(queue_size_list)
@@ -158,6 +152,25 @@ class MinddataAnalyser(BaseAnalyser):
                 queue_info["summary"]["queue_summary"]["full_queue"] = full_step
 
         return queue_info, time_info
+
+    def get_device_queue_file_path(self):
+        """
+        Get device queue file path.
+
+        Returns:
+            str, the file path.
+        """
+        device_queue_file_name = "device_queue_profiling_" + self._device_id + ".txt"
+        device_queue_file_path = MinddataAnalyser.find_target_file(self._profiling_dir, device_queue_file_name)
+        feed_file_name = "dataset_iterator_profiling_" + self._device_id + ".txt"
+        feed_file_path = MinddataAnalyser.find_target_file(self._profiling_dir, feed_file_name)
+        file_path = ""
+        if device_queue_file_path:
+            file_path = device_queue_file_path
+        elif not device_queue_file_path and feed_file_path:
+            file_path = feed_file_path
+
+        return file_path
 
     @staticmethod
     def analyse_queue_summary(get_next_queue_info, device_queue_info):
@@ -171,6 +184,7 @@ class MinddataAnalyser(BaseAnalyser):
         Returns:
             dict, the summary of queue.
         """
+        result = {}
         if get_next_queue_info and device_queue_info:
             result = {"data_process": {"status": "normal"},
                       "device_queue_op": {"status": "normal"},
@@ -190,13 +204,12 @@ class MinddataAnalyser(BaseAnalyser):
                 "summary", {}).get("queue_summary", {}).get("empty_queue", 0)
             device_queue_full_count = device_queue_info.get(
                 "summary", {}).get("queue_summary", {}).get("full_queue", 0)
-            result["device_queue_info"] = {
-                "summary": {
-                    "empty_batch_count": device_queue_empty_count,
-                    "full_batch_count": device_queue_full_count,
-                    "total_batch": device_queue_info.get("size")
-                }
-            }
+
+            result["device_queue_info"] = {"summary": {
+                "empty_batch_count": device_queue_empty_count,
+                "full_batch_count": device_queue_full_count,
+                "total_batch": device_queue_info.get("size")}}
+
             if get_next_queue_empty_count:
                 if device_queue_empty_count > device_queue_info.get("size", 0)*\
                         MinddataAnalyser.DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD:
@@ -225,9 +238,6 @@ class MinddataAnalyser(BaseAnalyser):
 
             if device_queue_empty_count > device_queue_info.get("size", 0)*0.7:
                 result["data_process"]["status"] = "warning"
-
-        else:
-            result = {}
 
         return result
 
