@@ -146,6 +146,7 @@ def get_training_trace_graph():
             'step_id': graph_type
         }})
     graph_info['summary'] = analyser.summary
+    graph_info['point_info'] = analyser.point_info
     return jsonify(graph_info)
 
 

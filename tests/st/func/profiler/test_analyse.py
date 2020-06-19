@@ -80,6 +80,20 @@ class TestProfilerAnalyse(TestCase):
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
+    def test_step_trace_point_info(self):
+        """Test the step trace file has been generated"""
+        point_info = self.step_trace_analyser.point_info
+        assert point_info == {
+            'fp_start': 'Default/Cast-op6',
+            'bp_end': 'Default/TransData-op7'
+        }
+
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
     def test_graph_api(self):
         """Test step trace restful api."""
         condition = {

@@ -14,11 +14,13 @@
 # ============================================================================
 """The StepTraceAnalyser analyser class."""
 import csv
+import json
+import os
 
 from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerParamValueErrorException, \
-    ProfilerFileNotFoundException, StepNumNotSupportedException
+    ProfilerFileNotFoundException, StepNumNotSupportedException, ProfilerRawFileException
 from mindinsight.profiler.common.log import logger as log
 from mindinsight.profiler.common.util import query_latest_trace_time_file, get_field_value, \
     get_summary_for_step_trace, to_millisecond
@@ -31,6 +33,7 @@ class StepTraceAnalyser(BaseAnalyser):
     _attr_ui_name = 'name'
     _attr_ui_start = 'start'
     _attr_ui_duration = 'duration'
+    _point_info = {}
 
     @property
     def summary(self):
@@ -39,6 +42,11 @@ class StepTraceAnalyser(BaseAnalyser):
         summary = get_summary_for_step_trace(self._data[-1], self.__column__)
         summary['total_steps'] = self._size
         return summary
+
+    @property
+    def point_info(self):
+        """The property of point info."""
+        return self._point_info
 
     def query(self, condition=None):
         """
@@ -90,6 +98,18 @@ class StepTraceAnalyser(BaseAnalyser):
             self._data = list(csv_reader)
         self._size = len(self._data) - 1
         self._display_col_names = self._col_names[:]
+        self._load_point_info()
+
+    def _load_point_info(self):
+        """Load point info."""
+        file_path = os.path.join(self._profiling_dir, 'step_trace_point_info.json')
+        if os.path.isfile(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                try:
+                    self._point_info = json.load(file)
+                except (json.JSONDecodeError, TypeError) as err:
+                    log.exception(err)
+                    raise ProfilerRawFileException('Fail to parse point info file.')
 
     def _filter(self, filter_condition):
         """
