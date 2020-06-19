@@ -186,10 +186,22 @@ export default {
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
                   const content = `${this.$t(`profiling`)[item].desc}`
-                      .replace(`{n1}`, deviceEmpty)
-                      .replace(`{n2}`, deviceTotal)
-                      .replace(`{n3}`, deviceFull)
-                      .replace(`{n4}`, deviceTotal);
+                      .replace(
+                          `{n1}`,
+                          `<span class="nowrap-style"> ${deviceEmpty}</span>`,
+                      )
+                      .replace(
+                          `{n2}`,
+                          `<span class="nowrap-style"> ${deviceTotal}</span>`,
+                      )
+                      .replace(
+                          `{n3}`,
+                          `<span class="nowrap-style"> ${deviceFull}</span>`,
+                      )
+                      .replace(
+                          `{n4}`,
+                          `<span class="nowrap-style"> ${deviceTotal}</span>`,
+                      );
                   divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
               <div class="helper-content-style">${content}</div>`;
                   helperDiv.appendChild(divDom);
@@ -205,8 +217,14 @@ export default {
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
                   const content = `${this.$t(`profiling`)[item].desc}`
-                      .replace(`{n1}`, getNextEmpty)
-                      .replace(`{n2}`, getNextTotal);
+                      .replace(
+                          `{n1}`,
+                          `<span class="nowrap-style"> ${getNextEmpty}</span>`,
+                      )
+                      .replace(
+                          `{n2}`,
+                          `<span class="nowrap-style"> ${getNextTotal}</span>`,
+                      );
                   divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
               <div class="helper-content-style">${content}</div>`;
                   helperDiv.appendChild(divDom);
@@ -216,7 +234,7 @@ export default {
                     divDom.setAttribute('class', 'content-style');
                     divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
                 <div class="helper-content-style">
-                <a href="${this.$t(`profiling`)[item].url[0]}">
+                <a target="_blank" href="${this.$t(`profiling`)[item].url[0]}">
                 ${this.$t(`profiling`)[item].desc}</a></div>`;
                     helperDiv.appendChild(divDom);
                   } else {
@@ -227,7 +245,7 @@ export default {
                     for (let i = 0; i < anchorList.length; i++) {
                       const desc = anchorContent.relpace(
                           anchorList[i],
-                          `<a href="${this.$t(`profiling`)[item].url[i]}">
+                          `<a target="_blank" href="${this.$t(`profiling`)[item].url[i]}">
                       ${anchorList[i]}</a>`,
                       );
                       anchorContent = desc;
@@ -288,8 +306,13 @@ export default {
       .helper {
         padding: 32px;
         height: 100%;
+        overflow-y: auto;
         margin-left: 32px;
         background: #edf0f5;
+        word-wrap: break-word;
+        .nowrap-style{
+          white-space: nowrap;
+        }
         .cur-card {
           margin-bottom: 32px;
           .card-select {

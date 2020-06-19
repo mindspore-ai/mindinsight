@@ -360,7 +360,8 @@
     "averageCapacity": "平均使用容量",
     "stepTraceMessage": "当前FP和BP为自动选点，如不合乎预期，请自行修改。",
     "FPMessage": "FP起始算子：",
-    "BPMessage": "BP终止算子："
+    "BPMessage": "BP终止算子：",
+    "approximateTime": "总时长 ≈ "
   },
   "components": {
     "summaryTitle": "训练选择",

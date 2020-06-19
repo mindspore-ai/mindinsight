@@ -32,6 +32,11 @@ limitations under the License.
         </div>
       </div>
     </div>
+    <div class="step-message">
+      <div class="step-padding-right">{{$t('profiling.stepTraceMessage')}}</div>
+      <div class="step-padding-right">{{$t('profiling.FPMessage')}}<span>{{fp_start}}</span></div>
+      <div class="step-padding-right">{{$t('profiling.BPMessage')}}<span>{{bp_end}}</span></div>
+    </div>
     <div class="pf-content-middle"
          v-show="!tabsArr[0].noData && !tabsArr[1].noData && !tabsArr[2].noData && !svg.noData">
       <div id="trace-container">
@@ -84,11 +89,11 @@ limitations under the License.
            class="chart-wrap">
         <div class="title">{{ item.name }}</div>
         <div class="rate-wrap">
-          <div v-if="item.timeSummary.total_time !== undefined && item.timeSummary[item.rate] !== undefined">
-            <span>{{item.timeLabel}}:</span>
-            {{(item.timeSummary.total_time*parseFloat(item.timeSummary[item.rate])/100).toFixed(4)}}ms</div>
           <div v-if="item.timeSummary[item.rate] !== undefined">
-            <span>{{item.rateLabel}}:</span>{{item.timeSummary[item.rate]}}</div>
+            <span>{{item.timeLabel}}:</span>
+            {{item.timeSummary[item.rate]}}ms</div>
+          <div v-if="item.timeSummary[item.percent] !== undefined">
+            <span>{{item.rateLabel}}:</span>{{item.timeSummary[item.percent]}}</div>
           <div v-if="item.timeSummary.total_steps !== undefined">
             <span>{{$t('profiling.stepNum')}}:</span>{{item.timeSummary.total_steps}}</div>
         </div>
@@ -125,6 +130,8 @@ export default {
       dir: this.$route.query.dir,
       train_id: this.$route.query.id,
       relativePath: this.$route.query.path,
+      fp_start: '--',
+      bp_end: '--',
       steps: [],
       selectedStep: '',
       charts: [],
@@ -157,6 +164,7 @@ export default {
           timeLabel: this.$t('profiling.iterGapTimeLabel'),
           rateLabel: this.$t('profiling.iterGapRateLabel'),
           noData: false,
+          percent: 'iteration_interval_percent',
         },
         {
           name: 'Fp+bp',
@@ -166,6 +174,7 @@ export default {
           timeLabel: this.$t('profiling.fpBpTimeLabel'),
           rateLabel: this.$t('profiling.fpBpRateLabel'),
           noData: false,
+          percent: 'fp_and_bp_percent',
         },
         {
           name: this.$t('profiling.lterationTail'),
@@ -175,6 +184,7 @@ export default {
           timeLabel: this.$t('profiling.tailTimeLabel'),
           rateLabel: this.$t('profiling.tailRateLabel'),
           noData: false,
+          percent: 'tail_percent',
         },
       ],
     };
@@ -348,7 +358,7 @@ export default {
     },
     resizeEchart() {
       setTimeout(() => {
-        this.charts.forEach((val)=>{
+        this.charts.forEach((val) => {
           val.resize();
         });
       }, 300);
@@ -367,6 +377,13 @@ export default {
             res.data.training_trace_graph.length
             ) {
               this.svg.noData = false;
+              if (res.data.point_info && res.data.point_info.length) {
+                this.fp_start = res.data.point_info.fp_start;
+                this.bp_end = res.data.point_info.bp_end;
+              } else {
+                this.fp_start = '--';
+                this.bp_end = '--';
+              }
               document.querySelector('#trace').style.height = `${res.data
                   .training_trace_graph.length * this.svg.rowHeight}px`;
               this.svg.data = JSON.parse(
@@ -377,12 +394,16 @@ export default {
                 this.dealTraceData();
               }, 100);
             } else {
+              this.fp_start = '--';
+              this.bp_end = '--';
               this.svg.data = [];
               this.svg.noData = true;
               this.removeTrace();
             }
           },
           (error) => {
+            this.fp_start = '--';
+            this.bp_end = '--';
             this.svg.data = [];
             this.svg.noData = true;
             this.removeTrace();
@@ -498,7 +519,9 @@ export default {
       line.setAttribute('marker-start', 'url(#marker_start)');
 
       const text = document.createElementNS(this.svg.namespaceURI, 'text');
-      text.textContent = `${data.duration.toFixed(4)}ms`;
+      text.textContent = `${
+        rowIndex === 0 ? this.$t('profiling.approximateTime') : ''
+      }${data.duration.toFixed(4)}ms`;
       const textWidth = this.getTextWidth(text.textContent);
       text.setAttribute(
           'x',
@@ -599,9 +622,20 @@ export default {
       font-weight: normal;
     }
   }
+  .step-message {
+    display: flex;
+    height: 24px;
+    line-height: 24px;
+    margin-top: 6px;
+    margin-left: 14px;
+    overflow-y: auto;
+  }
+  .step-padding-right {
+    padding-right: 6px;
+  }
   .pf-content-middle {
     padding: 15px 15px 0;
-    height: calc(100% - 32px);
+    height: calc(100% - 62px);
     #trace-container {
       width: 100%;
       height: 50%;
