@@ -66,7 +66,7 @@ def get_profile_op_info():
     search_condition = request.stream.read()
     try:
         search_condition = json.loads(search_condition if search_condition else "{}")
-    except Exception:
+    except (json.JSONDecodeError, ValueError):
         raise ParamValueError("Json data parse failed.")
     validate_condition(search_condition)
 
