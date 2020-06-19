@@ -46,7 +46,9 @@ limitations under the License.
                 </div>
                 <br />
                 <div>{{$t('profiling.statistics')}}</div>
-                <div>{{$t('profiling.totalTime')}}<span>{{totalTime}}{{$t('profiling.millisecond')}}</span></div>
+                <div>{{$t('profiling.totalTime')}}
+                  <span>{{totalTime}}{{$t('profiling.millisecond')}}</span>
+                </div>
                 <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
                 <div>{{$t('profiling.fpbpTimeRatio')}}<span>{{fpAndBp}}</span></div>
                 <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationInterval}}</span></div>
@@ -101,7 +103,7 @@ limitations under the License.
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.mindData') }}</div>
           <div class="view-detail">
-            <button @click="viewDetail('minddata')"
+            <button @click="viewDetail('data-process')"
                     :disabled="processSummary.noData"
                     :class="{disabled:processSummary.noData}">
               {{ $t('profiling.viewDetail') }}
@@ -117,18 +119,18 @@ limitations under the License.
                 <div>{{$t('profiling.dataProcessInfo')}}</div>
                 <div>{{$t('profiling.analysisOne')}}</div>
                 <div>{{$t('profiling.analysisTwo')}}</div>
-                <div v-show="deviceInfoShow||queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
+                <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
                 <br />
-                <div v-show="deviceInfoShow||queueInfoShow">{{$t('profiling.statistics')}}</div>
+                <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.statistics')}}</div>
                 <div v-show="queueInfoShow">{{$t('profiling.chipInfo')}}
-                  <span>{{queueInfoEmptyNum}}/{{queueInfoTotalNum}}</span>
+                  <span>{{queueInfoEmptyNum}} / {{queueInfoTotalNum}}</span>
                 </div>
                 <div v-show="deviceInfoShow">
                   <div>{{$t('profiling.hostIsEmpty')}}
-                    <span>{{deviceInfoEmptyNum}}/{{deviceInfoTotalNum}}</span>
+                    <span>{{deviceInfoEmptyNum}} / {{deviceInfoTotalNum}}</span>
                   </div>
                   <div>{{$t('profiling.hostIsFull')}}
-                    <span>{{deviceInfoFullNum}}/{{deviceInfoTotalNum}}</span>
+                    <span>{{deviceInfoFullNum}} / {{deviceInfoTotalNum}}</span>
                   </div>
                 </div>
               </div>
@@ -162,18 +164,19 @@ limitations under the License.
             </div>
             <div class="title">{{$t('profiling.connectorQuene')}}</div>
             <div class="description">
+              <div class="line"></div>
               <div class="item"
                    v-if="processSummary.device.empty || processSummary.device.empty === 0">
                 {{$t('profiling.queueTip2')}}
                 <span class="num">
-                  {{processSummary.device.empty}}/{{processSummary.device.total}}
+                  {{processSummary.device.empty}} / {{processSummary.device.total}}
                 </span>
               </div>
               <div class="item"
                    v-if="processSummary.device.full || processSummary.device.full === 0">
                 {{$t('profiling.queueTip1')}}
                 <span class="num">
-                  {{processSummary.device.empty}}/{{processSummary.device.total}}
+                  {{processSummary.device.empty}} / {{processSummary.device.total}}
                 </span>
               </div>
             </div>
@@ -206,18 +209,19 @@ limitations under the License.
             </div>
             <div class="title">{{$t('profiling.dataQueue')}}</div>
             <div class="description">
+              <div class="line"></div>
               <div class="item"
                    v-if="processSummary.get_next.empty || processSummary.get_next.empty === 0">
                 {{$t('profiling.queueTip2')}}
                 <span class="num">
-                  {{processSummary.get_next.empty}}/{{processSummary.get_next.total}}
+                  {{processSummary.get_next.empty}} / {{processSummary.get_next.total}}
                 </span>
               </div>
               <div class="item"
                    v-if="processSummary.get_next.full || processSummary.get_next.full === 0">
                 {{$t('profiling.queueTip1')}}
                 <span class="num">
-                  {{processSummary.get_next.empty}}/{{processSummary.get_next.total}}
+                  {{processSummary.get_next.empty}} / {{processSummary.get_next.total}}
                 </span>
               </div>
             </div>
@@ -451,8 +455,7 @@ export default {
           const data = JSON.parse(JSON.stringify(resp.data));
           this.processSummary.count = Object.keys(data).length;
           this.dealProcess(data);
-
-          // 芯片侧
+          // Chip side
           if (resp.data.get_next_queue_info) {
             this.queueInfoShow = true;
             this.queueInfoEmptyNum =
@@ -460,7 +463,7 @@ export default {
             this.queueInfoTotalNum =
               resp.data.get_next_queue_info.summary.total_batch;
           }
-          // 主机侧
+          // Host side
           if (resp.data.device_queue_info) {
             this.deviceInfoShow = true;
             this.deviceInfoEmptyNum =
@@ -498,13 +501,14 @@ export default {
       option.series = [
         {
           type: 'pie',
-          center: ['55%', '55%'],
+          center: ['50%', '50%'],
           data: this.pieChart.data,
-          radius: '50%',
-          lable: {
-            position: 'outer',
-            alignTo: 'none',
-            bleedMargin: 5,
+          radius: '80%',
+          label: {
+            normal: {
+              show: false,
+              positionL: 'inner',
+            },
           },
           itemStyle: {
             normal: {
@@ -550,7 +554,7 @@ export default {
               if (res.data.object) {
                 this.pieChart.data = [];
                 res.data.object.forEach((item) => {
-                  if (this.pieChart.data && this.pieChart.data.length < 19) {
+                  if (this.pieChart.data && this.pieChart.data.length < 5) {
                     this.pieChart.data.push({
                       name: item[0],
                       value: item[1],
@@ -558,15 +562,15 @@ export default {
                       percent: item[3],
                     });
                   } else {
-                    if (!this.pieChart.data[19]) {
-                      this.pieChart.data[19] = {
+                    if (!this.pieChart.data[5]) {
+                      this.pieChart.data[5] = {
                         name: 'Other',
                         value: 0,
                         percent: 0,
                       };
                     }
-                    this.pieChart.data[19].value += item[1];
-                    this.pieChart.data[19].percent += item[3];
+                    this.pieChart.data[5].value += item[1];
+                    this.pieChart.data[5].percent += item[3];
                   }
                 });
                 this.setPieOption();
@@ -751,7 +755,9 @@ export default {
       line.setAttribute('marker-start', 'url(#marker_start)');
 
       const text = document.createElementNS(this.svg.namespaceURI, 'text');
-      text.textContent = `${data.duration.toFixed(4)}ms`;
+      text.textContent = `${
+        rowIndex === 0 ? this.$t('profiling.approximateTime') : ''
+      }${data.duration.toFixed(4)}ms`;
       const textWidth = this.getTextWidth(text.textContent);
       text.setAttribute(
           'x',
@@ -884,7 +890,7 @@ export default {
       };
       this.processSummary.noData = true;
 
-      if (data) {
+      if (data && Object.keys(data).length) {
         if (data.device_queue_info && data.device_queue_info.summary) {
           this.processSummary.device = {
             empty: data.device_queue_info.summary.empty_batch_count,
@@ -1089,6 +1095,13 @@ export default {
             overflow: hidden;
             width: 100%;
             text-align: center;
+            .line {
+              width: 1px;
+              height: 40px;
+              margin: 20px 0;
+              border-left: 1px solid #979797;
+              display: inline-block;
+            }
             .item {
               font-size: 12px;
               line-height: 16px;

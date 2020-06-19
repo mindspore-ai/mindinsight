@@ -29,7 +29,7 @@ export default {
   queryLineagesData(params) {
     return axios({
       method: 'post',
-      url: '/v1/mindinsight/lineagemgr/lineages',
+      url: 'v1/mindinsight/lineagemgr/lineages',
       data: params.body,
     });
   },
@@ -37,7 +37,7 @@ export default {
   putLineagesData(params) {
     return axios({
       method: 'put',
-      url: '/v1/mindinsight/lineagemgr/lineages?train_id=' + params.train_id,
+      url: 'v1/mindinsight/lineagemgr/lineages?train_id=' + params.train_id,
       data: params.body,
     });
   },
@@ -46,7 +46,7 @@ export default {
   querySummaryList(params, isIgnoreError) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/datavisual/train-jobs',
+      url: 'v1/mindinsight/datavisual/train-jobs',
       params: params,
       headers: {
         ignoreError: isIgnoreError,
@@ -154,21 +154,21 @@ export default {
   getHistogramData(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/datavisual/histograms',
+      url: 'v1/mindinsight/datavisual/histograms',
       params: params,
     });
   },
   getProfilerDeviceData(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/profile/devices',
+      url: 'v1/mindinsight/profile/devices',
       params: params,
     });
   },
   getProfilerOpData(params) {
     return axios({
       method: 'post',
-      url: '/v1/mindinsight/profile/ops/search',
+      url: 'v1/mindinsight/profile/ops/search',
       params: params.params,
       data: params.body,
       headers: {
@@ -180,7 +180,7 @@ export default {
   queryDataOfProfileHelper(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/profile/summary/propose',
+      url: 'v1/mindinsight/profile/summary/propose',
       params: params,
     });
   },
@@ -188,7 +188,7 @@ export default {
   queryTrainingTrace(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/profile/training-trace/graph',
+      url: 'v1/mindinsight/profile/training-trace/graph',
       params: params,
       headers: {
         ignoreError: true,
@@ -198,7 +198,7 @@ export default {
   targetTimeInfo(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/profile/training-trace/target-time-info',
+      url: 'v1/mindinsight/profile/training-trace/target-time-info',
       params: params,
       headers: {
         ignoreError: true,
@@ -208,7 +208,7 @@ export default {
   queryTimeline(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/profile/timeline',
+      url: 'v1/mindinsight/profile/timeline',
       params: params,
       headers: {
         ignoreError: true,

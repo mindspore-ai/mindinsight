@@ -165,8 +165,8 @@
               {{ $t('operator.operatorStatistics') }}
             </span>
             <div class="cl-search-box">
-              <el-input v-model="searchByCPUNameInput"
-                        :placeholder="$t('operator.searchByName')"
+              <el-input v-model="searchByCPUTypeInput"
+                        :placeholder="$t('operator.searchByType')"
                         clearable
                         @clear="searchOpCpuList()"
                         @keyup.enter.native="searchOpCpuList()"></el-input>
@@ -256,7 +256,7 @@ export default {
       statisticType: 0, // ai core table statistic type
       searchByTypeInput: '', // search by ai core type name
       searchByNameInput: '', // search by ai core detail name
-      searchByCPUNameInput: '', // search by ai cpu name
+      searchByCPUTypeInput: '', // search by ai cpu name
       opTypeCol: [], // table headers list of operator type
       opTypeList: [], // table list of operator type
       opCpuList: {
@@ -310,7 +310,7 @@ export default {
           this.profile_dir = newValue.query.dir;
           this.train_id = newValue.query.id;
           this.currentCard = newValue.curCardNum;
-          this.init();
+          this.cardChange();
         }
       },
       deep: true,
@@ -323,9 +323,6 @@ export default {
     this.$bus.$off('collapse');
   },
   methods: {
-    init() {
-      this.getCoreTypeList();
-    },
     resizeEchart() {
       if (this.coreCharts.chartDom) {
         setTimeout(() => {
@@ -343,7 +340,7 @@ export default {
         this.getCoreTypeList();
       } else if (this.apiType === 'cpu') {
         this.clearCpuData();
-        this.getCpuList(true);
+        this.getCpuList();
       }
     },
     opTypeSortChange() {
@@ -358,7 +355,7 @@ export default {
      * clear cpu data
      */
     clearCpuData() {
-      this.searchByCPUNameInput = '';
+      this.searchByCPUTypeInput = '';
       this.opCpuList = {
         opDetailCol: [],
         opDetailList: [],
@@ -635,9 +632,9 @@ export default {
      */
     searchOpCpuList() {
       this.opCpuList.op_filter_condition = {};
-      if (this.searchByCPUNameInput) {
+      if (this.searchByCPUTypeInput) {
         this.opCpuList.op_filter_condition = {
-          op_name: {partial_match_str_in: [this.searchByCPUNameInput]},
+          op_type: {partial_match_str_in: [this.searchByCPUTypeInput]},
         };
       } else {
         this.opCpuList.op_filter_condition = {};
