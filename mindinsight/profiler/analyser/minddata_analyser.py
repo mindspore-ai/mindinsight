@@ -107,12 +107,11 @@ class MinddataAnalyser(BaseAnalyser):
         device_queue_file_path = MinddataAnalyser.find_target_file(self._profiling_dir, device_queue_file_name)
         feed_file_name = "dataset_iterator_profiling_" + self._device_id + ".txt"
         feed_file_path = MinddataAnalyser.find_target_file(self._profiling_dir, feed_file_name)
+        file_path = ""
         if device_queue_file_path:
             file_path = device_queue_file_path
         elif not device_queue_file_path and feed_file_path:
             file_path = feed_file_path
-        else:
-            file_path = ""
 
         if file_path:
             with open(file_path) as data_file:
