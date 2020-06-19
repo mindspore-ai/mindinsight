@@ -1836,6 +1836,7 @@ export default {
             sampleItem.pieceStr = '';
             const tempCharOption = sampleItem.charData.charOption;
             tempCharOption.visualMap.pieces = [];
+            tempCharOption.visualMap=false;
             tempCharOption.series[0].lineStyle.color = sampleItem.colors;
             tempCharOption.series[0].markLine = [];
             if (this.isTimeReload) {
