@@ -214,9 +214,8 @@ class TimelineAnalyser(BaseAnalyser):
         try:
             with open(file_path, 'r') as f_obj:
                 for line in f_obj:
-                    if not line.startswith('=') and not line.startswith('op_name') and \
-                            not line.startswith('-'):
-                        line_list = line.split()
+                    if not line.startswith('op_name'):
+                        line_list = line.strip('\n').split(',')
                         self._parse_timeline_data(line_list)
                         self._update_num_of_streams(line_list, stream_count_dict)
         except (IOError, OSError) as err:
