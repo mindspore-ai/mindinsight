@@ -22,7 +22,7 @@ import os
 import pasta
 
 from mindinsight.mindconverter.common.log import logger
-
+from mindinsight.mindconverter.common.exceptions import CodeSyntaxError
 
 REQUIRED = 'REQUIRED'
 UNREQUIRED = 'UNREQUIRED'
@@ -31,6 +31,7 @@ FUNC_MODULE = 'mindinsight.mindconverter.funcs'
 
 class APIPt:
     """Base API for args parse, and API for one frame."""
+
     def __init__(self, name: str, params: OrderedDict):
         self.name = name
         self.params = OrderedDict()
@@ -77,10 +78,8 @@ class APIPt:
         try:
             ast_node = ast.parse("whatever_call_name" + args_str)
             call_node = ast_node.body[0].value
-            if not isinstance(call_node, ast.Call):
-                raise ValueError('call name with args str [{}] not instance of ast.Call'.format(args_str))
-        except:
-            raise ValueError("can't parse code:\n{}".format(args_str))
+        except SyntaxError as parse_error:
+            raise CodeSyntaxError("can't parse code:\n{}".format(args_str)) from parse_error
 
         # regard all actual parameter as one parameter
         if len(self.params) == 1:
@@ -118,6 +117,7 @@ class APIPt:
 
 class APIMs(APIPt):
     """API for MindSpore"""
+
     def __init__(self, name: str, params: OrderedDict, p_attrs=None):
         self.is_primitive = name.startswith('P.')
         if self.is_primitive:
@@ -167,6 +167,7 @@ class APIMs(APIPt):
 
 class MappingHelper:
     """Mapping from one frame to another frame"""
+
     def __init__(self, ms_api: APIMs, pt_api: APIPt, **kwargs):
         ms2pt_mapping = kwargs.get('ms2pt_mapping')
         gen_explicit_map = kwargs.get('gen_explicit_map')
@@ -392,14 +393,12 @@ TENSOR_DOT_MAPPING = get_mapping_from_file(TENSOR_DOT_MAPPING_PATH)
 
 ALL_MAPPING = {**NN_MAPPING, **F_MAPPING, **TORCH_DOT_MAPPING, **TENSOR_DOT_MAPPING}
 
-
 # ---------------------------- api list support or not support ----------------------------
 NN_LIST_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'ops', 'nn_list.json'))
 NN_LIST = load_json_file(NN_LIST_PATH)
 NN_LIST += ["torch." + name for name in NN_LIST]
 NN_SUPPORTED = [x for x in NN_LIST if x in ALL_MAPPING]
 NN_UNSUPPORTED = [x for x in NN_LIST if x not in ALL_MAPPING]
-
 
 F_LIST_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'ops', 'f_list.json'))
 F_LIST = load_json_file(F_LIST_PATH)
@@ -408,28 +407,22 @@ F_LIST += ["F." + name[len("torch.nn.functional."):] for name in F_LIST] + \
 F_SUPPORTED = [x for x in F_LIST if x in ALL_MAPPING]
 F_UNSUPPORTED = [x for x in F_LIST if x not in ALL_MAPPING]
 
-
 TORCH_DOT_LIST_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'ops', 'torch_dot_list.json'))
 TORCH_DOT_LIST = load_json_file(TORCH_DOT_LIST_PATH)
-
 
 TORCH_DOT_SUPPORTED = [x for x in TORCH_DOT_LIST if x in ALL_MAPPING]
 TORCH_DOT_UNSUPPORTED = [x for x in TORCH_DOT_LIST if x not in ALL_MAPPING]
 
-
 TENSOR_DOT_LIST_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'ops', 'tensor_dot_list.json'))
 TENSOR_DOT_LIST = load_json_file(TENSOR_DOT_LIST_PATH)
 
-
 TENSOR_DOT_SUPPORTED = [x for x in TENSOR_DOT_LIST if x in ALL_MAPPING]
 TENSOR_DOT_UNSUPPORTED = [x for x in TENSOR_DOT_LIST if x not in ALL_MAPPING]
-
 
 ALL_2P_LIST = F_LIST + TORCH_DOT_LIST + TENSOR_DOT_LIST
 ALL_TORCH_APIS = NN_LIST + F_LIST + TORCH_DOT_LIST + TENSOR_DOT_LIST
 ALL_SUPPORTED = NN_SUPPORTED + F_SUPPORTED + TORCH_DOT_SUPPORTED + TENSOR_DOT_SUPPORTED
 ALL_UNSUPPORTED = NN_UNSUPPORTED + F_UNSUPPORTED + TORCH_DOT_UNSUPPORTED + TENSOR_DOT_UNSUPPORTED
-
 
 UNSUPPORTED_WARN_INFOS = {
     "nn.AdaptiveAvgPool2d": "Maybe could convert to mindspore.ops.operations.ReduceMean.",
