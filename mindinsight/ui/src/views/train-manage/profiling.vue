@@ -24,7 +24,8 @@ limitations under the License.
             <label>{{$t('profiling.curCard')}}</label>
             <el-select v-model="curDashboardInfo.curCardNum"
                        class="card-select"
-                       :placeholder="$t('public.select')">
+                       :placeholder="$t('public.select')"
+                       @change="selectValueChange">
               <el-option v-for="item in CardNumArr"
                          :key="item.value"
                          :label="item.value + $t('operator.card')"
@@ -35,6 +36,8 @@ limitations under the License.
           <div class="helper-title">
             {{$t("profiling.smartHelper")}}
           </div>
+          <div class="suggested-title">{{$t("profiling.suggestions")}}</div>
+          <div id="helper-tips"></div>
         </div>
         <div class="collapse-btn"
              :class="{collapse:collapse}"
@@ -58,6 +61,16 @@ import RequestService from '../../services/request-service';
 export default {
   data() {
     return {
+      tipsArrayList: [
+        'step_trace-iter_interval',
+        'minddata_pipeline-general',
+        'minddata_pipeline-dataset_op',
+        'minddata_pipeline-generator_op',
+        'minddata_pipeline-map_op',
+        'minddata_pipeline-batch_op',
+        'minddata_warning_op',
+      ],
+      moreParameter: ['minddata_device_queue', 'minddata_get_next_queue'],
       CardNumArr: [],
       collapse: false,
       curDashboardInfo: {
@@ -85,6 +98,12 @@ export default {
         this.curDashboardInfo.query.path = '';
         this.$message.error(this.$t('trainingDashboard.invalidId'));
       }
+      this.getDataOfProfileHelper();
+    },
+    selectValueChange() {
+      const helperDiv = document.getElementById('helper-tips');
+      helperDiv.innerHTML = '';
+      this.getDataOfProfileHelper();
     },
     getDeviceList() {
       const params = {
@@ -106,6 +125,124 @@ export default {
             } else {
               this.CardNumArr = [];
               this.curDashboardInfo.curCardNum = '';
+            }
+          })
+          .catch(() => {});
+    },
+
+    getDataOfProfileHelper() {
+      const params = {
+        train_id: this.curDashboardInfo.query.id,
+        profile: this.curDashboardInfo.query.dir,
+        device_id: this.curDashboardInfo.curCardNum.toString()
+          ? this.curDashboardInfo.curCardNum.toString()
+          : '0',
+      };
+      RequestService.queryDataOfProfileHelper(params)
+          .then((resp) => {
+            if (resp && resp.data) {
+              const dataKeys = Object.keys(resp.data);
+              const helperDiv = document.getElementById('helper-tips');
+              helperDiv.innerHTML = '';
+              dataKeys.forEach((item) => {
+                if (
+                  !this.tipsArrayList.includes(item) &&
+                !this.moreParameter.includes(item) &&
+                resp.data[item]
+                ) {
+                  this.$t(`profiling`)[item] = resp.data[item];
+                }
+                if (item.endsWith('type_label')) {
+                  const divDom = document.createElement('div');
+                  divDom.setAttribute('class', 'suggested-items-style');
+                  divDom.innerHTML = `<div class="helper-icon"></div>
+              <div class="helper-container-title">
+              ${this.$t(`profiling`)[item].desc}
+              </div>`;
+                  helperDiv.appendChild(divDom);
+                } else if (this.tipsArrayList.includes(item)) {
+                  const divDom = document.createElement('div');
+                  divDom.setAttribute('class', 'content-style');
+                  const content = `${this.$t(`profiling`)[item].desc}`.replace(
+                      `{n1}`,
+                      resp.data[item][0],
+                  );
+                  divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
+              <div class="helper-content-style">${content}</div>`;
+                  helperDiv.appendChild(divDom);
+                } else if (item === 'minddata_device_queue') {
+                  const deviceEmpty =
+                  resp.data['minddata_device_queue'][0] >= 0
+                    ? resp.data['minddata_device_queue'][0]
+                    : '--';
+                  const deviceTotal =
+                  resp.data['minddata_device_queue'][1] >= 0
+                    ? resp.data['minddata_device_queue'][1]
+                    : '--';
+                  const deviceFull =
+                  resp.data['minddata_device_queue'][2] >= 0
+                    ? resp.data['minddata_device_queue'][2]
+                    : '--';
+                  const divDom = document.createElement('div');
+                  divDom.setAttribute('class', 'content-style');
+                  const content = `${this.$t(`profiling`)[item].desc}`
+                      .replace(`{n1}`, deviceEmpty)
+                      .replace(`{n2}`, deviceTotal)
+                      .replace(`{n3}`, deviceFull)
+                      .replace(`{n4}`, deviceTotal);
+                  divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
+              <div class="helper-content-style">${content}</div>`;
+                  helperDiv.appendChild(divDom);
+                } else if (item === 'minddata_get_next_queue') {
+                  const getNextEmpty =
+                  resp.data['minddata_get_next_queue'][0] >= 0
+                    ? resp.data['minddata_get_next_queue'][0]
+                    : '--';
+                  const getNextTotal =
+                  resp.data['minddata_get_next_queue'][1] >= 0
+                    ? resp.data['minddata_get_next_queue'][1]
+                    : '--';
+                  const divDom = document.createElement('div');
+                  divDom.setAttribute('class', 'content-style');
+                  const content = `${this.$t(`profiling`)[item].desc}`
+                      .replace(`{n1}`, getNextEmpty)
+                      .replace(`{n2}`, getNextTotal);
+                  divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
+              <div class="helper-content-style">${content}</div>`;
+                  helperDiv.appendChild(divDom);
+                } else if (this.$t(`profiling`)[item].anchor) {
+                  if (this.$t(`profiling`)[item].anchor.length === 1) {
+                    const divDom = document.createElement('div');
+                    divDom.setAttribute('class', 'content-style');
+                    divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
+                <div class="helper-content-style">
+                <a href="${this.$t(`profiling`)[item].url[0]}">
+                ${this.$t(`profiling`)[item].desc}</a></div>`;
+                    helperDiv.appendChild(divDom);
+                  } else {
+                    const divDom = document.createElement('div');
+                    divDom.setAttribute('class', 'content-style');
+                    const anchorList = this.$t(`profiling`)[item].anchor;
+                    const anchorContent = this.$t(`profiling`)[item].desc;
+                    for (let i = 0; i < anchorList.length; i++) {
+                      const desc = anchorContent.relpace(
+                          anchorList[i],
+                          `<a href="${this.$t(`profiling`)[item].url[i]}">
+                      ${anchorList[i]}</a>`,
+                      );
+                      anchorContent = desc;
+                    }
+                    divDom.innerHTML = `<div class="content-icon el-icon-caret-right">
+                </div><div class="helper-content-style">${anchorContent}</div>`;
+                    helperDiv.appendChild(divDom);
+                  }
+                } else {
+                  const divDom = document.createElement('div');
+                  divDom.setAttribute('class', 'content-style');
+                  divDom.innerHTML = `${this.$t(`profiling`)[item].desc}`;
+                  helperDiv.appendChild(divDom);
+                }
+              });
             }
           })
           .catch(() => {});
@@ -171,6 +308,49 @@ export default {
             cursor: pointer;
           }
         }
+        .helper-container-title {
+          display: inline-block;
+          padding: 0 6px;
+        }
+        .helper-icon {
+          display: inline-block;
+          width: 6px;
+          height: 6px;
+          margin-top: 6px;
+          border-radius: 3px;
+          background-color: #00a5a7;
+        }
+        .suggested-title {
+          font-weight: bold;
+          margin-bottom: 20px;
+          font-size: 16px;
+        }
+        .container-bottom {
+          margin-bottom: 16px;
+        }
+        .suggested-items-style {
+          display: flex;
+          font-weight: bold;
+          margin-bottom: 6px;
+          margin-top: 10px;
+        }
+        .helper-content-style {
+          margin-left: 6px;
+          line-height: 20px;
+          word-break: break-all;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 8;
+        }
+      }
+      .content-icon {
+        color: #00a5a7;
+        padding-top: 3px;
+      }
+      .content-style {
+        display: flex;
       }
       .collapse-btn {
         position: absolute;
@@ -185,9 +365,9 @@ export default {
         text-align: center;
         background-image: url('../../assets/images/collapse-left.svg');
       }
-       .collapse-btn.collapse{
-         background-image: url('../../assets/images/collapse-right.svg');
-       }
+      .collapse-btn.collapse {
+        background-image: url('../../assets/images/collapse-right.svg');
+      }
     }
     .prof-content-left.collapse {
       width: 0;
