@@ -33,9 +33,8 @@ class Integrator:
     _header_aicore_type = ['op_type', 'execution_time', 'execution_frequency',
                            'percent']
     _header_aicore_detail = ['full_op_name', 'execution_time']
-    _header_aicpu = ['serial_number', 'op_name', 'total_time', 'dispatch_time',
-                     'RunV2_start', 'compute_start', 'memcpy_start',
-                     'memcpy_end', 'RunV2_end']
+    _header_aicpu = ['serial_number', 'op_type', 'total_time', 'dispatch_time',
+                     'run_start', 'run_end']
 
     def __init__(self, profiling_dir, device_id):
         self._profiling_dir = profiling_dir

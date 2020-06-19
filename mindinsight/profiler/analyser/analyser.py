@@ -262,9 +262,8 @@ class AicpuAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['serial_number', 'op_name', 'total_time', 'dispatch_time',
-                  'RunV2_start', 'compute_start', 'memcpy_start', 'memcpy_end',
-                  'RunV2_end']
+    _col_names = ['serial_number', 'op_type', 'total_time', 'dispatch_time',
+                  'run_start', 'run_end']
     _file_name_aicpu_time = 'aicpu_intermediate_{}.csv'
 
     def _load(self):
@@ -306,4 +305,4 @@ class AicpuAnalyser(BaseAnalyser):
             list[Union[str, float]], the converted data.
         """
         return [int(row[0]), row[1], float(row[2]), float(row[3]), int(row[4]),
-                int(row[5]), int(row[6]), int(row[7]), int(row[8])]
+                int(row[5])]
