@@ -24,6 +24,7 @@ class ConverterErrors(ScriptConverterErrors):
     """Converter error codes."""
     SCRIPT_NOT_SUPPORT = 1
     NODE_TYPE_NOT_SUPPORT = 2
+    CODE_SYNTAX_ERROR = 3
 
 
 class ScriptNotSupport(MindInsightException):
@@ -42,3 +43,12 @@ class NodeTypeNotSupport(MindInsightException):
         super(NodeTypeNotSupport, self).__init__(ConverterErrors.NODE_TYPE_NOT_SUPPORT,
                                                  msg,
                                                  http_code=400)
+
+
+class CodeSyntaxError(MindInsightException):
+    """The CodeSyntaxError class definition."""
+
+    def __init__(self, msg):
+        super(CodeSyntaxError, self).__init__(ConverterErrors.CODE_SYNTAX_ERROR,
+                                              msg,
+                                              http_code=400)
