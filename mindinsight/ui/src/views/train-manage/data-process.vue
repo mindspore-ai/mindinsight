@@ -61,7 +61,7 @@ limitations under the License.
                    v-if="processSummary.device.full || processSummary.device.full === 0">
                 {{$t('profiling.queueTip1')}}
                 <span class="num">
-                  {{processSummary.device.empty}}/{{processSummary.device.total}}
+                  {{processSummary.device.full}}/{{processSummary.device.total}}
                 </span>
               </div>
             </div>
@@ -108,7 +108,7 @@ limitations under the License.
                    v-if="processSummary.get_next.full || processSummary.get_next.full === 0">
                 {{$t('profiling.queueTip1')}}
                 <span class="num">
-                  {{processSummary.get_next.empty}}/{{processSummary.get_next.total}}
+                  {{processSummary.get_next.full}}/{{processSummary.get_next.total}}
                 </span>
               </div>
             </div>
@@ -391,9 +391,7 @@ export default {
               `${decodeURIComponent(this.trainId)}` +
               `-${this.$t('profiling.mindData')}-MindInsight`;
           } else {
-            document.title = `${this.$t(
-                'profiling.mindData',
-            )}-MindInsight`;
+            document.title = `${this.$t('profiling.mindData')}-MindInsight`;
           }
           if (this.activeName === 'queueInfo') {
             this.init();
