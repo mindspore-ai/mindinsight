@@ -12,3 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""Lineage writer module."""
+
+from ._summary_record import LineageSummary
+
+__all__ = ["LineageSummary"]

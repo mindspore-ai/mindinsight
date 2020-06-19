@@ -14,7 +14,6 @@
 # ============================================================================
 """Define schema of model lineage input parameters."""
 from marshmallow import Schema, fields, ValidationError, pre_load, validates
-from marshmallow.validate import Range
 
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrorMsg, \
     LineageErrors
@@ -28,71 +27,9 @@ from mindinsight.utils.exceptions import MindInsightException
 
 try:
     from mindspore.dataset.engine import Dataset
-    from mindspore.nn import Cell, Optimizer
-    from mindspore.common.tensor import Tensor
-    from mindspore.train.callback import _ListCallback
 except (ImportError, ModuleNotFoundError):
     logger.error('MindSpore Not Found!')
 
-
-class RunContextArgs(Schema):
-    """Define the parameter schema for RunContext."""
-    optimizer = fields.Function(allow_none=True)
-    loss_fn = fields.Function(allow_none=True)
-    net_outputs = fields.Function(allow_none=True)
-    train_network = fields.Function(allow_none=True)
-    train_dataset = fields.Function(allow_none=True)
-    epoch_num = fields.Int(allow_none=True, validate=Range(min=1))
-    batch_num = fields.Int(allow_none=True, validate=Range(min=0))
-    cur_step_num = fields.Int(allow_none=True, validate=Range(min=0))
-    parallel_mode = fields.Str(allow_none=True)
-    device_number = fields.Int(allow_none=True, validate=Range(min=1))
-    list_callback = fields.Function(allow_none=True)
-
-    @pre_load
-    def check_optimizer(self, data, **kwargs):
-        optimizer = data.get("optimizer")
-        if optimizer and not isinstance(optimizer, Optimizer):
-            raise ValidationError({'optimizer': [
-                "Parameter optimizer must be an instance of mindspore.nn.optim.Optimizer."
-            ]})
-        return data
-
-    @pre_load
-    def check_train_network(self, data, **kwargs):
-        train_network = data.get("train_network")
-        if train_network and not isinstance(train_network, Cell):
-            raise ValidationError({'train_network': [
-                "Parameter train_network must be an instance of mindspore.nn.Cell."]})
-        return data
-
-    @pre_load
-    def check_train_dataset(self, data, **kwargs):
-        train_dataset = data.get("train_dataset")
-        if train_dataset and not isinstance(train_dataset, Dataset):
-            raise ValidationError({'train_dataset': [
-                "Parameter train_dataset must be an instance of "
-                "mindspore.dataengine.datasets.Dataset"]})
-        return data
-
-    @pre_load
-    def check_loss(self, data, **kwargs):
-        net_outputs = data.get("net_outputs")
-        if net_outputs and not isinstance(net_outputs, Tensor):
-            raise ValidationError({'net_outpus': [
-                "The parameter net_outputs is invalid. It should be a Tensor."
-            ]})
-        return data
-
-    @pre_load
-    def check_list_callback(self, data, **kwargs):
-        list_callback = data.get("list_callback")
-        if list_callback and not isinstance(list_callback, _ListCallback):
-            raise ValidationError({'list_callback': [
-                "Parameter list_callback must be an instance of "
-                "mindspore.train.callback._ListCallback."
-            ]})
-        return data
 
 
 class EvalParameter(Schema):

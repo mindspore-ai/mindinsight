@@ -15,19 +15,12 @@
 """
 Lineagemgr Module Introduction.
 
-This module provides Python APIs to collect and query the lineage of models.
-Users can add the TrainLineage/EvalLineage callback to the MindSpore train/eval callback list to
-collect the key parameters and results, such as, the name of the network and optimizer, the
-evaluation metric and results.
+This module provides Python APIs to query the lineage of models.
 The APIs can be used to get the lineage information of the models. For example,
 what hyperparameter is used in the model training, which model has the highest
 accuracy among all the versions, etc.
 """
 from mindinsight.lineagemgr.api.model import get_summary_lineage, filter_summary_lineage
-from mindinsight.lineagemgr.common.log import logger
-try:
-    from mindinsight.lineagemgr.collection.model.model_lineage import TrainLineage, EvalLineage
-except (ModuleNotFoundError, NameError, ImportError):
-    logger.warning('Not found MindSpore!')
 
-__all__ = ["TrainLineage", "EvalLineage", "get_summary_lineage", "filter_summary_lineage"]
+
+__all__ = ["get_summary_lineage", "filter_summary_lineage"]

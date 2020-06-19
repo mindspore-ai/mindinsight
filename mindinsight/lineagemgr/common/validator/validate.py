@@ -18,18 +18,13 @@ import re
 from marshmallow import ValidationError
 
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors, LineageErrorMsg
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamMissingError, \
-    LineageParamTypeError, LineageParamValueError, LineageDirNotExistError
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, \
+    LineageParamValueError, LineageDirNotExistError
 from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.validator.validate_path import safe_normalize_path
 from mindinsight.lineagemgr.querier.query_model import FIELD_MAPPING
 from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 
-try:
-    from mindspore.nn import Cell
-    from mindspore.train.summary import SummaryRecord
-except (ImportError, ModuleNotFoundError):
-    log.warning('MindSpore Not Found!')
 
 # Named string regular expression
 _name_re = r"^\w+[0-9a-zA-Z\_\.]*$"
@@ -144,31 +139,6 @@ def validate_int_params(int_param, param_name):
                                        message=LineageErrorMsg.PARAM_BATCH_SIZE_ERROR.value)
 
 
-def validate_network(network):
-    """
-    Verify if the network is valid.
-
-    Args:
-        network (Cell): See mindspore.nn.Cell.
-
-    Raises:
-        LineageParamMissingError: If the network is None.
-        MindInsightException: If the network is invalid.
-    """
-    if not network:
-        error_msg = "The input network for TrainLineage should not be None."
-        log.error(error_msg)
-        raise LineageParamMissingError(error_msg)
-
-    if not isinstance(network, Cell):
-        log.error("Invalid network. Network should be an instance"
-                  "of mindspore.nn.Cell.")
-        raise MindInsightException(
-            error=LineageErrors.PARAM_TRAIN_NETWORK_ERROR,
-            message=LineageErrorMsg.PARAM_TRAIN_NETWORK_ERROR.value
-        )
-
-
 def validate_file_path(file_path, allow_empty=False):
     """
     Verify that the file_path is valid.
@@ -188,28 +158,6 @@ def validate_file_path(file_path, allow_empty=False):
         log.error(str(error))
         raise MindInsightException(error=LineageErrors.PARAM_FILE_PATH_ERROR,
                                    message=str(error))
-
-
-def validate_train_run_context(schema, data):
-    """
-    Validate mindspore train run_context data according to schema.
-
-    Args:
-        schema (Schema): data schema.
-        data (dict): data to check schema.
-
-    Raises:
-        MindInsightException: If the parameters are invalid.
-    """
-
-    errors = schema().validate(data)
-    for error_key, error_msg in errors.items():
-        if error_key in TRAIN_RUN_CONTEXT_ERROR_MAPPING.keys():
-            error_code = TRAIN_RUN_CONTEXT_ERROR_MAPPING.get(error_key)
-            if TRAIN_RUN_CONTEXT_ERROR_MSG_MAPPING.get(error_key):
-                error_msg = TRAIN_RUN_CONTEXT_ERROR_MSG_MAPPING.get(error_key)
-            log.error(error_msg)
-            raise MindInsightException(error=error_code, message=error_msg)
 
 
 def validate_eval_run_context(schema, data):
@@ -255,27 +203,6 @@ def validate_search_model_condition(schema, data):
                     break
             log.error(error_msg)
             raise MindInsightException(error=error_code, message=error_msg)
-
-
-def validate_summary_record(summary_record):
-    """
-    Validate summary_record.
-
-    Args:
-        summary_record (SummaryRecord): SummaryRecord is used to record
-            the summary value, and summary_record is an instance of SummaryRecord,
-            see mindspore.train.summary.SummaryRecord
-
-    Raises:
-        MindInsightException: If the parameters are invalid.
-    """
-    if not isinstance(summary_record, SummaryRecord):
-        log.error("Invalid summary_record. It should be an instance "
-                  "of mindspore.train.summary.SummaryRecord.")
-        raise MindInsightException(
-            error=LineageErrors.PARAM_SUMMARY_RECORD_ERROR,
-            message=LineageErrorMsg.PARAM_SUMMARY_RECORD_ERROR.value
-        )
 
 
 def validate_raise_exception(raise_exception):

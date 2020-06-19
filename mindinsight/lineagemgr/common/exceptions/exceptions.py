@@ -37,16 +37,6 @@ class LineageParamValueError(MindInsightException):
         )
 
 
-class LineageParamMissingError(MindInsightException):
-    """The parameter missing error in lineage module."""
-
-    def __init__(self, msg):
-        super(LineageParamMissingError, self).__init__(
-            error=LineageErrors.PARAM_MISSING_ERROR,
-            message=LineageErrorMsg.PARAM_MISSING_ERROR.value.format(msg)
-        )
-
-
 class LineageParamRunContextError(MindInsightException):
     """The input parameter run_context error in lineage module."""
 
@@ -64,15 +54,6 @@ class LineageGetModelFileError(MindInsightException):
         super(LineageGetModelFileError, self).__init__(
             error=LineageErrors.LINEAGE_GET_MODEL_FILE_ERROR,
             message=LineageErrorMsg.LINEAGE_GET_MODEL_FILE_ERROR.value.format(msg)
-        )
-
-
-class LineageSearchModelParamError(MindInsightException):
-    """The lineage search model param error."""
-    def __init__(self, msg):
-        super(LineageSearchModelParamError, self).__init__(
-            error=LineageErrors.LINEAGE_PARAM_NOT_SUPPORT_ERROR,
-            message=LineageErrorMsg.LINEAGE_PARAM_NOT_SUPPORT_ERROR.value.format(msg)
         )
 
 
