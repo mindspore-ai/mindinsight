@@ -633,6 +633,8 @@ export default {
 
               if (hasInvalidData) {
                 this.$set(sampleObject, 'invalidData', true);
+              } else {
+                this.$set(sampleObject, 'invalidData', false);
               }
 
               sampleObject.charData.charOption = this.formateCharOption(
