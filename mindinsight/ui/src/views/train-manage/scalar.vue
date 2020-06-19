@@ -731,10 +731,10 @@ export default {
 
         tempStorgeArr.forEach((item) => {
           if (item.lt) {
-            item.lt = Number(item.lt.toFixed(2));
+            item.lt = Number(item.lt.toFixed(5));
           }
           if (item.gt) {
-            item.gt = Number(item.gt.toFixed(2));
+            item.gt = Number(item.gt.toFixed(5));
           }
         });
 
@@ -757,7 +757,10 @@ export default {
         if (tempStorgeArr.length === 2) {
           if (!isNaN(tempStorgeArr[0].lt) && !isNaN(tempStorgeArr[1].gt)) {
             pieceStr = `(-Infinity,${tempStorgeArr[0].lt}),(${tempStorgeArr[1].gt},Infinity)`;
-          } else if (!isNaN(tempStorgeArr[0].gt) && !isNaN(tempStorgeArr[1].lt)) {
+          } else if (
+            !isNaN(tempStorgeArr[0].gt) &&
+            !isNaN(tempStorgeArr[1].lt)
+          ) {
             pieceStr = `(-Infinity,${tempStorgeArr[1].lt}),(${tempStorgeArr[0].gt},Infinity)`;
           }
         }
@@ -796,6 +799,7 @@ export default {
 
         dataObj.lineStyle.color = null;
         dataObj.markLine = {
+          precision: 5,
           silent: true,
           data: markLineData,
         };
@@ -1973,10 +1977,10 @@ export default {
 
         chartPieces.forEach((item) => {
           if (item.lt) {
-            item.lt = Number(item.lt.toFixed(2));
+            item.lt = Number(item.lt.toFixed(5));
           }
           if (item.gt) {
-            item.gt = Number(item.gt.toFixed(2));
+            item.gt = Number(item.gt.toFixed(5));
           }
         });
 
@@ -1984,15 +1988,9 @@ export default {
         if (chartPieces.length === 1) {
           if (!isNaN(chartPieces[0].gt) && !isNaN(chartPieces[0].lt)) {
             pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
-          } else if (
-            !isNaN(chartPieces[0].gt) &&
-            isNaN(chartPieces[0].lt)
-          ) {
+          } else if (!isNaN(chartPieces[0].gt) && isNaN(chartPieces[0].lt)) {
             pieceStr = `(${chartPieces[0].gt},Infinity)`;
-          } else if (
-            !isNaN(chartPieces[0].lt) &&
-            isNaN(chartPieces[0].gt)
-          ) {
+          } else if (!isNaN(chartPieces[0].lt) && isNaN(chartPieces[0].gt)) {
             pieceStr = `(-Infinity,${chartPieces[0].lt})`;
           }
         }
@@ -2061,6 +2059,7 @@ export default {
               };
               tempCharOption.series[0].lineStyle.color = null;
               tempCharOption.series[0].markLine = {
+                precision: 5,
                 silent: true,
                 data: markLineData,
               };
@@ -2079,6 +2078,7 @@ export default {
           };
           tempCharOption.series[0].lineStyle.color = null;
           tempCharOption.series[0].markLine = {
+            precision: 5,
             silent: true,
             data: markLineData,
           };
