@@ -73,6 +73,8 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The group_condition in search_condition error, ' \
                                          'The limit must be int.'
 
+    def test_validate_minddata_pipeline_condition_4(self):
+        """Test the method exceptions."""
         condition = {
             'group_condition': {
                 'limit': 0
@@ -106,7 +108,7 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The group_condition in search_condition error, ' \
                                          'The offset must le 1000000.'
 
-    def test_validate_minddata_pipeline_condition_4(self):
+    def test_validate_minddata_pipeline_condition_5(self):
         """Test the method exceptions."""
         condition = {'sort_condition': 0}
         with pytest.raises(ProfilerSortConditionException) as exc_info:
@@ -150,7 +152,7 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The sort_condition in search_condition error, ' \
                                          'The sorted type must be ascending or descending.'
 
-    def test_validate_minddata_pipeline_condition_5(self):
+    def test_validate_minddata_pipeline_condition_6(self):
         """Test the method exceptions."""
         condition = {
             'filter_condition': '0'
@@ -183,6 +185,8 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The filter_condition in search_condition error, ' \
                                          'The condition must be bool.'
 
+    def test_validate_minddata_pipeline_condition_7(self):
+        """Test the method exceptions."""
         condition = {
             'filter_condition': {
                 'op_id': 0
