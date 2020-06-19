@@ -64,7 +64,8 @@ limitations under the License.
           <div class="histogram-char-container"
                v-show="!!histogramTag && !wrongPlugin">
             <div id="distribution-chart"></div>
-            <div class="tag-text">{{histogramTag}}</div>
+            <div class="tag-text"
+                 :title="histogramTag">{{histogramTag}}</div>
           </div>
           <div class="no-data-img"
                key="no-chart-data"
@@ -1941,6 +1942,9 @@ export default {
       font-size: 12px;
       font-weight: 400;
       text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
     }
   }
 

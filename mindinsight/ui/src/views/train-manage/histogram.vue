@@ -1423,6 +1423,9 @@ export default {
             font-size: 16px;
             font-weight: 600;
             text-align: center;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
           }
         }
       }
