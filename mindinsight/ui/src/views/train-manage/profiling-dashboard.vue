@@ -30,29 +30,29 @@ limitations under the License.
                         effect="light">
               <div slot="content"
                    class="tooltip-container">
-                <div>{{$t("profiling.features")}}</div>
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
                 <div>{{$t('profiling.iterationInfo')}}</div>
                 <div>
-                  <span>{{$t('profiling.queueInfo')}}&nbsp;</span>
+                  <span class="font-style">{{$t('profiling.queueInfo')}}&nbsp;</span>
                   <span>{{$t('profiling.iterationGapInfo')}}</span>
                 </div>
                 <div>
-                  <span>{{$t('profiling.fpbpTitle')}}&nbsp;</span>
+                  <span class="font-style">{{$t('profiling.fpbpTitle')}}&nbsp;</span>
                   <span>{{$t('profiling.fpbpInfo')}}</span>
                 </div>
                 <div>
-                  <span>{{$t('profiling.iterativeTailingTitle')}}&nbsp;</span>
+                  <span class="font-style">{{$t('profiling.iterativeTailingTitle')}}&nbsp;</span>
                   <span>{{$t('profiling.iterativeTailingInfo')}}</span>
                 </div>
                 <br />
-                <div>{{$t('profiling.statistics')}}</div>
+                <div class="font-size-style">{{$t('profiling.statistics')}}</div>
                 <div>{{$t('profiling.totalTime')}}
                   <span>{{totalTime}}{{$t('profiling.millisecond')}}</span>
                 </div>
                 <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
-                <div>{{$t('profiling.fpbpTimeRatio')}}<span>{{fpAndBp}}</span></div>
-                <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationInterval}}</span></div>
-                <div>{{$t('profiling.iterativeTailingTimeRatio')}}<span>{{tail}}</span></div>
+                <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iteration_interval_percent}}</span></div>
+                <div>{{$t('profiling.fpbpTimeRatio')}}<span>{{fp_and_bp_percent}}</span></div>
+                <div>{{$t('profiling.iterativeTailingTimeRatio')}}<span>{{tail_percent}}</span></div>
               </div>
               <i class="el-icon-info"></i>
             </el-tooltip>
@@ -114,14 +114,15 @@ limitations under the License.
                         effect="light">
               <div slot="content"
                    class="tooltip-container">
-                <div>{{$t("profiling.features")}}</div>
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
                 <div>{{$t('profiling.dataProcess')}}</div>
                 <div>{{$t('profiling.dataProcessInfo')}}</div>
                 <div>{{$t('profiling.analysisOne')}}</div>
                 <div>{{$t('profiling.analysisTwo')}}</div>
                 <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
                 <br />
-                <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.statistics')}}</div>
+                <div v-show="deviceInfoShow || queueInfoShow"
+                     class="font-size-style">{{$t('profiling.statistics')}}</div>
                 <div v-show="queueInfoShow">{{$t('profiling.chipInfo')}}
                   <span>{{queueInfoEmptyNum}} / {{queueInfoTotalNum}}</span>
                 </div>
@@ -185,9 +186,8 @@ limitations under the License.
           <div class="cell-container device_queue_op"
                clickKey="device_queue_op">
             <div class="title">
-              {{$t('profiling.deviceQueueOp')}}
+              {{$t('profiling.deviceQueueOpTip')}}
             </div>
-            <div class="content">{{$t('profiling.deviceQueueOpTip')}} | TDT</div>
           </div>
 
           <div class="queue-container"
@@ -332,11 +332,11 @@ import CommonProperty from '../../common/common-property';
 export default {
   data() {
     return {
-      fpAndBp: '--',
-      iterationInterval: '--',
+      fp_and_bp_percent: '--',
+      iteration_interval_percent: '--',
       totalSteps: '--',
       totalTime: '--',
-      tail: '--',
+      tail_percent: '--',
       queueInfoShow: false,
       deviceInfoShow: false,
       queueInfoEmptyNum: '--',
@@ -617,17 +617,18 @@ export default {
                 this.dealTraceData();
               }, 100);
               if (res.data.summary) {
-                this.fpAndBp = res.data.summary.fp_and_bp;
-                this.iterationInterval = res.data.summary.iteration_interval;
+                this.fp_and_bp_percent = res.data.summary.fp_and_bp_percent;
+                this.iteration_interval_percent =
+                res.data.summary.iteration_interval_percent;
                 this.totalSteps = res.data.summary.total_steps;
                 this.totalTime = res.data.summary.total_time;
-                this.tail = res.data.summary.tail;
+                this.tail_percent = res.data.summary.tail_percent;
               } else {
-                this.fpAndBp = '--';
-                this.iterationInterval = '--';
+                this.fp_and_bp_percent = '--';
+                this.iteration_interval_percent = '--';
                 this.totalSteps = '--';
                 this.totalTime = '--';
-                this.tail = '--';
+                this.tail_percent = '--';
               }
             } else {
               document.querySelector('#trace').style.height = '0px';
@@ -653,6 +654,7 @@ export default {
           const svg = document.querySelector('#trace svg');
           this.svg.totalTime = this.svg.data[0][0].duration;
           if (this.svg.totalTime) {
+            this.svg.colorIndex = 0;
             this.svg.data.forEach((row, index) => {
               if (row && row.length) {
                 const dashedLine = this.addDashedLine(index);
@@ -868,14 +870,16 @@ export default {
             this.timelineInfo.noData = true;
           });
       this.perfetto.waiting = true;
-      RequestService.queryTimeline(params).then((res) => {
-        if (res && res.data) {
-          this.perfetto.data = this.stringToUint8Array(
-              JSON.stringify(res.data),
-          );
-          this.perfetto.waiting = false;
-        }
-      });
+      RequestService.queryTimeline(params)
+          .then((res) => {
+            if (res && res.data) {
+              this.perfetto.data = this.stringToUint8Array(
+                  JSON.stringify(res.data),
+              );
+              this.perfetto.waiting = false;
+            }
+          })
+          .catch(() => {});
     },
     dealProcess(data) {
       this.processSummary.device = {
@@ -922,6 +926,13 @@ export default {
 .tooltip-container {
   line-height: 20px;
   padding: 10px;
+  .font-style {
+    font-weight: bold;
+  }
+  .font-size-style {
+    font-weight: bold;
+    font-size: 16px;
+  }
 }
 .pro-router-wrap {
   height: 100%;
@@ -1031,10 +1042,6 @@ export default {
             line-height: 20px;
             padding: 0 0 0 20px;
             font-weight: bold;
-          }
-          .content {
-            padding: 10px 20px 0px 20px;
-            font-size: 12px;
           }
         }
         .data-process {

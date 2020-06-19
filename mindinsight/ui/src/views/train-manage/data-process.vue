@@ -72,9 +72,8 @@ limitations under the License.
                clickKey="device_queue_op"
                v-show="!processSummary.noData">
             <div class="title">
-              {{$t('profiling.deviceQueueOp')}}
+              {{$t('profiling.deviceQueueOpTip')}}
             </div>
-            <div class="content">{{$t('profiling.deviceQueueOpTip')}} | TDT</div>
           </div>
 
           <div class="queue-container"
@@ -126,7 +125,8 @@ limitations under the License.
         <div class="md-bottom"
              v-if="!(connectQueueChart.noData && dataQueueChart.noData && deviceQueueOpChart
              && getNextChart.getNextChart)">
-          <div class="queue-step-wrap">
+          <div class="queue-step-wrap"
+               v-if="processSummary.count === 6">
             <div class="title">{{$t('profiling.queueStep')}}</div>
             <div class="chart-content">
               <div class="chart-wrap"
@@ -135,21 +135,15 @@ limitations under the License.
                 <template v-if="!connectQueueChart.noData">
                   <div class="data-tips">
                     <div v-if="connectQueueChart.queueSummary.empty_queue!==undefined">
-                      {{$t('profiling.queueEmptyRatio')}}{{connectQueueChart.queueSummary.empty_queue}}</div>
+                      {{$t('profiling.queueTip2')}}{{connectQueueChart.queueSummary.empty_queue}}
+                      /{{connectQueueChart.size}}</div>
                     <div v-if="connectQueueChart.queueSummary.full_queue!==undefined">
-                      {{$t('profiling.queueFullRatio')}}{{connectQueueChart.queueSummary.full_queue}}</div>
+                      {{$t('profiling.queueTip1')}}{{connectQueueChart.queueSummary.full_queue}}
+                      /{{connectQueueChart.size}}</div>
                   </div>
                   <div id="connect-queue"
                        class="chart"></div>
                 </template>
-                <div class="image-noData"
-                     v-if="connectQueueChart.noData">
-                  <div>
-                    <img :src="require('@/assets/images/nodata.png')"
-                         alt="" />
-                  </div>
-                  <p>{{$t("public.noData")}}</p>
-                </div>
               </div>
               <div class="chart-wrap"
                    :class="{highlight:selected==='data_queue'}">
@@ -157,25 +151,20 @@ limitations under the License.
                 <template v-if="!dataQueueChart.noData">
                   <div class="data-tips">
                     <div v-if="dataQueueChart.queueSummary.empty_queue!==undefined">
-                      {{$t('profiling.queueEmptyRatio')}}{{dataQueueChart.queueSummary.empty_queue}}</div>
+                      {{$t('profiling.queueTip2')}}{{dataQueueChart.queueSummary.empty_queue}}
+                      /{{dataQueueChart.size}}</div>
                     <div v-if="dataQueueChart.queueSummary.full_queue!==undefined">
-                      {{$t('profiling.queueFullRatio')}}{{dataQueueChart.queueSummary.full_queue}}</div>
+                      {{$t('profiling.queueTip1')}}{{dataQueueChart.queueSummary.full_queue}}
+                      /{{dataQueueChart.size}}</div>
                   </div>
                   <div id="data-queue"
                        class="chart"></div>
                 </template>
-                <div class="image-noData"
-                     v-if="dataQueueChart.noData">
-                  <div>
-                    <img :src="require('@/assets/images/nodata.png')"
-                         alt="" />
-                  </div>
-                  <p>{{$t("public.noData")}}</p>
-                </div>
               </div>
             </div>
           </div>
-          <div class="queue-step-wrap">
+          <div class="queue-step-wrap"
+               v-if="processSummary.count === 6">
             <div class="title">{{$t('profiling.operatorTimeConAnalysis')}}</div>
             <div class="chart-content second">
               <div class="chart-wrap analysis"
@@ -193,14 +182,6 @@ limitations under the License.
                   <div id="device_queue_op"
                        class="chart"></div>
                 </template>
-                <div class="image-noData"
-                     v-if="deviceQueueOpChart.noData">
-                  <div>
-                    <img :src="require('@/assets/images/nodata.png')"
-                         alt="" />
-                  </div>
-                  <p>{{$t("public.noData")}}</p>
-                </div>
               </div>
               <div class="chart-wrap analysis"
                    :class="{highlight:selected==='get_next'}">
@@ -217,14 +198,28 @@ limitations under the License.
                   <div id="get_next"
                        class="chart"></div>
                 </template>
-                <div class="image-noData"
-                     v-if="getNextChart.noData">
-                  <div>
-                    <img :src="require('@/assets/images/nodata.png')"
-                         alt="" />
+              </div>
+            </div>
+          </div>
+          <div class="queue-step-wrap single"
+               v-if="processSummary.count !== 6">
+            <div class="title">{{$t('profiling.queueStep')}}</div>
+            <div class="chart-content">
+              <div class="chart-wrap"
+                   :class="{highlight:selected==='connector_queue'}">
+                <div class="title">{{$t('profiling.connectorQuene')}}</div>
+                <template v-if="!connectQueueChart.noData">
+                  <div class="data-tips">
+                    <div v-if="connectQueueChart.queueSummary.empty_queue!==undefined">
+                      {{$t('profiling.queueTip2')}}{{connectQueueChart.queueSummary.empty_queue}}
+                      /{{connectQueueChart.size}}</div>
+                    <div v-if="connectQueueChart.queueSummary.full_queue!==undefined">
+                      {{$t('profiling.queueTip1')}}{{connectQueueChart.queueSummary.full_queue}}
+                      /{{connectQueueChart.size}}</div>
                   </div>
-                  <p>{{$t("public.noData")}}</p>
-                </div>
+                  <div id="connect-queue"
+                       class="chart"></div>
+                </template>
               </div>
             </div>
           </div>
@@ -315,6 +310,7 @@ export default {
         type: 0,
         params: 'device_queue',
         noData: false,
+        size: null,
       },
       dataQueueChart: {
         id: 'data-queue',
@@ -325,6 +321,7 @@ export default {
         type: 0,
         params: 'get_next',
         noData: false,
+        size: null,
       },
       deviceQueueOpChart: {
         id: 'device_queue_op',
@@ -423,10 +420,6 @@ export default {
       this.resizeCallback();
     },
     init() {
-      this.queryQueueInfo(this.connectQueueChart);
-      this.queryQueueInfo(this.dataQueueChart);
-      this.queryMinddataOp(this.deviceQueueOpChart);
-      this.queryMinddataOp(this.getNextChart);
       this.queryProcessSummary();
     },
     resizeCallback() {
@@ -442,7 +435,7 @@ export default {
         if (this[val].chartDom) {
           setTimeout(() => {
             this[val].chartDom.resize();
-          }, 200);
+          }, 300);
         }
       });
     },
@@ -505,6 +498,7 @@ export default {
               if (result.size > 0) {
                 this.setOption(chart, result.size);
                 chart.noData = false;
+                chart.size = result.size;
               } else {
                 if (chart.chartDom) {
                   chart.chartDom.clear();
@@ -607,6 +601,16 @@ export default {
               this.processSummary.count = Object.keys(data).length;
 
               this.dealProcess(data);
+              this.$nextTick(() => {
+                if (this.processSummary.count < 6) {
+                  this.queryQueueInfo(this.connectQueueChart);
+                } else {
+                  this.queryQueueInfo(this.connectQueueChart);
+                  this.queryQueueInfo(this.dataQueueChart);
+                  this.queryMinddataOp(this.deviceQueueOpChart);
+                  this.queryMinddataOp(this.getNextChart);
+                }
+              });
             } else {
               this.dealProcess(null);
             }
@@ -1223,10 +1227,6 @@ export default {
         padding: 0 0 0 20px;
         font-weight: bold;
       }
-      .content {
-        padding: 10px 20px 0px 20px;
-        font-size: 12px;
-      }
     }
     .data-process {
       background-color: #e3f8eb;
@@ -1354,6 +1354,15 @@ export default {
         height: calc(100% - 25px);
       }
     }
+    .queue-step-wrap.single{
+      height: 100%;
+      .chart-content{
+        .chart-wrap{
+          width: 100%;
+        }
+      }
+    }
+
   }
   .pipeline-wrap {
     height: 100%;
