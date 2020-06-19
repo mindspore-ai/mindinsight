@@ -25,7 +25,7 @@ from mindinsight.lineagemgr.api.model import general_filter_summary_lineage, gen
 from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 from mindinsight.lineagemgr.cache_item_updater import update_lineage_object
 
-BLUEPRINT = Blueprint("lineage", __name__, url_prefix=settings.URL_PREFIX.rstrip("/"))
+BLUEPRINT = Blueprint("lineage", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
 
 @BLUEPRINT.route("/lineagemgr/lineages", methods=["POST"])

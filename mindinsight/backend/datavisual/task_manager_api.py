@@ -34,7 +34,7 @@ from mindinsight.datavisual.processors.train_task_manager import TrainTaskManage
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
 
 
-BLUEPRINT = Blueprint("task_manager", __name__, url_prefix=settings.URL_PREFIX)
+BLUEPRINT = Blueprint("task_manager", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
 
 @BLUEPRINT.route("/datavisual/single-job", methods=["GET"])

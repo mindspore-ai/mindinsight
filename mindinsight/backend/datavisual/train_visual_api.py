@@ -31,7 +31,7 @@ from mindinsight.datavisual.processors.graph_processor import GraphProcessor
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
 
 
-BLUEPRINT = Blueprint("train_visual", __name__, url_prefix=settings.URL_PREFIX)
+BLUEPRINT = Blueprint("train_visual", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
 
 @BLUEPRINT.route("/datavisual/image/metadata", methods=["GET"])

@@ -20,7 +20,7 @@ import axios from 'axios';
 import Vue from 'vue';
 
 export {default} from 'axios';
-export const basePath = location.origin;
+export const basePath = location.origin + location.pathname;
 
 axios.defaults.timeout = 30000;
 axios.defaults.baseURL = basePath;

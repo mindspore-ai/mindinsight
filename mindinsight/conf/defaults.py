@@ -24,6 +24,7 @@ WORKSPACE = os.path.join(os.environ['HOME'], 'mindinsight')
 # Web default settings.
 ####################################
 PORT = 8080
+URL_PATH_PREFIX = ''
 
 ####################################
 # Datavisual default settings.

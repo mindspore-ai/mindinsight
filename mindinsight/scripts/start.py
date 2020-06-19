@@ -16,6 +16,7 @@
 
 import os
 import sys
+import re
 import argparse
 from importlib import import_module
 
@@ -118,6 +119,28 @@ class PortAction(argparse.Action):
         setattr(namespace, self.dest, port)
 
 
+class UrlPathPrefixAction(argparse.Action):
+    """Url Path prefix action class definition."""
+
+    REGEX = r'^(\/[a-zA-Z0-9-\-\.]+)+$'
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from argparse.Action.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        prefix = values
+        if not re.match(self.REGEX, prefix):
+            parser.error(f'{option_string} value is invalid url path prefix')
+
+        setattr(namespace, self.dest, prefix)
+
+
 class Command(BaseCommand):
     """
     Start mindinsight service.
@@ -157,6 +180,14 @@ class Command(BaseCommand):
             help="""
                 Custom port ranging from %s to %s. Default value is %s.
             """ % (PortAction.MIN_PORT, PortAction.MAX_PORT, settings.PORT))
+
+        parser.add_argument(
+            '--url-path-prefix',
+            type=str,
+            action=UrlPathPrefixAction,
+            help="""
+                Custom path prefix for web page address. Default value is ''.
+            """)
 
         for hook in HookUtils.instance().hooks():
             hook.register_startup_arguments(parser)

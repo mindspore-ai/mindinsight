@@ -107,7 +107,7 @@ def before_request():
 
 def create_app():
     """Set flask APP config, and start the data manager."""
-    static_url_path = "/static"
+    static_url_path = settings.URL_PATH_PREFIX + "/static"
     static_folder_path = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir, 'ui', 'dist', 'static'))
 
     app = Flask(__name__, static_url_path=static_url_path, static_folder=static_folder_path)
