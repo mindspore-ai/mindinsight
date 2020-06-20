@@ -69,7 +69,7 @@ Classes and functions that can't be converted:
 
 Subclassing from the subclasses of nn.Module
 
-e.g. (code snip from torchvision,models.mobilenet)
+e.g. (code snip from torchvision.models.mobilenet)
 
 ```python
 from torch import nn
@@ -82,13 +82,4 @@ class ConvBNReLU(nn.Sequential):
             nn.BatchNorm2d(out_planes),
             nn.ReLU6(inplace=True)
         )
-```
-
-### Unsupported Situation #3
-
-Unconventional import naming
-
-e.g.
-```python
-import torch.nn as mm
 ```
