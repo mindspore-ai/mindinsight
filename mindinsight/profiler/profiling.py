@@ -136,10 +136,6 @@ class Profiler:
             logger.error("Profiling: fail to import release from mindspore.")
 
         job_id = self._get_profiling_job_id()
-        if not job_id:
-            msg = ("Fail to get profiling job, please check whether job dir was generated")
-            raise RuntimeError(msg)
-
         logger.info("Profiling: job id is %s ", job_id)
 
         source_path = os.path.join(PROFILING_LOG_BASE_PATH, job_id)
@@ -180,9 +176,7 @@ class Profiler:
 
         # parse minddata pipeline operator and queue
         try:
-            pipeline_parser = MinddataPipelineParser(
-                self._output_path, self._dev_id, self._output_path
-            )
+            pipeline_parser = MinddataPipelineParser(self._output_path, self._dev_id, self._output_path)
             pipeline_parser.parse()
         except MindInsightException as err:
             logger.warning(err.message)
@@ -313,6 +307,10 @@ class Profiler:
 
             job_id = item.strip()
             break
+
+        if not job_id:
+            msg = ("Fail to get profiling job, please check whether job dir was generated")
+            raise RuntimeError(msg)
 
         return job_id
 
