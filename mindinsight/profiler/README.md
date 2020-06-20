@@ -47,14 +47,14 @@ Users can access the Performance Profiler by selecting a specific training from 
 
 Figure 1： Overall Performance
 
-Figure 1 displays the overall performance of the training, including the overall data of Step Trace、Operator Performance、MindData Performance and Timeline.
+Figure 1 displays the overall performance of the training, including the overall data of Step Trace, Operator Performance, MindData Performance and Timeline.
 Users can click the detail link to see the details of each components. Besides, MindInsight Profiler will try to analyse the performance data, the assistant on the left 
 will show performance tuning suggestions for this training.
 
 ### Step Trace Analysis
 
 The Step Trace Component is used to show the general performance of the stages in the training. Step Trace will divide the training into several stages:
-Step Gap、Forward/Backward Propagation、 All Reduce and Parameter Update. It will show the execution time for each stage, and help to find the bottleneck
+Step Gap, Forward/Backward Propagation, All Reduce and Parameter Update. It will show the execution time for each stage, and help to find the bottleneck
 stage quickly.
 
 ![step_trace.png](./images/step_trace.png)
@@ -62,8 +62,12 @@ stage quickly.
 Figure 2： Step Trace Analysis
 
 Figure 2 displays the Step Trace page. The Step Trace detail will show the start/finish time for each stage. By default, it shows the average time for all the steps. Users
-can also choose a specific step to see its step trace statistics. The graphs at the bottom of the page show how the execution time of Step Gap、Forward/Backward Propagation and
-Step Tail changes according to different steps, it will help to decide whether we can optimize the performance of some stages. 
+can also choose a specific step to see its step trace statistics. The graphs at the bottom of the page show how the execution time of Step Gap, Forward/Backward Propagation and
+Step Tail changes according to different steps, it will help to decide whether we can optimize the performance of some stages.
+
+*Notice:* MindSpore choose the Foward Start/Backward End Operators automatically, The names of the two operators are shown on the page. It is possible that the two operators are
+not choosen as what the user expect. Users can choose the operators from the dumped execution graph, and specify the two operators manually by setting the `FP_POINT` and `BP_POINT` environment. 
+For example: `export FP_POINT=fp32_vars/conv2d/conv2Dfp32_vars/BatchNorm/FusedBatchNorm_Reduce` and `export BP_POINT=loss_scale/gradients/AddN_70`. 
 
 ### Operator Performance Analysis
 
@@ -84,14 +88,14 @@ Figure 4: Statistics for Operators
 
 Figure 4 displays the statistics table for the operators, including:
 
-- Choose All: Display statistics for the operators, including operator name、type、excution time、full scope time、information etc. The table will be sorted by execution time by default.
-- Choose Type: Display statistics for the operator types, including operator type name、execution time、execution frequency and proportion of total time. Users can click on each line, querying for all the operators belong to this type.
+- Choose All: Display statistics for the operators, including operator name, type, execution time, full scope time, information etc. The table will be sorted by execution time by default.
+- Choose Type: Display statistics for the operator types, including operator type name, execution time, execution frequency and proportion of total time. Users can click on each line, querying for all the operators belong to this type.
 - Search: There is a search box on the right, which can support fuzzy search for operators/operator types.
 
 ### MindData Performance Analysis
 
 The MindData performance analysis component is used to analyse the execution of data input pipeline for the training. The data input pipeline can be divided into three stages:
-the data process pipeline、data transfer from host to device and data fetch on device. The component will analyse the performance of each stage for detail and display the results. 
+the data process pipeline, data transfer from host to device and data fetch on device. The component will analyse the performance of each stage for detail and display the results.
 
 ![minddata_profile.png](./images/minddata_profile.png)
 
@@ -104,7 +108,7 @@ The step gap page is used to analyse whether there is performance bottleneck in 
 - The data queue size stands for the queue length when the training fetches data from the queue on the device. If the data queue size is 0, the training will wait until there is data in
 the queue; If the data queue size is above 0, the training can get data very quickly, and it means MindData is not the bottleneck for this training step.
 - The host queue size can be used to infer the speed of data process and data transfer. If the host queue size is 0, it means we need to speed up the data process stage.
-- If the host queue size keeps big and the data queue size keeps very small, the data transfer may be the bottleneck.    
+- If the host queue size keeps big and the data queue size keeps very small, the data transfer may be the bottleneck.  
 
 ![data_op_profile.png](./images/data_op_profile.png)
 
@@ -136,7 +140,7 @@ The Timeline component can display：
 
 Users can get the most detailed information from the Timeline:
 
-- From high level, users can analyse whether the stream split strategy can be optimized and whether is step tail is too long;
+- From high level, users can analyse whether the stream split strategy can be optimized and whether the step tail is too long;
 - From low level, users can analyse the execution time for all the operators, etc.
 
 ![timeline.png](./images/timeline.png)
@@ -145,7 +149,7 @@ Figure 7 Timeline Analysis
 
 The Timeline consists of the following parts:
 
-- *Device and Stream List*: It will show the stream list on each device. Each stream consists of a seires of tasks. One rectangle stands for one task, and the area stands for the execution time of the task;
+- *Device and Stream List*: It will show the stream list on each device. Each stream consists of a series of tasks. One rectangle stands for one task, and the area stands for the execution time of the task;
 - *The Operator Information*: When we click one task, the corresponding operator of this task will be shown at the bottom. 
 
 W/A/S/D can be applied to zoom in and out of the timeline graph.
