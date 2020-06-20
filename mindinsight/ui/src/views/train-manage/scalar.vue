@@ -1869,7 +1869,7 @@ export default {
         } else if (valueFirst.indexOf(' ') > -1) {
           this.thresholdErrorMsg = this.$t('scalar.noSpace');
           isValidate = false;
-        } else if (isNaN(valueFirst)) {
+        } else if (isNaN(valueFirst) || valueFirst.indexOf('Infinity') > -1) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
           isValidate = false;
         }
@@ -1887,6 +1887,9 @@ export default {
           this.thresholdErrorMsg = this.$t('scalar.unreasonable');
           isValidate = false;
         } else if (isNaN(valueFirst) || isNaN(valueSec)) {
+          this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
+          isValidate = false;
+        } else if (valueFirst.indexOf('Infinity') > -1 || valueSec.indexOf('Infinity') > -1) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
           isValidate = false;
         } else {
