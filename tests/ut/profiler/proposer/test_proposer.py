@@ -28,7 +28,7 @@ class TestPropose(TestCase):
         """Initialization before test case execution."""
         self.profiling_dir = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                            '../../../utils/resource/profiler'))
-        self.device_id = 0
+        self.device_id = "0"
         self.common_proposal_dict = OrderedDict()
         self.common_proposal_dict["common-profiler_tutorial"] = None
         self.step_trace_proposal_dict = OrderedDict()
@@ -41,7 +41,7 @@ class TestPropose(TestCase):
         proposal_dict.update(self.step_trace_proposal_dict)
         proposal_dict["common-proposer_type_label"] = None
         proposal_dict.update(self.common_proposal_dict)
-        type_list = ['step_trace', 'common']
+        type_list = ['step_trace', 'minddata', 'minddata_pipeline', 'common']
         condition = {"filter_condition": {'mode': "proc",
                                           "proc_name": "iteration_interval",
                                           "step_id": 0}}
@@ -53,7 +53,7 @@ class TestPropose(TestCase):
     def test_propose_compose_exception(self):
         """Test the class of ComposeProposal."""
         profiling_dir = os.path.realpath(os.path.join(os.path.dirname(__file__),
-                                                      '../../../utils/resource/test'))
+                                                      '../../../utils/resource/'))
         proposal_dict = OrderedDict()
         proposal_dict["common-proposer_type_label"] = None
         proposal_dict.update(self.common_proposal_dict)

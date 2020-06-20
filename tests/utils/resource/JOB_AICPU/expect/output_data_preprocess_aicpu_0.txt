@@ -1,0 +1,5 @@
+serial_number           node_type_name      total_time(us)    dispatch_time(us)    run_start     run_end
+----------------------  ----------------  ----------------  -------------------  -----------  ----------
+1                       InitData                      1567                  100   2298200409  2298200538
+2                       GetNext                        989                   87   2302769932  2302769980
+AI CPU Total Time(us):  2556
