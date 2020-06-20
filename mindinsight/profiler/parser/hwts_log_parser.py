@@ -98,7 +98,7 @@ class HWTSLogParser:
                     continue
 
                 if int(task_id) < 25000:
-                    task_id = stream_id + "_" + task_id
+                    task_id = str(stream_id) + "_" + str(task_id)
                 result_data += ("%-14s %-4s %-8s %-9s %-8s %-15s %s\n" %(log_type[int(ms_type, 2)], cnt, core_id,
                                                                          blk_id, task_id, syscnt, stream_id))
 
