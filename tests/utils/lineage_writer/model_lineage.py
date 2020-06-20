@@ -17,22 +17,20 @@ import json
 import os
 
 import numpy as np
-
-from mindinsight.lineagemgr.summary.summary_record import LineageSummary
-from mindinsight.utils.exceptions import \
-    MindInsightException
-from mindinsight.lineagemgr.common.validator.validate import validate_train_run_context, \
-    validate_eval_run_context, validate_file_path, validate_network, \
-    validate_int_params, validate_summary_record, validate_raise_exception,\
-    validate_user_defined_info
-from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors, LineageErrorMsg
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
-    LineageGetModelFileError, LineageLogError
+from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrorMsg, LineageErrors
+from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageGetModelFileError, LineageLogError,
+                                                                 LineageParamRunContextError)
 from mindinsight.lineagemgr.common.log import logger as log
-from mindinsight.lineagemgr.common.utils import try_except, make_directory
-from mindinsight.lineagemgr.common.validator.model_parameter import RunContextArgs, \
-    EvalParameter
-from mindinsight.lineagemgr.collection.model.base import Metadata
+from mindinsight.lineagemgr.common.utils import make_directory, try_except
+from mindinsight.lineagemgr.common.validator.model_parameter import EvalParameter
+from mindinsight.lineagemgr.common.validator.validate import (validate_eval_run_context, validate_file_path,
+                                                              validate_int_params,
+                                                              validate_raise_exception,
+                                                              validate_user_defined_info)
+from mindinsight.utils.exceptions import MindInsightException
+
+from ._summary_record import LineageSummary
+from .base import Metadata
 
 try:
     from mindspore.common.tensor import Tensor
@@ -91,7 +89,6 @@ class TrainLineage(Callback):
                 # make directory if not exist
                 self.lineage_log_dir = make_directory(summary_record)
             else:
-                validate_summary_record(summary_record)
                 summary_log_path = summary_record.full_file_name
                 validate_file_path(summary_log_path)
                 self.lineage_log_dir = os.path.dirname(summary_log_path)
@@ -145,7 +142,6 @@ class TrainLineage(Callback):
                 log.debug('initial_learning_rate: %s', self.initial_learning_rate)
             else:
                 network = run_context_args.get('train_network')
-                validate_network(network)
                 optimizer = AnalyzeObject.get_optimizer_by_network(network)
                 self.initial_learning_rate = AnalyzeObject.analyze_optimizer(optimizer)
                 log.debug('initial_learning_rate: %s', self.initial_learning_rate)
@@ -183,7 +179,6 @@ class TrainLineage(Callback):
             raise LineageParamRunContextError(error_msg)
 
         run_context_args = run_context.original_args()
-        validate_train_run_context(RunContextArgs, run_context_args)
 
         train_lineage = dict()
         train_lineage = AnalyzeObject.get_network_args(
@@ -277,7 +272,6 @@ class EvalLineage(Callback):
                 # make directory if not exist
                 self.lineage_log_dir = make_directory(summary_record)
             else:
-                validate_summary_record(summary_record)
                 summary_log_path = summary_record.full_file_name
                 validate_file_path(summary_log_path)
                 self.lineage_log_dir = os.path.dirname(summary_log_path)
@@ -639,7 +633,6 @@ class AnalyzeObject:
             dict, the lineage metadata.
         """
         network = run_context_args.get('train_network')
-        validate_network(network)
         optimizer = run_context_args.get('optimizer')
         if not optimizer:
             optimizer = AnalyzeObject.get_optimizer_by_network(network)

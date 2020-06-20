@@ -17,8 +17,7 @@ import os
 import time
 
 from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
-from mindinsight.lineagemgr.common.validator.validate import validate_file_path
-from mindinsight.lineagemgr.summary.event_writer import EventWriter
+from ._event_writer import EventWriter
 from ._summary_adapter import package_dataset_graph, package_user_defined_info, get_lineage_file_name
 
 
@@ -40,11 +39,10 @@ class LineageSummary:
         >>> lineage_summary.record_train_lineage(train_lineage)
     """
     def __init__(self,
-                 lineage_log_dir=None,
+                 lineage_log_dir,
                  override=False):
         lineage_log_name = get_lineage_file_name()
         self.lineage_log_path = os.path.join(lineage_log_dir, lineage_log_name)
-        validate_file_path(self.lineage_log_path)
         self.event_writer = EventWriter(self.lineage_log_path, override)
 
     @staticmethod

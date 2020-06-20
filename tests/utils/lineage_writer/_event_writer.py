@@ -17,7 +17,7 @@ import os
 import stat
 import struct
 
-from mindinsight.datavisual.utils import crc32
+from tests.utils import crc32
 
 
 class EventWriter:
@@ -84,6 +84,6 @@ class EventWriter:
         Returns:
             bytes, crc of content, 4 bytes.
         """
-        crc_value = crc32.GetMaskCrc32cValue(content, len(content))
+        crc_value = crc32.get_mask_from_string(content)
 
         return struct.pack("<L", crc_value)
