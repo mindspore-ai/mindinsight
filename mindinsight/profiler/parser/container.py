@@ -69,6 +69,9 @@ class TimelineContainer:
         self._stream_id = int(split_list[1])
         self._start_time = float(split_list[2])
         self._duration = float(split_list[3])
+        self._pid = None
+        if len(split_list) == 5:
+            self._pid = int(split_list[4])
 
     @property
     def op_name(self):
@@ -89,3 +92,8 @@ class TimelineContainer:
     def duration(self):
         """Get the duration of the operator execution."""
         return self._duration
+
+    @property
+    def pid(self):
+        """Get the pid of the operator execution."""
+        return self._pid

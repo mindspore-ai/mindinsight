@@ -69,7 +69,7 @@ class StepTraceAnalyser(BaseAnalyser):
 
         return self._result
 
-    def query_for_all_reduce(self):
+    def query_for_all_reduce(self, min_cycle_counter):
         """
         Query for all reduce info.
 
@@ -81,8 +81,9 @@ class StepTraceAnalyser(BaseAnalyser):
         reduce_infos = []
         for row_info in self._data[:-1]:
             row_info_dict = self._get_info_dict_from_row_data(row_info, 'systime')
-            reduce_info = self._get_reduce_time_in_order(row_info_dict)
-            reduce_infos.append(reduce_info)
+            reduce_info = self._sort_reduce_by_time(row_info_dict, min_cycle_counter)
+            if reduce_info:
+                reduce_infos.append(reduce_info)
 
         return reduce_infos
 
@@ -249,6 +250,42 @@ class StepTraceAnalyser(BaseAnalyser):
             cur_stream.append((reduce_start, reduce_end, reduce_duration, reduce_field))
         for _, reduce_events in reduce_info.items():
             reduce_events.sort(key=lambda elem: elem[1])
+        return reduce_info
+
+    def _sort_reduce_by_time(self, row_info_dict, min_cycle_counter):
+        """
+        Sort reduce info by time.
+
+        Args:
+            row_info_dict (dict): Step trace information.
+            min_cycle_counter (int): The minimum cycle counter.
+
+        Returns:
+            list, including the all reduce info sorted by start time only.
+            [
+                [reduce_field, stream_id, reduce_start, reduce_duration],
+                [...],
+                [...]
+            ]
+        """
+        factor = 1e5  # convert time unit from 10ns to 1ms
+        reduce_pid = 10000
+        reduce_info = []
+        reduce_fields = [field_name for field_name in self.__column__
+                         if field_name.startswith('stream_') and not field_name.endswith('point')]
+        for reduce_field in reduce_fields:
+            reduce_start = row_info_dict.get(reduce_field + '_start_point')
+            reduce_start = (reduce_start - min_cycle_counter) / factor \
+                if reduce_start else 0
+            reduce_duration = row_info_dict.get(reduce_field)
+            reduce_duration = reduce_duration / factor if reduce_duration else 0
+            if not (reduce_start and reduce_duration):
+                log.info("Reduce event missing value.")
+                continue
+            cur_stream_id = reduce_field.split('_', 2)[1]
+            reduce_info = [reduce_field, int(cur_stream_id), reduce_start,
+                           reduce_duration, reduce_pid]
+
         return reduce_info
 
     def _construct_reduce_lines(self, row_info_dict):

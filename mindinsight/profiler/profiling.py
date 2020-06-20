@@ -194,7 +194,10 @@ class Profiler:
             logger.warning(err.message)
 
         # analyse timeline info
-        self._analyse_timeline()
+        try:
+            self._analyse_timeline()
+        except (ProfilerIOException, ProfilerFileNotFoundException, ValidationError) as err:
+            logger.warning('Fail to write timeline data: %s', err)
 
     def _analyse_step_trace(self, source_path, framework_parser):
         """
@@ -233,6 +236,11 @@ class Profiler:
         """
         Analyse and parse timeline info.
         """
+        timeline_analyser = AnalyserFactory.instance().get_analyser(
+            'timeline', self._output_path, self._dev_id
+        )
+        min_cycle_counter = timeline_analyser.get_min_cycle_counter()
+
         # Get framework info
         aicoredetail_analyser = AnalyserFactory.instance().get_analyser(
             'aicore_detail', self._output_path, self._dev_id
@@ -243,19 +251,16 @@ class Profiler:
         step_trace_analyser = AnalyserFactory.instance().get_analyser(
             'step_trace', self._output_path, self._dev_id
         )
-        all_reduce_info = step_trace_analyser.query_for_all_reduce()
+        all_reduce_info = step_trace_analyser.query_for_all_reduce(min_cycle_counter)
 
         # Get timeline info
-        timeline_analyser = AnalyserFactory.instance().get_analyser(
-            'timeline', self._output_path, self._dev_id
-        )
-        timeline_analyser.add_framework_info(framework_info)
-        timeline_analyser.add_all_reduce_info(all_reduce_info)
-        try:
-            timeline_analyser.write_timeline()
-            timeline_analyser.write_timeline_summary()
-        except (ProfilerIOException, ProfilerFileNotFoundException, ValidationError) as err:
-            logger.warning('Fail to write timeline data: %s', err)
+        logger.info('Start writing timeline info...')
+        logger.info('Warm Prompt: It could take a few minutes if you are training '
+                    'with a complex network or more than 10 steps.')
+        # Add AllReduce and framework info into timeline
+        timeline_analyser.init_timeline(all_reduce_info, framework_info)
+        timeline_analyser.write_timeline()
+        timeline_analyser.write_timeline_summary()
 
     def __del__(self):
         """Disable the profiling collection service, called after training."""
