@@ -1,13 +1,13 @@
 <template>
   <div class="operator">
-     <div class="operator-title">{{$t('profiling.operatorDetail')}}</div>
-     <div class="cl-profiler">
+    <div class="operator-title">{{$t('profiling.operatorDetail')}}</div>
+    <div class="cl-profiler">
       <el-tabs v-model="apiType"
-              @tab-click="tabChange">
+               @tab-click="tabChange">
         <el-tab-pane label="AI CORE"
-                    name="core">
+                     name="core">
           <div class="cl-profiler-top"
-              v-if="coreCharts.data.length">
+               v-if="coreCharts.data.length">
             <div>
               <span class="profiler-title">
                 {{$t('operator.operatorTypeStatistics')}}
@@ -31,7 +31,7 @@
             </div>
           </div>
           <div class="cl-profiler-bottom"
-              v-if="coreCharts.data.length">
+               v-if="coreCharts.data.length">
             <span class="profiler-title">
               {{ $t('operator.operatorStatistics') }}
             </span>
@@ -82,73 +82,75 @@
                               @cell-click="showInfoDetail"
                               @sort-change="(...args)=>{coreDetailSortChange(props.row, ...args)}">
                       <el-table-column v-for="(ele, key) in props.row.opDetailCol"
-                                      :property="ele"
-                                      :key="key"
-                                      :sortable="ele === 'op_info' ? false : 'custom'"
-                                      :width="(ele==='execution_time'|| ele==='subgraph' ||
+                                       :property="ele"
+                                       :key="key"
+                                       :sortable="ele === 'op_info' ? false : 'custom'"
+                                       :width="(ele==='execution_time'|| ele==='subgraph' ||
                                         ele==='op_name'|| ele==='op_type')?'220':''"
-                                      show-overflow-tooltip
-                                      :label="ele">
+                                       show-overflow-tooltip
+                                       :label="ele">
                       </el-table-column>
                     </el-table>
                     <el-pagination :current-page="props.row.opDetailPage.offset + 1"
-                                  :page-size="props.row.opDetailPage.limit"
-                                  @current-change="(...args)=>{opDetailPageChange(props.row, ...args)}"
-                                  layout="total, prev, pager, next, jumper"
-                                  :total="props.row.pageTotal">
+                                   :page-size="props.row.opDetailPage.limit"
+                                   @current-change="(...args)=>{opDetailPageChange(props.row, ...args)}"
+                                   layout="total, prev, pager, next, jumper"
+                                   :total="props.row.pageTotal">
                     </el-pagination>
                     <div class="clear"></div>
                   </div>
                 </template>
               </el-table-column>
               <el-table-column v-for="(item, $index) in opTypeCol"
-                              :property="item"
-                              :key="$index"
-                              sortable
-                              :label="item">
+                               :property="item"
+                               :key="$index"
+                               sortable
+                               :label="item">
               </el-table-column>
             </el-table>
             <el-table v-show="statisticType && opAllTypeList.opDetailCol && opAllTypeList.opDetailCol.length"
                       :data="opAllTypeList.opDetailList"
                       stripe
+                      ref="opAllTable"
                       width="100%"
                       height="calc(100% - 114px)"
                       @cell-click="showInfoDetail"
                       @sort-change="(...args)=>{coreDetailSortChange(opAllTypeList, ...args)}"
                       tooltip-effect="light">
               <el-table-column v-for="(item, $index) in opAllTypeList.opDetailCol"
-                              :property="item"
-                              :key="$index"
-                              :label="item"
-                              :sortable="item === 'op_info' ? false : 'custom'"
-                              :width="(item==='execution_time'|| item==='subgraph' ||
+                               :property="item"
+                               :key="$index"
+                               :label="item"
+                               :sortable="item === 'op_info' ? false : 'custom'"
+                               :width="(item==='execution_time'|| item==='subgraph' ||
                                 item==='op_name'|| item==='op_type')?'220':''"
-                              show-overflow-tooltip>
+                               show-overflow-tooltip>
               </el-table-column>
             </el-table>
             <el-pagination v-show="statisticType"
-                          v-if="opAllTypeList.opDetailList.length"
-                          :current-page="opAllTypeList.opDetailPage.offset + 1"
-                          :page-size="opAllTypeList.opDetailPage.limit"
-                          @current-change="(...args)=>{opDetailPageChange(opAllTypeList, ...args)}"
-                          layout="total, prev, pager, next, jumper"
-                          :total="opAllTypeList.pageTotal">
+                           v-if="opAllTypeList.opDetailList.length"
+                           :current-page="opAllTypeList.opDetailPage.offset + 1"
+                           :page-size="opAllTypeList.opDetailPage.limit"
+                           @current-change="(...args)=>{opDetailPageChange(opAllTypeList, ...args)}"
+                           layout="total, prev, pager, next, jumper"
+                           :total="opAllTypeList.pageTotal">
             </el-pagination>
           </div>
           <div class="image-noData"
-              v-if="initOver && coreCharts.data.length === 0">
+               v-if="initOver && coreCharts.data.length === 0">
             <div>
               <img :src="require('@/assets/images/nodata.png')"
-                  alt="" />
+                   alt="" />
             </div>
             <p>{{ $t("public.noData") }}</p>
           </div>
         </el-tab-pane>
         <el-tab-pane label="AI CPU"
                      class="cpu-tab"
-                     name="cpu">
+                     name="cpu"
+                     v-if="false">
           <div class="cl-profiler-top"
-              v-if="cpuCharts.data.length">
+               v-if="cpuCharts.data.length">
             <div>
               <span class="profiler-title">
                 {{ $t('operator.operatorStatistics') }}
@@ -156,11 +158,11 @@
             </div>
             <div class="cl-profiler-echarts">
               <div class
-                  id="cpu-echarts"></div>
+                   id="cpu-echarts"></div>
             </div>
           </div>
           <div class="cl-profiler-bottom"
-              v-if="cpuCharts.data.length">
+               v-if="cpuCharts.data.length">
             <span class="profiler-title">
               {{ $t('operator.operatorStatistics') }}
             </span>
@@ -174,41 +176,42 @@
             <el-table v-show="opCpuList.opDetailCol && opCpuList.opDetailCol.length"
                       :data="opCpuList.opDetailList"
                       stripe
+                      ref="opCPUTable"
                       width="100%"
                       height="calc(100% - 82px)"
                       tooltip-effect="light"
                       @sort-change="(...args)=>{cpuDetailSortChange(opCpuList, ...args)}">
               <el-table-column v-for="(item, $index) in opCpuList.opDetailCol"
-                              :property="item"
-                              :key="$index"
-                              :label="item"
-                              sortable="custom"
-                              show-overflow-tooltip>
+                               :property="item"
+                               :key="$index"
+                               :label="item"
+                               sortable="custom"
+                               show-overflow-tooltip>
               </el-table-column>
             </el-table>
             <el-pagination v-if="opCpuList.opDetailList.length"
-                          :current-page="opCpuList.opDetailPage.offset + 1"
-                          :page-size="opCpuList.opDetailPage.limit"
-                          @current-change="(...args)=>{opCpuPageChange(opCpuList, ...args)}"
-                          layout="total, prev, pager, next, jumper"
-                          :total="opCpuList.pageTotal">
+                           :current-page="opCpuList.opDetailPage.offset + 1"
+                           :page-size="opCpuList.opDetailPage.limit"
+                           @current-change="(...args)=>{opCpuPageChange(opCpuList, ...args)}"
+                           layout="total, prev, pager, next, jumper"
+                           :total="opCpuList.pageTotal">
             </el-pagination>
           </div>
           <div class="image-noData"
-              v-if="initOver && cpuCharts.data.length === 0">
+               v-if="initOver && cpuCharts.data.length === 0">
             <div>
               <img :src="require('@/assets/images/nodata.png')"
-                  alt="" />
+                   alt="" />
             </div>
             <p>{{$t("public.noData")}}</p>
           </div>
         </el-tab-pane>
       </el-tabs>
       <el-dialog :title="rowName"
-                :visible.sync="detailsDialogVisible"
-                width="50%"
-                :close-on-click-modal="false"
-                class="details-data-list">
+                 :visible.sync="detailsDialogVisible"
+                 width="50%"
+                 :close-on-click-modal="false"
+                 class="details-data-list">
         <el-table :data="detailsDataList"
                   row-key="id"
                   lazy
@@ -217,11 +220,11 @@
                   :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
           <el-table-column width="50" />
           <el-table-column prop="key"
-                          width="180"
-                          label="Key"> </el-table-column>
+                           width="180"
+                           label="Key"> </el-table-column>
           <el-table-column prop="value"
-                          show-overflow-tooltip
-                          label="Value">
+                           show-overflow-tooltip
+                           label="Value">
             <template slot-scope="scope">
               {{ scope.row.value }}
             </template>
@@ -327,7 +330,7 @@ export default {
       if (this.coreCharts.chartDom) {
         setTimeout(() => {
           this.coreCharts.chartDom.resize();
-        }, 200);
+        }, 300);
       }
     },
     /**
@@ -340,7 +343,7 @@ export default {
         this.getCoreTypeList();
       } else if (this.apiType === 'cpu') {
         this.clearCpuData();
-        this.getCpuList();
+        this.getCpuList(true);
       }
     },
     opTypeSortChange() {
@@ -508,19 +511,22 @@ export default {
             if (res && res.data) {
               this.formatterDetailData(row, res.data);
               this.$nextTick(() => {
-                const item = this.$refs['expandChild'];
-                if (item) {
+                let item = null;
+                if (this.statisticType) {
+                  item = this.$refs['opAllTable'];
+                } else {
+                  item = this.$refs['expandChild'];
                   this.curActiveRow = {
                     rowItem: row,
                     childProp: row.op_sort_condition.name,
                     childOrder: row.op_sort_condition.type,
                   };
-                  if (isSort) {
-                    item.sort(
-                        row.op_sort_condition.name,
-                        row.op_sort_condition.type,
-                    );
-                  }
+                }
+                if (item && isSort) {
+                  item.sort(
+                      row.op_sort_condition.name,
+                      row.op_sort_condition.type,
+                  );
                 }
               });
             }
@@ -529,8 +535,9 @@ export default {
     },
     /**
      * get cpu list
+     * @param {Boolean} isSort if sort
      */
-    getCpuList() {
+    getCpuList(isSort) {
       const params = {};
       params.params = {
         profile: this.profile_dir,
@@ -569,6 +576,17 @@ export default {
                   res.data.object.splice(8);
                 }
                 this.formatterDetailData(this.opCpuList, res.data);
+                if (isSort) {
+                  this.$nextTick(() => {
+                    const item = this.$refs['opCPUTable'];
+                    if (item) {
+                      item.sort(
+                          this.opCpuList.op_sort_condition.name,
+                          this.opCpuList.op_sort_condition.type,
+                      );
+                    }
+                  });
+                }
               }
             }
           })
@@ -592,7 +610,7 @@ export default {
      */
     opCpuPageChange(row, pageIndex) {
       row.opDetailPage.offset = pageIndex - 1;
-      this.getCpuList();
+      this.getCpuList(false);
     },
     /**
      * get core list by search
@@ -639,7 +657,7 @@ export default {
       } else {
         this.opCpuList.op_filter_condition = {};
       }
-      this.getCpuList();
+      this.getCpuList(false);
     },
     /**
      * core detail sort
@@ -665,7 +683,7 @@ export default {
         type: column.order,
       };
       row.opDetailPage.offset = 0;
-      this.getCpuList();
+      this.getCpuList(false);
     },
     /**
      * format detail data
@@ -732,7 +750,7 @@ export default {
       ) {
         this.initOver = false;
         this.clearCpuData();
-        this.getCpuList();
+        this.getCpuList(true);
       } else if (
         this.apiType === 'core' &&
         this.coreCharts.device_id !== this.currentCard
@@ -855,6 +873,11 @@ export default {
         option.color = ['#6C92FA'];
         option.tooltip = {
           trigger: 'axis',
+          formatter: (params) => {
+            return `${params[0].axisValue}<br>${
+              params[0].marker
+            }${params[0].value.toFixed(4)}`;
+          },
           confine: true,
         };
         option.series = [
@@ -1026,7 +1049,7 @@ export default {
 };
 </script>
 <style lang="scss">
-.operator{
+.operator {
   height: 100%;
 }
 .clear {
@@ -1043,9 +1066,9 @@ export default {
   font-weight: bold;
 }
 .operator-title {
-    padding: 0 15px;
-    font-size: 16px;
-    font-weight: bold;
+  padding: 0 15px;
+  font-size: 16px;
+  font-weight: bold;
 }
 .cl-profiler {
   height: calc(100% - 21px);

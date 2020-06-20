@@ -98,7 +98,6 @@ export default {
         this.curDashboardInfo.query.path = '';
         this.$message.error(this.$t('trainingDashboard.invalidId'));
       }
-      this.getDataOfProfileHelper();
     },
     selectValueChange() {
       const helperDiv = document.getElementById('helper-tips');
@@ -121,6 +120,7 @@ export default {
                   });
                 });
                 this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
+                this.getDataOfProfileHelper();
               }
             } else {
               this.CardNumArr = [];
@@ -241,11 +241,13 @@ export default {
                     const divDom = document.createElement('div');
                     divDom.setAttribute('class', 'content-style');
                     const anchorList = this.$t(`profiling`)[item].anchor;
-                    const anchorContent = this.$t(`profiling`)[item].desc;
+                    let anchorContent = this.$t(`profiling`)[item].desc;
                     for (let i = 0; i < anchorList.length; i++) {
                       const desc = anchorContent.relpace(
                           anchorList[i],
-                          `<a target="_blank" href="${this.$t(`profiling`)[item].url[i]}">
+                          `<a target="_blank" href="${
+                            this.$t(`profiling`)[item].url[i]
+                          }">
                       ${anchorList[i]}</a>`,
                       );
                       anchorContent = desc;
@@ -310,7 +312,7 @@ export default {
         margin-left: 32px;
         background: #edf0f5;
         word-wrap: break-word;
-        .nowrap-style{
+        .nowrap-style {
           white-space: nowrap;
         }
         .cur-card {

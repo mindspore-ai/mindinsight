@@ -33,9 +33,14 @@ limitations under the License.
       </div>
     </div>
     <div class="step-message">
-      <div class="step-padding-right">{{$t('profiling.stepTraceMessage')}}</div>
-      <div class="step-padding-right">{{$t('profiling.FPMessage')}}<span>{{fp_start}}</span></div>
-      <div class="step-padding-right">{{$t('profiling.BPMessage')}}<span>{{bp_end}}</span></div>
+      <div class="step-left-padding-right">
+        <span class="font-weight-style">{{$t('profiling.FPMessage')}}</span>
+        <span>{{fp_start}}</span>
+      </div>
+      <div class="step-padding-right">
+        <span class="font-weight-style">{{$t('profiling.BPMessage')}}</span>
+        <span>{{bp_end}}</span>
+      </div>
     </div>
     <div class="pf-content-middle"
          v-show="!tabsArr[0].noData && !tabsArr[1].noData && !tabsArr[2].noData && !svg.noData">
@@ -377,9 +382,13 @@ export default {
             res.data.training_trace_graph.length
             ) {
               this.svg.noData = false;
-              if (res.data.point_info && res.data.point_info.length) {
-                this.fp_start = res.data.point_info.fp_start;
-                this.bp_end = res.data.point_info.bp_end;
+              if (res.data.point_info) {
+                this.fp_start = res.data.point_info.fp_start
+                ? res.data.point_info.fp_start
+                : '--';
+                this.bp_end = res.data.point_info.bp_end
+                ? res.data.point_info.bp_end
+                : '--';
               } else {
                 this.fp_start = '--';
                 this.bp_end = '--';
@@ -418,6 +427,7 @@ export default {
         const svg = document.querySelector('#trace svg');
         this.svg.totalTime = this.svg.data[0][0].duration;
         if (this.svg.totalTime) {
+          this.svg.colorIndex = 0;
           this.svg.data.forEach((row, index) => {
             if (row && row.length) {
               const dashedLine = this.addDashedLine(index);
@@ -623,7 +633,6 @@ export default {
     }
   }
   .step-message {
-    display: flex;
     height: 24px;
     line-height: 24px;
     margin-top: 6px;
@@ -631,7 +640,15 @@ export default {
     overflow-y: auto;
   }
   .step-padding-right {
-    padding-right: 6px;
+    padding-right: 20px;
+    display: inline-block;
+  }
+  .step-left-padding-right {
+    padding-right: 30px;
+    display: inline-block;
+  }
+  .font-weight-style {
+    font-weight: bold;
   }
   .pf-content-middle {
     padding: 15px 15px 0;
