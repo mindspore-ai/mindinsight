@@ -300,13 +300,22 @@ export default {
                     left: 50,
                     top: 50,
                     right: 50,
-                    bottom: 20,
+                    bottom: 50,
                   },
                   series: timeInfo,
                   tooltip: {
                     trigger: 'axis',
                     confine: true,
                   },
+                  dataZoom: [
+                    {
+                      bottom: 0,
+                    },
+                    {
+                      type: 'inside',
+                      bottom: 0,
+                    },
+                  ],
                 };
                 if (type === 'iteration_interval') {
                   option.yAxis.name = `${this.$t(
@@ -680,7 +689,7 @@ export default {
       margin-right: 15px;
       width: calc(33.3% - 10px);
       border: 1px solid #ccc;
-      padding: 30px;
+      padding: 30px 30px 0;
       border-radius: 4px;
       overflow: auto;
       &:last-child {
