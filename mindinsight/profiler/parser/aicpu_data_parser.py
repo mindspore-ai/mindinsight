@@ -41,15 +41,44 @@ class DataPreProcessParser:
     def __init__(self, input_path, output_filename):
         self._input_path = input_path
         self._output_filename = output_filename
-        self._source_file_name = self.get_source_file()
+        self._source_file_name = self._get_source_file()
+        self._ms_kernel_flag = 3
+        self._other_kernel_flag = 6
+        self._thread_flag = 7
+        self._ms_kernel_run_end_index = 2
+        self._other_kernel_run_end_index = 5
 
-    def get_source_file(self):
+    def _get_source_file(self):
         """Get log file name, which was created by ada service."""
         file_name = get_file_join_name(self._input_path, self._source_file_target)
         if not file_name:
             data_path = os.path.join(self._input_path, "data")
             file_name = get_file_join_name(data_path, self._source_file_target)
         return file_name
+
+    def _get_kernel_result(self, number, node_list, thread_list):
+        """Get the profiling data form different aicpu kernel"""
+        try:
+            if len(node_list) == self._ms_kernel_flag and len(thread_list) == self._thread_flag:
+                node_type_name = node_list[0].split(':')[-1]
+                run_end_index = self._ms_kernel_run_end_index
+            elif len(node_list) == self._other_kernel_flag and len(thread_list) == self._thread_flag:
+                node_type_name = node_list[0].split(':')[-1].split('/')[-1].split('-')[0]
+                run_end_index = self._other_kernel_run_end_index
+            else:
+                logger.warning("the data format can't support 'node_list':%s", str(node_list))
+                return None
+
+            run_start = node_list[1].split(':')[-1].split(' ')[0]
+            run_end = node_list[run_end_index].split(':')[-1].split(' ')[0]
+            total_time = thread_list[-1].split('=')[-1].split()[0]
+            dispatch_time = thread_list[-2].split('=')[-1].split()[0]
+
+            return [number, node_type_name, total_time, dispatch_time,
+                    run_start, run_end]
+        except IndexError as e:
+            logger.exception(e)
+            return None
 
     def execute(self):
         """Execute the parser, get result data, and write it to the output file."""
@@ -63,23 +92,26 @@ class DataPreProcessParser:
                              .replace(b'\x00', b' ___ '))[2:-1]
             ai_cpu_lines = ai_cpu_str.split(" ___ ")
 
-        node_list = list()
+        result_list = list()
         ai_cpu_total_time_summary = 0
         # Node serial number.
         serial_number = 1
         for i in range(len(ai_cpu_lines) - 1):
             node_line = ai_cpu_lines[i]
             thread_line = ai_cpu_lines[i + 1]
+            result = []
             if "Node" in node_line and "Thread" in thread_line:
                 # Get the node data from node_line
-                node_type_name = node_line.split(',')[0].split(':')[-1]
-                run_start = node_line.split(',')[1].split(':')[-1]
-                run_end = node_line.split(',')[2].split(':')[-1]
-                total_time = thread_line.split(',')[-1].split('=')[-1].split()[0]
-                dispatch_time = thread_line.split(',')[-2].split('=')[-1].split()[0]
-                node_list.append([serial_number, node_type_name, total_time,
-                                  dispatch_time, run_start, run_end])
+                node_list = node_line.split(',')
+                thread_list = thread_line.split(',')
+                result = self._get_kernel_result(serial_number, node_list, thread_list)
+
+                if result is None:
+                    continue
+
+                result_list.append(result)
                 # Calculate the total time.
+                total_time = result[2]
                 ai_cpu_total_time_summary += int(total_time)
                 # Increase node serial number.
                 serial_number += 1
@@ -87,11 +119,11 @@ class DataPreProcessParser:
                 node_type_name = node_line.split(',')[0].split(':')[-1]
                 logger.warning("The node type:%s cannot find thread data", node_type_name)
 
-        if node_list:
-            node_list.append(["AI CPU Total Time(us):", ai_cpu_total_time_summary])
+        if result_list:
+            result_list.append(["AI CPU Total Time(us):", ai_cpu_total_time_summary])
             fwrite_format(self._output_filename, data_source=self._dst_file_title, is_print=True,
                           is_start=True)
             fwrite_format(self._output_filename,
-                          data_source=tabulate(node_list, self._dst_file_column_title,
+                          data_source=tabulate(result_list, self._dst_file_column_title,
                                                tablefmt='simple'),
                           is_start=True, is_print=True)
