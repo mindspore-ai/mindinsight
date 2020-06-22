@@ -22,6 +22,7 @@ from pathlib import Path
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.utils.tools import Counter
+from mindinsight.datavisual.utils.utils import contains_null_byte
 from mindinsight.datavisual.common.exceptions import MaxCountExceededError
 from mindinsight.utils.exceptions import FileSystemPermissionError
 
@@ -61,7 +62,7 @@ class SummaryWatcher:
             >>> summary_watcher = SummaryWatcher()
             >>> directories = summary_watcher.list_summary_directories('/summary/base/dir')
         """
-        if self._contains_null_byte(summary_base_dir=summary_base_dir):
+        if contains_null_byte(summary_base_dir=summary_base_dir):
             return []
 
         relative_path = os.path.join('.', '')
@@ -147,25 +148,6 @@ class SummaryWatcher:
             if subdir_entry.is_symlink():
                 pass
             self._update_summary_dict(summary_dict, summary_base_dir, subdir_relative_path, subdir_entry)
-
-    def _contains_null_byte(self, **kwargs):
-        """
-        Check if arg contains null byte.
-
-        Args:
-            kwargs (Any): Check if arg contains null byte.
-
-        Returns:
-            bool, indicates if any arg contains null byte.
-        """
-        for key, value in kwargs.items():
-            if not isinstance(value, str):
-                continue
-            if '\x00' in value:
-                logger.warning('%s contains null byte \\x00.', key)
-                return True
-
-        return False
 
     def _is_valid_summary_directory(self, summary_base_dir, relative_path):
         """
@@ -276,7 +258,7 @@ class SummaryWatcher:
             >>> summary_watcher = SummaryWatcher()
             >>> summaries = summary_watcher.is_summary_directory('/summary/base/dir', './job-01')
         """
-        if self._contains_null_byte(summary_base_dir=summary_base_dir, relative_path=relative_path):
+        if contains_null_byte(summary_base_dir=summary_base_dir, relative_path=relative_path):
             return False
 
         if not self._is_valid_summary_directory(summary_base_dir, relative_path):
@@ -371,7 +353,7 @@ class SummaryWatcher:
             >>> summary_watcher = SummaryWatcher()
             >>> summaries = summary_watcher.list_summaries('/summary/base/dir', './job-01')
         """
-        if self._contains_null_byte(summary_base_dir=summary_base_dir, relative_path=relative_path):
+        if contains_null_byte(summary_base_dir=summary_base_dir, relative_path=relative_path):
             return []
 
         if not self._is_valid_summary_directory(summary_base_dir, relative_path):

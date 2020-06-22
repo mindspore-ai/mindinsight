@@ -14,6 +14,7 @@
 # ============================================================================
 """Utils."""
 import math
+from mindinsight.datavisual.common.log import logger
 
 
 def calc_histogram_bins(count):
@@ -45,3 +46,23 @@ def calc_histogram_bins(count):
         return math.ceil(count / number_per_bucket) + 1
 
     return max_bins
+
+
+def contains_null_byte(**kwargs):
+    """
+    Check if arg contains null byte.
+
+    Args:
+        kwargs (Any): Check if arg contains null byte.
+
+    Returns:
+        bool, indicates if any arg contains null byte.
+    """
+    for key, value in kwargs.items():
+        if not isinstance(value, str):
+            continue
+        if '\x00' in value:
+            logger.warning('%s contains null byte \\x00.', key)
+            return True
+
+    return False
