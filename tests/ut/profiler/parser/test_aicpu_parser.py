@@ -52,10 +52,10 @@ class TestAicpuParser(TestCase):
                                                            'JOB_AICPU/data'))
         self.expect_dir = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                         '../../../utils/resource/'
-                                                        'JOB_AICPU/data'))
+                                                        'JOB_AICPU/expect'))
         self.output_path = tempfile.mkdtemp(prefix='output_data_preprocess_aicpu_')
         self.output_file = os.path.join(self.output_path, 'output_data_preprocess_aicpu_0.txt')
-        self.expect_file = os.path.join(self.output_path, 'output_data_preprocess_aicpu_0.txt')
+        self.expect_file = os.path.join(self.expect_dir, 'output_data_preprocess_aicpu_0.txt')
 
     def test_aicpu_parser(self):
         """Test the class of Aicpu Parser."""
