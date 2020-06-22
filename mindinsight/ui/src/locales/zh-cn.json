@@ -265,7 +265,7 @@
       "desc": "性能分析与优化指导"
     },
     "minddata_pipeline-proposer_type_label": {
-      "desc": "Minddata pipeline性能优化建议"
+      "desc": "数据处理性能优化参考建议"
     },
     "minddata_pipeline-general": {
       "desc": "Pipeline中的算子{n1}可能存在性能瓶颈，请用户重点关注。"
@@ -286,7 +286,7 @@
       "desc": "经过上述判断，算子{n1}可能存在优化空间。"
     },
     "minddata-proposer_type_label": {
-      "desc": "数据处理性能分析"
+      "desc": "迭代间隙性能分析"
     },
     "minddata_device_queue": {
       "desc": "主机侧队列为空比例{n1}/{n2}，为满比例{n3}/{n4}。"
