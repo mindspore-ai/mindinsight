@@ -70,6 +70,7 @@ class DataVisualErrors(Enum):
     SCALAR_NOT_EXIST = 14
     HISTOGRAM_NOT_EXIST = 15
     TRAIN_JOB_DETAIL_NOT_IN_CACHE = 16
+    QUERY_STRING_CONTAINS_NULL_BYTE = 17
 
 
 class ScriptConverterErrors(Enum):

@@ -107,6 +107,15 @@ class TrainJobNotExistError(MindInsightException):
                                                     http_code=400)
 
 
+class QueryStringContainsNullByteError(MindInsightException):
+    """Query string contains null byte error."""
+    def __init__(self, error_detail):
+        error_msg = f"Query string contains null byte error. Detail: {error_detail}"
+        super(QueryStringContainsNullByteError, self).__init__(DataVisualErrors.QUERY_STRING_CONTAINS_NULL_BYTE,
+                                                               error_msg,
+                                                               http_code=400)
+
+
 class PluginNotAvailableError(MindInsightException):
     """The given plugin is not available."""
     def __init__(self, error_detail):

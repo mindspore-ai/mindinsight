@@ -19,7 +19,9 @@ from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.enums import CacheStatus
+from mindinsight.datavisual.common.exceptions import QueryStringContainsNullByteError
 from mindinsight.datavisual.common.validation import Validation
+from mindinsight.datavisual.utils.utils import contains_null_byte
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 from mindinsight.datavisual.data_transform.data_manager import DATAVISUAL_PLUGIN_KEY, DATAVISUAL_CACHE_KEY
 
@@ -57,6 +59,8 @@ class TrainTaskManager(BaseProcessor):
             dict, refer to restful api.
         """
         Validation.check_param_empty(train_id=train_id)
+        if contains_null_byte(train_id=train_id):
+            raise QueryStringContainsNullByteError("train job id: {} contains null byte.".format(train_id))
 
         if manual_update:
             self._data_manager.cache_train_job(train_id)

@@ -79,9 +79,9 @@ class TestPlugins:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.usefixtures("init_summary_logs")
-    @pytest.mark.parametrize("train_id", ["@#$", "./\x00home", "././/not_exist_id", dict()])
+    @pytest.mark.parametrize("train_id", ["@#$", "././/not_exist_id", dict()])
     def test_plugins_with_special_train_id(self, client, train_id):
-        """Test passing train_id with special character, null_byte, invalid id, and wrong type."""
+        """Test passing train_id with special character, invalid id, and wrong type."""
         params = dict(train_id=train_id)
         url = get_url(BASE_URL, params)
 
@@ -91,6 +91,26 @@ class TestPlugins:
         response = response.get_json()
         assert response['error_code'] == '50545005'
         assert response['error_msg'] == "Train job is not exist. Detail: Can not find the train job in data manager."
+
+    @pytest.mark.level1
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.usefixtures("init_summary_logs")
+    @pytest.mark.parametrize("train_id", ["./\x00home"])
+    def test_plugins_with_null_byte_train_id(self, client, train_id):
+        """Test passing train_id with null_byte."""
+        params = dict(train_id=train_id, manual_update=True)
+        url = get_url(BASE_URL, params)
+
+        response = client.get(url)
+        assert response.status_code == 400
+
+        response = response.get_json()
+        assert response['error_code'] == '50545011'
+        assert "Query string contains null byte error. " in response['error_msg']
 
     @pytest.mark.level1
     @pytest.mark.env_single
