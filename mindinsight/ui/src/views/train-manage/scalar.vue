@@ -92,7 +92,8 @@ limitations under the License.
             </div>
 
             <div class="chartThreshold">
-              <div class="chartThresholdLeft">{{$t("scalar.currentThreshold")}}：{{sampleItem.pieceStr || "-"}}</div>
+              <div class="chartThresholdLeft"
+                   :title="sampleItem.pieceStr">{{$t("scalar.currentThreshold")}}：{{sampleItem.pieceStr || "-"}}</div>
               <div class="chartThresholdRight">
                 <span @click="setThreshold(sampleItem)"
                       v-if="!thresholdLocal
@@ -1104,21 +1105,8 @@ export default {
             restore: {},
           },
         },
-        visualMap: {
-          show: false,
-          pieces: piecesData,
-          outOfRange: {
-            color: sampleObject.colors,
-          },
-        },
         series: seriesData,
       };
-
-      if (tempOption.visualMap.pieces.length > 0) {
-        tempOption.series.forEach((item) => {
-          item.lineStyle.color = null;
-        });
-      }
       return tempOption;
     },
 
@@ -1793,6 +1781,7 @@ export default {
      */
 
     setThreshold(sampleItem) {
+      this.stopUpdateSamples();
       this.getCache();
       if (
         this.thresholdLocal &&
@@ -1889,7 +1878,10 @@ export default {
         } else if (isNaN(valueFirst) || isNaN(valueSec)) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
           isValidate = false;
-        } else if (valueFirst.indexOf('Infinity') > -1 || valueSec.indexOf('Infinity') > -1) {
+        } else if (
+          valueFirst.indexOf('Infinity') > -1 ||
+          valueSec.indexOf('Infinity') > -1
+        ) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
           isValidate = false;
         } else {
@@ -1926,6 +1918,175 @@ export default {
         }
       }
       return isValidate;
+    },
+
+    /**
+     * set visualMap
+     * @param {Object} sampleObject sampleObject
+     * @param {Array} chartPieces chartPieces
+     */
+
+    setVisualMap(sampleObject, chartPieces) {
+      if (chartPieces.length === 0) {
+        return;
+      }
+      const markLineData = [];
+      chartPieces.forEach((item) => {
+        if (item.lt || item.lt === 0) {
+          const markLineDataItem = {};
+          markLineDataItem.yAxis = item.lt;
+          markLineData.push(markLineDataItem);
+        }
+        if (item.gt || item.gt === 0) {
+          const markLineDataItem = {};
+          markLineDataItem.yAxis = item.gt;
+          markLineData.push(markLineDataItem);
+        }
+      });
+      const tempCharOption = sampleObject.charData.charOption;
+
+      let chartPiecesTemp = JSON.parse(JSON.stringify(chartPieces));
+      chartPiecesTemp.forEach((item) => {
+        item.color = this.thresholdColor;
+      });
+
+      if (chartPiecesTemp.length === 1) {
+        if (
+          !isNaN(chartPiecesTemp[0]['lt']) &&
+          isNaN(chartPiecesTemp[0]['gt'])
+        ) {
+          if (chartPiecesTemp[0]['lt'] <= sampleObject.zoomData[0]) {
+            chartPiecesTemp = [];
+          } else if (
+            chartPiecesTemp[0]['lt'] < sampleObject.zoomData[1] &&
+            chartPiecesTemp[0]['lt'] > sampleObject.zoomData[0]
+          ) {
+            chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
+          } else if (chartPiecesTemp[0]['lt'] >= sampleObject.zoomData[1]) {
+            chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
+            chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
+          }
+        } else if (
+          !isNaN(chartPiecesTemp[0]['gt']) &&
+          isNaN(chartPiecesTemp[0]['lt'])
+        ) {
+          if (chartPiecesTemp[0]['gt'] >= sampleObject.zoomData[1]) {
+            chartPiecesTemp = [];
+          } else if (
+            chartPiecesTemp[0]['gt'] > sampleObject.zoomData[0] &&
+            chartPiecesTemp[0]['gt'] < sampleObject.zoomData[1]
+          ) {
+            chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
+          } else if (chartPiecesTemp[0]['gt'] <= sampleObject.zoomData[0]) {
+            chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
+            chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
+          }
+        } else if (
+          !isNaN(chartPiecesTemp[0]['lt']) &&
+          !isNaN(chartPiecesTemp[0]['gt'])
+        ) {
+          if (chartPiecesTemp[0]['gt'] >= sampleObject.zoomData[1]) {
+            chartPiecesTemp = [];
+          } else {
+            if (chartPiecesTemp[0]['gt'] <= sampleObject.zoomData[0]) {
+              chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
+            }
+            if (chartPiecesTemp[0]['lt'] >= sampleObject.zoomData[1]) {
+              chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
+            }
+            if (chartPiecesTemp[0]['lt'] <= sampleObject.zoomData[0]) {
+              chartPiecesTemp = [];
+            }
+          }
+        }
+      }
+
+      if (chartPiecesTemp.length === 2) {
+        const relationalArr = [];
+        relationalArr[0] = chartPiecesTemp[0].lt || chartPiecesTemp[1].lt;
+        relationalArr[1] = chartPiecesTemp[0].gt || chartPiecesTemp[1].gt;
+        if (
+          relationalArr[0] >= sampleObject.zoomData[1] ||
+          relationalArr[1] <= sampleObject.zoomData[0]
+        ) {
+          chartPiecesTemp = [
+            {
+              gt: sampleObject.zoomData[0],
+              lt: sampleObject.zoomData[1],
+              color: this.thresholdColor,
+            },
+          ];
+        } else {
+          if (relationalArr[0] <= sampleObject.zoomData[0]) {
+            if (!isNaN(chartPiecesTemp[0].lt)) {
+              chartPiecesTemp[0].lt = sampleObject.zoomData[0];
+            } else {
+              chartPiecesTemp[1].lt = sampleObject.zoomData[0];
+            }
+          }
+          if (relationalArr[1] >= sampleObject.zoomData[1]) {
+            if (!isNaN(chartPiecesTemp[0].gt)) {
+              chartPiecesTemp[0].gt = sampleObject.zoomData[1];
+            } else {
+              chartPiecesTemp[1].gt = sampleObject.zoomData[1];
+            }
+          }
+        }
+      }
+      if (chartPiecesTemp.length > 0) {
+        tempCharOption.series[0].lineStyle['color'] = null;
+        tempCharOption.visualMap = {};
+        tempCharOption.visualMap['show'] = false;
+        tempCharOption.visualMap['pieces'] = chartPiecesTemp;
+        tempCharOption.visualMap['outOfRange'] = {
+          color: sampleObject.colors,
+        };
+        tempCharOption.series[0]['markLine'] = {
+          precision: 5,
+          silent: true,
+          data: markLineData,
+        };
+
+        sampleObject.charObj.setOption(tempCharOption, false);
+      }
+    },
+
+    /**
+     * formate PieceStr
+     * @param {Array} piecesArr piecesArr
+     * @return {String}
+     */
+
+    formatePieceStr(piecesArr) {
+      if (piecesArr.length === 0) {
+        return;
+      }
+      piecesArr.forEach((item) => {
+        if (item.lt) {
+          item.lt = Number(item.lt.toFixed(5));
+        }
+        if (item.gt) {
+          item.gt = Number(item.gt.toFixed(5));
+        }
+      });
+      let pieceStr;
+      if (piecesArr.length === 1) {
+        if (!isNaN(piecesArr[0].gt) && !isNaN(piecesArr[0].lt)) {
+          pieceStr = `(${piecesArr[0].gt},${piecesArr[0].lt})`;
+        } else if (!isNaN(piecesArr[0].gt) && isNaN(piecesArr[0].lt)) {
+          pieceStr = `(${piecesArr[0].gt},Infinity)`;
+        } else if (!isNaN(piecesArr[0].lt) && isNaN(piecesArr[0].gt)) {
+          pieceStr = `(-Infinity,${piecesArr[0].lt})`;
+        }
+      }
+      if (piecesArr.length === 2) {
+        if (!isNaN(piecesArr[0].lt) && !isNaN(piecesArr[1].gt)) {
+          pieceStr = `(-Infinity,${piecesArr[0].lt}),(${piecesArr[1].gt},Infinity)`;
+        } else if (!isNaN(piecesArr[0].gt) && !isNaN(piecesArr[1].lt)) {
+          pieceStr = `(-Infinity,${piecesArr[1].lt}),(${piecesArr[0].gt},Infinity)`;
+        }
+      }
+      return pieceStr;
     },
 
     /**
@@ -1981,32 +2142,8 @@ export default {
           });
         }
 
-        chartPieces.forEach((item) => {
-          if (item.lt) {
-            item.lt = Number(item.lt.toFixed(5));
-          }
-          if (item.gt) {
-            item.gt = Number(item.gt.toFixed(5));
-          }
-        });
-
         let pieceStr = '';
-        if (chartPieces.length === 1) {
-          if (!isNaN(chartPieces[0].gt) && !isNaN(chartPieces[0].lt)) {
-            pieceStr = `(${chartPieces[0].gt},${chartPieces[0].lt})`;
-          } else if (!isNaN(chartPieces[0].gt) && isNaN(chartPieces[0].lt)) {
-            pieceStr = `(${chartPieces[0].gt},Infinity)`;
-          } else if (!isNaN(chartPieces[0].lt) && isNaN(chartPieces[0].gt)) {
-            pieceStr = `(-Infinity,${chartPieces[0].lt})`;
-          }
-        }
-        if (chartPieces.length === 2) {
-          if (!isNaN(chartPieces[0].lt) && !isNaN(chartPieces[1].gt)) {
-            pieceStr = `(-Infinity,${chartPieces[0].lt}),(${chartPieces[1].gt},Infinity)`;
-          } else if (!isNaN(chartPieces[0].gt) && !isNaN(chartPieces[1].lt)) {
-            pieceStr = `(-Infinity,${chartPieces[1].lt}),(${chartPieces[0].gt},Infinity)`;
-          }
-        }
+        pieceStr = this.formatePieceStr(chartPieces);
 
         if (!this.thresholdLocal) {
           this.thresholdLocal = {};
@@ -2032,21 +2169,6 @@ export default {
 
         const chartPiecesTemp = JSON.parse(JSON.stringify(chartPieces));
 
-        if (chartPiecesTemp.length === 1) {
-          let itemValue;
-          if (chartPiecesTemp[0]['lt'] || chartPiecesTemp[0]['lt'] === 0) {
-            itemValue = chartPiecesTemp[0]['lt'];
-          } else {
-            itemValue = chartPiecesTemp[0]['gt'];
-          }
-          chartPiecesTemp.push({
-            value:
-              chartPiecesTemp[0]['lt'] || chartPiecesTemp[0]['lt'] === 0
-                ? itemValue + 1
-                : itemValue - 1,
-          });
-        }
-
         chartPiecesTemp.forEach((item) => {
           item.color = this.thresholdColor;
         });
@@ -2060,18 +2182,7 @@ export default {
               sampleObject.pieceStr = pieceStr;
 
               if (sampleObject.charObj) {
-                const tempCharOption = sampleObject.charData.charOption;
-                tempCharOption.visualMap.pieces = chartPiecesTemp;
-                tempCharOption.visualMap.outOfRange = {
-                  color: sampleObject.colors,
-                };
-                tempCharOption.series[0].lineStyle.color = null;
-                tempCharOption.series[0].markLine = {
-                  precision: 5,
-                  silent: true,
-                  data: markLineData,
-                };
-                sampleObject.charObj.setOption(tempCharOption, true);
+                this.setVisualMap(sampleObject, chartPieces);
               }
             }
           });
@@ -2080,18 +2191,7 @@ export default {
               this.currentTagName
           ] = chartPieces;
           this.currentSample.pieceStr = pieceStr;
-          const tempCharOption = this.currentSample.charData.charOption;
-          tempCharOption.visualMap.pieces = chartPiecesTemp;
-          tempCharOption.visualMap.outOfRange = {
-            color: this.currentSample.colors,
-          };
-          tempCharOption.series[0].lineStyle.color = null;
-          tempCharOption.series[0].markLine = {
-            precision: 5,
-            silent: true,
-            data: markLineData,
-          };
-          this.currentSample.charObj.setOption(tempCharOption, true);
+          this.setVisualMap(this.currentSample, chartPieces);
         }
         localStorage.setItem(
             'thresholdCache',
@@ -2128,6 +2228,9 @@ export default {
       this.thresholdRelational = '';
       this.thresholdValue[1].filterCondition = this.$t('scalar.lessThan');
       this.thresholdDialogVisible = false;
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
     },
   },
   components: {
