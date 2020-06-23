@@ -297,7 +297,7 @@ class AstEditVisitor(ast.NodeVisitor):
         if source_prefix:
             pos = len(source_prefix)
         source_code = pasta.dump(node)
-        return source_code[pos]
+        return source_code[pos:]
 
     def _replace_external_reference(self):
         """
