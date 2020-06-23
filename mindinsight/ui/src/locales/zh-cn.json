@@ -134,7 +134,7 @@
     "lessThan": "小于",
     "applyAllSelectTag": "应用到当前所选标签",
     "placeHolderNumber": "请输入数值",
-    "noSpace":"请勿输入空格",
+    "noSpace": "请勿输入空格",
     "sameCompare": "不能有相同的比较运算符",
     "unreasonable": "逻辑不合理",
     "info": "提示",
@@ -318,7 +318,7 @@
     "pipelineTopTitle": "算子间队列平均使用率",
     "pipelineMiddleTitle": "算子间队列关系",
     "deviceQueueOp": "数据发送",
-    "deviceQueueOpTip": "前向+后向",
+    "deviceQueueOpTip": "前向+反向",
     "getNext": "取数据算子",
     "connectorQuene": "主机队列",
     "getData": "数据获取",
@@ -356,9 +356,12 @@
     "queueTip2": "队列为空比例：",
     "totalCapacity": "总容量",
     "averageCapacity": "平均使用容量",
-    "FPMessage": "FP起始算子：",
-    "BPMessage": "BP终止算子：",
-    "approximateTime": "总时长 ≈ "
+    "FPMessage": "前向起始算子：",
+    "BPMessage": "反向终止算子：",
+    "approximateTime": "总时长 ≈ ",
+    "stepInputTip": "请输入step值(1~{max}的正整数)",
+    "inputError": "输入参数异常，请输入一个1~{max}的正整数",
+    "defaultTip": "默认展示平均值"
   },
   "components": {
     "summaryTitle": "训练选择",

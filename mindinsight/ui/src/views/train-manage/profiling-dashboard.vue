@@ -704,6 +704,21 @@ export default {
         rowIndex * this.svg.rowHeight + (this.svg.rowHeight - height) / 2;
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
       const gChild = document.createElementNS(this.svg.namespaceURI, 'g');
+      let name = '';
+      switch (data.name) {
+        case 'iteration_interval':
+          name = this.$t('profiling.lterationGap');
+          break;
+        case 'fp_and_bp':
+          name = this.$t('profiling.deviceQueueOpTip');
+          break;
+        case 'tail':
+          name = this.$t('profiling.lterationTail');
+          break;
+        default:
+          name = data.name;
+          break;
+      }
 
       const rect = document.createElementNS(this.svg.namespaceURI, 'rect');
       rect.setAttribute('x', x1);
@@ -725,10 +740,10 @@ export default {
           `overflow:hidden;text-align:center;text-overflow:ellipsis;` +
           `white-space:nowrap;font-size:12px;line-height:${height}px;color:${color[0]}`,
       );
-      foreignObject.textContent = `${data.name}: ${data.duration.toFixed(4)}ms`;
+      foreignObject.textContent = `${name}: ${data.duration.toFixed(4)}ms`;
 
       const title = document.createElementNS(this.svg.namespaceURI, 'title');
-      title.textContent = `${data.name}: ${data.duration.toFixed(4)}ms`;
+      title.textContent = `${name}: ${data.duration.toFixed(4)}ms`;
 
       gChild.appendChild(rect);
       gChild.appendChild(foreignObject);
