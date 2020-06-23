@@ -652,6 +652,37 @@ export default {
                 // Draw chart
                 if (!this.compare) {
                   this.updateOrCreateChar(sampleIndex);
+
+                  this.getCache();
+                  if (
+                    this.thresholdLocal &&
+                  this.thresholdLocal[this.decodeTrainingJobId] &&
+                  this.thresholdLocal[this.decodeTrainingJobId][
+                      sampleObject.tagName
+                  ]
+                  ) {
+                    const tempStorgeArr = JSON.parse(
+                        JSON.stringify(
+                            this.thresholdLocal[this.decodeTrainingJobId][
+                                sampleObject.tagName
+                            ],
+                        ),
+                    );
+                    let pieceStr = '';
+                    pieceStr = this.formatePieceStr(tempStorgeArr);
+                    sampleObject.pieceStr = pieceStr;
+
+                    tempStorgeArr.forEach((item) => {
+                      item.color = this.thresholdColor;
+                    });
+
+                    if (sampleObject.charObj) {
+                      this.setVisualMap(sampleObject, tempStorgeArr);
+                    }
+                  } else {
+                    sampleObject.pieceStr = '';
+                    sampleObject.charData.charOption.series[0].markLine = false;
+                  }
                 } else {
                   this.abort = true;
                 }
@@ -678,8 +709,6 @@ export default {
       }
       let returnFlag = false;
       const seriesData = [];
-      const piecesData = [];
-      const markLineData = [];
       const oriData = sampleObject.charData.oriData;
       const runName = sampleObject.runNames;
       const curBackName = runName + this.backendString;
@@ -691,6 +720,7 @@ export default {
         lineStyle: {
           color: sampleObject.colors,
         },
+        markLine: [],
       };
       const dataObjBackend = {
         name: curBackName,
@@ -719,96 +749,6 @@ export default {
         }
       } else {
         returnFlag = true;
-      }
-      this.getCache();
-      if (
-        this.thresholdLocal &&
-        this.thresholdLocal[this.decodeTrainingJobId] &&
-        this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
-      ) {
-        const tempStorgeArr = JSON.parse(
-            JSON.stringify(
-                this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName],
-            ),
-        );
-
-        tempStorgeArr.forEach((item) => {
-          if (item.lt) {
-            item.lt = Number(item.lt.toFixed(5));
-          }
-          if (item.gt) {
-            item.gt = Number(item.gt.toFixed(5));
-          }
-        });
-
-        let pieceStr = '';
-        if (tempStorgeArr.length === 1) {
-          if (!isNaN(tempStorgeArr[0].gt) && !isNaN(tempStorgeArr[0].lt)) {
-            pieceStr = `(${tempStorgeArr[0].gt},${tempStorgeArr[0].lt})`;
-          } else if (
-            !isNaN(tempStorgeArr[0].gt) &&
-            isNaN(tempStorgeArr[0].lt)
-          ) {
-            pieceStr = `(${tempStorgeArr[0].gt},Infinity)`;
-          } else if (
-            !isNaN(tempStorgeArr[0].lt) &&
-            isNaN(tempStorgeArr[0].gt)
-          ) {
-            pieceStr = `(-Infinity,${tempStorgeArr[0].lt})`;
-          }
-        }
-        if (tempStorgeArr.length === 2) {
-          if (!isNaN(tempStorgeArr[0].lt) && !isNaN(tempStorgeArr[1].gt)) {
-            pieceStr = `(-Infinity,${tempStorgeArr[0].lt}),(${tempStorgeArr[1].gt},Infinity)`;
-          } else if (
-            !isNaN(tempStorgeArr[0].gt) &&
-            !isNaN(tempStorgeArr[1].lt)
-          ) {
-            pieceStr = `(-Infinity,${tempStorgeArr[1].lt}),(${tempStorgeArr[0].gt},Infinity)`;
-          }
-        }
-
-        sampleObject.pieceStr = pieceStr;
-
-        if (tempStorgeArr.length === 1) {
-          let itemValue;
-          if (tempStorgeArr[0]['lt'] || tempStorgeArr[0]['lt'] === 0) {
-            itemValue = tempStorgeArr[0]['lt'];
-          } else {
-            itemValue = tempStorgeArr[0]['gt'];
-          }
-          tempStorgeArr.push({
-            value:
-              tempStorgeArr[0]['lt'] || tempStorgeArr[0]['lt'] === 0
-                ? itemValue + 1
-                : itemValue - 1,
-          });
-        }
-
-        tempStorgeArr.forEach((item) => {
-          if (item.lt || item.lt === 0) {
-            const markLineDataItem = {};
-            markLineDataItem.yAxis = item.lt;
-            markLineData.push(markLineDataItem);
-          }
-          if (item.gt || item.gt === 0) {
-            const markLineDataItem = {};
-            markLineDataItem.yAxis = item.gt;
-            markLineData.push(markLineDataItem);
-          }
-          item.color = this.thresholdColor;
-          piecesData.push(item);
-        });
-
-        dataObj.lineStyle.color = null;
-        dataObj.markLine = {
-          precision: 5,
-          silent: true,
-          data: markLineData,
-        };
-      } else {
-        sampleObject.pieceStr = '';
-        dataObj.markLine = null;
       }
 
       seriesData.push(dataObj, dataObjBackend);
@@ -1107,6 +1047,7 @@ export default {
         },
         series: seriesData,
       };
+
       return tempOption;
     },
 
@@ -1727,7 +1668,43 @@ export default {
       sampleObject.updateFlag = true;
       sampleObject.charObj.clear();
 
-      this.updateOrCreateChar(sampleIndex);
+      const tempOption = sampleObject.charData.charOption;
+      if (
+        tempOption.visualMap &&
+        tempOption.visualMap['pieces'] &&
+        tempOption.visualMap['pieces'].length > 0
+      ) {
+        tempOption.visualMap = false;
+        tempOption.series[0].markLine = null;
+        sampleObject.charObj.setOption(tempOption, true);
+
+        this.getCache();
+        if (
+          this.thresholdLocal &&
+          this.thresholdLocal[this.decodeTrainingJobId] &&
+          this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
+        ) {
+          const tempStorgeArr = JSON.parse(
+              JSON.stringify(
+                  this.thresholdLocal[this.decodeTrainingJobId][
+                      sampleObject.tagName
+                  ],
+              ),
+          );
+          tempStorgeArr.forEach((item) => {
+            item.color = this.thresholdColor;
+          });
+
+          if (sampleObject.charObj) {
+            this.setVisualMap(sampleObject, tempStorgeArr);
+          }
+        } else {
+          sampleObject.pieceStr = '';
+          sampleObject.charData.charOption.series[0].markLine = false;
+        }
+      } else {
+        this.updateOrCreateChar(sampleIndex);
+      }
     },
 
     /**
@@ -1803,6 +1780,7 @@ export default {
      */
 
     delThreshold(sampleItem) {
+      this.stopUpdateSamples();
       this.$confirm(this.$t('scalar.isDelete'), this.$t('scalar.info'), {
         confirmButtonText: this.$t('public.sure'),
         cancelButtonText: this.$t('public.cancel'),
@@ -1826,17 +1804,27 @@ export default {
             }
             sampleItem.pieceStr = '';
             const tempCharOption = sampleItem.charData.charOption;
-            tempCharOption.visualMap.pieces = [];
-            tempCharOption.visualMap = false;
-            tempCharOption.series[0].lineStyle.color = sampleItem.colors;
-            tempCharOption.series[0].markLine = [];
+
+            if (
+              tempCharOption.visualMap &&
+            tempCharOption.visualMap['pieces'] &&
+            tempCharOption.visualMap['pieces'].length > 0
+            ) {
+              tempCharOption.visualMap = false;
+              tempCharOption.series[0].markLine = null;
+              tempCharOption.series[0].lineStyle.color = sampleItem.colors;
+            }
+            sampleItem.charObj.setOption(tempCharOption, true);
             if (this.isTimeReload) {
               this.autoUpdateSamples();
             }
-            sampleItem.charObj.setOption(tempCharOption, true);
             this.$forceUpdate();
           })
-          .catch(() => {});
+          .catch(() => {
+            if (this.isTimeReload) {
+              this.autoUpdateSamples();
+            }
+          });
     },
 
     /**
@@ -1927,17 +1915,18 @@ export default {
      */
 
     setVisualMap(sampleObject, chartPieces) {
+      // empty array
       if (chartPieces.length === 0) {
         return;
       }
       const markLineData = [];
       chartPieces.forEach((item) => {
-        if (item.lt || item.lt === 0) {
+        if (!isNaN(item.lt)) {
           const markLineDataItem = {};
           markLineDataItem.yAxis = item.lt;
           markLineData.push(markLineDataItem);
         }
-        if (item.gt || item.gt === 0) {
+        if (!isNaN(item.gt)) {
           const markLineDataItem = {};
           markLineDataItem.yAxis = item.gt;
           markLineData.push(markLineDataItem);
@@ -1950,6 +1939,7 @@ export default {
         item.color = this.thresholdColor;
       });
 
+      // one filter condition
       if (chartPiecesTemp.length === 1) {
         if (
           !isNaN(chartPiecesTemp[0]['lt']) &&
@@ -2001,6 +1991,7 @@ export default {
         }
       }
 
+      // two filter condition
       if (chartPiecesTemp.length === 2) {
         const relationalArr = [];
         relationalArr[0] = chartPiecesTemp[0].lt || chartPiecesTemp[1].lt;
@@ -2058,6 +2049,7 @@ export default {
      */
 
     formatePieceStr(piecesArr) {
+      // empty array
       if (piecesArr.length === 0) {
         return;
       }
@@ -2070,6 +2062,7 @@ export default {
         }
       });
       let pieceStr;
+      // only one filter condition
       if (piecesArr.length === 1) {
         if (!isNaN(piecesArr[0].gt) && !isNaN(piecesArr[0].lt)) {
           pieceStr = `(${piecesArr[0].gt},${piecesArr[0].lt})`;
@@ -2079,6 +2072,7 @@ export default {
           pieceStr = `(-Infinity,${piecesArr[0].lt})`;
         }
       }
+      //  two filter condition
       if (piecesArr.length === 2) {
         if (!isNaN(piecesArr[0].lt) && !isNaN(piecesArr[1].gt)) {
           pieceStr = `(-Infinity,${piecesArr[0].lt}),(${piecesArr[1].gt},Infinity)`;
@@ -2151,21 +2145,6 @@ export default {
         if (!this.thresholdLocal[this.decodeTrainingJobId]) {
           this.thresholdLocal[this.decodeTrainingJobId] = {};
         }
-
-        const markLineData = [];
-
-        chartPieces.forEach((item) => {
-          if (item.lt || item.lt === 0) {
-            const markLineDataItem = {};
-            markLineDataItem.yAxis = item.lt;
-            markLineData.push(markLineDataItem);
-          }
-          if (item.gt || item.gt === 0) {
-            const markLineDataItem = {};
-            markLineDataItem.yAxis = item.gt;
-            markLineData.push(markLineDataItem);
-          }
-        });
 
         const chartPiecesTemp = JSON.parse(JSON.stringify(chartPieces));
 
