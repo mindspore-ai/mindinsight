@@ -122,7 +122,8 @@ class PortAction(argparse.Action):
 class UrlPathPrefixAction(argparse.Action):
     """Url Path prefix action class definition."""
 
-    REGEX = r'^(\/[a-zA-Z0-9-\-\.]+)+$'
+    INVALID_SEGMENTS = ('.', '..')
+    REGEX = r'^[a-zA-Z0-9_\-\.]+$'
 
     def __call__(self, parser, namespace, values, option_string=None):
         """
@@ -135,8 +136,12 @@ class UrlPathPrefixAction(argparse.Action):
             option_string (str): Optional string for specific argument name. Default: None.
         """
         prefix = values
-        if not re.match(self.REGEX, prefix):
-            parser.error(f'{option_string} value is invalid url path prefix')
+        segments = prefix.split('/')
+        for index, segment in enumerate(segments):
+            if not segment and index in (0, len(segments) - 1):
+                continue
+            if segment in self.INVALID_SEGMENTS or not re.match(self.REGEX, segment):
+                parser.error(f'{option_string} value is invalid url path prefix')
 
         setattr(namespace, self.dest, prefix)
 
@@ -186,7 +191,10 @@ class Command(BaseCommand):
             type=str,
             action=UrlPathPrefixAction,
             help="""
-                Custom path prefix for web page address. Default value is ''.
+                Custom URL path prefix for web page address. URL path prefix 
+                consists of segments separated by slashes. Each segment supports
+                alphabets / digits / underscores / dashes / dots, but cannot just 
+                be emtpy string / single dot / double dots. Default value is ''.
             """)
 
         for hook in HookUtils.instance().hooks():

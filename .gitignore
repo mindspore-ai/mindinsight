@@ -86,3 +86,5 @@ build/*
 
 output/
 !output/README.md
+
+mindinsight/ui/public/static/js/graphvizlib.wasm
