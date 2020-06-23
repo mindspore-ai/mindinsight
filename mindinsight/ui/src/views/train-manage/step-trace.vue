@@ -16,21 +16,32 @@ limitations under the License.
 <template>
   <div class="step-trace">
     <div class="step-trace-title">{{$t('profiling.stepTraceDetail')}}
+      <el-tooltip class="item"
+                  effect="light"
+                  :content="$t('profiling.defaultTip')"
+                  placement="top">
+        <span class="el-icon-question"></span>
+      </el-tooltip>
+
       <div class="pf-content-right">
         <div class="input-wrap">
-          <label>{{$t('profiling.stepSelect')}}</label>
-          <el-select v-model="selectedStep"
-                     filterable
-                     :placeholder="$t('profiling.selectStep')"
-                     @change="changeStep">
-            <el-option v-for="item in steps"
-                       :key="item.value"
-                       :label="item.label"
-                       :value="item.value">
-            </el-option>
-          </el-select>
+          <label>{{steps.label}}</label>
+          <el-input ref="step"
+                    v-model.number="steps.step"
+                    :disabled="steps.disabled"
+                    @keyup.native.enter="changeStep">
+          </el-input>
+          <el-button @click="changeStep"
+                     :disabled="steps.disabled">
+            {{$t('public.sure')}}
+          </el-button>
         </div>
       </div>
+      <el-button class="show-average"
+                 @click="changeStep(0)"
+                 :disabled="steps.disabled">
+        {{$t('profiling.showAverage')}}
+      </el-button>
     </div>
     <div class="step-message">
       <div class="step-left-padding-right">
@@ -137,8 +148,12 @@ export default {
       relativePath: this.$route.query.path,
       fp_start: '--',
       bp_end: '--',
-      steps: [],
-      selectedStep: '',
+      steps: {
+        step: null,
+        max: 0,
+        disabled: true,
+        label: this.$t('profiling.stepInputTip'),
+      },
       charts: [],
       svg: {
         data: [],
@@ -172,7 +187,7 @@ export default {
           percent: 'iteration_interval_percent',
         },
         {
-          name: 'Fp+bp',
+          name: this.$t('profiling.deviceQueueOpTip'),
           id: 'fp-bp',
           timeSummary: {},
           rate: 'fp_and_bp',
@@ -238,17 +253,33 @@ export default {
           val.clear();
         });
       }
-      this.setStep();
+      this.steps = {
+        step: null,
+        max: 0,
+        disabled: true,
+        label: this.$t('profiling.stepInputTip'),
+      };
+
       this.getTimeInfo('fp-bp', 'fp_and_bp');
       this.getTimeInfo('iter-gap', 'iteration_interval');
       this.getTimeInfo('tailing', 'tail');
       this.queryTrainingTrace(0);
     },
     changeStep(value) {
-      if (value === this.$t('profiling.showAverage')) {
-        value = 0;
+      if (value === 0) {
+        this.steps.step = null;
+        this.queryTrainingTrace(0);
+      } else if (
+        /^[0-9]*[1-9][0-9]*$/.test(this.steps.step) &&
+        this.steps.step <= this.steps.max
+      ) {
+        this.queryTrainingTrace(this.steps.step);
+      } else {
+        this.steps.step = null;
+        this.$message.error(
+            this.$t('profiling.inputError').replace('{max}', this.steps.max),
+        );
       }
-      this.queryTrainingTrace(value);
     },
     getTimeInfo(id, type) {
       const params = {
@@ -270,8 +301,18 @@ export default {
               });
             }
             if (res.data && res.data.info) {
-              if (this.steps.length <= 1) {
-                this.setStep(res.data.size);
+              if (res.data.size && !this.steps.max) {
+                this.steps.max = res.data.size;
+                this.steps.disabled = false;
+                this.steps.label = this.steps.label.replace(
+                    '{max}',
+                    this.steps.max,
+                );
+              }
+
+              const xAxisData = [];
+              for (let i = 1; i <= this.steps.max; i++) {
+                xAxisData.push(i);
               }
               const timeInfo = [];
               Object.keys(res.data.info).forEach((val) => {
@@ -285,9 +326,9 @@ export default {
                 const option = {
                   xAxis: {
                     type: 'category',
-                    data: this.steps.map((val, index) => index + 1),
+                    data: xAxisData,
                     name: 'step',
-                    max: this.steps.length,
+                    max: this.steps.max,
                   },
                   yAxis: {
                     type: 'value',
@@ -321,24 +362,23 @@ export default {
                   option.yAxis.name = `${this.$t(
                       'profiling.iterationGapTime',
                   )}(ms)`;
-                  this.tabsArr[0].noData = this.steps.length ? false : true;
+                  this.tabsArr[0].noData = this.steps.max ? false : true;
                 } else if (type === 'fp_and_bp') {
-                  option.yAxis.name = `fp+bp${this.$t('profiling.time')}(ms)`;
-                  this.tabsArr[1].noData = this.steps.length ? false : true;
+                  option.yAxis.name = `${this.$t(
+                      'profiling.deviceQueueOpTip',
+                  )}${this.$t('profiling.time')}(ms)`;
+                  this.tabsArr[1].noData = this.steps.max ? false : true;
                 } else if (type === 'tail') {
-                  option.yAxis.name = `tail${this.$t('profiling.time')}(ms)`;
-                  this.tabsArr[2].noData = this.steps.length ? false : true;
+                  option.yAxis.name = `${this.$t(
+                      'profiling.lterationTail',
+                  )}${this.$t('profiling.time')}(ms)`;
+                  this.tabsArr[2].noData = this.steps.max ? false : true;
                 }
                 this.initChart(option, id);
-              } else {
-                this.steps = [];
-                this.selectedStep = '';
               }
             }
           },
           (error) => {
-            this.steps = [];
-            this.selectedStep = '';
             if (type === 'iteration_interval') {
               this.tabsArr[0].noData = true;
             } else if (type === 'fp_and_bp') {
@@ -348,20 +388,6 @@ export default {
             }
           },
       );
-    },
-    setStep(step = 0) {
-      this.steps = [];
-      this.steps.push({
-        label: this.$t('profiling.showAverage'),
-        value: this.$t('profiling.showAverage'),
-      });
-      for (let i = 1; i <= step; i++) {
-        this.steps.push({
-          label: i,
-          value: i,
-        });
-      }
-      this.selectedStep = this.$t('profiling.showAverage');
     },
     initChart(option, id) {
       this.$nextTick(() => {
@@ -485,6 +511,21 @@ export default {
         rowIndex * this.svg.rowHeight + (this.svg.rowHeight - height) / 2;
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
       const gChild = document.createElementNS(this.svg.namespaceURI, 'g');
+      let name = '';
+      switch (data.name) {
+        case 'iteration_interval':
+          name = this.$t('profiling.lterationGap');
+          break;
+        case 'fp_and_bp':
+          name = this.$t('profiling.deviceQueueOpTip');
+          break;
+        case 'tail':
+          name = this.$t('profiling.lterationTail');
+          break;
+        default:
+          name = data.name;
+          break;
+      }
 
       const rect = document.createElementNS(this.svg.namespaceURI, 'rect');
       rect.setAttribute('x', x1);
@@ -506,10 +547,10 @@ export default {
           `overflow:hidden;text-align:center;text-overflow:ellipsis;` +
           `white-space:nowrap;font-size:12px;line-height:${height}px;color:${color[0]}`,
       );
-      foreignObject.textContent = `${data.name}: ${data.duration.toFixed(4)}ms`;
+      foreignObject.textContent = `${name}: ${data.duration.toFixed(4)}ms`;
 
       const title = document.createElementNS(this.svg.namespaceURI, 'title');
-      title.textContent = `${data.name}: ${data.duration.toFixed(4)}ms`;
+      title.textContent = `${name}: ${data.duration.toFixed(4)}ms`;
 
       gChild.appendChild(rect);
       gChild.appendChild(foreignObject);
@@ -630,15 +671,36 @@ export default {
     padding: 0 15px;
     font-size: 16px;
     font-weight: bold;
+    .el-icon-question {
+      cursor: pointer;
+    }
     .pf-content-right {
       display: inline-block;
       margin-left: 35px;
-      label {
-        margin-right: 10px;
+      .input-wrap {
+        font-weight: normal;
+        label {
+          margin-right: 20px;
+        }
+        .el-input {
+          width: 150px;
+          margin-right: 16px;
+        }
       }
     }
-    .input-wrap {
-      font-weight: normal;
+    .el-button {
+      border: 1px solid #00a5a7;
+      border-radius: 2px;
+      background-color: white;
+      color: #00a5a7;
+      padding: 7px 15px;
+      &:hover {
+        background: rgb(230, 246, 246);
+      }
+    }
+    .show-average {
+      float: right;
+      margin-right: 20px;
     }
   }
   .step-message {
@@ -698,6 +760,7 @@ export default {
       .chart {
         height: calc(100% - 85px);
         min-height: 180px;
+        overflow: hidden;
       }
       .title {
         margin: 0 0 15px 20px;

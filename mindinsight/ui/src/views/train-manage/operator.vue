@@ -528,6 +528,7 @@ export default {
                       row.op_sort_condition.type,
                   );
                 }
+                this.$refs.expandTable.doLayout();
               });
             }
           })

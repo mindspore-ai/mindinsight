@@ -543,10 +543,13 @@ export default {
       };
       option.dataZoom = [
         {
-          startValue: 0,
+          start: 0,
+          end: 100,
           bottom: 0,
         },
         {
+          start: 0,
+          end: 100,
           type: 'inside',
           bottom: 0,
         },
@@ -756,11 +759,10 @@ export default {
                     },
                   ],
                   dataZoom: [
+                    {start: 0, end: 100, orient: 'vertical', right: 10},
                     {
-                      orient: 'vertical',
-                      right: 10,
-                    },
-                    {
+                      start: 0,
+                      end: 100,
                       type: 'inside',
                       orient: 'vertical',
                       right: 10,
@@ -840,13 +842,11 @@ export default {
             },
             dataZoom: [
               {
-                startValue: 0,
+                start: 0,
+                end: 100,
                 bottom: 10,
               },
-              {
-                type: 'inside',
-                bottom: 10,
-              },
+              {start: 0, end: 100, type: 'inside', bottom: 10},
             ],
           };
           echart.setOption(option);
@@ -1354,15 +1354,14 @@ export default {
         height: calc(100% - 25px);
       }
     }
-    .queue-step-wrap.single{
+    .queue-step-wrap.single {
       height: 100%;
-      .chart-content{
-        .chart-wrap{
+      .chart-content {
+        .chart-wrap {
           width: 100%;
         }
       }
     }
-
   }
   .pipeline-wrap {
     height: 100%;
@@ -1378,6 +1377,7 @@ export default {
         #average-rate {
           height: 100%;
           min-height: 180px;
+          overflow: hidden;
         }
       }
     }
@@ -1441,6 +1441,7 @@ export default {
             height: 100%;
             width: 100%;
             min-height: 220px;
+            overflow: hidden;
           }
         }
         .right {
