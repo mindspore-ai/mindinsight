@@ -196,7 +196,7 @@ class Profiler:
 
         # analyse timeline info
         try:
-            self._analyse_timeline()
+            self._analyse_timeline(aicpu_data_parser, optime_parser)
         except (ProfilerIOException, ProfilerFileNotFoundException, ValidationError) as err:
             logger.warning('Fail to write timeline data: %s', err)
 
@@ -233,14 +233,13 @@ class Profiler:
         logger.info("Finish saving the intermediate result: %s", step_trace_intermediate_file_path)
         logger.info("The point info is: %s", point_info)
 
-    def _analyse_timeline(self):
+    def _analyse_timeline(self, aicpu_parser, optime_parser):
         """
         Analyse and parse timeline info.
         """
         timeline_analyser = AnalyserFactory.instance().get_analyser(
             'timeline', self._output_path, self._dev_id
         )
-        min_cycle_counter = timeline_analyser.get_min_cycle_counter()
 
         # Get framework info
         aicoredetail_analyser = AnalyserFactory.instance().get_analyser(
@@ -252,14 +251,16 @@ class Profiler:
         step_trace_analyser = AnalyserFactory.instance().get_analyser(
             'step_trace', self._output_path, self._dev_id
         )
-        all_reduce_info = step_trace_analyser.query_for_all_reduce(min_cycle_counter)
+        all_reduce_info = step_trace_analyser.query_for_all_reduce()
 
         # Get timeline info
         logger.info('Start writing timeline info...')
         logger.info('Warm Prompt: It could take a few minutes if you are training '
                     'with a complex network or more than 10 steps.')
-        # Add AllReduce and framework info into timeline
-        timeline_analyser.init_timeline(all_reduce_info, framework_info)
+        # Add info into timeline, such as AI CPU, AllReduce, framework info.
+        aicpu_info = aicpu_parser.query_aicpu_data()
+        min_cycle_counter = min(aicpu_parser.min_cycle_counter, optime_parser.min_cycle_counter)
+        timeline_analyser.init_timeline(all_reduce_info, framework_info, aicpu_info, min_cycle_counter)
         timeline_analyser.write_timeline()
         timeline_analyser.write_timeline_summary()
 

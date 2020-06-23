@@ -122,8 +122,6 @@ class OPComputeTimeParser:
         # Write the timeline data into file,
         # including operator name, stream id, start time, and duration.
         self._write_timeline_data_into_file(timeline_data)
-        # Write the minimum cycle counter into the file.
-        self.write_min_cycle_counter_to_file()
 
     def _write_op_time_into_file(self, result_data):
         """
@@ -201,7 +199,7 @@ class OPComputeTimeParser:
                 cur_index += 1
 
         # Update the value of minimum cycle counter.
-        self._min_cycle_counter = min_cycle_counter
+        self._min_cycle_counter = min_cycle_counter / 1e5  # Convert the time unit from 10ns to 1ms
 
         return tmp_result_data
 
@@ -222,7 +220,7 @@ class OPComputeTimeParser:
         for item in op_data_list:
             op_name = item.op_name
             # Unit conversion: converting the cycle counter into ms.
-            op_start_time_str = str((item.cycle_counter - self._min_cycle_counter) / factor)
+            op_start_time_str = str(item.cycle_counter / factor)
             op_duration = item.duration / factor
             op_duration_str = str(item.duration / factor)
             if op_name in op_name_time_dict.keys():
@@ -243,13 +241,7 @@ class OPComputeTimeParser:
                     (op_start_time_str, op_duration_str)
                 )
 
-    def write_min_cycle_counter_to_file(self):
-        """Write minimum cycle counter into a txt file."""
-        min_cycle_counter = self._min_cycle_counter
-        file_name = 'min_cycle_counter_' + self._device_id + '.txt'
-        file_path = os.path.join(self._output_path, file_name)
-        file_path = validate_and_normalize_path(
-            file_path, raise_key='Invalid min cycle counter file path.'
-        )
-        with open(file_path, 'w') as file:
-            file.write(str(min_cycle_counter))
+    @property
+    def min_cycle_counter(self):
+        """Get minimum cycle counter."""
+        return self._min_cycle_counter
