@@ -818,7 +818,7 @@ export default {
           itemHeight: 18,
           padding: [0, 50, 0, 0],
           top: '5%',
-          left: '37%',
+          left: '45%',
           textStyle: {
             padding: [15, 0, 0, 0],
             rich: {
@@ -850,9 +850,9 @@ export default {
         option.series = [
           {
             type: 'pie',
-            center: ['20%', '60%'],
+            center: ['25%', '65%'],
             data: chart.data,
-            radius: '60%',
+            radius: '50%',
             lable: {
               position: 'outer',
               alignTo: 'none',
@@ -1095,10 +1095,10 @@ export default {
     margin-bottom: 10px;
   }
   .cl-profiler-top {
-    height: 36%;
+    height: 45%;
   }
   .cl-profiler-bottom {
-    height: 64%;
+    height: 55%;
     padding-top: 10px;
   }
   .cpu-tab {
@@ -1127,6 +1127,7 @@ export default {
       height: 100%;
       min-width: 1300px;
       min-height: 232px;
+      overflow: hidden;
     }
   }
   .chart-radio-group {
