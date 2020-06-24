@@ -191,7 +191,7 @@ limitations under the License.
           </div>
 
           <div class="queue-container"
-               v-if="processSummary.count === 6">
+               v-if="processSummary.count === processSummary.maxCount">
             <div class="img">
               <div class="edge">
                 <img src="@/assets/images/data-flow.png"
@@ -229,7 +229,7 @@ limitations under the License.
 
           <div class="cell-container get-next"
                clickKey="get_next"
-               v-if="processSummary.count === 6">
+               v-if="processSummary.count === processSummary.maxCount">
             <div class="title">
               {{$t('profiling.getData')}}
             </div>
@@ -390,6 +390,7 @@ export default {
       processSummary: {
         noData: true,
         count: 6,
+        maxCount: 6,
         device: {
           empty: 0,
           full: 0,
