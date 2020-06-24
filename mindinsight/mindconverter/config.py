@@ -32,7 +32,7 @@ FUNC_MODULE = 'mindinsight.mindconverter.funcs'
 class APIPt:
     """Base API for args parse, and API for one frame."""
 
-    def __init__(self, name: str, params: OrderedDict):
+    def __init__(self, name: str, params: dict):
         self.name = name
         self.params = OrderedDict()
 
@@ -45,7 +45,7 @@ class APIPt:
         Trans value to str.
 
         Args:
-            value (Union[str,Number,int]): Each value for params of OrderedDict.
+            value (Union[str,Number,int]): The value to convert.
 
         Returns:
             str, str type of value.
@@ -118,7 +118,7 @@ class APIPt:
 class APIMs(APIPt):
     """API for MindSpore"""
 
-    def __init__(self, name: str, params: OrderedDict, p_attrs=None):
+    def __init__(self, name: str, params: dict, p_attrs=None):
         self.is_primitive = name.startswith('P.')
         if self.is_primitive:
             self.p_attrs = p_attrs if p_attrs else set()
@@ -450,7 +450,6 @@ UNSUPPORTED_WARN_INFOS = {
     "F.one_hot": "Maybe could convert to mindspore.ops.operations.OneHot.",
     "torch.bmm": "Maybe could convert to mindspore.ops.operations.BatchMatMul.",
     "torch.cumsum": "Maybe could convert to mindspore.ops.operations.CumSum.",
-    "F.relu": "Maybe could convert to mindspore.ops.operations.ReLU.",
     "F.pad": "Maybe could convert to mindspore.ops.operations.Pad.",
     "F.softmax": "Maybe could convert to mindspore.ops.operations.Softmax.",
     "torch.clamp": "Maybe could convert to mindspore.ops.composite.clip_by_value.",
