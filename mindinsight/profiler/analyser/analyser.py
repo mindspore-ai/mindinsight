@@ -63,6 +63,17 @@ class AicoreTypeAnalyser(BaseAnalyser):
             return self._default_filter(item, filter_condition)
         self._result = list(filter(_inner_filter, self._data))
 
+    def _organize_query_result(self):
+        """
+        Organize the query result.
+
+        Returns:
+            dict, the query result.
+        """
+        for item in self._result:
+            item[1] = float(format(item[1], '.6f'))
+        return super()._organize_query_result()
+
     def _convert_field_type(self, row):
         """
         Convert the field type to the specific type.
