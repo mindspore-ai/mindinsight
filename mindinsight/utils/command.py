@@ -98,7 +98,8 @@ def main():
 
     parser = argparse.ArgumentParser(
                 prog='mindinsight',
-                description='MindInsight CLI entry point (version: {})'.format(mindinsight.__version__))
+                description='MindInsight CLI entry point (version: {})'.format(mindinsight.__version__),
+                allow_abbrev=False)
 
     parser.add_argument(
         '--version',
@@ -125,7 +126,7 @@ def main():
             continue
 
         command = command_cls()
-        command_parser = subparsers.add_parser(command.name, help=command.description)
+        command_parser = subparsers.add_parser(command.name, help=command.description, allow_abbrev=False)
         command.add_arguments(command_parser)
         commands[command.name] = command
 
