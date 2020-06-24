@@ -268,7 +268,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 20,
+          limit: 8,
         },
         op_filter_condition: {},
         op_sort_condition: {
@@ -626,6 +626,7 @@ export default {
         } else {
           this.opAllTypeList.op_filter_condition = {};
         }
+        this.opAllTypeList.opDetailPage.offset = 0;
         this.getCoreDetailList(this.opAllTypeList, false);
       } else {
         this.op_filter_condition = {};
@@ -658,6 +659,7 @@ export default {
       } else {
         this.opCpuList.op_filter_condition = {};
       }
+      this.opCpuList.opDetailPage.offset = 0;
       this.getCpuList(false);
     },
     /**
