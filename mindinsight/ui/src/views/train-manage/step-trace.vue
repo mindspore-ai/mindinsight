@@ -162,6 +162,7 @@ export default {
         totalTime: 0,
         rowHeight: 60,
         markerPadding: 4,
+        minRate: 0.05,
         namespaceURI: 'http://www.w3.org/2000/svg',
         resizeTimer: null,
         colorList: [
@@ -328,7 +329,6 @@ export default {
                     type: 'category',
                     data: xAxisData,
                     name: 'step',
-                    max: this.steps.max,
                   },
                   yAxis: {
                     type: 'value',
@@ -456,33 +456,43 @@ export default {
     },
 
     dealTraceData() {
-      this.svg.totalWidth =
-        document.querySelector('#trace').offsetWidth - this.svg.svgPadding * 2;
-      if (this.svg.data[0] && this.svg.data[0].length) {
-        const svg = document.querySelector('#trace svg');
-        this.svg.totalTime = this.svg.data[0][0].duration;
-        if (this.svg.totalTime) {
-          this.svg.colorIndex = 0;
-          this.svg.data.forEach((row, index) => {
-            if (row && row.length) {
-              const dashedLine = this.addDashedLine(index);
-              svg.insertBefore(dashedLine, svg.querySelector('g'));
-              row.forEach((i) => {
-                if (i.duration) {
-                  if (i.name) {
-                    const tempDom = this.createRect(i, index);
-                    svg.insertBefore(tempDom, svg.querySelector('g'));
-                  } else {
-                    const tempDom = this.createArrow(i, index);
-                    svg.appendChild(tempDom);
+      const traceDom = document.querySelector('#trace');
+      if (traceDom) {
+        this.svg.totalWidth = traceDom.offsetWidth - this.svg.svgPadding * 2;
+
+        if (this.svg.data[0] && this.svg.data[0].length) {
+          const svg = traceDom.querySelector('svg');
+          this.svg.totalTime = this.svg.data[0][0].duration;
+
+          if (this.svg.totalTime) {
+            this.svg.colorIndex = 0;
+            const minTime = this.svg.minRate * this.svg.totalTime;
+
+            this.svg.data.forEach((row, index) => {
+              if (row && row.length) {
+                const dashedLine = this.addDashedLine(index);
+                svg.insertBefore(dashedLine, svg.querySelector('g'));
+
+                row.forEach((i) => {
+                  if (i.duration) {
+                    if (i.name) {
+                      const tempDom = this.createRect(i, index);
+                      const tempStr = `g${
+                        i.duration > minTime ? '' : '.arrow'
+                      }`;
+                      svg.insertBefore(tempDom, svg.querySelector(tempStr));
+                    } else {
+                      const tempDom = this.createArrow(i, index);
+                      svg.appendChild(tempDom);
+                    }
                   }
-                }
-              });
-            }
-          });
+                });
+              }
+            });
+          }
+        } else {
+          this.removeTrace();
         }
-      } else {
-        this.removeTrace();
       }
     },
     addDashedLine(index) {
@@ -497,19 +507,27 @@ export default {
       line.setAttribute('style', 'stroke:#E2E2E2;stroke-width:1');
       line.setAttribute('stroke-dasharray', '5 5');
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
+      g.setAttribute('class', 'dashedLine');
       g.appendChild(line);
       return g;
     },
     createRect(data, rowIndex) {
-      const color = this.svg.colorList[this.svg.colorIndex++ % 4];
+      const color = this.svg.colorList[
+        rowIndex > 1 ? 3 : this.svg.colorIndex++ % 4
+      ];
       const height = 40;
       const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
+      const fontSize = 12;
+      const normalRect = data.duration > this.svg.minRate * this.svg.totalTime;
+
       const x1 =
         (data.start / this.svg.totalTime) * this.svg.totalWidth +
         this.svg.svgPadding;
       const y1 =
         rowIndex * this.svg.rowHeight + (this.svg.rowHeight - height) / 2;
+
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
+      g.setAttribute('class', 'rect');
       const gChild = document.createElementNS(this.svg.namespaceURI, 'g');
       let name = '';
       switch (data.name) {
@@ -517,7 +535,7 @@ export default {
           name = this.$t('profiling.lterationGap');
           break;
         case 'fp_and_bp':
-          name = this.$t('profiling.deviceQueueOpTip');
+          name = this.$t('profiling.deviceQueueOp');
           break;
         case 'tail':
           name = this.$t('profiling.lterationTail');
@@ -538,16 +556,30 @@ export default {
           this.svg.namespaceURI,
           'foreignObject',
       );
-      foreignObject.setAttribute('x', x1);
-      foreignObject.setAttribute('y', y1);
-      foreignObject.setAttribute('height', height);
-      foreignObject.setAttribute('width', width);
-      foreignObject.setAttribute(
-          'style',
-          `overflow:hidden;text-align:center;text-overflow:ellipsis;` +
-          `white-space:nowrap;font-size:12px;line-height:${height}px;color:${color[0]}`,
-      );
       foreignObject.textContent = `${name}: ${data.duration.toFixed(4)}ms`;
+      const textWidth = this.getTextWidth(foreignObject.textContent);
+
+      foreignObject.setAttribute(
+          'x',
+        normalRect
+          ? x1
+          : Math.min(
+              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth,
+              Math.max(0, x1 + width / 2 - textWidth / 2),
+          ),
+      );
+
+      foreignObject.setAttribute(
+          'y',
+          y1 + (height - fontSize) / 2 + (normalRect ? 0 : fontSize),
+      );
+      foreignObject.setAttribute('height', fontSize);
+      foreignObject.setAttribute('width', width);
+      foreignObject.setAttribute('style', `color:${color[0]}`);
+      foreignObject.setAttribute(
+          'class',
+          `content${normalRect ? '' : ' content-mini'}`,
+      );
 
       const title = document.createElementNS(this.svg.namespaceURI, 'title');
       title.textContent = `${name}: ${data.duration.toFixed(4)}ms`;
@@ -568,6 +600,7 @@ export default {
       const x2 = x1 + width - this.svg.markerPadding * 2;
       const y = rowIndex * this.svg.rowHeight + this.svg.rowHeight / 2;
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
+      g.setAttribute('class', 'arrow');
 
       const line = document.createElementNS(this.svg.namespaceURI, 'line');
       line.setAttribute('x1', x1);
@@ -741,6 +774,17 @@ export default {
           top: 10px;
           cursor: pointer;
           background-image: url('../../assets/images/download.png');
+        }
+        .content {
+          overflow: hidden;
+          text-align: center;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 12px;
+          line-height: 12px;
+        }
+        .content-mini {
+          overflow: visible;
         }
       }
     }
