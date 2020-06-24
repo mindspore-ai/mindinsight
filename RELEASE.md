@@ -1,5 +1,35 @@
 ## MindInsight
 
+# Release 0.5.0-beta
+
+## Major Features and Improvements
+* MindSpore Profiler
+    * Provide performance analyse tool for the input data pipeline.
+    * Provide timeline analyse tool, which can show the detail of the streams/tasks.
+    * Provide a tool to visualize the step trace information, which can be used to analyse the general performance of the neural network in each phase.
+    * Provide profiling guides for the users to find the performance bottlenecks quickly.
+* CPU summary operations support for CPU summary data.
+* Over threshold warn support in scalar training dashboard.
+* Provide more user-friendly callback function for visualization
+    * Provide unified callback `SummaryCollector` to log most commonly visualization event.
+    * Discard the original visualization callback `SummaryStep`, `TrainLineage` and `EvalLineage`.
+    * `SummaryRecord` provide new API `add_value` to collect data into cache for summary persistence.
+    * `SummaryRecord` provide new API `set_mode` to distinguish summary persistence mode at different stages.  
+* MindConverter supports conversion of more operators and networks, and improves its ease of use.
+
+## Bugfixes
+* Fix FileNotFound exception by adding robust check for summary watcher ([!281](https://gitee.com/mindspore/mindinsight/pulls/281)).
+* UI fix operator table sort jump problem ([!283](https://gitee.com/mindspore/mindinsight/pulls/283)).
+* Dataset serializer return schema json str when schema type is 'mindspore.dataset.engine.Schema' ([!2185](https://gitee.com/mindspore/mindspore/pulls/2185)).
+
+
+## Thanks to our Contributors
+Thanks goes to these wonderful people:
+
+Chao Chen, Congli Gao, Ye Huang, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Yongxiu Qu, Hui Pan, Luyu Qiu, Junyan Qin, Kai Wen, Weining Wang, Yue Wang, Zhuanke Wu, Yifan Xia, Lihua Ye, Weibiao Yu, Ximiao Yu, Yunshu Zhang, Ting Zhao, Jianfeng Zhu.
+
+Contributions of any kind are welcome!
+
 # Release 0.3.0-alpha
 
 ## Major Features and Improvements
