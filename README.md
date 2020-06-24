@@ -11,6 +11,10 @@ such as computation graph, training process metrics, etc.
     Provide visualization of model parameters information, 
 such as training data, model accuracy, etc.
 
+- Visualization of training performance:
+
+    Provide visualization of training performance information, such as operator execution time,
+data input pipeline performance, etc.
 
 # Index
 
@@ -90,6 +94,10 @@ The GUI of MindInsight displays the pipeline of dataset processing and augmentat
 ### Dataset Lineage visualization
 
 The GUI of MindInsight displays the parameters and operations of the dataset processing and augmentation.
+
+### Performance visualization
+
+The GUI of MindInsight displays the performance data of the neural networks.
 
 # Installation
 
