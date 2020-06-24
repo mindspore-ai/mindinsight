@@ -70,14 +70,15 @@ limitations under the License.
           <div class="cell-container device_queue_op"
                @click="highlight('device_queue_op')"
                clickKey="device_queue_op"
+               :style="{cursor: processSummary.count !== processSummary.maxCount ? 'default' : 'pointer'}"
                v-show="!processSummary.noData">
             <div class="title">
-              {{$t('profiling.deviceQueueOpTip')}}
+              {{$t('profiling.deviceQueueOp')}}
             </div>
           </div>
 
           <div class="queue-container"
-               v-show="processSummary.count === 6 && !processSummary.noData">
+               v-show="processSummary.count === processSummary.maxCount && !processSummary.noData">
             <div class="img">
               <div class="edge">
                 <img src="@/assets/images/data-flow.png"
@@ -116,7 +117,7 @@ limitations under the License.
           <div class="cell-container get-next"
                @click="highlight('get_next')"
                clickKey="get_next"
-               v-if="processSummary.count === 6 && !processSummary.noData">
+               v-if="processSummary.count === processSummary.maxCount && !processSummary.noData">
             <div class="title">
               {{$t('profiling.getData')}}
             </div>
@@ -126,7 +127,7 @@ limitations under the License.
              v-if="!(connectQueueChart.noData && dataQueueChart.noData && deviceQueueOpChart
              && getNextChart.getNextChart)">
           <div class="queue-step-wrap"
-               v-if="processSummary.count === 6">
+               v-if="processSummary.count === processSummary.maxCount">
             <div class="title">{{$t('profiling.queueStep')}}</div>
             <div class="chart-content">
               <div class="chart-wrap"
@@ -164,7 +165,7 @@ limitations under the License.
             </div>
           </div>
           <div class="queue-step-wrap"
-               v-if="processSummary.count === 6">
+               v-if="processSummary.count === processSummary.maxCount">
             <div class="title">{{$t('profiling.operatorTimeConAnalysis')}}</div>
             <div class="chart-content second">
               <div class="chart-wrap analysis"
@@ -202,7 +203,7 @@ limitations under the License.
             </div>
           </div>
           <div class="queue-step-wrap single"
-               v-if="processSummary.count !== 6">
+               v-if="processSummary.count !== processSummary.maxCount">
             <div class="title">{{$t('profiling.queueStep')}}</div>
             <div class="chart-content">
               <div class="chart-wrap"
@@ -344,6 +345,7 @@ export default {
       processSummary: {
         noData: true,
         count: 6,
+        maxCount: 6,
         device: {
           empty: 0,
           full: 0,
@@ -530,7 +532,6 @@ export default {
         xAxis: {
           name: 'step',
           data: [],
-          max: size,
         },
         yAxis: {},
         series: [],
@@ -605,7 +606,7 @@ export default {
 
               this.dealProcess(data);
               this.$nextTick(() => {
-                if (this.processSummary.count < 6) {
+                if (this.processSummary.count < this.processSummary.maxCount) {
                   this.queryQueueInfo(this.connectQueueChart);
                 } else {
                   this.queryQueueInfo(this.connectQueueChart);
@@ -820,7 +821,6 @@ export default {
                 data.sample_interval
               }ms`,
               data: dataY.map((val, index) => index + 1),
-              max: dataY.length,
             },
             yAxis: {
               name: '',
@@ -855,6 +855,12 @@ export default {
       });
     },
     highlight(key) {
+      if (
+        key === 'device_queue_op' &&
+        this.processSummary.count !== this.processSummary.maxCount
+      ) {
+        return;
+      }
       const domList = document.querySelectorAll('.md-top *[clickKey]');
       Array.prototype.forEach.call(domList, (dom) => {
         if (dom.getAttribute('clickKey') === key) {

@@ -1674,7 +1674,7 @@ export default {
         tempOption.visualMap['pieces'] &&
         tempOption.visualMap['pieces'].length > 0
       ) {
-        tempOption.visualMap = false;
+        tempOption.visualMap = null;
         tempOption.series[0].markLine = null;
         sampleObject.charObj.setOption(tempOption, true);
 
@@ -1810,7 +1810,7 @@ export default {
             tempCharOption.visualMap['pieces'] &&
             tempCharOption.visualMap['pieces'].length > 0
             ) {
-              tempCharOption.visualMap = false;
+              tempCharOption.visualMap = null;
               tempCharOption.series[0].markLine = null;
               tempCharOption.series[0].lineStyle.color = sampleItem.colors;
             }
