@@ -34,7 +34,6 @@ class TimelineAnalyser(BaseAnalyser):
     __col_names__ = ['op_name', 'stream_id', 'start_time', 'duration']
     _output_timeline_data_file_path = 'output_timeline_data_{}.txt'
     _min_cycle_counter_file_path = 'min_cycle_counter_{}.txt'
-    _timeline_filename = 'timeline_detail_{}.json'
     _display_filename = 'timeline_display_{}.json'
     _timeline_summary_filename = 'timeline_summary_{}.json'
     _timeline_meta = []
@@ -64,15 +63,9 @@ class TimelineAnalyser(BaseAnalyser):
             json, the content of timeline data.
         """
         # Search timeline json file under profiling dir.
-        timeline_filename = self._timeline_filename.format(self._device_id)
         display_filename = self._display_filename.format(self._device_id)
-        file_list = [filename for filename in os.listdir(self._profiling_dir)
-                     if timeline_filename in filename or display_filename in filename]
-
         # Check if there is a timeline json file for display
         file_path = os.path.join(self._profiling_dir, display_filename)
-        if display_filename not in file_list:
-            file_path = os.path.join(self._profiling_dir, timeline_filename)
         file_path = validate_and_normalize_path(
             file_path, raise_key='Invalid timeline json path.'
         )
@@ -121,38 +114,8 @@ class TimelineAnalyser(BaseAnalyser):
         """Load data according to the parsed profiling files."""
         # Write timeline to file.
         logger.info('Writing timeline file...')
-        file_size = self.write_timeline_to_json()
-
-        # If the file size is larger than 20MB, open a new file and
-        # write the first 20MB content into it.
-        if file_size > SIZE_LIMIT:
-            logger.debug('File size is larger than 20MB, will be resized...')
-            # write to json file for display
-            self.write_timeline_to_json_by_limitation()
-
+        self.write_timeline_to_json_by_limitation()
         logger.info('Finished file writing!')
-
-    def write_timeline_to_json(self):
-        """Write timeline to json."""
-        timeline_filename = self._timeline_filename.format(self._device_id)
-        timeline_file_path = os.path.join(
-            self._profiling_dir,
-            timeline_filename
-        )
-
-        timeline_file_path = validate_and_normalize_path(
-            timeline_file_path, raise_key='Invalid timeline json path.'
-        )
-
-        try:
-            with open(timeline_file_path, 'w') as json_file:
-                json.dump(self._timeline_meta, json_file)
-            file_size = os.path.getsize(timeline_file_path)
-        except (IOError, OSError) as err:
-            logger.error('Error occurred when write timeline full details: %s', err)
-            raise ProfilerIOException
-
-        return file_size
 
     def write_timeline_to_json_by_limitation(self):
         """Write timeline to json by limitation."""
@@ -161,7 +124,6 @@ class TimelineAnalyser(BaseAnalyser):
             self._profiling_dir,
             display_filename
         )
-
         display_file_path = validate_and_normalize_path(
             display_file_path, raise_key='Invalid timeline display json path.'
         )
@@ -224,11 +186,11 @@ class TimelineAnalyser(BaseAnalyser):
 
         return timeline_list
 
-    def _parse_timeline_data(self, line_list):
+    def _parse_timeline_data(self, timeline):
         """Parse timeline data."""
         # factor to convert the time unit from 1ms to 1us for timeline display
         factor = 1000
-        op_meta = TimelineContainer(line_list)
+        op_meta = TimelineContainer(timeline)
         timeline_dict = {}
         timeline_dict['name'] = op_meta.op_name
         timeline_dict['ph'] = 'X'
@@ -245,9 +207,9 @@ class TimelineAnalyser(BaseAnalyser):
         self._timeline_meta.append(timeline_dict)
 
     @staticmethod
-    def _update_num_of_streams(line_list, stream_count_dict):
+    def _update_num_of_streams(timeline, stream_count_dict):
         """Update number of streams."""
-        stream_id = line_list[1]
+        stream_id = timeline[1]
         if stream_id not in stream_count_dict.keys():
             stream_count_dict[stream_id] = 1
         else:
@@ -328,18 +290,28 @@ class TimelineAnalyser(BaseAnalyser):
             framework_obj_list (list): The framework metadata.
         """
         logger.debug('Start adding framework info into timeline...')
+        # Get the framework info that will be written into timeline.
+        framework_info_dict = {}
         for framework_obj in framework_obj_list:
             op_name = framework_obj[0]
             op_type = framework_obj[1]
             op_full_name = framework_obj[4]
             op_info = framework_obj[5]
-            for timeline_obj in self._timeline_meta:
-                if op_full_name == timeline_obj.get('name'):
-                    timeline_obj['name'] = op_name
-                    timeline_obj['args'] = {
-                        'type': op_type,
-                        'fullname': op_full_name
-                    }
-                    timeline_obj['args'].update(op_info)
+            framework_info_dict[op_full_name] = {
+                'name': op_name,
+                'args': {
+                    'type': op_type,
+                    'fullname': op_full_name
+                }
+            }
+            framework_info_dict[op_full_name]['args'].update(op_info)
+
+        # Insert framework info into timeline.
+        for timeline_item in self._timeline_meta:
+            op_full_name = timeline_item.get('name')
+            framework_item = framework_info_dict.get(op_full_name)
+            if framework_item:
+                timeline_item['name'] = framework_item.get('name')
+                timeline_item['args'] = framework_item.get('args')
 
         logger.debug('Finished adding framework info into timeline...')
