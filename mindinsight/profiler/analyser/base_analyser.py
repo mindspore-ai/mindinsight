@@ -97,11 +97,7 @@ class BaseAnalyser(ABC):
             self._sort(sort_condition)
         if group_condition:
             self._group(group_condition)
-        return {
-            'col_name': self._display_col_names,
-            'object': self._result,
-            'size': self._size
-        }
+        return self._organize_query_result()
 
     @abstractmethod
     def _load(self):
@@ -244,3 +240,16 @@ class BaseAnalyser(ABC):
         except ValidationError:
             raise ProfilerPathErrorException('The profiling dir is invalid.')
         return normalized_profiling_dir
+
+    def _organize_query_result(self):
+        """
+        Organize the query result.
+
+        Returns:
+            dict, the query result.
+        """
+        return {
+            'col_name': self._display_col_names,
+            'object': self._result,
+            'size': self._size
+        }
