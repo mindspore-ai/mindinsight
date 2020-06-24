@@ -118,7 +118,10 @@ def get_summary_for_step_trace(average_info, header):
 
 def calculate_percent(partial, total):
     """Calculate percent value."""
-    percent = round(partial / total * 100, 2)
+    if total:
+        percent = round(partial / total * 100, 2)
+    else:
+        percent = 0
     return f'{percent}%'
 
 

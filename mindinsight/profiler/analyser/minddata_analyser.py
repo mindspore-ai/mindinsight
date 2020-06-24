@@ -116,13 +116,13 @@ class MinddataAnalyser(BaseAnalyser):
                         # op_info: 2: step num 3: cost time
                         if op_info[1] == "0":
                             get_time_list.append([int(op_info[2]), float(op_info[3])])
-                            total_cost += float(op_info[3])
+                            total_get += float(op_info[3])
                         elif op_info[1] == "1":
                             push_time_list.append([int(op_info[2]), float(op_info[3])])
                             total_push += float(op_info[3])
                         elif op_info[1] == "2":
                             total_time_list.append([int(op_info[2]), float(op_info[3])])
-                            total_get += float(op_info[3])
+                            total_cost += float(op_info[3])
                     elif op_info and op_info[0] == "1" and info_type in ["all", "queue"]:
                         queue_size_list.append([int(op_info[2]), int(op_info[3])])
                         if op_info[1] == op_info[3]:
