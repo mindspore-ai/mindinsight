@@ -584,7 +584,7 @@ export default {
                     .map((i) => {
                       return {
                         name: i.name,
-                        time: i.value,
+                        time: i.value.toFixed(4),
                         frequency: i.frequency,
                       };
                     });
