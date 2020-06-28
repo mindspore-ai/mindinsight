@@ -31,7 +31,8 @@ from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, t
 from mindinsight.datavisual.utils.tools import unquote_args
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
-from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException, \
+    ProfilerDirNotFoundException
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 from mindinsight.profiler.common.validator.validate import validate_condition, validate_ui_proc
 from mindinsight.profiler.common.validator.validate import validate_minddata_pipeline_condition
@@ -421,6 +422,9 @@ def get_timeline_summary():
     """
     summary_dir = request.args.get("dir")
     profiler_dir = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    if not os.path.exists(profiler_dir):
+        msg = 'The profiler dir is not found!'
+        raise ProfilerDirNotFoundException(msg=msg)
     device_id = request.args.get("device_id", default='0')
     _ = to_int(device_id, 'device_id')
 
@@ -444,6 +448,9 @@ def get_timeline_detail():
     """
     summary_dir = request.args.get("dir")
     profiler_dir = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    if not os.path.exists(profiler_dir):
+        msg = 'The profiler dir is not found!'
+        raise ProfilerDirNotFoundException(msg=msg)
     device_id = request.args.get("device_id", default='0')
     _ = to_int(device_id, 'device_id')
 
