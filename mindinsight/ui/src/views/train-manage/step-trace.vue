@@ -29,6 +29,7 @@ limitations under the License.
           <el-input ref="step"
                     v-model.number="steps.step"
                     :disabled="steps.disabled"
+                    @blur="resetStep"
                     @keyup.native.enter="changeStep">
           </el-input>
           <el-button @click="changeStep"
@@ -150,6 +151,7 @@ export default {
       bp_end: '--',
       steps: {
         step: null,
+        trueStep: null,
         max: 0,
         disabled: true,
         label: this.$t('profiling.stepInputTip'),
@@ -269,18 +271,25 @@ export default {
     changeStep(value) {
       if (value === 0) {
         this.steps.step = null;
+        this.steps.trueStep = null;
         this.queryTrainingTrace(0);
       } else if (
         /^[0-9]*[1-9][0-9]*$/.test(this.steps.step) &&
         this.steps.step <= this.steps.max
       ) {
+        this.steps.trueStep = this.steps.step;
         this.queryTrainingTrace(this.steps.step);
       } else {
-        this.steps.step = null;
+        this.steps.step = this.steps.trueStep;
         this.$message.error(
             this.$t('profiling.inputError').replace('{max}', this.steps.max),
         );
       }
+    },
+    resetStep() {
+      setTimeout(() => {
+        this.steps.step = this.steps.trueStep;
+      }, 200);
     },
     getTimeInfo(id, type) {
       const params = {
@@ -535,7 +544,7 @@ export default {
           name = this.$t('profiling.lterationGap');
           break;
         case 'fp_and_bp':
-          name = this.$t('profiling.deviceQueueOp');
+          name = this.$t('profiling.deviceQueueOpTip');
           break;
         case 'tail':
           name = this.$t('profiling.lterationTail');

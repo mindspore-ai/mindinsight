@@ -1350,6 +1350,7 @@ export default {
           .chart {
             height: calc(100% - 70px);
             min-height: 150px;
+            overflow: hidden;
           }
         }
         .chart-wrap.highlight {

@@ -292,10 +292,33 @@ limitations under the License.
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.timeLine') }}</div>
           <div class="view-detail">
-            <button @click="toPerfetto()"
-                    :disabled="perfetto.waiting"
-                    :class="{disabled:perfetto.waiting}">{{ $t('profiling.viewDetail') }}
-              <i class="el-icon-d-arrow-right"></i></button>
+            <button @click="downloadPerfetto()"
+                    :disabled="timeLine.waiting"
+                    :class="{disabled:timeLine.waiting}">{{ $t('profiling.downloadTimeline') }}
+            </button>
+          </div>
+          <div class="tip-icon">
+            <el-tooltip placement="bottom"
+                        effect="light">
+              <div slot="content"
+                   class="tooltip-container">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+                <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
+                <div>{{$t("profiling.timelineTips.content11")}}</div>
+                <div>{{$t("profiling.timelineTips.content12")}}</div>
+                <div>{{$t("profiling.timelineTips.content13")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
+                <div>{{$t("profiling.timelineTips.content21")}}</div>
+                <div>{{$t("profiling.timelineTips.content22")}}</div>
+                <div>{{$t("profiling.timelineTips.content23")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
+                <div>{{$t("profiling.timelineTips.content31")}}</div>
+                <div>{{$t("profiling.timelineTips.content32")}}</div>
+              </div>
+              <i class="el-icon-info"></i>
+            </el-tooltip>
           </div>
         </div>
         <div class="timeline-info"
@@ -374,10 +397,8 @@ export default {
         topN: [],
         colorList: ['#6C92FA', '#6CBFFF', '#4EDED2', '#7ADFA0', '#A6DD82'],
       },
-      perfetto: {
-        url: 'https://ui.perfetto.dev/#!',
+      timeLine: {
         data: null,
-        delay: 5000,
         waiting: true,
       },
       timelineInfo: {
@@ -584,7 +605,7 @@ export default {
                     .map((i) => {
                       return {
                         name: i.name,
-                        time: i.value.toFixed(4),
+                        time: i.value,
                         frequency: i.frequency,
                       };
                     });
@@ -728,7 +749,7 @@ export default {
           name = this.$t('profiling.lterationGap');
           break;
         case 'fp_and_bp':
-          name = this.$t('profiling.deviceQueueOp');
+          name = this.$t('profiling.deviceQueueOpTip');
           break;
         case 'tail':
           name = this.$t('profiling.lterationTail');
@@ -879,24 +900,6 @@ export default {
       }
       return new Uint8Array(arr);
     },
-    toPerfetto() {
-      if (this.perfetto.data) {
-        const popupwin = window.open(this.perfetto.url);
-        setTimeout(() => {
-          const params = {
-            perfetto: {
-              title: '',
-              buffer: this.perfetto.data,
-            },
-          };
-          if (popupwin) {
-            popupwin.postMessage(params, this.perfetto.url);
-          }
-        }, this.perfetto.delay);
-      } else {
-        this.perfetto.waiting = true;
-      }
-    },
     queryTimeline() {
       const params = {
         dir: this.relativePath,
@@ -917,17 +920,27 @@ export default {
           .catch(() => {
             this.timelineInfo.noData = true;
           });
-      this.perfetto.waiting = true;
+      this.timeLine.waiting = true;
       RequestService.queryTimeline(params)
           .then((res) => {
             if (res && res.data) {
-              this.perfetto.data = this.stringToUint8Array(
+              this.timeLine.data = this.stringToUint8Array(
                   JSON.stringify(res.data),
               );
-              this.perfetto.waiting = false;
+              this.timeLine.waiting = false;
             }
           })
           .catch(() => {});
+    },
+    downloadPerfetto() {
+      const downloadLink = document.createElement('a');
+      downloadLink.download = this.getDocName();
+      downloadLink.style.display = 'none';
+      const blob = new Blob([this.timeLine.data]);
+      downloadLink.href = URL.createObjectURL(blob);
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     },
     dealProcess(data) {
       this.processSummary.device = {
@@ -959,6 +972,22 @@ export default {
         }
         this.processSummary.noData = false;
       }
+    },
+    getDocName() {
+      const dealNumber = (value) => {
+        const prefix = value < 10 ? '0' : '';
+        return prefix + value;
+      };
+      const date = new Date();
+      const year = date.getFullYear();
+      const mouth = dealNumber(date.getMonth() + 1);
+      const day = dealNumber(date.getDate());
+      const hour = dealNumber(date.getHours());
+      const minute = dealNumber(date.getMinutes());
+      const second = dealNumber(date.getSeconds());
+      const millisecond = date.getMilliseconds();
+      const timestamp = `${year}${mouth}${day}${hour}${minute}${second}${millisecond}`;
+      return `timeline_${this.trainingJobId}_${this.currentCard}_${timestamp}.json`;
     },
   },
   destroyed() {

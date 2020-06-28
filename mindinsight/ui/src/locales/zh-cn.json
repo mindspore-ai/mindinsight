@@ -248,9 +248,7 @@
     "suggestions": "优化建议",
     "common-profiler_tutorial": {
       "desc": "如何使用Profiler进行性能分析",
-      "anchor": [
-        "desc"
-      ],
+      "anchor": ["desc"],
       "url": [
         "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/performance_profiling.html"
       ]
@@ -361,7 +359,21 @@
     "approximateTime": "总时长 ≈ ",
     "stepInputTip": "请输入step值(1~{max}的正整数)",
     "inputError": "输入参数异常，请输入一个1~{max}的正整数",
-    "defaultTip": "默认展示平均值"
+    "defaultTip": "默认展示平均值",
+    "downloadTimeline": "下载",
+    "timelineTips": {
+      "title1": "时间线功能可以帮您对训练过程进行分析，它可以展示：",
+      "content11": "- 算子分配到哪个设备 (AICPU/AI Core) 执行；",
+      "content12": "- MindSpore对该网络的流切分策略；",
+      "content13": "- 算子在Device上的执行序列和执行时长。",
+      "title2": "如何查看时间线：",
+      "content21": "要查看时间线的详细信息，您可以点击 \"下载\" 按钮将带有时间线信息的文件保存到本地，再通过工具查看。",
+      "content22": "我们推荐您使用谷歌插件：chrome://tracing，或 Perfetto工具：https://ui.perfetto.dev/#!/viewer",
+      "content23": "选择一个工具，在浏览器地址栏输入地址并回车，进入页面点击按钮加载文件查看时间线（tracing工具点击左上角 \"load\"，Perfetto工具点击左侧栏 \"Open trace file\"）。",
+      "title3": "如何使用时间线：",
+      "content31": "您可以通过时间线信息分析流切分方法是否合理、迭代间隙和拖尾时间是否过长等；",
+      "content32": "也可以具体定位到某个算子，查看分析它的执行时间。"
+    }
   },
   "components": {
     "summaryTitle": "训练选择",
