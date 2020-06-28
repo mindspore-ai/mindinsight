@@ -363,7 +363,7 @@
     "downloadTimeline": "下载",
     "timelineTips": {
       "title1": "时间线功能可以帮您对训练过程进行分析，它可以展示：",
-      "content11": "- 算子分配到哪个设备 (AICPU/AI Core) 执行；",
+      "content11": "- 算子分配到哪个设备 (AI CPU/AI Core) 执行；",
       "content12": "- MindSpore对该网络的流切分策略；",
       "content13": "- 算子在Device上的执行序列和执行时长。",
       "title2": "如何查看时间线：",
