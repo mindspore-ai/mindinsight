@@ -32,7 +32,8 @@ from tests.ut.profiler import RAW_DATA_BASE
 
 OP_GATHER_V2_INFO = {
     'col_name': [
-        'op_name', 'op_type', 'avg_execution_time', 'subgraph', 'full_op_name', 'op_info'
+        'op_name', 'op_type', 'avg_execution_time (ms)', 'subgraph', 'full_op_name',
+        'op_info'
     ],
     'object': [
         [
@@ -124,7 +125,7 @@ class TestOpAnalyser:
     def test_query_aicore_type_1(self):
         """Test the function of querying AICORE operator type infomation."""
         expect_result = {
-            'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
+            'col_name': ['op_type', 'execution_time (ms)', 'execution_frequency', 'percent'],
             'object': [
                 ['UnsortedSegmentSum', 44.607826, 2, 35.28],
                 ['GatherV2', 43.155441, 2, 34.13],
@@ -176,7 +177,7 @@ class TestOpAnalyser:
     def test_query_aicore_type_2(self):
         """Test the function of querying AICORE operator type infomation."""
         expect_result = {
-            'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
+            'col_name': ['op_type', 'execution_time (ms)', 'execution_frequency', 'percent'],
             'object': [
                 ['MatMul', 1.936681, 15, 1.53],
                 ['Mul', 1.902949, 32, 1.51]
