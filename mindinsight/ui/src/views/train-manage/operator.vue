@@ -85,7 +85,7 @@
                                        :property="ele"
                                        :key="key"
                                        :sortable="ele === 'op_info' ? false : 'custom'"
-                                       :width="(ele==='execution_time'|| ele==='subgraph' ||
+                                       :width="(ele==='avg_execution_time (ms)'|| ele==='subgraph' ||
                                         ele==='op_name'|| ele==='op_type')?'220':''"
                                        show-overflow-tooltip
                                        :label="ele">
@@ -122,7 +122,7 @@
                                :key="$index"
                                :label="item"
                                :sortable="item === 'op_info' ? false : 'custom'"
-                               :width="(item==='execution_time'|| item==='subgraph' ||
+                               :width="(item==='avg_execution_time (ms)'|| item==='subgraph' ||
                                 item==='op_name'|| item==='op_type')?'220':''"
                                show-overflow-tooltip>
               </el-table-column>
@@ -147,10 +147,9 @@
         </el-tab-pane>
         <el-tab-pane label="AI CPU"
                      class="cpu-tab"
-                     name="cpu"
-                     v-if="false">
+                     name="cpu">
           <div class="cl-profiler-top"
-               v-if="cpuCharts.data.length">
+               v-if="false">
             <div>
               <span class="profiler-title">
                 {{ $t('operator.operatorStatistics') }}
@@ -268,7 +267,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 8,
+          limit: 15,
         },
         op_filter_condition: {},
         op_sort_condition: {
@@ -365,7 +364,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 20,
+          limit: 15,
         },
         op_filter_condition: {},
         op_sort_condition: {
@@ -572,10 +571,6 @@ export default {
                   });
                   this.setOption(this.cpuCharts);
                 }
-                if (res.data.object.length > 8) {
-                  this.opCpuList.opDetailPage.limit = 8;
-                  res.data.object.splice(8);
-                }
                 this.formatterDetailData(this.opCpuList, res.data);
                 if (isSort) {
                   this.$nextTick(() => {
@@ -733,7 +728,10 @@ export default {
         row.opDetailCol = [];
         row.opDetailPage.offset = 0;
         row.pageTotal = 0;
-        row.op_sort_condition = {name: 'execution_time', type: 'descending'};
+        row.op_sort_condition = {
+          name: 'avg_execution_time',
+          type: 'descending',
+        };
         this.getCoreDetailList(row, true);
       } else {
         this.curActiveRow = {
@@ -772,7 +770,7 @@ export default {
     coreTableChange() {
       if (this.statisticType && !this.opAllTypeList.opDetailCol.length) {
         this.opAllTypeList.op_sort_condition = {
-          name: 'execution_time',
+          name: 'avg_execution_time',
           type: 'descending',
         };
         this.getCoreDetailList(this.opAllTypeList, true);
@@ -811,7 +809,7 @@ export default {
                     : chart.data[i].name;
                 legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[
                     i
-                ].value.toFixed(3)}}\n{c|${chart.data[i].percent.toFixed(2)}%}`;
+                ].value.toFixed(6)}}\n{c|${chart.data[i].percent.toFixed(2)}%}`;
               }
             }
             return legendStr;
@@ -877,9 +875,7 @@ export default {
         option.tooltip = {
           trigger: 'axis',
           formatter: (params) => {
-            return `${params[0].axisValue}<br>${
-              params[0].marker
-            }${params[0].value.toFixed(4)}`;
+            return `${params[0].axisValue}<br>${params[0].marker}${params[0].value}`;
           },
           confine: true,
         };
@@ -1108,7 +1104,7 @@ export default {
       height: calc(36% + 32px);
     }
     .cl-profiler-bottom {
-      height: calc(64% - 32px);
+      height: 100%;
     }
   }
   .profiler-title {
@@ -1128,7 +1124,7 @@ export default {
       width: 100%;
       height: 100%;
       min-width: 1300px;
-      min-height: 232px;
+      min-height: 306px;
       overflow: hidden;
     }
   }
