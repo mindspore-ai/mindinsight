@@ -952,8 +952,10 @@ export default {
                 }
                 if (
                   addFlag &&
-                  parma.value[1] >= sampleObject.zoomData[0] &&
-                  parma.value[1] <= sampleObject.zoomData[1]
+                  Math.ceil(parma.value[1] * 1000) / 1000 >=
+                    sampleObject.zoomData[0] &&
+                  Math.floor(parma.value[1] * 1000) / 1000 <=
+                    sampleObject.zoomData[1]
                 ) {
                   dataCount++;
                   runArr.push(parma.seriesName);
