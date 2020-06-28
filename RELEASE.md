@@ -20,7 +20,7 @@
 ## Bugfixes
 * Fix FileNotFound exception by adding robust check for summary watcher ([!281](https://gitee.com/mindspore/mindinsight/pulls/281)).
 * UI fix operator table sort jump problem ([!283](https://gitee.com/mindspore/mindinsight/pulls/283)).
-* Dataset serializer return schema json str when schema type is 'mindspore.dataset.engine.Schema' ([!2185](https://gitee.com/mindspore/mindspore/pulls/2185)).
+* Dataset serializer return schema json str when schema type is `mindspore.dataset.engine.Schema` ([!2185](https://gitee.com/mindspore/mindspore/pulls/2185)).
 
 
 ## Thanks to our Contributors
