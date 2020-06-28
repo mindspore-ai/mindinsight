@@ -21,8 +21,8 @@ from unittest import TestCase
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
 
-COL_NAMES = ['op_name', 'op_type', 'execution_time', 'subgraph', 'full_op_name',
-             'op_info']
+COL_NAMES = ['op_name', 'op_type', 'avg_execution_time', 'subgraph',
+             'full_op_name', 'op_info']
 
 
 def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
@@ -126,12 +126,12 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying function."""
         expect_result = {
             'col_name': COL_NAMES,
-            'object': get_detail_infos(sort_name='execution_time', sort_type=True),
+            'object': get_detail_infos(sort_name='avg_execution_time', sort_type=True),
             'size': 10
         }
         condition = {
             'sort_condition': {
-                'name': 'execution_time',
+                'name': 'avg_execution_time',
                 'type': 'descending'
             }
         }
@@ -187,7 +187,7 @@ class TestAicoreDetailAnalyser(TestCase):
         expect_result = {
             'col_name': COL_NAMES,
             'object': get_detail_infos(
-                indexes=[1, 2], sort_name='execution_time', sort_type=True
+                indexes=[1, 2], sort_name='avg_execution_time', sort_type=True
             ),
             'size': 4
         }
@@ -198,7 +198,7 @@ class TestAicoreDetailAnalyser(TestCase):
                 }
             },
             'sort_condition': {
-                'name': 'execution_time'
+                'name': 'avg_execution_time'
             },
             'group_condition': {
                 'limit': 2,
@@ -211,7 +211,7 @@ class TestAicoreDetailAnalyser(TestCase):
         expect_result = {
             'col_name': COL_NAMES,
             'object': get_detail_infos(
-                indexes=[0, 1, 2, 8], sort_name='execution_time', sort_type=True
+                indexes=[0, 1, 2, 8], sort_name='avg_execution_time', sort_type=True
             ),
             'size': 4
         }
@@ -225,7 +225,7 @@ class TestAicoreDetailAnalyser(TestCase):
                 }
             },
             'sort_condition': {
-                'name': 'execution_time'
+                'name': 'avg_execution_time'
             }
         }
         result = self._analyser.query(condition)
