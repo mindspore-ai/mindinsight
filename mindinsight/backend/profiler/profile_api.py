@@ -21,7 +21,6 @@ import json
 import os
 
 from flask import Blueprint
-from flask import Response
 from flask import jsonify
 from flask import request
 from marshmallow import ValidationError
@@ -40,6 +39,7 @@ from mindinsight.profiler.common.validator.validate_path import \
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_profiler_path
 from mindinsight.profiler.proposer.compose_proposer import ComposeProposal
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.backend.application import CustomResponse
 
 BLUEPRINT = Blueprint("profile", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
@@ -320,7 +320,7 @@ def get_profile_summary_proposal():
     proposal_obj = ComposeProposal(profiler_dir_abs, device_id, proposal_type_list)
     proposal_info = proposal_obj.get_proposal(options)
     # Use json.dumps for orderly return
-    return Response(json.dumps(proposal_info), mimetype='application/json')
+    return CustomResponse(json.dumps(proposal_info), mimetype='application/json')
 
 
 @BLUEPRINT.route("/profile/minddata-pipeline/op-queue", methods=["POST"])
