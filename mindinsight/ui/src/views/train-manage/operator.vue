@@ -497,6 +497,7 @@ export default {
         profile: this.profile_dir,
         train_id: this.train_id,
       };
+      row.op_sort_condition.name = row.op_sort_condition.name.split(' ')[0];
       params.body = {
         op_type: 'aicore_detail',
         device_id: this.currentCard,
@@ -543,6 +544,7 @@ export default {
         profile: this.profile_dir,
         train_id: this.train_id,
       };
+      this.opCpuList.op_sort_condition.name = this.opCpuList.op_sort_condition.name.split(' ')[0];
       params.body = {
         op_type: 'aicpu',
         device_id: this.currentCard,
