@@ -24,7 +24,7 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerParamTypeE
 from mindinsight.profiler.common.log import logger as log
 
 AICORE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "precent"]
-AICORE_DETAIL_COL = ["op_name", "op_type", "execution_time", "subgraph", "full_op_name"]
+AICORE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "subgraph", "full_op_name"]
 AICPU_COL = ["serial_number", "op_type", "total_time", "dispatch_time", "run_start",
              "run_end"]
 MINDDATA_PIPELINE_COL = [

@@ -99,7 +99,7 @@ class AicoreDetailAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['op_name', 'op_type', 'execution_time', 'subgraph',
+    _col_names = ['op_name', 'op_type', 'avg_execution_time', 'subgraph',
                   'full_op_name', 'op_info']
     _file_name_aicore_detail_time = 'aicore_intermediate_{}_detail.csv'
     _file_name_framework_info = 'framework_raw_{}.csv'
