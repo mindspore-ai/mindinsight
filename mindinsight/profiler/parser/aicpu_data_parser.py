@@ -35,8 +35,9 @@ class DataPreProcessParser:
 
     _source_file_target = 'DATA_PREPROCESS.dev.AICPU.'
     _dst_file_title = 'title:DATA_PREPROCESS AICPU'
-    _dst_file_column_title = ['serial_number', 'node_type_name', 'total_time(us)',
-                              'dispatch_time(us)', 'run_start', 'run_end']
+    _dst_file_column_title = ['serial_number', 'node_type_name', 'total_time(ms)',
+                              'dispatch_time(ms)', 'run_start', 'run_end']
+    _ms_unit = 1000
 
     def __init__(self, input_path, output_filename):
         self._input_path = input_path
@@ -71,8 +72,8 @@ class DataPreProcessParser:
 
             run_start = node_list[1].split(':')[-1].split(' ')[0]
             run_end = node_list[run_end_index].split(':')[-1].split(' ')[0]
-            total_time = thread_list[-1].split('=')[-1].split()[0]
-            dispatch_time = thread_list[-2].split('=')[-1].split()[0]
+            total_time = float(thread_list[-1].split('=')[-1].split()[0]) / self._ms_unit
+            dispatch_time = float(thread_list[-2].split('=')[-1].split()[0]) / self._ms_unit
 
             return [number, node_type_name, total_time, dispatch_time,
                     run_start, run_end]
@@ -112,7 +113,7 @@ class DataPreProcessParser:
                 result_list.append(result)
                 # Calculate the total time.
                 total_time = result[2]
-                ai_cpu_total_time_summary += int(total_time)
+                ai_cpu_total_time_summary += total_time
                 # Increase node serial number.
                 serial_number += 1
             elif "Node" in node_line and "Thread" not in thread_line:
@@ -120,7 +121,8 @@ class DataPreProcessParser:
                 logger.warning("The node type:%s cannot find thread data", node_type_name)
 
         if result_list:
-            result_list.append(["AI CPU Total Time(us):", ai_cpu_total_time_summary])
+            ai_cpu_total_time = format(ai_cpu_total_time_summary, '.6f')
+            result_list.append(["AI CPU Total Time(ms):", ai_cpu_total_time])
             fwrite_format(self._output_filename, data_source=self._dst_file_title, is_print=True,
                           is_start=True)
             fwrite_format(self._output_filename,
