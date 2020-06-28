@@ -23,6 +23,8 @@ from tests.ut.profiler import PROFILER_DIR
 
 COL_NAMES = ['op_name', 'op_type', 'avg_execution_time', 'subgraph',
              'full_op_name', 'op_info']
+COL_NAMES_IN_RESULT = ['op_name', 'op_type', 'avg_execution_time (ms)',
+                       'subgraph', 'full_op_name', 'op_info']
 
 
 def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
@@ -75,7 +77,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_1(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES,
+            'col_name': COL_NAMES_IN_RESULT,
             'object': get_detail_infos(),
             'size': 10
         }
@@ -88,7 +90,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_2(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES,
+            'col_name': COL_NAMES_IN_RESULT,
             'object': get_detail_infos(indexes=[9]),
             'size': 1
         }
@@ -125,7 +127,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_3(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES,
+            'col_name': COL_NAMES_IN_RESULT,
             'object': get_detail_infos(sort_name='avg_execution_time', sort_type=True),
             'size': 10
         }
@@ -139,7 +141,7 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES,
+            'col_name': COL_NAMES_IN_RESULT,
             'object': get_detail_infos(sort_name='op_name', sort_type=False),
             'size': 10
         }
@@ -155,7 +157,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_4(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES,
+            'col_name': COL_NAMES_IN_RESULT,
             'object': get_detail_infos(indexes=[2, 3]),
             'size': 10
         }
@@ -169,7 +171,7 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES,
+            'col_name': COL_NAMES_IN_RESULT,
             'object': [],
             'size': 10
         }
@@ -185,7 +187,7 @@ class TestAicoreDetailAnalyser(TestCase):
     def test_query_success_5(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES,
+            'col_name': COL_NAMES_IN_RESULT,
             'object': get_detail_infos(
                 indexes=[1, 2], sort_name='avg_execution_time', sort_type=True
             ),
@@ -209,7 +211,7 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES,
+            'col_name': COL_NAMES_IN_RESULT,
             'object': get_detail_infos(
                 indexes=[0, 1, 2, 8], sort_name='avg_execution_time', sort_type=True
             ),
@@ -236,7 +238,7 @@ class TestAicoreDetailAnalyser(TestCase):
         detail_infos = get_detail_infos(indexes=[9])
 
         expect_result = {
-            'col_name': COL_NAMES[0:5],
+            'col_name': COL_NAMES_IN_RESULT[0:5],
             'object': [item[0:5] for item in detail_infos],
             'size': 1
         }
@@ -252,7 +254,7 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES[0:4],
+            'col_name': COL_NAMES_IN_RESULT[0:4],
             'object': [item[0:4] for item in detail_infos],
             'size': 1
         }
@@ -272,7 +274,7 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 5, 3, 4])
         expect_result = {
-            'col_name': COL_NAMES[0:4],
+            'col_name': COL_NAMES_IN_RESULT[0:4],
             'object': [item[0:4] for item in detail_infos]
         }
 
@@ -294,7 +296,7 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 3, 4, 8, 6])
         expect_result = {
-            'col_name': COL_NAMES[0:4],
+            'col_name': COL_NAMES_IN_RESULT[0:4],
             'object': [item[0:4] for item in detail_infos]
         }
 
