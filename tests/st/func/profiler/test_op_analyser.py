@@ -32,7 +32,7 @@ from tests.ut.profiler import RAW_DATA_BASE
 
 OP_GATHER_V2_INFO = {
     'col_name': [
-        'op_name', 'op_type', 'execution_time', 'subgraph', 'full_op_name', 'op_info'
+        'op_name', 'op_type', 'avg_execution_time', 'subgraph', 'full_op_name', 'op_info'
     ],
     'object': [
         [
@@ -213,7 +213,7 @@ class TestOpAnalyser:
                 }
             },
             'sort_condition': {
-                'name': 'execution_time',
+                'name': 'avg_execution_time',
                 'type': 'descending'
             },
             'group_condition': {

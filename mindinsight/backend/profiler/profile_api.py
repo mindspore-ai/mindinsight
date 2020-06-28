@@ -72,6 +72,7 @@ def get_profile_op_info():
     validate_condition(search_condition)
 
     device_id = search_condition.get("device_id", "0")
+    to_int(device_id, 'device_id')
     profiler_dir_abs = os.path.join(settings.SUMMARY_BASE_DIR, train_id, profiler_dir)
     try:
         profiler_dir_abs = validate_and_normalize_path(profiler_dir_abs, "profiler")
@@ -194,6 +195,7 @@ def get_queue_info():
     profile_dir = get_profiler_abs_dir(request)
 
     device_id = unquote_args(request, "device_id")
+    to_int(device_id, 'device_id')
     queue_type = unquote_args(request, "type")
     queue_info = {}
 
@@ -220,6 +222,7 @@ def get_time_info():
     """
     profile_dir = get_profiler_abs_dir(request)
     device_id = unquote_args(request, "device_id")
+    to_int(device_id, 'device_id')
     op_type = unquote_args(request, "type")
 
     time_info = {
@@ -251,6 +254,7 @@ def get_process_summary():
     """
     profile_dir = get_profiler_abs_dir(request)
     device_id = unquote_args(request, "device_id")
+    to_int(device_id, 'device_id')
 
     minddata_analyser = AnalyserFactory.instance().get_analyser(
         'minddata', profile_dir, device_id)
@@ -305,6 +309,7 @@ def get_profile_summary_proposal():
     device_id = get_device_id(request)
     if not profiler_dir or not train_id:
         raise ParamValueError("No profiler_dir or train_id.")
+    to_int(device_id, 'device_id')
 
     profiler_dir_abs = os.path.join(settings.SUMMARY_BASE_DIR, train_id, profiler_dir)
     try:
@@ -361,6 +366,7 @@ def get_minddata_pipeline_op_queue_info():
     validate_minddata_pipeline_condition(condition)
 
     device_id = condition.get("device_id", "0")
+    to_int(device_id, 'device_id')
     analyser = AnalyserFactory.instance().get_analyser(
         'minddata_pipeline', profiler_dir_abs, device_id
     )
@@ -398,6 +404,7 @@ def get_minddata_pipeline_queue_info():
         raise ParamValueError("Invalid profiler dir.")
 
     device_id = request.args.get('device_id', default='0')
+    to_int(device_id, 'device_id')
     op_id = request.args.get('op_id', type=int)
     if op_id is None:
         raise ParamValueError("Invalid operator id or operator id does not exist.")
