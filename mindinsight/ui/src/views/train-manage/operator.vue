@@ -85,10 +85,10 @@
                                        :property="ele"
                                        :key="key"
                                        :sortable="ele === 'op_info' ? false : 'custom'"
-                                       :width="(ele==='avg_execution_time (ms)'|| ele==='subgraph' ||
+                                       :width="(ele==='avg_execution_time'|| ele==='subgraph' ||
                                         ele==='op_name'|| ele==='op_type')?'220':''"
                                        show-overflow-tooltip
-                                       :label="ele">
+                                       :label="ele==='avg_execution_time'?`${ele} （ms)`:ele">
                       </el-table-column>
                     </el-table>
                     <el-pagination :current-page="props.row.opDetailPage.offset + 1"
@@ -105,7 +105,7 @@
                                :property="item"
                                :key="$index"
                                sortable
-                               :label="item">
+                               :label="item==='execution_time'?`${item} (ms)`:item">
               </el-table-column>
             </el-table>
             <el-table v-show="statisticType && opAllTypeList.opDetailCol && opAllTypeList.opDetailCol.length"
@@ -120,9 +120,9 @@
               <el-table-column v-for="(item, $index) in opAllTypeList.opDetailCol"
                                :property="item"
                                :key="$index"
-                               :label="item"
+                               :label="item==='avg_execution_time'?`${item} (ms)`:item"
                                :sortable="item === 'op_info' ? false : 'custom'"
-                               :width="(item==='avg_execution_time (ms)'|| item==='subgraph' ||
+                               :width="(item==='avg_execution_time'|| item==='subgraph' ||
                                 item==='op_name'|| item==='op_type')?'220':''"
                                show-overflow-tooltip>
               </el-table-column>
@@ -183,7 +183,7 @@
               <el-table-column v-for="(item, $index) in opCpuList.opDetailCol"
                                :property="item"
                                :key="$index"
-                               :label="item"
+                               :label="(item==='total_time' || item==='dispatch_time')?`${item} (ms)`:item"
                                sortable="custom"
                                show-overflow-tooltip>
               </el-table-column>
@@ -497,7 +497,6 @@ export default {
         profile: this.profile_dir,
         train_id: this.train_id,
       };
-      row.op_sort_condition.name = row.op_sort_condition.name.split(' ')[0];
       params.body = {
         op_type: 'aicore_detail',
         device_id: this.currentCard,
@@ -544,7 +543,6 @@ export default {
         profile: this.profile_dir,
         train_id: this.train_id,
       };
-      this.opCpuList.op_sort_condition.name = this.opCpuList.op_sort_condition.name.split(' ')[0];
       params.body = {
         op_type: 'aicpu',
         device_id: this.currentCard,

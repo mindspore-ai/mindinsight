@@ -20,7 +20,7 @@ limitations under the License.
                   effect="light"
                   :content="$t('profiling.defaultTip')"
                   placement="top">
-        <span class="el-icon-question"></span>
+        <span class="el-icon-info"></span>
       </el-tooltip>
 
       <div class="pf-content-right">
@@ -258,6 +258,7 @@ export default {
       }
       this.steps = {
         step: null,
+        trueStep: null,
         max: 0,
         disabled: true,
         label: this.$t('profiling.stepInputTip'),
@@ -848,6 +849,10 @@ export default {
   }
   .image-noData.svg {
     height: 100%;
+  }
+  .el-icon-info {
+    font-size: 18px;
+    color: #6c7280;
   }
 }
 </style>
