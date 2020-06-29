@@ -430,8 +430,7 @@ def get_timeline_summary():
     summary_dir = request.args.get("dir")
     profiler_dir = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     if not os.path.exists(profiler_dir):
-        msg = 'The profiler dir is not found!'
-        raise ProfilerDirNotFoundException(msg=msg)
+        raise ProfilerDirNotFoundException(msg=summary_dir)
     device_id = request.args.get("device_id", default='0')
     _ = to_int(device_id, 'device_id')
 
@@ -456,8 +455,7 @@ def get_timeline_detail():
     summary_dir = request.args.get("dir")
     profiler_dir = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     if not os.path.exists(profiler_dir):
-        msg = 'The profiler dir is not found!'
-        raise ProfilerDirNotFoundException(msg=msg)
+        raise ProfilerDirNotFoundException(msg=summary_dir)
     device_id = request.args.get("device_id", default='0')
     _ = to_int(device_id, 'device_id')
 
