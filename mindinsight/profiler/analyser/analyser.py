@@ -34,8 +34,6 @@ class AicoreTypeAnalyser(BaseAnalyser):
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
     _col_names = ['op_type', 'execution_time', 'execution_frequency', 'percent']
-    _col_names_in_result = ['op_type', 'execution_time (ms)',
-                            'execution_frequency', 'percent']
     _file_name_aicore_type_time = 'aicore_intermediate_{}_type.csv'
 
     def _load(self):
@@ -74,7 +72,6 @@ class AicoreTypeAnalyser(BaseAnalyser):
         """
         for item in self._result:
             item[1] = float(format(item[1], '.6f'))
-        self._display_col_names = self._col_names_in_result[:]
         return super()._organize_query_result()
 
     def _convert_field_type(self, row):
@@ -104,8 +101,6 @@ class AicoreDetailAnalyser(BaseAnalyser):
     """
     _col_names = ['op_name', 'op_type', 'avg_execution_time', 'subgraph',
                   'full_op_name', 'op_info']
-    _col_names_in_result = ['op_name', 'op_type', 'avg_execution_time (ms)',
-                            'subgraph', 'full_op_name', 'op_info']
     _file_name_aicore_detail_time = 'aicore_intermediate_{}_detail.csv'
     _file_name_framework_info = 'framework_raw_{}.csv'
 
@@ -231,11 +226,11 @@ class AicoreDetailAnalyser(BaseAnalyser):
             is_display_full_op_name (bool): Whether to display the operator full
                 name.
         """
-        self._display_col_names = self._col_names_in_result[0:4]
+        self._display_col_names = self._col_names[0:4]
         if is_display_full_op_name:
-            self._display_col_names.append(self._col_names_in_result[4])
+            self._display_col_names.append(self._col_names[4])
         if is_display_detail:
-            self._display_col_names.append(self._col_names_in_result[5])
+            self._display_col_names.append(self._col_names[5])
 
     def _convert_framework_field_type(self, row):
         """
@@ -280,8 +275,6 @@ class AicpuAnalyser(BaseAnalyser):
     """
     _col_names = ['serial_number', 'op_type', 'total_time', 'dispatch_time',
                   'run_start', 'run_end']
-    _col_names_in_result = ['serial_number', 'op_type', 'total_time (ms)',
-                            'dispatch_time (ms)', 'run_start', 'run_end']
     _file_name_aicpu_time = 'aicpu_intermediate_{}.csv'
 
     def _load(self):
@@ -311,16 +304,6 @@ class AicpuAnalyser(BaseAnalyser):
         def _inner_filter(item: list):
             return self._default_filter(item, filter_condition)
         self._result = list(filter(_inner_filter, self._data))
-
-    def _organize_query_result(self):
-        """
-        Organize the query result.
-
-        Returns:
-            dict, the query result.
-        """
-        self._display_col_names = self._col_names_in_result[:]
-        return super()._organize_query_result()
 
     def _convert_field_type(self, row):
         """

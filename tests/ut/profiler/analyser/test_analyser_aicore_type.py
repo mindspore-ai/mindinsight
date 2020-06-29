@@ -21,8 +21,6 @@ from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
 
 COL_NAMES = ['op_type', 'execution_time', 'execution_frequency', 'percent']
-COL_NAMES_IN_RESULT = ['op_type', 'execution_time (ms)', 'execution_frequency',
-                       'percent']
 
 
 def get_type_infos(indexes=None, sort_name=None, sort_type=True):
@@ -74,7 +72,7 @@ class TestAicoreTypeAnalyser(TestCase):
     def test_query_success_1(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(),
             'size': 5
         }
@@ -88,7 +86,7 @@ class TestAicoreTypeAnalyser(TestCase):
     def test_query_success_2(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(indexes=[1]),
             'size': 1
         }
@@ -103,7 +101,7 @@ class TestAicoreTypeAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(indexes=[0, 2, 3, 4]),
             'size': 4
         }
@@ -118,7 +116,7 @@ class TestAicoreTypeAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(indexes=[0, 1, 3]),
             'size': 3
         }
@@ -135,7 +133,7 @@ class TestAicoreTypeAnalyser(TestCase):
     def test_query_success_3(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(indexes=[1, 3]),
             'size': 2
         }
@@ -150,7 +148,7 @@ class TestAicoreTypeAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(indexes=[0, 2, 4]),
             'size': 3
         }
@@ -165,7 +163,7 @@ class TestAicoreTypeAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(indexes=[2, 3]),
             'size': 2
         }
@@ -182,7 +180,7 @@ class TestAicoreTypeAnalyser(TestCase):
     def test_query_success_4(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(sort_name='op_type', sort_type=True),
             'size': 5}
         condition = {
@@ -195,7 +193,7 @@ class TestAicoreTypeAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(sort_name='execution_time', sort_type=False),
             'size': 5
         }
@@ -211,7 +209,7 @@ class TestAicoreTypeAnalyser(TestCase):
     def test_query_success_5(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(indexes=[0, 1]),
             'size': 5
         }
@@ -225,7 +223,7 @@ class TestAicoreTypeAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(indexes=[3, 4]),
             'size': 5
         }
@@ -241,7 +239,7 @@ class TestAicoreTypeAnalyser(TestCase):
     def test_query_success_6(self):
         """Test the success of the querying function."""
         expect_result = {
-            'col_name': COL_NAMES_IN_RESULT,
+            'col_name': COL_NAMES,
             'object': get_type_infos(
                 indexes=[1, 3], sort_name='execution_time', sort_type=True
             ),
