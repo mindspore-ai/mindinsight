@@ -296,7 +296,7 @@ def validate_minddata_pipeline_condition(condition):
             elif key == 'op_type':
                 validate_op_filter_condition(value)
             elif key == 'is_display_op_detail':
-                if not isinstance(key, bool):
+                if not isinstance(value, bool):
                     raise ProfilerFilterConditionException(
                         "The condition must be bool."
                     )
