@@ -65,7 +65,7 @@ Figure 2 displays the Step Trace page. The Step Trace detail will show the start
 can also choose a specific step to see its step trace statistics. The graphs at the bottom of the page show how the execution time of Step Gap, Forward/Backward Propagation and
 Step Tail changes according to different steps, it will help to decide whether we can optimize the performance of some stages.
 
-*Notice:* MindSpore choose the Foward Start/Backward End Operators automatically, The names of the two operators are shown on the page. Profiler do not guarantee that the two operators are
+*Notice:* MindSpore choose the Forward Start/Backward End Operators automatically, The names of the two operators are shown on the page. Profiler do not guarantee that the two operators are
 always chosen as the user's expectation. Users can choose the two operators according to the execution graph, and specify the them manually by setting the `FP_POINT` and `BP_POINT` environment variables.
 For example: `export FP_POINT=fp32_vars/conv2d/conv2Dfp32_vars/BatchNorm/FusedBatchNorm_Reduce` and `export BP_POINT=loss_scale/gradients/AddN_70`. 
 
@@ -137,6 +137,17 @@ The Timeline component can display：
 - The operators (AICore/AICPU operators) are executed on which device;
 - The MindSpore stream split strategy for this neural network;
 - The time of tasks executed on the device.
+
+How to view the timeline:
+
+To view the detailed information of the timeline, you can click the "Download" button to save the file with the timeline information locally, and then view it through the tool.
+
+We recommend you to use Google plugin: chrome://tracing, or Perfetto tool: https://ui.perfetto.dev/#!viewer.
+
+- Select one of the tools mentioned above, enter the address in the browser and press Enter;
+- After entered the page, click the button to load the file to view the timeline.
+- For chrome tracing, using "load" button in the upper left corner.
+- For Perfetto, using "Open trace file" in the left column.
 
 Users can get the most detailed information from the Timeline:
 
