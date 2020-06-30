@@ -818,7 +818,7 @@ export default {
             required: false,
           },
           batch_size: {
-            label: 'steps_per_epoch',
+            label: 'batch_size',
             required: false,
           },
           device_num: {
