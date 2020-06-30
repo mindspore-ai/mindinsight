@@ -259,6 +259,7 @@ export default {
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
+      yAxisScaleTimer: null, // yAxis scale timer
       compare: false, // Comparison Page
       scalarCompare: this.$t('scalar')['comparison'],
       abort: false, // charts that have not been drawn.
@@ -369,6 +370,10 @@ export default {
     if (this.axisBenchChangeTimer) {
       clearTimeout(this.axisBenchChangeTimer);
       this.axisBenchChangeTimer = null;
+    }
+    if (this.yAxisScaleTimer) {
+      clearTimeout(this.yAxisScaleTimer);
+      this.yAxisScaleTimer = null;
     }
   },
   mounted() {
@@ -576,6 +581,7 @@ export default {
               if (!res || !res.data || !res.data.metadatas) {
                 if (sampleObject.charObj) {
                   sampleObject.charObj.clear();
+                  sampleObject.onePoint = false;
                 }
                 return;
               }
@@ -641,6 +647,15 @@ export default {
               sampleObject.charData.charOption = this.formateCharOption(
                   sampleIndex,
               );
+              const tempOption = sampleObject.charData.charOption;
+              if (
+                tempOption.series[0].data.length === 1 ||
+              sampleObject.onePoint
+              ) {
+                tempOption.series[0].showSymbol = true;
+              } else {
+                tempOption.series[0].showSymbol = false;
+              }
 
               this.$forceUpdate();
 
@@ -648,41 +663,9 @@ export default {
                 if (sampleObject.charObj) {
                   sampleObject.charObj.hideLoading();
                 }
-
                 // Draw chart
                 if (!this.compare) {
-                  this.updateOrCreateChar(sampleIndex);
-
-                  this.getCache();
-                  if (
-                    this.thresholdLocal &&
-                  this.thresholdLocal[this.decodeTrainingJobId] &&
-                  this.thresholdLocal[this.decodeTrainingJobId][
-                      sampleObject.tagName
-                  ]
-                  ) {
-                    const tempStorgeArr = JSON.parse(
-                        JSON.stringify(
-                            this.thresholdLocal[this.decodeTrainingJobId][
-                                sampleObject.tagName
-                            ],
-                        ),
-                    );
-                    let pieceStr = '';
-                    pieceStr = this.formatePieceStr(tempStorgeArr);
-                    sampleObject.pieceStr = pieceStr;
-
-                    tempStorgeArr.forEach((item) => {
-                      item.color = this.thresholdColor;
-                    });
-
-                    if (sampleObject.charObj) {
-                      this.setVisualMap(sampleObject, tempStorgeArr);
-                    }
-                  } else {
-                    sampleObject.pieceStr = '';
-                    sampleObject.charData.charOption.series[0].markLine = false;
-                  }
+                  this.updateOrCreateChar(sampleIndex, true);
                 } else {
                   this.abort = true;
                 }
@@ -693,6 +676,99 @@ export default {
                 sampleObject.charObj.clear();
               }
             });
+      });
+    },
+
+    /**
+     * set one point style
+     * @param {Object} sampleObject
+     */
+
+    setOnePoint(sampleObject) {
+      const that = this;
+      sampleObject.charObj.on('datazoom', function(params) {
+        const xAxisObject = params.batch[0];
+        const yAxisObject = params.batch[1];
+        const charData = sampleObject.charData.charOption.series[0].data;
+        const tempCharOption = sampleObject.charData.charOption;
+        // one point
+        if (charData.length === 1) {
+          sampleObject.onePoint = true;
+          tempCharOption.series[0].showSymbol = true;
+          sampleObject.charObj.setOption(tempCharOption, false);
+          return;
+        }
+        let filtetArr = [];
+        for (let i = 0; i < charData.length; i++) {
+          if (
+            Math.ceil(charData[i][0] * 10000) / 10000 >=
+              xAxisObject.startValue &&
+            Math.floor(charData[i][0] * 10000) / 10000 <=
+              xAxisObject.endValue &&
+            Math.ceil(charData[i][1] * 10000) / 10000 >=
+              yAxisObject.startValue &&
+            Math.floor(charData[i][1] * 10000) / 10000 <= yAxisObject.endValue
+          ) {
+            filtetArr.push(charData[i]);
+            if (filtetArr.length > 1) {
+              filtetArr = [];
+              break;
+            }
+          }
+        }
+        if (filtetArr.length === 1) {
+          sampleObject.onePoint = true;
+          tempCharOption.series[0].showSymbol = true;
+        } else {
+          sampleObject.onePoint = false;
+          tempCharOption.series[0].showSymbol = false;
+        }
+
+        if (
+          tempCharOption.visualMap &&
+          tempCharOption.visualMap['pieces'] &&
+          tempCharOption.visualMap['pieces'].length > 0
+        ) {
+          tempCharOption.visualMap = null;
+          tempCharOption.series[0].markLine = null;
+          that.updateVisualMap(sampleObject);
+        } else {
+          sampleObject.charObj.setOption(tempCharOption, false);
+        }
+      });
+    },
+
+    /**
+     * set restore
+     * @param {Object} sampleObject
+     */
+
+    setRestore(sampleObject) {
+      const that = this;
+      sampleObject.charObj.on('restore', function(params) {
+        const charData = sampleObject.charData.charOption.series[0].data;
+        const tempCharOption = sampleObject.charData.charOption;
+
+        // one point
+        if (charData.length === 1) {
+          sampleObject.onePoint = true;
+          tempCharOption.series[0].showSymbol = true;
+          sampleObject.charObj.setOption(tempCharOption, false);
+          return;
+        }
+        sampleObject.onePoint = false;
+        tempCharOption.series[0].showSymbol = false;
+        if (
+          tempCharOption.visualMap &&
+          tempCharOption.visualMap['pieces'] &&
+          tempCharOption.visualMap['pieces'].length > 0
+        ) {
+          tempCharOption.visualMap = null;
+          tempCharOption.series[0].markLine = null;
+          that.updateVisualMap(sampleObject);
+        } else {
+          sampleObject.charObj.setOption(tempCharOption, false);
+        }
       });
     },
 
@@ -822,7 +898,6 @@ export default {
               width: 2,
             },
           },
-
           axisLabel: {
             color: '#9EA4B3',
             formatter(value) {
@@ -968,7 +1043,8 @@ export default {
                   strBody +=
                     `<tr><td style="border-radius:50%;width:15px;height:15px;vertical-align: middle;` +
                     `margin-right: 5px;background-color:${
-                      parma.color === that.thresholdColor
+                      parma.color === that.thresholdColor &&
+                      sampleObject.charData.charOption.visualMap
                         ? that.thresholdColor
                         : sampleObject.colors
                     };` +
@@ -1054,12 +1130,46 @@ export default {
     },
 
     /**
-     * Updating or Creating a Specified chart
-     * @param {Number} sampleIndex Chart subscript
-     * @param {Boolen} resetAnimate restart the animation
+     * update visualMap
+     * @param {Object} sampleObject
      */
 
-    updateOrCreateChar(sampleIndex, resetAnimate) {
+    updateVisualMap(sampleObject) {
+      this.getCache();
+      if (
+        this.thresholdLocal &&
+        this.thresholdLocal[this.decodeTrainingJobId] &&
+        this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
+      ) {
+        const tempStorgeArr = JSON.parse(
+            JSON.stringify(
+                this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName],
+            ),
+        );
+        let pieceStr = '';
+        pieceStr = this.formatePieceStr(tempStorgeArr);
+        sampleObject.pieceStr = pieceStr;
+
+        tempStorgeArr.forEach((item) => {
+          item.color = this.thresholdColor;
+        });
+
+        if (sampleObject.charObj) {
+          this.setVisualMap(sampleObject, tempStorgeArr);
+        }
+      } else {
+        sampleObject.pieceStr = '';
+        sampleObject.charData.charOption.series[0].markLine = null;
+      }
+    },
+
+    /**
+     * Updating or Creating a Specified chart
+     * @param {Number} sampleIndex Chart subscript
+     * @param {Boolean} isSetVisualMap isSetVisualMap
+     */
+
+    updateOrCreateChar(sampleIndex, isSetVisualMap) {
       const sampleObject = this.originDataArr[sampleIndex];
       if (!sampleObject) {
         return;
@@ -1081,11 +1191,11 @@ export default {
             null,
         );
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
+        this.setOnePoint(sampleObject);
+        this.setRestore(sampleObject);
       }
-
-      // if run's display reopen the animation
-      if (resetAnimate) {
-        sampleObject.charData.charOption.animation = true;
+      if (isSetVisualMap) {
+        this.updateVisualMap(sampleObject);
       }
     },
 
@@ -1206,6 +1316,14 @@ export default {
               this.isActive === 2 ? 0 : 90;
             sampleObject.updateFlag = true;
             sampleObject.charObj.clear();
+
+            if (sampleObject.charData.charOption.series[0].data.length === 1) {
+              sampleObject.charData.charOption.series[0].showSymbol = true;
+              sampleObject.onePoint = true;
+            } else {
+              sampleObject.charData.charOption.series[0].showSymbol = false;
+              sampleObject.onePoint = false;
+            }
             this.updateOrCreateChar(sampleObject.sampleIndex);
           }
         });
@@ -1633,80 +1751,75 @@ export default {
      */
 
     yAxisScale(sampleIndex) {
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
+      if (this.yAxisScaleTimer) {
+        clearTimeout(this.yAxisScaleTimer);
+        this.yAxisScaleTimer = null;
+      }
       const sampleObject = this.originDataArr[sampleIndex];
       if (!sampleObject) {
         return;
       }
-      const log = !sampleObject.log;
-      if (log) {
-        sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
-          '#3E98C5';
-        sampleObject.charData.charOption.yAxis.type = 'log';
-      } else {
-        sampleObject.charData.charOption.yAxis.type = 'value';
-        sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
-          '#666';
-      }
-      sampleObject.charData.oriData.forEach((originData, index) => {
+      this.yAxisScaleTimer = setTimeout(() => {
+        const log = !sampleObject.log;
         if (log) {
-          sampleObject.charData.charOption.series[
-              index * 2
-          ].data = this.formateSmoothData(
-              sampleObject.charData.oriData[index].logData[this.curBenchX],
-          );
-          sampleObject.charData.charOption.series[index * 2 + 1].data =
-            sampleObject.charData.oriData[index].logData[this.curBenchX];
+          sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
+            '#3E98C5';
+          sampleObject.charData.charOption.yAxis.type = 'log';
         } else {
-          sampleObject.charData.charOption.series[
-              index * 2
-          ].data = this.formateSmoothData(
-              sampleObject.charData.oriData[index].valueData[this.curBenchX],
-          );
-          sampleObject.charData.charOption.series[index * 2 + 1].data =
-            sampleObject.charData.oriData[index].valueData[this.curBenchX];
+          sampleObject.charData.charOption.yAxis.type = 'value';
+          sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
+            '#666';
         }
-      });
-      sampleObject.log = log;
-      sampleObject.updateFlag = true;
-      sampleObject.charObj.clear();
-
-      const tempOption = sampleObject.charData.charOption;
-      if (
-        tempOption.visualMap &&
-        tempOption.visualMap['pieces'] &&
-        tempOption.visualMap['pieces'].length > 0
-      ) {
-        tempOption.visualMap = null;
-        tempOption.series[0].markLine = null;
-        sampleObject.charObj.setOption(tempOption, true);
-
-        this.getCache();
-        if (
-          this.thresholdLocal &&
-          this.thresholdLocal[this.decodeTrainingJobId] &&
-          this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
-        ) {
-          const tempStorgeArr = JSON.parse(
-              JSON.stringify(
-                  this.thresholdLocal[this.decodeTrainingJobId][
-                      sampleObject.tagName
-                  ],
-              ),
-          );
-          tempStorgeArr.forEach((item) => {
-            item.color = this.thresholdColor;
-          });
-
-          if (sampleObject.charObj) {
-            this.setVisualMap(sampleObject, tempStorgeArr);
+        sampleObject.charData.oriData.forEach((originData, index) => {
+          if (log) {
+            sampleObject.charData.charOption.series[
+                index * 2
+            ].data = this.formateSmoothData(
+                sampleObject.charData.oriData[index].logData[this.curBenchX],
+            );
+            sampleObject.charData.charOption.series[index * 2 + 1].data =
+              sampleObject.charData.oriData[index].logData[this.curBenchX];
+          } else {
+            sampleObject.charData.charOption.series[
+                index * 2
+            ].data = this.formateSmoothData(
+                sampleObject.charData.oriData[index].valueData[this.curBenchX],
+            );
+            sampleObject.charData.charOption.series[index * 2 + 1].data =
+              sampleObject.charData.oriData[index].valueData[this.curBenchX];
           }
+        });
+        sampleObject.log = log;
+        sampleObject.updateFlag = true;
+        sampleObject.charObj.clear();
+
+        const tempOption = sampleObject.charData.charOption;
+        const dataObj = tempOption.series[0];
+
+        // one point
+        if (dataObj.data.length === 1) {
+          tempOption.series[0].showSymbol = true;
+          sampleObject.onePoint = true;
         } else {
-          sampleObject.pieceStr = '';
-          sampleObject.charData.charOption.series[0].markLine = false;
+          tempOption.series[0].showSymbol = false;
+          sampleObject.onePoint = false;
         }
-      } else {
-        this.updateOrCreateChar(sampleIndex);
-      }
+        if (
+          tempOption.visualMap &&
+          tempOption.visualMap['pieces'] &&
+          tempOption.visualMap['pieces'].length > 0
+        ) {
+          tempOption.visualMap = null;
+          tempOption.series[0].markLine = null;
+          sampleObject.charObj.setOption(tempOption, true);
+          this.updateVisualMap(sampleObject);
+        } else {
+          this.updateOrCreateChar(sampleIndex);
+        }
+      }, 500);
     },
 
     /**
@@ -1814,13 +1927,12 @@ export default {
             ) {
               tempCharOption.visualMap = null;
               tempCharOption.series[0].markLine = null;
-              tempCharOption.series[0].lineStyle.color = sampleItem.colors;
+              tempCharOption.series[0].lineStyle['color'] = sampleItem.colors;
             }
-            sampleItem.charObj.setOption(tempCharOption, true);
+            sampleItem.charObj.setOption(tempCharOption, false);
             if (this.isTimeReload) {
               this.autoUpdateSamples();
             }
-            this.$forceUpdate();
           })
           .catch(() => {
             if (this.isTimeReload) {
