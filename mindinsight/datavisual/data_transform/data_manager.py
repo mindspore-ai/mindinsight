@@ -149,10 +149,13 @@ class CachedTrainJob:
         """Set value to cache."""
         self._content[key] = value
 
-    def delete(self, key):
+    def delete(self, key, raise_exception=True):
         """Delete key in cache."""
-        if key in self._content:
+        try:
             self._content.pop(key)
+        except KeyError:
+            if raise_exception:
+                raise ParamValueError("Delete failed. Invalid cache key({}).".format(key))
 
     def get(self, key, raise_exception=True):
         """

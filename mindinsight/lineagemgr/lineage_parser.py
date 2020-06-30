@@ -123,17 +123,9 @@ class LineageParser:
             bool, `True` if parse summary log success, else `False`.
         """
         file_path = os.path.realpath(os.path.join(self._summary_dir, self._latest_filename))
-        try:
-            lineage_info = LineageSummaryAnalyzer.get_summary_infos(file_path)
-            user_defined_info = LineageSummaryAnalyzer.get_user_defined_info(file_path)
-            self._update_lineage_obj(lineage_info, user_defined_info)
-        except LineageSummaryAnalyzeException:
-            logger.warning("Parse file failed under summary_dir %s.", file_path)
-        except (LineageEventNotExistException, LineageEventFieldNotExistException) as error:
-            logger.warning("Parse file failed under summary_dir %s. Detail: %s.", file_path, str(error))
-        except MindInsightException as error:
-            logger.exception(error)
-            logger.warning("Parse file failed under summary_dir %s.", file_path)
+        lineage_info = LineageSummaryAnalyzer.get_summary_infos(file_path)
+        user_defined_info = LineageSummaryAnalyzer.get_user_defined_info(file_path)
+        self._update_lineage_obj(lineage_info, user_defined_info)
 
     def _update_lineage_obj(self, lineage_info, user_defined_info):
         """Update lineage object."""
@@ -197,6 +189,13 @@ class LineageOrganizer:
                     self._super_lineage_objs.update({abs_summary_dir: super_lineage_obj})
             except LineageFileNotFoundError:
                 no_lineage_count += 1
+            except (LineageSummaryAnalyzeException,
+                    LineageEventNotExistException,
+                    LineageEventFieldNotExistException) as error:
+                logger.warning("Parse file failed under summary_dir %s. Detail: %s.", relative_dir, str(error))
+            except MindInsightException as error:
+                logger.exception(error)
+                logger.warning("Parse file failed under summary_dir %s.", relative_dir)
 
         if no_lineage_count == len(relative_dirs):
             logger.info('There is no summary log file under summary_base_dir.')
@@ -215,7 +214,7 @@ class LineageOrganizer:
                 super_lineage_obj = cache_train_job.get("lineage").super_lineage_obj
                 self._super_lineage_objs.update({relative_dir: super_lineage_obj})
             except ParamValueError:
-                logger.info("This is no lineage info in train job %s.", relative_dir)
+                logger.debug("This is no lineage info in train job %s.", relative_dir)
 
     @property
     def super_lineage_objs(self):
