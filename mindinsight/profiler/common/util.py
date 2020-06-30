@@ -35,16 +35,24 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
     Returns:
         list, the device_id list.
     """
+    profiler_file_prefix = ["timeline_display", "output_op_compute_time"]
+
     device_id_list = set()
     for _, _, filenames in os.walk(profiler_dir):
         for filename in filenames:
-            profiler_file_prefix = ["output_op_compute_time", "output_data_preprocess_aicpu"]
-            items = filename.split("_")
-            device_num = items[-1].split(".")[0] if items[-1].split(".") else ""
+            if filename.startswith("step_trace_raw"):
+                items = filename.split("_")
+                device_num = ""
+                if len(items) > 3:
+                    device_num = items[3]
+            else:
+                items = filename.split("_")
+                device_num = items[-1].split(".")[0] if items[-1].split(".") else ""
+
             if device_num.isdigit() and '_'.join(items[:-1]) in profiler_file_prefix:
                 device_id_list.add(device_num)
 
-    return list(device_id_list)
+    return sorted(list(device_id_list))
 
 
 def query_latest_trace_time_file(profiler_dir, device_id=0):
