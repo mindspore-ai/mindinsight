@@ -420,7 +420,7 @@ export default {
         this.$t('modelTraceback.testSampleNum'),
         this.$t('modelTraceback.learningRate'),
         'epoch',
-        'steps_per_epoch',
+        'batch_size',
         this.$t('modelTraceback.deviceNum'),
         this.$t('modelTraceback.modelSize'),
         this.$t('modelTraceback.lossFunc'),
@@ -469,7 +469,7 @@ export default {
             label: 'epoch',
           },
           batch_size: {
-            label: 'steps_per_epoch',
+            label: 'batch_size',
           },
           device_num: {
             label: this.$t('modelTraceback.deviceNum'),
