@@ -226,7 +226,7 @@ class SummaryWatcher:
         elif entry.is_dir():
             profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
             full_dir_path = os.path.join(summary_base_dir, relative_path, entry.name)
-            if profiler_pattern is None or self._is_empty_directory(full_dir_path):
+            if profiler_pattern is None or not self._is_valid_profiler_directory(full_dir_path):
                 return
 
             profiler = {
@@ -286,19 +286,19 @@ class SummaryWatcher:
             profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
             if profiler_pattern is not None and entry.is_dir():
                 full_path = os.path.realpath(os.path.join(summary_directory, entry.name))
-                if not self._is_empty_directory(full_path):
+                if self._is_valid_profiler_directory(full_path):
                     return True
 
         return False
 
-    def _is_empty_directory(self, directory):
+    def _is_valid_profiler_directory(self, directory):
         try:
-            count = len(os.listdir(directory))
-        except FileNotFoundError:
-            logger.warning('Directory %s not found.', directory)
-            count = 0
+            from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
+            device_list = analyse_device_list_from_profiler_dir(directory)
+        except ImportError:
+            device_list = []
 
-        return not bool(count)
+        return bool(device_list)
 
     def list_summary_directories_by_pagination(self, summary_base_dir, offset=0, limit=10):
         """
