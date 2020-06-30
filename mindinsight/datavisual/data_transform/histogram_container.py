@@ -225,7 +225,10 @@ class HistogramContainer:
                 intersection = self._calc_intersection_len(
                     min1=cur_left, max1=cur_right,
                     min2=original_bucket.left, max2=original_bucket.right)
-                estimated_count = (intersection / original_bucket.width) * original_bucket.count
+                if not original_bucket.width:
+                    estimated_count = original_bucket.count
+                else:
+                    estimated_count = (intersection / original_bucket.width) * original_bucket.count
 
                 cur_estimated_count += estimated_count
                 if cur_right > original_bucket.right:
