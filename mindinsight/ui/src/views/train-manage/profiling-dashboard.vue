@@ -923,7 +923,7 @@ export default {
       this.timeLine.waiting = true;
       RequestService.queryTimeline(params)
           .then((res) => {
-            if (res && res.data) {
+            if (res && res.data && res.data.length) {
               this.timeLine.data = this.stringToUint8Array(
                   JSON.stringify(res.data),
               );
