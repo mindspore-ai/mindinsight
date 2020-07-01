@@ -75,7 +75,7 @@ class TimelineAnalyser(BaseAnalyser):
             try:
                 with open(file_path, 'r') as f_obj:
                     timeline = json.load(f_obj)
-            except (IOError, OSError) as err:
+            except (IOError, OSError, json.JSONDecodeError) as err:
                 logger.error('Error occurred when read timeline display file: %s', err)
                 raise ProfilerIOException
         else:
@@ -104,7 +104,7 @@ class TimelineAnalyser(BaseAnalyser):
             try:
                 with open(file_path, 'r') as f_obj:
                     timeline_summary = json.load(f_obj)
-            except (IOError, OSError) as err:
+            except (IOError, OSError, json.JSONDecodeError) as err:
                 logger.error('Error occurred when read timeline summary file: %s', err)
                 raise ProfilerIOException
 
@@ -128,13 +128,16 @@ class TimelineAnalyser(BaseAnalyser):
             display_file_path, raise_key='Invalid timeline display json path.'
         )
 
+        length = len(self._timeline_meta)
         try:
             with open(display_file_path, 'w') as json_file:
                 json_file.write('[')
-                for item in self._timeline_meta:
+                for index, item in enumerate(self._timeline_meta):
                     json.dump(item, json_file)
                     file_size = os.path.getsize(display_file_path)
                     if file_size > SIZE_LIMIT:
+                        break
+                    if index == length - 1:
                         break
                     json_file.write(',')
                 json_file.write(']')
