@@ -363,41 +363,81 @@ export default {
      * Initializing the Zoom Function of a Graph
      */
     initZooming() {
-      const graphDom = document.querySelector('#graph0');
+      const svgDom = document.querySelector('#graph svg');
+      const svgRect = svgDom.getBoundingClientRect();
+
+      const graphDom = document.querySelector('#graph #graph0');
       const graphBox = graphDom.getBBox();
+      const graphRect = graphDom.getBoundingClientRect();
+      let graphTransform = {};
+
+      const minScale = Math.min(
+          svgRect.width / 2 / graphRect.width,
+          svgRect.height / 2 / graphRect.height,
+      );
+
       const padding = 4;
-      const pointer = {
-        start: {
-          x: 0,
-          y: 0,
-        },
-        end: {
-          x: 0,
-          y: 0,
-        },
-      };
+      const minDistance = 50;
+      const pointer = {start: {x: 0, y: 0}, end: {x: 0, y: 0}};
+
       const zoom = d3
           .zoom()
-          .on('start', (target) => {
+          .on('start', () => {
             pointer.start.x = event.x;
             pointer.start.y = event.y;
           })
-          .on('zoom', (target) => {
+          .on('zoom', () => {
             const transformData = this.getTransformData(graphDom);
+            if (!Object.keys(graphTransform).length) {
+              graphTransform = {
+                x: transformData.translate[0],
+                y: transformData.translate[1],
+                k: transformData.scale[0],
+              };
+            }
+
             let tempStr = '';
             let change = {};
             let scale = transformData.scale[0];
             const graphRect = graphDom.getBoundingClientRect();
-            const mapping = {
-              width: graphBox.width / graphRect.width,
-              height: graphBox.height / graphRect.height,
-            };
+            const transRate = graphBox.width / graphRect.width;
             if (event.type === 'mousemove') {
               pointer.end.x = event.x;
               pointer.end.y = event.y;
+              let tempX = pointer.end.x - pointer.start.x;
+              let tempY = pointer.end.y - pointer.start.y;
+              const paddingTrans = Math.max(
+                  (padding / transRate) * scale,
+                  minDistance,
+              );
+              if (
+                graphRect.left + paddingTrans + tempX >=
+              svgRect.left + svgRect.width
+              ) {
+                tempX = Math.min(tempX, 0);
+              }
+              if (
+                graphRect.left + graphRect.width - paddingTrans + tempX <=
+              svgRect.left
+              ) {
+                tempX = Math.max(tempX, 0);
+              }
+              if (
+                graphRect.top + paddingTrans + tempY >=
+              svgRect.top + svgRect.height
+              ) {
+                tempY = Math.min(tempY, 0);
+              }
+              if (
+                graphRect.top + graphRect.height - paddingTrans + tempY <=
+              svgRect.top
+              ) {
+                tempY = Math.max(tempY, 0);
+              }
+
               change = {
-                x: (pointer.end.x - pointer.start.x) * mapping.width * scale,
-                y: (pointer.end.y - pointer.start.y) * mapping.height * scale,
+                x: tempX * transRate * scale,
+                y: tempY * transRate * scale,
               };
               pointer.start.x = pointer.end.x;
               pointer.start.y = pointer.end.y;
@@ -408,29 +448,42 @@ export default {
               wheelDelta > 0
                 ? transformData.scale[0] * rate
                 : transformData.scale[0] / rate;
-              scale = Math.max(this.scaleRange[0], scale);
+
+              scale = Math.max(this.scaleRange[0], scale, minScale);
               scale = Math.min(this.scaleRange[1], scale);
               change = {
                 x:
-                (graphRect.x + padding / mapping.width - event.x) *
-                mapping.width *
+                (graphRect.x + padding / transRate - event.x) *
+                transRate *
                 (scale - transformData.scale[0]),
                 y:
-                (graphRect.bottom - padding / mapping.height - event.y) *
-                mapping.height *
+                (graphRect.bottom - padding / transRate - event.y) *
+                transRate *
                 (scale - transformData.scale[0]),
               };
             }
-            tempStr = `translate(${transformData.translate[0] +
-            change.x},${transformData.translate[1] +
-            change.y}) scale(${scale})`;
+
+            graphTransform = {
+              x: transformData.translate[0] + change.x,
+              y: transformData.translate[1] + change.y,
+              k: scale,
+            };
+
+            tempStr = `translate(${graphTransform.x},${graphTransform.y}) scale(${graphTransform.k})`;
             graphDom.setAttribute('transform', tempStr);
+            event.stopPropagation();
+            event.preventDefault();
           });
 
-      const svg = d3.select('svg');
+      const svg = d3.select('#graph svg');
       svg.on('.zoom', null);
       svg.call(zoom);
       svg.on('dblclick.zoom', null);
+      svg.on('wheel.zoom', null);
+
+      const graph0 = d3.select('#graph #graph0');
+      graph0.on('.zoom', null);
+      graph0.call(zoom);
     },
     /**
      * Obtains the transform data of a node.
