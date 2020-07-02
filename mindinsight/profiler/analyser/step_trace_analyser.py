@@ -69,7 +69,7 @@ class StepTraceAnalyser(BaseAnalyser):
 
         return self._result
 
-    def query_for_all_reduce(self, min_cycle_counter):
+    def query_for_all_reduce(self):
         """
         Query for all reduce info.
 
@@ -81,7 +81,7 @@ class StepTraceAnalyser(BaseAnalyser):
         reduce_infos = []
         for row_info in self._data[:-1]:
             row_info_dict = self._get_info_dict_from_row_data(row_info, 'systime')
-            reduce_info = self._sort_reduce_by_time(row_info_dict, min_cycle_counter)
+            reduce_info = self._sort_reduce_by_time(row_info_dict)
             if reduce_info:
                 reduce_infos.append(reduce_info)
 
@@ -252,13 +252,12 @@ class StepTraceAnalyser(BaseAnalyser):
             reduce_events.sort(key=lambda elem: elem[1])
         return reduce_info
 
-    def _sort_reduce_by_time(self, row_info_dict, min_cycle_counter):
+    def _sort_reduce_by_time(self, row_info_dict):
         """
         Sort reduce info by time.
 
         Args:
             row_info_dict (dict): Step trace information.
-            min_cycle_counter (int): The minimum cycle counter.
 
         Returns:
             list, including the all reduce info sorted by start time only.
@@ -275,7 +274,7 @@ class StepTraceAnalyser(BaseAnalyser):
                          if field_name.startswith('stream_') and not field_name.endswith('point')]
         for reduce_field in reduce_fields:
             reduce_start = row_info_dict.get(reduce_field + '_start_point')
-            reduce_start = (reduce_start - min_cycle_counter) / factor \
+            reduce_start = reduce_start / factor \
                 if reduce_start else 0
             reduce_duration = row_info_dict.get(reduce_field)
             reduce_duration = reduce_duration / factor if reduce_duration else 0

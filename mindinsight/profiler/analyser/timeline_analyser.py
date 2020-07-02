@@ -189,7 +189,7 @@ class TimelineAnalyser(BaseAnalyser):
 
         return timeline_list
 
-    def _parse_timeline_data(self, timeline):
+    def _parse_timeline_data(self, timeline, min_cycle_counter):
         """Parse timeline data."""
         # factor to convert the time unit from 1ms to 1us for timeline display
         factor = 1000
@@ -198,15 +198,15 @@ class TimelineAnalyser(BaseAnalyser):
         timeline_dict['name'] = op_meta.op_name
         timeline_dict['ph'] = 'X'
         timeline_dict['tid'] = op_meta.stream_id
-        timeline_dict['ts'] = op_meta.start_time * factor
+        timeline_dict['ts'] = (op_meta.start_time - min_cycle_counter) * factor
         dur = op_meta.duration * factor
         timeline_dict['dur'] = dur
-        if op_meta.pid == 10000:  # AllReduce PID
-            timeline_dict['pid'] = 10000
-        else:
+        if op_meta.pid is None:
             timeline_dict['pid'] = int(self._device_id)
             # Update total time of operator execution.
             self._timeline_summary['total_time'] += dur
+        else:  # AllReduce and AI CPU pid
+            timeline_dict['pid'] = op_meta.pid
         self._timeline_meta.append(timeline_dict)
 
     @staticmethod
@@ -249,14 +249,19 @@ class TimelineAnalyser(BaseAnalyser):
 
         return min_cycle_counter
 
-    def init_timeline(self, all_reduce_info, framework_info):
+    def init_timeline(self, all_reduce_info, framework_info, aicpu_info, min_cycle_counter):
         """
         Init timeline metadata, adding all collected info.
 
         Args:
             all_reduce_info (list[list]): The metadata of AllReduce operator.
             framework_info (dict): The framework metadata.
+            aicpu_info (dict): The metadata of AI CPU operator.
+            min_cycle_counter (float): The minimum cycle counter of the timeline.
         """
+        if min_cycle_counter == float('inf'):
+            min_cycle_counter = 0
+
         logger.info('Initiating timeline...')
         timeline_list = self._load_timeline_data()
         self._timeline_summary['op_exe_times'] = len(timeline_list)
@@ -267,10 +272,20 @@ class TimelineAnalyser(BaseAnalyser):
             timeline_list.extend(all_reduce_info)
             timeline_list.sort(key=lambda x: float(x[2]))
 
+        # Add AI CPU data into timeline temp list and sort by start time.
+        aicpu_data = aicpu_info.get('info')
+        if aicpu_data:
+            timeline_list.extend(aicpu_data)
+            timeline_list.sort(key=lambda x: float(x[2]))
+            self._timeline_summary['op_exe_times'] += aicpu_info.get('op_exe_times', 0)
+            self._timeline_summary['num_of_streams'] += aicpu_info.get('num_of_streams', 0)
+            self._timeline_summary['num_of_ops'] += aicpu_info.get('num_of_ops', 0)
+            self._timeline_summary['total_time'] += aicpu_info.get('total_time', 0)
+
         # Init a dict for counting the num of streams.
         stream_count_dict = {}
         for timeline in timeline_list:
-            self._parse_timeline_data(timeline)
+            self._parse_timeline_data(timeline, min_cycle_counter)
             # Updating the collection of streams.
             if len(timeline) == 4:
                 self._update_num_of_streams(timeline, stream_count_dict)
@@ -278,12 +293,12 @@ class TimelineAnalyser(BaseAnalyser):
         # Get framework metadata.
         framework_obj_list = framework_info.get('object')
         # The length of list is the number of operators.
-        self._timeline_summary['num_of_ops'] = len(framework_obj_list)
+        self._timeline_summary['num_of_ops'] += len(framework_obj_list)
         self._add_framework_info(framework_obj_list)
         logger.info('Finished adding info into timeline...')
 
         # Update timeline summary info
-        self._timeline_summary['num_of_streams'] = len(stream_count_dict.keys())
+        self._timeline_summary['num_of_streams'] += len(stream_count_dict.keys())
 
     def _add_framework_info(self, framework_obj_list):
         """

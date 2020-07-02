@@ -48,6 +48,8 @@ class DataPreProcessParser:
         self._thread_flag = 7
         self._ms_kernel_run_end_index = 2
         self._other_kernel_run_end_index = 5
+        self._result_list = []
+        self._min_cycle_counter = float('inf')
 
     def _get_source_file(self):
         """Get log file name, which was created by ada service."""
@@ -129,3 +131,52 @@ class DataPreProcessParser:
                           data_source=tabulate(result_list, self._dst_file_column_title,
                                                tablefmt='simple'),
                           is_start=True, is_print=True)
+
+        # For timeline display.
+        self._result_list = result_list
+
+    def query_aicpu_data(self):
+        """
+        Get execution time of AI CPU operator.
+
+        Returns:
+            a dict, the metadata of AI CPU operator execution time.
+        """
+        stream_id = 0  # Default stream id for AI CPU.
+        pid = 9000  # Default pid for AI CPU.
+        factor = 1000  # Convert time unit from 1us to 1ms
+        total_time = 0
+        min_cycle_counter = float('inf')
+        aicpu_info = []
+        op_count_list = []
+        for aicpu_item in self._result_list:
+            if "AI CPU Total Time(ms):" in aicpu_item:
+                total_time = aicpu_item[-1]
+                continue
+
+            op_name = aicpu_item[1]
+            start_time = float(aicpu_item[4]) / factor
+            min_cycle_counter = min(min_cycle_counter, start_time)
+            end_time = float(aicpu_item[5]) / factor
+            duration = end_time - start_time
+            aicpu_info.append([op_name, stream_id, start_time, duration, pid])
+
+            # Record the number of operator types.
+            if op_name not in op_count_list:
+                op_count_list.append(op_name)
+
+        self._min_cycle_counter = min_cycle_counter
+        aicpu_dict = {
+            'info': aicpu_info,
+            'total_time': float(total_time),
+            'op_exe_times': len(aicpu_info),
+            'num_of_ops': len(op_count_list),
+            'num_of_streams': 1
+        }
+
+        return aicpu_dict
+
+    @property
+    def min_cycle_counter(self):
+        """Get minimum cycle counter in AI CPU."""
+        return self._min_cycle_counter
