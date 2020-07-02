@@ -83,7 +83,7 @@ class StepTraceAnalyser(BaseAnalyser):
             row_info_dict = self._get_info_dict_from_row_data(row_info, 'systime')
             reduce_info = self._sort_reduce_by_time(row_info_dict)
             if reduce_info:
-                reduce_infos.append(reduce_info)
+                reduce_infos.extend(reduce_info)
 
         return reduce_infos
 
@@ -282,8 +282,9 @@ class StepTraceAnalyser(BaseAnalyser):
                 log.info("Reduce event missing value.")
                 continue
             cur_stream_id = reduce_field.split('_', 2)[1]
-            reduce_info = [reduce_field, int(cur_stream_id), reduce_start,
+            reduce_meta = [reduce_field, int(cur_stream_id), reduce_start,
                            reduce_duration, reduce_pid]
+            reduce_info.append(reduce_meta)
 
         return reduce_info
 

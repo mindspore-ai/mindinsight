@@ -236,6 +236,12 @@ class Profiler:
     def _analyse_timeline(self, aicpu_parser, optime_parser):
         """
         Analyse and parse timeline info.
+
+        Args:
+            aicpu_parser (DataPreProcessParser): The parser instance for AI CPU operator
+                execution time calculation.
+            optime_parser (OPComputeTimeParserParser): The parser instance for AI Core
+                operator execution time calculation.
         """
         timeline_analyser = AnalyserFactory.instance().get_analyser(
             'timeline', self._output_path, self._dev_id
