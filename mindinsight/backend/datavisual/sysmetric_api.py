@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Datavisual."""
+"""System metrics API."""
 
-from mindinsight.backend.datavisual.static_resource_api import init_module as static_init_module
-from mindinsight.backend.datavisual.task_manager_api import init_module as task_init_module
-from mindinsight.backend.datavisual.train_visual_api import init_module as train_init_module
-from mindinsight.backend.datavisual.sysmetric_api import init_module as sysmetric_init_module
+from flask import Blueprint, jsonify
+from mindinsight.conf import settings
+from mindinsight.sysmetric.collector import get_metrics
+
+BLUEPRINT = Blueprint("sysmetric", __name__, url_prefix=settings.URL_PATH_PREFIX + settings.API_PREFIX)
+
+
+@BLUEPRINT.route("/sysmetric/current", methods=["GET"])
+def query_sysmetric():
+    """Query the system metrics."""
+
+    return jsonify(get_metrics())
 
 
 def init_module(app):
     """
-    Interface to init module.
+    Init module entry.
 
     Args:
-        app (Flask): An instance of Flask.
+        app: the application obj.
 
     """
-    static_init_module(app)
-    task_init_module(app)
-    train_init_module(app)
-    sysmetric_init_module(app)
+    app.register_blueprint(BLUEPRINT)

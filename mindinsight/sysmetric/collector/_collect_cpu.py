@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Datavisual."""
+"""The cpu collector."""
 
-from mindinsight.backend.datavisual.static_resource_api import init_module as static_init_module
-from mindinsight.backend.datavisual.task_manager_api import init_module as task_init_module
-from mindinsight.backend.datavisual.train_visual_api import init_module as train_init_module
-from mindinsight.backend.datavisual.sysmetric_api import init_module as sysmetric_init_module
+import psutil
 
 
-def init_module(app):
+def collect_cpu(percpu=False, percent=False):
     """
-    Interface to init module.
+    Collect the cpu info.
 
     Args:
-        app (Flask): An instance of Flask.
+        percpu (bool): To return a list of cpu info for each logical CPU on the system.
+        percent (bool): Represent the sized in percentage.
 
+    Returns:
+        Union[dict, List[dict]], the CPUs info.
     """
-    static_init_module(app)
-    task_init_module(app)
-    train_init_module(app)
-    sysmetric_init_module(app)
+    if percent:
+        times = psutil.cpu_times_percent(percpu=percpu)
+    else:
+        times = psutil.cpu_times(percpu=percpu)
+    if not percpu:
+        return dict(times._asdict())
+    return [dict(time._asdict()) for time in times]
