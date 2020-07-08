@@ -22,7 +22,9 @@ import ElementUI from 'element-ui';
 import './assets/css/element.css';
 import './assets/css/reset.scss';
 import i18n from './i18n';
+import $ from 'jquery';
 
+window.$ = window.jQuery = $;
 Vue.use(ElementUI);
 
 Vue.prototype.$bus = new Vue();

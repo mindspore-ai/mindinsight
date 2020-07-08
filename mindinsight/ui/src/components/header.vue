@@ -40,6 +40,7 @@ limitations under the License.
          v-if="this.$route.path.indexOf('/scalar') > 0
          || this.$route.path.indexOf('/image') > 0
          || this.$route.path.indexOf('/histogram') > 0
+         || this.$route.path.indexOf('/tensor') > 0
          || this.$route.path.indexOf('/training-dashboard') > 0
          || !this.$route.path.indexOf('/compare-plate')">
       <!-- automatic refresh switch -->

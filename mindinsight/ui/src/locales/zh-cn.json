@@ -21,7 +21,9 @@
   },
   "symbols": {
     "leftbracket": "(",
-    "rightbracket": ")"
+    "rightbracket": ")",
+    "point": "·",
+    "slashes": "/"
   },
   "header": {
     "refreshData": "刷新数据",
@@ -165,6 +167,14 @@
   },
   "dataMap": {
     "titleText": "数据图"
+  },
+  "tensors": {
+    "titleText": "张量",
+    "dimension": "形状：",
+    "tensorType": "数据类型：",
+    "viewTypeTitle": "视图",
+    "chartViewType": "表格",
+    "histogramViewType": "直方图"
   },
   "graph": {
     "titleText": "计算图",
@@ -381,7 +391,11 @@
     "selectAll": "全选",
     "tagFilterPlaceHolder": "请输入需要的标签(支持正则表达式)",
     "open": "展开",
-    "close": "折叠"
+    "close": "折叠",
+    "gridIncorrectDataError": "当前只支持最多二维数组的展示",
+    "gridAccuracy": "保留小数位",
+    "inCorrectInput": "无效输入",
+    "gridTableNoData": "表格无数据"
   },
   "error": {
     "50540000": "系统错误",

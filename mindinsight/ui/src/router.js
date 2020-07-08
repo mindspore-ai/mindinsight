@@ -55,6 +55,10 @@ export default new Router({
       component: () => import('./views/train-manage/histogram.vue'),
     },
     {
+      path: '/train-manage/tensor',
+      component: () => import('./views/train-manage/tensor.vue'),
+    },
+    {
       path: '/train-manage/graph',
       component: () => import('./views/train-manage/graph.vue'),
     },

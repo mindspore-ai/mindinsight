@@ -146,12 +146,28 @@ limitations under the License.
           </div>
         </div>
       </div>
-      <div class="cl-dashboard-con-up no-data-hover">
-        <div class="coming-soon-content">
-          <div class="coming-soon-container">
-            <img :src="require('@/assets/images/coming-soon.png')" />
-            <p class='coming-soon-text'>
-              {{$t("public.stayTuned")}}
+      <div class="cl-dashboard-con-up"
+           :class="!!tensorTag && !wrongPlugin ? '' : 'no-data-hover'"
+           @click="viewMoreTensors">
+        <div class="cl-dashboard-title">{{$t("tensors.titleText")}}</div>
+        <div class="cl-module">
+          <div class="tensor-char-container"
+               v-show="!!tensorTag && !wrongPlugin">
+            <div id="tensor-chart-container">
+              <gridTableComponents ref="tensorChart"
+                                   :showOperate="false"
+                                   :fullData="tensorData"></gridTableComponents>
+            </div>
+            <div class="tag-text"
+                 :title="tensorTag">{{tensorTag}}</div>
+          </div>
+          <div class="no-data-img"
+               key="no-chart-data"
+               v-show="!tensorTag || wrongPlugin">
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+            <p class='no-data-text'>
+              {{$t("public.noData")}}
             </p>
           </div>
         </div>
@@ -168,6 +184,7 @@ import {select, selectAll, format, precisionRound} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, format, precisionRound};
 import echarts from 'echarts';
+import gridTableComponents from '../../components/gridTableSimple';
 export default {
   data() {
     return {
@@ -201,6 +218,8 @@ export default {
       reloadStopTime: 1000,
       wrongPlugin: false,
       fileTag: '',
+      tensorData: [],
+      tensorTag: '',
     };
   },
   computed: {
@@ -217,6 +236,9 @@ export default {
     timeReloadValue() {
       return this.$store.state.timeReloadValue;
     },
+  },
+  components: {
+    gridTableComponents,
   },
   watch: {
     isReload(newVal) {
@@ -282,6 +304,10 @@ export default {
         if (this.histogramObj) {
           this.histogramObj.resize();
         }
+        const elementItem = this.$refs.tensorChart;
+        if (elementItem) {
+          elementItem.resizeView();
+        }
       }, 500);
     },
 
@@ -330,6 +356,7 @@ export default {
             const imageTags = data.image || [];
             const scalarTags = data.scalar || [];
             const graphIds = data.graph || [];
+            const tensorTags = data.tensor || [];
             if (graphIds.length) {
               this.fileTag = graphIds[0];
             }
@@ -337,6 +364,7 @@ export default {
             this.getHistogramTag(histogramTags);
             this.dealImageData(imageTags);
             this.getScalarList(scalarTags);
+            this.dealTensorData(tensorTags);
             if (!this.firstFloorNodes.length && graphIds.length) {
               this.queryGraphData();
             }
@@ -378,6 +406,20 @@ export default {
       }
       this.$router.push({
         path: '/train-manage/histogram',
+        query: {
+          train_id: this.trainingJobId,
+        },
+      });
+    },
+    /**
+     * Viewing more tensors information
+     */
+    viewMoreTensors() {
+      if (!this.tensorTag) {
+        return;
+      }
+      this.$router.push({
+        path: '/train-manage/tensor',
         query: {
           train_id: this.trainingJobId,
         },
@@ -784,6 +826,117 @@ export default {
       });
       this.originImageDataArr = dataList;
       this.getSampleRandomly();
+    },
+    dealTensorData(tags) {
+      if (tags.length) {
+        this.tensorTag = tags[0];
+      } else {
+        this.tensorTag = '';
+      }
+      if (this.tensorTag) {
+        this.getTensorGridData();
+      }
+    },
+    getTensorGridData() {
+      const params = {
+        train_id: this.trainingJobId,
+        tag: this.tensorTag,
+        detail: 'stats',
+      };
+      RequestService.getTensorsSample(params).then(
+          (res) => {
+            if (!res || !res.data) {
+              return;
+            }
+            if (!res.data.tensors.length) {
+              return;
+            }
+            const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
+            if (!resData.values.length) {
+              this.tensorData = [];
+              this.$nextTick(() => {
+                const elementItem = this.$refs.tensorChart;
+                if (elementItem) {
+                  elementItem.updateGridData();
+                }
+              });
+              return;
+            }
+            const data = resData.values[resData.values.length - 1];
+            const filterStr = this.initFilterStr(data.value.dims);
+            this.freshtMartixData(data.step, filterStr);
+          },
+          () => {
+            this.tensorData = [];
+            this.$nextTick(() => {
+              const elementItem = this.$refs.tensorChart;
+              if (elementItem) {
+                elementItem.updateGridData();
+              }
+            });
+          },
+      );
+    },
+    initFilterStr(array) {
+      if (!array) {
+        return [];
+      }
+      const countLinit = array.length - 2;
+      const tempArr = [];
+      for (let i = 0; i < array.length; i++) {
+        tempArr.push(i >= countLinit ? ':' : '0');
+      }
+      return `[${tempArr.toString()}]`;
+    },
+    freshtMartixData(step, filterStr) {
+      const params = {
+        train_id: this.trainingJobId,
+        tag: this.tensorTag,
+        detail: 'data',
+        step: step,
+        dims: filterStr,
+      };
+      RequestService.getTensorsSample(params).then(
+          (res) => {
+            if (!res || !res.data) {
+              return;
+            }
+            if (!res.data.tensors.length) {
+              return;
+            }
+            const resData = res.data.tensors[0];
+            const curStepData = resData.values[0];
+            let statistics = {};
+            if (curStepData) {
+              this.tensorData =
+              curStepData.value.data instanceof Array
+                ? curStepData.value.data
+                : [curStepData.value.data];
+              statistics = curStepData.value.statistics;
+            } else {
+              this.tensorData = [[]];
+            }
+            this.$nextTick(() => {
+              const elementItem = this.$refs.tensorChart;
+              if (elementItem) {
+                elementItem.updateGridData(
+                    true,
+                    curStepData.value.dims,
+                    statistics,
+                );
+              }
+            });
+          },
+          () => {
+            this.tensorData = [];
+            this.$nextTick(() => {
+              const elementItem = this.$refs.tensorChart;
+              if (elementItem) {
+                elementItem.updateGridData();
+              }
+            });
+          },
+      );
     },
     getHistogramTag(tagList) {
       if (!tagList) {
@@ -1889,20 +2042,6 @@ export default {
     }
   }
 
-  .coming-soon-content {
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    .coming-soon-container {
-      position: relative;
-      top: calc(50% - 88px);
-      .coming-soon-text {
-        color: #000000;
-        font-size: 16px;
-      }
-    }
-  }
-
   .no-data-hover {
     cursor: not-allowed;
   }
@@ -1928,13 +2067,15 @@ export default {
       cursor: pointer;
     }
   }
-  #distribution-chart {
+  #distribution-chart,
+  #tensor-chart-container {
     height: calc(100% - 19px);
     canvas {
       cursor: pointer;
     }
   }
-  .histogram-char-container {
+  .histogram-char-container,
+  .tensor-char-container {
     height: 100%;
     width: 100%;
     cursor: pointer;

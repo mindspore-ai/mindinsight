@@ -66,6 +66,18 @@ export default {
     });
   },
 
+  // query tensors sample
+  getTensorsSample(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/datavisual/tensors',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+
   // query graph data
   queryGraphData(params) {
     return axios({
