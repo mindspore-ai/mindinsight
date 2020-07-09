@@ -90,7 +90,8 @@ limitations under the License.
             <div class="chars-container">
               <div class="char-item-content"
                    :id="sampleItem.domId"></div>
-              <div class="tag-title">{{sampleItem.tagName}}</div>
+              <div class="tag-title"
+                   :title="sampleItem.tagName">{{sampleItem.tagName}}</div>
             </div>
           </div>
         </div>
@@ -1325,16 +1326,17 @@ export default {
       sampleObject.fullScreen = !sampleObject.fullScreen;
       if (sampleObject.fullScreen) {
         if (this.curAxisName === 2) {
-          sampleObject.charObj.setOption({grid: {right: 140}});
+          sampleObject.charOption.grid.right = 140;
         }
         sampleObject.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#3E98C5';
       } else {
-        sampleObject.charObj.setOption({grid: {right: 40}});
+        sampleObject.charOption.grid.right = 40;
         sampleObject.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#6D7278';
       }
       setTimeout(() => {
+        sampleObject.charObj.setOption(sampleObject.charOption);
         sampleObject.charObj.resize();
         document.getElementById(sampleObject.domId).scrollIntoView();
       }, 0);
