@@ -222,6 +222,31 @@ limitations under the License.
       </span>
     </el-dialog>
 
+    <el-dialog :title="$t('scalar.info')"
+               :visible.sync="delThresholdVisible"
+               custom-class="delDialog"
+               :close-on-click-modal="false"
+               @close="delThresholdCancel"
+               top="35vh"
+               width="425px">
+      <div class="delThresholdItem">
+        <span class="delThresholdIcon el-icon-warning"></span>
+        <span class="delThresholdInfo">{{$t('scalar.isDelete')}}</span>
+      </div>
+      <div class="delThresholdItem">
+        <span class="delThresholdIcon">
+          <el-switch v-model="delThresholdSwitch"></el-switch>
+        </span>
+        <span class="delThresholdInfo">{{$t('scalar.applyAllSelectTag')}}</span>
+      </div>
+      <span slot="footer"
+            class="dialog-footer">
+        <el-button @click="delThresholdCancel">{{$t('public.cancel')}}</el-button>
+        <el-button type="primary"
+                   @click="delThresholdCommit">{{$t('public.sure')}}</el-button>
+      </span>
+    </el-dialog>
+
   </div>
 </template>
 <script>
@@ -262,9 +287,9 @@ export default {
       yAxisScaleTimer: null, // yAxis scale timer
       compare: false, // Comparison Page
       scalarCompare: this.$t('scalar')['comparison'],
-      abort: false, // charts that have not been drawn.
       trainingJobId: this.$route.query.train_id, // ID of the current training job
       thresholdDialogVisible: false,
+      delThresholdVisible: false,
       currentTagName: '',
       currentSample: {},
       thresholdErrorMsg: '',
@@ -285,6 +310,7 @@ export default {
       ],
       thresholdLocal: null,
       thresholdSwitch: false,
+      delThresholdSwitch: false,
       thresholdColor: '#f00',
       decodeTrainingJobId: '',
     };
@@ -579,6 +605,10 @@ export default {
             .then((res) => {
             // error
               if (!res || !res.data || !res.data.metadatas) {
+              // canceled
+                if (res.toString() === 'false') {
+                  return;
+                }
                 if (sampleObject.charObj) {
                   sampleObject.charObj.clear();
                   sampleObject.onePoint = false;
@@ -666,8 +696,6 @@ export default {
                 // Draw chart
                 if (!this.compare) {
                   this.updateOrCreateChar(sampleIndex, true);
-                } else {
-                  this.abort = true;
                 }
               });
             })
@@ -844,7 +872,6 @@ export default {
           scale: true,
           nameGap: 30,
           minInterval: this.isActive === 0 ? 1 : 0,
-
           axisLine: {
             lineStyle: {
               color: '#E6EBF5',
@@ -1263,68 +1290,65 @@ export default {
         clearTimeout(this.axisBenchChangeTimer);
         this.axisBenchChangeTimer = null;
       }
-      switch (val) {
-        case this.$t('scalar.step'):
-          this.curBenchX = 'stepData';
-          this.curAxisName = this.$t('scalar.step');
-          this.isActive = 0;
-          break;
-        case this.$t('scalar.relativeTime'):
-          this.curBenchX = 'relativeData';
-          this.curAxisName = this.$t('scalar.relativeTime');
-          this.isActive = 1;
-          break;
-        case this.$t('scalar.absoluteTime'):
-          this.curBenchX = 'absData';
-          this.curAxisName = this.$t('scalar.absoluteTime');
-          this.isActive = 2;
-          break;
-        default:
-          this.curBenchX = 'stepData';
-          this.curAxisName = this.$t('scalar.step');
-          this.isActive = 0;
-          break;
-      }
       this.axisBenchChangeTimer = setTimeout(() => {
+        switch (val) {
+          case this.$t('scalar.step'):
+            this.curBenchX = 'stepData';
+            this.curAxisName = this.$t('scalar.step');
+            this.isActive = 0;
+            break;
+          case this.$t('scalar.relativeTime'):
+            this.curBenchX = 'relativeData';
+            this.curAxisName = this.$t('scalar.relativeTime');
+            this.isActive = 1;
+            break;
+          case this.$t('scalar.absoluteTime'):
+            this.curBenchX = 'absData';
+            this.curAxisName = this.$t('scalar.absoluteTime');
+            this.isActive = 2;
+            break;
+          default:
+            this.curBenchX = 'stepData';
+            this.curAxisName = this.$t('scalar.step');
+            this.isActive = 0;
+            break;
+        }
         // Update the horizontal benchmark of the default data
         this.curPageArr.forEach((sampleObject) => {
           if (sampleObject.charObj) {
             sampleObject.charData.oriData.forEach((originData, index) => {
+              const seriesData = sampleObject.charData.charOption.series;
+              const oriIndexData = sampleObject.charData.oriData[index];
               if (sampleObject.log) {
-                sampleObject.charData.charOption.series[
-                    index * 2
-                ].data = this.formateSmoothData(
-                    sampleObject.charData.oriData[index].logData[this.curBenchX],
+                seriesData[index * 2].data = this.formateSmoothData(
+                    oriIndexData.logData[this.curBenchX],
                 );
-                sampleObject.charData.charOption.series[index * 2 + 1].data =
-                  sampleObject.charData.oriData[index].logData[this.curBenchX];
+                seriesData[index * 2 + 1].data =
+                  oriIndexData.logData[this.curBenchX];
               } else {
-                sampleObject.charData.charOption.series[
-                    index * 2
-                ].data = this.formateSmoothData(
-                    sampleObject.charData.oriData[index].valueData[this.curBenchX],
+                seriesData[index * 2].data = this.formateSmoothData(
+                    oriIndexData.valueData[this.curBenchX],
                 );
-                sampleObject.charData.charOption.series[index * 2 + 1].data =
-                  sampleObject.charData.oriData[index].valueData[
-                      this.curBenchX
-                  ];
+                seriesData[index * 2 + 1].data =
+                  oriIndexData.valueData[this.curBenchX];
               }
             });
-            sampleObject.charData.charOption.xAxis.minInterval =
-              this.isActive === 0 ? 1 : 0;
-            sampleObject.charData.charOption.xAxis.axisLabel.rotate =
-              this.isActive === 2 ? 0 : 90;
+
+            const optionxAxis = sampleObject.charData.charOption.xAxis;
+            const seriesData = sampleObject.charData.charOption.series[0];
+            optionxAxis.minInterval = this.isActive === 0 ? 1 : 0;
+            optionxAxis.axisLabel.rotate = this.isActive === 2 ? 0 : 90;
             sampleObject.updateFlag = true;
             sampleObject.charObj.clear();
 
-            if (sampleObject.charData.charOption.series[0].data.length === 1) {
-              sampleObject.charData.charOption.series[0].showSymbol = true;
+            if (seriesData.data.length === 1) {
+              seriesData.showSymbol = true;
               sampleObject.onePoint = true;
             } else {
-              sampleObject.charData.charOption.series[0].showSymbol = false;
+              seriesData.showSymbol = false;
               sampleObject.onePoint = false;
             }
-            this.updateOrCreateChar(sampleObject.sampleIndex);
+            this.updateOrCreateChar(sampleObject.sampleIndex, true);
           }
         });
       }, 500);
@@ -1763,40 +1787,35 @@ export default {
         return;
       }
       this.yAxisScaleTimer = setTimeout(() => {
+        const tempOption = sampleObject.charData.charOption;
+        const tempOriData = sampleObject.charData.oriData;
         const log = !sampleObject.log;
         if (log) {
-          sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
-            '#3E98C5';
-          sampleObject.charData.charOption.yAxis.type = 'log';
+          tempOption.toolbox.feature.myTool2.iconStyle.borderColor = '#3E98C5';
+          tempOption.yAxis.type = 'log';
         } else {
-          sampleObject.charData.charOption.yAxis.type = 'value';
-          sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
-            '#666';
+          tempOption.yAxis.type = 'value';
+          tempOption.toolbox.feature.myTool2.iconStyle.borderColor = '#666';
         }
-        sampleObject.charData.oriData.forEach((originData, index) => {
+        tempOriData.forEach((originData, index) => {
           if (log) {
-            sampleObject.charData.charOption.series[
-                index * 2
-            ].data = this.formateSmoothData(
-                sampleObject.charData.oriData[index].logData[this.curBenchX],
+            tempOption.series[index * 2].data = this.formateSmoothData(
+                tempOriData[index].logData[this.curBenchX],
             );
-            sampleObject.charData.charOption.series[index * 2 + 1].data =
-              sampleObject.charData.oriData[index].logData[this.curBenchX];
+            tempOption.series[index * 2 + 1].data =
+              tempOriData[index].logData[this.curBenchX];
           } else {
-            sampleObject.charData.charOption.series[
-                index * 2
-            ].data = this.formateSmoothData(
-                sampleObject.charData.oriData[index].valueData[this.curBenchX],
+            tempOption.series[index * 2].data = this.formateSmoothData(
+                tempOriData[index].valueData[this.curBenchX],
             );
-            sampleObject.charData.charOption.series[index * 2 + 1].data =
-              sampleObject.charData.oriData[index].valueData[this.curBenchX];
+            tempOption.series[index * 2 + 1].data =
+              tempOriData[index].valueData[this.curBenchX];
           }
         });
         sampleObject.log = log;
         sampleObject.updateFlag = true;
         sampleObject.charObj.clear();
 
-        const tempOption = sampleObject.charData.charOption;
         const dataObj = tempOption.series[0];
 
         // one point
@@ -1834,19 +1853,12 @@ export default {
       } else {
         this.scalarCompare = this.$t('scalar.comparison');
 
-        if (this.abort) {
-          this.curPageArr.forEach((sampleObject) => {
-            this.$nextTick(() => {
-              // Draw chart
-              if (!this.compare) {
-                this.updateOrCreateChar(sampleObject.sampleIndex);
-              } else {
-                this.abort = true;
-              }
-            });
-          });
-          this.abort = false;
-        }
+        this.curPageArr.forEach((sampleObject) => {
+          // Draw chart
+          if (!sampleObject.charObj) {
+            this.updateOrCreateChar(sampleObject.sampleIndex);
+          }
+        });
 
         this.$nextTick(() => {
           this.resizeCallback();
@@ -1896,49 +1908,9 @@ export default {
 
     delThreshold(sampleItem) {
       this.stopUpdateSamples();
-      this.$confirm(this.$t('scalar.isDelete'), this.$t('scalar.info'), {
-        confirmButtonText: this.$t('public.sure'),
-        cancelButtonText: this.$t('public.cancel'),
-        type: 'warning',
-      })
-          .then(() => {
-            this.getCache();
-            if (
-              this.thresholdLocal &&
-            this.thresholdLocal[this.decodeTrainingJobId] &&
-            this.thresholdLocal[this.decodeTrainingJobId][sampleItem.tagName]
-            ) {
-              delete this.thresholdLocal[this.decodeTrainingJobId][
-                  sampleItem.tagName
-              ];
-              this.clearCache();
-              localStorage.setItem(
-                  'thresholdCache',
-                  JSON.stringify(this.thresholdLocal),
-              );
-            }
-            sampleItem.pieceStr = '';
-            const tempCharOption = sampleItem.charData.charOption;
-
-            if (
-              tempCharOption.visualMap &&
-            tempCharOption.visualMap['pieces'] &&
-            tempCharOption.visualMap['pieces'].length > 0
-            ) {
-              tempCharOption.visualMap = null;
-              tempCharOption.series[0].markLine = null;
-              tempCharOption.series[0].lineStyle['color'] = sampleItem.colors;
-            }
-            sampleItem.charObj.setOption(tempCharOption, false);
-            if (this.isTimeReload) {
-              this.autoUpdateSamples();
-            }
-          })
-          .catch(() => {
-            if (this.isTimeReload) {
-              this.autoUpdateSamples();
-            }
-          });
+      this.currentTagName = sampleItem.tagName;
+      this.currentSample = sampleItem;
+      this.delThresholdVisible = true;
     },
 
     /**
@@ -2325,6 +2297,90 @@ export default {
         this.autoUpdateSamples();
       }
     },
+
+    /**
+     * delete threshold cancel
+     */
+
+    delThresholdCancel() {
+      this.currentTagName = '';
+      this.currentSample = {};
+      this.delThresholdSwitch = false;
+      this.delThresholdVisible = false;
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
+    },
+
+    /**
+     * delete threshold commit
+     */
+
+    delThresholdCommit() {
+      this.getCache();
+      if (this.delThresholdSwitch) {
+        this.originDataArr.forEach((sampleObject) => {
+          if (this.multiSelectedTagNames[sampleObject.tagName]) {
+            if (
+              this.thresholdLocal &&
+              this.thresholdLocal[this.decodeTrainingJobId] &&
+              this.thresholdLocal[this.decodeTrainingJobId][
+                  sampleObject.tagName
+              ]
+            ) {
+              delete this.thresholdLocal[this.decodeTrainingJobId][
+                  sampleObject.tagName
+              ];
+              sampleObject.pieceStr = '';
+              const tempCharOption = sampleObject.charData.charOption;
+              if (
+                tempCharOption.visualMap &&
+                tempCharOption.visualMap['pieces'] &&
+                tempCharOption.visualMap['pieces'].length > 0
+              ) {
+                tempCharOption.visualMap = null;
+                tempCharOption.series[0].markLine = null;
+                tempCharOption.series[0].lineStyle['color'] =
+                  sampleObject.colors;
+              }
+              if (sampleObject.charObj) {
+                sampleObject.charObj.setOption(tempCharOption, false);
+              }
+            }
+          }
+        });
+      } else {
+        if (
+          this.thresholdLocal &&
+          this.thresholdLocal[this.decodeTrainingJobId] &&
+          this.thresholdLocal[this.decodeTrainingJobId][this.currentTagName]
+        ) {
+          delete this.thresholdLocal[this.decodeTrainingJobId][
+              this.currentTagName
+          ];
+          this.currentSample.pieceStr = '';
+          const tempCharOption = this.currentSample.charData.charOption;
+          if (
+            tempCharOption.visualMap &&
+            tempCharOption.visualMap['pieces'] &&
+            tempCharOption.visualMap['pieces'].length > 0
+          ) {
+            tempCharOption.visualMap = null;
+            tempCharOption.series[0].markLine = null;
+            tempCharOption.series[0].lineStyle[
+                'color'
+            ] = this.currentSample.colors;
+          }
+          this.currentSample.charObj.setOption(tempCharOption, false);
+        }
+      }
+      this.clearCache();
+      localStorage.setItem(
+          'thresholdCache',
+          JSON.stringify(this.thresholdLocal),
+      );
+      this.delThresholdVisible = false;
+    },
   },
   components: {
     ScalarButton,
@@ -2601,7 +2657,7 @@ export default {
 
         span {
           cursor: pointer;
-          width: 80px;
+          width: auto;
           height: 39px;
           display: inline-block;
         }
@@ -2702,7 +2758,7 @@ export default {
   .fs16 {
     font-size: 16px;
     color: #6c7280;
-    width: 160px;
+    width: 180px;
   }
 }
 .tooltip-show-content {
@@ -2710,5 +2766,35 @@ export default {
 }
 .cl-title-right {
   padding-right: 20px;
+}
+
+.delDialog {
+  .el-dialog__header {
+    padding: 15px 15px 10px;
+  }
+  .el-dialog__title {
+    font-weight: normal;
+    line-height: 18px;
+  }
+  .el-dialog__body {
+    padding: 10px 15px;
+  }
+
+  .delThresholdItem {
+    display: flex;
+    margin-bottom: 10px;
+  }
+
+  .delThresholdIcon {
+    color: #e6a23c;
+    font-size: 24px;
+    width: 40px;
+    margin-right: 10px;
+  }
+
+  .delThresholdInfo {
+    line-height: 24px;
+    height: 24px;
+  }
 }
 </style>
