@@ -452,7 +452,7 @@ export default {
           if (this.curDataType === 1 && this.curViewName === 1) {
             const elementItem = this.$refs[sampleItem.ref];
             if (elementItem) {
-              elementItem.clearZrData();
+              elementItem[0].clearZrData();
             }
           }
         });
@@ -474,8 +474,9 @@ export default {
     },
     /**
      * Refresh the data on the current page
+     * @param {Boolean} isFromTypeChange
      */
-    freshCurPageData() {
+    freshCurPageData(isFromTypeChange) {
       this.curPageArr.forEach((sampleItem, index) => {
         if (!sampleItem || !sampleItem.tagName) {
           return;
@@ -484,6 +485,7 @@ export default {
         if (dataType) {
           this.getHistogramData(sampleItem);
         } else {
+          sampleItem.newDataFlag = !!isFromTypeChange || sampleItem.newDataFlag;
           this.getMartixData(sampleItem);
         }
       });
@@ -686,7 +688,7 @@ export default {
         this.dataTypeChangeTimer = null;
       }
       this.dataTypeChangeTimer = setTimeout(() => {
-        this.freshCurPageData();
+        this.freshCurPageData(true);
       }, 500);
     },
     /**

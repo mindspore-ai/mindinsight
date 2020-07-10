@@ -104,6 +104,7 @@ export default {
       itemId: '', // Dom id
       gridObj: null, // slickgrid object
       columnsData: [], // Column information
+      columnsLength: 0, // Column length
       filterArr: [], // Dimension selection array
       formateData: [], // formatted data
       formateArr: [], // formatted Array
@@ -268,10 +269,15 @@ export default {
               this.columnsData,
               this.optionObj,
           );
+          this.columnsLength = this.columnsData.length;
         }
         this.gridObj.setData(this.formateArr, this.scrollTop);
         this.scrollTop = false;
-        this.gridObj.setColumns(this.columnsData);
+        const columnsLength = this.columnsData.length;
+        if (this.columnsLength !== columnsLength) {
+          this.gridObj.setColumns(this.columnsData);
+          this.columnsLength = columnsLength;
+        }
         this.gridObj.render();
       });
     },
@@ -293,14 +299,19 @@ export default {
       let limitCount = 2;
       const tempArr = [];
       this.filterArr.forEach((filter) => {
-        const value = filter.model.trim();
-        tempArr.push(value);
+        let value = filter.model.trim();
         if (!isNaN(value)) {
-          if (value < -(filter.max + 1) || value > filter.max || value === '') {
+          if (
+            value < -(filter.max + 1) ||
+            value > filter.max ||
+            value === '' ||
+            value % 1
+          ) {
             filter.showError = true;
             filterCorrect = false;
           } else {
             filter.showError = false;
+            value = Number(value);
           }
         } else if (value === ':') {
           filter.showError = false;
@@ -313,6 +324,7 @@ export default {
           filter.showError = true;
           filterCorrect = false;
         }
+        tempArr.push(value);
       });
       this.filterCorrect = filterCorrect;
       if (incorrectData && filterCorrect) {
