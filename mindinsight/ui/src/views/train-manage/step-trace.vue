@@ -164,7 +164,7 @@ export default {
         totalTime: 0,
         rowHeight: 60,
         markerPadding: 4,
-        minRate: 0.05,
+        minRate: 0.01,
         namespaceURI: 'http://www.w3.org/2000/svg',
         resizeTimer: null,
         colorList: [
@@ -483,9 +483,17 @@ export default {
                 const dashedLine = this.addDashedLine(index);
                 svg.insertBefore(dashedLine, svg.querySelector('g'));
 
+                let textOffsets = 0;
                 row.forEach((i) => {
                   if (i.duration) {
                     if (i.name) {
+                      if (i.duration < minTime) {
+                        textOffsets++;
+                      } else {
+                        textOffsets = 0;
+                      }
+                      i.textOffsets = textOffsets;
+
                       const tempDom = this.createRect(i, index);
                       const tempStr = `g${
                         i.duration > minTime ? '' : '.arrow'
@@ -528,7 +536,6 @@ export default {
       const height = 40;
       const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
       const fontSize = 12;
-      const normalRect = data.duration > this.svg.minRate * this.svg.totalTime;
 
       const x1 =
         (data.start / this.svg.totalTime) * this.svg.totalWidth +
@@ -571,7 +578,7 @@ export default {
 
       foreignObject.setAttribute(
           'x',
-        normalRect
+        !data.textOffsets
           ? x1
           : Math.min(
               this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth,
@@ -581,14 +588,14 @@ export default {
 
       foreignObject.setAttribute(
           'y',
-          y1 + (height - fontSize) / 2 + (normalRect ? 0 : fontSize),
+          y1 + (height - fontSize) / 2 + data.textOffsets * fontSize,
       );
       foreignObject.setAttribute('height', fontSize);
       foreignObject.setAttribute('width', width);
       foreignObject.setAttribute('style', `color:${color[0]}`);
       foreignObject.setAttribute(
           'class',
-          `content${normalRect ? '' : ' content-mini'}`,
+          `content${!data.textOffsets ? '' : ' content-mini'}`,
       );
 
       const title = document.createElementNS(this.svg.namespaceURI, 'title');
@@ -747,8 +754,8 @@ export default {
     }
   }
   .step-message {
-    height: 24px;
-    line-height: 24px;
+    height: 32px;
+    line-height: 16px;
     margin-top: 6px;
     margin-left: 14px;
     overflow-y: auto;
@@ -765,7 +772,7 @@ export default {
     font-weight: bold;
   }
   .pf-content-middle {
-    padding: 15px 15px 0;
+    padding: 10px 15px 0;
     height: calc(100% - 62px);
     #trace-container {
       width: 100%;

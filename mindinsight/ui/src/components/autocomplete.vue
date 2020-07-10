@@ -22,7 +22,6 @@ limitations under the License.
        :aria-expanded="suggestionVisible"
        :aria-owns="id">
     <el-input ref="input"
-              class="rtl-item"
               v-bind="[$props, $attrs]"
               @input="handleChange"
               @focus="handleFocus"
