@@ -128,7 +128,7 @@ limitations under the License.
                              :prop="key"
                              :label="table.columnOptions[key].label.substring(3)"
                              show-overflow-tooltip
-                             min-width="150"
+                             min-width="120"
                              sortable="custom">
               <template slot="header"
                         slot-scope="scope">
@@ -152,7 +152,7 @@ limitations under the License.
                              :prop="key"
                              :label="table.columnOptions[key].label.substring(3)"
                              show-overflow-tooltip
-                             min-width="150"
+                             min-width="120"
                              sortable="custom">
               <template slot="header"
                         slot-scope="scope">
@@ -426,6 +426,26 @@ export default {
         metric: 'metric/',
         userDefined: 'user_defined/',
       },
+      valueType: {
+        int: 'int',
+        str: 'str',
+        mixed: 'mixed',
+        category: 'category',
+        model_size: 'model_size',
+        dataset_mark: 'dataset_mark',
+      },
+      valueName: {
+        userDefined: 'userDefined',
+        metric: 'metric',
+        UserDefined: 'UserDefined',
+        Metric: 'Metric',
+      },
+      labelValue: {
+        loss: 'loss',
+        batch_size: 'batch_size',
+        epoch: 'epoch',
+        learning_rate: 'learning_rate',
+      },
     };
   },
   computed: {},
@@ -479,8 +499,9 @@ export default {
       }
       this.addIconBorder(row);
       this.tagDialogShow = true;
+      const dialogHeight = 130;
       document.getElementById('tag-dialog').style.top =
-        window.event.clientY - 130 + 'px';
+        window.event.clientY - dialogHeight + 'px';
     },
 
     /**
@@ -790,7 +811,7 @@ export default {
             required: true,
           },
           loss: {
-            label: 'loss',
+            label: this.labelValue.loss,
             required: true,
           },
           network: {
@@ -814,11 +835,11 @@ export default {
             required: false,
           },
           epoch: {
-            label: 'epoch',
+            label: this.labelValue.epoch,
             required: false,
           },
           batch_size: {
-            label: 'batch_size',
+            label: this.labelValue.batch_size,
             required: false,
           },
           device_num: {
@@ -909,9 +930,9 @@ export default {
         } else if (item.indexOf('user_defined/') === 0) {
           userDefinedArray.push(item);
         } else if (
-          item === 'epoch' ||
-          item === 'batch_size' ||
-          item === 'learning_rate'
+          item === this.labelValue.epoch ||
+          item === this.labelValue.batch_size ||
+          item === this.labelValue.learning_rate
         ) {
           hyperArray.push(item);
         } else {
@@ -965,7 +986,9 @@ export default {
           .then(
               (res) => {
                 if (res && res.data && res.data.object) {
-                  const list = this.setDataOfModel(res.data.object);
+                  const listTemp = this.setDataOfModel(res.data.object);
+                  const list = JSON.parse(JSON.stringify(listTemp));
+                  const tempEchartData = JSON.parse(JSON.stringify(listTemp));
                   if (allData) {
                     let customized = {};
                     if (res.data.customized) {
@@ -973,17 +996,17 @@ export default {
                       const customizedKeys = Object.keys(customized);
                       if (customizedKeys.length) {
                         customizedKeys.forEach((i) => {
-                          if (customized[i].type === 'int') {
+                          if (customized[i].type === this.valueType.int) {
                             this.keysOfIntValue.push(i);
-                          } else if (customized[i].type === 'str') {
+                          } else if (customized[i].type === this.valueType.str) {
                             this.keysOfStringValue.push(i);
-                          } else if (customized[i].type === 'mixed') {
+                          } else if (customized[i].type === this.valueType.mixed) {
                             // list of type mixed
                             this.keysOfMixed.push(i);
                             this.keysOfStringValue.push(i);
                           }
                           if (i.startsWith(this.replaceStr.userDefined)) {
-                            this.labelObj.userDefined = 'userDefined';
+                            this.labelObj.userDefined = this.valueName.userDefined;
                             customized[i].label = customized[i].label.replace(
                                 this.replaceStr.userDefined,
                                 '[U]',
@@ -997,7 +1020,7 @@ export default {
                                 this.replaceStr.metric,
                                 '[M]',
                             );
-                            this.labelObj.metric = 'metric';
+                            this.labelObj.metric = this.valueName.metric;
                             const metricObject = {value: '', label: ''};
                             metricObject.value = customized[i].label;
                             metricObject.label = customized[i].label;
@@ -1033,7 +1056,7 @@ export default {
                       ];
                       if (this.labelObj.metric) {
                         const metricTemp = {
-                          label: 'Metric',
+                          label: this.valueName.Metric,
                           options: this.metricOptions,
                         };
                         this.checkOptions.push(metricTemp);
@@ -1041,7 +1064,7 @@ export default {
                       }
                       if (this.labelObj.userDefined) {
                         const userTemp = {
-                          label: 'UserDefined',
+                          label: this.valueName.UserDefined,
                           options: this.userOptions,
                         };
                         this.checkOptions.push(userTemp);
@@ -1049,19 +1072,19 @@ export default {
                       }
                       Object.keys(this.table.columnOptions).forEach((item) => {
                         if (
-                          item !== 'epoch' &&
-                      item !== 'learning_rate' &&
-                      item !== 'batch_size'
+                          item !== this.labelValue.epoch &&
+                      item !== this.labelValue.learning_rate &&
+                      item !== this.labelValue.batch_size
                         ) {
-                          const index = this.table.optionsNotInCheckbox.indexOf(
+                          const haveItem = this.table.optionsNotInCheckbox.includes(
                               item,
                           );
-                          if (index < 0) {
+                          if (!haveItem) {
                             const otherType = {value: '', label: ''};
                             otherType.value = this.table.columnOptions[item].label;
                             otherType.label = this.table.columnOptions[item].label;
                             if (
-                              otherType.value === 'loss' ||
+                              otherType.value === this.labelValue.loss ||
                           otherType.value ===
                             this.$t('modelTraceback.network') ||
                           otherType.value ===
@@ -1119,7 +1142,6 @@ export default {
                     this.noData = !res.data.object.length;
                     this.showEchartPic = !!res.data.object.length;
                     if (this.hidenDirChecked.length) {
-                      const tempEchartData = this.setDataOfModel(res.data.object);
                       this.hidenDirChecked.forEach((dir) => {
                         tempEchartData.forEach((item, index) => {
                           if (item.summary_dir === dir) {
@@ -1145,16 +1167,16 @@ export default {
                         return val[i] || val[i] === 0;
                       });
                       if (!flag) {
-                        let index = this.table.optionsNotInCheckbox.indexOf(i);
-                        if (index >= 0) {
+                        let haveItem = this.table.optionsNotInCheckbox.includes(i);
+                        if (haveItem) {
                           this.table.optionsNotInCheckbox.splice(index, 1);
                         }
-                        index = this.table.optionsNotInEchart.indexOf(i);
-                        if (index >= 0) {
+                        haveItem = this.table.optionsNotInEchart.includes(i);
+                        if (haveItem) {
                           this.table.optionsNotInEchart.splice(index, 1);
                         }
-                        index = this.table.optionsNotInTable.indexOf(i);
-                        if (index >= 0) {
+                        haveItem = this.table.optionsNotInTable.includes(i);
+                        if (haveItem) {
                           this.table.optionsNotInTable.splice(index, 1);
                         }
 
@@ -1230,8 +1252,9 @@ export default {
             ? item.added_info.tag
             : 0;
           const modelData = JSON.parse(JSON.stringify(item.model_lineage));
+          const byteNum = 1024;
           modelData.model_size = parseFloat(
-              ((modelData.model_size || 0) / 1024 / 1024).toFixed(2),
+              ((modelData.model_size || 0) / byteNum / byteNum).toFixed(2),
           );
           const keys = Object.keys(modelData.metric || {});
           if (keys.length) {
@@ -1512,9 +1535,9 @@ export default {
               values[i[key].toString()] = i[key].toString();
             }
           });
-          obj.type = 'category';
+          obj.type = this.valueType.category;
           obj.data = Object.keys(values);
-          if (key === 'dataset_mark') {
+          if (key === this.valueType.dataset_mark) {
             obj.axisLabel = {
               show: false,
             };
@@ -1612,15 +1635,15 @@ export default {
       if (this.echart.chart) {
         this.echart.chart.off('axisareaselected', null);
         window.removeEventListener('resize', this.resizeChart, false);
+      } else {
+        this.echart.chart = Echarts.init(document.querySelector('#echart'));
       }
-
-      this.echart.chart = Echarts.init(document.querySelector('#echart'));
       this.echart.chart.setOption(echartOption, true);
       window.addEventListener('resize', this.resizeChart, false);
-
-      // select use api
+      this.chartEventsListen(parallelAxis);
+    },
+    chartEventsListen(parallelAxis) {
       this.echart.chart.on('axisareaselected', (params) => {
-        // key of mixed item
         this.recordsNumber = 0;
         this.showNumber = 0;
         const key = params.parallelAxisId;
@@ -1649,15 +1672,16 @@ export default {
         const [axisData] = parallelAxis.filter((i) => {
           return i.id === key;
         });
-
-        if (axisData && range.length === 2) {
-          if (axisData && axisData.id === 'model_size') {
+        const lineLength = 2;
+        if (axisData && range.length === lineLength) {
+          if (axisData && axisData.id === this.valueType.model_size) {
+            const byteNum = 1024;
             range = [
-              parseInt(range[0] * 1024 * 1024, 0),
-              parseInt(range[1] * 1024 * 1024, 0),
+              parseInt(range[0] * byteNum * byteNum, 0),
+              parseInt(range[1] * byteNum * byteNum, 0),
             ];
           }
-          if (axisData.type === 'category') {
+          if (axisData.type === this.valueType.category) {
             const rangeData = {};
             for (let i = range[0]; i <= range[1]; i++) {
               rangeData[axisData.data[i]] = axisData.data[i];
@@ -1720,11 +1744,11 @@ export default {
                         ];
                         this.keysOfMixed = [];
                         customizedKeys.forEach((i) => {
-                          if (customized[i].type === 'int') {
+                          if (customized[i].type === this.valueType.int) {
                             this.keysOfIntValue.push(i);
-                          } else if (customized[i].type === 'str') {
+                          } else if (customized[i].type === this.valueType.str) {
                             this.keysOfStringValue.push(i);
-                          } else if (customized[i].type === 'mixed') {
+                          } else if (customized[i].type === this.valueType.mixed) {
                             // list of type mixed
                             this.keysOfMixed.push(i);
                             this.keysOfStringValue.push(i);
@@ -1858,20 +1882,25 @@ export default {
       if (isNaN(value) || !value) {
         return value;
       } else {
-        if (key === 'learning_rate') {
-          let temp = value.toPrecision(4);
+        const numDigits = 4;
+        if (key === this.labelValue.learning_rate) {
+          let temp = value.toPrecision(numDigits);
           let row = 0;
           while (temp < 1) {
             temp = temp * 10;
             row += 1;
           }
-          temp = this.toFixedFun(temp, 4);
+          temp = this.toFixedFun(temp, numDigits);
           return `${temp}${row ? `e-${row}` : ''}`;
-        } else if (key === 'model_size') {
+        } else if (key === this.valueType.model_size) {
           return value + 'MB';
         } else {
-          if (value < 1000) {
-            return Math.round(value * Math.pow(10, 4)) / Math.pow(10, 4);
+          const num = 1000;
+          if (value < num) {
+            return (
+              Math.round(value * Math.pow(10, numDigits)) /
+              Math.pow(10, numDigits)
+            );
           } else {
             const reg = /(?=(\B)(\d{3})+$)/g;
             return (value + '').replace(reg, ',');
@@ -1883,7 +1912,9 @@ export default {
      * Resizing Chart
      */
     resizeChart() {
-      this.echart.chart.resize();
+      if (this.echart && this.echart.chart) {
+        this.echart.chart.resize();
+      }
     },
   },
   /**
@@ -1926,11 +1957,6 @@ export default {
 }
 .el-tag.el-tag--info .el-tag__close {
   color: #fff;
-}
-// select
-.el-select > .el-input {
-  min-width: 280px !important;
-  max-width: 500px !important;
 }
 .select-inner-input {
   width: calc(100% - 140px);
@@ -2091,7 +2117,11 @@ export default {
     -webkit-box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     overflow: hidden;
-
+    // select
+    .el-select > .el-input {
+      min-width: 180px !important;
+      max-width: 500px !important;
+    }
     .top-area {
       margin: 24px 32px 12px;
       display: flex;

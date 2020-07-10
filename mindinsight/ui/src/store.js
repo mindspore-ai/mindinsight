@@ -34,6 +34,10 @@ export default new Vuex.Store({
     multiSelectedGroupCount: 0,
     tableId: 0,
     componentsCount: 0,
+    summaryDirList: undefined,
+    selectedBarList: [],
+    hidenDirChecked: [],
+    customizedColumnOptions: [],
   },
   mutations: {
     // set cancelTokenArr
