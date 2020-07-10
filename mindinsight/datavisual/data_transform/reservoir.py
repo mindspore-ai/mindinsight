@@ -205,12 +205,12 @@ class HistogramReservoir(Reservoir):
             visual_range = _VisualRange()
             max_count = 0
             for sample in self._samples:
-                histogram = sample.value
-                if histogram.count == 0:
+                histogram_container = sample.value
+                if histogram_container.count == 0:
                     # ignore empty tensor
                     continue
-                max_count = max(histogram.count, max_count)
-                visual_range.update(histogram.max, histogram.min)
+                max_count = max(histogram_container.count, max_count)
+                visual_range.update(histogram_container.max, histogram_container.min)
 
             if visual_range.max == visual_range.min and not max_count:
                 logger.info("Max equals to min. Count is zero.")
@@ -225,7 +225,7 @@ class HistogramReservoir(Reservoir):
                 bins,
                 max_count)
             for sample in self._samples:
-                histogram = sample.value
+                histogram = sample.value.histogram
                 histogram.set_visual_range(visual_range.max, visual_range.min, bins)
 
             self._visual_range_up_to_date = True
@@ -245,6 +245,6 @@ class ReservoirFactory:
         Returns:
             Reservoir, reservoir instance for given plugin name.
         """
-        if plugin_name == PluginNameEnum.HISTOGRAM.value:
+        if plugin_name in (PluginNameEnum.HISTOGRAM.value, PluginNameEnum.TENSOR.value):
             return HistogramReservoir(size)
         return Reservoir(size)

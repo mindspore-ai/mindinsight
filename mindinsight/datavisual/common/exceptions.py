@@ -161,6 +161,33 @@ class HistogramNotExistError(MindInsightException):
                                                      http_code=400)
 
 
+class TensorNotExistError(MindInsightException):
+    """Unable to get tensor values based on a given condition."""
+    def __init__(self, error_detail):
+        error_msg = f'Tensor value is not exist. Detail: {error_detail}'
+        super(TensorNotExistError, self).__init__(DataVisualErrors.TENSOR_NOT_EXIST,
+                                                  error_msg,
+                                                  http_code=400)
+
+
+class StepTensorDataNotInCacheError(MindInsightException):
+    """Tensor data with specific step does not in cache."""
+    def __init__(self, error_detail):
+        error_msg = f'Tensor data not in cache. Detail: {error_detail}'
+        super(StepTensorDataNotInCacheError, self).__init__(DataVisualErrors.STEP_TENSOR_DATA_NOT_IN_CACHE,
+                                                            error_msg,
+                                                            http_code=400)
+
+
+class ResponseDataExceedMaxValueError(MindInsightException):
+    """Response data exceed max value based on a given condition."""
+    def __init__(self, error_detail):
+        error_msg = f'Response data exceed max value. Detail: {error_detail}'
+        super(ResponseDataExceedMaxValueError, self).__init__(DataVisualErrors.MAX_RESPONSE_DATA_EXCEEDED_ERROR,
+                                                              error_msg,
+                                                              http_code=400)
+
+
 class TrainJobDetailNotInCacheError(MindInsightException):
     """Detail info of given train job is not in cache."""
     def __init__(self, error_detail="no detail provided."):

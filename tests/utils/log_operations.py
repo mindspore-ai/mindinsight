@@ -25,12 +25,14 @@ from .log_generators.graph_log_generator import GraphLogGenerator
 from .log_generators.images_log_generator import ImagesLogGenerator
 from .log_generators.scalars_log_generator import ScalarsLogGenerator
 from .log_generators.histogram_log_generator import HistogramLogGenerator
+from .log_generators.tensor_log_generator import TensorLogGenerator
 
 log_generators = {
     PluginNameEnum.GRAPH.value: GraphLogGenerator(),
     PluginNameEnum.IMAGE.value: ImagesLogGenerator(),
     PluginNameEnum.SCALAR.value: ScalarsLogGenerator(),
-    PluginNameEnum.HISTOGRAM.value: HistogramLogGenerator()
+    PluginNameEnum.HISTOGRAM.value: HistogramLogGenerator(),
+    PluginNameEnum.TENSOR.value: TensorLogGenerator()
 }
 
 
