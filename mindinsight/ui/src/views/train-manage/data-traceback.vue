@@ -435,6 +435,14 @@ export default {
         'learning_rate',
         'device_num',
       ],
+      valueType: {
+        float: 'float',
+        int: 'int',
+        string: 'string',
+        model_size: 'model_size',
+        learning_rate: 'learning_rate',
+        dataset_mark: 'dataset_mark',
+      },
       table: {
         columnOptions: {
           summary_dir: {
@@ -964,10 +972,10 @@ export default {
             id: item,
             checked: true,
           };
-          if (value && value.type === 'float') {
-            obj.type = 'float';
-          } else if (value && value.type === 'int') {
-            obj.type = 'int';
+          if (value && value.type === this.valueType.float) {
+            obj.type = this.valueType.float;
+          } else if (value && value.type === this.valueType.int) {
+            obj.type = this.valueType.int;
           }
           arrayTemp.push(obj);
         });
@@ -1006,14 +1014,14 @@ export default {
           content.name === this.repeatTitle ||
           content.name === this.shuffleTitle ||
           content.id === this.deviceNum ||
-          (content.type && content.type === 'int')
+          (content.type && content.type === this.valueType.int)
         ) {
           obj.scale = true;
           obj.minInterval = 1;
           this.setColorOfSelectedBar(selectedBarList, obj);
         } else if (
           this.numberTypeIdList.includes(content.id) ||
-          (content.type && content.type === 'float')
+          (content.type && content.type === this.valueType.float)
         ) {
           obj.scale = true;
           this.setColorOfSelectedBar(selectedBarList, obj);
@@ -1024,7 +1032,7 @@ export default {
             show: false,
           };
           this.setColorOfSelectedBar(selectedBarList, obj);
-          if (content.id === 'dataset_mark') {
+          if (content.id === this.valueType.dataset_mark) {
             obj.axisLabel = {
               show: false,
             };
@@ -1073,13 +1081,16 @@ export default {
       if (this.parallelEchart) {
         this.parallelEchart.off('axisareaselected', null);
         window.removeEventListener('resize', this.resizeChart, false);
+      } else {
+        this.parallelEchart = Echarts.init(
+            document.querySelector('#data-echart'),
+        );
       }
-      this.parallelEchart = Echarts.init(
-          document.querySelector('#data-echart'),
-      );
       this.parallelEchart.setOption(option, true);
       window.addEventListener('resize', this.resizeChart, false);
-
+      this.chartEventsListen(parallelAxis);
+    },
+    chartEventsListen(parallelAxis) {
       this.parallelEchart.on('axisareaselected', (params) => {
         this.recordsNumber = 0;
         this.showNumber = 0;
@@ -1149,17 +1160,19 @@ export default {
             color: '#00a5a7',
           },
           formatter: function(val) {
-            if (typeof val !== 'string') {
+            if (typeof val !== this.valueType.string) {
               return val;
             }
             const strs = val.split('');
             let str = '';
-            if (val.length > 100) {
-              return val.substring(0, 12) + '...';
+            const maxStringLength = 100;
+            const showStringLength = 12;
+            if (val.length > maxStringLength) {
+              return val.substring(0, showStringLength) + '...';
             } else {
               for (let i = 0, s = ''; (s = strs[i++]); ) {
                 str += s;
-                if (!(i % 12)) {
+                if (!(i % showStringLength)) {
                   str += '\n';
                 }
               }
@@ -1204,20 +1217,25 @@ export default {
       if (isNaN(value) || !value) {
         return value;
       } else {
-        if (key === 'learning_rate') {
-          let temp = value.toPrecision(4);
+        const numDigits = 4;
+        if (key === this.valueType.learning_rate) {
+          let temp = value.toPrecision(numDigits);
           let row = 0;
           while (temp < 1) {
             temp = temp * 10;
             row += 1;
           }
-          temp = this.toFixedFun(temp, 4);
+          temp = this.toFixedFun(temp, numDigits);
           return `${temp}${row ? `e-${row}` : ''}`;
-        } else if (key === 'model_size') {
+        } else if (key === this.valueType.model_size) {
           return value + 'MB';
         } else {
-          if (value < 1000) {
-            return Math.round(value * Math.pow(10, 4)) / Math.pow(10, 4);
+          const num = 1000;
+          if (value < num) {
+            return (
+              Math.round(value * Math.pow(10, numDigits)) /
+              Math.pow(10, numDigits)
+            );
           } else {
             const reg = /(?=(\B)(\d{3})+$)/g;
             return (value + '').replace(reg, ',');
@@ -1245,7 +1263,8 @@ export default {
      * @param {Object} scope
      */
     showDialogData(val, scope) {
-      if (typeof val !== 'string' || val === '{}') {
+      const emptyObjectStr = '{}';
+      if (typeof val !== this.valueType.string || val === emptyObjectStr) {
         return;
       } else {
         const isJson = this.isJSON(val);
@@ -1541,7 +1560,7 @@ export default {
     hideDataMarkTableData() {
       const result = [];
       this.selectedBarList.forEach((item) => {
-        if (item !== 'dataset_mark') {
+        if (item !== this.valueType.dataset_mark) {
           result.push(item);
         }
       });
@@ -1906,10 +1925,6 @@ export default {
 .el-color-alpha-slider {
   display: none;
 }
-.el-select > .el-input {
-  width: 280px !important;
-  max-width: 500px !important;
-}
 .select-inner-input {
   width: calc(100% - 140px);
   margin: 2px 4px;
@@ -1958,6 +1973,10 @@ export default {
   height: 100%;
   overflow-y: auto;
   position: relative;
+  .el-select > .el-input {
+    width: 280px !important;
+    max-width: 500px !important;
+  }
   .el-table th.is-leaf {
     background: #f5f7fa;
   }
