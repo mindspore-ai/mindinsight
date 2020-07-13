@@ -1160,7 +1160,7 @@ export default {
             color: '#00a5a7',
           },
           formatter: function(val) {
-            if (typeof val !== this.valueType.string) {
+            if (typeof val !== 'string') {
               return val;
             }
             const strs = val.split('');
