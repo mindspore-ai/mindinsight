@@ -62,9 +62,7 @@ class TimelineAnalyser(BaseAnalyser):
         Returns:
             json, the content of timeline data.
         """
-        # Search timeline json file under profiling dir.
         display_filename = self._display_filename.format(self._device_id)
-        # Check if there is a timeline json file for display
         file_path = os.path.join(self._profiling_dir, display_filename)
         file_path = validate_and_normalize_path(
             file_path, raise_key='Invalid timeline json path.'
@@ -90,11 +88,8 @@ class TimelineAnalyser(BaseAnalyser):
         Returns:
             json, the content of timeline summary information.
         """
-        file_path = None
-        summary_file_name = 'timeline_summary_{}.json'.format(self._device_id)
-        if summary_file_name in os.listdir(self._profiling_dir):
-            file_path = os.path.join(self._profiling_dir, summary_file_name)
-
+        summary_filename = self._timeline_summary_filename.format(self._device_id)
+        file_path = os.path.join(self._profiling_dir, summary_filename)
         file_path = validate_and_normalize_path(
             file_path, raise_key='Invalid timeline summary path.'
         )
@@ -107,6 +102,8 @@ class TimelineAnalyser(BaseAnalyser):
             except (IOError, OSError, json.JSONDecodeError) as err:
                 logger.error('Error occurred when read timeline summary file: %s', err)
                 raise ProfilerIOException
+        else:
+            logger.info('No timeline summary file. Please check the output path.')
 
         return timeline_summary
 
