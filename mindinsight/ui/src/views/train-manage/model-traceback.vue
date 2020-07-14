@@ -1167,16 +1167,16 @@ export default {
                         return val[i] || val[i] === 0;
                       });
                       if (!flag) {
-                        let haveItem = this.table.optionsNotInCheckbox.includes(i);
-                        if (haveItem) {
+                        let index = this.table.optionsNotInCheckbox.indexOf(i);
+                        if (index >= 0) {
                           this.table.optionsNotInCheckbox.splice(index, 1);
                         }
-                        haveItem = this.table.optionsNotInEchart.includes(i);
-                        if (haveItem) {
+                        index = this.table.optionsNotInEchart.indexOf(i);
+                        if (index >= 0) {
                           this.table.optionsNotInEchart.splice(index, 1);
                         }
-                        haveItem = this.table.optionsNotInTable.includes(i);
-                        if (haveItem) {
+                        index = this.table.optionsNotInTable.indexOf(i);
+                        if (index >= 0) {
                           this.table.optionsNotInTable.splice(index, 1);
                         }
 
