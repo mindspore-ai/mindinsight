@@ -98,7 +98,7 @@ limitations under the License.
           </div>
           <div class="sample-content"
                v-for="sampleItem in originDataArr"
-               :key="sampleItem.domId"
+               :key="sampleItem.ref"
                :class="sampleItem.fullScreen ? 'char-full-screen' : ''"
                v-show="sampleItem.show">
             <div class="chars-container">
@@ -416,6 +416,7 @@ export default {
      */
     filterChange(data, sampleItem) {
       sampleItem.filterStr = `[${data.toString()}]`;
+      sampleItem.newDataFlag = true;
       this.freshtMartixData(sampleItem);
     },
     /**
