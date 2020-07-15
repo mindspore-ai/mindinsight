@@ -172,7 +172,9 @@ export default {
       return;
     }
     this.trainJobID = this.$route.query.train_id;
-    document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t('trainingDashboard.dataMap')}-MindInsight`;
+    document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t(
+        'trainingDashboard.dataMap',
+    )}-MindInsight`;
     this.$nextTick(() => {
       this.queryGraphData();
     });
@@ -554,6 +556,8 @@ export default {
             const value =
               select[item] instanceof Array
                 ? select[item].join(', ')
+                : select[item] === null
+                ? 'None'
                 : select[item];
             this.selectedNode.push({key: item, value: value});
           }
