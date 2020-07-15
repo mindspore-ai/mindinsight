@@ -226,6 +226,7 @@ class Profiler:
                                  output_file_path=step_trace_intermediate_file_path,
                                  job_id=self._job_id_env,
                                  skip_first_step=skip_first_step_flag)
+        parser.update_tag_op_type_map(point_info)
         parser.parse_and_save()
         point_info = parser.record_point_info(point_info, point_info_file_path)
         # print parser result
