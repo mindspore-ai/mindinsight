@@ -105,7 +105,7 @@ See [Install MindInsight](https://www.mindspore.cn/install/en).
 
 # QuickStart
 
-See [guidance](https://www.mindspore.cn/tutorial/en/0.1.0-alpha/advanced_use/visualization_tutorials.html)
+See [guidance](https://www.mindspore.cn/tutorial/en/master/advanced_use/visualization_tutorials.html)
 
 # Docs
 
