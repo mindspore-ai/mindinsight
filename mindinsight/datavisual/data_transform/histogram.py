@@ -75,7 +75,10 @@ class Histogram:
     Histogram data class.
 
     Args:
-        buckets (tuple[Bucket])
+        buckets (tuple[Bucket]): The buckets of histogram data.
+        max_val (number): The max value of histogram data.
+        min_val (number): The min value of histogram data.
+        count (int): The count of histogram data.
     """
 
     # Max quantity of original buckets.
