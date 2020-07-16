@@ -108,7 +108,7 @@ class TestProfilerAnalyse(TestCase):
         assert len(res['training_trace_graph']) == 13
         assert res['training_trace_graph'][-1] == [
             {'name': '', 'start': 0.2038, 'duration': 118.1667},
-            {'name': 'stream_540_parallel_0', 'start': 118.3705, 'duration': 49.281},
+            {'name': 'stream_540_0_parallel', 'start': 118.3705, 'duration': 49.281},
             {'name': '', 'start': 167.6515, 'duration': 37.7294}]
 
     @pytest.mark.level0

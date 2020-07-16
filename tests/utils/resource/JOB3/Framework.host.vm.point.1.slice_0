@@ -1,4 +1,8 @@
 1 Default/Cast-op6
 2 Default/TransData-op7
-3 Default/network-WithLossCell/_backbone-ResNet/conv1-Conv2d/Cast-op5
-4 Default/network-WithLossCell/_backbone-ResNet/layer1-SequentialCell/0-ResidualBlock/conv1-Conv2d/Cast-op28
+3 Default/network-VirtualDatasetCellTriple/_backbone-NetWithLossClass/network-WideDeepModel/AllGather-op136
+4 Default/network-VirtualDatasetCellTriple/_backbone-NetWithLossClass/network-WideDeepModel/AllGather-op136
+5 Default/network-VirtualDatasetCellTriple/_backbone-NetWithLossClass/network-WideDeepModel/ReduceScatter-op145
+6 Default/network-VirtualDatasetCellTriple/_backbone-NetWithLossClass/network-WideDeepModel/ReduceScatter-op145
+7 Gradients/Default/network-VirtualDatasetCellTriple/_backbone-NetWithLossClass/network-WideDeepModel/gradReduceScatter/AllGather-op147
+8 Gradients/Default/network-VirtualDatasetCellTriple/_backbone-NetWithLossClass/network-WideDeepModel/gradReduceScatter/AllGather-op147
