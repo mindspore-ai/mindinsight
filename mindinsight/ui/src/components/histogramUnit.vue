@@ -696,7 +696,7 @@ export default {
       });
       if (yIndex === null && this.viewName === 1) {
         this.fullData.forEach((item, index) => {
-          if (index > value[1]) {
+          if (index >= value[1]) {
             yIndex = yIndex === null ? index : Math.min(yIndex, index);
           }
         });

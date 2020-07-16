@@ -566,7 +566,7 @@ export default {
               sampleItem.curStep = '';
               sampleItem.sliderValue = 0;
               sampleItem.totalStepNum = 0;
-              this.clearMartixData();
+              this.clearMartixData(sampleItem);
               return;
             }
             const oldTotalStepNum = sampleItem.totalStepNum;
@@ -966,9 +966,6 @@ export default {
         clearTimeout(sampleItem.sliderChangeTimer);
         sampleItem.sliderChangeTimer = null;
       }
-      if (sampleItem.curMartixShowSliderValue === sliderValue) {
-        return;
-      }
       if (!sampleItem.fullData || !sampleItem.fullData[sliderValue]) {
         return;
       }
@@ -980,6 +977,9 @@ export default {
       );
       sampleItem.curDataType = sampleItem.formateData.value.data_type;
       sampleItem.curDims = JSON.stringify(sampleItem.formateData.value.dims);
+      if (sampleItem.curMartixShowSliderValue === sliderValue) {
+        return;
+      }
       sampleItem.sliderChangeTimer = setTimeout(() => {
         this.freshtMartixData(sampleItem);
       }, 500);

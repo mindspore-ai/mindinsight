@@ -952,7 +952,7 @@ export default {
       });
       if (yIndex === null && this.curViewName === 1) {
         sampleObject.chartData.forEach((item, index) => {
-          if (index > value[1]) {
+          if (index >= value[1]) {
             yIndex = yIndex === null ? index : Math.min(yIndex, index);
           }
         });

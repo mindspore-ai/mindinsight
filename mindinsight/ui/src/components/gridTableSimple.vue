@@ -114,6 +114,7 @@ export default {
       updated: false, // Updated
       scrollTop: false, // Wheather scroll to the top
       filterCorrect: true, // Wheather the dimension input is correct
+      viewResizeFlag: false, // Size reset flag
       // Accuray options
       accuracyArr: [
         {label: 0, value: 0},
@@ -274,9 +275,10 @@ export default {
         this.gridObj.setData(this.formateArr, this.scrollTop);
         this.scrollTop = false;
         const columnsLength = this.columnsData.length;
-        if (this.columnsLength !== columnsLength) {
+        if (this.columnsLength !== columnsLength || this.viewResizeFlag) {
           this.gridObj.setColumns(this.columnsData);
           this.columnsLength = columnsLength;
+          this.viewResizeFlag = false;
         }
         this.gridObj.render();
       });
@@ -367,10 +369,14 @@ export default {
      */
     resizeView() {
       if (this.gridObj) {
-        this.$nextTick(() => {
-          this.gridObj.resizeCanvas();
-          this.gridObj.render();
-        });
+        if (this.incorrectData) {
+          this.viewResizeFlag = true;
+        } else {
+          this.$nextTick(() => {
+            this.gridObj.resizeCanvas();
+            this.gridObj.render();
+          });
+        }
       }
     },
     /**
