@@ -199,8 +199,8 @@ class TensorContainer:
 
     def __init__(self, tensor_message):
         self._lock = threading.Lock
-        self._msg = tensor_message
-        self._dims = tensor_message.dims
+        # Original dims can not be pickled to transfer to other process, so tuple is used.
+        self._dims = tuple(tensor_message.dims)
         self._data_type = tensor_message.data_type
         self._np_array = None
         self._data = _get_data_from_tensor(tensor_message)
@@ -265,5 +265,4 @@ class TensorContainer:
             logger.error("Reshape array fail, detail: %r", str(ex))
             return
 
-        self._msg = None
         self._np_array = ndarray

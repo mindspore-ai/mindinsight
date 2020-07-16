@@ -34,8 +34,13 @@ class DataLoader:
         self._summary_dir = summary_dir
         self._loader = None
 
-    def load(self):
-        """Load the data when loader is exist."""
+    def load(self, workers_count=1):
+        """Load the data when loader is exist.
+
+        Args:
+            workers_count (int): The count of workers. Default value is 1.
+        """
+
         if self._loader is None:
             ms_dataloader = MSDataLoader(self._summary_dir)
             loaders = [ms_dataloader]
@@ -48,7 +53,7 @@ class DataLoader:
                 logger.warning("No valid files can be loaded, summary_dir: %s.", self._summary_dir)
                 raise exceptions.SummaryLogPathInvalid()
 
-        self._loader.load()
+        self._loader.load(workers_count)
 
     def get_events_data(self):
         """

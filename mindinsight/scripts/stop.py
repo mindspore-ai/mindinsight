@@ -103,21 +103,17 @@ class Command(BaseCommand):
         self.logfile.info('Stop mindinsight with port %s and pid %s.', port, pid)
 
         process = psutil.Process(pid)
-        child_pids = [child.pid for child in process.children()]
+        processes_to_kill = [process]
+        # Set recursive to True to kill grand children processes.
+        for child in process.children(recursive=True):
+            processes_to_kill.append(child)
 
-        # kill gunicorn master process
-        try:
-            os.kill(pid, signal.SIGKILL)
-        except PermissionError:
-            self.console.info('kill pid %s failed due to permission error', pid)
-            sys.exit(1)
-
-        # cleanup gunicorn worker processes
-        for child_pid in child_pids:
+        for proc in processes_to_kill:
+            self.logfile.info('Stopping mindinsight process %s.', proc.pid)
             try:
-                os.kill(child_pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
+                proc.send_signal(signal.SIGKILL)
+            except psutil.Error as ex:
+                self.logfile.warning("Stop process %s failed. Detail: %s.", proc.pid, str(ex))
 
         for hook in HookUtils.instance().hooks():
             hook.on_shutdown(self.logfile)
@@ -154,7 +150,19 @@ class Command(BaseCommand):
             if user != process.username():
                 continue
 
-            pid = process.pid if process.ppid() == 1 else process.ppid()
+            gunicorn_master_process = process
+
+            # The gunicorn master process might have grand children (eg forked by process pool).
+            while True:
+                parent_process = gunicorn_master_process.parent()
+                if parent_process is None or parent_process.pid == 1:
+                    break
+                parent_cmd = parent_process.cmdline()
+                if ' '.join(parent_cmd).find(self.cmd_regex) == -1:
+                    break
+                gunicorn_master_process = parent_process
+
+            pid = gunicorn_master_process.pid
 
             for open_file in process.open_files():
                 if open_file.path.endswith(self.access_log_path):

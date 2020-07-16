@@ -85,6 +85,7 @@ class EventsData:
             deleted_tag = self._check_tag_out_of_spec(plugin_name)
             if deleted_tag is not None:
                 if tag in self._deleted_tags:
+                    logger.debug("Tag is in deleted tags: %s.", tag)
                     return
                 self.delete_tensor_event(deleted_tag)
 

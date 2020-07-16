@@ -245,7 +245,7 @@ class TensorProcessor(BaseProcessor):
             # This value is an instance of TensorContainer
             value = tensor.value
             value_dict = {
-                "dims": tuple(value.dims),
+                "dims": value.dims,
                 "data_type": anf_ir_pb2.DataType.Name(value.data_type)
             }
             if detail and detail == 'stats':
@@ -313,7 +313,7 @@ class TensorProcessor(BaseProcessor):
                 "wall_time": tensor.wall_time,
                 "step": tensor.step,
                 "value": {
-                    "dims": tuple(value.dims),
+                    "dims": value.dims,
                     "data_type": anf_ir_pb2.DataType.Name(value.data_type),
                     "data": res_data.tolist(),
                     "statistics": get_statistics_dict(value, flatten_data)
@@ -362,7 +362,7 @@ class TensorProcessor(BaseProcessor):
                 "wall_time": tensor.wall_time,
                 "step": tensor.step,
                 "value": {
-                    "dims": tuple(value.dims),
+                    "dims": value.dims,
                     "data_type": anf_ir_pb2.DataType.Name(value.data_type),
                     "histogram_buckets": buckets,
                     "statistics": get_statistics_dict(value, None)

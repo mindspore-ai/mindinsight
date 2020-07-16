@@ -236,9 +236,10 @@ def start():
     process = subprocess.Popen(
         shlex.split(cmd),
         shell=False,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        # Change stdout to DEVNULL to prevent broken pipe error when creating new processes.
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT
     )
 
     # sleep 1 second for gunicorn appplication to load modules
@@ -246,9 +247,7 @@ def start():
 
     # check if gunicorn application is running
     if process.poll() is not None:
-        _, stderr = process.communicate()
-        for line in stderr.decode().split('\n'):
-            console.error(line)
+        console.error("Start MindInsight failed. See log for details.")
     else:
         state_result = _check_server_start_stat(errorlog_abspath, log_size)
         # print gunicorn start state to stdout
