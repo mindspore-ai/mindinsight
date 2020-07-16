@@ -770,9 +770,11 @@ export default {
           hoveredAxis.toString().length >= 6
             ? yValueFormat(hoveredAxis)
             : hoveredAxis
-        }</td><td style="text-align:center;">${hoveredItem.step}</td><td>${(
-          hoveredItem.relative_time / 1000
-        ).toFixed(3)}${unit}</td><td>${this.dealrelativeTime(
+        }</td><td style="text-align:center;">${this.formateNUmber(
+            hoveredItem.step,
+        )}</td><td>${this.formateNUmber(
+            (hoveredItem.relative_time / 1000).toFixed(3),
+        )}${unit}</td><td>${this.dealrelativeTime(
             new Date(hoveredItem.wall_time * 1000).toString(),
         )}</td>`;
         const dom = document.querySelector('#tipTr');
@@ -816,7 +818,8 @@ export default {
               20 -
               offsetTop}px`;
           }
-          if (width + e.event.x + 50 > screenWidth && screenWidth > width) {
+          // Blank area on the right of the chart is 80
+          if (width + e.event.x + 80 > screenWidth && screenWidth > width) {
             document.querySelector('#echartTip').style.left = `${e.event.x -
               width -
               20}px`;
@@ -1118,11 +1121,12 @@ export default {
       );
       const fullScreenFun = this.toggleFullScreen;
       const curAxisName = this.curAxisName;
+      const that = this;
       const option = {
         grid: {
           left: 24,
           top: 60,
-          right: 50,
+          right: 80,
           bottom: 60,
         },
         xAxis: {
@@ -1132,11 +1136,7 @@ export default {
           axisLabel: {
             fontSize: '11',
             formatter: function(value) {
-              if (value.toString().length >= 6) {
-                return value.toExponential(3);
-              } else {
-                return Math.round(value * 1000) / 1000;
-              }
+              return that.formateNUmber(value);
             },
           },
           splitLine: {show: false},
@@ -1149,6 +1149,9 @@ export default {
           boundaryGap: false,
           axisLabel: {
             fontSize: '11',
+            formatter: function(value) {
+              return that.formateNUmber(value);
+            },
           },
         },
         toolbox: {
@@ -1222,7 +1225,6 @@ export default {
           option.grid.right = 140;
         }
         option.yAxis.inverse = true;
-        const that = this;
         option.yAxis.axisLabel.formatter = function(value) {
           return that.yAxisFormatter(sampleObject, value);
         };
@@ -1248,15 +1250,32 @@ export default {
       if (filter.length) {
         if (this.curAxisName === 2) {
           data = sampleObject.fullScreen
-            ? this.dealrelativeTime(new Date(filter[0].wall_time * 1000).toString())
+            ? this.dealrelativeTime(
+                new Date(filter[0].wall_time * 1000).toString(),
+            )
             : [];
         } else if (this.curAxisName === 1) {
-          data = `${(filter[0].relative_time / 3600).toFixed(3)}h`;
+          data = `${this.formateNUmber(
+              (filter[0].relative_time / 3600).toFixed(3),
+          )}h`;
         } else {
-          data = filter[0].step;
+          data = this.formateNUmber(filter[0].step);
         }
       }
       return data;
+    },
+    /**
+     * Formate time display
+     * @param {Number} value
+     * @return {Number} Formatted number
+     */
+    formateNUmber(value) {
+      value = Number(value);
+      if (value.toString().length > 6) {
+        return value.toExponential(3);
+      } else {
+        return Math.round(value * 1000) / 1000;
+      }
     },
     formatColor(str) {
       if (!str) {
@@ -1331,7 +1350,7 @@ export default {
         sampleObject.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#3E98C5';
       } else {
-        sampleObject.charOption.grid.right = 40;
+        sampleObject.charOption.grid.right = 80;
         sampleObject.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
           '#6D7278';
       }
