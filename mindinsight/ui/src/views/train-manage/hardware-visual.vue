@@ -1,0 +1,889 @@
+<!--
+Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<template>
+  <div class="cl-hardware-visual">
+    <div class="cl-hardware-content"
+         v-if="!(chipTableData.length === 0 && cpuList.length===0)">
+      <div class="cl-hardware-top">
+        <div class="cl-hardware-left">
+          <div class="cl-sub-title">
+            {{$t('hardwareVisual.processor')}}
+          </div>
+          <div class="cl-chip-wrap">
+            <el-table v-if="!(chipTableData.length === 0)"
+                      :data="chipTableData"
+                      width="100%"
+                      height="100%">
+              <el-table-column prop="chip_name"
+                               width="120">
+                <template slot="header">
+                  Name
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.chipNameTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+              <el-table-column prop="device_id"
+                               width="80">
+                <template slot="header">
+                  NPU
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.deviceIdTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+              <el-table-column prop="available"
+                               width="110">
+                <template slot="header">
+                  Available
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.availableTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+                <template slot-scope="scope">
+                  <i class="el-icon-success"
+                     v-if="scope.row.available"></i>
+                  <i class="el-icon-error"
+                     v-else></i>
+                </template>
+              </el-table-column>
+              <el-table-column prop="health"
+                               width="80">
+                <template slot="header">
+                  Health
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.healthTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+                <template slot-scope="scope">
+                  <i class="el-icon-success"
+                     v-if="scope.row.health===0"></i>
+                  <i class="el-icon-warning normal"
+                     v-if="scope.row.health===1"></i>
+                  <i class="el-icon-warning important"
+                     v-if="scope.row.health===2"></i>
+                  <i class="el-icon-warning emergency"
+                     v-if="scope.row.health===3"></i>
+                  <i class="el-icon-remove"
+                     v-if="scope.row.health=== 0xffffffff"></i>
+                </template>
+              </el-table-column>
+              <el-table-column prop="ip_address"
+                               width="130">
+                <template slot="header">
+                  IP Address
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.ipTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+              <el-table-column prop="aicore">
+                <template slot="header">
+                  AI Core(%)
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.aicoreTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+                <template slot-scope="scope">
+                  <el-progress :percentage="scope.row.aicore_rate"
+                               :format="format"></el-progress>
+                </template>
+
+              </el-table-column>
+              <el-table-column prop="hbm_usage"
+                               min-width="100">
+                <template slot="header">
+                  HBM-Usage(MB)
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.hbmTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+                <template slot-scope="scope">
+                  <div class="hbs-wrap">
+                    <el-progress :percentage="
+                    parseInt(scope.row.hbm_info.memory_usage/scope.row.hbm_info.memory_size*100)"
+                                 :format="formatHbm(scope.row.hbm_info)"></el-progress>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="power">
+                <template slot="header">
+                  Power(W)
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.powerTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+                <template slot-scope="scope">
+                  <div class="power-wrap">
+                    <div class="power"
+                         :style="{width:`${scope.row.power/powerMax*100}%`}">{{scope.row.power}}</div>
+                  </div>
+                </template>
+
+              </el-table-column>
+              <el-table-column prop="temp"
+                               width="150">
+                <template slot="header">
+                  Temp(℃)
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="$t('hardwareVisual.temperatureTip')"
+                              placement="top-start">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </template>
+                <template slot-scope="scope">
+                  <div class="temp-wrap">
+                    <div class="circle"
+                         :class="{zero:!scope.row.temperature}"></div>
+                    <div class="process-wrap">
+                      <div class="process-cover"
+                           :style="{width:scope.row.temperature/temperatureMax*100+'%'}"></div>
+                    </div>
+                    <span>{{scope.row.temperature}}</span>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="image-noData"
+                 v-if="chipTableData.length === 0">
+              <div>
+                <img :src="require('@/assets/images/nodata.png')"
+                     alt="" />
+              </div>
+              <p>{{$t("public.noData")}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cl-hardware-bottom">
+        <div class="cl-hardware-left">
+          <div class="cl-sub-title">
+            CPU
+          </div>
+          <div class="cl-cpu-wrap">
+            <div class="cpu-items">
+              <div class="cpu-item"
+                   v-for="(item,key) in cpuList"
+                   :key="key">
+                <div class="cpu"
+                     :class="{selected:item.selected}"
+                     :style="{backgroundColor:item.idle!==undefined?
+                     `rgba(250,152,65,${(100-item.idle).toFixed(2)/100}`:'#ccc'}"
+                     :title="item.idle!==undefined?`Core ${key}`:''"
+                     @click="viewPerCpuInfo(key)">
+                  {{ item.idle!==undefined?(100-item.idle).toFixed(2):'' }}
+                </div>
+              </div>
+            </div>
+            <div class="cpu-detail">
+              <div class="all-cpu-info">
+                <span>{{$t('hardwareVisual.allCpu')}}</span>
+                <div class="info-item"
+                     v-for="(item,index) in overallCpuInfo"
+                     :key="index">
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="item.tips"
+                              placement="top-start">
+                    <span>
+                      <span class="label">{{item.label}}</span>
+                      <span class="value">{{`${item.value}%`}}</span>
+                    </span>
+                  </el-tooltip>
+                </div>
+              </div>
+              <div class="selected-cpu-info"
+                   v-if="selectedCpuIndex!==null">
+                <span>{{$t('hardwareVisual.selectedCpu')}}</span>
+                <div class="info-item"
+                     v-for="(item,index) in selectedCpuInfo"
+                     :key="index">
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="item.tips"
+                              placement="top-start">
+                    <span>
+                      <span class="label">{{item.label}}</span>
+                      <span class="value">{{`${item.value}%`}}</span>
+                    </span>
+                  </el-tooltip>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cl-hardware-right">
+          <div class="cl-sub-title ram">
+            {{$t('hardwareVisual.ram')}}
+          </div>
+          <div class="cl-ram-wrap">
+            <div class="virtual-wrap">
+              <div id="virtual"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="image-noData"
+         v-if="chipTableData.length === 0 && cpuList.length===0">
+      <div>
+        <img :src="require('@/assets/images/nodata.png')"
+             alt="" />
+      </div>
+      <p>{{$t("public.noData")}}</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import echarts from 'echarts';
+import RequestService from '../../services/request-service';
+export default {
+  data() {
+    return {
+      chipTableData: [],
+      powerMax: null,
+      temperatureMax: null,
+      virtualChart: {
+        id: 'virtual',
+        chartDom: null,
+        data: [],
+        legend: [],
+        totalValue: null,
+      },
+      defaultCpuNum: 96,
+      cpuList: [],
+      overallCpuInfo: [],
+      selectedCpuInfo: [],
+      selectedCpuIndex: null,
+      pieColorArr: ['#5e7ce0', '#a6dd82'],
+      autoUpdateTimer: null, // Automatic refresh timer
+      isReloading: false, // Manually refresh
+    };
+  },
+  computed: {
+    /**
+     * Global refresh switch
+     * @return {Boolean}
+     */
+    isReload() {
+      return this.$store.state.isReload;
+    },
+    /**
+     * Automatic hardware refresh switch
+     * @return {Boolean}
+     */
+    isHardwareTimeReload() {
+      return this.$store.state.isHardwareTimeReload;
+    },
+    /**
+     * Automatic hardware refresh value
+     * @return {Boolean}
+     */
+    hardwareTimeReloadValue() {
+      return this.$store.state.hardwareTimeReloadValue;
+    },
+  },
+  watch: {
+    /**
+     * Global refresh switch Listener
+     * @param {Boolean} newVal Value After Change
+     * @param {Boolean} oldVal Value Before Change
+     */
+    isReload(newVal, oldVal) {
+      if (newVal) {
+        this.isReloading = true;
+        if (this.isHardwareTimeReload) {
+          this.autoUpdateSamples();
+        }
+        this.init();
+      }
+    },
+    /**
+     * Automatic refresh switch Listener
+     * @param {Boolean} newVal Value After Change
+     * @param {Boolean} oldVal Value Before Change
+     */
+    isHardwareTimeReload(newVal, oldVal) {
+      if (newVal) {
+        this.autoUpdateSamples();
+      } else {
+        this.stopUpdateSamples();
+      }
+    },
+    /**
+     * The refresh time is changed.
+     */
+    hardwareTimeReloadValue() {
+      this.autoUpdateSamples();
+    },
+  },
+  destroyed() {
+    // Disable the automatic refresh function
+    if (this.autoUpdateTimer) {
+      clearInterval(this.autoUpdateTimer);
+      this.autoUpdateTimer = null;
+    }
+    // Stop Refreshing
+    if (this.isReloading) {
+      this.$store.commit('setIsReload', false);
+      this.isReloading = false;
+    }
+  },
+  mounted() {
+    document.title = this.$t('summaryManage.hardwareVisual') + '-MindInsight';
+    // Automatic refresh
+    if (this.isHardwareTimeReload) {
+      this.autoUpdateSamples();
+    }
+    this.init();
+  },
+
+  methods: {
+    /**
+     * Initialization data
+     */
+    init() {
+      RequestService.getMetricsData().then(
+          (res) => {
+            if (this.isReloading) {
+              this.$store.commit('setIsReload', false);
+              this.isReloading = false;
+            }
+            if (res && res.data) {
+              this.chipTableData = res.data.npu || [];
+              this.powerMax =
+              Math.max(...this.chipTableData.map((val) => val.power)) * 1.2;
+              this.temperatureMax =
+              Math.max(...this.chipTableData.map((val) => val.temperature)) * 1.2;
+              // 1.2 In order to Demonstrated effect
+              if (res.data.momory && res.data.momory.virtual) {
+                this.dealChartData(this.virtualChart, res.data.momory.virtual);
+                this.setOption(this.virtualChart);
+              }
+              if (res.data.cpu) {
+                const overall = res.data.cpu.overall || {};
+                this.overallCpuInfo = Object.keys(overall).map((val) => {
+                  return {
+                    label: val,
+                    value: overall[val],
+                  };
+                });
+                this.addtips(this.overallCpuInfo);
+                this.cpuList = (res.data.cpu.percpu || []).map((val) => {
+                  return {...val, selected: false};
+                });
+                while (this.cpuList.length < this.defaultCpuNum) {
+                  this.cpuList.push({});
+                }
+                if (this.selectedCpuIndex !== null) {
+                  this.viewPerCpuInfo(this.selectedCpuIndex);
+                } else {
+                  this.selectedCpuInfo = [];
+                }
+              }
+            }
+          },
+          (err) => {
+            this.chipTableData = [];
+            this.cpuList = [];
+            if (this.isReloading) {
+              this.$store.commit('setIsReload', false);
+              this.isReloading = false;
+            }
+          },
+      );
+    },
+    /**
+     * add tips
+     * @param {Array} arr cpu Info
+     */
+    addtips(arr) {
+      arr.forEach((val) => {
+        switch (val.label) {
+          case 'user':
+            val.tips = this.$t('hardwareVisual.cpuUserTip');
+            break;
+          case 'nice':
+            val.tips = this.$t('hardwareVisual.cpuNiceTip');
+            break;
+          case 'system':
+            val.tips = this.$t('hardwareVisual.cpuSystemTip');
+            break;
+          case 'idle':
+            val.tips = this.$t('hardwareVisual.cpuIdleTip');
+            break;
+          case 'iowait':
+            val.tips = this.$t('hardwareVisual.cpuIowaitTip');
+            break;
+          case 'irq':
+            val.tips = this.$t('hardwareVisual.cpuIrqTip');
+            break;
+          case 'softirq':
+            val.tips = this.$t('hardwareVisual.cpuSoftirqTip');
+            break;
+          case 'steal':
+            val.tips = this.$t('hardwareVisual.cpuStealTip');
+            break;
+          case 'guest':
+            val.tips = this.$t('hardwareVisual.cpuGuestTip');
+            break;
+          case 'guest_nice':
+            val.tips = this.$t('hardwareVisual.cpuGuestniceTip');
+            break;
+          case 'interrupt':
+            val.tips = this.$t('hardwareVisual.cpuInterruptTip');
+            break;
+          case 'dpc':
+            val.tips = this.$t('hardwareVisual.cpuDpcTip');
+            break;
+        }
+      });
+    },
+    /**
+     * View the information of each cpu
+     * @param {Number} index index
+     */
+    viewPerCpuInfo(index) {
+      this.cpuList.forEach((val, key) => {
+        if (val.idle !== undefined) {
+          if (index === key) {
+            this.selectedCpuIndex = key;
+            val.selected = true;
+            this.selectedCpuInfo = Object.keys(this.cpuList[index]).map((val) => {
+              return {
+                label: val,
+                value: this.cpuList[index][val],
+              };
+            });
+            this.selectedCpuInfo.pop();
+          } else {
+            if (this.cpuList[index].idle !== undefined) {
+              val.selected = false;
+            }
+          }
+        }
+      });
+      this.addtips(this.selectedCpuInfo);
+    },
+    /**
+     * Handling pie chart data
+     * @param {Object} chart chart obejct
+     * @param {Object} data chart data
+     */
+    dealChartData(chart, data) {
+      const virtual = Object.keys(data);
+      chart.legend = virtual.reverse();
+      chart.data = virtual.map((val) => {
+        return {
+          value: data[val],
+          name: val,
+        };
+      });
+      chart.totalValue = 0;
+      chart.data.forEach((val) => {
+        chart.totalValue += val.value;
+      });
+    },
+    /**
+     * Data unit conversion
+     * @param {Number} n chart obejct
+     * @param {Boolean} type format type
+     * @return {String}
+     */
+    bytesHuman(n, type) {
+      const symbols = 'KMG'
+          .split('')
+          .map((symbol, index) => [symbol, 1 << ((index + 1) * 10)]);
+      for (const [symbol, prefix] of symbols.reverse()) {
+        if (n >= prefix) {
+          if (type) {
+            return `${n}(${(n / prefix).toFixed(1)}${symbol})`;
+          } else {
+            return `${(n / prefix).toFixed(1)}${symbol}`;
+          }
+        }
+      }
+      return `${n}`;
+    },
+    format(percentage, item) {
+      return `${percentage}`;
+    },
+    formatHbm(hbmInfo) {
+      return function() {
+        return `${hbmInfo.memory_usage}/${hbmInfo.memory_size}`;
+      };
+    },
+    /**
+     * Enable automatic hardware refresh
+     */
+    autoUpdateSamples() {
+      if (this.autoUpdateTimer) {
+        clearInterval(this.autoUpdateTimer);
+        this.autoUpdateTimer = null;
+      }
+      this.autoUpdateTimer = setInterval(() => {
+        this.$store.commit('clearToken');
+        this.init();
+      }, this.hardwareTimeReloadValue * 1000);
+    },
+    /**
+     * Disable automatic refresh
+     */
+    stopUpdateSamples() {
+      if (this.autoUpdateTimer) {
+        clearInterval(this.autoUpdateTimer);
+        this.autoUpdateTimer = null;
+      }
+    },
+    setOption(chart) {
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: (params) => {
+            return `${params.name}<br>
+            ${params.marker}${this.bytesHuman(params.value, true)}`;
+          },
+          confine: true,
+        },
+        legend: {
+          orient: 'vertical',
+          left: '50%',
+          top: '35%',
+          icon: 'circle',
+          data: chart.legend,
+          formatter: (params) => {
+            let legendStr = '';
+            for (let i = 0; i < chart.data.length; i++) {
+              if (chart.data[i].name === params) {
+                const name = chart.data[i].name;
+                legendStr = `{a|${this.bytesHuman(
+                    chart.data[i].value,
+                    true,
+                )}}\n{b|${name}}`;
+              }
+            }
+            return legendStr;
+          },
+          textStyle: {
+            rich: {
+              a: {
+                fontSize: 14,
+              },
+              b: {
+                color: '#aeb2bf',
+              },
+            },
+          },
+        },
+        series: [
+          {
+            name: '',
+            center: ['25%', '50%'],
+            type: 'pie',
+            radius: ['40%', '60%'],
+            avoidLabelOverlap: false,
+            label: {
+              show: true,
+              formatter: () => {
+                return `{a|${this.bytesHuman(chart.totalValue)}}{b|All}`;
+              },
+              position: 'center',
+              textStyle: {
+                rich: {
+                  a: {
+                    fontSize: 20,
+                    color: '#000',
+                  },
+                  b: {
+                    color: '#aeb2bf',
+                  },
+                },
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: chart.data,
+            itemStyle: {
+              normal: {
+                color: (params) => {
+                  return this.pieColorArr[params.dataIndex];
+                },
+              },
+            },
+          },
+        ],
+      };
+      this.$nextTick(() => {
+        const cpuDom = document.getElementById(chart.id);
+        if (cpuDom) {
+          chart.chartDom = echarts.init(cpuDom, null);
+          chart.chartDom.setOption(option, true);
+          chart.chartDom.resize();
+        }
+      });
+    },
+  },
+};
+</script>
+<style lang="scss" >
+.cl-hardware-visual {
+  height: 100%;
+  background-color: #fff;
+
+  .cl-hardware-content {
+    height: 100%;
+    padding: 0 24px 24px 24px;
+    .cl-hardware-top {
+      height: calc(100% - 372px);
+      padding-top: 16px;
+      & > div {
+        width: 100%;
+        .el-table_1_column_1,
+        .el-table_1_column_2,
+        .el-table_1_column_3,
+        .el-table_1_column_4,
+        .el-table_1_column_5 {
+          text-align: center;
+        }
+        .el-table::before {
+          height: 0px;
+        }
+      }
+    }
+    .cl-hardware-bottom {
+      height: 360px;
+      .cl-hardware-left {
+        width: calc(100% - 466px);
+        margin-right: 16px;
+      }
+      .cl-hardware-right {
+        width: 450px;
+      }
+    }
+    & > div {
+      height: calc(50% - 8px);
+      margin-bottom: 16px;
+      & > div {
+        float: left;
+        height: 100%;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 16px;
+        .cl-sub-title {
+          font-weight: bold;
+          font-size: 16px;
+          margin-bottom: 15px;
+        }
+        .cl-sub-title.ram {
+          margin-bottom: 10px;
+        }
+        .cl-chip-wrap {
+          height: calc(100% - 36px);
+          overflow: auto;
+          .el-icon-success:before {
+            color: #57d7ac;
+          }
+          .el-icon-error:before {
+            color: #e37783;
+          }
+          .el-icon-warning.normal:before {
+            color: #6f81e4;
+          }
+          .el-icon-warning.important:before {
+            color: #faa048;
+          }
+          .el-icon-warning.emergency:before {
+            color: #f06281;
+          }
+          .el-icon-remove:before {
+            color: #8b8e95;
+          }
+          .temp-wrap {
+            .circle {
+              width: 10px;
+              height: 10px;
+              border-radius: 5px;
+              background: #ffaa00;
+              display: inline-block;
+              position: absolute;
+              left: 1px;
+              top: 50%;
+              margin-top: -4px;
+            }
+            .circle.zero {
+              background: #e6ebf5;
+            }
+            .process-wrap {
+              background: #e6ebf5;
+              width: calc(100% - 50px);
+              height: 6px;
+              display: inline-block;
+              border-top-right-radius: 50px;
+              border-bottom-right-radius: 50px;
+              margin-right: 5px;
+              .process-cover {
+                height: 6px;
+                border-top-right-radius: 50px;
+                border-bottom-right-radius: 50px;
+                background: #ff5100;
+                background-image: linear-gradient(to right, #ffaa00, #ff5100);
+              }
+            }
+          }
+          .hbs-wrap {
+            .el-progress-bar {
+              padding-right: 140px;
+              margin-right: -145px;
+            }
+          }
+          .power {
+            background: #e5f6f6;
+            padding-left: 10px;
+          }
+        }
+        .cl-ram-wrap {
+          height: calc(100% - 36px);
+          .virtual-wrap {
+            height: 100%;
+            overflow: auto;
+            #virtual {
+              height: 100%;
+              overflow: hidden;
+            }
+          }
+        }
+        .cl-disk-wrap {
+          height: calc(100% - 36px);
+          overflow: auto;
+        }
+        .cl-cpu-wrap {
+          height: 201px;
+          .cpu-items {
+            height: 100%;
+            overflow: auto;
+            background: url('../../assets/images/cpu-bg.svg') repeat;
+            padding: 3px 0 0 3px;
+            .cpu-item {
+              float: left;
+              width: calc(6.25% - 3px);
+              height: 30px;
+              text-align: center;
+              background: #fff;
+              margin-right: 3px;
+              margin-bottom: 3px;
+              cursor: pointer;
+              .cpu {
+                height: 100%;
+                line-height: 30px;
+              }
+              .cpu.selected {
+                line-height: 30px;
+                outline: 3px solid #00a5a7;
+              }
+            }
+          }
+          .cpu-detail {
+            & > div {
+              margin-top: 10px;
+              & > span {
+                margin-right: 5px;
+                color: #b2b4bb;
+              }
+              & > div {
+                display: inline-block;
+                padding: 0 7px;
+                border-right: 1px solid #ccc;
+                &:last-child {
+                  border-right: none;
+                }
+                .label {
+                  margin-right: 5px;
+                  cursor: pointer;
+                }
+                .value {
+                  display: inline-block;
+                  width: 40px;
+                  text-align: right;
+                  cursor: pointer;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    .el-table thead tr {
+      background: #f0f3fa;
+    }
+    .el-table th.is-leaf .cell {
+      border-left: 1px solid #d4d9e6;
+    }
+    .el-table th.is-leaf:first-child .cell {
+      border-left: none;
+    }
+    .el-pagination {
+      margin: 7px 0;
+      float: right;
+    }
+  }
+  .el-table th {
+    height: 32px;
+  }
+  .image-noData {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    p {
+      font-size: 16px;
+      padding-top: 10px;
+    }
+  }
+  .el-icon-info:before {
+    color: #6c7280;
+  }
+}
+</style>

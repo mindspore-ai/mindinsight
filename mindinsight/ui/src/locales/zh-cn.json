@@ -45,7 +45,8 @@
     "modelTraceback": "模型溯源",
     "dataTraceback": "数据溯源",
     "comparePlate": "对比看板",
-    "disableProfilerTip": "无profiler日志，无法查看性能分析"
+    "disableProfilerTip": "无profiler日志，无法查看性能分析",
+    "hardwareVisual": "硬件资源"
   },
   "modelTraceback": {
     "summaryPath": "训练日志路径",
@@ -367,7 +368,7 @@
     "FPMessage": "前向起始算子：",
     "BPMessage": "反向终止算子：",
     "approximateTime": "总时长 ≈ ",
-    "stepInputTip": "请输入step值(1~{max}的正整数)",
+    "stepInputTip": "请输入step值(1~{max}的正整数，值为空时展示平均值)",
     "inputError": "输入参数异常，请输入一个1~{max}的正整数",
     "defaultTip": "默认展示平均值",
     "downloadTimeline": "下载",
@@ -383,7 +384,35 @@
       "title3": "如何使用时间线：",
       "content31": "您可以通过时间线信息分析流切分方法是否合理、迭代间隙和拖尾时间是否过长等；",
       "content32": "也可以具体定位到某个算子，查看分析它的执行时间。"
-    }
+    },
+    "unit": "ms/次"
+  },
+  "hardwareVisual": {
+    "processor": "昇腾AI处理器",
+    "ram": "内存",
+    "selectedCpu": "CPU-选中：",
+    "allCpu": "CPU-总计：",
+    "chipNameTip": "芯片名称",
+    "deviceIdTip": "芯片号",
+    "availableTip": "芯片是否空闲",
+    "healthTip": "芯片健康指数（正常、一般警告、重要警告、紧急警告）",
+    "ipTip": "芯片IP地址",
+    "aicoreTip": "芯片利用率",
+    "hbmTip": "芯片已用HBM内存",
+    "powerTip": "芯片功耗",
+    "temperatureTip": "芯片温度",
+    "cpuUserTip": "运行于用户态的时间百分比",
+    "cpuSystemTip": "运行于内核态的时间百分比",
+    "cpuIdleTip": "处于空闲状态的时间百分比",
+    "cpuNiceTip": "运行低优先级进程的时间百分比",
+    "cpuIowaitTip": "等待IO的时间百分比",
+    "cpuIrqTip": "处理硬中断的时间百分比",
+    "cpuSoftirqTip": "处理软中断的时间百分比",
+    "cpuStealTip": "被其他虚拟机抢夺的时间百分比",
+    "cpuGuestTip": "运行虚拟机的时间百分比",
+    "cpuGuestniceTip": "运行低优先级虚拟机的时间百分比",
+    "cpuInterruptTip": "处理硬中断的时间百分比",
+    "cpuDpcTip": "远程调用的时间百分比"
   },
   "components": {
     "summaryTitle": "训练选择",

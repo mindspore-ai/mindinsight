@@ -32,6 +32,7 @@ limitations under the License.
           <el-menu-item index="/model-traceback">{{$t("summaryManage.modelTraceback")}}</el-menu-item>
           <el-menu-item index="/data-traceback">{{$t("summaryManage.dataTraceback")}}</el-menu-item>
           <el-menu-item index="/compare-plate">{{$t("summaryManage.comparePlate")}}</el-menu-item>
+          <el-menu-item index="/hardware-visual">{{$t("summaryManage.hardwareVisual")}}</el-menu-item>
         </el-menu>
       </div>
     </div>
@@ -42,28 +43,61 @@ limitations under the License.
          || this.$route.path.indexOf('/histogram') > 0
          || this.$route.path.indexOf('/tensor') > 0
          || this.$route.path.indexOf('/training-dashboard') > 0
-         || !this.$route.path.indexOf('/compare-plate')">
-      <!-- automatic refresh switch -->
-      <el-switch v-model="isTimeReload"
-                 :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
-                 timeReloadValue+$t('header.timeSecond')+$t('symbols.rightbracket')"
-                 @change="timeReload"></el-switch>
-      <i class="el-icon-edit"
-         :title="$t('header.timeReloadScope')"
-         v-if="isTimeReload && !isShowInp"
-         @click="editTime"></i>
+         || !this.$route.path.indexOf('/compare-plate')
+         || !this.$route.path.indexOf('/hardware-visual')">
+      <div class="reload-training"
+          v-if="this.$route.path.indexOf('/scalar') > 0
+          || this.$route.path.indexOf('/image') > 0
+          || this.$route.path.indexOf('/histogram') > 0
+          || this.$route.path.indexOf('/training-dashboard') > 0
+          || !this.$route.path.indexOf('/compare-plate')">
+        <!-- automatic refresh switch -->
+        <el-switch v-model="isTimeReload"
+                  :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
+                  timeReloadValue+$t('header.timeSecond')+$t('symbols.rightbracket')"
+                  @change="timeReload"></el-switch>
+        <i class="el-icon-edit"
+          :title="$t('header.timeReloadScope')"
+          v-if="isTimeReload && !isShowInp"
+          @click="editTime"></i>
 
-      <el-input v-if="isTimeReload && isShowInp"
-                v-model="newReloadValue"
-                type="text"
-                @input="timeValueChange"></el-input>
+        <el-input v-if="isTimeReload && isShowInp"
+                  v-model="newReloadValue"
+                  type="text"
+                  @input="timeValueChange"></el-input>
 
-      <i class="el-icon-check"
-         v-if="isTimeReload && isShowInp"
-         @click="saveTimeValue"></i>
-      <i class="el-icon-close"
-         v-if="isTimeReload && isShowInp"
-         @click="cancleTimeValue"></i>
+        <i class="el-icon-check"
+          v-if="isTimeReload && isShowInp"
+          @click="saveTimeValue"></i>
+        <i class="el-icon-close"
+          v-if="isTimeReload && isShowInp"
+          @click="cancelTimeValue"></i>
+      </div>
+      <div class="reload-hardware"
+        v-if="!this.$route.path.indexOf('/hardware-visual')">
+        <!-- automatic refresh switch -->
+        <el-switch v-model="isHardwareTimeReload"
+                  :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
+                  hardwareTimeReloadValue+$t('header.timeSecond')+$t('symbols.rightbracket')"
+                  @change="hardwareTimeReload"></el-switch>
+        <i class="el-icon-edit"
+          :title="$t('header.timeReloadScope')"
+          v-if="isHardwareTimeReload && !isShowHardwareInp"
+          @click="editHardwareTime"></i>
+
+        <el-input v-if="isHardwareTimeReload && isShowHardwareInp"
+                  v-model="newHardwareReloadValue"
+                  type="text"
+                  @input="hardwareTimeValueChange"></el-input>
+
+        <i class="el-icon-check"
+          v-if="isHardwareTimeReload && isShowHardwareInp"
+          @click="saveHardwareTimeValue"></i>
+        <i class="el-icon-close"
+          v-if="isHardwareTimeReload && isShowHardwareInp"
+          @click="cancelHardwareTimeValue"></i>
+      </div>
+
 
       <!-- manual refresh switch -->
       <img src="../assets/images/reload.png"
@@ -90,6 +124,9 @@ export default {
       isShowInp: false,
       timeReloadValue: this.$store.state.timeReloadValue,
       newReloadValue: this.$store.state.timeReloadValue,
+      isShowHardwareInp: false,
+      hardwareTimeReloadValue: this.$store.state.hardwareTimeReloadValue,
+      newHardwareReloadValue: this.$store.state.hardwareTimeReloadValue,
     };
   },
   computed: {
@@ -101,6 +138,13 @@ export default {
     isTimeReload: {
       get() {
         return this.$store.state.isTimeReload;
+      },
+      set(val) {},
+    },
+    // set and get isHardwareTimeReload status
+    isHardwareTimeReload: {
+      get() {
+        return this.$store.state.isHardwareTimeReload;
       },
       set(val) {},
     },
@@ -117,7 +161,7 @@ export default {
     relPath(path) {
       this.$router.push(path);
     },
-    // save isTimeReload status
+    // training reload setting
     timeReload(val) {
       localStorage.isTimeReload = val;
       this.$store.commit('setIsTimeReload', val);
@@ -128,7 +172,7 @@ export default {
     },
 
     saveTimeValue() {
-      if (this.newReloadValue) {
+      if (this.newReloadValue >= 0) {
         this.newReloadValue =
           this.newReloadValue < 3
             ? 3
@@ -141,10 +185,10 @@ export default {
         this.$store.commit('setTimeReloadValue', timeValue);
         this.isShowInp = false;
       } else {
-        this.cancleTimeValue();
+        this.cancelTimeValue();
       }
     },
-    cancleTimeValue() {
+    cancelTimeValue() {
       this.isShowInp = false;
       this.newReloadValue = this.timeReloadValue;
     },
@@ -155,6 +199,45 @@ export default {
           .replace(/\./g, '');
       this.newReloadValue = Number(this.newReloadValue);
     },
+    // hardware reload setting
+    hardwareTimeReload(val) {
+      localStorage.isHardwareTimeReload = val;
+      this.$store.commit('setIsHardwareTimeReload', val);
+    },
+
+    editHardwareTime() {
+      this.isShowHardwareInp = true;
+    },
+
+    saveHardwareTimeValue() {
+      if (this.newHardwareReloadValue >= 0) {
+        this.newHardwareReloadValue =
+          this.newHardwareReloadValue < 3
+            ? 3
+            : this.newHardwareReloadValue > 300
+            ? 300
+            : this.newHardwareReloadValue;
+        const timeValue = this.newHardwareReloadValue;
+        this.hardwareTimeReloadValue = timeValue;
+        localStorage.hardwareTimeReloadValue = timeValue;
+        this.$store.commit('setHardwareTimeReloadValue', timeValue);
+        this.isShowHardwareInp = false;
+      } else {
+        this.cancelHardwareTimeValue();
+      }
+    },
+    cancelHardwareTimeValue() {
+      this.isShowHardwareInp = false;
+      this.newHardwareReloadValue = this.timeReloadValue;
+    },
+    hardwareTimeValueChange() {
+      this.newHardwareReloadValue = this.newHardwareReloadValue
+          .toString()
+          .replace(/[^\.\d]/g, '')
+          .replace(/\./g, '');
+      this.newHardwareReloadValue = Number(this.newHardwareReloadValue);
+    },
+
     // get active menu item
     getActive() {
       const str = this.$route.path.split('/');
@@ -217,6 +300,13 @@ export default {
     .el-icon-close {
       color: #f56c6c;
     }
+    .el-input {
+      width: 45px;
+      input {
+        padding: 0;
+        text-align: center;
+      }
+    }
   }
 
   // reload style
@@ -232,16 +322,10 @@ export default {
       transform: rotate(1turn);
     }
   }
-  .cl-header-right .el-input {
-    width: 45px;
-    input {
-      padding: 0;
-      text-align: center;
-    }
-  }
+
   .cl-header-nav {
     margin-left: 50px;
-    flex: 1;
+    flex: 1.5;
 
     .el-menu {
       border-bottom: none;
