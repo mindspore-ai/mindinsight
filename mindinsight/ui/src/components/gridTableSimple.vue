@@ -20,7 +20,11 @@ limitations under the License.
            class="error-msg-container">
         {{$t('components.gridIncorrectDataError')}}
       </div>
-      <div v-show="!fullData.length && updated && !incorrectData"
+      <div v-show="!incorrectData && requestError"
+           class="error-msg-container">
+        {{errorMsg}}
+      </div>
+      <div v-show="!fullData.length && updated && !incorrectData && !requestError"
            class="error-msg-container">
         {{$t('components.gridTableNoData')}}
       </div>
@@ -29,7 +33,7 @@ limitations under the License.
            class="grid-item"></div>
     </div>
     <div class="operate-container"
-         v-if="showOperate && fullData.length">
+         v-if="(showOperate && fullData.length) || requestError">
       <div class="filter-container"
            @keyup.enter="filterChange">
         <div v-for="(item, itemIndex) in filterArr"
@@ -114,6 +118,8 @@ export default {
       updated: false, // Updated
       scrollTop: false, // Wheather scroll to the top
       filterCorrect: true, // Wheather the dimension input is correct
+      requestError: false, // Exceeded the specification
+      errorMsg: '', // Error message
       viewResizeFlag: false, // Size reset flag
       // Accuray options
       accuracyArr: [
@@ -126,6 +132,7 @@ export default {
       ],
       // Table configuration items
       optionObj: {
+        enableColumnReorder: false,
         enableCellNavigation: true,
         frozenColumn: 0,
         frozenRow: 0,
@@ -348,6 +355,7 @@ export default {
      */
     updateGridData(newDataFlag, dimension, statistics, filterStr) {
       this.updated = true;
+      this.requestError = false;
       this.$nextTick(() => {
         if (!this.fullData || !this.fullData.length) {
           return;
@@ -369,7 +377,7 @@ export default {
      */
     resizeView() {
       if (this.gridObj) {
-        if (this.incorrectData) {
+        if (this.incorrectData || this.requestError) {
           this.viewResizeFlag = true;
         } else {
           this.$nextTick(() => {
@@ -384,6 +392,19 @@ export default {
      */
     toggleFullScreen() {
       this.$emit('toggleFullScreen');
+    },
+    /**
+     * Show Error message
+     * @param {String} errorMsg Error message
+     * @param {Array} dimension Array of dimension
+     * @param {String} filterStr String of dimension selection
+     */
+    showRequestErrorMessage(errorMsg, dimension, filterStr) {
+      this.errorMsg = errorMsg;
+      if (!this.filterArr.length) {
+        this.initializeFilterArr(dimension, filterStr);
+      }
+      this.requestError = true;
     },
   },
   destroyed() {},

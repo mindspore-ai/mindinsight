@@ -61,6 +61,9 @@ axios.interceptors.response.use(
         } else if ( router.currentRoute.path === '/profiling/profiling-dashboard' &&
         error.config.headers.ignoreError ) {
           return Promise.reject(error);
+        } else if ( error.response.data.error_code.toString() === '50545013' &&
+        router.currentRoute.path === '/train-manage/tensor') {
+          return Promise.reject(error);
         }
         if (errorData[error.response.data.error_code]) {
           Vue.prototype.$message.error(errorData[error.response.data.error_code]);
