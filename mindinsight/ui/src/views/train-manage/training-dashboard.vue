@@ -148,7 +148,9 @@ limitations under the License.
       </div>
       <div class="cl-dashboard-con-up"
            :class="!!tensorTag && !wrongPlugin ? '' : 'no-data-hover'"
-           @click="viewMoreTensors">
+           @mousedown="viewMoreTensors($event)"
+           @mouseup="viewMoreTensors($event)"
+           @click="viewMoreTensors($event)">
         <div class="cl-dashboard-title">{{$t("tensors.titleText")}}</div>
         <div class="cl-module">
           <div class="tensor-char-container"
@@ -220,6 +222,18 @@ export default {
       fileTag: '',
       tensorData: [],
       tensorTag: '',
+      tensorNewDataFlag: true,
+      tensorMouseData: {
+        timeStamp: 0,
+        pageX: 0,
+        pageY: 0,
+        isClick: false,
+      },
+      mouseEventKey: {
+        click: 'click',
+        mousedown: 'mousedown',
+        mouseup: 'mouseup',
+      },
     };
   },
   computed: {
@@ -413,17 +427,39 @@ export default {
     },
     /**
      * Viewing more tensors information
+     * @param {Object} event Mouse event
      */
-    viewMoreTensors() {
+    viewMoreTensors(event) {
       if (!this.tensorTag) {
         return;
       }
-      this.$router.push({
-        path: '/train-manage/tensor',
-        query: {
-          train_id: this.trainingJobId,
-        },
-      });
+      if (event.type === this.mouseEventKey.mousedown) {
+        this.tensorMouseData.isClick = false;
+        this.tensorMouseData.pageX = event.pageX;
+        this.tensorMouseData.pageY = event.pageY;
+      } else if (event.type === this.mouseEventKey.mouseup) {
+        // offset buffer is 3
+        const offsetBuffer = 3;
+        if (
+          Math.abs(event.pageX - this.tensorMouseData.pageX) <= offsetBuffer &&
+          Math.abs(event.pageY - this.tensorMouseData.pageY) <= offsetBuffer
+        ) {
+          this.tensorMouseData.isClick = true;
+          this.tensorMouseData.timeStamp = event.timeStamp;
+        }
+      } else if (event.type === this.mouseEventKey.click) {
+        if (
+          this.tensorMouseData.isClick &&
+          event.timeStamp === this.tensorMouseData.timeStamp
+        ) {
+          this.$router.push({
+            path: '/train-manage/tensor',
+            query: {
+              train_id: this.trainingJobId,
+            },
+          });
+        }
+      }
     },
     /**
      * Go to data.
@@ -828,10 +864,16 @@ export default {
       this.getSampleRandomly();
     },
     dealTensorData(tags) {
+      const oldTag = this.tensorTag;
       if (tags.length) {
         this.tensorTag = tags[0];
       } else {
         this.tensorTag = '';
+      }
+      if (this.tensorTag !== oldTag) {
+        this.tensorNewDataFlag = true;
+      } else {
+        this.tensorNewDataFlag = false;
       }
       if (this.tensorTag) {
         this.getTensorGridData();
@@ -920,7 +962,7 @@ export default {
               const elementItem = this.$refs.tensorChart;
               if (elementItem) {
                 elementItem.updateGridData(
-                    true,
+                    this.tensorNewDataFlag,
                     curStepData.value.dims,
                     statistics,
                 );

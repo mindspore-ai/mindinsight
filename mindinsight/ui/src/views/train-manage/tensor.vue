@@ -117,6 +117,9 @@ limitations under the License.
                               :viewName="curViewName"
                               :axisName="curAxisName"
                               :fullData="sampleItem.curData"></histogramUntil>
+              <div class="loading-cover"
+                   v-if="sampleItem.showLoading">
+                <i class="el-icon-loading"></i></div>
             </div>
             <!-- Information display area -->
             <div class="sample-data-show"
@@ -378,6 +381,7 @@ export default {
                   tagName: tagName,
                   summaryName: this.trainingJobId,
                   show: false,
+                  showLoading: false,
                   sliderValue: 0,
                   newDataFlag: true,
                   totalStepNum: 0,
@@ -415,6 +419,7 @@ export default {
      * @param {Object} sampleItem The object that is being operated
      */
     filterChange(data, sampleItem) {
+      sampleItem.showLoading = true;
       sampleItem.filterStr = `[${data.toString()}]`;
       sampleItem.newDataFlag = true;
       this.freshtMartixData(sampleItem);
@@ -517,24 +522,30 @@ export default {
         tag: sampleItem.tagName,
         detail: 'histogram',
       };
-      RequestService.getTensorsSample(params).then((res) => {
-        if (!res || !res.data || !this.curDataType) {
-          return;
-        }
-        if (!res.data.tensors || !res.data.tensors.length) {
-          return;
-        }
-        const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
-        sampleItem.summaryName = resData.train_id;
-        // sampleItem.fullData = resData;
-        sampleItem.curData = this.formHistogramOriData(resData);
-        this.$nextTick(() => {
-          const elementItem = this.$refs[sampleItem.ref];
-          if (elementItem) {
-            elementItem[0].updateHistogramData();
-          }
-        });
-      });
+      RequestService.getTensorsSample(params).then(
+          (res) => {
+            sampleItem.showLoading = false;
+            if (!res || !res.data || !this.curDataType) {
+              return;
+            }
+            if (!res.data.tensors || !res.data.tensors.length) {
+              return;
+            }
+            const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
+            sampleItem.summaryName = resData.train_id;
+            // sampleItem.fullData = resData;
+            sampleItem.curData = this.formHistogramOriData(resData);
+            this.$nextTick(() => {
+              const elementItem = this.$refs[sampleItem.ref];
+              if (elementItem) {
+                elementItem[0].updateHistogramData();
+              }
+            });
+          },
+          () => {
+            sampleItem.showLoading = false;
+          },
+      );
     },
     /**
      * Obtain table data
@@ -549,9 +560,11 @@ export default {
       RequestService.getTensorsSample(params).then(
           (res) => {
             if (!res || !res.data || this.curDataType) {
+              sampleItem.showLoading = false;
               return;
             }
             if (!res.data.tensors.length) {
+              sampleItem.showLoading = false;
               return;
             }
             const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
@@ -567,6 +580,7 @@ export default {
               sampleItem.sliderValue = 0;
               sampleItem.totalStepNum = 0;
               this.clearMartixData(sampleItem);
+              sampleItem.showLoading = false;
               return;
             }
             const oldTotalStepNum = sampleItem.totalStepNum;
@@ -610,6 +624,7 @@ export default {
             sampleItem.sliderValue = 0;
             sampleItem.totalStepNum = 0;
             this.clearMartixData(sampleItem);
+            sampleItem.showLoading = false;
           },
       );
     },
@@ -628,6 +643,7 @@ export default {
       sampleItem.curMartixShowSliderValue = sampleItem.sliderValue;
       RequestService.getTensorsSample(params).then(
           (res) => {
+            sampleItem.showLoading = false;
             if (!res || !res.data || this.curDataType) {
               return;
             }
@@ -660,16 +676,27 @@ export default {
               sampleItem.newDataFlag = false;
             });
           },
-          () => {
-            this.clearMartixData(sampleItem);
+          (e) => {
+            let showLimitError = false;
+            if (
+              e.response &&
+            e.response.data &&
+            e.response.data.error_code &&
+            e.response.data.error_code.toString() === '50545013'
+            ) {
+              showLimitError = true;
+            }
+            this.clearMartixData(sampleItem, showLimitError);
+            sampleItem.showLoading = false;
           },
       );
     },
     /**
      * Clear table display
      * @param {Object} sampleItem The object that is being operated
+     * @param {Boolean} showLimitError Display request error message
      */
-    clearMartixData(sampleItem) {
+    clearMartixData(sampleItem, showLimitError) {
       sampleItem.curData = [];
       sampleItem.newDataFlag = true;
       let elementItem = null;
@@ -677,6 +704,13 @@ export default {
         elementItem = this.$refs[sampleItem.ref];
         if (elementItem) {
           elementItem[0].updateGridData();
+          if (showLimitError) {
+            elementItem[0].showRequestErrorMessage(
+                this.$t('error.50545013'),
+                sampleItem.formateData.value.dims,
+                sampleItem.filterStr,
+            );
+          }
         }
       });
     },
@@ -917,6 +951,7 @@ export default {
             tagName: tagName,
             summaryName: this.trainingJobId,
             show: false,
+            showLoading: false,
             sliderValue: 0,
             newDataFlag: true,
             totalStepNum: 0,
@@ -981,6 +1016,7 @@ export default {
         return;
       }
       sampleItem.sliderChangeTimer = setTimeout(() => {
+        sampleItem.showLoading = true;
         this.freshtMartixData(sampleItem);
       }, 500);
     },
@@ -1112,6 +1148,19 @@ export default {
           position: relative;
           background: #f0f3fa;
           overflow-x: hidden;
+          .loading-cover {
+            width: 100%;
+            height: 100%;
+            z-index: 9;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            background: white;
+            opacity: 0.5;
+            align-items: center;
+            justify-content: center;
+          }
         }
         .sample-data-show {
           padding: 32px 16px;
