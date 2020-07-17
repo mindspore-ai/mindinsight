@@ -396,8 +396,8 @@ export default {
               this.temperatureMax =
               Math.max(...this.chipTableData.map((val) => val.temperature)) * 1.2;
               // 1.2 In order to Demonstrated effect
-              if (res.data.momory && res.data.momory.virtual) {
-                this.dealChartData(this.virtualChart, res.data.momory.virtual);
+              if (res.data.memory && res.data.memory.virtual) {
+                this.dealChartData(this.virtualChart, res.data.memory.virtual);
                 this.setOption(this.virtualChart);
               }
               if (res.data.cpu) {

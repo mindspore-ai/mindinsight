@@ -291,7 +291,7 @@ export default {
   getMetricsData() {
     return axios({
       method: 'get',
-      url: 'v1/mindinsight/resource_monitor/current/metrics',
+      url: 'v1/mindinsight/sysmetric/current',
       headers: {
         ignoreError: true,
       },
