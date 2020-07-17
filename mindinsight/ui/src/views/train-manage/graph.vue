@@ -2029,9 +2029,13 @@ export default {
           selectedNode.type === 'name_scope' ||
           selectedNode.type === 'aggregation_scope';
         this.selectedNode.count = selectedNode.subnode_count;
-        this.selectedNode.info.attributes = JSON.parse(
-            JSON.stringify(selectedNode.attr),
-        );
+        const attrTemp = JSON.parse(JSON.stringify(selectedNode.attr || {}));
+        this.selectedNode.info.attributes = Object.keys(attrTemp).map((key) => {
+          return {
+            name: key,
+            value: attrTemp[key],
+          };
+        });
 
         Object.keys(selectedNode.input).forEach((key) => {
           const value = this.getEdgeLabel(selectedNode.input[key]);
