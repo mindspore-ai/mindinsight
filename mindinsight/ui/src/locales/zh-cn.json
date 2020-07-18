@@ -394,7 +394,7 @@
     "allCpu": "CPU-总计：",
     "chipNameTip": "芯片名称",
     "deviceIdTip": "芯片号",
-    "availableTip": "芯片是否空闲",
+    "availableTip": "芯片是否空闲（仅供参考）",
     "healthTip": "芯片健康指数（正常、一般警告、重要警告、紧急警告）",
     "ipTip": "芯片IP地址",
     "aicoreTip": "芯片利用率",
@@ -412,7 +412,8 @@
     "cpuGuestTip": "运行虚拟机的时间百分比",
     "cpuGuestniceTip": "运行低优先级虚拟机的时间百分比",
     "cpuInterruptTip": "处理硬中断的时间百分比",
-    "cpuDpcTip": "远程调用的时间百分比"
+    "cpuDpcTip": "远程调用的时间百分比",
+    "noNpuInfo":"暂无昇腾AI处理器信息"
   },
   "components": {
     "summaryTitle": "训练选择",
