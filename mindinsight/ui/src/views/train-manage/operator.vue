@@ -22,6 +22,7 @@ limitations under the License.
         <el-tab-pane label="AI CORE"
                      name="core">
           <div class="cl-profiler-top"
+               :class="{fullScreen:fullScreen}"
                v-if="coreCharts.data.length">
             <div>
               <span class="profiler-title">
@@ -46,10 +47,15 @@ limitations under the License.
             </div>
           </div>
           <div class="cl-profiler-bottom"
+               :class="{fullScreen:fullScreen}"
                v-if="coreCharts.data.length">
             <span class="profiler-title">
               {{ $t('operator.operatorStatistics') }}
             </span>
+            <img src="../../assets/images/full-screen.png"
+                 :title="$t('graph.fullScreen')"
+                 class="fullScreen"
+                 @click="fullScreen=!fullScreen">
             <div>
               <el-radio-group v-model="statisticType"
                               @change="coreTableChange"
@@ -120,7 +126,7 @@ limitations under the License.
                                :property="item"
                                :key="$index"
                                sortable
-                               :label="item==='execution_time'?`${item} (ms)`:item">
+                               :label="item==='execution_time'?`${item} (${$t('profiling.unit')})`:item">
               </el-table-column>
             </el-table>
             <el-table v-show="statisticType && opAllTypeList.opDetailCol && opAllTypeList.opDetailCol.length"
@@ -135,7 +141,7 @@ limitations under the License.
               <el-table-column v-for="(item, $index) in opAllTypeList.opDetailCol"
                                :property="item"
                                :key="$index"
-                               :label="item==='avg_execution_time'?`${item} (ms)`:item"
+                               :label="item==='avg_execution_time'?`${item} (${$t('profiling.unit')})`:item"
                                :sortable="item === 'op_info' ? false : 'custom'"
                                :width="(item==='avg_execution_time'|| item==='subgraph' ||
                                 item==='op_name'|| item==='op_type')?'220':''"
@@ -198,7 +204,8 @@ limitations under the License.
               <el-table-column v-for="(item, $index) in opCpuList.opDetailCol"
                                :property="item"
                                :key="$index"
-                               :label="(item==='total_time' || item==='dispatch_time')?`${item} (ms)`:item"
+                               :label="(item==='total_time' || item==='dispatch_time')?
+                               `${item} (${$t('profiling.unit')})`:item"
                                sortable="custom"
                                show-overflow-tooltip>
               </el-table-column>
@@ -318,6 +325,7 @@ export default {
         childProp: null,
         childOrder: null,
       },
+      fullScreen: false,
     };
   },
   watch: {
@@ -1106,13 +1114,25 @@ export default {
   .cl-search-box {
     float: right;
     margin-bottom: 10px;
+    margin-right: 20px;
   }
   .cl-profiler-top {
     height: 45%;
   }
+  .cl-profiler-top.fullScreen{
+    display: none;
+  }
   .cl-profiler-bottom {
     height: 55%;
     padding-top: 10px;
+    .fullScreen{
+      float: right;
+      margin-top: 5px;
+      cursor: pointer;
+    }
+  }
+  .cl-profiler-bottom.fullScreen{
+    height: 100%;
   }
   .cpu-tab {
     .cl-profiler-top {
