@@ -270,7 +270,7 @@ export default {
       this.queryTrainingTrace(0);
     },
     changeStep(value) {
-      if (value === 0) {
+      if (value === 0 || (!this.steps.step && this.steps.step !== 0)) {
         this.steps.step = null;
         this.steps.trueStep = null;
         this.queryTrainingTrace(0);
