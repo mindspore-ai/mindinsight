@@ -20,11 +20,12 @@ limitations under the License.
          v-if="!(chipTableData.length === 0 && cpuList.length===0)">
       <div class="cl-hardware-top">
         <div class="cl-hardware-left">
-          <div class="cl-sub-title">
+          <div class="cl-sub-title"
+               v-if="chipTableData.length">
             {{$t('hardwareVisual.processor')}}
           </div>
           <div class="cl-chip-wrap">
-            <el-table v-if="!(chipTableData.length === 0)"
+            <el-table v-if="chipTableData.length"
                       :data="chipTableData"
                       width="100%"
                       height="100%">
@@ -66,7 +67,7 @@ limitations under the License.
                 <template slot-scope="scope">
                   <i class="el-icon-success"
                      v-if="scope.row.available"></i>
-                  <i class="el-icon-error"
+                  <i class="el-icon-question"
                      v-else></i>
                 </template>
               </el-table-column>
@@ -189,7 +190,7 @@ limitations under the License.
                 <img :src="require('@/assets/images/nodata.png')"
                      alt="" />
               </div>
-              <p>{{$t("public.noData")}}</p>
+              <p>{{$t("hardwareVisual.noNpuInfo")}}</p>
             </div>
           </div>
         </div>
@@ -721,6 +722,9 @@ export default {
         .cl-chip-wrap {
           height: calc(100% - 36px);
           overflow: auto;
+          .el-icon-question::before {
+            color: red;
+          }
           .el-icon-success:before {
             color: #57d7ac;
           }
