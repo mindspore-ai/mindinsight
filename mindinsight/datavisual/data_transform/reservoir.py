@@ -213,7 +213,7 @@ class HistogramReservoir(Reservoir):
                 visual_range.update(histogram_container.max, histogram_container.min)
 
             if visual_range.max == visual_range.min and not max_count:
-                logger.info("Max equals to min. Count is zero.")
+                logger.debug("Max equals to min. Count is zero.")
 
             bins = calc_histogram_bins(max_count)
 

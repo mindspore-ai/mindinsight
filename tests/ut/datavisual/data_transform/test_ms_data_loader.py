@@ -30,6 +30,7 @@ from mindinsight.datavisual.data_transform.ms_data_loader import MSDataLoader
 from mindinsight.datavisual.data_transform.ms_data_loader import _PbParser
 from mindinsight.datavisual.data_transform.events_data import TensorEvent
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from mindinsight.utils.computing_resource_mgr import ComputingResourceManager
 
 from ..mock import MockLogger
 from ....utils.log_generators.graph_pb_generator import create_graph_pb_file
@@ -85,7 +86,7 @@ class TestMsDataLoader:
         write_file(file1, SCALAR_RECORD)
         ms_loader = MSDataLoader(summary_dir)
         ms_loader._latest_summary_filename = 'summary.00'
-        ms_loader.load()
+        ms_loader.load(ComputingResourceManager(1, 1))
         shutil.rmtree(summary_dir)
         tag = ms_loader.get_events_data().list_tags_by_plugin('scalar')
         tensors = ms_loader.get_events_data().tensors(tag[0])
@@ -98,7 +99,7 @@ class TestMsDataLoader:
         file2 = os.path.join(summary_dir, 'summary.02')
         write_file(file2, SCALAR_RECORD)
         ms_loader = MSDataLoader(summary_dir)
-        ms_loader.load()
+        ms_loader.load(ComputingResourceManager(1, 1))
         shutil.rmtree(summary_dir)
         assert 'Check crc faild and ignore this file' in str(MockLogger.log_msg['warning'])
 
@@ -124,7 +125,7 @@ class TestMsDataLoader:
         summary_dir = tempfile.mkdtemp()
         create_graph_pb_file(output_dir=summary_dir, filename=filename)
         ms_loader = MSDataLoader(summary_dir)
-        ms_loader.load()
+        ms_loader.load(ComputingResourceManager(1, 1))
         events_data = ms_loader.get_events_data()
         plugins = events_data.list_tags_by_plugin(PluginNameEnum.GRAPH.value)
         shutil.rmtree(summary_dir)

@@ -224,3 +224,6 @@ def setup_logger(sub_module, log_name, **kwargs):
         logger.addHandler(logfile_handler)
 
     return logger
+
+
+utils_logger = setup_logger("utils", "utils")

@@ -40,6 +40,7 @@ from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
 from mindinsight.datavisual.data_transform.loader_generators.data_loader_generator import DataLoaderGenerator
+from mindinsight.utils.computing_resource_mgr import ComputingResourceManager
 from mindinsight.utils.exceptions import MindInsightException
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import UnknownError
@@ -510,7 +511,7 @@ class _DetailCacheManager(_BaseCacheManager):
             logger.debug("delete loader %s", loader_id)
             self._loader_pool.pop(loader_id)
 
-    def _execute_loader(self, loader_id, workers_count):
+    def _execute_loader(self, loader_id, computing_resource_mgr):
         """
         Load data form data_loader.
 
@@ -518,7 +519,7 @@ class _DetailCacheManager(_BaseCacheManager):
 
         Args:
             loader_id (str): An ID for `Loader`.
-            workers_count (int): The count of workers.
+            computing_resource_mgr (ComputingResourceManager): The ComputingResourceManager instance.
         """
         try:
             with self._loader_pool_mutex:
@@ -527,7 +528,7 @@ class _DetailCacheManager(_BaseCacheManager):
                     logger.debug("Loader %r has been deleted, will not load data.", loader_id)
                     return
 
-            loader.data_loader.load(workers_count)
+            loader.data_loader.load(computing_resource_mgr)
 
             # Update loader cache status to CACHED.
             # Loader with cache status CACHED should remain the same cache status.
@@ -580,13 +581,17 @@ class _DetailCacheManager(_BaseCacheManager):
 
         logger.info("Start to execute load data. threads_count: %s.", threads_count)
 
-        with ThreadPoolExecutor(max_workers=threads_count) as executor:
-            futures = []
-            loader_pool = self._get_snapshot_loader_pool()
-            for loader_id in loader_pool:
-                future = executor.submit(self._execute_loader, loader_id, threads_count)
-                futures.append(future)
-            wait(futures, return_when=ALL_COMPLETED)
+        with ComputingResourceManager(
+                executors_cnt=threads_count,
+                max_processes_cnt=settings.MAX_PROCESSES_COUNT) as computing_resource_mgr:
+
+            with ThreadPoolExecutor(max_workers=threads_count) as executor:
+                futures = []
+                loader_pool = self._get_snapshot_loader_pool()
+                for loader_id in loader_pool:
+                    future = executor.submit(self._execute_loader, loader_id, computing_resource_mgr)
+                    futures.append(future)
+                wait(futures, return_when=ALL_COMPLETED)
 
     def _get_threads_count(self):
         """
