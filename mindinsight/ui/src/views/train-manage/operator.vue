@@ -55,7 +55,7 @@ limitations under the License.
             <img src="../../assets/images/full-screen.png"
                  :title="$t('graph.fullScreen')"
                  class="fullScreen"
-                 @click="fullScreen=!fullScreen">
+                 @click="fullScreenControl()">
             <div>
               <el-radio-group v-model="statisticType"
                               @change="coreTableChange"
@@ -109,7 +109,7 @@ limitations under the License.
                                        :width="(ele==='avg_execution_time'|| ele==='subgraph' ||
                                         ele==='op_name'|| ele==='op_type')?'220':''"
                                        show-overflow-tooltip
-                                       :label="ele==='avg_execution_time'?`${ele} （ms)`:ele">
+                                       :label="ele==='avg_execution_time'?`${ele} (${$t('profiling.unit')})`:ele">
                       </el-table-column>
                     </el-table>
                     <el-pagination :current-page="props.row.opDetailPage.offset + 1"
@@ -353,6 +353,14 @@ export default {
         setTimeout(() => {
           this.coreCharts.chartDom.resize();
         }, 300);
+      }
+    },
+    fullScreenControl() {
+      this.fullScreen = !this.fullScreen;
+      if (this.coreCharts.chartDom && !this.fullScreen) {
+        this.$nextTick(() => {
+          this.coreCharts.chartDom.resize();
+        });
       }
     },
     /**
@@ -1119,19 +1127,19 @@ export default {
   .cl-profiler-top {
     height: 45%;
   }
-  .cl-profiler-top.fullScreen{
+  .cl-profiler-top.fullScreen {
     display: none;
   }
   .cl-profiler-bottom {
     height: 55%;
     padding-top: 10px;
-    .fullScreen{
+    .fullScreen {
       float: right;
       margin-top: 5px;
       cursor: pointer;
     }
   }
-  .cl-profiler-bottom.fullScreen{
+  .cl-profiler-bottom.fullScreen {
     height: 100%;
   }
   .cpu-tab {
