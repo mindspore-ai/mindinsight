@@ -510,7 +510,7 @@ class _DetailCacheManager(_BaseCacheManager):
             logger.debug("delete loader %s", loader_id)
             self._loader_pool.pop(loader_id)
 
-    def _execute_loader(self, loader_id):
+    def _execute_loader(self, loader_id, workers_count):
         """
         Load data form data_loader.
 
@@ -518,7 +518,7 @@ class _DetailCacheManager(_BaseCacheManager):
 
         Args:
             loader_id (str): An ID for `Loader`.
-
+            workers_count (int): The count of workers.
         """
         try:
             with self._loader_pool_mutex:
@@ -527,7 +527,7 @@ class _DetailCacheManager(_BaseCacheManager):
                     logger.debug("Loader %r has been deleted, will not load data.", loader_id)
                     return
 
-            loader.data_loader.load()
+            loader.data_loader.load(workers_count)
 
             # Update loader cache status to CACHED.
             # Loader with cache status CACHED should remain the same cache status.
@@ -584,7 +584,7 @@ class _DetailCacheManager(_BaseCacheManager):
             futures = []
             loader_pool = self._get_snapshot_loader_pool()
             for loader_id in loader_pool:
-                future = executor.submit(self._execute_loader, loader_id)
+                future = executor.submit(self._execute_loader, loader_id, threads_count)
                 futures.append(future)
             wait(futures, return_when=ALL_COMPLETED)
 

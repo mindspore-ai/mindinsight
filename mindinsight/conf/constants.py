@@ -14,6 +14,7 @@
 # ============================================================================
 """Constants module for mindinsight settings."""
 import logging
+import os
 
 ####################################
 # Global default settings.
@@ -48,6 +49,7 @@ API_PREFIX = '/v1/mindinsight'
 # Datavisual default settings.
 ####################################
 MAX_THREADS_COUNT = 15
+MAX_PROCESSES_COUNT = max(os.cpu_count() or 0, 15)
 
 MAX_TAG_SIZE_PER_EVENTS_DATA = 300
 DEFAULT_STEP_SIZES_PER_TAG = 500
