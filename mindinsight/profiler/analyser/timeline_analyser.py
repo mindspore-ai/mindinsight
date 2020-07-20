@@ -17,7 +17,6 @@ import json
 import os
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
-from mindinsight.profiler.parser.container import TimelineContainer
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException, \
     ProfilerIOException
 from mindinsight.profiler.common.log import logger
@@ -25,6 +24,48 @@ from mindinsight.profiler.common.validator.validate_path import validate_and_nor
 
 
 SIZE_LIMIT = 20 * 1024 * 1024  # 20MB
+
+
+class TimelineContainer:
+    """
+    A container of operator computation metadata.
+
+    Args:
+        split_list (list): The split list of metadata in op_compute output file.
+    """
+    def __init__(self, split_list):
+        self._op_name = split_list[0]
+        self._stream_id = int(split_list[1])
+        self._start_time = float(split_list[2])
+        self._duration = float(split_list[3])
+        self._pid = None
+        if len(split_list) == 5:
+            self._pid = int(split_list[4])
+
+    @property
+    def op_name(self):
+        """Get the name of the operator."""
+        return self._op_name
+
+    @property
+    def stream_id(self):
+        """Get the stream id of the operator."""
+        return self._stream_id
+
+    @property
+    def start_time(self):
+        """Get the execution start time of the operator."""
+        return self._start_time
+
+    @property
+    def duration(self):
+        """Get the duration of the operator execution."""
+        return self._duration
+
+    @property
+    def pid(self):
+        """Get the pid of the operator execution."""
+        return self._pid
 
 
 class TimelineAnalyser(BaseAnalyser):

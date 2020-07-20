@@ -15,7 +15,7 @@
 """The analyser factory."""
 import threading
 
-import mindinsight.profiler.analyser as analyser_module
+from mindinsight.profiler import analyser as analyser_module
 from mindinsight.profiler.common.exceptions.exceptions import \
     ProfilerAnalyserNotExistException
 
