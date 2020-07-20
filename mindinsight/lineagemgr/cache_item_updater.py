@@ -17,7 +17,7 @@ import os
 
 from mindinsight.datavisual.data_transform.data_manager import BaseCacheItemUpdater, CachedTrainJob
 from mindinsight.lineagemgr.common.log import logger
-from mindinsight.lineagemgr.common.exceptions.exceptions import MindInsightException
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageFileNotFoundError
 from mindinsight.lineagemgr.common.validator.validate import validate_train_id, validate_added_info
 from mindinsight.lineagemgr.lineage_parser import LineageParser, LINEAGE
 from mindinsight.utils.exceptions import ParamValueError
@@ -59,19 +59,13 @@ class LineageCacheItemUpdater(BaseCacheItemUpdater):
 
         try:
             lineage_parser = self._lineage_parsing(cache_item)
-        except MindInsightException as err:
-            with cache_item.lock_key(LINEAGE):
-                try:
-                    cache_item.delete(key=LINEAGE)
-                    logger.info("Parse failed, delete the tran job %s. Detail: %s.", relative_path, str(err))
-                except ParamValueError:
-                    logger.debug("Parse failed, no need to delete the train job %s. "
-                                 "Detail: %s.", relative_path, str(err))
+        except LineageFileNotFoundError:
+            self._delete_lineage_in_cache(cache_item, LINEAGE, relative_path)
             return
 
         super_lineage_obj = lineage_parser.super_lineage_obj
         if super_lineage_obj is None:
-            logger.debug("There is no lineage to update in tran job %s.", relative_path)
+            logger.debug("There is no lineage to update in train job %s.", relative_path)
             return
 
         cache_item.set(key=LINEAGE, value=lineage_parser)
@@ -91,3 +85,12 @@ class LineageCacheItemUpdater(BaseCacheItemUpdater):
                 lineage_parser.load()
 
         return lineage_parser
+
+    def _delete_lineage_in_cache(self, cache_item, key, relative_path):
+        with cache_item.lock_key(key):
+            try:
+                cache_item.delete(key=key)
+                logger.info("Parse failed, delete the tran job %s.", relative_path)
+            except ParamValueError:
+                logger.debug("Parse failed, and it is not in cache, "
+                             "no need to delete the train job %s.", relative_path)
