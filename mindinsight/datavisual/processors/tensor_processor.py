@@ -89,33 +89,16 @@ def get_specific_dims_data(ndarray, dims, tensor_dims):
     return ndarray[tuple(indices)]
 
 
-def get_statistics_dict(tensor_container, tensors):
+def get_statistics_dict(stats):
     """
-    Get statistics dict according to tensor data.
+    Get statistics dict according to statistics value.
 
     Args:
-        tensor_container (TensorContainer): An instance of TensorContainer.
-        tensors (numpy.ndarray or number): An numpy.ndarray or number of tensor data.
+        stats (Statistics): An instance of Statistics.
 
     Returns:
         dict, a dict including 'max', 'min', 'avg', 'count', 'nan_count', 'neg_inf_count', 'pos_inf_count'.
     """
-    if tensors is None:
-        statistics = {
-            "max": tensor_container.stats.max,
-            "min": tensor_container.stats.min,
-            "avg": tensor_container.stats.avg,
-            "count": tensor_container.stats.count,
-            "nan_count": tensor_container.stats.nan_count,
-            "neg_inf_count": tensor_container.stats.neg_inf_count,
-            "pos_inf_count": tensor_container.stats.pos_inf_count
-        }
-        return statistics
-
-    if not isinstance(tensors, np.ndarray):
-        tensors = np.array(tensors)
-
-    stats = get_statistics_from_tensor(tensors)
     statistics = {
         "max": stats.max,
         "min": stats.min,
@@ -249,7 +232,7 @@ class TensorProcessor(BaseProcessor):
                 "data_type": anf_ir_pb2.DataType.Name(value.data_type)
             }
             if detail and detail == 'stats':
-                stats = get_statistics_dict(value, None)
+                stats = get_statistics_dict(value.stats)
                 value_dict.update({"statistics": stats})
 
             values.append({
@@ -309,14 +292,40 @@ class TensorProcessor(BaseProcessor):
             if len(flatten_data) > MAX_TENSOR_RESPONSE_DATA_SIZE:
                 raise ResponseDataExceedMaxValueError("the size of response data: {} exceed max value: {}."
                                                       .format(len(flatten_data), MAX_TENSOR_RESPONSE_DATA_SIZE))
+
+            def transfer(array):
+                if not isinstance(array, np.ndarray):
+                    # The list is used here so that len function can be used
+                    # when the value of array is `NAN`、｀-INF｀ or ｀INF｀.
+                    array = [array]
+                transfer_data = [None] * len(array)
+                for index, data in enumerate(array):
+                    if isinstance(data, np.ndarray):
+                        transfer_data[index] = transfer(data)
+                    else:
+                        if np.isnan(data):
+                            transfer_data[index] = 'NAN'
+                        elif np.isneginf(data):
+                            transfer_data[index] = '-INF'
+                        elif np.isposinf(data):
+                            transfer_data[index] = 'INF'
+                        else:
+                            transfer_data[index] = data
+                return transfer_data
+
+            stats = get_statistics_from_tensor(res_data)
+            if stats.nan_count + stats.neg_inf_count + stats.pos_inf_count > 0:
+                tensor_data = transfer(res_data)
+            else:
+                tensor_data = res_data.tolist()
             values.append({
                 "wall_time": tensor.wall_time,
                 "step": tensor.step,
                 "value": {
                     "dims": value.dims,
                     "data_type": anf_ir_pb2.DataType.Name(value.data_type),
-                    "data": res_data.tolist(),
-                    "statistics": get_statistics_dict(value, flatten_data)
+                    "data": tensor_data,
+                    "statistics": get_statistics_dict(stats)
                 }
             })
             break
@@ -365,7 +374,7 @@ class TensorProcessor(BaseProcessor):
                     "dims": value.dims,
                     "data_type": anf_ir_pb2.DataType.Name(value.data_type),
                     "histogram_buckets": buckets,
-                    "statistics": get_statistics_dict(value, None)
+                    "statistics": get_statistics_dict(value.stats)
                 }
             })
 
