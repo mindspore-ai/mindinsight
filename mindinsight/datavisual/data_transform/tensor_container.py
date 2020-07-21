@@ -23,6 +23,7 @@ from mindinsight.datavisual.utils.utils import calc_histogram_bins
 from mindinsight.utils.exceptions import ParamValueError
 
 F32_MIN, F32_MAX = np.finfo(np.float32).min, np.finfo(np.float32).max
+MAX_TENSOR_COUNT = 10000000
 
 
 class Statistics:
