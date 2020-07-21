@@ -14,7 +14,36 @@
 # ============================================================================
 """Constants module for mindinsight settings."""
 import logging
+import math
 import os
+
+
+_DEFAULT_MAX_THREADS_COUNT = 15
+
+
+def _calc_default_max_processes_cnt():
+    """Calc default processes count."""
+
+    # We need to make sure every summary directory has a process to load data.
+    min_cnt = _DEFAULT_MAX_THREADS_COUNT
+    # Do not use too many processes to avoid system problems (eg. out of memory).
+    max_cnt = 45
+    used_cpu_ratio = 0.75
+
+    cpu_count = os.cpu_count()
+    if cpu_count is None:
+        return min_cnt
+
+    processes_cnt = math.floor(cpu_count * used_cpu_ratio)
+
+    if processes_cnt < min_cnt:
+        return min_cnt
+
+    if processes_cnt > max_cnt:
+        return max_cnt
+
+    return processes_cnt
+
 
 ####################################
 # Global default settings.
@@ -48,8 +77,8 @@ API_PREFIX = '/v1/mindinsight'
 ####################################
 # Datavisual default settings.
 ####################################
-MAX_THREADS_COUNT = 15
-MAX_PROCESSES_COUNT = max(os.cpu_count() or 0, 15)
+MAX_THREADS_COUNT = _DEFAULT_MAX_THREADS_COUNT
+MAX_PROCESSES_COUNT = _calc_default_max_processes_cnt()
 
 MAX_TAG_SIZE_PER_EVENTS_DATA = 300
 DEFAULT_STEP_SIZES_PER_TAG = 500
