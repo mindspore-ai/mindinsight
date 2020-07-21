@@ -43,6 +43,7 @@ class GeneralErrors(Enum):
     FILE_SYSTEM_PERMISSION_ERROR = 8
     PORT_NOT_AVAILABLE_ERROR = 9
     URL_DECODE_ERROR = 10
+    COMPUTING_RESOURCE_ERROR = 11
 
 
 class ProfilerMgrErrors(Enum):
