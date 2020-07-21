@@ -35,7 +35,7 @@ from mindinsight.datavisual.data_transform.graph import MSGraph
 from mindinsight.datavisual.data_transform.histogram import Histogram
 from mindinsight.datavisual.data_transform.histogram_container import HistogramContainer
 from mindinsight.datavisual.data_transform.image_container import ImageContainer
-from mindinsight.datavisual.data_transform.tensor_container import TensorContainer
+from mindinsight.datavisual.data_transform.tensor_container import TensorContainer, MAX_TENSOR_COUNT
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
 from mindinsight.datavisual.utils import crc32
@@ -43,6 +43,7 @@ from mindinsight.utils.exceptions import UnknownError
 
 HEADER_SIZE = 8
 CRC_STR_SIZE = 4
+MAX_EVENT_STRING = 500000000
 
 
 class MSDataLoader:
@@ -328,6 +329,10 @@ class _SummaryParser(_Parser):
                 if event_str is None:
                     file_handler.reset_offset(start_offset)
                     break
+                if len(event_str) > MAX_EVENT_STRING:
+                    logger.warning("file_path: %s, event string: %d exceeds %d and drop it.",
+                                   file_handler.file_path, len(event_str), MAX_EVENT_STRING)
+                    continue
 
                 future = executor.submit(self._event_parse, event_str, self._latest_filename)
 
@@ -451,8 +456,17 @@ class _SummaryParser(_Parser):
                             logger.info('original_buckets_count exceeds '
                                         'HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT')
                             continue
+
                     elif plugin == PluginNameEnum.TENSOR.value:
                         tensor_event_value = TensorContainer(tensor_event_value)
+                        tensor_count = 1
+                        for d in tensor_event_value.dims:
+                            tensor_count *= d
+                        if tensor_count > MAX_TENSOR_COUNT:
+                            logger.warning('tag: %s/tensor, tensor count: %d exceeds %d and drop it.',
+                                           value.tag, tensor_count, MAX_TENSOR_COUNT)
+                            continue
+
                     elif plugin == PluginNameEnum.IMAGE.value:
                         tensor_event_value = ImageContainer(tensor_event_value)
 
