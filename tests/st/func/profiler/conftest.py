@@ -15,31 +15,11 @@
 """The st config."""
 
 import os
-import shutil
 import sys
-import tempfile
 
-import pytest
-
+from tests.st.func.profiler import RAW_DATA_BASE
 from tests.utils import mindspore
 
 sys.modules['mindspore'] = mindspore
 
-BASE_SUMMARY_DIR = tempfile.mkdtemp(prefix='test_profiler_summary_dir_base_')
-
-
-@pytest.fixture(scope="session")
-def create_summary_dir():
-    """Create summary directory for profiler module."""
-
-    try:
-        if os.path.exists(BASE_SUMMARY_DIR):
-            shutil.rmtree(BASE_SUMMARY_DIR)
-        permissions = os.R_OK | os.W_OK | os.X_OK
-        mode = permissions << 6
-        if not os.path.exists(BASE_SUMMARY_DIR):
-            os.mkdir(BASE_SUMMARY_DIR, mode=mode)
-        yield
-    finally:
-        if os.path.exists(BASE_SUMMARY_DIR):
-            shutil.rmtree(BASE_SUMMARY_DIR)
+BASE_SUMMARY_DIR = os.path.realpath(os.path.join(RAW_DATA_BASE, "run_1"))

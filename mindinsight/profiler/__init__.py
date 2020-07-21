@@ -12,16 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Profiler Module Introduction.
-
-This module provides Python APIs to enable the profiling of MindSpore neural networks.
-Users can import the mindinsight.profiler.Profiler, initialize the Profiler object to start profiling,
-and use Profiler.analyse() to stop profiling and analyse the results.
-To visualize the profiling results, users can open MindInsight Web, find the corresponding run
-and click the profile link.
-Now, Profiler supports the AICore operator analysis.
-"""
-from mindinsight.profiler.profiling import Profiler
-
-__all__ = ["Profiler"]
+"""Profiler Module Introduction."""

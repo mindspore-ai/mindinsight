@@ -21,19 +21,16 @@ Usage:
 """
 
 import os
-from unittest import mock, TestCase
+from unittest import TestCase
 
 import pytest
 
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.common.exceptions.exceptions import StepNumNotSupportedException, \
     ProfilerParamValueErrorException
-from mindinsight.profiler.profiling import Profiler, FrameworkParser
-from tests.st.func.profiler import RAW_DATA_BASE
 from tests.st.func.profiler.conftest import BASE_SUMMARY_DIR
 
 
-@pytest.mark.usefixtures('create_summary_dir')
 class TestProfilerAnalyse(TestCase):
     """Test Converter module."""
     JOB_ID = 'JOB3'
@@ -42,26 +39,14 @@ class TestProfilerAnalyse(TestCase):
     def setup_class(cls):
         """Generate parsed files."""
         cls.step_trace_file = 'step_trace_raw_1_detail_time.csv'
-        cls.generate_parsed_files()
+        cls.summary_dir = os.path.join(BASE_SUMMARY_DIR, 'normal_run')
+        cls.profiler = os.path.join(cls.summary_dir, 'profiler')
 
     def setUp(self):
         """Setup before each test."""
         self.step_trace_analyser = AnalyserFactory.instance().get_analyser(
             'step_trace', self.profiler, '1')
 
-    @classmethod
-    def generate_parsed_files(cls):
-        """Test parse raw info about profiler."""
-        cls.summary_dir = os.path.join(BASE_SUMMARY_DIR, 'normal_run')
-        cls.profiler = os.path.join(cls.summary_dir, 'profiler')
-        FrameworkParser._raw_data_dir = RAW_DATA_BASE
-        if not os.path.exists(cls.summary_dir):
-            os.makedirs(cls.summary_dir)
-        Profiler._base_profiling_container_path = os.path.join(RAW_DATA_BASE, 'container')
-        with mock.patch('mindinsight.profiler.profiling.PROFILING_LOG_BASE_PATH', RAW_DATA_BASE):
-            profiler = Profiler(subgraph='all', is_detail=True, is_show_op_path=False,
-                                output_path=cls.summary_dir, job_id=cls.JOB_ID)
-            profiler.analyse()
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -108,7 +93,7 @@ class TestProfilerAnalyse(TestCase):
         assert len(res['training_trace_graph']) == 13
         assert res['training_trace_graph'][-1] == [
             {'name': '', 'start': 0.2038, 'duration': 118.1667},
-            {'name': 'stream_540_0_parallel', 'start': 118.3705, 'duration': 49.281},
+            {'name': 'stream_540_parallel_0', 'start': 118.3705, 'duration': 49.281},
             {'name': '', 'start': 167.6515, 'duration': 37.7294}]
 
     @pytest.mark.level0

@@ -19,16 +19,11 @@ Usage:
     pytest tests/st/func/profiler
 """
 import os
-from unittest import mock
 
 import pytest
 
-from mindinsight.profiler import Profiler
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
-from mindinsight.profiler.parser.framework_parser import FrameworkParser
 from tests.st.func.profiler.conftest import BASE_SUMMARY_DIR
-from tests.ut.profiler import RAW_DATA_BASE
-
 
 OP_GATHER_V2_INFO = {
     'col_name': [
@@ -84,7 +79,6 @@ OP_GATHER_V2_INFO = {
 }
 
 
-@pytest.mark.usefixtures('create_summary_dir')
 class TestOpAnalyser:
     """Test AICORE and AICPU analyser module."""
     JOB_ID = 'JOB3'
@@ -92,7 +86,8 @@ class TestOpAnalyser:
     @classmethod
     def setup_class(cls):
         """Generate parsed files."""
-        cls.generate_parsed_files()
+        cls.summary_dir = os.path.join(BASE_SUMMARY_DIR, 'normal_run')
+        cls.profiler = os.path.join(cls.summary_dir, 'profiler')
 
     def setup_method(self):
         """Create analyser."""
@@ -100,20 +95,6 @@ class TestOpAnalyser:
             'aicore_type', self.profiler, '1')
         self._analyser_aicore_detail = AnalyserFactory.instance().get_analyser(
             'aicore_detail', self.profiler, '1')
-
-    @classmethod
-    def generate_parsed_files(cls):
-        """Test parse raw info about profiler."""
-        cls.summary_dir = os.path.join(BASE_SUMMARY_DIR, 'normal_run')
-        cls.profiler = os.path.join(cls.summary_dir, 'profiler')
-        FrameworkParser._raw_data_dir = RAW_DATA_BASE
-        if not os.path.exists(cls.summary_dir):
-            os.makedirs(cls.summary_dir)
-        Profiler._base_profiling_container_path = os.path.join(RAW_DATA_BASE, 'container')
-        with mock.patch('mindinsight.profiler.profiling.PROFILING_LOG_BASE_PATH', RAW_DATA_BASE):
-            profiler = Profiler(subgraph='all', is_detail=True, is_show_op_path=False,
-                                output_path=cls.summary_dir, job_id=cls.JOB_ID)
-            profiler.analyse()
 
     @pytest.mark.level0
     @pytest.mark.env_single
