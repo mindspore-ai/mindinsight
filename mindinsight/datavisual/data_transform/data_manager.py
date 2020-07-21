@@ -831,6 +831,11 @@ class DataManager:
         self._detail_cache = _DetailCacheManager(loader_generators)
         self._brief_cache = _BriefCacheManager()
 
+        # This lock is used to make sure that only one self._load_data_in_thread() is running.
+        # Because self._load_data_in_thread() will create process pool when loading files, we can not
+        # afford to run multiple self._load_data_in_thread() simultaneously (will create too many processes).
+        self._load_data_lock = threading.Lock()
+
     @property
     def summary_base_dir(self):
         """Get summary base dir."""
@@ -886,7 +891,8 @@ class DataManager:
     def _load_data_in_thread_wrapper(self):
         """Wrapper for load data in thread."""
         try:
-            self._load_data_in_thread()
+            with self._load_data_lock:
+                self._load_data_in_thread()
         except MindInsightException as exc:
             # Not raising the exception here to ensure that data reloading does not crash.
             logger.warning(exc.message)
