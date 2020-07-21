@@ -111,6 +111,7 @@ def create_app():
     static_folder_path = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir, 'ui', 'dist', 'static'))
 
     app = Flask(__name__, static_url_path=static_url_path, static_folder=static_folder_path)
+    app.config['JSON_SORT_KEYS'] = False
 
     if settings.ENABLE_CORS:
         CORS(app, supports_credentials=True)

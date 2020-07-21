@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Datavisual."""
+"""The memory collector."""
 
-from mindinsight.backend.datavisual.static_resource_api import init_module as static_init_module
-from mindinsight.backend.datavisual.task_manager_api import init_module as task_init_module
-from mindinsight.backend.datavisual.train_visual_api import init_module as train_init_module
-from mindinsight.backend.datavisual.sysmetric_api import init_module as sysmetric_init_module
+import psutil
+from psutil._common import bytes2human
 
 
-def init_module(app):
+def collect_mem(readable=False):
     """
-    Interface to init module.
+    Collect the virtual memory info.
 
     Args:
-        app (Flask): An instance of Flask.
+        readable (bool): Read the sizes like 1K, 234M, 2G etc.
 
+    Returns:
+        dict, the virtual memory info.
     """
-    static_init_module(app)
-    task_init_module(app)
-    train_init_module(app)
-    sysmetric_init_module(app)
+    mem = psutil.virtual_memory()._asdict()
+    if not readable:
+        return dict(mem)
+    return {k: v if k == 'percent' else bytes2human(v) for k, v in mem.items()}
