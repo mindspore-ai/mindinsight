@@ -34,6 +34,7 @@ from mindinsight.datavisual.data_transform.events_data import TensorEvent
 from mindinsight.datavisual.data_transform.graph import MSGraph
 from mindinsight.datavisual.data_transform.histogram import Histogram
 from mindinsight.datavisual.data_transform.histogram_container import HistogramContainer
+from mindinsight.datavisual.data_transform.image_container import ImageContainer
 from mindinsight.datavisual.data_transform.tensor_container import TensorContainer
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
@@ -442,7 +443,7 @@ class _SummaryParser(_Parser):
                     tensor_event_value = getattr(value, plugin)
                     logger.debug("Processing plugin value: %s.", plugin_name_enum)
 
-                    if plugin == 'histogram':
+                    if plugin == PluginNameEnum.HISTOGRAM.value:
                         tensor_event_value = HistogramContainer(tensor_event_value)
                         # Drop steps if original_buckets_count exceeds HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT
                         # to avoid time-consuming re-sample process.
@@ -450,8 +451,10 @@ class _SummaryParser(_Parser):
                             logger.info('original_buckets_count exceeds '
                                         'HistogramContainer.MAX_ORIGINAL_BUCKETS_COUNT')
                             continue
-                    elif plugin == 'tensor':
+                    elif plugin == PluginNameEnum.TENSOR.value:
                         tensor_event_value = TensorContainer(tensor_event_value)
+                    elif plugin == PluginNameEnum.IMAGE.value:
+                        tensor_event_value = ImageContainer(tensor_event_value)
 
                     tensor_event = TensorEvent(wall_time=event.wall_time,
                                                step=event.step,

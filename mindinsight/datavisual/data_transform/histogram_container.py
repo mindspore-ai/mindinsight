@@ -26,8 +26,7 @@ class HistogramContainer:
     """
 
     def __init__(self, histogram_message: Summary.Histogram):
-        self._msg = histogram_message
-        original_buckets = [Bucket(bucket.left, bucket.width, bucket.count) for bucket in self._msg.buckets]
+        original_buckets = [Bucket(bucket.left, bucket.width, bucket.count) for bucket in histogram_message.buckets]
         # Ensure buckets are sorted from min to max.
         original_buckets.sort(key=lambda bucket: bucket.left)
         self._count = sum(bucket.count for bucket in original_buckets)
