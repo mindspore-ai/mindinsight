@@ -29,82 +29,100 @@ limitations under the License.
                       :data="chipTableData"
                       width="100%"
                       height="100%">
-              <el-table-column prop="chip_name"
-                               width="120">
+              <el-table-column width="120">
                 <template slot="header">
-                  Name
-                  <el-tooltip class="item"
-                              effect="light"
-                              :content="$t('hardwareVisual.chipNameTip')"
-                              placement="top-start">
-                    <i class="el-icon-info"></i>
-                  </el-tooltip>
-                </template>
-              </el-table-column>
-              <el-table-column prop="device_id"
-                               width="80">
-                <template slot="header">
-                  NPU
-                  <el-tooltip class="item"
-                              effect="light"
-                              :content="$t('hardwareVisual.deviceIdTip')"
-                              placement="top-start">
-                    <i class="el-icon-info"></i>
-                  </el-tooltip>
-                </template>
-              </el-table-column>
-              <el-table-column prop="available"
-                               width="110">
-                <template slot="header">
-                  Available
-                  <el-tooltip class="item"
-                              effect="light"
-                              :content="$t('hardwareVisual.availableTip')"
-                              placement="top-start">
-                    <i class="el-icon-info"></i>
-                  </el-tooltip>
+                  <span class="cl-text-center">
+                    Name
+                    <el-tooltip class="item"
+                                effect="light"
+                                :content="$t('hardwareVisual.chipNameTip')"
+                                placement="top-start">
+                      <i class="el-icon-info"></i>
+                    </el-tooltip>
+                  </span>
                 </template>
                 <template slot-scope="scope">
-                  <i class="el-icon-success"
-                     v-if="scope.row.available"></i>
-                  <i class="el-icon-question"
-                     v-else></i>
+                  <span class="cl-text-center">{{ scope.row.chip_name }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="health"
-                               width="80">
+              <el-table-column width="80">
                 <template slot="header">
-                  Health
-                  <el-tooltip class="item"
-                              effect="light"
-                              :content="$t('hardwareVisual.healthTip')"
-                              placement="top-start">
-                    <i class="el-icon-info"></i>
-                  </el-tooltip>
+                  <span class="cl-text-center">
+                    NPU
+                    <el-tooltip class="item"
+                                effect="light"
+                                :content="$t('hardwareVisual.deviceIdTip')"
+                                placement="top-start">
+                      <i class="el-icon-info"></i>
+                    </el-tooltip>
+                  </span>
                 </template>
                 <template slot-scope="scope">
-                  <i class="el-icon-success"
-                     v-if="scope.row.health===0"></i>
-                  <i class="el-icon-warning normal"
-                     v-if="scope.row.health===1"></i>
-                  <i class="el-icon-warning important"
-                     v-if="scope.row.health===2"></i>
-                  <i class="el-icon-warning emergency"
-                     v-if="scope.row.health===3"></i>
-                  <i class="el-icon-remove"
-                     v-if="scope.row.health=== 0xffffffff"></i>
+                  <span class="cl-text-center">{{ scope.row.device_id }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="ip_address"
-                               width="130">
+              <el-table-column width="110">
                 <template slot="header">
-                  IP Address
-                  <el-tooltip class="item"
-                              effect="light"
-                              :content="$t('hardwareVisual.ipTip')"
-                              placement="top-start">
-                    <i class="el-icon-info"></i>
-                  </el-tooltip>
+                  <span class="cl-text-center">
+                    Available
+                    <el-tooltip class="item"
+                                effect="light"
+                                :content="$t('hardwareVisual.availableTip')"
+                                placement="top-start">
+                      <i class="el-icon-info"></i>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <template slot-scope="scope">
+                  <span class="cl-text-center">
+                    <i class="el-icon-success"
+                       v-if="scope.row.available"></i>
+                    <i class="el-icon-question"
+                       v-else></i>
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column width="80">
+                <template slot="header">
+                  <span class="cl-text-center">
+                    Health
+                    <el-tooltip class="item"
+                                effect="light"
+                                :content="$t('hardwareVisual.healthTip')"
+                                placement="top-start">
+                      <i class="el-icon-info"></i>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <template slot-scope="scope">
+                  <span class="cl-text-center">
+                    <i class="el-icon-success"
+                       v-if="scope.row.health===0"></i>
+                    <i class="el-icon-warning normal"
+                       v-if="scope.row.health===1"></i>
+                    <i class="el-icon-warning important"
+                       v-if="scope.row.health===2"></i>
+                    <i class="el-icon-warning emergency"
+                       v-if="scope.row.health===3"></i>
+                    <i class="el-icon-remove"
+                       v-if="scope.row.health=== 0xffffffff"></i>
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column width="130">
+                <template slot="header">
+                  <span class="cl-text-center">
+                    IP Address
+                    <el-tooltip class="item"
+                                effect="light"
+                                :content="$t('hardwareVisual.ipTip')"
+                                placement="top-start">
+                      <i class="el-icon-info"></i>
+                    </el-tooltip>
+                  </span>
+                </template>
+                <template slot-scope="scope">
+                  <span class="cl-text-center">{{ scope.row.ip_address }}</span>
                 </template>
               </el-table-column>
               <el-table-column prop="aicore">
@@ -680,12 +698,10 @@ export default {
       padding-top: 16px;
       & > div {
         width: 100%;
-        .el-table_1_column_1,
-        .el-table_1_column_2,
-        .el-table_1_column_3,
-        .el-table_1_column_4,
-        .el-table_1_column_5 {
+        .cl-text-center {
+          display: inline-block;
           text-align: center;
+          width: 100%;
         }
         .el-table::before {
           height: 0px;
