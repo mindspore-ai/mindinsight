@@ -15,20 +15,13 @@
 """The memory collector."""
 
 import psutil
-from psutil._common import bytes2human
 
 
-def collect_mem(readable=False):
+def collect_mem():
     """
     Collect the virtual memory info.
-
-    Args:
-        readable (bool): Read the sizes like 1K, 234M, 2G etc.
 
     Returns:
         dict, the virtual memory info.
     """
-    mem = psutil.virtual_memory()._asdict()
-    if not readable:
-        return dict(mem)
-    return {k: v if k == 'percent' else bytes2human(v) for k, v in mem.items()}
+    return dict(psutil.virtual_memory()._asdict())
