@@ -100,7 +100,15 @@ class LineageParser:
                 continue
 
             self._latest_file_size = new_size
-            self._parse_summary_log()
+            try:
+                self._parse_summary_log()
+            except (LineageSummaryAnalyzeException,
+                    LineageEventNotExistException,
+                    LineageEventFieldNotExistException) as error:
+                logger.debug("Parse file failed, file_path is %s. Detail: %s.", file_path, str(error))
+            except MindInsightException as error:
+                logger.exception(error)
+                logger.debug("Parse file failed, file_path is %s.", file_path)
 
     def _init_if_files_deleted(self, file_list):
         """Init variables if files deleted."""
@@ -189,13 +197,6 @@ class LineageOrganizer:
                     self._super_lineage_objs.update({abs_summary_dir: super_lineage_obj})
             except LineageFileNotFoundError:
                 no_lineage_count += 1
-            except (LineageSummaryAnalyzeException,
-                    LineageEventNotExistException,
-                    LineageEventFieldNotExistException) as error:
-                logger.warning("Parse file failed under summary_dir %s. Detail: %s.", relative_dir, str(error))
-            except MindInsightException as error:
-                logger.exception(error)
-                logger.warning("Parse file failed under summary_dir %s.", relative_dir)
 
         if no_lineage_count == len(relative_dirs):
             logger.info('There is no summary log file under summary_base_dir.')
