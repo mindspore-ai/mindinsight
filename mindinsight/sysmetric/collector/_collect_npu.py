@@ -20,6 +20,7 @@ from ctypes import CDLL, Structure, byref, c_char, c_int, c_uint, c_ulong, c_ush
 from functools import lru_cache, wraps
 from threading import Lock, Thread
 
+from mindinsight.sysmetric.common.exceptions import DsmiQueryingException
 from mindinsight.sysmetric.common.log import logger
 
 
@@ -59,12 +60,39 @@ def _timeout(seconds, default):
     return outer
 
 
-def libsmicall(*args, **kwargs):
+def _fallback_to_prev_result(fn):
+    """Fallback to previous successful result when failing."""
+    prev_result = None
+
+    @wraps(fn)
+    def wrap(*args):
+        nonlocal prev_result
+        sucess, result = fn(*args)
+        if sucess:
+            prev_result = result
+            return sucess, result
+        if prev_result is not None:
+            return sucess, prev_result
+        raise RuntimeError(f'{fn.__name__} querying failed and no previous successful result.')
+
+    return wrap
+
+
+def _libsmicall(*args):
+    """
+    Call the lib function to querying NPU metrics.
+
+    Returns:
+        bool, True when success of querying, False otherwise.
+    """
     if not libsmi:
         logger.error('Trying to call the libdrvdsmi_host which is not loaded.')
         raise ValueError('Trying to call the libdrvdsmi_host which is not loaded.')
     fname = inspect.stack()[1].function
-    return getattr(libsmi, fname)(*args, **kwargs)
+    error_code = getattr(libsmi, fname)(*args)
+    if error_code != 0:
+        logger.error(f'{fname} querying failed with error code {error_code}.')
+    return error_code == 0
 
 
 @lru_cache(maxsize=4)
@@ -74,12 +102,15 @@ def dsmi_get_device_count():
 
     Returns:
         int, the device count.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
     device_count = c_int()
 
-    libsmicall(byref(device_count))
-
-    return device_count.value
+    if _libsmicall(byref(device_count)):
+        return device_count.value
+    raise RuntimeError('Querying device count failed.')
 
 
 @lru_cache(maxsize=4)
@@ -92,17 +123,21 @@ def dsmi_list_device(count):
 
     Returns:
         List[int], the device IDs.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
     device_id_array = c_int * count
     device_id_list = device_id_array()
     count = c_int(count)
 
-    libsmicall(device_id_list, count)
-
-    return list(device_id_list)
+    if _libsmicall(device_id_list, count):
+        return list(device_id_list)
+    raise RuntimeError('Querying device id list failed.')
 
 
 @lru_cache(maxsize=8)
+@_fallback_to_prev_result
 def dsmi_get_chip_info(device_id):
     """
     Get chip info.
@@ -115,6 +150,9 @@ def dsmi_get_chip_info(device_id):
             - chip_type (str): The chip type.
             - chip_name (str): The chip name.
             - chip_ver (str): The chip name.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
 
     class ChipInfoStruct(Structure):
@@ -122,14 +160,15 @@ def dsmi_get_chip_info(device_id):
 
     device_id = c_int(device_id)
     chip_info = ChipInfoStruct()
-    libsmicall(device_id, byref(chip_info))
-    return {
+    success = _libsmicall(device_id, byref(chip_info))
+    return success, {
         'chip_type': chip_info.chip_type.decode('utf-8'),
         'chip_name': chip_info.chip_name.decode('utf-8'),
         'chip_ver': chip_info.chip_ver.decode('utf-8')
     }
 
 
+@_fallback_to_prev_result
 def dsmi_get_device_health(device_id):
     """
     Get device health.
@@ -139,16 +178,20 @@ def dsmi_get_device_health(device_id):
 
     Returns:
         int, 0 indicats normal, 1 minor alarm, 2 major alarm, 3 critical alarm, 0xffffffff device not found.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
     device_id = c_int(device_id)
     health = c_uint()
 
-    libsmicall(device_id, byref(health))
+    success = _libsmicall(device_id, byref(health))
 
-    return health.value
+    return success, health.value
 
 
 @lru_cache(maxsize=8)
+@_fallback_to_prev_result
 def dsmi_get_device_ip_address(device_id):
     """
     Get device IP address.
@@ -159,6 +202,9 @@ def dsmi_get_device_ip_address(device_id):
         dict, the device IP address:
             - ip_address (str): the IP address.
             - mask_address (str): the mask address.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
     is_ipv6, port_type, port_id = False, 1, 0
 
@@ -171,7 +217,7 @@ def dsmi_get_device_ip_address(device_id):
     ip_address = Ipaddrstruct(b'', ip_type)
     mask_address = Ipaddrstruct(b'', ip_type)
 
-    libsmicall(device_id, port_type, port_id, byref(ip_address), byref(mask_address))
+    success = _libsmicall(device_id, port_type, port_id, byref(ip_address), byref(mask_address))
 
     def pad(u_addr):
         for i in range(4):
@@ -180,12 +226,13 @@ def dsmi_get_device_ip_address(device_id):
             else:
                 yield 0
 
-    return {
+    return success, {
         'ip_address': '.'.join(str(c) for c in pad(ip_address.u_addr)),
         'mask_address': '.'.join(str(c) for c in pad(mask_address.u_addr))
     }
 
 
+@_fallback_to_prev_result
 def dsmi_get_hbm_info(device_id):
     """
     Get the HBM info.
@@ -200,6 +247,9 @@ def dsmi_get_hbm_info(device_id):
             memory_usage (int), The used HBM memory, in KB.
             temp (int), The HBM temperature, in °C.
             bandwith_util_rate (int): The bandwith util rate, in %.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
 
     class HbmInfoStruct(Structure):
@@ -209,9 +259,9 @@ def dsmi_get_hbm_info(device_id):
     device_id = c_int(device_id)
     hbm_info = HbmInfoStruct()
 
-    libsmicall(device_id, byref(hbm_info))
+    success = _libsmicall(device_id, byref(hbm_info))
 
-    return {
+    return success, {
         'memory_size': hbm_info.memory_size,
         'freq': hbm_info.freq,
         'memory_usage': hbm_info.memory_usage,
@@ -221,6 +271,7 @@ def dsmi_get_hbm_info(device_id):
 
 
 @_timeout(0.2, 0)
+@_fallback_to_prev_result
 def dsmi_get_device_utilization_rate(device_id, device_type):
     """
     Get device utilization rate, %.
@@ -236,12 +287,11 @@ def dsmi_get_device_utilization_rate(device_id, device_type):
     device_id = c_int(device_id)
     device_type = c_int(device_type)
     utilization_rate = c_uint()
-
-    libsmicall(device_id, device_type, byref(utilization_rate))
-
-    return utilization_rate.value
+    success = _libsmicall(device_id, device_type, byref(utilization_rate))
+    return success, utilization_rate.value
 
 
+@_fallback_to_prev_result
 def dsmi_get_device_power_info(device_id):
     """
     Get the device power.
@@ -252,6 +302,9 @@ def dsmi_get_device_power_info(device_id):
     Returns:
         dict, the device power info.
             - power, the device power, in Watt.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
 
     class PowerInfoStruct(Structure):
@@ -260,10 +313,11 @@ def dsmi_get_device_power_info(device_id):
     power_info = PowerInfoStruct()
     device_id = c_int(device_id)
 
-    libsmicall(device_id, byref(power_info))
-    return {'power': round(power_info.power * 0.1, 2)}
+    success = _libsmicall(device_id, byref(power_info))
+    return success, {'power': round(power_info.power * 0.1, 2)}
 
 
+@_fallback_to_prev_result
 def dsmi_get_device_temperature(device_id):
     """
     Get the device temperature.
@@ -273,13 +327,16 @@ def dsmi_get_device_temperature(device_id):
 
     Returns:
         int, the device temperature, in °C.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
     device_id = c_int(device_id)
     temperature = c_uint()
 
-    libsmicall(device_id, byref(temperature))
+    success = _libsmicall(device_id, byref(temperature))
 
-    return temperature.value
+    return success, temperature.value
 
 
 def collect_npu():
@@ -287,36 +344,77 @@ def collect_npu():
 
     Returns:
         List[dict], the metrics of each NPUs.
+
+    Raises:
+        DsmiQueryingException, when querying dsmi returning non-zero.
+    """
+    try:
+        return _collect_npus()
+    except RuntimeError as e:
+        logger.warning(e.args[0])
+        raise DsmiQueryingException(e.args[0])
+
+
+def _collect_npus():
+    """Collect the metrics for each NPUs.
+
+    Returns:
+        List[dict], the metrics of each NPUs.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
     """
     if not libsmi:
         return None
-    kb_to_mb, memory_threshold = 1024, 4
     count = dsmi_get_device_count()
     device_ids = dsmi_list_device(count)
     npus = []
     for device_id in device_ids:
-        health = dsmi_get_device_health(device_id)
-        hbm_info = dsmi_get_hbm_info(device_id)
-        npus.append({
-            'chip_name': dsmi_get_chip_info(device_id).get('chip_name'),
-            'device_id': device_id,
-            'available': health == 0 and hbm_info.get('memory_usage', 0) // kb_to_mb < memory_threshold,
-            'health': health,
-            'ip_address': dsmi_get_device_ip_address(device_id).get('ip_address'),
-            'aicore_rate': dsmi_get_device_utilization_rate(device_id, 2),
-            'hbm_info': {
-                'memory_size': hbm_info.get('memory_size') // kb_to_mb,
-                'memory_usage': hbm_info.get('memory_usage') // kb_to_mb
-            },
-            'power': dsmi_get_device_power_info(device_id).get('power'),
-            'temperature': dsmi_get_device_temperature(device_id)
-        })
+        npu = _collect_one(device_id)
+        npus.append(npu)
     return npus
+
+
+def _collect_one(device_id):
+    """
+    Collect NPU info by the device_id.
+
+    Args:
+        device_id (int): The specific device id.
+
+    Returns:
+        dict, the NPU info.
+
+    Raises:
+        RuntimeError, when querying dsmi returning non-zero.
+    """
+    kb_to_mb, memory_threshold, success = 1024, 4, [True] * 7
+    success[0], health = dsmi_get_device_health(device_id)
+    success[1], hbm_info = dsmi_get_hbm_info(device_id)
+    success[2], chip_info = dsmi_get_chip_info(device_id)
+    success[3], ip_addr = dsmi_get_device_ip_address(device_id)
+    success[4], aicore_rate = dsmi_get_device_utilization_rate(device_id, 2)
+    success[5], power_info = dsmi_get_device_power_info(device_id)
+    success[6], temperature = dsmi_get_device_temperature(device_id)
+    return {
+        'chip_name': chip_info.get('chip_name'),
+        'device_id': device_id,
+        'available': all(success) and health == 0 and hbm_info.get('memory_usage', 0) // kb_to_mb < memory_threshold,
+        'health': health,
+        'ip_address': ip_addr.get('ip_address'),
+        'aicore_rate': aicore_rate,
+        'hbm_info': {
+            'memory_size': hbm_info.get('memory_size') // kb_to_mb,
+            'memory_usage': hbm_info.get('memory_usage') // kb_to_mb
+        },
+        'power': power_info.get('power'),
+        'temperature': temperature,
+        'success': all(success)
+    }
 
 
 try:
     libsmi = CDLL('libdrvdsmi_host.so')
-    Thread(target=collect_npu).start()
 except OSError:
     logger.info('Failed to load libdrvdsmi_host.so.')
     libsmi = None

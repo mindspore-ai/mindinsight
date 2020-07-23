@@ -13,20 +13,18 @@
 # limitations under the License.
 # ============================================================================
 """The metrics collector."""
-
 from ._collect_cpu import collect_cpu
 from ._collect_mem import collect_mem
 from ._collect_npu import collect_npu
 
-__all__ = [
-    'collect_cpu',
-    'collect_mem',
-    'collect_npu',
-]
+__all__ = ['collect_cpu', 'collect_mem', 'collect_npu', 'get_metrics']
 
 
 def get_metrics():
     mem = collect_mem()
+    mem_total = mem.get('total')
+    mem_available = mem.get('available')
+    mem_used = mem.get('used')
     return {
         'npu': collect_npu(),
         'cpu': {
@@ -35,8 +33,9 @@ def get_metrics():
         },
         'memory': {
             'virtual': {
-                'available': mem.get('available'),
-                'used': mem.get('used')
+                'available': mem_available,
+                'used': mem_used,
+                'others': max(mem_total - mem_available - mem_used, 0)
             }
         }
     }
