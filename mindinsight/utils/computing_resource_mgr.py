@@ -16,11 +16,15 @@
 import fractions
 import math
 import threading
+import multiprocessing
 from concurrent import futures
 
 from mindinsight.utils.log import utils_logger as logger
 from mindinsight.utils.constant import GeneralErrors
 from mindinsight.utils.exceptions import MindInsightException
+
+
+_MP_CONTEXT = multiprocessing.get_context(method="forkserver")
 
 
 class ComputingResourceManager:
@@ -44,7 +48,7 @@ class ComputingResourceManager:
             for ind in range(self._executors_cnt)
         }
         self._remaining_executors = len(self._executors)
-        self._backend = futures.ProcessPoolExecutor(max_workers=max_processes_cnt)
+        self._backend = futures.ProcessPoolExecutor(max_workers=max_processes_cnt, mp_context=_MP_CONTEXT)
         logger.info("Initialized ComputingResourceManager with executors_cnt=%s, max_processes_cnt=%s.",
                     executors_cnt, max_processes_cnt)
 
