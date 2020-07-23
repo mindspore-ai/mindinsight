@@ -15,9 +15,10 @@
 """The npu collector."""
 
 import inspect
+from collections import defaultdict
 from ctypes import CDLL, Structure, byref, c_char, c_int, c_uint, c_ulong, c_ushort
 from functools import lru_cache, wraps
-from threading import Thread
+from threading import Lock, Thread
 
 from mindinsight.sysmetric.common.log import logger
 
@@ -32,17 +33,26 @@ def _timeout(seconds, default):
     """
 
     def outer(fn):
+        cached, lockdict = {}, defaultdict(Lock)
 
-        def target(*args, **kwargs):
-            nonlocal default
-            default = fn(*args, **kwargs)
+        def target(*args):
+            lock = lockdict[args]
+            if lock.acquire(blocking=False):
+                try:
+                    cached[args] = fn(*args)
+                finally:
+                    lock.release()
+            else:
+                logger.debug('%s%r skipped.', fn.__name__, args)
 
         @wraps(fn)
-        def inner(*args, **kwargs):
-            thread = Thread(target=target, args=args, kwargs=kwargs)
+        def inner(*args):
+            thread = Thread(target=target, args=args, daemon=True)
             thread.start()
             thread.join(seconds)
-            return default
+            if thread.is_alive():
+                logger.debug('%s%r timeouted.', fn.__name__, args)
+            return cached.get(args, default)
 
         return inner
 
