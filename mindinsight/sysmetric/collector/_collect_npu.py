@@ -16,15 +16,37 @@
 
 import inspect
 from ctypes import CDLL, Structure, byref, c_char, c_int, c_uint, c_ulong, c_ushort
-from functools import lru_cache
+from functools import lru_cache, wraps
+from threading import Thread
 
 from mindinsight.sysmetric.common.log import logger
 
-try:
-    libsmi = CDLL('libdrvdsmi_host.so')
-except OSError:
-    logger.info('Failed to load libdrvdsmi_host.so.')
-    libsmi = None
+
+def _timeout(seconds, default):
+    """
+    The timeout decorator wait for specified seconds or return the default value.
+
+    Args:
+        seconds (float): The specified seconds.
+        default (Any): The default value.
+    """
+
+    def outer(fn):
+
+        def target(*args, **kwargs):
+            nonlocal default
+            default = fn(*args, **kwargs)
+
+        @wraps(fn)
+        def inner(*args, **kwargs):
+            thread = Thread(target=target, args=args, kwargs=kwargs)
+            thread.start()
+            thread.join(seconds)
+            return default
+
+        return inner
+
+    return outer
 
 
 def libsmicall(*args, **kwargs):
@@ -188,6 +210,7 @@ def dsmi_get_hbm_info(device_id):
     }
 
 
+@_timeout(0.2, 0)
 def dsmi_get_device_utilization_rate(device_id, device_type):
     """
     Get device utilization rate, %.
@@ -279,3 +302,11 @@ def collect_npu():
             'temperature': dsmi_get_device_temperature(device_id)
         })
     return npus
+
+
+try:
+    libsmi = CDLL('libdrvdsmi_host.so')
+    Thread(target=collect_npu).start()
+except OSError:
+    logger.info('Failed to load libdrvdsmi_host.so.')
+    libsmi = None
