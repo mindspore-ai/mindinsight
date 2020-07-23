@@ -11,11 +11,11 @@ The Profiler enables users to:
 
 To enable profiling on MindSpore, the MindInsight Profiler apis should be added to the script:
 
-1. Import MindInsight Profiler
+1. Import the Profiler
     ```
-    from mindinsight.profiler import Profiler
+    from mindspore.profiler import Profiler
     ```
-2. Initialize the Profiler after set context, and before the network initialization.  
+2. Initialize the Profiler after set context, and before the network and hccl initialization.  
 
     Example:
         
