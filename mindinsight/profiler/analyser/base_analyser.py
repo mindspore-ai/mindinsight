@@ -214,7 +214,7 @@ class BaseAnalyser(ABC):
                 return False
         elif exp_key == 'partial_match_str_in':
             for partial_match_str in exp_value:
-                if partial_match_str in actual_value:
+                if partial_match_str.lower() in actual_value.lower():
                     return True
             return False
         else:
