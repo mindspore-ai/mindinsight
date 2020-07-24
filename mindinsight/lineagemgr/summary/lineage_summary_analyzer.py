@@ -141,7 +141,7 @@ class SummaryAnalyzer:
             LineageVerificationException: Raise when verification failed.
         """
         if not crc32.CheckValueAgainstData(crc_str, source_str, len(source_str)):
-            log.error("The CRC verification failed.")
+            log.debug("The CRC verification not pass. source_str: %s. crc_str: %s.", source_str, crc_str)
             raise LineageVerificationException("The CRC verification failed.")
 
 
@@ -201,13 +201,14 @@ class LineageSummaryAnalyzer(SummaryAnalyzer):
             LineageSummaryAnalyzeException: If failed to get lineage information.
         """
         analyzer = cls(file_path)
+        err_msg = "Can not analyze lineage info, file path is %s. Detail: %s"
         try:
             lineage_info = analyzer.get_latest_info()
         except (MindInsightException, IOError, DecodeError) as err:
-            log.exception(err)
+            log.debug(err_msg, file_path, str(err))
             raise LineageSummaryAnalyzeException()
         except Exception as err:
-            log.exception(err)
+            log.debug(err_msg, file_path, str(err))
             raise LineageSummaryAnalyzeException()
 
         return lineage_info
