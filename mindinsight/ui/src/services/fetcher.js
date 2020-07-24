@@ -52,17 +52,17 @@ axios.interceptors.response.use(
       if (error.response && error.response.data && error.response.data.error_code) {
         if (error.response.data.error_code.toString() === '50545005') {
           if (error.config.headers.ignoreError ||
-            router.currentRoute.path === '/train-manage/training-dashboard') {
+          router.currentRoute.path === '/train-manage/training-dashboard') {
             return Promise.reject(error);
           }
-        } else if ( error.response.data.error_code.toString() === '50542216' &&
+        } else if (error.response.data.error_code.toString() === '50542216' &&
         router.currentRoute.path === '/train-manage/training-dashboard') {
           return Promise.reject(error);
-        } else if ( router.currentRoute.path === '/profiling/profiling-dashboard' &&
-        error.config.headers.ignoreError ) {
+        } else if (router.currentRoute.path === '/profiling/profiling-dashboard' &&
+        error.config.headers.ignoreError) {
           return Promise.reject(error);
-        } else if ( error.response.data.error_code.toString() === '50545013' &&
-        router.currentRoute.path === '/train-manage/tensor') {
+        } else if (error.response.data.error_code.toString() === '50545013' ||
+        error.response.data.error_code.toString() === '50545014') {
           return Promise.reject(error);
         }
         if (errorData[error.response.data.error_code]) {

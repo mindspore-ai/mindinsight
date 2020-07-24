@@ -969,12 +969,31 @@ export default {
               }
             });
           },
-          () => {
+          (e) => {
             this.tensorData = [];
+            let showLimitError = false;
+            let errorMsg = '';
+            if (
+              e.response &&
+            e.response.data &&
+            e.response.data.error_code &&
+            (e.response.data.error_code.toString() === '50545013' ||
+              e.response.data.error_code.toString() === '50545014')
+            ) {
+              showLimitError = true;
+              if (e.response.data.error_code.toString() === '50545014') {
+                errorMsg = this.$t('error')[e.response.data.error_code];
+              } else {
+                errorMsg = this.$t('tensors.tensorDashboardLimitErrorMsg');
+              }
+            }
             this.$nextTick(() => {
               const elementItem = this.$refs.tensorChart;
               if (elementItem) {
                 elementItem.updateGridData();
+                if (showLimitError) {
+                  elementItem.showRequestErrorMessage(errorMsg);
+                }
               }
             });
           },
