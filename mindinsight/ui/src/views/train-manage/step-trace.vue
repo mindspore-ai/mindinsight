@@ -59,10 +59,6 @@ limitations under the License.
       <div id="trace-container">
         <div id="trace"
              class="training-trace">
-          <div :title="$t('graph.downloadPic')"
-               class="download-button"
-               @click="downloadSVG">
-          </div>
           <svg version="1.1"
                xmlns="http://www.w3.org/2000/svg"
                height="100%"
@@ -75,8 +71,8 @@ limitations under the License.
                       markerHeight="8"
                       orient="auto">
                 <path d="M1,1 L1,7 L9,4 z"
-                      fill="#E6EBF5"
-                      stroke="#E6EBF5"></path>
+                      fill="#6c7280"
+                      stroke="#6c7280"></path>
               </marker>
               <marker id="marker_start"
                       refX="5"
@@ -85,8 +81,8 @@ limitations under the License.
                       markerHeight="8"
                       orient="auto">
                 <path d="M9,1 L9,7 L1,4 z"
-                      fill="#E6EBF5"
-                      stroke="#E6EBF5"></path>
+                      fill="#6c7280"
+                      stroke="#6c7280"></path>
               </marker>
             </defs>
           </svg>
@@ -162,18 +158,25 @@ export default {
         svgPadding: 20,
         totalWidth: 0,
         totalTime: 0,
-        rowHeight: 60,
+        cellHeight: 40,
+        cellPadding: 0,
+        rowPadding: 20,
+        rowMargin: 10,
+        totalHeight: 0,
         markerPadding: 4,
-        minRate: 0.01,
+        minRate: 0.1,
+        minTime: 0,
+        minWidth: 1,
+        fontSize: 12,
+        textMargin: 21,
         namespaceURI: 'http://www.w3.org/2000/svg',
         resizeTimer: null,
-        colorList: [
-          ['#A6DD82', '#edf8e6'],
-          ['#6CBFFF', '#e2f2ff'],
-          ['#fa8e5b', '#fff4de'],
-          ['#01a5a7', '#cceded'],
-        ],
-        colorIndex: 0,
+        colors: {
+          iteration_interval: ['#A6DD82', '#edf8e6'],
+          fp_and_bp: ['#6CBFFF', '#e2f2ff'],
+          tail: ['#fa8e5b', '#fff4de'],
+          stream_parallel: ['#01a5a7', '#cceded'],
+        },
         noData: false,
       },
       deviceId: 0,
@@ -438,15 +441,13 @@ export default {
                 this.fp_start = '--';
                 this.bp_end = '--';
               }
-              document.querySelector('#trace').style.height = `${res.data
-                  .training_trace_graph.length * this.svg.rowHeight}px`;
-              this.svg.data = JSON.parse(
-                  JSON.stringify(res.data.training_trace_graph),
-              );
+
               this.removeTrace();
-              setTimeout(() => {
-                this.dealTraceData();
-              }, 100);
+              this.$nextTick(() => {
+                this.packageTraceData(
+                    JSON.parse(JSON.stringify(res.data.training_trace_graph)),
+                );
+              });
             } else {
               this.fp_start = '--';
               this.bp_end = '--';
@@ -464,48 +465,80 @@ export default {
           },
       );
     },
+    packageTraceData(traceGraph) {
+      this.svg.totalTime = 0;
+      this.svg.minTime = 0;
+      this.svg.totalHeight = 0;
+      const data = [];
+
+      if (traceGraph && traceGraph[0] && traceGraph[0][0]) {
+        this.svg.totalTime = traceGraph[0][0].duration;
+        this.svg.minTime = this.svg.minRate * this.svg.totalTime;
+
+        traceGraph.forEach((row, index) => {
+          const rowObj = {
+            rowCount: 0,
+            data: [],
+            height: 0,
+            startY: this.svg.totalHeight,
+          };
+          let obj = [];
+          for (let i = 0; i < row.length; i++) {
+            if (row[i].duration < this.svg.minTime) {
+              if (obj.length) {
+                rowObj.data.push(obj);
+                obj = [];
+                rowObj.rowCount++;
+              }
+              rowObj.data.push([row[i]]);
+              rowObj.rowCount++;
+            } else {
+              obj.push(row[i]);
+            }
+
+            if (i === row.length - 1 && obj.length) {
+              rowObj.data.push(obj);
+              obj = [];
+              rowObj.rowCount++;
+            }
+          }
+          rowObj.height =
+            rowObj.rowCount * this.svg.cellHeight +
+            (rowObj.rowCount - 1) * this.svg.cellPadding +
+            (index ? this.svg.rowPadding * 2 : 0);
+
+          this.svg.totalHeight += rowObj.height + this.svg.rowMargin;
+          data.push(rowObj);
+        });
+
+        this.svg.totalHeight += this.svg.rowPadding;
+        document.querySelector(
+            '#trace',
+        ).style.height = `${this.svg.totalHeight}px`;
+        this.svg.data = JSON.parse(JSON.stringify(data));
+
+        this.$nextTick(() => {
+          this.dealTraceData();
+        });
+      }
+    },
 
     dealTraceData() {
       const traceDom = document.querySelector('#trace');
       if (traceDom) {
         this.svg.totalWidth = traceDom.offsetWidth - this.svg.svgPadding * 2;
 
-        if (this.svg.data[0] && this.svg.data[0].length) {
+        if (this.svg.data[0] && this.svg.data[0].data.length) {
           const svg = traceDom.querySelector('svg');
-          this.svg.totalTime = this.svg.data[0][0].duration;
-
           if (this.svg.totalTime) {
-            this.svg.colorIndex = 0;
-            const minTime = this.svg.minRate * this.svg.totalTime;
-
-            this.svg.data.forEach((row, index) => {
-              if (row && row.length) {
-                const dashedLine = this.addDashedLine(index);
-                svg.insertBefore(dashedLine, svg.querySelector('g'));
-
-                let textOffsets = 0;
-                row.forEach((i) => {
-                  if (i.duration) {
-                    if (i.name) {
-                      if (i.duration < minTime) {
-                        textOffsets++;
-                      } else {
-                        textOffsets = 0;
-                      }
-                      i.textOffsets = textOffsets;
-
-                      const tempDom = this.createRect(i, index);
-                      const tempStr = `g${
-                        i.duration > minTime ? '' : '.arrow'
-                      }`;
-                      svg.insertBefore(tempDom, svg.querySelector(tempStr));
-                    } else {
-                      const tempDom = this.createArrow(i, index);
-                      svg.appendChild(tempDom);
-                    }
-                  }
-                });
+            this.svg.data.forEach((item, index) => {
+              let itemDom = {};
+              if (index) {
+                itemDom = this.createMultipleRowContainer(item);
+              } else {
+                itemDom = this.createRowContainer(item.data, item.startY);
               }
+              svg.appendChild(itemDom);
             });
           }
         } else {
@@ -513,39 +546,69 @@ export default {
         }
       }
     },
-    addDashedLine(index) {
-      const x1 = this.svg.svgPadding;
-      const x2 = this.svg.svgPadding + this.svg.totalWidth;
-      const y = index * this.svg.rowHeight;
-      const line = document.createElementNS(this.svg.namespaceURI, 'line');
-      line.setAttribute('x1', x1);
-      line.setAttribute('y1', y);
-      line.setAttribute('x2', x2);
-      line.setAttribute('y2', y);
-      line.setAttribute('style', 'stroke:#E2E2E2;stroke-width:1');
-      line.setAttribute('stroke-dasharray', '5 5');
+
+    createMultipleRowContainer(item) {
+      const rectContainer = document.createElementNS(
+          this.svg.namespaceURI,
+          'g',
+      );
+      rectContainer.setAttribute('class', 'container');
+
+      const rect = document.createElementNS(this.svg.namespaceURI, 'rect');
+      rect.setAttribute('x', this.svg.svgPadding);
+      rect.setAttribute('y', item.startY + this.svg.rowPadding);
+      rect.setAttribute('height', item.height);
+      rect.setAttribute('width', this.svg.totalWidth);
+      rect.setAttribute('style', 'fill:#edf0f5;stroke:#E2E2E2;stroke-width:1');
+      rectContainer.appendChild(rect);
+
+      const temp = this.createRowContainer(
+          item.data,
+          item.startY + this.svg.rowPadding,
+      );
+      rectContainer.appendChild(temp);
+      return rectContainer;
+    },
+
+    createRowContainer(data, startY) {
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
-      g.setAttribute('class', 'dashedLine');
-      g.appendChild(line);
+
+      data.forEach((row, index) => {
+        const y =
+          startY +
+          this.svg.rowPadding +
+          index * (this.svg.cellPadding + this.svg.cellHeight);
+        row.forEach((i) => {
+          if (i.duration) {
+            let temp;
+            if (i.name) {
+              temp = this.createRect(i, y);
+              g.insertBefore(temp, g.querySelector('g'));
+            } else {
+              temp = this.createArrow(i, y);
+              g.appendChild(temp);
+            }
+          }
+        });
+      });
       return g;
     },
-    createRect(data, rowIndex) {
-      const color = this.svg.colorList[
-        rowIndex > 1 ? 3 : this.svg.colorIndex++ % 4
-      ];
-      const height = 40;
-      const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
-      const fontSize = 12;
+
+    createRect(data, startY) {
+      const color =
+        data.name && this.svg.colors[data.name]
+          ? this.svg.colors[data.name]
+          : this.svg.colors.stream_parallel;
 
       const x1 =
         (data.start / this.svg.totalTime) * this.svg.totalWidth +
         this.svg.svgPadding;
-      const y1 =
-        rowIndex * this.svg.rowHeight + (this.svg.rowHeight - height) / 2;
 
-      const g = document.createElementNS(this.svg.namespaceURI, 'g');
-      g.setAttribute('class', 'rect');
-      const gChild = document.createElementNS(this.svg.namespaceURI, 'g');
+      const width = Math.max(
+          this.svg.minWidth,
+          (data.duration / this.svg.totalTime) * this.svg.totalWidth,
+      );
+
       let name = '';
       switch (data.name) {
         case 'iteration_interval':
@@ -562,102 +625,117 @@ export default {
           break;
       }
 
+      const textContent = `${name}: ${data.duration.toFixed(4)}ms`;
+      const textWidth = this.getTextWidth(textContent);
+      const normalSize = data.duration >= this.svg.minTime;
+
+      const g = document.createElementNS(this.svg.namespaceURI, 'g');
+      g.setAttribute('class', 'rect');
+
       const rect = document.createElementNS(this.svg.namespaceURI, 'rect');
       rect.setAttribute('x', x1);
-      rect.setAttribute('y', y1);
-      rect.setAttribute('height', height);
+      rect.setAttribute('y', startY);
+      rect.setAttribute('height', this.svg.cellHeight);
       rect.setAttribute('width', width);
-      rect.setAttribute('style', `fill:${color[1]};stroke:${color[1]};`);
+      rect.setAttribute('style', `fill:${color[1]};stroke:${color[0]};`);
 
       const foreignObject = document.createElementNS(
           this.svg.namespaceURI,
           'foreignObject',
       );
-      foreignObject.textContent = `${name}: ${data.duration.toFixed(4)}ms`;
-      const textWidth = this.getTextWidth(foreignObject.textContent);
-
+      foreignObject.textContent = textContent;
       foreignObject.setAttribute(
           'x',
-        !data.textOffsets
+        normalSize
           ? x1
           : Math.min(
-              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth,
-              Math.max(0, x1 + width / 2 - textWidth / 2),
+              this.svg.svgPadding * 2 +
+                this.svg.totalWidth -
+                textWidth -
+                this.svg.textMargin,
+              Math.max(this.svg.textMargin, x1 + width / 2 - textWidth / 2),
           ),
       );
 
-      foreignObject.setAttribute(
-          'y',
-          y1 + (height - fontSize) / 2 + data.textOffsets * fontSize,
-      );
-      foreignObject.setAttribute('height', fontSize);
+      foreignObject.setAttribute('y', startY);
+      foreignObject.setAttribute('height', this.svg.cellHeight);
       foreignObject.setAttribute('width', width);
       foreignObject.setAttribute('style', `color:${color[0]}`);
       foreignObject.setAttribute(
           'class',
-          `content${!data.textOffsets ? '' : ' content-mini'}`,
+          `content${normalSize ? '' : ' content-mini'}`,
       );
 
       const title = document.createElementNS(this.svg.namespaceURI, 'title');
-      title.textContent = `${name}: ${data.duration.toFixed(4)}ms`;
+      title.textContent = textContent;
 
-      gChild.appendChild(rect);
-      gChild.appendChild(foreignObject);
-      gChild.appendChild(title);
-      g.appendChild(gChild);
+      g.appendChild(rect);
+      g.appendChild(foreignObject);
+      g.appendChild(title);
       return g;
     },
 
-    createArrow(data, rowIndex) {
+    createArrow(data, startY) {
       const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
       const x1 =
         (data.start / this.svg.totalTime) * this.svg.totalWidth +
-        this.svg.markerPadding +
         this.svg.svgPadding;
-      const x2 = x1 + width - this.svg.markerPadding * 2;
-      const y = rowIndex * this.svg.rowHeight + this.svg.rowHeight / 2;
+      const centerY = startY + this.svg.cellHeight / 2;
+
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
       g.setAttribute('class', 'arrow');
 
       const line = document.createElementNS(this.svg.namespaceURI, 'line');
-      line.setAttribute('x1', x1);
-      line.setAttribute('y1', y);
-      line.setAttribute('x2', x2);
-      line.setAttribute('y2', y);
-      line.setAttribute('style', 'stroke:#E6EBF5;stroke-width:1');
-      line.setAttribute('marker-end', 'url(#marker_end)');
-      line.setAttribute('marker-start', 'url(#marker_start)');
+      line.setAttribute('y1', centerY);
+      line.setAttribute('y2', centerY);
+      line.setAttribute('style', 'stroke:#6c7280;stroke-width:1');
+      if (width > this.svg.markerPadding) {
+        line.setAttribute('x1', x1 + this.svg.markerPadding);
+        line.setAttribute('x2', x1 + width - this.svg.markerPadding);
+        line.setAttribute('marker-end', 'url(#marker_end)');
+        line.setAttribute('marker-start', 'url(#marker_start)');
+      } else {
+        line.setAttribute('x1', x1);
+        line.setAttribute('x2', x1 + width);
+      }
 
       const text = document.createElementNS(this.svg.namespaceURI, 'text');
       text.textContent = `${
-        rowIndex === 0 ? this.$t('profiling.approximateTime') : ''
+        data.duration === this.svg.totalTime
+          ? this.$t('profiling.approximateTime')
+          : ''
       }${data.duration.toFixed(4)}ms`;
-      const textWidth = this.getTextWidth(text.textContent);
+      const textWidth = text.textContent
+        ? this.getTextWidth(text.textContent)
+        : 0;
       text.setAttribute(
           'x',
           Math.min(
-              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth,
-              Math.max(0, (x2 - x1) / 2 + x1 - textWidth / 2),
+              this.svg.svgPadding * 2 +
+            this.svg.totalWidth -
+            textWidth -
+            this.svg.textMargin,
+              Math.max(this.svg.textMargin, width / 2 + x1 - textWidth / 2),
           ),
       );
-      text.setAttribute('y', y - 6);
-      text.setAttribute('font-size', 12);
-      text.setAttribute('fill', '#6c7280');
+      text.setAttribute('y', centerY - this.svg.fontSize / 2);
+      text.setAttribute('font-size', this.svg.fontSize);
+      text.setAttribute('fill', 'black');
 
       const startLine = document.createElementNS(this.svg.namespaceURI, 'line');
-      startLine.setAttribute('x1', x1 - this.svg.markerPadding);
-      startLine.setAttribute('y1', y - this.svg.rowHeight / 4);
-      startLine.setAttribute('x2', x1 - this.svg.markerPadding);
-      startLine.setAttribute('y2', y + this.svg.rowHeight / 4);
-      startLine.setAttribute('style', 'stroke:#E6EBF5;stroke-width:1');
+      startLine.setAttribute('x1', x1);
+      startLine.setAttribute('y1', startY);
+      startLine.setAttribute('x2', x1);
+      startLine.setAttribute('y2', startY + this.svg.cellHeight);
+      startLine.setAttribute('style', 'stroke:#6c7280;stroke-width:1');
       g.appendChild(startLine);
 
       const endLine = document.createElementNS(this.svg.namespaceURI, 'line');
-      endLine.setAttribute('x1', x1 + width - this.svg.markerPadding);
-      endLine.setAttribute('y1', y - this.svg.rowHeight / 4);
-      endLine.setAttribute('x2', x1 + width - this.svg.markerPadding);
-      endLine.setAttribute('y2', y + this.svg.rowHeight / 4);
-      endLine.setAttribute('style', 'stroke:#E6EBF5;stroke-width:1');
+      endLine.setAttribute('x1', x1 + width);
+      endLine.setAttribute('y1', startY);
+      endLine.setAttribute('x2', x1 + width);
+      endLine.setAttribute('y2', startY + this.svg.cellHeight);
+      endLine.setAttribute('style', 'stroke:#6c7280;stroke-width:1');
       g.appendChild(endLine);
       g.appendChild(line);
       g.appendChild(text);
@@ -695,15 +773,6 @@ export default {
         this.dealTraceData();
         this.svg.resizeTimer = null;
       }, 500);
-    },
-    downloadSVG() {
-      const svgDom = document.querySelector('svg').outerHTML;
-      const src = `data:image/svg+xml;base64,
-      ${window.btoa(unescape(encodeURIComponent(svgDom)))}`;
-      const a = document.createElement('a');
-      a.href = src;
-      a.download = new Date().valueOf();
-      a.click();
     },
   },
   destroyed() {
@@ -782,23 +851,13 @@ export default {
       .training-trace {
         position: relative;
         height: 0;
-        .download-button {
-          display: none;
-          position: absolute;
-          width: 12px;
-          height: 12px;
-          right: 10px;
-          top: 10px;
-          cursor: pointer;
-          background-image: url('../../assets/images/download.png');
-        }
         .content {
           overflow: hidden;
           text-align: center;
           text-overflow: ellipsis;
           white-space: nowrap;
           font-size: 12px;
-          line-height: 12px;
+          line-height: 40px;
         }
         .content-mini {
           overflow: visible;
