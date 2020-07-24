@@ -105,7 +105,7 @@ class LineageParser:
             except (LineageSummaryAnalyzeException,
                     LineageEventNotExistException,
                     LineageEventFieldNotExistException) as error:
-                logger.debug("Parse file failed, file_path is %s. Detail: %s.", file_path, str(error))
+                logger.debug("Parse file failed, file_path is %s. Detail: %s", file_path, str(error))
             except MindInsightException as error:
                 logger.exception(error)
                 logger.debug("Parse file failed, file_path is %s.", file_path)
