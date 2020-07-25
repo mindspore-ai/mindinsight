@@ -294,11 +294,11 @@ export default {
       this.dataTypeChangeTimer = null;
     }
     if (this.viewNameChangeTimer) {
-      this.clearTimeout(this.viewNameChangeTimer);
+      clearTimeout(this.viewNameChangeTimer);
       this.viewNameChangeTimer = null;
     }
     if (this.axisNameChangeTimer) {
-      this.clearTimeout(this.axisNameChangeTimer);
+      clearTimeout(this.axisNameChangeTimer);
       this.axisNameChangeTimer = null;
     }
   },
@@ -678,15 +678,18 @@ export default {
           },
           (e) => {
             let showLimitError = false;
+            let errorMsg = '';
             if (
               e.response &&
             e.response.data &&
             e.response.data.error_code &&
-            e.response.data.error_code.toString() === '50545013'
+            (e.response.data.error_code.toString() === '50545013' ||
+              e.response.data.error_code.toString() === '50545014')
             ) {
               showLimitError = true;
+              errorMsg = this.$t('error')[e.response.data.error_code];
             }
-            this.clearMartixData(sampleItem, showLimitError);
+            this.clearMartixData(sampleItem, showLimitError, errorMsg);
             sampleItem.showLoading = false;
           },
       );
@@ -695,8 +698,9 @@ export default {
      * Clear table display
      * @param {Object} sampleItem The object that is being operated
      * @param {Boolean} showLimitError Display request error message
+     * @param {String} errorMsg Error message
      */
-    clearMartixData(sampleItem, showLimitError) {
+    clearMartixData(sampleItem, showLimitError, errorMsg) {
       sampleItem.curData = [];
       sampleItem.newDataFlag = true;
       let elementItem = null;
@@ -706,7 +710,7 @@ export default {
           elementItem[0].updateGridData();
           if (showLimitError) {
             elementItem[0].showRequestErrorMessage(
-                this.$t('error.50545013'),
+                errorMsg,
                 sampleItem.formateData.value.dims,
                 sampleItem.filterStr,
             );

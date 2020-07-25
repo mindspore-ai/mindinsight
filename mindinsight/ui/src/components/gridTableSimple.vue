@@ -33,7 +33,7 @@ limitations under the License.
            class="grid-item"></div>
     </div>
     <div class="operate-container"
-         v-if="(showOperate && fullData.length) || requestError">
+         v-if="showOperate && (fullData.length || requestError)">
       <div class="filter-container"
            @keyup.enter="filterChange">
         <div v-for="(item, itemIndex) in filterArr"
@@ -401,7 +401,7 @@ export default {
      */
     showRequestErrorMessage(errorMsg, dimension, filterStr) {
       this.errorMsg = errorMsg;
-      if (!this.filterArr.length) {
+      if (!this.filterArr.length && dimension && filterStr) {
         this.initializeFilterArr(dimension, filterStr);
       }
       this.requestError = true;
