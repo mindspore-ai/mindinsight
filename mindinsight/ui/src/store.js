@@ -35,7 +35,7 @@ export default new Vuex.Store({
     // hardware reload time
     hardwareTimeReloadValue: localStorage.hardwareTimeReloadValue
       ? localStorage.hardwareTimeReloadValue
-      : 3,
+      : 5,
     // multiSelevtGroup component count
     multiSelectedGroupCount: 0,
     tableId: 0,
