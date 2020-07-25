@@ -81,8 +81,9 @@ class TestDataManager:
     def test_start_load_data_success(self):
         """Test start_load_data method success."""
         summary_base_dir = tempfile.mkdtemp()
+        dir_num = 3
         train_ids = []
-        for i in range(3):
+        for i in range(dir_num):
             log_path = os.path.join(summary_base_dir, f'dir{i}')
             self._make_path_and_file_list(log_path)
             train_ids.append(f'./dir{i}')
@@ -215,7 +216,7 @@ class TestDataManager:
         expected_loader_ids = expected_loader_ids[-MAX_DATA_LOADER_SIZE:]
 
         # Make sure to finish loading, make it init.
-        mock_data_manager._status = DataManagerStatus.INIT
+        mock_data_manager._detail_cache._status = DataManagerStatus.INIT.value
         mock_generate_loaders.return_value = loader_dict
         mock_data_manager.start_load_data(reload_interval=0)
         check_loading_done(mock_data_manager)
