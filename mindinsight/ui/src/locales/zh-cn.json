@@ -396,7 +396,7 @@
     "chipNameTip": "芯片名称",
     "deviceIdTip": "芯片号",
     "availableTip": "芯片是否空闲（仅供参考）",
-    "healthTip": "芯片健康指数（正常、一般警告、重要警告、紧急警告）",
+    "healthTip": "芯片健康指数",
     "ipTip": "芯片IP地址",
     "aicoreTip": "芯片利用率",
     "hbmTip": "芯片已用HBM内存",
@@ -414,7 +414,16 @@
     "cpuGuestniceTip": "运行低优先级虚拟机的时间百分比",
     "cpuInterruptTip": "处理硬中断的时间百分比",
     "cpuDpcTip": "远程调用的时间百分比",
-    "noNpuInfo":"暂无昇腾AI处理器信息"
+    "noNpuInfo": "暂无昇腾AI处理器信息",
+    "normal": "正常",
+    "generalWarn": "一般警告",
+    "importantWarn": "重要警告",
+    "emergencyWarn": "紧急警告",
+    "noChip": "芯片不存在或未启动",
+    "availableFree": "芯片空闲",
+    "availableBusy": "芯片已被占用或不可用（仅供参考）",
+    "failQueryChip": "芯片信息查询有误",
+    "faliQuery": "查询有误"
   },
   "components": {
     "summaryTitle": "训练选择",
@@ -452,6 +461,7 @@
     "50542218": "筛选参数错误",
     "50545012": "张量数据不存在，请刷新。",
     "50545013": "请求的数据过大，请使用其他维度重试。",
-    "50545014": "查询的张量数据已被新数据替换，请刷新。"
+    "50545014": "查询的张量数据已被新数据替换，请刷新。",
+    "50548001": "昇腾AI处理器信息查询超时"
   }
 }
