@@ -26,7 +26,7 @@ from urllib.parse import urlencode
 import numpy as np
 from PIL import Image
 
-from mindinsight.datavisual.common.enums import DataManagerStatus
+from mindinsight.datavisual.common.enums import DetailCacheManagerStatus
 
 
 def get_url(url, params):
@@ -59,13 +59,13 @@ def check_loading_done(data_manager, time_limit=15, first_sleep_time=0):
     if first_sleep_time > 0:
         time.sleep(first_sleep_time)
     start_time = time.time()
-    while data_manager.status not in (DataManagerStatus.DONE.value, DataManagerStatus.INVALID.value):
+    while data_manager.get_detail_cache_status() != DetailCacheManagerStatus.DONE.value:
         time_used = time.time() - start_time
         if time_used > time_limit:
             break
         time.sleep(0.1)
         continue
-    return bool(data_manager.status == DataManagerStatus.DONE.value)
+    return bool(data_manager.get_detail_cache_status == DetailCacheManagerStatus.DONE.value)
 
 
 def get_image_tensor_from_bytes(image_string):

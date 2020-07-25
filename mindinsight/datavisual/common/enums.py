@@ -32,6 +32,13 @@ class DataManagerStatus(BaseEnum):
     INVALID = 'INVALID'
 
 
+class DetailCacheManagerStatus(BaseEnum):
+    """Data manager status."""
+    INIT = 'INIT'
+    LOADING = 'LOADING'
+    DONE = 'DONE'
+
+
 class PluginNameEnum(BaseEnum):
     """Plugin Name Enum."""
     IMAGE = 'image'
