@@ -22,12 +22,10 @@ from unittest.mock import patch
 
 from werkzeug.exceptions import MethodNotAllowed, NotFound
 
-from mindinsight.datavisual.processors import scalars_processor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 
 from ....utils.tools import get_url
 from ...backend.datavisual.conftest import TRAIN_ROUTES
-from ..mock import MockLogger
 
 
 class TestErrorHandler:
@@ -36,7 +34,6 @@ class TestErrorHandler:
     @patch.object(ScalarsProcessor, 'get_metadata_list')
     def test_handle_http_exception_error_not_found(self, mock_scalar_processor, client):
         """Test handle http exception error not found."""
-        scalars_processor.logger = MockLogger
         text = 'Test Message'
 
         # NotFound
@@ -59,7 +56,6 @@ class TestErrorHandler:
     @patch.object(ScalarsProcessor, 'get_metadata_list')
     def test_handle_http_exception_error_method_not_allowed(self, mock_scalar_processor, client):
         """Test handling http exception error method not allowed."""
-        scalars_processor.logger = MockLogger
         text = 'Test Message'
 
         # MethodNotAllowed
@@ -82,7 +78,6 @@ class TestErrorHandler:
     @patch.object(ScalarsProcessor, 'get_metadata_list')
     def test_handle_http_exception_error_method_other_errors(self, mock_scalar_processor, client):
         """Test handling http exception error method other errors."""
-        scalars_processor.logger = MockLogger
         text = 'Test Message'
 
         # Other errors

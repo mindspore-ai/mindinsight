@@ -15,28 +15,15 @@
 """
 Description: This file is used for some common util.
 """
-from unittest.mock import Mock
-
 import pytest
 from flask import Response
 
-from mindinsight.backend import datavisual
-from mindinsight.datavisual.utils import tools
+from mindinsight.backend.application import APP
 
 
 @pytest.fixture
 def client():
     """This fixture is flask client."""
-    mock_data_manager = Mock()
-    mock_data_manager.start_load_data = Mock()
-    datavisual.DATA_MANAGER = mock_data_manager
-
-    packages = ["mindinsight.backend.data_visual"]
-
-    mock_obj = Mock(return_value=packages)
-    tools.find_app_package = mock_obj
-
-    from mindinsight.backend.application import APP
     APP.response_class = Response
     app_client = APP.test_client()
 

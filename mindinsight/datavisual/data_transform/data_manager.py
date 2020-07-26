@@ -35,7 +35,7 @@ from mindinsight.conf import settings
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import CacheStatus
 from mindinsight.datavisual.common.log import logger
-from mindinsight.datavisual.common.enums import DataManagerStatus
+from mindinsight.datavisual.common.enums import DataManagerStatus, DetailCacheManagerStatus
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
@@ -44,6 +44,7 @@ from mindinsight.utils.computing_resource_mgr import ComputingResourceManager
 from mindinsight.utils.exceptions import MindInsightException
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import UnknownError
+from mindinsight.datavisual.utils.tools import exception_wrapper
 
 
 class _BasicTrainJob:
@@ -415,6 +416,13 @@ class _DetailCacheManager(_BaseCacheManager):
         self._loader_pool_mutex = threading.Lock()
         self._max_threads_count = 30
         self._loader_generators = loader_generators
+        self._status = DetailCacheManagerStatus.INIT.value
+        self._loading_mutex = threading.Lock()
+
+    @property
+    def status(self):
+        """Get loading status, if it is loading, return True."""
+        return self._status
 
     def has_content(self):
         """Whether this cache manager has train jobs."""
@@ -435,6 +443,20 @@ class _DetailCacheManager(_BaseCacheManager):
         """Get loader pool size."""
         return len(self._loader_pool)
 
+    def _load_in_cache(self):
+        """Generate and execute loaders."""
+        def load():
+            self._generate_loaders()
+            self._execute_load_data()
+        try:
+            exception_wrapper(load())
+        except UnknownError as ex:
+            logger.warning("Load event data failed. Detail: %s.", str(ex))
+        finally:
+            self._status = DetailCacheManagerStatus.DONE.value
+        logger.info("Load event data end, status: %r, and loader pool size is %r.",
+                    self._status, self.loader_pool_size())
+
     def update_cache(self, disk_train_jobs: Iterable[_BasicTrainJob]):
         """
         Update cache.
@@ -445,8 +467,13 @@ class _DetailCacheManager(_BaseCacheManager):
             disk_train_jobs (Iterable[_BasicTrainJob]): Basic info about train jobs on disk.
 
         """
-        self._generate_loaders()
-        self._execute_load_data()
+        with self._loading_mutex:
+            if self._status == DetailCacheManagerStatus.LOADING.value:
+                logger.debug("Event data is loading, and loader pool size is %r.", self.loader_pool_size())
+                return
+            self._status = DetailCacheManagerStatus.LOADING.value
+            thread = threading.Thread(target=self._load_in_cache, name="load_detail_in_cache")
+            thread.start()
 
     def cache_train_job(self, train_id):
         """Cache given train job."""
@@ -711,8 +738,7 @@ class _DetailCacheManager(_BaseCacheManager):
 
         loader = self._get_loader(train_id)
         if loader is None:
-            logger.warning("No valid summary log in train job %s, "
-                           "or it is not in the cache.", train_id)
+            logger.info("No valid summary log in train job %s, or it is not in the cache.", train_id)
             return None
 
         train_job = loader.to_dict()
@@ -897,18 +923,10 @@ class DataManager:
         """Wrapper for load data in thread."""
         try:
             with self._load_data_lock:
-                self._load_data_in_thread()
-        except MindInsightException as exc:
+                exception_wrapper(self._load_data())
+        except UnknownError as exc:
             # Not raising the exception here to ensure that data reloading does not crash.
             logger.warning(exc.message)
-
-    def _load_data_in_thread(self):
-        """Log (but not swallow) exceptions in thread to help debugging."""
-        try:
-            self._load_data()
-        except Exception as exc:
-            logger.exception(exc)
-            raise UnknownError('Load data thread error.')
 
     def _load_data(self):
         """This function will load data once and ignore it if the status is loading."""
@@ -939,13 +957,13 @@ class DataManager:
         self._brief_cache.update_cache(basic_train_jobs)
         self._detail_cache.update_cache(basic_train_jobs)
 
-        if not self._brief_cache.has_content() and not self._detail_cache.has_content():
+        if not self._brief_cache.has_content() and not self._detail_cache.has_content() \
+                and self._detail_cache.status == DetailCacheManagerStatus.DONE.value:
             self.status = DataManagerStatus.INVALID.value
         else:
             self.status = DataManagerStatus.DONE.value
 
-        logger.info("Load event data end, status: %r, and loader pool size is %r.",
-                    self.status, self._detail_cache.loader_pool_size())
+        logger.info("Load brief data end, and loader pool size is %r.", self._detail_cache.loader_pool_size())
 
     @staticmethod
     def check_reload_interval(reload_interval):
@@ -1046,14 +1064,6 @@ class DataManager:
 
         return TrainJob(brief_train_job, detail_train_job)
 
-    def list_train_jobs(self):
-        """
-        List train jobs.
-
-        To be implemented.
-        """
-        raise NotImplementedError()
-
     @property
     def status(self):
         """
@@ -1087,6 +1097,10 @@ class DataManager:
     def get_brief_train_job(self, train_id):
         """Get brief train job."""
         return self._brief_cache.get_train_job(train_id)
+
+    def get_detail_cache_status(self):
+        """Get detail status, just for ut/st."""
+        return self._detail_cache.status
 
 
 DATA_MANAGER = DataManager(settings.SUMMARY_BASE_DIR)
