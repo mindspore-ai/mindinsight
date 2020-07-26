@@ -21,7 +21,9 @@ from numbers import Number
 from urllib.parse import unquote
 
 from mindinsight.datavisual.common.exceptions import MaxCountExceededError
+from mindinsight.datavisual.common.log import logger
 from mindinsight.utils import exceptions
+from mindinsight.utils.exceptions import UnknownError
 
 _IMG_EXT_TO_MIMETYPE = {
     'bmp': 'image/bmp',
@@ -214,6 +216,16 @@ def if_nan_inf_to_none(name, value):
     if math.isnan(value) or math.isinf(value):
         value = None
     return value
+
+
+def exception_wrapper(func):
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except Exception as exc:
+            logger.exception(exc)
+            raise UnknownError(str(exc))
+    return wrapper
 
 
 class Counter:
