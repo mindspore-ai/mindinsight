@@ -292,9 +292,6 @@ export default {
     return axios({
       method: 'get',
       url: 'v1/mindinsight/sysmetric/current',
-      headers: {
-        ignoreError: true,
-      },
     });
   },
 };
