@@ -66,12 +66,13 @@ def query_train_jobs():
     """Query train jobs."""
     offset = request.args.get("offset", default=0)
     limit = request.args.get("limit", default=10)
+    train_id = get_train_id(request)
 
     offset = Validation.check_offset(offset=offset)
     limit = Validation.check_limit(limit, min_value=1, max_value=SummaryWatcher.MAX_SUMMARY_DIR_COUNT)
 
     processor = TrainTaskManager(DATA_MANAGER)
-    total, train_jobs = processor.query_train_jobs(offset, limit)
+    total, train_jobs = processor.query_train_jobs(offset, limit, train_id)
 
     return jsonify({
         'name': os.path.basename(os.path.realpath(settings.SUMMARY_BASE_DIR)),
