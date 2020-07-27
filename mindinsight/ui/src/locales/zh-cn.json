@@ -395,7 +395,7 @@
     "allCpu": "CPU-总计：",
     "chipNameTip": "芯片名称",
     "deviceIdTip": "芯片号",
-    "availableTip": "芯片是否空闲（仅供参考）",
+    "availableTip": "芯片是否空闲",
     "healthTip": "芯片健康指数",
     "ipTip": "芯片IP地址",
     "aicoreTip": "芯片利用率",

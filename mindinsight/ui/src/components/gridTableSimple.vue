@@ -296,7 +296,9 @@ export default {
      */
     accuracyChange(value) {
       this.formateGridArray();
-      this.updateGrid();
+      if (!this.requestError && !this.incorrectData) {
+        this.updateGrid();
+      }
     },
     /**
      * Dimension selection changed
@@ -369,7 +371,9 @@ export default {
         }
         this.formateGridArray();
         this.formateColumnsData();
-        this.updateGrid();
+        if (!this.incorrectData) {
+          this.updateGrid();
+        }
       });
     },
     /**
