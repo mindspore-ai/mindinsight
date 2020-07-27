@@ -329,6 +329,7 @@ export default {
       pieColorArr: ['#5e7ce0', '#ccc', '#a6dd82'],
       autoUpdateTimer: null, // Automatic refresh timer
       isReloading: false, // Manually refresh
+      legendSelected: {},
     };
   },
   computed: {
@@ -670,6 +671,7 @@ export default {
             }
             return legendStr;
           },
+          selected: this.legendSelected,
           textStyle: {
             rich: {
               a: {
@@ -726,6 +728,9 @@ export default {
           chart.chartDom = echarts.init(cpuDom, null);
           chart.chartDom.setOption(option, true);
           chart.chartDom.resize();
+          chart.chartDom.on('legendselectchanged', (obj) => {
+            this.legendSelected = obj.selected;
+          });
         }
       });
     },
