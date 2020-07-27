@@ -990,9 +990,10 @@ export default {
             this.$nextTick(() => {
               const elementItem = this.$refs.tensorChart;
               if (elementItem) {
-                elementItem.updateGridData();
                 if (showLimitError) {
                   elementItem.showRequestErrorMessage(errorMsg);
+                } else {
+                  elementItem.updateGridData();
                 }
               }
             });
