@@ -707,13 +707,14 @@ export default {
       this.$nextTick(() => {
         elementItem = this.$refs[sampleItem.ref];
         if (elementItem) {
-          elementItem[0].updateGridData();
           if (showLimitError) {
             elementItem[0].showRequestErrorMessage(
                 errorMsg,
                 sampleItem.formateData.value.dims,
                 sampleItem.filterStr,
             );
+          } else {
+            elementItem[0].updateGridData();
           }
         }
       });
