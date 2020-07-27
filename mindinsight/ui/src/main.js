@@ -40,6 +40,9 @@ router.beforeEach((to, from, next) => {
   store.commit('setIsReload', false);
   next();
 });
+router.onError((error) => {
+  Vue.prototype.$message.error(i18n.messages[i18n.locale].public.netWorkError);
+});
 
 // forbidden showing production tip
 Vue.config.productionTip = false;
