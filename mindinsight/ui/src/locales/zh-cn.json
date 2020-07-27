@@ -100,7 +100,8 @@
     "samplingData": "数据抽样",
     "imagesampleSwitch": "切换标签",
     "invalidId": "无效的训练作业",
-    "summaryDirPath": "训练日志路径："
+    "summaryDirPath": "训练日志路径：",
+    "loadingTip": "加载中"
   },
   "scalar": {
     "titleText": "标量",
