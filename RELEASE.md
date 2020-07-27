@@ -1,5 +1,25 @@
 ## MindInsight
 
+# Release 0.6.0-beta
+
+## Major Features and Improvements
+* Provide monitoring capabilities for each of Ascend AI processor and other hardware resources, including CPU and memory.
+* Visualization of weight, gradient and other tensor data in model training.
+    * Provide tabular from presentation of tensor data.
+    * Provide histogram to show the distribution of tensor data and its change over time.
+
+## Bugfixes
+* UI fix for the error message display mode of the tensor during real-time training. ([!465](https://gitee.com/mindspore/mindinsight/pulls/465))
+* The summary file size is larger than max_file_size. ([!3481](https://gitee.com/mindspore/dashboard/projects/mindspore/mindspore/pulls/3481))
+* Fix real-time training error when disk is full. ([!3058](https://gitee.com/mindspore/mindspore/pulls/3058))
+
+## Thanks to our Contributors
+Thanks goes to these wonderful people:
+
+Congli Gao, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Yongxiu Qu, Hui Pan, Luyu Qiu, Junyan Qin, Kai Wen, Weining Wang, Yue Wang, Zhuanke Wu, Yifan Xia, Lihua Ye, Weibiao Yu, Ximiao Yu, Yunshu Zhang, Ting Zhao, Jianfeng Zhu, Ning Ma, Yihui Zhang, Shuide Wang.
+
+Contributions of any kind are welcome!
+
 # Release 0.5.0-beta
 
 ## Major Features and Improvements
