@@ -90,7 +90,7 @@ limitations under the License.
             </svg>
           </div>
           <div class="image-noData"
-               v-if="svg.noData">
+               v-if="svg.noData && svg.initOver">
             <div>
               <img :src="require('@/assets/images/nodata.png')"
                    alt="" />
@@ -236,7 +236,7 @@ limitations under the License.
           </div>
         </div>
         <div class="image-noData"
-             v-if="processSummary.noData">
+             v-if="processSummary.noData && processSummary.initOver">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
@@ -257,7 +257,7 @@ limitations under the License.
           </div>
         </div>
         <div class="image-noData"
-             v-if="pieChart.noData && pieChart.data.length === 0">
+             v-if="pieChart.noData && pieChart.data.length === 0 && pieChart.initOver">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
@@ -337,7 +337,7 @@ limitations under the License.
 
         </div>
         <div class="image-noData"
-             v-if="timelineInfo.noData">
+             v-if="timelineInfo.noData && timelineInfo.initOver">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
@@ -392,6 +392,7 @@ export default {
           stream_parallel: ['#01a5a7', '#cceded'],
         },
         noData: false,
+        initOver: false,
       },
       trainingJobId: this.$route.query.id,
       summaryPath: this.$route.query.dir,
@@ -403,6 +404,7 @@ export default {
         noData: false,
         topN: [],
         colorList: ['#6C92FA', '#6CBFFF', '#4EDED2', '#7ADFA0', '#A6DD82'],
+        initOver: false,
       },
       timeLine: {
         data: null,
@@ -414,6 +416,7 @@ export default {
         opNum: 0,
         opTimes: 0,
         noData: true,
+        initOver: false,
       },
       processSummary: {
         noData: true,
@@ -429,6 +432,7 @@ export default {
           full: 0,
           total: 0,
         },
+        initOver: false,
       },
     };
   },
@@ -481,6 +485,7 @@ export default {
         device_id: this.currentCard,
       };
       RequestService.queryProcessSummary(params).then((resp) => {
+        this.processSummary.initOver = true;
         if (resp && resp.data) {
           const data = JSON.parse(JSON.stringify(resp.data));
           this.processSummary.count = Object.keys(data).length;
@@ -505,6 +510,7 @@ export default {
           }
         } else {
           this.dealProcess(null);
+          this.processSummary.initOver = true;
         }
       });
     },
@@ -580,6 +586,7 @@ export default {
       };
       RequestService.getProfilerOpData(params)
           .then((res) => {
+            this.pieChart.initOver = true;
             if (res && res.data) {
               if (res.data.object) {
                 this.pieChart.data = [];
@@ -621,6 +628,7 @@ export default {
           })
           .catch(() => {
             this.pieChart.noData = true;
+            this.pieChart.initOver = true;
           });
     },
     queryTrainingTrace() {
@@ -631,6 +639,7 @@ export default {
       };
       RequestService.queryTrainingTrace(params).then(
           (res) => {
+            this.svg.initOver = true;
             if (
               res.data &&
             res.data.training_trace_graph &&
@@ -669,6 +678,7 @@ export default {
             document.querySelector('#trace').style.height = '0px';
             this.svg.noData = true;
             this.svg.data = [];
+            this.svg.initOver = true;
             this.removeTrace();
           },
       );
@@ -991,13 +1001,15 @@ export default {
       return new Uint8Array(arr);
     },
     queryTimeline() {
+      this.timeLine.waiting = true;
       const params = {
         dir: this.relativePath,
         device_id: this.currentCard,
       };
       RequestService.queryTimlineInfo(params)
           .then((res) => {
-            if (res && res.data) {
+            this.timelineInfo.initOver = true;
+            if (res && res.data && res.data.length) {
               this.timelineInfo.noData = false;
               this.timelineInfo.totalTime = res.data.total_time.toFixed(4);
               this.timelineInfo.streamNum = res.data.num_of_streams;
@@ -1009,8 +1021,8 @@ export default {
           })
           .catch(() => {
             this.timelineInfo.noData = true;
+            this.timelineInfo.initOver = true;
           });
-      this.timeLine.waiting = true;
       RequestService.queryTimeline(params)
           .then((res) => {
             if (res && res.data && res.data.length) {

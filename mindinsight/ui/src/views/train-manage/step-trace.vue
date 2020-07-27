@@ -88,7 +88,7 @@ limitations under the License.
           </svg>
         </div>
         <div class="image-noData svg"
-             v-if="svg.data.length === 0">
+             v-if="svg.data.length === 0 && svg.initOver">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
@@ -178,6 +178,7 @@ export default {
           stream_parallel: ['#01a5a7', '#cceded'],
         },
         noData: false,
+        initOver: false,
       },
       deviceId: 0,
       radio: this.$t('profiling.lterationGap'),
@@ -424,6 +425,7 @@ export default {
       };
       RequestService.queryTrainingTrace(params).then(
           (res) => {
+            this.svg.initOver = true;
             if (
               res.data &&
             res.data.training_trace_graph &&
@@ -461,6 +463,7 @@ export default {
             this.bp_end = '--';
             this.svg.data = [];
             this.svg.noData = true;
+            this.svg.initOver = true;
             this.removeTrace();
           },
       );
