@@ -18,7 +18,8 @@ limitations under the License.
   <div class="cl-hardware-visual">
     <div class="cl-hardware-content"
          v-if="!(chipTableData.length === 0 && cpuList.length===0)">
-      <div class="cl-hardware-top">
+      <div class="cl-hardware-top"
+           v-if="chipTableData.length">
         <div class="cl-hardware-left">
           <div class="cl-sub-title"
                v-if="chipTableData.length">
@@ -28,7 +29,8 @@ limitations under the License.
             <el-table v-if="chipTableData.length"
                       :data="chipTableData"
                       width="100%"
-                      height="100%">
+                      height="100%"
+                      :row-class-name="tableRowClassName">
               <el-table-column width="120">
                 <template slot="header">
                   <span class="cl-text-center">
@@ -76,8 +78,10 @@ limitations under the License.
                 <template slot-scope="scope">
                   <span class="cl-text-center">
                     <i class="el-icon-success"
-                       v-if="scope.row.available"></i>
+                       v-if="scope.row.available"
+                       :title="$t('hardwareVisual.availableFree')"></i>
                     <i class="el-icon-question"
+                       :title="$t('hardwareVisual.availableBusy')"
                        v-else></i>
                   </span>
                 </template>
@@ -97,15 +101,20 @@ limitations under the License.
                 <template slot-scope="scope">
                   <span class="cl-text-center">
                     <i class="el-icon-success"
-                       v-if="scope.row.health===0"></i>
+                       v-if="scope.row.health===0"
+                       :title="$t('hardwareVisual.normal')"></i>
                     <i class="el-icon-warning normal"
-                       v-if="scope.row.health===1"></i>
+                       v-if="scope.row.health===1"
+                       :title="$t('hardwareVisual.generalWarn')"></i>
                     <i class="el-icon-warning important"
-                       v-if="scope.row.health===2"></i>
+                       v-if="scope.row.health===2"
+                       :title="$t('hardwareVisual.importantWarn')"></i>
                     <i class="el-icon-warning emergency"
-                       v-if="scope.row.health===3"></i>
+                       v-if="scope.row.health===3"
+                       :title="$t('hardwareVisual.emergencyWarn')"></i>
                     <i class="el-icon-remove"
-                       v-if="scope.row.health=== 0xffffffff"></i>
+                       v-if="scope.row.health=== 0xffffffff"
+                       :title="$t('hardwareVisual.noChip')"></i>
                   </span>
                 </template>
               </el-table-column>
@@ -136,8 +145,10 @@ limitations under the License.
                   </el-tooltip>
                 </template>
                 <template slot-scope="scope">
-                  <el-progress :percentage="scope.row.aicore_rate"
-                               :format="format"></el-progress>
+                  <div class="core-wrap">
+                    <el-progress :percentage="scope.row.aicore_rate===-1?0:scope.row.aicore_rate"
+                                 :format="format(scope.row.aicore_rate)"></el-progress>
+                  </div>
                 </template>
 
               </el-table-column>
@@ -154,8 +165,8 @@ limitations under the License.
                 </template>
                 <template slot-scope="scope">
                   <div class="hbs-wrap">
-                    <el-progress :percentage="
-                    parseInt(scope.row.hbm_info.memory_usage/scope.row.hbm_info.memory_size*100)"
+                    <el-progress :percentage="scope.row.hbm_info.memory_size?
+                    parseInt(scope.row.hbm_info.memory_usage/scope.row.hbm_info.memory_size*100):0"
                                  :format="formatHbm(scope.row.hbm_info)"></el-progress>
                   </div>
                 </template>
@@ -195,7 +206,7 @@ limitations under the License.
                          :class="{zero:!scope.row.temperature}"></div>
                     <div class="process-wrap">
                       <div class="process-cover"
-                           :style="{width:scope.row.temperature/temperatureMax*100+'%'}"></div>
+                           :style="{width:temperatureMax?scope.row.temperature/temperatureMax*100+'%':0}"></div>
                     </div>
                     <span>{{scope.row.temperature}}</span>
                   </div>
@@ -213,7 +224,8 @@ limitations under the License.
           </div>
         </div>
       </div>
-      <div class="cl-hardware-bottom">
+      <div class="cl-hardware-bottom"
+           :class="{noNpu:!chipTableData.length}">
         <div class="cl-hardware-left">
           <div class="cl-sub-title">
             CPU
@@ -314,7 +326,7 @@ export default {
       overallCpuInfo: [],
       selectedCpuInfo: [],
       selectedCpuIndex: null,
-      pieColorArr: ['#5e7ce0', '#a6dd82'],
+      pieColorArr: ['#5e7ce0', '#ccc', '#a6dd82'],
       autoUpdateTimer: null, // Automatic refresh timer
       isReloading: false, // Manually refresh
     };
@@ -410,10 +422,14 @@ export default {
             }
             if (res && res.data) {
               this.chipTableData = res.data.npu || [];
+              if (this.chipTableData.length === 0) {
+                this.defaultCpuNum = 192;
+              }
               this.powerMax =
               Math.max(...this.chipTableData.map((val) => val.power)) * 1.2;
               this.temperatureMax =
-              Math.max(...this.chipTableData.map((val) => val.temperature)) * 1.2;
+              Math.max(...this.chipTableData.map((val) => val.temperature)) *
+              1.2;
               // 1.2 In order to Demonstrated effect
               if (res.data.memory && res.data.memory.virtual) {
                 this.dealChartData(this.virtualChart, res.data.memory.virtual);
@@ -439,6 +455,17 @@ export default {
                 } else {
                   this.selectedCpuInfo = [];
                 }
+                this.$nextTick(() => {
+                  const doms = document.querySelectorAll('.fail-row');
+                  if (doms) {
+                    for (let i = 0; i < doms.length; i++) {
+                      doms[i].setAttribute(
+                          'title',
+                          this.$t('hardwareVisual.failQueryChip'),
+                      );
+                    }
+                  }
+                });
               }
             }
           },
@@ -451,6 +478,12 @@ export default {
             }
           },
       );
+    },
+    tableRowClassName({row, rowIndex}) {
+      if (!row.success) {
+        return 'fail-row';
+      }
+      return '';
     },
     /**
      * add tips
@@ -507,14 +540,21 @@ export default {
         if (val.idle !== undefined) {
           if (index === key) {
             this.selectedCpuIndex = key;
-            val.selected = true;
-            this.selectedCpuInfo = Object.keys(this.cpuList[index]).map((val) => {
-              return {
-                label: val,
-                value: this.cpuList[index][val],
-              };
-            });
-            this.selectedCpuInfo.pop();
+            val.selected = !val.selected;
+            if (val.selected) {
+              this.selectedCpuInfo = Object.keys(this.cpuList[index]).map(
+                  (val) => {
+                    return {
+                      label: val,
+                      value: this.cpuList[index][val],
+                    };
+                  },
+              );
+              this.selectedCpuInfo.pop();
+            } else {
+              this.selectedCpuIndex = null;
+              this.selectedCpuInfo = [];
+            }
           } else {
             if (this.cpuList[index].idle !== undefined) {
               val.selected = false;
@@ -530,9 +570,12 @@ export default {
      * @param {Object} data chart data
      */
     dealChartData(chart, data) {
-      const virtual = Object.keys(data);
-      chart.legend = virtual.reverse();
-      chart.data = virtual.map((val) => {
+      if (data.others === 0) {
+        chart.legend = ['used', 'available'];
+      } else {
+        chart.legend = ['used', 'others', 'available'];
+      }
+      chart.data = chart.legend.map((val) => {
         return {
           value: data[val],
           name: val,
@@ -565,7 +608,11 @@ export default {
       return `${n}`;
     },
     format(percentage, item) {
-      return `${percentage}`;
+      return () => {
+        return percentage === -1
+          ? this.$t('hardwareVisual.faliQuery')
+          : `${percentage}`;
+      };
     },
     formatHbm(hbmInfo) {
       return function() {
@@ -639,7 +686,7 @@ export default {
             name: '',
             center: ['25%', '50%'],
             type: 'pie',
-            radius: ['40%', '60%'],
+            radius: this.chipTableData.length ? ['40%', '60%'] : ['30%', '40%'],
             avoidLabelOverlap: false,
             label: {
               show: true,
@@ -739,7 +786,7 @@ export default {
           height: calc(100% - 36px);
           overflow: auto;
           .el-icon-question::before {
-            color: red;
+            color: #f06281;
           }
           .el-icon-success:before {
             color: #57d7ac;
@@ -795,6 +842,12 @@ export default {
             .el-progress-bar {
               padding-right: 140px;
               margin-right: -145px;
+            }
+          }
+          .core-wrap {
+            .el-progress-bar {
+              padding-right: 80px;
+              margin-right: -85px;
             }
           }
           .power {
@@ -873,6 +926,13 @@ export default {
         }
       }
     }
+    .cl-hardware-bottom.noNpu {
+      padding-top: 16px;
+      height: 570px;
+      .cl-cpu-wrap {
+        height: 399px;
+      }
+    }
     .el-table thead tr {
       background: #f0f3fa;
     }
@@ -904,6 +964,10 @@ export default {
   }
   .el-icon-info:before {
     color: #6c7280;
+  }
+  .el-table .fail-row {
+    opacity: 0.24;
+    filter: grayscale(1);
   }
 }
 </style>
