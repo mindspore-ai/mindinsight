@@ -295,7 +295,7 @@ limitations under the License.
       </div>
     </div>
     <div class="image-noData"
-         v-if="chipTableData.length === 0 && cpuList.length===0">
+         v-if="chipTableData.length === 0 && cpuList.length===0 && initOver">
       <div>
         <img :src="require('@/assets/images/nodata.png')"
              alt="" />
@@ -330,6 +330,7 @@ export default {
       autoUpdateTimer: null, // Automatic refresh timer
       isReloading: false, // Manually refresh
       legendSelected: {},
+      initOver: false,
     };
   },
   computed: {
@@ -417,6 +418,7 @@ export default {
     init() {
       RequestService.getMetricsData().then(
           (res) => {
+            this.initOver = true;
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);
               this.isReloading = false;
@@ -473,6 +475,7 @@ export default {
           (err) => {
             this.chipTableData = [];
             this.cpuList = [];
+            this.initOver = true;
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);
               this.isReloading = false;
