@@ -270,8 +270,7 @@ def dsmi_get_hbm_info(device_id):
     }
 
 
-@_timeout(0.2, 0)
-@_fallback_to_prev_result
+@_timeout(0.2, -1)
 def dsmi_get_device_utilization_rate(device_id, device_type):
     """
     Get device utilization rate, %.
@@ -282,13 +281,14 @@ def dsmi_get_device_utilization_rate(device_id, device_type):
         device_id (int): The specific device id
         device_type (int): The device type, 1 for memory, 2 AI Core, 5 memory bandwidth, 6 HBM, 10 HBM bandwidth.
     Returns:
-        int, the utilization rate.
+        int, the utilization rate, returning -1 to indicate querying failed.
     """
     device_id = c_int(device_id)
     device_type = c_int(device_type)
     utilization_rate = c_uint()
-    success = _libsmicall(device_id, device_type, byref(utilization_rate))
-    return success, utilization_rate.value
+    if _libsmicall(device_id, device_type, byref(utilization_rate)):
+        return utilization_rate.value
+    return -1
 
 
 @_fallback_to_prev_result
@@ -388,14 +388,14 @@ def _collect_one(device_id):
     Raises:
         RuntimeError, when querying dsmi returning non-zero.
     """
-    kb_to_mb, memory_threshold, success = 1024, 4, [True] * 7
+    kb_to_mb, memory_threshold, success = 1024, 4, [True] * 6
     success[0], health = dsmi_get_device_health(device_id)
     success[1], hbm_info = dsmi_get_hbm_info(device_id)
     success[2], chip_info = dsmi_get_chip_info(device_id)
     success[3], ip_addr = dsmi_get_device_ip_address(device_id)
-    success[4], aicore_rate = dsmi_get_device_utilization_rate(device_id, 2)
-    success[5], power_info = dsmi_get_device_power_info(device_id)
-    success[6], temperature = dsmi_get_device_temperature(device_id)
+    success[4], power_info = dsmi_get_device_power_info(device_id)
+    success[5], temperature = dsmi_get_device_temperature(device_id)
+    aicore_rate = dsmi_get_device_utilization_rate(device_id, 2)
     return {
         'chip_name': chip_info.get('chip_name'),
         'device_id': device_id,
