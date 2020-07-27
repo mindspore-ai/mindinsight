@@ -194,6 +194,9 @@ export default {
       this.newReloadValue = this.timeReloadValue;
     },
     timeValueChange() {
+      if (this.newReloadValue === '') {
+        return;
+      }
       this.newReloadValue = this.newReloadValue
           .toString()
           .replace(/[^\.\d]/g, '')
@@ -229,9 +232,12 @@ export default {
     },
     cancelHardwareTimeValue() {
       this.isShowHardwareInp = false;
-      this.newHardwareReloadValue = this.timeReloadValue;
+      this.newHardwareReloadValue = this.hardwareTimeReloadValue;
     },
     hardwareTimeValueChange() {
+      if (this.newHardwareReloadValue === '') {
+        return;
+      }
       this.newHardwareReloadValue = this.newHardwareReloadValue
           .toString()
           .replace(/[^\.\d]/g, '')
