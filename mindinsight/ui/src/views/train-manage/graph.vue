@@ -467,7 +467,7 @@ export default {
         show: false,
         info: '',
       },
-      scaleRange: [0.0001, 10000], // graph zooms in and zooms out.
+      scaleRange: [0.001, 1000], // graph zooms in and zooms out.
       rightShow: true, // Check whether the right side bar is displayed.
       fullScreen: false, // Display Full Screen
       totalMemory: 16777216 * 2, // Memory size of the graph plug-in
@@ -583,29 +583,32 @@ export default {
      * @param {String} dot dot statement encapsulated in graph data
      */
     initGraph(dot) {
-      this.graphviz = d3
-          .select('#graph')
-          .graphviz({useWorker: false, totalMemory: this.totalMemory})
-          .zoomScaleExtent(this.scaleRange)
-          .dot(dot)
-          .attributer(this.attributer)
-          .render(() => {
-            this.initSvg();
-            this.afterInitGraph();
-          });
+      try {
+        this.graphviz = d3
+            .select('#graph')
+            .graphviz({useWorker: false, totalMemory: this.totalMemory})
+            .zoomScaleExtent(this.scaleRange)
+            .dot(dot)
+            .attributer(this.attributer)
+            .render(() => {
+              this.initSvg();
+              this.afterInitGraph();
+            });
+      } catch (error) {
+        const svg = document.querySelector('#graph svg');
+        if (svg) {
+          svg.remove();
+        }
+        this.initGraph(dot);
+      }
+
       // Generate the dom of the submap.
       if (!d3.select('#graphTemp').size()) {
-        d3.select('body')
-            .append('div')
-            .attr('id', 'graphTemp')
-            .attr('style', 'visibility: collapse');
+        d3.select('body').append('div').attr('id', 'graphTemp');
       }
       // Stores the dom of all the sorted subgraphs.
       if (!d3.select('#subgraphTemp').size()) {
-        d3.select('body')
-            .append('div')
-            .attr('id', 'subgraphTemp')
-            .attr('style', 'visibility: collapse');
+        d3.select('body').append('div').attr('id', 'subgraphTemp');
       }
     },
     initSvg() {
@@ -654,10 +657,7 @@ export default {
       this.$nextTick(() => {
         this.loading.show = false;
       });
-      const elements = d3
-          .select('#graph')
-          .selectAll('g.node, g.edge')
-          .nodes();
+      const elements = d3.select('#graph').selectAll('g.node, g.edge').nodes();
       elements.forEach((ele) => {
         if (!ele.hasAttribute('transform')) {
           ele.setAttribute('transform', 'translate(0,0)');
@@ -728,6 +728,7 @@ export default {
               .parentNode.id;
           name = parentId.replace('_unfold', '');
           this.allGraphData[name].index += changePage;
+          this.selectedNode.name = name;
         }
         if (unfoldFlag) {
           this.dealDoubleClick(name);
@@ -928,26 +929,39 @@ export default {
      * @param {Boolean} toUnfold Expand the namespace.
      */
     layoutNamescope(name, toUnfold) {
-      setTimeout(() => {
+      this.$nextTick(() => {
         const dotStr = this.packageNamescope(name);
-        this.graphvizTemp = d3
-            .select('#graphTemp')
-            .graphviz({useWorker: false, totalMemory: this.totalMemory})
-            .dot(dotStr)
-            .zoomScaleExtent(this.scaleRange)
-            .attributer((datum, index, nodes) => {
-              if (
-                datum.tag === 'polygon' &&
-              datum.attributes.stroke !== 'transparent'
-              ) {
-                datum.attributes.stroke = 'rgb(167, 167, 167)';
-              }
-            })
-            .render(() => {
-              this.fitGraph('graphTemp');
-              this.dealNamescopeTempGraph(name);
-            });
-      }, 20);
+        try {
+          this.graphvizTemp = d3
+              .select('#graphTemp')
+              .graphviz({useWorker: false, totalMemory: this.totalMemory})
+              .dot(dotStr)
+              .zoomScaleExtent(this.scaleRange)
+              .attributer((datum, index, nodes) => {
+                if (
+                  datum.tag === 'polygon' &&
+                datum.attributes.stroke !== 'transparent'
+                ) {
+                  datum.attributes.stroke = 'rgb(167, 167, 167)';
+                }
+              })
+              .render(() => {
+                this.fitGraph('graphTemp');
+                this.dealNamescopeTempGraph(name);
+              });
+        } catch (error) {
+          const graphTempSvg = document.querySelector('#graphTemp svg');
+          if (graphTempSvg) {
+            graphTempSvg.remove();
+          }
+          const subGraphTempSvg = document.querySelector('#subgraphTemp svg');
+          if (subGraphTempSvg) {
+            subGraphTempSvg.remove();
+          }
+
+          this.dealDoubleClick(this.selectedNode.name);
+        }
+      });
     },
     /**
      * To obtain graph data, initialize and expand the namespace or aggregate nodes.
@@ -1665,10 +1679,7 @@ export default {
           .attr('width', g.node().getBBox().width + this.frameSpace * 2)
           .attr('height', g.node().getBBox().height + this.frameSpace * 2);
 
-      boxTemp = d3
-          .select(`${idStr}g[id="${name}_unfold"]`)
-          .node()
-          .getBBox();
+      boxTemp = d3.select(`${idStr}g[id="${name}_unfold"]`).node().getBBox();
       // After the namespace dom is successfully encapsulated, set the related data of the data object.
       this.allGraphData[name].isUnfold = true;
       this.allGraphData[name].size = [boxTemp.width / 72, boxTemp.height / 72];
@@ -1680,8 +1691,9 @@ export default {
         const node = document.querySelector(`#graphTemp g[id="${name}"]`);
         const box = node.getBBox();
         const boxTemp = nodeTemp.getBBox();
-        const translateStr = `translate(${box.x - boxTemp.x},${box.y -
-          boxTemp.y})`;
+        const translateStr = `translate(${box.x - boxTemp.x},${
+          box.y - boxTemp.y
+        })`;
         nodeTemp.setAttribute('transform', translateStr);
         node.parentNode.appendChild(nodeTemp);
         document.querySelector('#subgraphTemp svg').remove();
@@ -1732,8 +1744,9 @@ export default {
           if (node && nodeTemp) {
             const box = node.getBBox();
             const boxTemp = nodeTemp.getBBox();
-            const translateStr = `translate(${box.x - boxTemp.x},${box.y -
-              boxTemp.y})`;
+            const translateStr = `translate(${box.x - boxTemp.x},${
+              box.y - boxTemp.y
+            })`;
             nodeTemp.setAttribute('transform', translateStr);
             node.parentNode.appendChild(nodeTemp);
             node.remove();
@@ -1809,10 +1822,7 @@ export default {
         this.loading.show = true;
       }
       if (name.includes('/')) {
-        const subPath = name
-            .split('/')
-            .slice(0, -1)
-            .join('/');
+        const subPath = name.split('/').slice(0, -1).join('/');
         this.layoutNamescope(subPath, true);
       } else {
         const svg = document.querySelector('#graph svg');
@@ -2292,10 +2302,7 @@ export default {
       if (subPsth && this.allGraphData[subPsth]) {
         // The virtual node and its subnodes need to return their namespaces.
         if (this.allGraphData[subPsth].independent_layout) {
-          subPsth = subPsth
-              .split('/')
-              .slice(0, -1)
-              .join('/');
+          subPsth = subPsth.split('/').slice(0, -1).join('/');
         }
       }
       return subPsth;
@@ -2619,7 +2626,7 @@ export default {
         this.insideBox.height = this.smallResize.height;
         this.insideBox.top = this.insideBox.left = 0;
         this.styleSet('#inside-box', this.insideBox);
-        insideBox.style.cursor = 'not-allowed';
+        this.insideBox.style.cursor = 'not-allowed';
       } else {
         let transformString = '';
         const transTemp = this.graph.dom.attributes.transform || null;
@@ -2757,8 +2764,9 @@ export default {
         `<svg xmlns="http://www.w3.org/2000/svg" ` +
         `xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" ` +
         `viewBox="0.00 0.00 ${this.svg.originSize.width} ${this.svg.originSize.height}"` +
-        `><g id="smallGraph" class="graph" transform="translate(4,${this.svg
-            .originSize.height - 4}) scale(1)"` +
+        `><g id="smallGraph" class="graph" transform="translate(4,${
+          this.svg.originSize.height - 4
+        }) scale(1)"` +
         `>${this.graph.dom.innerHTML}</g></svg>`;
 
       smallMap.innerHTML = svgOuterHtml;
@@ -3492,5 +3500,10 @@ export default {
   .cl-title-right {
     padding-right: 32px;
   }
+}
+#graphTemp,
+#subgraphTemp {
+  position: absolute;
+  bottom: 0;
 }
 </style>
