@@ -21,6 +21,9 @@ limitations under the License.
       <div class="cl-dashboard-top-title">
         {{$t('trainingDashboard.trainingDashboardTitle')}}
       </div>
+      <div :title="$t('trainingDashboard.loadingTip')"
+           v-if="trainJobCached"
+           class="el-icon-loading loading-icon"></div>
       <div class="path-message">
         <span>{{$t('symbols.leftbracket')}}</span>
         <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
@@ -234,6 +237,12 @@ export default {
         mousedown: 'mousedown',
         mouseup: 'mouseup',
       },
+      trainJobCached: false,
+      cacheKey: {
+        notInCache: 'NOT_IN_CACHE',
+        caching: 'CACHING',
+        cached: 'CACHED',
+      },
     };
   },
   computed: {
@@ -262,6 +271,7 @@ export default {
         }
         this.getDatavisualPlugins(true);
         this.queryDatasetGraph();
+        this.queryTrainJobCacheState();
         setTimeout(() => {
           this.$store.commit('setIsReload', false);
         }, this.reloadStopTime);
@@ -349,6 +359,7 @@ export default {
         this.startAutoUpdate();
       }
       this.queryDatasetGraph();
+      this.queryTrainJobCacheState();
     },
 
     /**
@@ -504,6 +515,7 @@ export default {
         if (!Object.keys(this.allDatasetGraphData).length) {
           this.queryDatasetGraph();
         }
+        this.queryTrainJobCacheState();
       }, this.timeReloadValue * 1000);
     },
     /**
@@ -1941,6 +1953,31 @@ export default {
           .selectAll('title')
           .remove();
     },
+    /**
+    * Query the cachee status of training jonb
+    */
+    queryTrainJobCacheState() {
+      const params = {
+        train_id: this.trainingJobId,
+      };
+      RequestService.querySummaryList(params, true).then((response) => {
+        if (
+          response &&
+          response.data &&
+          response.data.train_jobs &&
+          response.data.train_jobs.length
+        ) {
+          const curTrain = response.data.train_jobs[0];
+          if (curTrain.cache_status !== this.cacheKey.cached) {
+            this.trainJobCached = true;
+          } else {
+            this.trainJobCached = false;
+          }
+        } else {
+          this.trainJobCached = false;
+        }
+      });
+    },
   },
 };
 </script>
@@ -1962,6 +1999,9 @@ export default {
       line-height: 20px;
       padding: 18px 16px;
       font-weight: bold;
+    }
+    .loading-icon {
+      margin-left: 5px;
     }
     .cl-dashboard-top-title {
       float: left;
