@@ -35,6 +35,7 @@ CONFIG = {
     'max_tag_sizes_per_plugin':
         {
             PluginNameEnum.GRAPH.value: settings.MAX_GRAPH_TAG_SIZE,
+            PluginNameEnum.TENSOR.value: settings.MAX_TENSOR_TAG_SIZE
         },
     'max_step_sizes_per_tag':
         {
