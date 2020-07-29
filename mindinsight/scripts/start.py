@@ -193,8 +193,8 @@ class Command(BaseCommand):
             help="""
                 Custom URL path prefix for web page address. URL path prefix 
                 consists of segments separated by slashes. Each segment supports
-                alphabets / digits / underscores / dashes / dots, but cannot just 
-                be emtpy string / single dot / double dots. Default value is ''.
+                alphabets / digits / underscores / dashes / dots, but not single 
+                dot or double dots. Default value is ''.
             """)
 
         for hook in HookUtils.instance().hooks():
