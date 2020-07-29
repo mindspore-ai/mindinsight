@@ -164,25 +164,26 @@ export default {
     listSelectAll() {
       this.operateSelectAll = !this.operateSelectAll;
       this.multiSelectedItemNames = {};
-      this.selectedNumber = 0;
       // Setting the status of list items
       if (this.operateSelectAll) {
         if (this.isLimit) {
           const loopCount = this.checkListArr.length;
           for (let i = 0; i < loopCount; i++) {
-            if (this.selectedNumber >= this.limitNum) {
-              break;
-            }
             const listItem = this.checkListArr[i];
-            if (listItem.checked) {
-              this.selectedNumber++;
-              if (listItem.show) {
+            if (this.selectedNumber >= this.limitNum) {
+              if (listItem.checked && listItem.show) {
                 this.multiSelectedItemNames[listItem.label] = true;
               }
-            } else if (listItem.show) {
-              listItem.checked = true;
-              this.multiSelectedItemNames[listItem.label] = true;
-              this.selectedNumber++;
+            } else {
+              if (listItem.checked) {
+                if (listItem.show) {
+                  this.multiSelectedItemNames[listItem.label] = true;
+                }
+              } else if (listItem.show) {
+                listItem.checked = true;
+                this.multiSelectedItemNames[listItem.label] = true;
+                this.selectedNumber++;
+              }
             }
           }
         } else {
