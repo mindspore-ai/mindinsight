@@ -91,7 +91,7 @@ def _libsmicall(*args):
     fname = inspect.stack()[1].function
     error_code = getattr(libsmi, fname)(*args)
     if error_code != 0:
-        logger.error(f'{fname} querying failed with error code {error_code}.')
+        logger.error('%s querying failed with error code %d.', fname, error_code)
     return error_code == 0
 
 
