@@ -1009,7 +1009,7 @@ export default {
       RequestService.queryTimlineInfo(params)
           .then((res) => {
             this.timelineInfo.initOver = true;
-            if (res && res.data && res.data.length) {
+            if (res && res.data) {
               this.timelineInfo.noData = false;
               this.timelineInfo.totalTime = res.data.total_time.toFixed(4);
               this.timelineInfo.streamNum = res.data.num_of_streams;
