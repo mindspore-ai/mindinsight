@@ -30,7 +30,12 @@ from setuptools.command.install import install
 
 
 def get_version():
-    """Get version."""
+    """
+    Get version.
+
+    Returns:
+        str, mindinsight version.
+    """
     machinery = import_module('importlib.machinery')
     version_path = os.path.join(os.path.dirname(__file__), 'mindinsight', '_version.py')
     module_name = '__mindinsightversion__'
@@ -40,15 +45,24 @@ def get_version():
     return version_module.VERSION
 
 
-def get_os():
-    """Get OS."""
-    os_system = platform.system().lower()
-    return os_system
+def get_platform():
+    """
+    Get platform name.
+
+    Returns:
+        str, platform name in lowercase.
+    """
+    return platform.system().lower()
 
 
 def get_description():
-    """Get description."""
-    os_info = get_os()
+    """
+    Get description.
+
+    Returns:
+        str, wheel package description.
+    """
+    os_info = get_platform()
     cpu_info = platform.machine()
 
     cmd = "git log --format='[sha1]:%h, [branch]:%d' -1"
@@ -68,7 +82,12 @@ def get_description():
 
 
 def get_install_requires():
-    """Get install requirements."""
+    """
+    Get install requirements.
+
+    Returns:
+        list, list of dependent packages.
+    """
     with open('requirements.txt') as file:
         return file.read().splitlines()
 
@@ -95,15 +114,34 @@ def run_script(script):
 
     Args:
         script (str): Target script file path.
+
+    Returns:
+        int, return code.
     """
     cmd = '/bin/bash {}'.format(script)
     process = subprocess.Popen(
         shlex.split(cmd),
         shell=False
     )
+    return process.wait()
 
-    rc = process.wait()
+
+def build_dependencies():
+    """Build dependencies."""
+    build_dir = os.path.join(os.path.dirname(__file__), 'build')
+
+    sys.stdout.write('building crc32 ...\n')
+    crc32_script = os.path.join(build_dir, 'scripts', 'crc32.sh')
+    rc = run_script(crc32_script)
     if rc:
+        sys.stdout.write('building crc32 failure\n')
+        sys.exit(1)
+
+    sys.stdout.write('building ui ...\n')
+    ui_script = os.path.join(build_dir, 'scripts', 'ui.sh')
+    rc = run_script(ui_script)
+    if rc:
+        sys.stdout.write('building ui failure\n')
         sys.exit(1)
 
 
@@ -111,25 +149,11 @@ class EggInfo(egg_info):
     """Egg info."""
 
     def run(self):
-        self.build_dependencies()
-
+        build_dependencies()
         egg_info_dir = os.path.join(os.path.dirname(__file__), 'mindinsight.egg-info')
         shutil.rmtree(egg_info_dir, ignore_errors=True)
-
         super().run()
-
         update_permissions(egg_info_dir)
-
-    def build_dependencies(self):
-        build_dir = os.path.join(os.path.dirname(__file__), 'build')
-
-        sys.stdout.write('building crc32 ...\n')
-        crc32_script = os.path.join(build_dir, 'scripts', 'crc32.sh')
-        run_script(crc32_script)
-
-        sys.stdout.write('building ui ...\n')
-        ui_script = os.path.join(build_dir, 'scripts', 'ui.sh')
-        run_script(ui_script)
 
 
 class BuildPy(build_py):
@@ -138,9 +162,7 @@ class BuildPy(build_py):
     def run(self):
         mindinsight_lib_dir = os.path.join(os.path.dirname(__file__), 'build', 'lib', 'mindinsight')
         shutil.rmtree(mindinsight_lib_dir, ignore_errors=True)
-
         super().run()
-
         update_permissions(mindinsight_lib_dir)
 
 
@@ -149,7 +171,6 @@ class Install(install):
 
     def run(self):
         super().run()
-
         if sys.argv[-1] == 'install':
             pip = import_module('pip')
             mindinsight_dir = os.path.join(os.path.dirname(pip.__path__[0]), 'mindinsight')
@@ -175,7 +196,7 @@ if __name__ == '__main__':
         },
         description=get_description(),
         packages=['mindinsight'],
-        platforms=[get_os()],
+        platforms=[get_platform()],
         include_package_data=True,
         cmdclass={
             'egg_info': EggInfo,
