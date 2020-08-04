@@ -17,6 +17,7 @@ import time
 
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
+from mindinsight.datavisual.common.enums import PluginNameEnum
 from .node import Node
 from .node import NodeTypeEnum
 from .graph import Graph
@@ -76,8 +77,12 @@ class MSGraph(Graph):
                 logger.warning("Finding a node with an empty name will not save it.")
                 continue
 
-            node_name = Node.create_node_name(scope=node_proto.scope,
-                                              base_name=f'{node_proto.op_type}{node_proto.name}')
+            if not node_proto.full_name or any(
+                    node_proto.full_name.lower().endswith(f'[:{plugin.value.lower()}]') for plugin in PluginNameEnum):
+                node_name = Node.create_node_name(scope=node_proto.scope,
+                                                  base_name=f'{node_proto.op_type}{node_proto.name}')
+            else:
+                node_name = node_proto.full_name
             node = Node(name=node_name, node_id=node_proto.name)
             node.type = node_proto.op_type
             logger.debug("Foreach graph proto nodes, node id: %s, node name: %s, node def name: %s, "

@@ -85,9 +85,11 @@ enum DataType {
   DT_BASE_FLOAT = 38;   // type generate float
   DT_TYPE = 39;         // type type
   DT_ANYTHING = 40;     // type anything
+  DT_REFKEY = 41;     // type refkey
+  DT_REF = 42;     // type ref
 }
 
-// Value definiton for attribute value or parameter default value
+// Value definition for attribute value or parameter default value
 message ValueProto {
   // data type of value
   optional DataType dtype = 1;   // discriminator that indicates which field below is in use
@@ -223,6 +225,9 @@ message NodeProto {
 
   // other fields for debug
   optional uint64 output_i = 7;
+
+  // The full_name_with_scope of CNode
+  optional string full_name = 8;
 }
 
 // Models
