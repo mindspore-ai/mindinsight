@@ -2908,8 +2908,10 @@ export default {
       ${window.btoa(unescape(encodeURIComponent(encodeStr)))}`;
       const a = document.createElement('a');
       a.href = src; // Export the information in the canvas as image data.
-      a.download = 'graph'; // Set the download name.
-      a.click(); // Click to trigger download.
+      a.download = 'graph.svg'; // Set the download name.
+      const evt = document.createEvent('MouseEvents');
+      evt.initEvent('click', true, true);
+      a.dispatchEvent(evt);
     },
     /**
      * Fold the legend area.

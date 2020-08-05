@@ -57,12 +57,15 @@ limitations under the License.
       <div class="cl-img-show-data-content">
         <!-- No data is displayed. -->
         <div class="image-noData"
-             v-if="initOver && originDataArr.length === 0">
+             v-if="!originDataArr.length">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <div class="noData-text">{{$t("public.noData")}}</div>
+          <div v-if="initOver"
+               class="noData-text">{{$t("public.noData")}}</div>
+          <div v-else
+               class="noData-text">{{$t("public.dataLoading")}}</div>
         </div>
         <!-- Data is displayed -->
         <div class="data-content"
@@ -810,7 +813,7 @@ export default {
     .image-noData {
       // Set the width and white on the right.
       width: 100%;
-      height: 450px;
+      height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;

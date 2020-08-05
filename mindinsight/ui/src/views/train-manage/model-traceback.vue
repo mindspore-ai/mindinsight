@@ -87,9 +87,9 @@ limitations under the License.
 
       </div>
       <div id="echart"
-           v-show="!noData && showEchartPic"></div>
+           v-show="!noData && showEchartPic && !loading"></div>
       <div class="echart-no-data"
-           v-show="!noData && !showEchartPic">
+           v-show="!noData && !showEchartPic && !loading">
       </div>
       <div class="btns-container"
            v-show="showTable && !noData">
@@ -252,7 +252,7 @@ limitations under the License.
                            prop="tag"
                            sortable="custom">
             <template slot-scope="scope">
-              <div @click="showAllIcon(scope.row,scope)"
+              <div @click="showAllIcon(scope.row, scope, $event)"
                    class="tag-icon-container">
                 <img v-if="scope.row.tag"
                      :class="'img' + scope.$index"
@@ -297,6 +297,14 @@ limitations under the License.
           </div>
         </div>
       </div>
+      <div v-if="loading"
+           class="no-data-page">
+        <div class="no-data-img">
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+          <p class="no-data-text">{{$t("public.dataLoading")}}</p>
+        </div>
+      </div>
     </div>
     <!-- tag dialog -->
     <div v-show="tagDialogShow"
@@ -326,7 +334,7 @@ limitations under the License.
             <el-button type="primary"
                        size="mini"
                        class="custom-btn"
-                       @click="clearIcon(tagScope)"
+                       @click="clearIcon(tagScope, $event)"
                        plain>
               {{$t('public.clear')}}
             </el-button>
@@ -421,6 +429,7 @@ export default {
       sortInfo: {},
       showTable: false,
       noData: false,
+      loading: true,
       haveCustomizedParams: false,
       replaceStr: {
         metric: 'metric/',
@@ -472,7 +481,8 @@ export default {
   methods: {
     blurFloat(event) {
       const domArr = document.querySelectorAll('.icon-dialog');
-      const isActiveDom = event.path.some((item) => {
+      const path = event.path || (event.composedPath && event.composedPath());
+      const isActiveDom = path.some((item) => {
         return item.className === 'icon-dialog';
       });
       if (!isActiveDom) {
@@ -488,8 +498,9 @@ export default {
      * Display of the icon dialog box
      * @param {Object} row
      * @param {Object} scope
+     * @param {Object} event
      */
-    showAllIcon(row, scope) {
+    showAllIcon(row, scope, event) {
       this.iconValue = row.tag >= 0 ? row.tag : 0;
       this.tagScope = scope;
       if (this.tagDialogShow) {
@@ -500,8 +511,9 @@ export default {
       this.addIconBorder(row);
       this.tagDialogShow = true;
       const dialogHeight = 130;
+      const ev = window.event || event;
       document.getElementById('tag-dialog').style.top =
-        window.event.clientY - dialogHeight + 'px';
+        ev.clientY - dialogHeight + 'px';
     },
 
     /**
@@ -536,14 +548,15 @@ export default {
      *  @param {Object} event
      */
     iconValueChange(row, num, event) {
-      const classWrap = event.path.find((item) => {
+      const path = event.path || (event.composedPath && event.composedPath());
+      const classWrap = path.find((item) => {
         return item.className === 'icon-dialog';
       });
       const classArr = classWrap.querySelectorAll('.icon-border');
       classArr.forEach((item) => {
         item.classList.remove('icon-border');
       });
-      const htmDom = event.path.find((item) => {
+      const htmDom = path.find((item) => {
         return item.nodeName === 'DIV';
       });
       htmDom.classList.add('icon-border');
@@ -576,9 +589,11 @@ export default {
     /**
      * clear icon
      * @param {Object} scope
+     * @param {Object} event
      */
-    clearIcon(scope) {
-      const classWrap = event.path.find((item) => {
+    clearIcon(scope, event) {
+      const path = event.path || (event.composedPath && event.composedPath());
+      const classWrap = path.find((item) => {
         return item.className === 'icon-dialog';
       });
       const classArr = classWrap.querySelectorAll('.icon-border');
@@ -639,9 +654,9 @@ export default {
           }
         });
       });
-      this.initChart();
       this.initColumm();
       this.$nextTick(() => {
+        this.initChart();
         this.$refs.table.doLayout();
       });
     },
@@ -985,6 +1000,7 @@ export default {
       RequestService.queryLineagesData(params)
           .then(
               (res) => {
+                this.loading = false;
                 if (res && res.data && res.data.object) {
                   const listTemp = this.setDataOfModel(res.data.object);
                   const list = JSON.parse(JSON.stringify(listTemp));
@@ -1184,7 +1200,11 @@ export default {
                       }
                     });
                     this.initColumm();
-                    this.initChart();
+                    this.$nextTick(() => {
+                      this.resizeChart();
+                      this.initChart();
+                    });
+
                     const tempList = list.slice(0, this.pagination.pageSize);
                     this.recordsNumber = tempList.length;
                     if (this.hidenDirChecked.length) {
@@ -1222,6 +1242,7 @@ export default {
                 }
               },
               (error) => {
+                this.loading = false;
                 if (allData) {
                   this.noData = allData;
                   this.showEchartPic = !allData;
@@ -1229,6 +1250,7 @@ export default {
               },
           )
           .catch(() => {
+            this.loading = false;
             this.noData = true;
           });
     },
@@ -1294,7 +1316,9 @@ export default {
         return;
       }
       this.echart.showData = list.length ? list : this.echart.brushData;
-      this.initChart();
+      this.$nextTick(() => {
+        this.initChart();
+      });
       this.checkedSummary = list;
       const summaryDirFilter = [];
       this.echart.showData.forEach((i) => {
@@ -1334,7 +1358,9 @@ export default {
           }
         });
       });
-      this.initChart();
+      this.$nextTick(() => {
+        this.initChart();
+      });
       this.initColumm();
     },
 
@@ -1377,7 +1403,9 @@ export default {
         // Restore the style of the table selection box.
         this.$refs.table.clearSelection();
         if (this.echart.showData.length > 0) {
-          this.initChart();
+          this.$nextTick(() => {
+            this.initChart();
+          });
         } else {
           this.showEchartPic = false;
         }
@@ -1584,7 +1612,7 @@ export default {
         },
         parallel: {
           top: 25,
-          left: 50,
+          left: 70,
           right: 100,
           bottom: 10,
           parallelAxisDefault: {
@@ -1644,8 +1672,6 @@ export default {
     },
     chartEventsListen(parallelAxis) {
       this.echart.chart.on('axisareaselected', (params) => {
-        this.recordsNumber = 0;
-        this.showNumber = 0;
         const key = params.parallelAxisId;
         if (
           this.keysOfMixed &&
@@ -1653,9 +1679,13 @@ export default {
           this.keysOfMixed.includes(key)
         ) {
           this.$message.error(this.$t('modelTraceback.mixedItemMessage'));
-          this.initChart();
+          this.$nextTick(() => {
+            this.initChart();
+          });
           return;
         }
+        this.recordsNumber = 0;
+        this.showNumber = 0;
         const list = this.$store.state.selectedBarList || [];
         const selectedAxisId = params.parallelAxisId;
         if (list.length) {
@@ -1777,7 +1807,9 @@ export default {
                       const summaryDirList = list.map((i) => i.summary_dir);
                       this.$store.commit('setSummaryDirList', summaryDirList);
                       this.echart.showData = this.echart.brushData = list;
-                      this.initChart();
+                      this.$nextTick(() => {
+                        this.initChart();
+                      });
                       this.getTableList(tableParams);
                     } else {
                       this.summaryDirList = [];
@@ -1912,8 +1944,15 @@ export default {
      * Resizing Chart
      */
     resizeChart() {
-      if (this.echart && this.echart.chart) {
-        this.echart.chart.resize();
+      if (
+        document.getElementById('echart') &&
+        document.getElementById('echart').style.display !== 'none' &&
+        this.echart &&
+        this.echart.chart
+      ) {
+        this.$nextTick(() => {
+          this.echart.chart.resize();
+        });
       }
     },
   },
@@ -2119,7 +2158,7 @@ export default {
     overflow: hidden;
     // select
     .el-select > .el-input {
-      min-width: 180px !important;
+      min-width: 280px !important;
       max-width: 500px !important;
     }
     .top-area {

@@ -193,7 +193,7 @@ limitations under the License.
                            prop="tag"
                            sortable="custom">
             <template slot-scope="scope">
-              <div @click="showAllIcon(scope.row,scope)"
+              <div @click="showAllIcon(scope.row, scope, $event)"
                    class="tag-icon-container">
                 <img v-if="scope.row.tag"
                      :class="'img' + scope.$index"
@@ -240,6 +240,14 @@ limitations under the License.
               {{ $t('dataTraceback.viewAllData') }}
             </p>
           </div>
+        </div>
+      </div>
+      <div v-if="loading"
+           class="no-data-page">
+        <div class="no-data-img">
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+          <p class="no-data-text">{{$t("public.dataLoading")}}</p>
         </div>
       </div>
     </div>
@@ -297,7 +305,7 @@ limitations under the License.
             <el-button type="primary"
                        size="mini"
                        class="custom-btn"
-                       @click="clearIcon(tagScope)"
+                       @click="clearIcon(tagScope,$event)"
                        plain>
               {{ $t('public.clear')}}
             </el-button>
@@ -323,6 +331,7 @@ import Echarts from 'echarts';
 export default {
   data() {
     return {
+      loading: true,
       tagDialogShow: false,
       tagScope: {},
       iconValue: 0,
@@ -355,7 +364,7 @@ export default {
       summaryDirList: undefined,
       // Table filter condition
       tableFilter: {},
-      echartNoData: false,
+      echartNoData: true,
       // Encapsulate the data returned by the background interface.
       lineagedata: {},
       // Create an array of the type and filter the mandatory options from the array.
@@ -521,7 +530,8 @@ export default {
   methods: {
     blurFloat(event) {
       const domArr = document.querySelectorAll('.icon-dialog');
-      const isActiveDom = event.path.some((item) => {
+      const path = event.path || (event.composedPath && event.composedPath());
+      const isActiveDom = path.some((item) => {
         return item.className === 'icon-dialog';
       });
       if (!isActiveDom) {
@@ -536,8 +546,9 @@ export default {
      * Display of the icon dialog box
      * @param {Object} row
      * @param {Object} scope
+     * @param {Object} event
      */
-    showAllIcon(row, scope) {
+    showAllIcon(row, scope, event) {
       this.tagScope = scope;
       this.iconValue = row.tag >= 0 ? row.tag : 0;
       if (this.tagDialogShow) {
@@ -547,8 +558,8 @@ export default {
       }
       this.addIconBorder(row);
       this.tagDialogShow = true;
-      document.getElementById('tag-dialog').style.top =
-        window.event.clientY - 130 + 'px';
+      const ev = window.event || event;
+      document.getElementById('tag-dialog').style.top = ev.clientY - 130 + 'px';
     },
 
     /**
@@ -583,14 +594,15 @@ export default {
      * @param {Object} event
      */
     iconValueChange(row, num, event) {
-      const classWrap = event.path.find((item) => {
+      const path = event.path || (event.composedPath && event.composedPath());
+      const classWrap = path.find((item) => {
         return item.className === 'icon-dialog';
       });
       const classArr = classWrap.querySelectorAll('.icon-border');
       classArr.forEach((item) => {
         item.classList.remove('icon-border');
       });
-      const htmDom = event.path.find((item) => {
+      const htmDom = path.find((item) => {
         return item.nodeName === 'DIV';
       });
       htmDom.classList.add('icon-border');
@@ -624,9 +636,11 @@ export default {
     /**
      * clear icon
      * @param {Object} scope
+     * @param {Object} event
      */
-    clearIcon(scope) {
-      const classWrap = event.path.find((item) => {
+    clearIcon(scope, event) {
+      const path = event.path || (event.composedPath && event.composedPath());
+      const classWrap = path.find((item) => {
         return item.className === 'icon-dialog';
       });
       const classArr = classWrap.querySelectorAll('.icon-border');
@@ -1056,7 +1070,7 @@ export default {
         },
         parallel: {
           top: 30,
-          left: 50,
+          left: 90,
           right: 100,
           bottom: 12,
           parallelAxisDefault: {
@@ -1335,6 +1349,8 @@ export default {
           .then(
               (res) => {
                 this.initOver = true;
+                this.loading = false;
+                this.echartNoData = false;
                 if (!res || !res.data) {
                   return;
                 }
@@ -1495,11 +1511,13 @@ export default {
                 }
               },
               (error) => {
+                this.loading = false;
                 this.initOver = true;
                 this.showEchartPic = false;
               },
           )
           .catch(() => {
+            this.loading = false;
             this.initOver = true;
             this.showEchartPic = false;
           });
@@ -1858,7 +1876,12 @@ export default {
           key: key,
           value: '',
         };
-        if (typeof dataObj[key] === this.objectType && dataObj[key] !== null) {
+        if (dataObj[key] === null) {
+          tempData.value = 'None';
+        } else if (
+          typeof dataObj[key] === this.objectType &&
+          dataObj[key] !== null
+        ) {
           if (!(dataObj[key] instanceof Array)) {
             tempData.hasChildren = true;
             tempData.children = [];

@@ -53,8 +53,13 @@ limitations under the License.
                key="no-chart-data">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
-            <p class='no-data-text'>
+            <p v-if="initOverKey.scalar"
+               class='no-data-text'>
               {{$t("public.noData")}}
+            </p>
+            <p v-else
+               class='no-data-text'>
+              {{$t("public.dataLoading")}}
             </p>
           </div>
         </div>
@@ -75,8 +80,13 @@ limitations under the License.
                v-show="!histogramTag || wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
-            <p class='no-data-text'>
+            <p v-if="initOverKey.histogram"
+               class='no-data-text'>
               {{$t("public.noData")}}
+            </p>
+            <p v-else
+               class='no-data-text'>
+              {{$t("public.dataLoading")}}
             </p>
           </div>
         </div>
@@ -143,8 +153,12 @@ limitations under the License.
                  alt=""
                  v-show="!originImageDataArr.length || wrongPlugin">
             <p class='no-data-text'
-               v-show=" !originImageDataArr.length || wrongPlugin">
+               v-show="(!originImageDataArr.length || wrongPlugin) && initOverKey.image">
               {{$t("public.noData")}}
+            </p>
+            <p class='no-data-text'
+               v-show="(!originImageDataArr.length || wrongPlugin) && !initOverKey.image">
+              {{$t("public.dataLoading")}}
             </p>
           </div>
         </div>
@@ -171,8 +185,13 @@ limitations under the License.
                v-show="!tensorTag || wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
-            <p class='no-data-text'>
+            <p v-if="initOverKey.tensor"
+               class='no-data-text'>
               {{$t("public.noData")}}
+            </p>
+            <p v-else
+               class='no-data-text'>
+              {{$t("public.dataLoading")}}
             </p>
           </div>
         </div>
@@ -242,6 +261,12 @@ export default {
         notInCache: 'NOT_IN_CACHE',
         caching: 'CACHING',
         cached: 'CACHED',
+      },
+      initOverKey: {
+        histogram: false,
+        image: false,
+        tensor: false,
+        scalar: false,
       },
     };
   },
@@ -375,6 +400,12 @@ export default {
           .then((res) => {
             this.wrongPlugin = false;
             if (!res || !res.data || !res.data.plugins) {
+              this.initOverKey = {
+                histogram: true,
+                image: true,
+                tensor: true,
+                scalar: true,
+              };
               return;
             }
             const data = res.data.plugins;
@@ -395,6 +426,12 @@ export default {
             }
           })
           .catch((error) => {
+            this.initOverKey = {
+              histogram: true,
+              image: true,
+              tensor: true,
+              scalar: true,
+            };
             if (
               !error.response ||
             !error.response.data ||
@@ -538,6 +575,7 @@ export default {
         this.charOption = {};
         this.charData = [];
         this.curPageArr = [];
+        this.initOverKey.scalar=true;
         return;
       }
       const params = {
@@ -552,6 +590,7 @@ export default {
             !res.data.train_jobs ||
             !res.data.train_jobs.length
             ) {
+              this.initOverKey.scalar=true;
               return;
             }
             if (res.data && res.data.error_code) {
@@ -600,7 +639,9 @@ export default {
               this.updateTagInPage();
             }
           }, this.errorScalar)
-          .catch((e) => {});
+          .catch((e) => {
+            this.initOverKey.scalar=true;
+          });
     },
     /**
      * Update tag
@@ -854,6 +895,7 @@ export default {
       if (!tags.length) {
         this.curImageShowSample = {};
         this.originImageDataArr = [];
+        this.initOverKey.image = true;
         return;
       }
       if (JSON.stringify(this.curImageShowSample) !== '{}') {
@@ -889,6 +931,8 @@ export default {
       }
       if (this.tensorTag) {
         this.getTensorGridData();
+      } else {
+        this.initOverKey.tensor = true;
       }
     },
     getTensorGridData() {
@@ -899,6 +943,7 @@ export default {
       };
       RequestService.getTensorsSample(params).then(
           (res) => {
+            this.initOverKey.tensor = true;
             if (!res || !res.data) {
               return;
             }
@@ -922,6 +967,7 @@ export default {
           },
           () => {
             this.tensorData = [];
+            this.initOverKey.tensor = true;
             this.$nextTick(() => {
               const elementItem = this.$refs.tensorChart;
               if (elementItem) {
@@ -1014,6 +1060,7 @@ export default {
     },
     getHistogramTag(tagList) {
       if (!tagList) {
+        this.initOverKey.histogram = true;
         return;
       }
       let histogramTag = '';
@@ -1024,6 +1071,7 @@ export default {
       }
       if (!histogramTag) {
         this.histogramTag = histogramTag;
+        this.initOverKey.histogram = true;
         return;
       }
       const params = {
@@ -1033,6 +1081,7 @@ export default {
       // tag
       RequestService.getHistogramData(params).then(
           (res) => {
+            this.initOverKey.histogram = true;
             if (
               !res ||
             !res.data ||
@@ -1048,6 +1097,7 @@ export default {
             this.updateHistogramSampleData();
           },
           (e) => {
+            this.initOverKey.histogram = true;
             this.histogramTag = '';
           },
       );
@@ -1361,6 +1411,7 @@ export default {
      */
     updateImageSample() {
       if (JSON.stringify(this.curImageShowSample) === '{}') {
+        this.initOverKey.image = true;
         return;
       }
       const sampleItem = this.curImageShowSample;
@@ -1371,6 +1422,7 @@ export default {
       RequestService.getImageMetadatas(params)
           .then(
               (res) => {
+                this.initOverKey.image = true;
                 if (!res || !res.data || !res.data.metadatas) {
                   return;
                 }
@@ -1398,6 +1450,7 @@ export default {
                 }
               },
               (err) => {
+                this.initOverKey.image = true;
                 this.curImageShowSample = {};
               },
           )
@@ -1415,7 +1468,8 @@ export default {
         return;
       }
       if (this.originImageDataArr.length === 1) {
-        const bool = event.path.some((dom) => {
+        const path = event.path || (event.composedPath && event.composedPath());
+        const bool = path.some((dom) => {
           if (dom.className) {
             return dom.className.indexOf('el-button') !== -1;
           }
@@ -1954,8 +2008,8 @@ export default {
           .remove();
     },
     /**
-    * Query the cachee status of training jonb
-    */
+     * Query the cachee status of training jonb
+     */
     queryTrainJobCacheState() {
       const params = {
         train_id: this.trainingJobId,

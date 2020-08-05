@@ -54,8 +54,7 @@ limitations under the License.
         <span>{{bp_end}}</span>
       </div>
     </div>
-    <div class="pf-content-middle"
-         v-show="!tabsArr[0].noData && !tabsArr[1].noData && !tabsArr[2].noData && !svg.noData">
+    <div class="pf-content-middle">
       <div id="trace-container">
         <div id="trace"
              class="training-trace">
@@ -88,12 +87,12 @@ limitations under the License.
           </svg>
         </div>
         <div class="image-noData svg"
-             v-if="svg.data.length === 0 && svg.initOver">
+             v-if="svg.noData">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p>{{svg.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </div>
 
@@ -119,7 +118,7 @@ limitations under the License.
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p>{{item.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </div>
     </div>
@@ -177,7 +176,7 @@ export default {
           tail: ['#fa8e5b', '#fff4de'],
           stream_parallel: ['#01a5a7', '#cceded'],
         },
-        noData: false,
+        noData: true,
         initOver: false,
       },
       deviceId: 0,
@@ -190,8 +189,9 @@ export default {
           rate: 'iteration_interval',
           timeLabel: this.$t('profiling.iterGapTimeLabel'),
           rateLabel: this.$t('profiling.iterGapRateLabel'),
-          noData: false,
+          noData: true,
           percent: 'iteration_interval_percent',
+          initOver: false,
         },
         {
           name: this.$t('profiling.deviceQueueOpTip'),
@@ -200,8 +200,9 @@ export default {
           rate: 'fp_and_bp',
           timeLabel: this.$t('profiling.fpBpTimeLabel'),
           rateLabel: this.$t('profiling.fpBpRateLabel'),
-          noData: false,
+          noData: true,
           percent: 'fp_and_bp_percent',
+          initOver: false,
         },
         {
           name: this.$t('profiling.lterationTail'),
@@ -210,8 +211,9 @@ export default {
           rate: 'tail',
           timeLabel: this.$t('profiling.tailTimeLabel'),
           rateLabel: this.$t('profiling.tailRateLabel'),
-          noData: false,
+          noData: true,
           percent: 'tail_percent',
+          initOver: false,
         },
       ],
     };
@@ -231,11 +233,18 @@ export default {
           } else {
             document.title = `${this.$t('profiling.stepTrace')}-MindInsight`;
           }
-          this.svg.noData = false;
+          this.svg.noData = true;
+          this.svg.initOver = false;
           this.tabsArr.forEach((val) => {
-            val.noData = false;
+            val.noData = true;
+            val.initOver = false;
           });
           this.init();
+        } else {
+          this.svg.initOver = true;
+          this.tabsArr.forEach((val) => {
+            val.initOver = true;
+          });
         }
       },
       deep: true,
@@ -377,16 +386,19 @@ export default {
                       'profiling.iterationGapTime',
                   )}(ms)`;
                   this.tabsArr[0].noData = this.steps.max ? false : true;
+                  this.tabsArr[0].initOver = true;
                 } else if (type === 'fp_and_bp') {
                   option.yAxis.name = `${this.$t(
                       'profiling.deviceQueueOpTip',
                   )}${this.$t('profiling.time')}(ms)`;
                   this.tabsArr[1].noData = this.steps.max ? false : true;
+                  this.tabsArr[1].initOver = true;
                 } else if (type === 'tail') {
                   option.yAxis.name = `${this.$t(
                       'profiling.lterationTail',
                   )}${this.$t('profiling.time')}(ms)`;
                   this.tabsArr[2].noData = this.steps.max ? false : true;
+                  this.tabsArr[2].initOver = true;
                 }
                 this.initChart(option, id);
               }

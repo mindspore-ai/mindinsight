@@ -90,12 +90,13 @@ limitations under the License.
             </svg>
           </div>
           <div class="image-noData"
-               v-if="svg.noData && svg.initOver">
+               v-if="svg.noData">
             <div>
               <img :src="require('@/assets/images/nodata.png')"
                    alt="" />
             </div>
-            <p>{{$t("public.noData")}}</p>
+            <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
+            <p v-show="svg.initOver">{{$t("public.noData")}}</p>
           </div>
         </div>
       </div>
@@ -236,12 +237,13 @@ limitations under the License.
           </div>
         </div>
         <div class="image-noData"
-             v-if="processSummary.noData && processSummary.initOver">
+             v-if="processSummary.noData">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p v-show="!processSummary.initOver">{{$t("public.dataLoading")}}</p>
+          <p v-show="processSummary.initOver">{{$t("public.noData")}}</p>
         </div>
       </div>
     </div>
@@ -257,12 +259,13 @@ limitations under the License.
           </div>
         </div>
         <div class="image-noData"
-             v-if="pieChart.noData && pieChart.data.length === 0 && pieChart.initOver">
+             v-if="pieChart.noData">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p v-show="!pieChart.initOver">{{$t("public.dataLoading")}}</p>
+          <p v-show="pieChart.initOver">{{$t("public.noData")}}</p>
         </div>
         <div class="op-time-content">
           <div id="pieChart"
@@ -337,12 +340,13 @@ limitations under the License.
 
         </div>
         <div class="image-noData"
-             v-if="timelineInfo.noData && timelineInfo.initOver">
+             v-if="timelineInfo.noData">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p v-show="!timelineInfo.initOver">{{$t("public.dataLoading")}}</p>
+          <p v-show="timelineInfo.initOver">{{$t("public.noData")}}</p>
         </div>
       </div>
     </div>
@@ -391,7 +395,7 @@ export default {
           tail: ['#fa8e5b', '#fff4de'],
           stream_parallel: ['#01a5a7', '#cceded'],
         },
-        noData: false,
+        noData: true,
         initOver: false,
       },
       trainingJobId: this.$route.query.id,
@@ -401,7 +405,7 @@ export default {
       pieChart: {
         chartDom: null,
         data: [],
-        noData: false,
+        noData: true,
         topN: [],
         colorList: ['#6C92FA', '#6CBFFF', '#4EDED2', '#7ADFA0', '#A6DD82'],
         initOver: false,
@@ -447,6 +451,10 @@ export default {
         if (newValue.curCardNum === '') {
           this.pieChart.noData = true;
           this.svg.noData = true;
+          this.svg.initOver = true;
+          this.pieChart.initOver = true;
+          this.timelineInfo.initOver = true;
+          this.processSummary.initOver = true;
         }
         if (newValue.query.dir && newValue.query.id && newValue.query.path) {
           this.summaryPath = newValue.query.dir;
@@ -456,13 +464,16 @@ export default {
           if (this.trainingJobId) {
             document.title = `${decodeURIComponent(
                 this.trainingJobId,
-            )}-${this.$t('profiling.profilingDashboard')}
-        -MindInsight`;
+            )}-${this.$t('profiling.profilingDashboard')}-MindInsight`;
           } else {
             document.title = `${this.$t(
                 'profiling.profilingDashboard',
             )}-MindInsight`;
           }
+          this.svg.initOver = false;
+          this.pieChart.initOver = false;
+          this.timelineInfo.initOver = false;
+          this.processSummary.initOver = false;
           this.init();
         }
       },
@@ -611,9 +622,7 @@ export default {
                   }
                 });
                 this.setPieOption();
-                if (this.pieChart.data.length === 0) {
-                  this.pieChart.noData = true;
-                }
+                this.pieChart.noData = !!!this.pieChart.data.length;
                 this.pieChart.topN = this.pieChart.data
                     .slice(0, Math.min(this.pieChart.data.length, 5))
                     .map((i) => {

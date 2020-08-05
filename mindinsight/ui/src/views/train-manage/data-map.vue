@@ -591,8 +591,10 @@ export default {
       ${window.btoa(unescape(encodeURIComponent(encodeStr)))}`;
       const a = document.createElement('a');
       a.href = src; // Export the information in the canvas as image data.
-      a.download = 'dataMap'; // Set the download name.
-      a.click(); // Click to trigger download.
+      a.download = 'dataMap.svg'; // Set the download name.
+      const evt = document.createEvent('MouseEvents');
+      evt.initEvent('click', true, true);
+      a.dispatchEvent(evt);
     },
     /**
      * Collapse on the right

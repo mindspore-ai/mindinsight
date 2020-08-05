@@ -295,12 +295,12 @@ limitations under the License.
       </div>
     </div>
     <div class="image-noData"
-         v-if="chipTableData.length === 0 && cpuList.length===0 && initOver">
+         v-if="chipTableData.length === 0 && cpuList.length===0">
       <div>
         <img :src="require('@/assets/images/nodata.png')"
              alt="" />
       </div>
-      <p>{{$t("public.noData")}}</p>
+      <p>{{initOver?$t("public.noData"):$t('public.dataLoading')}}</p>
     </div>
   </div>
 </template>
@@ -331,6 +331,7 @@ export default {
       isReloading: false, // Manually refresh
       legendSelected: {},
       initOver: false,
+      mark: false,
     };
   },
   computed: {
@@ -416,8 +417,10 @@ export default {
      * Initialization data
      */
     init() {
+      this.mark = false;
       RequestService.getMetricsData().then(
           (res) => {
+            this.mark = true;
             this.initOver = true;
             if (this.isReloading) {
               this.$store.commit('setIsReload', false);
@@ -473,6 +476,7 @@ export default {
             }
           },
           (err) => {
+            this.mark = true;
             this.chipTableData = [];
             this.cpuList = [];
             this.initOver = true;
@@ -632,8 +636,10 @@ export default {
         this.autoUpdateTimer = null;
       }
       this.autoUpdateTimer = setInterval(() => {
-        this.$store.commit('clearToken');
-        this.init();
+        if (this.mark) {
+          this.$store.commit('clearToken');
+          this.init();
+        }
       }, this.hardwareTimeReloadValue * 1000);
     },
     /**
