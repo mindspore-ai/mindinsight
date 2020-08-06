@@ -105,8 +105,13 @@ limitations under the License.
                v-show="!firstFloorNodes.length || wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
-            <p class='no-data-text'>
+            <p v-if="initOverKey.graph"
+               class='no-data-text'>
               {{$t("public.noData")}}
+            </p>
+            <p v-else
+               class='no-data-text'>
+              {{$t("public.dataLoading")}}
             </p>
           </div>
         </div>
@@ -124,8 +129,13 @@ limitations under the License.
                v-show="!showDatasetGraph || wrongPlugin">
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
-            <p class='no-data-text'>
+            <p v-if="initOverKey.dataMap"
+               class='no-data-text'>
               {{$t("public.noData")}}
+            </p>
+            <p v-else
+               class='no-data-text'>
+              {{$t("public.dataLoading")}}
             </p>
           </div>
         </div>
@@ -267,6 +277,8 @@ export default {
         image: false,
         tensor: false,
         scalar: false,
+        graph: false,
+        dataMap: false,
       },
     };
   },
@@ -405,6 +417,8 @@ export default {
                 image: true,
                 tensor: true,
                 scalar: true,
+                graph: true,
+                dataMap: true,
               };
               return;
             }
@@ -423,6 +437,8 @@ export default {
             this.dealTensorData(tensorTags);
             if (!this.firstFloorNodes.length && graphIds.length) {
               this.queryGraphData();
+            } else {
+              this.initOverKey.graph = true;
             }
           })
           .catch((error) => {
@@ -431,6 +447,8 @@ export default {
               image: true,
               tensor: true,
               scalar: true,
+              graph: true,
+              dataMap: true,
             };
             if (
               !error.response ||
@@ -575,7 +593,7 @@ export default {
         this.charOption = {};
         this.charData = [];
         this.curPageArr = [];
-        this.initOverKey.scalar=true;
+        this.initOverKey.scalar = true;
         return;
       }
       const params = {
@@ -590,7 +608,7 @@ export default {
             !res.data.train_jobs ||
             !res.data.train_jobs.length
             ) {
-              this.initOverKey.scalar=true;
+              this.initOverKey.scalar = true;
               return;
             }
             if (res.data && res.data.error_code) {
@@ -640,7 +658,7 @@ export default {
             }
           }, this.errorScalar)
           .catch((e) => {
-            this.initOverKey.scalar=true;
+            this.initOverKey.scalar = true;
           });
     },
     /**
@@ -1507,6 +1525,7 @@ export default {
           .dot(dot)
           .attributer(this.attributer)
           .render(() => {
+            this.initOverKey.graph = true;
             if (d3.select('#graph svg')) {
               d3.select('#graph svg').on('.zoom', null);
             }
@@ -1530,18 +1549,27 @@ export default {
       RequestService.queryGraphData(params)
           .then(
               (response) => {
-                if (response && response.data && response.data.nodes) {
+                if (
+                  response &&
+              response.data &&
+              response.data.nodes &&
+              response.data.nodes.length
+                ) {
                   const nodes = response.data.nodes;
-                  if (nodes && nodes.length) {
-                    this.packageDataToObject(nodes);
-                    const dot = this.packageGraphData();
-                    this.initGraph(dot);
-                  }
+                  this.packageDataToObject(nodes);
+                  const dot = this.packageGraphData();
+                  this.initGraph(dot);
+                } else {
+                  this.initOverKey.graph = true;
                 }
               },
-              (error) => {},
+              (error) => {
+                this.initOverKey.graph = true;
+              },
           )
-          .catch((e) => {});
+          .catch((e) => {
+            this.initOverKey.graph = true;
+          });
     },
     /**
      * Processes its own and corresponding child node data when expanding or closing namespaces.
@@ -1861,11 +1889,17 @@ export default {
                     const dot = this.packageDatasetGraph();
                     this.initDatasetGraph(dot);
                   }
+                } else {
+                  this.initOverKey.dataMap = true;
                 }
               },
-              (err) => {},
+              (err) => {
+                this.initOverKey.dataMap = true;
+              },
           )
-          .catch((e) => {});
+          .catch((e) => {
+            this.initOverKey.dataMap = true;
+          });
     },
     /**
      * Processing dataset Graph Data
@@ -1877,8 +1911,9 @@ export default {
       if (!data) {
         return;
       }
-      const key = `${parentKey ? parentKey + '/' : ''}${data.op_type ||
-        ''}_${index}`;
+      const key = `${parentKey ? parentKey + '/' : ''}${
+        data.op_type || ''
+      }_${index}`;
       const obj = {
         key: key,
         id: '',
@@ -1993,6 +2028,7 @@ export default {
      */
     afterinitDatasetGraph() {
       this.showDatasetGraph = true;
+      this.initOverKey.dataMap = true;
       if (d3.select('#dataMapGraph svg')) {
         d3.select('#dataMapGraph svg').on('.zoom', null);
       }
@@ -2003,9 +2039,7 @@ export default {
           this.datasetGraphviz = null;
         }
       }, 100);
-      d3.select('#dataMapGraph')
-          .selectAll('title')
-          .remove();
+      d3.select('#dataMapGraph').selectAll('title').remove();
     },
     /**
      * Query the cachee status of training jonb

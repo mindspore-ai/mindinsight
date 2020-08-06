@@ -60,7 +60,8 @@ limitations under the License.
         </div>
         <div class="trace-container">
           <div id="trace"
-               class="training-trace">
+               class="training-trace"
+               :style="{height: svg.totalHeight + 'px'}">
             <svg version="1.1"
                  xmlns="http://www.w3.org/2000/svg"
                  height="100%"
@@ -525,6 +526,10 @@ export default {
         }
       });
     },
+    /**
+     * router link
+     * @param { String } path  router path
+     */
     viewDetail(path) {
       this.$router.push({
         path,
@@ -535,6 +540,9 @@ export default {
         },
       });
     },
+    /**
+     * chart setOption
+     */
     setPieOption() {
       const option = {};
       option.tooltip = {
@@ -580,6 +588,9 @@ export default {
         this.pieChart.chartDom.resize();
       }, 10);
     },
+    /**
+     * init chart
+     */
     initPieChart() {
       const params = {};
       params.params = {
@@ -650,7 +661,8 @@ export default {
           (res) => {
             this.svg.initOver = true;
             if (
-              res.data &&
+              res &&
+            res.data &&
             res.data.training_trace_graph &&
             res.data.training_trace_graph.length
             ) {
@@ -677,14 +689,14 @@ export default {
                 this.tail_percent = '--';
               }
             } else {
-              document.querySelector('#trace').style.height = '0px';
+              this.svg.totalHeight = 0;
               this.svg.noData = true;
               this.svg.data = [];
               this.removeTrace();
             }
           },
           (error) => {
-            document.querySelector('#trace').style.height = '0px';
+            this.svg.totalHeight = 0;
             this.svg.noData = true;
             this.svg.data = [];
             this.svg.initOver = true;
@@ -740,9 +752,6 @@ export default {
         });
 
         this.svg.totalHeight += this.svg.rowPadding;
-        document.querySelector(
-            '#trace',
-        ).style.height = `${this.svg.totalHeight}px`;
         this.svg.data = JSON.parse(JSON.stringify(data));
 
         this.$nextTick(() => {
@@ -853,7 +862,7 @@ export default {
           break;
       }
 
-      const textContent = `${name}: ${data.duration.toFixed(4)}ms`;
+      const textContent = `${name}: ${this.toFixedFun(data.duration, 4)}ms`;
       const textWidth = this.getTextWidth(textContent);
       const normalSize = data.duration >= this.svg.minTime;
 
@@ -932,7 +941,7 @@ export default {
         data.duration === this.svg.totalTime
           ? this.$t('profiling.approximateTime')
           : ''
-      }${data.duration.toFixed(4)}ms`;
+      }${this.toFixedFun(data.duration, 4)}ms`;
       const textWidth = text.textContent
         ? this.getTextWidth(text.textContent)
         : 0;
@@ -1020,7 +1029,10 @@ export default {
             this.timelineInfo.initOver = true;
             if (res && res.data) {
               this.timelineInfo.noData = false;
-              this.timelineInfo.totalTime = res.data.total_time.toFixed(4);
+              this.timelineInfo.totalTime = this.toFixedFun(
+                  res.data.total_time,
+                  4,
+              );
               this.timelineInfo.streamNum = res.data.num_of_streams;
               this.timelineInfo.opNum = res.data.num_of_ops;
               this.timelineInfo.opTimes = res.data.op_exe_times;
@@ -1099,6 +1111,18 @@ export default {
       const millisecond = date.getMilliseconds();
       const timestamp = `${year}${mouth}${day}${hour}${minute}${second}${millisecond}`;
       return `timeline_${this.trainingJobId}_${this.currentCard}_${timestamp}.json`;
+    },
+    /**
+     * Keep the number with n decimal places.
+     * @param {Number} num
+     * @param {Number} pow Number of decimal places
+     * @return {Number}
+     */
+    toFixedFun(num, pow) {
+      if (isNaN(num) || isNaN(pow) || !num || !pow) {
+        return num;
+      }
+      return Math.round(num * Math.pow(10, pow)) / Math.pow(10, pow);
     },
   },
   destroyed() {

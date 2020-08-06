@@ -57,7 +57,8 @@ limitations under the License.
     <div class="pf-content-middle">
       <div id="trace-container">
         <div id="trace"
-             class="training-trace">
+             class="training-trace"
+             :style="{height: svg.totalHeight + 'px'}">
           <svg version="1.1"
                xmlns="http://www.w3.org/2000/svg"
                height="100%"
@@ -313,7 +314,7 @@ export default {
       };
       RequestService.targetTimeInfo(params).then(
           (res) => {
-            if (res.data && res.data.summary) {
+            if (res && res.data && res.data.summary) {
               const summary = res.data.summary;
               Object.keys(summary).forEach((val) => {
                 summary[val] = summary[val];
@@ -324,7 +325,7 @@ export default {
                 }
               });
             }
-            if (res.data && res.data.info) {
+            if (res && res.data && res.data.info) {
               if (res.data.size && !this.steps.max) {
                 this.steps.max = res.data.size;
                 this.steps.disabled = false;
@@ -439,7 +440,8 @@ export default {
           (res) => {
             this.svg.initOver = true;
             if (
-              res.data &&
+              res &&
+            res.data &&
             res.data.training_trace_graph &&
             res.data.training_trace_graph.length
             ) {
@@ -527,9 +529,6 @@ export default {
         });
 
         this.svg.totalHeight += this.svg.rowPadding;
-        document.querySelector(
-            '#trace',
-        ).style.height = `${this.svg.totalHeight}px`;
         this.svg.data = JSON.parse(JSON.stringify(data));
 
         this.$nextTick(() => {
@@ -640,7 +639,7 @@ export default {
           break;
       }
 
-      const textContent = `${name}: ${data.duration.toFixed(4)}ms`;
+      const textContent = `${name}: ${this.toFixedFun(data.duration, 4)}ms`;
       const textWidth = this.getTextWidth(textContent);
       const normalSize = data.duration >= this.svg.minTime;
 
@@ -719,7 +718,7 @@ export default {
         data.duration === this.svg.totalTime
           ? this.$t('profiling.approximateTime')
           : ''
-      }${data.duration.toFixed(4)}ms`;
+      }${this.toFixedFun(data.duration, 4)}ms`;
       const textWidth = text.textContent
         ? this.getTextWidth(text.textContent)
         : 0;
@@ -788,6 +787,18 @@ export default {
         this.dealTraceData();
         this.svg.resizeTimer = null;
       }, 500);
+    },
+    /**
+     * Keep the number with n decimal places.
+     * @param {Number} num
+     * @param {Number} pow Number of decimal places
+     * @return {Number}
+     */
+    toFixedFun(num, pow) {
+      if (isNaN(num) || isNaN(pow) || !num || !pow) {
+        return num;
+      }
+      return Math.round(num * Math.pow(10, pow)) / Math.pow(10, pow);
     },
   },
   destroyed() {
