@@ -66,7 +66,7 @@ limitations under the License.
                   {{$t('operator.allOperator')}}
                 </el-radio-button>
                 <el-radio-button :label="0">
-                  {{$t('operator.ClassificationOperator')}}
+                  {{$t('operator.classificationOperator')}}
                 </el-radio-button>
               </el-radio-group>
               <div class="cl-search-box">
@@ -158,12 +158,12 @@ limitations under the License.
             </el-pagination>
           </div>
           <div class="image-noData"
-               v-if="initOver && coreCharts.data.length === 0">
+               v-if="coreCharts.data.length === 0">
             <div>
               <img :src="require('@/assets/images/nodata.png')"
                    alt="" />
             </div>
-            <p>{{ $t("public.noData") }}</p>
+            <p>{{ initOver?$t("public.noData"):$t('public.dataLoading') }}</p>
           </div>
         </el-tab-pane>
         <el-tab-pane label="AI CPU"
@@ -219,12 +219,12 @@ limitations under the License.
             </el-pagination>
           </div>
           <div class="image-noData"
-               v-if="initOver && cpuCharts.data.length === 0">
+               v-if="cpuCharts.data.length === 0">
             <div>
               <img :src="require('@/assets/images/nodata.png')"
                    alt="" />
             </div>
-            <p>{{$t("public.noData")}}</p>
+            <p>{{initOver?$t("public.noData"):$t('public.dataLoading')}}</p>
           </div>
         </el-tab-pane>
       </el-tabs>
@@ -335,7 +335,10 @@ export default {
           this.profile_dir = newValue.query.dir;
           this.train_id = newValue.query.id;
           this.currentCard = newValue.curCardNum;
+          this.initOver = false;
           this.cardChange();
+        } else {
+          this.initOver = true;
         }
       },
       deep: true,

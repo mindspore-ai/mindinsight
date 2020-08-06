@@ -22,7 +22,7 @@ limitations under the License.
                    name="queueInfo">
         <div class="md-top"
              v-if="!(connectQueueChart.noData && dataQueueChart.noData &&
-              deviceQueueOpChart && getNextChart.getNextChart)">
+              deviceQueueOpChart.noData && getNextChart.noData)">
           <div class="cell-container data-process"
                v-show="!processSummary.noData">
             <div class="title">
@@ -124,8 +124,8 @@ limitations under the License.
           </div>
         </div>
         <div class="md-bottom"
-             v-if="!(connectQueueChart.noData && dataQueueChart.noData && deviceQueueOpChart
-             && getNextChart.getNextChart)">
+             v-if="!(connectQueueChart.noData && dataQueueChart.noData && deviceQueueOpChart.noData
+             && getNextChart.noData)">
           <div class="queue-step-wrap"
                v-if="processSummary.count === processSummary.maxCount">
             <div class="title">{{$t('profiling.queueStep')}}</div>
@@ -227,18 +227,19 @@ limitations under the License.
         </div>
         <div class="image-noData"
              v-if="(connectQueueChart.noData && dataQueueChart.noData &&
-                deviceQueueOpChart && getNextChart.getNextChart)">
+                deviceQueueOpChart.noData && getNextChart.noData)">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p>{{(connectQueueChart.initOver && dataQueueChart.initOver &&
+                deviceQueueOpChart.initOver && getNextChart.initOver)?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </el-tab-pane>
       <el-tab-pane :label="$t('profiling.pipeline')"
                    name="pipeLine">
         <div class="pipeline-wrap"
-             v-show="pipeData">
+             v-show="!pipeData">
           <div class="pipeline-top">
             <div class="pipeline-top-title">
               {{$t('profiling.pipelineTopTitle')}}
@@ -279,12 +280,12 @@ limitations under the License.
           </div>
         </div>
         <div class="image-noData"
-             v-if="!pipeData">
+             v-if="pipeData">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p>{{initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </el-tab-pane>
     </el-tabs>
@@ -294,6 +295,7 @@ limitations under the License.
 import echarts from 'echarts';
 import RequestService from '../../services/request-service';
 import {select, selectAll, zoom} from 'd3';
+import {event as currentEvent} from 'd3-selection';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom};
 export default {
@@ -310,8 +312,9 @@ export default {
         advise: '',
         type: 0,
         params: 'device_queue',
-        noData: false,
+        noData: true,
         size: null,
+        initOver: false,
       },
       dataQueueChart: {
         id: 'data-queue',
@@ -321,8 +324,9 @@ export default {
         advise: '',
         type: 0,
         params: 'get_next',
-        noData: false,
+        noData: true,
         size: null,
+        initOver: false,
       },
       deviceQueueOpChart: {
         id: 'device_queue_op',
@@ -331,7 +335,8 @@ export default {
         timeSummary: {},
         type: 1,
         params: 'device_queue',
-        noData: false,
+        noData: true,
+        initOver: false,
       },
       getNextChart: {
         id: 'get_next',
@@ -340,7 +345,8 @@ export default {
         timeSummary: {},
         type: 1,
         params: 'get_next',
-        noData: false,
+        noData: true,
+        initOver: false,
       },
       processSummary: {
         noData: true,
@@ -369,6 +375,7 @@ export default {
       current_op: {},
       parent_op: {},
       pipeData: true,
+      initOver: false,
       allGraphData: {},
       graphviz: null,
       totalMemory: 16777216 * 2, // Memory size of the graph plug-in
@@ -393,10 +400,19 @@ export default {
             document.title = `${this.$t('profiling.mindData')}-MindInsight`;
           }
           if (this.activeName === 'queueInfo') {
+            this.connectQueueChart.initOver = false;
+            this.dataQueueChart.initOver = false;
+            this.deviceQueueOpChart.initOver = false;
+            this.getNextChart.initOver = false;
             this.init();
           } else {
             this.queryAverageRate();
           }
+        } else {
+          this.connectQueueChart.initOver = true;
+          this.dataQueueChart.initOver = true;
+          this.deviceQueueOpChart.initOver = true;
+          this.getNextChart.initOver = true;
         }
       },
       deep: true,
@@ -463,13 +479,17 @@ export default {
               }
               chart.advise = result.advise;
               if (result.size > 0) {
-                this.setOption(chart);
                 chart.noData = false;
+                chart.initOver = true;
+                this.$nextTick(() => {
+                  this.setOption(chart);
+                });
               } else {
                 if (chart.chartDom) {
                   chart.chartDom.clear();
                 }
                 chart.noData = true;
+                chart.initOver = true;
               }
             }
           },
@@ -478,6 +498,7 @@ export default {
               chart.chartDom.clear();
             }
             chart.noData = true;
+            chart.initOver = true;
           },
       );
     },
@@ -498,19 +519,24 @@ export default {
               }
               chart.advise = result.advise;
               if (result.size > 0) {
-                this.setOption(chart, result.size);
                 chart.noData = false;
+                chart.initOver = true;
                 chart.size = result.size;
+                this.$nextTick(() => {
+                  this.setOption(chart, result.size);
+                });
               } else {
                 if (chart.chartDom) {
                   chart.chartDom.clear();
                 }
                 chart.noData = true;
+                chart.initOver = true;
               }
             }
           },
           (err) => {
             chart.noData = true;
+            chart.initOver = true;
             if (chart.chartDom) {
               chart.chartDom.clear();
             }
@@ -608,6 +634,12 @@ export default {
               this.$nextTick(() => {
                 if (this.processSummary.count < this.processSummary.maxCount) {
                   this.queryQueueInfo(this.connectQueueChart);
+                  this.dataQueueChart.noData = false;
+                  this.deviceQueueOpChart.noData = false;
+                  this.getNextChart.noData = false;
+                  this.dataQueueChart.initOver = true;
+                  this.deviceQueueOpChart.initOver = true;
+                  this.getNextChart.initOver = true;
                 } else {
                   this.queryQueueInfo(this.connectQueueChart);
                   this.queryQueueInfo(this.dataQueueChart);
@@ -667,12 +699,13 @@ export default {
       };
       RequestService.queryOpQueue(params).then(
           (res) => {
+            this.initOver = true;
             if (res && res.data) {
               this.removeGraph();
               const data = JSON.parse(JSON.stringify(res.data));
               this.dealPipeLineData(data);
 
-              this.pipeData = !!(res.data.object && res.data.object.length);
+              this.pipeData = !!!(res.data.object && res.data.object.length);
               if (
                 res.data.object &&
               res.data.object.length &&
@@ -770,16 +803,19 @@ export default {
                     },
                   ],
                 };
-                const echart = echarts.init(
-                    document.getElementById(this.averageRateChart.id),
-                );
-                echart.setOption(option);
-                this.averageRateChart.chartDom = echart;
+                this.$nextTick(() => {
+                  const echart = echarts.init(
+                      document.getElementById(this.averageRateChart.id),
+                  );
+                  echart.setOption(option);
+                  this.averageRateChart.chartDom = echart;
+                });
               }
             }
           },
           () => {
-            this.pipeData = false;
+            this.initOver = true;
+            this.pipeData = true;
             this.removeGraph();
           },
       );
@@ -799,9 +835,6 @@ export default {
           this.parent_op = res.data.parent_op || {};
           this.current_op.name = `${this.current_op.op_type}_${this.current_op.op_id}`;
           this.parent_op.name = `${this.parent_op.op_type}_${this.parent_op.op_id}`;
-          const echart = echarts.init(
-              document.getElementById(this.queueDeepChart.id),
-          );
           const option = {
             title: {
               text: this.$t('profiling.queueDeepChartTitle', {
@@ -849,8 +882,13 @@ export default {
               {start: 0, end: 100, type: 'inside', bottom: 10},
             ],
           };
-          echart.setOption(option);
-          this.queueDeepChart.chartDom = echart;
+          this.$nextTick(() => {
+            const echart = echarts.init(
+                document.getElementById(this.queueDeepChart.id),
+            );
+            echart.setOption(option);
+            this.queueDeepChart.chartDom = echart;
+          });
         }
       });
     },
@@ -989,9 +1027,7 @@ export default {
           this.graphviz = null;
         }
       }, 500);
-      d3.select('#graph')
-          .selectAll('.operator>title')
-          .remove();
+      d3.select('#graph').selectAll('.operator>title').remove();
 
       const queueList = Array.from(document.querySelectorAll('#graph .queue'));
       for (let i = 0, len = queueList.length; i < len; i++) {
@@ -1005,11 +1041,12 @@ export default {
 
           const title = node.querySelector('title');
           title.textContent =
-            `${this.$t(
-                'profiling.averageCapacity',
-            )}:${data.output_queue_average_size || 0}\n` +
-            `${this.$t('profiling.totalCapacity')}:${data.output_queue_length ||
-              0}`;
+            `${this.$t('profiling.averageCapacity')}:${
+              data.output_queue_average_size || 0
+            }\n` +
+            `${this.$t('profiling.totalCapacity')}:${
+              data.output_queue_length || 0
+            }`;
         }
       }
 
@@ -1053,10 +1090,12 @@ export default {
       const zoom = d3
           .zoom()
           .on('start', () => {
+            const event = currentEvent.sourceEvent;
             pointer.start.x = event.x;
             pointer.start.y = event.y;
           })
           .on('zoom', () => {
+            const event = currentEvent.sourceEvent;
             const transformData = this.getTransformData(graphDom);
             if (!Object.keys(graphTransform).length) {
               graphTransform = {
@@ -1112,8 +1151,8 @@ export default {
               pointer.start.x = pointer.end.x;
               pointer.start.y = pointer.end.y;
             } else if (event.type === 'wheel') {
-              const wheelDelta = event.wheelDelta;
-              const rate = Math.abs(wheelDelta / 100);
+              const wheelDelta = -event.deltaY;
+              const rate = 1.2;
               scale =
               wheelDelta > 0
                 ? transformData.scale[0] * rate
