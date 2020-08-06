@@ -15,8 +15,18 @@ limitations under the License.
 -->
 <template>
   <div id="cl-model-traceback">
-    <div class="cl-model-right">
-      <div class="top-area">
+    <div v-if="loading"
+         class="no-data-page">
+      <div class="no-data-img">
+        <img :src="require('@/assets/images/nodata.png')"
+             alt="" />
+        <p class="no-data-text">{{$t("public.dataLoading")}}</p>
+      </div>
+    </div>
+    <div class="cl-model-right"
+         v-if="!loading">
+      <div class="top-area"
+           v-show="!errorData">
         <div class="select-box"
              v-if="!noData &&
              (!summaryDirList || (summaryDirList && summaryDirList.length))">
@@ -277,11 +287,11 @@ limitations under the License.
           </div>
           <div class="clear"></div>
         </div>
-
       </div>
       <div v-if="noData"
            class="no-data-page">
-        <div class="no-data-img">
+        <div class="no-data-img"
+             :class="{'set-height-class':(summaryDirList && !summaryDirList.length)}">
           <img :src="require('@/assets/images/nodata.png')"
                alt />
           <p class="no-data-text"
@@ -295,14 +305,6 @@ limitations under the License.
               {{ $t('modelTraceback.viewAllData') }}
             </p>
           </div>
-        </div>
-      </div>
-      <div v-if="loading"
-           class="no-data-page">
-        <div class="no-data-img">
-          <img :src="require('@/assets/images/nodata.png')"
-               alt="" />
-          <p class="no-data-text">{{$t("public.dataLoading")}}</p>
         </div>
       </div>
     </div>
@@ -364,6 +366,7 @@ export default {
   data() {
     return {
       tagDialogShow: false,
+      errorData: true,
       tagScope: {},
       iconValue: 0,
       imageList: [],
@@ -394,22 +397,8 @@ export default {
       summaryDirList: undefined,
       text: this.$t('modelTraceback.summaryPath'),
       checkedSummary: [],
-      keysOfStringValue: [
-        'summary_dir',
-        'network',
-        'optimizer',
-        'loss_function',
-        'train_dataset_path',
-        'test_dataset_path',
-        'dataset_mark',
-      ], // All keys whose values are character strings
-      keysOfIntValue: [
-        'train_dataset_count',
-        'test_dataset_count',
-        'epoch',
-        'batch_size',
-        'device_num',
-      ], // All keys whose values are int
+      keysOfStringValue: [], // All keys whose values are character strings
+      keysOfIntValue: [], // All keys whose values are int
       keysOfMixed: [],
       echart: {
         chart: null,
@@ -459,6 +448,7 @@ export default {
   },
   computed: {},
   mounted() {
+    this.setInitListValue();
     this.imageList = [];
     for (let i = 1; i <= 10; i++) {
       const obj = {};
@@ -810,6 +800,25 @@ export default {
         this.tableFilter.summary_dir = undefined;
       }
     },
+    setInitListValue() {
+      this.keysOfStringValue = [
+        'summary_dir',
+        'network',
+        'optimizer',
+        'loss_function',
+        'train_dataset_path',
+        'test_dataset_path',
+        'dataset_mark',
+      ]; // All keys whose values are character strings
+      this.keysOfIntValue = [
+        'train_dataset_count',
+        'test_dataset_count',
+        'epoch',
+        'batch_size',
+        'device_num',
+      ]; // All keys whose values are int
+      this.keysOfMixed = [];
+    },
 
     /**
      * Initialization
@@ -1002,6 +1011,8 @@ export default {
               (res) => {
                 this.loading = false;
                 if (res && res.data && res.data.object) {
+                  this.errorData = false;
+                  this.setInitListValue();
                   const listTemp = this.setDataOfModel(res.data.object);
                   const list = JSON.parse(JSON.stringify(listTemp));
                   const tempEchartData = JSON.parse(JSON.stringify(listTemp));
@@ -1237,11 +1248,13 @@ export default {
 
                   this.pagination.total = res.data.count || 0;
                 } else {
+                  this.errorData = true;
                   this.noData = allData;
                   this.showEchartPic = !allData;
                 }
               },
               (error) => {
+                this.errorData = true;
                 this.loading = false;
                 if (allData) {
                   this.noData = allData;
@@ -1250,6 +1263,7 @@ export default {
               },
           )
           .catch(() => {
+            this.errorData = true;
             this.loading = false;
             this.noData = true;
           });
@@ -1443,6 +1457,7 @@ export default {
       RequestService.queryLineagesData(params).then(
           (res) => {
             if (res && res.data && res.data.object) {
+              this.errorData = false;
               const list = this.setDataOfModel(res.data.object);
               this.echart.allData = list;
               this.echart.brushData = list;
@@ -1459,9 +1474,13 @@ export default {
               this.recordsNumber = this.table.data.length;
               this.showNumber = this.table.data.length;
               this.pagination.total = res.data.count || 0;
+            } else {
+              this.errorData = true;
             }
           },
-          (error) => {},
+          (error) => {
+            this.errorData = true;
+          },
       );
     },
 
@@ -1492,6 +1511,7 @@ export default {
           .then(
               (res) => {
                 if (res && res.data && res.data.object) {
+                  this.errorData = false;
                   const list = this.setDataOfModel(res.data.object);
                   const tempList = list.slice(0, this.pagination.pageSize);
                   this.recordsNumber = tempList.length;
@@ -1508,11 +1528,17 @@ export default {
                   this.table.data = tempList;
                   this.pagination.total = res.data.count || 0;
                   this.pagination.currentPage = 1;
+                } else {
+                  this.errorData = true;
                 }
               },
-              (error) => {},
+              (error) => {
+                this.errorData = true;
+              },
           )
-          .catch(() => {});
+          .catch(() => {
+            this.errorData = true;
+          });
     },
 
     /**
@@ -1746,82 +1772,74 @@ export default {
           RequestService.queryLineagesData(filterParams)
               .then(
                   (res) => {
-                    if (
-                      res &&
-                  res.data &&
-                  res.data.object &&
-                  res.data.object.length
-                    ) {
-                      let customized = {};
-                      customized = JSON.parse(JSON.stringify(res.data.customized));
-                      const customizedKeys = Object.keys(customized);
-                      if (customizedKeys.length) {
-                        this.keysOfStringValue = [
-                          'summary_dir',
-                          'network',
-                          'optimizer',
-                          'loss_function',
-                          'train_dataset_path',
-                          'test_dataset_path',
-                          'dataset_mark',
-                        ];
-                        this.keysOfIntValue = [
-                          'train_dataset_count',
-                          'test_dataset_count',
-                          'epoch',
-                          'batch_size',
-                          'device_num',
-                        ];
-                        this.keysOfMixed = [];
-                        customizedKeys.forEach((i) => {
-                          if (customized[i].type === this.valueType.int) {
-                            this.keysOfIntValue.push(i);
-                          } else if (customized[i].type === this.valueType.str) {
-                            this.keysOfStringValue.push(i);
-                          } else if (customized[i].type === this.valueType.mixed) {
-                            // list of type mixed
-                            this.keysOfMixed.push(i);
-                            this.keysOfStringValue.push(i);
-                          }
-                        });
-                      }
-
-                      const list = this.setDataOfModel(res.data.object);
-                      if (this.hidenDirChecked.length) {
-                        this.hidenDirChecked.forEach((dir) => {
-                          list.forEach((item, index) => {
-                            if (item.summary_dir === dir) {
-                              list.splice(index, 1);
+                    if (res && res.data && res.data.object) {
+                      this.errorData = false;
+                      if (res.data.object.length) {
+                        let customized = {};
+                        customized = JSON.parse(
+                            JSON.stringify(res.data.customized),
+                        );
+                        const customizedKeys = Object.keys(customized);
+                        if (customizedKeys.length) {
+                          this.setInitListValue();
+                          customizedKeys.forEach((i) => {
+                            if (customized[i].type === this.valueType.int) {
+                              this.keysOfIntValue.push(i);
+                            } else if (customized[i].type === this.valueType.str) {
+                              this.keysOfStringValue.push(i);
+                            } else if (
+                              customized[i].type === this.valueType.mixed
+                            ) {
+                              // list of type mixed
+                              this.keysOfMixed.push(i);
+                              this.keysOfStringValue.push(i);
                             }
                           });
+                        }
+
+                        const list = this.setDataOfModel(res.data.object);
+                        if (this.hidenDirChecked.length) {
+                          this.hidenDirChecked.forEach((dir) => {
+                            list.forEach((item, index) => {
+                              if (item.summary_dir === dir) {
+                                list.splice(index, 1);
+                              }
+                            });
+                          });
+                        }
+                        if (!list.length) {
+                          this.noData = true;
+                          this.showEchartPic = false;
+                          this.summaryDirList = [];
+                          this.checkedSummary = [];
+                          this.$store.commit('setSummaryDirList', []);
+                          return;
+                        }
+                        const summaryDirList = list.map((i) => i.summary_dir);
+                        this.$store.commit('setSummaryDirList', summaryDirList);
+                        this.echart.showData = this.echart.brushData = list;
+                        this.$nextTick(() => {
+                          this.initChart();
                         });
-                      }
-                      if (!list.length) {
+                        this.getTableList(tableParams);
+                      } else {
+                        this.summaryDirList = [];
+                        this.$store.commit('setSummaryDirList', []);
+                        this.checkedSummary = [];
                         this.noData = true;
                         this.showEchartPic = false;
-                        this.summaryDirList = [];
-                        this.checkedSummary = [];
-                        this.$store.commit('setSummaryDirList', []);
-                        return;
                       }
-                      const summaryDirList = list.map((i) => i.summary_dir);
-                      this.$store.commit('setSummaryDirList', summaryDirList);
-                      this.echart.showData = this.echart.brushData = list;
-                      this.$nextTick(() => {
-                        this.initChart();
-                      });
-                      this.getTableList(tableParams);
                     } else {
-                      this.summaryDirList = [];
-                      this.$store.commit('setSummaryDirList', []);
-                      this.checkedSummary = [];
-                      this.noData = true;
-                      this.showEchartPic = false;
+                      this.errorData = true;
                     }
                   },
-                  (error) => {},
+                  (error) => {
+                    this.errorData = true;
+                  },
               )
-              .catch(() => {});
+              .catch(() => {
+                this.errorData = true;
+              });
         }
       });
     },
@@ -1833,30 +1851,38 @@ export default {
       RequestService.queryLineagesData(tableParams)
           .then(
               (res) => {
-                if (res && res.data && res.data.object && res.data.object.length) {
-                  const list = this.setDataOfModel(res.data.object);
-
-                  if (this.hidenDirChecked.length) {
-                    this.hidenDirChecked.forEach((dir) => {
-                      list.forEach((item, index) => {
-                        if (item.summary_dir === dir) {
-                          list.splice(index, 1);
-                        }
+                if (res && res.data && res.data.object) {
+                  this.errorData = false;
+                  if (res.data.object.length) {
+                    const list = this.setDataOfModel(res.data.object);
+                    if (this.hidenDirChecked.length) {
+                      this.hidenDirChecked.forEach((dir) => {
+                        list.forEach((item, index) => {
+                          if (item.summary_dir === dir) {
+                            list.splice(index, 1);
+                          }
+                        });
                       });
-                    });
+                    }
+                    const tempList = list.slice(0, this.pagination.pageSize);
+                    this.recordsNumber = tempList.length;
+                    this.showNumber = tempList.length;
+                    this.table.data = tempList;
+                    this.pagination.currentPage = 1;
+                    this.pagination.total = this.echart.brushData.length;
+                    this.$refs.table.clearSelection();
                   }
-                  const tempList = list.slice(0, this.pagination.pageSize);
-                  this.recordsNumber = tempList.length;
-                  this.showNumber = tempList.length;
-                  this.table.data = tempList;
-                  this.pagination.currentPage = 1;
-                  this.pagination.total = this.echart.brushData.length;
-                  this.$refs.table.clearSelection();
+                } else {
+                  this.errorData = true;
                 }
               },
-              (error) => {},
+              (error) => {
+                this.errorData = true;
+              },
           )
-          .catch(() => {});
+          .catch(() => {
+            this.errorData = true;
+          });
     },
     /**
      * Resetting the Eechart
@@ -2043,9 +2069,41 @@ export default {
 }
 
 #cl-model-traceback {
+  display: flex;
   height: 100%;
   overflow-y: auto;
   position: relative;
+  background: #fff;
+  .no-data-page {
+    display: flex;
+    width: 100%;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    .set-height-class {
+      height: 282px !important;
+    }
+    .no-data-img {
+      background: #fff;
+      text-align: center;
+      height: 200px;
+      width: 310px;
+      margin: auto;
+      img {
+        max-width: 100%;
+      }
+      p {
+        font-size: 16px;
+        padding-top: 10px;
+        text-align: center;
+      }
+    }
+    .no-data-text {
+      font-size: 16px;
+      padding-top: 10px;
+      text-align: center;
+    }
+  }
   .el-table th.gutter {
     display: table-cell !important;
   }
@@ -2151,8 +2209,9 @@ export default {
   .cl-model-right {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    background-color: #ffffff;
+    width: 100%;
+    flex: 1;
+    background-color: #fff;
     -webkit-box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     overflow: hidden;
@@ -2224,25 +2283,6 @@ export default {
       }
       .pagination-container {
         height: 40px;
-      }
-    }
-    .no-data-page {
-      width: 100%;
-      height: 100%;
-      padding-top: 200px;
-      .no-data-img {
-        background: #fff;
-        text-align: center;
-        height: 100%;
-        width: 310px;
-        margin: auto;
-        img {
-          max-width: 100%;
-        }
-        p {
-          font-size: 16px;
-          padding-top: 10px;
-        }
       }
     }
   }
