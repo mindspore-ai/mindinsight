@@ -15,18 +15,19 @@ limitations under the License.
 -->
 <template>
   <div id="cl-data-traceback">
-    <div class="cl-data-right">
+    <div v-if="loading"
+         class="no-data-page">
+      <div class="no-data-img">
+        <img :src="require('@/assets/images/nodata.png')"
+             alt="" />
+        <p class="no-data-text">{{$t("public.dataLoading")}}</p>
+      </div>
+    </div>
+    <div class="cl-data-right"
+         v-if="!loading">
       <!-- select area -->
-      <div class="data-checkbox-area">
-        <!-- show all data button -->
-        <el-button class="reset-btn custom-btn"
-                   @click="echartShowAllData"
-                   type="primary"
-                   size="mini"
-                   plain
-                   v-show="(summaryDirList && !summaryDirList.length)||(totalSeries && totalSeries.length)">
-          {{ $t('modelTraceback.showAllData') }}
-        </el-button>
+      <div class="data-checkbox-area"
+           v-show="!errorData">
         <div class="select-container"
              v-show="totalSeries && totalSeries.length &&
               (!summaryDirList || (summaryDirList && summaryDirList.length))">
@@ -74,6 +75,17 @@ limitations under the License.
               </el-option>
             </el-select>
           </div>
+        </div>
+        <!-- show all data button -->
+        <div class="btns">
+          <el-button class="reset-btn custom-btn"
+                     @click="echartShowAllData"
+                     type="primary"
+                     size="mini"
+                     plain
+                     v-show="(summaryDirList && !summaryDirList.length)||(totalSeries && totalSeries.length)">
+            {{ $t('modelTraceback.showAllData') }}
+          </el-button>
         </div>
       </div>
       <!-- echart drawing area -->
@@ -222,7 +234,8 @@ limitations under the License.
       <div v-show="((!lineagedata.serData || !lineagedata.serData.length) && initOver)
          ||(echartNoData && (lineagedata.serData && !!lineagedata.serData.length))"
            class="no-data-page">
-        <div class="no-data-img">
+        <div class="no-data-img"
+             :class="{'set-height-class':(summaryDirList && !summaryDirList.length)}">
           <img :src="require('@/assets/images/nodata.png')"
                alt="" />
           <p class="no-data-text"
@@ -240,14 +253,6 @@ limitations under the License.
               {{ $t('dataTraceback.viewAllData') }}
             </p>
           </div>
-        </div>
-      </div>
-      <div v-if="loading"
-           class="no-data-page">
-        <div class="no-data-img">
-          <img :src="require('@/assets/images/nodata.png')"
-               alt="" />
-          <p class="no-data-text">{{$t("public.dataLoading")}}</p>
         </div>
       </div>
     </div>
@@ -332,6 +337,7 @@ export default {
   data() {
     return {
       loading: true,
+      errorData: true,
       tagDialogShow: false,
       tagScope: {},
       iconValue: 0,
@@ -687,7 +693,9 @@ export default {
       });
 
       this.selectCheckAll = !this.selectCheckAll;
-      this.initChart();
+      this.$nextTick(() => {
+        this.initChart();
+      });
       const list = [];
       this.checkOptions.forEach((item) => {
         this.selectArrayValue.forEach((i) => {
@@ -716,7 +724,9 @@ export default {
         }
       });
       this.selectCheckAll = false;
-      this.initChart();
+      this.$nextTick(() => {
+        this.initChart();
+      });
       const list = [];
       this.checkOptions.forEach((item) => {
         this.selectArrayValue.forEach((i) => {
@@ -826,7 +836,9 @@ export default {
         this.echart.showData = tempEchartData;
         this.$refs.table.clearSelection();
         if (this.echart.showData.length > 0) {
-          this.initChart();
+          this.$nextTick(() => {
+            this.initChart();
+          });
         } else {
           this.showEchartPic = false;
         }
@@ -924,7 +936,9 @@ export default {
       } else {
         this.selectCheckAll = true;
       }
-      this.initChart();
+      this.$nextTick(() => {
+        this.initChart();
+      });
       const list = [];
       this.basearr.forEach((item) => {
         this.selectArrayValue.forEach((i) => {
@@ -1143,7 +1157,9 @@ export default {
             this.echartNoData = true;
           } else {
             this.echart.showData = this.echart.brushData;
-            this.initChart();
+            this.$nextTick(() => {
+              this.initChart();
+            });
             this.pagination.currentPage = 1;
             this.pagination.total = this.echart.brushData.length;
             this.table.data = this.echart.brushData.slice(
@@ -1331,13 +1347,18 @@ export default {
                 if (!res || !res.data) {
                   return;
                 }
+                this.errorData = false;
                 this.lineagedata = this.formateOriginData(res.data);
                 const serData = this.lineagedata.serData;
                 this.table.data = JSON.parse(JSON.stringify(serData));
               },
-              (error) => {},
+              (error) => {
+                this.errorData = true;
+              },
           )
-          .catch(() => {});
+          .catch(() => {
+            this.errorData = true;
+          });
     },
 
     /**
@@ -1354,6 +1375,7 @@ export default {
                 if (!res || !res.data) {
                   return;
                 }
+                this.errorData = false;
                 this.customizedTypeObject = res.data.customized;
                 let keys = Object.keys(this.customizedTypeObject);
                 if (keys.length) {
@@ -1514,12 +1536,14 @@ export default {
                 this.loading = false;
                 this.initOver = true;
                 this.showEchartPic = false;
+                this.errorData = true;
               },
           )
           .catch(() => {
             this.loading = false;
             this.initOver = true;
             this.showEchartPic = false;
+            this.errorData = true;
           });
     },
 
@@ -1600,7 +1624,9 @@ export default {
       } else {
         this.echart.showData = this.echart.brushData;
       }
-      this.initChart();
+      this.$nextTick(() => {
+        this.initChart();
+      });
     },
 
     setEchartValue() {
@@ -1993,9 +2019,11 @@ export default {
   cursor: not-allowed !important;
 }
 #cl-data-traceback {
+  display: flex;
   height: 100%;
   overflow-y: auto;
   position: relative;
+  background: #fff;
   .el-select > .el-input {
     width: 280px !important;
     max-width: 500px !important;
@@ -2059,27 +2087,32 @@ export default {
     border-radius: 2px;
   }
   .no-data-page {
+    display: flex;
     width: 100%;
-    height: 100%;
-    padding-top: 200px;
-  }
-  .no-data-img {
-    background: #fff;
-    text-align: center;
-    height: 100%;
-    width: 310px;
-    margin: auto;
-    img {
-      max-width: 100%;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    .set-height-class {
+      height: 282px !important;
     }
-    p {
+    .no-data-img {
+      background: #fff;
+      text-align: center;
+      height: 200px;
+      width: 310px;
+      margin: auto;
+      img {
+        max-width: 100%;
+      }
+      p {
+        font-size: 16px;
+        padding-top: 10px;
+      }
+    }
+    .no-data-text {
       font-size: 16px;
       padding-top: 10px;
     }
-  }
-  .no-data-text {
-    font-size: 16px;
-    padding-top: 10px;
   }
   .edit-text-container {
     display: inline-block;
@@ -2110,28 +2143,32 @@ export default {
     display: inline-block;
     padding-right: 6px;
   }
-  .select-container {
-    padding: 10px 0;
-    display: inline-block;
-  }
   .remark-input-style {
     width: 140px;
   }
   .cl-data-right {
-    height: 100%;
-    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background-color: #fff;
     -webkit-box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     overflow: hidden;
 
     .data-checkbox-area {
-      position: relative;
       margin: 24px 32px 12px;
       height: 46px;
-      .reset-btn {
-        position: absolute;
-        right: 0px;
-        top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      .select-container {
+        padding-top: 10px;
+        height: 46px;
+        flex-grow: 1;
+      }
+      .btns {
+        margin-left: 20px;
+        padding-top: 12px;
+        height: 46px;
       }
     }
     #data-echart {
