@@ -140,38 +140,41 @@ import RequestService from '../../services/request-service';
 export default {
   data() {
     return {
-      dir: this.$route.query.dir,
-      train_id: this.$route.query.id,
-      relativePath: this.$route.query.path,
-      fp_start: '--',
-      bp_end: '--',
+      dir: this.$route.query.dir, // Summary path data
+      train_id: this.$route.query.id, // Training job id
+      relativePath: this.$route.query.path, // Relative path of summary log
+      fp_start: '--', // FP start operator
+      bp_end: '--', // BP termination operator
       steps: {
-        step: null,
-        trueStep: null,
-        max: 0,
+        // Information of training steps
+        step: null, // Step value of page presentation
+        trueStep: null, // True step value
+        max: 0, // Maximum value of step
         disabled: true,
         label: this.$t('profiling.stepInputTip'),
       },
       charts: [],
       svg: {
-        data: [],
-        svgPadding: 20,
-        totalWidth: 0,
-        totalTime: 0,
+        // Step trace svg information
+        data: [], // Data of svg
+        svgPadding: 20, // Padding of svg
+        totalWidth: 0, // Total width of svg
+        totalTime: 0, // Total time
         cellHeight: 40,
         cellPadding: 0,
         rowPadding: 20,
         rowMargin: 10,
         totalHeight: 0,
         markerPadding: 4,
-        minRate: 0.1,
-        minTime: 0,
-        minWidth: 1,
+        minRate: 0.1, // Minimum time share threshold of non wrapping display
+        minTime: 0, // Minimum time for non wrapping display
+        minWidth: 1, // Minimum width of graphics in SVG
         fontSize: 12,
-        textMargin: 21,
-        namespaceURI: 'http://www.w3.org/2000/svg',
-        resizeTimer: null,
+        textMargin: 21, // The minimum margin of the text from the border
+        namespaceURI: 'http://www.w3.org/2000/svg', // XML namespace
+        resizeTimer: null, // Response delay of resize event
         colors: {
+          // Colors of different types of data presentation
           iteration_interval: ['#A6DD82', '#edf8e6'],
           fp_and_bp: ['#6CBFFF', '#e2f2ff'],
           tail: ['#fa8e5b', '#fff4de'],
@@ -183,6 +186,7 @@ export default {
       deviceId: 0,
       radio: this.$t('profiling.lterationGap'),
       tabsArr: [
+        // Detailed chart of data in step trace
         {
           name: this.$t('profiling.lterationGap'),
           id: 'iter-gap',
@@ -220,6 +224,7 @@ export default {
     };
   },
   watch: {
+    // Monitor current card information
     '$parent.curDashboardInfo': {
       handler(newValue, oldValue) {
         if (newValue.curCardNum || newValue.curCardNum === 0) {
@@ -254,6 +259,7 @@ export default {
   },
   computed: {},
   mounted() {
+    // Collapse the left column to respond to events
     setTimeout(() => {
       this.$bus.$on('collapse', () => {
         this.resizeTrace();
@@ -262,6 +268,9 @@ export default {
     }, 500);
   },
   methods: {
+    /**
+     * Initialization function
+     */
     init() {
       window.addEventListener('resize', this.resizeTrace, false);
       window.addEventListener('resize', this.resizeEchart, false);
@@ -283,6 +292,10 @@ export default {
       this.getTimeInfo('tailing', 'tail');
       this.queryTrainingTrace(0);
     },
+    /**
+     * Change the current step value
+     * @param {Number} value The current step value
+     */
     changeStep(value) {
       if (value === 0 || (!this.steps.step && this.steps.step !== 0)) {
         this.steps.step = null;
@@ -301,11 +314,19 @@ export default {
         );
       }
     },
+    /**
+     * Reset the current step value
+     */
     resetStep() {
       setTimeout(() => {
         this.steps.step = this.steps.trueStep;
       }, 200);
     },
+    /**
+     * Get different types of time information
+     * @param {String} id Dom id
+     * @param {String} type Types of time information
+     */
     getTimeInfo(id, type) {
       const params = {
         dir: this.relativePath,
@@ -416,6 +437,11 @@ export default {
           },
       );
     },
+    /**
+     * Initialization chart
+     * @param {Object} option Chart options
+     * @param {String} id Dom id
+     */
     initChart(option, id) {
       this.$nextTick(() => {
         const chart = echarts.init(document.getElementById(id));
@@ -423,6 +449,9 @@ export default {
         this.charts.push(chart);
       });
     },
+    /**
+     * Resize chart
+     */
     resizeEchart() {
       setTimeout(() => {
         this.charts.forEach((val) => {
@@ -430,6 +459,10 @@ export default {
         });
       }, 300);
     },
+    /**
+     * Get training trace information
+     * @param {Number} step Current step value
+     */
     queryTrainingTrace(step) {
       const params = {
         dir: this.relativePath,
@@ -482,6 +515,10 @@ export default {
           },
       );
     },
+    /**
+     * Encapsulating the data of training trace
+     * @param {Object} traceGraph Data of training trace
+     */
     packageTraceData(traceGraph) {
       this.svg.totalTime = 0;
       this.svg.minTime = 0;
@@ -492,6 +529,8 @@ export default {
         this.svg.totalTime = traceGraph[0][0].duration;
         this.svg.minTime = this.svg.minRate * this.svg.totalTime;
 
+        // If there is data less than the minimum time in each row,
+        // the data in each row is divided into several rows
         traceGraph.forEach((row, index) => {
           const rowObj = {
             rowCount: 0,
@@ -537,6 +576,9 @@ export default {
       }
     },
 
+    /**
+     * Processing the data of training trace, Control data generation svg
+     */
     dealTraceData() {
       const traceDom = document.querySelector('#trace');
       if (traceDom) {
@@ -561,6 +603,11 @@ export default {
       }
     },
 
+    /**
+     * Generate a container with multiple rows
+     * @param {Object} item Multi row data
+     * @return {Object} Generated DOM object
+     */
     createMultipleRowContainer(item) {
       const rectContainer = document.createElementNS(
           this.svg.namespaceURI,
@@ -584,6 +631,12 @@ export default {
       return rectContainer;
     },
 
+    /**
+     * DOM for generating a single SVG image
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of box
+     * @return {Object}
+     */
     createRowContainer(data, startY) {
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
 
@@ -608,21 +661,28 @@ export default {
       return g;
     },
 
+    /**
+     * Create a box DOM from the data
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of box
+     * @return {Object}
+     */
     createRect(data, startY) {
       const color =
         data.name && this.svg.colors[data.name]
           ? this.svg.colors[data.name]
           : this.svg.colors.stream_parallel;
-
+      // Start x position of box
       const x1 =
         (data.start / this.svg.totalTime) * this.svg.totalWidth +
         this.svg.svgPadding;
-
+      // The width of the box
       const width = Math.max(
           this.svg.minWidth,
           (data.duration / this.svg.totalTime) * this.svg.totalWidth,
       );
 
+      // Contents of the box
       let name = '';
       switch (data.name) {
         case 'iteration_interval':
@@ -689,6 +749,12 @@ export default {
       return g;
     },
 
+    /**
+     * Create a arrow DOM from the data
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of arrow
+     * @return {Object}
+     */
     createArrow(data, startY) {
       const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
       const x1 =
@@ -722,6 +788,8 @@ export default {
       const textWidth = text.textContent
         ? this.getTextWidth(text.textContent)
         : 0;
+
+      // The position of the text cannot go beyond the border of the SVG
       text.setAttribute(
           'x',
           Math.min(
@@ -755,6 +823,11 @@ export default {
       g.appendChild(text);
       return g;
     },
+    /**
+     * Gets the width of a string
+     * @param {String} text
+     * @return {Number}
+     */
     getTextWidth(text) {
       const body = document.querySelector('body');
       const temp = document.createElement('span');
@@ -765,6 +838,9 @@ export default {
       body.removeChild(temp);
       return textWidth;
     },
+    /**
+     * Remove SVG DOM from page
+     */
     removeTrace() {
       const svgDom = document.querySelector('#trace svg');
       if (svgDom) {
@@ -778,6 +854,9 @@ export default {
         }
       }
     },
+    /**
+     * Respond to the reset event and update the page display
+     */
     resizeTrace() {
       if (this.svg.resizeTimer) {
         clearTimeout(this.svg.resizeTimer);

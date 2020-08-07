@@ -302,9 +302,10 @@ export default {
   props: {},
   data() {
     return {
-      dir: '',
-      currentCard: '',
+      dir: '', // Profiler path
+      currentCard: '', // Purrent card number
       connectQueueChart: {
+        // Ponnect queue chart object
         id: 'connect-queue',
         chartDom: null,
         data: [],
@@ -317,6 +318,7 @@ export default {
         initOver: false,
       },
       dataQueueChart: {
+        // Data queue chart object
         id: 'data-queue',
         chartDom: null,
         data: [],
@@ -329,6 +331,7 @@ export default {
         initOver: false,
       },
       deviceQueueOpChart: {
+        // Device queue chart object
         id: 'device_queue_op',
         chartDom: null,
         data: [],
@@ -339,6 +342,7 @@ export default {
         initOver: false,
       },
       getNextChart: {
+        // Get next chart object
         id: 'get_next',
         chartDom: null,
         data: [],
@@ -349,6 +353,7 @@ export default {
         initOver: false,
       },
       processSummary: {
+        // Process summary object
         noData: true,
         count: 6,
         maxCount: 6,
@@ -365,17 +370,19 @@ export default {
       },
       activeName: 'queueInfo',
       averageRateChart: {
+        // Average rate chart object
         id: 'average-rate',
         chartDom: null,
       },
       queueDeepChart: {
+        // Queue deep chart object
         id: 'queue-deep',
         chartDom: null,
       },
       current_op: {},
       parent_op: {},
       pipeData: true,
-      initOver: false,
+      initOver: false, // Identify whether the interface returns
       allGraphData: {},
       graphviz: null,
       totalMemory: 16777216 * 2, // Memory size of the graph plug-in
@@ -427,6 +434,9 @@ export default {
     }, 500);
   },
   methods: {
+    /**
+     *  Tabs switch
+     */
     handleClick() {
       if (this.activeName === 'pipeLine') {
         if (!Object.keys(this.allGraphData).length) {
@@ -440,6 +450,9 @@ export default {
     init() {
       this.queryProcessSummary();
     },
+    /**
+     *  Resize callback function
+     */
     resizeCallback() {
       const chartArr = [
         'connectQueueChart',
@@ -457,6 +470,10 @@ export default {
         }
       });
     },
+    /**
+     * Query minddata data
+     * @param {Object} chart Chart object
+     */
     queryMinddataOp(chart) {
       const params = {
         profile: this.dir,
@@ -502,6 +519,10 @@ export default {
           },
       );
     },
+    /**
+     * Query queue info
+     * @param {Object} chart Chart object
+     */
     queryQueueInfo(chart) {
       const params = {
         profile: this.dir,
@@ -523,7 +544,7 @@ export default {
                 chart.initOver = true;
                 chart.size = result.size;
                 this.$nextTick(() => {
-                  this.setOption(chart, result.size);
+                  this.setOption(chart);
                 });
               } else {
                 if (chart.chartDom) {
@@ -543,7 +564,11 @@ export default {
           },
       );
     },
-    setOption(chart, size) {
+    /**
+     * Chart set option
+     * @param {Object} chart Chart object
+     */
+    setOption(chart) {
       const myChart = echarts.init(document.getElementById(chart.id));
       const option = {
         title: {
@@ -618,6 +643,9 @@ export default {
         ]);
       }
     },
+    /**
+     * Query process summary info
+     */
     queryProcessSummary() {
       const params = {
         profile: this.dir,
@@ -656,6 +684,10 @@ export default {
           },
       );
     },
+    /**
+     * Deal process data
+     * @param {Object} data Process data
+     */
     dealProcess(data) {
       this.processSummary.device = {
         empty: 0,
@@ -687,6 +719,9 @@ export default {
         this.processSummary.noData = false;
       }
     },
+    /**
+     * Query average rate info
+     */
     queryAverageRate() {
       const params = {
         params: {
@@ -820,6 +855,10 @@ export default {
           },
       );
     },
+    /**
+     * Query queue info
+     * @param {Number} id Op id
+     */
     queryQueue(id) {
       const params = {
         profile: this.dir,
