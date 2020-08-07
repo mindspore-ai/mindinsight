@@ -146,6 +146,7 @@ limitations under the License.
 import RequestService from '../../services/request-service';
 import CommonProperty from '@/common/common-property.js';
 import {select, selectAll, zoom} from 'd3';
+import {event as currentEvent} from 'd3-selection';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom};
 export default {
@@ -385,10 +386,12 @@ export default {
       const zoom = d3
           .zoom()
           .on('start', () => {
+            const event = currentEvent.sourceEvent;
             pointer.start.x = event.x;
             pointer.start.y = event.y;
           })
           .on('zoom', () => {
+            const event = currentEvent.sourceEvent;
             const transformData = this.getTransformData(graphDom);
             if (!Object.keys(graphTransform).length) {
               graphTransform = {
@@ -444,8 +447,8 @@ export default {
               pointer.start.x = pointer.end.x;
               pointer.start.y = pointer.end.y;
             } else if (event.type === 'wheel') {
-              const wheelDelta = event.wheelDelta;
-              const rate = Math.abs(wheelDelta / 100);
+              const wheelDelta = -event.deltaY;
+              const rate = 1.2;
               scale =
               wheelDelta > 0
                 ? transformData.scale[0] * rate

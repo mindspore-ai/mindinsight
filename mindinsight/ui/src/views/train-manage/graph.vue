@@ -415,6 +415,7 @@ import Autocomplete from '@/components/autocomplete';
 import CommonProperty from '@/common/common-property.js';
 import RequestService from '@/services/request-service';
 import {select, selectAll, zoom} from 'd3';
+import {event as currentEvent} from 'd3-selection';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom};
 export default {
@@ -679,69 +680,82 @@ export default {
      */
     startApp() {
       const nodes = d3.selectAll('g.node, g.cluster');
-      nodes.on('click', (target, index, nodesList) => {
-        // The target value of the element converted from the HTML attribute of the variable is null.
-        const clickNode = nodesList[index];
-        const nodeId = clickNode.id;
-        const nodeClass = clickNode.classList.value;
-        setTimeout(() => {
-          this.clickScope = {
-            id: nodeId,
-            class: nodeClass,
-          };
-        }, 10);
-        setTimeout(() => {
-          this.clickScope = {};
-        }, 1000);
-        this.selectedNode.name = nodeId;
-        this.selectNode(false);
-        if (!event || !event.type || event.type !== 'click') {
-          return;
-        }
-        event.stopPropagation();
-        event.preventDefault();
-      });
+      nodes.on(
+          'click',
+          (target, index, nodesList) => {
+          // The target value of the element converted from the HTML attribute of the variable is null.
+            const event = currentEvent;
+            event.stopPropagation();
+            event.preventDefault();
+
+            const clickNode = nodesList[index];
+            const nodeId = clickNode.id;
+            const nodeClass = clickNode.classList.value;
+            setTimeout(() => {
+              this.clickScope = {
+                id: nodeId,
+                class: nodeClass,
+              };
+            }, 10);
+            setTimeout(() => {
+              this.clickScope = {};
+            }, 1000);
+            this.selectedNode.name = nodeId;
+            this.selectNode(false);
+          },
+          false,
+      );
       // namespaces Expansion or Reduction
-      nodes.on('dblclick', (target, index, nodesList) => {
-        // The target of the element converted from the HTML attribute of the variable is empty and
-        // needs to be manually encapsulated.
-        const clickNode = nodesList[index];
-        const nodeId = clickNode.id;
-        const nodeClass = clickNode.classList.value;
-        let name = nodeId;
-        this.selectedNode.more =
-          name.indexOf('more...') !== -1 &&
-          document
-              .querySelector(`#graph g[id="${name}"]`)
-              .attributes.class.value.indexOf('plain') === -1;
+      nodes.on(
+          'dblclick',
+          (target, index, nodesList) => {
+          // The target of the element converted from the HTML attribute of the variable is empty and
+          // needs to be manually encapsulated.
+            const event = currentEvent;
+            event.stopPropagation();
+            event.preventDefault();
 
-        const unfoldFlag =
-          (nodeClass.includes('aggregation') ||
-            nodeClass.includes('cluster') ||
-            this.selectedNode.more) &&
-          (!this.clickScope.id ||
-            (this.clickScope.id && nodeId === this.clickScope.id));
+            const clickNode = nodesList[index];
+            const nodeId = clickNode.id;
+            const nodeClass = clickNode.classList.value;
+            let name = nodeId;
+            this.selectedNode.more =
+            name.indexOf('more...') !== -1 &&
+            document
+                .querySelector(`#graph g[id="${name}"]`)
+                .attributes.class.value.indexOf('plain') === -1;
 
-        if (this.selectedNode.more) {
-          const changePage = name.includes('right') ? 1 : -1;
-          const parentId = document.querySelector(`#graph g[id="${name}"]`)
-              .parentNode.id;
-          name = parentId.replace('_unfold', '');
-          this.allGraphData[name].index += changePage;
-          this.selectedNode.name = name;
-        }
-        if (unfoldFlag) {
-          this.dealDoubleClick(name);
-        } else if (this.clickScope.id) {
-          this.selectedNode.name = this.clickScope.id;
-          this.selectNode(false);
-        }
-        if (!event || !event.type || event.type !== 'dblclick') {
-          return;
-        }
-        event.stopPropagation();
-        event.preventDefault();
-      });
+            const unfoldFlag =
+            (nodeClass.includes('aggregation') ||
+              nodeClass.includes('cluster') ||
+              this.selectedNode.more) &&
+            (!this.clickScope.id ||
+              (this.clickScope.id && nodeId === this.clickScope.id));
+
+            if (this.selectedNode.more) {
+              const changePage = name.includes('right') ? 1 : -1;
+              const parentId = document.querySelector(`#graph g[id="${name}"]`)
+                  .parentNode.id;
+              name = parentId.replace('_unfold', '');
+              this.allGraphData[name].index += changePage;
+              this.allGraphData[name].index = Math.max(
+                  0,
+                  Math.min(
+                      this.allGraphData[name].index,
+                      this.allGraphData[name].childIdsList.length - 1,
+                  ),
+              );
+              this.selectedNode.name = name;
+            }
+            if (unfoldFlag) {
+              this.dealDoubleClick(name);
+            } else if (this.clickScope.id) {
+              this.selectedNode.name = this.clickScope.id;
+              this.selectNode(false);
+            }
+          },
+          false,
+      );
       this.initZooming();
       if (this.selectedNode.name) {
         this.selectNode(true);
@@ -758,10 +772,15 @@ export default {
       const zoom = d3
           .zoom()
           .on('start', () => {
+            const event = currentEvent.sourceEvent;
             pointer.start.x = event.x;
             pointer.start.y = event.y;
           })
           .on('zoom', () => {
+            const event = currentEvent.sourceEvent;
+            event.stopPropagation();
+            event.preventDefault();
+
             const transformData = this.getTransformData(this.graph.dom);
             let tempStr = '';
             let change = {};
@@ -809,8 +828,8 @@ export default {
               pointer.start.x = pointer.end.x;
               pointer.start.y = pointer.end.y;
             } else if (event.type === 'wheel') {
-              const wheelDelta = event.wheelDelta;
-              const rate = Math.abs(wheelDelta / 100);
+              const wheelDelta = -event.deltaY;
+              const rate = 1.2;
               scale =
               wheelDelta > 0
                 ? transformData.scale[0] * rate
@@ -838,11 +857,11 @@ export default {
             this.graph.transRate =
             graphRect.width / graphBox.width / this.graph.transform.k;
 
-            tempStr = `translate(${this.graph.transform.x},${this.graph.transform.y}) scale(${this.graph.transform.k})`;
+            tempStr =
+            `translate(${this.graph.transform.x},${this.graph.transform.y}) ` +
+            `scale(${this.graph.transform.k})`;
             this.graph.dom.setAttribute('transform', tempStr);
             this.setInsideBoxData();
-            event.stopPropagation();
-            event.preventDefault();
           });
 
       const svg = d3.select('#graph svg');
@@ -930,8 +949,8 @@ export default {
      */
     layoutNamescope(name, toUnfold) {
       this.$nextTick(() => {
-        const dotStr = this.packageNamescope(name);
         try {
+          const dotStr = this.packageNamescope(name);
           this.graphvizTemp = d3
               .select('#graphTemp')
               .graphviz({useWorker: false, totalMemory: this.totalMemory})
@@ -2678,12 +2697,11 @@ export default {
         };
 
         // Mouse wheel event
-        smallContainer.onmousewheel = (e) => {
+        smallContainer.onwheel = (e) => {
           e = e || window.event;
-          const wheelDelta = e.wheelDelta ? e.wheelDelta : e.detail;
+          const wheelDelta = e.wheelDelta ? e.wheelDelta : -e.deltaY;
           if (!isNaN(this.graph.transform.k) && this.graph.transform.k !== 0) {
-            let rate =
-              wheelDelta > 0 ? wheelDelta / 100 : -1 / (wheelDelta / 100);
+            let rate = wheelDelta > 0 ? 1.2 : 1 / 1.2;
 
             let scaleTemp = this.graph.transform.k / rate;
             if (scaleTemp <= this.graph.minScale) {
