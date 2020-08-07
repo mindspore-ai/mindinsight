@@ -16,7 +16,16 @@ limitations under the License.
 
 <template>
   <div id="cl-summary-manage">
-    <div class="cl-summary-manage-container">
+    <div v-if="loading"
+         class="no-data-page">
+      <div class="no-data-img">
+        <img :src="require('@/assets/images/nodata.png')"
+             alt="" />
+        <p class="no-data-text">{{$t("public.dataLoading")}}</p>
+      </div>
+    </div>
+    <div class="cl-summary-manage-container"
+         v-if="!loading">
       <div class="cl-title">
         <div class="cl-title-left">
           <span class="summary-title">{{$t('summaryManage.summaryList')}}</span>
@@ -58,15 +67,21 @@ limitations under the License.
             <!--operate   -->
             <el-table-column prop="operate"
                              :label="$t('summaryManage.operation')"
-                             width="220">
+                             width="240">
               <template slot-scope="scope">
-                <el-button type="text" @click.stop="goToTrainDashboard(scope.row)">
+                <el-button type="text"
+                           @click.stop="goToTrainDashboard(scope.row)">
                   {{$t('summaryManage.viewDashboard')}} </el-button>
-                <el-button type="text" class="operate-btn" v-if="scope.row.viewProfiler"
-                  @click.stop="goToProfiler(scope.row)">
+                <el-button type="text"
+                           class="operate-btn"
+                           v-if="scope.row.viewProfiler"
+                           @click.stop="goToProfiler(scope.row)">
                   {{$t('summaryManage.viewProfiler')}} </el-button>
-                <el-button type="text" class="operate-btn" disabled :title="$t('summaryManage.disableProfilerTip')"
-                v-if="!scope.row.viewProfiler">{{$t('summaryManage.viewProfiler')}} </el-button>
+                <el-button type="text"
+                           class="operate-btn"
+                           disabled
+                           :title="$t('summaryManage.disableProfilerTip')"
+                           v-if="!scope.row.viewProfiler">{{$t('summaryManage.viewProfiler')}} </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -93,6 +108,7 @@ import RequestService from '../../services/request-service';
 export default {
   data() {
     return {
+      loading: true,
       currentFolder: '--',
       summaryList: [],
       pagination: {
@@ -130,6 +146,7 @@ export default {
       RequestService.querySummaryList(params, false)
           .then(
               (res) => {
+                this.loading = false;
                 if (res && res.data && res.data.train_jobs) {
                   const summaryList = JSON.parse(
                       JSON.stringify(res.data.train_jobs),
@@ -149,9 +166,13 @@ export default {
                   this.summaryList = [];
                 }
               },
-              (error) => {},
+              (error) => {
+                this.loading = false;
+              },
           )
-          .catch((e) => {});
+          .catch((e) => {
+            this.loading = false;
+          });
     },
     currentPageChange(currentPage) {
       this.pagination.currentPage = currentPage;
@@ -202,6 +223,27 @@ export default {
   height: 100%;
   width: 100%;
   background-color: #fff;
+  .no-data-page {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .no-data-img {
+      background: #fff;
+      text-align: center;
+      height: 200px;
+      width: 310px;
+      margin: auto;
+      img {
+        max-width: 100%;
+      }
+      p {
+        font-size: 16px;
+        padding-top: 10px;
+      }
+    }
+  }
   .cl-summary-manage-container {
     height: 100%;
     padding: 14px 32px 32px;
