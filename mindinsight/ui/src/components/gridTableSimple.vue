@@ -496,9 +496,6 @@ export default {
   border-left: none;
   text-align: center;
 }
-.grid-canvas-left .slick-cell {
-  height: 54px;
-}
 .slick-viewport-left {
   overflow: hidden !important;
 }
