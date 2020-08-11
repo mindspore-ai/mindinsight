@@ -71,9 +71,10 @@ export default {
         'minddata_warning_op',
       ],
       moreParameter: ['minddata_device_queue', 'minddata_get_next_queue'],
-      CardNumArr: [],
+      CardNumArr: [], // Card list
       collapse: false,
       curDashboardInfo: {
+        // Current Select card info
         curCardNum: '',
         query: {},
       },
@@ -86,6 +87,9 @@ export default {
     });
   },
   methods: {
+    /**
+     * Init function
+     */
     init() {
       if (this.$route.query && this.$route.query.id && this.$route.query.dir) {
         this.curDashboardInfo.query.id = this.$route.query.id;
@@ -99,11 +103,17 @@ export default {
         this.$message.error(this.$t('trainingDashboard.invalidId'));
       }
     },
+    /**
+     * When card mumber changed,request data again.
+     */
     selectValueChange() {
       const helperDiv = document.getElementById('helper-tips');
       helperDiv.innerHTML = '';
       this.getDataOfProfileHelper();
     },
+    /**
+     * Get card number list
+     */
     getDeviceList() {
       const params = {
         profile: this.curDashboardInfo.query.dir,
@@ -129,7 +139,9 @@ export default {
           })
           .catch(() => {});
     },
-
+    /**
+     * Get profile helper data
+     */
     getDataOfProfileHelper() {
       const params = {
         train_id: this.curDashboardInfo.query.id,
@@ -267,6 +279,9 @@ export default {
           })
           .catch(() => {});
     },
+    /**
+     * Router back to profiling-dashboard
+     */
     backToDdashboard() {
       this.$router.push({
         path: '/profiling/profiling-dashboard',
@@ -318,7 +333,7 @@ export default {
         .cur-card {
           margin-bottom: 32px;
           .card-select {
-            width: calc(100% - 70px);
+            width: calc(100% - 120px);
           }
           & > label {
             margin-right: 14px;

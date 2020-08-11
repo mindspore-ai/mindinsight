@@ -16,6 +16,7 @@ limitations under the License.
 <template>
   <div class="pro-router-wrap">
     <div class="pro-router-left">
+      <!-- Timeline display area -->
       <div class="step-trace">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.stepTrace') }}</div>
@@ -25,6 +26,7 @@ limitations under the License.
                     :class="{disabled:svg.noData && svg.data.length === 0}">{{ $t('profiling.viewDetail') }}
               <i class="el-icon-d-arrow-right"></i></button>
           </div>
+          <!-- Timeline description -->
           <div class="tip-icon">
             <el-tooltip placement="bottom"
                         effect="light">
@@ -50,14 +52,15 @@ limitations under the License.
                   <span>{{totalTime}}{{$t('profiling.millisecond')}}</span>
                 </div>
                 <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
-                <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iteration_interval_percent}}</span></div>
-                <div>{{$t('profiling.fpbpTimeRatio')}}<span>{{fp_and_bp_percent}}</span></div>
-                <div>{{$t('profiling.iterativeTailingTimeRatio')}}<span>{{tail_percent}}</span></div>
+                <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationIntervalPercent}}</span></div>
+                <div>{{$t('profiling.fpbpTimeRatio')}}<span>{{fpBpPercent}}</span></div>
+                <div>{{$t('profiling.iterativeTailingTimeRatio')}}<span>{{tailPercent}}</span></div>
               </div>
               <i class="el-icon-info"></i>
             </el-tooltip>
           </div>
         </div>
+        <!-- Timeline SVG container -->
         <div class="trace-container">
           <div id="trace"
                class="training-trace"
@@ -101,6 +104,7 @@ limitations under the License.
           </div>
         </div>
       </div>
+      <!-- Process summary display area -->
       <div class="minddata">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.mindData') }}</div>
@@ -248,6 +252,7 @@ limitations under the License.
         </div>
       </div>
     </div>
+    <!-- Operator information display area -->
     <div class="pro-router-right">
       <div class="op-time-consume">
         <div class="title-wrap">
@@ -272,6 +277,7 @@ limitations under the License.
           <div id="pieChart"
                class="pie-chart"
                v-if="pieChart.data.length"></div>
+          <!-- Operator time consumption top5 -->
           <div class="time-list"
                v-if="pieChart.data.length">
             <ul>
@@ -292,6 +298,7 @@ limitations under the License.
           </div>
         </div>
       </div>
+      <!-- Time line display area -->
       <div class="time-line">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.timeLine') }}</div>
@@ -325,6 +332,7 @@ limitations under the License.
             </el-tooltip>
           </div>
         </div>
+        <!-- Time line detail -->
         <div class="timeline-info"
              v-if="!timelineInfo.noData">
           <div class="info-line">
@@ -360,37 +368,39 @@ import CommonProperty from '../../common/common-property';
 export default {
   data() {
     return {
-      fp_and_bp_percent: '--',
-      iteration_interval_percent: '--',
-      totalSteps: '--',
-      totalTime: '--',
-      tail_percent: '--',
-      queueInfoShow: false,
-      deviceInfoShow: false,
-      queueInfoEmptyNum: '--',
-      queueInfoTotalNum: '--',
-      deviceInfoEmptyNum: '--',
-      deviceInfoTotalNum: '--',
-      deviceInfoFullNum: '--',
+      fpBpPercent: '--', // Ratio of time consumed by forward and backward propagation
+      iterationIntervalPercent: '--', // Ratio of time consumed by step interval
+      totalSteps: '--', // Total steps
+      totalTime: '--', // Total time
+      tailPercent: '--', // Ratio of time consumed by step tail
+      queueInfoShow: false, // Whether to show queue information
+      deviceInfoShow: false, // Whether to show device information
+      queueInfoEmptyNum: '--', // The number of empty queue information
+      queueInfoTotalNum: '--', // Total number of queues
+      deviceInfoEmptyNum: '--', // Number of empty device information
+      deviceInfoTotalNum: '--', // Total number of devices
+      deviceInfoFullNum: '--', // Number of full queues
       svg: {
-        data: [],
-        svgPadding: 20,
-        totalWidth: 0,
-        totalTime: 0,
+        // Step trace svg information
+        data: [], // Data of svg
+        svgPadding: 20, // Padding of svg
+        totalWidth: 0, // Total width of svg
+        totalTime: 0, // Total time
         cellHeight: 40,
         cellPadding: 0,
         rowPadding: 20,
         rowMargin: 10,
         totalHeight: 0,
         markerPadding: 4,
-        minRate: 0.1,
-        minTime: 0,
-        minWidth: 1,
+        minRate: 0.1, // Minimum time share threshold of non wrapping display
+        minTime: 0, // Minimum time for non wrapping display
+        minWidth: 1, // Minimum width of graphics in SVG
         fontSize: 12,
-        textMargin: 21,
-        namespaceURI: 'http://www.w3.org/2000/svg',
-        resizeTimer: null,
+        textMargin: 21, // The minimum margin of the text from the border
+        namespaceURI: 'http://www.w3.org/2000/svg', // XML namespace
+        resizeTimer: null, // Response delay of resize event
         colors: {
+          // Colors of different types of data presentation
           iteration_interval: ['#A6DD82', '#edf8e6'],
           fp_and_bp: ['#6CBFFF', '#e2f2ff'],
           tail: ['#fa8e5b', '#fff4de'],
@@ -399,54 +409,60 @@ export default {
         noData: true,
         initOver: false,
       },
-      trainingJobId: this.$route.query.id,
-      summaryPath: this.$route.query.dir,
-      relativePath: this.$route.query.path,
-      currentCard: '',
+      trainingJobId: this.$route.query.id, // Training job id
+      summaryPath: this.$route.query.dir, // Summary path data
+      relativePath: this.$route.query.path, // Relative path of summary log
+      currentCard: '', // Data of current card
       pieChart: {
+        // Pie graph information of operators
         chartDom: null,
         data: [],
         noData: true,
         topN: [],
         colorList: ['#6C92FA', '#6CBFFF', '#4EDED2', '#7ADFA0', '#A6DD82'],
-        initOver: false,
+        initOver: false, // Is initialization complete
       },
       timeLine: {
+        // Time line data
         data: null,
-        waiting: true,
+        waiting: true, // Is it waiting for interface return
       },
       timelineInfo: {
+        // Time line information
         totalTime: 0,
         streamNum: 0,
-        opNum: 0,
-        opTimes: 0,
+        opNum: 0, // Number of operators
+        opTimes: 0, // Operator time consuming
         noData: true,
-        initOver: false,
+        initOver: false, // Is initialization complete
       },
       processSummary: {
+        // Data of process summary
         noData: true,
         count: 6,
         maxCount: 6,
         device: {
-          empty: 0,
-          full: 0,
-          total: 0,
+          empty: 0, // Number of empty devices
+          full: 0, // Number of full devices
+          total: 0, // Total number of devices
         },
         get_next: {
           empty: 0,
           full: 0,
           total: 0,
         },
-        initOver: false,
+        initOver: false, // Is initialization complete
       },
     };
   },
   mounted() {
+    // Collapse the left column to respond to events
     setTimeout(() => {
       this.$bus.$on('collapse', this.resizeTrace);
     }, 500);
   },
   watch: {
+    // Monitor current card information
     '$parent.curDashboardInfo': {
       handler(newValue, oldValue) {
         if (newValue.curCardNum === '') {
@@ -483,6 +499,9 @@ export default {
     },
   },
   methods: {
+    /**
+     * Initialization function
+     */
     init() {
       this.queryTimeline();
       this.queryTrainingTrace();
@@ -490,6 +509,9 @@ export default {
       this.initPieChart();
       window.addEventListener('resize', this.resizeTrace, false);
     },
+    /**
+     * Get the data of proccess summary
+     */
     getProccessSummary() {
       const params = {
         train_id: this.trainingJobId,
@@ -651,6 +673,9 @@ export default {
             this.pieChart.initOver = true;
           });
     },
+    /**
+     * Get the data of training trace
+     */
     queryTrainingTrace() {
       const params = {
         dir: this.relativePath,
@@ -674,19 +699,20 @@ export default {
                 );
               });
 
+              // Set the display information in tip
               if (res.data.summary) {
-                this.fp_and_bp_percent = res.data.summary.fp_and_bp_percent;
-                this.iteration_interval_percent =
+                this.fpBpPercent = res.data.summary.fp_and_bp_percent;
+                this.iterationIntervalPercent =
                 res.data.summary.iteration_interval_percent;
                 this.totalSteps = res.data.summary.total_steps;
                 this.totalTime = res.data.summary.total_time;
-                this.tail_percent = res.data.summary.tail_percent;
+                this.tailPercent = res.data.summary.tail_percent;
               } else {
-                this.fp_and_bp_percent = '--';
-                this.iteration_interval_percent = '--';
+                this.fpBpPercent = '--';
+                this.iterationIntervalPercent = '--';
                 this.totalSteps = '--';
                 this.totalTime = '--';
-                this.tail_percent = '--';
+                this.tailPercent = '--';
               }
             } else {
               this.svg.totalHeight = 0;
@@ -704,7 +730,10 @@ export default {
           },
       );
     },
-
+    /**
+     * Encapsulating the data of training trace
+     * @param {Object} traceGraph Data of training trace
+     */
     packageTraceData(traceGraph) {
       this.svg.totalTime = 0;
       this.svg.minTime = 0;
@@ -715,6 +744,8 @@ export default {
         this.svg.totalTime = traceGraph[0][0].duration;
         this.svg.minTime = this.svg.minRate * this.svg.totalTime;
 
+        // If there is data less than the minimum time in each row,
+        // the data in each row is divided into several rows
         traceGraph.forEach((row, index) => {
           const rowObj = {
             rowCount: 0,
@@ -759,7 +790,9 @@ export default {
         });
       }
     },
-
+    /**
+     * Processing the data of training trace, Control data generation svg
+     */
     dealTraceData() {
       const traceDom = document.querySelector('#trace');
       if (traceDom) {
@@ -783,7 +816,11 @@ export default {
         }
       }
     },
-
+    /**
+     * Generate a container with multiple rows
+     * @param {Object} item Multi row data
+     * @return {Object} Generated DOM object
+     */
     createMultipleRowContainer(item) {
       const rectContainer = document.createElementNS(
           this.svg.namespaceURI,
@@ -806,7 +843,12 @@ export default {
       rectContainer.appendChild(temp);
       return rectContainer;
     },
-
+    /**
+     * DOM for generating a single SVG image
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of box
+     * @return {Object}
+     */
     createRowContainer(data, startY) {
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
 
@@ -830,22 +872,28 @@ export default {
       });
       return g;
     },
-
+    /**
+     * Create a box DOM from the data
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of box
+     * @return {Object}
+     */
     createRect(data, startY) {
       const color =
         data.name && this.svg.colors[data.name]
           ? this.svg.colors[data.name]
           : this.svg.colors.stream_parallel;
-
+      // Start x position of box
       const x1 =
         (data.start / this.svg.totalTime) * this.svg.totalWidth +
         this.svg.svgPadding;
-
+      // The width of the box
       const width = Math.max(
           this.svg.minWidth,
           (data.duration / this.svg.totalTime) * this.svg.totalWidth,
       );
 
+      // Contents of the box
       let name = '';
       switch (data.name) {
         case 'iteration_interval':
@@ -911,7 +959,12 @@ export default {
       g.appendChild(title);
       return g;
     },
-
+    /**
+     * Create a arrow DOM from the data
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of arrow
+     * @return {Object}
+     */
     createArrow(data, startY) {
       const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
       const x1 =
@@ -945,6 +998,7 @@ export default {
       const textWidth = text.textContent
         ? this.getTextWidth(text.textContent)
         : 0;
+      // The position of the text cannot go beyond the border of the SVG
       text.setAttribute(
           'x',
           Math.min(
@@ -978,6 +1032,11 @@ export default {
       g.appendChild(text);
       return g;
     },
+    /**
+     * Gets the width of a string
+     * @param {String} text
+     * @return {Number}
+     */
     getTextWidth(text) {
       const body = document.querySelector('body');
       const temp = document.createElement('span');
@@ -988,6 +1047,9 @@ export default {
       body.removeChild(temp);
       return textWidth;
     },
+    /**
+     * Remove SVG DOM from page
+     */
     removeTrace() {
       const svgDom = document.querySelector('#trace svg');
       if (svgDom) {
@@ -1001,6 +1063,9 @@ export default {
         }
       }
     },
+    /**
+     * Respond to the reset event and update the page display
+     */
     resizeTrace() {
       if (this.svg.resizeTimer) {
         clearTimeout(this.svg.resizeTimer);
@@ -1011,6 +1076,11 @@ export default {
         this.svg.resizeTimer = null;
       }, 500);
     },
+    /**
+     * Converts a string to data in uint8array format
+     * @param {String} str The string to be converted
+     * @return {Array}
+     */
     stringToUint8Array(str) {
       const arr = [];
       for (let i = 0, strLen = str.length; i < strLen; i++) {
@@ -1018,6 +1088,9 @@ export default {
       }
       return new Uint8Array(arr);
     },
+    /**
+     * Query the data of time line
+     */
     queryTimeline() {
       this.timeLine.waiting = true;
       const params = {
@@ -1055,6 +1128,9 @@ export default {
           })
           .catch(() => {});
     },
+    /**
+     * Download Perfetto data file
+     */
     downloadPerfetto() {
       const downloadLink = document.createElement('a');
       downloadLink.download = this.getDocName();
@@ -1065,6 +1141,10 @@ export default {
       downloadLink.click();
       document.body.removeChild(downloadLink);
     },
+    /**
+     * Set the data of process
+     * @param {Object} data The data of process
+     */
     dealProcess(data) {
       this.processSummary.device = {
         empty: 0,
@@ -1096,6 +1176,10 @@ export default {
         this.processSummary.noData = false;
       }
     },
+    /**
+     * Generate a download file name
+     * @return {String}
+     */
     getDocName() {
       const dealNumber = (value) => {
         const prefix = value < 10 ? '0' : '';
