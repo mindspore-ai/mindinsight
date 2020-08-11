@@ -1914,7 +1914,11 @@ export default {
             Object.keys(dataObj[key]).forEach((k, j) => {
               const item = {};
               item.key = k;
-              item.value = dataObj[key][k];
+              if (dataObj[key][k] === null) {
+                item.value = 'None';
+              } else {
+                item.value = dataObj[key][k];
+              }
               item.id =
                 `${new Date().getTime()}` + `${this.$store.state.tableId}`;
               this.$store.commit('increaseTableId');
