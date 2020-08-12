@@ -320,9 +320,21 @@ limitations under the License.
                 <div>{{$t("profiling.timelineTips.content13")}}</div>
                 <br>
                 <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
-                <div>{{$t("profiling.timelineTips.content21")}}</div>
+                <div>
+                  {{$t("profiling.timelineTips.content21.part1")}}
+                  <b>{{$t("profiling.timelineTips.content21.part2")}}</b>
+                  {{$t("profiling.timelineTips.content21.part3")}}
+                </div>
                 <div>{{$t("profiling.timelineTips.content22")}}</div>
-                <div>{{$t("profiling.timelineTips.content23")}}</div>
+                <div>
+                  {{$t("profiling.timelineTips.content23.part1")}}
+                  <b>{{$t("profiling.timelineTips.content23.part2")}}</b>
+                  {{$t("profiling.timelineTips.content23.part3")}}
+                  <b>{{$t("profiling.timelineTips.content23.part4")}}</b>
+                  {{$t("profiling.timelineTips.content23.part5")}}
+                  <b>{{$t("profiling.timelineTips.content23.part6")}}</b>
+                  {{$t("profiling.timelineTips.content23.part7")}}
+                </div>
                 <br>
                 <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
                 <div>{{$t("profiling.timelineTips.content31")}}</div>

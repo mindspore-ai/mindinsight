@@ -316,6 +316,7 @@ export default {
         noData: true,
         size: null,
         initOver: false,
+        deviceId: null,
       },
       dataQueueChart: {
         // Data queue chart object
@@ -373,6 +374,7 @@ export default {
         // Average rate chart object
         id: 'average-rate',
         chartDom: null,
+        deviceId: null,
       },
       queueDeepChart: {
         // Queue deep chart object
@@ -438,14 +440,20 @@ export default {
      *  Tabs switch
      */
     handleClick() {
-      if (this.activeName === 'pipeLine') {
-        if (!Object.keys(this.allGraphData).length) {
-          this.$nextTick(() => {
-            this.queryAverageRate();
-          });
-        }
+      if (
+        this.activeName === 'pipeLine' &&
+        this.averageRateChart.deviceId !== this.currentCard
+      ) {
+        this.queryAverageRate();
+      } else if (
+        this.activeName === 'queueInfo' &&
+        this.connectQueueChart.deviceId !== this.currentCard
+      ) {
+        this.init();
       }
-      this.resizeCallback();
+      this.$nextTick(() => {
+        this.resizeCallback();
+      });
     },
     init() {
       this.queryProcessSummary();
@@ -652,6 +660,7 @@ export default {
         device_id: this.currentCard,
         train_id: this.trainId,
       };
+      this.connectQueueChart.deviceId = this.currentCard;
       RequestService.queryProcessSummary(params).then(
           (res) => {
             if (res && res.data) {
@@ -732,6 +741,7 @@ export default {
           device_id: this.currentCard,
         },
       };
+      this.averageRateChart.deviceId = this.currentCard;
       RequestService.queryOpQueue(params).then(
           (res) => {
             this.initOver = true;
