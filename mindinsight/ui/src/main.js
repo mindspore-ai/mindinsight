@@ -23,8 +23,8 @@ import './assets/css/element.css';
 import './assets/css/reset.scss';
 import i18n from './i18n';
 import $ from 'jquery';
-import locale from '../node_modules/element-ui/lib/locale/lang/en';
-import localezh from '../node_modules/element-ui/lib/locale/lang/zh-CN';
+import locale from 'element-ui/lib/locale/lang/en';
+import localezh from 'element-ui/lib/locale/lang/zh-CN';
 
 if (
   localStorage.getItem('milang') &&

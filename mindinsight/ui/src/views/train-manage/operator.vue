@@ -337,7 +337,8 @@ export default {
           this.currentCard = newValue.curCardNum;
           this.initOver = false;
           this.cardChange();
-        } else {
+        }
+        if (newValue.initOver) {
           this.initOver = true;
         }
       },

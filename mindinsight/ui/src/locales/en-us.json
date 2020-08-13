@@ -49,9 +49,7 @@
     "dataTraceback": "Dataset Lineage",
     "comparePlate": "Comparison Dashboard",
     "disableProfilerTip": "Failed to view profiling because no profiler log is available.",
-    "hardwareVisual": "Hardware Resources",
-    "paramDetails": "Parameter Details",
-    "trainingParamDetails": "Training Parameter Details(Directory)"
+    "hardwareVisual": "Hardware Resources"
   },
   "modelTraceback": {
     "summaryPath": "Summary Path",

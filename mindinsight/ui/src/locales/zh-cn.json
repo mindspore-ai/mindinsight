@@ -1,6 +1,6 @@
 {
   "public": {
-    "netWorkError": "网络或后台错误，请检查。",
+    "netWorkError": "网络或后端服务错误，请检查。",
     "browserWarning": "您当前的浏览器可能导致部分功能失效或不可使用，建议使用Chrome 65版本以上的浏览器。",
     "timeout": "超时，请重新请求。",
     "noData": "暂无数据",
