@@ -28,11 +28,26 @@ limitations under the License.
                  :default-active="getActive()"
                  class="el-menu-demo"
                  mode="horizontal">
-          <el-menu-item index="/summary-manage">{{$t("summaryManage.summaryList")}}</el-menu-item>
-          <el-menu-item index="/model-traceback">{{$t("summaryManage.modelTraceback")}}</el-menu-item>
-          <el-menu-item index="/data-traceback">{{$t("summaryManage.dataTraceback")}}</el-menu-item>
-          <el-menu-item index="/compare-plate">{{$t("summaryManage.comparePlate")}}</el-menu-item>
-          <el-menu-item index="/hardware-visual">{{$t("summaryManage.hardwareVisual")}}</el-menu-item>
+          <el-menu-item index="/summary-manage"
+                        :title='$t("summaryManage.summaryList")'>
+            {{$t("summaryManage.summaryList")}}
+          </el-menu-item>
+          <el-menu-item index="/model-traceback"
+                        :title='$t("summaryManage.modelTraceback")'>
+            {{$t("summaryManage.modelTraceback")}}
+          </el-menu-item>
+          <el-menu-item index="/data-traceback"
+                        :title='$t("summaryManage.dataTraceback")'>
+            {{$t("summaryManage.dataTraceback")}}
+          </el-menu-item>
+          <el-menu-item index="/compare-plate"
+                        :title='$t("summaryManage.comparePlate")'>
+            {{$t("summaryManage.comparePlate")}}
+          </el-menu-item>
+          <el-menu-item index="/hardware-visual"
+                        :title='$t("summaryManage.hardwareVisual")'>
+            {{$t("summaryManage.hardwareVisual")}}
+          </el-menu-item>
         </el-menu>
       </div>
     </div>
@@ -46,7 +61,7 @@ limitations under the License.
          || !this.$route.path.indexOf('/compare-plate')
          || !this.$route.path.indexOf('/hardware-visual')">
       <div class="reload-training"
-          v-if="this.$route.path.indexOf('/scalar') > 0
+           v-if="this.$route.path.indexOf('/scalar') > 0
           || this.$route.path.indexOf('/image') > 0
           || this.$route.path.indexOf('/histogram') > 0
           || this.$route.path.indexOf('/tensor') > 0
@@ -54,13 +69,13 @@ limitations under the License.
           || !this.$route.path.indexOf('/compare-plate')">
         <!-- automatic refresh switch -->
         <el-switch v-model="isTimeReload"
-                  :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
+                   :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
                   timeReloadValue+$t('header.timeSecond')+$t('symbols.rightbracket')"
-                  @change="timeReload"></el-switch>
+                   @change="timeReload"></el-switch>
         <i class="el-icon-edit"
-          :title="$t('header.timeReloadScope')"
-          v-if="isTimeReload && !isShowInp"
-          @click="editTime"></i>
+           :title="$t('header.timeReloadScope')"
+           v-if="isTimeReload && !isShowInp"
+           @click="editTime"></i>
 
         <el-input v-if="isTimeReload && isShowInp"
                   v-model="newReloadValue"
@@ -68,23 +83,23 @@ limitations under the License.
                   @input="timeValueChange"></el-input>
 
         <i class="el-icon-check"
-          v-if="isTimeReload && isShowInp"
-          @click="saveTimeValue"></i>
+           v-if="isTimeReload && isShowInp"
+           @click="saveTimeValue"></i>
         <i class="el-icon-close"
-          v-if="isTimeReload && isShowInp"
-          @click="cancelTimeValue"></i>
+           v-if="isTimeReload && isShowInp"
+           @click="cancelTimeValue"></i>
       </div>
       <div class="reload-hardware"
-        v-if="!this.$route.path.indexOf('/hardware-visual')">
+           v-if="!this.$route.path.indexOf('/hardware-visual')">
         <!-- automatic refresh switch -->
         <el-switch v-model="isHardwareTimeReload"
-                  :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
+                   :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
                   hardwareTimeReloadValue+$t('header.timeSecond')+$t('symbols.rightbracket')"
-                  @change="hardwareTimeReload"></el-switch>
+                   @change="hardwareTimeReload"></el-switch>
         <i class="el-icon-edit"
-          :title="$t('header.timeReloadScope')"
-          v-if="isHardwareTimeReload && !isShowHardwareInp"
-          @click="editHardwareTime"></i>
+           :title="$t('header.timeReloadScope')"
+           v-if="isHardwareTimeReload && !isShowHardwareInp"
+           @click="editHardwareTime"></i>
 
         <el-input v-if="isHardwareTimeReload && isShowHardwareInp"
                   v-model="newHardwareReloadValue"
@@ -92,13 +107,12 @@ limitations under the License.
                   @input="hardwareTimeValueChange"></el-input>
 
         <i class="el-icon-check"
-          v-if="isHardwareTimeReload && isShowHardwareInp"
-          @click="saveHardwareTimeValue"></i>
+           v-if="isHardwareTimeReload && isShowHardwareInp"
+           @click="saveHardwareTimeValue"></i>
         <i class="el-icon-close"
-          v-if="isHardwareTimeReload && isShowHardwareInp"
-          @click="cancelHardwareTimeValue"></i>
+           v-if="isHardwareTimeReload && isShowHardwareInp"
+           @click="cancelHardwareTimeValue"></i>
       </div>
-
 
       <!-- manual refresh switch -->
       <img src="../assets/images/reload.png"
@@ -113,7 +127,21 @@ limitations under the License.
            width="24"
            class="cl-header-img cl-reload"
            v-if="isReload"
-           :title="$t('header.RefreshingData')" />
+           :title="$t('header.refreshingData')" />
+    </div>
+    <div class="md-header-language"
+         v-show="isLanguage">
+      <span class="spanLanguage"
+            :class="[isChinese?'active':'']"
+            @click="changeLanguage('zh-cn')">
+        {{$t('public.zhLanguage')}}
+      </span>
+      <span class="spanLine">/</span>
+      <span class="spanLanguage"
+            :class="[!isChinese?'active':'']"
+            @click="changeLanguage('en-us')">
+        {{$t('public.enLanguage')}}
+      </span>
     </div>
   </div>
 </template>
@@ -123,6 +151,7 @@ export default {
   data() {
     return {
       isShowInp: false,
+      isLanguage: true,
       timeReloadValue: this.$store.state.timeReloadValue,
       newReloadValue: this.$store.state.timeReloadValue,
       isShowHardwareInp: false,
@@ -141,6 +170,16 @@ export default {
         return this.$store.state.isTimeReload;
       },
       set(val) {},
+    },
+    isChinese() {
+      let isChinese = false;
+      if (
+        localStorage.getItem('milang') &&
+        localStorage.getItem('milang') === 'zh-cn'
+      ) {
+        isChinese = true;
+      }
+      return isChinese;
     },
     // set and get isHardwareTimeReload status
     isHardwareTimeReload: {
@@ -258,6 +297,10 @@ export default {
         return this.$route.path;
       }
     },
+    changeLanguage(lan) {
+      localStorage.setItem('milang', lan);
+      window.location.reload();
+    },
   },
 };
 </script>
@@ -271,6 +314,19 @@ export default {
   display: flex;
   color: $headerColor;
   flex-shrink: 0;
+  .md-header-language {
+    width: 100px;
+    line-height: 64px;
+    .spanLine {
+      margin: 0 5px;
+    }
+    .spanLanguage {
+      cursor: pointer;
+    }
+    .active {
+      color: #00a5a7;
+    }
+  }
   // logo style
   .cl-header-logo {
     width: 161px;
@@ -332,7 +388,7 @@ export default {
 
   .cl-header-nav {
     margin-left: 50px;
-    flex: 1.5;
+    flex: 2.2;
 
     .el-menu {
       border-bottom: none;
@@ -341,6 +397,10 @@ export default {
       font-size: 16px;
       color: #fff;
       padding-top: 4px;
+      max-width: 20%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     .el-menu--horizontal > .el-menu-item.is-active {
       color: #00a5a7 !important;

@@ -367,9 +367,21 @@
       "content12": "- MindSpore对该网络的流切分策略；",
       "content13": "- 算子在Device上的执行序列和执行时长。",
       "title2": "如何查看时间线：",
-      "content21": "要查看时间线的详细信息，您可以点击 \"下载\" 按钮将带有时间线信息的文件保存到本地，再通过工具查看。",
+      "content21": {
+        "part1": "要查看时间线的详细信息，您可以点击 \"",
+        "part2": "下载",
+        "part3": "\" 按钮将带有时间线信息的文件保存到本地，再通过工具查看。"
+      },
       "content22": "我们推荐您使用谷歌插件：chrome://tracing，或 Perfetto工具：https://ui.perfetto.dev/#!/viewer",
-      "content23": "选择一个工具，在浏览器地址栏输入地址并回车，进入页面点击按钮加载文件查看时间线（tracing工具点击左上角 \"load\"，Perfetto工具点击左侧栏 \"Open trace file\"）。",
+      "content23": {
+        "part1": "选择一个工具，在浏览器地址栏输入地址并",
+        "part2": "回车",
+        "part3": "，进入页面点击按钮加载文件查看时间线（tracing工具点击左上角 \"",
+        "part4": "Load",
+        "part5": "\"，Perfetto工具点击左侧栏 \"",
+        "part6": "Open trace file",
+        "part7": "\"）。"
+      },
       "title3": "如何使用时间线：",
       "content31": "您可以通过时间线信息分析流切分方法是否合理、迭代间隙和拖尾时间是否过长等；",
       "content32": "也可以具体定位到某个算子，查看分析它的执行时间。"

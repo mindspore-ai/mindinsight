@@ -23,9 +23,18 @@ import './assets/css/element.css';
 import './assets/css/reset.scss';
 import i18n from './i18n';
 import $ from 'jquery';
+import locale from '../node_modules/element-ui/lib/locale/lang/en';
+import localezh from '../node_modules/element-ui/lib/locale/lang/zh-CN';
 
+if (
+  localStorage.getItem('milang') &&
+  localStorage.getItem('milang') !== 'zh-cn'
+) {
+  Vue.use(ElementUI, {locale});
+} else {
+  Vue.use(ElementUI, {localezh});
+}
 window.$ = window.jQuery = $;
-Vue.use(ElementUI);
 
 Vue.prototype.$bus = new Vue();
 
@@ -46,7 +55,6 @@ router.onError((error) => {
 
 // forbidden showing production tip
 Vue.config.productionTip = false;
-
 
 /**
  * Check the browser version

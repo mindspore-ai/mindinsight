@@ -42,17 +42,17 @@ limitations under the License.
         </el-popover>
         <div class="step"
              v-show="guide.step == 1">
-          <img src="@/assets/images/graph-step1.svg"
+          <img :src="require(`@/assets/images/graph-step1${language === 'en-us' ? '-en' : ''}.svg`)"
                alt="" />
         </div>
         <div class="step"
              v-show="guide.step == 2">
-          <img src="@/assets/images/graph-step2.svg"
+          <img :src="require(`@/assets/images/graph-step2${language === 'en-us' ? '-en' : ''}.svg`)"
                alt="" />
         </div>
         <div class="step"
              v-show="guide.step == 3">
-          <img src="@/assets/images/graph-step3.svg"
+          <img :src="require(`@/assets/images/graph-step3${language === 'en-us' ? '-en' : ''}.svg`)"
                alt="" />
         </div>
       </div>
@@ -492,6 +492,7 @@ export default {
         max: 10000,
         scale: {x: 1, y: 1},
       },
+      language: '',
     };
   },
   computed: {},
@@ -528,6 +529,7 @@ export default {
     }
 
     this.trainJobID = this.$route.query.train_id;
+    this.language = localStorage.getItem('milang') || 'zh-cn';
     document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t(
         'graph.titleText',
     )}-MindInsight`;
