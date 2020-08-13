@@ -1,5 +1,7 @@
 # MindInsight Profiler Introduction
 
+[查看中文](./README_CN.md)
+
 MindInsight Profiler is a performance analysis tool for MindSpore. It can help to analyse and optimize the performance of the neural networks.
 
 The Profiler enables users to:
