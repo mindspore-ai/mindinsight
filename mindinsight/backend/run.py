@@ -14,18 +14,17 @@
 # ============================================================================
 """Web service entrance."""
 import os
-import stat
 import re
+import shlex
+import socket
+import stat
 import subprocess
 import time
-import shlex
 
 from gunicorn.glogging import Logger
-
 from mindinsight.backend.config import WEB_CONFIG_DIR
 from mindinsight.conf import settings
 from mindinsight.utils.log import setup_logger
-
 
 MINDBOARD_APP_MODULE = "mindinsight.backend.application:APP"
 GUNICORN_LOGGER = "mindinsight.backend.run.GunicornLogger"
@@ -210,6 +209,22 @@ class GunicornLogger(Logger):
         os.chmod(error_log_path, stat.S_IREAD | stat.S_IWRITE)
 
 
+def _get_all_ip_addresses(host):
+    """Get all the accessible IP address."""
+
+    localhost, hostname = '127.0.0.1', socket.gethostname()
+    _, _, ip_addresses = socket.gethostbyname_ex(hostname)
+    if localhost in ip_addresses:
+        ip_addresses.remove(localhost)
+    yield localhost
+    if host == localhost:
+        return
+    if host not in ip_addresses:
+        yield from ip_addresses
+    else:
+        yield host
+
+
 def start():
     """Start web service."""
     errorlog_abspath = _get_error_log_path()
@@ -251,7 +266,11 @@ def start():
     else:
         state_result = _check_server_start_stat(errorlog_abspath, log_size)
         # print gunicorn start state to stdout
-        console.info('Web address: http://%s:%s%s', settings.HOST, settings.PORT, settings.URL_PATH_PREFIX)
+        label = 'Web address:'
+        for ip in _get_all_ip_addresses(settings.HOST):
+            format_args = label, ip, str(settings.PORT), settings.URL_PATH_PREFIX
+            console.info('%s http://%s:%s%s', *format_args)
+            label = '.' * len(label)
         for line in state_result["prompt_message"]:
             console.info(line)
 
