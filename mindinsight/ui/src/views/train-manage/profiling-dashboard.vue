@@ -477,7 +477,7 @@ export default {
     // Monitor current card information
     '$parent.curDashboardInfo': {
       handler(newValue, oldValue) {
-        if (newValue.curCardNum === '') {
+        if (newValue.initOver) {
           this.pieChart.noData = true;
           this.svg.noData = true;
           this.svg.initOver = true;
@@ -485,7 +485,7 @@ export default {
           this.timelineInfo.initOver = true;
           this.processSummary.initOver = true;
         }
-        if (newValue.query.dir && newValue.query.id && newValue.query.path) {
+        if (newValue.query.dir && newValue.query.id && newValue.query.path && newValue.curCardNum) {
           this.summaryPath = newValue.query.dir;
           this.trainingJobId = newValue.query.id;
           this.relativePath = newValue.query.path;

@@ -77,6 +77,7 @@ export default {
         // Current Select card info
         curCardNum: '',
         query: {},
+        initOver: false,
       },
     };
   },
@@ -137,7 +138,9 @@ export default {
               this.curDashboardInfo.curCardNum = '';
             }
           })
-          .catch(() => {});
+          .catch(() => {
+            this.curDashboardInfo.initOver = true;
+          });
     },
     /**
      * Get profile helper data

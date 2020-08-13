@@ -246,7 +246,8 @@ export default {
             val.initOver = false;
           });
           this.init();
-        } else {
+        }
+        if (newValue.initOver) {
           this.svg.initOver = true;
           this.tabsArr.forEach((val) => {
             val.initOver = true;

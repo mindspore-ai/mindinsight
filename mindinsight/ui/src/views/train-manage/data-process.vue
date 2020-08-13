@@ -417,7 +417,8 @@ export default {
           } else {
             this.queryAverageRate();
           }
-        } else {
+        }
+        if (newValue.initOver) {
           this.connectQueueChart.initOver = true;
           this.dataQueueChart.initOver = true;
           this.deviceQueueOpChart.initOver = true;
