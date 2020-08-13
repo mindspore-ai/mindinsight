@@ -36,8 +36,10 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
         list, the device_id list.
     """
     profiler_file_prefix = ["timeline_display", "output_op_compute_time"]
+    gpu_profiler_file_prefix = ["gpu_op_detail_info", "gpu_activity_data", "gpu_op_type_info"]
 
     device_id_list = set()
+    gpu_device_id_list = set()
     for _, _, filenames in os.walk(profiler_dir):
         for filename in filenames:
             if filename.startswith("step_trace_raw"):
@@ -51,8 +53,19 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
 
             if device_num.isdigit() and '_'.join(items[:-1]) in profiler_file_prefix:
                 device_id_list.add(device_num)
+            elif device_num.isdigit() and '_'.join(items[:-1]) in gpu_profiler_file_prefix:
+                gpu_device_id_list.add(device_num)
 
-    return sorted(list(device_id_list))
+    if device_id_list:
+        result_list = sorted(list(device_id_list))
+        profiler_type = "ascend"
+    elif gpu_device_id_list:
+        result_list = sorted(list(gpu_device_id_list))
+        profiler_type = "gpu"
+    else:
+        result_list = []
+        profiler_type = ""
+    return result_list, profiler_type
 
 
 def query_latest_trace_time_file(profiler_dir, device_id=0):

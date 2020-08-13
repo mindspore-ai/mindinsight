@@ -114,7 +114,7 @@ def get_profile_device_list():
     except ValidationError:
         raise ParamValueError("Invalid profiler dir")
 
-    device_list = analyse_device_list_from_profiler_dir(profiler_dir_abs)
+    device_list, _ = analyse_device_list_from_profiler_dir(profiler_dir_abs)
     return jsonify(device_list)
 
 

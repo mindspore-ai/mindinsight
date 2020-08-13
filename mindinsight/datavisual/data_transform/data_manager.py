@@ -59,14 +59,17 @@ class _BasicTrainJob:
         create_time (DateTime): The create time of summary directory.
         update_time (DateTime): The latest modify time of summary files directly in the summary directory.
         profiler_dir (str): The relative path of profiler directory.
+        profiler_type (str): The profiler device type.
     """
-    def __init__(self, train_id, abs_summary_base_dir, abs_summary_dir, create_time, update_time, profiler_dir):
+    def __init__(self, train_id, abs_summary_base_dir, abs_summary_dir, create_time, update_time, profiler_dir,
+                 profiler_type=""):
         self._train_id = train_id
         self._abs_summary_base_dir = abs_summary_base_dir
         self._abs_summary_dir = abs_summary_dir
         self._create_time = create_time
         self._update_time = update_time
         self._profiler_dir = profiler_dir
+        self._profiler_type = profiler_type
 
     @property
     def abs_summary_dir(self):
@@ -97,6 +100,11 @@ class _BasicTrainJob:
     def update_time(self):
         """Get update time."""
         return self._update_time
+
+    @property
+    def profiler_type(self):
+        """Get profiler type"""
+        return self._profiler_type
 
 
 class CachedTrainJob:
@@ -952,6 +960,7 @@ class DataManager:
                 create_time=info['create_time'],
                 update_time=info['update_time'],
                 profiler_dir=None if profiler is None else profiler['directory'],
+                profiler_type="" if profiler is None else profiler['profiler_type'],
             ))
 
         self._brief_cache.update_cache(basic_train_jobs)

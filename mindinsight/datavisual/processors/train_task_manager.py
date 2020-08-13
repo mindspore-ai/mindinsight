@@ -144,6 +144,7 @@ class TrainTaskManager(BaseProcessor):
             update_time=basic_info.update_time.strftime('%Y-%m-%d %H:%M:%S'),
             profiler_dir=basic_info.profiler_dir,
             cache_status=train_job.cache_status.value,
+            profiler_type=basic_info.profiler_type,
         )
 
         if train_job.cache_status == CacheStatus.CACHED:
