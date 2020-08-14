@@ -37,14 +37,15 @@ function loadLocaleMessages() {
 }
 
 /* load default language pack */
+const languageList = ['zh-cn', 'en-us'];
 const langStorge = window.localStorage.getItem('milang');
 let langflag;
 // Check language by default
-if (langStorge) {
+if (langStorge && languageList.includes(langStorge)) {
   langflag = langStorge;
 } else {
   // set Chinese if no default language
-  langflag = 'zh-cn';
+  langflag = languageList[0];
   window.localStorage.setItem('milang', langflag);
 }
 

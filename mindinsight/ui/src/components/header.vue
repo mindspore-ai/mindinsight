@@ -172,12 +172,14 @@ export default {
       set(val) {},
     },
     isChinese() {
-      let isChinese = false;
-      if (
-        localStorage.getItem('milang') &&
-        localStorage.getItem('milang') === 'zh-cn'
-      ) {
-        isChinese = true;
+      let isChinese = true;
+      const languageList = ['zh-cn', 'en-us'];
+      const language = window.localStorage.getItem('milang');
+
+      if (language && languageList.includes(language)) {
+        isChinese = language === languageList[0];
+      } else {
+        window.localStorage.setItem('milang', languageList[0]);
       }
       return isChinese;
     },
