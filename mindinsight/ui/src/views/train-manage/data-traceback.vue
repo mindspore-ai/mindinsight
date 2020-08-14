@@ -256,32 +256,34 @@ limitations under the License.
         </div>
       </div>
     </div>
-    <el-dialog :title="rowName"
-               :visible.sync="detailsDialogVisible"
-               width="50%"
-               :close-on-click-modal="false"
-               class="details-data-list">
-      <div class="details-data-title">{{ detailsDataTitle }}</div>
-      <el-table :data="detailsDataList"
-                row-key="id"
-                lazy
-                tooltip-effect="light"
-                :load="loadDataListChildren"
-                :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
-        <el-table-column width="50" />
-        <el-table-column prop="key"
-                         width="180"
-                         label="Key">
-        </el-table-column>
-        <el-table-column prop="value"
-                         show-overflow-tooltip
-                         label="Value">
-          <template slot-scope="scope">
-            {{ scope.row.value }}
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-dialog>
+    <div v-if="detailsDialogVisible">
+      <el-dialog :title="rowName"
+                 :visible.sync="detailsDialogVisible"
+                 width="50%"
+                 :close-on-click-modal="false"
+                 class="details-data-list">
+        <div class="details-data-title">{{ detailsDataTitle }}</div>
+        <el-table :data="detailsDataList"
+                  row-key="id"
+                  lazy
+                  tooltip-effect="light"
+                  :load="loadDataListChildren"
+                  :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
+          <el-table-column width="50" />
+          <el-table-column prop="key"
+                           width="180"
+                           label="Key">
+          </el-table-column>
+          <el-table-column prop="value"
+                           show-overflow-tooltip
+                           label="Value">
+            <template slot-scope="scope">
+              {{ scope.row.value }}
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-dialog>
+    </div>
     <!-- tag dialog -->
     <div v-show="tagDialogShow"
          id="tag-dialog"
@@ -2228,7 +2230,10 @@ export default {
       }
     }
   }
-
+  .el-dialog {
+    min-width: 500px;
+    padding-bottom: 30px;
+  }
   .details-data-list {
     .el-table td,
     .el-table th.is-leaf {
@@ -2299,6 +2304,7 @@ export default {
     .el-dialog__body {
       max-height: 500px;
       padding-top: 10px;
+      padding-bottom: 0px;
       overflow: auto;
       .details-data-title {
         margin-bottom: 20px;
