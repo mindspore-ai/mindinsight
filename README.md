@@ -1,128 +1,80 @@
-MindInsight provides MindSpore with easy-to-use debugging and tuning capabilities. It 
-enables users to visualize the experiments. The features of MindInsight are as follows.
+[简体中文](./README.md)
 
-- Visualization of training process: 
-
-    Provide visualization of training process information, 
-such as computation graph, training process metrics, etc.
-
-- Traceability of training result: 
-
-    Provide visualization of model parameters information, 
-such as training data, model accuracy, etc.
-
-- Visualization of training performance:
-
-    Provide visualization of training performance information, such as operator execution time,
-data input pipeline performance, etc.
-
-# Index
-
-- [More about MindInsight](#more-about-mindinsight)
+- [Introduction ](#introduction)
 - [Installation](#installation)
 - [QuickStart](#quickstart)
 - [Docs](#docs)
 - [Community](#community)
+    - [Governance](#governance)
+    - [Communication](#communication)
 - [Contributing](#contributing)
 - [Release Notes](#release-notes)
 - [License](#license)
 
-# More about MindInsight
-
-The architecture diagram of MindInsight is illustrated as follows:
-
+## Introduction
+MindInsight provides MindSpore with easy-to-use debugging and tuning capabilities. During the training, data such as scalar, tensor, image, computational graph, model hyper parameter and training’s execution time can be recorded in the file for viewing and analysis through the visual page of MindInsight.
 
 ![MindInsight Architecture](docs/arch.png)
 
+Click to view the [Design document](https://www.mindspore.cn/docs/en/master/design.html)，learn more about the design.
+Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/en/master/advanced_use/visualization_tutorials.html) learn more about the MindInsight tutorial.
 
-## Summary log file
+## Installation
+Download whl package from [MindSpore download page](https://www.mindspore.cn/versions/en), and install the package.
 
-The summary log file consists of a series of operation events. Each event contains 
-the necessary data for visualization.
+```
+pip install -U mindinsight-{version}-cp37-cp37m-linux_{arch}.whl
+```
 
-MindSpore uses the Callback mechanism to record graph, scalar, image and model 
-information into summary log file. 
+For more details on how to install MindInsight, click on the MindInsight section of the [installation tutorial](https://www.mindspore.cn/install/en).
 
-- The scalar and image is recorded by Summary operator.
+## Quick Start
+Before using MindInsight, the data in the training process should be recorded. When starting MindInsight, the directory of the saved data should be specified. After successful startup, the data can be viewed through the web page. Here is a brief introduction to recording training data, as well as starting and stopping MindInsight.
 
-- The computation graph is recorded by SummaryRecord after it was compiled.
+[SummaryCollector](https://www.mindspore.cn/api/en/master/api/python/mindspore/mindspore.train.html?highlight=summarycollector#mindspore.train.callback.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
+```
+...
 
-- The model parameters is recorded by TrainLineage or EvalLineage.
+from mindspore.train.callback import SummaryCollector
+summary_collector = SummaryCollector(summary_dir='./summary_dir')
+model.train(epoch=1, ds_train, callbacks=[summary_collector])
+```
 
-MindInsight provides the capability to analyze summary log files and visualize 
-relative information.
+For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/tutorial/en/master/advanced_use/visualization_tutorials.html).
 
-## Visualization
+After you've collected the data, when you launch MindInsight, specify the directory in which the data has been stored.
+```
+mindinsight start --summary-base-dir ./summary_dir
+```
 
-MindInsight provides users with a full-process visualized GUI during 
-AI development, in order to help model developers to improve the model 
-precision efficiently.
+After successful startup, visit `http://127.0.0.1:8080` through the browser to view the web page.
 
-MindInsight has the following visualization capabilities:
+Command of stopping the MindInsight service:
+```
+mindinsight stop
+```
 
-### Graph visualization
+## Docs
+More details about installation guide, tutorials and APIs, please see the
+[User Documentation](https://gitee.com/mindspore/docs).
 
-The GUI of MindInsight displays the structure of neural network, the data flow and control 
-flow of each operator during the entire training process.
+## Community
+### Governance
+Check out how MindSpore Open Governance [works](https://gitee.com/mindspore/community/blob/master/governance.md).
 
-### Scalar visualization
+### Communication
+- [MindSpore Slack](https://join.slack.com/t/mindspore/shared_invite/zt-dgk65rli-3ex4xvS4wHX7UDmsQmfu8w) - Communication platform for developers.
+- IRC channel at `#mindspore` (only for meeting minutes logging purpose)
+- Video Conferencing: TBD
+- Mailing-list: <https://mailweb.mindspore.cn/postorius/lists>
 
-The GUI of MindInsight displays the change tendency of a specific scalar during the entire 
-training process, such as loss value and accuracy rate of each iteration. 
+## Contributing
+Welcome contributions. See our [Contributor Wiki](https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md) for
+more details.
 
-Two scalar curves can be combined and displayed in one chart. 
-
-### Parameter distribution
-
-The GUI of MindInsight displays the distribution change tendency of a tensor such as weight
-or gradient during the entire training process.
-
-### Image visualization
-
-The GUI of MindInsight displays both original images and enhanced images during the entire 
-training process.
-
-### Model lineage visualization
-
-The GUI of MindInsight displays the parameters and metrics of all models, such as the 
-learning rate, the number of samples and the loss function of each model.
-
-### Dataset Graph visualization
-
-The GUI of MindInsight displays the pipeline of dataset processing and augmentation.
-
-### Dataset Lineage visualization
-
-The GUI of MindInsight displays the parameters and operations of the dataset processing and augmentation.
-
-### Performance visualization
-
-The GUI of MindInsight displays the performance data of the neural networks.
-
-# Installation
-
-See [Install MindInsight](https://www.mindspore.cn/install/en).
-
-# QuickStart
-
-See [guidance](https://www.mindspore.cn/tutorial/en/master/advanced_use/visualization_tutorials.html)
-
-# Docs
-
-See [API Reference](https://www.mindspore.cn/api/en/master/index.html) 
-
-# Community
-
-- [MindSpore Slack](https://join.slack.com/t/mindspore/shared_invite/enQtOTcwMTIxMDI3NjM0LTNkMWM2MzI5NjIyZWU5ZWQ5M2EwMTQ5MWNiYzMxOGM4OWFhZjI4M2E5OGI2YTg3ODU1ODE2Njg1MThiNWI3YmQ) - Communication platform for developers.
-
-# Contributing
-
-Welcome contributions. See our [Contributor Wiki](https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md) for more details.
-
-# Release Notes
-
+## Release Notes
 The release notes, see our [RELEASE](RELEASE.md).
 
-# License
-
+## License
 [Apache License 2.0](LICENSE)
+
