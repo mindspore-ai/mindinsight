@@ -529,7 +529,14 @@ export default {
     }
 
     this.trainJobID = this.$route.query.train_id;
-    this.language = localStorage.getItem('milang') || 'zh-cn';
+
+    this.language = window.localStorage.getItem('milang');
+    const languageList = ['zh-cn', 'en-us'];
+    if (!this.language || !languageList.includes(this.language)) {
+      this.language = languageList[0];
+      window.localStorage.setItem('milang', this.language);
+    }
+
     document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t(
         'graph.titleText',
     )}-MindInsight`;

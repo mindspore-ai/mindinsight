@@ -26,10 +26,14 @@ import $ from 'jquery';
 import locale from 'element-ui/lib/locale/lang/en';
 import localezh from 'element-ui/lib/locale/lang/zh-CN';
 
-if (
-  localStorage.getItem('milang') &&
-  localStorage.getItem('milang') !== 'zh-cn'
-) {
+let language = window.localStorage.getItem('milang');
+const languageList = ['zh-cn', 'en-us'];
+if (!language || !languageList.includes(language)) {
+  language = languageList[0];
+  window.localStorage.setItem('milang', language);
+}
+
+if (language !== languageList[0]) {
   Vue.use(ElementUI, {locale});
 } else {
   Vue.use(ElementUI, {localezh});
