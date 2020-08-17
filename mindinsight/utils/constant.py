@@ -32,6 +32,7 @@ class MindInsightModules(Enum):
     PROFILERMGR = 6
     SCRIPTCONVERTER = 7
     SYSMETRIC = 8
+    WIZARD = 9
 
 
 class GeneralErrors(Enum):
@@ -84,3 +85,7 @@ class ScriptConverterErrors(Enum):
 class SysmetricErrors(Enum):
     """Enum definition for sysmetric errors."""
     DSMI_QUERYING_NONZERO = 1
+
+
+class WizardErrors(Enum):
+    """Enum definition for mindwizard errors."""
