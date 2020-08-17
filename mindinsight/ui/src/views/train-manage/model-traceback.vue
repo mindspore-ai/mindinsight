@@ -365,6 +365,8 @@ export default {
   watch: {},
   data() {
     return {
+      sortChangeTimer: null,
+      unhideRecordsTimer: null,
       tagDialogShow: false,
       errorData: true,
       tagScope: {},
@@ -375,6 +377,7 @@ export default {
       // Number of data records returned by the interface.
       recordsNumber: 0,
       showNumber: 0,
+      delayTime: 500,
       showEchartPic: true,
       hideRecord: false,
       hidenDirChecked: [],
@@ -1430,58 +1433,64 @@ export default {
      * Unhide
      */
     unhideRecords() {
-      this.showEchartPic = true;
-      this.$refs.table.clearSelection();
-      this.$store.commit('setHidenDirChecked', []);
-      if (this.hidenDirChecked.length) {
-        this.checkedSummary = [];
-        this.hidenDirChecked = [];
+      if (this.unhideRecordsTimer) {
+        clearTimeout(this.unhideRecordsTimer);
+        this.unhideRecordsTimer = null;
       }
-      const params = {
-        body: {},
-      };
-      const tempParam = {
-        sorted_name: this.sortInfo.sorted_name,
-        sorted_type: this.sortInfo.sorted_type,
-      };
-      this.summaryDirList = this.$store.state.summaryDirList;
-      this.tableFilter.summary_dir = {
-        in: this.summaryDirList,
-      };
-      params.body = Object.assign(
-          params.body,
-          this.chartFilter,
-          tempParam,
-          this.tableFilter,
-      );
-      RequestService.queryLineagesData(params).then(
-          (res) => {
-            if (res && res.data && res.data.object) {
-              this.errorData = false;
-              const list = this.setDataOfModel(res.data.object);
-              this.echart.allData = list;
-              this.echart.brushData = list;
-              this.echart.showData = this.echart.brushData;
-              this.$nextTick(() => {
-                this.resizeChart();
-                this.initChart();
-              });
-              const showList = list.slice(
-                  (this.pagination.currentPage - 1) * this.pagination.pageSize,
-                  this.pagination.currentPage * this.pagination.pageSize,
-              );
-              this.table.data = showList;
-              this.recordsNumber = this.table.data.length;
-              this.showNumber = this.table.data.length;
-              this.pagination.total = res.data.count || 0;
-            } else {
+      this.unhideRecordsTimer = setTimeout(() => {
+        this.showEchartPic = true;
+        this.$refs.table.clearSelection();
+        this.$store.commit('setHidenDirChecked', []);
+        if (this.hidenDirChecked.length) {
+          this.checkedSummary = [];
+          this.hidenDirChecked = [];
+        }
+        const params = {
+          body: {},
+        };
+        const tempParam = {
+          sorted_name: this.sortInfo.sorted_name,
+          sorted_type: this.sortInfo.sorted_type,
+        };
+        this.summaryDirList = this.$store.state.summaryDirList;
+        this.tableFilter.summary_dir = {
+          in: this.summaryDirList,
+        };
+        params.body = Object.assign(
+            params.body,
+            this.chartFilter,
+            tempParam,
+            this.tableFilter,
+        );
+        RequestService.queryLineagesData(params).then(
+            (res) => {
+              if (res && res.data && res.data.object) {
+                this.errorData = false;
+                const list = this.setDataOfModel(res.data.object);
+                this.echart.allData = list;
+                this.echart.brushData = list;
+                this.echart.showData = this.echart.brushData;
+                this.$nextTick(() => {
+                  this.resizeChart();
+                  this.initChart();
+                });
+                const showList = list.slice(
+                    (this.pagination.currentPage - 1) * this.pagination.pageSize,
+                    this.pagination.currentPage * this.pagination.pageSize,
+                );
+                this.table.data = showList;
+                this.recordsNumber = this.table.data.length;
+                this.showNumber = this.table.data.length;
+                this.pagination.total = res.data.count || 0;
+              } else {
+                this.errorData = true;
+              }
+            },
+            (error) => {
               this.errorData = true;
-            }
-          },
-          (error) => {
-            this.errorData = true;
-          },
-      );
+            },
+        );
+      }, this.delayTime);
     },
 
     /**
@@ -1489,56 +1498,62 @@ export default {
      * @param {Object} column current column
      */
     sortChange(column) {
-      this.sortInfo.sorted_name = column.prop;
-      this.sortInfo.sorted_type = column.order;
-      this.recordsNumber = 0;
-      this.showNumber = 0;
-      this.getStoreList();
-      const tempParam = {
-        limit: this.pagination.pageSize,
-        offset: 0,
-        sorted_name: this.sortInfo.sorted_name,
-        sorted_type: this.sortInfo.sorted_type,
-      };
-      const params = {};
-      params.body = Object.assign(
-          {},
-          tempParam,
-          this.tableFilter,
-          this.chartFilter || {},
-      );
-      RequestService.queryLineagesData(params)
-          .then(
-              (res) => {
-                if (res && res.data && res.data.object) {
-                  this.errorData = false;
-                  const list = this.setDataOfModel(res.data.object);
-                  const tempList = list.slice(0, this.pagination.pageSize);
-                  this.recordsNumber = tempList.length;
-                  if (this.hidenDirChecked.length) {
-                    this.hidenDirChecked.forEach((dir) => {
-                      tempList.forEach((item, index) => {
-                        if (item.summary_dir === dir) {
-                          tempList.splice(index, 1);
-                        }
+      if (this.sortChangeTimer) {
+        clearTimeout(this.sortChangeTimer);
+        this.sortChangeTimer = null;
+      }
+      this.sortChangeTimer = setTimeout(() => {
+        this.sortInfo.sorted_name = column.prop;
+        this.sortInfo.sorted_type = column.order;
+        this.recordsNumber = 0;
+        this.showNumber = 0;
+        this.getStoreList();
+        const tempParam = {
+          limit: this.pagination.pageSize,
+          offset: 0,
+          sorted_name: this.sortInfo.sorted_name,
+          sorted_type: this.sortInfo.sorted_type,
+        };
+        const params = {};
+        params.body = Object.assign(
+            {},
+            tempParam,
+            this.tableFilter,
+            this.chartFilter || {},
+        );
+        RequestService.queryLineagesData(params)
+            .then(
+                (res) => {
+                  if (res && res.data && res.data.object) {
+                    this.errorData = false;
+                    const list = this.setDataOfModel(res.data.object);
+                    const tempList = list.slice(0, this.pagination.pageSize);
+                    this.recordsNumber = tempList.length;
+                    if (this.hidenDirChecked.length) {
+                      this.hidenDirChecked.forEach((dir) => {
+                        tempList.forEach((item, index) => {
+                          if (item.summary_dir === dir) {
+                            tempList.splice(index, 1);
+                          }
+                        });
                       });
-                    });
+                    }
+                    this.showNumber = tempList.length;
+                    this.table.data = tempList;
+                    this.pagination.total = res.data.count || 0;
+                    this.pagination.currentPage = 1;
+                  } else {
+                    this.errorData = true;
                   }
-                  this.showNumber = tempList.length;
-                  this.table.data = tempList;
-                  this.pagination.total = res.data.count || 0;
-                  this.pagination.currentPage = 1;
-                } else {
+                },
+                (error) => {
                   this.errorData = true;
-                }
-              },
-              (error) => {
-                this.errorData = true;
-              },
-          )
-          .catch(() => {
-            this.errorData = true;
-          });
+                },
+            )
+            .catch(() => {
+              this.errorData = true;
+            });
+      }, this.delayTime);
     },
 
     /**
@@ -1986,6 +2001,8 @@ export default {
    * Destroy the page
    */
   destroyed() {
+    this.sortChangeTimer = null;
+    this.unhideRecordsTimer = null;
     if (this.checkedSummary.length) {
       const tempList = [];
       this.checkedSummary.forEach((item) => {
