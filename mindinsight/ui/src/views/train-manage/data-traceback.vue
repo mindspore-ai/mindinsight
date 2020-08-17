@@ -338,6 +338,9 @@ import Echarts from 'echarts';
 export default {
   data() {
     return {
+      tableSortTimer: null,
+      showAllTimer: null,
+      unhideTimer: null,
       loading: true,
       errorData: true,
       tagDialogShow: false,
@@ -363,6 +366,7 @@ export default {
       recordsNumber: 0,
       // Number of displayed records.
       showNumber: 0,
+      delayTime: 500,
       selectArrayValue: [],
       customizedColumnOptions: [],
       // Set the type of customized
@@ -852,37 +856,43 @@ export default {
      * Unhide
      */
     unhideRecords() {
-      this.showEchartPic = true;
-      this.$refs.table.clearSelection();
-      if (this.parallelEchart) {
-        this.parallelEchart.clear();
+      if (this.unhideTimer) {
+        clearTimeout(this.unhideTimer);
+        this.unhideTimer = null;
       }
-      this.$store.commit('setHidenDirChecked', []);
-      if (this.hidenDirChecked.length) {
-        this.checkedSummary = [];
-        this.hidenDirChecked = [];
-      }
-      this.checkOptions = [];
-      this.selectArrayValue = [];
-      this.basearr = [];
-      const params = {
-        body: {},
-      };
-      const tempParam = {
-        sorted_name: this.sortInfo.sorted_name,
-        sorted_type: this.sortInfo.sorted_type,
-      };
-      this.summaryDirList = this.$store.state.summaryDirList;
-      this.tableFilter.summary_dir = {
-        in: this.summaryDirList,
-      };
-      params.body = Object.assign(
-          params.body,
-          this.chartFilter,
-          tempParam,
-          this.tableFilter,
-      );
-      this.queryLineagesData(params);
+      this.unhideTimer = setTimeout(() => {
+        this.showEchartPic = true;
+        this.$refs.table.clearSelection();
+        if (this.parallelEchart) {
+          this.parallelEchart.clear();
+        }
+        this.$store.commit('setHidenDirChecked', []);
+        if (this.hidenDirChecked.length) {
+          this.checkedSummary = [];
+          this.hidenDirChecked = [];
+        }
+        this.checkOptions = [];
+        this.selectArrayValue = [];
+        this.basearr = [];
+        const params = {
+          body: {},
+        };
+        const tempParam = {
+          sorted_name: this.sortInfo.sorted_name,
+          sorted_type: this.sortInfo.sorted_type,
+        };
+        this.summaryDirList = this.$store.state.summaryDirList;
+        this.tableFilter.summary_dir = {
+          in: this.summaryDirList,
+        };
+        params.body = Object.assign(
+            params.body,
+            this.chartFilter,
+            tempParam,
+            this.tableFilter,
+        );
+        this.queryLineagesData(params);
+      }, this.delayTime);
     },
     /**
      * Input search filtering in the select module
@@ -1579,22 +1589,28 @@ export default {
      */
     echartShowAllData() {
       // The first page is displayed.
-      this.initOver = false;
-      this.echartNoData = false;
-      this.showEchartPic = true;
-      this.selectCheckAll = true;
-      // checkOptions initializate to an empty array
-      this.checkOptions = [];
-      this.selectArrayValue = [];
-      this.basearr = [];
-      this.pagination.currentPage = 1;
-      this.$store.commit('setSummaryDirList', undefined);
-      this.$store.commit('setSelectedBarList', []);
-      if (this.parallelEchart) {
-        this.parallelEchart.clear();
+      if (this.showAllTimer) {
+        clearTimeout(this.showAllTimer);
+        this.showAllTimer = null;
       }
-      this.$refs.table.clearSelection();
-      this.init();
+      this.showAllTimer = setTimeout(() => {
+        this.initOver = false;
+        this.echartNoData = false;
+        this.showEchartPic = true;
+        this.selectCheckAll = true;
+        // checkOptions initializate to an empty array
+        this.checkOptions = [];
+        this.selectArrayValue = [];
+        this.basearr = [];
+        this.pagination.currentPage = 1;
+        this.$store.commit('setSummaryDirList', undefined);
+        this.$store.commit('setSelectedBarList', []);
+        if (this.parallelEchart) {
+          this.parallelEchart.clear();
+        }
+        this.$refs.table.clearSelection();
+        this.init();
+      }, this.delayTime);
     },
 
     /**
@@ -1649,25 +1665,31 @@ export default {
      * @param {Object} data
      */
     tableSortChange(data) {
-      this.sortInfo.sorted_name = data.prop;
-      this.sortInfo.sorted_type = data.order;
-      const params = {};
-      const tempParam = {
-        sorted_name: data.prop,
-        sorted_type: data.order,
-      };
-      this.checkOptions = [];
-      this.selectArrayValue = [];
-      this.basearr = [];
-      this.pagination.currentPage = 1;
-      this.summaryDirList = this.$store.state.summaryDirList;
-      if (this.summaryDirList) {
-        this.tableFilter.summary_dir = {in: this.summaryDirList};
-      } else {
-        this.tableFilter.summary_dir = undefined;
+      if (this.tableSortTimer) {
+        clearTimeout(this.tableSortTimer);
+        this.tableSortTimer = null;
       }
-      params.body = Object.assign({}, tempParam, this.tableFilter);
-      this.queryLineagesData(params);
+      this.tableSortTimer = setTimeout(() => {
+        this.sortInfo.sorted_name = data.prop;
+        this.sortInfo.sorted_type = data.order;
+        const params = {};
+        const tempParam = {
+          sorted_name: data.prop,
+          sorted_type: data.order,
+        };
+        this.checkOptions = [];
+        this.selectArrayValue = [];
+        this.basearr = [];
+        this.pagination.currentPage = 1;
+        this.summaryDirList = this.$store.state.summaryDirList;
+        if (this.summaryDirList) {
+          this.tableFilter.summary_dir = {in: this.summaryDirList};
+        } else {
+          this.tableFilter.summary_dir = undefined;
+        }
+        params.body = Object.assign({}, tempParam, this.tableFilter);
+        this.queryLineagesData(params);
+      }, this.delayTime);
     },
 
     /**
@@ -1946,6 +1968,9 @@ export default {
    * Destroy the page
    */
   destroyed() {
+    this.tableSortTimer = null;
+    this.showAllTimer = null;
+    this.unhideTimer = null;
     if (this.dataCheckedSummary && this.dataCheckedSummary.length) {
       const summaryDirList = [];
       this.dataCheckedSummary.forEach((item) => {
