@@ -16,7 +16,6 @@
 import os
 import re
 import shlex
-import socket
 import stat
 import subprocess
 import time
@@ -212,17 +211,20 @@ class GunicornLogger(Logger):
 def _get_all_ip_addresses(host):
     """Get all the accessible IP address."""
 
-    localhost, hostname = '127.0.0.1', socket.gethostname()
-    _, _, ip_addresses = socket.gethostbyname_ex(hostname)
-    if localhost in ip_addresses:
-        ip_addresses.remove(localhost)
-    yield localhost
-    if host == localhost:
+    yield host
+    if host == '127.0.0.1':
         return
-    if host not in ip_addresses:
-        yield from ip_addresses
-    else:
-        yield host
+    # The format of the environment variable SSH_CONNECTION is:
+    #     '<client_ip> <client_port> <server_ip> <server_port>'
+    connection = os.getenv('SSH_CONNECTION', '')
+    if len(connection) > 128:
+        # The length should be less than 128 bytes, or the variable may be corruped.
+        # And 128 bytes should be enough to hold two IPs and two ports.
+        return
+    connection = connection.split()
+    if len(connection) == 4 and connection[2] != host:
+        # 'connection' should hold 4 components and '<server_ip>' should be in index 2.
+        yield connection[2]
 
 
 def start():
