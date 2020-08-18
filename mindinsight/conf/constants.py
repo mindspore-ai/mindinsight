@@ -51,7 +51,7 @@ def _calc_default_max_processes_cnt():
 LOG_FORMAT = '[%(levelname)s] MI(%(process)d:%(thread)d,%(processName)s):%(asctime)s ' \
              '[%(filepath)s:%(lineno)d][%(sub_module)s] %(message)s'
 
-GUNICORN_ACCESS_FORMAT = "'%(h)s <%(r)s> %(s)s %(b)s <%(f)s> <%(a)s> %(D)s'"
+GUNICORN_ACCESS_FORMAT = "'%(t)s %(h)s <%(r)s> %(s)s %(b)s <%(f)s> <%(a)s> %(L)s '"
 
 LOG_LEVEL = logging.INFO
 # rotating max bytes, default is 50M

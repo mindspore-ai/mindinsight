@@ -32,10 +32,10 @@ timeout = 30
 graceful_timeout = 30
 daemon = False
 
-captureoutput = True
+captureoutput = False
 
-# write gunicorn default log to stream, and using mindinsight logger write gunicorn log to file.
-accesslog = '-'
+# write gunicorn default log to devnull, and using mindinsight logger write gunicorn log to file.
+accesslog = os.devnull
 
 
 def on_starting(server):

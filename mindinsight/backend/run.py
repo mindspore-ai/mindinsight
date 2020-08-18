@@ -199,13 +199,17 @@ class GunicornLogger(Logger):
     """Rewrite gunicorn default logger."""
 
     def __init__(self, cfg):
-        self.access_log = setup_logger('gunicorn', 'access')
-        self.error_log = setup_logger('gunicorn', 'error')
-        super(GunicornLogger, self).__init__(cfg)
+        self.cfg = cfg
+        self.access_log = setup_logger('gunicorn', 'access', formatter='%(message)s')
+        self.error_log = setup_logger('gunicorn', 'error', formatter=self.error_fmt)
         access_log_path = _get_access_log_path()
         error_log_path = _get_error_log_path()
         os.chmod(access_log_path, stat.S_IREAD | stat.S_IWRITE)
         os.chmod(error_log_path, stat.S_IREAD | stat.S_IWRITE)
+
+    def now(self):
+        """return Log Format"""
+        return time.strftime('[%Y-%m-%d-%H:%M:%S %z]')
 
 
 def _get_all_ip_addresses(host):
@@ -255,7 +259,7 @@ def start():
         shell=False,
         # Change stdout to DEVNULL to prevent broken pipe error when creating new processes.
         stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
+        stdout=None,
         stderr=subprocess.STDOUT
     )
 
