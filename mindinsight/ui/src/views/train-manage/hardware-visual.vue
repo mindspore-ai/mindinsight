@@ -80,7 +80,7 @@ limitations under the License.
                     <i class="el-icon-success"
                        v-if="scope.row.available"
                        :title="$t('hardwareVisual.availableFree')"></i>
-                    <i class="el-icon-question"
+                    <i class="available-fail"
                        :title="$t('hardwareVisual.availableBusy')"
                        v-else></i>
                   </span>
@@ -799,8 +799,12 @@ export default {
         .cl-chip-wrap {
           height: calc(100% - 36px);
           overflow: auto;
-          .el-icon-question::before {
-            color: #f06281;
+          .available-fail{
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 12px;
+            background: #ffaa00;
           }
           .el-icon-success:before {
             color: #57d7ac;
