@@ -1,20 +1,17 @@
-### Introduction
+﻿# MindConverter Documents
+
+[查看中文](./README_CN.md)
+
+## Introduction
 
 MindConverter is a tool that converting PyTorch scripts to MindSpore scripts. With minial manual editing and the guidance from conversion reports, users may easily migrate their model from PyTorch framework to MindSpore.
 
-
-
-### Installation
+## Installation
 
 This tool is part of MindInsight and accessible to users after installing MindInsight, no extra installation is needed.
 
-### Commandline Usage
-Set the model scripts directory as the PYTHONPATH environment variable first: 
-```buildoutcfg
-export PYTHONPATH=<model scripts dir>
-```
+## Commandline Usage
 
-mindconverter commandline usage:
 ```buildoutcfg
 mindconverter [-h] [--version] --in_file IN_FILE [--output OUTPUT]
               [--report REPORT]
@@ -29,7 +26,7 @@ optional arguments:
                      directorys
 ```
 
-#### Use example:
+## Use example
 
 We have a collection of PyTorch model scripts
 ```buildoutcfg
@@ -39,9 +36,8 @@ models
 lenet.py resnet.py vgg.py
 ```
 
-Then we set the PYTHONPATH environment variable and convert alexnet.py
+Then convert lenet.py
 ```buildoutcfg
-~$ export PYTHONPATH=~/models
 ~$ mindconverter --in_file models/lenet.py
 ```
 
@@ -56,21 +52,21 @@ lenet.py
 Please checkout [models/lenet.py](../../tests/st/func/mindconverter/data/lenet_script.py) and [output/lenet.py](../../tests/st/func/mindconverter/data/lenet_converted.py) as the input/output example representatively.
 Since the conversion is not 100% flawless, we encourage users to checkout the report when fixing issues of the converted script.
 
+## Unsupported Situation1
 
-### Unsupported Situation #1
 Classes and functions that can't be converted:
+
 * The use of shape, ndim and dtype member of torch.Tensor.
 * torch.nn.AdaptiveXXXPoolXd and torch.nn.functional.adaptive_XXX_poolXd()
 * torch.nn.functional.Dropout
 * torch.unsqueeze() and torch.Tensor.unsqueeze()
 * torch.chunk() and torch.Tensor.chunk()
 
-### Unsupported Situation #2
+## Unsupported Situation2
 
 Subclassing from the subclasses of nn.Module
 
 e.g. (code snip from torchvision.models.mobilenet)
-
 ```python
 from torch import nn
 
