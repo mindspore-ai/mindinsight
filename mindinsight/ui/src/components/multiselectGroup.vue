@@ -500,7 +500,7 @@ export default {
     user-select: none;
   }
   .search-input-item {
-    width: 261px;
+    width: 290px;
   }
 }
 .tooltip-show-content {

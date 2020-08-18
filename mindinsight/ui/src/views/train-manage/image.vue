@@ -29,8 +29,8 @@ limitations under the License.
       <!-- Selecting an operation area -->
       <div class="cl-img-operate-content">
         <multiselectGroupComponents ref="multiselectGroupComponents"
-                             :checkListArr="tagOperateList"
-                             @selectedChange="tagSelectedChanged"></multiselectGroupComponents>
+                                    :checkListArr="tagOperateList"
+                                    @selectedChange="tagSelectedChanged"></multiselectGroupComponents>
       </div>
       <!-- Sliding block area -->
       <div class="cl-img-slider-operate-content">
@@ -229,7 +229,10 @@ export default {
       document.title = this.$t('images.titleText') + '-MindInsight';
       return;
     }
-    document.title = decodeURIComponent(this.$route.query.train_id) +'-' + this.$t('images.titleText') +
+    document.title =
+      decodeURIComponent(this.$route.query.train_id) +
+      '-' +
+      this.$t('images.titleText') +
       '-MindInsight';
     this.getTagList();
     // Automatic refresh
@@ -367,9 +370,9 @@ export default {
                     sampleItem.curImgUrl =
                   `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
                   `&tag=${sampleItem.tagName}&step=${curSampleData.step}&wt=${curSampleData.wall_time}`;
-                    sampleItem.curTime = this.dealrelativeTime(new Date(
-                        curSampleData.wall_time * 1000,
-                    ).toString());
+                    sampleItem.curTime = this.dealrelativeTime(
+                        new Date(curSampleData.wall_time * 1000).toString(),
+                    );
                     sampleItem.curImageSize = [
                       curSampleData.width,
                       curSampleData.height,
@@ -407,9 +410,9 @@ export default {
       sampleItem.curImgUrl =
         `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
         `&tag=${sampleItem.tagName}&step=${curStepData.step}&wt=${curStepData.wall_time}`;
-      sampleItem.curTime = this.dealrelativeTime(new Date(
-          curStepData.wall_time * 1000,
-      ).toString());
+      sampleItem.curTime = this.dealrelativeTime(
+          new Date(curStepData.wall_time * 1000).toString(),
+      );
       sampleItem.curImageSize = [curStepData.width, curStepData.height];
     },
     /**
@@ -862,7 +865,7 @@ export default {
     }
   }
   .search-input-item {
-    width: 261px;
+    width: 290px;
   }
   .cl-close-btn {
     width: 20px;
