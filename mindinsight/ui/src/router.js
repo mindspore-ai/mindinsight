@@ -80,25 +80,24 @@ export default new Router({
     },
     {
       path: '/profiling',
-      component: () => import('./views/train-manage/profiling.vue'),
+      component: () => import('./views/profiling/profiling.vue'),
       redirect: '/profiling/profiling-dashboard',
       children: [
         {
           path: 'profiling-dashboard',
-          component: () =>
-            import('./views/train-manage/profiling-dashboard.vue'),
+          component: () => import('./views/profiling/profiling-dashboard.vue'),
         },
         {
           path: 'step-trace',
-          component: () => import('./views/train-manage/step-trace.vue'),
+          component: () => import('./views/profiling/step-trace.vue'),
         },
         {
           path: 'operator',
-          component: () => import('./views/train-manage/operator.vue'),
+          component: () => import('./views/profiling/operator.vue'),
         },
         {
           path: 'data-process',
-          component: () => import('./views/train-manage/data-process.vue'),
+          component: () => import('./views/profiling/data-process.vue'),
         },
       ],
     },

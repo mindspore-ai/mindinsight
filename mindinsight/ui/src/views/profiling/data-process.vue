@@ -902,7 +902,9 @@ export default {
             xAxis: {
               name: `${this.$t('profiling.sampleInterval')}/${
                 data.sample_interval
-              }ms`,
+              }ms`
+                  .split(' ')
+                  .join('\n'),
               data: dataY.map((val, index) => index + 1),
             },
             yAxis: {

@@ -122,20 +122,19 @@ export default {
       };
       RequestService.getProfilerDeviceData(params)
           .then((res) => {
-            if (res && res.data) {
+            if (res && res.data && res.data.length) {
               const deviceList = res.data;
-              if (deviceList.length) {
-                deviceList.forEach((item) => {
-                  this.CardNumArr.push({
-                    value: item,
-                  });
+              deviceList.forEach((item) => {
+                this.CardNumArr.push({
+                  value: item,
                 });
-                this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
-                this.getDataOfProfileHelper();
-              }
+              });
+              this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
+              this.getDataOfProfileHelper();
             } else {
               this.CardNumArr = [];
               this.curDashboardInfo.curCardNum = '';
+              this.curDashboardInfo.initOver = true;
             }
           })
           .catch(() => {
