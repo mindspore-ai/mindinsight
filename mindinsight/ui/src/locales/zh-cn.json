@@ -236,6 +236,8 @@
     "profilingDashboard": "性能看板",
     "showAverage": "展示平均值",
     "iterationGapTime": "迭代间隙时间",
+    "fpBpTime": "前向+反向时间",
+    "tailTime": "迭代拖尾时间",
     "time": "时间",
     "operatorTimeConAnalysis": "算子耗时分析",
     "avgCost": "平均总耗时：",

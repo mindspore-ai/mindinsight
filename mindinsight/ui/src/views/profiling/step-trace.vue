@@ -30,7 +30,9 @@ limitations under the License.
                     v-model.number="steps.step"
                     :disabled="steps.disabled"
                     @blur="resetStep"
-                    @keyup.native.enter="changeStep">
+                    @keyup.native.enter="changeStep"
+                    @clear="clearStep"
+                    clearable>
           </el-input>
           <el-button @click="changeStep"
                      :disabled="steps.disabled">
@@ -320,8 +322,17 @@ export default {
      */
     resetStep() {
       setTimeout(() => {
-        this.steps.step = this.steps.trueStep;
+        if (!this.$refs.step.focused) {
+          this.steps.step = this.steps.trueStep;
+        }
       }, 200);
+    },
+    /**
+     * Clear the current step value
+     */
+    clearStep() {
+      this.steps.step = null;
+      this.$refs.step.focus();
     },
     /**
      * Get different types of time information
@@ -380,7 +391,8 @@ export default {
                     type: 'value',
                     name: '',
                     nameTextStyle: {
-                      padding: [0, 0, 0, 30],
+                      padding: [0, 0, 0, -30],
+                      align: 'left',
                     },
                   },
                   grid: {
@@ -411,15 +423,11 @@ export default {
                   this.tabsArr[0].noData = this.steps.max ? false : true;
                   this.tabsArr[0].initOver = true;
                 } else if (type === 'fp_and_bp') {
-                  option.yAxis.name = `${this.$t(
-                      'profiling.deviceQueueOpTip',
-                  )}${this.$t('profiling.time')}(ms)`;
+                  option.yAxis.name = `${this.$t('profiling.fpBpTime')}(ms)`;
                   this.tabsArr[1].noData = this.steps.max ? false : true;
                   this.tabsArr[1].initOver = true;
                 } else if (type === 'tail') {
-                  option.yAxis.name = `${this.$t(
-                      'profiling.lterationTail',
-                  )}${this.$t('profiling.time')}(ms)`;
+                  option.yAxis.name = `${this.$t('profiling.tailTime')}(ms)`;
                   this.tabsArr[2].noData = this.steps.max ? false : true;
                   this.tabsArr[2].initOver = true;
                 }
@@ -986,6 +994,7 @@ export default {
       .chart {
         height: calc(100% - 85px);
         min-height: 180px;
+        min-width: 250px;
         overflow: hidden;
       }
       .title {

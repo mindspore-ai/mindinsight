@@ -108,8 +108,13 @@ limitations under the License.
                                        :sortable="ele === 'op_info' ? false : 'custom'"
                                        :width="(ele==='avg_execution_time'|| ele==='subgraph' ||
                                         ele==='op_name'|| ele==='op_type')?'220':''"
-                                       show-overflow-tooltip
-                                       :label="ele==='avg_execution_time'?`${ele} (${$t('profiling.unit')})`:ele">
+                                       show-overflow-tooltip>
+                        <template slot="header">
+                          <div class="custom-label"
+                               :title="ele==='avg_execution_time'?`${ele} (${$t('profiling.unit')})`:ele">
+                            {{ele==='avg_execution_time'?`${ele} (${$t('profiling.unit')})`:ele}}
+                          </div>
+                        </template>
                       </el-table-column>
                     </el-table>
                     <el-pagination :current-page="props.row.opDetailPage.offset + 1"
@@ -125,8 +130,13 @@ limitations under the License.
               <el-table-column v-for="(item, $index) in opTypeCol"
                                :property="item"
                                :key="$index"
-                               sortable
-                               :label="item==='execution_time'?`${item} (${$t('profiling.unit')})`:item">
+                               sortable>
+                <template slot="header">
+                  <div class="custom-label"
+                       :title="item==='execution_time'?`${item} (${$t('profiling.unit')})`:item">
+                    {{item==='execution_time'?`${item} (${$t('profiling.unit')})`:item}}
+                  </div>
+                </template>
               </el-table-column>
             </el-table>
             <el-table v-show="statisticType && opAllTypeList.opDetailCol && opAllTypeList.opDetailCol.length"
@@ -141,11 +151,16 @@ limitations under the License.
               <el-table-column v-for="(item, $index) in opAllTypeList.opDetailCol"
                                :property="item"
                                :key="$index"
-                               :label="item==='avg_execution_time'?`${item} (${$t('profiling.unit')})`:item"
                                :sortable="item === 'op_info' ? false : 'custom'"
                                :width="(item==='avg_execution_time'|| item==='subgraph' ||
                                 item==='op_name'|| item==='op_type')?'220':''"
                                show-overflow-tooltip>
+                <template slot="header">
+                  <div class="custom-label"
+                       :title="item==='avg_execution_time'?`${item} (${$t('profiling.unit')})`:item">
+                    {{item==='avg_execution_time'?`${item} (${$t('profiling.unit')})`:item}}
+                  </div>
+                </template>
               </el-table-column>
             </el-table>
             <el-pagination v-show="statisticType"
@@ -204,10 +219,16 @@ limitations under the License.
               <el-table-column v-for="(item, $index) in opCpuList.opDetailCol"
                                :property="item"
                                :key="$index"
-                               :label="(item==='total_time' || item==='dispatch_time')?
-                               `${item} (${$t('profiling.unit')})`:item"
                                sortable="custom"
                                show-overflow-tooltip>
+                <template slot="header">
+                  <div class="custom-label"
+                       :title="(item==='total_time' || item==='dispatch_time')?
+                               `${item} (${$t('profiling.unit')})`:item">
+                    {{(item==='total_time' || item==='dispatch_time')?
+                               `${item} (${$t('profiling.unit')})`:item}}
+                  </div>
+                </template>
               </el-table-column>
             </el-table>
             <el-pagination v-if="opCpuList.opDetailList.length"
@@ -829,6 +850,7 @@ export default {
      */
     setOption(chart) {
       const option = {};
+      const maxLabelLength = 20;
       if (!chart.type) {
         option.legend = {
           data: [],
@@ -885,13 +907,18 @@ export default {
         option.series = [
           {
             type: 'pie',
-            center: ['25%', '65%'],
+            center: ['23%', '60%'],
             data: chart.data,
             radius: '50%',
-            lable: {
+            label: {
               position: 'outer',
-              alignTo: 'none',
-              bleedMargin: 5,
+              alignTo: 'labelLine',
+              formatter: (params) => {
+                return params.data.name &&
+                  params.data.name.length > maxLabelLength
+                  ? `${params.data.name.slice(0, maxLabelLength)}...`
+                  : params.data.name;
+              },
             },
             itemStyle: {
               normal: {
@@ -1111,6 +1138,11 @@ export default {
   background: #fff;
   padding: 0 16px;
   overflow: hidden;
+  .custom-label {
+    max-width: calc(100% - 25px);
+    padding: 0;
+    vertical-align: middle;
+  }
   .el-tabs {
     height: 100%;
     .el-tabs__header {

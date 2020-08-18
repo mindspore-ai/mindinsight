@@ -273,6 +273,7 @@ limitations under the License.
           <p v-show="!pieChart.initOver">{{$t("public.dataLoading")}}</p>
           <p v-show="pieChart.initOver">{{$t("public.noData")}}</p>
         </div>
+
         <div class="op-time-content">
           <div id="pieChart"
                class="pie-chart"
@@ -358,7 +359,6 @@ limitations under the License.
           <div class="info-line">
             <span>{{$t('profiling.opTimes')}}</span><span>{{timelineInfo.opTimes + $t('profiling.times')}}</span>
           </div>
-
         </div>
         <div class="image-noData"
              v-if="timelineInfo.noData">
@@ -369,6 +369,7 @@ limitations under the License.
           <p v-show="!timelineInfo.initOver">{{$t("public.dataLoading")}}</p>
           <p v-show="timelineInfo.initOver">{{$t("public.noData")}}</p>
         </div>
+
       </div>
     </div>
   </div>
@@ -485,7 +486,12 @@ export default {
           this.timelineInfo.initOver = true;
           this.processSummary.initOver = true;
         }
-        if (newValue.query.dir && newValue.query.id && newValue.query.path && newValue.curCardNum) {
+        if (
+          newValue.query.dir &&
+          newValue.query.id &&
+          newValue.query.path &&
+          newValue.curCardNum
+        ) {
           this.summaryPath = newValue.query.dir;
           this.trainingJobId = newValue.query.id;
           this.relativePath = newValue.query.path;
@@ -1114,13 +1120,17 @@ export default {
             this.timelineInfo.initOver = true;
             if (res && res.data) {
               this.timelineInfo.noData = false;
-              this.timelineInfo.totalTime = this.toFixedFun(
-                  res.data.total_time,
-                  4,
-              );
-              this.timelineInfo.streamNum = res.data.num_of_streams;
-              this.timelineInfo.opNum = res.data.num_of_ops;
-              this.timelineInfo.opTimes = res.data.op_exe_times;
+
+              this.timelineInfo.totalTime =
+              this.toFixedFun(res.data.total_time, 4) ||
+              (res.data.total_time === 0 ? 0 : '--');
+              this.timelineInfo.streamNum =
+              res.data.num_of_streams ||
+              (res.data.num_of_streams === 0 ? 0 : '--');
+              this.timelineInfo.opNum =
+              res.data.num_of_ops || (res.data.num_of_ops === 0 ? 0 : '--');
+              this.timelineInfo.opTimes =
+              res.data.op_exe_times || (res.data.op_exe_times === 0 ? 0 : '--');
             } else {
               this.timelineInfo.noData = true;
             }
