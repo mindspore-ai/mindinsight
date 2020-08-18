@@ -17,16 +17,19 @@ import mindspore.nn as nn
 from mindspore.common.initializer import TruncatedNormal
 from mindspore.ops import operations as P
 
+
 def conv(in_channels, out_channels, kernel_size, stride=1, padding=0, pad_mode="valid"):
     weight = weight_variable()
     return nn.Conv2d(in_channels, out_channels,
                      kernel_size=kernel_size, stride=stride, padding=padding,
                      weight_init=weight, has_bias=False, pad_mode=pad_mode)
 
+
 def fc_with_initialize(input_channels, out_channels):
     weight = weight_variable()
     bias = weight_variable()
     return nn.Dense(input_channels, out_channels, weight, bias)
+
 
 def weight_variable():
     return TruncatedNormal(0.02)

@@ -16,7 +16,7 @@
 
 if [ $# != 2 ] && [ $# != 3 ]
 then
-	echo "Usage: sh run_distribute_train.sh [DATASET_PATH] [MINDSPORE_HCCL_CONFIG_PATH] [PRETRAINED_CKPT_PATH](optional)"
+	echo "Usage: sh run_distribute_train.sh [RANK_TABLE_FILE] [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)"
 exit 1
 fi
 
@@ -31,15 +31,15 @@ get_real_path(){
 PATH1=$(get_real_path $1)
 PATH2=$(get_real_path $2)
 
-if [ ! -d $PATH1 ]
+if [ ! -f $PATH1 ]
 then
-    echo "error: DATASET_PATH=$PATH1 is not a directory"
+    echo "error: RANK_TABLE_FILE=$PATH1 is not a file"
 exit 1
 fi
 
-if [ ! -f $PATH2 ]
+if [ ! -d $PATH2 ]
 then
-    echo "error: MINDSPORE_HCCL_CONFIG_PATH=$PATH2 is not a file"
+    echo "error: DATASET_PATH=$PATH2 is not a directory"
 exit 1
 fi
 
@@ -56,15 +56,15 @@ fi
 
 ulimit -u unlimited
 export DEVICE_NUM=8
-export RANK_SIZE=8
-export MINDSPORE_HCCL_CONFIG_PATH=$PATH2
-export RANK_TABLE_FILE=$PATH2
-rank_start=$((DEVICE_NUM * SERVER_ID))
+export RANK_SIZE=$DEVICE_NUM
+export MINDSPORE_HCCL_CONFIG_PATH=$PATH1
+export RANK_TABLE_FILE=$PATH1
 
-for((i=0; i<DEVICE_NUM; i++))
+start_id=0
+for((i=start_id; i<DEVICE_NUM + start_id; i++))
 do
     export DEVICE_ID=$i
-    export RANK_ID=$((rank_start + i))
+    export RANK_ID=$((i - start_id))
     rm -rf ./train_parallel$i
     mkdir ./train_parallel$i
     cp ../*.py ./train_parallel$i
@@ -75,12 +75,12 @@ do
     env > env.log
     if [ $# == 2 ]
     then
-        python train.py --run_distribute=True --device_num=$DEVICE_NUM --dataset_path=$PATH1 --dataset_sink_mode=False &> log &
+        python train.py --run_distribute=True --device_num=$DEVICE_NUM --dataset_path=$PATH2 --dataset_sink_mode=False &> log &
     fi
 
     if [ $# == 3 ]
     then
-        python train.py --run_distribute=True --device_num=$DEVICE_NUM --dataset_path=$PATH1 --pre_trained=$PATH2 --dataset_sink_mode=False &> log &
+        python train.py --run_distribute=True --device_num=$DEVICE_NUM --dataset_path=$PATH2 --pre_trained=$PATH3 --dataset_sink_mode=False &> log &
     fi
 
     cd ..

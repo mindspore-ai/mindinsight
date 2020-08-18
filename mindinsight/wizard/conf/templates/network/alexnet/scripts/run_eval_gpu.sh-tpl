@@ -61,6 +61,6 @@ cp *.sh ./eval
 cp -r ../src ./eval
 cd ./eval || exit
 env > env.log
-echo "start evaluation for device $DEVICE_ID"
+echo "start evaluation"
 python eval.py --dataset_path=$PATH1 --checkpoint_path=$PATH2 --device_target="GPU" &> log &
 cd ..

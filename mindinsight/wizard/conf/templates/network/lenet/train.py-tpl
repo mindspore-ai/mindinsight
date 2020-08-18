@@ -48,6 +48,7 @@ if __name__ == "__main__":
     if args.device_target == "CPU":
         args.dataset_sink = False
 
+    context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target)
     ckpt_save_dir = './'
     if args.run_distribute:
         if args.device_target == 'Ascend':
@@ -62,7 +63,6 @@ if __name__ == "__main__":
         context.reset_auto_parallel_context()
         context.set_auto_parallel_context(device_num=args.device_num, parallel_mode=ParallelMode.DATA_PARALLEL,
                                           mirror_mean=True)
-    context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target)
 
     data_path = args.dataset_path
     do_train = True
@@ -79,10 +79,10 @@ if __name__ == "__main__":
     {% elif loss=='SoftmaxCrossEntropyExpand' %}
     net_loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
     {% endif %}
-    {% if optimizer=='Lamb' %}
-    net_opt = nn.Lamb(network.trainable_params(), learning_rate=cfg.lr)
-    {% elif optimizer=='Momentum' %}
+    {% if optimizer=='Momentum' %}
     net_opt = nn.Momentum(network.trainable_params(), learning_rate=cfg.lr, momentum=cfg.momentum)
+    {% else %}
+    net_opt = nn.{{ optimizer }}(network.trainable_params(), learning_rate=cfg.lr)
     {% endif %}
     time_cb = TimeMonitor(data_size=ds_train.get_dataset_size())
     config_ck = CheckpointConfig(save_checkpoint_steps=cfg.save_checkpoint_steps,

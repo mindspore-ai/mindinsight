@@ -29,7 +29,7 @@ def render_template(template_file_path, context):
 
 class TemplateManager:
     """BaseNetwork code generator."""
-    replace_template_suffixes = [('.py-tpl', '.py')]
+    replace_template_suffixes = [('.py-tpl', '.py'), ('.sh-tpl', '.sh'), ('.md-tpl', '.md')]
 
     def __init__(self, template_base_dir, exclude_dirs=None, exclude_files=None):
         self.template_base_dir = template_base_dir
@@ -70,7 +70,7 @@ class TemplateManager:
         """Generate the network files."""
         source_files = []
         template_files = self.get_template_files()
-        extensions = tuple(options.get('extensions', '.py'))
+        extensions = tuple([new_extension for _, new_extension in self.replace_template_suffixes])
         for template_file in template_files:
             new_file_path = template_file
             template_file_path = template_file

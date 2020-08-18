@@ -21,4 +21,4 @@ class Network(GenericNetwork):
     name = 'lenet'
     supported_datasets = ['MNIST']
     supported_loss_functions = ['SoftmaxCrossEntropyWithLogits', 'SoftmaxCrossEntropyExpand']
-    supported_optimizers = ['Momentum', 'Lamb']
+    supported_optimizers = ['Momentum', 'Adam', 'SGD']

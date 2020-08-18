@@ -71,6 +71,7 @@ def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, targe
     cifar_ds = cifar_ds.repeat(repeat_size)
     return cifar_ds
 
+
 def _get_rank_info():
     """
     get rank size and rank id

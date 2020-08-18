@@ -112,12 +112,11 @@ if __name__ == '__main__':
     lr = Tensor(lr)
 
     # define opt
-    {% if optimizer=='Lamb' %}
-    opt = nn.Lamb(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr,
-                  weight_decay=cfg.weight_decay)
-    {% elif optimizer=='Momentum' %}
+    {% if optimizer=='Momentum' %}
     opt = nn.Momentum(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr, momentum=cfg.momentum,
                       weight_decay=cfg.weight_decay, loss_scale=cfg.loss_scale)
+    {% else %}
+    opt = nn.{{optimizer}}(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=cfg.lr)
     {% endif %}
 
     # define loss, model
@@ -125,7 +124,7 @@ if __name__ == '__main__':
         {% if dataset=='ImageNet' %}
         if not cfg.use_label_smooth:
             cfg.label_smooth_factor = 0.0
-        loss = CrossEntropy(smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
+        loss = CrossEntLambropy(smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
         {% else %}
         {% if loss=='SoftmaxCrossEntropyWithLogits' %}
         loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
@@ -143,10 +142,10 @@ if __name__ == '__main__':
         {% elif loss=='SoftmaxCrossEntropyExpand' %}
         loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
         {% endif %}
-        {% if optimizer=='Lamb' %}
-        opt = nn.Lamb(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr)
-        {% elif optimizer=='Momentum' %}
+        {% if optimizer=='Momentum' %}
         opt = nn.Momentum(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr, momentum=cfg.momentum)
+        {% else %}
+        opt = nn.{{optimizer}}(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr)
         {% endif %}
         model = Model(net, loss_fn=loss, optimizer=opt, metrics={'acc'})
 

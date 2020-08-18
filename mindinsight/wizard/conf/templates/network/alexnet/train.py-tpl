@@ -18,6 +18,7 @@ train alexnet and get network model files(.ckpt) :
 python train.py --data_path /YourDataPath
 """
 
+import os
 import argparse
 from src.config import cfg
 from src.dataset import create_dataset
@@ -26,9 +27,10 @@ from src.alexnet import AlexNet
 import mindspore.nn as nn
 from mindspore import context
 from mindspore import Tensor
-from mindspore.train import Model
+from mindspore.train import Model, ParallelMode
 from mindspore.nn.metrics import Accuracy
 from mindspore.train.callback import ModelCheckpoint, CheckpointConfig, LossMonitor, TimeMonitor
+from mindspore.train.loss_scale_manager import FixedLossScaleManager
 from mindspore.parallel._auto_parallel_context import auto_parallel_context
 from mindspore.train.serialization import load_checkpoint, load_param_into_net
 from mindspore.communication.management import init, get_rank, get_group_size
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('--device_num', type=int, default=1, help='Device num')
     parser.add_argument('--device_target', type=str, default="Ascend", choices=['Ascend', 'GPU', 'CPU'],
                         help='device where the code will be implemented (default: Ascend)')
-    parser.add_argument('--data_path', type=str, default="./", help='path where the dataset is saved')
+    parser.add_argument('--dataset_path', type=str, default="./", help='path where the dataset is saved')
     parser.add_argument('--pre_trained', type=str, default=None, help='Pre-trained checkpoint path')
     parser.add_argument('--dataset_sink_mode', type=str, default='True', choices = ['True', 'False'],
                         help='DataSet sink mode is True or False')
@@ -58,7 +60,6 @@ if __name__ == "__main__":
             context.set_context(device_id=device_id, enable_auto_mixed_precision=True)
             context.set_auto_parallel_context(device_num=args.device_num, parallel_mode=ParallelMode.DATA_PARALLEL,
                                               mirror_mean=True)
-            auto_parallel_context().set_all_reduce_fusion_split_indices([107, 160])
 
             init()
         # GPU target
@@ -69,7 +70,7 @@ if __name__ == "__main__":
             ckpt_save_dir = cfg.save_checkpoint_path + "ckpt_" + str(get_rank()) + "/"
 
 
-    data_path = args.data_path
+    data_path = args.dataset_path
     do_train = True
 
     ds_train = create_dataset(data_path=data_path, batch_size=cfg.batch_size, do_train=do_train,
@@ -77,14 +78,14 @@ if __name__ == "__main__":
     step_size = ds_train.get_dataset_size()
 
     # define net
-    network = AlexNet(cfg.num_classes)
+    net = AlexNet(cfg.num_classes)
 
     # init weight
     if args.pre_trained:
         param_dict = load_checkpoint(args.pre_trained)
-        load_param_into_net(network, param_dict)
+        load_param_into_net(net, param_dict)
     else:
-        for _, cell in network.cells_and_names():
+        for _, cell in net.cells_and_names():
             if isinstance(cell, nn.Conv2d):
                 cell.weight.default_input = weight_init.initializer(weight_init.XavierUniform(),
                                                                     cell.weight.default_input.shape,
@@ -93,20 +94,37 @@ if __name__ == "__main__":
                 cell.weight.default_input = weight_init.initializer(weight_init.TruncatedNormal(),
                                                                     cell.weight.default_input.shape,
                                                                     cell.weight.default_input.dtype).to_tensor()
-
-
-    {% if loss=='SoftmaxCrossEntropyWithLogits' %}
-    net_loss = nn.SoftmaxCrossEntropyWithLogits(is_grad=False, sparse=True, reduction="mean")
-    {% elif loss=='SoftmaxCrossEntropyExpand' %}
-    net_loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
-    {% endif %}
+    # define learning rate
     lr = Tensor(get_lr(0, cfg.lr, cfg.epoch_size, ds_train.get_dataset_size()))
-    {% if optimizer=='Lamb' %}
-    net_opt = nn.Lamb(network.trainable_params(), learning_rate=lr)
-    {% elif optimizer=='Momentum' %}
-    net_opt = nn.Momentum(network.trainable_params(), learning_rate=lr, momentum=cfg.momentum)
-    {% endif %}
-    model = Model(network, net_loss, net_opt, metrics={"Accuracy": Accuracy()})
+
+    # define loss, model
+    if target == "Ascend":
+        {% if loss=='SoftmaxCrossEntropyWithLogits' %}
+        loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
+        {% elif loss=='SoftmaxCrossEntropyExpand' %}
+        loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
+        {% endif %}
+        {% if optimizer=='Momentum' %}
+        opt = nn.Momentum(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr, momentum=cfg.momentum,
+                          weight_decay=cfg.weight_decay, loss_scale=cfg.loss_scale)
+        {% else %}
+        opt = nn.{{ optimizer }}(net.trainable_params(), learning_rate=cfg.lr)
+        {% endif %}
+        loss_scale = FixedLossScaleManager(cfg.loss_scale, drop_overflow_update=False)
+        model = Model(net, loss_fn=loss, optimizer=opt, loss_scale_manager=loss_scale, metrics={'acc'},
+                      amp_level="O2", keep_batchnorm_fp32=False)
+    else:
+        {% if loss=='SoftmaxCrossEntropyWithLogits' %}
+        loss = nn.SoftmaxCrossEntropyWithLogits(is_grad=False, sparse=True, reduction="mean")
+        {% elif loss=='SoftmaxCrossEntropyExpand' %}
+        loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
+        {% endif %}
+        {% if optimizer=='Momentum' %}
+        opt = nn.Momentum(net.trainable_params(), learning_rate=lr, momentum=cfg.momentum)
+        {% else %}
+        opt = nn.{{ optimizer }}(net.trainable_params(), learning_rate=lr)
+        {% endif %}
+        model = Model(net, loss, opt, metrics={"Accuracy": Accuracy()})
 
     # define callbacks
     time_cb = TimeMonitor(data_size=step_size)
@@ -114,7 +132,7 @@ if __name__ == "__main__":
     cb = [time_cb, loss_cb]
     if cfg.save_checkpoint:
         cfg_ck = CheckpointConfig(save_checkpoint_steps=cfg.save_checkpoint_epochs * step_size,
-                                     keep_checkpoint_max=cfg.keep_checkpoint_max)
+                                  keep_checkpoint_max=cfg.keep_checkpoint_max)
         ckpt_cb = ModelCheckpoint(prefix="alexnet", directory=ckpt_save_dir, config=cfg_ck)
         cb += [ckpt_cb]
 

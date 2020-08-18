@@ -15,7 +15,7 @@
 # ============================================================================
 
 if [ $# != 2 ]
-then
+then 
     echo "Usage: sh run_eval_gpu.sh [DATASET_PATH] [CHECKPOINT_PATH]"
 exit 1
 fi
@@ -34,16 +34,16 @@ PATH2=$(get_real_path $2)
 
 
 if [ ! -d $PATH1 ]
-then
+then 
     echo "error: DATASET_PATH=$PATH1 is not a directory"
 exit 1
-fi
+fi 
 
 if [ ! -f $PATH2 ]
-then
+then 
     echo "error: CHECKPOINT_PATH=$PATH2 is not a file"
 exit 1
-fi
+fi 
 
 ulimit -u unlimited
 export DEVICE_NUM=1
@@ -61,6 +61,6 @@ cp *.sh ./eval
 cp -r ../src ./eval
 cd ./eval || exit
 env > env.log
-echo "start evaluation for device $DEVICE_ID"
+echo "start evaluation"
 python eval.py --dataset_path=$PATH1 --checkpoint_path=$PATH2 --device_target="GPU" &> log &
 cd ..

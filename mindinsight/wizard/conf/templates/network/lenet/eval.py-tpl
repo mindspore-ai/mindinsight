@@ -17,6 +17,8 @@
 eval lenet according to model file:
 python eval.py --data_path /YourDataPath --ckpt_path Your.ckpt
 """
+
+import os
 import argparse
 
 import mindspore.nn as nn
@@ -37,11 +39,12 @@ if __name__ == "__main__":
                         help='path where the dataset is saved')
     parser.add_argument('--checkpoint_path', type=str, default="", help='if mode is test, must provide\
                         path where the trained ckpt file')
-    parser.add_argument('--dataset_sink_mode', type=bool, default=False, help='dataset_sink_mode is False or True')
+    parser.add_argument('--dataset_sink', action='store_true', help='enable dataset sink or not')
 
     args = parser.parse_args()
 
-    context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target)
+    device_id = int(os.getenv('DEVICE_ID'))
+    context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target, device_id=device_id)
 
     network = LeNet5(cfg.num_classes)
     {% if loss=='SoftmaxCrossEntropyWithLogits' %}
@@ -49,12 +52,7 @@ if __name__ == "__main__":
     {% elif loss=='SoftmaxCrossEntropyExpand' %}
     net_loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
     {% endif %}
-    {% if optimizer=='Lamb' %}
-    net_opt = nn.Lamb(network.trainable_params(), learning_rate=cfg.lr)
-    {% elif optimizer=='Momentum' %}
-    net_opt = nn.Momentum(network.trainable_params(), learning_rate=cfg.lr, momentum=cfg.momentum)
-    {% endif %}
-    model = Model(network, net_loss, net_opt, metrics={"Accuracy": Accuracy()})
+    model = Model(network, loss_fn=net_loss, metrics={"Accuracy": Accuracy()})
 
     print("============== Starting Testing ==============")
     param_dict = load_checkpoint(args.checkpoint_path)
@@ -63,5 +61,5 @@ if __name__ == "__main__":
     do_train = False
     ds_eval = create_dataset(data_path=data_path, do_train=do_train, batch_size=cfg.batch_size,
                              target=args.device_target)
-    acc = model.eval(ds_eval, dataset_sink_mode=args.dataset_sink_mode)
+    acc = model.eval(ds_eval, dataset_sink_mode=args.dataset_sink)
     print("============== {} ==============".format(acc))

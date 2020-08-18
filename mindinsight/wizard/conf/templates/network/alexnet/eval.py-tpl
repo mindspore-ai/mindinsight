@@ -18,6 +18,7 @@ eval alexnet according to model file:
 python eval.py --data_path /YourDataPath --ckpt_path Your.ckpt
 """
 
+import os
 import argparse
 from src.config import cfg
 from src.dataset import create_dataset
@@ -33,15 +34,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='MindSpore AlexNet Example')
     parser.add_argument('--device_target', type=str, default="Ascend", choices=['Ascend', 'GPU'],
                         help='device where the code will be implemented (default: Ascend)')
-    parser.add_argument('--data_path', type=str, default="./", help='path where the dataset is saved')
-    parser.add_argument('--ckpt_path', type=str, default="./ckpt", help='if is test, must provide\
+    parser.add_argument('--dataset_path', type=str, default="./", help='path where the dataset is saved')
+    parser.add_argument('--checkpoint_path', type=str, default="./ckpt", help='if is test, must provide\
                         path where the trained ckpt file')
     parser.add_argument('--dataset_sink_mode', type=str, default='True', choices = ['True', 'False'],
                         help='DataSet sink mode is True or False')
     args = parser.parse_args()
 
-    context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target)
-    data_path = args.data_path
+    device_id = int(os.getenv('DEVICE_ID'))
+    context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target, save_graphs=False, device_id=device_id)
+    data_path = args.dataset_path
     dataset_sink_mode = args.dataset_sink_mode=='True'
 
     network = AlexNet(cfg.num_classes)
@@ -50,15 +52,10 @@ if __name__ == "__main__":
     {% elif loss=='SoftmaxCrossEntropyExpand' %}
     net_loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
     {% endif %}
-    {% if optimizer=='Lamb' %}
-    net_opt = nn.Lamb(network.trainable_params(), learning_rate=cfg.lr)
-    {% elif optimizer=='Momentum' %}
-    net_opt = nn.Momentum(network.trainable_params(), learning_rate=cfg.lr, momentum=cfg.momentum)
-    {% endif %}
-    model = Model(network, net_loss, net_opt, metrics={"Accuracy": Accuracy()})
+    model = Model(network, loss_fn=net_loss, metrics={"Accuracy": Accuracy()})
 
     print("============== Starting Testing ==============")
-    param_dict = load_checkpoint(args.ckpt_path)
+    param_dict = load_checkpoint(args.checkpoint_path)
     load_param_into_net(network, param_dict)
     do_train = False
     ds_eval = create_dataset(data_path=data_path, batch_size=cfg.batch_size, do_train=do_train,
