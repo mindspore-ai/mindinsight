@@ -24,6 +24,7 @@ from mindspore.common import dtype as mstype
 from .config import cfg
 from mindspore.communication.management import init, get_rank, get_group_size
 
+
 def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, target="Ascend"):
     """
     create dataset for train or test
@@ -65,6 +66,7 @@ def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, targe
     cifar_ds = cifar_ds.batch(batch_size, drop_remainder=True)
     cifar_ds = cifar_ds.repeat(repeat_size)
     return cifar_ds
+
 
 def _get_rank_info():
     """

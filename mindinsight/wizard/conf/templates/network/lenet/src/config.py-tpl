@@ -18,20 +18,14 @@ network config setting, will be used in train.py
 from easydict import EasyDict as edict
 
 cfg = edict({
-    {% if dataset=='MNIST' %}
     'num_classes': 10,
-    {% elif dataset=='Cifar10' %}
-    'num_classes': 10,
-    {% elif dataset=='ImageNet' %}
-    'num_classes': 1001,
-    {% endif %}
-    {% if dataset=='Momentum' %}
+    {% if optimizer=='Momentum' %}
     'lr': 0.01,
+    "momentum": 0.9,
+    {% elif optimizer=='SGD' %}
+    'lr': 0.1,
     {% else %}
     'lr': 0.001,
-    {% endif %}
-    {% if optimizer=='Momentum' %}
-    "momentum": 0.9,
     {% endif %}
     'epoch_size': 1,
     'batch_size': 32,

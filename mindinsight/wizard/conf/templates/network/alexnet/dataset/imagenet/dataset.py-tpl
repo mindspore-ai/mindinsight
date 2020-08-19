@@ -24,6 +24,7 @@ from mindspore.communication.management import init, get_rank, get_group_size
 
 from .config import cfg
 
+
 def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, target="Ascend"):
     """
     create a train or eval imagenet dataset
@@ -87,6 +88,7 @@ def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, targe
     ds = ds.repeat(repeat_size)
 
     return ds
+
 
 def _get_rank_info():
     """

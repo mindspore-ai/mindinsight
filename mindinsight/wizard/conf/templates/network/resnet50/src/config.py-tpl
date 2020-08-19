@@ -28,7 +28,13 @@ cfg = ed({
     "batch_size": 32,
     "loss_scale": 1024,
     {% if optimizer=='Momentum' %}
+    "lr": 0.01,
     "momentum": 0.9,
+    "lr": 0.01,
+    {% elif optimizer=='SGD' %}
+    'lr': 0.1,
+    {% else %}
+    'lr': 0.001,
     {% endif %}
     "image_height": 224,
     "image_width": 224,
@@ -48,7 +54,6 @@ cfg = ed({
     {% endif %}
     "use_label_smooth": True,
     "label_smooth_factor": 0.1,
-    "lr": 0.01,
     "lr_init": 0.01,
     "lr_end": 0.00001,
     "lr_max": 0.1

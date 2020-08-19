@@ -15,4 +15,4 @@ class Network(GenericNetwork):
     name = 'alexnet'
     supported_datasets = ['Cifar10', 'ImageNet']
     supported_loss_functions = ['SoftmaxCrossEntropyWithLogits', 'SoftmaxCrossEntropyExpand']
-    supported_optimizers = ['Momentum', 'Lamb']
+    supported_optimizers = ['Momentum', 'Adam', 'SGD']

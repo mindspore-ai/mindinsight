@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""alexnet module."""
+"""Resnet50 module."""
 from mindinsight.wizard.network.generic_network import GenericNetwork
 
 
@@ -15,4 +15,4 @@ class Network(GenericNetwork):
     name = 'resnet50'
     supported_datasets = ['Cifar10', 'ImageNet']
     supported_loss_functions = ['SoftmaxCrossEntropyWithLogits', 'SoftmaxCrossEntropyExpand']
-    supported_optimizers = ['Momentum', 'Lamb']
+    supported_optimizers = ['Momentum', 'Adam', 'SGD']
