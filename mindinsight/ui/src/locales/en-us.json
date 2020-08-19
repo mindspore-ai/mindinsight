@@ -226,13 +226,15 @@
     "currentCard": "Number of cards",
     "pie": "Pie",
     "bar": "Bar",
-    "operatorStatistics": "Operator Statistics",
-    "operatorTypeStatistics": "Operator Type Statistics",
     "allOperator": "All",
     "classificationOperator": "Type",
     "card": " ",
     "searchByType": "Enter operator type",
-    "searchByName": "Enter operator name"
+    "searchByName": "Enter operator name",
+    "operatorInfo":"Operator",
+    "kernelInfo":"Kernel",
+    "searchByCoreName":"Enter kernel name",
+    "searchByCoreFullName":"Enter operator full name"
   },
   "profiling": {
     "profilingDashboard": "Profiling Dashboard",
@@ -389,7 +391,8 @@
       "content31": "You can analyze whether the flow tiling policy is proper and whether the step interval and tail time are too long based on the timeline information.",
       "content32": "You can also locate an operator and view and analyze its execution time."
     },
-    "unit": "ms/time"
+    "unit": "ms/time",
+    "gpuunit": "us/time"
   },
   "hardwareVisual": {
     "processor": "Ascend AI Processor",
@@ -398,13 +401,13 @@
     "allCpu": "Total CPUs:",
     "chipNameTip": "Chip name",
     "deviceIdTip": "Chip ID",
-    "availableTip": "Available or not(for reference only)",
-    "healthTip": "Chip health index",
+    "availableTip": "Is chip available(for reference only)",
+    "healthTip": "Chip health status",
     "ipTip": "Chip IP address",
-    "aicoreTip": "Chip usage",
-    "hbmTip": "Used HBM memory",
-    "powerTip": "Chip power consumption",
-    "temperatureTip": "Chip temperature",
+    "aicoreTip": "Chip utilization",
+    "hbmTip": "Chip HBM usage",
+    "powerTip": "Chip real-time power",
+    "temperatureTip": "Chip real-time temperature",
     "cpuUserTip": "Time for running in user mode (%)",
     "cpuSystemTip": "Time for running in kernel mode (%)",
     "cpuIdleTip": "Idle time (%)",
@@ -426,7 +429,16 @@
     "availableFree": "The chip is available.",
     "availableBusy": "The chip is occupied or unavailable.",
     "failQueryChip": "An error occurs during chip information query.",
-    "faliQuery": "Query error"
+    "faliQuery": "Query error",
+    "name": "Name",
+    "npu": "ID",
+    "available": "Available",
+    "health": "Health",
+    "ipAddress": "IP Address",
+    "aiCore": "AI Core(%)",
+    "hbmUsage": "HBM Usage(MB)",
+    "power": "Power(W)",
+    "temp": "Temp(℃)"
   },
   "components": {
     "summaryTitle": "Training selection",

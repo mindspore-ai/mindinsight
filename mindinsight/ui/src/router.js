@@ -102,6 +102,22 @@ export default new Router({
       ],
     },
     {
+      path: '/profiling-gpu',
+      component: () => import('./views/profiling-gpu/profiling.vue'),
+      redirect: '/profiling-gpu/profiling-dashboard',
+      children: [
+        {
+          path: 'profiling-dashboard',
+          component: () =>
+            import('./views/profiling-gpu/profiling-dashboard.vue'),
+        },
+        {
+          path: 'operator',
+          component: () => import('./views/profiling-gpu/operator.vue'),
+        },
+      ],
+    },
+    {
       path: '/hardware-visual',
       component: () => import('./views/train-manage/hardware-visual.vue'),
     },

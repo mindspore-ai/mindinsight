@@ -49,7 +49,7 @@ limitations under the License.
         <router-view></router-view>
         <div class="close"
              @click="backToDdashboard"
-             v-if="$route.path !== '/profiling/profiling-dashboard'">
+             v-if="$route.path !== '/profiling-gpu/profiling-dashboard'">
           <img src="@/assets/images/close-page.png">
         </div>
       </div>
@@ -77,7 +77,6 @@ export default {
         // Current Select card info
         curCardNum: '',
         query: {},
-        initOver: false,
       },
     };
   },
@@ -293,7 +292,7 @@ export default {
      */
     backToDdashboard() {
       this.$router.push({
-        path: '/profiling/profiling-dashboard',
+        path: '/profiling-gpu/profiling-dashboard',
         query: {
           dir: this.curDashboardInfo.query.dir,
           id: this.curDashboardInfo.query.id,
