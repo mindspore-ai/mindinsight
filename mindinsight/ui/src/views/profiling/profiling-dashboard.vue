@@ -1442,7 +1442,9 @@ export default {
               font-size: 12px;
               line-height: 16px;
               white-space: normal;
+              overflow: visible;
               .num {
+                white-space: nowrap;
                 color: #07a695;
               }
             }
