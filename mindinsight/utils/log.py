@@ -189,7 +189,7 @@ def setup_logger(sub_module, log_name, **kwargs):
     if not formatter:
         formatter = settings.LOG_FORMAT
 
-    if kwargs.get('console', True):
+    if kwargs.get('console', False):
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.formatter = MindInsightFormatter(sub_module, formatter)
         logger.addHandler(console_handler)
