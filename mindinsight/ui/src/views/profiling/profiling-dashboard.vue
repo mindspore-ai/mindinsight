@@ -1364,6 +1364,7 @@ export default {
         align-items: baseline;
         .cell-container {
           width: 20%;
+          min-width:110px;
           padding: 20px 0;
           border: 2px solid transparent;
           .title {
@@ -1428,7 +1429,7 @@ export default {
             font-size: 12px;
             line-height: 12px;
             white-space: nowrap;
-            overflow: hidden;
+            overflow: visible;
             width: 100%;
             text-align: center;
             .line {

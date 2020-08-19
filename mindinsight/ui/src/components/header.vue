@@ -290,7 +290,7 @@ export default {
     getActive() {
       const str = this.$route.path.split('/');
       if (str.length > 2) {
-        if (str[1] === 'train-manage' || str[1] === 'profiling') {
+        if (str[1] === 'train-manage' || str[1] === 'profiling' || str[1] === 'profiling-gpu') {
           return '/summary-manage';
         } else {
           return '/' + str[1];
