@@ -124,7 +124,7 @@ if __name__ == '__main__':
         {% if dataset=='ImageNet' %}
         if not cfg.use_label_smooth:
             cfg.label_smooth_factor = 0.0
-        loss = CrossEntLambropy(smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
+        loss = CrossEntropy(smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
         {% else %}
         {% if loss=='SoftmaxCrossEntropyWithLogits' %}
         loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
