@@ -34,7 +34,7 @@ limitations under the License.
               <el-table-column width="120">
                 <template slot="header">
                   <span class="cl-text-center">
-                    Name
+                    {{ $t('hardwareVisual.name') }}
                     <el-tooltip class="item"
                                 effect="light"
                                 :content="$t('hardwareVisual.chipNameTip')"
@@ -50,7 +50,7 @@ limitations under the License.
               <el-table-column width="80">
                 <template slot="header">
                   <span class="cl-text-center">
-                    NPU
+                    {{ $t('hardwareVisual.npu') }}
                     <el-tooltip class="item"
                                 effect="light"
                                 :content="$t('hardwareVisual.deviceIdTip')"
@@ -66,7 +66,7 @@ limitations under the License.
               <el-table-column width="110">
                 <template slot="header">
                   <span class="cl-text-center">
-                    Available
+                    {{ $t('hardwareVisual.available') }}
                     <el-tooltip class="item"
                                 effect="light"
                                 :content="$t('hardwareVisual.availableTip')"
@@ -86,10 +86,10 @@ limitations under the License.
                   </span>
                 </template>
               </el-table-column>
-              <el-table-column width="80">
+              <el-table-column width="100">
                 <template slot="header">
                   <span class="cl-text-center">
-                    Health
+                    {{ $t('hardwareVisual.health') }}
                     <el-tooltip class="item"
                                 effect="light"
                                 :content="$t('hardwareVisual.healthTip')"
@@ -121,7 +121,7 @@ limitations under the License.
               <el-table-column width="130">
                 <template slot="header">
                   <span class="cl-text-center">
-                    IP Address
+                    {{ $t('hardwareVisual.ipAddress') }}
                     <el-tooltip class="item"
                                 effect="light"
                                 :content="$t('hardwareVisual.ipTip')"
@@ -136,7 +136,7 @@ limitations under the License.
               </el-table-column>
               <el-table-column prop="aicore">
                 <template slot="header">
-                  AI Core(%)
+                   {{ $t('hardwareVisual.aiCore') }}
                   <el-tooltip class="item"
                               effect="light"
                               :content="$t('hardwareVisual.aicoreTip')"
@@ -155,7 +155,7 @@ limitations under the License.
               <el-table-column prop="hbm_usage"
                                min-width="100">
                 <template slot="header">
-                  HBM-Usage(MB)
+                  {{ $t('hardwareVisual.hbmUsage') }}
                   <el-tooltip class="item"
                               effect="light"
                               :content="$t('hardwareVisual.hbmTip')"
@@ -173,7 +173,7 @@ limitations under the License.
               </el-table-column>
               <el-table-column prop="power">
                 <template slot="header">
-                  Power(W)
+                  {{ $t('hardwareVisual.power') }}
                   <el-tooltip class="item"
                               effect="light"
                               :content="$t('hardwareVisual.powerTip')"
@@ -192,7 +192,7 @@ limitations under the License.
               <el-table-column prop="temp"
                                width="150">
                 <template slot="header">
-                  Temp(℃)
+                 {{ $t('hardwareVisual.temp') }}
                   <el-tooltip class="item"
                               effect="light"
                               :content="$t('hardwareVisual.temperatureTip')"
