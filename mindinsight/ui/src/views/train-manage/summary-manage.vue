@@ -203,9 +203,10 @@ export default {
       const profilerDir = encodeURIComponent(row.profiler_dir);
       const trainId = encodeURIComponent(row.train_id);
       const path = encodeURIComponent(row.relative_path);
+      const router = `/profiling${row.profiler_type === 'gpu' ? '-gpu' : ''}`;
 
       const routeUrl = this.$router.resolve({
-        path: '/profiling',
+        path: router,
         query: {
           dir: profilerDir,
           id: trainId,
