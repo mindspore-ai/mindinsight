@@ -27,7 +27,7 @@ limitations under the License.
          v-if="!loading">
       <!-- select area -->
       <div class="data-checkbox-area"
-           v-show="!errorData">
+           v-show="!errorData&&!(!totalSeries.length&&pagination.total)">
         <div class="select-container"
              v-show="totalSeries && totalSeries.length &&
               (!summaryDirList || (summaryDirList && summaryDirList.length))">
@@ -231,8 +231,7 @@ limitations under the License.
           <div class="clear"></div>
         </div>
       </div>
-      <div v-show="((!lineagedata.serData || !lineagedata.serData.length) && initOver)
-         ||(echartNoData && (lineagedata.serData && !!lineagedata.serData.length))"
+      <div v-show="nodata"
            class="no-data-page">
         <div class="no-data-img"
              :class="{'set-height-class':(summaryDirList && !summaryDirList.length)}">
@@ -344,6 +343,7 @@ export default {
       loading: true,
       errorData: true,
       tagDialogShow: false,
+      nodata: false,
       tagScope: {},
       iconValue: 0,
       // icon list of tag
@@ -1166,6 +1166,7 @@ export default {
             this.summaryDirList = [];
             this.lineagedata.serData = undefined;
             this.showTable = false;
+            this.nodata = true;
             this.echartNoData = true;
           } else {
             this.echart.showData = this.echart.brushData;
@@ -1357,8 +1358,10 @@ export default {
           .then(
               (res) => {
                 if (!res || !res.data) {
+                  this.nodata = true;
                   return;
                 }
+                this.nodata = false;
                 this.errorData = false;
                 this.lineagedata = this.formateOriginData(res.data);
                 const serData = this.lineagedata.serData;
@@ -1366,10 +1369,12 @@ export default {
               },
               (error) => {
                 this.errorData = true;
+                this.nodata = true;
               },
           )
           .catch(() => {
             this.errorData = true;
+            this.nodata = true;
           });
     },
 
@@ -1385,8 +1390,10 @@ export default {
                 this.loading = false;
                 this.echartNoData = false;
                 if (!res || !res.data) {
+                  this.nodata = true;
                   return;
                 }
+                this.nodata = false;
                 this.errorData = false;
                 this.customizedTypeObject = res.data.customized;
                 let keys = Object.keys(this.customizedTypeObject);
@@ -1463,6 +1470,9 @@ export default {
                 this.totalSeries = this.lineagedata.fullNodeList;
                 if (!this.totalSeries.length) {
                   this.echartNoData = true;
+                  this.nodata = true;
+                } else {
+                  this.nodata = false;
                 }
                 this.totalSeries.forEach((nodeItem) => {
                   if (this.createType[nodeItem.name]) {
@@ -1549,6 +1559,7 @@ export default {
                 this.initOver = true;
                 this.showEchartPic = false;
                 this.errorData = true;
+                this.nodata = true;
               },
           )
           .catch(() => {
@@ -1556,6 +1567,7 @@ export default {
             this.initOver = true;
             this.showEchartPic = false;
             this.errorData = true;
+            this.nodata = true;
           });
     },
 
@@ -1589,6 +1601,7 @@ export default {
      */
     echartShowAllData() {
       // The first page is displayed.
+      this.nodata = false;
       if (this.showAllTimer) {
         clearTimeout(this.showAllTimer);
         this.showAllTimer = null;

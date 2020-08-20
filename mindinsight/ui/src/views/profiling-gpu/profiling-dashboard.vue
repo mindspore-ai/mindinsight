@@ -254,7 +254,6 @@ export default {
      * Initialization function
      */
     init() {
-      this.queryTimeline();
       this.initPieChart();
     },
     /**
