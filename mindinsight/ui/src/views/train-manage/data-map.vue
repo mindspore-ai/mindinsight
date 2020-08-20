@@ -19,7 +19,14 @@ limitations under the License.
   <div class="cl-data-map-manage">
     <div class='data-map-p32'>
       <div class="cl-title cl-data-map-title">
-        <div class="cl-title-left">{{$t('dataMap.titleText')}}</div>
+        <div class="cl-title-left">{{$t('dataMap.titleText')}}
+          <div class="path-message">
+            <span>{{$t('symbols.leftbracket')}}</span>
+            <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
+            <span>{{summaryPath}}</span>
+            <span>{{$t('symbols.rightbracket')}}</span>
+          </div>
+        </div>
         <div class="cl-title-right">
           <div class="cl-close-btn"
                @click="jumpToTrainDashboard">
@@ -162,6 +169,7 @@ export default {
       trainJobID: '',
       selectedNode: [],
       noData: false,
+      summaryPath: this.$route.query.summaryPath,
     };
   },
   mounted() {
@@ -213,8 +221,9 @@ export default {
       if (!data) {
         return;
       }
-      const key = `${parentKey ? parentKey + '/' : ''}${data.op_type ||
-        ''}_${index}`;
+      const key = `${parentKey ? parentKey + '/' : ''}${
+        data.op_type || ''
+      }_${index}`;
       const obj = {
         key: key,
         id: '',
@@ -329,9 +338,7 @@ export default {
           this.graphviz = null;
         }
       }, 100);
-      d3.select('#graph')
-          .selectAll('title')
-          .remove();
+      d3.select('#graph').selectAll('title').remove();
       this.startApp();
     },
     /**
@@ -631,6 +638,13 @@ export default {
   .cl-data-map-title {
     height: 56px;
     line-height: 56px;
+    .path-message {
+      display: inline-block;
+      line-height: 20px;
+      padding: 0px 4px 15px 4px;
+      font-weight: bold;
+      vertical-align: bottom;
+    }
   }
   .data-map-p32 {
     height: 100%;

@@ -474,6 +474,7 @@ export default {
         path: '/train-manage/scalar',
         query: {
           train_id: this.trainingJobId,
+          summaryPath: this.summaryPath,
         },
       });
     },
@@ -488,6 +489,7 @@ export default {
         path: '/train-manage/histogram',
         query: {
           train_id: this.trainingJobId,
+          summaryPath: this.summaryPath,
         },
       });
     },
@@ -522,6 +524,7 @@ export default {
             path: '/train-manage/tensor',
             query: {
               train_id: this.trainingJobId,
+              summaryPath: this.summaryPath,
             },
           });
         }
@@ -538,6 +541,7 @@ export default {
         path: '/train-manage/data-map',
         query: {
           train_id: this.trainingJobId,
+          summaryPath: this.summaryPath,
         },
       });
     },
@@ -552,6 +556,7 @@ export default {
         path: '/train-manage/graph',
         query: {
           train_id: this.trainingJobId,
+          summaryPath: this.summaryPath,
         },
       });
     },
@@ -1500,6 +1505,7 @@ export default {
         path: '/train-manage/image',
         query: {
           train_id: this.trainingJobId,
+          summaryPath: this.summaryPath,
         },
       });
     },
@@ -2085,8 +2091,9 @@ export default {
     .path-message {
       display: inline-block;
       line-height: 20px;
-      padding: 18px 16px;
+      padding: 21px 4px 0 4px;
       font-weight: bold;
+      vertical-align: bottom;
     }
     .loading-icon {
       margin-left: 5px;
@@ -2096,8 +2103,8 @@ export default {
       color: #000000;
       font-weight: bold;
       font-size: 20px;
-      line-height: 20px;
-      padding: 18px 0;
+      line-height: 56px;
+      padding: 0;
     }
   }
   .cl-dashboard-center {

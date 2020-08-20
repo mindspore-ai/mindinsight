@@ -18,7 +18,14 @@ limitations under the License.
     <div class="histogram-bk">
       <!-- Title area -->
       <div class="cl-title cl-histogram-title">
-        <div class="cl-title-left">{{$t('histogram.titleText')}}</div>
+        <div class="cl-title-left">{{$t('histogram.titleText')}}
+          <div class="path-message">
+            <span>{{$t('symbols.leftbracket')}}</span>
+            <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
+            <span>{{summaryPath}}</span>
+            <span>{{$t('symbols.rightbracket')}}</span>
+          </div>
+        </div>
         <div class="cl-title-right">
           <div class="cl-close-btn"
                @click="jumpToTrainDashboard">
@@ -126,6 +133,7 @@ export default {
     return {
       tagList: [], // Tag list.
       trainingJobId: this.$route.query.train_id, // ID of the current training job.
+      summaryPath: this.$route.query.summaryPath,
       originDataArr: [], // List of all data.
       initOver: false, // Indicates whether the initialization is complete.
       curAxisName: 0, // Current time type.
@@ -263,8 +271,11 @@ export default {
         document.title = this.$t('histogram.titleText') + '-MindInsight';
         return;
       }
-      document.title = decodeURIComponent(this.$route.query.train_id) +'-' + this.$t('histogram.titleText') +
-      '-MindInsight';
+      document.title =
+        decodeURIComponent(this.$route.query.train_id) +
+        '-' +
+        this.$t('histogram.titleText') +
+        '-MindInsight';
       this.getOriginData();
       if (this.isTimeReload) {
         this.autoUpdateSamples();
@@ -810,25 +821,23 @@ export default {
               '.cl-histogram-show-data-content',
           ).offsetTop;
           if (height + e.event.y + 20 > screenHeight && screenHeight > height) {
-            document.querySelector('#echartTip').style.top = `${e.event.y +
-              scrollTop -
-              height -
-              20 -
-              offsetTop}px`;
+            document.querySelector('#echartTip').style.top = `${
+              e.event.y + scrollTop - height - 20 - offsetTop
+            }px`;
           } else {
-            document.querySelector('#echartTip').style.top = `${e.event.y +
-              scrollTop +
-              20 -
-              offsetTop}px`;
+            document.querySelector('#echartTip').style.top = `${
+              e.event.y + scrollTop + 20 - offsetTop
+            }px`;
           }
           // Blank area on the right of the chart is 80
           if (width + e.event.x + 80 > screenWidth && screenWidth > width) {
-            document.querySelector('#echartTip').style.left = `${e.event.x -
-              width -
-              20}px`;
+            document.querySelector('#echartTip').style.left = `${
+              e.event.x - width - 20
+            }px`;
           } else {
-            document.querySelector('#echartTip').style.left = `${e.event.x +
-              20}px`;
+            document.querySelector('#echartTip').style.left = `${
+              e.event.x + 20
+            }px`;
           }
         }
 
@@ -1377,6 +1386,13 @@ export default {
     .cl-histogram-title {
       height: 56px;
       line-height: 56px;
+      .path-message {
+        display: inline-block;
+        line-height: 20px;
+        padding: 0px 4px 15px 4px;
+        font-weight: bold;
+        vertical-align: bottom;
+      }
       .cl-close-btn {
         width: 20px;
         height: 20px;

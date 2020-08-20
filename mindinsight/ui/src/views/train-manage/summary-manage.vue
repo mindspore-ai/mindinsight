@@ -211,6 +211,7 @@ export default {
           dir: profilerDir,
           id: trainId,
           path: path,
+          summaryPath: row.train_id,
         },
       });
       window.open(routeUrl.href, '_blank');

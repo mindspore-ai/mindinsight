@@ -18,7 +18,14 @@ limitations under the License.
     <div class="tensor-bk">
       <!-- Title area -->
       <div class="cl-title cl-tensor-title">
-        <div class="cl-title-left">{{$t('tensors.titleText')}}</div>
+        <div class="cl-title-left">{{$t('tensors.titleText')}}
+          <div class="path-message">
+            <span>{{$t('symbols.leftbracket')}}</span>
+            <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
+            <span>{{summaryPath}}</span>
+            <span>{{$t('symbols.rightbracket')}}</span>
+          </div>
+        </div>
         <div class="cl-title-right">
           <div class="cl-close-btn"
                @click="jumpToTrainDashboard">
@@ -183,6 +190,7 @@ export default {
     return {
       tagList: [], // Tag list.
       trainingJobId: this.$route.query.train_id, // ID of the current training job.
+      summaryPath: this.$route.query.summaryPath,
       originDataArr: [], // List of all data.
       initOver: false, // Indicates whether the initialization is complete.
       curFullTagDic: {}, // Dictionary that contains all the current tags.
@@ -1092,6 +1100,13 @@ export default {
     .cl-tensor-title {
       height: 56px;
       line-height: 56px;
+      .path-message {
+        display: inline-block;
+        line-height: 20px;
+        padding: 0px 4px 15px 4px;
+        font-weight: bold;
+        vertical-align: bottom;
+      }
       .cl-close-btn {
         width: 20px;
         height: 20px;
