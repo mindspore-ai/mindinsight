@@ -56,22 +56,21 @@ class GenericNetwork(BaseNetwork):
             dict, configuration value to network.
         """
         if settings:
-            config = {'loss': settings['loss'],
-                      'optimizer': settings['optimizer'],
-                      'dataset': settings['dataset']}
-            self.settings.update(config)
-            return config
-        loss = self.ask_loss_function()
-        optimizer = self.ask_optimizer()
-        dataset = self.ask_dataset()
-        self._dataset_maker = load_dataset_maker(dataset)
-        self._dataset_maker.set_network(self)
-        dataset_config = self._dataset_maker.configure()
+            config = dict(settings)
+            dataset_name = settings['dataset']
+            self._dataset_maker = load_dataset_maker(dataset_name)
+        else:
+            loss = self.ask_loss_function()
+            optimizer = self.ask_optimizer()
+            dataset_name = self.ask_dataset()
+            self._dataset_maker = load_dataset_maker(dataset_name)
+            dataset_config = self._dataset_maker.configure()
 
-        config = {'loss': loss,
-                  'optimizer': optimizer,
-                  'dataset': dataset}
-        config.update(dataset_config)
+            config = {'loss': loss,
+                      'optimizer': optimizer,
+                      'dataset': dataset_name}
+            config.update(dataset_config)
+        self._dataset_maker.set_network(self)
         self.settings.update(config)
         return config
 

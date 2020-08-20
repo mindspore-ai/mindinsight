@@ -12,11 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Constants module for wizard."""
-import os
-
-
-TEMPLATES_BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
-SUPPORT_MINDSPORE_VERSION = '0.7.0'
-
-QUESTION_START = '>>> '
+"""Test the wizard module."""
