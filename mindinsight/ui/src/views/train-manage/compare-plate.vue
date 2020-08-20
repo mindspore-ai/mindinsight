@@ -394,10 +394,9 @@ export default {
               this.trainJobsCaches();
             }
           });
-        }, this.requestErrorCallback)
+        })
         .catch((e) => {
-          this.initOver = true;
-          this.$message.error(this.$t('public.dataError'));
+          this.requestErrorCallback(e);
         });
     },
 
@@ -1324,7 +1323,7 @@ export default {
           summaryColor = CommonProperty.commonColorArr[colorIndex];
           this.summaryOperateList.push({
             label: summaryObj.train_id,
-            checked: false,
+            checked: true,
             show: false,
             color: summaryColor,
             colorIndex: colorIndex,
