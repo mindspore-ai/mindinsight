@@ -1370,7 +1370,7 @@ export default {
           .title {
             font-size: 14px;
             line-height: 20px;
-            padding: 0 0 0 20px;
+            padding: 0 0 0 10px;
             font-weight: bold;
           }
         }
