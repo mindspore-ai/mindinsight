@@ -450,7 +450,8 @@
     "gridIncorrectDataError": "A maximum of two-dimensionalarrays can be displayed.",
     "gridAccuracy": "Decimal places are reserved.",
     "inCorrectInput": "Invalid input.",
-    "gridTableNoData": "No data in the table."
+    "gridTableNoData": "No data in the table.",
+    "cache":"CACHING"
   },
   "error": {
     "50540000": "System error.",

@@ -174,7 +174,6 @@ export default {
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
-      cacheStatus: 'CACHING', // cache
     };
   },
   computed: {
@@ -321,13 +320,11 @@ export default {
               colorIndex: colorIndex,
             });
 
-            if (summaryObj.cache_status === this.cacheStatus) {
-              tempSummaryList.forEach((item) => {
-                if (item.label === summaryObj.train_id) {
-                  item.loading = true;
-                }
-              });
-            }
+            tempSummaryList.forEach((item) => {
+              if (item.label === summaryObj.train_id) {
+                item.loading = summaryObj.cache_status;
+              }
+            });
 
             summaryObj.plugins.scalar.forEach((tagObj) => {
               // tag with the same name exists
@@ -1336,19 +1333,11 @@ export default {
           summaryColor = this.summaryOperateList[sameSummaryIndex].color;
         }
 
-        if (summaryObj.cache_status === this.cacheStatus) {
-          this.summaryOperateList.forEach((item) => {
-            if (item.label === summaryObj.train_id) {
-              item.loading = true;
-            }
-          });
-        } else {
-          this.summaryOperateList.forEach((item) => {
-            if (item.label === summaryObj.train_id) {
-              item.loading = false;
-            }
-          });
-        }
+        this.summaryOperateList.forEach((item) => {
+          if (item.label === summaryObj.train_id) {
+            item.loading = summaryObj.cache_status;
+          }
+        });
 
         summaryObj.plugins.scalar.forEach((tagObj) => {
           let sameTagIndex = -1;

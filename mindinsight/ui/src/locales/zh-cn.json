@@ -449,7 +449,8 @@
     "gridIncorrectDataError": "当前只支持最多二维数组的展示",
     "gridAccuracy": "保留小数位",
     "inCorrectInput": "无效输入",
-    "gridTableNoData": "表格无数据"
+    "gridTableNoData": "表格无数据",
+    "cache":"正在加载"
   },
   "error": {
     "50540000": "系统错误",

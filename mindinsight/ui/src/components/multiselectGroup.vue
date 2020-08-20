@@ -48,9 +48,11 @@ limitations under the License.
                         popper-class="tooltip-show-content"
                         :content="item.label"
                         placement="top">
-              <span class="select-disable"><i title="CACHING"
-                   v-if="item.loading"
-                   class="el-icon-loading"></i>{{item.label}}</span>
+              <span class="select-disable">
+                <i :title="$t('components.cache')"
+                   class="el-icon-time"
+                   v-if="item.checked && (item.loading==='CACHING' || item.loading==='NOT_IN_CACHE')"></i>
+                {{item.label}}</span>
             </el-tooltip>
           </span>
         </div>
@@ -80,9 +82,11 @@ limitations under the License.
                       popper-class="tooltip-show-content"
                       :content="item.label"
                       placement="top">
-            <span class="select-disable"><i title="CACHING"
-                 v-if="item.loading"
-                 class="el-icon-loading"></i>{{item.label}}</span>
+            <span class="select-disable">
+              <i :title="$t('components.cache')"
+                 class="el-icon-time"
+                 v-if="item.checked && (item.loading==='CACHING' || item.loading==='NOT_IN_CACHE')"></i>
+              {{item.label}}</span>
           </el-tooltip>
         </span>
       </div>
