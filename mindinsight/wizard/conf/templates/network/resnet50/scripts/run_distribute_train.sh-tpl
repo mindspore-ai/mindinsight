@@ -57,14 +57,13 @@ fi
 ulimit -u unlimited
 export DEVICE_NUM=8
 export RANK_SIZE=$DEVICE_NUM
-export MINDSPORE_HCCL_CONFIG_PATH=$PATH1
 export RANK_TABLE_FILE=$PATH1
 
 start_id=0
-for((i=start_id; i<DEVICE_NUM + start_id; i++))
+for((i=0; i<${DEVICE_NUM}; i++))
 do
-    export DEVICE_ID=$i
-    export RANK_ID=$((i - start_id))
+    export DEVICE_ID=$((i + start_id))
+    export RANK_ID=$i
     rm -rf ./train_parallel$i
     mkdir ./train_parallel$i
     cp ../*.py ./train_parallel$i

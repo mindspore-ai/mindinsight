@@ -72,5 +72,5 @@ if [ $# == 2 ]
 then
   mpirun --allow-run-as-root -n $RANK_SIZE \
   python train.py --run_distribute=True \
-  --device_num=$DEVICE_NUM --device_target="GPU" --dataset_path=$PATH1 --pre_trained=$PATH3 &> log &
+  --device_num=$DEVICE_NUM --device_target="GPU" --dataset_path=$PATH1 --pre_trained=$PATH2 &> log &
 fi
