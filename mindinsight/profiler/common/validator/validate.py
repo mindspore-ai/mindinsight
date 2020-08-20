@@ -27,6 +27,13 @@ AICORE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "precent"
 AICORE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "subgraph", "full_op_name"]
 AICPU_COL = ["serial_number", "op_type", "total_time", "dispatch_time", "run_start",
              "run_end"]
+GPU_TYPE_COL = ["op_type", "type_occurrences", "total_time", "proportion", "avg_time"]
+GPU_ACTIVITY_COL = ["name", "type", "op_full_name", "stream_id",
+                    "block_dim", "grid_dim", "occurrences", "total_duration",
+                    "avg_duration", "max_duration", "min_duration"]
+GPU_DETAIL_COL = ["op_side", "op_type", "op_name", "op_full_name",
+                  "op_occurrences", "op_total_time", "op_avg_time",
+                  "proportion", "cuda_activity_cost_time", "cuda_activity_call_count"]
 MINDDATA_PIPELINE_COL = [
     'op_id', 'op_type', 'num_workers', 'output_queue_average_size',
     'output_queue_length', 'output_queue_usage_rate', 'sample_interval',
@@ -67,10 +74,20 @@ def validate_condition(search_condition):
             search_scope = AICORE_TYPE_COL
         elif op_type == "aicore_detail":
             search_scope = AICORE_DETAIL_COL
+        elif op_type == "gpu_op_type":
+            search_scope = GPU_TYPE_COL
+        elif op_type == "gpu_op_info":
+            search_scope = GPU_DETAIL_COL
+        elif op_type == "gpu_cuda_activity":
+            search_scope = GPU_ACTIVITY_COL
         else:
-            raise ProfilerOpTypeException("The op_type must in ['aicpu', 'aicore_type', 'aicore_detail']")
+            raise ProfilerOpTypeException(
+                "The op_type must in ['aicpu', 'aicore_type', 'aicore_detail', "
+                "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']")
     else:
-        raise ProfilerOpTypeException("The op_type must in ['aicpu', 'aicore_type', 'aicore_detail']")
+        raise ProfilerOpTypeException(
+            "The op_type must in ['aicpu', 'aicore_type', 'aicore_detail', "
+            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']")
 
     if "group_condition" in search_condition:
         validate_group_condition(search_condition)
@@ -199,8 +216,6 @@ def validate_filter_condition(search_condition):
         if "op_name" in filter_condition:
             op_name_condition = filter_condition.get("op_name")
             validate_op_filter_condition(op_name_condition)
-        if "op_type" not in filter_condition and "op_name" not in filter_condition:
-            raise ProfilerFilterConditionException("The key of filter_condition is not support")
 
 
 def validate_and_set_job_id_env(job_id_env):

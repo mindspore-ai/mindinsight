@@ -14,4 +14,4 @@
 # ============================================================================
 """The analyser module."""
 from . import analyser, minddata_pipeline_analyser, step_trace_analyser, \
-    minddata_analyser, timeline_analyser
+    minddata_analyser, timeline_analyser, gpu_analyser
