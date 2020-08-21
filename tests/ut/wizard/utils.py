@@ -12,11 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Constants module for wizard."""
+"""Utils method."""
 import os
+import stat
 
 
-TEMPLATES_BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
-SUPPORT_MINDSPORE_VERSION = '0.7.0'
-
-QUESTION_START = '>>> '
+def generate_file(file, template_content, mode=None):
+    """Create a file and write content."""
+    os.makedirs(os.path.dirname(file), mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR, exist_ok=True)
+    with open(file, 'w') as fp:
+        fp.write(template_content)
+    if mode:
+        os.chmod(file, mode)
+    else:
+        os.chmod(file, stat.S_IRUSR)
