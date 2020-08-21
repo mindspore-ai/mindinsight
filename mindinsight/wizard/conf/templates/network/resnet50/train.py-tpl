@@ -29,7 +29,6 @@ from mindspore.communication.management import init, get_rank, get_group_size
 import mindspore.nn as nn
 import mindspore.common.initializer as weight_init
 from src.lr_generator import get_lr, warmup_cosine_annealing_lr
-from src.crossentropy import CrossEntropy
 
 parser = argparse.ArgumentParser(description='Image classification')
 parser.add_argument('--run_distribute', type=bool, default=False, help='Run distribute')
@@ -122,9 +121,14 @@ if __name__ == '__main__':
     # define loss, model
     if target == "Ascend":
         {% if dataset=='ImageNet' %}
+        {% if loss=='SoftmaxCrossEntropyWithLogits' %}
         if not cfg.use_label_smooth:
             cfg.label_smooth_factor = 0.0
-        loss = CrossEntropy(smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
+        loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean',
+                                                smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
+        {% elif loss=='SoftmaxCrossEntropyExpand' %}
+        loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
+        {% endif %}
         {% else %}
         {% if loss=='SoftmaxCrossEntropyWithLogits' %}
         loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
@@ -137,6 +141,16 @@ if __name__ == '__main__':
                       amp_level="O2", keep_batchnorm_fp32=False)
     else:
         # GPU target
+        {% if dataset=='ImageNet' %}
+        {% if loss=='SoftmaxCrossEntropyWithLogits' %}
+        if not cfg.use_label_smooth:
+            cfg.label_smooth_factor = 0.0
+        loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, is_grad=False, reduction='mean',
+                                                smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
+        {% elif loss=='SoftmaxCrossEntropyExpand' %}
+        loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
+        {% endif %}
+        {% else %}
         {% if loss=='SoftmaxCrossEntropyWithLogits' %}
         loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, is_grad=False, reduction='mean')
         {% elif loss=='SoftmaxCrossEntropyExpand' %}
@@ -146,6 +160,7 @@ if __name__ == '__main__':
         opt = nn.Momentum(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr, momentum=cfg.momentum)
         {% else %}
         opt = nn.{{optimizer}}(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr)
+        {% endif %}
         {% endif %}
         model = Model(net, loss_fn=loss, optimizer=opt, metrics={'acc'})
 

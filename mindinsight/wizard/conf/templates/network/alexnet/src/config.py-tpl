@@ -19,9 +19,7 @@ network config setting, will be used in train.py
 from easydict import EasyDict as edict
 
 cfg = edict({
-    {% if dataset=='MNIST' %}
-    'num_classes': 10,
-    {% elif dataset=='Cifar10' %}
+    {% if dataset=='Cifar10' %}
     'num_classes': 10,
     {% elif dataset=='ImageNet' %}
     'num_classes': 1001,

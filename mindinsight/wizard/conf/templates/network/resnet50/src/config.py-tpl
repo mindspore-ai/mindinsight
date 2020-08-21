@@ -18,9 +18,7 @@ network config setting, will be used in train.py and eval.py
 from easydict import EasyDict as ed
 
 cfg = ed({
-    {% if dataset=='MNIST' %}
-    'num_classes': 10,
-    {% elif dataset=='Cifar10' %}
+    {% if dataset=='Cifar10' %}
     'num_classes': 10,
     {% elif dataset=='ImageNet' %}
     'num_classes': 1001,
@@ -48,7 +46,7 @@ cfg = ed({
     {% if dataset=='ImageNet' %}
     "warmup_epochs": 0,
     "lr_decay_mode": "cosine",
-    {% else %}
+    {% elif dataset=='Cifar10' %}
     "warmup_epochs": 5,
     "lr_decay_mode": "poly",
     {% endif %}

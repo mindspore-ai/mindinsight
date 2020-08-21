@@ -66,32 +66,34 @@ Parameters for both training and evaluation can be set in src/config.py.
 
 ## Running the example
 
-### Train
+### Running on Ascend
 
-#### Usage
+#### Train
+
+##### Usage
 
 ```
 # distributed training
-Usage: ./run_distribute_train.sh [RANK_TABLE_FILE] [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+Usage: bash run_distribute_train.sh [RANK_TABLE_FILE] [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
 
 # standalone training
-Usage: ./run_standalone_train.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+Usage: bash run_standalone_train.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
 ```
 
 
-#### Launch
+##### Launch
 
 ```
 # distribute training example
-./run_distribute_train.sh rank_table.json ~/dataset_path
+bash run_distribute_train.sh rank_table.json ~/cifar-10-batches-bin
 
 # standalone training example
-./run_standalone_train.sh ~/dataset_path
+bash run_standalone_train.sh ~/cifar-10-batches-bin
 ```
 
-> About rank_table.json, you can refer to the [distributed training tutorial](https://www.mindspore.cn/tutorial/en/master/advanced_use/distributed_training.html).
+> About rank_table.json, you can refer to the [distributed training tutorial](https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/distributed_training_ascend.html).
 
-#### Result
+##### Result
 
 Training result will be stored in the example path, whose folder name begins with "train" or "train_parallel". Under this, you can find checkpoint file together with result like the followings in log.
 
@@ -104,20 +106,20 @@ epoch: 1 step: 603, loss is 2.305666
 ...
 ```
 
-### Evaluation
+#### Evaluation
 
-#### Usage
+##### Usage
 
 ```
 # evaluation
-Usage: ./run_eval.sh [DATASET_PATH] [CHECKPOINT_PATH]
+Usage: bash run_eval.sh [DATASET_PATH] [CHECKPOINT_PATH]
 ```
 
-#### Launch
+##### Launch
 
 ```
 # evaluation example
-./run_eval.sh ~/cifar-10-batches-bin ~/resnet50/train/alexnet-1.591.ckpt
+bash run_eval.sh ~/cifar-10-verify-bin ~/resnet50/train/alexnet-1.591.ckpt
 ```
 
 > checkpoint can be produced in training process.
@@ -126,11 +128,11 @@ Usage: ./run_eval.sh [DATASET_PATH] [CHECKPOINT_PATH]
 ### Running on GPU
 ```
 # distributed training example
-./run_distribute_train_gpu.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+bash run_distribute_train_gpu.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
 
 # standalone training example
-./run_standalone_train_gpu.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+bash run_standalone_train_gpu.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
 
 # infer example
-./run_eval_gpu.sh [DATASET_PATH] [CHECKPOINT_PATH]
+bash run_eval_gpu.sh [DATASET_PATH] [CHECKPOINT_PATH]
 ```
