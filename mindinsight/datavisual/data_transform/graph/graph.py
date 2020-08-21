@@ -15,6 +15,8 @@
 """
 This file is used to define the basic graph.
 """
+import time
+
 from enum import Enum
 from collections import defaultdict
 
@@ -52,6 +54,8 @@ class Graph:
 
     def build_graph(self, proto_data):
         """This method is used to build the graph."""
+        logger.info("Start to build graph")
+        start_time = time.time()
 
         # Notice:
         # The following methods are interdependent and cannot be switched at will.
@@ -64,6 +68,12 @@ class Graph:
         # Since const nodes are not aggregated, adding them at the end can save a lot of computation.
         self._add_variable_nodes(NodeTypeEnum.CONST.value)
         self._calc_subnode_count()
+
+        precision = 6
+        time_consuming = round(time.time() - start_time, precision)
+        logger.info("Build graph end, all node count: %s, const count: %s, parameter count: %s, time-consuming: %s s.",
+                    self.normal_node_count, len(self._const_node_temp_cache),
+                    len(self._parameter_node_temp_cache), time_consuming)
 
     def exist_node(self, name):
         """
