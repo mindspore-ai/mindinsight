@@ -13,8 +13,6 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the MindSpore graph."""
-import time
-
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
 from mindinsight.datavisual.common.enums import PluginNameEnum
@@ -26,24 +24,6 @@ from .graph import EdgeTypeEnum
 
 class MSGraph(Graph):
     """The object describes the MindSpore graph, and it is defined in the anf_ir proto file."""
-
-    def build_graph(self, proto_data):
-        """
-        Build graph by graph proto which refer to `anf_ir_pb2.GraphProto`.
-
-        Args:
-            proto_data (anf_ir_pb2.GraphProto): Refer to `anf_ir_pb2.GraphProto`.
-        """
-        logger.info("Start to build graph, graph name: %s.", proto_data.name)
-        start_time = time.time()
-
-        super(MSGraph, self).build_graph(proto_data)
-
-        precision = 6
-        time_consuming = round(time.time()-start_time, precision)
-        logger.info("Build graph end, all node count: %s, const count: %s, parameter count: %s, time-consuming: %s s.",
-                    self.normal_node_count, len(self._const_node_temp_cache),
-                    len(self._parameter_node_temp_cache), time_consuming)
 
     def _parse_data(self, proto_data):
         """
@@ -85,8 +65,6 @@ class MSGraph(Graph):
                 node_name = node_proto.full_name
             node = Node(name=node_name, node_id=node_proto.name)
             node.type = node_proto.op_type
-            logger.debug("Foreach graph proto nodes, node id: %s, node name: %s, node def name: %s, "
-                         "input count: %s", node.node_id, node.name, node_proto.name, len(node_proto.input))
 
             self._parse_attributes(node_proto.attribute, node)
             self._parse_inputs(node_proto.input, node)
@@ -112,6 +90,7 @@ class MSGraph(Graph):
                 continue
             node = Node(name=parameter.name, node_id=parameter.name)
             node.type = NodeTypeEnum.PARAMETER.value
+            node.output_data_type = self._get_data_type_by_parse_type_proto(parameter.type)
             node.output_shape = self._get_shape_by_parse_type_proto(parameter.type)
             attr = dict(
                 type=self._get_data_type_by_parse_type_proto(parameter.type),
@@ -237,7 +216,7 @@ class MSGraph(Graph):
             if attr.value.ByteSize() > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:
                 message = f"The attribute value of node({node.name}) " \
                           f"is over {self.MAX_NODE_ATTRIBUTE_VALUE_BYTES} Bytes, will ignore."
-                logger.info(message)
+                logger.warning(message)
                 continue
             node.add_attr({attr.name: str(attr.value)})
 
