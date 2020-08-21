@@ -36,7 +36,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='MindSpore Lenet Example')
     parser.add_argument('--run_distribute', type=bool, default=False, help='Run distribute')
     parser.add_argument('--device_num', type=int, default=1, help='Device num.')
-    parser.add_argument('--device_target', type=str, default="Ascend", choices=['Ascend', 'GPU', 'CPU'],
+    parser.add_argument('--device_target', type=str, default="Ascend", choices=['Ascend', 'GPU'],
                         help='device where the code will be implemented (default: Ascend)')
     parser.add_argument('--dataset_path', type=str, default="./Data",
                         help='path where the dataset is saved')
@@ -44,9 +44,6 @@ if __name__ == "__main__":
     parser.add_argument('--dataset_sink', action='store_true', help='enable dataset sink or not')
 
     args = parser.parse_args()
-
-    if args.device_target == "CPU":
-        args.dataset_sink = False
 
     context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target)
     ckpt_save_dir = './'

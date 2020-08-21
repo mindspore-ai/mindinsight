@@ -59,7 +59,8 @@ class CreateProject(BaseCommand):
     def _check_project_dir(project_name):
         """Check project directory whether empty or exist."""
         if not re.search('^[A-Za-z0-9][A-Za-z0-9._-]*$', project_name):
-            raise CommandError("'%s' is not a valid project name. Please input a valid name" % project_name)
+            raise CommandError("'%s' is not a valid project name. Please input a valid name matching "
+                               "regex ^[A-Za-z0-9][A-Za-z0-9._-]*$" % project_name)
         project_dir = os.path.join(os.getcwd(), project_name)
         if os.path.exists(project_dir):
             output_path = Path(project_dir)
@@ -81,19 +82,23 @@ class CreateProject(BaseCommand):
             '\n'.join(f'{idx: >4}: {choice}' for idx, choice in enumerate(network_type_choices, start=1))
         )
         prompt_type = click.IntRange(min=1, max=len(network_type_choices))
-        choice = click.prompt(prompt_msg, type=prompt_type, hide_input=False, show_choices=False,
-                              confirmation_prompt=False,
-                              value_proc=lambda x: process_prompt_choice(x, prompt_type))
+        choice = 0
+        while not choice:
+            choice = click.prompt(prompt_msg, default=0, type=prompt_type,
+                                  hide_input=False, show_choices=False,
+                                  confirmation_prompt=False, show_default=False,
+                                  value_proc=lambda x: process_prompt_choice(x, prompt_type))
+            if not choice:
+                click.secho(textwrap.dedent("Network is required."), fg='red')
+
         return network_type_choices[choice - 1]
 
     @staticmethod
     def echo_notice():
         """Echo notice for depending environment."""
-        click.secho(textwrap.dedent("""
-        [NOTICE] To ensure the final generated scripts run under specific environment with the following 
-        
-        mindspore   : %s
-        """ % SUPPORT_MINDSPORE_VERSION), fg='red')
+        click.secho(textwrap.dedent(
+            "[NOTICE] The final generated scripts should be run under environment "
+            "where mindspore==%s and related device drivers are installed. " % SUPPORT_MINDSPORE_VERSION), fg='yellow')
 
     def run(self, args):
         """Override run method to start."""

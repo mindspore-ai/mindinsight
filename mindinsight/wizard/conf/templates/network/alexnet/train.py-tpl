@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='MindSpore AlexNet Example')
     parser.add_argument('--run_distribute', type=bool, default=False, help='Run distribute')
     parser.add_argument('--device_num', type=int, default=1, help='Device num')
-    parser.add_argument('--device_target', type=str, default="Ascend", choices=['Ascend', 'GPU', 'CPU'],
+    parser.add_argument('--device_target', type=str, default="Ascend", choices=['Ascend', 'GPU'],
                         help='device where the code will be implemented (default: Ascend)')
     parser.add_argument('--dataset_path', type=str, default="./", help='path where the dataset is saved')
     parser.add_argument('--pre_trained', type=str, default=None, help='Pre-trained checkpoint path')
