@@ -19,7 +19,14 @@ limitations under the License.
     <div class="scalar-bk">
       <div class="cl-title cl-scalar-title"
            v-show="originDataArr.length>0">
-        <div class="cl-title-left">{{$t("scalar.titleText")}}</div>
+        <div class="cl-title-left">{{$t("scalar.titleText")}}
+          <div class="path-message">
+            <span>{{$t('symbols.leftbracket')}}</span>
+            <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
+            <span>{{summaryPath}}</span>
+            <span>{{$t('symbols.rightbracket')}}</span>
+          </div>
+        </div>
         <div class="cl-title-right">
           <ScalarButton class="scalar-btn"
                         :right="scalarCompare"
@@ -291,6 +298,7 @@ export default {
       compare: false, // Comparison Page
       scalarCompare: this.$t('scalar')['comparison'],
       trainingJobId: this.$route.query.train_id, // ID of the current training job
+      summaryPath: this.$route.query.summaryPath,
       thresholdDialogVisible: false,
       delThresholdVisible: false,
       currentTagName: '',
@@ -298,8 +306,8 @@ export default {
       thresholdErrorMsg: '',
       thresholdRelational: '',
       thresholdValue: [
-        { filterCondition: this.$t('scalar.lessThan'), value: '' },
-        { filterCondition: this.$t('scalar.lessThan'), value: '' },
+        {filterCondition: this.$t('scalar.lessThan'), value: ''},
+        {filterCondition: this.$t('scalar.lessThan'), value: ''},
       ],
       filterOptions: [
         {
@@ -412,7 +420,7 @@ export default {
       return;
     }
     document.title = `${decodeURIComponent(
-      this.$route.query.train_id
+        this.$route.query.train_id,
     )}-${this.$t('scalar.titleText')}-MindInsight`;
     // Adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
@@ -440,7 +448,7 @@ export default {
       if (localStorage.getItem('thresholdCache')) {
         try {
           this.thresholdLocal = JSON.parse(
-            localStorage.getItem('thresholdCache')
+              localStorage.getItem('thresholdCache'),
           );
           this.clearCache();
         } catch (e) {
@@ -467,8 +475,8 @@ export default {
         ) {
           delete this.thresholdLocal[this.decodeTrainingJobId];
           localStorage.setItem(
-            'thresholdCache',
-            JSON.stringify(this.thresholdLocal)
+              'thresholdCache',
+              JSON.stringify(this.thresholdLocal),
           );
         }
       }
@@ -484,81 +492,81 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, false)
-        .then((res) => {
+          .then((res) => {
           // error;
-          if (
-            !res ||
+            if (
+              !res ||
             !res.data ||
             !res.data.train_jobs ||
             !res.data.train_jobs.length
-          ) {
-            this.initOver = true;
-            return;
-          }
-          const tempTagList = [];
-          const dataList = [];
-          const propsList = [];
-          const data = res.data.train_jobs[0];
-          const runNmeColor = CommonProperty.commonColorArr[0];
-          data.tags.forEach((tagObj) => {
-            if (!this.oriDataDictionaries[tagObj]) {
-              this.oriDataDictionaries[tagObj] = true;
-              // Add the tag list
-              tempTagList.push({
-                label: tagObj,
-                checked: true,
-                show: true,
-              });
-              const sampleIndex = dataList.length;
-              // Adding Chart Data
-              dataList.push({
-                tagName: tagObj,
-                runNames: data.name,
-                colors: runNmeColor,
-                show: false,
-                updateFlag: false,
-                dataRemove: false,
-                fullScreen: false,
-                sampleIndex: sampleIndex,
-                domId: 'prDom' + this.DomIdIndex,
-                charData: {
-                  oriData: [],
-                  charOption: {},
-                },
-                zoomData: [null, null],
-                zoomDataTimer: null,
-                charObj: null,
-                invalidData: false,
-              });
-
-              propsList.push({
-                tagName: tagObj,
-                runNames: data.name,
-                colors: '',
-              });
-              this.DomIdIndex++;
+            ) {
+              this.initOver = true;
+              return;
             }
-          });
-          this.tagOperateList = tempTagList;
-          this.tagPropsList = JSON.parse(JSON.stringify(tempTagList));
-          if (dataList.length === 1) {
-            dataList[0].fullScreen = true;
-          }
-          this.originDataArr = dataList;
-          this.propsList = propsList;
-          this.initOver = true;
+            const tempTagList = [];
+            const dataList = [];
+            const propsList = [];
+            const data = res.data.train_jobs[0];
+            const runNmeColor = CommonProperty.commonColorArr[0];
+            data.tags.forEach((tagObj) => {
+              if (!this.oriDataDictionaries[tagObj]) {
+                this.oriDataDictionaries[tagObj] = true;
+                // Add the tag list
+                tempTagList.push({
+                  label: tagObj,
+                  checked: true,
+                  show: true,
+                });
+                const sampleIndex = dataList.length;
+                // Adding Chart Data
+                dataList.push({
+                  tagName: tagObj,
+                  runNames: data.name,
+                  colors: runNmeColor,
+                  show: false,
+                  updateFlag: false,
+                  dataRemove: false,
+                  fullScreen: false,
+                  sampleIndex: sampleIndex,
+                  domId: 'prDom' + this.DomIdIndex,
+                  charData: {
+                    oriData: [],
+                    charOption: {},
+                  },
+                  zoomData: [null, null],
+                  zoomDataTimer: null,
+                  charObj: null,
+                  invalidData: false,
+                });
 
-          this.$nextTick(() => {
-            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-            // Obtains data on the current page
-            this.updateTagInPage();
-            this.resizeCallback();
+                propsList.push({
+                  tagName: tagObj,
+                  runNames: data.name,
+                  colors: '',
+                });
+                this.DomIdIndex++;
+              }
+            });
+            this.tagOperateList = tempTagList;
+            this.tagPropsList = JSON.parse(JSON.stringify(tempTagList));
+            if (dataList.length === 1) {
+              dataList[0].fullScreen = true;
+            }
+            this.originDataArr = dataList;
+            this.propsList = propsList;
+            this.initOver = true;
+
+            this.$nextTick(() => {
+              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+              // Obtains data on the current page
+              this.updateTagInPage();
+              this.resizeCallback();
+            });
+          }, this.requestErrorCallback)
+          .catch((e) => {
+            this.initOver = true;
+            this.$message.error(this.$t('public.dataError'));
           });
-        }, this.requestErrorCallback)
-        .catch((e) => {
-          this.initOver = true;
-          this.$message.error(this.$t('public.dataError'));
-        });
     },
 
     /**
@@ -606,108 +614,108 @@ export default {
         };
 
         RequestService.getScalarsSample(params)
-          .then((res) => {
+            .then((res) => {
             // error
-            if (!res || !res.data || !res.data.metadatas) {
+              if (!res || !res.data || !res.data.metadatas) {
               // canceled
-              if (res.toString() === 'false') {
+                if (res.toString() === 'false') {
+                  return;
+                }
+                if (sampleObject.charObj) {
+                  sampleObject.charObj.clear();
+                  sampleObject.onePoint = false;
+                }
                 return;
               }
+              let hasInvalidData = false;
+
+              if (sampleObject.charObj) {
+                sampleObject.charObj.showLoading();
+              }
+
+              const resData = res.data;
+
+              const tempObject = {
+                valueData: {
+                  stepData: [],
+                  absData: [],
+                  relativeData: [],
+                },
+                logData: {
+                  stepData: [],
+                  absData: [],
+                  relativeData: [],
+                },
+              };
+              let relativeTimeBench = 0;
+              if (resData.metadatas.length) {
+                relativeTimeBench = resData.metadatas[0].wall_time;
+              }
+
+              // Initializing Chart Data
+              resData.metadatas.forEach((metaData) => {
+                if (metaData.value === null && !hasInvalidData) {
+                  hasInvalidData = true;
+                }
+                tempObject.valueData.stepData.push([
+                  metaData.step,
+                  metaData.value,
+                ]);
+                tempObject.valueData.absData.push([
+                  metaData.wall_time,
+                  metaData.value,
+                ]);
+                tempObject.valueData.relativeData.push([
+                  metaData.wall_time - relativeTimeBench,
+                  metaData.value,
+                ]);
+                const logValue = metaData.value >= 0 ? metaData.value : '';
+                tempObject.logData.stepData.push([metaData.step, logValue]);
+                tempObject.logData.absData.push([metaData.wall_time, logValue]);
+                tempObject.logData.relativeData.push([
+                  metaData.wall_time - relativeTimeBench,
+                  logValue,
+                ]);
+              });
+
+              sampleObject.charData.oriData[0] = tempObject;
+
+              if (hasInvalidData) {
+                this.$set(sampleObject, 'invalidData', true);
+              } else {
+                this.$set(sampleObject, 'invalidData', false);
+              }
+
+              sampleObject.charData.charOption = this.formateCharOption(
+                  sampleIndex,
+              );
+              const tempOption = sampleObject.charData.charOption;
+              if (
+                tempOption.series[0].data.length === 1 ||
+              sampleObject.onePoint
+              ) {
+                tempOption.series[0].showSymbol = true;
+              } else {
+                tempOption.series[0].showSymbol = false;
+              }
+
+              this.$forceUpdate();
+
+              this.$nextTick(() => {
+                if (sampleObject.charObj) {
+                  sampleObject.charObj.hideLoading();
+                }
+                // Draw chart
+                if (!this.compare) {
+                  this.updateOrCreateChar(sampleIndex, true);
+                }
+              });
+            })
+            .catch((e) => {
               if (sampleObject.charObj) {
                 sampleObject.charObj.clear();
-                sampleObject.onePoint = false;
-              }
-              return;
-            }
-            let hasInvalidData = false;
-
-            if (sampleObject.charObj) {
-              sampleObject.charObj.showLoading();
-            }
-
-            const resData = res.data;
-
-            const tempObject = {
-              valueData: {
-                stepData: [],
-                absData: [],
-                relativeData: [],
-              },
-              logData: {
-                stepData: [],
-                absData: [],
-                relativeData: [],
-              },
-            };
-            let relativeTimeBench = 0;
-            if (resData.metadatas.length) {
-              relativeTimeBench = resData.metadatas[0].wall_time;
-            }
-
-            // Initializing Chart Data
-            resData.metadatas.forEach((metaData) => {
-              if (metaData.value === null && !hasInvalidData) {
-                hasInvalidData = true;
-              }
-              tempObject.valueData.stepData.push([
-                metaData.step,
-                metaData.value,
-              ]);
-              tempObject.valueData.absData.push([
-                metaData.wall_time,
-                metaData.value,
-              ]);
-              tempObject.valueData.relativeData.push([
-                metaData.wall_time - relativeTimeBench,
-                metaData.value,
-              ]);
-              const logValue = metaData.value >= 0 ? metaData.value : '';
-              tempObject.logData.stepData.push([metaData.step, logValue]);
-              tempObject.logData.absData.push([metaData.wall_time, logValue]);
-              tempObject.logData.relativeData.push([
-                metaData.wall_time - relativeTimeBench,
-                logValue,
-              ]);
-            });
-
-            sampleObject.charData.oriData[0] = tempObject;
-
-            if (hasInvalidData) {
-              this.$set(sampleObject, 'invalidData', true);
-            } else {
-              this.$set(sampleObject, 'invalidData', false);
-            }
-
-            sampleObject.charData.charOption = this.formateCharOption(
-              sampleIndex
-            );
-            const tempOption = sampleObject.charData.charOption;
-            if (
-              tempOption.series[0].data.length === 1 ||
-              sampleObject.onePoint
-            ) {
-              tempOption.series[0].showSymbol = true;
-            } else {
-              tempOption.series[0].showSymbol = false;
-            }
-
-            this.$forceUpdate();
-
-            this.$nextTick(() => {
-              if (sampleObject.charObj) {
-                sampleObject.charObj.hideLoading();
-              }
-              // Draw chart
-              if (!this.compare) {
-                this.updateOrCreateChar(sampleIndex, true);
               }
             });
-          })
-          .catch((e) => {
-            if (sampleObject.charObj) {
-              sampleObject.charObj.clear();
-            }
-          });
       });
     },
 
@@ -718,7 +726,7 @@ export default {
 
     setOnePoint(sampleObject) {
       const that = this;
-      sampleObject.charObj.on('datazoom', function (params) {
+      sampleObject.charObj.on('datazoom', function(params) {
         const xAxisObject = params.batch[0];
         const yAxisObject = params.batch[1];
         const charData = sampleObject.charData.charOption.series[0].data;
@@ -777,7 +785,7 @@ export default {
 
     setRestore(sampleObject) {
       const that = this;
-      sampleObject.charObj.on('restore', function (params) {
+      sampleObject.charObj.on('restore', function(params) {
         const charData = sampleObject.charData.charOption.series[0].data;
         const tempCharOption = sampleObject.charData.charOption;
 
@@ -846,12 +854,12 @@ export default {
       if (curOriData) {
         if (sampleObject.log) {
           dataObj.data = this.formateSmoothData(
-            curOriData.logData[this.curBenchX]
+              curOriData.logData[this.curBenchX],
           );
           dataObjBackend.data = curOriData.logData[this.curBenchX];
         } else {
           dataObj.data = this.formateSmoothData(
-            curOriData.valueData[this.curBenchX]
+              curOriData.valueData[this.curBenchX],
           );
           dataObjBackend.data = curOriData.valueData[this.curBenchX];
         }
@@ -981,23 +989,23 @@ export default {
           position: (point, params, dom, rect, size) => {
             const curDom = document.getElementById(sampleObject.domId);
             if (!curDom) {
-              return { left: 0, bottom: '100%' };
+              return {left: 0, bottom: '100%'};
             }
             if (sampleObject.fullScreen) {
               if (point[0] + size.contentSize[0] <= size.viewSize[0]) {
-                return { left: point[0], bottom: '10%' };
+                return {left: point[0], bottom: '10%'};
               } else {
-                return { right: size.viewSize[0] - point[0], bottom: '10%' };
+                return {right: size.viewSize[0] - point[0], bottom: '10%'};
               }
             } else {
               const parentNode = curDom.parentNode;
               if (!parentNode) {
-                return { left: 0, bottom: '100%' };
+                return {left: 0, bottom: '100%'};
               }
               if (parentNode.offsetLeft > size.contentSize[0]) {
-                return { right: '100%', bottom: 0 };
+                return {right: '100%', bottom: 0};
               } else {
-                return { left: '100%', bottom: 0 };
+                return {left: '100%', bottom: 0};
               }
             }
           },
@@ -1082,16 +1090,16 @@ export default {
                     `display:inline-block;"></td><td>${parma.seriesName}</td>` +
                     `<td>${that.formateYaxisValue(parma.value[1])}</td>` +
                     `<td>${that.formateYaxisValue(
-                      curSerieOriData.stepData[parma.dataIndex][1]
+                        curSerieOriData.stepData[parma.dataIndex][1],
                     )}</td>` +
                     `<td>${curSerieOriData.stepData[parma.dataIndex][0]}</td>` +
                     `<td>${curSerieOriData.relativeData[
-                      parma.dataIndex
+                        parma.dataIndex
                     ][0].toFixed(3)}${unit}</td>` +
                     `<td>${that.dealrelativeTime(
-                      new Date(
-                        curSerieOriData.absData[parma.dataIndex][0] * 1000
-                      ).toString()
+                        new Date(
+                            curSerieOriData.absData[parma.dataIndex][0] * 1000,
+                        ).toString(),
                     )}</td>` +
                     `</tr>`;
                 }
@@ -1176,9 +1184,9 @@ export default {
         this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
       ) {
         const tempStorgeArr = JSON.parse(
-          JSON.stringify(
-            this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
-          )
+            JSON.stringify(
+                this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName],
+            ),
         );
         let pieceStr = '';
         pieceStr = this.formatePieceStr(tempStorgeArr);
@@ -1212,8 +1220,8 @@ export default {
         // Updating chart option
         if (sampleObject.updateFlag) {
           sampleObject.charObj.setOption(
-            sampleObject.charData.charOption,
-            sampleObject.dataRemove
+              sampleObject.charData.charOption,
+              sampleObject.dataRemove,
           );
           sampleObject.updateFlag = false;
           sampleObject.dataRemove = false;
@@ -1221,8 +1229,8 @@ export default {
       } else {
         // creat chart
         sampleObject.charObj = echarts.init(
-          document.getElementById(sampleObject.domId),
-          null
+            document.getElementById(sampleObject.domId),
+            null,
         );
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
         this.setOnePoint(sampleObject);
@@ -1328,13 +1336,13 @@ export default {
               const oriIndexData = sampleObject.charData.oriData[index];
               if (sampleObject.log) {
                 seriesData[index * 2].data = this.formateSmoothData(
-                  oriIndexData.logData[this.curBenchX]
+                    oriIndexData.logData[this.curBenchX],
                 );
                 seriesData[index * 2 + 1].data =
                   oriIndexData.logData[this.curBenchX];
               } else {
                 seriesData[index * 2].data = this.formateSmoothData(
-                  oriIndexData.valueData[this.curBenchX]
+                    oriIndexData.valueData[this.curBenchX],
                 );
                 seriesData[index * 2 + 1].data =
                   oriIndexData.valueData[this.curBenchX];
@@ -1548,56 +1556,56 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, ignoreError)
-        .then((res) => {
-          if (this.isReloading) {
-            this.$store.commit('setIsReload', false);
-            this.isReloading = false;
-          }
+          .then((res) => {
+            if (this.isReloading) {
+              this.$store.commit('setIsReload', false);
+              this.isReloading = false;
+            }
 
-          // Fault tolerance processing
-          if (!res || !res.data) {
-            return;
-          } else if (!res.data.train_jobs || !res.data.train_jobs.length) {
-            this.clearAllData();
-            return;
-          }
-          const data = res.data.train_jobs[0];
-          // Delete the data that does not exist
-          const tagRemoveFlag = this.removeNonexistentData(data);
+            // Fault tolerance processing
+            if (!res || !res.data) {
+              return;
+            } else if (!res.data.train_jobs || !res.data.train_jobs.length) {
+              this.clearAllData();
+              return;
+            }
+            const data = res.data.train_jobs[0];
+            // Delete the data that does not exist
+            const tagRemoveFlag = this.removeNonexistentData(data);
 
-          // Check whether new data exists and add it to the page
-          const tagAddFlag = this.checkNewDataAndComplete(data);
+            // Check whether new data exists and add it to the page
+            const tagAddFlag = this.checkNewDataAndComplete(data);
 
-          this.$nextTick(() => {
-            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-            this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
-            this.resizeCallback();
-          });
+            this.$nextTick(() => {
+              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+              this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
+              this.resizeCallback();
+            });
 
-          const tempTagList = [];
-          const propsList = [];
-          // Initial chart data
-          data.tags.forEach((tagObj) => {
+            const tempTagList = [];
+            const propsList = [];
+            // Initial chart data
+            data.tags.forEach((tagObj) => {
             // Check whether the tag with the same name exists
-            tempTagList.push({
-              label: tagObj,
-              checked: true,
-              show: true,
-            });
+              tempTagList.push({
+                label: tagObj,
+                checked: true,
+                show: true,
+              });
 
-            // Add the tag list.
-            propsList.push({
-              tagName: tagObj,
-              runNames: data.name,
-              colors: '',
+              // Add the tag list.
+              propsList.push({
+                tagName: tagObj,
+                runNames: data.name,
+                colors: '',
+              });
             });
+            this.tagPropsList = tempTagList;
+            this.propsList = propsList;
+          }, this.requestErrorCallback)
+          .catch((e) => {
+            this.$message.error(this.$t('public.dataError'));
           });
-          this.tagPropsList = tempTagList;
-          this.propsList = propsList;
-        }, this.requestErrorCallback)
-        .catch((e) => {
-          this.$message.error(this.$t('public.dataError'));
-        });
     },
 
     /**
@@ -1703,15 +1711,15 @@ export default {
             if (index % 2 === 0) {
               if (log) {
                 serie.data = this.formateSmoothData(
-                  sampleObject.charData.oriData[index / 2].logData[
-                    this.curBenchX
-                  ]
+                    sampleObject.charData.oriData[index / 2].logData[
+                        this.curBenchX
+                    ],
                 );
               } else {
                 serie.data = this.formateSmoothData(
-                  sampleObject.charData.oriData[index / 2].valueData[
-                    this.curBenchX
-                  ]
+                    sampleObject.charData.oriData[index / 2].valueData[
+                        this.curBenchX
+                    ],
                 );
               }
             }
@@ -1807,13 +1815,13 @@ export default {
         tempOriData.forEach((originData, index) => {
           if (log) {
             tempOption.series[index * 2].data = this.formateSmoothData(
-              tempOriData[index].logData[this.curBenchX]
+                tempOriData[index].logData[this.curBenchX],
             );
             tempOption.series[index * 2 + 1].data =
               tempOriData[index].logData[this.curBenchX];
           } else {
             tempOption.series[index * 2].data = this.formateSmoothData(
-              tempOriData[index].valueData[this.curBenchX]
+                tempOriData[index].valueData[this.curBenchX],
             );
             tempOption.series[index * 2 + 1].data =
               tempOriData[index].valueData[this.curBenchX];
@@ -1900,7 +1908,7 @@ export default {
         this.thresholdLocal[this.decodeTrainingJobId][sampleItem.tagName]
       ) {
         delete this.thresholdLocal[this.decodeTrainingJobId][
-          sampleItem.tagName
+            sampleItem.tagName
         ];
       }
       this.currentTagName = sampleItem.tagName;
@@ -2249,7 +2257,7 @@ export default {
           this.originDataArr.forEach((sampleObject) => {
             if (this.multiSelectedTagNames[sampleObject.tagName]) {
               this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
+                  sampleObject.tagName
               ] = chartPieces;
               sampleObject.pieceStr = pieceStr;
 
@@ -2260,14 +2268,14 @@ export default {
           });
         } else {
           this.thresholdLocal[this.decodeTrainingJobId][
-            this.currentTagName
+              this.currentTagName
           ] = chartPieces;
           this.currentSample.pieceStr = pieceStr;
           this.setVisualMap(this.currentSample, chartPieces);
         }
         localStorage.setItem(
-          'thresholdCache',
-          JSON.stringify(this.thresholdLocal)
+            'thresholdCache',
+            JSON.stringify(this.thresholdLocal),
         );
 
         this.thresholdDialogVisible = false;
@@ -2332,11 +2340,11 @@ export default {
               this.thresholdLocal &&
               this.thresholdLocal[this.decodeTrainingJobId] &&
               this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
+                  sampleObject.tagName
               ]
             ) {
               delete this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
+                  sampleObject.tagName
               ];
               sampleObject.pieceStr = '';
               const tempCharOption = sampleObject.charData.charOption;
@@ -2363,7 +2371,7 @@ export default {
           this.thresholdLocal[this.decodeTrainingJobId][this.currentTagName]
         ) {
           delete this.thresholdLocal[this.decodeTrainingJobId][
-            this.currentTagName
+              this.currentTagName
           ];
           this.currentSample.pieceStr = '';
           const tempCharOption = this.currentSample.charData.charOption;
@@ -2375,7 +2383,7 @@ export default {
             tempCharOption.visualMap = null;
             tempCharOption.series[0].markLine = null;
             tempCharOption.series[0].lineStyle[
-              'color'
+                'color'
             ] = this.currentSample.colors;
           }
           this.currentSample.charObj.setOption(tempCharOption, false);
@@ -2383,8 +2391,8 @@ export default {
       }
       this.clearCache();
       localStorage.setItem(
-        'thresholdCache',
-        JSON.stringify(this.thresholdLocal)
+          'thresholdCache',
+          JSON.stringify(this.thresholdLocal),
       );
       this.delThresholdVisible = false;
     },
@@ -2445,7 +2453,13 @@ export default {
     background-color: #fff;
     display: flex;
     flex-direction: column;
-
+    .path-message {
+      display: inline-block;
+      line-height: 20px;
+      padding: 0px 4px 15px 4px;
+      font-weight: bold;
+      vertical-align: bottom;
+    }
     .cl-scalar-title {
       height: 56px;
       line-height: 56px;

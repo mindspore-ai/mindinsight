@@ -59,6 +59,12 @@ limitations under the License.
       <div class="cl-title cl-graph-title">
         <div class="cl-title-left">
           {{ $t('graph.titleText') }}
+          <div class="path-message">
+            <span>{{$t('symbols.leftbracket')}}</span>
+            <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
+            <span>{{summaryPath}}</span>
+            <span>{{$t('symbols.rightbracket')}}</span>
+          </div>
           <span @click="showUserGuide"
                 class="guide">
             <i class="guide-icon"></i>
@@ -421,6 +427,7 @@ const d3 = {select, selectAll, zoom};
 export default {
   data() {
     return {
+      summaryPath: this.$route.query.summaryPath,
       clickScope: {}, // Information about the node that is clicked for the first time.
       smallResize: {}, // The container of display area box.
       insideBox: {}, // Basic information about the display area box
@@ -2968,6 +2975,13 @@ export default {
   .cl-graph-title {
     height: 56px;
     line-height: 56px;
+    .path-message {
+      display: inline-block;
+      line-height: 20px;
+      padding: 0px 4px 15px 4px;
+      font-weight: bold;
+      vertical-align: bottom;
+    }
     .guide {
       cursor: pointer;
       margin-left: 10px;

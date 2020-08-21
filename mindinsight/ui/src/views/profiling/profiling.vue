@@ -20,6 +20,10 @@ limitations under the License.
            :class="{collapse:collapse}">
         <div class="helper"
              v-show="!collapse">
+          <div class="summary-path">
+            {{$t('trainingDashboard.summaryDirPath')}}
+            <span>{{ summaryPath}}</span>
+          </div>
           <div class="cur-card">
             <label>{{$t('profiling.curCard')}}</label>
             <el-select v-model="curDashboardInfo.curCardNum"
@@ -61,6 +65,7 @@ import RequestService from '../../services/request-service';
 export default {
   data() {
     return {
+      summaryPath: this.$route.query.summaryPath,
       tipsArrayList: [
         'step_trace-iter_interval',
         'minddata_pipeline-general',
@@ -331,11 +336,26 @@ export default {
       }
       .helper {
         padding: 32px;
+        padding-top: 20px;
         height: 100%;
         overflow-y: auto;
         margin-left: 24px;
         background: #edf0f5;
         word-wrap: break-word;
+        .summary-path {
+          line-height: 24px;
+          font-size: 14px;
+          overflow: hidden;
+          font-weight: bold;
+          padding-bottom: 10px;
+          word-break: break-all;
+          text-overflow: -o-ellipsis-lastline;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 4;
+          -webkit-box-orient: vertical;
+        }
         .nowrap-style {
           white-space: nowrap;
         }
