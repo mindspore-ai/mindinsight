@@ -1539,6 +1539,8 @@ export default {
           } else {
             label = `${edge.data_type} ${edge.shape.join('×')}`;
           }
+        } else if (edge.data_type) {
+          label = `${edge.data_type} Scalar`;
         }
       } else {
         label = `${edge.count}tensors`;

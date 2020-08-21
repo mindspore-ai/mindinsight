@@ -61,6 +61,9 @@ axios.interceptors.response.use(
         } else if (router.currentRoute.path === '/profiling/profiling-dashboard' &&
         error.config.headers.ignoreError) {
           return Promise.reject(error);
+        } else if (router.currentRoute.path === '/profiling-gpu/profiling-dashboard' &&
+        error.config.headers.ignoreError) {
+          return Promise.reject(error);
         } else if (error.response.data.error_code.toString() === '50545013' ||
         error.response.data.error_code.toString() === '50545014') {
           return Promise.reject(error);

@@ -436,7 +436,7 @@
     "health": "Health",
     "ipAddress": "IP Address",
     "aiCore": "AI Core(%)",
-    "hbmUsage": "HBM Usage(MB)",
+    "hbmUsage": "HBM-Usage(MB)",
     "power": "Power(W)",
     "temp": "Temp(℃)"
   },
