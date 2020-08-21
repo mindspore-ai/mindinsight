@@ -11,7 +11,7 @@ These are examples of training ResNet50 with dataset in MindSpore.
 - Download the dataset, the directory structure is as follows:
 
 {% if dataset=='Cifar10' %}
-CIFAR-10
+Cifar10
 
 ```
 └─Data
@@ -50,7 +50,6 @@ ImageNet
     └── run_standalone_train_gpu.sh        # launch gpu standalone training(1 pcs)
   ├── src
     ├── config.py                          # parameter configuration
-    ├── crossentropy.py                    # loss definition for ImageNet2012 dataset
     ├── dataset.py                         # data preprocessing
     ├── lr_generator.py                    # generate learning rate for each step
     └── resnet50.py                        # resNet50 network definition

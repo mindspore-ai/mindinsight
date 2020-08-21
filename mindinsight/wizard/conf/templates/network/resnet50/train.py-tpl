@@ -21,7 +21,8 @@ from mindspore import context
 from mindspore import Tensor
 from mindspore import dataset as de
 from mindspore.parallel._auto_parallel_context import auto_parallel_context
-from mindspore.train.model import Model, ParallelMode
+from mindspore.train.model import Model
+from mindspore.context import ParallelMode
 from mindspore.train.callback import ModelCheckpoint, CheckpointConfig, LossMonitor, TimeMonitor
 from mindspore.train.loss_scale_manager import FixedLossScaleManager
 from mindspore.train.serialization import load_checkpoint, load_param_into_net
@@ -46,7 +47,7 @@ np.random.seed(1)
 de.config.set_seed(1)
 
 
-from src.resnet50 import resnet50 as resnet
+from src.resnet50 import resnet50
 from src.config import cfg
 from src.dataset import create_dataset
 
@@ -80,7 +81,7 @@ if __name__ == '__main__':
     step_size = dataset.get_dataset_size()
 
     # define net
-    net = resnet(class_num=cfg.num_classes)
+    net = resnet50(class_num=cfg.num_classes)
 
     # init weight
     if args_opt.pre_trained:
@@ -156,13 +157,10 @@ if __name__ == '__main__':
         {% elif loss=='SoftmaxCrossEntropyExpand' %}
         loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
         {% endif %}
-        {% if optimizer=='Momentum' %}
-        opt = nn.Momentum(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr, momentum=cfg.momentum)
-        {% else %}
-        opt = nn.{{optimizer}}(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr)
         {% endif %}
-        {% endif %}
-        model = Model(net, loss_fn=loss, optimizer=opt, metrics={'acc'})
+        loss_scale = FixedLossScaleManager(cfg.loss_scale, drop_overflow_update=False)
+        model = Model(net, loss_fn=loss, optimizer=opt, loss_scale_manager=loss_scale, metrics={'acc'},
+                      amp_level="O2", keep_batchnorm_fp32=True)
 
     # define callbacks
     time_cb = TimeMonitor(data_size=step_size)

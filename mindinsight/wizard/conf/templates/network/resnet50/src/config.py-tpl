@@ -23,36 +23,35 @@ cfg = ed({
     {% elif dataset=='ImageNet' %}
     'num_classes': 1001,
     {% endif %}
-    "batch_size": 32,
-    "loss_scale": 1024,
+    'batch_size': 32,
+    'loss_scale': 1024,
     {% if optimizer=='Momentum' %}
-    "lr": 0.01,
-    "momentum": 0.9,
-    "lr": 0.01,
+    'lr': 0.01,
+    'momentum': 0.9,
     {% elif optimizer=='SGD' %}
-    'lr': 0.1,
+    'lr': 0.01,
     {% else %}
     'lr': 0.001,
     {% endif %}
-    "image_height": 224,
-    "image_width": 224,
-    "weight_decay": 1e-4,
-    "epoch_size": 1,
-    "pretrain_epoch_size": 1,
-    "save_checkpoint": True,
-    "save_checkpoint_epochs": 5,
-    "keep_checkpoint_max": 10,
-    "save_checkpoint_path": "./",
+    'image_height': 224,
+    'image_width': 224,
+    'weight_decay': 1e-4,
+    'epoch_size': 1,
+    'pretrain_epoch_size': 1,
+    'save_checkpoint': True,
+    'save_checkpoint_epochs': 5,
+    'keep_checkpoint_max': 10,
+    'save_checkpoint_path': './',
     {% if dataset=='ImageNet' %}
-    "warmup_epochs": 0,
-    "lr_decay_mode": "cosine",
+    'warmup_epochs': 0,
+    'lr_decay_mode': 'cosine',
     {% elif dataset=='Cifar10' %}
-    "warmup_epochs": 5,
-    "lr_decay_mode": "poly",
+    'warmup_epochs': 5,
+    'lr_decay_mode': 'poly',
     {% endif %}
-    "use_label_smooth": True,
-    "label_smooth_factor": 0.1,
-    "lr_init": 0.01,
-    "lr_end": 0.00001,
-    "lr_max": 0.1
+    'use_label_smooth': True,
+    'label_smooth_factor': 0.1,
+    'lr_init': 0.01,
+    'lr_end': 0.00001,
+    'lr_max': 0.1
 })

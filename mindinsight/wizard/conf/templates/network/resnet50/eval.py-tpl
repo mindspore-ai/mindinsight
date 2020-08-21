@@ -37,7 +37,7 @@ np.random.seed(1)
 de.config.set_seed(1)
 
 
-from src.resnet50 import resnet50 as resnet
+from src.resnet50 import resnet50
 
 
 from src.config import cfg
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     step_size = dataset.get_dataset_size()
 
     # define net
-    net = resnet(class_num=cfg.num_classes)
+    net = resnet50(class_num=cfg.num_classes)
 
     # load checkpoint
     param_dict = load_checkpoint(args_opt.checkpoint_path)

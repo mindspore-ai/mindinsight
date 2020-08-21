@@ -11,7 +11,7 @@ These are examples of training AlexNet with dataset in MindSpore.
 - Download the dataset, the directory structure is as follows:
 
 {% if dataset=='Cifar10' %}
-CIFAR-10
+Cifar10
 
 ```
 └─Data
