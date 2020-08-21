@@ -82,7 +82,7 @@ class GpuOpTypeAnalyser(GpuAnalyser):
         Returns:
             list, the converted data.
         """
-        return [row[0], int(row[1]), float(row[2]), float(row[3]), float(row[4])]
+        return [row[0], int(row[1]), float(row[2]), float(row[3])*100, float(row[4])]
 
 
 class GpuOpInfoAnalyser(GpuAnalyser):
