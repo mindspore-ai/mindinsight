@@ -580,8 +580,10 @@ export default {
     dealChartData(chart, data) {
       if (data.others === 0) {
         chart.legend = ['used', 'available'];
+        this.pieColorArr = ['#5e7ce0', '#a6dd82'];
       } else {
         chart.legend = ['used', 'others', 'available'];
+        this.pieColorArr = ['#5e7ce0', '#ccc', '#a6dd82'];
       }
       chart.data = chart.legend.map((val) => {
         return {
@@ -799,12 +801,13 @@ export default {
         .cl-chip-wrap {
           height: calc(100% - 36px);
           overflow: auto;
-          .available-fail{
+          .available-fail {
             display: inline-block;
             width: 12px;
             height: 12px;
             border-radius: 12px;
-            background: #ffaa00;
+            background-image: url('../../assets/images/occupy.svg');
+            background-size: 100% 100%;
           }
           .el-icon-success:before {
             color: #57d7ac;
