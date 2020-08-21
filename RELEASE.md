@@ -1,5 +1,24 @@
 ## MindInsight
 
+# Release 0.7.0-beta
+
+## Major Features and Improvements
+* Optimize node name display in computation graph.
+* MindSpore Profiler supports network training with GPU operators.
+* MindWizard generates classic network scripts according to user preference.
+* Web UI supports language internationalization, including both Chinese and English.
+
+## Bugfixes
+* Optimize UI page initialization to handle timeout requests. [!503](https://gitee.com/mindspore/mindinsight/pulls/503)
+* Fix the line break problem when the profiling file number is too long. [532](https://gitee.com/mindspore/mindinsight/pulls/532)
+
+## Thanks to our Contributors
+Thanks goes to these wonderful people:
+
+Congli Gao, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Yongxiu Qu, Hui Pan, Luyu Qiu, Junyan Qin, Kai Wen, Weining Wang, Yue Wang, Zhuanke Wu, Yifan Xia, Lihua Ye, Weibiao Yu, Ximiao Yu, Yunshu Zhang, Ting Zhao, Jianfeng Zhu, Ning Ma, Yihui Zhang, Shuide Wang, Hong Sheng, Lin Pan, Ran Mo.
+
+Contributions of any kind are welcome!
+
 # Release 0.6.0-beta
 
 ## Major Features and Improvements
