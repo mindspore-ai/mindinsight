@@ -28,7 +28,7 @@ def cli_entry():
     os.umask(permissions << 3 | permissions)
 
     parser = argparse.ArgumentParser(
-        prog='wizard',
+        prog='mindwizard',
         description='MindWizard CLI entry point (version: {})'.format(mindinsight.__version__))
 
     parser.add_argument(

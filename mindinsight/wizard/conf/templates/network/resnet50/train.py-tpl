@@ -36,7 +36,7 @@ parser.add_argument('--run_distribute', type=bool, default=False, help='Run dist
 parser.add_argument('--device_num', type=int, default=1, help='Device num.')
 
 parser.add_argument('--dataset_path', type=str, default=None, help='Dataset path')
-parser.add_argument('--device_target', type=str, default='Ascend', help='Device target: "Ascend", "GPU", "CPU"')
+parser.add_argument('--device_target', type=str, default='Ascend', help='Device target: "Ascend", "GPU"')
 parser.add_argument('--pre_trained', type=str, default=None, help='Pretrained checkpoint path')
 parser.add_argument('--dataset_sink_mode', type=str, default='True', choices = ['True', 'False'],
                     help='DataSet sink mode is True or False')

@@ -33,7 +33,7 @@ from src.lenet import LeNet5
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='MindSpore Lenet Example')
-    parser.add_argument('--device_target', type=str, default="Ascend", choices=['Ascend', 'GPU', 'CPU'],
+    parser.add_argument('--device_target', type=str, default="Ascend", choices=['Ascend', 'GPU'],
                         help='device where the code will be implemented (default: Ascend)')
     parser.add_argument('--dataset_path', type=str, default="./Data",
                         help='path where the dataset is saved')

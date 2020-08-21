@@ -14,6 +14,7 @@
 # ============================================================================
 """GenericNetwork module."""
 import os
+import textwrap
 
 import click
 
@@ -93,6 +94,7 @@ class GenericNetwork(BaseNetwork):
         choice = click.prompt(prompt_msg, type=prompt_type, hide_input=False, show_choices=False,
                               confirmation_prompt=False, default=default_choice,
                               value_proc=lambda x: process_prompt_choice(x, prompt_type))
+        click.secho(textwrap.dedent("Your choice is %s." % choice_contents[choice - 1]), fg='yellow')
         return choice_contents[choice - 1]
 
     def ask_loss_function(self):

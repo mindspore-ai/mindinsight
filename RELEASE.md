@@ -9,8 +9,8 @@
 * Web UI supports language internationalization, including both Chinese and English.
 
 ## Bugfixes
-* Optimize UI page initialization to handle timeout requests. [!503](https://gitee.com/mindspore/mindinsight/pulls/503)
-* Fix the line break problem when the profiling file number is too long. [532](https://gitee.com/mindspore/mindinsight/pulls/532)
+* Optimize UI page initialization to handle timeout requests. ([!503](https://gitee.com/mindspore/mindinsight/pulls/503))
+* Fix the line break problem when the profiling file number is too long. ([!532](https://gitee.com/mindspore/mindinsight/pulls/532))
 
 ## Thanks to our Contributors
 Thanks goes to these wonderful people:
