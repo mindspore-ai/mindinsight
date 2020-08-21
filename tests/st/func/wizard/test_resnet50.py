@@ -117,6 +117,7 @@ class TestResNet50:
         config_dataset_is_right = False
         config_optimizer_is_right = False
         network_is_right = False
+        cross_entorpy_smooth_is_right = False
         generator_lr_is_right = False
         for source_file in self.source_files:
             if source_file.file_relative_path == 'src/dataset.py':
@@ -124,6 +125,8 @@ class TestResNet50:
                     dataset_is_right = True
             if source_file.file_relative_path == os.path.join('src', NETWORK_NAME.lower() + '.py'):
                 network_is_right = True
+            if source_file.file_relative_path == 'src/CrossEntropySmooth.py':
+                cross_entorpy_smooth_is_right = True
             if source_file.file_relative_path == 'src/lr_generator.py':
                 generator_lr_is_right = True
             if source_file.file_relative_path == 'src/config.py':
@@ -136,6 +139,7 @@ class TestResNet50:
         assert config_dataset_is_right
         assert config_optimizer_is_right
         assert network_is_right
+        assert cross_entorpy_smooth_is_right
         assert generator_lr_is_right
 
     @staticmethod
@@ -179,13 +183,21 @@ class TestResNet50:
         for source_file in self.source_files:
             if source_file.file_relative_path == 'train.py':
                 content = source_file.content
-                if 'resnet50' in content and loss_name in content and optimizer_name in content:
-                    train_is_right = True
+                if 'resnet50' in content and optimizer_name in content:
+                    if dataset_name == 'ImageNet' and loss_name == 'SoftmaxCrossEntropyWithLogits' \
+                            and 'loss = CrossEntropySmooth' in content:
+                        train_is_right = True
+                    elif loss_name in content:
+                        train_is_right = True
 
             if source_file.file_relative_path == 'eval.py':
                 content = source_file.content
-                if 'resnet50' in content and loss_name in content:
-                    eval_is_right = True
+                if 'resnet50' in content:
+                    if dataset_name == 'ImageNet' and loss_name == 'SoftmaxCrossEntropyWithLogits' \
+                            and 'loss = CrossEntropySmooth' in content:
+                        eval_is_right = True
+                    elif loss_name in content:
+                        eval_is_right = True
 
             if source_file.file_relative_path == 'README.md':
                 content = source_file.content
