@@ -206,10 +206,14 @@ class GunicornLogger(Logger):
         error_log_path = _get_error_log_path()
         os.chmod(access_log_path, stat.S_IREAD | stat.S_IWRITE)
         os.chmod(error_log_path, stat.S_IREAD | stat.S_IWRITE)
+        super(GunicornLogger, self).__init__(cfg)
 
     def now(self):
-        """return Log Format"""
+        """return the log format"""
         return time.strftime('[%Y-%m-%d-%H:%M:%S %z]')
+
+    def setup(self, cfg):
+        """Rewrite the setup method of Logger, and we don't need to do anything"""
 
 
 def _get_all_ip_addresses(host):
