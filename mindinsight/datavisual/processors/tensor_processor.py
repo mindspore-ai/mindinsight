@@ -99,9 +99,9 @@ def get_statistics_dict(stats):
         dict, a dict including 'max', 'min', 'avg', 'count', 'nan_count', 'neg_inf_count', 'pos_inf_count'.
     """
     statistics = {
-        "max": stats.max,
-        "min": stats.min,
-        "avg": stats.avg,
+        "max": float(stats.max),
+        "min": float(stats.min),
+        "avg": float(stats.avg),
         "count": stats.count,
         "nan_count": stats.nan_count,
         "neg_inf_count": stats.neg_inf_count,
@@ -302,8 +302,7 @@ class TensorProcessor(BaseProcessor):
             if step != tensor.step:
                 continue
             step_in_cache = True
-            ndarray = value.get_or_calc_ndarray()
-            res_data = get_specific_dims_data(ndarray, dims, list(value.dims))
+            res_data = get_specific_dims_data(value.ndarray, dims, list(value.dims))
             flatten_data = res_data.flatten().tolist()
             if len(flatten_data) > MAX_TENSOR_RESPONSE_DATA_SIZE:
                 raise ResponseDataExceedMaxValueError("the size of response data: {} exceed max value: {}."
@@ -326,7 +325,7 @@ class TensorProcessor(BaseProcessor):
                         elif np.isposinf(data):
                             transfer_data[index] = 'INF'
                         else:
-                            transfer_data[index] = data
+                            transfer_data[index] = float(data)
                 return transfer_data
 
             stats = get_statistics_from_tensor(res_data)

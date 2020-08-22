@@ -209,7 +209,7 @@ class GunicornLogger(Logger):
         super(GunicornLogger, self).__init__(cfg)
 
     def now(self):
-        """return the log format"""
+        """Get log format."""
         return time.strftime('[%Y-%m-%d-%H:%M:%S %z]')
 
     def setup(self, cfg):

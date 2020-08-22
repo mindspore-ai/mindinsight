@@ -15,9 +15,13 @@
 """Config file for gunicorn."""
 
 import os
+import multiprocessing
+import signal
 import threading
+import time
 from importlib import import_module
 
+import psutil
 import gunicorn
 
 
@@ -43,3 +47,44 @@ def on_starting(server):
     hook_module = import_module('mindinsight.utils.hook')
     for hook in hook_module.HookUtils.instance().hooks():
         threading.Thread(target=hook.on_startup, args=(server.log,)).start()
+
+
+def post_fork(server, worker):
+    """
+    Launch a process to listen worker after gunicorn fork worker.
+
+    Children processes of gunicorn worker should be killed when worker has been killed
+    because gunicorn master murders this worker for some reasons such as worker timeout.
+
+    Args:
+        server (Arbiter): gunicorn server instance.
+        worker (ThreadWorker): worker instance.
+    """
+    def murder_worker_children_processes():
+        processes_to_kill = []
+        # sleep 3 seconds so that all worker children processes have been launched.
+        time.sleep(3)
+        process = psutil.Process(worker.pid)
+        for child in process.children(recursive=True):
+            if child.pid != os.getpid():
+                processes_to_kill.append(child)
+        while True:
+            if os.getppid() != worker.pid:
+                current_worker_pid = os.getppid()
+                for proc in processes_to_kill:
+                    server.log.info("Original worker pid: %d, current worker pid: %d, stop process %d",
+                                    worker.pid, current_worker_pid, proc.pid)
+                    try:
+                        proc.send_signal(signal.SIGKILL)
+                    except psutil.NoSuchProcess:
+                        continue
+                    except psutil.Error as ex:
+                        server.log.error("Stop process %d failed. Detail: %s.", proc.pid, str(ex))
+                server.log.info("%d processes have been killed.", len(processes_to_kill))
+                break
+            time.sleep(1)
+
+    listen_process = multiprocessing.Process(target=murder_worker_children_processes,
+                                             name="murder_worker_children_processes")
+    listen_process.start()
+    server.log.info("Server pid: %d, start to listening.", server.pid)
