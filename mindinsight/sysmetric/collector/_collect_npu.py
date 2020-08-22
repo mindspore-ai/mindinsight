@@ -15,49 +15,11 @@
 """The npu collector."""
 
 import inspect
-from collections import defaultdict
 from ctypes import CDLL, Structure, byref, c_char, c_int, c_uint, c_ulong, c_ushort
 from functools import lru_cache, wraps
-from threading import Lock, Thread
 
 from mindinsight.sysmetric.common.exceptions import DsmiQueryingException
 from mindinsight.sysmetric.common.log import logger
-
-
-def _timeout(seconds, default):
-    """
-    The timeout decorator wait for specified seconds or return the default value.
-
-    Args:
-        seconds (float): The specified seconds.
-        default (Any): The default value.
-    """
-
-    def outer(fn):
-        cached, lockdict = {}, defaultdict(Lock)
-
-        def target(*args):
-            lock = lockdict[args]
-            if lock.acquire(blocking=False):
-                try:
-                    cached[args] = fn(*args)
-                finally:
-                    lock.release()
-            else:
-                logger.debug('%s%r skipped.', fn.__name__, args)
-
-        @wraps(fn)
-        def inner(*args):
-            thread = Thread(target=target, args=args, daemon=True)
-            thread.start()
-            thread.join(seconds)
-            if thread.is_alive():
-                logger.debug('%s%r timeouted.', fn.__name__, args)
-            return cached.get(args, default)
-
-        return inner
-
-    return outer
 
 
 def _fallback_to_prev_result(fn):
@@ -270,27 +232,6 @@ def dsmi_get_hbm_info(device_id):
     }
 
 
-@_timeout(0.2, -1)
-def dsmi_get_device_utilization_rate(device_id, device_type):
-    """
-    Get device utilization rate, %.
-
-    Note: Query AI Core when profiling turns on will return failure.
-
-    Args:
-        device_id (int): The specific device id
-        device_type (int): The device type, 1 for memory, 2 AI Core, 5 memory bandwidth, 6 HBM, 10 HBM bandwidth.
-    Returns:
-        int, the utilization rate, returning -1 to indicate querying failed.
-    """
-    device_id = c_int(device_id)
-    device_type = c_int(device_type)
-    utilization_rate = c_uint()
-    if _libsmicall(device_id, device_type, byref(utilization_rate)):
-        return utilization_rate.value
-    return -1
-
-
 @_fallback_to_prev_result
 def dsmi_get_device_power_info(device_id):
     """
@@ -395,14 +336,12 @@ def _collect_one(device_id):
     success[3], ip_addr = dsmi_get_device_ip_address(device_id)
     success[4], power_info = dsmi_get_device_power_info(device_id)
     success[5], temperature = dsmi_get_device_temperature(device_id)
-    aicore_rate = dsmi_get_device_utilization_rate(device_id, 2)
     return {
         'chip_name': chip_info.get('chip_name'),
         'device_id': device_id,
         'available': all(success) and health == 0 and hbm_info.get('memory_usage', 0) // kb_to_mb < memory_threshold,
         'health': health,
         'ip_address': ip_addr.get('ip_address'),
-        'aicore_rate': aicore_rate,
         'hbm_info': {
             'memory_size': hbm_info.get('memory_size') // kb_to_mb,
             'memory_usage': hbm_info.get('memory_usage') // kb_to_mb
