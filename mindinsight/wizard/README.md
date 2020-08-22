@@ -48,6 +48,7 @@ project
  |   |- config.py                   # parameter configuration
  |   |- dataset.py                  # data preprocessing
  |   |- lenet.py/resent.py/...      # network definition
+ |   |- ...
  |- eval.py                         # evaluate network
  |- train.py                        # train network
  |- README.md
@@ -78,23 +79,39 @@ $ mindwizard project
    1: MNIST
  [1]: 1
 
-lenet is generated in $PWD/project
+project is generated in $PWD/project
 
 $ cd $PWD/project/scripts
 ```
 
 ### Training
 
-```
-# distributed training
-Usage: ./run_distribute_train.sh [RANK_TABLE_FILE] [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+Distributed training
 
-# standalone training
-Usage: ./run_standalone_train.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+```
+# Ascend
+Usage: bash run_distribute_train.sh [RANK_TABLE_FILE] [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+
+# GPU
+Usage: bash run_distribute_train_gpu.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+```
+
+Standalone training
+
+```
+# Ascend
+Usage: bash run_standalone_train.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
+
+# GPU 
+Usage: bash run_standalone_train_gpu.sh [DATASET_PATH] [PRETRAINED_CKPT_PATH](optional)
 ```
 
 ### Evaluation
 
 ```
-Usage: ./run_eval.sh [DATASET_PATH] [CHECKPOINT_PATH]
+# Ascend
+Usage: bash run_eval.sh [DATASET_PATH] [CHECKPOINT_PATH]
+
+# GPU
+Usage: bash run_eval_gpu.sh [DATASET_PATH] [CHECKPOINT_PATH]
 ```
