@@ -188,6 +188,15 @@ class ResponseDataExceedMaxValueError(MindInsightException):
                                                               http_code=400)
 
 
+class DataTypeError(MindInsightException):
+    """Data_type does not support."""
+    def __init__(self, error_detail):
+        error_msg = f'Data type does not support. Detail: {error_detail}'
+        super(DataTypeError, self).__init__(DataVisualErrors.DATA_TYPE_NOT_SUPPORT,
+                                            error_msg,
+                                            http_code=400)
+
+
 class TrainJobDetailNotInCacheError(MindInsightException):
     """Detail info of given train job is not in cache."""
     def __init__(self, error_detail="no detail provided."):
