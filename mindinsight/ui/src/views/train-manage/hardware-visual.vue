@@ -134,24 +134,6 @@ limitations under the License.
                   <span class="cl-text-center">{{ scope.row.ip_address }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="aicore">
-                <template slot="header">
-                   {{ $t('hardwareVisual.aiCore') }}
-                  <el-tooltip class="item"
-                              effect="light"
-                              :content="$t('hardwareVisual.aicoreTip')"
-                              placement="top-start">
-                    <i class="el-icon-info"></i>
-                  </el-tooltip>
-                </template>
-                <template slot-scope="scope">
-                  <div class="core-wrap">
-                    <el-progress :percentage="scope.row.aicore_rate===-1?0:scope.row.aicore_rate"
-                                 :format="format(scope.row.aicore_rate)"></el-progress>
-                  </div>
-                </template>
-
-              </el-table-column>
               <el-table-column prop="hbm_usage"
                                min-width="100">
                 <template slot="header">
@@ -616,13 +598,6 @@ export default {
         }
       }
       return `${n}`;
-    },
-    format(percentage, item) {
-      return () => {
-        return percentage === -1
-          ? this.$t('hardwareVisual.faliQuery')
-          : `${percentage}`;
-      };
     },
     formatHbm(hbmInfo) {
       return function() {
