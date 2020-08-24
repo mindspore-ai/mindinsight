@@ -114,6 +114,8 @@ limitations under the License.
       <!-- table area -->
       <div class="table-container"
            v-show="!echartNoData && showTable">
+        <div class="disabled-checked"
+             v-show="!table.data.length"></div>
         <el-table ref="table"
                   :data="table.data"
                   tooltip-effect="light"
@@ -2229,6 +2231,15 @@ export default {
       height: calc(68% - 130px);
       padding: 6px 32px;
       position: relative;
+      .disabled-checked {
+        position: absolute;
+        top: 9px;
+        left: 0px;
+        z-index: 1000;
+        width: 87px;
+        height: 66px;
+        cursor: not-allowed;
+      }
       .custom-label {
         max-width: calc(100% - 25px);
         padding: 0;
