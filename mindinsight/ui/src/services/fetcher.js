@@ -50,22 +50,16 @@ axios.interceptors.response.use(
 
       // error returned by backend
       if (error.response && error.response.data && error.response.data.error_code) {
-        if (error.response.data.error_code.toString() === '50545005') {
-          if (error.config.headers.ignoreError ||
-          router.currentRoute.path === '/train-manage/training-dashboard') {
-            return Promise.reject(error);
-          }
-        } else if (error.response.data.error_code.toString() === '50542216' &&
-        router.currentRoute.path === '/train-manage/training-dashboard') {
-          return Promise.reject(error);
-        } else if (router.currentRoute.path === '/profiling/profiling-dashboard' &&
-        error.config.headers.ignoreError) {
-          return Promise.reject(error);
-        } else if (router.currentRoute.path === '/profiling-gpu/profiling-dashboard' &&
-        error.config.headers.ignoreError) {
-          return Promise.reject(error);
-        } else if (error.response.data.error_code.toString() === '50545013' ||
-        error.response.data.error_code.toString() === '50545014') {
+        const path = router.currentRoute.path;
+        const errorCode = error.response.data.error_code.toString();
+
+        const ignoreCode = {
+          ignoreError: ['50545005'],
+          regardError: ['50545013', '50545014'],
+        };
+
+        if (path.includes('-dashboard') || ignoreCode.regardError.includes(errorCode) ||
+          (ignoreCode.ignoreError.includes(errorCode) && error.config.headers.ignoreError)) {
           return Promise.reject(error);
         }
         if (errorData[error.response.data.error_code]) {
@@ -86,9 +80,7 @@ axios.interceptors.response.use(
           return false;
         } else {
         // show network error
-          Vue.prototype.$message.error(
-              i18n.messages[i18n.locale].public.netWorkError,
-          );
+          Vue.prototype.$message.error(i18n.messages[i18n.locale].public.netWorkError);
           return Promise.reject(error);
         }
       }
