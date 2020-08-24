@@ -296,6 +296,7 @@ class _SummaryParser(_Parser):
                 self._load_single_file(self._summary_file_handler, executor)
                 # Wait for data in this file to be processed to avoid loading multiple files at the same time.
                 executor.wait_all_tasks_finish()
+                logger.info("Parse summary file finished, file path: %s.", file_path)
             except UnknownError as ex:
                 logger.warning("Parse summary file failed, detail: %r,"
                                "file path: %s.", str(ex), file_path)
@@ -383,7 +384,7 @@ class _SummaryParser(_Parser):
         # read the header
         header_str = file_handler.read(HEADER_SIZE)
         if not header_str:
-            logger.info("End of file, file_path=%s.", file_handler.file_path)
+            logger.info("Load summary file finished, file_path=%s.", file_handler.file_path)
             return None
         header_crc_str = file_handler.read(CRC_STR_SIZE)
         if not header_crc_str:
@@ -441,12 +442,9 @@ class _SummaryParser(_Parser):
 
         elif plugin == PluginNameEnum.TENSOR.value:
             tensor_event_value = TensorContainer(tensor_event_value)
-            tensor_count = 1
-            for d in tensor_event_value.dims:
-                tensor_count *= d
-            if tensor_count > MAX_TENSOR_COUNT:
+            if tensor_event_value.size > MAX_TENSOR_COUNT:
                 logger.warning('tag: %s/tensor, dims: %s, tensor count: %d exceeds %d and drop it.',
-                               value.tag, tensor_event_value.dims, tensor_count, MAX_TENSOR_COUNT)
+                               value.tag, tensor_event_value.dims, tensor_event_value.size, MAX_TENSOR_COUNT)
                 return None
 
         elif plugin == PluginNameEnum.IMAGE.value:
