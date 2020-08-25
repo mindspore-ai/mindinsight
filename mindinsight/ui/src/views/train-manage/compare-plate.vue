@@ -1208,9 +1208,7 @@ export default {
         this.$store.commit('setIsReload', false);
         this.isReloading = false;
       }
-      if (error.response && error.response.data) {
-        this.clearAllData();
-      }
+      this.clearAllData();
     },
 
     /**
