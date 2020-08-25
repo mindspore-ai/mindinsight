@@ -29,7 +29,7 @@ export default new Vuex.Store({
     // reload time
     timeReloadValue: localStorage.timeReloadValue
       ? localStorage.timeReloadValue
-      : 3,
+      : 10,
     // Scheduled hardware reload flag
     isHardwareTimeReload: localStorage.isHardwareTimeReload === 'false' ? false : true,
     // hardware reload time
