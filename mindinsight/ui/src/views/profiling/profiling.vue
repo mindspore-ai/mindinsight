@@ -65,7 +65,7 @@ import RequestService from '../../services/request-service';
 export default {
   data() {
     return {
-      summaryPath: this.$route.query.summaryPath,
+      summaryPath: '',
       tipsArrayList: [
         'step_trace-iter_interval',
         'minddata_pipeline-general',
@@ -101,6 +101,7 @@ export default {
         this.curDashboardInfo.query.id = this.$route.query.id;
         this.curDashboardInfo.query.dir = this.$route.query.dir;
         this.curDashboardInfo.query.path = this.$route.query.path;
+        this.summaryPath = decodeURIComponent( this.$route.query.id);
         this.getDeviceList();
       } else {
         this.curDashboardInfo.query.trainingJobId = '';
