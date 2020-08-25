@@ -49,7 +49,8 @@
     "dataTraceback": "数据溯源",
     "comparePlate": "对比看板",
     "disableProfilerTip": "无profiler日志，无法查看性能分析",
-    "hardwareVisual": "硬件资源"
+    "hardwareVisual": "硬件资源",
+    "openNewTab": "打开新页签"
   },
   "modelTraceback": {
     "summaryPath": "训练日志路径",

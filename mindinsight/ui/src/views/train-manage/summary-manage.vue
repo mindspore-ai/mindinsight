@@ -69,14 +69,15 @@ limitations under the License.
                              :label="$t('summaryManage.operation')"
                              width="240">
               <template slot-scope="scope">
-                <el-button type="text"
-                           @click.stop="goToTrainDashboard(scope.row)">
-                  {{$t('summaryManage.viewDashboard')}} </el-button>
-                <el-button type="text"
-                           class="operate-btn"
+                <span class="menu-item"
+                      @contextmenu.prevent="rightClick(scope.row, $event, 0)"
+                      @click.stop="goToTrainDashboard(scope.row)">
+                  {{$t('summaryManage.viewDashboard')}} </span>
+                <span class="menu-item operate-btn"
                            v-if="scope.row.viewProfiler"
+                           @contextmenu.prevent="rightClick(scope.row, $event, 1)"
                            @click.stop="goToProfiler(scope.row)">
-                  {{$t('summaryManage.viewProfiler')}} </el-button>
+                  {{$t('summaryManage.viewProfiler')}} </span>
                 <el-button type="text"
                            class="operate-btn"
                            disabled
@@ -99,6 +100,13 @@ limitations under the License.
         </el-pagination>
       </div>
     </div>
+    <div id="contextMenu"
+         v-if="contextMenu.show"
+         :style="{left: contextMenu.left, top: contextMenu.top}">
+      <ul>
+        <li @click="doRightClick()">{{$t('summaryManage.openNewTab')}}</li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -117,11 +125,20 @@ export default {
         total: 0,
         layout: 'total, prev, pager, next, jumper',
       },
+      contextMenu: {
+        show: false,
+        left: '',
+        top: '',
+        data: null,
+        type: 0,
+      },
     };
   },
   computed: {},
   watch: {},
-  destroyed() {},
+  destroyed() {
+    document.onclick = null;
+  },
   activated() {},
   mounted() {
     document.title = `${this.$t('summaryManage.summaryList')}-MindInsight`;
@@ -132,6 +149,10 @@ export default {
 
   methods: {
     init() {
+      document.onclick = () => {
+        this.contextMenu.show = false;
+      };
+
       const params = {
         limit: this.pagination.pageSize,
         offset: this.pagination.currentPage - 1,
@@ -187,34 +208,74 @@ export default {
      * @param {Object} row select row
      */
     goToTrainDashboard(row) {
+      this.contextMenu.show = false;
       const trainId = encodeURIComponent(row.train_id);
 
-      const routeUrl = this.$router.resolve({
+      this.$router.push({
         path: '/train-manage/training-dashboard',
         query: {id: trainId},
       });
-      window.open(routeUrl.href, '_blank');
     },
     /**
      * go to Profiler
      * @param {Object} row select row
      */
     goToProfiler(row) {
+      this.contextMenu.show = false;
       const profilerDir = encodeURIComponent(row.profiler_dir);
       const trainId = encodeURIComponent(row.train_id);
       const path = encodeURIComponent(row.relative_path);
       const router = `/profiling${row.profiler_type === 'gpu' ? '-gpu' : ''}`;
 
-      const routeUrl = this.$router.resolve({
+      this.$router.push({
         path: router,
         query: {
           dir: profilerDir,
           id: trainId,
           path: path,
-          summaryPath: row.train_id,
         },
       });
-      window.open(routeUrl.href, '_blank');
+    },
+
+    rightClick(row, event, type) {
+      this.contextMenu.data = row;
+      this.contextMenu.type = type;
+      this.contextMenu.left = event.x + 'px';
+      this.contextMenu.top = event.y + 'px';
+      this.contextMenu.show = true;
+    },
+
+    doRightClick(key) {
+      const row = this.contextMenu.data;
+      if (!row) {
+        return;
+      }
+      if (this.contextMenu.type) {
+        this.contextMenu.show = false;
+        const profilerDir = encodeURIComponent(row.profiler_dir);
+        const trainId = encodeURIComponent(row.train_id);
+        const path = encodeURIComponent(row.relative_path);
+        const router = `/profiling${row.profiler_type === 'gpu' ? '-gpu' : ''}`;
+
+        const routeUrl = this.$router.resolve({
+          path: router,
+          query: {
+            dir: profilerDir,
+            id: trainId,
+            path: path,
+          },
+        });
+        window.open(routeUrl.href, '_blank');
+      } else {
+        this.contextMenu.show = false;
+        const trainId = encodeURIComponent(row.train_id);
+
+        const routeUrl = this.$router.resolve({
+          path: '/train-manage/training-dashboard',
+          query: {id: trainId},
+        });
+        window.open(routeUrl.href, '_blank');
+      }
     },
   },
   components: {},
@@ -281,6 +342,27 @@ export default {
   }
   .operate-btn {
     margin-left: 20px;
+  }
+  .menu-item {
+    color: #00a5a7;
+    cursor: pointer;
+  }
+  #contextMenu {
+    position: absolute;
+    min-width: 150px;
+    border: 1px solid #d4d4d4;
+    ul {
+      background-color: #f7faff;
+      border-radius: 2px;
+      li {
+        padding: 5px 18px;
+        cursor: pointer;
+        &:hover {
+          background-color: rgb(167, 167, 167);
+          color: white;
+        }
+      }
+    }
   }
 }
 </style>
