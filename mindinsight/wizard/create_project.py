@@ -91,6 +91,7 @@ class CreateProject(BaseCommand):
             if not choice:
                 click.secho(textwrap.dedent("Network is required."), fg='red')
 
+        click.secho(textwrap.dedent("Your choice is %s." % network_type_choices[choice - 1]), fg='yellow')
         return network_type_choices[choice - 1]
 
     @staticmethod

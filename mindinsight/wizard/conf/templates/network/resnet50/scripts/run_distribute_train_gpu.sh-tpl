@@ -54,7 +54,6 @@ export RANK_SIZE=$DEVICE_NUM
 rm -rf ./train_parallel
 mkdir ./train_parallel
 cp ../*.py ./train_parallel
-cp *.sh ./train_parallel
 cp -r ../src ./train_parallel
 cd ./train_parallel || exit
 
