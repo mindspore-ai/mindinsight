@@ -44,7 +44,8 @@ limitations under the License.
                     stripe
                     height="100%"
                     tooltip-effect="light"
-                    class="list-el-table">
+                    class="list-el-table"
+                    ref="table">
             <el-table-column width="50"
                              type=index
                              :label="$t('summaryManage.sorting')">
@@ -132,12 +133,19 @@ export default {
         data: null,
         type: 0,
       },
+      tableDom: null,
     };
   },
   computed: {},
   watch: {},
   destroyed() {
+    window.removeEventListener('resize', this.closeMenu);
+    window.removeEventListener('mousewheel', this.closeMenu);
+    if (this.tableDom) {
+      this.tableDom.removeEventListener('scroll', this.closeMenu);
+    }
     document.onclick = null;
+    document.onscroll = null;
   },
   activated() {},
   mounted() {
@@ -145,11 +153,20 @@ export default {
     this.$nextTick(() => {
       this.init();
     });
+    setTimeout(() => {
+      window.addEventListener('resize', this.closeMenu, false);
+      window.addEventListener('mousewheel', this.closeMenu, false);
+      this.tableDom = this.$refs.table.bodyWrapper;
+      this.tableDom.addEventListener('scroll', this.closeMenu, false);
+    }, 300);
   },
 
   methods: {
     init() {
       document.onclick = () => {
+        this.contextMenu.show = false;
+      };
+      document.onscroll = () => {
         this.contextMenu.show = false;
       };
 
@@ -238,10 +255,13 @@ export default {
     },
 
     rightClick(row, event, type) {
+      const maxWidth = 175;
       this.contextMenu.data = row;
       this.contextMenu.type = type;
-      this.contextMenu.left = event.x + 'px';
-      this.contextMenu.top = event.y + 'px';
+      const width = document.getElementById('cl-summary-manage').clientWidth;
+      const left = Math.min(width - maxWidth, event.clientX + window.scrollX);
+      this.contextMenu.left = left + 'px';
+      this.contextMenu.top = event.clientY + window.scrollY + 'px';
       this.contextMenu.show = true;
     },
 
@@ -276,6 +296,9 @@ export default {
         });
         window.open(routeUrl.href, '_blank');
       }
+    },
+    closeMenu() {
+      this.contextMenu.show = false;
     },
   },
   components: {},

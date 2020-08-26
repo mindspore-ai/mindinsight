@@ -391,8 +391,10 @@
       "content31": "您可以通过时间线信息分析流切分方法是否合理、迭代间隙和拖尾时间是否过长等；",
       "content32": "也可以具体定位到某个算子，查看分析它的执行时间。"
     },
+    "countUnit": "次",
     "unit": "ms/次",
-    "gpuunit": "us/次"
+    "gpuunit": "us/次",
+    "chartTitle": "平均耗时排行"
   },
   "hardwareVisual": {
     "processor": "昇腾AI处理器",
@@ -428,14 +430,14 @@
     "availableFree": "芯片空闲",
     "availableBusy": "芯片已被占用或不可用",
     "failQueryChip": "芯片信息查询有误",
-    "name":"名称",
-    "npu":"编号",
-    "available":"是否空闲",
-    "health":"健康状态",
-    "ipAddress":"IP 地址",
-    "hbmUsage":"已用HBM内存(MB)",
-    "power":"功率(W)",
-    "temp":"温度(℃)"
+    "name": "名称",
+    "npu": "编号",
+    "available": "是否空闲",
+    "health": "健康状态",
+    "ipAddress": "IP 地址",
+    "hbmUsage": "已用HBM内存(MB)",
+    "power": "功率(W)",
+    "temp": "温度(℃)"
   },
   "components": {
     "summaryTitle": "训练选择",
@@ -448,7 +450,7 @@
     "gridAccuracy": "保留小数位",
     "inCorrectInput": "无效输入",
     "gridTableNoData": "表格无数据",
-    "cache":"正在加载"
+    "cache": "正在加载"
   },
   "error": {
     "50540000": "系统错误",
