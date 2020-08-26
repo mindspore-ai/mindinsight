@@ -232,10 +232,10 @@
     "card": " ",
     "searchByType": "Enter operator type",
     "searchByName": "Enter operator name",
-    "operatorInfo":"Operator",
-    "kernelInfo":"Kernel",
-    "searchByCoreName":"Enter kernel name",
-    "searchByCoreFullName":"Enter operator full name"
+    "operatorInfo": "Operator",
+    "kernelInfo": "Kernel",
+    "searchByCoreName": "Enter kernel name",
+    "searchByCoreFullName": "Enter operator full name"
   },
   "profiling": {
     "profilingDashboard": "Profiling Dashboard",
@@ -392,8 +392,10 @@
       "content31": "You can analyze whether the flow tiling policy is proper and whether the step interval and tail time are too long based on the timeline information.",
       "content32": "You can also locate an operator and view and analyze its execution time."
     },
+    "countUnit": "times",
     "unit": "ms/time",
-    "gpuunit": "us/time"
+    "gpuunit": "us/time",
+    "chartTitle": "Average Time Consumption Ranking"
   },
   "hardwareVisual": {
     "processor": "Ascend AI Processor",
@@ -449,7 +451,7 @@
     "gridAccuracy": "Decimal places are reserved.",
     "inCorrectInput": "Invalid input.",
     "gridTableNoData": "No data in the table.",
-    "cache":"CACHING"
+    "cache": "CACHING"
   },
   "error": {
     "50540000": "System error.",

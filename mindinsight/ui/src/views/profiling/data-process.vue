@@ -1293,7 +1293,7 @@ export default {
 .md-wrap {
   height: 100%;
   background: #fff;
-  padding: 0 32px;
+  padding: 0 16px;
   .title {
     font-size: 16px;
     font-weight: bold;
@@ -1307,6 +1307,10 @@ export default {
     & > .el-tab-pane {
       height: 100%;
     }
+  }
+  .el-tabs__item.is-active {
+    color: #00a5a7;
+    font-weight: bold;
   }
   .md-top {
     height: 20%;

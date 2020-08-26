@@ -25,6 +25,7 @@ limitations under the License.
                :class="{fullScreen:fullScreen}"
                v-if="operatorCharts.data.length">
             <div>
+              <div class="chart-title">{{$t('profiling.chartTitle')}}</div>
               <el-radio-group class="chart-radio-group"
                               v-model="operatorCharts.type"
                               @change="operatorChartChange"
@@ -99,13 +100,14 @@ limitations under the License.
                                        :property="ele"
                                        :key="key"
                                        :sortable="ele === 'op_info' ? false : 'custom'"
-                                       show-overflow-tooltip>
+                                       :min-width="(ele === 'op_type') ? 100 : (ele === 'op_name') ?
+                                       120 : (ele === 'op_full_name') ? 150 : '' "
+                                       :show-overflow-tooltip="(ele === 'op_full_name'||ele === 'op_name'
+                                       ||ele==='op_type') ? false : true">
                         <template slot="header">
                           <div class="custom-label"
-                               :title="(ele==='op_total_time'||ele==='op_avg_time'||ele==='cuda_activity_cost_time')
-                               ?`${ele} (${$t('profiling.gpuunit')})`:ele">
-                            {{(ele==='op_total_time'||ele==='op_avg_time'||ele==='cuda_activity_cost_time')
-                            ?`${ele} (${$t('profiling.gpuunit')})`:ele}}
+                               :title="getHeaderField(ele)">
+                            {{getHeaderField(ele)}}
                           </div>
                         </template>
                       </el-table-column>
@@ -126,8 +128,8 @@ limitations under the License.
                                sortable>
                 <template slot="header">
                   <div class="custom-label"
-                       :title="(item==='total_time'||item==='avg_time')?`${item} (${$t('profiling.gpuunit')})`:item">
-                    {{(item==='total_time'||item==='avg_time')?`${item} (${$t('profiling.gpuunit')})`:item}}
+                       :title="getHeaderField(item)">
+                    {{getHeaderField(item)}}
                   </div>
                 </template>
               </el-table-column>
@@ -144,13 +146,14 @@ limitations under the License.
                                :property="item"
                                :key="$index"
                                :sortable="item === 'op_info' ? false : 'custom'"
-                               show-overflow-tooltip>
+                               :min-width="(item === 'op_type') ? 100 : (item === 'op_name')
+                               ? 120 : (item === 'op_full_name') ? 150 : '' "
+                               :show-overflow-tooltip="(item === 'op_full_name' || item === 'op_name'
+                               || item === 'op_type') ? false : true">
                 <template slot="header">
                   <div class="custom-label"
-                       :title="(item==='op_total_time'||item==='op_avg_time'||item==='cuda_activity_cost_time')
-                       ?`${item} (${$t('profiling.gpuunit')})`:item">
-                    {{(item==='op_total_time'||item==='op_avg_time'||item==='cuda_activity_cost_time')
-                    ?`${item} (${$t('profiling.gpuunit')})`:item}}
+                       :title="getHeaderField(item)">
+                    {{getHeaderField(item)}}
                   </div>
                 </template>
               </el-table-column>
@@ -180,6 +183,7 @@ limitations under the License.
                :class="{fullScreen:fullScreenKernel}"
                v-if="coreCharts.data.length">
             <div>
+              <div class="chart-title">{{$t('profiling.chartTitle')}}</div>
             </div>
             <div class="cl-profiler-echarts">
               <div class
@@ -225,13 +229,14 @@ limitations under the License.
                                :property="item"
                                :key="$index"
                                sortable="custom"
-                               show-overflow-tooltip>
+                               :min-width="(item === 'type') ? 100 : (item === 'name' || item === 'op_full_name')
+                                ? 150 : '' "
+                               :show-overflow-tooltip="(item === 'op_full_name' || item === 'name'
+                               ||item === 'type') ? false : true">
                 <template slot="header">
                   <div class="custom-label"
-                       :title="(item==='total_duration'||item==='avg_duration'||item==='max_duration'
-                       || item==='min_duration')?`${item} (${$t('profiling.gpuunit')})`:item">
-                    {{(item==='total_duration'||item==='avg_duration'||item==='max_duration'||item==='min_duration')
-                    ?`${item} (${$t('profiling.gpuunit')})`:item}}
+                       :title="getHeaderField(item)">
+                    {{getHeaderField(item)}}
                   </div>
                 </template>
               </el-table-column>
@@ -363,6 +368,29 @@ export default {
     this.$bus.$off('collapse');
   },
   methods: {
+    getHeaderField(key) {
+      const maps = {
+        total_time: 'total_time (us)',
+        avg_time: `avg_time (${this.$t('profiling.gpuunit')})`,
+        op_total_time: 'op_total_time (us)',
+        op_avg_time: `op_avg_time (${this.$t('profiling.gpuunit')})`,
+        max_duration: 'max_duration (us)',
+        min_duration: 'min_duration (us)',
+        avg_duration: 'avg_duration (us)',
+        total_duration: 'total_duration (us)',
+        proportion: 'total_time_proportion (%)',
+        cuda_activity_cost_time: 'cuda_activity_cost_time (us)',
+        cuda_activity_call_count: `cuda_activity_call_count (${this.$t(
+            'profiling.countUnit',
+        )})`,
+        type_occurrences: `type_occurrences (${this.$t(
+            'profiling.countUnit',
+        )})`,
+        op_occurrences: `op_occurrences (${this.$t('profiling.countUnit')})`,
+        occurrences: `occurrences (${this.$t('profiling.countUnit')})`,
+      };
+      return maps[key] ? maps[key] : key;
+    },
     resizeEchart() {
       if (this.operatorCharts.chartDom) {
         setTimeout(() => {
@@ -400,7 +428,16 @@ export default {
         this.getCoreList(true);
       }
     },
-    opTypeSortChange() {
+    /**
+     * Operators type sort
+     * @param {Object} sort Sort data
+     */
+    opTypeSortChange(sort) {
+      this.op_sort_condition = {
+        name: sort.prop,
+        type: sort.order,
+      };
+
       this.$nextTick(() => {
         const item = this.$refs['expandChild'];
         if (item && this.curActiveRow.rowItem) {
@@ -856,6 +893,8 @@ export default {
     setOption(chart) {
       const option = {};
       const maxLabelLength = 20;
+      const maxTooltipLen = 50;
+
       if (!chart.type) {
         option.legend = {
           data: [],
@@ -871,17 +910,25 @@ export default {
                     : chart.data[i].name;
                 legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[
                     i
-                ].value.toFixed(3)}}\n{c|${
-                  chart.data[i].percent
-                    ? chart.data[i].percent.toFixed(2) + '%'
-                    : ''
-                }}`;
+                ].value.toFixed(3)}}\n{c|}`;
               }
             }
             return legendStr;
           },
           tooltip: {
             show: true,
+            formatter: (params) => {
+              let name = params.name;
+              name = name.replace(/</g, '< ');
+
+              const breakCount = Math.ceil(name.length / maxTooltipLen);
+              let str = '';
+              for (let i = 0; i < breakCount; i++) {
+                const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
+                str += str ? '<br/>' + temp : temp;
+              }
+              return str;
+            },
           },
           itemWidth: 18,
           itemHeight: 18,
@@ -912,7 +959,16 @@ export default {
         option.tooltip = {
           trigger: 'item',
           formatter: (params) => {
-            return `${params.marker} ${params.data.name} ${params.percent}%`;
+            const name = params.data.name.replace(/</g, '< ');
+            const strTemp = `${name} ${params.percent.toFixed(2) + '%'}`;
+
+            const breakCount = Math.ceil(strTemp.length / maxTooltipLen);
+            let str = '';
+            for (let i = 0; i < breakCount; i++) {
+              const temp = strTemp.substr(i * maxTooltipLen, maxTooltipLen);
+              str += str ? '<br/>' + temp : temp;
+            }
+            return str;
           },
           confine: true,
         };
@@ -1049,225 +1105,228 @@ export default {
 <style lang="scss">
 .operator {
   height: 100%;
-}
-.clear {
-  clear: both;
-}
-.el-tabs__item {
-  color: #6c7280;
-  font-size: 16px;
-  line-height: 36px;
-  height: 36px;
-}
-.el-tabs__item.is-active {
-  color: #00a5a7;
-  font-weight: bold;
-}
-.operator-title {
-  padding: 0 15px;
-  font-size: 16px;
-  font-weight: bold;
-}
-.cl-profiler {
-  height: calc(100% - 21px);
-  overflow-y: auto;
-  width: 100%;
-  background: #fff;
-  padding: 0 16px;
-  overflow: hidden;
-  .custom-label {
-    max-width: calc(100% - 25px);
-    padding: 0;
-    vertical-align: middle;
+  .clear {
+    clear: both;
   }
-  .el-tabs {
-    height: 100%;
-    .el-tabs__header {
-      margin-bottom: 10px;
-    }
+  .el-tabs__item {
+    color: #6c7280;
+    line-height: 36px;
+    height: 36px;
   }
-  .el-tabs__content {
-    height: calc(100% - 46px);
+  .el-tabs__item.is-active {
+    color: #00a5a7;
+    font-weight: bold;
   }
-  .el-tab-pane {
-    height: 100%;
+  .operator-title {
+    padding: 0 15px;
+    font-size: 16px;
+    font-weight: bold;
   }
-  .cl-search-box {
-    float: right;
-    margin-bottom: 10px;
-    margin-right: 20px;
-  }
-  .cl-profiler-top {
-    height: 45%;
-  }
-  .cl-profiler-top.fullScreen {
-    display: none;
-  }
-  .cl-profiler-bottom {
-    height: 55%;
-    padding-top: 10px;
-    .fullScreen {
-      float: right;
-      margin-top: 5px;
-      cursor: pointer;
-    }
-  }
-  .cl-profiler-bottom.fullScreen {
-    height: 100%;
-  }
-  .core-search-type {
-    float: right;
-    width: 130px;
-    margin-right: 10px;
-  }
-  .cl-profiler-echarts {
+  .cl-profiler {
+    height: calc(100% - 21px);
+    overflow-y: auto;
     width: 100%;
-    height: calc(100% - 32px);
-    display: inline-block;
-    position: relative;
-    overflow: auto;
-    #core-echarts,
-    #operator-echarts {
-      width: 100%;
-      height: 100%;
-      min-width: 1300px;
-      min-height: 306px;
-      overflow: hidden;
+    background: #fff;
+    padding: 0 16px;
+    overflow: hidden;
+    .custom-label {
+      max-width: calc(100% - 25px);
+      padding: 0;
+      vertical-align: middle;
     }
-  }
-  .core-tab {
+    .el-tabs {
+      height: 100%;
+      .el-tabs__header {
+        margin-bottom: 10px;
+      }
+    }
+    .el-tabs__content {
+      height: calc(100% - 46px);
+    }
+    .el-tab-pane {
+      height: 100%;
+    }
+    .cl-search-box {
+      float: right;
+      margin-bottom: 10px;
+      margin-right: 20px;
+    }
     .cl-profiler-top {
-      height: calc(45% - 40px);
+      height: 45%;
+      .chart-title {
+        float: left;
+        font-weight: bold;
+      }
+    }
+    .cl-profiler-top.fullScreen {
+      display: none;
     }
     .cl-profiler-bottom {
-      height: calc(55% + 40px);
-    }
-    .cl-profiler-echarts {
-      height: 100%;
+      height: 55%;
+      padding-top: 10px;
+      .fullScreen {
+        float: right;
+        margin-top: 5px;
+        cursor: pointer;
+      }
     }
     .cl-profiler-bottom.fullScreen {
       height: 100%;
     }
-  }
-  .chart-radio-group {
-    float: right;
-  }
-  .el-radio-group {
-    .el-radio-button--small .el-radio-button__inner {
-      height: 30px;
-      width: 70px;
-      font-size: 14px;
-      line-height: 10px;
+    .core-search-type {
+      float: right;
+      width: 130px;
+      margin-right: 10px;
     }
-  }
-  .cl-profiler-bar {
-    display: inline-block;
-    width: calc(100% - 400px);
-    vertical-align: top;
-    height: 100%;
-    padding: 20px;
-  }
-  .cl-profiler-table-type {
-    display: inline-block;
-    width: calc(100% - 400px);
-    vertical-align: top;
-    height: 100%;
-  }
-  .el-pagination {
-    margin: 7px 0;
-    float: right;
-  }
-  .details-data-list {
-    .el-table {
-      th {
-        padding: 10px 0;
-        border-top: 1px solid #ebeef5;
-        .cell {
-          border-left: 1px solid #d9d8dd;
-          height: 14px;
-          line-height: 14px;
+    .cl-profiler-echarts {
+      width: 100%;
+      height: calc(100% - 32px);
+      display: inline-block;
+      position: relative;
+      overflow: auto;
+      #core-echarts,
+      #operator-echarts {
+        width: 100%;
+        height: 100%;
+        min-width: 1300px;
+        min-height: 306px;
+        overflow: hidden;
+      }
+    }
+    .core-tab {
+      .cl-profiler-top {
+        height: 45%;
+      }
+      .cl-profiler-bottom {
+        height: 55%;
+      }
+      .cl-profiler-echarts {
+        height: calc(100% - 32px);
+      }
+      .cl-profiler-bottom.fullScreen {
+        height: 100%;
+      }
+    }
+    .chart-radio-group {
+      float: right;
+    }
+    .el-radio-group {
+      .el-radio-button--small .el-radio-button__inner {
+        height: 30px;
+        width: 70px;
+        font-size: 14px;
+        line-height: 10px;
+      }
+    }
+    .cl-profiler-bar {
+      display: inline-block;
+      width: calc(100% - 400px);
+      vertical-align: top;
+      height: 100%;
+      padding: 20px;
+    }
+    .cl-profiler-table-type {
+      display: inline-block;
+      width: calc(100% - 400px);
+      vertical-align: top;
+      height: 100%;
+    }
+    .el-pagination {
+      margin: 7px 0;
+      float: right;
+    }
+    .details-data-list {
+      .el-table {
+        th {
+          padding: 10px 0;
+          border-top: 1px solid #ebeef5;
+          .cell {
+            border-left: 1px solid #d9d8dd;
+            height: 14px;
+            line-height: 14px;
+          }
+        }
+        th:first-child {
+          .cell {
+            border-left: none;
+          }
+        }
+        th:nth-child(2),
+        td:nth-child(2) {
+          max-width: 30%;
+        }
+        td {
+          padding: 8px 0;
         }
       }
-      th:first-child {
-        .cell {
-          border-left: none;
-        }
-      }
-      th:nth-child(2),
-      td:nth-child(2) {
-        max-width: 30%;
-      }
-      td {
-        padding: 8px 0;
-      }
-    }
-    .el-table__row--level-0 td:first-child:after {
-      width: 20px;
-      height: 1px;
-      background: #ebeef5;
-      z-index: 11;
-      position: absolute;
-      left: 0;
-      bottom: -1px;
-      content: '';
-      display: block;
-    }
-    .el-table__row--level-1 {
-      td {
-        padding: 4px 0;
-        position: relative;
-      }
-      td:first-child::before {
-        width: 42px;
-        background: #f0fdfd;
-        border-right: 2px #00a5a7 solid;
-        z-index: 10;
+      .el-table__row--level-0 td:first-child:after {
+        width: 20px;
+        height: 1px;
+        background: #ebeef5;
+        z-index: 11;
         position: absolute;
         left: 0;
-        top: -1px;
-        bottom: 0px;
+        bottom: -1px;
         content: '';
         display: block;
       }
-    }
+      .el-table__row--level-1 {
+        td {
+          padding: 4px 0;
+          position: relative;
+        }
+        td:first-child::before {
+          width: 42px;
+          background: #f0fdfd;
+          border-right: 2px #00a5a7 solid;
+          z-index: 10;
+          position: absolute;
+          left: 0;
+          top: -1px;
+          bottom: 0px;
+          content: '';
+          display: block;
+        }
+      }
 
-    .el-table__row--level-1:first-child {
-      td:first-child::before {
-        bottom: 0;
+      .el-table__row--level-1:first-child {
+        td:first-child::before {
+          bottom: 0;
+        }
       }
     }
-  }
-  .el-table__expanded-cell[class*='cell'] {
-    padding: 0;
-  }
-  .expand-table {
-    position: relative;
-    padding-left: 44px;
-  }
-  .expand-table::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background: #f0fdfd;
-    width: 42px;
-    border-right: 2px #00a5a7 solid;
-  }
-  .el-radio-button:last-child .el-radio-button__inner,
-  .el-radio-button:first-child .el-radio-button__inner {
-    border-radius: 0;
-  }
-  .image-noData {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    p {
-      font-size: 16px;
-      padding-top: 10px;
+    .el-table__expanded-cell[class*='cell'] {
+      padding: 0;
+    }
+    .expand-table {
+      position: relative;
+      padding-left: 44px;
+    }
+    .expand-table::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: #f0fdfd;
+      width: 42px;
+      border-right: 2px #00a5a7 solid;
+    }
+    .el-radio-button:last-child .el-radio-button__inner,
+    .el-radio-button:first-child .el-radio-button__inner {
+      border-radius: 0;
+    }
+    .image-noData {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      p {
+        font-size: 16px;
+        padding-top: 10px;
+      }
     }
   }
 }
