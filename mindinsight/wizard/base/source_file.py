@@ -45,6 +45,7 @@ class SourceFile:
             fp.write(self.content)
         try:
             shutil.copymode(self.template_file_path, new_file_path)
+            os.chmod(new_file_path, stat.S_IRUSR | stat.S_IWUSR)
             self.set_writeable(new_file_path)
             if new_file_path.endswith('.sh'):
                 self.set_executable(new_file_path)
