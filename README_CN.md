@@ -23,7 +23,7 @@ MindInsight为MindSpore提供了简单易用的调优调试能力。在训练过
 请从[MindSpore下载页面](https://www.mindspore.cn/versions)下载并安装whl包。
 
 ```
-pip install mindinsight-{version}-cp37-cp37m-linux_{arch}.whl
+pip install -U mindinsight-{version}-cp37-cp37m-linux_{arch}.whl
 ```
 
 更多MindInsight的安装方法，请点击[安装教程](https://www.mindspore.cn/install/)中的MindInsight章节进行查看。
