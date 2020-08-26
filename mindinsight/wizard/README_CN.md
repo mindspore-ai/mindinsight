@@ -4,7 +4,7 @@
 
 ## 介绍
 
-MindWizard是一款快速生成经典网络脚本的工具。工具根据用户选择，组合模型、超参、数据集等网络参数，自动生成目标网络脚本，生成的网络脚本可以在Ascend或GPU等环境上进行训练和推理。
+MindWizard是一款快速生成经典网络脚本的工具。工具根据用户选择，组合模型、超参、数据集等网络参数，自动生成目标网络脚本，生成的网络脚本可以在Ascend或GPU等环境上进行训练和评估。
 
 ## 安装
 
@@ -33,7 +33,7 @@ optional arguments:
 
 2. 请选择数据集（MNIST / Cifar10 / ImageNet / ...）
 
-生成脚本后，用户可执行训练和推理，详细介绍可参考网络脚本工程中的README。
+生成脚本后，用户可执行训练和评估，详细介绍可参考网络脚本工程中的README。
 
 ## 网络脚本工程结构
 
@@ -42,14 +42,14 @@ project
  |- script
  |   |- run_standalone_train.sh     # 单卡训练脚本
  |   |- run_distribute_train.sh     # 多卡训练脚本
- |   |- run_eval.sh                 # 推理脚本
+ |   |- run_eval.sh                 # 评估脚本
  |   |- ...
  |- src
  |   |- config.py                   # 参数配置
  |   |- dataset.py                  # 数据集处理
  |   |- lenet.py/resent.py/...      # 网络定义
  |   |- ...
- |- eval.py                         # 网络推理
+ |- eval.py                         # 网络评估
  |- train.py                        # 网络训练
  |- README.md
 ```
