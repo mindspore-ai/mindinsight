@@ -1,8 +1,8 @@
-[简体中文](./README.md)
+[简体中文](./README_CN.md)
 
 - [Introduction ](#introduction)
 - [Installation](#installation)
-- [QuickStart](#quickstart)
+- [QuickStart](#quick-start)
 - [Docs](#docs)
 - [Community](#community)
     - [Governance](#governance)
