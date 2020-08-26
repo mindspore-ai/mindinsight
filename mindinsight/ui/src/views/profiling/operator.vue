@@ -25,6 +25,7 @@ limitations under the License.
                :class="{fullScreen:fullScreen}"
                v-if="coreCharts.data.length">
             <div>
+              <div class="chart-title">{{$t('profiling.chartTitle')}}</div>
               <el-radio-group class="chart-radio-group"
                               v-model="coreCharts.type"
                               @change="coreChartChange"
@@ -105,8 +106,8 @@ limitations under the License.
                                        show-overflow-tooltip>
                         <template slot="header">
                           <div class="custom-label"
-                               :title="ele==='avg_execution_time'?`${ele} (${$t('profiling.unit')})`:ele">
-                            {{ele==='avg_execution_time'?`${ele} (${$t('profiling.unit')})`:ele}}
+                               :title="getHeaderField(ele)">
+                            {{getHeaderField(ele)}}
                           </div>
                         </template>
                       </el-table-column>
@@ -127,8 +128,8 @@ limitations under the License.
                                sortable>
                 <template slot="header">
                   <div class="custom-label"
-                       :title="item==='execution_time'?`${item} (${$t('profiling.unit')})`:item">
-                    {{item==='execution_time'?`${item} (${$t('profiling.unit')})`:item}}
+                       :title="getHeaderField(item)">
+                    {{getHeaderField(item)}}
                   </div>
                 </template>
               </el-table-column>
@@ -151,8 +152,8 @@ limitations under the License.
                                show-overflow-tooltip>
                 <template slot="header">
                   <div class="custom-label"
-                       :title="item==='avg_execution_time'?`${item} (${$t('profiling.unit')})`:item">
-                    {{item==='avg_execution_time'?`${item} (${$t('profiling.unit')})`:item}}
+                       :title="getHeaderField(item)">
+                    {{getHeaderField(item)}}
                   </div>
                 </template>
               </el-table-column>
@@ -209,10 +210,8 @@ limitations under the License.
                                show-overflow-tooltip>
                 <template slot="header">
                   <div class="custom-label"
-                       :title="(item==='total_time' || item==='dispatch_time')?
-                               `${item} (${$t('profiling.unit')})`:item">
-                    {{(item==='total_time' || item==='dispatch_time')?
-                               `${item} (${$t('profiling.unit')})`:item}}
+                       :title="getHeaderField(item)">
+                    {{getHeaderField(item)}}
                   </div>
                 </template>
               </el-table-column>
@@ -359,6 +358,19 @@ export default {
     this.$bus.$off('collapse');
   },
   methods: {
+    getHeaderField(key) {
+      const maps = {
+        execution_time: `execution_time (${this.$t('profiling.unit')})`,
+        avg_execution_time: `avg_execution_time (${this.$t('profiling.unit')})`,
+        execution_frequency: `execution_frequency (${this.$t(
+            'profiling.countUnit',
+        )})`,
+        percent: 'percent (%)',
+        total_time: 'total_time (ms)',
+        dispatch_time: 'dispatch_time (ms)',
+      };
+      return maps[key] ? maps[key] : key;
+    },
     resizeEchart() {
       if (this.coreCharts.chartDom) {
         setTimeout(() => {
@@ -387,7 +399,15 @@ export default {
         this.getCpuList(true);
       }
     },
-    opTypeSortChange() {
+    /**
+     * Operators type sort
+     * @param {Object} sort Sort data
+     */
+    opTypeSortChange(sort) {
+      this.op_sort_condition = {
+        name: sort.prop,
+        type: sort.order,
+      };
       this.$nextTick(() => {
         const item = this.$refs['expandChild'];
         if (item && this.curActiveRow.rowItem) {
@@ -837,6 +857,8 @@ export default {
     setOption(chart) {
       const option = {};
       const maxLabelLength = 20;
+      const maxTooltipLen = 50;
+
       if (!chart.type) {
         option.legend = {
           data: [],
@@ -859,6 +881,18 @@ export default {
           },
           tooltip: {
             show: true,
+            formatter: (params) => {
+              let name = params.name;
+              name = name.replace(/</g, '< ');
+
+              const breakCount = Math.ceil(name.length / maxTooltipLen);
+              let str = '';
+              for (let i = 0; i < breakCount; i++) {
+                const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
+                str += str ? '<br/>' + temp : temp;
+              }
+              return str;
+            },
           },
           itemWidth: 18,
           itemHeight: 18,
@@ -889,7 +923,16 @@ export default {
         option.tooltip = {
           trigger: 'item',
           formatter: (params) => {
-            return `${params.marker} ${params.data.name} ${params.percent}%`;
+            const name = params.data.name.replace(/</g, '< ');
+            const strTemp = `${name} ${params.percent.toFixed(2) + '%'}`;
+
+            const breakCount = Math.ceil(strTemp.length / maxTooltipLen);
+            let str = '';
+            for (let i = 0; i < breakCount; i++) {
+              const temp = strTemp.substr(i * maxTooltipLen, maxTooltipLen);
+              str += str ? '<br/>' + temp : temp;
+            }
+            return str;
           },
           confine: true,
         };
@@ -1101,225 +1144,228 @@ export default {
 <style lang="scss">
 .operator {
   height: 100%;
-}
-.clear {
-  clear: both;
-}
-.el-tabs__item {
-  color: #6c7280;
-  font-size: 16px;
-  line-height: 36px;
-  height: 36px;
-}
-.el-tabs__item.is-active {
-  color: #00a5a7;
-  font-weight: bold;
-}
-.operator-title {
-  padding: 0 15px;
-  font-size: 16px;
-  font-weight: bold;
-}
-.cl-profiler {
-  height: calc(100% - 21px);
-  overflow-y: auto;
-  width: 100%;
-  background: #fff;
-  padding: 0 16px;
-  overflow: hidden;
-  .custom-label {
-    max-width: calc(100% - 25px);
-    padding: 0;
-    vertical-align: middle;
+  .clear {
+    clear: both;
   }
-  .el-tabs {
-    height: 100%;
-    .el-tabs__header {
-      margin-bottom: 10px;
+  .el-tabs__item {
+    color: #6c7280;
+    line-height: 36px;
+    height: 36px;
+  }
+  .el-tabs__item.is-active {
+    color: #00a5a7;
+    font-weight: bold;
+  }
+  .operator-title {
+    padding: 0 15px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .cl-profiler {
+    height: calc(100% - 21px);
+    overflow-y: auto;
+    width: 100%;
+    background: #fff;
+    padding: 0 16px;
+    overflow: hidden;
+    .custom-label {
+      max-width: calc(100% - 25px);
+      padding: 0;
+      vertical-align: middle;
     }
-  }
-  .el-tabs__content {
-    height: calc(100% - 46px);
-  }
-  .el-tab-pane {
-    height: 100%;
-  }
-  .cl-search-box {
-    float: right;
-    margin-bottom: 10px;
-    margin-right: 20px;
-  }
-  .cl-profiler-top {
-    height: 45%;
-  }
-  .cl-profiler-top.fullScreen {
-    display: none;
-  }
-  .cl-profiler-bottom {
-    height: 55%;
-    padding-top: 10px;
-    .fullScreen {
+    .el-tabs {
+      height: 100%;
+      .el-tabs__header {
+        margin-bottom: 10px;
+      }
+    }
+    .el-tabs__content {
+      height: calc(100% - 46px);
+    }
+    .el-tab-pane {
+      height: 100%;
+    }
+    .cl-search-box {
       float: right;
-      margin-top: 5px;
-      cursor: pointer;
+      margin-bottom: 10px;
+      margin-right: 20px;
     }
-  }
-  .cl-profiler-bottom.fullScreen {
-    height: 100%;
-  }
-  .cpu-tab {
     .cl-profiler-top {
-      height: calc(36% + 32px);
+      height: 45%;
+      .chart-title {
+        float: left;
+        font-weight: bold;
+      }
+    }
+    .cl-profiler-top.fullScreen {
+      display: none;
     }
     .cl-profiler-bottom {
+      height: 55%;
+      padding-top: 10px;
+      .fullScreen {
+        float: right;
+        margin-top: 5px;
+        cursor: pointer;
+      }
+    }
+    .cl-profiler-bottom.fullScreen {
       height: 100%;
     }
-  }
-  .cl-profiler-echarts {
-    width: 100%;
-    height: calc(100% - 32px);
-    display: inline-block;
-    position: relative;
-    overflow: auto;
-    #cpu-echarts,
-    #core-echarts {
+    .cpu-tab {
+      .cl-profiler-top {
+        height: calc(36% + 32px);
+      }
+      .cl-profiler-bottom {
+        height: 100%;
+      }
+    }
+    .cl-profiler-echarts {
       width: 100%;
+      height: calc(100% - 32px);
+      display: inline-block;
+      position: relative;
+      overflow: auto;
+      #cpu-echarts,
+      #core-echarts {
+        width: 100%;
+        height: 100%;
+        min-width: 1300px;
+        min-height: 306px;
+        overflow: hidden;
+      }
+    }
+    .chart-radio-group {
+      float: right;
+    }
+    .el-radio-group {
+      .el-radio-button--small .el-radio-button__inner {
+        height: 30px;
+        width: 70px;
+        font-size: 14px;
+        line-height: 10px;
+      }
+    }
+    .cl-profiler-bar {
+      display: inline-block;
+      width: calc(100% - 400px);
+      vertical-align: top;
       height: 100%;
-      min-width: 1300px;
-      min-height: 306px;
-      overflow: hidden;
+      padding: 20px;
     }
-  }
-  .chart-radio-group {
-    float: right;
-  }
-  .el-radio-group {
-    .el-radio-button--small .el-radio-button__inner {
-      height: 30px;
-      width: 70px;
-      font-size: 14px;
-      line-height: 10px;
+    .cl-profiler-table-type {
+      display: inline-block;
+      width: calc(100% - 400px);
+      vertical-align: top;
+      height: 100%;
     }
-  }
-  .cl-profiler-bar {
-    display: inline-block;
-    width: calc(100% - 400px);
-    vertical-align: top;
-    height: 100%;
-    padding: 20px;
-  }
-  .cl-profiler-table-type {
-    display: inline-block;
-    width: calc(100% - 400px);
-    vertical-align: top;
-    height: 100%;
-  }
-  .el-pagination {
-    margin: 7px 0;
-    float: right;
-  }
-  .details-data-list {
-    .el-table {
-      th {
-        padding: 10px 0;
-        border-top: 1px solid #ebeef5;
-        .cell {
-          border-left: 1px solid #d9d8dd;
-          height: 14px;
-          line-height: 14px;
+    .el-pagination {
+      margin: 7px 0;
+      float: right;
+    }
+    .details-data-list {
+      .el-table {
+        th {
+          padding: 10px 0;
+          border-top: 1px solid #ebeef5;
+          .cell {
+            border-left: 1px solid #d9d8dd;
+            height: 14px;
+            line-height: 14px;
+          }
+        }
+        th:first-child {
+          .cell {
+            border-left: none;
+          }
+        }
+        th:nth-child(2),
+        td:nth-child(2) {
+          max-width: 30%;
+        }
+        td {
+          padding: 8px 0;
         }
       }
-      th:first-child {
-        .cell {
-          border-left: none;
-        }
-      }
-      th:nth-child(2),
-      td:nth-child(2) {
-        max-width: 30%;
-      }
-      td {
-        padding: 8px 0;
-      }
-    }
-    .el-table__row--level-0 td:first-child:after {
-      width: 20px;
-      height: 1px;
-      background: #ebeef5;
-      z-index: 11;
-      position: absolute;
-      left: 0;
-      bottom: -1px;
-      content: '';
-      display: block;
-    }
-    .el-table__row--level-1 {
-      td {
-        padding: 4px 0;
-        position: relative;
-      }
-      td:first-child::before {
-        width: 42px;
-        background: #f0fdfd;
-        border-right: 2px #00a5a7 solid;
-        z-index: 10;
+      .el-table__row--level-0 td:first-child:after {
+        width: 20px;
+        height: 1px;
+        background: #ebeef5;
+        z-index: 11;
         position: absolute;
         left: 0;
-        top: -1px;
-        bottom: 0px;
+        bottom: -1px;
         content: '';
         display: block;
       }
-    }
+      .el-table__row--level-1 {
+        td {
+          padding: 4px 0;
+          position: relative;
+        }
+        td:first-child::before {
+          width: 42px;
+          background: #f0fdfd;
+          border-right: 2px #00a5a7 solid;
+          z-index: 10;
+          position: absolute;
+          left: 0;
+          top: -1px;
+          bottom: 0px;
+          content: '';
+          display: block;
+        }
+      }
 
-    .el-table__row--level-1:first-child {
-      td:first-child::before {
-        bottom: 0;
+      .el-table__row--level-1:first-child {
+        td:first-child::before {
+          bottom: 0;
+        }
+      }
+      .el-dialog__title {
+        font-weight: bold;
+      }
+      .el-dialog__body {
+        max-height: 500px;
+        padding-top: 10px;
+        overflow: auto;
+        .details-data-title {
+          margin-bottom: 20px;
+        }
       }
     }
-    .el-dialog__title {
-      font-weight: bold;
+    .el-table__expanded-cell[class*='cell'] {
+      padding: 0;
     }
-    .el-dialog__body {
-      max-height: 500px;
-      padding-top: 10px;
-      overflow: auto;
-      .details-data-title {
-        margin-bottom: 20px;
+    .expand-table {
+      position: relative;
+      padding-left: 44px;
+    }
+    .expand-table::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: #f0fdfd;
+      width: 42px;
+      border-right: 2px #00a5a7 solid;
+    }
+    .el-radio-button:last-child .el-radio-button__inner,
+    .el-radio-button:first-child .el-radio-button__inner {
+      border-radius: 0;
+    }
+    .image-noData {
+      width: 100%;
+      height: 450px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      p {
+        font-size: 16px;
+        padding-top: 10px;
       }
-    }
-  }
-  .el-table__expanded-cell[class*='cell'] {
-    padding: 0;
-  }
-  .expand-table {
-    position: relative;
-    padding-left: 44px;
-  }
-  .expand-table::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background: #f0fdfd;
-    width: 42px;
-    border-right: 2px #00a5a7 solid;
-  }
-  .el-radio-button:last-child .el-radio-button__inner,
-  .el-radio-button:first-child .el-radio-button__inner {
-    border-radius: 0;
-  }
-  .image-noData {
-    width: 100%;
-    height: 450px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    p {
-      font-size: 16px;
-      padding-top: 10px;
     }
   }
 }
