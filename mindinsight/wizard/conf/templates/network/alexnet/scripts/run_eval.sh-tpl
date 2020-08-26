@@ -56,7 +56,6 @@ then
 fi
 mkdir ./eval
 cp ../*.py ./eval
-cp *.sh ./eval
 cp -r ../src ./eval
 cd ./eval || exit
 env > env.log
