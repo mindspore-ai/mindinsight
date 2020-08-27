@@ -13,12 +13,12 @@
 # limitations under the License.
 # ============================================================================
 """Tensor data container."""
-import threading
-
 import numpy as np
 
+from mindinsight.datavisual.common.exceptions import DataTypeError
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.data_transform.histogram import Histogram, Bucket
+from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.utils.utils import calc_histogram_bins
 from mindinsight.utils.exceptions import ParamValueError
 
@@ -139,19 +139,6 @@ def get_statistics_from_tensor(tensors):
     return statistics
 
 
-def _get_data_from_tensor(tensor):
-    """
-    Get data from tensor and convert to tuple.
-
-    Args:
-        tensor (TensorProto): Tensor proto data.
-
-    Returns:
-        tuple, the item of tensor value.
-    """
-    return tuple(tensor.float_data)
-
-
 def calc_original_buckets(np_value, stats):
     """
     Calculate buckets from tensor data.
@@ -199,18 +186,23 @@ class TensorContainer:
     """
 
     def __init__(self, tensor_message):
-        self._lock = threading.Lock
         # Original dims can not be pickled to transfer to other process, so tuple is used.
         self._dims = tuple(tensor_message.dims)
         self._data_type = tensor_message.data_type
-        self._np_array = None
-        self._data = _get_data_from_tensor(tensor_message)
-        self._stats = get_statistics_from_tensor(self.get_or_calc_ndarray())
-        original_buckets = calc_original_buckets(self.get_or_calc_ndarray(), self._stats)
+        self._np_array = self.get_ndarray(tensor_message.float_data)
+        self._stats = get_statistics_from_tensor(self._np_array)
+        original_buckets = calc_original_buckets(self._np_array, self._stats)
         self._count = sum(bucket.count for bucket in original_buckets)
-        self._max = self._stats.max
-        self._min = self._stats.min
+        # convert the type of max and min value to np.float64 so that it cannot overflow
+        # when calculating width of histogram.
+        self._max = np.float64(self._stats.max)
+        self._min = np.float64(self._stats.min)
         self._histogram = Histogram(tuple(original_buckets), self._max, self._min, self._count)
+
+    @property
+    def size(self):
+        """Get size of tensor."""
+        return self._np_array.size
 
     @property
     def dims(self):
@@ -221,6 +213,11 @@ class TensorContainer:
     def data_type(self):
         """Get data type of tensor."""
         return self._data_type
+
+    @property
+    def ndarray(self):
+        """Get ndarray of tensor."""
+        return self._np_array
 
     @property
     def max(self):
@@ -251,19 +248,24 @@ class TensorContainer:
         """Get histogram buckets."""
         return self._histogram.buckets()
 
-    def get_or_calc_ndarray(self):
-        """Get or calculate ndarray."""
-        with self._lock():
-            if self._np_array is None:
-                self._convert_to_numpy_array()
-            return self._np_array
+    def get_ndarray(self, tensor):
+        """
+        Get ndarray of tensor.
 
-    def _convert_to_numpy_array(self):
-        """Convert a list data to numpy array."""
-        try:
-            ndarray = np.array(self._data).reshape(self._dims)
-        except ValueError as ex:
-            logger.error("Reshape array fail, detail: %r", str(ex))
-            return
+        Args:
+            tensor (float16|float32|float64): tensor data.
 
-        self._np_array = ndarray
+        Returns:
+            numpy.ndarray, ndarray of tensor.
+
+        Raises:
+            DataTypeError, If data type of tensor is not among float16 or float32 or float64.
+        """
+        data_type_str = anf_ir_pb2.DataType.Name(self.data_type)
+        if data_type_str == 'DT_FLOAT16':
+            return np.array(tuple(tensor), dtype=np.float16).reshape(self.dims)
+        if data_type_str == 'DT_FLOAT32':
+            return np.array(tuple(tensor), dtype=np.float32).reshape(self.dims)
+        if data_type_str == 'DT_FLOAT64':
+            return np.array(tuple(tensor), dtype=np.float64).reshape(self.dims)
+        raise DataTypeError("Data type: {}.".format(data_type_str))
