@@ -193,8 +193,10 @@ class TensorContainer:
         self._stats = get_statistics_from_tensor(self._np_array)
         original_buckets = calc_original_buckets(self._np_array, self._stats)
         self._count = sum(bucket.count for bucket in original_buckets)
-        self._max = self._stats.max
-        self._min = self._stats.min
+        # convert the type of max and min value to np.float64 so that it cannot overflow
+        # when calculating width of histogram.
+        self._max = np.float64(self._stats.max)
+        self._min = np.float64(self._stats.min)
         self._histogram = Histogram(tuple(original_buckets), self._max, self._min, self._count)
 
     @property
