@@ -260,7 +260,7 @@ export default {
                     divDom.setAttribute('class', 'content-style');
                     divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
                 <div class="helper-content-style">
-                <a target="_blank" href="${this.$t(`profiling`)[item].url[0]}">
+                <a target="_blank" href="${this.$t(`profiling`)[item].gpuUrl[0]}">
                 ${this.$t(`profiling`)[item].desc}</a></div>`;
                     helperDiv.appendChild(divDom);
                   } else {
@@ -272,7 +272,7 @@ export default {
                       const desc = anchorContent.relpace(
                           anchorList[i],
                           `<a target="_blank" href="${
-                            this.$t(`profiling`)[item].url[i]
+                            this.$t(`profiling`)[item].gpuUrl[i]
                           }">
                       ${anchorList[i]}</a>`,
                       );

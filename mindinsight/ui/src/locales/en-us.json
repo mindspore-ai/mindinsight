@@ -259,6 +259,9 @@
       "anchor": ["desc"],
       "url": [
         "https://www.mindspore.cn/tutorial/en/master/advanced_use/performance_profiling.html"
+      ],
+      "gpuUrl": [
+        "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/performance_profiling_gpu.html"
       ]
     },
     "step_trace-proposer_type_label": {
