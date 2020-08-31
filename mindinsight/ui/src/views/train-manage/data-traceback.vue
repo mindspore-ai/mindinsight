@@ -1367,7 +1367,71 @@ export default {
                 this.errorData = false;
                 this.lineagedata = this.formateOriginData(res.data);
                 const serData = this.lineagedata.serData;
-                this.table.data = JSON.parse(JSON.stringify(serData));
+                if (this.selectedBarList && this.selectedBarList.length) {
+                  const tempList = JSON.parse(JSON.stringify(res.data.object));
+                  const list = [];
+                  const metricKeys = {};
+                  tempList.forEach((item) => {
+                    if (item.model_lineage) {
+                      const modelData = JSON.parse(
+                          JSON.stringify(item.model_lineage),
+                      );
+                      modelData.model_size = parseFloat(
+                          ((modelData.model_size || 0) / 1024 / 1024).toFixed(2),
+                      );
+                      const keys = Object.keys(modelData.metric || {});
+                      if (keys.length) {
+                        keys.forEach((key) => {
+                          if (
+                            modelData.metric[key] ||
+                        modelData.metric[key] === 0
+                          ) {
+                            const temp = this.replaceStr.metric + key;
+                            metricKeys[temp] = key;
+                            modelData[temp] = modelData.metric[key];
+                          }
+                        });
+                        delete modelData.metric;
+                      }
+                      const udkeys = Object.keys(modelData.user_defined || {});
+                      if (udkeys.length) {
+                        udkeys.forEach((key) => {
+                          if (
+                            modelData.user_defined[key] ||
+                        modelData.user_defined[key] === 0
+                          ) {
+                            const temp = this.replaceStr.userDefined + key;
+                            modelData[temp] = modelData.user_defined[key];
+                          }
+                        });
+                        delete modelData.user_defined;
+                      }
+                      list.push(modelData);
+                    }
+                  });
+                  this.modelObjectArray = [];
+                  for (let i = 0; i < list.length; i++) {
+                    const modelObject = {};
+                    for (let j = 0; j < this.selectedBarList.length; j++) {
+                      const tempObject = list[i];
+                      const key = this.selectedBarList[j];
+                      modelObject[key] = tempObject[key];
+                    }
+                    this.modelObjectArray.push(modelObject);
+                  }
+                  if (this.modelObjectArray.length) {
+                    const list = JSON.parse(JSON.stringify(serData));
+                    for (let i = 0; i < list.length; i++) {
+                      const temp = this.modelObjectArray[i];
+                      list[i] = Object.assign(list[i], temp);
+                    }
+                    this.table.data = list;
+                  } else {
+                    this.table.data = JSON.parse(JSON.stringify(serData));
+                  }
+                } else {
+                  this.table.data = JSON.parse(JSON.stringify(serData));
+                }
               },
               (error) => {
                 this.errorData = true;
