@@ -56,16 +56,31 @@ class SuperLineageObj:
         """Get update time."""
         return self._update_time
 
+    @update_time.setter
+    def update_time(self, update_time):
+        """Set update_time."""
+        self._update_time = update_time
+
 
 class LineageParser:
     """Lineage parser."""
     def __init__(self, summary_dir, update_time=None, added_info=None):
         self._summary_dir = summary_dir
-        self.update_time = update_time
+        self._update_time = update_time
         self._added_info = added_info
 
         self._init_variables()
         self.load()
+
+    @property
+    def update_time(self):
+        return self._update_time
+
+    @update_time.setter
+    def update_time(self, update_time):
+        self._update_time = update_time
+        if self._super_lineage_obj is not None:
+            self._super_lineage_obj.update_time = update_time
 
     def _init_variables(self):
         """Init variables."""
