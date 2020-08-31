@@ -1017,11 +1017,11 @@ export default {
                 this.loading = false;
                 if (res && res.data && res.data.object) {
                   this.errorData = false;
-                  this.setInitListValue();
                   const listTemp = this.setDataOfModel(res.data.object);
                   const list = JSON.parse(JSON.stringify(listTemp));
                   const tempEchartData = JSON.parse(JSON.stringify(listTemp));
                   if (allData) {
+                    this.setInitListValue();
                     let customized = {};
                     if (res.data.customized) {
                       customized = JSON.parse(JSON.stringify(res.data.customized));
