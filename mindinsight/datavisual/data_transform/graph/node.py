@@ -50,6 +50,9 @@ class Node:
         self.independent_layout = False
         self.output_shape = []
         self.output_data_type = ""
+        self.output_nums = 0
+        self.elem_types = []
+        self.full_name = ""
 
     def to_dict(self):
         """Converts the node object to dictionary format."""
@@ -208,6 +211,7 @@ class Node:
             src_node (Node): The copied node.
             dst_node (Node): The destination node.
         """
+        dst_node.full_name = src_node.full_name
         dst_node.type = src_node.type
         dst_node.output_i = src_node.output_i
         dst_node.subnode_count = src_node.subnode_count
@@ -215,6 +219,8 @@ class Node:
         dst_node.independent_layout = src_node.independent_layout
         dst_node.output_shape = src_node.output_shape
         dst_node.output_data_type = src_node.output_data_type
+        dst_node.output_nums = src_node.output_nums
+        dst_node.elem_types = src_node.elem_types
         dst_node.add_attr(src_node.attr)
 
     def __str__(self):
