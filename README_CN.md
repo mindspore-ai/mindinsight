@@ -16,8 +16,8 @@ MindInsight为MindSpore提供了简单易用的调优调试能力。在训练过
 
 ![MindInsight Architecture](docs/arch.png)
 
-点击查看[设计文档](https://www.mindspore.cn/docs/zh-CN/master/design.html)，了解更多设计详情。
-点击查看[教程文档](https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/visualization_tutorials.html)，了解更多MindInsight教程。
+点击查看[设计文档](https://www.mindspore.cn/docs/zh-CN/r0.7/design.html)，了解更多设计详情。
+点击查看[教程文档](https://www.mindspore.cn/tutorial/zh-CN/r0.7/advanced_use/visualization_tutorials.html)，了解更多MindInsight教程。
 
 ## 安装
 请从[MindSpore下载页面](https://www.mindspore.cn/versions)下载并安装whl包。
@@ -32,7 +32,7 @@ pip install -U mindinsight-{version}-cp37-cp37m-linux_{arch}.whl
 使用MindInsight前，需要先将训练过程中的数据记录下来，启动MindInsight时，指定所保存的数据的位置，启动成功后，
 即可通过可视化页面查看数据。下面将简单介绍记录训练过程数据，以及启动、停止MindInsight服务。
 
-[SummaryCollector](https://www.mindspore.cn/api/zh-CN/master/api/python/mindspore/mindspore.train.html?highlight=summarycollector#mindspore.train.callback.SummaryCollector)是MindSpore提供的快速简易地收集一些常见信息的接口，收集的信息包括计算图、损失值、学习率、参数权重等。
+[SummaryCollector](https://www.mindspore.cn/api/zh-CN/r0.7/api/python/mindspore/mindspore.train.html?highlight=summarycollector#mindspore.train.callback.SummaryCollector)是MindSpore提供的快速简易地收集一些常见信息的接口，收集的信息包括计算图、损失值、学习率、参数权重等。
 下面是使用 `SummaryCollector` 进行数据收集的示例，其中指定存放数据的目录为 `./summary_dir`。
 ```
 ...
@@ -42,7 +42,7 @@ summary_collector = SummaryCollector(summary_dir='./summary_dir')
 model.train(epoch=1, ds_train, callbacks=[summary_collector])
 ```
 
-更多记录可视化数据的方法，请点击查看[MindInsight使用教程](https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/visualization_tutorials.html)。
+更多记录可视化数据的方法，请点击查看[MindInsight使用教程](https://www.mindspore.cn/tutorial/zh-CN/r0.7/advanced_use/visualization_tutorials.html)。
 
 收集好数据后，启动MindInsight时指定存放数据的目录。
 ```
@@ -70,7 +70,7 @@ mindinsight stop
 - 邮件列表：<https://mailweb.mindspore.cn/postorius/lists>
 
 ## 贡献
-欢迎参与贡献。更多详情，请参阅我们的[贡献者Wiki](https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md)。
+欢迎参与贡献。更多详情，请参阅我们的[贡献者Wiki](https://gitee.com/mindspore/mindspore/blob/r0.7/CONTRIBUTING.md)。
 
 ## 版本说明
 版本说明请参阅[RELEASE](RELEASE.md)。
