@@ -21,7 +21,7 @@ cfg = edict({
     'num_classes': 10,
     {% if optimizer=='Momentum' %}
     'lr': 0.01,
-    "momentum": 0.9,
+    'momentum': 0.9,
     {% elif optimizer=='SGD' %}
     'lr': 0.01,
     {% else %}
