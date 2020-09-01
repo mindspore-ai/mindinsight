@@ -895,13 +895,19 @@ export default {
      * @param {String} name Name of the current node (also the ID of the node)
      */
     dealDoubleClick(name) {
-      name = name.replace('_unfold', '');
-      if (this.allGraphData[name].isUnfold) {
-        this.selectedNode.name = name;
-        this.deleteNamespace(name);
-      } else {
-        this.queryGraphData(name);
-      }
+      this.loading.info = this.$t('graph.queryLoading');
+      this.loading.show = true;
+      this.$nextTick(() => {
+        setTimeout(() => {
+          name = name.replace('_unfold', '');
+          if (this.allGraphData[name].isUnfold) {
+            this.selectedNode.name = name;
+            this.deleteNamespace(name);
+          } else {
+            this.queryGraphData(name);
+          }
+        }, 200);
+      });
     },
     /**
      * Default method of the graph rendering adjustment. Set the node format.
@@ -2519,7 +2525,12 @@ export default {
             this.loading.info = this.$t('graph.searchLoading');
             this.loading.show = true;
             this.selectedNode.name = option.value;
-            this.layoutNamescope(parentId, true);
+
+            this.$nextTick(() => {
+              setTimeout(() => {
+                this.layoutNamescope(parentId, true);
+              }, 500);
+            });
           }
         }
       } else {
@@ -2622,7 +2633,11 @@ export default {
             } else {
               this.loading.info = this.$t('graph.searchLoading');
               this.loading.show = true;
-              this.layoutNamescope(data.scope_name, true);
+              this.$nextTick(() => {
+                setTimeout(() => {
+                  this.layoutNamescope(data.scope_name, true);
+                }, 200);
+              });
             }
           }
         }
