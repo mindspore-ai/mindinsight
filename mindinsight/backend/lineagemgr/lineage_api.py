@@ -21,7 +21,7 @@ from flask import Blueprint, jsonify, request
 from mindinsight.conf import settings
 from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
-from mindinsight.lineagemgr.api.model import general_filter_summary_lineage, general_get_summary_lineage
+from mindinsight.lineagemgr.model import filter_summary_lineage, get_summary_lineage
 from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 from mindinsight.lineagemgr.cache_item_updater import update_lineage_object
 
@@ -69,7 +69,7 @@ def _get_lineage_info(search_condition):
     """
     summary_base_dir = str(settings.SUMMARY_BASE_DIR)
     try:
-        lineage_info = general_filter_summary_lineage(
+        lineage_info = filter_summary_lineage(
             data_manager=DATA_MANAGER,
             search_condition=search_condition,
             added=True)
@@ -137,7 +137,7 @@ def get_dataset_graph():
     summary_base_dir = str(settings.SUMMARY_BASE_DIR)
     summary_dir = get_train_id(request)
     try:
-        dataset_graph = general_get_summary_lineage(
+        dataset_graph = get_summary_lineage(
             DATA_MANAGER,
             summary_dir=summary_dir,
             keys=['dataset_graph']

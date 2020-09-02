@@ -25,13 +25,13 @@ from unittest import TestCase
 
 import pytest
 
-from mindinsight.lineagemgr import filter_summary_lineage, get_summary_lineage
+from mindinsight.lineagemgr.model import filter_summary_lineage, get_summary_lineage
 from mindinsight.lineagemgr.common.exceptions.exceptions import (LineageFileNotFoundError, LineageParamSummaryPathError,
                                                                  LineageParamTypeError, LineageParamValueError,
                                                                  LineageSearchConditionParamError)
-from ..conftest import BASE_SUMMARY_DIR, DATASET_GRAPH, SUMMARY_DIR, SUMMARY_DIR_2
-from .....ut.lineagemgr.querier import event_data
-from .....utils.tools import assert_equal_lineages
+from .conftest import BASE_SUMMARY_DIR, DATASET_GRAPH, SUMMARY_DIR, SUMMARY_DIR_2
+from ....ut.lineagemgr.querier import event_data
+from ....utils.tools import assert_equal_lineages
 
 LINEAGE_INFO_RUN1 = {
     'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
@@ -170,9 +170,9 @@ class TestModelApi(TestCase):
     @pytest.mark.env_single
     def test_get_summary_lineage(self):
         """Test the interface of get_summary_lineage."""
-        total_res = get_summary_lineage(SUMMARY_DIR)
-        partial_res1 = get_summary_lineage(SUMMARY_DIR, ['hyper_parameters'])
-        partial_res2 = get_summary_lineage(SUMMARY_DIR, ['metric', 'algorithm'])
+        total_res = get_summary_lineage(None, SUMMARY_DIR)
+        partial_res1 = get_summary_lineage(None, SUMMARY_DIR, ['hyper_parameters'])
+        partial_res2 = get_summary_lineage(None, SUMMARY_DIR, ['metric', 'algorithm'])
         expect_total_res = LINEAGE_INFO_RUN1
         expect_partial_res1 = {
             'summary_dir': os.path.join(BASE_SUMMARY_DIR, 'run1'),
@@ -200,14 +200,14 @@ class TestModelApi(TestCase):
         assert_equal_lineages(expect_partial_res2, partial_res2, self.assertDictEqual)
 
         # the lineage summary file is empty
-        result = get_summary_lineage(self.dir_with_empty_lineage)
+        result = get_summary_lineage(None, self.dir_with_empty_lineage)
         assert {} == result
 
         # keys is empty list
         expect_result = {
             'summary_dir': SUMMARY_DIR
         }
-        result = get_summary_lineage(SUMMARY_DIR, [])
+        result = get_summary_lineage(None, SUMMARY_DIR, [])
         assert expect_result == result
 
     @pytest.mark.level0
@@ -223,6 +223,7 @@ class TestModelApi(TestCase):
             LineageParamSummaryPathError,
             'The summary path does not exist or is not a dir.',
             get_summary_lineage,
+            None,
             '/tmp/fake/dir'
         )
 
@@ -231,6 +232,7 @@ class TestModelApi(TestCase):
             LineageParamSummaryPathError,
             'The summary path is invalid.',
             get_summary_lineage,
+            None,
             'tmp'
         )
 
@@ -239,6 +241,7 @@ class TestModelApi(TestCase):
             LineageParamSummaryPathError,
             'The summary path is invalid.',
             get_summary_lineage,
+            None,
             ['/root/linage1', '/root/lineage2']
         )
 
@@ -247,6 +250,7 @@ class TestModelApi(TestCase):
             LineageParamSummaryPathError,
             'The summary path is invalid.',
             get_summary_lineage,
+            None,
             '',
             keys=None
         )
@@ -256,6 +260,7 @@ class TestModelApi(TestCase):
             LineageParamSummaryPathError,
             'The summary path is invalid.',
             get_summary_lineage,
+            None,
             '\\',
             keys=None
         )
@@ -273,6 +278,7 @@ class TestModelApi(TestCase):
             LineageParamValueError,
             'Keys must be in',
             get_summary_lineage,
+            None,
             SUMMARY_DIR,
             ['metric', 'fake_name']
         )
@@ -281,6 +287,7 @@ class TestModelApi(TestCase):
             LineageParamTypeError,
             'Keys must be list.',
             get_summary_lineage,
+            None,
             SUMMARY_DIR,
             0
         )
@@ -289,6 +296,7 @@ class TestModelApi(TestCase):
             LineageParamTypeError,
             'Keys must be list.',
             get_summary_lineage,
+            None,
             SUMMARY_DIR,
             0.1
         )
@@ -297,6 +305,7 @@ class TestModelApi(TestCase):
             LineageParamTypeError,
             'Keys must be list.',
             get_summary_lineage,
+            None,
             SUMMARY_DIR,
             True
         )
@@ -305,6 +314,7 @@ class TestModelApi(TestCase):
             LineageParamTypeError,
             'Element of keys must be str.',
             get_summary_lineage,
+            None,
             SUMMARY_DIR,
             [1, 2, 3]
         )
@@ -313,6 +323,7 @@ class TestModelApi(TestCase):
             LineageParamTypeError,
             'Keys must be list.',
             get_summary_lineage,
+            None,
             SUMMARY_DIR,
             (3, 4)
         )
@@ -321,6 +332,7 @@ class TestModelApi(TestCase):
             LineageParamTypeError,
             'Keys must be list.',
             get_summary_lineage,
+            None,
             SUMMARY_DIR,
             {'a': 'b'}
         )
@@ -346,7 +358,7 @@ class TestModelApi(TestCase):
         search_condition = {
             'sorted_name': 'summary_dir'
         }
-        res = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition)
+        res = filter_summary_lineage(None, BASE_SUMMARY_DIR, search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -357,7 +369,7 @@ class TestModelApi(TestCase):
             'object': [],
             'count': 0
         }
-        res = filter_summary_lineage(self.dir_with_empty_lineage)
+        res = filter_summary_lineage(None, self.dir_with_empty_lineage)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -395,7 +407,7 @@ class TestModelApi(TestCase):
             ],
             'count': 2
         }
-        partial_res = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition)
+        partial_res = filter_summary_lineage(None, BASE_SUMMARY_DIR, search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -433,7 +445,7 @@ class TestModelApi(TestCase):
             ],
             'count': 2
         }
-        partial_res = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition)
+        partial_res = filter_summary_lineage(None, BASE_SUMMARY_DIR, search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -462,7 +474,7 @@ class TestModelApi(TestCase):
             ],
             'count': 3
         }
-        partial_res1 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition1)
+        partial_res1 = filter_summary_lineage(None, BASE_SUMMARY_DIR, search_condition1)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res1.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -481,7 +493,7 @@ class TestModelApi(TestCase):
             'object': [],
             'count': 0
         }
-        partial_res2 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition2)
+        partial_res2 = filter_summary_lineage(None, BASE_SUMMARY_DIR, search_condition2)
         assert expect_result == partial_res2
 
     @pytest.mark.level0
@@ -511,7 +523,7 @@ class TestModelApi(TestCase):
             ],
             'count': 1
         }
-        res = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition)
+        res = filter_summary_lineage(None, BASE_SUMMARY_DIR, search_condition)
         assert expect_result == res
 
     @pytest.mark.level0
@@ -527,6 +539,7 @@ class TestModelApi(TestCase):
             LineageParamSummaryPathError,
             'The summary path is invalid.',
             filter_summary_lineage,
+            None,
             'relative_path'
         )
 
@@ -535,6 +548,7 @@ class TestModelApi(TestCase):
             LineageParamSummaryPathError,
             'The summary path does not exist or is not a dir.',
             filter_summary_lineage,
+            None,
             '/path/does/not/exist'
         )
 
@@ -543,6 +557,7 @@ class TestModelApi(TestCase):
             LineageFileNotFoundError,
             'There is no summary log file under summary_base_dir.',
             filter_summary_lineage,
+            None,
             self.empty_dir
         )
 
@@ -562,6 +577,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'The search_condition element summary_dir should be dict.',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -574,6 +590,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'The sorted_name have to exist when sorted_type exists.',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -584,6 +601,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'Invalid search_condition type, it should be dict.',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -596,6 +614,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'The limit must be int.',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -616,6 +635,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'The offset must be int.',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -630,6 +650,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'The search attribute not supported.',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -651,6 +672,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'The sorted_type must be ascending or descending',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -665,6 +687,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'The compare condition should be in',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -679,6 +702,7 @@ class TestModelApi(TestCase):
             LineageSearchConditionParamError,
             'The parameter metric/accuracy is invalid.',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -703,6 +727,7 @@ class TestModelApi(TestCase):
             LineageParamSummaryPathError,
             'The summary path is invalid.',
             filter_summary_lineage,
+            None,
             BASE_SUMMARY_DIR,
             search_condition
         )
@@ -727,7 +752,7 @@ class TestModelApi(TestCase):
             'object': [],
             'count': 0
         }
-        partial_res1 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition1)
+        partial_res1 = filter_summary_lineage(None, BASE_SUMMARY_DIR, search_condition1)
         assert expect_result == partial_res1
 
         # the (offset + 1) * limit > count
@@ -743,7 +768,7 @@ class TestModelApi(TestCase):
             'object': [],
             'count': 2
         }
-        partial_res2 = filter_summary_lineage(BASE_SUMMARY_DIR, search_condition2)
+        partial_res2 = filter_summary_lineage(None, BASE_SUMMARY_DIR, search_condition2)
         assert expect_result == partial_res2
 
     @pytest.mark.level0
@@ -766,6 +791,7 @@ class TestModelApi(TestCase):
                 LineageSearchConditionParamError,
                 f'The parameter {condition_key} is invalid. Its operation should be `in` or `eq`.',
                 filter_summary_lineage,
+                None,
                 BASE_SUMMARY_DIR,
                 search_condition
             )
@@ -781,6 +807,7 @@ class TestModelApi(TestCase):
                 LineageSearchConditionParamError,
                 f'The parameter {condition_key} is invalid. More than one operation.',
                 filter_summary_lineage,
+                None,
                 BASE_SUMMARY_DIR,
                 search_condition
             )
@@ -804,6 +831,7 @@ class TestModelApi(TestCase):
                 LineageSearchConditionParamError,
                 "The parameter lineage_type is invalid. It should be 'dataset' or 'model'.",
                 filter_summary_lineage,
+                None,
                 BASE_SUMMARY_DIR,
                 search_condition
             )
@@ -825,6 +853,7 @@ class TestModelApi(TestCase):
                 LineageSearchConditionParamError,
                 'The sorted_name must be in',
                 filter_summary_lineage,
+                None,
                 BASE_SUMMARY_DIR,
                 search_condition
             )
