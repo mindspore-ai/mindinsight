@@ -60,7 +60,6 @@ class TensorLogGenerator(LogGenerator):
         value.tensor.dims[:] = tensor.get('dims')
         value.tensor.data_type = tensor.get('data_type')
         value.tensor.float_data[:] = tensor.get('float_data')
-        print(tensor.get('float_data'))
 
         return tensor_event
 
