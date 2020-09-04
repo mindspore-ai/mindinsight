@@ -26,10 +26,9 @@ import pytest
 
 from mindinsight.datavisual.data_transform.data_manager import DataManager
 from mindinsight.lineagemgr.cache_item_updater import LineageCacheItemUpdater
-from mindinsight.lineagemgr.api.model import general_filter_summary_lineage, \
-    general_get_summary_lineage
+from mindinsight.lineagemgr.model import filter_summary_lineage, get_summary_lineage
 
-from ..api.test_model_api import LINEAGE_INFO_RUN1, LINEAGE_FILTRATION_EXCEPT_RUN, \
+from ..test_model import LINEAGE_INFO_RUN1, LINEAGE_FILTRATION_EXCEPT_RUN, \
     LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2
 from ..conftest import BASE_SUMMARY_DIR
 from .....ut.lineagemgr.querier import event_data
@@ -56,7 +55,7 @@ class TestModelApi(TestCase):
     @pytest.mark.env_single
     def test_get_summary_lineage(self):
         """Test the interface of get_summary_lineage."""
-        total_res = general_get_summary_lineage(data_manager=self._data_manger, summary_dir="./run1")
+        total_res = get_summary_lineage(data_manager=self._data_manger, summary_dir="./run1")
         expect_total_res = LINEAGE_INFO_RUN1
         assert_equal_lineages(expect_total_res, total_res, self.assertDictEqual)
 
@@ -81,7 +80,7 @@ class TestModelApi(TestCase):
         search_condition = {
             'sorted_name': 'summary_dir'
         }
-        res = general_filter_summary_lineage(data_manager=self._data_manger, search_condition=search_condition)
+        res = filter_summary_lineage(data_manager=self._data_manger, search_condition=search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -98,5 +97,5 @@ class TestModelApi(TestCase):
                 "in": ['./dir_with_empty_lineage']
             }
         }
-        res = general_filter_summary_lineage(data_manager=self._data_manger, search_condition=search_condition)
+        res = filter_summary_lineage(data_manager=self._data_manger, search_condition=search_condition)
         assert_equal_lineages(expect_result, res, self.assertDictEqual)

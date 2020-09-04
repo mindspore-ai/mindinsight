@@ -27,7 +27,7 @@ from unittest import TestCase, mock
 
 import numpy as np
 import pytest
-from mindinsight.lineagemgr import get_summary_lineage
+from mindinsight.lineagemgr.model import get_summary_lineage
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors
 from mindinsight.utils.exceptions import MindInsightException
 
@@ -90,12 +90,12 @@ class TestModelLineage(TestCase):
         train_callback = TrainLineage(SUMMARY_DIR, True, self.user_defined_info)
         train_callback.initial_learning_rate = 0.12
         train_callback.end(RunContext(self.run_context))
-        res = get_summary_lineage(SUMMARY_DIR)
+        res = get_summary_lineage(summary_dir=SUMMARY_DIR)
         assert res.get('hyper_parameters', {}).get('epoch') == 10
         run_context = self.run_context
         run_context['epoch_num'] = 14
         train_callback.end(RunContext(run_context))
-        res = get_summary_lineage(SUMMARY_DIR)
+        res = get_summary_lineage(summary_dir=SUMMARY_DIR)
         assert res.get('hyper_parameters', {}).get('epoch') == 14
 
     @pytest.mark.scene_eval(3)
@@ -186,7 +186,7 @@ class TestModelLineage(TestCase):
         run_context_customized['train_network'] = net
         train_callback.begin(RunContext(run_context_customized))
         train_callback.end(RunContext(run_context_customized))
-        res = get_summary_lineage(SUMMARY_DIR)
+        res = get_summary_lineage(summary_dir=SUMMARY_DIR)
         assert res.get('hyper_parameters', {}).get('loss_function') \
                == 'SoftmaxCrossEntropyWithLogits'
         assert res.get('algorithm', {}).get('network') == 'ResNet'
