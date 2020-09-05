@@ -22,6 +22,7 @@ from mindspore import context
 from mindspore import dataset as de
 from mindspore.train.model import Model
 from mindspore.train.serialization import load_checkpoint, load_param_into_net
+from src.CrossEntropySmooth import CrossEntropySmooth
 
 parser = argparse.ArgumentParser(description='Image classification')
 
@@ -69,8 +70,8 @@ if __name__ == '__main__':
     {% if loss=='SoftmaxCrossEntropyWithLogits' %}
     if not cfg.use_label_smooth:
         cfg.label_smooth_factor = 0.0
-    loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean',
-                                            smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
+    loss = CrossEntropySmooth(sparse=True, reduction='mean',
+                              smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
     {% elif loss=='SoftmaxCrossEntropyExpand' %}
     loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
     {% endif %}

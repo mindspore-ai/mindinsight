@@ -99,33 +99,17 @@ if __name__ == "__main__":
     lr = Tensor(get_lr(0, cfg.lr, cfg.epoch_size, ds_train.get_dataset_size()))
 
     # define loss, model
-    if target == "Ascend":
-        {% if loss=='SoftmaxCrossEntropyWithLogits' %}
-        loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
-        {% elif loss=='SoftmaxCrossEntropyExpand' %}
-        loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
-        {% endif %}
-        {% if optimizer=='Momentum' %}
-        opt = nn.Momentum(filter(lambda x: x.requires_grad, net.get_parameters()), learning_rate=lr, momentum=cfg.momentum,
-                          weight_decay=cfg.weight_decay, loss_scale=cfg.loss_scale)
-        {% else %}
-        opt = nn.{{ optimizer }}(net.trainable_params(), learning_rate=cfg.lr)
-        {% endif %}
-        loss_scale = FixedLossScaleManager(cfg.loss_scale, drop_overflow_update=False)
-        model = Model(net, loss_fn=loss, optimizer=opt, loss_scale_manager=loss_scale, metrics={'acc'},
-                      amp_level="O2", keep_batchnorm_fp32=False)
-    else:
-        {% if loss=='SoftmaxCrossEntropyWithLogits' %}
-        loss = nn.SoftmaxCrossEntropyWithLogits(is_grad=False, sparse=True, reduction="mean")
-        {% elif loss=='SoftmaxCrossEntropyExpand' %}
-        loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
-        {% endif %}
-        {% if optimizer=='Momentum' %}
-        opt = nn.Momentum(net.trainable_params(), learning_rate=lr, momentum=cfg.momentum)
-        {% else %}
-        opt = nn.{{ optimizer }}(net.trainable_params(), learning_rate=lr)
-        {% endif %}
-        model = Model(net, loss, opt, metrics={"Accuracy": Accuracy()})
+    {% if loss=='SoftmaxCrossEntropyWithLogits' %}
+    loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction="mean")
+    {% elif loss=='SoftmaxCrossEntropyExpand' %}
+    loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
+    {% endif %}
+    {% if optimizer=='Momentum' %}
+    opt = nn.Momentum(net.trainable_params(), learning_rate=lr, momentum=cfg.momentum)
+    {% else %}
+    opt = nn.{{ optimizer }}(net.trainable_params(), learning_rate=lr)
+    {% endif %}
+    model = Model(net, loss, opt, metrics={"Accuracy": Accuracy()})
 
     # define callbacks
     time_cb = TimeMonitor(data_size=step_size)

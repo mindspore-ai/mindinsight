@@ -30,6 +30,7 @@ from mindspore.communication.management import init, get_rank, get_group_size
 import mindspore.nn as nn
 import mindspore.common.initializer as weight_init
 from src.lr_generator import get_lr, warmup_cosine_annealing_lr
+from src.CrossEntropySmooth import CrossEntropySmooth
 
 parser = argparse.ArgumentParser(description='Image classification')
 parser.add_argument('--run_distribute', type=bool, default=False, help='Run distribute')
@@ -105,8 +106,9 @@ if __name__ == '__main__':
                 warmup_epochs=cfg.warmup_epochs, total_epochs=cfg.epoch_size, steps_per_epoch=step_size,
                 lr_decay_mode='poly')
     {% else %}
-    lr = get_lr(lr_init=cfg.lr_init, lr_end=0.0, lr_max=cfg.lr_max, warmup_epochs=cfg.warmup_epochs,
-                total_epochs=cfg.epoch_size, steps_per_epoch=step_size, lr_decay_mode='cosine')
+    lr = get_lr(lr_init=cfg.lr_init, lr_end=0.0, lr_max=cfg.lr_max,
+                warmup_epochs=cfg.warmup_epochs, total_epochs=cfg.epoch_size, steps_per_epoch=step_size,
+                lr_decay_mode='cosine')
     {% endif %}
 
     lr = Tensor(lr)
@@ -125,8 +127,8 @@ if __name__ == '__main__':
         {% if loss=='SoftmaxCrossEntropyWithLogits' %}
         if not cfg.use_label_smooth:
             cfg.label_smooth_factor = 0.0
-        loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean',
-                                                smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
+        loss = CrossEntropySmooth(sparse=True, reduction='mean',
+                                  smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
         {% elif loss=='SoftmaxCrossEntropyExpand' %}
         loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
         {% endif %}
@@ -146,14 +148,14 @@ if __name__ == '__main__':
         {% if loss=='SoftmaxCrossEntropyWithLogits' %}
         if not cfg.use_label_smooth:
             cfg.label_smooth_factor = 0.0
-        loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, is_grad=False, reduction='mean',
-                                                smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
+        loss = CrossEntropySmooth(sparse=True, reduction='mean',
+                                  smooth_factor=cfg.label_smooth_factor, num_classes=cfg.num_classes)
         {% elif loss=='SoftmaxCrossEntropyExpand' %}
         loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
         {% endif %}
         {% else %}
         {% if loss=='SoftmaxCrossEntropyWithLogits' %}
-        loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, is_grad=False, reduction='mean')
+        loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
         {% elif loss=='SoftmaxCrossEntropyExpand' %}
         loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
         {% endif %}

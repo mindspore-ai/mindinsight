@@ -52,6 +52,7 @@ ImageNet
     ├── config.py                          # parameter configuration
     ├── dataset.py                         # data preprocessing
     ├── lr_generator.py                    # generate learning rate for each step
+    ├── CrossEntropySmooth.py              # define the cross entropy loss function with smoothed labels
     └── resnet50.py                        # resNet50 network definition
   ├── eval.py                              # eval net
   └── train.py                             # train net

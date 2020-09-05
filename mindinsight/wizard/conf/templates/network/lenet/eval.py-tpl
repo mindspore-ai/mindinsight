@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     network = LeNet5(cfg.num_classes)
     {% if loss=='SoftmaxCrossEntropyWithLogits' %}
-    net_loss = nn.SoftmaxCrossEntropyWithLogits(is_grad=False, sparse=True, reduction="mean")
+    net_loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction="mean")
     {% elif loss=='SoftmaxCrossEntropyExpand' %}
     net_loss = nn.SoftmaxCrossEntropyExpand(sparse=True)
     {% endif %}
