@@ -129,32 +129,46 @@ class TestResNet50:
             if source_file.file_relative_path == 'src/config.py':
                 content = source_file.content
 
-                if config['dataset'] == 'Cifar10':
-                    if "'num_classes': 10" in content \
-                            and "'warmup_epochs': 5" in content \
-                            and "'lr_decay_mode': 'poly'" in content:
-                        config_dataset_is_right = True
-                elif config['dataset'] == 'ImageNet':
-                    if "'num_classes': 1001" in content \
-                            and "'warmup_epochs': 0" in content \
-                            and "'lr_decay_mode': 'cosine'":
-                        config_dataset_is_right = True
+                config_dataset_is_right = self._check_config_dataset(config, content)
+                config_optimizer_is_right = self._check_config_optimizer(config, content)
 
-                if config['optimizer'] == 'Momentum':
-                    if "'lr': 0.01" in content and \
-                            "'momentum': 0.9" in content:
-                        config_optimizer_is_right = True
-                elif config['optimizer'] == 'SGD':
-                    if "'lr': 0.01" in content:
-                        config_optimizer_is_right = True
-                else:
-                    if "'lr': 0.001" in content:
-                        config_optimizer_is_right = True
         assert dataset_is_right
         assert config_dataset_is_right
         assert config_optimizer_is_right
         assert network_is_right
         assert generator_lr_is_right
+
+    @staticmethod
+    def _check_config_dataset(config, content):
+        """Check dataset in config"""
+        config_dataset_is_right = False
+        if config['dataset'] == 'Cifar10':
+            if "'num_classes': 10" in content \
+                    and "'warmup_epochs': 5" in content \
+                    and "'lr_decay_mode': 'poly'" in content:
+                config_dataset_is_right = True
+        elif config['dataset'] == 'ImageNet':
+            if "'num_classes': 1001" in content \
+                    and "'warmup_epochs': 0" in content \
+                    and "'lr_decay_mode': 'cosine'":
+                config_dataset_is_right = True
+        return config_dataset_is_right
+
+    @staticmethod
+    def _check_config_optimizer(config, content):
+        """Check optimizer in config"""
+        config_optimizer_is_right = False
+        if config['optimizer'] == 'Momentum':
+            if "'lr': 0.01" in content and \
+                    "'momentum': 0.9" in content:
+                config_optimizer_is_right = True
+        elif config['optimizer'] == 'SGD':
+            if "'lr': 0.01" in content:
+                config_optimizer_is_right = True
+        else:
+            if "'lr': 0.001" in content:
+                config_optimizer_is_right = True
+        return config_optimizer_is_right
 
     def check_train_eval_readme(self, dataset_name, loss_name, optimizer_name):
         """Check train and eval"""
