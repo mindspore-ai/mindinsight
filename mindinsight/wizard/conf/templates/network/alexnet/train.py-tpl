@@ -60,14 +60,14 @@ if __name__ == "__main__":
             device_id = int(os.getenv('DEVICE_ID'))
             context.set_context(device_id=device_id, enable_auto_mixed_precision=True)
             context.set_auto_parallel_context(device_num=args.device_num, parallel_mode=ParallelMode.DATA_PARALLEL,
-                                              mirror_mean=True)
+                                              gradients_mean=True)
 
             init()
         # GPU target
         else:
             init("nccl")
             context.set_auto_parallel_context(device_num=get_group_size(), parallel_mode=ParallelMode.DATA_PARALLEL,
-                                              mirror_mean=True)
+                                              gradients_mean=True)
             ckpt_save_dir = cfg.save_checkpoint_path + "ckpt_" + str(get_rank()) + "/"
 
 
