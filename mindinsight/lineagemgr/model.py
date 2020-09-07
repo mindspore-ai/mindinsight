@@ -14,6 +14,7 @@
 # ============================================================================
 """This file is used to define the model lineage python api."""
 import os
+import numpy as np
 import pandas as pd
 
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamValueError, \
@@ -21,16 +22,20 @@ from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamValu
     LineageQuerierParamException, LineageDirNotExistError, LineageSearchConditionParamError, \
     LineageParamTypeError, LineageSummaryParseException
 from mindinsight.lineagemgr.common.log import logger as log
-from mindinsight.lineagemgr.common.utils import normalize_summary_dir
+from mindinsight.lineagemgr.common.utils import normalize_summary_dir, get_relative_path
 from mindinsight.lineagemgr.common.validator.model_parameter import SearchModelConditionParameter
 from mindinsight.lineagemgr.common.validator.validate import validate_filter_key, validate_search_model_condition, \
     validate_condition, validate_path, validate_train_id
 from mindinsight.lineagemgr.lineage_parser import LineageParser, LineageOrganizer
 from mindinsight.lineagemgr.querier.querier import Querier
+from mindinsight.optimizer.common.enums import ReasonCode
+from mindinsight.optimizer.utils.utils import is_simple_numpy_number
 from mindinsight.utils.exceptions import MindInsightException
 
 _METRIC_PREFIX = "[M]"
 _USER_DEFINED_PREFIX = "[U]"
+
+USER_DEFINED_INFO_LIMIT = 100
 
 
 def get_summary_lineage(data_manager=None, summary_dir=None, keys=None):
@@ -189,44 +194,181 @@ def _convert_relative_path_to_abspath(summary_base_dir, search_condition):
     return search_condition
 
 
-def get_lineage_table(data_manager):
+def get_lineage_table(data_manager, search_condition):
     """Get lineage data in a table from data manager."""
-    lineages = filter_summary_lineage(data_manager=data_manager)
+    summary_base_dir = data_manager.summary_base_dir
+    lineages = filter_summary_lineage(data_manager=data_manager, search_condition=search_condition)
     lineage_objects = lineages.get("object", [])
-    cnt_lineages = len(lineage_objects)
-    metric_prefix = _METRIC_PREFIX
-    user_defined_prefix = _USER_DEFINED_PREFIX
+
     # Step 1, get column names
+    column_names = _get_columns_name(lineage_objects)
+
+    # Step 2, collect data
+    column_data = _organize_data_to_matrix(lineage_objects, column_names, summary_base_dir)
+
+    return LineageTable(pd.DataFrame(column_data))
+
+
+def _get_columns_name(lineage_objects):
+    """Get columns name."""
     column_names = set()
+    user_defined_num = 0
     for lineage in lineage_objects:
         model_lineage = lineage.get("model_lineage", {})
         metric = model_lineage.get("metric", {})
-        metric_names = tuple('{}{}'.format(metric_prefix, key) for key in metric.keys())
+        metric_names = tuple('{}{}'.format(_METRIC_PREFIX, key) for key in metric.keys())
         user_defined = model_lineage.get("user_defined", {})
-        user_defined_names = tuple('{}{}'.format(metric_prefix, key) for key in user_defined.keys())
+        user_defined_names = tuple('{}{}'.format(_USER_DEFINED_PREFIX, key) for key in user_defined.keys())
         model_lineage_temp = list(model_lineage.keys())
         for key in model_lineage_temp:
             if key in ["metric", "user_defined"]:
                 model_lineage_temp.remove(key)
         column_names.update(model_lineage_temp)
         column_names.update(metric_names)
-        column_names.update(user_defined_names)
-    # Step 2, collect data
+        if user_defined_num + len(user_defined_names) <= USER_DEFINED_INFO_LIMIT:
+            column_names.update(user_defined_names)
+            user_defined_num += len(user_defined_names)
+        elif user_defined_num < USER_DEFINED_INFO_LIMIT <= user_defined_num + len(user_defined_names):
+            names = []
+            for i in range(USER_DEFINED_INFO_LIMIT - user_defined_num):
+                names.append(user_defined_names[i])
+            column_names.update(names)
+            user_defined_num += len(names)
+            log.info("Partial user_defined_info is deleted. Currently saved length is: %s.", user_defined_num)
+        else:
+            log.info("The quantity of user_defined_info has reached the limit %s.", USER_DEFINED_INFO_LIMIT)
+    column_names.update(["train_id"])
+
+    return column_names
+
+
+def _organize_data_to_matrix(lineage_objects, column_names, summary_base_dir):
+    """Collect data and transform to matrix."""
+    cnt_lineages = len(lineage_objects)
     column_data = {key: [None] * cnt_lineages for key in column_names}
     for ind, lineage in enumerate(lineage_objects):
+
+        train_id = get_relative_path(lineage.get("summary_dir"), summary_base_dir)
+
         model_lineage = lineage.get("model_lineage", {})
         metric = model_lineage.pop("metric", {})
         metric_content = {
-            '{}{}'.format(metric_prefix, key): val for key, val in metric.items()
+            '{}{}'.format(_METRIC_PREFIX, key): val for key, val in metric.items()
         }
         user_defined = model_lineage.pop("user_defined", {})
         user_defined_content = {
-            '{}{}'.format(user_defined_prefix, key): val for key, val in user_defined.items()
+            '{}{}'.format(_USER_DEFINED_PREFIX, key): val for key, val in user_defined.items()
         }
         final_content = {}
         final_content.update(model_lineage)
         final_content.update(metric_content)
         final_content.update(user_defined_content)
+        final_content.update({"train_id": train_id})
         for key, val in final_content.items():
-            column_data[key][ind] = val
-    return pd.DataFrame(column_data)
+            if isinstance(val, str) and val.lower() in ['nan', 'inf']:
+                val = np.nan
+            if key in column_data:
+                column_data[key][ind] = val
+    return column_data
+
+
+class LineageTable:
+    """Wrap lineage data in a table."""
+    _LOSS_NAME = "loss"
+    _NOT_TUNABLE_NAMES = [_LOSS_NAME, "train_id", "device_num", "model_size",
+                          "test_dataset_count", "train_dataset_count"]
+
+    def __init__(self, df: pd.DataFrame):
+        self._df = df
+        self.train_ids = self._df["train_id"].tolist()
+        self._drop_columns_info = []
+        self._remove_unsupported_columns()
+
+    def _remove_unsupported_columns(self):
+        """Remove unsupported columns."""
+        columns_to_drop = []
+        for name, data in self._df.iteritems():
+            if not is_simple_numpy_number(data.dtype):
+                columns_to_drop.append(name)
+
+        if columns_to_drop:
+            log.debug("Unsupported columns: %s", columns_to_drop)
+            self._df = self._df.drop(columns=columns_to_drop)
+
+        for name in columns_to_drop:
+            if not name.startswith(_USER_DEFINED_PREFIX):
+                continue
+            self._drop_columns_info.append({
+                "name": name,
+                "unselected": True,
+                "reason_code": ReasonCode.NOT_ALL_NUMBERS.value
+            })
+
+    @property
+    def target_names(self):
+        """Get names for optimize targets (eg loss, accuracy)."""
+        target_names = [name for name in self._df.columns if name.startswith(_METRIC_PREFIX)]
+        if self._LOSS_NAME in self._df.columns:
+            target_names.append(self._LOSS_NAME)
+        return target_names
+
+    @property
+    def hyper_param_names(self, tunable=True):
+        """Get hyper param names."""
+        blocked_names = self._get_blocked_names(tunable)
+
+        hyper_param_names = [
+            name for name in self._df.columns
+            if not name.startswith(_METRIC_PREFIX) and name not in blocked_names]
+
+        if self._LOSS_NAME in hyper_param_names:
+            hyper_param_names.remove(self._LOSS_NAME)
+
+        return hyper_param_names
+
+    def _get_blocked_names(self, tunable):
+        if tunable:
+            block_names = self._NOT_TUNABLE_NAMES
+        else:
+            block_names = []
+        return block_names
+
+    @property
+    def user_defined_hyper_param_names(self):
+        """Get user defined hyper param names."""
+        names = [name for name in self._df.columns if name.startswith(_USER_DEFINED_PREFIX)]
+        return names
+
+    def get_column(self, name):
+        """
+        Get data for specified column.
+        Args:
+            name (str): column name.
+
+        Returns:
+            np.ndarray, specified column.
+
+        """
+        return self._df[name]
+
+    def get_column_values(self, name):
+        """
+        Get data for specified column.
+        Args:
+            name (str): column name.
+
+        Returns:
+            list, specified column data. If value is np.nan, transform to None.
+
+        """
+        return [None if np.isnan(num) else num for num in self._df[name].tolist()]
+
+    @property
+    def df(self):
+        """Get the DataFrame."""
+        return self._df
+
+    @property
+    def drop_column_info(self):
+        """Get dropped columns info."""
+        return self._drop_columns_info

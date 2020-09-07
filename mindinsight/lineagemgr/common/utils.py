@@ -16,6 +16,7 @@
 import os
 import re
 from functools import wraps
+from pathlib import Path
 
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
@@ -99,7 +100,29 @@ def make_directory(path):
         try:
             os.makedirs(path, exist_ok=True)
             real_path = path
-        except PermissionError as e:
-            log.error("No write permission on the directory(%r), error = %r", path, e)
+        except PermissionError as err:
+            log.error("No write permission on the directory(%r), error = %r", path, err)
             raise LineageParamTypeError("No write permission on the directory.")
     return real_path
+
+
+def get_relative_path(path, base_path):
+    """
+    Get relative path based on base_path.
+
+    Args:
+        path (str): absolute path.
+        base_path: absolute base path.
+
+    Returns:
+        str, relative path based on base_path.
+
+    """
+    try:
+        r_path = str(Path(path).relative_to(Path(base_path)))
+    except ValueError:
+        raise LineageParamValueError("The path %r does not start with %r." % (path, base_path))
+
+    if r_path == ".":
+        r_path = ""
+    return os.path.join("./", r_path)

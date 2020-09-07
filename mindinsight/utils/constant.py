@@ -32,6 +32,7 @@ class MindInsightModules(Enum):
     PROFILERMGR = 6
     SCRIPTCONVERTER = 7
     WIZARD = 9
+    OPTIMIZER = 10
 
 
 class GeneralErrors(Enum):
@@ -81,5 +82,12 @@ class DataVisualErrors(Enum):
 class ScriptConverterErrors(Enum):
     """Enum definition for mindconverter errors."""
 
+
 class WizardErrors(Enum):
     """Enum definition for mindwizard errors."""
+
+
+class OptimizerErrors(Enum):
+    """Enum definition for optimizer errors."""
+    SAMPLES_NOT_ENOUGH = 1
+    CORRELATION_NAN = 2
