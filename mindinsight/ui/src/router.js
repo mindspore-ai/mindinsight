@@ -117,9 +117,5 @@ export default new Router({
         },
       ],
     },
-    {
-      path: '/hardware-visual',
-      component: () => import('./views/train-manage/hardware-visual.vue'),
-    },
   ],
 });

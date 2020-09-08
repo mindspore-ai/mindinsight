@@ -288,10 +288,4 @@ export default {
       },
     });
   },
-  getMetricsData() {
-    return axios({
-      method: 'get',
-      url: 'v1/mindinsight/sysmetric/current',
-    });
-  },
 };

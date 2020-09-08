@@ -44,10 +44,6 @@ limitations under the License.
                         :title='$t("summaryManage.comparePlate")'>
             {{$t("summaryManage.comparePlate")}}
           </el-menu-item>
-          <el-menu-item index="/hardware-visual"
-                        :title='$t("summaryManage.hardwareVisual")'>
-            {{$t("summaryManage.hardwareVisual")}}
-          </el-menu-item>
         </el-menu>
       </div>
     </div>
@@ -58,15 +54,8 @@ limitations under the License.
          || this.$route.path.indexOf('/histogram') > 0
          || this.$route.path.indexOf('/tensor') > 0
          || this.$route.path.indexOf('/training-dashboard') > 0
-         || !this.$route.path.indexOf('/compare-plate')
-         || !this.$route.path.indexOf('/hardware-visual')">
-      <div class="reload-training"
-           v-if="this.$route.path.indexOf('/scalar') > 0
-          || this.$route.path.indexOf('/image') > 0
-          || this.$route.path.indexOf('/histogram') > 0
-          || this.$route.path.indexOf('/tensor') > 0
-          || this.$route.path.indexOf('/training-dashboard') > 0
-          || !this.$route.path.indexOf('/compare-plate')">
+         || !this.$route.path.indexOf('/compare-plate')">
+      <div class="reload-training">
         <!-- automatic refresh switch -->
         <el-switch v-model="isTimeReload"
                    :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
@@ -89,31 +78,6 @@ limitations under the License.
            v-if="isTimeReload && isShowInp"
            @click="cancelTimeValue"></i>
       </div>
-      <div class="reload-hardware"
-           v-if="!this.$route.path.indexOf('/hardware-visual')">
-        <!-- automatic refresh switch -->
-        <el-switch v-model="isHardwareTimeReload"
-                   :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
-                  hardwareTimeReloadValue+$t('header.timeSecond')+$t('symbols.rightbracket')"
-                   @change="hardwareTimeReload"></el-switch>
-        <i class="el-icon-edit"
-           :title="$t('header.timeReloadScope')"
-           v-if="isHardwareTimeReload && !isShowHardwareInp"
-           @click="editHardwareTime"></i>
-
-        <el-input v-if="isHardwareTimeReload && isShowHardwareInp"
-                  v-model="newHardwareReloadValue"
-                  type="text"
-                  @input="hardwareTimeValueChange"></el-input>
-
-        <i class="el-icon-check"
-           v-if="isHardwareTimeReload && isShowHardwareInp"
-           @click="saveHardwareTimeValue"></i>
-        <i class="el-icon-close"
-           v-if="isHardwareTimeReload && isShowHardwareInp"
-           @click="cancelHardwareTimeValue"></i>
-      </div>
-
       <!-- manual refresh switch -->
       <img src="../assets/images/reload.png"
            alt=""
@@ -154,9 +118,6 @@ export default {
       isLanguage: true,
       timeReloadValue: this.$store.state.timeReloadValue,
       newReloadValue: this.$store.state.timeReloadValue,
-      isShowHardwareInp: false,
-      hardwareTimeReloadValue: this.$store.state.hardwareTimeReloadValue,
-      newHardwareReloadValue: this.$store.state.hardwareTimeReloadValue,
     };
   },
   computed: {
@@ -182,13 +143,6 @@ export default {
         window.localStorage.setItem('milang', languageList[0]);
       }
       return isChinese;
-    },
-    // set and get isHardwareTimeReload status
-    isHardwareTimeReload: {
-      get() {
-        return this.$store.state.isHardwareTimeReload;
-      },
-      set(val) {},
     },
   },
   watch: {},
@@ -244,48 +198,6 @@ export default {
           .replace(/\./g, '');
       this.newReloadValue = Number(this.newReloadValue);
     },
-    // hardware reload setting
-    hardwareTimeReload(val) {
-      localStorage.isHardwareTimeReload = val;
-      this.$store.commit('setIsHardwareTimeReload', val);
-    },
-
-    editHardwareTime() {
-      this.isShowHardwareInp = true;
-    },
-
-    saveHardwareTimeValue() {
-      if (this.newHardwareReloadValue >= 0) {
-        this.newHardwareReloadValue =
-          this.newHardwareReloadValue < 3
-            ? 3
-            : this.newHardwareReloadValue > 300
-            ? 300
-            : this.newHardwareReloadValue;
-        const timeValue = this.newHardwareReloadValue;
-        this.hardwareTimeReloadValue = timeValue;
-        localStorage.hardwareTimeReloadValue = timeValue;
-        this.$store.commit('setHardwareTimeReloadValue', timeValue);
-        this.isShowHardwareInp = false;
-      } else {
-        this.cancelHardwareTimeValue();
-      }
-    },
-    cancelHardwareTimeValue() {
-      this.isShowHardwareInp = false;
-      this.newHardwareReloadValue = this.hardwareTimeReloadValue;
-    },
-    hardwareTimeValueChange() {
-      if (this.newHardwareReloadValue === '') {
-        return;
-      }
-      this.newHardwareReloadValue = this.newHardwareReloadValue
-          .toString()
-          .replace(/[^\.\d]/g, '')
-          .replace(/\./g, '');
-      this.newHardwareReloadValue = Number(this.newHardwareReloadValue);
-    },
-
     // get active menu item
     getActive() {
       const str = this.$route.path.split('/');
