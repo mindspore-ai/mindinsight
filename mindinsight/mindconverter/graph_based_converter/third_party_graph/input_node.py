@@ -1,0 +1,109 @@
+# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Define PyTorch graph node."""
+import os
+
+from .base import GraphNode
+from ..constant import SEPARATOR_IN_SCOPE, NodeType
+
+
+class InputNode(GraphNode):
+    """
+    Pytorch Input Node.
+
+    Args:
+        input_shape: Input shape of module.
+
+    """
+
+    def convert_successful(self):
+        """
+        Whether convert successful.
+
+        Returns:
+            bool, true or false.
+        """
+        return False
+
+    def froze_node_type_and_module_name(self, node_type, module_name):
+        pass
+
+    def _get_raw_params(self, node):
+        pass
+
+    def clear_args_of_declaration(self):
+        pass
+
+    @property
+    def op_name(self):
+        return self._op_name
+
+    def hash_key(self):
+        pass
+
+    def replace_with_arg(self, arg):
+        pass
+
+    def _get_arg_name(self, arg):
+        pass
+
+    def add_input_and_output_shape(self, input_shape, output_shape):
+        pass
+
+    def __init__(self, input_shape):
+        super(InputNode, self).__init__(node=None)
+        self._op_name = 'Input'
+        self._op_params = {'node_shape': input_shape}
+        self._node_type = NodeType.INPUT.value
+
+    def set_scope_name(self, original_input_scope_name):
+        """
+        Set scope name.
+        Args:
+            original_input_scope_name: Original input scope name needed to be linked.
+        """
+        prefix_name = original_input_scope_name.split(SEPARATOR_IN_SCOPE)[0]
+        node_name = ''.join((self.node_type, '[input]'))
+        self._scope_name = os.path.join(prefix_name, node_name)
+
+    def set_successor_nodes(self, original_input_scope_names):
+        """
+        Set successor nodes.
+        Args:
+            original_input_scope_names: Original input scope names needed to be linked.
+        """
+        if isinstance(original_input_scope_names, list):
+            self.successor_nodes = original_input_scope_names
+        elif isinstance(original_input_scope_names, str):
+            self.successor_nodes.append(original_input_scope_names)
+        else:
+            raise ValueError
+
+    @property
+    def real_name(self):
+        return
+
+    @property
+    def variable_name(self):
+        return
+
+    def to_ir(self):
+        """
+        No need to implement for now.
+        """
+        raise NotImplementedError()
+
+    def to_code(self, ipt_args_in_construct: str, output_var: str):
+        raise NotImplementedError()
