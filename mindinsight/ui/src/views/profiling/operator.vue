@@ -22,7 +22,7 @@ limitations under the License.
         <el-tab-pane label="AI CORE"
                      name="core">
           <div class="cl-profiler-top"
-               :class="{fullScreen:fullScreen}"
+               :class="{fullScreen:coreFullScreen}"
                v-if="coreCharts.data.length">
             <div>
               <div class="chart-title">{{$t('profiling.chartTitle')}}</div>
@@ -45,14 +45,14 @@ limitations under the License.
             </div>
           </div>
           <div class="cl-profiler-bottom"
-               :class="{fullScreen:fullScreen}"
+               :class="{fullScreen:coreFullScreen}"
                v-if="coreCharts.data.length">
             <img src="../../assets/images/full-screen.png"
                  :title="$t('graph.fullScreen')"
                  class="fullScreen"
                  @click="fullScreenControl()">
             <div>
-              <el-radio-group v-model="statisticType"
+              <el-radio-group v-model="coreStatisticType"
                               @change="coreTableChange"
                               fill="#00A5A7"
                               text-color="#FFFFFF"
@@ -66,23 +66,23 @@ limitations under the License.
               </el-radio-group>
               <div class="cl-search-box">
                 <el-input v-model="searchByTypeInput"
-                          v-if="!statisticType"
+                          v-if="!coreStatisticType"
                           :placeholder="$t('operator.searchByType')"
                           clearable
                           @clear="searchOpCoreList()"
                           @keyup.enter.native="searchOpCoreList()"></el-input>
                 <el-input v-model="searchByNameInput"
-                          v-if="statisticType"
+                          v-if="coreStatisticType"
                           :placeholder="$t('operator.searchByName')"
                           clearable
                           @clear="searchOpCoreList()"
                           @keyup.enter.native="searchOpCoreList()"></el-input>
               </div>
             </div>
-            <el-table v-show="!statisticType && opTypeCol && opTypeCol.length"
+            <el-table v-show="!coreStatisticType && opTypeCol && opTypeCol.length"
                       :data="opTypeList"
                       ref="expandTable"
-                      @expand-change="expandTypeItem"
+                      @expand-change="expandCoreTypeItem"
                       @sort-change="opTypeSortChange"
                       stripe
                       height="calc(100% - 40px)"
@@ -92,7 +92,7 @@ limitations under the License.
                   <div class="expand-table">
                     <el-table :data="props.row.opDetailList"
                               stripe
-                              ref="expandChild"
+                              ref="expandCoreChild"
                               width="100%"
                               tooltip-effect="light"
                               @cell-click="showInfoDetail"
@@ -101,9 +101,8 @@ limitations under the License.
                                        :property="ele"
                                        :key="key"
                                        :sortable="ele === 'op_info' ? false : 'custom'"
-                                       :width="(ele==='avg_execution_time'|| ele==='subgraph' ||
-                                        ele==='op_name'|| ele==='op_type')?'220':''"
-                                       show-overflow-tooltip>
+                                       :min-width="(ele === 'op_info') ? 350 : (ele === 'full_op_name') ? 220 : ''"
+                                       :show-overflow-tooltip="(ele === 'avg_execution_time')">
                         <template slot="header">
                           <div class="custom-label"
                                :title="getHeaderField(ele)">
@@ -134,7 +133,7 @@ limitations under the License.
                 </template>
               </el-table-column>
             </el-table>
-            <el-table v-show="statisticType && opAllTypeList.opDetailCol && opAllTypeList.opDetailCol.length"
+            <el-table v-show="coreStatisticType && opAllTypeList.opDetailCol && opAllTypeList.opDetailCol.length"
                       :data="opAllTypeList.opDetailList"
                       stripe
                       ref="opAllTable"
@@ -147,9 +146,8 @@ limitations under the License.
                                :property="item"
                                :key="$index"
                                :sortable="item === 'op_info' ? false : 'custom'"
-                               :width="(item==='avg_execution_time'|| item==='subgraph' ||
-                                item==='op_name'|| item==='op_type')?'220':''"
-                               show-overflow-tooltip>
+                               :min-width="(item === 'op_info') ? 350 : (item === 'full_op_name') ? 220 : ''"
+                               :show-overflow-tooltip="(item === 'avg_execution_time')">
                 <template slot="header">
                   <div class="custom-label"
                        :title="getHeaderField(item)">
@@ -158,7 +156,7 @@ limitations under the License.
                 </template>
               </el-table-column>
             </el-table>
-            <el-pagination v-show="statisticType"
+            <el-pagination v-show="coreStatisticType"
                            v-if="opAllTypeList.opDetailList.length"
                            :current-page="opAllTypeList.opDetailPage.offset + 1"
                            :page-size="opAllTypeList.opDetailPage.limit"
@@ -179,31 +177,126 @@ limitations under the License.
         <el-tab-pane label="AI CPU"
                      class="cpu-tab"
                      name="cpu">
-          <div class="cl-profiler-top"
-               v-if="false">
+           <div class="cl-profiler-top"
+               :class="{fullScreen:cpuFullScreen}"
+               v-if="cpuCharts.data.length">
+            <div>
+              <div class="chart-title">{{$t('profiling.chartTitle')}}</div>
+              <el-radio-group class="chart-radio-group"
+                              v-model="cpuCharts.type"
+                              @change="cpuChartChange"
+                              fill="#00A5A7"
+                              text-color="#FFFFFF"
+                              size="small">
+                <el-radio-button :label="0">
+                  {{$t('operator.pie')}}
+                </el-radio-button>
+                <el-radio-button :label="1">
+                  {{ $t('operator.bar')}}
+                </el-radio-button>
+              </el-radio-group>
+            </div>
             <div class="cl-profiler-echarts">
-              <div class
-                   id="cpu-echarts"></div>
+              <div id="cpu-echarts"></div>
             </div>
           </div>
+
           <div class="cl-profiler-bottom"
+               :class="{fullScreen:cpuFullScreen}"
                v-if="cpuCharts.data.length">
-            <div class="cl-search-box">
-              <el-input v-model="searchByCPUTypeInput"
-                        :placeholder="$t('operator.searchByType')"
-                        clearable
-                        @clear="searchOpCpuList()"
-                        @keyup.enter.native="searchOpCpuList()"></el-input>
+            <img src="../../assets/images/full-screen.png"
+                 :title="$t('graph.fullScreen')"
+                 class="fullScreen"
+                 @click="fullScreenControl()">
+            <div>
+              <el-radio-group v-model="cpuStatisticType"
+                              @change="cpuTableChange"
+                              fill="#00A5A7"
+                              text-color="#FFFFFF"
+                              size="small">
+                <el-radio-button :label="1">
+                  {{$t('operator.allOperator')}}
+                </el-radio-button>
+                <el-radio-button :label="0">
+                  {{$t('operator.classificationOperator')}}
+                </el-radio-button>
+              </el-radio-group>
+              <div class="cl-search-box">
+                <el-input v-model="searchByCpuTypeInput"
+                          v-if="!cpuStatisticType"
+                          :placeholder="$t('operator.searchByType')"
+                          clearable
+                          @clear="searchOpCpuList()"
+                          @keyup.enter.native="searchOpCpuList()"></el-input>
+                <el-input v-model="searchAllByCpuTypeInput"
+                          v-if="cpuStatisticType"
+                          :placeholder="$t('operator.searchByType')"
+                          clearable
+                          @clear="searchOpCpuList()"
+                          @keyup.enter.native="searchOpCpuList()"></el-input>
+              </div>
             </div>
-            <el-table v-show="opCpuList.opDetailCol && opCpuList.opDetailCol.length"
-                      :data="opCpuList.opDetailList"
+            <el-table v-show="!cpuStatisticType && opCpuTypeCol && opCpuTypeCol.length"
+                      :data="opCpuTypeList"
+                      ref="expandCpuTable"
+                      @expand-change="expandCpuTypeItem"
+                      @sort-change="opCpuTypeSortChange"
                       stripe
-                      ref="opCPUTable"
+                      height="calc(100% - 40px)"
+                      width="100%">
+              <el-table-column type="expand">
+                <template slot-scope="props">
+                  <div class="expand-table">
+                    <el-table :data="props.row.opDetailList"
+                              stripe
+                              ref="expandCpuChild"
+                              width="100%"
+                              tooltip-effect="light"
+                              @sort-change="(...args)=>{cpuDetailSortChange(props.row, ...args)}">
+                      <el-table-column v-for="(ele, key) in props.row.opDetailCol"
+                                       :property="ele"
+                                       :key="key"
+                                       sortable="custom"
+                                       show-overflow-tooltip>
+                        <template slot="header">
+                          <div class="custom-label"
+                               :title="getHeaderField(ele)">
+                            {{getHeaderField(ele)}}
+                          </div>
+                        </template>
+                      </el-table-column>
+                    </el-table>
+                    <el-pagination :current-page="props.row.opDetailPage.offset + 1"
+                                   :page-size="props.row.opDetailPage.limit"
+                                   @current-change="(...args)=>{opCpuDetailPageChange(props.row, ...args)}"
+                                   layout="total, prev, pager, next, jumper"
+                                   :total="props.row.pageTotal">
+                    </el-pagination>
+                    <div class="clear"></div>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column v-for="(item, $index) in opTypeCol"
+                               :property="item"
+                               :key="$index"
+                               sortable>
+                <template slot="header">
+                  <div class="custom-label"
+                       :title="getHeaderField(item)">
+                    {{getHeaderField(item)}}
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-table v-show="cpuStatisticType && opCpuAllTypeList.opDetailCol && opCpuAllTypeList.opDetailCol.length"
+                      :data="opCpuAllTypeList.opDetailList"
+                      stripe
+                      ref="opCpuAllTable"
                       width="100%"
-                      height="calc(100% - 82px)"
+                      height="calc(100% - 80px)"
                       tooltip-effect="light"
-                      @sort-change="(...args)=>{cpuDetailSortChange(opCpuList, ...args)}">
-              <el-table-column v-for="(item, $index) in opCpuList.opDetailCol"
+                      @sort-change="(...args)=>{cpuDetailSortChange(opCpuAllTypeList, ...args)}">
+              <el-table-column v-for="(item, $index) in opCpuAllTypeList.opDetailCol"
                                :property="item"
                                :key="$index"
                                sortable="custom"
@@ -216,12 +309,13 @@ limitations under the License.
                 </template>
               </el-table-column>
             </el-table>
-            <el-pagination v-if="opCpuList.opDetailList.length"
-                           :current-page="opCpuList.opDetailPage.offset + 1"
-                           :page-size="opCpuList.opDetailPage.limit"
-                           @current-change="(...args)=>{opCpuPageChange(opCpuList, ...args)}"
+            <el-pagination v-show="cpuStatisticType"
+                            v-if="opCpuAllTypeList.opDetailList.length"
+                           :current-page="opCpuAllTypeList.opDetailPage.offset + 1"
+                           :page-size="opCpuAllTypeList.opDetailPage.limit"
+                           @current-change="(...args)=>{opCpuDetailPageChange(opCpuAllTypeList, ...args)}"
                            layout="total, prev, pager, next, jumper"
-                           :total="opCpuList.pageTotal">
+                           :total="opCpuAllTypeList.pageTotal">
             </el-pagination>
           </div>
           <div class="image-noData"
@@ -272,7 +366,7 @@ export default {
       apiType: 'core',
       currentCard: '',
       cpuCharts: {
-        type: 1,
+        type: 0,
         id: 'cpu-echarts',
         chartDom: null,
         data: [],
@@ -283,13 +377,17 @@ export default {
         chartDom: null,
         data: [],
       }, // ai core chart
-      statisticType: 0, // ai core table statistic type
+      coreStatisticType: 0, // ai core table statistic type
+      cpuStatisticType: 0, // ai cpu table statistic type
       searchByTypeInput: '', // search by ai core type name
       searchByNameInput: '', // search by ai core detail name
-      searchByCPUTypeInput: '', // search by ai cpu name
+      searchByCpuTypeInput: '', // search by ai cpu type
+      searchAllByCpuTypeInput: '', // search by ai cpu type in all list
       opTypeCol: [], // table headers list of operator type
       opTypeList: [], // table list of operator type
-      opCpuList: {
+      opCpuTypeCol: [], // table headers list of operator type
+      opCpuTypeList: [], // table list of operator type
+      opCpuAllTypeList: {
         opDetailCol: [],
         opDetailList: [],
         pageTotal: 0,
@@ -324,6 +422,11 @@ export default {
         name: 'execution_time',
         type: 'descending',
       }, // operator type filter
+      op_cpu_filter_condition: {},
+      op_cpu_sort_condition: {
+        name: 'execution_time',
+        type: 'descending',
+      }, // operator cpu type filter
       initOver: false,
       objectType: 'object',
       curActiveRow: {
@@ -331,7 +434,13 @@ export default {
         childProp: null,
         childOrder: null,
       },
-      fullScreen: false,
+      curCpuActiveRow: {
+        rowItem: null,
+        childProp: null,
+        childOrder: null,
+      },
+      coreFullScreen: false,
+      cpuFullScreen: false,
     };
   },
   watch: {
@@ -379,11 +488,20 @@ export default {
       }
     },
     fullScreenControl() {
-      this.fullScreen = !this.fullScreen;
-      if (this.coreCharts.chartDom && !this.fullScreen) {
-        this.$nextTick(() => {
-          this.coreCharts.chartDom.resize();
-        });
+      if (this.apiType === 'core') {
+        this.coreFullScreen = !this.coreFullScreen;
+        if (this.coreCharts.chartDom && !this.coreFullScreen) {
+          this.$nextTick(() => {
+            this.coreCharts.chartDom.resize();
+          });
+        }
+      } else {
+        this.cpuFullScreen = !this.cpuFullScreen;
+        if (this.cpuCharts.chartDom && !this.cpuFullScreen) {
+          this.$nextTick(() => {
+            this.cpuCharts.chartDom.resize();
+          });
+        }
       }
     },
     /**
@@ -391,16 +509,17 @@ export default {
      */
     cardChange() {
       if (this.apiType === 'core') {
-        this.statisticType = 0;
+        this.coreStatisticType = 0;
         this.clearCoreData();
         this.getCoreTypeList();
       } else if (this.apiType === 'cpu') {
+        this.cpuStatisticType = 0;
         this.clearCpuData();
-        this.getCpuList(true);
+        this.getCpuTypeList();
       }
     },
     /**
-     * Operators type sort
+     * Operators core type sort
      * @param {Object} sort Sort data
      */
     opTypeSortChange(sort) {
@@ -409,9 +528,25 @@ export default {
         type: sort.order,
       };
       this.$nextTick(() => {
-        const item = this.$refs['expandChild'];
+        const item = this.$refs['expandCoreChild'];
         if (item && this.curActiveRow.rowItem) {
           item.sort(this.curActiveRow.childProp, this.curActiveRow.childOrder);
+        }
+      });
+    },
+    /**
+     * Operators cpu type sort
+     * @param {Object} sort Sort data
+     */
+    opCpuTypeSortChange(sort) {
+      this.op_cpu_sort_condition = {
+        name: sort.prop,
+        type: sort.order,
+      };
+      this.$nextTick(() => {
+        const item = this.$refs['expandCpuChild'];
+        if (item && this.curCpuActiveRow.rowItem) {
+          item.sort(this.curCpuActiveRow.childProp, this.curCpuActiveRow.childOrder);
         }
       });
     },
@@ -419,8 +554,12 @@ export default {
      * clear cpu data
      */
     clearCpuData() {
-      this.searchByCPUTypeInput = '';
-      this.opCpuList = {
+      this.searchByCpuTypeInput = '';
+      this.searchAllByCpuTypeInput = '';
+      this.op_cpu_filter_condition = {};
+      this.opCpuTypeCol = [];
+      this.opCpuTypeList = [];
+      this.opCpuAllTypeList = {
         opDetailCol: [],
         opDetailList: [],
         pageTotal: 0,
@@ -429,10 +568,7 @@ export default {
           limit: 15,
         },
         op_filter_condition: {},
-        op_sort_condition: {
-          name: 'total_time',
-          type: 'descending',
-        },
+        op_sort_condition: {},
       };
     },
     /**
@@ -457,7 +593,7 @@ export default {
       };
     },
     /**
-     * get core list
+     * get core type list
      */
     getCoreTypeList() {
       const params = {};
@@ -573,10 +709,10 @@ export default {
               this.formatterDetailData(row, res.data);
               this.$nextTick(() => {
                 let item = null;
-                if (this.statisticType) {
+                if (this.coreStatisticType) {
                   item = this.$refs['opAllTable'];
                 } else {
-                  item = this.$refs['expandChild'];
+                  item = this.$refs['expandCoreChild'];
                   this.curActiveRow = {
                     rowItem: row,
                     childProp: row.op_sort_condition.name,
@@ -596,28 +732,59 @@ export default {
           .catch(() => {});
     },
     /**
-     * get cpu list
-     * @param {Boolean} isSort if sort
+     * get cpu type list
      */
-    getCpuList(isSort) {
+    getCpuTypeList() {
       const params = {};
       params.params = {
         profile: this.profile_dir,
         train_id: this.train_id,
       };
       params.body = {
-        op_type: 'aicpu',
+        op_type: 'aicpu_type',
         device_id: this.currentCard,
-        filter_condition: this.opCpuList.op_filter_condition,
-        sort_condition: this.opCpuList.op_sort_condition,
-        group_condition: this.opCpuList.opDetailPage,
+        filter_condition: this.op_cpu_filter_condition,
+        sort_condition: this.op_cpu_sort_condition,
       };
       requestService
           .getProfilerOpData(params)
           .then((res) => {
             this.initOver = true;
+            this.opCpuTypeList = [];
             if (res && res.data) {
+              this.opCpuTypeCol = res.data.col_name;
               if (res.data.object) {
+                res.data.object.forEach((k) => {
+                  const object = {
+                    isExpanded: false,
+                    opDetailList: [],
+                    opDetailCol: [],
+                    opDetailPage: {
+                      offset: 0,
+                      limit: 15,
+                    },
+                    pageTotal: 0,
+                    op_filter_condition: {
+                      op_type: {
+                        in: [k[0]],
+                      },
+                    },
+                    op_sort_condition: {},
+                  };
+                  res.data.col_name.forEach((item, index) => {
+                    object[item] = k[index];
+                  });
+                  this.opCpuTypeList.push(object);
+                });
+                this.$nextTick(() => {
+                  const elementItem = this.$refs['expandCpuTable'];
+                  if (elementItem) {
+                    elementItem.sort(
+                        this.op_sort_condition.name,
+                        this.op_sort_condition.type,
+                    );
+                  }
+                });
                 if (
                   !this.cpuCharts.device_id ||
                 this.cpuCharts.device_id !== this.currentCard
@@ -625,32 +792,83 @@ export default {
                   this.cpuCharts.device_id = this.currentCard;
                   this.cpuCharts.data = [];
                   res.data.object.forEach((k) => {
-                    this.cpuCharts.data.push({
-                      name: k[0],
-                      op_name: k[1],
-                      value: k[2],
-                    });
-                  });
-                  this.setOption(this.cpuCharts);
-                }
-                this.formatterDetailData(this.opCpuList, res.data);
-                if (isSort) {
-                  this.$nextTick(() => {
-                    const item = this.$refs['opCPUTable'];
-                    if (item) {
-                      item.sort(
-                          this.opCpuList.op_sort_condition.name,
-                          this.opCpuList.op_sort_condition.type,
-                      );
+                    if (
+                      this.cpuCharts.data &&
+                    this.cpuCharts.data.length < 19
+                    ) {
+                      this.cpuCharts.data.push({
+                        name: k[0],
+                        value: k[1],
+                        percent: k[3],
+                      });
+                    } else {
+                      if (!this.cpuCharts.data[19]) {
+                        this.cpuCharts.data[19] = {
+                          name: 'Other',
+                          value: 0,
+                          percent: 0,
+                        };
+                      }
+                      this.cpuCharts.data[19].value += k[1];
+                      this.cpuCharts.data[19].percent += k[3];
                     }
                   });
+                  this.setOption(this.cpuCharts);
                 }
               }
             }
           })
           .catch(() => {
+            this.opTypeList = [];
             this.initOver = true;
           });
+    },
+    /**
+     * get cpu list
+     * @param {Object} row type row
+     * @param {Boolean} isSort if sort
+     */
+    getCpuDetailList(row, isSort) {
+      const params = {};
+      params.params = {
+        profile: this.profile_dir,
+        train_id: this.train_id,
+      };
+      params.body = {
+        op_type: 'aicpu_detail',
+        device_id: this.currentCard,
+        filter_condition: row.op_filter_condition,
+        sort_condition: row.op_sort_condition,
+        group_condition: row.opDetailPage,
+      };
+      requestService
+          .getProfilerOpData(params)
+          .then((res) => {
+            if (res && res.data) {
+              this.formatterDetailData(row, res.data);
+              this.$nextTick(() => {
+                let item = null;
+                if (this.cpuStatisticType) {
+                  item = this.$refs['opCpuAllTable'];
+                } else {
+                  item = this.$refs['expandCpuChild'];
+                  this.curCpuActiveRow = {
+                    rowItem: row,
+                    childProp: row.op_sort_condition.name,
+                    childOrder: row.op_sort_condition.type,
+                  };
+                }
+                if (item && isSort) {
+                  item.sort(
+                      row.op_sort_condition.name,
+                      row.op_sort_condition.type,
+                  );
+                }
+                this.$refs.expandCpuTable.doLayout();
+              });
+            }
+          })
+          .catch(() => {});
     },
     /**
      * operator detail list page change
@@ -666,15 +884,15 @@ export default {
      * @param {Object} row table cell
      * @param {Number} pageIndex current page
      */
-    opCpuPageChange(row, pageIndex) {
+    opCpuDetailPageChange(row, pageIndex) {
       row.opDetailPage.offset = pageIndex - 1;
-      this.getCpuList(false);
+      this.getCpuDetailList(row, false);
     },
     /**
      * get core list by search
      */
     searchOpCoreList() {
-      if (this.statisticType) {
+      if (this.coreStatisticType) {
         this.opAllTypeList.op_filter_condition = {};
         if (this.searchByNameInput) {
           this.opAllTypeList.op_filter_condition = {
@@ -708,16 +926,35 @@ export default {
      * get cpu list by search
      */
     searchOpCpuList() {
-      this.opCpuList.op_filter_condition = {};
-      if (this.searchByCPUTypeInput) {
-        this.opCpuList.op_filter_condition = {
-          op_type: {partial_match_str_in: [this.searchByCPUTypeInput]},
-        };
+      if (this.cpuStatisticType) {
+        this.opCpuAllTypeList.op_filter_condition = {};
+        if (this.searchAllByCpuTypeInput) {
+          this.opCpuAllTypeList.op_filter_condition = {
+            op_type: {partial_match_str_in: [this.searchAllByCpuTypeInput]},
+          };
+        } else {
+          this.opCpuAllTypeList.op_filter_condition = {};
+        }
+        this.opCpuAllTypeList.opDetailPage.offset = 0;
+        this.getCpuDetailList(this.opCpuAllTypeList, false);
       } else {
-        this.opCpuList.op_filter_condition = {};
+        this.op_cpu_filter_condition = {};
+        if (this.searchByCpuTypeInput) {
+          this.op_cpu_filter_condition = {
+            op_type: {partial_match_str_in: [this.searchByCpuTypeInput]},
+          };
+        } else {
+          this.op_cpu_filter_condition = {};
+        }
+        if (this.curCpuActiveRow.rowItem) {
+          this.curCpuActiveRow = {
+            rowItem: null,
+            childProp: null,
+            childOrder: null,
+          };
+        }
+        this.getCpuTypeList();
       }
-      this.opCpuList.opDetailPage.offset = 0;
-      this.getCpuList(false);
     },
     /**
      * core detail sort
@@ -743,7 +980,7 @@ export default {
         type: column.order,
       };
       row.opDetailPage.offset = 0;
-      this.getCpuList(false);
+      this.getCpuDetailList(row, false);
     },
     /**
      * format detail data
@@ -772,7 +1009,7 @@ export default {
      * expand core type table
      * @param {Object} row table cell
      */
-    expandTypeItem(row) {
+    expandCoreTypeItem(row) {
       row.isExpanded = !row.isExpanded;
       if (row.isExpanded) {
         if (this.curActiveRow.rowItem) {
@@ -804,6 +1041,41 @@ export default {
       }
     },
     /**
+     * expand cpu type table
+     * @param {Object} row table cell
+     */
+    expandCpuTypeItem(row) {
+      row.isExpanded = !row.isExpanded;
+      if (row.isExpanded) {
+        if (this.curCpuActiveRow.rowItem) {
+          const item = this.$refs['expandCpuTable'];
+          if (item) {
+            item.toggleRowExpansion(this.curCpuActiveRow.rowItem, false);
+          }
+        }
+        this.curCpuActiveRow = {
+          rowItem: row,
+          childProp: null,
+          childOrder: null,
+        };
+        row.opDetailList = [];
+        row.opDetailCol = [];
+        row.opDetailPage.offset = 0;
+        row.pageTotal = 0;
+        row.op_sort_condition = {
+          name: 'total_time',
+          type: 'descending',
+        };
+        this.getCpuDetailList(row, true);
+      } else {
+        this.curCpuActiveRow = {
+          rowItem: null,
+          childProp: null,
+          childOrder: null,
+        };
+      }
+    },
+    /**
      * tab change
      */
     tabChange() {
@@ -813,7 +1085,7 @@ export default {
       ) {
         this.initOver = false;
         this.clearCpuData();
-        this.getCpuList(true);
+        this.getCpuTypeList();
       } else if (
         this.apiType === 'core' &&
         this.coreCharts.device_id !== this.currentCard
@@ -830,12 +1102,24 @@ export default {
      * core table type change
      */
     coreTableChange() {
-      if (this.statisticType && !this.opAllTypeList.opDetailCol.length) {
+      if (this.coreStatisticType && !this.opAllTypeList.opDetailCol.length) {
         this.opAllTypeList.op_sort_condition = {
           name: 'avg_execution_time',
           type: 'descending',
         };
         this.getCoreDetailList(this.opAllTypeList, true);
+      }
+    },
+    /**
+     * cpu table type change
+     */
+    cpuTableChange() {
+      if (this.cpuStatisticType && !this.opCpuAllTypeList.opDetailCol.length) {
+        this.opCpuAllTypeList.op_sort_condition = {
+          name: 'total_time',
+          type: 'descending',
+        };
+        this.getCpuDetailList(this.opCpuAllTypeList, true);
       }
     },
     /**
@@ -998,16 +1282,9 @@ export default {
           type: 'value',
         };
         chart.data.forEach((item) => {
-          const name = this.apiType === 'cpu' ? item.op_name : item.name;
-          option.xAxis.data.push(name);
+          option.xAxis.data.push(item.name);
           option.series[0].data.push(item.value);
         });
-        if (this.apiType === 'cpu') {
-          option.xAxis.axisLabel.formatter = (params, dataIndex) => {
-            const xAxisValue = chart.data[dataIndex].op_name;
-            return xAxisValue.replace(/^.+\//g, '');
-          };
-        }
       }
       this.$nextTick(() => {
         const cpuDom = document.getElementById(chart.id);
@@ -1050,7 +1327,7 @@ export default {
         }
       }
       this.$nextTick(() => {
-        this.rowName = `${column.label}${this.$t('dataTraceback.details')}`;
+        this.rowName = `op_info${this.$t('dataTraceback.details')}`;
         this.detailsDialogVisible = true;
         this.detailsDataList = this.formateJsonString(val);
       });
@@ -1191,17 +1468,18 @@ export default {
       margin-right: 20px;
     }
     .cl-profiler-top {
-      height: 45%;
+      height: 47%;
       .chart-title {
         float: left;
         font-weight: bold;
+        height: 32px;
       }
     }
     .cl-profiler-top.fullScreen {
       display: none;
     }
     .cl-profiler-bottom {
-      height: 55%;
+      height: 53%;
       padding-top: 10px;
       .fullScreen {
         float: right;
@@ -1211,14 +1489,6 @@ export default {
     }
     .cl-profiler-bottom.fullScreen {
       height: 100%;
-    }
-    .cpu-tab {
-      .cl-profiler-top {
-        height: calc(36% + 32px);
-      }
-      .cl-profiler-bottom {
-        height: 100%;
-      }
     }
     .cl-profiler-echarts {
       width: 100%;
@@ -1231,7 +1501,7 @@ export default {
         width: 100%;
         height: 100%;
         min-width: 1300px;
-        min-height: 306px;
+        min-height: 321px;
         overflow: hidden;
       }
     }
