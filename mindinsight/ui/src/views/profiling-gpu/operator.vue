@@ -1152,17 +1152,18 @@ export default {
       margin-right: 20px;
     }
     .cl-profiler-top {
-      height: 45%;
+      height: 47%;
       .chart-title {
         float: left;
         font-weight: bold;
+        height: 32px;
       }
     }
     .cl-profiler-top.fullScreen {
       display: none;
     }
     .cl-profiler-bottom {
-      height: 55%;
+      height: 53%;
       padding-top: 10px;
       .fullScreen {
         float: right;
@@ -1189,16 +1190,16 @@ export default {
         width: 100%;
         height: 100%;
         min-width: 1300px;
-        min-height: 306px;
+        min-height: 321px;
         overflow: hidden;
       }
     }
     .core-tab {
       .cl-profiler-top {
-        height: 45%;
+        height: 47%;
       }
       .cl-profiler-bottom {
-        height: 55%;
+        height: 53%;
       }
       .cl-profiler-echarts {
         height: calc(100% - 32px);
