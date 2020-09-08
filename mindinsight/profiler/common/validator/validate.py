@@ -23,10 +23,10 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerParamTypeE
     ProfilerGroupConditionException, ProfilerParamValueErrorException
 from mindinsight.profiler.common.log import logger as log
 
-AICORE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "precent"]
+AICORE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
 AICORE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "subgraph", "full_op_name"]
-AICPU_COL = ["serial_number", "op_type", "total_time", "dispatch_time", "run_start",
-             "run_end"]
+AICPU_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
+AICPU_DETAIL_COL = ["serial_number", "op_type", "total_time", "dispatch_time", "run_start", "run_end"]
 GPU_TYPE_COL = ["op_type", "type_occurrences", "total_time", "proportion", "avg_time"]
 GPU_ACTIVITY_COL = ["name", "type", "op_full_name", "stream_id",
                     "block_dim", "grid_dim", "occurrences", "total_duration",
@@ -68,8 +68,10 @@ def validate_condition(search_condition):
 
     if "op_type" in search_condition:
         op_type = search_condition.get("op_type")
-        if op_type == "aicpu":
-            search_scope = AICPU_COL
+        if op_type == "aicpu_type":
+            search_scope = AICPU_TYPE_COL
+        elif op_type == "aicpu_detail":
+            search_scope = AICPU_DETAIL_COL
         elif op_type == "aicore_type":
             search_scope = AICORE_TYPE_COL
         elif op_type == "aicore_detail":
@@ -82,11 +84,11 @@ def validate_condition(search_condition):
             search_scope = GPU_ACTIVITY_COL
         else:
             raise ProfilerOpTypeException(
-                "The op_type must in ['aicpu', 'aicore_type', 'aicore_detail', "
+                "The op_type must in ['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "
                 "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']")
     else:
         raise ProfilerOpTypeException(
-            "The op_type must in ['aicpu', 'aicore_type', 'aicore_detail', "
+            "The op_type must in ['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "
             "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']")
 
     if "group_condition" in search_condition:

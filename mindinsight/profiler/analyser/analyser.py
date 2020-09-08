@@ -19,6 +19,7 @@ import os
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.log import logger
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 
 
 class AicoreTypeAnalyser(BaseAnalyser):
@@ -42,6 +43,11 @@ class AicoreTypeAnalyser(BaseAnalyser):
             self._profiling_dir,
             self._file_name_aicore_type_time.format(self._device_id)
         )
+
+        op_type_file_path = validate_and_normalize_path(
+            op_type_file_path, raise_key='Invalid aicore_type file path.'
+        )
+
         if not os.path.isfile(op_type_file_path):
             logger.warning('The file <%s> does not exist.', op_type_file_path)
             return
@@ -161,6 +167,13 @@ class AicoreDetailAnalyser(BaseAnalyser):
             self._profiling_dir,
             self._file_name_framework_info.format(self._device_id)
         )
+        op_detail_file_path = validate_and_normalize_path(
+            op_detail_file_path, raise_key='Invalid aicore_detail file path.'
+        )
+
+        framework_file_path = validate_and_normalize_path(
+            framework_file_path, raise_key='Invalid framework file path.'
+        )
         if not os.path.isfile(op_detail_file_path):
             logger.warning('The file <%s> does not exist.', op_detail_file_path)
             return
@@ -261,7 +274,78 @@ class AicoreDetailAnalyser(BaseAnalyser):
                 framework_info[3], framework_info[0], framework_info[4]]
 
 
-class AicpuAnalyser(BaseAnalyser):
+class AicpuTypeAnalyser(BaseAnalyser):
+    """
+    The analyser for analyzing all the AICPU operators.
+
+    Args:
+        profiling_dir (str): The directory where the parsed profiling files are
+            located.
+        device_id (str): The device ID.
+
+    Raises:
+        ProfilerPathErrorException: If the profiling dir is invalid.
+    """
+    _col_names = ['op_type', 'execution_time', 'execution_frequency', 'percent']
+    _file_name_aicpu_time = 'aicpu_intermediate_{}.csv'
+
+    def _load(self):
+        """Load data according to the parsed AICPU operator file."""
+        aicpu_file_path = os.path.join(
+            self._profiling_dir,
+            self._file_name_aicpu_time.format(self._device_id)
+        )
+        aicpu_file_path = validate_and_normalize_path(
+            aicpu_file_path, raise_key='Invalid aicpu file path.'
+        )
+
+        if not os.path.isfile(aicpu_file_path):
+            logger.warning('The file <%s> does not exist.', aicpu_file_path)
+            return
+
+        type_detail_cache = dict()
+        with open(aicpu_file_path, 'r') as file:
+            csv_reader = csv.reader(file)
+            _ = next(csv_reader)
+            for item in csv_reader:
+                op_type = item[1]
+                info = type_detail_cache.get(op_type)
+                if info:
+                    info.append(item)
+                else:
+                    type_detail_cache[op_type] = [item]
+        type_temp_detail_cache = dict()
+        total_avg_time = 0
+        result = []
+        for key, value in type_detail_cache.items():
+            exec_frequency = len(value)
+            total_time_index = 2
+            exec_avg_time = sum([float(i[total_time_index]) for i in value])/exec_frequency
+            exec_avg_time = round(exec_avg_time, 6)
+            total_avg_time += exec_avg_time
+            type_temp_detail_cache[key] = [key, exec_avg_time, exec_frequency]
+
+        for key, value in type_temp_detail_cache.items():
+            execution_time_index = 1
+            percent = round((value[execution_time_index]/total_avg_time)*100, 2)
+            value.append(percent)
+            result.append(value)
+
+        self._data = result
+
+    def _filter(self, filter_condition):
+        """
+        Filter the profiling data according to the filter condition.
+
+        Args:
+            filter_condition (dict): The filter condition.
+        """
+        def _inner_filter(item: list):
+            return self._default_filter(item, filter_condition)
+        self._result = list(filter(_inner_filter, self._data))
+
+
+class AicpuDetailAnalyser(BaseAnalyser):
     """
     The analyser for analyzing all the AICPU operators.
 
@@ -282,6 +366,9 @@ class AicpuAnalyser(BaseAnalyser):
         aicpu_file_path = os.path.join(
             self._profiling_dir,
             self._file_name_aicpu_time.format(self._device_id)
+        )
+        aicpu_file_path = validate_and_normalize_path(
+            aicpu_file_path, raise_key='Invalid aicpu file path.'
         )
         if not os.path.isfile(aicpu_file_path):
             logger.warning('The file <%s> does not exist.', aicpu_file_path)
