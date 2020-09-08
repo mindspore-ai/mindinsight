@@ -285,33 +285,6 @@ class TestModelApi(TestCase):
 
         self.assertRaisesRegex(
             LineageParamTypeError,
-            'Keys must be list.',
-            get_summary_lineage,
-            None,
-            SUMMARY_DIR,
-            0
-        )
-
-        self.assertRaisesRegex(
-            LineageParamTypeError,
-            'Keys must be list.',
-            get_summary_lineage,
-            None,
-            SUMMARY_DIR,
-            0.1
-        )
-
-        self.assertRaisesRegex(
-            LineageParamTypeError,
-            'Keys must be list.',
-            get_summary_lineage,
-            None,
-            SUMMARY_DIR,
-            True
-        )
-
-        self.assertRaisesRegex(
-            LineageParamTypeError,
             'Element of keys must be str.',
             get_summary_lineage,
             None,
@@ -319,23 +292,23 @@ class TestModelApi(TestCase):
             [1, 2, 3]
         )
 
-        self.assertRaisesRegex(
-            LineageParamTypeError,
-            'Keys must be list.',
-            get_summary_lineage,
-            None,
-            SUMMARY_DIR,
-            (3, 4)
-        )
-
-        self.assertRaisesRegex(
-            LineageParamTypeError,
-            'Keys must be list.',
-            get_summary_lineage,
-            None,
-            SUMMARY_DIR,
-            {'a': 'b'}
-        )
+    @pytest.mark.level0
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.env_single
+    def test_get_summary_lineage_exception_3(self):
+        """Test the interface of get_summary_lineage with exception."""
+        for keys in [0, 0.1, True, (3, 4), {'a': 'b'}]:
+            self.assertRaisesRegex(
+                LineageParamTypeError,
+                'Keys must be list.',
+                get_summary_lineage,
+                None,
+                SUMMARY_DIR,
+                keys
+            )
 
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
