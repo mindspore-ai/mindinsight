@@ -525,7 +525,7 @@ export default {
         }</td><td style="text-align:center;">${this.formateNUmber(
             hoveredItem.step,
         )}</td><td>${this.formateNUmber(
-            (hoveredItem.relative_time / 1000).toFixed(3),
+            (hoveredItem.relative_time).toFixed(3),
         )}${unit}</td><td>${this.dealrelativeTime(
             new Date(hoveredItem.wall_time * 1000).toString(),
         )}</td>`;

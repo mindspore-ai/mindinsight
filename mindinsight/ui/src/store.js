@@ -30,12 +30,6 @@ export default new Vuex.Store({
     timeReloadValue: localStorage.timeReloadValue
       ? localStorage.timeReloadValue
       : 10,
-    // Scheduled hardware reload flag
-    isHardwareTimeReload: localStorage.isHardwareTimeReload === 'false' ? false : true,
-    // hardware reload time
-    hardwareTimeReloadValue: localStorage.hardwareTimeReloadValue
-      ? localStorage.hardwareTimeReloadValue
-      : 5,
     // multiSelevtGroup component count
     multiSelectedGroupCount: 0,
     tableId: 0,
@@ -80,13 +74,6 @@ export default new Vuex.Store({
     },
     setTimeReloadValue: (state, val) => {
       state.timeReloadValue = val;
-    },
-    // set isHardwareTimeReload
-    setIsHardwareTimeReload: (state, val) => {
-      state.isHardwareTimeReload = val;
-    },
-    setHardwareTimeReloadValue: (state, val) => {
-      state.hardwareTimeReloadValue = val;
     },
     multiSelectedGroupComponentNum(state) {
       state.multiSelectedGroupCount++;

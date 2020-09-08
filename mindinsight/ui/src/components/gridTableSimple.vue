@@ -67,7 +67,7 @@ limitations under the License.
              :title="$t('scalar.fullScreen')"
              @click="toggleFullScreen"
              :class="fullScreen ? 'active-color' : ''">
-          <span><i class="el-icon-full-screen"></i></span>
+          <i class="el-icon-full-screen"></i>
         </div>
       </div>
     </div>
@@ -159,6 +159,7 @@ export default {
      * @param {String} filterStr Dimension String
      */
     initializeFilterArr(dimension, filterStr) {
+      this.filterCorrect = true;
       if (!filterStr) {
         this.filterArr = [];
         return;
@@ -223,11 +224,13 @@ export default {
       ) {
         return value;
       } else if (value < 0) {
-        return `<span class="table-item-span" style="background:rgba(94, 124, 224, ${value /
-          this.statistics.min})">${value}</span>`;
+        return `<span class="table-item-span" style="background:rgba(227, 125, 41, ${
+          value / this.statistics.min
+        })">${value}</span>`;
       } else {
-        return `<span class="table-item-span" style="background:rgba(246, 111, 106, ${value /
-          this.statistics.max})">${value}</span>`;
+        return `<span class="table-item-span" style="background:rgba(0, 165, 167, ${
+          value / this.statistics.max
+        })">${value}</span>`;
       }
     },
     /**
@@ -292,9 +295,8 @@ export default {
     },
     /**
      * accuracy changed
-     * @param {Number} value The value after changed
      */
-    accuracyChange(value) {
+    accuracyChange() {
       this.formateGridArray();
       if (!this.requestError && !this.incorrectData) {
         this.updateGrid();
@@ -416,7 +418,6 @@ export default {
 </script>
 <style lang="scss">
 .cl-slickgrid-container {
-  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -426,6 +427,36 @@ export default {
     .grid-item {
       width: 100%;
       height: 100%;
+      ::-webkit-scrollbar-button {
+        z-index: 200;
+        width: 10px;
+        height: 10px;
+        background: #fff;
+        cursor: pointer;
+      }
+      ::-webkit-scrollbar-button:horizontal:single-button:start {
+        background-image: url('../assets/images/scroll-btn-left.png');
+        background-position: center;
+      }
+      ::-webkit-scrollbar-button:horizontal:single-button:end {
+        background-image: url('../assets/images/scroll-btn-right.png');
+        background-position: center;
+      }
+      ::-webkit-scrollbar-button:vertical:single-button:start {
+        background-image: url('../assets/images/scroll-btn-up.png');
+        background-position: center;
+      }
+      ::-webkit-scrollbar-button:vertical:single-button:end {
+        background-image: url('../assets/images/scroll-btn-down.png');
+        background-position: center;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #bac5cc;
+      }
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
     }
     .error-msg-container {
       width: 100%;
@@ -496,15 +527,7 @@ export default {
   border-left: none;
   text-align: center;
 }
-.slick-viewport-left {
-  overflow: hidden !important;
-}
-.slick-viewport-left .slick-row {
-  background-color: white !important;
-  ::-webkit-scrollbar {
-    width: 0px;
-  }
-}
+
 .ui-widget-content {
   background: none;
 }
