@@ -17,7 +17,6 @@
 from mindinsight.backend.datavisual.static_resource_api import init_module as static_init_module
 from mindinsight.backend.datavisual.task_manager_api import init_module as task_init_module
 from mindinsight.backend.datavisual.train_visual_api import init_module as train_init_module
-from mindinsight.backend.datavisual.sysmetric_api import init_module as sysmetric_init_module
 
 
 def init_module(app):
@@ -31,4 +30,3 @@ def init_module(app):
     static_init_module(app)
     task_init_module(app)
     train_init_module(app)
-    sysmetric_init_module(app)
