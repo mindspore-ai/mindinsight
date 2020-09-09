@@ -31,7 +31,6 @@ class MindInsightModules(Enum):
     DATAVISUAL = 5
     PROFILERMGR = 6
     SCRIPTCONVERTER = 7
-    SYSMETRIC = 8
     WIZARD = 9
 
 
@@ -81,11 +80,6 @@ class DataVisualErrors(Enum):
 
 class ScriptConverterErrors(Enum):
     """Enum definition for mindconverter errors."""
-
-class SysmetricErrors(Enum):
-    """Enum definition for sysmetric errors."""
-    DSMI_QUERYING_NONZERO = 1
-
 
 class WizardErrors(Enum):
     """Enum definition for mindwizard errors."""
