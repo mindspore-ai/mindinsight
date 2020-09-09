@@ -16,6 +16,7 @@
 import csv
 import os
 from decimal import Decimal
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 
 
 class Integrator:
@@ -54,6 +55,8 @@ class Integrator:
             self._profiling_dir,
             self._file_name_framework.format(self._device_id)
         )
+        framework_file = validate_and_normalize_path(
+            framework_file, raise_key="Invaild framework file path.")
         if not os.path.isfile(framework_file):
             return
 
@@ -93,6 +96,8 @@ class Integrator:
             self._profiling_dir,
             self._file_name_aicore_detail_time.format(self._device_id)
         )
+        aicore_detail_file = validate_and_normalize_path(
+            aicore_detail_file, raise_key="Invaild aicore_detail file path.")
         if not os.path.isfile(aicore_detail_file):
             return
 
@@ -132,6 +137,8 @@ class Integrator:
             self._profiling_dir,
             self._file_name_aicpu_time.format(self._device_id)
         )
+        aicpu_file = validate_and_normalize_path(
+            aicpu_file, raise_key="Invaild aicpu file path.")
         if not os.path.isfile(aicpu_file):
             return
 

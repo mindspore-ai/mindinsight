@@ -18,6 +18,7 @@ import os
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.log import logger
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 
 
 class GpuAnalyser(BaseAnalyser):
@@ -30,6 +31,8 @@ class GpuAnalyser(BaseAnalyser):
             self._profiling_dir,
             self._csv_file_to_analyse.format(self._device_id)
         )
+        op_type_file_path = validate_and_normalize_path(
+            op_type_file_path, raise_key="Invalid op_type_file_path")
         if not os.path.isfile(op_type_file_path):
             logger.warning('The file <%s> does not exist.', op_type_file_path)
             return

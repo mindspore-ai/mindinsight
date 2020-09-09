@@ -16,7 +16,7 @@
 import os
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
-
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 
 class MinddataAnalyser(BaseAnalyser):
     """The Minddata profiling analyser."""
@@ -49,6 +49,8 @@ class MinddataAnalyser(BaseAnalyser):
         file_path = MinddataAnalyser.find_target_file(self._profiling_dir, file_name)
 
         if file_path:
+            file_path = validate_and_normalize_path(
+                file_path, raise_key="Invaild minddata_aicpu file path.")
             with open(file_path) as data_file:
                 for line in data_file.readlines():
                     node_info = line.split()
@@ -107,6 +109,8 @@ class MinddataAnalyser(BaseAnalyser):
         file_path = self.get_device_queue_file_path()
 
         if file_path:
+            file_path = validate_and_normalize_path(
+                file_path, raise_key="Invaild device_queue file path.")
             with open(file_path) as data_file:
                 for line in data_file.readlines():
                     op_info = line.split()
