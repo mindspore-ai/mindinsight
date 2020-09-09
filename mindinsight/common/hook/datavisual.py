@@ -17,27 +17,7 @@
 import argparse
 import os
 
-from mindinsight.conf import settings
 from mindinsight.utils.hook import BaseHook
-
-
-class ReloadIntervalAction(argparse.Action):
-    """Reload interval action class definition."""
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        """
-        Inherited __call__ method from argparse.Action.
-
-        Args:
-            parser (ArgumentParser): Passed-in argument parser.
-            namespace (Namespace): Namespace object to hold arguments.
-            values (object): Argument values with type depending on argument definition.
-            option_string (str): Option string for specific argument name.
-        """
-        reload_interval = values
-        if reload_interval < 0:
-            parser.error(f'{option_string} should be greater than or equal to 0')
-        setattr(namespace, self.dest, reload_interval)
 
 
 class SummaryBaseDirAction(argparse.Action):
@@ -67,15 +47,6 @@ class Hook(BaseHook):
         Args:
             parser (ArgumentParser): Specify parser to which arguments are added.
         """
-        parser.add_argument(
-            '--reload-interval',
-            type=int,
-            action=ReloadIntervalAction,
-            help="""
-                data reload time(Seconds). It should be greater than 0 or equal to 0.
-                If it equals 0, load data only once. Default value is %s seconds.
-            """ % settings.RELOAD_INTERVAL)
-
         parser.add_argument(
             '--summary-base-dir',
             type=str,

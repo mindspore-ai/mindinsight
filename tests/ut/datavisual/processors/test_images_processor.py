@@ -31,7 +31,7 @@ from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.utils import crc32
 
 from ....utils.log_operations import LogOperations
-from ....utils.tools import check_loading_done, delete_files_or_dirs, get_image_tensor_from_bytes
+from ....utils.tools import delete_files_or_dirs, get_image_tensor_from_bytes
 from ..mock import MockLogger
 
 
@@ -81,10 +81,7 @@ class TestImagesProcessor:
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager(summary_base_dir)
-        self._mock_data_manager.start_load_data(reload_interval=0)
-
-        # wait for loading done
-        check_loading_done(self._mock_data_manager, time_limit=5)
+        self._mock_data_manager.start_load_data().join()
 
     @pytest.fixture(scope='function')
     def load_image_record(self):

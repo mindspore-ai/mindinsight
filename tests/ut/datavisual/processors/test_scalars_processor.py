@@ -31,7 +31,7 @@ from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 from mindinsight.datavisual.utils import crc32
 
 from ....utils.log_operations import LogOperations
-from ....utils.tools import check_loading_done, delete_files_or_dirs
+from ....utils.tools import delete_files_or_dirs
 from ..mock import MockLogger
 
 
@@ -73,10 +73,7 @@ class TestScalarsProcessor:
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager(summary_base_dir)
-        self._mock_data_manager.start_load_data(reload_interval=0)
-
-        # wait for loading done
-        check_loading_done(self._mock_data_manager, time_limit=5)
+        self._mock_data_manager.start_load_data().join()
 
     @pytest.mark.usefixtures('load_scalar_record')
     def test_get_metadata_list_with_not_exist_id(self):

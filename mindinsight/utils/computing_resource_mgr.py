@@ -37,7 +37,7 @@ class ComputingResourceManager:
         executors_cnt (int): Number of executors to be provided by this class.
         max_processes_cnt (int): Max number of processes to be used for computing.
     """
-    def __init__(self, executors_cnt, max_processes_cnt):
+    def __init__(self, executors_cnt=1, max_processes_cnt=4):
         self._max_processes_cnt = max_processes_cnt
         self._executors_cnt = executors_cnt
         self._lock = threading.Lock()

@@ -39,6 +39,7 @@ from mindinsight.datavisual.data_transform.tensor_container import TensorContain
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
 from mindinsight.datavisual.utils import crc32
+from mindinsight.utils.computing_resource_mgr import ComputingResourceManager, Executor
 from mindinsight.utils.exceptions import UnknownError
 
 HEADER_SIZE = 8
@@ -81,16 +82,44 @@ class MSDataLoader:
                            "we will reload all files in path %s.", self._summary_dir)
             self.__init__(self._summary_dir)
 
-    def load(self, computing_resource_mgr):
+    def load(self, executor=None):
         """
         Load all log valid files.
 
         When the file is reloaded, it will continue to load from where it left off.
 
         Args:
-            computing_resource_mgr (ComputingResourceManager): The ComputingResourceManager instance.
+            executor (Optional[executor]): The Executor instance.
+
+        Returns:
+            bool, True if the train job is finished loading.
         """
         logger.debug("Start to load data in ms data loader.")
+        if isinstance(executor, Executor):
+            return self._load(executor)
+
+        if executor is not None:
+            raise TypeError("'executor' should be an Executor instance or None.")
+
+        with ComputingResourceManager() as mgr:
+            with mgr.get_executor() as new_executor:
+                while not self._load(new_executor):
+                    pass
+                new_executor.wait_all_tasks_finish()
+                return True
+
+    def _load(self, executor):
+        """
+        Load all log valid files.
+
+        When the file is reloaded, it will continue to load from where it left off.
+
+        Args:
+            executor (executor): The Executor instance.
+
+        Returns:
+            bool, True if the train job is finished loading.
+        """
         filenames = self.filter_valid_files()
         if not filenames:
             logger.warning("No valid files can be loaded, summary_dir: %s.", self._summary_dir)
@@ -99,9 +128,10 @@ class MSDataLoader:
         self._valid_filenames = filenames
         self._check_files_deleted(filenames, old_filenames)
 
-        with computing_resource_mgr.get_executor() as executor:
-            for parser in self._parser_list:
-                parser.parse_files(executor, filenames, events_data=self._events_data)
+        finished = True
+        for parser in self._parser_list:
+            finished = parser.parse_files(executor, filenames, events_data=self._events_data) and finished
+        return finished
 
     def filter_valid_files(self):
         """
@@ -127,9 +157,8 @@ class _Parser:
     """Parsed base class."""
 
     def __init__(self, summary_dir):
-        self._latest_filename = ''
-        self._latest_mtime = 0
         self._summary_dir = summary_dir
+        self._latest_filename = ''
 
     def parse_files(self, executor, filenames, events_data):
         """
@@ -142,12 +171,6 @@ class _Parser:
         """
         raise NotImplementedError
 
-    def sort_files(self, filenames):
-        """Sort by modify time increments and filenames increments."""
-        filenames = sorted(filenames, key=lambda file: (
-            FileHandler.file_stat(FileHandler.join(self._summary_dir, file)).mtime, file))
-        return filenames
-
     def filter_files(self, filenames):
         """
         Gets a list of files that this parsing class can parse.
@@ -159,6 +182,52 @@ class _Parser:
             list[str], filename list.
         """
         raise NotImplementedError
+
+
+class _PbParser(_Parser):
+    """This class is used to parse pb file."""
+
+    def __init__(self, summary_dir):
+        super(_PbParser, self).__init__(summary_dir)
+        self._latest_mtime = 0
+
+    def parse_files(self, executor, filenames, events_data):
+        pb_filenames = self.filter_files(filenames)
+        pb_filenames = self.sort_files(pb_filenames)
+        for filename in pb_filenames:
+            if not self._set_latest_file(filename):
+                continue
+
+            try:
+                tensor_event = self._parse_pb_file(filename)
+            except UnknownError:
+                # Parse pb file failed, so return None.
+                continue
+
+            events_data.add_tensor_event(tensor_event)
+            return False
+        return True
+
+    def filter_files(self, filenames):
+        """
+        Get a list of pb files.
+
+        Args:
+            filenames (list[str]): File name list, like [filename1, filename2].
+
+        Returns:
+            list[str], filename list.
+
+        Returns:
+            bool, True if all the pb files are finished loading.
+        """
+        return list(filter(lambda filename: re.search(r'\.pb$', filename), filenames))
+
+    def sort_files(self, filenames):
+        """Sort by modify time increments and filenames increments."""
+        filenames = sorted(filenames, key=lambda file: (
+            FileHandler.file_stat(FileHandler.join(self._summary_dir, file)).mtime, file))
+        return filenames
 
     def _set_latest_file(self, filename):
         """
@@ -179,37 +248,6 @@ class _Parser:
         self._latest_filename = filename
 
         return True
-
-
-class _PbParser(_Parser):
-    """This class is used to parse pb file."""
-
-    def parse_files(self, executor, filenames, events_data):
-        pb_filenames = self.filter_files(filenames)
-        pb_filenames = self.sort_files(pb_filenames)
-        for filename in pb_filenames:
-            if not self._set_latest_file(filename):
-                continue
-
-            try:
-                tensor_event = self._parse_pb_file(filename)
-            except UnknownError:
-                # Parse pb file failed, so return None.
-                continue
-
-            events_data.add_tensor_event(tensor_event)
-
-    def filter_files(self, filenames):
-        """
-        Get a list of pb files.
-
-        Args:
-            filenames (list[str]): File name list, like [filename1, filename2].
-
-        Returns:
-            list[str], filename list.
-        """
-        return list(filter(lambda filename: re.search(r'\.pb$', filename), filenames))
 
     def _parse_pb_file(self, filename):
         """
@@ -270,16 +308,18 @@ class _SummaryParser(_Parser):
             executor (Executor): The executor instance.
             filenames (list[str]): File name list.
             events_data (EventsData): The container of event data.
+
+        Returns:
+            bool, True if all the summary files are finished loading.
         """
         self._events_data = events_data
         summary_files = self.filter_files(filenames)
         summary_files = self.sort_files(summary_files)
+        if self._latest_filename in summary_files:
+            index = summary_files.index(self._latest_filename)
+            summary_files = summary_files[index:]
 
         for filename in summary_files:
-            if self._latest_filename and \
-                    (self._compare_summary_file(self._latest_filename, filename)):
-                continue
-
             file_path = FileHandler.join(self._summary_dir, filename)
 
             if filename != self._latest_filename:
@@ -291,15 +331,18 @@ class _SummaryParser(_Parser):
             if new_size == self._latest_file_size:
                 continue
 
-            self._latest_file_size = new_size
             try:
-                self._load_single_file(self._summary_file_handler, executor)
+                if not self._load_single_file(self._summary_file_handler, executor):
+                    self._latest_file_size = self._summary_file_handler.offset
+                else:
+                    self._latest_file_size = new_size
                 # Wait for data in this file to be processed to avoid loading multiple files at the same time.
-                executor.wait_all_tasks_finish()
-                logger.info("Parse summary file finished, file path: %s.", file_path)
+                logger.info("Parse summary file offset %d, file path: %s.", self._latest_file_size, file_path)
+                return False
             except UnknownError as ex:
                 logger.warning("Parse summary file failed, detail: %r,"
                                "file path: %s.", str(ex), file_path)
+        return True
 
     def filter_files(self, filenames):
         """
@@ -322,6 +365,9 @@ class _SummaryParser(_Parser):
         Args:
             file_handler (FileHandler): A file handler.
             executor (Executor): The executor instance.
+
+        Returns:
+            bool, True if the summary file is finished loading.
         """
         while True:
             start_offset = file_handler.offset
@@ -329,7 +375,7 @@ class _SummaryParser(_Parser):
                 event_str = self._event_load(file_handler)
                 if event_str is None:
                     file_handler.reset_offset(start_offset)
-                    break
+                    return True
                 if len(event_str) > MAX_EVENT_STRING:
                     logger.warning("file_path: %s, event string: %d exceeds %d and drop it.",
                                    file_handler.file_path, len(event_str), MAX_EVENT_STRING)
@@ -358,15 +404,16 @@ class _SummaryParser(_Parser):
                         raise
 
                 future.add_done_callback(_add_tensor_event_callback)
+                return False
             except exceptions.CRCFailedError:
                 file_handler.reset_offset(start_offset)
                 logger.warning("Check crc faild and ignore this file, file_path=%s, "
                                "offset=%s.", file_handler.file_path, file_handler.offset)
-                break
+                return True
             except (OSError, DecodeError, exceptions.MindInsightException) as ex:
                 logger.warning("Parse log file fail, and ignore this file, detail: %r,"
                                "file path: %s.", str(ex), file_handler.file_path)
-                break
+                return True
             except Exception as ex:
                 logger.exception(ex)
                 raise UnknownError(str(ex))
@@ -508,24 +555,6 @@ class _SummaryParser(_Parser):
             ret_tensor_events.append(tensor_event)
 
         return ret_tensor_events
-
-    @staticmethod
-    def _compare_summary_file(current_file, dst_file):
-        """
-        Compare the creation times of the two summary log files.
-
-        Args:
-            current_file (str): Must be the summary log file path.
-            dst_file (str): Must be the summary log file path.
-
-        Returns:
-            bool, returns True if the current file is new, or False if not.
-        """
-        current_time = int(re.search(r'summary\.(\d+)', current_file)[1])
-        dst_time = int(re.search(r'summary\.(\d+)', dst_file)[1])
-        if current_time > dst_time or (current_time == dst_time and current_file > dst_file):
-            return True
-        return False
 
     def sort_files(self, filenames):
         """Sort by creating time increments and filenames decrement."""

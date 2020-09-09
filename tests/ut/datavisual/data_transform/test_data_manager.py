@@ -38,7 +38,6 @@ from mindinsight.datavisual.data_transform.loader_generators.loader_struct impor
 from mindinsight.datavisual.data_transform.ms_data_loader import MSDataLoader
 from mindinsight.utils.exceptions import ParamValueError
 
-from ....utils.tools import check_loading_done
 from ..mock import MockLogger
 
 
@@ -90,31 +89,9 @@ class TestDataManager:
 
         data_manager.logger = MockLogger
         mock_manager = data_manager.DataManager(summary_base_dir)
-        mock_manager.start_load_data(reload_interval=0)
+        mock_manager.start_load_data().join()
 
-        check_loading_done(mock_manager)
-
-        assert MockLogger.log_msg['info'] == "Load event data end, status: 'DONE', " \
-                                             "and loader pool size is '3'."
-        shutil.rmtree(summary_base_dir)
-
-    @pytest.mark.parametrize('params', [{
-        'reload_interval': '30'
-    }, {
-        'reload_interval': -1
-    }, {
-        'reload_interval': 30,
-        'max_threads_count': '20'
-    }, {
-        'reload_interval': 30,
-        'max_threads_count': 0
-    }])
-    def test_start_load_data_with_invalid_params(self, params):
-        """Test start_load_data with invalid reload_interval or invalid max_threads_count."""
-        summary_base_dir = tempfile.mkdtemp()
-        d_manager = DataManager(summary_base_dir)
-        with pytest.raises(ParamValueError):
-            d_manager.start_load_data(**params)
+        assert MockLogger.log_msg['info'] == "Load brief data end, and loader pool size is '3'."
         shutil.rmtree(summary_base_dir)
 
     def test_list_tensors_success(self):
@@ -201,10 +178,9 @@ class TestDataManager:
 
         mock_generate_loaders.return_value = loader_dict
         mock_data_manager = data_manager.DataManager(summary_base_dir)
-        mock_data_manager._detail_cache._execute_load_data = Mock()
+        mock_data_manager._detail_cache._execute_loader = Mock()
 
-        mock_data_manager.start_load_data(reload_interval=0)
-        check_loading_done(mock_data_manager, 3)
+        mock_data_manager.start_load_data().join()
         current_loader_ids = mock_data_manager._detail_cache._loader_pool.keys()
 
         assert sorted(current_loader_ids) == sorted(expected_loader_ids)
@@ -215,11 +191,8 @@ class TestDataManager:
         expected_loader_ids.extend(list(loader_dict.keys()))
         expected_loader_ids = expected_loader_ids[-MAX_DATA_LOADER_SIZE:]
 
-        # Make sure to finish loading, make it init.
-        mock_data_manager._detail_cache._status = DataManagerStatus.INIT.value
         mock_generate_loaders.return_value = loader_dict
-        mock_data_manager.start_load_data(reload_interval=0)
-        check_loading_done(mock_data_manager)
+        mock_data_manager.start_load_data().join()
         current_loader_ids = mock_data_manager._detail_cache._loader_pool.keys()
 
         assert sorted(current_loader_ids) == sorted(expected_loader_ids)

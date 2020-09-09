@@ -189,10 +189,7 @@ class TrainTaskManager(BaseProcessor):
                 logger.warning('Train job %s not existed', train_id)
                 continue
 
-            if train_job.cache_status == CacheStatus.NOT_IN_CACHE:
-                self._data_manager.cache_train_job(train_id)
-                # Update loader cache status to CACHING for consistency in response.
-                train_job.cache_status = CacheStatus.CACHING
+            self._data_manager.cache_train_job(train_id)
 
             cache_result.append(dict(
                 train_id=train_id,
