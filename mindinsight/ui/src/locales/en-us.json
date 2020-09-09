@@ -26,7 +26,8 @@
     "leftbracket": "(",
     "rightbracket": ")",
     "point": "·",
-    "slashes": "/"
+    "slashes": "/",
+    "colon": ":"
   },
   "header": {
     "refreshData": "Refresh Data",
@@ -261,7 +262,7 @@
         "https://www.mindspore.cn/tutorial/en/master/advanced_use/performance_profiling.html"
       ],
       "gpuUrl": [
-        "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/performance_profiling_gpu.html"
+        "https://www.mindspore.cn/tutorial/en/master/advanced_use/performance_profiling_gpu.html"
       ]
     },
     "step_trace-proposer_type_label": {
@@ -437,7 +438,6 @@
     "50542218": "Incorrect filtering parameter.",
     "50545012": "The tensor data does not exist. Please refresh.",
     "50545013": "The requested data is too large. Try another dimension.",
-    "50545014": "The queried tensor data has been replaced by new data. Please refresh.",
-    "50548001": "Ascend AI Processor information query timed out."
+    "50545014": "The queried tensor data has been replaced by new data. Please refresh."
   }
 }
