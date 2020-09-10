@@ -42,6 +42,13 @@ export default {
     });
   },
 
+  queryTargetsData() {
+    return axios({
+      method: 'get',
+      url: `v1/mindinsight/optimizer/targets`,
+    });
+  },
+
   // query summary list
   querySummaryList(params, isIgnoreError) {
     return axios({
