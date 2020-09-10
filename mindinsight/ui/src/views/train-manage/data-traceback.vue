@@ -14,318 +14,325 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div id="cl-data-traceback">
-    <div v-if="loading"
-         class="no-data-page">
-      <div class="no-data-img">
-        <img :src="require('@/assets/images/nodata.png')"
-             alt="" />
-        <p class="no-data-text">{{$t("public.dataLoading")}}</p>
-      </div>
+  <div class="cl-data-traceback">
+    <div class="traceback-tab">
+      <div class="traceback-tab-item"
+           @click="jumpToModelTraceback()">{{$t("summaryManage.modelTraceback")}}</div>
+      <div class="traceback-tab-item item-active">{{$t("summaryManage.dataTraceback")}}</div>
     </div>
-    <div class="cl-data-right"
-         v-if="!loading">
-      <!-- select area -->
-      <div class="data-checkbox-area"
-           v-show="!errorData&&!(!totalSeries.length&&pagination.total)">
-        <div class="select-container"
-             v-show="totalSeries && totalSeries.length &&
-              (!summaryDirList || (summaryDirList && summaryDirList.length))">
-          <div class="display-column">
-            {{$t('modelTraceback.displayColumn')}}
-          </div>
-          <div class="inline-block-set">
-            <!-- multiple collapse-tags -->
-            <el-select v-model="selectArrayValue"
-                       multiple
-                       collapse-tags
-                       @change="selectValueChange"
-                       :placeholder="$t('public.select')"
-                       @focus="selectinputFocus">
-              <div class="select-input-button">
-                <div class="select-inner-input">
-                  <el-input v-model="keyWord"
-                            v-on:input="myfilter"
-                            :placeholder="$t('public.search')">
-                  </el-input>
-                </div>
-                <button type="text"
-                        @click="allSelect"
-                        class="select-all-button"
-                        :class="[selectCheckAll ? 'checked-color' : 'button-text',
-                           basearr.length > checkOptions.length ? 'btn-disabled' : '']"
-                        :disabled="basearr.length > checkOptions.length">
-                  {{ $t('public.selectAll')}}
-                </button>
-                <button type="text"
-                        @click="deselectAll"
-                        class="deselect-all-button"
-                        :class="[!selectCheckAll ? 'checked-color' : 'button-text',
-                           basearr.length > checkOptions.length ? 'btn-disabled' : '']"
-                        :disabled="basearr.length > checkOptions.length">
-                  {{ $t('public.deselectAll')}}
-                </button>
-              </div>
-              <el-option v-for="item in checkOptions"
-                         :key="item.value"
-                         :label="item.label"
-                         :value="item.value"
-                         :disabled="item.disabled"
-                         :title="item.disabled ? $t('modelTraceback.mustExist') : ''">
-              </el-option>
-            </el-select>
-          </div>
-        </div>
-        <!-- show all data button -->
-        <div class="btns">
-          <el-button class="reset-btn custom-btn"
-                     @click="echartShowAllData"
-                     type="primary"
-                     size="mini"
-                     plain
-                     v-show="(summaryDirList && !summaryDirList.length)||(totalSeries && totalSeries.length)">
-            {{ $t('modelTraceback.showAllData') }}
-          </el-button>
-        </div>
-      </div>
-      <!-- echart drawing area -->
-      <div id="data-echart"
-           v-show="showEchartPic && !echartNoData"></div>
-      <div class="echart-nodata-container"
-           v-show="!showEchartPic && showTable && !(summaryDirList && !summaryDirList.length)">
-      </div>
-      <div class="btns-container"
-           v-show="!echartNoData && showTable">
-        <el-button type="primary"
-                   size="mini"
-                   class="custom-btn"
-                   @click="hiddenRecords"
-                   plain>
-          {{ $t('modelTraceback.hide')}}
-        </el-button>
-        <el-button type="primary"
-                   size="mini"
-                   class="custom-btn"
-                   @click="unhideRecords"
-                   plain>
-          {{$t('modelTraceback.unhide')}}
-        </el-button>
-      </div>
-      <!-- table area -->
-      <div class="table-container"
-           v-show="!echartNoData && showTable">
-        <div class="disabled-checked"
-             v-show="!table.data.length"></div>
-        <el-table ref="table"
-                  :data="table.data"
-                  tooltip-effect="light"
-                  height="calc(100% - 40px)"
-                  row-key="summary_dir"
-                  @selection-change="handleSelectionChange"
-                  @sort-change="tableSortChange">
-          <el-table-column type="selection"
-                           width="55"
-                           :reserve-selection="true"
-                           v-show="!echartNoData && showTable">
-          </el-table-column>
-          <el-table-column v-for="key in table.column"
-                           :key="key"
-                           :prop="key"
-                           :label="table.columnOptions[key].label"
-                           :sortable="sortArray.includes(table.columnOptions[key].label) ? 'custom' : false"
-                           :fixed="table.columnOptions[key].label === text ? true : false"
-                           min-width="200"
-                           show-overflow-tooltip>
-            <template slot="header"
-                      slot-scope="scope">
-              <div class="custom-label"
-                   :title="scope.column.label">
-                {{scope.column.label}}
-              </div>
-            </template>
-            <template slot-scope="scope">
-              <span class="icon-container"
-                    v-show="table.columnOptions[key].label === text">
-                <el-tooltip effect="light"
-                            :content="$t('dataTraceback.dataTraceTips')"
-                            placement="top"
-                            v-show="scope.row.children">
-                  <i class="el-icon-warning"></i>
-                </el-tooltip>
-              </span>
-              <span @click="jumpToTrainDashboard(scope.row[key])"
-                    v-if="table.columnOptions[key].label === text"
-                    class="href-color">
-                {{ scope.row[key] }}
-              </span>
-              <span v-else
-                    @click="showDialogData(scope.row[key], scope)"
-                    class="click-span">
-                {{formatNumber(key, scope.row[key]) }}
-              </span>
-            </template>
-          </el-table-column>
-          <!-- remark column -->
-          <el-table-column fixed="right"
-                           width="260">
-            <template slot="header">
-              <div>
-                <div class="label-text">{{$t('public.remark')}}</div>
-                <div class="remark-tip">{{$t('modelTraceback.remarkTips')}}</div>
-              </div>
-            </template>
-            <template slot-scope="scope">
-              <!-- The system determines whether to display the pen icon and
-              text box based on the values of editShow -->
-              <div class="edit-text-container"
-                   v-show="scope.row.editShow">{{ scope.row.remark }}</div>
-              <div class="inline-block-set">
-                <i class="el-icon-edit"
-                   @click="editRemarks(scope.row)"
-                   v-show="scope.row.editShow"></i>
-                <el-input type="text"
-                          v-model="scope.row.remark"
-                          v-show="!scope.row.editShow"
-                          :placeholder="$t('public.enter')"
-                          class="remark-input-style"></el-input>
-                <i class="el-icon-check"
-                   @click="saveRemarksValue(scope.row)"
-                   v-show="!scope.row.editShow"></i>
-                <i class="el-icon-close"
-                   @click="cancelRemarksValue(scope.row)"
-                   v-show="!scope.row.editShow"></i>
-                <div class="validation-error"
-                     v-show="scope.row.isError">
-                  {{ $t('modelTraceback.remarkValidation')}}
-                </div>
-              </div>
-            </template>
-          </el-table-column>
-          <!-- tag column -->
-          <el-table-column label="tag"
-                           fixed="right"
-                           prop="tag"
-                           sortable="custom">
-            <template slot-scope="scope">
-              <div @click="showAllIcon(scope.row, scope, $event)"
-                   class="tag-icon-container">
-                <img v-if="scope.row.tag"
-                     :class="'img' + scope.$index"
-                     :src="require('@/assets/images/icon' + scope.row.tag + '.svg')">
-                <img v-else
-                     :class="'img' + scope.$index"
-                     :src="require('@/assets/images/icon-down.svg')">
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
-        <div class="pagination-container">
-          <el-pagination @current-change="handleCurrentChange"
-                         :current-page="pagination.currentPage"
-                         :page-size="pagination.pageSize"
-                         :layout="pagination.layout"
-                         :total="pagination.total">
-          </el-pagination>
-          <div class="hide-count"
-               v-show="recordsNumber-showNumber">
-            {{ $t('modelTraceback.totalHide').replace(`{n}`, (recordsNumber-showNumber))}}
-          </div>
-          <div class="clear"></div>
-        </div>
-      </div>
-      <div v-show="nodata"
+    <div id="data-traceback-con">
+      <div v-if="loading"
            class="no-data-page">
-        <div class="no-data-img"
-             :class="{'set-height-class':(summaryDirList && !summaryDirList.length)}">
+        <div class="no-data-img">
           <img :src="require('@/assets/images/nodata.png')"
                alt="" />
-          <p class="no-data-text"
-             v-show="!summaryDirList || (summaryDirList && summaryDirList.length) && !lineagedata.serData">
-            {{ $t('public.noData') }}
-          </p>
-          <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length)">
-            <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
+          <p class="no-data-text">{{$t("public.dataLoading")}}</p>
+        </div>
+      </div>
+      <div class="cl-data-right"
+           v-if="!loading">
+        <!-- select area -->
+        <div class="data-checkbox-area"
+             v-show="!errorData && !(!totalSeries.length && pagination.total)">
+          <div class="select-container"
+               v-show="totalSeries && totalSeries.length &&
+              (!summaryDirList || (summaryDirList && summaryDirList.length))">
+            <div class="display-column">
+              {{$t('modelTraceback.displayColumn')}}
+            </div>
+            <div class="inline-block-set">
+              <!-- multiple collapse-tags -->
+              <el-select v-model="selectArrayValue"
+                         multiple
+                         collapse-tags
+                         @change="selectValueChange"
+                         :placeholder="$t('public.select')"
+                         @focus="selectinputFocus">
+                <div class="select-input-button">
+                  <div class="select-inner-input">
+                    <el-input v-model="keyWord"
+                              v-on:input="myfilter"
+                              :placeholder="$t('public.search')">
+                    </el-input>
+                  </div>
+                  <button type="text"
+                          @click="allSelect"
+                          class="select-all-button"
+                          :class="[selectCheckAll ? 'checked-color' : 'button-text',
+                           basearr.length > checkOptions.length ? 'btn-disabled' : '']"
+                          :disabled="basearr.length > checkOptions.length">
+                    {{ $t('public.selectAll')}}
+                  </button>
+                  <button type="text"
+                          @click="deselectAll"
+                          class="deselect-all-button"
+                          :class="[!selectCheckAll ? 'checked-color' : 'button-text',
+                           basearr.length > checkOptions.length ? 'btn-disabled' : '']"
+                          :disabled="basearr.length > checkOptions.length">
+                    {{ $t('public.deselectAll')}}
+                  </button>
+                </div>
+                <el-option v-for="item in checkOptions"
+                           :key="item.value"
+                           :label="item.label"
+                           :value="item.value"
+                           :disabled="item.disabled"
+                           :title="item.disabled ? $t('modelTraceback.mustExist') : ''">
+                </el-option>
+              </el-select>
+            </div>
           </div>
-          <div v-show="summaryDirList && !summaryDirList.length">
-            <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
-            <p class="no-data-text">
-              {{ $t('dataTraceback.click') }}
-              <b> {{ $t('modelTraceback.showAllDataBtn') }}</b>
-              {{ $t('dataTraceback.viewAllData') }}
+          <!-- show all data button -->
+          <div class="btns">
+            <el-button class="reset-btn custom-btn"
+                       @click="echartShowAllData"
+                       type="primary"
+                       size="mini"
+                       plain
+                       v-show="(summaryDirList && !summaryDirList.length)||(totalSeries && totalSeries.length)">
+              {{ $t('modelTraceback.showAllData') }}
+            </el-button>
+          </div>
+        </div>
+        <!-- echart drawing area -->
+        <div id="data-echart"
+             v-show="showEchartPic && !echartNoData"></div>
+        <div class="echart-nodata-container"
+             v-show="!showEchartPic && showTable && !(summaryDirList && !summaryDirList.length)">
+        </div>
+        <div class="btns-container"
+             v-show="!echartNoData && showTable">
+          <el-button type="primary"
+                     size="mini"
+                     class="custom-btn"
+                     @click="hiddenRecords"
+                     plain>
+            {{ $t('modelTraceback.hide')}}
+          </el-button>
+          <el-button type="primary"
+                     size="mini"
+                     class="custom-btn"
+                     @click="unhideRecords"
+                     plain>
+            {{$t('modelTraceback.unhide')}}
+          </el-button>
+        </div>
+        <!-- table area -->
+        <div class="table-container"
+             v-show="!echartNoData && showTable">
+          <div class="disabled-checked"
+               v-show="!table.data.length"></div>
+          <el-table ref="table"
+                    :data="table.data"
+                    tooltip-effect="light"
+                    height="calc(100% - 40px)"
+                    row-key="summary_dir"
+                    @selection-change="handleSelectionChange"
+                    @sort-change="tableSortChange">
+            <el-table-column type="selection"
+                             width="55"
+                             :reserve-selection="true"
+                             v-show="!echartNoData && showTable">
+            </el-table-column>
+            <el-table-column v-for="key in table.column"
+                             :key="key"
+                             :prop="key"
+                             :label="table.columnOptions[key].label"
+                             :sortable="sortArray.includes(table.columnOptions[key].label) ? 'custom' : false"
+                             :fixed="table.columnOptions[key].label === text ? true : false"
+                             min-width="200"
+                             show-overflow-tooltip>
+              <template slot="header"
+                        slot-scope="scope">
+                <div class="custom-label"
+                     :title="scope.column.label">
+                  {{scope.column.label}}
+                </div>
+              </template>
+              <template slot-scope="scope">
+                <span class="icon-container"
+                      v-show="table.columnOptions[key].label === text">
+                  <el-tooltip effect="light"
+                              :content="$t('dataTraceback.dataTraceTips')"
+                              placement="top"
+                              v-show="scope.row.children">
+                    <i class="el-icon-warning"></i>
+                  </el-tooltip>
+                </span>
+                <span @click="jumpToTrainDashboard(scope.row[key])"
+                      v-if="table.columnOptions[key].label === text"
+                      class="href-color">
+                  {{ scope.row[key] }}
+                </span>
+                <span v-else
+                      @click="showDialogData(scope.row[key], scope)"
+                      class="click-span">
+                  {{formatNumber(key, scope.row[key]) }}
+                </span>
+              </template>
+            </el-table-column>
+            <!-- remark column -->
+            <el-table-column fixed="right"
+                             width="260">
+              <template slot="header">
+                <div>
+                  <div class="label-text">{{$t('public.remark')}}</div>
+                  <div class="remark-tip">{{$t('modelTraceback.remarkTips')}}</div>
+                </div>
+              </template>
+              <template slot-scope="scope">
+                <!-- The system determines whether to display the pen icon and
+              text box based on the values of editShow -->
+                <div class="edit-text-container"
+                     v-show="scope.row.editShow">{{ scope.row.remark }}</div>
+                <div class="inline-block-set">
+                  <i class="el-icon-edit"
+                     @click="editRemarks(scope.row)"
+                     v-show="scope.row.editShow"></i>
+                  <el-input type="text"
+                            v-model="scope.row.remark"
+                            v-show="!scope.row.editShow"
+                            :placeholder="$t('public.enter')"
+                            class="remark-input-style"></el-input>
+                  <i class="el-icon-check"
+                     @click="saveRemarksValue(scope.row)"
+                     v-show="!scope.row.editShow"></i>
+                  <i class="el-icon-close"
+                     @click="cancelRemarksValue(scope.row)"
+                     v-show="!scope.row.editShow"></i>
+                  <div class="validation-error"
+                       v-show="scope.row.isError">
+                    {{ $t('modelTraceback.remarkValidation')}}
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
+            <!-- tag column -->
+            <el-table-column label="tag"
+                             fixed="right"
+                             prop="tag"
+                             sortable="custom">
+              <template slot-scope="scope">
+                <div @click="showAllIcon(scope.row, scope, $event)"
+                     class="tag-icon-container">
+                  <img v-if="scope.row.tag"
+                       :class="'img' + scope.$index"
+                       :src="require('@/assets/images/icon' + scope.row.tag + '.svg')">
+                  <img v-else
+                       :class="'img' + scope.$index"
+                       :src="require('@/assets/images/icon-down.svg')">
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="pagination-container">
+            <el-pagination @current-change="handleCurrentChange"
+                           :current-page="pagination.currentPage"
+                           :page-size="pagination.pageSize"
+                           :layout="pagination.layout"
+                           :total="pagination.total">
+            </el-pagination>
+            <div class="hide-count"
+                 v-show="recordsNumber-showNumber">
+              {{ $t('modelTraceback.totalHide').replace(`{n}`, (recordsNumber-showNumber))}}
+            </div>
+            <div class="clear"></div>
+          </div>
+        </div>
+        <div v-show="nodata"
+             class="no-data-page">
+          <div class="no-data-img"
+               :class="{'set-height-class':(summaryDirList && !summaryDirList.length)}">
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+            <p class="no-data-text"
+               v-show="!summaryDirList || (summaryDirList && summaryDirList.length) && !lineagedata.serData">
+              {{ $t('public.noData') }}
             </p>
+            <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length)">
+              <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
+            </div>
+            <div v-show="summaryDirList && !summaryDirList.length">
+              <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
+              <p class="no-data-text">
+                {{ $t('dataTraceback.click') }}
+                <b> {{ $t('modelTraceback.showAllDataBtn') }}</b>
+                {{ $t('dataTraceback.viewAllData') }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div v-if="detailsDialogVisible">
-      <el-dialog :title="rowName"
-                 :visible.sync="detailsDialogVisible"
-                 width="50%"
-                 :close-on-click-modal="false"
-                 class="details-data-list">
-        <div class="details-data-title">{{ detailsDataTitle }}</div>
-        <el-table :data="detailsDataList"
-                  row-key="id"
-                  lazy
-                  tooltip-effect="light"
-                  :load="loadDataListChildren"
-                  :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
-          <el-table-column width="50" />
-          <el-table-column prop="key"
-                           width="180"
-                           label="Key">
-          </el-table-column>
-          <el-table-column prop="value"
-                           show-overflow-tooltip
-                           label="Value">
-            <template slot-scope="scope">
-              {{ scope.row.value }}
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-dialog>
-    </div>
-    <!-- tag dialog -->
-    <div v-show="tagDialogShow"
-         id="tag-dialog"
-         class="icon-dialog">
-      <div>
-        <div class="icon-image-container">
-          <div class="icon-image"
-               v-for="item in imageList"
-               :key="item.number"
-               :class="[tagScope.row && item.number === tagScope.row.tag ? 'icon-border' : '']"
-               @click="iconValueChange(tagScope.row, item.number, $event)">
-            <img :src="item.iconAdd">
+      <div v-if="detailsDialogVisible">
+        <el-dialog :title="rowName"
+                   :visible.sync="detailsDialogVisible"
+                   width="50%"
+                   :close-on-click-modal="false"
+                   class="details-data-list">
+          <div class="details-data-title">{{ detailsDataTitle }}</div>
+          <el-table :data="detailsDataList"
+                    row-key="id"
+                    lazy
+                    tooltip-effect="light"
+                    :load="loadDataListChildren"
+                    :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
+            <el-table-column width="50" />
+            <el-table-column prop="key"
+                             width="180"
+                             label="Key">
+            </el-table-column>
+            <el-table-column prop="value"
+                             show-overflow-tooltip
+                             label="Value">
+              <template slot-scope="scope">
+                {{ scope.row.value }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-dialog>
+      </div>
+      <!-- tag dialog -->
+      <div v-show="tagDialogShow"
+           id="tag-dialog"
+           class="icon-dialog">
+        <div>
+          <div class="icon-image-container">
+            <div class="icon-image"
+                 v-for="item in imageList"
+                 :key="item.number"
+                 :class="[tagScope.row && item.number === tagScope.row.tag ? 'icon-border' : '']"
+                 @click="iconValueChange(tagScope.row, item.number, $event)">
+              <img :src="item.iconAdd">
+            </div>
           </div>
-        </div>
-        <div class="btn-container-margin">
-          <div class="tag-button-container">
-            <el-button type="primary"
-                       size="mini"
-                       class="custom-btn"
-                       @click="iconChangeSave(tagScope)"
-                       plain>
-              {{ $t('public.sure')}}
-            </el-button>
-          </div>
-          <div class="tag-button-container">
-            <el-button type="primary"
-                       size="mini"
-                       class="custom-btn"
-                       @click="clearIcon(tagScope,$event)"
-                       plain>
-              {{ $t('public.clear')}}
-            </el-button>
-          </div>
-          <div class="tag-button-container">
-            <el-button type="primary"
-                       size="mini"
-                       class="custom-btn"
-                       @click="cancelChangeIcon(tagScope.row)"
-                       plain>
-              {{ $t('public.cancel')}}
-            </el-button>
+          <div class="btn-container-margin">
+            <div class="tag-button-container">
+              <el-button type="primary"
+                         size="mini"
+                         class="custom-btn"
+                         @click="iconChangeSave(tagScope)"
+                         plain>
+                {{ $t('public.sure')}}
+              </el-button>
+            </div>
+            <div class="tag-button-container">
+              <el-button type="primary"
+                         size="mini"
+                         class="custom-btn"
+                         @click="clearIcon(tagScope,$event)"
+                         plain>
+                {{ $t('public.clear')}}
+              </el-button>
+            </div>
+            <div class="tag-button-container">
+              <el-button type="primary"
+                         size="mini"
+                         class="custom-btn"
+                         @click="cancelChangeIcon(tagScope.row)"
+                         plain>
+                {{ $t('public.cancel')}}
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -528,13 +535,8 @@ export default {
   },
   computed: {},
   mounted() {
-    this.imageList = [];
-    for (let i = 1; i <= 10; i++) {
-      const obj = {};
-      obj.number = i;
-      obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
-      this.imageList.push(obj);
-    }
+    // Set the image display of the tag
+    this.setTagImage();
     document.title = `${this.$t('summaryManage.dataTraceback')}-MindInsight`;
     document.addEventListener('click', this.blurFloat, true);
     this.$nextTick(() => {
@@ -542,6 +544,721 @@ export default {
     });
   },
   methods: {
+    setTagImage() {
+      this.imageList = [];
+      for (let i = 1; i <= 10; i++) {
+        const obj = {};
+        obj.number = i;
+        obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
+        this.imageList.push(obj);
+      }
+    },
+    /** Data source page initialization**/
+    /**
+     * init
+     */
+    init() {
+      this.customizedColumnOptions =
+        this.$store.state.customizedColumnOptions || [];
+      this.table.columnOptions = Object.assign(
+          this.table.columnOptions,
+          this.customizedColumnOptions,
+      );
+      // Obtain the value of summary_dir from the store,
+      this.summaryDirList = this.$store.state.summaryDirList;
+      this.selectedBarList = this.$store.state.selectedBarList;
+      if (this.selectedBarList && this.selectedBarList.length) {
+        this.tableFilter = {};
+      } else {
+        this.tableFilter.lineage_type = {in: ['dataset']};
+      }
+      const params = {};
+      if (this.summaryDirList) {
+        this.tableFilter.summary_dir = {in: this.summaryDirList};
+      } else {
+        this.tableFilter.summary_dir = undefined;
+      }
+      params.body = Object.assign({}, this.tableFilter);
+      this.queryLineagesData(params);
+    },
+    /**
+     * Method of invoking the interface
+     * @param {Object} params
+     */
+    queryLineagesData(params) {
+      RequestService.queryLineagesData(params)
+          .then(
+              (res) => {
+                this.initOver = true;
+                this.loading = false;
+                this.echartNoData = false;
+                if (!res || !res.data) {
+                  this.nodata = true;
+                  return;
+                }
+                this.nodata = false;
+                this.errorData = false;
+                this.customizedTypeObject = res.data.customized;
+                let keys = Object.keys(this.customizedTypeObject);
+                if (keys.length) {
+                  keys = keys.map((i) => {
+                    if (i.startsWith(this.replaceStr.userDefined)) {
+                      return i.replace(this.replaceStr.userDefined, '[U]');
+                    } else if (i.startsWith(this.replaceStr.metric)) {
+                      return i.replace(this.replaceStr.metric, '[M]');
+                    }
+                  });
+                  this.sortArray = this.sortArray.concat(keys);
+                }
+                // Model source tracing filtering parameters
+                this.selectedBarList = this.$store.state.selectedBarList;
+                if (this.selectedBarList && this.selectedBarList.length) {
+                  const tempList = JSON.parse(JSON.stringify(res.data.object));
+                  const list = [];
+                  const metricKeys = {};
+                  tempList.forEach((item) => {
+                    if (item.model_lineage) {
+                      const modelData = JSON.parse(
+                          JSON.stringify(item.model_lineage),
+                      );
+                      modelData.model_size = parseFloat(
+                          ((modelData.model_size || 0) / 1024 / 1024).toFixed(2),
+                      );
+                      const keys = Object.keys(modelData.metric || {});
+                      if (keys.length) {
+                        keys.forEach((key) => {
+                          if (
+                            modelData.metric[key] ||
+                        modelData.metric[key] === 0
+                          ) {
+                            const temp = this.replaceStr.metric + key;
+                            metricKeys[temp] = key;
+                            modelData[temp] = modelData.metric[key];
+                          }
+                        });
+                        delete modelData.metric;
+                      }
+                      const udkeys = Object.keys(modelData.user_defined || {});
+                      if (udkeys.length) {
+                        udkeys.forEach((key) => {
+                          if (
+                            modelData.user_defined[key] ||
+                        modelData.user_defined[key] === 0
+                          ) {
+                            const temp = this.replaceStr.userDefined + key;
+                            modelData[temp] = modelData.user_defined[key];
+                          }
+                        });
+                        delete modelData.user_defined;
+                      }
+                      list.push(modelData);
+                    }
+                  });
+                  this.modelObjectArray = [];
+                  for (let i = 0; i < list.length; i++) {
+                    const modelObject = {};
+                    for (let j = 0; j < this.selectedBarList.length; j++) {
+                      const tempObject = list[i];
+                      const key = this.selectedBarList[j];
+                      modelObject[key] = tempObject[key];
+                    }
+                    this.modelObjectArray.push(modelObject);
+                  }
+                }
+
+                this.fixedSeries = [];
+                this.noFixedSeries = [];
+                this.checkedSeries = [];
+                this.lineagedata = this.formateOriginData(res.data);
+                this.totalSeries = this.lineagedata.fullNodeList;
+                if (!this.totalSeries.length) {
+                  this.echartNoData = true;
+                  this.nodata = true;
+                } else {
+                  this.nodata = false;
+                }
+                this.totalSeries.forEach((nodeItem) => {
+                  if (this.createType[nodeItem.name]) {
+                    nodeItem.checked = true;
+                    this.fixedSeries.push(nodeItem);
+                  } else {
+                    nodeItem.checked = false;
+                    this.noFixedSeries.push(nodeItem);
+                  }
+                });
+                this.noFixedSeries.forEach((item) => {
+                  item.checked = true;
+                });
+                this.getCheckedSerList();
+                if (this.fixedSeries.length) {
+                  this.setObjectValue(this.fixedSeries, true);
+                }
+                if (this.noFixedSeries.length) {
+                  this.setObjectValue(this.noFixedSeries, false);
+                }
+                const list1 = this.fixedSeries.concat(this.noFixedSeries);
+                list1.forEach((item, index) => {
+                  this.checkOptions[index] = {};
+                  this.basearr[index] = {};
+                  this.checkOptions[index].label = item.name;
+                  this.checkOptions[index].value = item.id;
+                  if (this.createType[item.name]) {
+                    this.checkOptions[index].disabled = true;
+                    this.basearr[index].disabled = true;
+                  }
+                  this.basearr[index].label = item.name;
+                  this.basearr[index].value = item.id;
+                });
+                this.checkOptions.forEach((item) => {
+                  this.selectArrayValue.push(item.value);
+                });
+                this.hidenDirChecked = this.$store.state.hidenDirChecked || [];
+                this.echart.brushData = this.lineagedata.serData;
+                if (this.hidenDirChecked.length) {
+                  const listdada = this.lineagedata.serData.slice();
+                  this.hidenDirChecked.forEach((item) => {
+                    listdada.forEach((i, index) => {
+                      if (i.summary_dir === item) {
+                        listdada.splice(index, 1);
+                      }
+                    });
+                  });
+                  if (listdada.length) {
+                    this.showEchartPic = true;
+                  } else {
+                    this.showEchartPic = false;
+                  }
+                  this.echart.showData = listdada;
+                } else {
+                  this.echart.showData = this.echart.brushData;
+                  this.showEchartPic = true;
+                }
+                this.resizeChart();
+                this.setEchartValue();
+                this.$nextTick(() => {
+                  this.initChart();
+                });
+                // Total number of pages in the table
+                this.pagination.total = res.data.count;
+                // Data encapsulation of the table
+                let data = [];
+                data = this.setTableData();
+                this.table.data = data;
+                this.showTable = true;
+                if (this.selectedBarList) {
+                  const resultArray = this.hideDataMarkTableData();
+                  this.table.column = this.dirPathList.concat(
+                      resultArray,
+                      this.checkedSeries.map((i) => i.id),
+                  );
+                } else {
+                  this.table.column = this.dirPathList.concat(
+                      this.checkedSeries.map((i) => i.id),
+                  );
+                }
+              },
+              (error) => {
+                this.loading = false;
+                this.initOver = true;
+                this.showEchartPic = false;
+                this.errorData = true;
+                this.nodata = true;
+              },
+          )
+          .catch(() => {
+            this.loading = false;
+            this.initOver = true;
+            this.showEchartPic = false;
+            this.errorData = true;
+            this.nodata = true;
+          });
+    },
+    /**
+     *  Gets the selected items and updates the select all state.
+     */
+    getCheckedSerList() {
+      this.checkedSeries = [];
+      this.totalSeries.forEach((nodeItem) => {
+        if (nodeItem.checked) {
+          this.checkedSeries.push(nodeItem);
+        }
+      });
+    },
+    /**
+     * Chart data encapsulation
+     * @param {Object} data
+     * @return {Object}
+     */
+    formateOriginData(data) {
+      if (!data || !data.object) {
+        return {};
+      }
+      // Preliminarily filter the required data from the original data and form a unified format.
+      const objectDataArr = [];
+      data.object.forEach((object) => {
+        this.tempFormateData = {
+          nodeList: [],
+          children: false,
+          summary_dir: object.summary_dir,
+          remark: object.added_info.remark ? object.added_info.remark : '',
+          tag: object.added_info.tag,
+        };
+        if (JSON.stringify(object.dataset_graph) !== '{}') {
+          this.getSingleRunData(object.dataset_graph);
+        }
+        objectDataArr.push(JSON.parse(JSON.stringify(this.tempFormateData)));
+      });
+      // The data in the unified format is combined by category.
+      const fullNodeList = [];
+      const tempDic = {};
+      objectDataArr.forEach((objectData) => {
+        if (fullNodeList.length) {
+          let startIndex = 0;
+          let tempNodeListMap = fullNodeList.map((nodeObj) => nodeObj.name);
+          objectData.nodeList.forEach((nodeItem) => {
+            const tempIndex = tempNodeListMap.indexOf(
+                nodeItem.name,
+                startIndex,
+            );
+            if (tempIndex === -1) {
+              if (!tempDic[nodeItem.name]) {
+                tempDic[nodeItem.name] = 0;
+              }
+              tempDic[nodeItem.name]++;
+              let tempId = '';
+              const createKey = Object.keys(this.createType);
+              if (createKey.includes(nodeItem.name)) {
+                tempId = nodeItem.name;
+              } else {
+                tempId = `${nodeItem.name}${tempDic[nodeItem.name]}`;
+              }
+              fullNodeList.splice(startIndex, 0, {
+                name: nodeItem.name,
+                id: tempId,
+              });
+              nodeItem.id = tempId;
+              startIndex++;
+              tempNodeListMap = fullNodeList.map((nodeObj) => nodeObj.name);
+            } else {
+              nodeItem.id = fullNodeList[tempIndex].id;
+              startIndex = tempIndex + 1;
+            }
+          });
+        } else {
+          objectData.nodeList.forEach((nodeItem) => {
+            if (!tempDic[nodeItem.name]) {
+              tempDic[nodeItem.name] = 0;
+            }
+            tempDic[nodeItem.name]++;
+            const createKey = Object.keys(this.createType);
+            if (createKey.includes(nodeItem.name)) {
+              fullNodeList.push({
+                name: nodeItem.name,
+                id: nodeItem.name,
+              });
+              nodeItem.id = nodeItem.name;
+            } else {
+              fullNodeList.push({
+                name: nodeItem.name,
+                id: `${nodeItem.name}${tempDic[nodeItem.name]}`,
+              });
+              nodeItem.id = `${nodeItem.name}${tempDic[nodeItem.name]}`;
+            }
+          });
+        }
+      });
+      // Obtain the value of run on each coordinate.
+      const serData = [];
+      objectDataArr.forEach((objectData) => {
+        const curDataObj = {};
+        objectData.nodeList.forEach((nodeItem) => {
+          curDataObj[nodeItem.id] = nodeItem.value;
+        });
+        curDataObj.children = objectData.children;
+        curDataObj.summary_dir = objectData.summary_dir;
+
+        // set remark value
+        curDataObj.remark = objectData.remark;
+        // set tag value
+        curDataObj.tag = objectData.tag;
+        // set remark icon is show
+        curDataObj.editShow = true;
+        curDataObj.isError = false;
+        serData.push(curDataObj);
+      });
+      const formateData = {
+        fullNodeList: fullNodeList,
+        serData: serData,
+      };
+      return formateData;
+    },
+
+    setEchartValue() {
+      if (this.modelObjectArray.length) {
+        const list = this.echart.showData;
+        for (let i = 0; i < list.length; i++) {
+          const temp = this.modelObjectArray[i];
+          this.echart.showData[i] = Object.assign(
+              this.echart.showData[i],
+              temp,
+          );
+        }
+      }
+    },
+    /*
+     * Initialize the echart diagram.
+     */
+    initChart() {
+      const parallelAxis = [];
+      const selectedBarList = this.$store.state.selectedBarList;
+      const data = [];
+      const arrayTemp = [];
+      if (selectedBarList && selectedBarList.length) {
+        selectedBarList.forEach((item) => {
+          const value = this.customizedTypeObject[item];
+          const obj = {
+            name: this.table.columnOptions[item].label,
+            id: item,
+            checked: true,
+          };
+          if (value && value.type === this.valueType.float) {
+            obj.type = this.valueType.float;
+          } else if (value && value.type === this.valueType.int) {
+            obj.type = this.valueType.int;
+          }
+          arrayTemp.push(obj);
+        });
+      }
+      const list = [];
+      this.basearr.forEach((item) => {
+        this.selectArrayValue.forEach((i) => {
+          if (i === item.value) {
+            const obj = {};
+            obj.id = item.value;
+            obj.name = item.label;
+            list.push(obj);
+          }
+        });
+      });
+      const totalBarArray = arrayTemp.concat(list);
+      this.echart.showData.forEach((val, i) => {
+        let item = {};
+        item = {
+          lineStyle: {
+            normal: {
+              color: CommonProperty.commonColorArr[i % 10],
+            },
+          },
+          value: [],
+        };
+        totalBarArray.forEach((obj) => {
+          item.value.push(val[obj.id]);
+        });
+        data.push(item);
+      });
+
+      totalBarArray.forEach((content, i) => {
+        const obj = {dim: i, name: content.name, id: content.id};
+        if (
+          content.name === this.repeatTitle ||
+          content.name === this.shuffleTitle ||
+          content.id === this.deviceNum ||
+          (content.type && content.type === this.valueType.int)
+        ) {
+          obj.scale = true;
+          obj.minInterval = 1;
+          this.setColorOfSelectedBar(selectedBarList, obj);
+        } else if (
+          this.numberTypeIdList.includes(content.id) ||
+          (content.type && content.type === this.valueType.float)
+        ) {
+          obj.scale = true;
+          this.setColorOfSelectedBar(selectedBarList, obj);
+        } else {
+          // String type
+          obj.type = this.categoryType;
+          obj.axisLabel = {
+            show: false,
+          };
+          this.setColorOfSelectedBar(selectedBarList, obj);
+          if (content.id === this.valueType.dataset_mark) {
+            obj.axisLabel = {
+              show: false,
+            };
+          }
+          const values = {};
+          this.echart.showData.forEach((i) => {
+            if (i[content.id] || i[content.id] === 0) {
+              values[i[content.id]] = '';
+            }
+          });
+          obj.data = Object.keys(values);
+        }
+        parallelAxis.push(obj);
+      });
+
+      const option = {
+        backgroundColor: 'white',
+        parallelAxis: parallelAxis,
+        tooltip: {
+          trigger: 'axis',
+        },
+        parallel: {
+          top: 30,
+          left: 90,
+          right: 100,
+          bottom: 12,
+          parallelAxisDefault: {
+            areaSelectStyle: {
+              width: 40,
+            },
+            tooltip: {
+              show: true,
+            },
+            realtime: false,
+          },
+        },
+        series: {
+          type: 'parallel',
+          lineStyle: {
+            width: 1,
+            opacity: 1,
+          },
+          data: data,
+        },
+      };
+      if (this.parallelEchart) {
+        this.parallelEchart.off('axisareaselected', null);
+        window.removeEventListener('resize', this.resizeChart, false);
+      } else {
+        this.parallelEchart = Echarts.init(
+            document.querySelector('#data-echart'),
+        );
+      }
+      this.parallelEchart.setOption(option, true);
+      window.addEventListener('resize', this.resizeChart, false);
+      this.chartEventsListen(parallelAxis);
+    },
+    chartEventsListen(parallelAxis) {
+      this.parallelEchart.on('axisareaselected', (params) => {
+        this.recordsNumber = 0;
+        this.showNumber = 0;
+        const key = params.parallelAxisId;
+        const range = params.intervals[0] || [];
+        const [axisData] = parallelAxis.filter((i) => {
+          return i.id === key;
+        });
+        if (axisData && range.length === 2) {
+          if (axisData.type === this.categoryType) {
+            const selectedAxisKeys = axisData.data.slice(
+                range[0],
+                range[1] + 1,
+            );
+            this.echart.brushData = this.echart.showData.filter((i) => {
+              return selectedAxisKeys.includes(i[key]);
+            });
+          } else {
+            this.echart.brushData = this.echart.showData.filter((i) => {
+              return i[key] >= range[0] && i[key] <= range[1];
+            });
+          }
+          const tempList = this.echart.brushData;
+          const summaryList = [];
+          tempList.forEach((item) => {
+            summaryList.push(item.summary_dir);
+          });
+          // The summaryList value could not be saved in the destroy state.
+          this.dataCheckedSummary = [];
+          this.$store.commit('setSummaryDirList', summaryList);
+          this.tableFilter.summary_dir = {in: summaryList};
+          if (!tempList.length) {
+            this.summaryDirList = [];
+            this.lineagedata.serData = undefined;
+            this.showTable = false;
+            this.nodata = true;
+            this.echartNoData = true;
+          } else {
+            this.echart.showData = this.echart.brushData;
+            this.$nextTick(() => {
+              this.initChart();
+            });
+            this.pagination.currentPage = 1;
+            this.pagination.total = this.echart.brushData.length;
+            this.table.data = this.echart.brushData.slice(
+                (this.pagination.currentPage - 1) * this.pagination.pageSize,
+                this.pagination.currentPage * this.pagination.pageSize,
+            );
+            const tableLength = this.table.data.length;
+            this.recordsNumber = tableLength;
+            this.showNumber = tableLength;
+            this.showTable = true;
+          }
+        }
+      });
+    },
+
+    /**
+     *  The window size changes. Resizing Chart
+     */
+    resizeChart() {
+      if (
+        document.getElementById('data-echart') &&
+        document.getElementById('data-echart').style.display !== 'none' &&
+        this.parallelEchart
+      ) {
+        this.parallelEchart.resize();
+      }
+    },
+    /**
+     * Setting Table Data
+     * @return {Array}
+     */
+    setTableData() {
+      let data = [];
+      // Table data encapsulation
+      const pathData = JSON.parse(JSON.stringify(this.echart.brushData));
+      // Obtain table data based on the page number and number of records.
+      data = pathData.slice(
+          (this.pagination.currentPage - 1) * this.pagination.pageSize,
+          this.pagination.currentPage * this.pagination.pageSize,
+      );
+      this.recordsNumber = data.length;
+      if (this.hidenDirChecked.length) {
+        this.hidenDirChecked.forEach((dir) => {
+          data.forEach((item, index) => {
+            if (item.summary_dir === dir) {
+              data.splice(index, 1);
+            }
+          });
+        });
+      }
+      this.showNumber = data.length;
+      return data;
+    },
+
+    /**
+     * The table column data is deleted from the data processing result.
+     * @return {Array}
+     */
+    hideDataMarkTableData() {
+      const result = [];
+      this.selectedBarList.forEach((item) => {
+        if (item !== this.valueType.dataset_mark) {
+          result.push(item);
+        }
+      });
+      return result;
+    },
+
+    /**
+     * Set the color of the model tracing axis.
+     * @param {Array} selectedBarList
+     * @param {Object} obj
+     */
+    setColorOfSelectedBar(selectedBarList, obj) {
+      if (selectedBarList && obj.dim < selectedBarList.length) {
+        obj.nameTextStyle = {
+          color: '#00a5a7',
+        };
+        obj.axisLabel = {
+          show: true,
+          textStyle: {
+            color: '#00a5a7',
+          },
+          formatter: function(val) {
+            if (typeof val !== 'string') {
+              return val;
+            }
+            const strs = val.split('');
+            let str = '';
+            const maxStringLength = 100;
+            const showStringLength = 12;
+            if (val.length > maxStringLength) {
+              return val.substring(0, showStringLength) + '...';
+            } else {
+              for (let i = 0, s = ''; (s = strs[i++]); ) {
+                str += s;
+                if (!(i % showStringLength)) {
+                  str += '\n';
+                }
+              }
+              return str;
+            }
+          },
+        };
+        obj.axisLine = {
+          show: true,
+          lineStyle: {
+            color: '#00a5a7',
+          },
+        };
+      } else {
+        // Text color
+        obj.nameTextStyle = {
+          color: 'black',
+        };
+      }
+    },
+
+    /**
+     * Edit remarks
+     * @param {Object} row
+     */
+    editRemarks(row) {
+      row.editShow = false;
+      row.isError = false;
+      this.beforeEditValue = row.remark;
+    },
+
+    /**
+     * Save remarks
+     * @param {Object} row
+     */
+    saveRemarksValue(row) {
+      const tagValidation = new RegExp('^[a-zA-Z0-9\u4e00-\u9fa5_.-]{1,128}$');
+      const result = row.remark.length ? tagValidation.test(row.remark) : true;
+      if (result) {
+        row.isError = false;
+        row.editShow = true;
+        const params = {
+          train_id: row.summary_dir,
+          body: {
+            remark: row.remark,
+          },
+        };
+        this.putChangeToLineagesData(params);
+      } else {
+        row.isError = true;
+      }
+    },
+
+    /**
+     * Cancel Save Editing
+     * @param {Object} row
+     */
+    cancelRemarksValue(row) {
+      row.editShow = true;
+      row.remark = this.beforeEditValue;
+      row.isError = false;
+    },
+    /**
+     * After the remark or tag is modified,invoke the interface and save the modification
+     * @param {Object} params
+     */
+    putChangeToLineagesData(params) {
+      RequestService.putLineagesData(params)
+          .then(
+              (res) => {
+                if (res) {
+                  this.$message.success(this.$t('modelTraceback.changeSuccess'));
+                }
+              },
+              (error) => {},
+          )
+          .catch(() => {});
+    },
+
+    // Set tag style
     blurFloat(event) {
       const domArr = document.querySelectorAll('.icon-dialog');
       const path = event.path || (event.composedPath && event.composedPath());
@@ -752,65 +1469,6 @@ export default {
     },
 
     /**
-     * Edit remarks
-     * @param {Object} row
-     */
-    editRemarks(row) {
-      row.editShow = false;
-      row.isError = false;
-      this.beforeEditValue = row.remark;
-    },
-
-    /**
-     * Save remarks
-     * @param {Object} row
-     */
-    saveRemarksValue(row) {
-      const tagValidation = new RegExp('^[a-zA-Z0-9\u4e00-\u9fa5_.-]{1,128}$');
-      const result = row.remark.length ? tagValidation.test(row.remark) : true;
-      if (result) {
-        row.isError = false;
-        row.editShow = true;
-        const params = {
-          train_id: row.summary_dir,
-          body: {
-            remark: row.remark,
-          },
-        };
-        this.putChangeToLineagesData(params);
-      } else {
-        row.isError = true;
-      }
-    },
-
-    /**
-     * Cancel Save Editing
-     * @param {Object} row
-     */
-    cancelRemarksValue(row) {
-      row.editShow = true;
-      row.remark = this.beforeEditValue;
-      row.isError = false;
-    },
-
-    /**
-     * After the remark or tag is modified,invoke the interface and save the modification
-     * @param {Object} params
-     */
-    putChangeToLineagesData(params) {
-      RequestService.putLineagesData(params)
-          .then(
-              (res) => {
-                if (res) {
-                  this.$message.success(this.$t('modelTraceback.changeSuccess'));
-                }
-              },
-              (error) => {},
-          )
-          .catch(() => {});
-    },
-
-    /**
      * Hidden records
      */
     hiddenRecords() {
@@ -969,276 +1627,6 @@ export default {
         this.table.column = this.dirPathList.concat(list);
       }
     },
-
-    /**
-     * init
-     */
-    init() {
-      this.customizedColumnOptions =
-        this.$store.state.customizedColumnOptions || [];
-      this.table.columnOptions = Object.assign(
-          this.table.columnOptions,
-          this.customizedColumnOptions,
-      );
-      // Obtain the value of summary_dir from the store,
-      this.summaryDirList = this.$store.state.summaryDirList;
-      this.selectedBarList = this.$store.state.selectedBarList;
-      if (this.selectedBarList && this.selectedBarList.length) {
-        this.tableFilter = {};
-      } else {
-        this.tableFilter.lineage_type = {in: ['dataset']};
-      }
-      const params = {};
-      if (this.summaryDirList) {
-        this.tableFilter.summary_dir = {in: this.summaryDirList};
-      } else {
-        this.tableFilter.summary_dir = undefined;
-      }
-      params.body = Object.assign({}, this.tableFilter);
-      this.queryLineagesData(params);
-    },
-
-    /*
-     * Initialize the echart diagram.
-     */
-    initChart() {
-      const parallelAxis = [];
-      const selectedBarList = this.$store.state.selectedBarList;
-      const data = [];
-      const arrayTemp = [];
-      if (selectedBarList && selectedBarList.length) {
-        selectedBarList.forEach((item) => {
-          const value = this.customizedTypeObject[item];
-          const obj = {
-            name: this.table.columnOptions[item].label,
-            id: item,
-            checked: true,
-          };
-          if (value && value.type === this.valueType.float) {
-            obj.type = this.valueType.float;
-          } else if (value && value.type === this.valueType.int) {
-            obj.type = this.valueType.int;
-          }
-          arrayTemp.push(obj);
-        });
-      }
-      const list = [];
-      this.basearr.forEach((item) => {
-        this.selectArrayValue.forEach((i) => {
-          if (i === item.value) {
-            const obj = {};
-            obj.id = item.value;
-            obj.name = item.label;
-            list.push(obj);
-          }
-        });
-      });
-      const totalBarArray = arrayTemp.concat(list);
-      this.echart.showData.forEach((val, i) => {
-        let item = {};
-        item = {
-          lineStyle: {
-            normal: {
-              color: CommonProperty.commonColorArr[i % 10],
-            },
-          },
-          value: [],
-        };
-        totalBarArray.forEach((obj) => {
-          item.value.push(val[obj.id]);
-        });
-        data.push(item);
-      });
-
-      totalBarArray.forEach((content, i) => {
-        const obj = {dim: i, name: content.name, id: content.id};
-        if (
-          content.name === this.repeatTitle ||
-          content.name === this.shuffleTitle ||
-          content.id === this.deviceNum ||
-          (content.type && content.type === this.valueType.int)
-        ) {
-          obj.scale = true;
-          obj.minInterval = 1;
-          this.setColorOfSelectedBar(selectedBarList, obj);
-        } else if (
-          this.numberTypeIdList.includes(content.id) ||
-          (content.type && content.type === this.valueType.float)
-        ) {
-          obj.scale = true;
-          this.setColorOfSelectedBar(selectedBarList, obj);
-        } else {
-          // String type
-          obj.type = this.categoryType;
-          obj.axisLabel = {
-            show: false,
-          };
-          this.setColorOfSelectedBar(selectedBarList, obj);
-          if (content.id === this.valueType.dataset_mark) {
-            obj.axisLabel = {
-              show: false,
-            };
-          }
-          const values = {};
-          this.echart.showData.forEach((i) => {
-            if (i[content.id] || i[content.id] === 0) {
-              values[i[content.id]] = '';
-            }
-          });
-          obj.data = Object.keys(values);
-        }
-        parallelAxis.push(obj);
-      });
-
-      const option = {
-        backgroundColor: 'white',
-        parallelAxis: parallelAxis,
-        tooltip: {
-          trigger: 'axis',
-        },
-        parallel: {
-          top: 30,
-          left: 90,
-          right: 100,
-          bottom: 12,
-          parallelAxisDefault: {
-            areaSelectStyle: {
-              width: 40,
-            },
-            tooltip: {
-              show: true,
-            },
-            realtime: false,
-          },
-        },
-        series: {
-          type: 'parallel',
-          lineStyle: {
-            width: 1,
-            opacity: 1,
-          },
-          data: data,
-        },
-      };
-      if (this.parallelEchart) {
-        this.parallelEchart.off('axisareaselected', null);
-        window.removeEventListener('resize', this.resizeChart, false);
-      } else {
-        this.parallelEchart = Echarts.init(
-            document.querySelector('#data-echart'),
-        );
-      }
-      this.parallelEchart.setOption(option, true);
-      window.addEventListener('resize', this.resizeChart, false);
-      this.chartEventsListen(parallelAxis);
-    },
-    chartEventsListen(parallelAxis) {
-      this.parallelEchart.on('axisareaselected', (params) => {
-        this.recordsNumber = 0;
-        this.showNumber = 0;
-        const key = params.parallelAxisId;
-        const range = params.intervals[0] || [];
-        const [axisData] = parallelAxis.filter((i) => {
-          return i.id === key;
-        });
-        if (axisData && range.length === 2) {
-          if (axisData.type === this.categoryType) {
-            const selectedAxisKeys = axisData.data.slice(
-                range[0],
-                range[1] + 1,
-            );
-            this.echart.brushData = this.echart.showData.filter((i) => {
-              return selectedAxisKeys.includes(i[key]);
-            });
-          } else {
-            this.echart.brushData = this.echart.showData.filter((i) => {
-              return i[key] >= range[0] && i[key] <= range[1];
-            });
-          }
-          const tempList = this.echart.brushData;
-          const summaryList = [];
-          tempList.forEach((item) => {
-            summaryList.push(item.summary_dir);
-          });
-          // The summaryList value could not be saved in the destroy state.
-          this.dataCheckedSummary = [];
-          this.$store.commit('setSummaryDirList', summaryList);
-          this.tableFilter.summary_dir = {in: summaryList};
-          if (!tempList.length) {
-            this.summaryDirList = [];
-            this.lineagedata.serData = undefined;
-            this.showTable = false;
-            this.nodata = true;
-            this.echartNoData = true;
-          } else {
-            this.echart.showData = this.echart.brushData;
-            this.$nextTick(() => {
-              this.initChart();
-            });
-            this.pagination.currentPage = 1;
-            this.pagination.total = this.echart.brushData.length;
-            this.table.data = this.echart.brushData.slice(
-                (this.pagination.currentPage - 1) * this.pagination.pageSize,
-                this.pagination.currentPage * this.pagination.pageSize,
-            );
-            const tableLength = this.table.data.length;
-            this.recordsNumber = tableLength;
-            this.showNumber = tableLength;
-            this.showTable = true;
-          }
-        }
-      });
-    },
-    /**
-     * Set the color of the model tracing axis.
-     * @param {Array} selectedBarList
-     * @param {Object} obj
-     */
-    setColorOfSelectedBar(selectedBarList, obj) {
-      if (selectedBarList && obj.dim < selectedBarList.length) {
-        obj.nameTextStyle = {
-          color: '#00a5a7',
-        };
-        obj.axisLabel = {
-          show: true,
-          textStyle: {
-            color: '#00a5a7',
-          },
-          formatter: function(val) {
-            if (typeof val !== 'string') {
-              return val;
-            }
-            const strs = val.split('');
-            let str = '';
-            const maxStringLength = 100;
-            const showStringLength = 12;
-            if (val.length > maxStringLength) {
-              return val.substring(0, showStringLength) + '...';
-            } else {
-              for (let i = 0, s = ''; (s = strs[i++]); ) {
-                str += s;
-                if (!(i % showStringLength)) {
-                  str += '\n';
-                }
-              }
-              return str;
-            }
-          },
-        };
-        obj.axisLine = {
-          show: true,
-          lineStyle: {
-            color: '#00a5a7',
-          },
-        };
-      } else {
-        // Text color
-        obj.nameTextStyle = {
-          color: 'black',
-        };
-      }
-    },
-
     /**
      * jump to train dashboard
      * @param {String} val
@@ -1251,7 +1639,14 @@ export default {
       });
       window.open(routeUrl.href, '_blank');
     },
-
+    /**
+     * Jump to DataTraceback
+     */
+    jumpToModelTraceback() {
+      this.$router.push({
+        path: '/model-traceback',
+      });
+    },
     /**
      * Formatting Data
      * @param {String} key
@@ -1445,224 +1840,6 @@ export default {
     },
 
     /**
-     * Method of invoking the interface
-     * @param {Object} params
-     */
-    queryLineagesData(params) {
-      RequestService.queryLineagesData(params)
-          .then(
-              (res) => {
-                this.initOver = true;
-                this.loading = false;
-                this.echartNoData = false;
-                if (!res || !res.data) {
-                  this.nodata = true;
-                  return;
-                }
-                this.nodata = false;
-                this.errorData = false;
-                this.customizedTypeObject = res.data.customized;
-                let keys = Object.keys(this.customizedTypeObject);
-                if (keys.length) {
-                  keys = keys.map((i) => {
-                    if (i.startsWith(this.replaceStr.userDefined)) {
-                      return i.replace(this.replaceStr.userDefined, '[U]');
-                    } else if (i.startsWith(this.replaceStr.metric)) {
-                      return i.replace(this.replaceStr.metric, '[M]');
-                    }
-                  });
-                  this.sortArray = this.sortArray.concat(keys);
-                }
-                // Model source tracing filtering parameters
-                this.selectedBarList = this.$store.state.selectedBarList;
-                if (this.selectedBarList && this.selectedBarList.length) {
-                  const tempList = JSON.parse(JSON.stringify(res.data.object));
-                  const list = [];
-                  const metricKeys = {};
-                  tempList.forEach((item) => {
-                    if (item.model_lineage) {
-                      const modelData = JSON.parse(
-                          JSON.stringify(item.model_lineage),
-                      );
-                      modelData.model_size = parseFloat(
-                          ((modelData.model_size || 0) / 1024 / 1024).toFixed(2),
-                      );
-                      const keys = Object.keys(modelData.metric || {});
-                      if (keys.length) {
-                        keys.forEach((key) => {
-                          if (
-                            modelData.metric[key] ||
-                        modelData.metric[key] === 0
-                          ) {
-                            const temp = this.replaceStr.metric + key;
-                            metricKeys[temp] = key;
-                            modelData[temp] = modelData.metric[key];
-                          }
-                        });
-                        delete modelData.metric;
-                      }
-                      const udkeys = Object.keys(modelData.user_defined || {});
-                      if (udkeys.length) {
-                        udkeys.forEach((key) => {
-                          if (
-                            modelData.user_defined[key] ||
-                        modelData.user_defined[key] === 0
-                          ) {
-                            const temp = this.replaceStr.userDefined + key;
-                            modelData[temp] = modelData.user_defined[key];
-                          }
-                        });
-                        delete modelData.user_defined;
-                      }
-                      list.push(modelData);
-                    }
-                  });
-                  this.modelObjectArray = [];
-                  for (let i = 0; i < list.length; i++) {
-                    const modelObject = {};
-                    for (let j = 0; j < this.selectedBarList.length; j++) {
-                      const tempObject = list[i];
-                      const key = this.selectedBarList[j];
-                      modelObject[key] = tempObject[key];
-                    }
-                    this.modelObjectArray.push(modelObject);
-                  }
-                }
-
-                this.fixedSeries = [];
-                this.noFixedSeries = [];
-                this.checkedSeries = [];
-                this.lineagedata = this.formateOriginData(res.data);
-                this.totalSeries = this.lineagedata.fullNodeList;
-                if (!this.totalSeries.length) {
-                  this.echartNoData = true;
-                  this.nodata = true;
-                } else {
-                  this.nodata = false;
-                }
-                this.totalSeries.forEach((nodeItem) => {
-                  if (this.createType[nodeItem.name]) {
-                    nodeItem.checked = true;
-                    this.fixedSeries.push(nodeItem);
-                  } else {
-                    nodeItem.checked = false;
-                    this.noFixedSeries.push(nodeItem);
-                  }
-                });
-                this.noFixedSeries.forEach((item) => {
-                  item.checked = true;
-                });
-                this.getCheckedSerList();
-                if (this.fixedSeries.length) {
-                  this.setObjectValue(this.fixedSeries, true);
-                }
-                if (this.noFixedSeries.length) {
-                  this.setObjectValue(this.noFixedSeries, false);
-                }
-                const list1 = this.fixedSeries.concat(this.noFixedSeries);
-                list1.forEach((item, index) => {
-                  this.checkOptions[index] = {};
-                  this.basearr[index] = {};
-                  this.checkOptions[index].label = item.name;
-                  this.checkOptions[index].value = item.id;
-                  if (this.createType[item.name]) {
-                    this.checkOptions[index].disabled = true;
-                    this.basearr[index].disabled = true;
-                  }
-                  this.basearr[index].label = item.name;
-                  this.basearr[index].value = item.id;
-                });
-                this.checkOptions.forEach((item) => {
-                  this.selectArrayValue.push(item.value);
-                });
-                this.hidenDirChecked = this.$store.state.hidenDirChecked || [];
-                this.echart.brushData = this.lineagedata.serData;
-                if (this.hidenDirChecked.length) {
-                  const listdada = this.lineagedata.serData.slice();
-                  this.hidenDirChecked.forEach((item) => {
-                    listdada.forEach((i, index) => {
-                      if (i.summary_dir === item) {
-                        listdada.splice(index, 1);
-                      }
-                    });
-                  });
-                  if (listdada.length) {
-                    this.showEchartPic = true;
-                  } else {
-                    this.showEchartPic = false;
-                  }
-                  this.echart.showData = listdada;
-                } else {
-                  this.echart.showData = this.echart.brushData;
-                  this.showEchartPic = true;
-                }
-                this.resizeChart();
-                this.setEchartValue();
-                this.$nextTick(() => {
-                  this.initChart();
-                });
-                // Total number of pages in the table
-                this.pagination.total = res.data.count;
-                // Data encapsulation of the table
-                let data = [];
-                data = this.setTableData();
-                this.table.data = data;
-                this.showTable = true;
-                if (this.selectedBarList) {
-                  const resultArray = this.hideDataMarkTableData();
-                  this.table.column = this.dirPathList.concat(
-                      resultArray,
-                      this.checkedSeries.map((i) => i.id),
-                  );
-                } else {
-                  this.table.column = this.dirPathList.concat(
-                      this.checkedSeries.map((i) => i.id),
-                  );
-                }
-              },
-              (error) => {
-                this.loading = false;
-                this.initOver = true;
-                this.showEchartPic = false;
-                this.errorData = true;
-                this.nodata = true;
-              },
-          )
-          .catch(() => {
-            this.loading = false;
-            this.initOver = true;
-            this.showEchartPic = false;
-            this.errorData = true;
-            this.nodata = true;
-          });
-    },
-
-    /**
-     *  Gets the selected items and updates the select all state.
-     */
-    getCheckedSerList() {
-      this.checkedSeries = [];
-      this.totalSeries.forEach((nodeItem) => {
-        if (nodeItem.checked) {
-          this.checkedSeries.push(nodeItem);
-        }
-      });
-    },
-
-    /**
-     *  The window size changes. Resizing Chart
-     */
-    resizeChart() {
-      if (
-        document.getElementById('data-echart') &&
-        document.getElementById('data-echart').style.display !== 'none' &&
-        this.parallelEchart
-      ) {
-        this.parallelEchart.resize();
-      }
-    },
-
-    /**
      * reset echart data.Show all data
      */
     echartShowAllData() {
@@ -1693,20 +1870,6 @@ export default {
     },
 
     /**
-     * The table column data is deleted from the data processing result.
-     * @return {Array}
-     */
-    hideDataMarkTableData() {
-      const result = [];
-      this.selectedBarList.forEach((item) => {
-        if (item !== this.valueType.dataset_mark) {
-          result.push(item);
-        }
-      });
-      return result;
-    },
-
-    /**
      * Selected rows of tables
      * @param {Object} val
      */
@@ -1724,19 +1887,6 @@ export default {
       this.$nextTick(() => {
         this.initChart();
       });
-    },
-
-    setEchartValue() {
-      if (this.modelObjectArray.length) {
-        const list = this.echart.showData;
-        for (let i = 0; i < list.length; i++) {
-          const temp = this.modelObjectArray[i];
-          this.echart.showData[i] = Object.assign(
-              this.echart.showData[i],
-              temp,
-          );
-        }
-      }
     },
 
     /**
@@ -1799,142 +1949,6 @@ export default {
           this.tableFilter,
       );
       this.queryTableLineagesData(params);
-    },
-
-    /**
-     * Setting Table Data
-     * @return {Array}
-     */
-    setTableData() {
-      let data = [];
-      // Table data encapsulation
-      const pathData = JSON.parse(JSON.stringify(this.echart.brushData));
-      // Obtain table data based on the page number and number of records.
-      data = pathData.slice(
-          (this.pagination.currentPage - 1) * this.pagination.pageSize,
-          this.pagination.currentPage * this.pagination.pageSize,
-      );
-      this.recordsNumber = data.length;
-      if (this.hidenDirChecked.length) {
-        this.hidenDirChecked.forEach((dir) => {
-          data.forEach((item, index) => {
-            if (item.summary_dir === dir) {
-              data.splice(index, 1);
-            }
-          });
-        });
-      }
-      this.showNumber = data.length;
-      return data;
-    },
-
-    /**
-     * Chart data encapsulation
-     * @param {Object} data
-     * @return {Object}
-     */
-    formateOriginData(data) {
-      if (!data || !data.object) {
-        return {};
-      }
-      // Preliminarily filter the required data from the original data and form a unified format.
-      const objectDataArr = [];
-      data.object.forEach((object) => {
-        this.tempFormateData = {
-          nodeList: [],
-          children: false,
-          summary_dir: object.summary_dir,
-          remark: object.added_info.remark ? object.added_info.remark : '',
-          tag: object.added_info.tag,
-        };
-        if (JSON.stringify(object.dataset_graph) !== '{}') {
-          this.getSingleRunData(object.dataset_graph);
-        }
-        objectDataArr.push(JSON.parse(JSON.stringify(this.tempFormateData)));
-      });
-      // The data in the unified format is combined by category.
-      const fullNodeList = [];
-      const tempDic = {};
-      objectDataArr.forEach((objectData) => {
-        if (fullNodeList.length) {
-          let startIndex = 0;
-          let tempNodeListMap = fullNodeList.map((nodeObj) => nodeObj.name);
-          objectData.nodeList.forEach((nodeItem) => {
-            const tempIndex = tempNodeListMap.indexOf(
-                nodeItem.name,
-                startIndex,
-            );
-            if (tempIndex === -1) {
-              if (!tempDic[nodeItem.name]) {
-                tempDic[nodeItem.name] = 0;
-              }
-              tempDic[nodeItem.name]++;
-              let tempId = '';
-              const createKey = Object.keys(this.createType);
-              if (createKey.includes(nodeItem.name)) {
-                tempId = nodeItem.name;
-              } else {
-                tempId = `${nodeItem.name}${tempDic[nodeItem.name]}`;
-              }
-              fullNodeList.splice(startIndex, 0, {
-                name: nodeItem.name,
-                id: tempId,
-              });
-              nodeItem.id = tempId;
-              startIndex++;
-              tempNodeListMap = fullNodeList.map((nodeObj) => nodeObj.name);
-            } else {
-              nodeItem.id = fullNodeList[tempIndex].id;
-              startIndex = tempIndex + 1;
-            }
-          });
-        } else {
-          objectData.nodeList.forEach((nodeItem) => {
-            if (!tempDic[nodeItem.name]) {
-              tempDic[nodeItem.name] = 0;
-            }
-            tempDic[nodeItem.name]++;
-            const createKey = Object.keys(this.createType);
-            if (createKey.includes(nodeItem.name)) {
-              fullNodeList.push({
-                name: nodeItem.name,
-                id: nodeItem.name,
-              });
-              nodeItem.id = nodeItem.name;
-            } else {
-              fullNodeList.push({
-                name: nodeItem.name,
-                id: `${nodeItem.name}${tempDic[nodeItem.name]}`,
-              });
-              nodeItem.id = `${nodeItem.name}${tempDic[nodeItem.name]}`;
-            }
-          });
-        }
-      });
-      // Obtain the value of run on each coordinate.
-      const serData = [];
-      objectDataArr.forEach((objectData) => {
-        const curDataObj = {};
-        objectData.nodeList.forEach((nodeItem) => {
-          curDataObj[nodeItem.id] = nodeItem.value;
-        });
-        curDataObj.children = objectData.children;
-        curDataObj.summary_dir = objectData.summary_dir;
-
-        // set remark value
-        curDataObj.remark = objectData.remark;
-        // set tag value
-        curDataObj.tag = objectData.tag;
-        // set remark icon is show
-        curDataObj.editShow = true;
-        curDataObj.isError = false;
-        serData.push(curDataObj);
-      });
-      const formateData = {
-        fullNodeList: fullNodeList,
-        serData: serData,
-      };
-      return formateData;
     },
 
     /**
@@ -2067,6 +2081,37 @@ export default {
 };
 </script>
 <style lang="scss">
+.cl-data-traceback {
+  height: 100%;
+  background-color: #fff;
+}
+.traceback-tab {
+  height: 51px;
+  line-height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba($color: #000000, $alpha: 0.1);
+}
+.traceback-tab-item {
+  padding: 0 10px;
+  height: 48px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  line-height: 48px;
+  display: inline-block;
+  list-style: none;
+  font-size: 18px;
+  color: #303133;
+  position: relative;
+}
+.item-active {
+  color: #00a5a7;
+  font-weight: bold;
+  border-bottom: 3px solid rgba($color: #00a5a7, $alpha: 1);
+}
+.traceback-tab-item:hover {
+  color: #00a5a7;
+  cursor: pointer;
+}
 .label-text {
   line-height: 20px !important;
   padding-top: 20px;
@@ -2128,9 +2173,9 @@ export default {
 .btn-disabled {
   cursor: not-allowed !important;
 }
-#cl-data-traceback {
+#data-traceback-con {
   display: flex;
-  height: 100%;
+  height: calc(100% - 51px);
   overflow-y: auto;
   position: relative;
   background: #fff;
@@ -2266,7 +2311,7 @@ export default {
     overflow: hidden;
 
     .data-checkbox-area {
-      margin: 24px 32px 12px;
+      margin: 6px 32px;
       height: 46px;
       display: flex;
       justify-content: flex-end;
@@ -2287,12 +2332,12 @@ export default {
       padding: 0 12px;
     }
     .echart-nodata-container {
-      height: 32%;
+      height: 35%;
       width: 100%;
     }
     .table-container {
       background-color: white;
-      height: calc(68% - 130px);
+      height: calc(65% - 88px);
       padding: 6px 32px;
       position: relative;
       .disabled-checked {
