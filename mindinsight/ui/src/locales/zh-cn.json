@@ -117,9 +117,14 @@
     "parameterImportance": "参数重要性",
     "optimizationTitle": "参数和优化目标",
     "viewBigImage": "查看大图",
-    "mustOptions":"必选",
-    "customOptions":"自定义",
-    "targetTips":"可以通过上述参数的柱状图来切换参数和优化目标的散点图"
+    "mustOptions": "必选",
+    "customOptions": "自定义",
+    "targetTips": "可以通过上述参数的柱状图来切换参数和优化目标的散点图",
+    "reasonCode": {
+      "1": "该参数含有非数字值",
+      "2": "该参数和优化目标的有效条目≤2,无法计算重要性",
+      "3": "重要性为NaN"
+    }
   },
   "dataTraceback": {
     "details": "详情",
@@ -475,10 +480,10 @@
     "nextNodeTip": "当前已经是最后一个节点",
     "previousNodeTip": "当前已经是第一个节点",
     "serviceError": "连接后端服务失败，请检查后刷新页面",
-    "tolerance":"容忍度",
-    "curValue":"当前值",
-    "compareToPre":"上一步对比",
-    "stepTip":"(0表示训练初始状态)",
+    "tolerance": "容忍度",
+    "curValue": "当前值",
+    "compareToPre": "上一步对比",
+    "stepTip": "(0表示训练初始状态)",
     "toSummeryList": "返回训练列表",
     "clientIp": "训练端地址",
     "deviceId": "卡号",

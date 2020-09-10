@@ -168,6 +168,10 @@ export default {
      */
 
     createChart() {
+      if (!this.data.length) {
+        this.clearScatter();
+        return;
+      }
       if (!this.chartObj) {
         this.chartObj = echarts.init(this.$refs.scatter);
         this.chartObj.setOption(this.chartOption, true);
@@ -175,7 +179,14 @@ export default {
         this.chartObj.setOption(this.chartOption, false);
       }
     },
-
+    /**
+     *Clear chart
+     */
+    clearScatter() {
+      if (this.chartObj) {
+        this.chartObj.clear();
+      }
+    },
     /**
      *window resize
      */
