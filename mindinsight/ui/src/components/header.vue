@@ -28,22 +28,8 @@ limitations under the License.
                  :default-active="getActive()"
                  class="el-menu-demo"
                  mode="horizontal">
-          <el-menu-item index="/summary-manage"
-                        :title='$t("summaryManage.summaryList")'>
-            {{$t("summaryManage.summaryList")}}
-          </el-menu-item>
-          <el-menu-item index="/model-traceback"
-                        :title='$t("summaryManage.modelTraceback")'>
-            {{$t("summaryManage.modelTraceback")}}
-          </el-menu-item>
-          <el-menu-item index="/data-traceback"
-                        :title='$t("summaryManage.dataTraceback")'>
-            {{$t("summaryManage.dataTraceback")}}
-          </el-menu-item>
-          <el-menu-item index="/compare-plate"
-                        :title='$t("summaryManage.comparePlate")'>
-            {{$t("summaryManage.comparePlate")}}
-          </el-menu-item>
+          <el-menu-item index="/summary-manage">{{$t("summaryManage.summaryList")}}</el-menu-item>
+          <el-menu-item v-if="false" index="/debugger">Debugger</el-menu-item>
         </el-menu>
       </div>
     </div>
@@ -201,15 +187,10 @@ export default {
     // get active menu item
     getActive() {
       const str = this.$route.path.split('/');
-      if (str.length > 2) {
-        if (str[1] === 'train-manage' || str[1] === 'profiling' || str[1] === 'profiling-gpu') {
-          return '/summary-manage';
-        } else {
-          return '/' + str[1];
-        }
-      } else {
+      if (str.length > 1 && str[1] === 'debugger') {
         return this.$route.path;
       }
+      return '/summary-manage';
     },
     changeLanguage(lan) {
       localStorage.setItem('milang', lan);

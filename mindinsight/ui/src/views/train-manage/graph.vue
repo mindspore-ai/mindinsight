@@ -337,7 +337,7 @@ limitations under the License.
                      class="legend-content">
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/name-scope.png')"
+                      <img :src="require('@/assets/images/name-scope.svg')"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -347,7 +347,7 @@ limitations under the License.
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/polymetric.png')"
+                      <img :src="require('@/assets/images/polymetric.svg')"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -357,7 +357,7 @@ limitations under the License.
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/virtual-node.png')"
+                      <img :src="require('@/assets/images/virtual-node.svg')"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -367,7 +367,7 @@ limitations under the License.
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/operator-node.png')"
+                      <img :src="require('@/assets/images/operator-node.svg')"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -377,7 +377,7 @@ limitations under the License.
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/constant-node.png')"
+                      <img :src="require('@/assets/images/constant-node.svg')"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -926,7 +926,7 @@ export default {
         datum.attributes.width = width;
         datum.attributes.height = height;
       } else if (isChild) {
-        datum.attributes.stroke = 'rgb(167, 167, 167)';
+        datum.attributes.stroke = 'rgb(120, 120, 120)';
       }
     },
     /**
@@ -983,7 +983,7 @@ export default {
                   datum.tag === 'polygon' &&
                 datum.attributes.stroke !== 'transparent'
                 ) {
-                  datum.attributes.stroke = 'rgb(167, 167, 167)';
+                  datum.attributes.stroke = 'rgb(120, 120, 120)';
                 }
               })
               .render(() => {
@@ -1256,7 +1256,7 @@ export default {
                 : 'shape="octagon";'
             }];`;
         } else if (node.type === 'name_scope') {
-          const fillColor = CommonProperty.graphColorArr[this.curColorIndex];
+          const fillColor = CommonProperty.graphColorArrPhg[this.curColorIndex];
           this.curColorIndex = this.curColorIndex % 4;
           this.curColorIndex++;
           tempStr +=
@@ -1537,16 +1537,25 @@ export default {
       let label = '';
       if (!edge.count || edge.count === 1) {
         if (edge.shape && edge.shape.length) {
-          const flag = edge.shape.some((i) => {
-            return typeof i !== 'number';
-          });
-          if (flag) {
+          if (edge.shape.length > 1) {
             label = `tuple(${edge.shape.length} items)`;
           } else {
-            label = `${edge.data_type} ${edge.shape.join('×')}`;
+            const shape = edge.shape[0];
+            if (shape && shape.length) {
+              const flag = shape.some((i) => {
+                return typeof i !== 'number';
+              });
+              if (flag) {
+                label = `tuple(${shape.length} items)`;
+              } else {
+                label = `${edge.data_type} ${shape.join('×')}`;
+              }
+            } else if (edge.data_type) {
+              label = `${edge.data_type}`;
+            }
           }
         } else if (edge.data_type) {
-          label = `${edge.data_type} Scalar`;
+          label = `${edge.data_type}`;
         }
       } else {
         label = `${edge.count}tensors`;
@@ -1678,7 +1687,7 @@ export default {
       let fillColor = type === 'aggregation_scope' ? '#fff2d4' : '#ffe4d6';
       const curColorIndex = (name.split('/').length - 1) % 4;
       if (type === 'name_scope') {
-        fillColor = CommonProperty.graphColorArr[curColorIndex];
+        fillColor = CommonProperty.graphColorArrPhg[curColorIndex];
       }
 
       const graphTemp = d3.select(idStr).node();
@@ -1909,8 +1918,8 @@ export default {
       marker
           .append('path')
           .attr('d', 'M1,1 L1,5 L6,3 z')
-          .attr('fill', 'rgb(167, 167, 167)')
-          .attr('stroke', 'rgb(167, 167, 167)');
+          .attr('fill', 'rgb(120, 120, 120)')
+          .attr('stroke', 'rgb(120, 120, 120)');
       g.append('path')
           .attr('stroke', 'rgb(167, 167, 167)')
           .attr('stroke-width', 1)
@@ -3439,7 +3448,7 @@ export default {
         stroke-width: 2px;
       }
       .node.cluster > rect:hover {
-        stroke: #f45c5e;
+        stroke: #8df1f2;
       }
       .selected {
         stroke: red !important;
@@ -3472,10 +3481,10 @@ export default {
       }
       .edge {
         path {
-          stroke: rgb(167, 167, 167);
+          stroke: rgb(120, 120, 120);
         }
         polygon {
-          fill: rgb(167, 167, 167);
+          fill: rgb(120, 120, 120);
         }
       }
       .edge.highlighted {
@@ -3493,26 +3502,26 @@ export default {
         }
       }
       .node.aggregation > polygon {
-        stroke: #fdca5a;
-        fill: #ffe8b5;
+        stroke: #e3aa00;
+        fill: #ffe794;
       }
       .node.cluster.aggregation > rect {
-        stroke: #fdca5a;
-        fill: #fff2d4;
+        stroke: #e3aa00;
+        fill: #ffe794;
         stroke-dasharray: 3, 3;
       }
       .node > polygon {
-        stroke: #f45c5e;
-        fill: #ffba99;
+        stroke: #00a5a7;
+        fill: rgb(141, 241, 242);
       }
       .node > ellipse {
-        stroke: #58a4e0;
-        fill: #d1ebff;
+        stroke: #4ea6e6;
+        fill: #b8e0ff;
       }
       .plain > path,
       .plain ellipse {
-        stroke: #56b077;
-        fill: #c1f5d5;
+        stroke: #e37d29;
+        fill: #ffd0a6;
         stroke-dasharray: 1.5, 1.5;
       }
       .edge-point ellipse {

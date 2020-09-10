@@ -51,11 +51,19 @@ limitations under the License.
           <div class="no-data-img"
                v-show="!curPageArr.length || wrongPlugin"
                key="no-chart-data">
-            <img :src="require('@/assets/images/nodata.png')"
+            <img :src="require('@/assets/images/scalar-guid.svg')"
                  alt="" />
             <p v-if="initOverKey.scalar"
                class='no-data-text'>
-              {{$t("public.noData")}}
+              {{$t("summaryManage.guidTipFirst")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.guidUrl')"
+                 target="_blank">{{$t("summaryManage.guidTipSecond")}}</a>
+              {{$t("summaryManage.guidTipThird")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.scalarUrl')"
+                 target="_blank">{{$t("summaryManage.scalarTipFirst")}}</a>
+              {{$t("summaryManage.scalarTipSecond")}}
             </p>
             <p v-else
                class='no-data-text'>
@@ -78,11 +86,60 @@ limitations under the License.
           <div class="no-data-img"
                key="no-chart-data"
                v-show="!histogramTag || wrongPlugin">
-            <img :src="require('@/assets/images/nodata.png')"
+            <img :src="require('@/assets/images/histogram-guid.svg')"
                  alt="" />
             <p v-if="initOverKey.histogram"
                class='no-data-text'>
-              {{$t("public.noData")}}
+              {{$t("summaryManage.guidTipFirst")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.guidUrl')"
+                 target="_blank">{{$t("summaryManage.guidTipSecond")}}</a>
+              {{$t("summaryManage.guidTipThird")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.histogramUrl')"
+                 target="_blank">{{$t("summaryManage.histogramGuidTipFirst")}}</a>
+              {{$t("summaryManage.histogramGuidTipSecond")}}
+            </p>
+            <p v-else
+               class='no-data-text'>
+              {{$t("public.dataLoading")}}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="cl-dashboard-con-up"
+           :class="!!tensorTag && !wrongPlugin ? '' : 'no-data-hover'"
+           @mousedown="viewMoreTensors($event)"
+           @mouseup="viewMoreTensors($event)"
+           @click="viewMoreTensors($event)">
+        <div class="cl-dashboard-title">{{$t("tensors.titleText")}}</div>
+        <div class="cl-module">
+          <div class="tensor-char-container"
+               v-show="!!tensorTag && !wrongPlugin">
+            <div id="tensor-chart-container">
+              <gridTableComponents ref="tensorChart"
+                                   :showOperate="false"
+                                   :fullData="tensorData"></gridTableComponents>
+            </div>
+            <div class="tag-text"
+                 :title="tensorTag">{{tensorTag}}</div>
+          </div>
+          <div class="no-data-img"
+               key="no-chart-data"
+               v-show="!tensorTag || wrongPlugin">
+            <img :src="require('@/assets/images/tensor-guid.svg')"
+                 alt="" />
+            <p v-if="initOverKey.tensor"
+               class='no-data-text'>
+              {{$t("summaryManage.guidTipFirst")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.guidUrl')"
+                 target="_blank">{{$t("summaryManage.guidTipSecond")}}</a>
+              {{$t("summaryManage.guidTipThird")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.tensorUrl')"
+                 target="_blank">{{$t("summaryManage.tensorTipFirst")}}</a>
+              {{$t("summaryManage.tensorTipSecond")}}
             </p>
             <p v-else
                class='no-data-text'>
@@ -103,11 +160,19 @@ limitations under the License.
                v-show="firstFloorNodes.length && !wrongPlugin"></div>
           <div class="no-data-img"
                v-show="!firstFloorNodes.length || wrongPlugin">
-            <img :src="require('@/assets/images/nodata.png')"
+            <img :src="require('@/assets/images/graph-guid.svg')"
                  alt="" />
             <p v-if="initOverKey.graph"
                class='no-data-text'>
-              {{$t("public.noData")}}
+              {{$t("summaryManage.guidTipFirst")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.guidUrl')"
+                 target="_blank">{{$t("summaryManage.guidTipSecond")}}</a>
+              {{$t("summaryManage.guidTipThird")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.graphUrl')"
+                 target="_blank">{{$t("summaryManage.graphTipFirst")}}</a>
+              {{$t("summaryManage.graphTipSecond")}}
             </p>
             <p v-else
                class='no-data-text'>
@@ -127,11 +192,19 @@ limitations under the License.
           <div class="no-data-img"
                key="no-chart-data"
                v-show="!showDatasetGraph || wrongPlugin">
-            <img :src="require('@/assets/images/nodata.png')"
+            <img :src="require('@/assets/images/data-process-guid.svg')"
                  alt="" />
             <p v-if="initOverKey.dataMap"
                class='no-data-text'>
-              {{$t("public.noData")}}
+              {{$t("summaryManage.guidTipFirst")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.guidUrl')"
+                 target="_blank">{{$t("summaryManage.guidTipSecond")}}</a>
+              {{$t("summaryManage.guidTipThird")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.dataProcessUrl')"
+                 target="_blank">{{$t("summaryManage.dataProcessTipFirst")}}</a>
+              {{$t("summaryManage.dataProcessTipSecond")}}
             </p>
             <p v-else
                class='no-data-text'>
@@ -159,48 +232,23 @@ limitations under the License.
             <img class="sample-img select-disable"
                  :src="curImageShowSample.curImgUrl"
                  v-show="originImageDataArr.length && !wrongPlugin">
-            <img :src="require('@/assets/images/nodata.png')"
+            <img :src="require('@/assets/images/image-guid.svg')"
                  alt=""
                  v-show="!originImageDataArr.length || wrongPlugin">
             <p class='no-data-text'
                v-show="(!originImageDataArr.length || wrongPlugin) && initOverKey.image">
-              {{$t("public.noData")}}
+              {{$t("summaryManage.guidTipFirst")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.guidUrl')"
+                 target="_blank">{{$t("summaryManage.guidTipSecond")}}</a>
+              {{$t("summaryManage.guidTipThird")}}
+              <a class="link-text"
+                 :href="$t('summaryManage.imageUrl')"
+                 target="_blank">{{$t("summaryManage.imageTipFirst")}}</a>
+              {{$t("summaryManage.imageTipSecond")}}
             </p>
             <p class='no-data-text'
                v-show="(!originImageDataArr.length || wrongPlugin) && !initOverKey.image">
-              {{$t("public.dataLoading")}}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="cl-dashboard-con-up"
-           :class="!!tensorTag && !wrongPlugin ? '' : 'no-data-hover'"
-           @mousedown="viewMoreTensors($event)"
-           @mouseup="viewMoreTensors($event)"
-           @click="viewMoreTensors($event)">
-        <div class="cl-dashboard-title">{{$t("tensors.titleText")}}</div>
-        <div class="cl-module">
-          <div class="tensor-char-container"
-               v-show="!!tensorTag && !wrongPlugin">
-            <div id="tensor-chart-container">
-              <gridTableComponents ref="tensorChart"
-                                   :showOperate="false"
-                                   :fullData="tensorData"></gridTableComponents>
-            </div>
-            <div class="tag-text"
-                 :title="tensorTag">{{tensorTag}}</div>
-          </div>
-          <div class="no-data-img"
-               key="no-chart-data"
-               v-show="!tensorTag || wrongPlugin">
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
-            <p v-if="initOverKey.tensor"
-               class='no-data-text'>
-              {{$t("public.noData")}}
-            </p>
-            <p v-else
-               class='no-data-text'>
               {{$t("public.dataLoading")}}
             </p>
           </div>
@@ -1868,7 +1916,7 @@ export default {
         datum.attributes.width = width;
         datum.attributes.height = height;
       } else if (isChild) {
-        datum.attributes.stroke = 'rgb(167, 167, 167)';
+        datum.attributes.stroke = 'rgb(120, 120, 120)';
       }
     },
 
@@ -2087,7 +2135,6 @@ export default {
     padding-right: 20px;
     height: 56px;
     vertical-align: middle;
-    background: #ffffff;
     .path-message {
       display: inline-block;
       line-height: 20px;
@@ -2108,10 +2155,10 @@ export default {
     }
   }
   .cl-dashboard-center {
-    width: calc(100% + 2px);
-    margin: -1px;
-    margin-top: 2px;
+    width: 100%;
+    margin: 0;
     height: calc(100% - 58px);
+    padding: 0px 10px 10px 10px;
   }
   .title-height {
     height: 30px;
@@ -2150,10 +2197,17 @@ export default {
     padding: 1.6vw;
     cursor: pointer;
     overflow: hidden;
-    height: calc(50% - 2px);
-    width: calc(33.3% - 2px);
-    margin: 1px;
+    height: calc(50% - 10px);
+    width: calc(33.3% - 10px);
+    margin: 5px;
     float: left;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    .link-text {
+      cursor: pointer;
+      font-size: 16px;
+      color: #00a5a7;
+    }
   }
 
   .cl-module {
@@ -2195,10 +2249,10 @@ export default {
       }
       .edge {
         path {
-          stroke: rgb(167, 167, 167);
+          stroke: rgb(120, 120, 120);
         }
         polygon {
-          fill: rgb(167, 167, 167);
+          fill: rgb(120, 120, 120);
         }
       }
 
@@ -2213,8 +2267,8 @@ export default {
       }
 
       .node > polygon {
-        stroke: #f45c5e;
-        fill: #ffba99;
+        stroke: #00a5a7;
+        fill: #8df1f2;
       }
       .node > ellipse {
         stroke: #58a4e0;
@@ -2247,13 +2301,13 @@ export default {
     background: #fff;
     text-align: center;
     height: 100%;
-    padding-top: 50px;
+    padding-top: 26px;
     img {
       max-width: 100%;
     }
     p {
       font-size: 16px;
-      padding-top: 10px;
+      padding-top: 31px;
     }
   }
   // Public Style End
@@ -2289,24 +2343,24 @@ export default {
   #dataMapGraph {
     .CreatDataset > polygon,
     .Operator > ellipse {
-      stroke: #58a4e0;
-      fill: #d1ebff;
+      stroke: #4ea6e6;
+      fill: #b8e0ff;
     }
     .cluster > polygon {
-      fill: #c1f5d5;
-      stroke: #56b077;
+      fill: #8df1f2;
+      stroke: #00a5a7;
     }
     .RepeatDataset > polygon {
       stroke: #fdca5a;
       fill: #fff2d4;
     }
     .ShuffleDataset > polygon {
-      stroke: #f79666;
-      fill: #fed78e;
+      stroke: #e37d29;
+      fill: #ffd0a6;
     }
     .BatchDataset > polygon {
-      stroke: #fa8e5a;
-      fill: #ffcfb8;
+      stroke: #de504e;
+      fill: #ffbcba;
     }
     .edge {
       path {

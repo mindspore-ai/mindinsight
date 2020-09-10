@@ -99,42 +99,42 @@ limitations under the License.
                      class="legend-content">
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/creat-dataset.png')"
+                      <img :src="require('@/assets/images/creat-dataset.svg')"
                            alt="" />
                     </div>
                     <div>Create</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/map-dataset.png')"
+                      <img :src="require('@/assets/images/map-dataset.svg')"
                            alt="" />
                     </div>
                     <div>Map</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/operator-node.png')"
+                      <img :src="require('@/assets/images/operator-node.svg')"
                            alt="" />
                     </div>
                     <div>Operator</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/shuffle-dataset.png')"
+                      <img :src="require('@/assets/images/shuffle-dataset.svg')"
                            alt="" />
                     </div>
                     <div>Shuffle</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/name-scope.png')"
+                      <img :src="require('@/assets/images/batch-img.svg')"
                            alt="" />
                     </div>
                     <div>Batch</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/repeat-dataset.png')"
+                      <img :src="require('@/assets/images/repeat-dataset.svg')"
                            alt="" />
                     </div>
                     <div>Repeat</div>
@@ -691,24 +691,24 @@ export default {
           }
           .CreatDataset > polygon,
           .Operator > ellipse {
-            stroke: #58a4e0;
-            fill: #d1ebff;
+            stroke: #4ea6e6;
+            fill: #b8e0ff;
           }
           .cluster > polygon {
-            fill: #c1f5d5;
-            stroke: #56b077;
+            fill: #8df1f2;
+            stroke: #00a5a7;
           }
           .RepeatDataset > polygon {
             stroke: #fdca5a;
             fill: #fff2d4;
           }
           .ShuffleDataset > polygon {
-            stroke: #f79666;
-            fill: #fed78e;
+            stroke: #e37d29;
+            fill: #ffd0a6;
           }
           .BatchDataset > polygon {
-            stroke: #fa8e5a;
-            fill: #ffcfb8;
+            stroke: #de504e;
+            fill: #ffbcba;
           }
           .edge {
             path {

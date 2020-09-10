@@ -38,6 +38,7 @@ export default {
     '#664EA3',
   ],
   commonColorArr: [
+    '#00A5A7',
     '#6C92FA',
     '#FA8E5A',
     '#A6DD82',
@@ -91,6 +92,7 @@ export default {
   ],
   // define graph color array
   graphColorArr: ['#FFF8F5', '#FDEEE7', '#FFE5D9', '#FFDAC9'],
+  graphColorArrPhg: ['#F5FBFB', '#EDF9F9', '#DEF5F5', '#C9F5F5'],
   // define fullscreen icon
   fullScreenIcon:
     'path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,' +
@@ -107,11 +109,11 @@ export default {
     'border: 1px solid #e6ebf5;}.selected {stroke: red !important;stroke-width: 2px;}' +
     '.node {cursor: pointer;}.node:hover > path,.node:hover > ellipse,' +
     '.node:hover > polygon,.node:hover > rect {stroke-width: 2px;}' +
-    '.edge path {stroke: rgb(167, 167, 167);}.edge polygon {fill: rgb(167, 167, 167);}' +
-    '.node.aggregation > polygon {stroke: #fdca5a;fill: #ffe8b5;}.node.cluster.aggregation > ' +
-    'rect {stroke: #fdca5a;fill: #fff2d4;stroke-dasharray: 3, 3;}' +
-    '.node.cluster > rect:hover {stroke: #f45c5e;}.node > polygon {stroke: #f45c5e;fill: #ffba99;}' +
-    '.node > ellipse {stroke: #58a4e0;fill: #d1ebff;}.node > path {stroke: #56b077;fill: #c1f5d5;' +
+    '.edge path {stroke: rgb(120, 120, 120);}.edge polygon {fill: rgb(120, 120, 120);}' +
+    '.node.aggregation > polygon {stroke: #e3aa00;fill: #ffe794;}.node.cluster.aggregation > ' +
+    'rect {stroke: #e3aa00;fill: #ffe794;stroke-dasharray: 3, 3;}' +
+    '.node.cluster > rect:hover {stroke: #8df1f2;}.node > polygon {stroke: #00a5a7;fill: #rgb(141,241,242);}' +
+    '.node > ellipse {stroke: #4ea6e6;fill: #b8e0ff;}.node > path {stroke: #e37d29;fill: #ffd0a6;' +
     'stroke-dasharray: 3, 3;}' +
     '.hide {visibility: hidden;}.show {visibility: visible;}' +
     '.edgePoint ellipse{stroke:#a7a7a7;' +
@@ -122,11 +124,11 @@ export default {
   dataMapDownloadStyle: '<style> #graph0 > polygon { fill: transparent; }' +
     '.node, .cluster { cursor: pointer; }' +
     '.selected { polygon, ellipse { stroke: red !important; stroke-width: 2px; } }' +
-    '.CreatDataset > polygon, .Operator > ellipse { stroke: #58a4e0; fill: #d1ebff; }' +
-    '.cluster > polygon { fill: #c1f5d5; stroke: #56b077; }' +
+    '.CreatDataset > polygon, .Operator > ellipse { stroke: #4ea6e6; fill: #b8e0ff; }' +
+    '.cluster > polygon { fill: #8df1f2; stroke: #00a5a7; }' +
     '.RepeatDataset > polygon { stroke: #fdca5a; fill: #fff2d4; }' +
-    '.ShuffleDataset > polygon { stroke: #f79666; fill: #fed78e; }' +
-    '.BatchDataset > polygon { stroke: #fa8e5a; fill: #ffcfb8; }' +
+    '.ShuffleDataset > polygon { stroke: #e37d29; fill: #ffd0a6; }' +
+    '.BatchDataset > polygon { stroke: #de504e; fill: #ffbcba; }' +
     '.edge { path { stroke: rgb(167, 167, 167); }' +
     'polygon { fill: rgb(167, 167, 167); stroke: rgb(167, 167, 167); } }</style>',
 };
