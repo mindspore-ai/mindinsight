@@ -43,14 +43,29 @@ axios.interceptors.request.use(
 // Add a response interceptor
 axios.interceptors.response.use(
     function(response) {
+      if (typeof response.data === 'string') {
+        response.data = JSON.parse(
+            response.data
+                .replace(/NaN/g, '"NaN"')
+                .replace(/(?<!-)Infinity/g, '"Infinity"')
+                .replace(/-Infinity/g, '"-Infinity"'),
+        );
+      }
       return response;
     },
     function(error) {
       const errorData = i18n.messages[i18n.locale].error;
+      const path = router.currentRoute.path;
 
+      if (path === '/debugger') {
+        return Promise.reject(error);
+      }
       // error returned by backend
-      if (error.response && error.response.data && error.response.data.error_code) {
-        const path = router.currentRoute.path;
+      if (
+        error.response &&
+      error.response.data &&
+      error.response.data.error_code
+      ) {
         const errorCode = error.response.data.error_code.toString();
 
         const ignoreCode = {
@@ -58,12 +73,16 @@ axios.interceptors.response.use(
           regardError: ['50545013', '50545014'],
         };
 
-        if (path.includes('-dashboard') || ignoreCode.regardError.includes(errorCode) ||
-          (ignoreCode.ignoreError.includes(errorCode) && error.config.headers.ignoreError)) {
+        if (
+          path.includes('-dashboard') ||
+        ignoreCode.regardError.includes(errorCode) ||
+        (ignoreCode.ignoreError.includes(errorCode) &&
+          error.config.headers.ignoreError)
+        ) {
           return Promise.reject(error);
         }
-        if (errorData[error.response.data.error_code]) {
-          Vue.prototype.$message.error(errorData[error.response.data.error_code]);
+        if (errorData[errorCode]) {
+          Vue.prototype.$message.error(errorData[errorCode]);
         }
         return Promise.reject(error);
       } else {
@@ -79,8 +98,10 @@ axios.interceptors.response.use(
         // route jump
           return false;
         } else {
-        // show network error
-          Vue.prototype.$message.error(i18n.messages[i18n.locale].public.netWorkError);
+          // show network error
+          Vue.prototype.$message.error(
+              i18n.messages[i18n.locale].public.netWorkError,
+          );
           return Promise.reject(error);
         }
       }

@@ -117,5 +117,9 @@ export default new Router({
         },
       ],
     },
+    {
+      path: '/debugger',
+      component: () => import('./views/debugger/debugger.vue'),
+    },
   ],
 });

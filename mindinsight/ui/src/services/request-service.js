@@ -296,4 +296,78 @@ export default {
       },
     });
   },
+  // debugger
+  pollData(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/debugger/poll_data',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  retrieve(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/debugger/retrieve',
+      data: params,
+    });
+  },
+  createWatchpoint(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/debugger/create_watchpoint',
+      data: params,
+    });
+  },
+  updateWatchpoint(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/debugger/update_watchpoint',
+      data: params,
+    });
+  },
+  deleteWatchpoint(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/debugger/delete_watchpoint',
+      data: params,
+    });
+  },
+  control(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/debugger/control',
+      data: params,
+    });
+  },
+  search(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/debugger/search',
+      params: params,
+    });
+  },
+  retrieveNodeByBfs(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/debugger/retrieve_node_by_bfs',
+      params: params,
+    });
+  },
+  tensorComparisons(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/debugger/tensor-comparisons',
+      params: params,
+    });
+  },
+  tensors(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/debugger/tensors',
+      params: params,
+    });
+  },
 };

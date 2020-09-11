@@ -29,7 +29,7 @@ limitations under the License.
                  class="el-menu-demo"
                  mode="horizontal">
           <el-menu-item index="/summary-manage">{{$t("summaryManage.summaryList")}}</el-menu-item>
-          <el-menu-item v-if="false" index="/debugger">Debugger</el-menu-item>
+          <el-menu-item index="/debugger" v-if="false">{{$t("debugger.debugger")}}</el-menu-item>
         </el-menu>
       </div>
     </div>
@@ -44,6 +44,8 @@ limitations under the License.
       <div class="reload-training">
         <!-- automatic refresh switch -->
         <el-switch v-model="isTimeReload"
+                   :title="this.$route.path.includes('/training-dashboard') ?
+                   $t('trainingDashboard.switchTitle') : ''"
                    :active-text="$t('header.timeReload')+$t('symbols.leftbracket')+
                   timeReloadValue+$t('header.timeSecond')+$t('symbols.rightbracket')"
                    @change="timeReload"></el-switch>

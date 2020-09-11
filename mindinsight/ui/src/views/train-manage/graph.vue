@@ -3574,5 +3574,6 @@ export default {
 #subgraphTemp {
   position: absolute;
   bottom: 0;
+  visibility: hidden;
 }
 </style>
