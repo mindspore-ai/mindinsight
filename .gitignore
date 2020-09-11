@@ -78,6 +78,10 @@ TESTS*.xml
 # vscode settings
 .vscode
 
+
+# OS files
+*.DS_Store
+
 package-lock.json
 
 build/*
