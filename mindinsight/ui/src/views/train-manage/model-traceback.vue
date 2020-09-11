@@ -757,7 +757,9 @@ export default {
       if (this.myBarChart) {
         this.myBarChart.clear();
       }
-      this.$refs.smallScatter.clearScatter();
+      if (this.$refs.smallScatter) {
+        this.$refs.smallScatter.clearScatter();
+      }
     },
     /**
      * Single selection drop-down box on the left
@@ -917,7 +919,7 @@ export default {
               disabled: item.unselected ? true : false,
               unselected: item.unselected ? item.unselected : undefined,
               message: item.reason_code
-                ? this.$t('modelTraceback.reason_code')[
+                ? this.$t('modelTraceback.reasonCode')[
                     item.reason_code.toString()
                 ]
                 : '',
@@ -932,7 +934,7 @@ export default {
               disabled: true,
               unselected: item.unselected ? item.unselected : undefined,
               message: item.reason_code
-                ? this.$t('modelTraceback.reason_code')[
+                ? this.$t('modelTraceback.reasonCode')[
                     item.reason_code.toString()
                 ]
                 : '',
@@ -944,7 +946,7 @@ export default {
               disabled: true,
               unselected: item.unselected ? item.unselected : undefined,
               message: item.reason_code
-                ? this.$t('modelTraceback.reason_code')[
+                ? this.$t('modelTraceback.reasonCode')[
                     item.reason_code.toString()
                 ]
                 : '',
@@ -989,7 +991,9 @@ export default {
     },
 
     setChartOfPie() {
-      this.myPieChart = Echarts.init(document.getElementById('pie-chart'));
+      if (!this.myPieChart) {
+        this.myPieChart = Echarts.init(document.getElementById('pie-chart'));
+      }
       const pieOption = {
         grid: {
           y2: 0,
@@ -1045,7 +1049,9 @@ export default {
       this.xTitle = this.barYAxisData[this.barYAxisData.length - 1];
       // Set up a scatter chart
       this.setChartOfScatters();
-      this.myBarChart = Echarts.init(document.getElementById('bar-chart'));
+      if (!this.myBarChart) {
+        this.myBarChart = Echarts.init(document.getElementById('bar-chart'));
+      }
       const barOption = {
         tooltip: {
           trigger: 'axis',
@@ -1073,6 +1079,14 @@ export default {
             axisTick: {show: false},
             data: this.barYAxisData,
             axisLabel: {
+              formatter: function(params) {
+                const maxLength = 13;
+                if (params.length > maxLength) {
+                  return params.substring(0, maxLength) + '...';
+                } else {
+                  return params;
+                }
+              },
               textStyle: {
                 color: (params) => {
                   const textColor =
@@ -1105,9 +1119,9 @@ export default {
           },
         ],
         grid: {
-          x: 90,
+          x: 82,
           y: 30,
-          x2: 40,
+          x2: 50,
           y2: 30,
         },
         dataZoom: [
@@ -1122,6 +1136,7 @@ export default {
         ],
       };
       this.barEnd = this.barYAxisData.length > 15 ? 40 : 0;
+      this.barStart = 100;
       this.$nextTick(() => {
         this.myBarChart.setOption(barOption);
       });
@@ -1198,7 +1213,7 @@ export default {
       for (let i = 0; i < xvalue.length; i++) {
         if ((xvalue[i] || xvalue[i] === 0) && (yvalue[i] || yvalue[i] === 0)) {
           arrayTemp.push([xvalue[i], yvalue[i]]);
-          const obj = {train_id: this.scatterData.metadata['train_id'][i]};
+          const obj = {train_id: this.scatterData.metadata['train_ids'][i]};
           obj[this.xTitle] = xvalue[i];
           obj[this.yTitle] = yvalue[i];
           this.tooltipsData.push(obj);
@@ -2811,6 +2826,8 @@ export default {
    * Destroy the page
    */
   destroyed() {
+    this.myPieChart = null;
+    this.myBarChart = null;
     this.sortChangeTimer = null;
     this.unhideRecordsTimer = null;
     if (this.checkedSummary.length) {
@@ -3100,7 +3117,7 @@ export default {
     padding: 10px 20px;
     .left-chart-container {
       height: 100%;
-      min-height: 800px;
+      min-height: 774px;
     }
     .left-title {
       height: 30px;
@@ -3143,10 +3160,10 @@ export default {
     }
     .pie-module-container {
       padding: 10px 0 0px;
-      height: 280px;
+      height: 250px;
       #pie-chart {
         width: 100%;
-        height: 240px;
+        height: 200px;
       }
     }
     .bar-module-container {
@@ -3176,7 +3193,7 @@ export default {
       }
     }
     .scatter-container {
-      height: calc(100% - 30px - 270px - 270px);
+      height: calc(100% - 20px - 250px - 270px);
       padding-top: 10px;
       .scatter-title-container {
         display: flex;
@@ -3273,16 +3290,17 @@ export default {
       }
     }
     #echart {
-      height: 33%;
+      height: 31%;
       padding: 0 12px;
     }
     .echart-no-data {
-      height: 33%;
+      height: 31%;
+      padding: 0 12px;
       width: 100%;
     }
     .table-container {
       background-color: white;
-      height: calc(67% - 88px);
+      height: calc(67% - 85px);
       padding: 6px 32px;
       position: relative;
       .disabled-checked {
