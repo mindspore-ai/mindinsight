@@ -97,22 +97,19 @@ limitations under the License.
       <div class="time-line">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.timeLine') }}</div>
-          <div class="view-detail"
-               v-if="false">
+          <div class="view-detail">
             <button @click="downloadPerfetto()"
                     :disabled="timeLine.waiting"
                     :class="{disabled:timeLine.waiting}">{{ $t('profiling.downloadTimeline') }}
             </button>
           </div>
-          <div class="tip-icon"
-               v-if="false">
+          <div class="tip-icon">
             <el-tooltip placement="bottom"
                         effect="light">
               <div slot="content"
                    class="tooltip-container">
                 <div class="font-size-style">{{$t("profiling.features")}}</div>
                 <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
-                <div>{{$t("profiling.timelineTips.content11")}}</div>
                 <div>{{$t("profiling.timelineTips.content12")}}</div>
                 <div>{{$t("profiling.timelineTips.content13")}}</div>
                 <br>
@@ -142,9 +139,8 @@ limitations under the License.
           </div>
         </div>
         <!-- Time line detail  -->
-        <!-- v-if="!timelineInfo.noData" -->
         <div class="timeline-info"
-             v-if="false">
+             v-if="!timelineInfo.noData">
           <div class="info-line">
             <span>{{$t('profiling.opTotalTime')}}</span><span>{{timelineInfo.totalTime}}ms</span>
           </div>
@@ -157,17 +153,8 @@ limitations under the License.
             <span>{{$t('profiling.opTimes')}}</span><span>{{timelineInfo.opTimes}}{{$t('profiling.times')}}</span>
           </div>
         </div>
-        <!-- coming soon -->
-        <div class="image-noData">
-          <div>
-            <img :src="require('@/assets/images/coming-soon.png')"
-                 alt="" />
-          </div>
-          <p> {{$t('public.stayTuned')}}</p>
-        </div>
-        <!--  v-if="timelineInfo.noData" -->
         <div class="image-noData"
-             v-if="false">
+             v-if="timelineInfo.noData">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
@@ -254,6 +241,7 @@ export default {
      * Initialization function
      */
     init() {
+      this.queryTimeline();
       this.initPieChart();
     },
     /**
@@ -401,7 +389,7 @@ export default {
       const params = {
         dir: this.relativePath,
         device_id: this.currentCard,
-        target_device: 'gpu',
+        device_type: 'gpu',
       };
       RequestService.queryTimlineInfo(params)
           .then((res) => {

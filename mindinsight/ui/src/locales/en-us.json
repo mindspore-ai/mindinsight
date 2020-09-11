@@ -105,7 +105,8 @@
     "imagesampleSwitch": "Switch Tag",
     "invalidId": "Invalid training job.",
     "summaryDirPath": "Summary path:",
-    "loadingTip": "Loading..."
+    "loadingTip": "Loading...",
+    "switchTitle": "The Computational Graph and Data Graph modules do not support auto refresh."
   },
   "scalar": {
     "titleText": "Scalar",

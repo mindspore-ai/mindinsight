@@ -144,7 +144,8 @@
     "imagesampleSwitch": "切换标签",
     "invalidId": "无效的训练作业",
     "summaryDirPath": "训练日志路径：",
-    "loadingTip": "加载中"
+    "loadingTip": "加载中",
+    "switchTitle": "计算图和数据图模块不支持自动刷新"
   },
   "scalar": {
     "titleText": "标量",
@@ -480,6 +481,7 @@
     "nextNodeTip": "当前已经是最后一个节点",
     "previousNodeTip": "当前已经是第一个节点",
     "serviceError": "连接后端服务失败，请检查后刷新页面",
+    "debuggerError": "连接后端服务失败，请检查服务是否正确启动",
     "tolerance": "容忍度",
     "curValue": "当前值",
     "compareToPre": "上一步对比",
@@ -495,7 +497,9 @@
     "tensorMsg": "张量信息",
     "dType": "类型",
     "shape": "形状",
-    "value": "值"
+    "value": "值",
+    "largeDataTip": "请求的数据过大，请使用其他维度重试。",
+    "continueTo": "运行到该节点"
   },
   "error": {
     "50540000": "系统错误",
@@ -522,6 +526,7 @@
     "50545012": "张量数据不存在，请刷新。",
     "50545013": "请求的数据过大，请使用其他维度重试。",
     "50545014": "查询的张量数据已被新数据替换，请刷新。",
+    "50548001": "昇腾AI处理器信息查询超时",
 
     "5054A080": "参数类型错误",
     "5054A081": "参数值错误",
