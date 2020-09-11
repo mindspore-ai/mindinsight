@@ -20,14 +20,18 @@ class DenseMapper(ONNXToMindSporeMapper):
     """Dense mapper."""
 
     @staticmethod
-    def _operation_name_in_ms():
+    def _operation_name_in_ms(*args, **kwargs):
         return "nn.Dense"
 
     @staticmethod
-    def _convert_params(params):
+    def _convert_params(params, weights):
+        has_bias = bool('bias' in weights)
+        weight = weights['weight'].numpy().transpose()
+        in_channels, out_channels = weight.shape
         return {
-            'in_channels': params['input_shape'][1],
-            'out_channels': params['output_shape'][1]
+            'in_channels': in_channels,
+            'out_channels': out_channels,
+            'has_bias': has_bias
         }
 
     @staticmethod

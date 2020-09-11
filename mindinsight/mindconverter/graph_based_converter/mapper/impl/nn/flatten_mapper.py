@@ -20,11 +20,11 @@ class FlattenMapper(ONNXToMindSporeMapper):
     """Flatten mapper."""
 
     @staticmethod
-    def _operation_name_in_ms():
+    def _operation_name_in_ms(*args, **kwargs):
         return "nn.Flatten"
 
     @staticmethod
-    def _convert_params(params):
+    def _convert_params(params, weights):
         if params:
             pass
         return dict()

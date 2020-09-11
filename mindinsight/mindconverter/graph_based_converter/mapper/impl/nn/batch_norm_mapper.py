@@ -20,13 +20,14 @@ class BatchNormMapper(ONNXToMindSporeMapper):
     """BatchNorm mapper."""
 
     @staticmethod
-    def _operation_name_in_ms():
-        return "nn.BatchNorm2d"
+    def _operation_name_in_ms(*args, **kwargs):
+        dim = len(kwargs['params']['output_shape']) - 2
+        return f"nn.BatchNorm{dim}d"
 
     @staticmethod
-    def _convert_params(params):
+    def _convert_params(params, weights):
         return {
-            'num_features': params['input_shape'][1],
+            'num_features': params['output_shape'][1],
             'eps': params['epsilon'],
             'momentum': params['momentum']
         }

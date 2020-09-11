@@ -16,20 +16,28 @@
 from ...base import ONNXToMindSporeMapper
 
 
-class GlobalAvgPoolMapper(ONNXToMindSporeMapper):
-    """AvgPool mapper."""
+class PoolMapper(ONNXToMindSporeMapper):
+    """MaxPool mapper."""
 
     @staticmethod
-    def _operation_name_in_ms():
-        return "nn.AvgPool2d"
+    def _operation_name_in_ms(*args, **kwargs):
+        if kwargs['op_name'] == 'onnx::AveragePool':
+            op_name = 'nn.AvgPool{}d'
+        else:
+            op_name = 'nn.MaxPool{}d'
+        dim = len(kwargs['params']['strides'])
+        return op_name.format(dim)
 
     @staticmethod
-    def _convert_params(params):
-        kernel_size_height = params['input_shape'][2] // params['output_shape'][2]
-        kernel_size_width = params['input_shape'][3] // params['output_shape'][3]
-        kernel_size = [kernel_size_height, kernel_size_width]
+    def _convert_params(params, weights):
+        if sum(params['pads']) == 0:
+            pad_mode = '\"valid\"'
+        else:
+            pad_mode = '\"same\"'
         return {
-            'kernel_size': kernel_size
+            'kernel_size': tuple(params['kernel_shape']),
+            'stride': tuple(params['strides']),
+            'pad_mode': pad_mode
         }
 
     @staticmethod
