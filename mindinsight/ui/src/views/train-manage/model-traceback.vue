@@ -80,16 +80,16 @@ limitations under the License.
                             @click="barAllSelect"
                             class="select-all-button"
                             :class="[selectedAllBar ? 'checked-color' : 'button-text',
-                            baseSelectOptions.length > barNameList.length ? 'btn-disabled' : '']"
-                            :disabled="baseSelectOptions.length > barNameList.length">
+                            (baseSelectOptions.length > barNameList.length)||!canSelected.length ? 'btn-disabled' : '']"
+                            :disabled="(baseSelectOptions.length > barNameList.length)||!canSelected.length">
                       {{$t('public.selectAll')}}
                     </button>
                     <button type="text"
                             @click="barDeselectAll"
                             class="deselect-all-button"
                             :class="[!selectedAllBar ? 'checked-color' : 'button-text',
-                            baseSelectOptions.length > barNameList.length ? 'btn-disabled' : '']"
-                            :disabled="baseSelectOptions.length > barNameList.length">
+                            (baseSelectOptions.length > barNameList.length)||!canSelected.length ? 'btn-disabled' : '']"
+                            :disabled="(baseSelectOptions.length > barNameList.length)||!canSelected.length">
                       {{$t('public.deselectAll')}}
                     </button>
                   </div>
@@ -100,8 +100,9 @@ limitations under the License.
                                :key="item.value"
                                :label="item.label"
                                :value="item.value"
-                               :disabled="item.disabled"
-                               :title="item.disabled ? $t('modelTraceback.mustExist') : ''">
+                               :disabled="item.disabled||item.unselected"
+                               :title="item.message ? item.message : item.disabled ?
+                               $t('modelTraceback.mustExist') : ''">
                     </el-option>
                   </el-option-group>
                 </el-select>
@@ -127,12 +128,15 @@ limitations under the License.
               <div class="right-view">
                 <div class="view-big"
                      @click="viewLargeImage"
+                     :disabled="viewBigBtnDisabled"
+                     :class="[viewBigBtnDisabled ? 'btn-disabled' : '']"
                      :title="$t('modelTraceback.viewBigImage')">
                 </div>
               </div>
             </div>
             <div class="left-scatters-container">
-              <Scatter :data="scatterChartData"
+              <Scatter ref="smallScatter"
+                       :data="scatterChartData"
                        :yTitle="yTitle"
                        :xTitle="xTitle"
                        :tooltipsData="tooltipsData"
@@ -176,16 +180,16 @@ limitations under the License.
                             @click="allSelect"
                             class="select-all-button"
                             :class="[selectCheckAll ? 'checked-color' : 'button-text',
-                          basearr.length > checkOptions.length ? 'btn-disabled' : '']"
-                            :disabled="basearr.length > checkOptions.length">
+                            basearr.length > checkOptions.length ? 'btn-disabled' : '']"
+                            :disabled="(basearr.length > checkOptions.length)||!canSelected.length">
                       {{$t('public.selectAll')}}
                     </button>
                     <button type="text"
                             @click="deselectAll"
                             class="deselect-all-button"
                             :class="[!selectCheckAll ? 'checked-color' : 'button-text',
-                               basearr.length > checkOptions.length ? 'btn-disabled' : '']"
-                            :disabled="basearr.length > checkOptions.length">
+                            basearr.length > checkOptions.length ? 'btn-disabled' : '']"
+                            :disabled="(basearr.length > checkOptions.length)||!canSelected.length">
                       {{$t('public.deselectAll')}}
                     </button>
                   </div>
@@ -516,6 +520,14 @@ export default {
       // Expand and collapse the left column
       collapse: false,
       showLeftChart: null,
+      // pie chart
+      myPieChart: undefined,
+      // bar chart
+      myBarChart: undefined,
+      // Check whether the big scatter icon can be clicked
+      viewBigBtnDisabled: false,
+      // Options that can be selected in the multiple selection drop-down box on the left
+      canSelected: [],
       targetValue: '',
       targetOptions: [],
       targetLabel: '',
@@ -681,43 +693,72 @@ export default {
 
     /**
      * Call the left side to optimize the target interface to obtain data
+     * @param {Object} params
      */
-    initLeftColumnData() {
-      this.getTargetsData();
+    initLeftColumnData(params) {
+      this.getTargetsData(params);
     },
-    getTargetsData() {
+    getTargetsData(params) {
       this.targetOptions = [];
-      RequestService.queryTargetsData().then((resp) => {
-        if (
-          resp &&
-          resp.data &&
-          resp.data.targets &&
-          resp.data.targets.length
-        ) {
-          this.targetData = JSON.parse(JSON.stringify(resp.data.targets));
-          this.scatterData = JSON.parse(JSON.stringify(resp.data));
-          let targetName = '';
-          for (let i = 0; i < this.targetData.length; i++) {
-            const obj = {};
-            targetName = this.targetData[i].name;
-            obj.value = targetName;
-            obj.label = targetName;
-            this.targetOptions.push(obj);
-          }
-          this.targetValue = this.targetData[0].name;
-          this.targetLabel = this.targetData[0].name;
-          this.setTargetsData(0);
-          this.$nextTick(() => {
-            setTimeout(() => {
-              this.setChartOfPie();
-              this.setChartOfBar();
-              this.setChartOfScatters();
-            }, this.otherDelayTime);
+      RequestService.queryTargetsData(params)
+          .then(
+              (resp) => {
+                if (
+                  resp &&
+              resp.data &&
+              resp.data.targets &&
+              resp.data.targets.length
+                ) {
+                  this.targetData = JSON.parse(JSON.stringify(resp.data.targets));
+                  this.scatterData = JSON.parse(JSON.stringify(resp.data));
+                  let targetName = '';
+                  for (let i = 0; i < this.targetData.length; i++) {
+                    const obj = {};
+                    targetName = this.targetData[i].name;
+                    obj.value = targetName;
+                    obj.label = targetName;
+                    this.targetOptions.push(obj);
+                  }
+                  this.targetValue = this.targetData[0].name;
+                  this.targetLabel = this.targetData[0].name;
+                  this.setTargetsData(0);
+                  this.$nextTick(() => {
+                    setTimeout(() => {
+                      this.setChartOfPie();
+                      this.setChartOfBar();
+                    }, this.otherDelayTime);
+                  });
+                } else {
+                  this.leftChartNoData();
+                }
+              },
+              (error) => {
+                this.leftChartNoData();
+              },
+          )
+          .catch(() => {
+            this.leftChartNoData();
           });
-        }
-      });
     },
-
+    /**
+     * No data on echart on the left
+     */
+    leftChartNoData() {
+      this.viewBigBtnDisabled = true;
+      this.targetValue = '';
+      this.targetOptions = [];
+      this.selectedBarArray = [];
+      this.barNameList = [];
+      this.baseSelectOptions = [];
+      // Clear pie charts, bar chart and scatter charts
+      if (this.myPieChart) {
+        this.myPieChart.clear();
+      }
+      if (this.myBarChart) {
+        this.myBarChart.clear();
+      }
+      this.$refs.smallScatter.clearScatter();
+    },
     /**
      * Single selection drop-down box on the left
      */
@@ -734,7 +775,6 @@ export default {
       this.$nextTick(() => {
         this.setChartOfPie();
         this.setChartOfBar();
-        this.setChartOfScatters();
       });
     },
     /**
@@ -763,7 +803,9 @@ export default {
       this.selectedBarArray = [];
       this.barNameList.forEach((item) => {
         item.options.forEach((option) => {
-          this.selectedBarArray.push(option.label);
+          if (!option.unselected) {
+            this.selectedBarArray.push(option.label);
+          }
         });
       });
       this.selectedAllBar = !this.selectedAllBar;
@@ -775,7 +817,7 @@ export default {
       this.selectedBarArray = [];
       this.barNameList.forEach((item) => {
         item.options.forEach((option) => {
-          if (option.disabled) {
+          if (option.disabled && !option.unselected) {
             this.selectedBarArray.push(option.label);
           }
         });
@@ -785,11 +827,13 @@ export default {
     },
 
     viewLargeImage() {
-      this.echartDialogVisible = true;
-      this.$nextTick(() => {
-        this.largeScatterChartData = this.scatterChartData;
-        this.$refs.dialogScatter.resizeCallback();
-      });
+      if (this.scatterChartData.length && !this.viewBigBtnDisabled) {
+        this.echartDialogVisible = true;
+        this.$nextTick(() => {
+          this.largeScatterChartData = this.scatterChartData;
+          this.$refs.dialogScatter.resizeCallback();
+        });
+      }
     },
 
     sortBy(field) {
@@ -825,31 +869,87 @@ export default {
         objData.name = numSumString;
         this.pieSeriesData.push(objData);
       }
-      this.setBarData(index);
+      this.setBarSelectOptionData(index);
     },
 
-    //
-    setBarData(index) {
-      const barHyper = this.targetData[index].hyper_parameters;
+    setBarSelectOptionData(index) {
+      const barHyper = [];
+      const tempData = this.targetData[index].hyper_parameters;
+      const unrecognizedParams = this.scatterData.metadata.unrecognized_params;
+      let arrayTotal = [];
+      if (unrecognizedParams && unrecognizedParams.length) {
+        arrayTotal = unrecognizedParams.concat(tempData);
+      } else {
+        arrayTotal = tempData;
+      }
+      tempData.forEach((item) => {
+        if (!item.unselected) {
+          barHyper.push(item);
+        }
+      });
+
       barHyper.sort(this.sortBy('importance'));
       this.selectedBarArray = [];
       const mustSelectOptions = [];
       const otherListOptions = [];
       const selectBar = [];
-      barHyper.forEach((item) => {
+      // Options that can be selected
+      this.canSelected = [];
+      arrayTotal.forEach((item) => {
         if (item.name.startsWith('[U]')) {
-          otherListOptions.push({
-            value: item.name,
-            label: item.name,
-            disabled: false,
-          });
+          if (!item.unselected) {
+            this.canSelected.push(item);
+            otherListOptions.unshift({
+              value: item.name,
+              label: item.name,
+              disabled: item.unselected ? true : false,
+              unselected: item.unselected ? item.unselected : undefined,
+              message: item.reason_code
+                ? this.$t('modelTraceback.reasonCode')[
+                    item.reason_code.toString()
+                ]
+                : '',
+            });
+          } else {
+            otherListOptions.push({
+              value: item.name,
+              label: item.name,
+              disabled: item.unselected ? true : false,
+              unselected: item.unselected ? item.unselected : undefined,
+              message: item.reason_code
+                ? this.$t('modelTraceback.reason_code')[
+                    item.reason_code.toString()
+                ]
+                : '',
+            });
+          }
         } else {
-          mustSelectOptions.push({
-            value: item.name,
-            label: item.name,
-            disabled: true,
-          });
-          selectBar.push(item.name);
+          if (!item.unselected) {
+            selectBar.push(item.name);
+            mustSelectOptions.unshift({
+              value: item.name,
+              label: item.name,
+              disabled: true,
+              unselected: item.unselected ? item.unselected : undefined,
+              message: item.reason_code
+                ? this.$t('modelTraceback.reason_code')[
+                    item.reason_code.toString()
+                ]
+                : '',
+            });
+          } else {
+            mustSelectOptions.push({
+              value: item.name,
+              label: item.name,
+              disabled: true,
+              unselected: item.unselected ? item.unselected : undefined,
+              message: item.reason_code
+                ? this.$t('modelTraceback.reason_code')[
+                    item.reason_code.toString()
+                ]
+                : '',
+            });
+          }
         }
       });
       this.selectedBarArray = selectBar;
@@ -889,7 +989,7 @@ export default {
     },
 
     setChartOfPie() {
-      const myPieChart = Echarts.init(document.getElementById('pie-chart'));
+      this.myPieChart = Echarts.init(document.getElementById('pie-chart'));
       const pieOption = {
         grid: {
           y2: 0,
@@ -915,7 +1015,7 @@ export default {
             type: 'pie',
             radius: '55%',
             center: ['50%', '60%'],
-            label: {formatter: '{c}({d}%)'},
+            label: {alignTo: 'labelLine', formatter: '{c}({d}%)'},
             data: this.pieSeriesData,
             emphasis: {
               itemStyle: {
@@ -928,13 +1028,24 @@ export default {
         ],
       };
       this.$nextTick(() => {
-        myPieChart.setOption(pieOption);
+        this.myPieChart.setOption(pieOption);
       });
     },
 
     setChartOfBar() {
+      if (!this.barSeriesData.length) {
+        this.viewBigBtnDisabled = true;
+      }
+      if (this.barSeriesData.length === 0 && this.myBarChart) {
+        this.myBarChart.clear();
+        this.$refs.smallScatter.clearScatter();
+        return;
+      }
+      this.viewBigBtnDisabled = false;
       this.xTitle = this.barYAxisData[this.barYAxisData.length - 1];
-      const myBarChart = Echarts.init(document.getElementById('bar-chart'));
+      // Set up a scatter chart
+      this.setChartOfScatters();
+      this.myBarChart = Echarts.init(document.getElementById('bar-chart'));
       const barOption = {
         tooltip: {
           trigger: 'axis',
@@ -1012,13 +1123,13 @@ export default {
       };
       this.barEnd = this.barYAxisData.length > 15 ? 40 : 0;
       this.$nextTick(() => {
-        myBarChart.setOption(barOption);
+        this.myBarChart.setOption(barOption);
       });
-      myBarChart.on('datazoom', (params) => {
+      this.myBarChart.on('datazoom', (params) => {
         this.barStart = params.start;
         this.barEnd = params.end;
       });
-      myBarChart.getZr().on('click', (params) => {
+      this.myBarChart.getZr().on('click', (params) => {
         this.xTitle = this.tooltipsBarData[0].name;
         barOption.dataZoom = [
           {
@@ -1057,7 +1168,7 @@ export default {
           },
         ];
         this.$nextTick(() => {
-          myBarChart.setOption(barOption);
+          this.myBarChart.setOption(barOption);
         });
         // Draw a scatter chart after click
         this.setChartOfScatters();
@@ -1072,7 +1183,7 @@ export default {
       let xvalue = [];
       let yvalue = [];
       this.tooltipsData = [];
-      const hyper = this.scatterData.metadata.hyper_parameters;
+      const hyper = this.scatterData.metadata.possible_hyper_parameters;
       for (let m = 0; m < hyper.length; m++) {
         if (hyper[m].name === this.xTitle) {
           xvalue = hyper[m].data;
@@ -1226,8 +1337,10 @@ export default {
       } else {
         params.body = Object.assign(params.body, this.tableFilter);
       }
-      // 1.调取左边栏数据接口请求
-      this.initLeftColumnData();
+      // 1.Retrieve the data interface request in the left column (non-table page turning)
+      if (allData) {
+        this.initLeftColumnData(params);
+      }
       RequestService.queryLineagesData(params)
           .then(
               (res) => {
@@ -1851,8 +1964,8 @@ export default {
               this.tableFilter,
               this.sortInfo,
           );
-          // 调取target接口，传入框选参数
-          this.initLeftColumnData();
+          // Call the target interface, and pass in the frame selection parameters
+          this.initLeftColumnData(filterParams);
           RequestService.queryLineagesData(filterParams)
               .then(
                   (res) => {
@@ -2401,10 +2514,14 @@ export default {
 
     selectedSetBarData() {
       // Set the y-axis coordinate
-      let barHyper = [];
+      const barHyper = [];
       for (let i = 0; i < this.targetData.length; i++) {
         if (this.targetData[i].name === this.yTitle) {
-          barHyper = this.targetData[i].hyper_parameters;
+          this.targetData[i].hyper_parameters.forEach((item) => {
+            if (!item.unselected) {
+              barHyper.push(item);
+            }
+          });
         }
       }
       barHyper.sort(this.sortBy('importance'));
@@ -2428,7 +2545,6 @@ export default {
         barHyper.length > this.barYAxisData.length ? false : true;
       this.$nextTick(() => {
         this.setChartOfBar();
-        this.setChartOfScatters();
       });
     },
 
@@ -2721,6 +2837,13 @@ export default {
   height: 100%;
   background-color: #fff;
 }
+// Set the maximum width of the drop-down box
+.el-select-dropdown {
+  max-width: 300px;
+}
+.el-select__tags {
+  overflow: hidden;
+}
 .traceback-tab {
   height: 51px;
   line-height: 56px;
@@ -2997,7 +3120,6 @@ export default {
       flex: 1;
       font-weight: bold;
       margin-bottom: 4px;
-      margin-right: 80px;
       .el-icon-refresh-right {
         font-size: 20px;
         vertical-align: middle;
@@ -3036,7 +3158,7 @@ export default {
         display: flex;
         flex: 1.5;
         .el-select {
-          width: 240px;
+          max-width: 240px;
         }
       }
       .bar-title-container {

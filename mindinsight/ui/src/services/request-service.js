@@ -42,10 +42,11 @@ export default {
     });
   },
 
-  queryTargetsData() {
+  queryTargetsData(params) {
     return axios({
-      method: 'get',
+      method: 'post',
       url: `v1/mindinsight/optimizer/targets`,
+      data: params.body,
     });
   },
 
