@@ -80,6 +80,25 @@ def to_int(param, param_name):
     return param
 
 
+def to_float(param, param_name):
+    """
+    Transfer param to float type.
+
+    Args:
+        param (Any): A param transformed.
+        param_name (str): Param name.
+
+    Returns:
+        float, value after transformed.
+
+    """
+    try:
+        param = float(param)
+    except ValueError:
+        raise exceptions.ParamTypeError(param_name, 'Float')
+    return param
+
+
 def str_to_bool(param, param_name):
     """
     Check param and transform it to bool.

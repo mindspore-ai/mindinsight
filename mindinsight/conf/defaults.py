@@ -27,6 +27,12 @@ PORT = 8080
 URL_PATH_PREFIX = ''
 
 ####################################
+# Debugger default settings.
+####################################
+DEBUGGER_PORT = '50051'
+ENABLE_DEBUGGER = False
+
+####################################
 # Datavisual default settings.
 ####################################
 RELOAD_INTERVAL = 3  # Seconds

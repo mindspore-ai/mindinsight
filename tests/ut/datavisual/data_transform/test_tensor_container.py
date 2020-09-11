@@ -14,9 +14,11 @@
 # ============================================================================
 """Test tensor container."""
 import unittest.mock as mock
+
 import numpy as np
 
 from mindinsight.datavisual.data_transform import tensor_container as tensor
+from mindinsight.utils.tensor import TensorUtils
 
 
 class TestTensorContainer:
@@ -34,8 +36,9 @@ class TestTensorContainer:
 
     def test_get_statistics_from_tensor(self):
         """Tests get statistics from tensor."""
-        ndarray = np.array([1, 2, 3, 4, 5, float('-INF'), float('INF'), float('NAN')]).reshape([2, 2, 2])
-        statistics = tensor.get_statistics_from_tensor(ndarray)
+        ndarray = np.array([1, 2, 3, 4, 5, float('-INF'), float('INF'), float('NAN')]).reshape(
+            [2, 2, 2])
+        statistics = TensorUtils.get_statistics_from_tensor(ndarray)
         assert (statistics.max, statistics.min, statistics.avg, statistics.count,
                 statistics.nan_count, statistics.neg_inf_count, statistics.pos_inf_count) == \
                (5, 1, 3, 8,
@@ -43,8 +46,9 @@ class TestTensorContainer:
 
     def test_calc_original_buckets(self):
         """Tests calculate original buckets."""
-        ndarray = np.array([1, 2, 3, 4, 5, float('-INF'), float('INF'), float('NAN')]).reshape([2, 2, 2])
-        statistics = tensor.get_statistics_from_tensor(ndarray)
+        ndarray = np.array([1, 2, 3, 4, 5, float('-INF'), float('INF'), float('NAN')]).reshape(
+            [2, 2, 2])
+        statistics = TensorUtils.get_statistics_from_tensor(ndarray)
         buckets = tensor.calc_original_buckets(ndarray, statistics)
 
         assert (buckets[0].left, buckets[0].width, buckets[0].count) == (1, 2, 2)

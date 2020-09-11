@@ -1,0 +1,113 @@
+/**
+ * Copyright 2020 Huawei Technologies Co., Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package debugger;
+
+import "mindinsight/debugger/proto/ms_graph.proto";
+
+
+service EventListener {
+  rpc WaitCMD (Metadata) returns (EventReply) {};
+  rpc SendMetadata (Metadata) returns (EventReply) {};
+  rpc SendGraph (stream Chunk) returns (EventReply) {};
+  rpc SendTensors (stream TensorProto) returns (EventReply) {};
+  rpc SendWatchpointHits (stream WatchpointHit) returns (EventReply) {};
+}
+
+message Metadata {
+  string device_name = 1;
+  int32 cur_step = 2;
+  // define the backend is 'GPU' or 'Ascend'
+  string backend = 3;
+  // the full name of current node
+  string cur_node = 4;
+  // check if training is done.
+  bool training_done = 5;
+}
+
+message Chunk {
+    bytes buffer = 1;
+}
+message EventReply {
+  enum Status {
+    OK = 0;
+    FAILED = 1;
+    PENDING = 2;
+  }
+
+  Status status = 1;
+
+  oneof cmd {
+    bool exit = 2;
+    RunCMD run_cmd = 3;
+    SetCMD set_cmd = 4;
+    ViewCMD view_cmd = 5;
+  }
+}
+
+message RunCMD {
+    // running level. 'step' or 'node'
+    string run_level = 1;
+
+    oneof cmd {
+        int32 run_steps = 2;
+
+        // the full name of next node
+        string node_name = 3;
+    }
+}
+
+message SetCMD {
+  repeated WatchNode watch_nodes = 1;
+  WatchCondition watch_condition = 2;
+  bool delete = 3;
+  int32 id = 4;
+}
+
+message ViewCMD {
+  repeated TensorProto tensors = 1;
+}
+
+message WatchCondition {
+  enum Condition {
+    nan = 0;
+    inf = 1;
+    overflow = 2;
+    max_gt = 3;
+    max_lt = 4;
+    min_gt = 5;
+    min_lt = 6;
+    max_min_gt = 7;
+    max_min_lt = 8;
+    mean_gt = 9;
+    mean_lt = 10;
+  }
+  Condition condition = 1;
+  float value = 2;  // for between condition, there will be two values
+}
+
+message WatchNode {
+  string node_name = 1;
+  string node_type = 2;
+}
+
+message WatchpointHit {
+  TensorProto tensor = 1;
+  WatchCondition watch_condition = 2;
+  int32 id = 3;
+}

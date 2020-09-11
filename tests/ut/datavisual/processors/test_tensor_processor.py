@@ -29,10 +29,8 @@ from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.common.exceptions import TensorNotExistError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.tensor_container import calc_original_buckets
-from mindinsight.datavisual.data_transform.tensor_container import get_statistics_from_tensor
 from mindinsight.datavisual.processors.tensor_processor import TensorProcessor
-from mindinsight.datavisual.processors.tensor_processor import get_specific_dims_data
-from mindinsight.datavisual.processors.tensor_processor import get_statistics_dict
+from mindinsight.utils.tensor import TensorUtils
 from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import ParamMissError
@@ -187,7 +185,7 @@ class TestTensorProcessor:
             dims = expected_values.get('value').get("dims")
             expected_data = np.array(expected_values.get('value').get("float_data")).reshape(dims)
             recv_tensor = np.array(recv_values.get('value').get("data"))
-            expected_tensor = get_specific_dims_data(expected_data, [0, 0, None, None], dims)
+            expected_tensor = TensorUtils.get_specific_dims_data(expected_data, [0, 0, None, None], dims)
             assert np.sum(np.isclose(recv_tensor, expected_tensor, rtol=1e-6) == 0) == 0
 
     @pytest.mark.usefixtures('load_tensor_record')
@@ -204,7 +202,8 @@ class TestTensorProcessor:
             assert recv_values.get('wall_time') == expected_values.get('wall_time')
             assert recv_values.get('step') == expected_values.get('step')
             expected_data = expected_values.get('value').get("float_data")
-            expected_statistic = get_statistics_dict(get_statistics_from_tensor(expected_data))
+            expected_statistic_instance = TensorUtils.get_statistics_from_tensor(expected_data)
+            expected_statistic = TensorUtils.get_statistics_dict(expected_statistic_instance)
             recv_statistic = recv_values.get('value').get("statistics")
             assert recv_statistic.get("max") - expected_statistic.get("max") < 1e-6
             assert recv_statistic.get("min") - expected_statistic.get("min") < 1e-6
@@ -225,7 +224,7 @@ class TestTensorProcessor:
             assert recv_values.get('wall_time') == expected_values.get('wall_time')
             assert recv_values.get('step') == expected_values.get('step')
             expected_data = expected_values.get('value').get("float_data")
-            expected_statistic = get_statistics_from_tensor(expected_data)
+            expected_statistic = TensorUtils.get_statistics_from_tensor(expected_data)
             expected_buckets = calc_original_buckets(expected_data, expected_statistic)
             recv_buckets = recv_values.get('value').get("histogram_buckets")
 
