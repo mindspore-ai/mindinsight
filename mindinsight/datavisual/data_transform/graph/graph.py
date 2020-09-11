@@ -52,6 +52,9 @@ class Graph:
         self._const_node_temp_cache = {}
         self._parameter_node_temp_cache = {}
 
+        self._leaf_nodes = {}
+        self._full_name_map_name = {}
+
     def build_graph(self, proto_data):
         """This method is used to build the graph."""
         logger.info("Start to build graph")
@@ -68,12 +71,40 @@ class Graph:
         # Since const nodes are not aggregated, adding them at the end can save a lot of computation.
         self._add_variable_nodes(NodeTypeEnum.CONST.value)
         self._calc_subnode_count()
+        self._leaf_nodes = self._get_leaf_nodes()
+        self._full_name_map_name = self._get_leaf_node_full_name_map()
 
         precision = 6
         time_consuming = round(time.time() - start_time, precision)
         logger.info("Build graph end, all node count: %s, const count: %s, parameter count: %s, time-consuming: %s s.",
                     self.normal_node_count, len(self._const_node_temp_cache),
                     len(self._parameter_node_temp_cache), time_consuming)
+
+    def _get_leaf_nodes(self):
+        """
+        Get all leaf nodes, including normal leaf nodes, const nodes and param nodes.
+        """
+        leaf_nodes = {}
+        for node_name, node in self._normal_node_map.items():
+            # update full name
+            if not node.full_name:
+                node.full_name = node.name
+            if not node.type or node.type.endswith('_scope'):
+                continue
+            leaf_nodes[node_name] = node
+
+        return leaf_nodes
+
+    def _get_leaf_node_full_name_map(self):
+        """Get node by debugger name."""
+        full_name_map = {}
+        for name, node in self._leaf_nodes.items():
+            if not node.full_name:
+                logger.warning("Node %s does not have full name.", name)
+                continue
+            full_name_map[node.full_name] = name
+
+        return full_name_map
 
     def exist_node(self, name):
         """

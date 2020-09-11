@@ -64,6 +64,7 @@ class MSGraph(Graph):
             else:
                 node_name = node_proto.full_name
             node = Node(name=node_name, node_id=node_proto.name)
+            node.full_name = node_proto.full_name
             node.type = node_proto.op_type
 
             self._parse_attributes(node_proto.attribute, node)
@@ -72,7 +73,8 @@ class MSGraph(Graph):
             node.output_i = node_proto.output_i
             node.scope = node_proto.scope
             node.output_shape = self._get_shape_by_parse_type_proto(node_proto.output_type)
-            node.output_data_type = self._get_data_type_by_parse_type_proto(node_proto.output_type)
+            node.output_nums = len(node.output_shape)
+            node.output_data_type = self._get_data_type_by_parse_type_proto(node_proto.output_type, node)
 
             self._cache_node(node)
 
@@ -90,10 +92,11 @@ class MSGraph(Graph):
                 continue
             node = Node(name=parameter.name, node_id=parameter.name)
             node.type = NodeTypeEnum.PARAMETER.value
-            node.output_data_type = self._get_data_type_by_parse_type_proto(parameter.type)
             node.output_shape = self._get_shape_by_parse_type_proto(parameter.type)
+            node.output_nums = len(node.output_shape)
+            node.output_data_type = self._get_data_type_by_parse_type_proto(parameter.type, node)
             attr = dict(
-                type=self._get_data_type_by_parse_type_proto(parameter.type),
+                type=self._get_data_type_by_parse_type_proto(parameter.type, node),
                 shape=str(self._get_shape_by_parse_type_proto(parameter.type))
             )
             node.add_attr(attr)
@@ -117,11 +120,18 @@ class MSGraph(Graph):
             node = Node(name=const.key, node_id=const.key)
             node.type = NodeTypeEnum.CONST.value
             node.add_attr({const.key: str(const.value)})
+
             if const.value.dtype == DataType.DT_TENSOR:
-                shape = []
-                for dim in const.value.tensor_val.dims:
-                    shape.append(dim)
-                node.output_shape = shape
+                shape = list(const.value.tensor_val.dims)
+                node.output_shape.append(shape)
+                if const.value.tensor_val.HasField('data_type'):
+                    node.elem_types.append(DataType.Name(const.value.tensor_val.data_type))
+            else:
+                node.elem_types.append(DataType.Name(const.value.dtype))
+                # dim is zero
+                node.output_shape.append([])
+
+            node.output_nums = len(node.output_shape)
 
             self._cache_node(node)
 
@@ -136,17 +146,24 @@ class MSGraph(Graph):
             list, a list of shape.
         """
         shapes = []
+        if type_proto.HasField('data_type'):
+            if type_proto.data_type != DataType.DT_TENSOR and \
+                    type_proto.data_type != DataType.DT_TUPLE:
+                # Append an empty list as a placeholder
+                # for the convenience of output number calculation.
+                shapes.append([])
+                return shapes
         if type_proto.HasField('tensor_type'):
             tensor_type = type_proto.tensor_type
             tensor_shape_proto = tensor_type.shape
-            for dim in tensor_shape_proto.dim:
-                shapes.append(dim.size)
+            shape = [dim.size for dim in tensor_shape_proto.dim]
+            shapes.append(shape)
         if type_proto.HasField('sequence_type'):
             for elem_type in type_proto.sequence_type.elem_types:
-                shapes.append(self._get_shape_by_parse_type_proto(elem_type))
+                shapes.extend(self._get_shape_by_parse_type_proto(elem_type))
         return shapes
 
-    def _get_data_type_by_parse_type_proto(self, type_proto):
+    def _get_data_type_by_parse_type_proto(self, type_proto, node):
         """
         Get data type by parse type proto object.
 
@@ -165,13 +182,16 @@ class MSGraph(Graph):
             tensor_type_proto = type_proto.tensor_type
             value = type_proto.tensor_type.elem_type
             elem_type_name = self._get_data_type_name_by_value(tensor_type_proto, value, field_name='elem_type')
+            node.elem_types.append(elem_type_name)
             return f'{data_type_name}[{elem_type_name}]'
 
         if type_proto.data_type == DataType.DT_TUPLE:
             data_types = []
             for elem_type in type_proto.sequence_type.elem_types:
-                data_types.append(self._get_data_type_by_parse_type_proto(elem_type))
+                data_types.append(self._get_data_type_by_parse_type_proto(elem_type, node))
             return f'{data_type_name}{str(data_types)}'
+
+        node.elem_types.append(data_type_name)
 
         return data_type_name
 
