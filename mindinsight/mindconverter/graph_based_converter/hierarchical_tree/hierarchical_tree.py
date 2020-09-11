@@ -27,6 +27,7 @@ from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
 from ..constant import SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVEL_INDENT, CodeFormatConfig
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT
 from ..constant import NodeType
+from ..report_generator import ReportGenerator
 
 GLOBAL_VAR_NAME_MGR = GlobalVarNameMgr()
 
@@ -316,7 +317,10 @@ class HierarchicalTree(Tree):
         formatted_code, _ = FormatCode("".join(code_blocks),
                                        style_config=CodeFormatConfig.PEP8.value)
 
-        return {"model": (formatted_code, "No report content.")}
+        report_generator = ReportGenerator()
+        report = report_generator.gen_report(formatted_code)
+
+        return {"model": (formatted_code, report)}
 
     def _fetch_func_and_type(self, node) -> Union[object, str]:
         """
