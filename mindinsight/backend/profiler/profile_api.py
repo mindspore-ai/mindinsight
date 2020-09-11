@@ -39,6 +39,7 @@ from mindinsight.profiler.common.validator.validate_path import \
     validate_and_normalize_path
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_profiler_path
 from mindinsight.profiler.proposer.compose_proposer import ComposeProposal
+from mindinsight.profiler.common.log import logger
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.backend.application import CustomResponse
 
@@ -433,10 +434,14 @@ def get_timeline_summary():
         raise ProfilerDirNotFoundException(msg=summary_dir)
     device_id = request.args.get("device_id", default='0')
     _ = to_int(device_id, 'device_id')
+    device_type = request.args.get("device_type", default='ascend')
+    if device_type not in ['gpu', 'ascend']:
+        logger.info("Invalid device_type, device_type should be gpu or ascend.")
+        raise ParamValueError("Invalid device_type.")
 
     analyser = AnalyserFactory.instance().get_analyser(
         'timeline', profiler_dir, device_id)
-    summary = analyser.get_timeline_summary()
+    summary = analyser.get_timeline_summary(device_type)
 
     return summary
 
@@ -458,10 +463,14 @@ def get_timeline_detail():
         raise ProfilerDirNotFoundException(msg=summary_dir)
     device_id = request.args.get("device_id", default='0')
     _ = to_int(device_id, 'device_id')
+    device_type = request.args.get("device_type", default='ascend')
+    if device_type not in ['gpu', 'ascend']:
+        logger.info("Invalid device_type, device_type should be gpu or ascend.")
+        raise ParamValueError("Invalid device_type.")
 
     analyser = AnalyserFactory.instance().get_analyser(
         'timeline', profiler_dir, device_id)
-    timeline = analyser.get_display_timeline()
+    timeline = analyser.get_display_timeline(device_type)
 
     return jsonify(timeline)
 

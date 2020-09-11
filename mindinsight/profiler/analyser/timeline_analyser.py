@@ -21,7 +21,7 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFou
     ProfilerIOException
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
-
+from mindinsight.utils.exceptions import ParamValueError
 
 SIZE_LIMIT = 20 * 1024 * 1024  # 20MB
 
@@ -75,8 +75,10 @@ class TimelineAnalyser(BaseAnalyser):
     __col_names__ = ['op_name', 'stream_id', 'start_time', 'duration']
     _output_timeline_data_file_path = 'output_timeline_data_{}.txt'
     _min_cycle_counter_file_path = 'min_cycle_counter_{}.txt'
-    _display_filename = 'timeline_display_{}.json'
-    _timeline_summary_filename = 'timeline_summary_{}.json'
+    _ascend_display_filename = 'ascend_timeline_display_{}.json'
+    _gpu_display_filename = 'gpu_timeline_display_{}.json'
+    _ascend_timeline_summary_filename = 'ascend_timeline_summary_{}.json'
+    _gpu_timeline_summary_filename = 'gpu_timeline_summary_{}.json'
     _timeline_meta = []
     _timeline_summary = {
         'total_time': 0,
@@ -96,14 +98,20 @@ class TimelineAnalyser(BaseAnalyser):
             filter_condition (dict): The filter condition.
         """
 
-    def get_display_timeline(self):
+    def get_display_timeline(self, device_type):
         """
         Get timeline data for UI display.
 
         Returns:
             json, the content of timeline data.
         """
-        display_filename = self._display_filename.format(self._device_id)
+        if device_type == "ascend":
+            display_filename = self._ascend_display_filename.format(self._device_id)
+        elif device_type == "gpu":
+            display_filename = self._gpu_display_filename.format(self._device_id)
+        else:
+            logger.info('device type should be ascend or gpu. Please check the device type.')
+            raise ParamValueError("Invalid device_type.")
         file_path = os.path.join(self._profiling_dir, display_filename)
         file_path = validate_and_normalize_path(
             file_path, raise_key='Invalid timeline json path.'
@@ -122,14 +130,20 @@ class TimelineAnalyser(BaseAnalyser):
 
         return timeline
 
-    def get_timeline_summary(self):
+    def get_timeline_summary(self, device_type):
         """
         Get timeline summary information for UI display.
 
         Returns:
             json, the content of timeline summary information.
         """
-        summary_filename = self._timeline_summary_filename.format(self._device_id)
+        if device_type == "ascend":
+            summary_filename = self._ascend_timeline_summary_filename.format(self._device_id)
+        elif device_type == "gpu":
+            summary_filename = self._gpu_timeline_summary_filename.format(self._device_id)
+        else:
+            logger.info('device type should be ascend or gpu. Please check the device type.')
+            raise ParamValueError("Invalid device_type.")
         file_path = os.path.join(self._profiling_dir, summary_filename)
         file_path = validate_and_normalize_path(
             file_path, raise_key='Invalid timeline summary path.'
