@@ -98,7 +98,7 @@ limitations under the License.
         <div id="data-echart"
              v-show="showEchartPic && !echartNoData"></div>
         <div class="echart-nodata-container"
-             v-show="!showEchartPic && showTable && !(summaryDirList && !summaryDirList.length)">
+             v-show="!showEchartPic && showTable && !echartNoData">
         </div>
         <div class="btns-container"
              v-show="!echartNoData && showTable">
@@ -249,7 +249,8 @@ limitations under the License.
                v-show="!summaryDirList || (summaryDirList && summaryDirList.length) && !lineagedata.serData">
               {{ $t('public.noData') }}
             </p>
-            <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length)">
+            <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length) &&
+            summaryDirList && !summaryDirList.length">
               <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
             </div>
             <div v-show="summaryDirList && !summaryDirList.length">
@@ -2327,17 +2328,18 @@ export default {
       }
     }
     #data-echart {
-      height: 32%;
+      height: 31%;
       width: 100%;
       padding: 0 12px;
     }
     .echart-nodata-container {
-      height: 35%;
+      height: 31%;
       width: 100%;
+      padding: 0 12px;
     }
     .table-container {
       background-color: white;
-      height: calc(65% - 88px);
+      height: calc(67% - 88px);
       padding: 6px 32px;
       position: relative;
       .disabled-checked {

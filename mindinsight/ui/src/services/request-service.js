@@ -45,7 +45,7 @@ export default {
   queryTargetsData(params) {
     return axios({
       method: 'post',
-      url: `v1/mindinsight/optimizer/targets`,
+      url: `v1/mindinsight/optimizer/targets/search`,
       data: params.body,
     });
   },
