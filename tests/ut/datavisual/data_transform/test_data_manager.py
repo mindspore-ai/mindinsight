@@ -94,6 +94,19 @@ class TestDataManager:
         assert MockLogger.log_msg['info'] == "Load brief data end, and loader pool size is '3'."
         shutil.rmtree(summary_base_dir)
 
+    @pytest.mark.parametrize('params', [{
+        'reload_interval': '30'
+    }, {
+        'reload_interval': -1
+    }])
+    def test_start_load_data_with_invalid_params(self, params):
+        """Test start_load_data with invalid reload_interval or invalid max_threads_count."""
+        summary_base_dir = tempfile.mkdtemp()
+        d_manager = DataManager(summary_base_dir)
+        with pytest.raises(ParamValueError):
+            d_manager.start_load_data(**params)
+        shutil.rmtree(summary_base_dir)
+
     def test_list_tensors_success(self):
         """Test list_tensors method success."""
         summary_base_dir = tempfile.mkdtemp()
