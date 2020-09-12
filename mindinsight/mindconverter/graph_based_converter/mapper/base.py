@@ -99,7 +99,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             converted_params = params_converter(params, weights)
             converted_weights = weights_converter(weights) if weights else dict()
             converted_params.update(converted_weights)
-        except (AttributeError,) as _:
+        except (AttributeError, KeyError, ValueError, TypeError) as _:
             print(f"Converting {op_name} failed.")
             return None, dict()
 

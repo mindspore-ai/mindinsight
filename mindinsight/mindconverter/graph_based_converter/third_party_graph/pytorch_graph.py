@@ -111,6 +111,18 @@ class PyTorchGraph(Graph):
         self._check_input_shape(input_shape)
 
         def _extract_shape(shape):
+            """
+            Extract shape from string-type shape.
+
+            Args:
+                shape (str): Shape value in string-type.
+
+            Returns:
+                list, shape.
+            """
+            pattern = re.compile(r"\d+:\d*")
+            if not pattern.findall(shape):
+                return []
             return [int(x.split(":")[0].replace("!", "")) for x in shape.split(',')]
 
         feed_forward_ipt_shape = (1, *input_shape)
@@ -132,7 +144,7 @@ class PyTorchGraph(Graph):
             output_shape_str = output_shape_str_list[1]
             output_shape = _extract_shape(output_shape_str)
             weight_scope = '.'.join(
-                re.findall(r'\[([\w\d.]+)\]', node.scopeName())
+                re.findall(r'\[([\w\d.]+)]', node.scopeName())
             )
             node_weight = {}
             for scope, weight in self._params_dict.items():
@@ -195,7 +207,8 @@ class PyTorchGraph(Graph):
                 node_input = self._input_shape.get(node_name)
 
             if not node_input:
-                raise ValueError(f"Cannot find {node_name}'s input shape.")
+                raise ValueError(f"This model is not supported now. "
+                                 f"Cannot find {node_name}'s input shape.")
 
             tree.insert(node_inst, node_name, node_input, node_output)
             node_input = node_output

@@ -30,15 +30,17 @@ class PoolMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_params(params, weights):
-        if sum(params['pads']) == 0:
-            pad_mode = '\"valid\"'
-        else:
-            pad_mode = '\"same\"'
-        return {
-            'kernel_size': tuple(params['kernel_shape']),
-            'stride': tuple(params['strides']),
-            'pad_mode': pad_mode
-        }
+        transformed_params = dict()
+        transformed_params["kernel_size"] = tuple(params['kernel_shape'])
+        transformed_params["stride"] = tuple(params['strides'])
+        if "pads" in params:
+            if sum(params['pads']) == 0:
+                pad_mode = '\"valid\"'
+            else:
+                pad_mode = '\"same\"'
+            transformed_params["pad_mode"] = pad_mode
+
+        return transformed_params
 
     @staticmethod
     def _convert_trained_weights(weights):
