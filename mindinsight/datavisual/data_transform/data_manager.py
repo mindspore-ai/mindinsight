@@ -850,23 +850,41 @@ class DataManager:
         """Get summary base dir."""
         return self._summary_base_dir
 
-    def start_load_data(self, auto_reload=False):
+    def start_load_data(self, reload_interval=0):
         """
         Start threads for loading data.
+
+        Args:
+            reload_interval (int): Time to reload data again.
 
         Returns:
             Thread, the background Thread instance.
         """
         logger.info("Start to load data")
+        DataManager.check_reload_interval(reload_interval)
         thread = threading.Thread(target=self._load_data_in_thread_wrapper,
                                   name='start_load_data_thread',
-                                  args=(auto_reload,),
+                                  args=(reload_interval,),
                                   daemon=True)
         thread.daemon = True
         thread.start()
         return thread
 
-    def _load_data_in_thread_wrapper(self, auto_reload):
+    @staticmethod
+    def check_reload_interval(reload_interval):
+        """
+        Check reload interval is valid.
+
+        Args:
+            reload_interval (int): Reload interval >= 0.
+        """
+        if not isinstance(reload_interval, int):
+            raise ParamValueError("The value of reload interval should be integer.")
+
+        if reload_interval < 0:
+            raise ParamValueError("The value of reload interval should be >= 0.")
+
+    def _load_data_in_thread_wrapper(self, reload_interval):
         """Wrapper for load data in thread."""
         if self._load_data_lock.locked():
             return
@@ -874,8 +892,9 @@ class DataManager:
             with self._load_data_lock:
                 while True:
                     exception_wrapper(self._load_data)()
-                    if not auto_reload:
+                    if not reload_interval:
                         break
+                    time.sleep(reload_interval)
         except UnknownError as exc:
             # Not raising the exception here to ensure that data reloading does not crash.
             logger.warning(exc.message)

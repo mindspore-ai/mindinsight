@@ -15,6 +15,7 @@
 """Trigger data manager load."""
 import time
 
+from mindinsight.conf import settings
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
 from mindinsight.lineagemgr.cache_item_updater import LineageCacheItemUpdater
@@ -34,4 +35,4 @@ def init_module(app):
     # Let gunicorn load other modules first.
     time.sleep(1)
 
-    DATA_MANAGER.start_load_data(auto_reload=True)
+    DATA_MANAGER.start_load_data(reload_interval=settings.RELOAD_INTERVAL)
