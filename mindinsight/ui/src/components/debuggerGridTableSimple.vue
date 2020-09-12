@@ -394,7 +394,7 @@ export default {
      * Dimension selection changed
      */
     filterChange() {
-      // 校验检索条件
+      // filter condition
       let filterCorrect = true;
       let incorrectData = false;
       let limitCount = 2;

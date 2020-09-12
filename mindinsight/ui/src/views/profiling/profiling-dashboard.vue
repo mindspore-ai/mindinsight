@@ -304,10 +304,12 @@ limitations under the License.
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.timeLine') }}</div>
           <div class="view-detail">
-            <button @click="downloadPerfetto()"
-                    :disabled="timeLine.waiting"
-                    :class="{disabled:timeLine.waiting}">{{ $t('profiling.downloadTimeline') }}
+            <button @click="downloadTimelineFile()"
+                    v-show="!timeLine.waiting"
+                    :disabled="timeLine.disable"
+                    :class="{disabled:timeLine.disable}">{{ $t('profiling.downloadTimeline') }}
             </button>
+            <div class="el-icon-loading loading-icon" v-show="timeLine.waiting"></div>
           </div>
           <div class="tip-icon">
             <el-tooltip placement="bottom"
@@ -439,6 +441,7 @@ export default {
         // Time line data
         data: null,
         waiting: true, // Is it waiting for interface return
+        disable: true,
       },
       timelineInfo: {
         // Time line information
@@ -485,6 +488,7 @@ export default {
           this.pieChart.initOver = true;
           this.timelineInfo.initOver = true;
           this.processSummary.initOver = true;
+          this.timeLine.waiting = false;
         }
         if (
           newValue.query.dir &&
@@ -1095,22 +1099,11 @@ export default {
       }, 500);
     },
     /**
-     * Converts a string to data in uint8array format
-     * @param {String} str The string to be converted
-     * @return {Array}
-     */
-    stringToUint8Array(str) {
-      const arr = [];
-      for (let i = 0, strLen = str.length; i < strLen; i++) {
-        arr.push(str.charCodeAt(i));
-      }
-      return new Uint8Array(arr);
-    },
-    /**
      * Query the data of time line
      */
     queryTimeline() {
       this.timeLine.waiting = true;
+      this.timeLine.disable = true;
       const params = {
         dir: this.relativePath,
         device_id: this.currentCard,
@@ -1141,17 +1134,20 @@ export default {
           });
       RequestService.queryTimeline(params)
           .then((res) => {
+            this.timeLine.waiting = false;
             if (res && res.data && res.data.length) {
               this.timeLine.data = JSON.stringify(res.data);
-              this.timeLine.waiting = false;
+              this.timeLine.disable = false;
             }
           })
-          .catch(() => {});
+          .catch(() => {
+            this.timeLine.waiting = false;
+          });
     },
     /**
-     * Download Perfetto data file
+     * Download timeline data file
      */
-    downloadPerfetto() {
+    downloadTimelineFile() {
       const downloadLink = document.createElement('a');
       downloadLink.download = this.getDocName();
       downloadLink.style.display = 'none';
@@ -1281,7 +1277,6 @@ export default {
       .view-detail {
         float: right;
         cursor: pointer;
-        color: #00a5a7;
         font-size: 12px;
         height: 24px;
         line-height: 24px;
@@ -1305,6 +1300,9 @@ export default {
         clear: both;
         display: block;
       }
+    }
+    .loading-icon {
+      margin-left: 5px;
     }
     .coming-soon-content {
       height: calc(100% - 50px);

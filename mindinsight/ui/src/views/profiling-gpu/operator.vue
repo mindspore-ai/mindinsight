@@ -472,6 +472,10 @@ export default {
       this.searchByTypeInput = '';
       this.searchByNameInput = '';
       this.op_filter_condition = {};
+      this.op_sort_condition = {
+        name: 'avg_time',
+        type: 'descending',
+      };
       this.opTypeCol = [];
       this.opTypeList = [];
       this.opAllTypeList = {
