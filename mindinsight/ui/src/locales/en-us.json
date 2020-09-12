@@ -53,7 +53,7 @@
     "disableProfilerTip": "Failed to view profiling because no profiler log is available.",
     "openNewTab": "Open Link in New Tab",
     "paramDetails": "Parameter Details",
-    "trainingParamDetails": "Training Parameter Details (Directory)",
+    "trainingParamDetails": "Training Parameter Details",
     "tracebackAnalysis": "Lineage Analysis",
     "compareAnalysis": "Comparison Analysis",
     "guidTipFirst": "In the training script, add ",

@@ -125,7 +125,7 @@ limitations under the License.
           <el-table ref="table"
                     :data="table.data"
                     tooltip-effect="light"
-                    height="calc(100% - 40px)"
+                    height="calc(100% - 39px)"
                     row-key="summary_dir"
                     @selection-change="handleSelectionChange"
                     @sort-change="tableSortChange">
@@ -2339,7 +2339,7 @@ export default {
     }
     .table-container {
       background-color: white;
-      height: calc(67% - 88px);
+      height: calc(67% - 72px);
       padding: 6px 32px;
       position: relative;
       .disabled-checked {

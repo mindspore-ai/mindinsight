@@ -53,7 +53,7 @@
     "disableProfilerTip": "无profiler日志，无法查看性能分析",
     "openNewTab": "打开新页签",
     "paramDetails": "参数详情",
-    "trainingParamDetails": "训练参数详情（目录）",
+    "trainingParamDetails": "训练参数详情",
     "tracebackAnalysis": "溯源分析",
     "compareAnalysis": "对比分析",
     "guidTipFirst": "请在您的训练脚本中",
