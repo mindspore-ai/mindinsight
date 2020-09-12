@@ -17,7 +17,7 @@ from functools import wraps
 
 from mindinsight.debugger.common.log import logger as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
-    create_view_event_from_tensor_history, Streams
+    Streams
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.debugger.proto.ms_graph_pb2 import GraphProto
 
@@ -50,18 +50,16 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._cache_store = cache_store
         self._pos = None
         self._status = None
-        self._view_event = None
-        self._view_round = None
         self._continue_steps = None
+        self._received_view_cmd = None
         self.init()
 
     def init(self):
         """Init debugger grpc server."""
         self._pos = '0'
         self._status = ServerStatus.PENDING
-        self._view_event = None
-        self._view_round = True
         self._continue_steps = 0
+        self._received_view_cmd = {}
         self._cache_store.clean()
 
     @debugger_wrap
@@ -73,6 +71,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             log.warning("No graph received before WaitCMD.")
             reply = get_ack_reply(1)
             return reply
+        self._send_received_tensor_tag()
         # send graph if has not been sent before
         self._pre_process(request)
         # deal with old command
@@ -80,13 +79,8 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         if reply:
             log.info("Reply to WaitCMD with old command: %s", reply)
             return reply
-        # send view cmd
-        if self._view_round and self._view_event:
-            self._view_round = False
-            reply = self._view_event
-            log.debug("Send ViewCMD.")
         # continue multiple steps training
-        elif self._continue_steps != 0:
+        if self._continue_steps:
             reply = get_ack_reply()
             reply.run_cmd.run_steps = 1
             reply.run_cmd.run_level = 'step'
@@ -103,6 +97,18 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         else:
             log.info("Reply to WaitCMD: %s", reply)
         return reply
+
+    def _send_received_tensor_tag(self):
+        """Send received_finish_tag."""
+        node_name = self._received_view_cmd.get('node_name')
+        if not node_name or self._received_view_cmd.get('wait_for_tensor'):
+            return
+        metadata = self._cache_store.get_stream_handler(Streams.METADATA).get()
+        ret = {'receive_tensor': {'node_name': node_name}}
+        ret.update(metadata)
+        self._cache_store.put_data(ret)
+        self._received_view_cmd.clear()
+        log.info("Send receive tensor flag for %s", node_name)
 
     def _pre_process(self, request):
         """Send graph and metadata when WaitCMD first called."""
@@ -124,7 +130,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def _update_metadata(self, metadata_stream, metadata_proto):
         """Update metadata."""
         # reset view round and clean cache data
-        self._view_round = True
         if metadata_stream.step < metadata_proto.cur_step:
             self._cache_store.clean_data()
             self._cache_store.get_stream_handler(Streams.TENSOR).clean_tensors(
@@ -169,18 +174,27 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         log.debug("Received event :%s", event)
         if event is None:
             return event
-        if isinstance(event, dict) and event.get('reset'):
-            self._set_view_event(event)
-            event = None
+        if isinstance(event, dict):
+            event = self._deal_with_view_cmd(event)
         elif event.HasField('run_cmd'):
             event = self._deal_with_run_cmd(event)
-        elif event.HasField('view_cmd'):
-            self._view_round = False
         elif event.HasField('exit'):
             self._cache_store.clean()
             log.info("Clean cache for exit cmd.")
 
         return event
+
+    def _deal_with_view_cmd(self, event):
+        """Deal with view cmd."""
+        view_cmd = event.get('view_cmd')
+        node_name = event.get('node_name')
+        log.debug("Receive view cmd %s for node: %s.", view_cmd, node_name)
+        if not (view_cmd and node_name):
+            log.warning("Invaid view command. Ignore it.")
+            return None
+        self._received_view_cmd['node_name'] = node_name
+        self._received_view_cmd['wait_for_tensor'] = True
+        return view_cmd
 
     def _deal_with_run_cmd(self, event):
         """Deal with run cmd."""
@@ -200,19 +214,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
         return event
 
-    def _set_view_event(self, event):
-        """Create view event for view cmd."""
-        # the first tensor in view cmd is always the output
-        node_name = event.get('node_name')
-        tensor_history = event.get('tensor_history')
-        if not node_name or not tensor_history:
-            self._view_event = None
-            log.info("Reset view command to None.")
-        else:
-            # create view event and set
-            self._view_event = create_view_event_from_tensor_history(tensor_history)
-            log.info("Reset view command to %s.", node_name)
-
     @debugger_wrap
     def SendMetadata(self, request, context):
         """Send metadata into DebuggerCache."""
@@ -223,12 +224,15 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
         client_ip = context.peer().split(':', 1)[-1]
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
-        metadata_stream.put(request)
-        metadata_stream.client_ip = client_ip
-        metadata = metadata_stream.get()
+        if request.training_done:
+            log.info("The training from %s has finished.", client_ip)
+        else:
+            metadata_stream.put(request)
+            metadata_stream.client_ip = client_ip
+            log.info("Put new metadata from %s into cache.", client_ip)
         # put metadata into data queue
+        metadata = metadata_stream.get()
         self._cache_store.put_data(metadata)
-        log.info("Put new metadata to DataQueue.")
         reply = get_ack_reply()
         log.info("Send the reply to %s.", client_ip)
         return reply
@@ -253,6 +257,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def SendTensors(self, request_iterator, context):
         """Send tensors into DebuggerCache."""
         log.info("Received tensor.")
+        self._received_view_cmd['wait_for_tensor'] = False
         tensor_construct = []
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR)
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
@@ -265,41 +270,28 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                 tensor_construct = []
                 tensor_names.append(':'.join([tensor.node_name, tensor.slot]))
                 continue
-        # send back tensor finished flag when all waiting tensor has value.
-        tensor_history = tensor_stream.get_tensor_history(tensor_names)
-        self._add_node_name_for_tensor_history(tensor_history)
-        metadata = metadata_stream.get()
-        tensor_history.update(metadata)
-        self._cache_store.put_data({})  # reply to the listening request
-        self._cache_store.put_data(tensor_history)
-        log.info("Send updated tensor history to data queue.")
         reply = get_ack_reply()
         return reply
-
-    def _add_node_name_for_tensor_history(self, tensor_history):
-        """Add node name for tensor history."""
-        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
-        for tensor_info in tensor_history.get('tensor_history'):
-            if tensor_info:
-                full_name, slot = tensor_info.get('full_name', '').rsplit(':', 1)
-                node_name = graph_stream.get_node_name_by_full_name(full_name)
-                tensor_info['name'] = node_name + ':' + slot
 
     @debugger_wrap
     def SendWatchpointHits(self, request_iterator, context):
         """Send watchpoint hits info DebuggerCache."""
         log.info("Received WatchpointHits. Left steps %d change to 0.", self._continue_steps)
         self._continue_steps = 0
-        self._view_event = None
         watchpoint_hit_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
         graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
         for watchpoint_hit_proto in request_iterator:
+            ui_node_name = graph_stream.get_node_name_by_full_name(
+                watchpoint_hit_proto.tensor.node_name)
+            log.debug("Receive watch point hit: %s", watchpoint_hit_proto)
+            if not ui_node_name:
+                log.info("Not support to show %s on graph.", watchpoint_hit_proto.tensor.node_name)
+                continue
             watchpoint_hit = {
                 'tensor_proto': watchpoint_hit_proto.tensor,
                 'watchpoint': watchpoint_stream.get_watchpoint_by_id(watchpoint_hit_proto.id),
-                'node_name': graph_stream.get_node_name_by_full_name(
-                    watchpoint_hit_proto.tensor.node_name)
+                'node_name': ui_node_name
             }
             watchpoint_hit_stream.put(watchpoint_hit)
         watchpoint_hits_info = watchpoint_hit_stream.get()

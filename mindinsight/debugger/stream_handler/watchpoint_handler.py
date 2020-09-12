@@ -98,7 +98,7 @@ class WatchpointHandler(StreamHandlerBase):
         """
         if not (watch_point_id and graph):
             return
-        self._validate_watchpoint_id(watch_point_id)
+        self.validate_watchpoint_id(watch_point_id)
         log.debug("add watch flags")
         watchpoint = self._watchpoints.get(watch_point_id)
         self._set_watch_status_recursively(graph, watchpoint)
@@ -144,7 +144,7 @@ class WatchpointHandler(StreamHandlerBase):
         if watch_nodes:
             watchpoint.add_nodes(watch_nodes)
         elif watch_point_id:
-            self._validate_watchpoint_id(watch_point_id)
+            self.validate_watchpoint_id(watch_point_id)
             watchpoint.copy_nodes_from(self._watchpoints.get(watch_point_id))
         self.put(watchpoint)
 
@@ -163,7 +163,7 @@ class WatchpointHandler(StreamHandlerBase):
         Returns:
             dict, empty response.
         """
-        self._validate_watchpoint_id(watch_point_id)
+        self.validate_watchpoint_id(watch_point_id)
         watchpoint = self._watchpoints.get(watch_point_id)
         if watched:
             watchpoint.add_nodes(watch_nodes)
@@ -182,7 +182,7 @@ class WatchpointHandler(StreamHandlerBase):
         Returns:
             dict, empty response.
         """
-        self._validate_watchpoint_id(watch_point_id)
+        self.validate_watchpoint_id(watch_point_id)
         self._watchpoints.pop(watch_point_id)
         set_cmd = SetCMD()
         set_cmd.id = watch_point_id
@@ -190,7 +190,7 @@ class WatchpointHandler(StreamHandlerBase):
         self._deleted_watchpoints.append(set_cmd)
         log.debug("Delete watchpoint %d in cache.", watch_point_id)
 
-    def _validate_watchpoint_id(self, watch_point_id):
+    def validate_watchpoint_id(self, watch_point_id):
         """Validate watchpoint id."""
         if watch_point_id and watch_point_id not in self._watchpoints:
             log.error("Invalid watchpoint id: %d.", watch_point_id)

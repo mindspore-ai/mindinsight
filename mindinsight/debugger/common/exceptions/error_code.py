@@ -44,8 +44,6 @@ class DebuggerErrorMsg(Enum):
     """Debugger error messages."""
     PARAM_TYPE_ERROR = "TypeError. {}"
     PARAM_VALUE_ERROR = "ValueError. {}"
-    PARAM_MISSING_ERROR = "MissingError. {}"
-    UNEXPECTED_EXCEPTION_ERROR = "Unexpected exception. {}"
 
     GRAPH_NOT_EXIST_ERROR = "The graph does not exist."
 

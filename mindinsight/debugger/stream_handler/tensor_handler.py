@@ -51,7 +51,7 @@ class TensorHandler(StreamHandlerBase):
             step -= 1
         tensor = OpTensor(merged_tensor, step)
         self._put_tensor_into_cache(tensor, step)
-        log.debug("Put tensor %s of step: %d, into cache", tensor.name, step)
+        log.info("Put tensor %s of step: %d, into cache", tensor.name, step)
 
     @staticmethod
     def _get_merged_tensor(tensor_protos):
@@ -164,16 +164,6 @@ class TensorHandler(StreamHandlerBase):
 
         return None
 
-    def get_tensor_history(self, tensor_names):
-        """Get tensor history for tensor names."""
-        # only used by grpc server, could be remove later
-        tensor_infos = []
-        for tensor_name in tensor_names:
-            tensor_info = self._get_basic_info(tensor_name)
-            tensor_infos.append(tensor_info)
-
-        return {'tensor_history': tensor_infos}
-
     def update_tensor_history(self, tensor_history):
         """
         Add tensor basic info in tensor_history.
@@ -208,20 +198,22 @@ class TensorHandler(StreamHandlerBase):
         """Update has_prev_step field in tensor info."""
         flag = None
         if node_type == NodeTypeEnum.PARAMETER.value:
-            flag = self._has_prev_tensor_value(tensor_name)
+            flag = self._get_prev_tensor_value_status(tensor_name)
             if flag and tensor_info:
                 tensor_info['has_prev_step'] = True
         return flag
 
-    def _has_prev_tensor_value(self, tensor_name):
+    def _get_prev_tensor_value_status(self, tensor_name):
         """
-        Check if the tensor has valid value of previous step.
+        Get the status of tensor value of previous step.
 
         Args:
             tensor_name (str): Tensor name.
 
         Returns:
-            bool, whether the tensor has valid tensor value.
+            Union[None, bool], the status of previous tensor value. If True, there is valid previous
+                tensor value. If False, the tensor value should be queried from client.
+                If None, ignore.
         """
         flag = None
         # check if the tensor has previous step value.
@@ -229,7 +221,12 @@ class TensorHandler(StreamHandlerBase):
         if prev_step < 0:
             return flag
         tensor = self._get_tensor(tensor_name, step=prev_step)
-        flag = bool(tensor and tensor.value)
+        if not tensor:
+            # the tensor need to be queried from client
+            flag = False
+        elif tensor.value:
+            flag = True
+
         return flag
 
     def get_tensor_value_by_name(self, tensor_name, prev=False):

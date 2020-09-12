@@ -168,7 +168,6 @@ class DebuggerServer:
                       "'watchpoint_hit', 'tensor'], but got %s.", mode_mapping)
             raise DebuggerParamTypeError("Invalid mode.")
         filter_condition = {} if filter_condition is None else filter_condition
-        self._watch_point_id = filter_condition.get('watch_point_id', 0)
         reply = mode_mapping[mode](filter_condition)
 
         return reply
@@ -179,9 +178,9 @@ class DebuggerServer:
             log.error("No filter condition required for retrieve all request.")
             raise DebuggerParamTypeError("filter_condition should be empty.")
         result = {}
+        self._watch_point_id = 0
         self.cache_store.clean_data()
         log.info("Clean data queue cache when retrieve all request.")
-        self.cache_store.put_command({'reset': True})
         for stream in [Streams.METADATA, Streams.GRAPH, Streams.WATCHPOINT]:
             sub_res = self.cache_store.get_stream_handler(stream).get()
             result.update(sub_res)
@@ -197,8 +196,6 @@ class DebuggerServer:
 
                 - name (str): The name of single node.
 
-                - watch_point_id (int): The id of watchpoint.
-
                 - single_node (bool): If False, return the sub-layer of single node. If True, return
                     the node list from root node to single node.
 
@@ -206,24 +203,12 @@ class DebuggerServer:
             dict, the node info.
         """
         log.info("Retrieve node %s.", filter_condition)
-        graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH)
-        # validate parameters
         node_name = filter_condition.get('name')
-        if not node_name:
-            node_type = NodeTypeEnum.NAME_SCOPE.value
-        else:
-            node_type = graph_stream.get_node_type(node_name)
-            filter_condition['node_type'] = node_type
+        if node_name:
+            # validate node name
+            self.cache_store.get_stream_handler(Streams.GRAPH).get_node_type(node_name)
         filter_condition['single_node'] = bool(filter_condition.get('single_node'))
-        # get graph for scope node
-        if is_scope_type(node_type):
-            reply = self._get_nodes_info(filter_condition)
-        # get tensor history for leaf node
-        else:
-            reply = self._get_tensor_history(node_name)
-            if filter_condition.get('single_node'):
-                graph = self._get_nodes_info(filter_condition)
-                reply.update(graph)
+        reply = self._get_nodes_info(filter_condition)
         return reply
 
     def _get_nodes_info(self, filter_condition):
@@ -237,8 +222,6 @@ class DebuggerServer:
 
                 - single_node (bool): If False, return the sub-layer of single node. If True, return
                     the node list from root node to single node.
-
-                - watch_point_id (int): The id of watchpoint.
 
         Returns:
             dict, reply with graph.
@@ -288,13 +271,8 @@ class DebuggerServer:
         # get basic tensor history
         graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH)
         tensor_history = graph_stream.get_tensor_history(node_name)
-        # set the view event
-        self.cache_store.put_command(
-            {'reset': True,
-             'node_name': node_name,
-             'tensor_history': tensor_history.get('tensor_history')})
         # add tensor value for tensor history
-        self._add_tensor_value_for_tensor_history(tensor_history)
+        self._add_tensor_value_for_tensor_history(tensor_history, node_name)
         # add hit label for tensor history
         watchpoint_hit_stream = self.cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         watchpoint_hit_stream.update_tensor_history(tensor_history)
@@ -303,12 +281,13 @@ class DebuggerServer:
         tensor_history.update(metadata)
         return tensor_history
 
-    def _add_tensor_value_for_tensor_history(self, tensor_history):
+    def _add_tensor_value_for_tensor_history(self, tensor_history, node_name):
         """
         Add tensor value for_tensor_history and send ViewCMD if tensor value missed.
 
         Args:
             tensor_history (list[dict]): A list of tensor info, including name and type.
+            node_name (str): The UI node name.
 
         Returns:
             dict, the tensor info.
@@ -317,7 +296,7 @@ class DebuggerServer:
         missed_tensors = tensor_stream.update_tensor_history(tensor_history)
         if missed_tensors:
             view_cmd = create_view_event_from_tensor_history(missed_tensors)
-            self.cache_store.put_command(view_cmd)
+            self.cache_store.put_command({'view_cmd': view_cmd, 'node_name': node_name})
             log.debug("Send view cmd.")
 
     def retrieve_tensor_value(self, name, detail, shape):
@@ -400,7 +379,10 @@ class DebuggerServer:
             dict, watch point list or relative graph.
         """
         watchpoint_id = filter_condition.get('watch_point_id')
-        if watchpoint_id is None:
+        watchpoint_stream = self.cache_store.get_stream_handler(Streams.WATCHPOINT)
+        watchpoint_stream.validate_watchpoint_id(watchpoint_id)
+        self._watch_point_id = watchpoint_id if watchpoint_id else 0
+        if not watchpoint_id:
             reply = self.cache_store.get_stream_handler(Streams.WATCHPOINT).get()
             log.debug("Get condition of watchpoints.")
         else:
@@ -472,6 +454,7 @@ class DebuggerServer:
         watch_nodes = self._get_node_basic_infos(watch_nodes)
         watch_point_id = self.cache_store.get_stream_handler(Streams.WATCHPOINT).create_watchpoint(
             watch_condition, watch_nodes, watch_point_id)
+        self._watch_point_id = 0
         log.info("Create watchpoint %d", watch_point_id)
         return {'id': watch_point_id}
 
@@ -507,6 +490,7 @@ class DebuggerServer:
 
         self.cache_store.get_stream_handler(Streams.WATCHPOINT).update_watchpoint(
             watch_point_id, watch_nodes, mode)
+        self._watch_point_id = watch_point_id
         log.info("Update watchpoint with id: %d", watch_point_id)
         return {}
 
@@ -544,6 +528,7 @@ class DebuggerServer:
             )
         self.cache_store.get_stream_handler(Streams.WATCHPOINT).delete_watchpoint(
             watch_point_id)
+        self._watch_point_id = 0
         log.info("Delete watchpoint with id: %d", watch_point_id)
         return {}
 
