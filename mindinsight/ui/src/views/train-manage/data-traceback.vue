@@ -249,8 +249,8 @@ limitations under the License.
                v-show="!summaryDirList || (summaryDirList && summaryDirList.length) && !lineagedata.serData">
               {{ $t('public.noData') }}
             </p>
-            <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length) &&
-            summaryDirList && !summaryDirList.length">
+            <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length)&&
+            summaryDirList && summaryDirList.length">
               <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
             </div>
             <div v-show="summaryDirList && !summaryDirList.length">

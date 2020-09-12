@@ -328,7 +328,7 @@ limitations under the License.
                                width="120">
               </el-table-column>
               <el-table-column :label="$t('debugger.value')"
-                               width="160">
+                               width="260">
                 <template slot="header">
                   <span class="center">{{ $t('debugger.value')}}</span>
                 </template>
@@ -567,8 +567,12 @@ export default {
     },
   },
   methods: {
+    /**
+     * format tolenrance
+     * @param {Number} value
+     * @return {String}
+     */
     formatTolenrance(value) {
-      // format tolenrance
       return `${value}%`;
     },
     /**
@@ -633,6 +637,9 @@ export default {
         }
       });
     },
+    /**
+     * Initialize the condition
+     */
     initCondition() {
       this.conditionMappings = {
         INF: 'INF',
@@ -1136,7 +1143,8 @@ export default {
           },
           (err) => {
             if (!err || (err && err.message !== 'routeJump')) {
-              this.$message.error(this.$t('debugger.serviceError'));
+              this.initFail = true;
+              this.dialogVisible = true;
             }
           },
       );
@@ -1260,6 +1268,10 @@ export default {
         }
       }
     },
+    /**
+     * Condition change processing
+     * @param {Object} item
+     */
     conditionChange(item) {
       item.label = this.conditionMappings[item.condition];
       if (this.conditions.noValue.includes(item.condition)) {
@@ -1347,6 +1359,11 @@ export default {
       }
       this.curWatchPointId = '';
     },
+    /**
+     * Collapse node
+     * @param {Object} _
+     * @param {Object} node node data
+     */
     nodeCollapse(_, node) {
       node.loaded = false;
       if (this.treeFlag) {
@@ -1388,7 +1405,8 @@ export default {
         );
       }
     },
-    /** Deal search data
+    /**
+     * Deal search data
      * @param {Array} arr search tree data
      */
     dealSearchResult(arr) {
@@ -1402,7 +1420,8 @@ export default {
         val.label = val.name.split('/').pop();
       });
     },
-    /** Draw the tree
+    /**
+     * Draw the tree
      * @param {Object} node tree root node
      * @param {Function} resolve callback function ,return next node data
      */
@@ -1554,7 +1573,8 @@ export default {
         );
       }
     },
-    /** Show data of current selected watchpoint
+    /**
+     * Show data of current selected watchpoint
      * @param {Number} key watchpoint id
      */
     selectWatchPoint(key) {
@@ -1584,7 +1604,8 @@ export default {
         }
       });
     },
-    /** Query graph data by watchpoint id
+    /**
+     * Query graph data by watchpoint id
      * @param {Number} id wacthpoint id
      */
     queryGraphByWatchpoint(id) {
@@ -1638,7 +1659,8 @@ export default {
           },
       );
     },
-    /** Query WatchPoints
+    /**
+     * Query WatchPoints
      */
     queryWatchPoints() {
       const params = {
@@ -1663,7 +1685,8 @@ export default {
           },
       );
     },
-    /** Tree linkage with graph   Collapse of current node
+    /**
+     * Tree linkage with graph   Collapse of current node
      * @param {Obejct} name  The name of the current node
      */
     nodeCollapseLinkage(name) {
@@ -1672,7 +1695,8 @@ export default {
       node.loaded = false;
       node.childNodes = [];
     },
-    /** Tree linkage with graph  Expand of current node
+    /**
+     * Tree linkage with graph  Expand of current node
      * @param {Obejct} nodes Data of children of current node
      * @param {Obejct} name  The name of the current node
      */
@@ -1715,7 +1739,8 @@ export default {
         }, 800);
       });
     },
-    /** Query WatchpointHits
+    /**
+     * Query WatchpointHits
      */
     getWatchpointHits() {
       if (this.radio1 === 'hit') {
@@ -1745,7 +1770,8 @@ export default {
         );
       }
     },
-    /** Udpate TensrValue
+    /**
+     * Udpate TensrValue
      * @param {number} key The index of the node of the watchPointHits currently clicked
      */
     updateTensorValue(key) {
@@ -1793,7 +1819,8 @@ export default {
           },
       );
     },
-    /** Query the graph data
+    /**
+     * Query the graph data
      * @param {String} nodeName The name of the node that needs to be query
      * @param {Boolean} isQueryTensor The name of the node that needs to be query
      */
@@ -1834,7 +1861,8 @@ export default {
           },
       );
     },
-    /** Draw the tree
+    /**
+     * Draw the tree
      * @param {Object} children child node
      * @param {String} name The name of the node that needs to be highlighted
      */
@@ -1928,6 +1956,9 @@ export default {
         d3.select('body').append('div').attr('id', 'subgraphTemp');
       }
     },
+    /**
+     * Initialize svg
+     */
     initSvg() {
       this.svg.dom = document.querySelector('#graph svg');
       this.svg.rect = this.svg.dom.getBoundingClientRect();
@@ -2268,6 +2299,9 @@ export default {
       graph0.on('.zoom', null);
       graph0.call(zoom);
     },
+    /**
+     * Initialize the right-click menu
+     */
     initContextMenu() {
       this.contextmenu.dom = document.querySelector('#contextMenu');
       const svgDom = document.querySelector('#graph svg');
@@ -2337,6 +2371,9 @@ export default {
         this.continueTo();
       };
     },
+    /**
+     * Continue to
+     */
     continueTo() {
       this.watchPointHits = [];
       const params = {
@@ -2497,6 +2534,11 @@ export default {
             }
           });
     },
+    /**
+     * Process graph data
+     * @param {Object} nodes nodes data
+     * @param {String} name node name
+     */
     dealGraphData(nodes, name) {
       const namescopeChildLimit = 3500;
       const nodesCountLimit = name ? this.nodesCountLimit : namescopeChildLimit;
@@ -2575,7 +2617,12 @@ export default {
       this.allGraphData[name].index = 0;
       this.allGraphData[name].maxChainNum = maxChainNum;
     },
-
+    /**
+     * Process chaining data
+     * @param {String} name nodes name
+     * @param {String} prefix node prefix
+     * @return {Number}
+     */
     dealChainingData(name, prefix) {
       const node = this.allGraphData[name];
       if (!node.chained) {
@@ -2593,7 +2640,12 @@ export default {
       }
       return node.chainNum;
     },
-
+    /**
+     * Get associated node
+     * @param {String} name nodes name
+     * @param {String} prefix node prefix
+     * @return {Number}
+     */
     getAssociatedNode(name, prefix) {
       const node = this.allGraphData[name];
       let ids = [];
@@ -3441,9 +3493,16 @@ export default {
               });
             }, 500);
           }
+          if (ignoreType.includes(type)) {
+            this.tableData = [];
+          }
         }
       }
     },
+    /**
+     * Highlight proxy nodes
+     * @param {String} nodeId node id
+     */
     highlightProxyNodes(nodeId) {
       const proxyNodes = d3
           .selectAll('#graph g.node')
@@ -3852,6 +3911,10 @@ export default {
         return null;
       }
     },
+    /**
+     * Show error message
+     * @param {Object} error error data
+     */
     showErrorMsg(error) {
       if (
         error &&
@@ -3868,6 +3931,9 @@ export default {
         }
       }
     },
+    /**
+     * To summery list page
+     */
     toSummeryList() {
       this.dialogVisible = false;
       this.$router.push({
