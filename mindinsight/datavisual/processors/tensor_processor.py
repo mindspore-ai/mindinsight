@@ -19,95 +19,14 @@ import numpy as np
 
 from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.utils.exceptions import ParamValueError, UrlDecodeError
+from mindinsight.utils.tensor import TensorUtils
 from mindinsight.conf.constants import MAX_TENSOR_RESPONSE_DATA_SIZE
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.common.exceptions import StepTensorDataNotInCacheError, TensorNotExistError
 from mindinsight.datavisual.common.exceptions import ResponseDataExceedMaxValueError
-from mindinsight.datavisual.data_transform.tensor_container import TensorContainer, get_statistics_from_tensor
+from mindinsight.datavisual.data_transform.tensor_container import TensorContainer
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
-
-
-def convert_array_from_str(dims, limit=0):
-    """
-    Convert string of dims data to array.
-
-    Args:
-        dims (str): Specify dims of tensor.
-        limit (int): The max flexible dimension count, default value is 0 which means that there is no limitation.
-
-    Returns:
-        list, a string like this: "[0, 0, :, :]" will convert to this value: [0, 0, None, None].
-
-    Raises:
-        ParamValueError, If flexible dimensions exceed limit value.
-    """
-    dims = dims.strip().lstrip('[').rstrip(']')
-    dims_list = []
-    count = 0
-    for dim in dims.split(','):
-        dim = dim.strip()
-        if dim == ':':
-            dims_list.append(None)
-            count += 1
-        else:
-            dims_list.append(to_int(dim, "dim"))
-    if limit and count > limit:
-        raise ParamValueError("Flexible dimensions cannot exceed limit value: {}, size: {}"
-                              .format(limit, count))
-    return dims_list
-
-
-def get_specific_dims_data(ndarray, dims, tensor_dims):
-    """
-    Get specific dims data.
-
-    Args:
-        ndarray (numpy.ndarray): An ndarray of numpy.
-        dims (list): A list of specific dims.
-        tensor_dims (list): A list of tensor dims.
-
-    Returns:
-        numpy.ndarray, an ndarray of specific dims tensor data.
-
-    Raises:
-        ParamValueError, If the length of param dims is not equal to the length of tensor dims or
-                         the index of param dims out of range.
-    """
-    if len(dims) != len(tensor_dims):
-        raise ParamValueError("The length of param dims: {}, is not equal to the "
-                              "length of tensor dims: {}.".format(len(dims), len(tensor_dims)))
-    indices = []
-    for k, d in enumerate(dims):
-        if d is not None:
-            if d >= tensor_dims[k]:
-                raise ParamValueError("The index: {} of param dims out of range: {}.".format(d, tensor_dims[k]))
-            indices.append(d)
-        else:
-            indices.append(slice(0, tensor_dims[k]))
-    return ndarray[tuple(indices)]
-
-
-def get_statistics_dict(stats):
-    """
-    Get statistics dict according to statistics value.
-
-    Args:
-        stats (Statistics): An instance of Statistics.
-
-    Returns:
-        dict, a dict including 'max', 'min', 'avg', 'count', 'nan_count', 'neg_inf_count', 'pos_inf_count'.
-    """
-    statistics = {
-        "max": float(stats.max),
-        "min": float(stats.min),
-        "avg": float(stats.avg),
-        "count": stats.count,
-        "nan_count": stats.nan_count,
-        "neg_inf_count": stats.neg_inf_count,
-        "pos_inf_count": stats.pos_inf_count
-    }
-    return statistics
 
 
 class TensorProcessor(BaseProcessor):
@@ -130,22 +49,7 @@ class TensorProcessor(BaseProcessor):
             UrlDecodeError, If unquote train id error with strict mode.
         """
         Validation.check_param_empty(train_id=train_ids, tag=tags)
-        if dims is not None:
-            if not isinstance(dims, str):
-                raise ParamValueError('The type of dims must be str, but got {}.'.format(type(dims)))
-            dims = dims.strip()
-            if not (dims.startswith('[') and dims.endswith(']')):
-                raise ParamValueError('The value: {} of dims must be '
-                                      'start with `[` and end with `]`.'.format(dims))
-            for dim in dims[1:-1].split(','):
-                dim = dim.strip()
-                if dim == ":":
-                    continue
-                if dim.startswith('-'):
-                    dim = dim[1:]
-                if not dim.isdigit():
-                    raise ParamValueError('The value: {} of dims in the square brackets '
-                                          'must be int or `:`.'.format(dims))
+        TensorUtils.validate_dims_format(dims)
 
         for index, train_id in enumerate(train_ids):
             try:
@@ -248,7 +152,7 @@ class TensorProcessor(BaseProcessor):
                 "data_type": anf_ir_pb2.DataType.Name(value.data_type)
             }
             if detail and detail == 'stats':
-                stats = get_statistics_dict(value.stats)
+                stats = TensorUtils.get_statistics_dict(value.stats)
                 value_dict.update({"statistics": stats})
 
             values.append({
@@ -295,14 +199,14 @@ class TensorProcessor(BaseProcessor):
         """
         values = []
         step_in_cache = False
-        dims = convert_array_from_str(dims, limit=2)
+        dims = TensorUtils.convert_array_from_str_dims(dims, limit=2)
         for tensor in tensors:
             # This value is an instance of TensorContainer
             value = tensor.value
             if step != tensor.step:
                 continue
             step_in_cache = True
-            res_data = get_specific_dims_data(value.ndarray, dims, list(value.dims))
+            res_data = TensorUtils.get_specific_dims_data(value.ndarray, dims, list(value.dims))
             flatten_data = res_data.flatten().tolist()
             if len(flatten_data) > MAX_TENSOR_RESPONSE_DATA_SIZE:
                 raise ResponseDataExceedMaxValueError("the size of response data: {} exceed max value: {}."
@@ -328,7 +232,7 @@ class TensorProcessor(BaseProcessor):
                             transfer_data[index] = float(data)
                 return transfer_data
 
-            stats = get_statistics_from_tensor(res_data)
+            stats = TensorUtils.get_statistics_from_tensor(res_data)
             if stats.nan_count + stats.neg_inf_count + stats.pos_inf_count > 0:
                 tensor_data = transfer(res_data)
             else:
@@ -340,7 +244,7 @@ class TensorProcessor(BaseProcessor):
                     "dims": value.dims,
                     "data_type": anf_ir_pb2.DataType.Name(value.data_type),
                     "data": tensor_data,
-                    "statistics": get_statistics_dict(stats)
+                    "statistics": TensorUtils.get_statistics_dict(stats)
                 }
             })
             break
@@ -389,7 +293,7 @@ class TensorProcessor(BaseProcessor):
                     "dims": value.dims,
                     "data_type": anf_ir_pb2.DataType.Name(value.data_type),
                     "histogram_buckets": buckets,
-                    "statistics": get_statistics_dict(value.stats)
+                    "statistics": TensorUtils.get_statistics_dict(value.stats)
                 }
             })
 

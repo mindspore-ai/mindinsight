@@ -33,6 +33,7 @@ class MindInsightModules(Enum):
     SCRIPTCONVERTER = 7
     WIZARD = 9
     OPTIMIZER = 10
+    DEBUGGER = 11
 
 
 class GeneralErrors(Enum):
@@ -54,6 +55,10 @@ class ProfilerMgrErrors(Enum):
 
 class LineageMgrErrors(Enum):
     """Enum definition for lineage errors."""
+
+
+class DebuggerErrors(Enum):
+    """Enum definition for debugger errors."""
 
 
 class DataVisualErrors(Enum):

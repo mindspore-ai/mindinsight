@@ -17,3 +17,4 @@ tabulate>=0.8.6
 pandas>=1.0.4
 yapf>=0.30.0
 treelib>=1.6.1
+grpcio>=1.29.0

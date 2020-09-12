@@ -14,19 +14,28 @@
 # ============================================================================
 """Start mindinsight service."""
 
-import os
-import sys
-import re
 import argparse
+import os
+import re
+import sys
 from importlib import import_module
 
 import psutil
 
 from mindinsight.conf import settings
 from mindinsight.utils.command import BaseCommand
+from mindinsight.utils.exceptions import PortNotAvailableError
 from mindinsight.utils.hook import HookUtils
 from mindinsight.utils.hook import init
-from mindinsight.utils.exceptions import PortNotAvailableError
+
+
+def str2bool(string):
+    """Convert str to bool"""
+    if string.lower() == 'false':
+        return False
+    if string.lower() == 'true':
+        return True
+    raise ValueError
 
 
 class ConfigAction(argparse.Action):
@@ -146,6 +155,23 @@ class UrlPathPrefixAction(argparse.Action):
         setattr(namespace, self.dest, prefix)
 
 
+class EnableDebuggerAction(argparse.Action):
+    """SSL certificate action class definition."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from argparse.Action.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        enable_debugger = values
+        setattr(namespace, self.dest, enable_debugger)
+
+
 class Command(BaseCommand):
     """
     Start mindinsight service.
@@ -187,6 +213,14 @@ class Command(BaseCommand):
             """ % (PortAction.MIN_PORT, PortAction.MAX_PORT, settings.PORT))
 
         parser.add_argument(
+            '--debugger_port',
+            type=int,
+            action=PortAction,
+            help="""
+                Debugger port ranging from %s to %s. Default value is %s.
+            """ % (PortAction.MIN_PORT, PortAction.MAX_PORT, settings.DEBUGGER_PORT))
+
+        parser.add_argument(
             '--url-path-prefix',
             type=str,
             action=UrlPathPrefixAction,
@@ -197,6 +231,14 @@ class Command(BaseCommand):
                 dot or double dots. Default value is ''.
             """)
 
+        parser.add_argument(
+            '--enable_debugger',
+            type=str2bool,
+            action=EnableDebuggerAction,
+            default=False,
+            help="""
+                Enable debugger or not. 
+                Dfault is False.""")
         for hook in HookUtils.instance().hooks():
             hook.register_startup_arguments(parser)
 
