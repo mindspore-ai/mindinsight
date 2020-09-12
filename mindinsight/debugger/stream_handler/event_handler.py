@@ -60,7 +60,7 @@ class EventHandler(StreamHandlerBase):
             self._event_cache = [None] * self.max_limit
             value = {'metadata': {'pos': '0'}}
             self.clean_pending_requests(value)
-            log.debug("Clean event cache.")
+            log.debug("Clean event cache. %d request is waiting.", len(self._pending_requests))
 
     def put(self, value):
         """

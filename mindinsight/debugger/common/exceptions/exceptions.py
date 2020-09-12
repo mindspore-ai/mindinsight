@@ -23,7 +23,8 @@ class DebuggerParamTypeError(MindInsightException):
     def __init__(self, msg):
         super(DebuggerParamTypeError, self).__init__(
             error=DebuggerErrors.PARAM_TYPE_ERROR,
-            message=DebuggerErrorMsg.PARAM_TYPE_ERROR.value.format(msg)
+            message=DebuggerErrorMsg.PARAM_TYPE_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -33,7 +34,8 @@ class DebuggerParamValueError(MindInsightException):
     def __init__(self, msg):
         super(DebuggerParamValueError, self).__init__(
             error=DebuggerErrors.PARAM_VALUE_ERROR,
-            message=DebuggerErrorMsg.PARAM_VALUE_ERROR.value.format(msg)
+            message=DebuggerErrorMsg.PARAM_VALUE_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -43,7 +45,8 @@ class DebuggerCreateWatchPointError(MindInsightException):
     def __init__(self, msg):
         super(DebuggerCreateWatchPointError, self).__init__(
             error=DebuggerErrors.CREATE_WATCHPOINT_ERROR,
-            message=DebuggerErrorMsg.CREATE_WATCHPOINT_ERROR.value.format(msg)
+            message=DebuggerErrorMsg.CREATE_WATCHPOINT_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -53,7 +56,8 @@ class DebuggerUpdateWatchPointError(MindInsightException):
     def __init__(self, msg):
         super(DebuggerUpdateWatchPointError, self).__init__(
             error=DebuggerErrors.UPDATE_WATCHPOINT_ERROR,
-            message=DebuggerErrorMsg.UPDATE_WATCHPOINT_ERROR.value.format(msg)
+            message=DebuggerErrorMsg.UPDATE_WATCHPOINT_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -63,7 +67,8 @@ class DebuggerDeleteWatchPointError(MindInsightException):
     def __init__(self, msg):
         super(DebuggerDeleteWatchPointError, self).__init__(
             error=DebuggerErrors.DELETE_WATCHPOINT_ERROR,
-            message=DebuggerErrorMsg.DELETE_WATCHPOINT_ERROR.value.format(msg)
+            message=DebuggerErrorMsg.DELETE_WATCHPOINT_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -82,7 +87,8 @@ class DebuggerContinueError(MindInsightException):
     def __init__(self, msg):
         super(DebuggerContinueError, self).__init__(
             error=DebuggerErrors.CONTINUE_ERROR,
-            message=DebuggerErrorMsg.CONTINUE_ERROR.value.format(msg)
+            message=DebuggerErrorMsg.CONTINUE_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -91,7 +97,8 @@ class DebuggerPauseError(MindInsightException):
     def __init__(self, msg):
         super(DebuggerPauseError, self).__init__(
             error=DebuggerErrors.PAUSE_ERROR,
-            message=DebuggerErrorMsg.PAUSE_ERROR.value.format(msg)
+            message=DebuggerErrorMsg.PAUSE_ERROR.value.format(msg),
+            http_code=400
         )
 
 
