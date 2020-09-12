@@ -32,7 +32,7 @@ class PyTorchGraphNode(GraphNode):
     _type_frozen = False
     _module_name_frozen = False
 
-    def __init__(self, node=None):
+    def __init__(self, node=None, weight=None):
         super(PyTorchGraphNode, self).__init__(node=node)
         self._op_params = self._get_raw_params(node)
         self._op_name = node.kind() if node else None
@@ -40,6 +40,7 @@ class PyTorchGraphNode(GraphNode):
         self._opt_var_name = None
         self._variable_name = self._extract_var_name(self._scope_name)
         self._module_name = None
+        self._weight = weight
 
     def clear_args_of_declaration(self):
         """

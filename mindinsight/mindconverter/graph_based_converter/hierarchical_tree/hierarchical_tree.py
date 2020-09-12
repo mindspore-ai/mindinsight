@@ -489,6 +489,35 @@ class HierarchicalTree(Tree):
         """
         return s.split(SEPARATOR_IN_SCOPE)[-1].lower().split(SEPARATOR_BTW_NAME_AND_ID)[0]
 
+    def _find_all_previous_opt_var_(self, cur_nd, pre_nd):
+        """
+        Find all input varian names.
+
+        Args:
+            cur_nd (Node): Current node.
+            pre_nd (Node): Precursor node.
+
+        Returns:
+            str, needed var names.
+        """
+        ipt_lst = []
+        for e in cur_nd.data.precursor_nodes:
+            p_nd = self.get_node(e)
+            if e not in pre_nd.successors(self.tree_identifier):
+                while True:
+                    if p_nd.identifier in pre_nd.successors(self.tree_identifier):
+                        ipt_lst.append(p_nd.data.opt_var_name)
+                        break
+                    pre_nd_name = p_nd.predecessor(self.tree_identifier)
+                    if not pre_nd_name:
+                        ipt_lst.append("x")
+                        break
+                    p_nd = self.get_node(pre_nd_name)
+                continue
+
+            ipt_lst.append(p_nd.data.opt_var_name)
+        return ipt_lst
+
     def _get_previous_opt_var(self, cur_nd, pre_nd):
         """
         Get needed input variable names.
@@ -500,29 +529,13 @@ class HierarchicalTree(Tree):
         Returns:
             str, needed var names.
         """
-        ipt_lst = []
-        if cur_nd.data.node_type == NodeType.OPERATION.value:
-            for e in cur_nd.data.precursor_nodes:
-                p_nd = self.get_node(e)
-                if e not in pre_nd.successors(self.tree_identifier):
-                    while True:
-                        if p_nd.identifier in pre_nd.successors(self.tree_identifier):
-                            ipt_lst.append(p_nd.data.opt_var_name)
-                            break
-                        pre_nd_name = p_nd.predecessor(self.tree_identifier)
-                        if not pre_nd_name:
-                            ipt_lst.append("x")
-                            break
-                        p_nd = self.get_node(pre_nd_name)
-                    continue
-
-                ipt_lst.append(p_nd.data.opt_var_name)
-        else:
-            idx = pre_nd.successors(self.tree_identifier).index(cur_nd.identifier) - 1
-            p_nd = self.get_node(pre_nd.successors(self.tree_identifier)[idx])
-            ipt_lst.append(p_nd.data.opt_var_name)
-
-        return ", ".join(ipt_lst)
+        if cur_nd.data.node_type != NodeType.OPERATION.value:
+            while True:
+                p_nd = cur_nd.successors(self.tree_identifier)
+                if not p_nd:
+                    break
+                cur_nd = self.get_node(p_nd[0])
+        return ", ".join(self._find_all_previous_opt_var_(cur_nd, pre_nd))
 
     def hash_key(self, node):
         """

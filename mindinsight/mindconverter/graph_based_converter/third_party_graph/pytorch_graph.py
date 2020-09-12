@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Define PyTorch graph."""
-import platform
 import warnings
 import re
 from typing import Dict, NoReturn
@@ -112,9 +111,7 @@ class PyTorchGraph(Graph):
         self._check_input_shape(input_shape)
 
         def _extract_shape(shape):
-            if platform.system() == "Darwin":
-                return [int(x.split(":")[0]) for x in shape.split(',')]
-            return [int(x.replace("!", "")) for x in shape.split(',')]
+            return [int(x.split(":")[0].replace("!", "")) for x in shape.split(',')]
 
         feed_forward_ipt_shape = (1, *input_shape)
         batched_sample = create_autograd_variable(torch.rand(*feed_forward_ipt_shape))
@@ -134,9 +131,16 @@ class PyTorchGraph(Graph):
             output_shape_str_list = re.findall(r'[^()!]+', str(node))
             output_shape_str = output_shape_str_list[1]
             output_shape = _extract_shape(output_shape_str)
-
+            weight_scope = '.'.join(
+                re.findall(r'\[([\w\d.]+)\]', node.scopeName())
+            )
+            node_weight = {}
+            for scope, weight in self._params_dict.items():
+                split_scope = scope.split('.')
+                if '.'.join(split_scope[:-1]) == weight_scope:
+                    node_weight[split_scope[-1]] = weight
             self._shape_dict[node_name] = output_shape
-            self._nodes_collection[node_name] = PyTorchGraphNode(node)
+            self._nodes_collection[node_name] = PyTorchGraphNode(node, node_weight)
             self._nodes_record[node_name] = node_name
 
             for node_input in list(node.inputs()):

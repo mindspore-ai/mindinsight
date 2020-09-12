@@ -20,11 +20,11 @@ class ReLUMapper(ONNXToMindSporeMapper):
     """ReLU mapper."""
 
     @staticmethod
-    def _operation_name_in_ms():
+    def _operation_name_in_ms(*args, **kwargs):
         return "nn.ReLU"
 
     @staticmethod
-    def _convert_params(params):
+    def _convert_params(params, weights):
         if params:
             pass
         return dict()

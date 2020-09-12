@@ -41,12 +41,12 @@ class Mapper(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def _operation_name_in_ms():
+    def _operation_name_in_ms(*args, **kwargs):
         """Corresponding operation name in mindspore."""
 
     @staticmethod
     @abc.abstractmethod
-    def _convert_params(params):
+    def _convert_params(params, weights):
         """Convert third party operation's param into MindSpore operation."""
 
     @staticmethod
@@ -95,8 +95,8 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             return None, dict()
 
         try:
-            converter_name = op_name_converter()
-            converted_params = params_converter(params)
+            converter_name = op_name_converter(params=params, weights=weights, op_name=op_name)
+            converted_params = params_converter(params, weights)
             converted_weights = weights_converter(weights) if weights else dict()
             converted_params.update(converted_weights)
         except (AttributeError,) as _:
@@ -106,11 +106,11 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         return converter_name, converted_params
 
     @staticmethod
-    def _operation_name_in_ms():
+    def _operation_name_in_ms(*args, **kwargs):
         raise NotImplementedError
 
     @staticmethod
-    def _convert_params(params):
+    def _convert_params(params, weights):
         raise NotImplementedError
 
     @staticmethod

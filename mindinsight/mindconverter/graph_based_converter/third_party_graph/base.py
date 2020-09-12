@@ -288,6 +288,8 @@ class GraphNode(abc.ABC):
         self._ipt_shape = None
         # Output shape of current op.
         self._opt_shape = None
+        # Weight of current op.
+        self._weight = None
 
     @property
     def opt_var_name(self):
@@ -536,7 +538,8 @@ class GraphNode(abc.ABC):
                        "output_shape": self.output_shape})
 
         op_name_in_mindspore, ms_params = mapper.convert(op_name=self.op_name,
-                                                         params=params)
+                                                         params=params,
+                                                         weights=self._weight)
         if op_name_in_mindspore:
             self._op_in_ms = op_name_in_mindspore
             self._params_in_ms = ms_params
