@@ -29,7 +29,7 @@ limitations under the License.
                  class="el-menu-demo"
                  mode="horizontal">
           <el-menu-item index="/summary-manage">{{$t("summaryManage.summaryList")}}</el-menu-item>
-          <el-menu-item index="/debugger" v-if="false">{{$t("debugger.debugger")}}</el-menu-item>
+          <el-menu-item index="/debugger">{{$t("debugger.debugger")}}</el-menu-item>
         </el-menu>
       </div>
     </div>
