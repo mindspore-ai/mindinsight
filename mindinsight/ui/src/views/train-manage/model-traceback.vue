@@ -2875,7 +2875,7 @@ export default {
   line-height: 48px;
   display: inline-block;
   list-style: none;
-  font-size: 18px;
+  font-size: 17px;
   color: #303133;
   position: relative;
 }
@@ -3114,7 +3114,7 @@ export default {
     background: #edf0f5;
     overflow-y: auto;
     margin: 6px 0px 10px 32px;
-    padding: 10px 20px;
+    padding: 10px 16px;
     .left-chart-container {
       height: 100%;
       min-height: 774px;
@@ -3126,17 +3126,17 @@ export default {
         flex: 1;
       }
       .left-select {
-        width: 200px;
+        width: 180px;
         .el-select > .el-input {
-          width: 200px !important;
+          width: 180px !important;
         }
       }
     }
     .title-style {
-      font-size: 18px;
+      font-size: 16px;
       flex: 1;
       font-weight: bold;
-      margin-bottom: 4px;
+      line-height: 30px;
       .el-icon-refresh-right {
         font-size: 20px;
         vertical-align: middle;
@@ -3173,7 +3173,7 @@ export default {
       padding: 10px 0;
       .bar-select {
         display: flex;
-        flex: 1.5;
+        flex: 1.35;
         .el-select {
           max-width: 240px;
         }
@@ -3265,7 +3265,7 @@ export default {
       max-width: 500px !important;
     }
     .top-area {
-      margin: 6px 32px;
+      margin: 0px 32px 6px;
       display: flex;
       justify-content: flex-end;
       .select-box {
@@ -3300,7 +3300,7 @@ export default {
     }
     .table-container {
       background-color: white;
-      height: calc(67% - 85px);
+      height: calc(67% - 80px);
       padding: 6px 32px;
       position: relative;
       .disabled-checked {
