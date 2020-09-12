@@ -174,7 +174,7 @@ limitations under the License.
                        v-for="(watchpoint,index) in item.watch_points"
                        :key="index">
                     id:{{ watchpoint.id }}&nbsp;condition :{{
-                         this.conditionMappings[watchpoint.watch_condition.condition]
+                      conditionMappings[watchpoint.watch_condition.condition]
                          }} {{watchpoint.watch_condition.param}}
                   </div>
                 </div>
@@ -917,16 +917,11 @@ export default {
      * Query tensor value
      * @param { Object } data node info
      */
-    queryTensorValue(data) {
+    retrieveTensorHistory(data) {
       const params = {
-        mode: 'node',
-        params: {
-          node_type: data.type,
-          watch_point_id: this.curWatchPointId,
-          name: data.name,
-        },
+        name: data.name,
       };
-      RequestService.retrieve(params).then(
+      RequestService.retrieveTensorHistory(params).then(
           (res) => {
             if (res.data && res.data.metadata) {
               this.dealMetadata(res.data.metadata);
@@ -1089,14 +1084,13 @@ export default {
               }
               if (
                 res.data.receive_tensor &&
-              res.data.receive_tensor.metadata &&
-              res.data.receive_tensor.metadata.step >= this.metadata.step &&
+              res.data.metadata &&
+              res.data.metadata.step >= this.metadata.step &&
               res.data.receive_tensor.node_name ===
                 this.$refs.tree.getCurrentKey()
               ) {
-                this.queryTensorValue({
+                this.retrieveTensorHistory({
                   name: res.data.receive_tensor.node_name,
-                  type: res.data.receive_tensor.node_type,
                 });
               }
               if (
@@ -3487,9 +3481,8 @@ export default {
               clearTimeout(this.graph.timer);
             }
             this.graph.timer = setTimeout(() => {
-              this.queryTensorValue({
+              this.retrieveTensorHistory({
                 name: path[0].replace('_unfold', ''),
-                type: this.allGraphData[path[0].replace('_unfold', '')].type,
               });
             }, 500);
           }
