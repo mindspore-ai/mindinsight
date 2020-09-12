@@ -35,7 +35,7 @@ from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
 
 from ....utils.log_operations import LogOperations
-from ....utils.tools import check_loading_done, compare_result_with_file, delete_files_or_dirs
+from ....utils.tools import compare_result_with_file, delete_files_or_dirs
 from ..mock import MockLogger
 
 
@@ -74,10 +74,7 @@ class TestGraphProcessor:
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager(summary_base_dir)
-        self._mock_data_manager.start_load_data(reload_interval=0)
-
-        # wait for loading done
-        check_loading_done(self._mock_data_manager, time_limit=5)
+        self._mock_data_manager.start_load_data().join()
 
     @pytest.fixture(scope='function')
     def load_no_graph_record(self):
@@ -93,10 +90,7 @@ class TestGraphProcessor:
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager(summary_base_dir)
-        self._mock_data_manager.start_load_data(reload_interval=0)
-
-        # wait for loading done
-        check_loading_done(self._mock_data_manager, time_limit=5)
+        self._mock_data_manager.start_load_data().join()
 
     @pytest.mark.usefixtures('load_graph_record')
     def test_get_nodes_with_not_exist_train_id(self):

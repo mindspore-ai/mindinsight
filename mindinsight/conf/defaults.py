@@ -35,5 +35,4 @@ ENABLE_DEBUGGER = False
 ####################################
 # Datavisual default settings.
 ####################################
-RELOAD_INTERVAL = 3  # Seconds
 SUMMARY_BASE_DIR = os.getcwd()

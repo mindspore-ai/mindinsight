@@ -27,15 +27,13 @@ import time
 import os
 from typing import Iterable, Optional
 
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
-
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import CacheStatus
 from mindinsight.datavisual.common.log import logger
-from mindinsight.datavisual.common.enums import DataManagerStatus, DetailCacheManagerStatus
+from mindinsight.datavisual.common.enums import DataManagerStatus
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
@@ -294,7 +292,8 @@ class BaseCacheItemUpdater(abc.ABC):
 class _BaseCacheManager:
     """Base class for cache manager."""
 
-    def __init__(self):
+    def __init__(self, summary_base_dir):
+        self._summary_base_dir = summary_base_dir
         # Use dict to remove duplicate updaters.
         self._updaters = {}
 
@@ -342,16 +341,62 @@ class _BaseCacheManager:
         """Whether this cache manager has train jobs."""
         return bool(self._cache_items)
 
-    def update_cache(self, disk_train_jobs: Iterable[_BasicTrainJob]):
+    def update_cache(self, executor):
         """
         Update cache according to given train jobs on disk.
 
         Different cache manager should implement different cache update policies in this method.
 
         Args:
-            disk_train_jobs (Iterable[_BasicTrainJob]): Train jobs on disk.
+            executor (Executor): The Executor instance.
         """
         raise NotImplementedError()
+
+
+class _BriefCacheManager(_BaseCacheManager):
+    """A cache manager that holds all disk train jobs on disk."""
+
+    def cache_train_job(self, train_id):
+        """
+        Cache given train job.
+
+        All disk train jobs are cached on every reload, so this method always return false.
+
+        Args:
+            train_id (str): Train Id.
+        """
+        if train_id in self._cache_items:
+            self._cache_items[train_id].update_access_time()
+
+        return False
+
+    def update_cache(self, executor):
+        """Update cache."""
+        logger.info('Start to update BriefCacheManager.')
+        summaries_info = SummaryWatcher().list_summary_directories(self._summary_base_dir)
+
+        basic_train_jobs = []
+        for info in summaries_info:
+            profiler = info['profiler']
+            basic_train_jobs.append(_BasicTrainJob(
+                train_id=info['relative_path'],
+                abs_summary_base_dir=self._summary_base_dir,
+                abs_summary_dir=os.path.realpath(os.path.join(
+                    self._summary_base_dir,
+                    info['relative_path']
+                )),
+                create_time=info['create_time'],
+                update_time=info['update_time'],
+                profiler_dir=None if profiler is None else profiler['directory'],
+                profiler_type="" if profiler is None else profiler['profiler_type'],
+            ))
+
+        with self._lock:
+            new_cache_items = self._merge_with_disk(basic_train_jobs)
+            self._cache_items = new_cache_items
+        for updater in self._updaters.values():
+            for cache_item in self._cache_items.values():
+                updater.update_item(cache_item)
 
     def _merge_with_disk(self, disk_train_jobs: Iterable[_BasicTrainJob]):
         """
@@ -376,33 +421,6 @@ class _BaseCacheManager:
 
         return new_cache_items
 
-
-class _BriefCacheManager(_BaseCacheManager):
-    """A cache manager that holds all disk train jobs on disk."""
-
-    def cache_train_job(self, train_id):
-        """
-        Cache given train job.
-
-        All disk train jobs are cached on every reload, so this method always return false.
-
-        Args:
-            train_id (str): Train Id.
-        """
-        if train_id in self._cache_items:
-            self._cache_items[train_id].update_access_time()
-
-        return False
-
-    def update_cache(self, disk_train_jobs):
-        """Update cache."""
-        with self._lock:
-            new_cache_items = self._merge_with_disk(disk_train_jobs)
-            self._cache_items = new_cache_items
-        for updater in self._updaters.values():
-            for cache_item in self._cache_items.values():
-                updater.update_item(cache_item)
-
     @property
     def cache_items(self):
         """Get cache items."""
@@ -417,20 +435,13 @@ DATAVISUAL_CACHE_KEY = "datavisual"
 
 class _DetailCacheManager(_BaseCacheManager):
     """A cache manager that holds detailed info for most recently used train jobs."""
-    def __init__(self, loader_generators):
-        super().__init__()
+    def __init__(self, summary_base_dir):
+        super().__init__(summary_base_dir)
         self._loader_pool = {}
         self._deleted_id_list = []
         self._loader_pool_mutex = threading.Lock()
-        self._max_threads_count = 30
-        self._loader_generators = loader_generators
-        self._status = DetailCacheManagerStatus.INIT.value
+        self._loader_generators = [DataLoaderGenerator(summary_base_dir)]
         self._loading_mutex = threading.Lock()
-
-    @property
-    def status(self):
-        """Get loading status, if it is loading, return True."""
-        return self._status
 
     def has_content(self):
         """Whether this cache manager has train jobs."""
@@ -451,37 +462,22 @@ class _DetailCacheManager(_BaseCacheManager):
         """Get loader pool size."""
         return len(self._loader_pool)
 
-    def _load_in_cache(self):
-        """Generate and execute loaders."""
-        def load():
-            self._generate_loaders()
-            self._execute_load_data()
-        try:
-            exception_wrapper(load())
-        except UnknownError as ex:
-            logger.warning("Load event data failed. Detail: %s.", str(ex))
-        finally:
-            self._status = DetailCacheManagerStatus.DONE.value
-        logger.info("Load event data end, status: %r, and loader pool size is %r.",
-                    self._status, self.loader_pool_size())
-
-    def update_cache(self, disk_train_jobs: Iterable[_BasicTrainJob]):
+    def update_cache(self, executor):
         """
         Update cache.
 
         Will switch to using disk_train_jobs in the future.
 
         Args:
-            disk_train_jobs (Iterable[_BasicTrainJob]): Basic info about train jobs on disk.
-
+            executor (Executor): The Executor instance.
         """
         with self._loading_mutex:
-            if self._status == DetailCacheManagerStatus.LOADING.value:
-                logger.debug("Event data is loading, and loader pool size is %r.", self.loader_pool_size())
-                return
-            self._status = DetailCacheManagerStatus.LOADING.value
-            thread = threading.Thread(target=self._load_in_cache, name="load_detail_in_cache")
-            thread.start()
+            load_in_cache = exception_wrapper(self._execute_load_data)
+            try:
+                while not load_in_cache(executor):
+                    yield
+            except UnknownError as ex:
+                logger.warning("Load event data failed. Detail: %s.", str(ex))
 
     def cache_train_job(self, train_id):
         """Cache given train job."""
@@ -500,11 +496,6 @@ class _DetailCacheManager(_BaseCacheManager):
 
                 if loader is None:
                     raise TrainJobNotExistError(train_id)
-
-                # Update cache status loader to CACHING if loader is NOT_IN_CACHE
-                # before triggering the next interval.
-                if loader.cache_status == CacheStatus.NOT_IN_CACHE:
-                    loader.cache_status = CacheStatus.CACHING
 
                 self._add_loader(loader)
                 need_reload = True
@@ -546,7 +537,7 @@ class _DetailCacheManager(_BaseCacheManager):
             logger.debug("delete loader %s", loader_id)
             self._loader_pool.pop(loader_id)
 
-    def _execute_loader(self, loader_id, computing_resource_mgr):
+    def _execute_loader(self, loader_id, executor):
         """
         Load data form data_loader.
 
@@ -554,20 +545,25 @@ class _DetailCacheManager(_BaseCacheManager):
 
         Args:
             loader_id (str): An ID for `Loader`.
-            computing_resource_mgr (ComputingResourceManager): The ComputingResourceManager instance.
+            executor (Executor): The Executor instance.
+
+        Returns:
+            bool, True if the loader is finished loading.
         """
         try:
             with self._loader_pool_mutex:
                 loader = self._loader_pool.get(loader_id, None)
                 if loader is None:
                     logger.debug("Loader %r has been deleted, will not load data.", loader_id)
-                    return
+                    return True
 
-            loader.data_loader.load(computing_resource_mgr)
-
-            # Update loader cache status to CACHED.
-            # Loader with cache status CACHED should remain the same cache status.
-            loader.cache_status = CacheStatus.CACHED
+            loader.cache_status = CacheStatus.CACHING
+            if loader.data_loader.load(executor):
+                # Update loader cache status to CACHED.
+                # Loader with cache status CACHED should remain the same cache status.
+                loader.cache_status = CacheStatus.CACHED
+                return True
+            return False
 
         except MindInsightException as ex:
             logger.warning("Data loader %r load data failed. "
@@ -575,6 +571,7 @@ class _DetailCacheManager(_BaseCacheManager):
 
             with self._loader_pool_mutex:
                 self._delete_loader(loader_id)
+            return True
 
     def _generate_loaders(self):
         """This function generates the loader from given path."""
@@ -607,38 +604,14 @@ class _DetailCacheManager(_BaseCacheManager):
                 if self._loader_pool[loader_id].latest_update_time < loader.latest_update_time:
                     self._update_loader_latest_update_time(loader_id, loader.latest_update_time)
 
-    def _execute_load_data(self):
+    def _execute_load_data(self, executor):
         """Load data through multiple threads."""
-        threads_count = self._get_threads_count()
-        if not threads_count:
-            logger.info("Can not find any valid train log path to load, loader pool is empty.")
-            return
-
-        logger.info("Start to execute load data. threads_count: %s.", threads_count)
-
-        with ComputingResourceManager(
-                executors_cnt=threads_count,
-                max_processes_cnt=settings.MAX_PROCESSES_COUNT) as computing_resource_mgr:
-
-            with ThreadPoolExecutor(max_workers=threads_count) as executor:
-                futures = []
-                loader_pool = self._get_snapshot_loader_pool()
-                for loader_id in loader_pool:
-                    future = executor.submit(self._execute_loader, loader_id, computing_resource_mgr)
-                    futures.append(future)
-                wait(futures, return_when=ALL_COMPLETED)
-
-    def _get_threads_count(self):
-        """
-        Use the maximum number of threads available.
-
-        Returns:
-            int, number of threads.
-
-        """
-        threads_count = min(self._max_threads_count, len(self._loader_pool))
-
-        return threads_count
+        self._generate_loaders()
+        loader_pool = self._get_snapshot_loader_pool()
+        loaded = True
+        for loader_id in loader_pool:
+            loaded = self._execute_loader(loader_id, executor) and loaded
+        return loaded
 
     def delete_train_job(self, train_id):
         """
@@ -864,11 +837,8 @@ class DataManager:
         self._status = DataManagerStatus.INIT.value
         self._status_mutex = threading.Lock()
 
-        self._reload_interval = 3
-
-        loader_generators = [DataLoaderGenerator(self._summary_base_dir)]
-        self._detail_cache = _DetailCacheManager(loader_generators)
-        self._brief_cache = _BriefCacheManager()
+        self._detail_cache = _DetailCacheManager(self._summary_base_dir)
+        self._brief_cache = _BriefCacheManager(self._summary_base_dir)
 
         # This lock is used to make sure that only one self._load_data_in_thread() is running.
         # Because self._load_data_in_thread() will create process pool when loading files, we can not
@@ -880,126 +850,58 @@ class DataManager:
         """Get summary base dir."""
         return self._summary_base_dir
 
-    def start_load_data(self,
-                        reload_interval=settings.RELOAD_INTERVAL,
-                        max_threads_count=MAX_DATA_LOADER_SIZE):
+    def start_load_data(self, auto_reload=False):
         """
         Start threads for loading data.
 
-        Args:
-            reload_interval (int): Time to reload data once.
-            max_threads_count (int): Max number of threads of execution.
-
+        Returns:
+            Thread, the background Thread instance.
         """
-        logger.info("Start to load data, reload_interval: %s, "
-                    "max_threads_count: %s.", reload_interval, max_threads_count)
-        DataManager.check_reload_interval(reload_interval)
-        DataManager.check_max_threads_count(max_threads_count)
-
-        self._reload_interval = reload_interval
-        self._max_threads_count = max_threads_count
-
-        thread = threading.Thread(target=self._reload_data_in_thread,
-                                  name='start_load_data_thread')
+        logger.info("Start to load data")
+        thread = threading.Thread(target=self._load_data_in_thread_wrapper,
+                                  name='start_load_data_thread',
+                                  args=(auto_reload,),
+                                  daemon=True)
         thread.daemon = True
         thread.start()
+        return thread
 
-    def _reload_data_in_thread(self):
-        """This function periodically loads the data."""
-        # Let gunicorn load other modules first.
-        time.sleep(1)
-        while True:
-            self._load_data_in_thread_wrapper()
-
-            if not self._reload_interval:
-                break
-            time.sleep(self._reload_interval)
-
-    def reload_data(self):
-        """
-        Reload the data once.
-
-        This function needs to be used after `start_load_data` function.
-        """
-        logger.debug("start to reload data")
-        thread = threading.Thread(target=self._load_data_in_thread_wrapper,
-                                  name='reload_data_thread')
-        thread.daemon = False
-        thread.start()
-
-    def _load_data_in_thread_wrapper(self):
+    def _load_data_in_thread_wrapper(self, auto_reload):
         """Wrapper for load data in thread."""
+        if self._load_data_lock.locked():
+            return
         try:
             with self._load_data_lock:
-                exception_wrapper(self._load_data())
+                while True:
+                    exception_wrapper(self._load_data)()
+                    if not auto_reload:
+                        break
         except UnknownError as exc:
             # Not raising the exception here to ensure that data reloading does not crash.
             logger.warning(exc.message)
 
     def _load_data(self):
         """This function will load data once and ignore it if the status is loading."""
-        logger.info("Start to load data, reload interval: %r.", self._reload_interval)
         with self._status_mutex:
             if self.status == DataManagerStatus.LOADING.value:
                 logger.debug("Current status is %s , will ignore to load data.", self.status)
                 return
             self.status = DataManagerStatus.LOADING.value
 
-        summaries_info = SummaryWatcher().list_summary_directories(self._summary_base_dir)
+        with ComputingResourceManager(executors_cnt=1,
+                                      max_processes_cnt=settings.MAX_PROCESSES_COUNT) as computing_resource_mgr:
+            with computing_resource_mgr.get_executor() as executor:
+                self._brief_cache.update_cache(executor)
+                for _ in self._detail_cache.update_cache(executor):
+                    self._brief_cache.update_cache(executor)
+                executor.wait_all_tasks_finish()
+            with self._status_mutex:
+                if not self._brief_cache.has_content() and not self._detail_cache.has_content():
+                    self.status = DataManagerStatus.INVALID.value
+                else:
+                    self.status = DataManagerStatus.DONE.value
 
-        basic_train_jobs = []
-        for info in summaries_info:
-            profiler = info['profiler']
-            basic_train_jobs.append(_BasicTrainJob(
-                train_id=info['relative_path'],
-                abs_summary_base_dir=self._summary_base_dir,
-                abs_summary_dir=os.path.realpath(os.path.join(
-                    self._summary_base_dir,
-                    info['relative_path']
-                )),
-                create_time=info['create_time'],
-                update_time=info['update_time'],
-                profiler_dir=None if profiler is None else profiler['directory'],
-                profiler_type="" if profiler is None else profiler['profiler_type'],
-            ))
-
-        self._brief_cache.update_cache(basic_train_jobs)
-        self._detail_cache.update_cache(basic_train_jobs)
-
-        if not self._brief_cache.has_content() and not self._detail_cache.has_content() \
-                and self._detail_cache.status == DetailCacheManagerStatus.DONE.value:
-            self.status = DataManagerStatus.INVALID.value
-        else:
-            self.status = DataManagerStatus.DONE.value
-
-        logger.info("Load brief data end, and loader pool size is %r.", self._detail_cache.loader_pool_size())
-
-    @staticmethod
-    def check_reload_interval(reload_interval):
-        """
-        Check reload interval is valid.
-
-        Args:
-            reload_interval (int): Reload interval >= 0.
-        """
-        if not isinstance(reload_interval, int):
-            raise ParamValueError("The value of reload interval should be integer.")
-
-        if reload_interval < 0:
-            raise ParamValueError("The value of reload interval should be >= 0.")
-
-    @staticmethod
-    def check_max_threads_count(max_threads_count):
-        """
-        Threads count should be a integer, and should > 0.
-
-        Args:
-            max_threads_count (int), should > 0.
-        """
-        if not isinstance(max_threads_count, int):
-            raise ParamValueError("The value of max threads count should be integer.")
-        if max_threads_count <= 0:
-            raise ParamValueError("The value of max threads count should be > 0.")
+                logger.info("Load brief data end, and loader pool size is %r.", self._detail_cache.loader_pool_size())
 
     def get_train_job_by_plugin(self, train_id, plugin_name):
         """
@@ -1093,7 +995,7 @@ class DataManager:
         brief_need_reload = self._brief_cache.cache_train_job(train_id)
         detail_need_reload = self._detail_cache.cache_train_job(train_id)
         if brief_need_reload or detail_need_reload:
-            self.reload_data()
+            self.start_load_data()
 
     def register_brief_cache_item_updater(self, updater: BaseCacheItemUpdater):
         """Register brief cache item updater for brief cache manager."""
@@ -1106,10 +1008,6 @@ class DataManager:
     def get_brief_train_job(self, train_id):
         """Get brief train job."""
         return self._brief_cache.get_train_job(train_id)
-
-    def get_detail_cache_status(self):
-        """Get detail status, just for ut/st."""
-        return self._detail_cache.status
 
 
 DATA_MANAGER = DataManager(settings.SUMMARY_BASE_DIR)

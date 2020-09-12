@@ -36,7 +36,7 @@ from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import ParamMissError
 
 from ....utils.log_operations import LogOperations
-from ....utils.tools import check_loading_done, delete_files_or_dirs
+from ....utils.tools import delete_files_or_dirs
 from ..mock import MockLogger
 
 
@@ -77,10 +77,7 @@ class TestTensorProcessor:
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager(summary_base_dir)
-        self._mock_data_manager.start_load_data(reload_interval=0)
-
-        # wait for loading done
-        check_loading_done(self._mock_data_manager, time_limit=3)
+        self._mock_data_manager.start_load_data().join()
 
     @pytest.mark.usefixtures('load_tensor_record')
     def test_get_tensors_with_not_exist_id(self):

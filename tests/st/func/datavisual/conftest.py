@@ -29,7 +29,6 @@ from mindinsight.datavisual.data_transform.loader_generators.loader_generator im
 from mindinsight.datavisual.utils import tools
 
 from ....utils.log_operations import LogOperations
-from ....utils.tools import check_loading_done
 from . import constants
 from . import globals as gbl
 
@@ -59,8 +58,7 @@ def init_summary_logs():
         summaries_metadata = log_operations.create_summary_logs(summary_base_dir, constants.SUMMARY_DIR_NUM_FIRST,
                                                                 constants.SUMMARY_DIR_PREFIX)
         mock_data_manager = DataManager(summary_base_dir)
-        mock_data_manager.start_load_data(reload_interval=0)
-        check_loading_done(mock_data_manager)
+        mock_data_manager.start_load_data().join()
 
         summaries_metadata.update(
             log_operations.create_summary_logs(summary_base_dir, constants.SUMMARY_DIR_NUM_SECOND,
@@ -72,10 +70,7 @@ def init_summary_logs():
         summaries_metadata.update(
             log_operations.create_reservoir_log(summary_base_dir, constants.RESERVOIR_DIR_NAME,
                                                 constants.RESERVOIR_STEP_NUM))
-        mock_data_manager.start_load_data(reload_interval=0)
-
-        # Sleep 1 sec to make sure the status of mock_data_manager changed to LOADING.
-        check_loading_done(mock_data_manager, first_sleep_time=1)
+        mock_data_manager.start_load_data().join()
 
         # Maximum number of loads is `MAX_DATA_LOADER_SIZE`.
         for i in range(len(summaries_metadata) - MAX_DATA_LOADER_SIZE):
@@ -98,8 +93,7 @@ def populate_globals():
 def client():
     """This fixture is flask client."""
 
-    gbl.mock_data_manager.start_load_data(reload_interval=0)
-    check_loading_done(gbl.mock_data_manager)
+    gbl.mock_data_manager.start_load_data().join()
 
     data_manager.DATA_MANAGER = gbl.mock_data_manager
 

@@ -240,7 +240,7 @@ def if_nan_inf_to_none(name, value):
 def exception_wrapper(func):
     def wrapper(*args, **kwargs):
         try:
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
         except Exception as exc:
             logger.exception(exc)
             raise UnknownError(str(exc))

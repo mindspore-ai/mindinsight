@@ -27,7 +27,6 @@ import pytest
 from mindinsight.datavisual.common.exceptions import SummaryLogPathInvalid
 from mindinsight.datavisual.data_transform import data_loader
 from mindinsight.datavisual.data_transform.data_loader import DataLoader
-from mindinsight.utils.computing_resource_mgr import ComputingResourceManager
 
 from ..mock import MockLogger
 
@@ -58,7 +57,7 @@ class TestDataLoader:
         """Test loading method with empty file list."""
         loader = DataLoader(self._summary_dir)
         with pytest.raises(SummaryLogPathInvalid):
-            loader.load(ComputingResourceManager(1, 1))
+            loader.load()
         assert 'No valid files can be loaded' in str(MockLogger.log_msg['warning'])
 
     def test_load_with_invalid_file_list(self):
@@ -67,7 +66,7 @@ class TestDataLoader:
         self._generate_files(self._summary_dir, file_list)
         loader = DataLoader(self._summary_dir)
         with pytest.raises(SummaryLogPathInvalid):
-            loader.load(ComputingResourceManager(1, 1))
+            loader.load()
         assert 'No valid files can be loaded' in str(MockLogger.log_msg['warning'])
 
     def test_load_success(self):
@@ -78,6 +77,6 @@ class TestDataLoader:
         file_list = ['summary.001', 'summary.002']
         self._generate_files(dir_path, file_list)
         dataloader = DataLoader(dir_path)
-        dataloader.load(ComputingResourceManager(1, 1))
+        dataloader.load()
         assert dataloader._loader is not None
         shutil.rmtree(dir_path)

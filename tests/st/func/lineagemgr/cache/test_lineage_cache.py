@@ -32,7 +32,7 @@ from ..test_model import LINEAGE_INFO_RUN1, LINEAGE_FILTRATION_EXCEPT_RUN, \
     LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2
 from ..conftest import BASE_SUMMARY_DIR
 from .....ut.lineagemgr.querier import event_data
-from .....utils.tools import check_loading_done, assert_equal_lineages
+from .....utils.tools import assert_equal_lineages
 
 
 @pytest.mark.usefixtures("create_summary_dir")
@@ -42,8 +42,7 @@ class TestModelApi(TestCase):
     def setup_class(cls):
         data_manager = DataManager(BASE_SUMMARY_DIR)
         data_manager.register_brief_cache_item_updater(LineageCacheItemUpdater())
-        data_manager.start_load_data(reload_interval=0)
-        check_loading_done(data_manager)
+        data_manager.start_load_data().join()
 
         cls._data_manger = data_manager
 

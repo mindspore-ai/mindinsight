@@ -13,11 +13,14 @@
 # limitations under the License.
 # ============================================================================
 """crc32 type stub module."""
+from typing import Union
+
+ByteStr = Union[bytes, str]
 
 
-def CheckValueAgainstData(crc_value: bytes, data: bytes, size: int) -> bool:
+def CheckValueAgainstData(crc_value: ByteStr, data: ByteStr, size: int) -> bool:
     """Check crc_value against new crc value from data to see if data is currupted."""
 
 
-def GetMaskCrc32cValue(data: bytes, n: int) -> int:
+def GetMaskCrc32cValue(data: ByteStr, n: int) -> int:
     """Get masked crc value from data."""

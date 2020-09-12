@@ -34,11 +34,14 @@ class DataLoader:
         self._summary_dir = summary_dir
         self._loader = None
 
-    def load(self, computing_resource_mgr):
+    def load(self, executor=None):
         """Load the data when loader is exist.
 
         Args:
-            computing_resource_mgr (ComputingResourceManager): The ComputingResourceManager instance.
+            executor (Optional[Executor]): The executor instance.
+
+        Returns:
+            bool, True if the loader is finished loading.
         """
 
         if self._loader is None:
@@ -53,7 +56,7 @@ class DataLoader:
                 logger.warning("No valid files can be loaded, summary_dir: %s.", self._summary_dir)
                 raise exceptions.SummaryLogPathInvalid()
 
-        self._loader.load(computing_resource_mgr)
+        return self._loader.load(executor)
 
     def get_events_data(self):
         """

@@ -31,7 +31,7 @@ from mindinsight.datavisual.processors.train_task_manager import TrainTaskManage
 from mindinsight.datavisual.utils import crc32
 
 from ....utils.log_operations import LogOperations
-from ....utils.tools import check_loading_done, delete_files_or_dirs
+from ....utils.tools import delete_files_or_dirs
 from ..mock import MockLogger
 
 
@@ -97,9 +97,7 @@ class TestTrainTaskManager:
         self._generated_path.append(self._root_dir)
 
         self._mock_data_manager = data_manager.DataManager(self._root_dir)
-        self._mock_data_manager.start_load_data(reload_interval=0)
-
-        check_loading_done(self._mock_data_manager, time_limit=30)
+        self._mock_data_manager.start_load_data().join()
 
     @pytest.mark.usefixtures('load_data')
     def test_get_single_train_task_with_not_exists_train_id(self):
