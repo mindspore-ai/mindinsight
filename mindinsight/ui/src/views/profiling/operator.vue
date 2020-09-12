@@ -557,6 +557,10 @@ export default {
       this.searchByCpuTypeInput = '';
       this.searchAllByCpuTypeInput = '';
       this.op_cpu_filter_condition = {};
+      this.op_cpu_sort_condition = {
+        name: 'execution_time',
+        type: 'descending',
+      };
       this.opCpuTypeCol = [];
       this.opCpuTypeList = [];
       this.opCpuAllTypeList = {
@@ -578,6 +582,10 @@ export default {
       this.searchByTypeInput = '';
       this.searchByNameInput = '';
       this.op_filter_condition = {};
+      this.op_sort_condition = {
+        name: 'execution_time',
+        type: 'descending',
+      };
       this.opTypeCol = [];
       this.opTypeList = [];
       this.opAllTypeList = {

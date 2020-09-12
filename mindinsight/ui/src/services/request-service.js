@@ -370,4 +370,11 @@ export default {
       params: params,
     });
   },
+  retrieveTensorHistory(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/debugger/retrieve_tensor_history',
+      data: params,
+    });
+  },
 };
