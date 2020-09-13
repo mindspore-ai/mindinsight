@@ -16,7 +16,6 @@
 import importlib
 
 from torch.nn import Module
-from torch.jit import _unique_state_dict
 from torch.onnx.utils import _trace
 from torch.onnx.utils import _node_getitem
 
@@ -36,6 +35,8 @@ def unique_state_dict(model):
     Returns:
         dict, params.
     """
+    from torch.jit import _unique_state_dict
+
     return _unique_state_dict(model)
 
 
