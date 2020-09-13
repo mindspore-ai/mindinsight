@@ -21,7 +21,7 @@ from mindinsight.debugger.common.log import logger as log
 from mindinsight.debugger.proto.ms_graph_pb2 import DataType
 from mindinsight.debugger.stream_cache.tensor import OpTensor, ConstTensor
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
-from mindinsight.utils.tensor import TensorUtils
+from mindinsight.utils.tensor import TensorUtils, TensorComparison
 
 
 class TensorHandler(StreamHandlerBase):
@@ -291,7 +291,8 @@ class TensorHandler(StreamHandlerBase):
                 boundary value, the result will set to be zero.
 
         Raises:
-            DebuggerParamValueError, If get current step node and previous step node failed.
+            DebuggerParamValueError, If get current step node and previous step node failed or
+                the type of tensor value is not numpy.ndarray."
 
         Returns:
             dict, the retrieved data.
@@ -306,15 +307,33 @@ class TensorHandler(StreamHandlerBase):
         prev_tensor_slice = prev_tensor.get_tensor_value_by_shape(shape)
         tensor_info = curr_tensor.get_basic_info()
         if isinstance(tensor_info, dict):
-            del tensor_info['has_prev_step']
-            del tensor_info['value']
+            tensor_info.pop('has_prev_step')
+            tensor_info.pop('value')
+
+        tensor_comparison = curr_tensor.tensor_comparison
+        if not tensor_comparison or tensor_comparison.tolerance != tolerance:
+            if isinstance(curr_tensor.value, np.ndarray) and isinstance(prev_tensor.value, np.ndarray):
+                tensor_diff = TensorUtils.calc_diff_between_two_tensor(curr_tensor.value, prev_tensor.value, tolerance)
+                if not tensor_comparison:
+                    stats = TensorUtils.get_statistics_from_tensor(tensor_diff)
+                    tensor_comparison = TensorComparison(tolerance, stats, tensor_diff)
+                    curr_tensor.update_tensor_comparisons(tensor_comparison)
+                else:
+                    tensor_comparison.update(tolerance=tolerance, value=tensor_diff)
+            else:
+                raise DebuggerParamValueError("The type of tensor value should be numpy.ndarray.")
+
         # the type of curr_tensor_slice is one of None, np.ndarray or str
         if isinstance(curr_tensor_slice, np.ndarray) and isinstance(prev_tensor_slice, np.ndarray):
-            diff_tensor = TensorUtils.calc_diff_between_two_tensor(curr_tensor_slice, prev_tensor_slice, tolerance)
-            result = np.stack([prev_tensor_slice, curr_tensor_slice, diff_tensor], axis=-1)
+            if not shape:
+                tensor_diff_slice = tensor_comparison.value
+            else:
+                tensor_diff_slice = tensor_comparison.value[shape]
+            result = np.stack([prev_tensor_slice, curr_tensor_slice, tensor_diff_slice], axis=-1)
             tensor_info['diff'] = result.tolist()
-            stats = TensorUtils.get_statistics_from_tensor(diff_tensor)
-            tensor_info['statistics'] = TensorUtils.get_statistics_dict(stats)
+            stats = TensorUtils.get_statistics_from_tensor(tensor_diff_slice)
+            tensor_info['statistics'] = TensorUtils.get_statistics_dict(stats=stats,
+                                                                        overall_stats=tensor_comparison.stats)
         elif isinstance(curr_tensor_slice, str):
             tensor_info['diff'] = curr_tensor_slice
         reply = {'tensor_value': tensor_info}

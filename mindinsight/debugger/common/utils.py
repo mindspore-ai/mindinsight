@@ -18,8 +18,6 @@ from collections import namedtuple
 
 import numpy as np
 
-from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
-from mindinsight.debugger.common.log import logger as log
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
 from mindinsight.debugger.stream_cache.debugger_graph import NodeTypeEnum
 
@@ -144,25 +142,3 @@ def is_scope_type(node_type):
     """Judge whether the type is scope type."""
     scope_types = [NodeTypeEnum.NAME_SCOPE.value, NodeTypeEnum.AGGREGATION_SCOPE.value]
     return node_type in scope_types
-
-
-def str_to_slice_or_int(input_str):
-    """
-    Translate param from string to slice or int.
-
-    Args:
-        input_str (str): The string to be translated.
-
-    Returns:
-        Union[int, slice], the transformed param.
-    """
-    try:
-        if ':' in input_str:
-            ret = slice(*map(lambda x: int(x.strip()) if x.strip() else None, input_str.split(':')))
-        else:
-            ret = int(input_str)
-    except ValueError as err:
-        log.error("Failed to create slice from %s", input_str)
-        log.exception(err)
-        raise DebuggerParamValueError("Invalid shape.")
-    return ret

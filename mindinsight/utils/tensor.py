@@ -16,13 +16,12 @@
 
 import numpy as np
 
-from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import ParamTypeError
 from mindinsight.utils.log import utils_logger as logger
 
 F32_MIN, F32_MAX = np.finfo(np.float32).min, np.finfo(np.float32).max
-
+MAX_DIMENSIONS_FOR_TENSOR = 2
 
 class Statistics:
     """Statistics data class.
@@ -82,97 +81,115 @@ class Statistics:
         """Get count of positive INF."""
         return self._pos_inf_count
 
+class TensorComparison:
+    """TensorComparison class.
+
+    Args:
+        tolerance (float): tolerance for calculating tensor diff.
+        stats (float): statistics of tensor diff.
+        value (numpy.ndarray): tensor diff.
+    """
+    def __init__(self, tolerance=0, stats=None, value=None):
+        self._tolerance = tolerance
+        self._stats = stats
+        self._value = value
+
+    @property
+    def tolerance(self):
+        """Get tolerance of TensorComparison."""
+        return self._tolerance
+
+    @property
+    def stats(self):
+        """Get stats of tensor diff."""
+        return self._stats
+
+    def update(self, tolerance, value):
+        """update tensor comparisons."""
+        self._tolerance = tolerance
+        self._value = value
+
+    @property
+    def value(self):
+        """Get value of tensor diff."""
+        return self._value
+
+def str_to_slice_or_int(input_str):
+    """
+    Translate param from string to slice or int.
+
+    Args:
+        input_str (str): The string to be translated.
+
+    Returns:
+        Union[int, slice], the transformed param.
+    """
+    try:
+        if ':' in input_str:
+            ret = slice(*map(lambda x: int(x.strip()) if x.strip() else None, input_str.split(':')))
+        else:
+            ret = int(input_str)
+    except ValueError:
+        raise ParamValueError("Invalid shape. Convert int from str failed. input_str: {}".format(input_str))
+    return ret
+
 
 class TensorUtils:
     """Tensor Utils class."""
 
     @staticmethod
-    def validate_dims_format(dims):
+    def parse_shape(shape, limit=0):
         """
-        Validate correct of format of dimension parameter.
+        Parse shape from str.
 
         Args:
-            dims (str): Dims of tensor. Its format is something like this "[0, 0, :, :]".
-
-        Raises:
-            ParamValueError: If format of dims is not correct.
-        """
-        if dims is not None:
-            if not isinstance(dims, str):
-                raise ParamTypeError(dims, str)
-            dims = dims.strip()
-            if not (dims.startswith('[') and dims.endswith(']')):
-                raise ParamValueError('The value: {} of dims must be '
-                                      'start with `[` and end with `]`.'.format(dims))
-            for dim in dims[1:-1].split(','):
-                dim = dim.strip()
-                if dim == ":":
-                    continue
-                if dim.startswith('-'):
-                    dim = dim[1:]
-                if not dim.isdigit():
-                    raise ParamValueError('The value: {} of dims in the square brackets '
-                                          'must be int or `:`.'.format(dims))
-
-    @staticmethod
-    def convert_array_from_str_dims(dims, limit=0):
-        """
-        Convert string of dims data to array.
-
-        Args:
-            dims (str): Specify dims of tensor.
-            limit (int): The max flexible dimension count, default value is 0 which means that there is no limitation.
+            shape (str): Specify shape of tensor.
+            limit (int): The max dimensions specified. Default value is 0 which means that there is no limitation.
 
         Returns:
-            list, a string like this: "[0, 0, :, :]" will convert to this value: [0, 0, None, None].
+            Union[None, tuple], a string like this: "[0, 0, 1:10, :]" will convert to this value:
+                (0, 0, slice(1, 10, None), slice(None, None, None)].
 
         Raises:
-            ParamValueError, If flexible dimensions exceed limit value.
+            ParamValueError, If type of shape is not str or format is not correct or exceed specified dimensions.
         """
-        dims = dims.strip().lstrip('[').rstrip(']')
-        dims_list = []
-        count = 0
-        for dim in dims.split(','):
-            dim = dim.strip()
-            if dim == ':':
-                dims_list.append(None)
-                count += 1
-            else:
-                dims_list.append(to_int(dim, "dim"))
-        if limit and count > limit:
-            raise ParamValueError("Flexible dimensions cannot exceed limit value: {}, size: {}"
-                                  .format(limit, count))
-        return dims_list
+        if shape is None:
+            return shape
+        if not (isinstance(shape, str) and shape.strip().startswith('[') and shape.strip().endswith(']')):
+            raise ParamValueError("Invalid shape. The type of shape should be str and start with `[` and "
+                                  "end with `]`. Received: {}.".format(shape))
+        shape = shape.strip()[1:-1]
+        dimension_size = sum(1 for dim in shape.split(',') if dim.count(':'))
+        if limit and dimension_size > limit:
+            raise ParamValueError("Invalid shape. At most {} dimensions are specified. Received: {}"
+                                  .format(limit, shape))
+        parsed_shape = tuple(
+            str_to_slice_or_int(dim.strip()) for dim in shape.split(',')) if shape else tuple()
+        return parsed_shape
 
     @staticmethod
-    def get_specific_dims_data(ndarray, dims, tensor_dims):
+    def get_specific_dims_data(ndarray, dims):
         """
         Get specific dims data.
 
         Args:
             ndarray (numpy.ndarray): An ndarray of numpy.
-            dims (list): A list of specific dims.
-            tensor_dims (list): A list of tensor dims.
+            dims (tuple): A tuple of specific dims.
 
         Returns:
             numpy.ndarray, an ndarray of specific dims tensor data.
 
         Raises:
-            ParamValueError, If the length of param dims is not equal to the length of tensor dims or
-                             the index of param dims out of range.
+            ParamValueError, If the length of param dims is not equal to the length of tensor dims.
+            IndexError, If the param dims and tensor shape is unmatched.
         """
-        if len(dims) != len(tensor_dims):
-            raise ParamValueError("The length of param dims: {}, is not equal to the "
-                                  "length of tensor dims: {}.".format(len(dims), len(tensor_dims)))
-        indices = []
-        for k, d in enumerate(dims):
-            if d is not None:
-                if d >= tensor_dims[k]:
-                    raise ParamValueError("The index: {} of param dims out of range: {}.".format(d, tensor_dims[k]))
-                indices.append(d)
-            else:
-                indices.append(slice(0, tensor_dims[k]))
-        result = ndarray[tuple(indices)]
+        if len(ndarray.shape) != len(dims):
+            raise ParamValueError("Invalid dims. The length of param dims and tensor shape should be the same.")
+        try:
+            result = ndarray[dims]
+        except IndexError:
+            raise ParamValueError("Invalid shape. Shape unmatched. Received: {}, tensor shape: {}"
+                                  .format(dims, ndarray.shape))
         # Make sure the return type is numpy.ndarray.
         if not isinstance(result, np.ndarray):
             result = np.array(result)
@@ -233,15 +250,17 @@ class TensorUtils:
         return statistics
 
     @staticmethod
-    def get_statistics_dict(stats):
+    def get_statistics_dict(stats, overall_stats):
         """
         Get statistics dict according to statistics value.
 
         Args:
-            stats (Statistics): An instance of Statistics.
+            stats (Statistics): An instance of Statistics for sliced tensor.
+            overall_stats (Statistics): An instance of Statistics for whole tensor.
 
         Returns:
-            dict, a dict including 'max', 'min', 'avg', 'count', 'nan_count', 'neg_inf_count', 'pos_inf_count'.
+            dict, a dict including 'max', 'min', 'avg', 'count',
+                'nan_count', 'neg_inf_count', 'pos_inf_count', 'overall_max', 'overall_min'.
         """
         statistics = {
             "max": float(stats.max),
@@ -250,7 +269,9 @@ class TensorUtils:
             "count": stats.count,
             "nan_count": stats.nan_count,
             "neg_inf_count": stats.neg_inf_count,
-            "pos_inf_count": stats.pos_inf_count
+            "pos_inf_count": stats.pos_inf_count,
+            "overall_max": float(overall_stats.max),
+            "overall_min": float(overall_stats.min)
         }
         return statistics
 
@@ -274,7 +295,8 @@ class TensorUtils:
 
         Raises:
             ParamTypeError: If the type of these two tensors is not the numpy.ndarray.
-            ParamValueError: If the shape or dtype is not the same of these two tensors.
+            ParamValueError: If the shape or dtype is not the same of these two tensors or
+                the tolerance should be between 0 and 1.
         """
         if not isinstance(first_tensor, np.ndarray):
             raise ParamTypeError('first_tensor', np.ndarray)
@@ -289,6 +311,9 @@ class TensorUtils:
         if first_tensor.dtype != second_tensor.dtype:
             raise ParamValueError("the dtype: {} of first tensor is not equal to dtype: {} of second tensor."
                                   .format(first_tensor.dtype, second_tensor.dtype))
+        # Make sure tolerance is between 0 and 1.
+        if tolerance < 0 or tolerance > 1:
+            raise ParamValueError("the tolerance should be between 0 and 1, but got {}".format(tolerance))
 
         diff_tensor = np.subtract(first_tensor, second_tensor)
         stats = TensorUtils.get_statistics_from_tensor(diff_tensor)

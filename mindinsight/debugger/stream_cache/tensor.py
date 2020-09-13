@@ -98,6 +98,8 @@ class OpTensor(BaseTensor):
         super(OpTensor, self).__init__(step)
         self._tensor_proto = tensor_proto
         self._value = self.generate_value_from_proto(tensor_proto)
+        self._stats = None
+        self._tensor_comparison = None
 
     @property
     def name(self):
@@ -122,6 +124,16 @@ class OpTensor(BaseTensor):
     def value(self):
         """The property of tensor value."""
         return self._value
+
+    @property
+    def stats(self):
+        """The property of tensor stats."""
+        return self._stats
+
+    @property
+    def tensor_comparison(self):
+        """The property of tensor_comparison."""
+        return self._tensor_comparison
 
     def generate_value_from_proto(self, tensor_proto):
         """
@@ -156,12 +168,34 @@ class OpTensor(BaseTensor):
         # the type of tensor_value is one of None, np.ndarray or str
         if isinstance(tensor_value, np.ndarray):
             statistics = TensorUtils.get_statistics_from_tensor(tensor_value)
-            res['statistics'] = TensorUtils.get_statistics_dict(statistics)
+            if not self.stats:
+                self.update_tensor_stats(TensorUtils.get_statistics_from_tensor(self.value))
+            res['statistics'] = TensorUtils.get_statistics_dict(stats=statistics, overall_stats=self.stats)
             res['value'] = tensor_value.tolist()
         elif isinstance(tensor_value, str):
             res['value'] = tensor_value
 
         return res
+
+    def update_tensor_comparisons(self, tensor_comparison):
+        """
+        Update tensor comparison for tensor.
+
+        Args:
+            tensor_comparison (TensorComparison) instance of TensorComparison.
+
+        """
+        self._tensor_comparison = tensor_comparison
+
+    def update_tensor_stats(self, stats):
+        """
+        Update tensor stats.
+
+        Args:
+            stats (Statistics) instance of Statistics.
+
+        """
+        self._stats = stats
 
     def get_tensor_value_by_shape(self, shape=None):
         """
@@ -190,8 +224,8 @@ class OpTensor(BaseTensor):
             raise DebuggerParamValueError("Invalid shape. Shape unmatched.")
         if isinstance(value, np.ndarray):
             if value.size > self.max_number_data_show_on_ui:
+                log.info("The tensor size is %d, which is too large to show on UI.", value.size)
                 value = "Too large to show."
-                log.info("The tensor size is %s, which is too large to show on UI.")
         else:
             value = np.asarray(value)
         return value

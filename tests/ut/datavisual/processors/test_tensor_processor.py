@@ -150,8 +150,7 @@ class TestTensorProcessor:
             processor.get_tensors([self._train_id], [test_tag_name], step='1', dims='[0,:]', detail='data')
 
         assert exc_info.value.error_code == '50540002'
-        assert "Invalid parameter value. The length of param dims: 2, is not equal to the length of tensor dims: 4" \
-               in exc_info.value.message
+        assert "The length of param dims and tensor shape should be the same" in exc_info.value.message
 
     @pytest.mark.usefixtures('load_tensor_record')
     def test_get_tensor_data_with_exceed_two_dims(self):
@@ -163,8 +162,7 @@ class TestTensorProcessor:
             processor.get_tensors([self._train_id], [test_tag_name], step='1', dims='[0,:,:,:]', detail='data')
 
         assert exc_info.value.error_code == '50540002'
-        assert "Invalid parameter value. Flexible dimensions cannot exceed limit value: 2, size: 3" \
-               in exc_info.value.message
+        assert "Invalid shape. At most 2 dimensions are specified" in exc_info.value.message
 
     @pytest.mark.usefixtures('load_tensor_record')
     def test_get_tensor_data_success(self):
@@ -172,7 +170,7 @@ class TestTensorProcessor:
         test_tag_name = self._complete_tag_name
 
         processor = TensorProcessor(self._mock_data_manager)
-        results = processor.get_tensors([self._train_id], [test_tag_name], step='1', dims='[0,0,:,:]', detail='data')
+        results = processor.get_tensors([self._train_id], [test_tag_name], step='1', dims='[0,0,:-1,:]', detail='data')
 
         recv_metadata = results.get('tensors')[0].get("values")
 
@@ -182,7 +180,11 @@ class TestTensorProcessor:
             dims = expected_values.get('value').get("dims")
             expected_data = np.array(expected_values.get('value').get("float_data")).reshape(dims)
             recv_tensor = np.array(recv_values.get('value').get("data"))
-            expected_tensor = TensorUtils.get_specific_dims_data(expected_data, [0, 0, None, None], dims)
+            expected_tensor = TensorUtils.get_specific_dims_data(
+                expected_data, (0, 0, slice(None, -1, None), slice(None)))
+            # Compare tensor shape when recv_tensor shape is not empty.
+            if recv_tensor.shape != (0,):
+                assert recv_tensor.shape == expected_tensor.shape
             assert np.sum(np.isclose(recv_tensor, expected_tensor, rtol=1e-6) == 0) == 0
 
     @pytest.mark.usefixtures('load_tensor_record')
@@ -200,7 +202,8 @@ class TestTensorProcessor:
             assert recv_values.get('step') == expected_values.get('step')
             expected_data = expected_values.get('value').get("float_data")
             expected_statistic_instance = TensorUtils.get_statistics_from_tensor(expected_data)
-            expected_statistic = TensorUtils.get_statistics_dict(expected_statistic_instance)
+            expected_statistic = TensorUtils.get_statistics_dict(stats=expected_statistic_instance,
+                                                                 overall_stats=expected_statistic_instance)
             recv_statistic = recv_values.get('value').get("statistics")
             assert recv_statistic.get("max") - expected_statistic.get("max") < 1e-6
             assert recv_statistic.get("min") - expected_statistic.get("min") < 1e-6

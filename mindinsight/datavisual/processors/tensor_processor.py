@@ -19,7 +19,7 @@ import numpy as np
 
 from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.utils.exceptions import ParamValueError, UrlDecodeError
-from mindinsight.utils.tensor import TensorUtils
+from mindinsight.utils.tensor import TensorUtils, MAX_DIMENSIONS_FOR_TENSOR
 from mindinsight.conf.constants import MAX_TENSOR_RESPONSE_DATA_SIZE
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.common.exceptions import StepTensorDataNotInCacheError, TensorNotExistError
@@ -49,7 +49,6 @@ class TensorProcessor(BaseProcessor):
             UrlDecodeError, If unquote train id error with strict mode.
         """
         Validation.check_param_empty(train_id=train_ids, tag=tags)
-        TensorUtils.validate_dims_format(dims)
 
         for index, train_id in enumerate(train_ids):
             try:
@@ -99,6 +98,8 @@ class TensorProcessor(BaseProcessor):
                 values = self._get_tensors_summary(detail, tensors)
             elif detail == 'data':
                 Validation.check_param_empty(step=step, dims=dims)
+                # Limit to query max two dimensions for tensor in table view.
+                dims = TensorUtils.parse_shape(dims, limit=MAX_DIMENSIONS_FOR_TENSOR)
                 step = to_int(step, "step")
                 values = self._get_tensors_data(step, dims, tensors)
             elif detail == 'histogram':
@@ -152,7 +153,7 @@ class TensorProcessor(BaseProcessor):
                 "data_type": anf_ir_pb2.DataType.Name(value.data_type)
             }
             if detail and detail == 'stats':
-                stats = TensorUtils.get_statistics_dict(value.stats)
+                stats = TensorUtils.get_statistics_dict(stats=value.stats, overall_stats=value.stats)
                 value_dict.update({"statistics": stats})
 
             values.append({
@@ -169,7 +170,7 @@ class TensorProcessor(BaseProcessor):
 
         Args:
             step (int): Specify step of tensor.
-            dims (str): Specify dims of tensor.
+            dims (tuple): Specify dims of tensor.
             tensors (list): The list of _Tensor data.
 
         Returns:
@@ -199,14 +200,13 @@ class TensorProcessor(BaseProcessor):
         """
         values = []
         step_in_cache = False
-        dims = TensorUtils.convert_array_from_str_dims(dims, limit=2)
         for tensor in tensors:
             # This value is an instance of TensorContainer
             value = tensor.value
             if step != tensor.step:
                 continue
             step_in_cache = True
-            res_data = TensorUtils.get_specific_dims_data(value.ndarray, dims, list(value.dims))
+            res_data = TensorUtils.get_specific_dims_data(value.ndarray, dims)
             flatten_data = res_data.flatten().tolist()
             if len(flatten_data) > MAX_TENSOR_RESPONSE_DATA_SIZE:
                 raise ResponseDataExceedMaxValueError("the size of response data: {} exceed max value: {}."
@@ -244,7 +244,7 @@ class TensorProcessor(BaseProcessor):
                     "dims": value.dims,
                     "data_type": anf_ir_pb2.DataType.Name(value.data_type),
                     "data": tensor_data,
-                    "statistics": TensorUtils.get_statistics_dict(stats)
+                    "statistics": TensorUtils.get_statistics_dict(stats=stats, overall_stats=value.stats)
                 }
             })
             break
@@ -293,7 +293,7 @@ class TensorProcessor(BaseProcessor):
                     "dims": value.dims,
                     "data_type": anf_ir_pb2.DataType.Name(value.data_type),
                     "histogram_buckets": buckets,
-                    "statistics": TensorUtils.get_statistics_dict(value.stats)
+                    "statistics": TensorUtils.get_statistics_dict(stats=value.stats, overall_stats=value.stats)
                 }
             })
 

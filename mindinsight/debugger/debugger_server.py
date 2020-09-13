@@ -27,13 +27,13 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
     DebuggerDeleteWatchPointError, DebuggerContinueError, DebuggerPauseError, DebuggerCompareTensorError
 from mindinsight.debugger.common.log import logger as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
-    create_view_event_from_tensor_history, Streams, is_scope_type, NodeBasicInfo, \
-    str_to_slice_or_int
+    create_view_event_from_tensor_history, Streams, is_scope_type, NodeBasicInfo
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_grpc_server import DebuggerGrpcServer
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.debugger.proto.debug_grpc_pb2 import RunCMD
 from mindinsight.utils.exceptions import MindInsightException
+from mindinsight.utils.tensor import TensorUtils, MAX_DIMENSIONS_FOR_TENSOR
 
 
 class DebuggerServer:
@@ -128,7 +128,8 @@ class DebuggerServer:
                 "Failed to compare tensors as the MindSpore is not in waiting state."
             )
         self.validate_tensor_param(name, detail)
-        parsed_shape = self.parse_shape(shape)
+        # Limit to query max two dimensions for tensor in table view.
+        parsed_shape = TensorUtils.parse_shape(shape, limit=MAX_DIMENSIONS_FOR_TENSOR)
         node_type, tensor_name = self._get_tensor_name_and_type_by_ui_name(name)
         tolerance = to_float(tolerance, 'tolerance')
         tensor_stream = self.cache_store.get_stream_handler(Streams.TENSOR)
@@ -303,7 +304,8 @@ class DebuggerServer:
         """Retrieve the tensor value."""
         log.info("Retrieve tensor value: name: %s, detail: %s, shape: %s", name, detail, shape)
         self.validate_tensor_param(name, detail)
-        parsed_shape = self.parse_shape(shape)
+        # Limit to query max two dimensions for tensor in table view.
+        parsed_shape = TensorUtils.parse_shape(shape, limit=MAX_DIMENSIONS_FOR_TENSOR)
         node_type, tensor_name = self._get_tensor_name_and_type_by_ui_name(name)
         reply = self.cache_store.get_stream_handler(Streams.TENSOR).get(
             {'name': tensor_name,
@@ -343,23 +345,6 @@ class DebuggerServer:
         if detail != 'data':
             log.error("Invalid detail value. Received: %s", detail)
             raise DebuggerParamValueError("Invalid detail value.")
-
-    @staticmethod
-    def parse_shape(shape):
-        """Parse shape."""
-        if shape is None:
-            return shape
-        if not (isinstance(shape, str) and shape.startswith('[') and shape.endswith(']')):
-            log.error("Invalid shape. Received: %s", shape)
-            raise DebuggerParamValueError("Invalid shape.")
-        shape = shape.strip('[]')
-        if shape.count(':') > 2:
-            log.error("Invalid shape. At most two dimensions are specified.")
-            raise DebuggerParamValueError("Invalid shape.")
-        parsed_shape = tuple(
-            str_to_slice_or_int(dim) for dim in shape.split(',')) if shape else tuple()
-        log.info("Parsed shape: %s from %s", parsed_shape, shape)
-        return parsed_shape
 
     def _retrieve_watchpoint(self, filter_condition):
         """
