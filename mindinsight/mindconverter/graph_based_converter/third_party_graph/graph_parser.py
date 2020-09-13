@@ -14,6 +14,7 @@
 # ==============================================================================
 """Third party graph parser."""
 import os
+from mindinsight.mindconverter.common.log import logger as log
 from .base import GraphParser
 
 
@@ -34,12 +35,24 @@ class PyTorchGraphParser(GraphParser):
         import torch
 
         if not os.path.exists(model_path):
-            raise FileNotFoundError("`model_path` must be assigned with "
-                                    "an existed file path.")
+            error = FileNotFoundError("`model_path` must be assigned with "
+                                      "an existed file path.")
+            log.error(str(error))
+            log.exception(error)
+            raise error
 
-        if torch.cuda.is_available():
-            model = torch.load(f=model_path)
-        else:
-            model = torch.load(f=model_path, map_location="cpu")
+        try:
+            if torch.cuda.is_available():
+                model = torch.load(f=model_path)
+            else:
+                model = torch.load(f=model_path, map_location="cpu")
+        except ModuleNotFoundError:
+            error_msg = \
+                "Cannot find model scripts in system path, " \
+                "set `--project_path` to the path of model scripts folder correctly."
+            error = ModuleNotFoundError(error_msg)
+            log.error(str(error))
+            log.exception(error)
+            raise error
 
         return model
