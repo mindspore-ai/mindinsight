@@ -50,29 +50,18 @@ class _BasicTrainJob:
     Basic info about train job.
 
     Args:
-        train_id (str): Id of the train job.
         abs_summary_base_dir (str): The canonical path of summary base directory. It should be the return value of
             realpath().
-        abs_summary_dir (str): The canonical path of summary directory. It should be the return value of realpath().
-        create_time (DateTime): The create time of summary directory.
-        update_time (DateTime): The latest modify time of summary files directly in the summary directory.
-        profiler_dir (str): The relative path of profiler directory.
-        profiler_type (str): The profiler device type.
+        entry (dict): The summary dir entry listed by SummaryWatcher.
     """
-    def __init__(self, train_id, abs_summary_base_dir, abs_summary_dir, create_time, update_time, profiler_dir,
-                 profiler_type=""):
-        self._train_id = train_id
+    def __init__(self, abs_summary_base_dir, entry):
         self._abs_summary_base_dir = abs_summary_base_dir
-        self._abs_summary_dir = abs_summary_dir
-        self._create_time = create_time
-        self._update_time = update_time
-        self._profiler_dir = profiler_dir
-        self._profiler_type = profiler_type
+        self._entry = entry
 
     @property
     def abs_summary_dir(self):
         """Get summary directory path."""
-        return self._abs_summary_dir
+        return os.path.realpath(os.path.join(self._abs_summary_base_dir, self._entry['relative_path']))
 
     @property
     def summary_base_dir(self):
@@ -82,27 +71,46 @@ class _BasicTrainJob:
     @property
     def train_id(self):
         """Get train id."""
-        return self._train_id
+        return self._entry['relative_path']
 
     @property
     def profiler_dir(self):
         """Get profiler directory path."""
-        return self._profiler_dir
+        if self._entry['profiler'] is not None:
+            return self._entry['profiler']['directory']
+        return None
 
     @property
     def create_time(self):
         """Get create time."""
-        return self._create_time
+        return self._entry['create_time']
 
     @property
     def update_time(self):
         """Get update time."""
-        return self._update_time
+        return self._entry['update_time']
 
     @property
     def profiler_type(self):
         """Get profiler type"""
-        return self._profiler_type
+        if self._entry['profiler'] is not None:
+            return self._entry['profiler']['profiler_type']
+        return ''
+
+    @property
+    def summary_files(self):
+        """Get the summary files count in the summary dir."""
+        return self._entry['summary_files']
+
+    @property
+    def graph_files(self):
+        """Get the graph pb files count in the summary dir."""
+        return self._entry['graph_files']
+
+    @property
+    def lineage_files(self):
+        """Get the lineage files count in the summary dir."""
+        return self._entry['lineage_files']
 
 
 class CachedTrainJob:
@@ -377,18 +385,9 @@ class _BriefCacheManager(_BaseCacheManager):
 
         basic_train_jobs = []
         for info in summaries_info:
-            profiler = info['profiler']
             basic_train_jobs.append(_BasicTrainJob(
-                train_id=info['relative_path'],
                 abs_summary_base_dir=self._summary_base_dir,
-                abs_summary_dir=os.path.realpath(os.path.join(
-                    self._summary_base_dir,
-                    info['relative_path']
-                )),
-                create_time=info['create_time'],
-                update_time=info['update_time'],
-                profiler_dir=None if profiler is None else profiler['directory'],
-                profiler_type="" if profiler is None else profiler['profiler_type'],
+                entry=info
             ))
 
         with self._lock:

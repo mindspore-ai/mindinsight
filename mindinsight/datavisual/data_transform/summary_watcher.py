@@ -26,6 +26,7 @@ from mindinsight.datavisual.utils.utils import contains_null_byte
 from mindinsight.datavisual.common.exceptions import MaxCountExceededError
 from mindinsight.utils.exceptions import FileSystemPermissionError
 
+LINEAGE_SUMMARY_SUFFIX = '_lineage'
 
 class SummaryWatcher:
     """SummaryWatcher class."""
@@ -99,18 +100,8 @@ class SummaryWatcher:
         for key, value in summary_dict.items():
             directory = {
                 'relative_path': key,
-                'profiler': None,
-                'create_time': value['ctime'],
-                'update_time': value['mtime'],
+                **value
             }
-            profiler = value.get('profiler')
-            if profiler is not None:
-                directory['profiler'] = {
-                    'directory': profiler['directory'],
-                    'create_time': profiler['ctime'],
-                    'update_time': profiler['mtime'],
-                    'profiler_type': profiler['profiler_type']
-                }
             directories.append(directory)
 
         # sort by update time in descending order and relative path in ascending order
@@ -215,15 +206,24 @@ class SummaryWatcher:
                     return
             if relative_path not in summary_dict:
                 summary_dict[relative_path] = {
-                    'ctime': ctime,
-                    'mtime': mtime,
+                    'create_time': ctime,
+                    'update_time': mtime,
+                    'summary_files': 0,
+                    'lineage_files': 0,
+                    'graph_files': 0,
                     'profiler': None,
                 }
-            elif summary_dict[relative_path]['ctime'] < ctime:
+            if summary_dict[relative_path]['create_time'] < ctime:
                 summary_dict[relative_path].update({
-                    'ctime': ctime,
-                    'mtime': mtime,
+                    'create_time': ctime,
+                    'update_time': mtime,
                 })
+            if not summary_pattern:
+                summary_dict[relative_path]['graph_files'] += 1
+            elif entry.name.endswith(LINEAGE_SUMMARY_SUFFIX):
+                summary_dict[relative_path]['lineage_files'] += 1
+            else:
+                summary_dict[relative_path]['summary_files'] += 1
         elif entry.is_dir():
             profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
             full_dir_path = os.path.join(summary_base_dir, relative_path, entry.name)
@@ -233,16 +233,22 @@ class SummaryWatcher:
 
             profiler = {
                 'directory': os.path.join('.', entry.name),
-                'ctime': ctime,
-                'mtime': mtime,
+                'create_time': ctime,
+                'update_time': mtime,
                 "profiler_type": profiler_type
             }
 
-            summary_dict[relative_path] = {
-                'ctime': ctime,
-                'mtime': mtime,
-                'profiler': profiler,
-            }
+            if relative_path in summary_dict:
+                summary_dict[relative_path]['profiler'] = profiler
+            else:
+                summary_dict[relative_path] = {
+                    'create_time': ctime,
+                    'summary_files': 0,
+                    'lineage_files': 0,
+                    'graph_files': 0,
+                    'update_time': mtime,
+                    'profiler': profiler
+                }
 
     def is_summary_directory(self, summary_base_dir, relative_path):
         """

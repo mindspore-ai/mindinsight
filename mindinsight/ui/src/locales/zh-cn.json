@@ -51,6 +51,8 @@
     "dataTraceback": "数据溯源",
     "comparePlate": "对比看板",
     "disableProfilerTip": "无profiler日志，无法查看性能分析",
+    "disableDashboardTip": "无summary日志或pb文件，无法查看训练看板",
+    "disableParameterTip": "无lineage日志，无法查看参数详情",
     "openNewTab": "打开新页签",
     "paramDetails": "参数详情",
     "trainingParamDetails": "训练参数详情",
