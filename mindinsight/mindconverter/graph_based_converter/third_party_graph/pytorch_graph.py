@@ -204,37 +204,6 @@ class PyTorchGraph(Graph):
         """
         raise NotImplementedError()
 
-    def to_hierarchical_tree(self):
-        """
-        Generate hierarchical tree based on graph.
-        """
-        from ..hierarchical_tree import HierarchicalTree
-
-        tree = HierarchicalTree()
-        node_input = None
-        for _, node_name in enumerate(self.nodes_in_topological_order):
-            node_inst = self.get_node(node_name)
-            node_output = self._shape_dict.get(node_name)
-            if node_inst.in_degree == 0:
-                # If in-degree equals to zero, then it's a input node.
-                continue
-
-            # If the node is on the top, then fetch its input
-            # from input table.
-            if not node_input:
-                node_input = self._input_shape.get(node_name)
-
-            if not node_input:
-                error = ValueError(f"This model is not supported now. "
-                                   f"Cannot find {node_name}'s input shape.")
-                log.error(str(error))
-                log.exception(error)
-                raise error
-
-            tree.insert(node_inst, node_name, node_input, node_output)
-            node_input = node_output
-        return tree
-
     def build_connection(self, src, tgt) -> NoReturn:
         """
         Build connection between source node and target node.

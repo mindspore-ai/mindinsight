@@ -109,6 +109,8 @@ class ProjectPathAction(argparse.Action):
             option_string (str): Optional string for specific argument name. Default: None.
         """
         outfile_dir = FileDirAction.check_path(parser, values, option_string)
+        if not os.path.exists(outfile_dir):
+            parser.error(f'{option_string} {outfile_dir} not exists')
         if not os.path.isdir(outfile_dir):
             parser.error(f'{option_string} [{outfile_dir}] should be a directory.')
 
@@ -134,6 +136,32 @@ class InFileAction(argparse.Action):
 
         if not os.path.isfile(outfile_dir):
             parser.error(f'{option_string} {outfile_dir} is not a file')
+
+        setattr(namespace, self.dest, outfile_dir)
+
+
+class ModelFileAction(argparse.Action):
+    """Model File action class definition."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from argparse.Action.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        outfile_dir = FileDirAction.check_path(parser, values, option_string)
+        if not os.path.exists(outfile_dir):
+            parser.error(f'{option_string} {outfile_dir} not exists')
+
+        if not os.path.isfile(outfile_dir):
+            parser.error(f'{option_string} {outfile_dir} is not a file')
+
+        if not outfile_dir.endswith('.pth'):
+            parser.error(f"{option_string} {outfile_dir} should be a Pytorch model, ending with '.pth'.")
 
         setattr(namespace, self.dest, outfile_dir)
 
@@ -208,7 +236,7 @@ def cli_entry():
     parser.add_argument(
         '--model_file',
         type=str,
-        action=InFileAction,
+        action=ModelFileAction,
         required=False,
         help="""
             Pytorch .pth model file path ot use graph
