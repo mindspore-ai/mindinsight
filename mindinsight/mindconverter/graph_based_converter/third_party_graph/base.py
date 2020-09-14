@@ -16,6 +16,7 @@
 import abc
 from collections import OrderedDict
 
+from mindinsight.mindconverter.common.log import logger as log
 from ..constant import SEPARATOR_IN_ONNX_OP
 from ..mapper.base import Mapper
 
@@ -66,8 +67,11 @@ class BaseGraph(metaclass=abc.ABCMeta):
         """Control the create action of graph."""
         model_param = args[0] if args else kwargs.get(cls._REQUIRED_PARAM_OF_MODEL)
         if not model_param:
-            raise ValueError(f"`{cls._REQUIRED_PARAM_OF_MODEL}` "
-                             f"can not be None.")
+            error = ValueError(f"`{cls._REQUIRED_PARAM_OF_MODEL}` "
+                               f"can not be None.")
+            log.error(str(error))
+            log.exception(error)
+            raise error
 
         return super(BaseGraph, cls).__new__(cls)
 

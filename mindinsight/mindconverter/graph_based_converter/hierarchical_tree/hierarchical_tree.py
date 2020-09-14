@@ -14,12 +14,15 @@
 # ==============================================================================
 """Define hierarchical tree."""
 import os
+import stat
 from copy import deepcopy
 from typing import NoReturn, Union
 from queue import Queue
 
 from yapf.yapflib.yapf_api import FormatCode
 from treelib import Tree, Node
+
+from mindinsight.mindconverter.common.log import logger as log
 
 from .name_mgr import ModuleNameMgr, GlobalVarNameMgr
 from ..mapper.base import Mapper
@@ -34,6 +37,10 @@ GLOBAL_VAR_NAME_MGR = GlobalVarNameMgr()
 
 class HierarchicalTree(Tree):
     """Define hierarchical tree."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    modes = stat.S_IRUSR | stat.S_IWUSR
+    modes_usr = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+
     _root_created = False
     ROOT_LEVEL = 0
 
@@ -162,19 +169,31 @@ class HierarchicalTree(Tree):
             report_folder = os.path.abspath(report_folder)
 
         if not os.path.exists(out_folder):
-            os.makedirs(out_folder)
+            os.makedirs(out_folder, self.modes_usr)
         if not os.path.exists(report_folder):
-            os.makedirs(report_folder)
+            os.makedirs(report_folder, self.modes_usr)
 
         for file_name in code_fragments:
             code, report = code_fragments[file_name]
-            with open(os.path.join(os.path.abspath(out_folder),
-                                   f"{file_name}.py"), "w") as file:
-                file.write(code)
+            try:
+                with os.fdopen(
+                        os.open(os.path.join(os.path.abspath(out_folder), f"{file_name}.py"),
+                                self.flags, self.modes), 'w') as file:
+                    file.write(code)
+            except IOError as error:
+                log.error(str(error))
+                log.exception(error)
+                raise error
 
-            with open(os.path.join(report_folder,
-                                   f"report_of_{file_name}.txt"), "w") as rpt_f:
-                rpt_f.write(report)
+            try:
+                with os.fdopen(
+                        os.open(os.path.join(report_folder, f"report_of_{file_name}.txt"),
+                                self.flags, stat.S_IRUSR), "w") as rpt_f:
+                    rpt_f.write(report)
+            except IOError as error:
+                log.error(str(error))
+                log.exception(error)
+                raise error
 
     def _preprocess_node_args(self, node, module_key):
         """
@@ -625,7 +644,6 @@ class HierarchicalTree(Tree):
             nd_inst = self.get_node(successor_name)
             # Generate variable name here, then
             # to generate args.
-            # if nd_inst.data.node_type == NodeType.OPERATION.value:
             if created:
                 nd_inst.data.variable_name = self._module_vars[module_key][idx]
             else:

@@ -116,8 +116,6 @@ class PyTorchGraphNode(GraphNode):
         """
         if not self._module_name_frozen:
             module_name = self.tag
-            # if self._node_type == NodeType.CLASS.value:
-            #     module_name = f"{module_name[0].upper()}{module_name[1:]}"
             return module_name
 
         return self._module_name

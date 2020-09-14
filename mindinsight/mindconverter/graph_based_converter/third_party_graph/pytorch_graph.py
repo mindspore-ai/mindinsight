@@ -17,6 +17,7 @@ import warnings
 import re
 from typing import Dict, NoReturn
 
+from mindinsight.mindconverter.common.log import logger as log
 from .base import Graph
 from .input_node import InputNode
 from .pytorch_graph_node import PyTorchGraphNode
@@ -89,12 +90,18 @@ class PyTorchGraph(Graph):
 
         """
         if not input_shape:
-            raise ValueError("`input_shape` can not be None.")
+            error = ValueError("`input_shape` can not be None.")
+            log.error(str(error))
+            log.exception(error)
+            raise error
 
         for item in input_shape:
             if not isinstance(item, int):
-                raise ValueError(f"Only support model with one input now, "
-                                 f"and each shape value in `input_shape` should be int.")
+                error = ValueError(f"Only support model with one input now, "
+                                   f"and each shape value in `input_shape` should be int.")
+                log.error(str(error))
+                log.exception(error)
+                raise error
 
     def build(self, input_shape):
         """
@@ -122,9 +129,11 @@ class PyTorchGraph(Graph):
             Returns:
                 list, shape.
             """
-            pattern = re.compile(r"\d+:\d*")
-            if not pattern.findall(shape):
+            if "," not in shape:
                 return []
+            for s in shape.split(","):
+                if not s:
+                    return []
             return [int(x.split(":")[0].replace("!", "")) for x in shape.split(',')]
 
         feed_forward_ipt_shape = (1, *input_shape)
@@ -133,10 +142,15 @@ class PyTorchGraph(Graph):
         # Assign execution mode to eval.
         self.model.eval()
 
-        with OverloadTorchModuleTemporarily() as _:
-            # In pytorch higher version, trace function has a known.
-            graph = onnx_tracer(self.model, batched_sample,
-                                OperatorExportTypes.ONNX)
+        try:
+            with OverloadTorchModuleTemporarily() as _:
+                # In pytorch higher version, trace function has a known.
+                graph = onnx_tracer(self.model, batched_sample,
+                                    OperatorExportTypes.ONNX)
+        except RuntimeError as error:
+            log.error(str(error))
+            log.exception(error)
+            raise error
 
         nodes = list(graph.nodes())
 
@@ -190,6 +204,37 @@ class PyTorchGraph(Graph):
         """
         raise NotImplementedError()
 
+    def to_hierarchical_tree(self):
+        """
+        Generate hierarchical tree based on graph.
+        """
+        from ..hierarchical_tree import HierarchicalTree
+
+        tree = HierarchicalTree()
+        node_input = None
+        for _, node_name in enumerate(self.nodes_in_topological_order):
+            node_inst = self.get_node(node_name)
+            node_output = self._shape_dict.get(node_name)
+            if node_inst.in_degree == 0:
+                # If in-degree equals to zero, then it's a input node.
+                continue
+
+            # If the node is on the top, then fetch its input
+            # from input table.
+            if not node_input:
+                node_input = self._input_shape.get(node_name)
+
+            if not node_input:
+                error = ValueError(f"This model is not supported now. "
+                                   f"Cannot find {node_name}'s input shape.")
+                log.error(str(error))
+                log.exception(error)
+                raise error
+
+            tree.insert(node_inst, node_name, node_input, node_output)
+            node_input = node_output
+        return tree
+
     def build_connection(self, src, tgt) -> NoReturn:
         """
         Build connection between source node and target node.
@@ -229,8 +274,11 @@ class PyTorchGraph(Graph):
         """
         Load graph metadata.
         """
-        raise NotImplementedError("class `PyTorchGraph` has not implemented "
-                                  "`load_metadata()`.")
+        error = NotImplementedError("class `PyTorchGraph` has not implemented "
+                                    "`load_metadata()`.")
+        log.error(str(error))
+        log.exception(error)
+        raise error
 
     @staticmethod
     def load_graph(graph_path: str):

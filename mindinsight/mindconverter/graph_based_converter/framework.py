@@ -18,6 +18,7 @@ import argparse
 from importlib.util import find_spec
 
 import mindinsight
+from mindinsight.mindconverter.common.log import logger as log
 from .mapper import ONNXToMindSporeMapper
 
 permissions = os.R_OK | os.W_OK | os.X_OK
@@ -57,9 +58,12 @@ def torch_installation_validation(func):
            checkpoint_path: str = None):
         # Check whether pytorch is installed.
         if not find_spec("torch"):
-            raise ModuleNotFoundError("PyTorch is required when using graph based "
-                                      "scripts converter, and PyTorch vision must "
-                                      "be consisted with model generation runtime.")
+            error = ModuleNotFoundError("PyTorch is required when using graph based "
+                                        "scripts converter, and PyTorch vision must "
+                                        "be consisted with model generation runtime.")
+            log.error(str(error))
+            log.exception(error)
+            raise error
 
         func(graph_path=graph_path, sample_shape=sample_shape,
              output_folder=output_folder, report_folder=report_folder,
@@ -93,10 +97,14 @@ def graph_based_converter(graph_path: str, sample_shape: tuple,
                                         report_folder=report_folder)
 
 
-if __name__ == '__main__':
-    args, _ = parser.parse_known_args()
-    graph_based_converter(graph_path=args.graph,
-                          sample_shape=args.sample_shape,
-                          output_folder=args.output,
-                          report_folder=args.report,
-                          checkpoint_path=args.ckpt)
+def main_graph_base_converter(file_config):
+    """
+        The entrance for converter, script files will be converted.
+
+        Args:
+            file_config (dict): The config of file which to convert.
+        """
+    graph_based_converter(graph_path=file_config['model_file'],
+                          sample_shape=file_config['shape'],
+                          output_folder=file_config['outfile_dir'],
+                          report_folder=file_config['report_dir'])

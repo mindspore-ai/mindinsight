@@ -19,6 +19,9 @@ import argparse
 
 import mindinsight
 from mindinsight.mindconverter.converter import main
+from mindinsight.mindconverter.graph_based_converter.framework import main_graph_base_converter
+
+from mindinsight.mindconverter.common.log import logger as log
 
 
 class FileDirAction(argparse.Action):
@@ -92,6 +95,26 @@ class OutputDirAction(argparse.Action):
         setattr(namespace, self.dest, output)
 
 
+class ProjectPathAction(argparse.Action):
+    """Project directory action class definition."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from argparse.Action.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        outfile_dir = FileDirAction.check_path(parser, values, option_string)
+        if not os.path.isdir(outfile_dir):
+            parser.error(f'{option_string} [{outfile_dir}] should be a directory.')
+
+        setattr(namespace, self.dest, outfile_dir)
+
+
 class InFileAction(argparse.Action):
     """Input File action class definition."""
 
@@ -134,6 +157,29 @@ class LogFileAction(argparse.Action):
         setattr(namespace, self.dest, outfile_dir)
 
 
+class ShapeAction(argparse.Action):
+    """Shape action class definition."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from FileDirAction.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        in_shape = None
+        shape_str = values
+        try:
+            in_shape = [int(num_shape) for num_shape in shape_str.split(',')]
+        except ValueError:
+            parser.error(
+                f"{option_string} {shape_str} should be a list of integer split by ',', check it please.")
+        setattr(namespace, self.dest, in_shape)
+
+
 def cli_entry():
     """Entry point for mindconverter CLI."""
 
@@ -153,9 +199,36 @@ def cli_entry():
         '--in_file',
         type=str,
         action=InFileAction,
-        required=True,
+        required=False,
+        default=None,
         help="""
-            Specify path for script file.
+            Specify path for script file. 
+        """)
+
+    parser.add_argument(
+        '--model_file',
+        type=str,
+        action=InFileAction,
+        required=False,
+        help="""
+            Pytorch .pth model file path ot use graph
+            based schema to do script generation. When
+            `--in_file` and `--model_path` are both provided,
+            use AST schema as default. 
+            Usage: --model_file ~/pytorch_file/net.pth.
+        """)
+
+    parser.add_argument(
+        '--shape',
+        type=str,
+        action=ShapeAction,
+        default=None,
+        required=False,
+        help="""
+            Optional, excepted input tensor shape of
+            `--model_file`. It's required when use graph based
+            schema. 
+            Usage: --shape 3,244,244
         """)
 
     parser.add_argument(
@@ -172,9 +245,22 @@ def cli_entry():
         '--report',
         type=str,
         action=LogFileAction,
-        default=os.getcwd(),
+        default=None,
         help="""
             Specify report directory. Default is the current working directory.
+        """)
+
+    parser.add_argument(
+        '--project_path',
+        type=str,
+        action=ProjectPathAction,
+        required=False,
+        default=None,
+        help="""
+            Optional, pytorch scripts project path. If pytorch
+            project is not in PYTHONPATH, please assign
+            `--project_path' when use graph based schema. 
+            Usage: --project_path ~/script_file/
         """)
 
     argv = sys.argv[1:]
@@ -185,30 +271,58 @@ def cli_entry():
         args = parser.parse_args()
     mode = permissions << 6
     os.makedirs(args.output, mode=mode, exist_ok=True)
+    if args.report is None:
+        args.report = args.output
     os.makedirs(args.report, mode=mode, exist_ok=True)
-    _run(args.in_file, args.output, args.report)
+    _run(args.in_file, args.model_file, args.shape, args.output, args.report, args.project_path)
 
 
-def _run(in_files, out_dir, report):
+def _run(in_files, model_file, shape, out_dir, report, project_path):
     """
     Run converter command.
 
     Args:
         in_files (str): The file path or directory to convert.
+        model_file(str): The pytorch .pth to convert on graph based schema.
+        shape(list): The input tensor shape of module_file.
         out_dir (str): The output directory to save converted file.
         report (str): The report file path.
+        project_path(str): Pytorch scripts project path.
     """
-    files_config = {
-        'root_path': in_files if in_files else '',
-        'in_files': [],
-        'outfile_dir': out_dir,
-        'report_dir': report
-    }
-    if os.path.isfile(in_files):
-        files_config['root_path'] = os.path.dirname(in_files)
-        files_config['in_files'] = [in_files]
+    if in_files:
+        files_config = {
+            'root_path': in_files,
+            'in_files': [],
+            'outfile_dir': out_dir,
+            'report_dir': report if report else out_dir
+        }
+
+        if os.path.isfile(in_files):
+            files_config['root_path'] = os.path.dirname(in_files)
+            files_config['in_files'] = [in_files]
+        else:
+            for root_dir, _, files in os.walk(in_files):
+                for file in files:
+                    files_config['in_files'].append(os.path.join(root_dir, file))
+        main(files_config)
+
+    elif model_file:
+        file_config = {
+            'model_file': model_file,
+            'shape': shape if shape else [],
+            'outfile_dir': out_dir,
+            'report_dir': report if report else out_dir
+        }
+        if project_path:
+            paths = sys.path
+            if project_path not in paths:
+                sys.path.append(project_path)
+
+        main_graph_base_converter(file_config)
+
     else:
-        for root_dir, _, files in os.walk(in_files):
-            for file in files:
-                files_config['in_files'].append(os.path.join(root_dir, file))
-    main(files_config)
+        error_msg = "`--in_files` and `--model_file` should be set at least one."
+        error = FileNotFoundError(error_msg)
+        log.error(str(error))
+        log.exception(error)
+        raise error
