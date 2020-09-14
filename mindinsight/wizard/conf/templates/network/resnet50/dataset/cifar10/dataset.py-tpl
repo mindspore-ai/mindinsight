@@ -19,7 +19,7 @@ import os
 
 import mindspore.dataset as ds
 import mindspore.dataset.transforms.c_transforms as C
-import mindspore.dataset.transforms.vision.c_transforms as CV
+import mindspore.dataset.vision.c_transforms as CV
 from mindspore.common import dtype as mstype
 from mindspore.communication.management import init, get_rank, get_group_size
 
@@ -46,8 +46,6 @@ def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, targe
 
     rescale = 1.0 / 255.0
     shift = 0.0
-    rescale = 1.0 / 255.0
-    shift = 0.0
 
     resize_op = CV.Resize((cfg.image_height, cfg.image_width))
     rescale_op = CV.Rescale(rescale, shift)
@@ -57,14 +55,14 @@ def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, targe
         random_horizontal_op = CV.RandomHorizontalFlip()
     channel_swap_op = CV.HWC2CHW()
     typecast_op = C.TypeCast(mstype.int32)
-    cifar_ds = cifar_ds.map(input_columns="label", operations=typecast_op)
+    cifar_ds = cifar_ds.map(operations=typecast_op, input_columns="label")
     if do_train:
-        cifar_ds = cifar_ds.map(input_columns="image", operations=random_crop_op)
-        cifar_ds = cifar_ds.map(input_columns="image", operations=random_horizontal_op)
-    cifar_ds = cifar_ds.map(input_columns="image", operations=resize_op)
-    cifar_ds = cifar_ds.map(input_columns="image", operations=rescale_op)
-    cifar_ds = cifar_ds.map(input_columns="image", operations=normalize_op)
-    cifar_ds = cifar_ds.map(input_columns="image", operations=channel_swap_op)
+        cifar_ds = cifar_ds.map(operations=random_crop_op, input_columns="image")
+        cifar_ds = cifar_ds.map(operations=random_horizontal_op, input_columns="image")
+    cifar_ds = cifar_ds.map(operations=resize_op, input_columns="image")
+    cifar_ds = cifar_ds.map(operations=rescale_op, input_columns="image")
+    cifar_ds = cifar_ds.map(operations=normalize_op, input_columns="image")
+    cifar_ds = cifar_ds.map(operations=channel_swap_op, input_columns="image")
 
     cifar_ds = cifar_ds.shuffle(buffer_size=1000)
     cifar_ds = cifar_ds.batch(batch_size, drop_remainder=True)

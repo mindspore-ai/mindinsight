@@ -26,7 +26,7 @@ NETWORK_NAME = 'alexnet'
 
 
 class TestAlexNet:
-    """Test AlexNet Module"""
+    """Test AlexNet Module."""
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -68,35 +68,35 @@ class TestAlexNet:
         'config': {'loss': 'SoftmaxCrossEntropyWithLogits',
                    'optimizer': 'Momentum',
                    'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDatasetV2'
+        'dataset_loader_name': 'ImageFolderDataset'
     }, {
         'config': {'loss': 'SoftmaxCrossEntropyWithLogits',
                    'optimizer': 'Adam',
                    'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDatasetV2'
+        'dataset_loader_name': 'ImageFolderDataset'
     }, {
         'config': {'loss': 'SoftmaxCrossEntropyWithLogits',
                    'optimizer': 'SGD',
                    'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDatasetV2'
+        'dataset_loader_name': 'ImageFolderDataset'
     }, {
         'config': {'loss': 'SoftmaxCrossEntropyExpand',
                    'optimizer': 'Momentum',
                    'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDatasetV2'
+        'dataset_loader_name': 'ImageFolderDataset'
     }, {
         'config': {'loss': 'SoftmaxCrossEntropyExpand',
                    'optimizer': 'Adam',
                    'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDatasetV2'
+        'dataset_loader_name': 'ImageFolderDataset'
     }, {
         'config': {'loss': 'SoftmaxCrossEntropyExpand',
                    'optimizer': 'SGD',
                    'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDatasetV2'
+        'dataset_loader_name': 'ImageFolderDataset'
     }])
     def test_combinations(self, params):
-        """Do testing"""
+        """Do testing."""
 
         network_maker_name = NETWORK_NAME
         config = params['config']
@@ -112,7 +112,7 @@ class TestAlexNet:
         self.check_train_eval_readme(config['dataset'], config['loss'], config['optimizer'])
 
     def check_src(self, dataset_name, config):
-        """Check src file"""
+        """Check src file."""
         dataset_is_right = False
         config_dataset_is_right = False
         config_optimizer_is_right = False
@@ -140,7 +140,7 @@ class TestAlexNet:
 
     @staticmethod
     def _check_config_dataset(config, content):
-        """Check dataset in config"""
+        """Check dataset in config."""
         config_dataset_is_right = False
         if config['dataset'] == 'Cifar10':
             if "'num_classes': 10" in content:
@@ -152,7 +152,7 @@ class TestAlexNet:
 
     @staticmethod
     def _check_config_optimizer(config, content):
-        """Check optimizer in config"""
+        """Check optimizer in config."""
         config_optimizer_is_right = False
         if config['optimizer'] == 'Momentum':
             if "'lr': 0.002" in content:
@@ -166,7 +166,7 @@ class TestAlexNet:
         return config_optimizer_is_right
 
     def check_train_eval_readme(self, dataset_name, loss_name, optimizer_name):
-        """Check train and eval"""
+        """Check train and eval."""
 
         train_is_right = False
         eval_is_right = False
@@ -191,7 +191,7 @@ class TestAlexNet:
         assert readme_is_right
 
     def check_scripts(self):
-        """Check scripts"""
+        """Check scripts."""
 
         exist_run_distribute_train = False
         exist_run_distribute_train_gpu = False
