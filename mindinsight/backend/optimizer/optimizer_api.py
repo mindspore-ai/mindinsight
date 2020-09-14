@@ -14,11 +14,12 @@
 # ============================================================================
 """Optimizer API module."""
 import json
+import pandas as pd
 from flask import Blueprint, jsonify, request
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
-from mindinsight.lineagemgr.model import get_lineage_table
+from mindinsight.lineagemgr.model import get_flattened_lineage, LineageTable
 from mindinsight.optimizer.common.enums import ReasonCode
 from mindinsight.optimizer.common.exceptions import SamplesNotEnoughError, CorrelationNanError
 from mindinsight.optimizer.utils.importances import calc_hyper_param_importance
@@ -41,9 +42,10 @@ def get_optimize_targets():
     return jsonify(response)
 
 
-def _get_optimize_targets(data_manager, search_condition):
+def _get_optimize_targets(data_manager, search_condition=None):
     """Get optimize targets."""
-    table = get_lineage_table(data_manager, search_condition)
+    flatten_lineage = get_flattened_lineage(data_manager, search_condition)
+    table = LineageTable(pd.DataFrame(flatten_lineage))
 
     target_summaries = []
     for target in table.target_names:
@@ -51,7 +53,7 @@ def _get_optimize_targets(data_manager, search_condition):
         for hyper_param in table.hyper_param_names:
             param_info = {"name": hyper_param}
             try:
-                importance = calc_hyper_param_importance(table.df, hyper_param, target)
+                importance = calc_hyper_param_importance(table.dataframe_data, hyper_param, target)
                 param_info.update({"importance": importance})
             except SamplesNotEnoughError:
                 param_info.update({"importance": 0})
