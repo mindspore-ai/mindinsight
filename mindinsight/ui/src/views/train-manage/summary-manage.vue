@@ -74,10 +74,16 @@ limitations under the License.
                              class-name="operate-container"
                              width="400">
               <template slot-scope="scope">
-                <span class="menu-item"
+                <span class="menu-item operate-btn"
+                      v-if="scope.row.viewDashboard"
                       @contextmenu.prevent="rightClick(scope.row, $event, 0)"
                       @click.stop="goToTrainDashboard(scope.row)">
                   {{$t('summaryManage.viewDashboard')}} </span>
+                <span class="menu-item operate-btn button-disable"
+                      v-else
+                      :title="$t('summaryManage.disableDashboardTip')">
+                  {{$t('summaryManage.viewDashboard')}}
+                </span>
                 <span class="menu-item operate-btn"
                       v-if="scope.row.viewProfiler"
                       @contextmenu.prevent="rightClick(scope.row, $event, 1)"
@@ -89,9 +95,14 @@ limitations under the License.
                   {{$t('summaryManage.viewProfiler')}}
                 </span>
                 <span class="menu-item operate-btn"
+                      v-if="scope.row.paramDetails"
                       @click.stop="showModelDialog(scope.row)">
                   {{$t('summaryManage.paramDetails')}} </span>
-
+                <span class="menu-item operate-btn button-disable"
+                      v-else
+                      :title="$t('summaryManage.disableParameterTip')">
+                  {{$t('summaryManage.paramDetails')}}
+                </span>
               </template>
             </el-table-column>
           </el-table>
@@ -267,6 +278,8 @@ export default {
                     i.relative_path = i.relative_path ? i.relative_path : '--';
                     i.update_time = i.update_time ? i.update_time : '--';
                     i.viewProfiler = i.profiler_dir && i.profiler_dir.length;
+                    i.viewDashboard = i.summary_files || i.graph_files || i.lineage_files;
+                    i.paramDetails = i.lineage_files;
                   });
                   this.currentFolder = res.data.name ? res.data.name : '--';
                   this.pagination.total = res.data.total;

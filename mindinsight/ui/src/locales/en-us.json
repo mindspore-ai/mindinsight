@@ -51,6 +51,8 @@
     "dataTraceback": "Dataset Lineage",
     "comparePlate": "Comparison Dashboard",
     "disableProfilerTip": "Failed to view profiling because no profiler log is available.",
+    "disableDashboardTip": "Failed to view training dashboard because no summary log or pb files are available.",
+    "disableParameterTip": "Failed to view parameter details because no lineage log is available.",
     "openNewTab": "Open Link in New Tab",
     "paramDetails": "Parameter Details",
     "trainingParamDetails": "Training Parameter Details",

@@ -145,6 +145,9 @@ class TrainTaskManager(BaseProcessor):
             profiler_dir=basic_info.profiler_dir,
             cache_status=train_job.cache_status.value,
             profiler_type=basic_info.profiler_type,
+            summary_files=basic_info.summary_files,
+            graph_files=basic_info.graph_files,
+            lineage_files=basic_info.lineage_files
         )
 
         if train_job.cache_status == CacheStatus.CACHED:
