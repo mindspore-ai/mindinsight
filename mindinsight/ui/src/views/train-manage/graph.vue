@@ -2092,6 +2092,15 @@ export default {
           selectedNode.type === 'aggregation_scope';
         this.selectedNode.count = selectedNode.subnode_count;
         const attrTemp = JSON.parse(JSON.stringify(selectedNode.attr || {}));
+        if (attrTemp.shape && attrTemp.shape.length) {
+          const shape = attrTemp.shape;
+          let str = '';
+          for (let i = 0; i < shape.length; i++) {
+            str += (str ? ',' : '') + JSON.stringify(shape[i]);
+          }
+          attrTemp.shape = str;
+        }
+
         this.selectedNode.info.attributes = Object.keys(attrTemp).map((key) => {
           return {
             name: key,

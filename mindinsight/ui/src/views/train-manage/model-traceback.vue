@@ -80,16 +80,16 @@ limitations under the License.
                             @click="barAllSelect"
                             class="select-all-button"
                             :class="[selectedAllBar ? 'checked-color' : 'button-text',
-                            (baseSelectOptions.length > barNameList.length)||!canSelected.length ? 'btn-disabled' : '']"
-                            :disabled="(baseSelectOptions.length > barNameList.length)||!canSelected.length">
+                            (baseOptions.length > searchOptions.length)||!canSelected.length ? 'btn-disabled' : '']"
+                            :disabled="(baseOptions.length > searchOptions.length)||!canSelected.length">
                       {{$t('public.selectAll')}}
                     </button>
                     <button type="text"
                             @click="barDeselectAll"
                             class="deselect-all-button"
                             :class="[!selectedAllBar ? 'checked-color' : 'button-text',
-                            (baseSelectOptions.length > barNameList.length)||!canSelected.length ? 'btn-disabled' : '']"
-                            :disabled="(baseSelectOptions.length > barNameList.length)||!canSelected.length">
+                            (baseOptions.length > searchOptions.length)||!canSelected.length ? 'btn-disabled' : '']"
+                            :disabled="(baseOptions.length > searchOptions.length)||!canSelected.length">
                       {{$t('public.deselectAll')}}
                     </button>
                   </div>
@@ -181,7 +181,7 @@ limitations under the License.
                             class="select-all-button"
                             :class="[selectCheckAll ? 'checked-color' : 'button-text',
                             basearr.length > checkOptions.length ? 'btn-disabled' : '']"
-                            :disabled="(basearr.length > checkOptions.length)||!canSelected.length">
+                            :disabled="basearr.length > checkOptions.length">
                       {{$t('public.selectAll')}}
                     </button>
                     <button type="text"
@@ -189,7 +189,7 @@ limitations under the License.
                             class="deselect-all-button"
                             :class="[!selectCheckAll ? 'checked-color' : 'button-text',
                             basearr.length > checkOptions.length ? 'btn-disabled' : '']"
-                            :disabled="(basearr.length > checkOptions.length)||!canSelected.length">
+                            :disabled="basearr.length > checkOptions.length">
                       {{$t('public.deselectAll')}}
                     </button>
                   </div>
@@ -517,6 +517,8 @@ export default {
   data() {
     return {
       // left data
+      searchOptions: [],
+      baseOptions: [],
       // Expand and collapse the left column
       collapse: false,
       showLeftChart: null,
@@ -577,7 +579,6 @@ export default {
       recordsNumber: 0,
       showNumber: 0,
       delayTime: 500,
-      otherDelayTime: 300,
       showEchartPic: true,
       hideRecord: false,
       hidenDirChecked: [],
@@ -726,7 +727,7 @@ export default {
                     setTimeout(() => {
                       this.setChartOfPie();
                       this.setChartOfBar();
-                    }, this.otherDelayTime);
+                    }, this.delayTime);
                   });
                 } else {
                   this.leftChartNoData();
@@ -965,6 +966,8 @@ export default {
         label: this.$t('modelTraceback.customOptions'),
         options: otherListOptions,
       };
+      this.baseOptions = mustSelectOptions.concat(otherListOptions);
+      this.searchOptions = this.baseOptions;
       // The displayed bar drop-down box content
       this.barNameList.push(nameObjMust, nameObjOther);
       // Save all the contents of the drop-down box
@@ -1011,6 +1014,9 @@ export default {
           itemWidth: 10,
           itemHeight: 10,
           itemGap: 10,
+          orient: 'vertical',
+          left: 'left',
+          top: 'bottom',
         },
         color: ['#6c91fb', '#7cdc9f', '#fc8b5d', '#f1689b', '#ab74ff'],
         series: [
@@ -1018,7 +1024,7 @@ export default {
             name: this.targetLabel,
             type: 'pie',
             radius: '55%',
-            center: ['50%', '60%'],
+            center: ['67%', '50%'],
             label: {alignTo: 'labelLine', formatter: '{c}({d}%)'},
             data: this.pieSeriesData,
             emphasis: {
@@ -2395,6 +2401,7 @@ export default {
       if (val === 'left') {
         // Parameter importance drop-down box
         this.barKeyWord = '';
+        this.searchOptions = this.baseOptions;
         this.barNameList = this.baseSelectOptions;
       } else {
         // Model traceability drop-down box on the right
@@ -2415,6 +2422,12 @@ export default {
           ? this.createFilter(queryString, restaurants)
           : restaurants;
         this.barNameList = results;
+        this.searchOptions = [];
+        const list = [];
+        results.forEach((item) => {
+          list.concat(item.options);
+        });
+        this.searchOptions = list;
       } else {
         // Model traceability drop-down box on the right
         const queryString = this.keyWord;
@@ -3162,7 +3175,7 @@ export default {
       padding: 10px 0 0px;
       height: 250px;
       #pie-chart {
-        width: 100%;
+        width: 368px;
         height: 200px;
       }
     }
@@ -3188,7 +3201,7 @@ export default {
         line-height: 32px;
       }
       #bar-chart {
-        width: 100%;
+        width: 368px;
         height: 220px;
       }
     }
