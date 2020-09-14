@@ -327,7 +327,7 @@ export default {
             const innerOrder = innerIndex;
             const tempArr = [];
             innerData.forEach((innerValue) => {
-              if (isNaN(innerValue)) {
+              if (isNaN(innerValue) || innerValue === 'Infinity' || innerValue === '-Infinity') {
                 tempArr.push(innerValue);
               } else {
                 tempArr.push(innerValue.toFixed(this.accuracy));
@@ -344,7 +344,7 @@ export default {
           };
           outerData.forEach((innerData, innerIndex) => {
             const innerOrder = innerIndex;
-            if (isNaN(innerData)) {
+            if (isNaN(innerData) || innerData === 'Infinity' || innerData === '-Infinity') {
               tempData[innerOrder] = innerData;
             } else {
               tempData[innerOrder] = innerData.toFixed(this.accuracy);

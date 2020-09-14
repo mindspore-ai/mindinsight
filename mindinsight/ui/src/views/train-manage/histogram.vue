@@ -787,7 +787,7 @@ export default {
         }</td><td style="text-align:center;">${this.formateNUmber(
             hoveredItem.step,
         )}</td><td>${this.formateNUmber(
-            (hoveredItem.relative_time).toFixed(3),
+            (hoveredItem.relative_time).toFixed(0),
         )}${unit}</td><td>${this.dealrelativeTime(
             new Date(hoveredItem.wall_time * 1000).toString(),
         )}</td>`;
@@ -1268,8 +1268,8 @@ export default {
             : [];
         } else if (this.curAxisName === 1) {
           data = `${this.formateNUmber(
-              (filter[0].relative_time / 3600).toFixed(3),
-          )}h`;
+              (filter[0].relative_time).toFixed(0),
+          )}s`;
         } else {
           data = this.formateNUmber(filter[0].step);
         }

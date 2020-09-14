@@ -526,16 +526,12 @@
     "50545013": "The requested data is too large. Try another dimension.",
     "50545014": "The queried tensor data has been replaced by new data. Please refresh.",
     "50548001": "Ascend AI Processor information query timed out.",
-    "5054B080": "Incorrect parameter type.",
-    "5054B081": "Incorrect parameter value.",
-    "5054B082": "Parameters are missing.",
-    "5054B083": "Running error.",
-    "5054B100": "The node does not exist.",
-    "5054B101": "The graph does not exist.",
-    "5054B180": "Failed to create the watchpoint.",
-    "5054B181": "Failed to update the watchpoint.",
-    "5054B182": "Failed to delete the watchpoint.",
-    "5054B183": "Backend training is in progress or has ended.",
-    "5054B184": "Backend training is not started or has been paused."
+
+    "5054B080": "Incorrect parameter type. Please check the input parameter type.",
+    "5054B081": "Incorrect parameter value. Please check the input parameter.",
+    "5054B180": "Failed to create the watchpoint. Please stop training and try again.",
+    "5054B181": "Failed to update the watchpoint. Please stop training and try again.",
+    "5054B182": "Failed to delete the watchpoint. Please stop training and try again.",
+    "5054B183": "Backend training is in progress or has ended. Please try again later"
   }
 }

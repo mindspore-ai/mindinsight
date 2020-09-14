@@ -112,6 +112,7 @@ limitations under the License.
                         </el-option>
                       </el-select>
                       <el-input v-model="item.param"
+                                :placeholder="$t('scalar.placeHolderNumber')"
                                 v-if="conditions.hasValue.includes(item.condition)"
                                 @input="validateParam(item)"
                                 class="condition-param"></el-input>
@@ -141,19 +142,21 @@ limitations under the License.
               <el-button type="primary"
                          size="mini"
                          class="custom-btn green"
-                         :disabled="!step"
+                         :disabled="!step || metadata.state==='running' || metadata.state==='pending'"
                          @click="control(0)">{{ $t('public.sure') }}</el-button>
             </div>
             <div class="btn-two">
               <el-button size="mini"
                          class="custom-btn white"
+                         :disabled="metadata.state==='running'|| metadata.state==='pending'"
                          @click="control(1)">{{$t('debugger.continue')}}</el-button>
               <el-button size="mini"
-                         class="custom-btn  white"
+                         class="custom-btn white"
                          :disabled="metadata.state!=='running'"
                          @click="control(3)">{{$t('debugger.pause')}}</el-button>
               <el-button size="mini"
-                         class="custom-btn  white"
+                         class="custom-btn white"
+                         :disabled="metadata.state==='pending'"
                          @click="terminate">{{$t('debugger.terminate')}}</el-button>
             </div>
           </div>
@@ -195,12 +198,13 @@ limitations under the License.
               <el-button type="primary"
                          size="mini"
                          class="custom-btn green"
-                         :disabled="!step"
+                         :disabled="!step || metadata.state==='running' || metadata.state==='pending'"
                          @click="control(0)">{{ $t('public.sure') }}</el-button>
             </div>
             <div class="btn-two">
               <el-button size="mini"
                          class="custom-btn white"
+                         :disabled="metadata.state==='running'|| metadata.state==='pending'"
                          @click="control(1)">{{$t('debugger.continue')}}</el-button>
               <el-button size="mini"
                          class="custom-btn white"
@@ -208,6 +212,7 @@ limitations under the License.
                          @click="control(3)">{{$t('debugger.pause')}}</el-button>
               <el-button size="mini"
                          class="custom-btn white"
+                         :disabled="metadata.state==='pending'"
                          @click="terminate">{{$t('debugger.terminate')}}</el-button>
             </div>
           </div>
@@ -618,6 +623,20 @@ export default {
         if (res && res.data && res.data.tensor_value) {
           this.tensorCompareFlag = true;
           const tensorValue = res.data.tensor_value;
+          if (
+            tensorValue.diff &&
+            tensorValue.diff.includes('Too large to show')
+          ) {
+            this.tensorValue = [];
+            this.$nextTick(() => {
+              this.$refs.tensorValue.showRequestErrorMessage(
+                  this.$t('debugger.largeDataTip'),
+                  JSON.parse(row.shape),
+                  shape,
+              );
+            });
+            return;
+          }
           this.tensorValue = tensorValue.diff;
           if (
             this.tensorValue &&
@@ -804,11 +823,8 @@ export default {
       const params = {ascend, name, watch_point_id: this.curWatchPointId};
       RequestService.retrieveNodeByBfs(params).then(
           (res) => {
-            if (res.data && res.data.tensor_history) {
-              this.tableData = res.data.tensor_history;
-              this.dealTableData(this.tableData);
-            }
             if (res.data && res.data.graph && res.data.name) {
+              this.retrieveTensorHistory({name: res.data.name});
               const graph = res.data.graph;
               this.curLeafNodeName = res.data.name;
               this.nodeName = res.data.name;
@@ -910,7 +926,7 @@ export default {
       if (this.treeFlag) {
         this.querySingleNode({}, data.name, true);
       } else {
-        this.queryAllTreeData(data.name, false);
+        this.queryAllTreeData(data.name, true);
       }
     },
     /**
@@ -1013,7 +1029,8 @@ export default {
             this.tensorCompareFlag = true;
             if (res.data.tensor_value) {
               const value = res.data.tensor_value.value;
-              if (value === 'Too large to show') {
+              if (value.includes('Too large to show')) {
+                this.tensorValue = [];
                 this.$nextTick(() => {
                   this.$refs.tensorValue.showRequestErrorMessage(
                       this.$t('debugger.largeDataTip'),
@@ -2177,7 +2194,7 @@ export default {
       this.initContextMenu();
 
       if (this.selectedNode.name) {
-        this.selectNode(true);
+        this.selectNode(true, true);
       }
     },
     /**
@@ -2305,6 +2322,7 @@ export default {
         'Depend',
         'make_tuple',
         'tuple_getitem',
+        'ControlDepend',
       ];
 
       const dispatch = d3
@@ -4065,7 +4083,7 @@ export default {
                     width: 150px;
                   }
                   .condition-param {
-                    width: 100px;
+                    width: 120px;
                     margin-left: 10px;
                   }
                   .btn-wrap {
