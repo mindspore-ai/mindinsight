@@ -305,7 +305,11 @@ export default {
           const tempSummaryList = [];
           const tempTagList = [];
           const dataList = [];
-          const data = res.data.train_jobs;
+          const data = res.data.train_jobs.filter(({summary_files}) => summary_files > 0);
+          if (!data.length) {
+            this.initOver = true;
+            return;
+          }
           data.forEach((summaryObj, summaryIndex) => {
             const colorIndex = this.curAvlColorIndexArr.length
               ? this.curAvlColorIndexArr.shift()
@@ -1417,7 +1421,11 @@ export default {
             this.clearAllData();
             return;
           }
-          const data = res.data.train_jobs;
+          const data = res.data.train_jobs.filter(({summary_files}) => summary_files > 0);
+          if (!data.length) {
+            this.clearAllData();
+            return;
+          }
 
           // Delete the data that does not exist
           const tagRemoveFlag = this.removeNonexistentData(data);
