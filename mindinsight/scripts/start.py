@@ -238,7 +238,7 @@ class Command(BaseCommand):
             default=False,
             help="""
                 Enable debugger or not. 
-                Dfault is False.""")
+                Default is False.""")
         for hook in HookUtils.instance().hooks():
             hook.register_startup_arguments(parser)
 
