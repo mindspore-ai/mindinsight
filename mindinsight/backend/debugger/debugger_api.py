@@ -126,7 +126,7 @@ def tensor_comparisons():
 
     Examples:
         >>> Get http://xxxx/v1/mindinsight/debugger/tensor-comparisons?
-            name=node_name&detail=data&shape=[0, 0, :, :]&tolerance=0.5
+        >>> name=node_name&detail=data&shape=[0, 0, :, :]&tolerance=0.5
     """
     name = request.args.get('name')
     detail = request.args.get('detail', 'data')
