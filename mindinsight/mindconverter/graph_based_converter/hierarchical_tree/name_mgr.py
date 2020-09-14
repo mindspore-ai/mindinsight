@@ -53,10 +53,6 @@ class ModuleNameMgr(NameMgr):
     """Module name manager."""
 
 
-class VariableNameMgrInModule(NameMgr):
-    """Variable name mgr for a module."""
-
-
 global_op_namespace = dict()
 START_IDX = 0
 

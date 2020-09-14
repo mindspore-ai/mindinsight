@@ -84,10 +84,11 @@ def graph_based_converter(graph_path: str, sample_shape: tuple,
 
     """
     from .third_party_graph import GraphFactory
+    from .hierarchical_tree import HierarchicalTreeFactory
 
     graph_obj = GraphFactory.init(graph_path, sample_shape=sample_shape,
                                   checkpoint=checkpoint_path)
-    hierarchical_tree = graph_obj.to_hierarchical_tree()
+    hierarchical_tree = HierarchicalTreeFactory.create(graph_obj)
     hierarchical_tree.save_source_files(output_folder, mapper=ONNXToMindSporeMapper,
                                         report_folder=report_folder)
 

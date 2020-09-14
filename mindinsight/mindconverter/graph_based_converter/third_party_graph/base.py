@@ -15,9 +15,6 @@
 """Define graph entity."""
 import abc
 from collections import OrderedDict
-from typing import Dict, Union, Any
-
-from torch.nn import Module
 
 from ..constant import SEPARATOR_IN_ONNX_OP
 from ..mapper.base import Mapper
@@ -41,20 +38,12 @@ class BaseGraph(metaclass=abc.ABCMeta):
         """Build graph."""
 
     @abc.abstractmethod
-    def to_ir(self, mapper):
-        """Convert graph to ir graph."""
-
-    @abc.abstractmethod
-    def to_hierarchical_tree(self):
-        """Convert to hierarchical tree."""
-
-    @abc.abstractmethod
     def sub_graph_merging(self):
         """Merge split nodes into one."""
 
     @staticmethod
     @abc.abstractmethod
-    def load_checkpoint(ckpt_path: str) -> Dict:
+    def load_checkpoint(ckpt_path: str) -> dict:
         """Load checkpoint file."""
 
     @staticmethod
@@ -88,15 +77,14 @@ class Graph(BaseGraph, abc.ABC):
     Define Factory method to create Graph sub-class.
 
     Args:
-        model (Union[Module, Any]): Graph file.
+        model (Union[torch.nn.Module, Any]): Graph file.
         checkpoint (dict): Checkpoint path.
 
     """
 
     sorted = False
 
-    def __init__(self, model: Union[Module, Any],
-                 **kwargs):
+    def __init__(self, model, **kwargs):
         super(Graph, self).__init__()
         self.model = model
         self.checkpoint = kwargs.get("checkpoint", None)
@@ -107,6 +95,27 @@ class Graph(BaseGraph, abc.ABC):
         self._output_nodes = []
         self._topological_order = []
         self._input_shape = dict()
+
+    def get_output_shape(self, name):
+        """
+        Get node output shape.
+
+        Args:
+            name (str): Node name.
+
+        Returns:
+            list, shape.
+        """
+        return self._shape_dict.get(name)
+
+    def get_input_shape(self, name):
+        """
+        Get node input shape.
+
+        Returns:
+            list, shape.
+        """
+        return self._input_shape.get(name)
 
     @property
     def nodes_in_topological_order(self):
@@ -192,17 +201,11 @@ class Graph(BaseGraph, abc.ABC):
             idx += 1
         self.sorted = True
 
-    def to_ir(self, mapper):
-        raise NotImplementedError
-
-    def to_hierarchical_tree(self):
-        raise NotImplementedError
-
     def sub_graph_merging(self):
         raise NotImplementedError
 
     @staticmethod
-    def load_checkpoint(ckpt_path: str) -> Dict:
+    def load_checkpoint(ckpt_path: str) -> dict:
         raise NotImplementedError
 
     @staticmethod

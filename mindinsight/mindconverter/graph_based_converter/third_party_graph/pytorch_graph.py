@@ -17,18 +17,11 @@ import warnings
 import re
 from typing import Dict, NoReturn
 
-import torch
-from torch.nn import Module
-from torch.onnx import OperatorExportTypes
-
 from .base import Graph
 from .input_node import InputNode
 from .pytorch_graph_node import PyTorchGraphNode
 from .graph_parser import PyTorchGraphParser
-from .torch_utils import OverloadTorchModuleTemporarily, unique_state_dict
-from .torch_utils import create_autograd_variable
-from .torch_utils import onnx_tracer
-from ..hierarchical_tree import HierarchicalTree
+
 from ..constant import SEPARATOR_IN_SCOPE, LINK_IN_SCOPE
 from ..constant import LEFT_BUCKET, RIGHT_BUCKET
 
@@ -78,8 +71,11 @@ class PyTorchGraph(Graph):
 
     """
 
-    def __init__(self, model: Module, sample_shape: tuple):
+    def __init__(self, model, sample_shape: tuple):
         super(PyTorchGraph, self).__init__(model=model)
+
+        from .torch_utils import unique_state_dict
+
         self._params_dict = unique_state_dict(model)
         self.build(sample_shape)
 
@@ -108,6 +104,12 @@ class PyTorchGraph(Graph):
             input_shape (tuple): Input shape of model.
 
         """
+        import torch
+        from torch.onnx import OperatorExportTypes
+        from .torch_utils import OverloadTorchModuleTemporarily
+        from .torch_utils import create_autograd_variable
+        from .torch_utils import onnx_tracer
+
         self._check_input_shape(input_shape)
 
         def _extract_shape(shape):
@@ -187,32 +189,6 @@ class PyTorchGraph(Graph):
         Convert graph to IR graph.
         """
         raise NotImplementedError()
-
-    def to_hierarchical_tree(self):
-        """
-        Generate hierarchical tree based on graph.
-        """
-        tree = HierarchicalTree()
-        node_input = None
-        for _, node_name in enumerate(self.nodes_in_topological_order):
-            node_inst = self.get_node(node_name)
-            node_output = self._shape_dict.get(node_name)
-            if node_inst.in_degree == 0:
-                # If in-degree equals to zero, then it's a input node.
-                continue
-
-            # If the node is on the top, then fetch its input
-            # from input table.
-            if not node_input:
-                node_input = self._input_shape.get(node_name)
-
-            if not node_input:
-                raise ValueError(f"This model is not supported now. "
-                                 f"Cannot find {node_name}'s input shape.")
-
-            tree.insert(node_inst, node_name, node_input, node_output)
-            node_input = node_output
-        return tree
 
     def build_connection(self, src, tgt) -> NoReturn:
         """

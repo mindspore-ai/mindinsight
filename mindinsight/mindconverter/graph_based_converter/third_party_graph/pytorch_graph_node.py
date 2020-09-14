@@ -14,7 +14,7 @@
 # ==============================================================================
 """Define PyTorch graph node."""
 from .base import GraphNode
-from .torch_utils import getitem_of_node
+
 from ..constant import NodeType, SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, LEFT_BUCKET, RIGHT_BUCKET, \
     SEPARATOR_IN_ONNX_OP
 from ..mapper.base import Mapper
@@ -202,6 +202,8 @@ class PyTorchGraphNode(GraphNode):
         Returns:
             dict, raw params.
         """
+        from .torch_utils import getitem_of_node
+
         raw_params = dict()
 
         if not node:
