@@ -713,7 +713,17 @@ class DebuggerServer:
         return {'metadata': {'state': 'pending'}}
 
     def retrieve_node_by_bfs(self, node_name, ascend=False):
-        """Get the graph and tensor history of the next node name according to node_name."""
+        """
+        Get the graph of the next node according to node_name.
+
+        Args:
+            node_name (str): The name of current chosen leaf node.
+            ascend (bool): If True, traverse the input nodes;
+                If False, traverse the output nodes. Default is True.
+
+        Returns:
+            dict, the next node information.
+        """
         log.info("Retrieve node <%s> by bfs, `ascend` is :%s",
                  node_name, ascend)
         reply = {}
@@ -728,9 +738,7 @@ class DebuggerServer:
             'single_node': True
         }
         search_graph = self._get_nodes_info(filter_condition)
-        tensor_history = self._get_tensor_history(next_node_name)
         reply = {'name': next_node_name}
         reply.update(search_graph)
-        reply.update(tensor_history)
 
         return reply

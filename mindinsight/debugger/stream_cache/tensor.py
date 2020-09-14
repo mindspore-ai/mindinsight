@@ -148,6 +148,7 @@ class OpTensor(BaseTensor):
         """
         tensor_value = self.get_tensor_value_by_shape(shape)
         res = {}
+        # the type of tensor_value is one of None, np.ndarray or str
         if isinstance(tensor_value, np.ndarray):
             statistics = TensorUtils.get_statistics_from_tensor(tensor_value)
             res['statistics'] = TensorUtils.get_statistics_dict(statistics)

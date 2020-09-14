@@ -229,13 +229,12 @@ class GraphHandler(StreamHandlerBase):
         Traverse the graph in order of breath-first search by given node.
 
         Args:
-            node_name (str): The node name which will be regarded
-                as the start node in graph.
+            node_name (str): The name of current chosen leaf node.
             ascend (bool): If True, traverse the input nodes;
                 If False, traverse the output nodes. Default is True.
 
         Returns:
-            dict, including the searched node and its tensor value.
+            Union[None, dict], the next node object in dict type or None.
         """
         self._graph_exists()
         bfs_order = self.bfs_order
@@ -248,7 +247,7 @@ class GraphHandler(StreamHandlerBase):
 
         if node_name is None:
             if ascend is False:
-                next_node = bfs_order[-1]
+                next_node = None
             else:
                 next_node = bfs_order[0]
         else:

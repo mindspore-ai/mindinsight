@@ -224,7 +224,7 @@ class TensorHandler(StreamHandlerBase):
         if prev_step < 0:
             return flag
         tensor = self._get_tensor(tensor_name, step=prev_step)
-        return bool(tensor and tensor.valule)
+        return bool(tensor and tensor.value)
 
     def get_tensor_value_by_name(self, tensor_name, prev=False):
         """Get tensor value by name in numpy type."""
@@ -283,6 +283,7 @@ class TensorHandler(StreamHandlerBase):
         if isinstance(tensor_info, dict):
             del tensor_info['has_prev_step']
             del tensor_info['value']
+        # the type of curr_tensor_slice is one of None, np.ndarray or str
         if isinstance(curr_tensor_slice, np.ndarray) and isinstance(prev_tensor_slice, np.ndarray):
             diff_tensor = TensorUtils.calc_diff_between_two_tensor(curr_tensor_slice, prev_tensor_slice, tolerance)
             result = np.stack([prev_tensor_slice, curr_tensor_slice, diff_tensor], axis=-1)
