@@ -188,6 +188,9 @@ class TensorHandler(StreamHandlerBase):
             # add `has_prev_step` field to tensor basic info.
             if basic_info:
                 tensor_info.update(basic_info)
+                if not basic_info.get('value'):
+                    missed_tensors.append(tensor_info)
+                    log.debug("Add view cmd for %s", tensor_name)
             else:
                 missed_tensors.append(tensor_info)
                 log.debug("Add view cmd for %s", tensor_name)
@@ -221,13 +224,7 @@ class TensorHandler(StreamHandlerBase):
         if prev_step < 0:
             return flag
         tensor = self._get_tensor(tensor_name, step=prev_step)
-        if not tensor:
-            # the tensor need to be queried from client
-            flag = False
-        elif tensor.value:
-            flag = True
-
-        return flag
+        return bool(tensor and tensor.valule)
 
     def get_tensor_value_by_name(self, tensor_name, prev=False):
         """Get tensor value by name in numpy type."""
@@ -283,13 +280,16 @@ class TensorHandler(StreamHandlerBase):
         curr_tensor_slice = curr_tensor.get_tensor_value_by_shape(shape)
         prev_tensor_slice = prev_tensor.get_tensor_value_by_shape(shape)
         tensor_info = curr_tensor.get_basic_info()
+        if isinstance(tensor_info, dict):
+            del tensor_info['has_prev_step']
+            del tensor_info['value']
         if isinstance(curr_tensor_slice, np.ndarray) and isinstance(prev_tensor_slice, np.ndarray):
             diff_tensor = TensorUtils.calc_diff_between_two_tensor(curr_tensor_slice, prev_tensor_slice, tolerance)
             result = np.stack([prev_tensor_slice, curr_tensor_slice, diff_tensor], axis=-1)
             tensor_info['diff'] = result.tolist()
             stats = TensorUtils.get_statistics_from_tensor(diff_tensor)
             tensor_info['statistics'] = TensorUtils.get_statistics_dict(stats)
-            del tensor_info['has_prev_step']
-            del tensor_info['value']
+        elif isinstance(curr_tensor_slice, str):
+            tensor_info['diff'] = curr_tensor_slice
         reply = {'tensor_value': tensor_info}
         return reply

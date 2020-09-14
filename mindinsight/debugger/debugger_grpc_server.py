@@ -257,7 +257,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def SendTensors(self, request_iterator, context):
         """Send tensors into DebuggerCache."""
         log.info("Received tensor.")
-        self._received_view_cmd['wait_for_tensor'] = False
         tensor_construct = []
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR)
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
@@ -266,6 +265,8 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         for tensor in request_iterator:
             tensor_construct.append(tensor)
             if tensor.finished:
+                if self._received_view_cmd.get('wait_for_tensor') and tensor.tensor_content:
+                    self._received_view_cmd['wait_for_tensor'] = False
                 tensor_stream.put({'step': step, 'tensor_protos': tensor_construct})
                 tensor_construct = []
                 tensor_names.append(':'.join([tensor.node_name, tensor.slot]))

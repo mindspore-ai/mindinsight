@@ -445,8 +445,7 @@ class DebuggerServer:
         if metadata_stream.state != ServerStatus.WAITING.value:
             log.error("Failed to create watchpoint as the MindSpore is not in waiting state.")
             raise DebuggerCreateWatchPointError(
-                "Failed to create watchpoint as the MindSpore is not in waiting state."
-            )
+                "Failed to create watchpoint as the MindSpore is not in waiting state.")
         if metadata_stream.backend == 'GPU' and watch_condition.get('condition') == 'OVERFLOW':
             log.error("GPU doesn't support OVERFLOW watch condition.")
             raise DebuggerParamValueError("GPU doesn't support OVERFLOW watch condition.")

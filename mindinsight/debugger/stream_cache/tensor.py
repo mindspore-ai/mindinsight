@@ -152,7 +152,9 @@ class OpTensor(BaseTensor):
             statistics = TensorUtils.get_statistics_from_tensor(tensor_value)
             res['statistics'] = TensorUtils.get_statistics_dict(statistics)
             res['value'] = tensor_value.tolist()
-            return res
+        elif isinstance(tensor_value, str):
+            res['value'] = tensor_value
+
         return res
 
     def get_tensor_value_by_shape(self, shape=None):
@@ -187,6 +189,7 @@ class OpTensor(BaseTensor):
         else:
             value = np.asarray(value)
         return value
+
 
 class ConstTensor(BaseTensor):
     """Tensor data structure for Const Node."""
