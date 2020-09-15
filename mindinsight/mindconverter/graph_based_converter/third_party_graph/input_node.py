@@ -53,7 +53,7 @@ class InputNode(GraphNode):
     def hash_key(self):
         pass
 
-    def replace_with_arg(self, arg):
+    def replace_with_arg(self, src_arg, tgt_arg):
         pass
 
     def _get_arg_name(self, arg):
@@ -65,8 +65,29 @@ class InputNode(GraphNode):
     def __init__(self, input_shape):
         super(InputNode, self).__init__(node=None)
         self._op_name = 'Input'
-        self._op_params = {'node_shape': input_shape}
+        self._op_params = {'input_shape': input_shape,
+                           "output_shape": input_shape}
         self._node_type = NodeType.INPUT.value
+
+    @property
+    def input_shape(self):
+        """
+        Input tensor shape of current node.
+
+        Returns:
+            tuple, tensor shape of input.
+        """
+        return self._op_params["input_shape"]
+
+    @property
+    def output_shape(self):
+        """
+        Output tensor shape.
+
+        Returns:
+            tuple, output tensor shape.
+        """
+        return self._op_params["output_shape"]
 
     def set_scope_name(self, original_input_scope_name):
         """

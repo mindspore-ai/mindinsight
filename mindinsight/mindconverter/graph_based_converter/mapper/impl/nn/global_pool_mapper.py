@@ -31,8 +31,7 @@ class GlobalPoolMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_params(params, weights):
-        dim = 1 if len(params['input_shape']) == 3\
-            else 2
+        dim = 1 if len(params['input_shape']) == 3 else 2
         if dim == 1:
             kernel_size = params['input_shape'][-1] // params['output_shape'][-1]
         else:

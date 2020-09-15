@@ -39,7 +39,7 @@ class ConvMapper(ONNXToMindSporeMapper):
         else:
             stride = params['strides']
         kernel_shape = list(weight.shape)
-        in_channels = kernel_shape[-2]
+        in_channels = kernel_shape[-2] * params.get("group", 1)
         out_channels = kernel_shape[-1]
         kernel_size = kernel_shape[:-2]
         if len(kernel_size) == 1:
