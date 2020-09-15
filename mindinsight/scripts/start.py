@@ -213,7 +213,7 @@ class Command(BaseCommand):
             """ % (PortAction.MIN_PORT, PortAction.MAX_PORT, settings.PORT))
 
         parser.add_argument(
-            '--debugger_port',
+            '--debugger-port',
             type=int,
             action=PortAction,
             help="""
@@ -232,7 +232,7 @@ class Command(BaseCommand):
             """)
 
         parser.add_argument(
-            '--enable_debugger',
+            '--enable-debugger',
             type=str2bool,
             action=EnableDebuggerAction,
             default=False,
