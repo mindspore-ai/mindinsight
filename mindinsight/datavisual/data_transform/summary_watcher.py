@@ -205,14 +205,7 @@ class SummaryWatcher:
                 except OverflowError:
                     return
             if relative_path not in summary_dict:
-                summary_dict[relative_path] = {
-                    'create_time': ctime,
-                    'update_time': mtime,
-                    'summary_files': 0,
-                    'lineage_files': 0,
-                    'graph_files': 0,
-                    'profiler': None,
-                }
+                summary_dict[relative_path] = _new_entry(ctime, mtime)
             if summary_dict[relative_path]['create_time'] < ctime:
                 summary_dict[relative_path].update({
                     'create_time': ctime,
@@ -241,14 +234,7 @@ class SummaryWatcher:
             if relative_path in summary_dict:
                 summary_dict[relative_path]['profiler'] = profiler
             else:
-                summary_dict[relative_path] = {
-                    'create_time': ctime,
-                    'summary_files': 0,
-                    'lineage_files': 0,
-                    'graph_files': 0,
-                    'update_time': mtime,
-                    'profiler': profiler
-                }
+                summary_dict[relative_path] = _new_entry(ctime, mtime, profiler)
 
     def is_summary_directory(self, summary_base_dir, relative_path):
         """
@@ -410,3 +396,15 @@ class SummaryWatcher:
         summaries.sort(key=lambda x: (-int(x['update_time'].timestamp()), x['file_name']))
 
         return summaries
+
+
+def _new_entry(ctime, mtime, profiler=None):
+    """Create a new entry."""
+    return {
+        'create_time': ctime,
+        'update_time': mtime,
+        'summary_files': 0,
+        'lineage_files': 0,
+        'graph_files': 0,
+        'profiler': profiler
+    }

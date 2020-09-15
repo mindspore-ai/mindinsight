@@ -197,14 +197,16 @@ class _PbParser(_Parser):
         for filename in pb_filenames:
             if not self._set_latest_file(filename):
                 continue
-
-            try:
-                tensor_event = self._parse_pb_file(filename)
-            except UnknownError:
-                # Parse pb file failed, so return None.
-                continue
-
-            events_data.add_tensor_event(tensor_event)
+            future = executor.submit(self._parse_pb_file, self._summary_dir, filename)
+            def add_tensor_event(future_value):
+                try:
+                    tensor_event = future_value.result()
+                    if tensor_event is not None:
+                        events_data.add_tensor_event(tensor_event)
+                except Exception as ex:
+                    logger.exception(ex)
+                    raise UnknownError(str(ex))
+            future.add_done_callback(add_tensor_event)
             return False
         return True
 
@@ -249,7 +251,8 @@ class _PbParser(_Parser):
 
         return True
 
-    def _parse_pb_file(self, filename):
+    @staticmethod
+    def _parse_pb_file(summary_dir, filename):
         """
         Parse pb file and write content to `EventsData`.
 
@@ -259,7 +262,7 @@ class _PbParser(_Parser):
         Returns:
             TensorEvent, if load pb file and build graph success, will return tensor event, else return None.
         """
-        file_path = FileHandler.join(self._summary_dir, filename)
+        file_path = FileHandler.join(summary_dir, filename)
         logger.info("Start to load graph from pb file, file path: %s.", file_path)
         filehandler = FileHandler(file_path)
         model_proto = anf_ir_pb2.ModelProto()
@@ -280,7 +283,7 @@ class _PbParser(_Parser):
             logger.exception(ex)
             raise UnknownError(str(ex))
 
-        tensor_event = TensorEvent(wall_time=FileHandler.file_stat(file_path),
+        tensor_event = TensorEvent(wall_time=FileHandler.file_stat(file_path).mtime,
                                    step=0,
                                    tag=filename,
                                    plugin_name=PluginNameEnum.GRAPH.value,
@@ -298,7 +301,6 @@ class _SummaryParser(_Parser):
         super(_SummaryParser, self).__init__(summary_dir)
         self._latest_file_size = 0
         self._summary_file_handler = None
-        self._events_data = None
 
     def parse_files(self, executor, filenames, events_data):
         """
@@ -312,7 +314,6 @@ class _SummaryParser(_Parser):
         Returns:
             bool, True if all the summary files are finished loading.
         """
-        self._events_data = events_data
         summary_files = self.filter_files(filenames)
         summary_files = self.sort_files(summary_files)
         if self._latest_filename in summary_files:
@@ -332,7 +333,7 @@ class _SummaryParser(_Parser):
                 continue
 
             try:
-                if not self._load_single_file(self._summary_file_handler, executor):
+                if not self._load_single_file(self._summary_file_handler, executor, events_data):
                     self._latest_file_size = self._summary_file_handler.offset
                 else:
                     self._latest_file_size = new_size
@@ -358,13 +359,14 @@ class _SummaryParser(_Parser):
             lambda filename: (re.search(r'summary\.\d+', filename)
                               and not filename.endswith("_lineage")), filenames))
 
-    def _load_single_file(self, file_handler, executor):
+    def _load_single_file(self, file_handler, executor, events_data):
         """
         Load a log file data.
 
         Args:
             file_handler (FileHandler): A file handler.
             executor (Executor): The executor instance.
+            events_data (EventsData): The container of event data.
 
         Returns:
             bool, True if the summary file is finished loading.
@@ -389,15 +391,15 @@ class _SummaryParser(_Parser):
                         for tensor_value in tensor_values:
                             if tensor_value.plugin_name == PluginNameEnum.GRAPH.value:
                                 try:
-                                    graph_tags = self._events_data.list_tags_by_plugin(PluginNameEnum.GRAPH.value)
+                                    graph_tags = events_data.list_tags_by_plugin(PluginNameEnum.GRAPH.value)
                                 except KeyError:
                                     graph_tags = []
 
                                 summary_tags = self.filter_files(graph_tags)
                                 for tag in summary_tags:
-                                    self._events_data.delete_tensor_event(tag)
+                                    events_data.delete_tensor_event(tag)
 
-                            self._events_data.add_tensor_event(tensor_value)
+                            events_data.add_tensor_event(tensor_value)
                     except Exception as exc:
                         # Log exception for debugging.
                         logger.exception(exc)
