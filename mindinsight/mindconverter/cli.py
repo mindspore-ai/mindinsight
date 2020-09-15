@@ -28,12 +28,12 @@ class FileDirAction(argparse.Action):
     """File directory action class definition."""
 
     @staticmethod
-    def check_path(parser, values, option_string=None):
+    def check_path(parser_in, values, option_string=None):
         """
         Check argument for file path.
 
         Args:
-            parser (ArgumentParser): Passed-in argument parser.
+            parser_in (ArgumentParser): Passed-in argument parser.
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
         """
@@ -45,22 +45,22 @@ class FileDirAction(argparse.Action):
             outfile = os.path.realpath(os.path.join(os.getcwd(), outfile))
 
         if os.path.exists(outfile) and not os.access(outfile, os.R_OK):
-            parser.error(f'{option_string} {outfile} not accessible')
+            parser_in.error(f'{option_string} {outfile} not accessible')
         return outfile
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser_in, namespace, values, option_string=None):
         """
         Inherited __call__ method from argparse.Action.
 
         Args:
-            parser (ArgumentParser): Passed-in argument parser.
+            parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-        outfile_dir = self.check_path(parser, values, option_string)
+        outfile_dir = self.check_path(parser_in, values, option_string)
         if os.path.isfile(outfile_dir):
-            parser.error(f'{option_string} {outfile_dir} is a file')
+            parser_in.error(f'{option_string} {outfile_dir} is a file')
 
         setattr(namespace, self.dest, outfile_dir)
 
@@ -68,12 +68,12 @@ class FileDirAction(argparse.Action):
 class OutputDirAction(argparse.Action):
     """File directory action class definition."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser_in, namespace, values, option_string=None):
         """
         Inherited __call__ method from argparse.Action.
 
         Args:
-            parser (ArgumentParser): Passed-in argument parser.
+            parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
@@ -87,10 +87,10 @@ class OutputDirAction(argparse.Action):
 
         if os.path.exists(output):
             if not os.access(output, os.R_OK):
-                parser.error(f'{option_string} {output} not accessible')
+                parser_in.error(f'{option_string} {output} not accessible')
 
             if os.path.isfile(output):
-                parser.error(f'{option_string} {output} is a file')
+                parser_in.error(f'{option_string} {output} is a file')
 
         setattr(namespace, self.dest, output)
 
@@ -98,21 +98,21 @@ class OutputDirAction(argparse.Action):
 class ProjectPathAction(argparse.Action):
     """Project directory action class definition."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser_in, namespace, values, option_string=None):
         """
         Inherited __call__ method from argparse.Action.
 
         Args:
-            parser (ArgumentParser): Passed-in argument parser.
+            parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-        outfile_dir = FileDirAction.check_path(parser, values, option_string)
+        outfile_dir = FileDirAction.check_path(parser_in, values, option_string)
         if not os.path.exists(outfile_dir):
-            parser.error(f'{option_string} {outfile_dir} not exists')
+            parser_in.error(f'{option_string} {outfile_dir} not exists')
         if not os.path.isdir(outfile_dir):
-            parser.error(f'{option_string} [{outfile_dir}] should be a directory.')
+            parser_in.error(f'{option_string} [{outfile_dir}] should be a directory.')
 
         setattr(namespace, self.dest, outfile_dir)
 
@@ -120,22 +120,22 @@ class ProjectPathAction(argparse.Action):
 class InFileAction(argparse.Action):
     """Input File action class definition."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser_in, namespace, values, option_string=None):
         """
         Inherited __call__ method from argparse.Action.
 
         Args:
-            parser (ArgumentParser): Passed-in argument parser.
+            parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-        outfile_dir = FileDirAction.check_path(parser, values, option_string)
+        outfile_dir = FileDirAction.check_path(parser_in, values, option_string)
         if not os.path.exists(outfile_dir):
-            parser.error(f'{option_string} {outfile_dir} not exists')
+            parser_in.error(f'{option_string} {outfile_dir} not exists')
 
         if not os.path.isfile(outfile_dir):
-            parser.error(f'{option_string} {outfile_dir} is not a file')
+            parser_in.error(f'{option_string} {outfile_dir} is not a file')
 
         setattr(namespace, self.dest, outfile_dir)
 
@@ -143,25 +143,25 @@ class InFileAction(argparse.Action):
 class ModelFileAction(argparse.Action):
     """Model File action class definition."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser_in, namespace, values, option_string=None):
         """
         Inherited __call__ method from argparse.Action.
 
         Args:
-            parser (ArgumentParser): Passed-in argument parser.
+            parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-        outfile_dir = FileDirAction.check_path(parser, values, option_string)
+        outfile_dir = FileDirAction.check_path(parser_in, values, option_string)
         if not os.path.exists(outfile_dir):
-            parser.error(f'{option_string} {outfile_dir} not exists')
+            parser_in.error(f'{option_string} {outfile_dir} not exists')
 
         if not os.path.isfile(outfile_dir):
-            parser.error(f'{option_string} {outfile_dir} is not a file')
+            parser_in.error(f'{option_string} {outfile_dir} is not a file')
 
         if not outfile_dir.endswith('.pth'):
-            parser.error(f"{option_string} {outfile_dir} should be a Pytorch model, ending with '.pth'.")
+            parser_in.error(f"{option_string} {outfile_dir} should be a Pytorch model, ending with '.pth'.")
 
         setattr(namespace, self.dest, outfile_dir)
 
@@ -169,31 +169,31 @@ class ModelFileAction(argparse.Action):
 class LogFileAction(argparse.Action):
     """Log file action class definition."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser_in, namespace, values, option_string=None):
         """
         Inherited __call__ method from FileDirAction.
 
         Args:
-            parser (ArgumentParser): Passed-in argument parser.
+            parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-        outfile_dir = FileDirAction.check_path(parser, values, option_string)
+        outfile_dir = FileDirAction.check_path(parser_in, values, option_string)
         if os.path.exists(outfile_dir) and not os.path.isdir(outfile_dir):
-            parser.error(f'{option_string} {outfile_dir} is not a directory')
+            parser_in.error(f'{option_string} {outfile_dir} is not a directory')
         setattr(namespace, self.dest, outfile_dir)
 
 
 class ShapeAction(argparse.Action):
     """Shape action class definition."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser_in, namespace, values, option_string=None):
         """
         Inherited __call__ method from FileDirAction.
 
         Args:
-            parser (ArgumentParser): Passed-in argument parser.
+            parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
@@ -203,27 +203,21 @@ class ShapeAction(argparse.Action):
         try:
             in_shape = [int(num_shape) for num_shape in shape_str.split(',')]
         except ValueError:
-            parser.error(
+            parser_in.error(
                 f"{option_string} {shape_str} should be a list of integer split by ',', check it please.")
         setattr(namespace, self.dest, in_shape)
 
 
-def cli_entry():
-    """Entry point for mindconverter CLI."""
-
-    permissions = os.R_OK | os.W_OK | os.X_OK
-    os.umask(permissions << 3 | permissions)
-
-    parser = argparse.ArgumentParser(
+parser = argparse.ArgumentParser(
         prog='mindconverter',
         description='MindConverter CLI entry point (version: {})'.format(mindinsight.__version__))
 
-    parser.add_argument(
+parser.add_argument(
         '--version',
         action='version',
         version='%(prog)s ({})'.format(mindinsight.__version__))
 
-    parser.add_argument(
+parser.add_argument(
         '--in_file',
         type=str,
         action=InFileAction,
@@ -233,7 +227,7 @@ def cli_entry():
             Specify path for script file. 
         """)
 
-    parser.add_argument(
+parser.add_argument(
         '--model_file',
         type=str,
         action=ModelFileAction,
@@ -246,7 +240,7 @@ def cli_entry():
             Usage: --model_file ~/pytorch_file/net.pth.
         """)
 
-    parser.add_argument(
+parser.add_argument(
         '--shape',
         type=str,
         action=ShapeAction,
@@ -259,7 +253,7 @@ def cli_entry():
             Usage: --shape 3,244,244
         """)
 
-    parser.add_argument(
+parser.add_argument(
         '--output',
         type=str,
         action=OutputDirAction,
@@ -269,7 +263,7 @@ def cli_entry():
             Default is output directory in the current working directory.
         """)
 
-    parser.add_argument(
+parser.add_argument(
         '--report',
         type=str,
         action=LogFileAction,
@@ -278,7 +272,7 @@ def cli_entry():
             Specify report directory. Default is the current working directory.
         """)
 
-    parser.add_argument(
+parser.add_argument(
         '--project_path',
         type=str,
         action=ProjectPathAction,
@@ -290,6 +284,13 @@ def cli_entry():
             `--project_path' when use graph based schema. 
             Usage: --project_path ~/script_file/
         """)
+
+
+def cli_entry():
+    """Entry point for mindconverter CLI."""
+
+    permissions = os.R_OK | os.W_OK | os.X_OK
+    os.umask(permissions << 3 | permissions)
 
     argv = sys.argv[1:]
     if not argv:
