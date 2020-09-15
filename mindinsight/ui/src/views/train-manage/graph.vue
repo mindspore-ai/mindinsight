@@ -550,8 +550,12 @@ export default {
     this.getDatavisualPlugins();
     window.onresize = () => {
       if (this.graph.dom) {
-        this.initSvg();
-        this.initGraphRectData();
+        this.$nextTick(() => {
+          setTimeout(() => {
+            this.initSvg(false);
+            this.initGraphRectData();
+          }, 500);
+        });
       }
     };
   },
@@ -608,7 +612,7 @@ export default {
             .dot(dot)
             .attributer(this.attributer)
             .render(() => {
-              this.initSvg();
+              this.initSvg(true);
               this.afterInitGraph();
             });
       } catch (error) {
@@ -628,12 +632,18 @@ export default {
         d3.select('body').append('div').attr('id', 'subgraphTemp');
       }
     },
-    initSvg() {
+    /**
+     * Initialize svg
+     * @param {Bealoon} setSize Weather to set svg origin width and height
+     */
+    initSvg(setSize) {
       this.svg.dom = document.querySelector('#graph svg');
       this.svg.rect = this.svg.dom.getBoundingClientRect();
       const viewBoxData = this.svg.dom.getAttribute('viewBox').split(' ');
       this.viewBox.scale.x = 1;
-      this.svg.originSize = {width: viewBoxData[2], height: viewBoxData[3]};
+      if (setSize) {
+        this.svg.originSize = {width: viewBoxData[2], height: viewBoxData[3]};
+      }
       if (viewBoxData[2] > this.viewBox.max) {
         this.viewBox.scale.x = viewBoxData[2] / this.viewBox.max;
         viewBoxData[2] = this.viewBox.max;
@@ -2092,13 +2102,15 @@ export default {
           selectedNode.type === 'aggregation_scope';
         this.selectedNode.count = selectedNode.subnode_count;
         const attrTemp = JSON.parse(JSON.stringify(selectedNode.attr || {}));
-        if (attrTemp.shape && attrTemp.shape.length) {
-          const shape = attrTemp.shape;
-          let str = '';
-          for (let i = 0; i < shape.length; i++) {
-            str += (str ? ',' : '') + JSON.stringify(shape[i]);
+        if (attrTemp.shape) {
+          const shape = JSON.parse(attrTemp.shape);
+          if (shape.length) {
+            let str = '';
+            for (let i = 0; i < shape.length; i++) {
+              str += (str ? ',' : '') + JSON.stringify(shape[i]);
+            }
+            attrTemp.shape = str;
           }
-          attrTemp.shape = str;
         }
 
         this.selectedNode.info.attributes = Object.keys(attrTemp).map((key) => {
@@ -2945,9 +2957,9 @@ export default {
     toggleRight() {
       this.rightShow = !this.rightShow;
       setTimeout(() => {
-        this.initSvg();
+        this.initSvg(false);
         this.initGraphRectData();
-      }, 10);
+      }, 500);
     },
     /**
      * Full-screen display
@@ -2955,9 +2967,9 @@ export default {
     toggleScreen() {
       this.fullScreen = !this.fullScreen;
       setTimeout(() => {
-        this.initSvg();
+        this.initSvg(false);
         this.initGraphRectData();
-      }, 10);
+      }, 500);
     },
     /**
      * Download svg
