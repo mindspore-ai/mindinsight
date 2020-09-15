@@ -18,6 +18,7 @@ import argparse
 import os
 import re
 import sys
+import socket
 from importlib import import_module
 
 import psutil
@@ -27,15 +28,6 @@ from mindinsight.utils.command import BaseCommand
 from mindinsight.utils.exceptions import PortNotAvailableError
 from mindinsight.utils.hook import HookUtils
 from mindinsight.utils.hook import init
-
-
-def str2bool(string):
-    """Convert str to bool"""
-    if string.lower() == 'false':
-        return False
-    if string.lower() == 'true':
-        return True
-    raise ValueError
 
 
 class ConfigAction(argparse.Action):
@@ -155,23 +147,6 @@ class UrlPathPrefixAction(argparse.Action):
         setattr(namespace, self.dest, prefix)
 
 
-class EnableDebuggerAction(argparse.Action):
-    """SSL certificate action class definition."""
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        """
-        Inherited __call__ method from argparse.Action.
-
-        Args:
-            parser (ArgumentParser): Passed-in argument parser.
-            namespace (Namespace): Namespace object to hold arguments.
-            values (object): Argument values with type depending on argument definition.
-            option_string (str): Optional string for specific argument name. Default: None.
-        """
-        enable_debugger = values
-        setattr(namespace, self.dest, enable_debugger)
-
-
 class Command(BaseCommand):
     """
     Start mindinsight service.
@@ -213,14 +188,6 @@ class Command(BaseCommand):
             """ % (PortAction.MIN_PORT, PortAction.MAX_PORT, settings.PORT))
 
         parser.add_argument(
-            '--debugger-port',
-            type=int,
-            action=PortAction,
-            help="""
-                Debugger port ranging from %s to %s. Default value is %s.
-            """ % (PortAction.MIN_PORT, PortAction.MAX_PORT, settings.DEBUGGER_PORT))
-
-        parser.add_argument(
             '--url-path-prefix',
             type=str,
             action=UrlPathPrefixAction,
@@ -231,14 +198,6 @@ class Command(BaseCommand):
                 dot or double dots. Default value is ''.
             """)
 
-        parser.add_argument(
-            '--enable-debugger',
-            type=str2bool,
-            action=EnableDebuggerAction,
-            default=False,
-            help="""
-                Enable debugger or not. 
-                Default is False.""")
         for hook in HookUtils.instance().hooks():
             hook.register_startup_arguments(parser)
 
@@ -269,6 +228,7 @@ class Command(BaseCommand):
 
         try:
             self.check_port()
+            self.check_debugger_port()
         except PortNotAvailableError as error:
             self.console.error(error.message)
             self.logfile.error(error.message)
@@ -292,4 +252,19 @@ class Command(BaseCommand):
             if connection.status != 'LISTEN':
                 continue
             if connection.laddr.port == settings.PORT:
-                raise PortNotAvailableError(f'Port {settings.PORT} is not available for MindInsight')
+                raise PortNotAvailableError(f'Port {settings.PORT} is no available for MindInsight')
+
+
+    def check_debugger_port(self):
+        """Check if the debugger_port is available"""
+        if not settings.ENABLE_DEBUGGER:
+            return
+        ip = settings.HOST
+        port = settings.DEBUGGER_PORT
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect((ip, int(port)))
+            s.shutdown(2)
+            raise PortNotAvailableError(f'Debugger-port {ip}:{port} is not available for MindInsight')
+        except socket.error:
+            return
