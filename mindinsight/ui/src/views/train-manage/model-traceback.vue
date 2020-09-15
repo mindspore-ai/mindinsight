@@ -180,16 +180,16 @@ limitations under the License.
                             @click="allSelect"
                             class="select-all-button"
                             :class="[selectCheckAll ? 'checked-color' : 'button-text',
-                            basearr.length > checkOptions.length ? 'btn-disabled' : '']"
-                            :disabled="basearr.length > checkOptions.length">
+                            rightAllOptions.length > showOptions.length ? 'btn-disabled' : '']"
+                            :disabled="rightAllOptions.length > showOptions.length">
                       {{$t('public.selectAll')}}
                     </button>
                     <button type="text"
                             @click="deselectAll"
                             class="deselect-all-button"
                             :class="[!selectCheckAll ? 'checked-color' : 'button-text',
-                            basearr.length > checkOptions.length ? 'btn-disabled' : '']"
-                            :disabled="basearr.length > checkOptions.length">
+                            rightAllOptions.length > showOptions.length ? 'btn-disabled' : '']"
+                            :disabled="rightAllOptions.length > showOptions.length">
                       {{$t('public.deselectAll')}}
                     </button>
                   </div>
@@ -566,6 +566,8 @@ export default {
       echartDialogVisible: false,
 
       // right data
+      rightAllOptions: [],
+      showOptions: [],
       sortChangeTimer: null,
       unhideRecordsTimer: null,
       tagDialogShow: false,
@@ -604,6 +606,7 @@ export default {
       keysOfStringValue: [], // All keys whose values are character strings
       keysOfIntValue: [], // All keys whose values are int
       keysOfMixed: [],
+      keysOfListType: [],
       echart: {
         chart: null,
         allData: [],
@@ -632,6 +635,7 @@ export default {
         int: 'int',
         str: 'str',
         mixed: 'mixed',
+        list: 'list',
         category: 'category',
         model_size: 'model_size',
         dataset_mark: 'dataset_mark',
@@ -860,13 +864,39 @@ export default {
       // data of pie
       for (let i = 0; i < pieHBuckets.length; i++) {
         const objData = {};
-        let preNumber = pieHBuckets[i][0];
-        preNumber = Math.round(preNumber * Math.pow(10, 4)) / Math.pow(10, 4);
-        let nextNumber = pieHBuckets[i][1];
-        nextNumber = Math.round(nextNumber * Math.pow(10, 4)) / Math.pow(10, 4);
-        let numSum = preNumber + nextNumber;
-        numSum = Math.round(numSum * Math.pow(10, 4)) / Math.pow(10, 4);
-        const numSumString = preNumber + '~' + numSum;
+        let preNum = pieHBuckets[i][0];
+        let numSum = undefined;
+        preNum = Math.round(preNum * Math.pow(10, 4)) / Math.pow(10, 4);
+        if (i < pieHBuckets.length - 1) {
+          numSum =
+            Math.round(pieHBuckets[i + 1][0] * Math.pow(10, 4)) /
+            Math.pow(10, 4);
+        } else {
+          let nextNumber = pieHBuckets[i][1];
+          nextNumber =
+            Math.round(nextNumber * Math.pow(10, 4)) / Math.pow(10, 4);
+          numSum = preNum + nextNumber;
+          numSum = Math.round(numSum * Math.pow(10, 4)) / Math.pow(10, 4);
+        }
+        const minNegativeNum = -10000;
+        const maxNegativeNum = -0.0001;
+        const minPositiveNum = 0.0001;
+        const maxPositiveNum = 10000;
+        if (
+          ((preNum > maxPositiveNum || preNum < minPositiveNum) &&
+            preNum > 0) ||
+          ((preNum < minNegativeNum || preNum > maxNegativeNum) && preNum < 0)
+        ) {
+          preNum = preNum.toExponential(2);
+        }
+        if (
+          ((numSum > maxPositiveNum || numSum < minPositiveNum) &&
+            numSum > 0) ||
+          ((numSum < minNegativeNum || numSum > maxNegativeNum) && numSum < 0)
+        ) {
+          numSum = numSum.toExponential(2);
+        }
+        const numSumString = preNum + '~' + numSum;
         this.pieLegendData.push(numSumString);
         objData.value = pieHBuckets[i][2];
         objData.name = numSumString;
@@ -887,10 +917,13 @@ export default {
       }
       tempData.forEach((item) => {
         if (!item.unselected) {
-          barHyper.push(item);
+          if (item.name.startsWith('[U]')) {
+            barHyper.unshift(item);
+          } else {
+            barHyper.push(item);
+          }
         }
       });
-
       barHyper.sort(this.sortBy('importance'));
       this.selectedBarArray = [];
       const mustSelectOptions = [];
@@ -1025,7 +1058,12 @@ export default {
             type: 'pie',
             radius: '55%',
             center: ['67%', '50%'],
-            label: {alignTo: 'labelLine', formatter: '{c}({d}%)'},
+            label: {
+              normal: {
+                show: false,
+                positionL: 'inner',
+              },
+            },
             data: this.pieSeriesData,
             emphasis: {
               itemStyle: {
@@ -1066,9 +1104,19 @@ export default {
           },
           formatter: (val) => {
             this.tooltipsBarData = val;
+            const maxTooltipLen = 30;
+            let name = val[0].name;
+            name = name.replace(/</g, '< ');
+            const breakCount = Math.ceil(name.length / maxTooltipLen);
+            let str = '';
+            for (let i = 0; i < breakCount; i++) {
+              const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
+              str += str ? '<br/>' + temp : temp;
+            }
+
             const res =
               '<p>' +
-              val[0].name +
+              str +
               '</p><p>' +
               this.$t('modelTraceback.parameterImportance') +
               ':' +
@@ -1138,6 +1186,7 @@ export default {
             width: '30px',
             start: 100, // The starting percentage of the data frame range
             end: this.barYAxisData.length > 15 ? 40 : 0, // The end percentage of the data frame range
+            showDetail: false,
           },
         ],
       };
@@ -1309,6 +1358,7 @@ export default {
         indeterminate: false,
       };
       this.keysOfMixed = [];
+      this.keysOfListType = [];
 
       this.userOptions = [];
       this.metricOptions = [];
@@ -1386,6 +1436,9 @@ export default {
                           } else if (customized[i].type === this.valueType.mixed) {
                             // list of type mixed
                             this.keysOfMixed.push(i);
+                            this.keysOfStringValue.push(i);
+                          } else if (customized[i].type === this.valueType.list) {
+                            this.keysOfListType.push(i);
                             this.keysOfStringValue.push(i);
                           }
                           if (i.startsWith(this.replaceStr.userDefined)) {
@@ -1501,11 +1554,16 @@ export default {
                         this.basearr.push(otherTemp);
                       }
                     }
+                    let tempOptions = [];
                     this.checkOptions.forEach((item) => {
+                      tempOptions = tempOptions.concat(item.options);
                       item.options.forEach((option) => {
                         this.selectArrayValue.push(option.label);
                       });
                     });
+                    this.showOptions = tempOptions;
+                    // select all options
+                    this.rightAllOptions = tempOptions;
                     this.table.columnOptions = Object.assign(
                         {
                           summary_dir: {
@@ -1693,6 +1751,7 @@ export default {
         'device_num',
       ]; // All keys whose values are int
       this.keysOfMixed = [];
+      this.keysOfListType=[];
     },
     /**
      * Column initialization
@@ -1918,7 +1977,7 @@ export default {
         if (
           this.keysOfMixed &&
           this.keysOfMixed.length &&
-          this.keysOfMixed.includes(key)
+          this.keysOfMixed.includes(key)||this.keysOfListType.includes(key)
         ) {
           this.$message.error(this.$t('modelTraceback.mixedItemMessage'));
           this.$nextTick(() => {
@@ -2407,6 +2466,7 @@ export default {
         // Model traceability drop-down box on the right
         this.keyWord = '';
         this.checkOptions = this.basearr;
+        this.showOptions = this.rightAllOptions;
       }
     },
     /**
@@ -2423,9 +2483,9 @@ export default {
           : restaurants;
         this.barNameList = results;
         this.searchOptions = [];
-        const list = [];
+        let list = [];
         results.forEach((item) => {
-          list.concat(item.options);
+          list = list.concat(item.options);
         });
         this.searchOptions = list;
       } else {
@@ -2436,6 +2496,12 @@ export default {
           ? this.createFilter(queryString, restaurants)
           : restaurants;
         this.checkOptions = results;
+        this.showOptions = [];
+        let list = [];
+        results.forEach((item) => {
+          list = list.concat(item.options);
+        });
+        this.showOptions = list;
       }
     },
 
@@ -2547,7 +2613,11 @@ export default {
         if (this.targetData[i].name === this.yTitle) {
           this.targetData[i].hyper_parameters.forEach((item) => {
             if (!item.unselected) {
-              barHyper.push(item);
+              if (item.name.startsWith('[U]')) {
+                barHyper.unshift(item);
+              } else {
+                barHyper.push(item);
+              }
             }
           });
         }
