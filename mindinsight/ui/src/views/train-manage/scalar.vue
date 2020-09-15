@@ -1121,6 +1121,7 @@ export default {
             iconStyle: {
               textPosition: 'top',
               textAlign: 'right',
+              borderColor: '#00A5A7',
             },
           },
           // toolbox
@@ -1130,7 +1131,7 @@ export default {
               show: true,
               title: this.$t('scalar.fullScreen'),
               iconStyle: {
-                borderColor: sampleObject.fullScreen ? '#3E98C5' : '#6D7278',
+                borderColor: sampleObject.fullScreen ? '#00A5A7' : '#6D7278',
               },
               icon: CommonProperty.fullScreenIcon,
               onclick() {
@@ -1141,7 +1142,7 @@ export default {
               show: true,
               title: this.$t('scalar.toggleYaxisScale'),
               iconStyle: {
-                borderColor: sampleObject.log ? '#3E98C5' : '#6D7278',
+                borderColor: sampleObject.log ? '#00A5A7' : '#6D7278',
               },
               icon:
                 'path://M0 150 c0 -18 7 -20 85 -20 78 0 85 2 85 20 0 18 -7 20 -85 20 -78 0 -85 -2 ' +
@@ -1260,7 +1261,7 @@ export default {
       sampleObject.fullScreen = !sampleObject.fullScreen;
       if (sampleObject.fullScreen) {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
-          '#3E98C5';
+          '#00A5A7';
         sampleObject.charData.charOption.grid.right = 80;
       } else {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
@@ -1810,7 +1811,7 @@ export default {
         const tempOriData = sampleObject.charData.oriData;
         const log = !sampleObject.log;
         if (log) {
-          tempOption.toolbox.feature.myTool2.iconStyle.borderColor = '#3E98C5';
+          tempOption.toolbox.feature.myTool2.iconStyle.borderColor = '#00A5A7';
           tempOption.yAxis.type = 'log';
         } else {
           tempOption.yAxis.type = 'value';

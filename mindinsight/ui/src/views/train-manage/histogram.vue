@@ -1172,6 +1172,7 @@ export default {
           emphasis: {
             iconStyle: {
               textPosition: 'top',
+              borderColor: '#00A5A7',
             },
           },
           // toolbox
@@ -1181,7 +1182,7 @@ export default {
               show: true,
               title: this.$t('histogram.fullScreen'),
               iconStyle: {
-                borderColor: sampleObject.fullScreen ? '#3E98C5' : '#6D7278',
+                borderColor: sampleObject.fullScreen ? '#00A5A7' : '#6D7278',
               },
               icon: CommonProperty.fullScreenIcon,
               onclick() {
@@ -1360,7 +1361,7 @@ export default {
           sampleObject.charOption.grid.right = 140;
         }
         sampleObject.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
-          '#3E98C5';
+          '#00A5A7';
       } else {
         sampleObject.charOption.grid.right = 80;
         sampleObject.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =

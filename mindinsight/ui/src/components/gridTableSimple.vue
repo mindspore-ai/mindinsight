@@ -483,11 +483,11 @@ export default {
       line-height: 34px;
       cursor: pointer;
       :hover {
-        color: #3e98c5;
+        color: #00a5a7;
       }
     }
     .active-color {
-      color: #3e98c5;
+      color: #00a5a7;
     }
     .filter-container {
       float: left;

@@ -72,7 +72,7 @@ limitations under the License.
             <el-table-column prop="operate"
                              :label="$t('summaryManage.operation')"
                              class-name="operate-container"
-                             width="400">
+                             :width="operateWidth">
               <template slot-scope="scope">
                 <span class="menu-item operate-btn"
                       v-if="scope.row.viewDashboard"
@@ -217,6 +217,7 @@ export default {
         type: 0,
       },
       tableDom: null,
+      operateWidth: localStorage.getItem('milang') === 'en-us' ? 415 : 300,
     };
   },
   computed: {},
@@ -542,11 +543,7 @@ export default {
     .list-table {
       height: 100%;
       .operate-container {
-        text-align: right;
         padding-right: 32px;
-      }
-      th.operate-container {
-        text-align: center;
       }
     }
   }
