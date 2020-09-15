@@ -108,7 +108,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         ret.update(metadata)
         self._cache_store.put_data(ret)
         self._received_view_cmd.clear()
-        log.info("Send receive tensor flag for %s", node_name)
+        log.debug("Send receive tensor flag for %s", node_name)
 
     def _pre_process(self, request):
         """Send graph and metadata when WaitCMD first called."""
@@ -121,7 +121,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             res = self._cache_store.get_stream_handler(Streams.GRAPH).get()
             res.update(metadata)
             self._cache_store.put_data(res)
-            log.info("Put graph into data queue.")
+            log.debug("Put graph into data queue.")
 
         if metadata_stream.step < request.cur_step or metadata_stream.full_name != request.cur_node:
             # clean tensor cache and DataQueue at the beginning of each step
@@ -141,7 +141,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         metadata_stream.node_name = cur_node
         metadata = metadata_stream.get()
         self._cache_store.put_data(metadata)
-        log.info("Put new metadata into data queue.")
+        log.debug("Put new metadata into data queue.")
 
     def _deal_with_old_command(self):
         """Deal with old command."""
@@ -190,7 +190,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         node_name = event.get('node_name')
         log.debug("Receive view cmd %s for node: %s.", view_cmd, node_name)
         if not (view_cmd and node_name):
-            log.warning("Invaid view command. Ignore it.")
+            log.debug("Invalid view command. Ignore it.")
             return None
         self._received_view_cmd['node_name'] = node_name
         self._received_view_cmd['wait_for_tensor'] = True
@@ -229,12 +229,12 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         else:
             metadata_stream.put(request)
             metadata_stream.client_ip = client_ip
-            log.info("Put new metadata from %s into cache.", client_ip)
+            log.debug("Put new metadata from %s into cache.", client_ip)
         # put metadata into data queue
         metadata = metadata_stream.get()
         self._cache_store.put_data(metadata)
         reply = get_ack_reply()
-        log.info("Send the reply to %s.", client_ip)
+        log.debug("Send the reply to %s.", client_ip)
         return reply
 
     @debugger_wrap
@@ -250,7 +250,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._cache_store.get_stream_handler(Streams.TENSOR).put_const_vals(graph.const_vals)
         self._status = ServerStatus.RECEIVE_GRAPH
         reply = get_ack_reply()
-        log.info("Send the reply for graph.")
+        log.debug("Send the reply for graph.")
         return reply
 
     @debugger_wrap
@@ -267,6 +267,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             if tensor.finished:
                 if self._received_view_cmd.get('wait_for_tensor') and tensor.tensor_content:
                     self._received_view_cmd['wait_for_tensor'] = False
+                    log.debug("Set wait for tensor flag to False.")
                 tensor_stream.put({'step': step, 'tensor_protos': tensor_construct})
                 tensor_construct = []
                 tensor_names.append(':'.join([tensor.node_name, tensor.slot]))
@@ -297,6 +298,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             watchpoint_hit_stream.put(watchpoint_hit)
         watchpoint_hits_info = watchpoint_hit_stream.get()
         self._cache_store.put_data(watchpoint_hits_info)
-        log.info("Send the watchpoint hits to DataQueue.\nSend the reply.")
+        log.debug("Send the watchpoint hits to DataQueue.\nSend the reply.")
         reply = get_ack_reply()
         return reply
