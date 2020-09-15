@@ -120,7 +120,7 @@ export default {
       formateData: [], // formatted data
       formateArr: [], // formatted Array
       statistics: {}, // Object contain maximun and minimun
-      accuracy: 7, // accuracy value
+      accuracy: 10, // accuracy value
       incorrectData: false, // Wheather the dimension is correctly selected
       updated: false, // Updated
       scrollTop: false, // Wheather scroll to the top
@@ -138,6 +138,9 @@ export default {
         {label: 5, value: 5},
         {label: 6, value: 6},
         {label: 7, value: 7},
+        {label: 8, value: 8},
+        {label: 9, value: 9},
+        {label: 10, value: 10},
       ],
       // Table configuration items
       optionObj: {
@@ -495,10 +498,11 @@ export default {
      * @param {String} errorMsg Error message
      * @param {Array} dimension Array of dimension
      * @param {String} filterStr String of dimension selection
+     * @param {Boolean} isUpdate Whether to reset
      */
-    showRequestErrorMessage(errorMsg, dimension, filterStr) {
+    showRequestErrorMessage(errorMsg, dimension, filterStr, isUpdate) {
       this.errorMsg = errorMsg;
-      if (!this.filterArr.length && dimension && filterStr) {
+      if ((!this.filterArr.length && dimension && filterStr)|| isUpdate) {
         this.initializeFilterArr(dimension, filterStr);
       }
       this.requestError = true;
@@ -595,7 +599,7 @@ export default {
         }
       }
       .filter-input {
-        width: 50px;
+        width: 65px;
         text-align: center;
       }
       .input-behind {
@@ -610,7 +614,7 @@ export default {
     .accuracy-container {
       float: right;
       .select-item {
-        width: 60px;
+        width: 65px;
       }
     }
   }

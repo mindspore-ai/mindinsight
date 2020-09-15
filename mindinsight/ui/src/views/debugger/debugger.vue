@@ -372,7 +372,7 @@ limitations under the License.
         <div class="deb-con-title-right">
           <div class="close-btn">
             <img src="@/assets/images/close-page.png"
-                 @click="tensorCompareFlag=false">
+                 @click="tensorCompareFlag=false;dims=null;tolerance=0;">
           </div>
         </div>
 
@@ -589,6 +589,8 @@ export default {
       if (this.gridType === 'compare') {
         this.tensorComparisons(this.curRowObj);
       } else {
+        this.dims = null;
+        this.tolerance = 0;
         this.viewValueDetail(this.curRowObj);
       }
     },
@@ -613,48 +615,54 @@ export default {
                 })
                 .reverse(),
         ).replace(/"/g, '');
+      this.dims = shape;
       const params = {
         name: row.name,
         detail: 'data',
         shape,
         tolerance: this.tolerance / 100,
       };
-      RequestService.tensorComparisons(params).then((res) => {
-        if (res && res.data && res.data.tensor_value) {
-          this.tensorCompareFlag = true;
-          const tensorValue = res.data.tensor_value;
-          if (
-            tensorValue.diff &&
-            tensorValue.diff.includes('Too large to show')
-          ) {
-            this.tensorValue = [];
-            this.$nextTick(() => {
-              this.$refs.tensorValue.showRequestErrorMessage(
-                  this.$t('debugger.largeDataTip'),
-                  JSON.parse(row.shape),
-                  shape,
-              );
-            });
-            return;
-          }
-          this.tensorValue = tensorValue.diff;
-          if (
-            this.tensorValue &&
-            this.tensorValue instanceof Array &&
-            !(this.tensorValue[0] instanceof Array)
-          ) {
-            this.tensorValue = [this.tensorValue];
-          }
-          this.$nextTick(() => {
-            this.$refs.tensorValue.updateGridData(
-                this.tensorValue,
-                JSON.parse(row.shape),
-                tensorValue.statistics,
-                shape,
-            );
-          });
-        }
-      });
+      const loadingInstance = this.$loading(this.loadingOption);
+      RequestService.tensorComparisons(params).then(
+          (res) => {
+            loadingInstance.close();
+            if (res && res.data && res.data.tensor_value) {
+              this.tensorCompareFlag = true;
+              const tensorValue = res.data.tensor_value;
+              if (tensorValue.diff === 'Too large to show.') {
+                this.tensorValue = [];
+                this.$nextTick(() => {
+                  this.$refs.tensorValue.showRequestErrorMessage(
+                      this.$t('debugger.largeDataTip'),
+                      JSON.parse(row.shape),
+                      shape,
+                      true,
+                  );
+                });
+                return;
+              }
+              this.tensorValue = tensorValue.diff;
+              if (
+                this.tensorValue &&
+              this.tensorValue instanceof Array &&
+              !(this.tensorValue[0] instanceof Array)
+              ) {
+                this.tensorValue = [this.tensorValue];
+              }
+              this.$nextTick(() => {
+                this.$refs.tensorValue.updateGridData(
+                    this.tensorValue,
+                    JSON.parse(row.shape),
+                    tensorValue.statistics,
+                    shape,
+                );
+              });
+            }
+          },
+          (err) => {
+            loadingInstance.close();
+          },
+      );
     },
     /**
      * Initialize the condition
@@ -1018,7 +1026,6 @@ export default {
                 })
                 .reverse(),
         ).replace(/"/g, '');
-      this.dims = shape;
       const params = {name: row.name, detail: 'data', shape};
       const loadingInstance = this.$loading(this.loadingOption);
       RequestService.tensors(params).then(
@@ -1029,13 +1036,14 @@ export default {
             this.tensorCompareFlag = true;
             if (res.data.tensor_value) {
               const value = res.data.tensor_value.value;
-              if (value.includes('Too large to show')) {
+              if (value === 'Too large to show.') {
                 this.tensorValue = [];
                 this.$nextTick(() => {
                   this.$refs.tensorValue.showRequestErrorMessage(
                       this.$t('debugger.largeDataTip'),
                       JSON.parse(row.shape),
                       shape,
+                      true,
                   );
                 });
                 return;
