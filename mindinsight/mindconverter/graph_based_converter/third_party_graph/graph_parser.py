@@ -54,5 +54,10 @@ class PyTorchGraphParser(GraphParser):
             log.error(str(error))
             log.exception(error)
             raise error
+        except Exception as e:
+            error_msg = "Error occurs in loading model, make sure model.pth correct."
+            log.error(error_msg)
+            log.exception(e)
+            raise Exception(error_msg)
 
         return model

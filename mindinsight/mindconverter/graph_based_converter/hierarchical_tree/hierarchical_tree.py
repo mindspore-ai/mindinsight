@@ -153,6 +153,7 @@ class HierarchicalTree(Tree):
         parent_node.set_successors(brothers, tree_id=self.tree_identifier)
 
     def save_source_files(self, out_folder: str, mapper: Mapper,
+                          model_name: str,
                           report_folder: str = None) -> NoReturn:
         """
         Save source codes to target folder.
@@ -160,6 +161,7 @@ class HierarchicalTree(Tree):
         Args:
             report_folder (str): Report folder.
             mapper (Mapper): Mapper of third party framework and mindspore.
+            model_name(str): Name of Converted model.
             out_folder (str): Output folder.
 
         """
@@ -171,11 +173,11 @@ class HierarchicalTree(Tree):
             log.error("Error occur when create hierarchical tree.")
             raise NodeTypeNotSupport("This model is not supported now.")
 
-        out_folder = os.path.abspath(out_folder)
+        out_folder = os.path.realpath(out_folder)
         if not report_folder:
             report_folder = out_folder
         else:
-            report_folder = os.path.abspath(report_folder)
+            report_folder = os.path.realpath(report_folder)
 
         if not os.path.exists(out_folder):
             os.makedirs(out_folder, self.modes_usr)
@@ -185,8 +187,8 @@ class HierarchicalTree(Tree):
         for file_name in code_fragments:
             code, report = code_fragments[file_name]
             try:
-                with os.fdopen(os.open(os.path.join(os.path.abspath(out_folder), f"{file_name}.py"),
-                                       self.flags, self.modes), "w") as file:
+                with os.fdopen(os.open(os.path.realpath(os.path.join(out_folder, f"{model_name}.py")),
+                                       self.flags, self.modes), 'w') as file:
                     file.write(code)
             except IOError as error:
                 log.error(str(error))
@@ -194,7 +196,8 @@ class HierarchicalTree(Tree):
                 raise error
 
             try:
-                with os.fdopen(os.open(os.path.join(report_folder, f"report_of_{file_name}.txt"),
+                with os.fdopen(os.open(os.path.realpath(os.path.join(report_folder,
+                                                                     f"report_of_{model_name}.txt")),
                                        self.flags, stat.S_IRUSR), "w") as rpt_f:
                     rpt_f.write(report)
             except IOError as error:

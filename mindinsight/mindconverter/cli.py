@@ -352,7 +352,7 @@ def _run(in_files, model_file, shape, out_dir, report, project_path):
         main_graph_base_converter(file_config)
 
     else:
-        error_msg = "`--in_files` and `--model_file` should be set at least one."
+        error_msg = "`--in_file` and `--model_file` should be set at least one."
         error = FileNotFoundError(error_msg)
         log.error(str(error))
         log.exception(error)
