@@ -66,6 +66,7 @@ class ExpressionType(enum.Enum):
     LE = 'le'
     GE = 'ge'
     IN = 'in'
+    NOT_IN = 'not_in'
 
     @classmethod
     def is_valid_exp(cls, key):
@@ -103,6 +104,8 @@ class ExpressionType(enum.Enum):
         try:
             if except_key == cls.IN.value:
                 state = operator.contains(except_value, actual_value)
+            elif except_key == cls.NOT_IN.value:
+                state = not operator.contains(except_value, actual_value)
             else:
                 state = getattr(operator, except_key)(actual_value, except_value)
         except TypeError:

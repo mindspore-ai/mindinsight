@@ -762,23 +762,7 @@ class TestModelApi(TestCase):
             }
             self.assertRaisesRegex(
                 LineageSearchConditionParamError,
-                f'The parameter {condition_key} is invalid. Its operation should be `in` or `eq`.',
-                filter_summary_lineage,
-                None,
-                BASE_SUMMARY_DIR,
-                search_condition
-            )
-
-            # more than one operation in summary_dir and lineage_type
-            search_condition = {
-                condition_key: {
-                    'in': ['/xxx', '/yyy'],
-                    'eq': '/zzz',
-                }
-            }
-            self.assertRaisesRegex(
-                LineageSearchConditionParamError,
-                f'The parameter {condition_key} is invalid. More than one operation.',
+                f'The parameter {condition_key} is invalid. Its operation should be `eq`, `in` or `not_in`.',
                 filter_summary_lineage,
                 None,
                 BASE_SUMMARY_DIR,
