@@ -102,6 +102,7 @@
     "metric": "Metrics",
     "deviceNum": "Devices",
     "mixedItemMessage": "This parameter contains multiple types of data and cannot be filtered.",
+    "notSupportSelected": "Filtering is not supported for this parameter type.",
     "displayColumn": "Displayed columns",
     "hide": "Hide Record",
     "unhide": "Unhide Record",

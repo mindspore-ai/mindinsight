@@ -102,6 +102,7 @@
     "metric": "度量指标",
     "deviceNum": "device数目",
     "mixedItemMessage": "该参数含有多种类型数据，无法筛选展示",
+    "notSupportSelected": "该参数类型暂不支持筛选",
     "displayColumn": "请选择展示列",
     "hide": "隐藏记录",
     "unhide": "取消隐藏",
