@@ -44,11 +44,12 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
     function(response) {
       if (typeof response.data === 'string') {
+        const variant = new Date().getTime();
         response.data = JSON.parse(
             response.data
                 .replace(/NaN/g, '"NaN"')
-                .replace(/(?<!-)Infinity/g, '"Infinity"')
-                .replace(/-Infinity/g, '"-Infinity"'),
+                .replace(/-Infinity/g, variant).replace(/Infinity/g, '"Infinity"')
+                .replace(new RegExp(variant, 'g'), '"-Infinity"'),
         );
       }
       return response;

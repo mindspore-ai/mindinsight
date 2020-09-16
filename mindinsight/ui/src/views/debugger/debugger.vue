@@ -782,17 +782,13 @@ export default {
                     false,
                 );
               }
-              if (res.data.tensor_history) {
-                this.tableData = res.data.tensor_history;
-                this.dealTableData(this.tableData);
-                this.tableData = JSON.parse(JSON.stringify(this.tableData));
-              }
             }
           },
           (err) => {
             this.showErrorMsg(err);
           },
       );
+      this.retrieveTensorHistory({name: this.nodeName});
     },
     /**
      * Query next node info
