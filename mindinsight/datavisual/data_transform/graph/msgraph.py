@@ -119,7 +119,10 @@ class MSGraph(Graph):
                 continue
             node = Node(name=const.key, node_id=const.key)
             node.type = NodeTypeEnum.CONST.value
-            node.add_attr({const.key: str(const.value)})
+            if const.value.ByteSize() > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:
+                node.add_attr({const.key: 'dtype: ' + DataType.Name(const.value.dtype)})
+            else:
+                node.add_attr({const.key: str(const.value)})
 
             if const.value.dtype == DataType.DT_TENSOR:
                 shape = list(const.value.tensor_val.dims)
