@@ -74,12 +74,12 @@ limitations under the License.
                              class-name="operate-container"
                              :width="operateWidth">
               <template slot-scope="scope">
-                <span class="menu-item operate-btn"
+                <span class="menu-item operate-btn first-btn"
                       v-if="scope.row.viewDashboard"
                       @contextmenu.prevent="rightClick(scope.row, $event, 0)"
                       @click.stop="goToTrainDashboard(scope.row)">
                   {{$t('summaryManage.viewDashboard')}} </span>
-                <span class="menu-item operate-btn button-disable"
+                <span class="menu-item operate-btn first-btn button-disable"
                       v-else
                       :title="$t('summaryManage.disableDashboardTip')">
                   {{$t('summaryManage.viewDashboard')}}
@@ -217,7 +217,7 @@ export default {
         type: 0,
       },
       tableDom: null,
-      operateWidth: localStorage.getItem('milang') === 'en-us' ? 415 : 300,
+      operateWidth: localStorage.getItem('milang') === 'en-us' ? 400 : 290,
     };
   },
   computed: {},
@@ -571,6 +571,9 @@ export default {
   .menu-item {
     color: #00a5a7;
     cursor: pointer;
+  }
+  .menu-item.operate-btn.first-btn {
+    margin-left: 0;
   }
   #contextMenu {
     position: absolute;

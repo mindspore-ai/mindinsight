@@ -2984,15 +2984,14 @@ export default {
         `width="${bbox.width}" height="${bbox.height}" ` +
         `viewBox="${viewBoxSize}">${CommonProperty.graphDownloadStyle}<g>${svgXml}</g></svg>`;
 
-      // Write the svg stream encoded by base64 to the image object.
-      const src = `data:image/svg+xml;base64,
-      ${window.btoa(unescape(encodeURIComponent(encodeStr)))}`;
-      const a = document.createElement('a');
-      a.href = src; // Export the information in the canvas as image data.
-      a.download = 'graph.svg'; // Set the download name.
-      const evt = document.createEvent('MouseEvents');
-      evt.initEvent('click', true, true);
-      a.dispatchEvent(evt);
+      const downloadLink = document.createElement('a');
+      downloadLink.download = 'graph.svg';
+      downloadLink.style.display = 'none';
+      const blob = new Blob([encodeStr], {type: 'text/html'});
+      downloadLink.href = URL.createObjectURL(blob);
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     },
     /**
      * Fold the legend area.
