@@ -14,16 +14,15 @@
 # ============================================================================
 """Lineage restful api."""
 import json
-import os
 
 from flask import Blueprint, jsonify, request
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
-from mindinsight.lineagemgr.model import filter_summary_lineage, get_summary_lineage
-from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 from mindinsight.lineagemgr.cache_item_updater import update_lineage_object
+from mindinsight.lineagemgr.model import filter_summary_lineage
+from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 
 BLUEPRINT = Blueprint("lineage", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
@@ -67,26 +66,8 @@ def _get_lineage_info(search_condition):
     Raises:
         MindInsightException: If method fails to be called.
     """
-    summary_base_dir = str(settings.SUMMARY_BASE_DIR)
     try:
-        lineage_info = filter_summary_lineage(
-            data_manager=DATA_MANAGER,
-            search_condition=search_condition,
-            added=True)
-
-        lineages = lineage_info['object']
-
-        summary_base_dir = os.path.realpath(summary_base_dir)
-        length = len(summary_base_dir)
-
-        for lineage in lineages:
-            summary_dir = lineage['summary_dir']
-            summary_dir = os.path.realpath(summary_dir)
-            if summary_base_dir == summary_dir:
-                relative_dir = './'
-            else:
-                relative_dir = os.path.join(os.curdir, summary_dir[length+1:])
-            lineage['summary_dir'] = relative_dir
+        lineage_info = filter_summary_lineage(data_manager=DATA_MANAGER, search_condition=search_condition)
 
     except MindInsightException as exception:
         raise MindInsightException(exception.error, exception.message, http_code=400)
@@ -134,29 +115,27 @@ def get_dataset_graph():
         >>> GET http://xxxx/v1/mindinsight/datasets/dataset_graph?train_id=xxx
     """
 
-    summary_base_dir = str(settings.SUMMARY_BASE_DIR)
-    summary_dir = get_train_id(request)
+    train_id = get_train_id(request)
+    search_condition = {
+        'summary_dir': {
+            'in': [train_id]
+        }
+    }
+    result = {}
     try:
-        dataset_graph = get_summary_lineage(
-            DATA_MANAGER,
-            summary_dir=summary_dir,
-            keys=['dataset_graph']
-        )
+        objects = filter_summary_lineage(DATA_MANAGER, search_condition).get('object')
     except MindInsightException as exception:
         raise MindInsightException(exception.error, exception.message, http_code=400)
 
-    if dataset_graph:
-        summary_dir_result = dataset_graph.get('summary_dir')
-        base_dir_len = len(summary_base_dir)
-        if summary_base_dir == summary_dir_result:
-            relative_dir = './'
-        else:
-            relative_dir = os.path.join(
-                os.curdir, summary_dir[base_dir_len + 1:]
-            )
-        dataset_graph['summary_dir'] = relative_dir
+    if objects:
+        lineage_obj = objects[0]
+        dataset_graph = lineage_obj.get('dataset_graph')
 
-    return jsonify(dataset_graph)
+        if dataset_graph:
+            result.update({'dataset_graph': dataset_graph})
+            result.update({'summary_dir': lineage_obj.get('summary_dir')})
+
+    return jsonify(result)
 
 
 def init_module(app):

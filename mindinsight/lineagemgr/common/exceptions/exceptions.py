@@ -106,16 +106,6 @@ class LineageEventFieldNotExistException(MindInsightException):
         )
 
 
-class LineageParamSummaryPathError(MindInsightException):
-    """The lineage parameter summary path error."""
-    def __init__(self, msg):
-        super(LineageParamSummaryPathError, self).__init__(
-            error=LineageErrors.LINEAGE_PARAM_SUMMARY_PATH_ERROR,
-            message=LineageErrorMsg.LINEAGE_PARAM_SUMMARY_PATH_ERROR.value.format(msg),
-            http_code=400
-        )
-
-
 class LineageQuerySummaryDataError(MindInsightException):
     """Query summary data error in lineage module."""
     def __init__(self, msg):
@@ -132,16 +122,6 @@ class LineageFileNotFoundError(MindInsightException):
         super(LineageFileNotFoundError, self).__init__(
             error=LineageErrors.LINEAGE_FILE_NOT_FOUND_ERROR,
             message=LineageErrorMsg.LINEAGE_FILE_NOT_FOUND_ERROR.value.format(msg),
-            http_code=400
-        )
-
-
-class LineageDirNotExistError(MindInsightException):
-    """Directory not exist in lineage module."""
-    def __init__(self, msg):
-        super(LineageDirNotExistError, self).__init__(
-            error=LineageErrors.LINEAGE_DIR_NOT_EXIST_ERROR,
-            message=LineageErrorMsg.LINEAGE_DIR_NOT_EXIST_ERROR.value.format(msg),
             http_code=400
         )
 

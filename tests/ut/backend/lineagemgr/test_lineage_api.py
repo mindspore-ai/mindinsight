@@ -14,7 +14,6 @@
 # ============================================================================
 """Test the module of lineage_api."""
 import json
-import os
 from unittest import TestCase, mock
 
 from flask import Response
@@ -73,21 +72,21 @@ class TestSearchModel(TestCase):
     @mock.patch('mindinsight.backend.lineagemgr.lineage_api.filter_summary_lineage')
     def test_search_model_success(self, *args):
         """Test the success of model_success."""
-        base_dir = '/path/to/test_lineage_summary_dir_base'
         args[0].return_value = {
             'object': [
                 {
-                    'summary_dir': base_dir,
-                    'model_lineage': LINEAGE_FILTRATION_BASE
+                    'summary_dir': './',
+                    'model_lineage': LINEAGE_FILTRATION_BASE,
+                    'added_info': {}
                 },
                 {
-                    'summary_dir': os.path.join(base_dir, 'run1'),
-                    'model_lineage': LINEAGE_FILTRATION_RUN1
+                    'summary_dir': './run1',
+                    'model_lineage': LINEAGE_FILTRATION_RUN1,
+                    'added_info': {}
                 }
             ],
             'count': 2
         }
-        args[1].SUMMARY_BASE_DIR = base_dir
 
         body_data = {
             'limit': 10,
@@ -101,11 +100,13 @@ class TestSearchModel(TestCase):
             'object': [
                 {
                     'summary_dir': './',
-                    'model_lineage': LINEAGE_FILTRATION_BASE
+                    'model_lineage': LINEAGE_FILTRATION_BASE,
+                    'added_info': {}
                 },
                 {
                     'summary_dir': './run1',
-                    'model_lineage': LINEAGE_FILTRATION_RUN1
+                    'model_lineage': LINEAGE_FILTRATION_RUN1,
+                    'added_info': {}
                 }
             ],
             'count': 2

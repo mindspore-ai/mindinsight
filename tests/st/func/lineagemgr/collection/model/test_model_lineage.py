@@ -27,7 +27,7 @@ from unittest import TestCase, mock
 
 import numpy as np
 import pytest
-from mindinsight.lineagemgr.model import get_summary_lineage
+from mindinsight.lineagemgr.model import filter_summary_lineage
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors
 from mindinsight.utils.exceptions import MindInsightException
 
@@ -37,10 +37,11 @@ from mindspore.dataset.engine import MindDataset
 from mindspore.nn import Momentum, SoftmaxCrossEntropyWithLogits, WithLossCell
 from mindspore.train.callback import ModelCheckpoint, RunContext, SummaryStep, _ListCallback
 from mindspore.train.summary import SummaryRecord
-from tests.utils.lineage_writer.model_lineage import AnalyzeObject, EvalLineage, TrainLineage
 
-from ...conftest import SUMMARY_DIR, SUMMARY_DIR_2, SUMMARY_DIR_3
 from .train_one_step import TrainOneStep
+from ...conftest import SUMMARY_DIR, SUMMARY_DIR_2, SUMMARY_DIR_3, BASE_SUMMARY_DIR, LINEAGE_DATA_MANAGER
+from ......utils.lineage_writer.model_lineage import AnalyzeObject, EvalLineage, TrainLineage
+from ......utils.tools import get_relative_path
 
 
 @pytest.mark.usefixtures("create_summary_dir")
@@ -76,6 +77,13 @@ class TestModelLineage(TestCase):
             "version": "v1"
         }
 
+        train_id = get_relative_path(SUMMARY_DIR, BASE_SUMMARY_DIR)
+        cls._search_condition = {
+            'summary_dir': {
+                'eq': train_id
+            }
+        }
+
     @pytest.mark.scene_train(2)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
@@ -90,13 +98,17 @@ class TestModelLineage(TestCase):
         train_callback = TrainLineage(SUMMARY_DIR, True, self.user_defined_info)
         train_callback.initial_learning_rate = 0.12
         train_callback.end(RunContext(self.run_context))
-        res = get_summary_lineage(summary_dir=SUMMARY_DIR)
-        assert res.get('hyper_parameters', {}).get('epoch') == 10
+
+        LINEAGE_DATA_MANAGER.start_load_data().join()
+        res = filter_summary_lineage(LINEAGE_DATA_MANAGER, self._search_condition)
+        assert res.get('object')[0].get('model_lineage', {}).get('epoch') == 10
         run_context = self.run_context
         run_context['epoch_num'] = 14
         train_callback.end(RunContext(run_context))
-        res = get_summary_lineage(summary_dir=SUMMARY_DIR)
-        assert res.get('hyper_parameters', {}).get('epoch') == 14
+
+        LINEAGE_DATA_MANAGER.start_load_data().join()
+        res = filter_summary_lineage(LINEAGE_DATA_MANAGER, self._search_condition)
+        assert res.get('object')[0].get('model_lineage', {}).get('epoch') == 14
 
     @pytest.mark.scene_eval(3)
     @pytest.mark.level0
@@ -186,12 +198,13 @@ class TestModelLineage(TestCase):
         run_context_customized['train_network'] = net
         train_callback.begin(RunContext(run_context_customized))
         train_callback.end(RunContext(run_context_customized))
-        res = get_summary_lineage(summary_dir=SUMMARY_DIR)
-        assert res.get('hyper_parameters', {}).get('loss_function') \
-               == 'SoftmaxCrossEntropyWithLogits'
-        assert res.get('algorithm', {}).get('network') == 'ResNet'
-        assert res.get('hyper_parameters', {}).get('optimizer') == 'Momentum'
 
+        LINEAGE_DATA_MANAGER.start_load_data().join()
+        res = filter_summary_lineage(LINEAGE_DATA_MANAGER, self._search_condition)
+        assert res.get('object')[0].get('model_lineage', {}).get('loss_function') \
+               == 'SoftmaxCrossEntropyWithLogits'
+        assert res.get('object')[0].get('model_lineage', {}).get('network') == 'ResNet'
+        assert res.get('object')[0].get('model_lineage', {}).get('optimizer') == 'Momentum'
 
     @pytest.mark.scene_exception(1)
     @pytest.mark.level0

@@ -133,6 +133,7 @@ class TestLineageObj(TestCase):
         )
         expected_result['model_lineage']['dataset_mark'] = None
         expected_result.pop('dataset_graph')
+        expected_result.pop('added_info')
         result = self.lineage_obj.to_model_lineage_dict()
         assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
