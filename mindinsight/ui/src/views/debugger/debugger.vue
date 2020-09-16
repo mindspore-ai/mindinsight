@@ -587,11 +587,9 @@ export default {
     tabChange(gridType) {
       this.gridType = gridType;
       if (this.gridType === 'compare') {
-        this.tensorComparisons(this.curRowObj);
+        this.tensorComparisons(this.curRowObj, this.dims);
       } else {
-        this.dims = null;
-        this.tolerance = 0;
-        this.viewValueDetail(this.curRowObj);
+        this.viewValueDetail(this.curRowObj, this.dims);
       }
     },
     /**
@@ -601,7 +599,6 @@ export default {
      */
     tensorComparisons(row, dims) {
       this.curRowObj = row;
-      this.gridType = 'compare';
       const shape = dims
         ? dims
         : JSON.stringify(
@@ -615,7 +612,6 @@ export default {
                 })
                 .reverse(),
         ).replace(/"/g, '');
-      this.dims = shape;
       const params = {
         name: row.name,
         detail: 'data',
@@ -628,6 +624,7 @@ export default {
             loadingInstance.close();
             if (res && res.data && res.data.tensor_value) {
               this.tensorCompareFlag = true;
+              this.gridType = 'compare';
               const tensorValue = res.data.tensor_value;
               if (tensorValue.diff === 'Too large to show.') {
                 this.tensorValue = [];
@@ -1000,11 +997,11 @@ export default {
      * @param {Object} data tensor value data
      */
     tensorFilterChange(data) {
+      this.dims = `[${data.toString()}]`;
       if (this.gridType === 'value') {
-        this.viewValueDetail(this.curRowObj, `[${data.toString()}]`);
+        this.viewValueDetail(this.curRowObj, this.dims);
       } else {
-        this.dims = `[${data.toString()}]`;
-        this.tensorComparisons(this.curRowObj, `[${data.toString()}]`);
+        this.tensorComparisons(this.curRowObj, this.dims);
       }
     },
     /**
