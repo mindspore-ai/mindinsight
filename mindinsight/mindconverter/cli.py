@@ -230,7 +230,8 @@ def cli_entry():
         required=False,
         default=None,
         help="""
-            Specify path for script file. 
+            Specify path for script file to use AST schema to 
+            do script conversation.
         """)
 
     parser.add_argument(
@@ -239,11 +240,10 @@ def cli_entry():
         action=ModelFileAction,
         required=False,
         help="""
-            Pytorch .pth model file path ot use graph
-            based schema to do script generation. When
-            `--in_file` and `--model_path` are both provided,
-            use AST schema as default. 
-            Usage: --model_file ~/pytorch_file/net.pth.
+            PyTorch .pth model file path to use graph 
+            based schema to do script generation. When 
+            `--in_file` and `--model_file` are both provided,
+            use AST schema as default.
         """)
 
     parser.add_argument(
@@ -265,8 +265,9 @@ def cli_entry():
         action=OutputDirAction,
         default=os.path.join(os.getcwd(), 'output'),
         help="""
-            Specify path for converted script file directory. 
-            Default is output directory in the current working directory.
+            Optional, specify path for converted script file 
+            directory. Default output directory is `output` folder 
+            in the current working directory.
         """)
 
     parser.add_argument(
@@ -275,7 +276,8 @@ def cli_entry():
         action=LogFileAction,
         default=None,
         help="""
-            Specify report directory. Default is the current working directory.
+            Optional, specify report directory. Default is 
+            converted script directory.
         """)
 
     parser.add_argument(
@@ -285,9 +287,9 @@ def cli_entry():
         required=False,
         default=None,
         help="""
-            Optional, pytorch scripts project path. If pytorch
+            Optional, PyTorch scripts project path. If PyTorch
             project is not in PYTHONPATH, please assign
-            `--project_path' when use graph based schema. 
+            `--project_path` when use graph based schema. 
             Usage: --project_path ~/script_file/
         """)
 
