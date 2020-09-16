@@ -24,6 +24,7 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerParamValue
 from mindinsight.profiler.common.log import logger as log
 from mindinsight.profiler.common.util import query_latest_trace_time_file, get_field_value, \
     get_summary_for_step_trace, to_millisecond
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 
 
 class StepTraceAnalyser(BaseAnalyser):
@@ -93,6 +94,8 @@ class StepTraceAnalyser(BaseAnalyser):
         if not file_path:
             log.error("Failed to find parsed trace time file.")
             raise ProfilerFileNotFoundException('parsed step trace time file')
+        file_path = validate_and_normalize_path(
+            file_path, raise_key="Invaild latest_trace_trace_time file path.")
         with open(file_path, 'r') as handle:
             csv_reader = csv.reader(handle)
             self.__column__ = next(csv_reader)
@@ -104,6 +107,8 @@ class StepTraceAnalyser(BaseAnalyser):
     def _load_point_info(self):
         """Load point info."""
         file_path = os.path.join(self._profiling_dir, 'step_trace_point_info.json')
+        file_path = validate_and_normalize_path(
+            file_path, raise_key="Invaild step_trace_point_info file path.")
         if os.path.isfile(file_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 try:

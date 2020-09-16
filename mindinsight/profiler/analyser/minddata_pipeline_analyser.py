@@ -22,6 +22,7 @@ from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import \
     ProfilerPipelineOpNotExistException
 from mindinsight.profiler.common.log import logger
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 
 
 class MinddataPipelineAnalyser(BaseAnalyser):
@@ -115,6 +116,8 @@ class MinddataPipelineAnalyser(BaseAnalyser):
             self._profiling_dir,
             self._file_name_pipeline.format(self._device_id)
         )
+        pipeline_file_path = validate_and_normalize_path(
+            pipeline_file_path, raise_key="Invaild pipeline file path.")
         if not os.path.isfile(pipeline_file_path):
             logger.warning('The file <%s> does not exist.', pipeline_file_path)
             return
