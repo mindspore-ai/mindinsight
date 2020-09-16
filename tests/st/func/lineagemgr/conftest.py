@@ -26,7 +26,7 @@ from ....utils.mindspore.dataset.engine.serializer_deserializer import SERIALIZE
 
 sys.modules['mindspore'] = mindspore
 
-BASE_SUMMARY_DIR = tempfile.mkdtemp(prefix='test_lineage_summary_dir_base_')
+BASE_SUMMARY_DIR = tempfile.NamedTemporaryFile(prefix='test_lineage_summary_dir_base_').name
 SUMMARY_DIR = os.path.join(BASE_SUMMARY_DIR, 'run1')
 SUMMARY_DIR_2 = os.path.join(BASE_SUMMARY_DIR, 'run2')
 SUMMARY_DIR_3 = os.path.join(BASE_SUMMARY_DIR, 'except_run')
@@ -34,6 +34,7 @@ SUMMARY_DIR_3 = os.path.join(BASE_SUMMARY_DIR, 'except_run')
 COLLECTION_MODULE = 'TestModelLineage'
 API_MODULE = 'TestModelApi'
 DATASET_GRAPH = SERIALIZED_PIPELINE
+
 
 def get_module_name(nodeid):
     """Get the module name from nodeid."""
