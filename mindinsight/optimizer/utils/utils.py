@@ -42,9 +42,10 @@ def calc_histogram(np_value: np.ndarray, bins=_DEFAULT_HISTOGRAM_BINS):
     range_left = min_val
     range_right = max_val
 
+    default_half_range = 0.5
     if range_left >= range_right:
-        range_left -= 0.5
-        range_right += 0.5
+        range_left -= default_half_range
+        range_right += default_half_range
 
     with np.errstate(invalid='ignore'):
         # if don't ignore state above, when np.nan exists,

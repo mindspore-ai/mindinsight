@@ -194,8 +194,18 @@ def _convert_relative_path_to_abspath(summary_base_dir, search_condition):
     return search_condition
 
 
-def get_lineage_table(data_manager, search_condition):
-    """Get lineage data in a table from data manager."""
+def get_flattened_lineage(data_manager, search_condition=None):
+    """
+    Get lineage data in a table from data manager.
+
+    Args:
+        data_manager (mindinsight.datavisual.data_manager.DataManager): An object to manage loading.
+        search_condition (dict): The search condition.
+
+    Returns:
+        Dict[str, list]: A dict contains keys and values from lineages.
+
+    """
     summary_base_dir = data_manager.summary_base_dir
     lineages = filter_summary_lineage(data_manager=data_manager, search_condition=search_condition)
     lineage_objects = lineages.get("object", [])
@@ -206,7 +216,7 @@ def get_lineage_table(data_manager, search_condition):
     # Step 2, collect data
     column_data = _organize_data_to_matrix(lineage_objects, column_names, summary_base_dir)
 
-    return LineageTable(pd.DataFrame(column_data))
+    return column_data
 
 
 def _get_columns_name(lineage_objects):
@@ -236,7 +246,7 @@ def _get_columns_name(lineage_objects):
             user_defined_num += len(names)
             log.info("Partial user_defined_info is deleted. Currently saved length is: %s.", user_defined_num)
         else:
-            log.info("The quantity of user_defined_info has reached the limit %s.", USER_DEFINED_INFO_LIMIT)
+            log.warning("The quantity of user_defined_info has reached the limit %s.", USER_DEFINED_INFO_LIMIT)
     column_names.update(["train_id"])
 
     return column_names
@@ -364,7 +374,7 @@ class LineageTable:
         return [None if np.isnan(num) else num for num in self._df[name].tolist()]
 
     @property
-    def df(self):
+    def dataframe_data(self):
         """Get the DataFrame."""
         return self._df
 
