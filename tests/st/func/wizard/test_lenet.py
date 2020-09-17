@@ -25,7 +25,7 @@ NETWORK_NAME = 'lenet'
 
 
 class TestLeNet:
-    """Test LeNet Module"""
+    """Test LeNet Module."""
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -65,7 +65,7 @@ class TestLeNet:
         'dataset_loader_name': 'MnistDataset'
     }])
     def test_combinations(self, params):
-        """Do testing"""
+        """Do testing."""
 
         network_maker_name = NETWORK_NAME
         config = params['config']
@@ -81,7 +81,7 @@ class TestLeNet:
         self.check_train_eval_readme(config['loss'], config['optimizer'])
 
     def check_src(self, dataset_name, config):
-        """Check src file"""
+        """Check src file."""
         dataset_is_right = False
         config_optimizer_is_right = False
         network_is_right = False
@@ -109,7 +109,7 @@ class TestLeNet:
         assert network_is_right
 
     def check_train_eval_readme(self, loss_name, optimizer_name):
-        """Check train and eval"""
+        """Check train and eval."""
 
         train_is_right = False
         eval_is_right = False
@@ -134,7 +134,7 @@ class TestLeNet:
         assert readme_is_right
 
     def check_scripts(self):
-        """Check scripts"""
+        """Check scripts."""
 
         exist_run_distribute_train = False
         exist_run_distribute_train_gpu = False

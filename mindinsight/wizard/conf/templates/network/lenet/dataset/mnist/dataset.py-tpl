@@ -18,9 +18,9 @@ Produce the dataset
 import os
 
 import mindspore.dataset as ds
-import mindspore.dataset.transforms.vision.c_transforms as CV
+import mindspore.dataset.vision.c_transforms as CV
 import mindspore.dataset.transforms.c_transforms as C
-from mindspore.dataset.transforms.vision import Inter
+from mindspore.dataset.vision import Inter
 from mindspore.common import dtype as mstype
 from mindspore.communication.management import init, get_rank, get_group_size
 
@@ -67,11 +67,11 @@ def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, targe
     type_cast_op = C.TypeCast(mstype.int32)
 
     # apply map operations on images
-    mnist_ds = mnist_ds.map(input_columns="label", operations=type_cast_op)
-    mnist_ds = mnist_ds.map(input_columns="image", operations=resize_op)
-    mnist_ds = mnist_ds.map(input_columns="image", operations=rescale_op)
-    mnist_ds = mnist_ds.map(input_columns="image", operations=rescale_nml_op)
-    mnist_ds = mnist_ds.map(input_columns="image", operations=hwc2chw_op)
+    mnist_ds = mnist_ds.map(operations=type_cast_op, input_columns="label")
+    mnist_ds = mnist_ds.map(operations=resize_op, input_columns="image")
+    mnist_ds = mnist_ds.map(operations=rescale_op, input_columns="image")
+    mnist_ds = mnist_ds.map(operations=rescale_nml_op, input_columns="image")
+    mnist_ds = mnist_ds.map(operations=hwc2chw_op, input_columns="image")
 
     # apply DatasetOps
     buffer_size = 10000
