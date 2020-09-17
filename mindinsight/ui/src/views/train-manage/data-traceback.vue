@@ -33,7 +33,7 @@ limitations under the License.
            v-if="!loading">
         <!-- select area -->
         <div class="data-checkbox-area"
-             v-show="!errorData && !(!totalSeries.length && pagination.total)">
+             v-show="showEchartPic && !echartNoData">
           <div class="select-container"
                v-show="totalSeries && totalSeries.length &&
               (!summaryDirList || (summaryDirList && summaryDirList.length))">
@@ -82,39 +82,37 @@ limitations under the License.
               </el-select>
             </div>
           </div>
-          <!-- show all data button -->
-          <div class="btns">
-            <el-button class="reset-btn custom-btn"
-                       @click="echartShowAllData"
-                       type="primary"
-                       size="mini"
-                       plain
-                       v-show="(summaryDirList && !summaryDirList.length)||(totalSeries && totalSeries.length)">
-              {{ $t('modelTraceback.showAllData') }}
-            </el-button>
-          </div>
         </div>
         <!-- echart drawing area -->
         <div id="data-echart"
-             v-show="showEchartPic && !echartNoData"></div>
-        <div class="echart-nodata-container"
-             v-show="!showEchartPic && showTable && !echartNoData">
+             v-show="showEchartPic && !echartNoData">
         </div>
         <div class="btns-container"
              v-show="!echartNoData && showTable">
           <el-button type="primary"
                      size="mini"
-                     class="custom-btn"
-                     @click="hiddenRecords"
+                     class="disabled-btn-color"
+                     :disabled="disabledFilterBtn"
+                     @click="showSelectedTableData"
+                     :class="[!disabledFilterBtn ? 'abled-btn-color' : '']"
                      plain>
-            {{ $t('modelTraceback.hide')}}
+            {{$t('modelTraceback.showSelected')}}
+          </el-button>
+          <el-button type="primary"
+                     size="mini"
+                     class="disabled-btn-color"
+                     :disabled="disabledHideBtn"
+                     @click="hideSelectedRows"
+                     :class="[!disabledHideBtn ? 'abled-btn-color' : '']"
+                     plain>
+            {{$t('modelTraceback.hideSelected')}}
           </el-button>
           <el-button type="primary"
                      size="mini"
                      class="custom-btn"
-                     @click="unhideRecords"
+                     @click="showAllDataBtn"
                      plain>
-            {{$t('modelTraceback.unhide')}}
+            {{ $t('modelTraceback.showAllData') }}
           </el-button>
         </div>
         <!-- table area -->
@@ -232,11 +230,6 @@ limitations under the License.
                            :layout="pagination.layout"
                            :total="pagination.total">
             </el-pagination>
-            <div class="hide-count"
-                 v-show="recordsNumber-showNumber">
-              {{ $t('modelTraceback.totalHide').replace(`{n}`, (recordsNumber-showNumber))}}
-            </div>
-            <div class="clear"></div>
           </div>
         </div>
         <div v-show="nodata"
@@ -246,7 +239,7 @@ limitations under the License.
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
             <p class="no-data-text"
-               v-show="!summaryDirList || (summaryDirList && summaryDirList.length) && !lineagedata.serData">
+               v-show="!summaryDirList || (summaryDirList && summaryDirList.length)">
               {{ $t('public.noData') }}
             </p>
             <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length)&&
@@ -256,9 +249,13 @@ limitations under the License.
             <div v-show="summaryDirList && !summaryDirList.length">
               <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
               <p class="no-data-text">
-                {{ $t('dataTraceback.click') }}
-                <b> {{ $t('modelTraceback.showAllDataBtn') }}</b>
-                {{ $t('dataTraceback.viewAllData') }}
+                <el-button type="primary"
+                           size="mini"
+                           class="custom-btn"
+                           @click="showAllDataBtn"
+                           plain>
+                  {{ $t('modelTraceback.showAllData') }}
+                </el-button>
               </p>
             </div>
           </div>
@@ -347,9 +344,18 @@ import Echarts from 'echarts';
 export default {
   data() {
     return {
+      // Filter button disabled
+      disabledFilterBtn: true,
+      // Hide button disabled
+      disabledHideBtn: true,
+      // Hide table rows
+      hideTableRows: [],
+      // Id list of hidden table
+      hideTableIdList: undefined,
+      // List of selected option IDs in the table
+      selectRowIdList: [],
       tableSortTimer: null,
       showAllTimer: null,
-      unhideTimer: null,
       loading: true,
       errorData: true,
       tagDialogShow: false,
@@ -360,22 +366,14 @@ export default {
       imageList: [],
       selectCheckAll: true,
       initOver: false, // Page initialization completed.
-      dataCheckedSummary: [],
       selectedBarList: [],
-      // The selected summarydir list to hide.
-      hidenDirChecked: [],
       showTable: false,
-      hideRecord: false,
       // Whether to display the echart
       showEchartPic: true,
       checkOptions: [],
       basearr: [],
       sortInfo: {},
       keyWord: '',
-      // Number of data records returned by the interface.
-      recordsNumber: 0,
-      // Number of displayed records.
-      showNumber: 0,
       delayTime: 500,
       selectArrayValue: [],
       customizedColumnOptions: [],
@@ -574,8 +572,12 @@ export default {
         this.tableFilter.lineage_type = {in: ['dataset']};
       }
       const params = {};
-      if (this.summaryDirList) {
-        this.tableFilter.summary_dir = {in: this.summaryDirList};
+      this.hideTableIdList = this.$store.state.hideTableIdList;
+      if (this.summaryDirList || this.hideTableIdList) {
+        this.tableFilter.summary_dir = {
+          in: this.summaryDirList,
+          not_in: this.hideTableIdList,
+        };
       } else {
         this.tableFilter.summary_dir = undefined;
       }
@@ -713,27 +715,9 @@ export default {
                 this.checkOptions.forEach((item) => {
                   this.selectArrayValue.push(item.value);
                 });
-                this.hidenDirChecked = this.$store.state.hidenDirChecked || [];
                 this.echart.brushData = this.lineagedata.serData;
-                if (this.hidenDirChecked.length) {
-                  const listdada = this.lineagedata.serData.slice();
-                  this.hidenDirChecked.forEach((item) => {
-                    listdada.forEach((i, index) => {
-                      if (i.summary_dir === item) {
-                        listdada.splice(index, 1);
-                      }
-                    });
-                  });
-                  if (listdada.length) {
-                    this.showEchartPic = true;
-                  } else {
-                    this.showEchartPic = false;
-                  }
-                  this.echart.showData = listdada;
-                } else {
-                  this.echart.showData = this.echart.brushData;
-                  this.showEchartPic = true;
-                }
+                this.echart.showData = this.echart.brushData;
+                this.showEchartPic = true;
                 this.resizeChart();
                 this.setEchartValue();
                 this.$nextTick(() => {
@@ -742,8 +726,7 @@ export default {
                 // Total number of pages in the table
                 this.pagination.total = res.data.count;
                 // Data encapsulation of the table
-                let data = [];
-                data = this.setTableData();
+                const data = this.setTableData();
                 this.table.data = data;
                 this.showTable = true;
                 if (this.selectedBarList) {
@@ -1041,9 +1024,9 @@ export default {
       this.chartEventsListen(parallelAxis);
     },
     chartEventsListen(parallelAxis) {
+      // Inherit the previous features, do not support interface requests, the deep-level and shallow-level names may
+      // be the same, and do not support the filtering request background interface
       this.parallelEchart.on('axisareaselected', (params) => {
-        this.recordsNumber = 0;
-        this.showNumber = 0;
         const key = params.parallelAxisId;
         const range = params.intervals[0] || [];
         const [axisData] = parallelAxis.filter((i) => {
@@ -1069,9 +1052,18 @@ export default {
             summaryList.push(item.summary_dir);
           });
           // The summaryList value could not be saved in the destroy state.
-          this.dataCheckedSummary = [];
           this.$store.commit('setSummaryDirList', summaryList);
-          this.tableFilter.summary_dir = {in: summaryList};
+          this.hideTableIdList = this.$store.state.hideTableIdList;
+          this.$refs.table.clearSelection();
+          if (summaryList || this.hideTableIdList) {
+            this.tableFilter.summary_dir = {
+              in: summaryList,
+              not_in: this.hideTableIdList,
+            };
+          } else {
+            // If filtering and hiding do not exist, the summary_dir parameter is not passed in the case of undefined
+            this.tableFilter.summary_dir = undefined;
+          }
           if (!tempList.length) {
             this.summaryDirList = [];
             this.lineagedata.serData = undefined;
@@ -1089,9 +1081,6 @@ export default {
                 (this.pagination.currentPage - 1) * this.pagination.pageSize,
                 this.pagination.currentPage * this.pagination.pageSize,
             );
-            const tableLength = this.table.data.length;
-            this.recordsNumber = tableLength;
-            this.showNumber = tableLength;
             this.showTable = true;
           }
         }
@@ -1123,17 +1112,6 @@ export default {
           (this.pagination.currentPage - 1) * this.pagination.pageSize,
           this.pagination.currentPage * this.pagination.pageSize,
       );
-      this.recordsNumber = data.length;
-      if (this.hidenDirChecked.length) {
-        this.hidenDirChecked.forEach((dir) => {
-          data.forEach((item, index) => {
-            if (item.summary_dir === dir) {
-              data.splice(index, 1);
-            }
-          });
-        });
-      }
-      this.showNumber = data.length;
       return data;
     },
 
@@ -1470,92 +1448,6 @@ export default {
     },
 
     /**
-     * Hidden records
-     */
-    hiddenRecords() {
-      this.hideRecord = true;
-      if (this.dataCheckedSummary.length) {
-        this.dataCheckedSummary.forEach((i) => {
-          this.hidenDirChecked.push(i.summary_dir);
-        });
-      }
-      this.$store.commit('setHidenDirChecked', this.hidenDirChecked);
-      if (this.hidenDirChecked.length) {
-        const tempEchartData = this.echart.brushData.slice();
-        this.hidenDirChecked.forEach((dir) => {
-          tempEchartData.forEach((item, index) => {
-            if (item.summary_dir === dir) {
-              tempEchartData.splice(index, 1);
-            }
-          });
-        });
-        const tableTemp = this.table.data.slice();
-        this.hidenDirChecked.forEach((dir) => {
-          tableTemp.forEach((item, index) => {
-            if (item.summary_dir === dir) {
-              tableTemp.splice(index, 1);
-            }
-          });
-        });
-        this.dataCheckedSummary = [];
-        this.table.data = tableTemp;
-        this.showNumber = tableTemp.length;
-        this.echart.showData = tempEchartData;
-        this.$refs.table.clearSelection();
-        if (this.echart.showData.length > 0) {
-          this.$nextTick(() => {
-            this.initChart();
-          });
-        } else {
-          this.showEchartPic = false;
-        }
-      }
-      this.hideRecord = false;
-    },
-
-    /**
-     * Unhide
-     */
-    unhideRecords() {
-      if (this.unhideTimer) {
-        clearTimeout(this.unhideTimer);
-        this.unhideTimer = null;
-      }
-      this.unhideTimer = setTimeout(() => {
-        this.showEchartPic = true;
-        this.$refs.table.clearSelection();
-        if (this.parallelEchart) {
-          this.parallelEchart.clear();
-        }
-        this.$store.commit('setHidenDirChecked', []);
-        if (this.hidenDirChecked.length) {
-          this.checkedSummary = [];
-          this.hidenDirChecked = [];
-        }
-        this.checkOptions = [];
-        this.selectArrayValue = [];
-        this.basearr = [];
-        const params = {
-          body: {},
-        };
-        const tempParam = {
-          sorted_name: this.sortInfo.sorted_name,
-          sorted_type: this.sortInfo.sorted_type,
-        };
-        this.summaryDirList = this.$store.state.summaryDirList;
-        this.tableFilter.summary_dir = {
-          in: this.summaryDirList,
-        };
-        params.body = Object.assign(
-            params.body,
-            this.chartFilter,
-            tempParam,
-            this.tableFilter,
-        );
-        this.queryLineagesData(params);
-      }, this.delayTime);
-    },
-    /**
      * Input search filtering in the select module
      */
     myfilter() {
@@ -1839,11 +1731,73 @@ export default {
             this.nodata = true;
           });
     },
+    /**
+     * Selected rows of table
+     * @param {Object} val
+     */
+    handleSelectionChange(val) {
+      const list = val;
+      const summaryDirFilter = [];
+      list.forEach((i) => {
+        summaryDirFilter.push(i.summary_dir);
+      });
+      this.selectRowIdList = summaryDirFilter;
+      if (this.selectRowIdList.length) {
+        this.disabledFilterBtn = false;
+        this.disabledHideBtn = false;
+      } else {
+        this.disabledFilterBtn = true;
+        this.disabledHideBtn = true;
+      }
+    },
+    // Show selected data
+    showSelectedTableData() {
+      // At this time only need to pass in the filter data
+      this.tableFilter.summary_dir = {
+        in: this.selectRowIdList,
+      };
+      this.summaryDirList = this.selectRowIdList;
+      this.$store.commit('setSummaryDirList', this.summaryDirList);
+      this.checkOptions = [];
+      this.selectArrayValue = [];
+      this.basearr = [];
+      this.$refs.table.clearSelection();
+      // The page needs to be initialized to 1
+      this.pagination.currentPage = 1;
+      this.init();
+    },
+    // Hide selected table columns
+    hideSelectedRows() {
+      // Get previous filter data
+      this.summaryDirList = this.$store.state.summaryDirList;
+      // Set hidden data
+      if (this.hideTableIdList) {
+        this.hideTableIdList = this.hideTableIdList.concat(
+            this.selectRowIdList,
+        );
+      } else {
+        this.hideTableIdList = this.selectRowIdList;
+      }
+      // Hidden data must exist at this time
+      this.tableFilter.summary_dir = {
+        in: this.summaryDirList,
+        not_in: this.hideTableIdList,
+      };
+      // Save hidden data
+      this.$store.commit('setHideTableIdList', this.hideTableIdList);
+      this.$refs.table.clearSelection();
+      this.checkOptions = [];
+      this.selectArrayValue = [];
+      this.basearr = [];
+      // The page needs to be initialized to 1
+      this.pagination.currentPage = 1;
+      this.init();
+    },
 
     /**
      * reset echart data.Show all data
      */
-    echartShowAllData() {
+    showAllDataBtn() {
       // The first page is displayed.
       this.nodata = false;
       if (this.showAllTimer) {
@@ -1860,6 +1814,9 @@ export default {
         this.selectArrayValue = [];
         this.basearr = [];
         this.pagination.currentPage = 1;
+        // Set hidden data to undefined
+        this.$store.commit('setHideTableIdList', undefined);
+        this.hideTableIdList = undefined;
         this.$store.commit('setSummaryDirList', undefined);
         this.$store.commit('setSelectedBarList', []);
         if (this.parallelEchart) {
@@ -1868,26 +1825,6 @@ export default {
         this.$refs.table.clearSelection();
         this.init();
       }, this.delayTime);
-    },
-
-    /**
-     * Selected rows of tables
-     * @param {Object} val
-     */
-    handleSelectionChange(val) {
-      // summary_dir cannot be stored here.If it is not selected ,it cannot be stroed correctly.
-      if (this.hideRecord) {
-        return;
-      }
-      this.dataCheckedSummary = val;
-      if (val.length) {
-        this.echart.showData = val;
-      } else {
-        this.echart.showData = this.echart.brushData;
-      }
-      this.$nextTick(() => {
-        this.initChart();
-      });
     },
 
     /**
@@ -1912,9 +1849,16 @@ export default {
         this.basearr = [];
         this.pagination.currentPage = 1;
         this.summaryDirList = this.$store.state.summaryDirList;
-        if (this.summaryDirList) {
-          this.tableFilter.summary_dir = {in: this.summaryDirList};
+        // Get hidden data
+        this.hideTableIdList = this.$store.state.hideTableIdList;
+        // If there is one hidden and filtered list, pass in summary_dir
+        if (this.summaryDirList || this.hideTableIdList) {
+          this.tableFilter.summary_dir = {
+            in: this.summaryDirList,
+            not_in: this.hideTableIdList,
+          };
         } else {
+          // If filtering and hiding do not exist, do not pass in summary_dir
           this.tableFilter.summary_dir = undefined;
         }
         params.body = Object.assign({}, tempParam, this.tableFilter);
@@ -1923,7 +1867,7 @@ export default {
     },
 
     /**
-     * Setting Table Data
+     * Setting Table Data.Table flip
      * @param {Number} val
      */
     handleCurrentChange(val) {
@@ -1940,8 +1884,11 @@ export default {
         sorted_name: this.sortInfo.sorted_name,
         sorted_type: this.sortInfo.sorted_type,
       };
+      this.hideTableIdList = this.$store.state.hideTableIdList;
+      // Page turning needs to transfer the next page data to the background
       this.tableFilter.summary_dir = {
         in: summaryDirList,
+        not_in: this.hideTableIdList,
       };
       params.body = Object.assign(
           params.body,
@@ -2064,14 +2011,6 @@ export default {
   destroyed() {
     this.tableSortTimer = null;
     this.showAllTimer = null;
-    this.unhideTimer = null;
-    if (this.dataCheckedSummary && this.dataCheckedSummary.length) {
-      const summaryDirList = [];
-      this.dataCheckedSummary.forEach((item) => {
-        summaryDirList.push(item.summary_dir);
-      });
-      this.$store.commit('setSummaryDirList', summaryDirList);
-    }
     if (this.parallelEchart) {
       window.removeEventListener('resize', this.resizeChart, false);
       this.parallelEchart.clear();
@@ -2215,6 +2154,21 @@ export default {
     color: #00a5a7;
     background: #e9f7f7;
   }
+  .disabled-btn-color {
+    border-radius: 2px;
+    background-color: #f5f5f6;
+    border: 1px solid #dfe1e6;
+    color: #adb0b8;
+  }
+  .abled-btn-color {
+    border: 1px solid #00a5a7;
+    color: #00a5a7;
+    background: white;
+  }
+  .abled-btn-color:hover {
+    color: #00a5a7;
+    background: #e9f7f7;
+  }
   #tag-dialog {
     z-index: 999;
     border: 1px solid #d6c9c9;
@@ -2260,14 +2214,10 @@ export default {
       img {
         max-width: 100%;
       }
-      p {
-        font-size: 16px;
-        padding-top: 10px;
-      }
     }
     .no-data-text {
       font-size: 16px;
-      padding-top: 10px;
+      padding-top: 15px;
     }
   }
   .edit-text-container {
@@ -2278,7 +2228,7 @@ export default {
     white-space: nowrap;
   }
   .btns-container {
-    padding: 14px 32px 4px;
+    padding: 6px 32px 4px;
   }
   .table-container .el-icon-edit {
     margin-left: 5px;
@@ -2312,7 +2262,7 @@ export default {
     overflow: hidden;
 
     .data-checkbox-area {
-      margin: 6px 32px;
+      margin: 0px 32px 6px;
       height: 46px;
       display: flex;
       justify-content: flex-end;
@@ -2321,26 +2271,16 @@ export default {
         height: 46px;
         flex-grow: 1;
       }
-      .btns {
-        margin-left: 20px;
-        padding-top: 12px;
-        height: 46px;
-      }
     }
     #data-echart {
       height: 31%;
       width: 100%;
       padding: 0 12px;
     }
-    .echart-nodata-container {
-      height: 31%;
-      width: 100%;
-      padding: 0 12px;
-    }
     .table-container {
       background-color: white;
-      height: calc(67% - 72px);
-      padding: 6px 32px;
+      height: calc(67% - 77px);
+      padding: 6px 32px 0px;
       position: relative;
       .disabled-checked {
         position: absolute;
@@ -2369,16 +2309,6 @@ export default {
       }
       .click-span {
         cursor: pointer;
-      }
-      .clear {
-        clear: both;
-      }
-      .hide-count {
-        height: 32px;
-        line-height: 32px;
-        color: red;
-        float: right;
-        margin-right: 10px;
       }
       .el-pagination {
         float: right;
