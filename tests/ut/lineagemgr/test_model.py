@@ -16,12 +16,14 @@
 from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
-from mindinsight.lineagemgr.model import get_summary_lineage, filter_summary_lineage, _convert_relative_path_to_abspath
+from mindinsight.lineagemgr.model import get_summary_lineage, filter_summary_lineage, \
+    _convert_relative_path_to_abspath, get_flattened_lineage
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamSummaryPathError, \
     LineageFileNotFoundError, LineageSummaryParseException, LineageQuerierParamException, \
     LineageQuerySummaryDataError, LineageSearchConditionParamError, LineageParamTypeError, \
     LineageParamValueError
 from mindinsight.lineagemgr.common.path_parser import SummaryPathParser
+from ...st.func.lineagemgr.test_model import LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2
 
 
 class TestModel(TestCase):
@@ -242,3 +244,15 @@ class TestFilterAPI(TestCase):
             None,
             '/path/to/summary/dir'
         )
+
+    @mock.patch('mindinsight.lineagemgr.model.filter_summary_lineage')
+    def test_get_lineage_table(self, mock_filter_summary_lineage):
+        """Test get_flattened_lineage with valid param."""
+        mock_data = {
+            'object': [LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2]
+        }
+        mock_datamanager = MagicMock()
+        mock_datamanager.summary_base_dir = '/tmp/'
+        mock_filter_summary_lineage.return_value = mock_data
+        result = get_flattened_lineage(mock_datamanager, None)
+        assert result.get('[U]info') == ['info1', None]
