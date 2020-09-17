@@ -886,16 +886,16 @@ class DataManager:
         """Wrapper for load data in thread."""
         if self._load_data_lock.locked():
             return
-        try:
-            with self._load_data_lock:
-                while True:
+        with self._load_data_lock:
+            while True:
+                try:
                     exception_wrapper(self._load_data)()
-                    if not reload_interval:
-                        break
-                    time.sleep(reload_interval)
-        except UnknownError as exc:
-            # Not raising the exception here to ensure that data reloading does not crash.
-            logger.warning(exc.message)
+                except UnknownError as exc:
+                    # Not raising the exception here to ensure that data reloading does not crash.
+                    logger.warning(exc.message)
+                if not reload_interval:
+                    break
+                time.sleep(reload_interval)
 
     def _load_data(self):
         """This function will load data once and ignore it if the status is loading."""
