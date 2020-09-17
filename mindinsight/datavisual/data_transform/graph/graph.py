@@ -276,7 +276,7 @@ class Graph:
               So in this scenario, we need to filter the const nodes.
         """
         filtered_type = {NodeTypeEnum.CONST.value} if filtered_type is None else filtered_type
-        for method in ['input', 'output', 'proxy_input', 'proxy_output']:
+        for method in ['inputs', 'outputs', 'proxy_inputs', 'proxy_outputs']:
             for node in subnode_list:
                 for item_name, item_attr in getattr(node, method).items():
                     target_node = self._get_normal_node(node_name=item_name)
@@ -375,7 +375,7 @@ class Graph:
         logger.info("Start to add %s nodes to each scope in graph.", node_type)
         node_map = {}
         for node in self._normal_node_map.values():
-            for src_name, input_attr in dict(node.input).items():
+            for src_name, input_attr in dict(node.inputs).items():
 
                 if node_type == NodeTypeEnum.CONST.value and not self._const_node_temp_cache.get(src_name):
                     continue
@@ -393,11 +393,11 @@ class Graph:
                     Node.copy_node_without_input_output(cache_node, variable_node)
                     variable_node.scope = node.scope
 
-                variable_node.add_output(dst_name=node.name, output_attr=input_attr)
+                variable_node.add_outputs(dst_name=node.name, output_attr=input_attr)
                 node_map.update({variable_name: variable_node})
 
-                node.delete_input(src_name)
-                node.add_input(variable_name, input_attr)
+                node.delete_inputs(src_name)
+                node.add_inputs(variable_name, input_attr)
 
         for node in node_map.values():
             self._cache_node(node)
@@ -497,7 +497,7 @@ class Graph:
 
         # Find all nodes that need to modify the input and input
         update_node_map = {}
-        for method in ['input', 'output', 'proxy_input', 'proxy_output']:
+        for method in ['inputs', 'outputs', 'proxy_inputs', 'proxy_outputs']:
             for target_name in getattr(node, method):
                 target_node = self._get_normal_node(node_name=target_name)
                 if target_node is None:
@@ -529,7 +529,7 @@ class Graph:
 
         # Update the input and output of the nodes
         for target_node in update_node_map.values():
-            for method in ['input', 'output', 'proxy_input', 'proxy_output']:
+            for method in ['inputs', 'outputs', 'proxy_inputs', 'proxy_outputs']:
                 attr_temp = getattr(target_node, method).get(origin_name)
                 if attr_temp is None:
                     # This method does not have this node, so it is skipped
@@ -563,12 +563,12 @@ class Graph:
         for scope_node in independent_layout_node_map.values():
             scope_node.independent_layout = True
 
-            method = 'output'
+            method = 'outputs'
             for target_name, target_attr in dict(getattr(scope_node, method)).items():
                 proxy_attr = dict(edge_type=target_attr['edge_type'])
 
                 target_node = self._get_normal_node(node_name=target_name)
-                getattr(target_node, 'add_proxy_input')(scope_node.name, proxy_attr)
+                getattr(target_node, 'add_proxy_inputs')(scope_node.name, proxy_attr)
 
                 # Note:
                 # If the source node and the destination node are not in the same scope,
@@ -581,7 +581,7 @@ class Graph:
                 else:
                     target_scope_node = self._get_normal_node(node_name=target_node.scope)
                     getattr(scope_node, f'add_proxy_{method}')(target_node.scope, proxy_attr)
-                    getattr(target_scope_node, 'add_proxy_input')(scope_node.name, proxy_attr)
+                    getattr(target_scope_node, 'add_proxy_inputs')(scope_node.name, proxy_attr)
 
             for subnode in subnode_map[scope_node.name]:
                 subnode.independent_layout = True
@@ -593,6 +593,6 @@ class Graph:
                     else:
                         getattr(subnode, f'add_proxy_{method}')(target_node.scope, proxy_attr)
 
-                    input_attr = getattr(target_node, 'input')[subnode.name]
+                    input_attr = getattr(target_node, 'inputs')[subnode.name]
                     input_attr['independent_layout'] = True
-                    target_node.add_input(subnode.name, input_attr)
+                    target_node.add_inputs(subnode.name, input_attr)

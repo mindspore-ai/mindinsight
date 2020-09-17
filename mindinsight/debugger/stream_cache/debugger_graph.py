@@ -179,7 +179,7 @@ class DebuggerGraph(MSGraph):
             if tensors_info:
                 tensor_history.extend(tensors_info)
             if cur_depth < depth:
-                for name in cur_node.input.keys():
+                for name in cur_node.inputs.keys():
                     trace_list.append((self._leaf_nodes[name], cur_depth + 1))
 
         return tensor_history, cur_outputs_nums
@@ -208,7 +208,7 @@ class DebuggerGraph(MSGraph):
     def _get_input_tensors_of_node(self, cur_node):
         """Get input tensors of node."""
         tensors_info = []
-        for name in cur_node.input.keys():
+        for name in cur_node.inputs.keys():
             node = self._leaf_nodes.get(name)
             tensor_info = self._get_tensor_infos_of_node(node)
             tensors_info.extend(tensor_info)
@@ -258,12 +258,12 @@ class DebuggerGraph(MSGraph):
                 continue
 
             bfs_order.append(node_name)
-            if node.input:
-                for name in node.input.keys():
+            if node.inputs:
+                for name in node.inputs.keys():
                     if name not in temp_list and name not in bfs_order:
                         temp_list.append(name)
-            if node.output:
-                for name in node.output.keys():
+            if node.outputs:
+                for name in node.outputs.keys():
                     if name not in temp_list and name not in bfs_order:
                         temp_list.append(name)
 

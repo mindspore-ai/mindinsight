@@ -103,7 +103,7 @@ class Node:
         self._attr.update(attr_dict)
 
     @property
-    def input(self):
+    def inputs(self):
         """
         Get all input of current node.
 
@@ -112,7 +112,7 @@ class Node:
         """
         return self._input
 
-    def add_input(self, src_name, input_attr):
+    def add_inputs(self, src_name, input_attr):
         """
         Update input.
 
@@ -127,7 +127,7 @@ class Node:
         """
         self._input.update({src_name: input_attr})
 
-    def delete_input(self, src_name):
+    def delete_inputs(self, src_name):
         """
         Delete input attribute by the given source name.
 
@@ -137,11 +137,11 @@ class Node:
         self._input.pop(src_name)
 
     @property
-    def output(self):
+    def outputs(self):
         """The output node of this node."""
         return self._output
 
-    def add_output(self, dst_name, output_attr):
+    def add_outputs(self, dst_name, output_attr):
         """
         Add a output node to this node.
 
@@ -151,7 +151,7 @@ class Node:
         """
         self._output.update({dst_name: output_attr})
 
-    def delete_output(self, dst_name):
+    def delete_outputs(self, dst_name):
         """
         Delete a output node.
 
@@ -161,11 +161,11 @@ class Node:
         self._output.pop(dst_name)
 
     @property
-    def proxy_input(self):
+    def proxy_inputs(self):
         """Return proxy input, type is dict."""
         return self._proxy_input
 
-    def add_proxy_input(self, src_name, attr):
+    def add_proxy_inputs(self, src_name, attr):
         """
         Add a proxy input to node.
 
@@ -177,16 +177,16 @@ class Node:
         """
         self._proxy_input.update({src_name: attr})
 
-    def delete_proxy_input(self, src_name):
+    def delete_proxy_inputs(self, src_name):
         """Delete a proxy input by the src name."""
         self._proxy_input.pop(src_name)
 
     @property
-    def proxy_output(self):
+    def proxy_outputs(self):
         """Get proxy output, data type is dict."""
         return self._proxy_output
 
-    def add_proxy_output(self, dst_name, attr):
+    def add_proxy_outputs(self, dst_name, attr):
         """
         Add a proxy output to node.
 
@@ -198,7 +198,7 @@ class Node:
         """
         self._proxy_output.update({dst_name: attr})
 
-    def delete_proxy_output(self, dst_name):
+    def delete_proxy_outputs(self, dst_name):
         """Delete a proxy output by dst name."""
         self._proxy_output.pop(dst_name)
 
