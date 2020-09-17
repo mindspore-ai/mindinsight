@@ -35,8 +35,10 @@ export default new Vuex.Store({
     tableId: 0,
     componentsCount: 0,
     summaryDirList: undefined,
+    // Traceability list that needs to be hidden
+    hideTableIdList: undefined,
+    // Echart column selected by model traceability box
     selectedBarList: [],
-    hidenDirChecked: [],
     customizedColumnOptions: [],
   },
   mutations: {
@@ -58,12 +60,13 @@ export default new Vuex.Store({
     setSummaryDirList: (state, val) => {
       state.summaryDirList = val;
     },
+    // Set hidden list
+    setHideTableIdList: (state, val) => {
+      state.hideTableIdList = val;
+    },
+    // Set the frame selection bar of model traceability echart
     setSelectedBarList: (state, val) => {
       state.selectedBarList = val;
-    },
-    // hide list of model traceback
-    setHidenDirChecked: (state, val) => {
-      state.hidenDirChecked = val;
     },
     customizedColumnOptions: (state, val) => {
       state.customizedColumnOptions = val;

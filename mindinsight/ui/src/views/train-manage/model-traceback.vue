@@ -155,7 +155,7 @@ limitations under the License.
            v-if="!loading"
            :class="{collapse:collapse}">
         <div class="top-area"
-             v-show="!errorData">
+             v-show="!noData && showEchartPic && !loading">
           <div class="select-box"
                v-if="!noData &&
              (!summaryDirList || (summaryDirList && summaryDirList.length))">
@@ -213,35 +213,33 @@ limitations under the License.
               </div>
             </div>
           </div>
-          <div class="btns">
-            <el-button class="custom-btn"
-                       @click="showAllDatafun"
-                       type="primary"
-                       size="mini"
-                       plain
-                       v-if="(!noData && basearr.length) ||
-                   (noData && summaryDirList && !summaryDirList.length)">
-              {{ $t('modelTraceback.showAllData') }}</el-button>
-          </div>
-
         </div>
         <div id="echart"
-             v-show="!noData && showEchartPic && !loading"></div>
-        <div class="echart-no-data"
-             v-show="!noData && !showEchartPic && !loading">
+             v-show="!noData && showEchartPic && !loading">
         </div>
         <div class="btns-container"
              v-show="showTable && !noData">
           <el-button type="primary"
                      size="mini"
-                     class="custom-btn"
-                     @click="hiddenRecords"
-                     plain>{{$t('modelTraceback.hide')}}</el-button>
+                     @click="showSelectedModelData"
+                     :disabled="disabledFilterBtnModel"
+                     class="disabled-btn-color"
+                     :class="[!disabledFilterBtnModel ? 'abled-btn-color' : '']"
+                     plain>{{$t('modelTraceback.showSelected')}}</el-button>
+          <el-button type="primary"
+                     size="mini"
+                     @click="hideSelectedModelRows"
+                     :disabled="disabledHideBtnModel"
+                     class="disabled-btn-color"
+                     :class="[!disabledHideBtnModel ? 'abled-btn-color' : '']"
+                     plain>{{$t('modelTraceback.hideSelected')}}</el-button>
           <el-button type="primary"
                      size="mini"
                      class="custom-btn"
-                     @click="unhideRecords"
-                     plain>{{$t('modelTraceback.unhide')}}</el-button>
+                     @click="showAllDatafun"
+                     plain>
+            {{ $t('modelTraceback.showAllData') }}
+          </el-button>
         </div>
         <div class="table-container"
              v-show="showTable && !noData">
@@ -412,11 +410,6 @@ limitations under the License.
                            :layout="pagination.layout"
                            :total="pagination.total">
             </el-pagination>
-            <div class="hide-count"
-                 v-show="recordsNumber-showNumber">
-              {{$t('modelTraceback.totalHide').replace(`{n}`, (recordsNumber-showNumber))}}
-            </div>
-            <div class="clear"></div>
           </div>
         </div>
         <div v-if="noData"
@@ -431,9 +424,13 @@ limitations under the License.
             <div v-show="summaryDirList && !summaryDirList.length">
               <p class="no-data-text">{{ $t('modelTraceback.noDataFound') }}</p>
               <p class="no-data-text">
-                {{ $t('modelTraceback.click') }}
-                <b> {{ $t('modelTraceback.showAllDataBtn') }}</b>
-                {{ $t('modelTraceback.viewAllData') }}
+                <el-button type="primary"
+                           size="mini"
+                           class="custom-btn"
+                           @click="showAllDatafun"
+                           plain>
+                  {{ $t('modelTraceback.showAllData') }}
+                </el-button>
               </p>
             </div>
           </div>
@@ -568,8 +565,13 @@ export default {
       // right data
       rightAllOptions: [],
       showOptions: [],
+      // Filter button disabled
+      disabledFilterBtnModel: true,
+      // Hide button disabled
+      disabledHideBtnModel: true,
+      // List of IDs that need to be hidden
+      hideTableIdList: [],
       sortChangeTimer: null,
-      unhideRecordsTimer: null,
       tagDialogShow: false,
       errorData: true,
       tagScope: {},
@@ -577,13 +579,8 @@ export default {
       imageList: [],
       // Select all
       selectCheckAll: true,
-      // Number of data records returned by the interface.
-      recordsNumber: 0,
-      showNumber: 0,
       delayTime: 500,
       showEchartPic: true,
-      hideRecord: false,
-      hidenDirChecked: [],
       beforeEditValue: '',
       keyWord: '',
       basearr: [],
@@ -602,7 +599,6 @@ export default {
       table: {},
       summaryDirList: undefined,
       text: this.$t('modelTraceback.summaryPath'),
-      checkedSummary: [],
       keysOfStringValue: [], // All keys whose values are character strings
       keysOfIntValue: [], // All keys whose values are int
       keysOfMixed: [],
@@ -703,6 +699,10 @@ export default {
     initLeftColumnData(params) {
       this.getTargetsData(params);
     },
+    /**
+     * Call the left side to optimize the target interface to obtain data
+     * @param {Object} params
+     */
     getTargetsData(params) {
       this.targetOptions = [];
       RequestService.queryTargetsData(params)
@@ -1056,8 +1056,8 @@ export default {
           {
             name: this.targetLabel,
             type: 'pie',
-            radius: '55%',
-            center: ['67%', '50%'],
+            radius: '65%',
+            center: ['65%', '50%'],
             label: {
               normal: {
                 show: false,
@@ -1113,7 +1113,6 @@ export default {
               const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
               str += str ? '<br/>' + temp : temp;
             }
-
             const res =
               '<p>' +
               str +
@@ -1173,7 +1172,7 @@ export default {
           },
         ],
         grid: {
-          x: 82,
+          x: 88,
           y: 30,
           x2: 50,
           y2: 30,
@@ -1374,8 +1373,6 @@ export default {
       this.checkOptions = [];
       this.basearr = [];
       this.selectArrayValue = [];
-      // Obtain the hidden summary_dir list after initialization.
-      this.hidenDirChecked = this.$store.state.hidenDirChecked || [];
       this.queryLineagesData(true);
     },
 
@@ -1391,12 +1388,20 @@ export default {
         sorted_name: this.sortInfo.sorted_name,
         sorted_type: this.sortInfo.sorted_type,
       };
-      if (!allData) {
-        this.summaryDirList = this.$store.state.summaryDirList;
+      // List id to be hidden
+      this.hideTableIdList = this.$store.state.hideTableIdList;
+      this.summaryDirList = this.$store.state.summaryDirList;
+      // Need to pass in the request parameters of the hidden list id
+      if (this.summaryDirList || this.hideTableIdList) {
         this.tableFilter.summary_dir = {
           in: this.summaryDirList,
+          not_in: this.hideTableIdList,
         };
+      } else {
+        this.tableFilter.summary_dir = undefined;
+      }
 
+      if (!allData) {
         tempParam.limit = this.pagination.pageSize;
         tempParam.offset = this.pagination.currentPage - 1;
         params.body = Object.assign(
@@ -1420,7 +1425,6 @@ export default {
                   this.errorData = false;
                   const listTemp = this.setDataOfModel(res.data.object);
                   const list = JSON.parse(JSON.stringify(listTemp));
-                  const tempEchartData = JSON.parse(JSON.stringify(listTemp));
                   if (allData) {
                     this.setInitListValue();
                     let customized = {};
@@ -1582,25 +1586,8 @@ export default {
 
                     this.noData = !res.data.object.length;
                     this.showEchartPic = !!res.data.object.length;
-                    if (this.hidenDirChecked.length) {
-                      this.hidenDirChecked.forEach((dir) => {
-                        tempEchartData.forEach((item, index) => {
-                          if (item.summary_dir === dir) {
-                            tempEchartData.splice(index, 1);
-                          }
-                        });
-                      });
-                      if (tempEchartData.length === 0) {
-                        this.showEchartPic = false;
-                      } else {
-                        this.showEchartPic = true;
-                        this.echart.allData = tempEchartData;
-                        this.echart.brushData = tempEchartData;
-                      }
-                    } else {
-                      this.echart.allData = list;
-                      this.echart.brushData = list;
-                    }
+                    this.echart.allData = list;
+                    this.echart.brushData = list;
                     this.echart.showData = this.echart.brushData;
                     Object.keys(this.table.columnOptions).forEach((i) => {
                       this.table.columnOptions[i].selected = true;
@@ -1631,32 +1618,9 @@ export default {
                     });
 
                     const tempList = list.slice(0, this.pagination.pageSize);
-                    this.recordsNumber = tempList.length;
-                    if (this.hidenDirChecked.length) {
-                      this.hidenDirChecked.forEach((dir) => {
-                        tempList.forEach((item, index) => {
-                          if (item.summary_dir === dir) {
-                            tempList.splice(index, 1);
-                          }
-                        });
-                      });
-                    }
-                    this.showNumber = tempList.length;
                     this.table.data = tempList;
                   } else {
                     const tempList = list.slice(0, this.pagination.pageSize);
-                    this.recordsNumber = tempList.length;
-                    this.hidenDirChecked = this.$store.state.hidenDirChecked || [];
-                    if (this.hidenDirChecked.length) {
-                      this.hidenDirChecked.forEach((dir) => {
-                        tempList.forEach((item, index) => {
-                          if (item.summary_dir === dir) {
-                            tempList.splice(index, 1);
-                          }
-                        });
-                      });
-                    }
-                    this.showNumber = tempList.length;
                     this.table.data = tempList;
                   }
 
@@ -1751,7 +1715,7 @@ export default {
         'device_num',
       ]; // All keys whose values are int
       this.keysOfMixed = [];
-      this.keysOfListType=[];
+      this.keysOfListType = [];
     },
     /**
      * Column initialization
@@ -1975,9 +1939,10 @@ export default {
       this.echart.chart.on('axisareaselected', (params) => {
         const key = params.parallelAxisId;
         if (
-          this.keysOfMixed &&
-          this.keysOfMixed.length &&
-          this.keysOfMixed.includes(key)||this.keysOfListType.includes(key)
+          (this.keysOfMixed &&
+            this.keysOfMixed.length &&
+            this.keysOfMixed.includes(key)) ||
+          this.keysOfListType.includes(key)
         ) {
           if (this.keysOfListType.includes(key)) {
             this.$message.error(this.$t('modelTraceback.notSupportSelected'));
@@ -1989,8 +1954,6 @@ export default {
           });
           return;
         }
-        this.recordsNumber = 0;
-        this.showNumber = 0;
         const list = this.$store.state.selectedBarList || [];
         const selectedAxisId = params.parallelAxisId;
         if (list.length) {
@@ -2079,20 +2042,11 @@ export default {
                         }
 
                         const list = this.setDataOfModel(res.data.object);
-                        if (this.hidenDirChecked.length) {
-                          this.hidenDirChecked.forEach((dir) => {
-                            list.forEach((item, index) => {
-                              if (item.summary_dir === dir) {
-                                list.splice(index, 1);
-                              }
-                            });
-                          });
-                        }
                         if (!list.length) {
                           this.noData = true;
                           this.showEchartPic = false;
+                          // After the echart box is selected, it is empty, and an empty data array needs to be saved
                           this.summaryDirList = [];
-                          this.checkedSummary = [];
                           this.$store.commit('setSummaryDirList', []);
                           return;
                         }
@@ -2104,9 +2058,9 @@ export default {
                         });
                         this.getTableList(tableParams);
                       } else {
+                        // After the echart box is selected, it is empty, and an empty data array needs to be saved
                         this.summaryDirList = [];
                         this.$store.commit('setSummaryDirList', []);
-                        this.checkedSummary = [];
                         this.noData = true;
                         this.showEchartPic = false;
                       }
@@ -2136,18 +2090,7 @@ export default {
                   this.errorData = false;
                   if (res.data.object.length) {
                     const list = this.setDataOfModel(res.data.object);
-                    if (this.hidenDirChecked.length) {
-                      this.hidenDirChecked.forEach((dir) => {
-                        list.forEach((item, index) => {
-                          if (item.summary_dir === dir) {
-                            list.splice(index, 1);
-                          }
-                        });
-                      });
-                    }
                     const tempList = list.slice(0, this.pagination.pageSize);
-                    this.recordsNumber = tempList.length;
-                    this.showNumber = tempList.length;
                     this.table.data = tempList;
                     this.pagination.currentPage = 1;
                     this.pagination.total = this.echart.brushData.length;
@@ -2170,6 +2113,10 @@ export default {
      */
     showAllDatafun() {
       this.summaryDirList = undefined;
+      // The hidden list is set to undefined
+      this.hideTableIdList = undefined;
+      // Set the saved hidden list to undefined;
+      this.$store.commit('setHideTableIdList', undefined);
       this.$store.commit('setSummaryDirList', undefined);
       this.$store.commit('setSelectedBarList', []);
       this.noData = false;
@@ -2543,10 +2490,13 @@ export default {
     },
 
     getStoreList() {
+      // Get hidden list
+      this.hideTableIdList = this.$store.state.hideTableIdList;
       this.summaryDirList = this.$store.state.summaryDirList;
-      if (this.summaryDirList) {
+      if (this.summaryDirList || this.hideTableIdList) {
         this.tableFilter.summary_dir = {
           in: this.summaryDirList,
+          not_in: this.hideTableIdList,
         };
       } else {
         this.tableFilter.summary_dir = undefined;
@@ -2558,21 +2508,58 @@ export default {
      * @param {Array} list Selected data in the table
      */
     selectionChange(list = []) {
-      if (this.hideRecord) {
-        return;
-      }
-      this.echart.showData = list.length ? list : this.echart.brushData;
-      this.$nextTick(() => {
-        this.initChart();
-      });
-      this.checkedSummary = list;
       const summaryDirFilter = [];
-      this.echart.showData.forEach((i) => {
+      list.forEach((i) => {
         summaryDirFilter.push(i.summary_dir);
       });
+      this.selectRowIdList = summaryDirFilter;
+      if (summaryDirFilter.length) {
+        this.disabledFilterBtnModel = false;
+        this.disabledHideBtnModel = false;
+      } else {
+        this.disabledFilterBtnModel = true;
+        this.disabledHideBtnModel = true;
+      }
+    },
+    showSelectedModelData() {
+      // Only need to pass in the filter data list when filtering the table
       this.tableFilter.summary_dir = {
-        in: summaryDirFilter,
+        in: this.selectRowIdList,
       };
+      this.$store.commit('setSummaryDirList', this.selectRowIdList);
+      this.selectArrayValue = [];
+      this.checkOptions = [];
+      this.basearr = [];
+      this.$refs.table.clearSelection();
+      // The page needs to be initialized to 1
+      this.pagination.currentPage = 1;
+      this.init();
+    },
+    // Hide button, hide selected item
+    hideSelectedModelRows() {
+      this.hideTableIdList = this.$store.state.hideTableIdList;
+      this.summaryDirList = this.$store.state.summaryDirList;
+      // Set hidden data
+      if (this.hideTableIdList) {
+        this.hideTableIdList = this.hideTableIdList.concat(
+            this.selectRowIdList,
+        );
+      } else {
+        this.hideTableIdList = this.selectRowIdList;
+      }
+      // There must be hidden list data
+      this.tableFilter.summary_dir = {
+        in: this.summaryDirList,
+        not_in: this.hideTableIdList,
+      };
+      this.$store.commit('setHideTableIdList', this.hideTableIdList);
+      this.selectArrayValue = [];
+      this.checkOptions = [];
+      this.basearr = [];
+      this.$refs.table.clearSelection();
+      // The page needs to be initialized to 1
+      this.pagination.currentPage = 1;
+      this.init();
     },
 
     /**
@@ -2651,118 +2638,6 @@ export default {
     },
 
     /**
-     * Hidden records
-     */
-    hiddenRecords() {
-      this.hideRecord = true;
-      if (this.checkedSummary.length) {
-        this.checkedSummary.forEach((i) => {
-          this.hidenDirChecked.push(i.summary_dir);
-        });
-      }
-      this.checkedSummary = [];
-      this.summaryDirList = this.$store.state.summaryDirList;
-      this.tableFilter.summary_dir = {
-        in: this.summaryDirList,
-      };
-      this.$store.commit('setHidenDirChecked', this.hidenDirChecked);
-      if (this.hidenDirChecked.length) {
-        const tempEchartData = this.echart.brushData;
-        this.hidenDirChecked.forEach((dir) => {
-          tempEchartData.forEach((item, index) => {
-            if (item.summary_dir === dir) {
-              tempEchartData.splice(index, 1);
-            }
-          });
-        });
-        const tableTemp = this.table.data;
-        this.hidenDirChecked.forEach((dir) => {
-          tableTemp.forEach((item, index) => {
-            if (item.summary_dir === dir) {
-              tableTemp.splice(index, 1);
-            }
-          });
-        });
-        this.table.data = tableTemp;
-        this.showNumber = tableTemp.length;
-        this.echart.showData = tempEchartData;
-        // Restore the style of the table selection box.
-        this.$refs.table.clearSelection();
-        if (this.echart.showData.length > 0) {
-          this.$nextTick(() => {
-            this.initChart();
-          });
-        } else {
-          this.showEchartPic = false;
-        }
-      }
-      this.hideRecord = false;
-    },
-    /**
-     * Unhide
-     */
-    unhideRecords() {
-      if (this.unhideRecordsTimer) {
-        clearTimeout(this.unhideRecordsTimer);
-        this.unhideRecordsTimer = null;
-      }
-      this.unhideRecordsTimer = setTimeout(() => {
-        this.showEchartPic = true;
-        this.$refs.table.clearSelection();
-        this.$store.commit('setHidenDirChecked', []);
-        if (this.hidenDirChecked.length) {
-          this.checkedSummary = [];
-          this.hidenDirChecked = [];
-        }
-        const params = {
-          body: {},
-        };
-        const tempParam = {
-          sorted_name: this.sortInfo.sorted_name,
-          sorted_type: this.sortInfo.sorted_type,
-        };
-        this.summaryDirList = this.$store.state.summaryDirList;
-        this.tableFilter.summary_dir = {
-          in: this.summaryDirList,
-        };
-        params.body = Object.assign(
-            params.body,
-            this.chartFilter,
-            tempParam,
-            this.tableFilter,
-        );
-        RequestService.queryLineagesData(params).then(
-            (res) => {
-              if (res && res.data && res.data.object) {
-                this.errorData = false;
-                const list = this.setDataOfModel(res.data.object);
-                this.echart.allData = list;
-                this.echart.brushData = list;
-                this.echart.showData = this.echart.brushData;
-                this.$nextTick(() => {
-                  this.resizeChart();
-                  this.initChart();
-                });
-                const showList = list.slice(
-                    (this.pagination.currentPage - 1) * this.pagination.pageSize,
-                    this.pagination.currentPage * this.pagination.pageSize,
-                );
-                this.table.data = showList;
-                this.recordsNumber = this.table.data.length;
-                this.showNumber = this.table.data.length;
-                this.pagination.total = res.data.count || 0;
-              } else {
-                this.errorData = true;
-              }
-            },
-            (error) => {
-              this.errorData = true;
-            },
-        );
-      }, this.delayTime);
-    },
-
-    /**
      * Sort data in the table
      * @param {Object} column current column
      */
@@ -2774,8 +2649,6 @@ export default {
       this.sortChangeTimer = setTimeout(() => {
         this.sortInfo.sorted_name = column.prop;
         this.sortInfo.sorted_type = column.order;
-        this.recordsNumber = 0;
-        this.showNumber = 0;
         this.getStoreList();
         const tempParam = {
           limit: this.pagination.pageSize,
@@ -2797,17 +2670,6 @@ export default {
                     this.errorData = false;
                     const list = this.setDataOfModel(res.data.object);
                     const tempList = list.slice(0, this.pagination.pageSize);
-                    this.recordsNumber = tempList.length;
-                    if (this.hidenDirChecked.length) {
-                      this.hidenDirChecked.forEach((dir) => {
-                        tempList.forEach((item, index) => {
-                          if (item.summary_dir === dir) {
-                            tempList.splice(index, 1);
-                          }
-                        });
-                      });
-                    }
-                    this.showNumber = tempList.length;
                     this.table.data = tempList;
                     this.pagination.total = res.data.count || 0;
                     this.pagination.currentPage = 1;
@@ -2916,14 +2778,6 @@ export default {
     this.myPieChart = null;
     this.myBarChart = null;
     this.sortChangeTimer = null;
-    this.unhideRecordsTimer = null;
-    if (this.checkedSummary.length) {
-      const tempList = [];
-      this.checkedSummary.forEach((item) => {
-        tempList.push(item.summary_dir);
-      });
-      this.$store.commit('setSummaryDirList', tempList);
-    }
     if (this.echart.chart) {
       window.removeEventListener('resize', this.resizeChart, false);
       this.echart.chart.clear();
@@ -3064,15 +2918,10 @@ export default {
       img {
         max-width: 100%;
       }
-      p {
-        font-size: 16px;
-        padding-top: 10px;
-        text-align: center;
-      }
     }
     .no-data-text {
       font-size: 16px;
-      padding-top: 10px;
+      padding-top: 15px;
       text-align: center;
     }
   }
@@ -3120,6 +2969,21 @@ export default {
     color: #00a5a7;
     background: #e9f7f7;
   }
+  .disabled-btn-color {
+    border-radius: 2px;
+    background-color: #f5f5f6;
+    border: 1px solid #dfe1e6;
+    color: #adb0b8;
+  }
+  .abled-btn-color {
+    border: 1px solid #00a5a7;
+    color: #00a5a7;
+    background: white;
+  }
+  .abled-btn-color:hover {
+    color: #00a5a7;
+    background: #e9f7f7;
+  }
   .icon-image {
     display: inline-block;
     padding: 4px;
@@ -3136,11 +3000,6 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  .btns {
-    margin-left: 20px;
-    padding-top: 12px;
-    height: 46px;
   }
   .btn-container-margin {
     margin: 0 10%;
@@ -3387,8 +3246,8 @@ export default {
     }
     .table-container {
       background-color: white;
-      height: calc(67% - 80px);
-      padding: 6px 32px;
+      height: calc(67% - 78px);
+      padding: 6px 32px 0px;
       position: relative;
       .disabled-checked {
         position: absolute;
@@ -3406,16 +3265,6 @@ export default {
       }
       a {
         cursor: pointer;
-      }
-      .clear {
-        clear: both;
-      }
-      .hide-count {
-        height: 32px;
-        line-height: 32px;
-        color: red;
-        float: right;
-        margin-right: 10px;
       }
       .el-pagination {
         float: right;
