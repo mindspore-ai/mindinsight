@@ -97,6 +97,7 @@
     "modelSize": "模型大小",
     "dataProcess": "数据处理",
     "noDataFound": "暂无满足筛选条件的数据",
+    "allHide":"数据已全部隐藏",
     "userDefined": "自定义数据",
     "metric": "度量指标",
     "deviceNum": "device数目",

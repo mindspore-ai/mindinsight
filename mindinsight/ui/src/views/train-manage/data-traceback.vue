@@ -239,12 +239,25 @@ limitations under the License.
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
             <p class="no-data-text"
-               v-show="!summaryDirList || (summaryDirList && summaryDirList.length)">
+               v-show="(!summaryDirList || (summaryDirList && summaryDirList.length)) &&
+               (!hideTableIdList||(hideTableIdList&&!hideTableIdList.length))">
               {{ $t('public.noData') }}
             </p>
             <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length)&&
             summaryDirList && summaryDirList.length">
               <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
+            </div>
+            <div v-show="hideTableIdList && hideTableIdList.length">
+              <p class="no-data-text">{{ $t('modelTraceback.allHide') }}</p>
+              <p class="no-data-text">
+                <el-button type="primary"
+                           size="mini"
+                           class="custom-btn"
+                           @click="showAllDataBtn"
+                           plain>
+                  {{ $t('modelTraceback.showAllData') }}
+                </el-button>
+              </p>
             </div>
             <div v-show="summaryDirList && !summaryDirList.length">
               <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>

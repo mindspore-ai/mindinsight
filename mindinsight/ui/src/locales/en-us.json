@@ -97,6 +97,7 @@
     "modelSize": "Model Size",
     "dataProcess": "Data Processing",
     "noDataFound": "No data found.",
+    "allHide":"All data is hidden.",
     "userDefined": "User-defined Data",
     "metric": "Metrics",
     "deviceNum": "Devices",
