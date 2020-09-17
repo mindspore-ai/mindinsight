@@ -63,7 +63,8 @@ def _get_optimize_targets(data_manager, search_condition=None):
                 param_info.update({"reason_code": ReasonCode.CORRELATION_NAN.value})
             hyper_parameters.append(param_info)
 
-        hyper_parameters.sort(key=lambda hyper_param: hyper_param.get("importance"), reverse=True)
+        # Sort `hyper_parameters` in descending order of `importance` and ascending order of `name`.
+        hyper_parameters.sort(key=lambda hyper_param: (-hyper_param.get("importance"), hyper_param.get("name")))
 
         target_summary = {
             "name": target,
