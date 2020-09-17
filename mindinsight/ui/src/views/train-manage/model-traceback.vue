@@ -1979,7 +1979,11 @@ export default {
           this.keysOfMixed.length &&
           this.keysOfMixed.includes(key)||this.keysOfListType.includes(key)
         ) {
-          this.$message.error(this.$t('modelTraceback.mixedItemMessage'));
+          if (this.keysOfListType.includes(key)) {
+            this.$message.error(this.$t('modelTraceback.notSupportSelected'));
+          } else {
+            this.$message.error(this.$t('modelTraceback.mixedItemMessage'));
+          }
           this.$nextTick(() => {
             this.initChart();
           });
