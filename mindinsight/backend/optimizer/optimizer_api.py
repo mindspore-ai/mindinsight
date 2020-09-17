@@ -64,7 +64,11 @@ def _get_optimize_targets(data_manager, search_condition=None):
             hyper_parameters.append(param_info)
 
         # Sort `hyper_parameters` in descending order of `importance` and ascending order of `name`.
-        hyper_parameters.sort(key=lambda hyper_param: (-hyper_param.get("importance"), hyper_param.get("name")))
+        # If the automatically collected parameters and user-defined parameters have the same importance,
+        # the user-defined parameters will be ranked behind.
+        hyper_parameters.sort(key=lambda hyper_param: (-hyper_param.get("importance"),
+                                                       hyper_param.get("name").startswith('['),
+                                                       hyper_param.get("name")))
 
         target_summary = {
             "name": target,
