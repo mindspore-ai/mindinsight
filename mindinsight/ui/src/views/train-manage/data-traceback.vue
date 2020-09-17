@@ -243,11 +243,11 @@ limitations under the License.
                (!hideTableIdList||(hideTableIdList&&!hideTableIdList.length))">
               {{ $t('public.noData') }}
             </p>
-            <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length)&&
+            <div v-show="echartNoData && (lineagedata.serData && !!lineagedata.serData.length) &&
             summaryDirList && summaryDirList.length">
               <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
             </div>
-            <div v-show="hideTableIdList && hideTableIdList.length">
+            <div v-show="(hideTableIdList && hideTableIdList.length) && !summaryDirList">
               <p class="no-data-text">{{ $t('modelTraceback.allHide') }}</p>
               <p class="no-data-text">
                 <el-button type="primary"

@@ -422,7 +422,7 @@ limitations under the License.
                v-show="(!summaryDirList || (summaryDirList && summaryDirList.length)) &&
                (!hideTableIdList||(hideTableIdList&&!hideTableIdList.length))">
               {{ $t('public.noData') }}</p>
-            <div v-show="hideTableIdList && hideTableIdList.length">
+            <div v-show="(hideTableIdList && hideTableIdList.length) && !summaryDirList">
               <p class="no-data-text">{{ $t('modelTraceback.allHide') }}</p>
               <p class="no-data-text">
                 <el-button type="primary"
