@@ -153,6 +153,10 @@ export default {
         value: 'value',
         compare: 'compare',
       },
+      tableStartIndex: {
+        rowStartIndex: 0,
+        colStartIndex: 0,
+      },
     };
   },
   computed: {},
@@ -186,14 +190,42 @@ export default {
       }
       const tempFilterArr = filterStr.slice(1, filterStr.length - 1).split(',');
       const tempArr = [];
+      const multiDimsArr = [];
       for (let i = 0; i < tempFilterArr.length; i++) {
         tempArr.push({
           model: tempFilterArr[i],
           max: dimension[i] - 1,
           showError: false,
         });
+        if (tempFilterArr[i].indexOf(':') !== -1) {
+          const curFilterArr = tempFilterArr[i].split(':');
+          if (curFilterArr[0]) {
+            let startIndex = Number(curFilterArr[0]);
+            startIndex =
+              startIndex < 0 ? dimension[i] + startIndex : startIndex;
+            multiDimsArr.push(startIndex);
+          } else {
+            multiDimsArr.push(0);
+          }
+        }
       }
       this.filterArr = tempArr;
+      if (!multiDimsArr.length) {
+        this.tableStartIndex = {
+          rowStartIndex: 0,
+          colStartIndex: 0,
+        };
+      } else if (multiDimsArr.length >= 2) {
+        this.tableStartIndex = {
+          rowStartIndex: multiDimsArr[0],
+          colStartIndex: multiDimsArr[1],
+        };
+      } else {
+        this.tableStartIndex = {
+          rowStartIndex: 0,
+          colStartIndex: multiDimsArr[0],
+        };
+      }
     },
     /**
      * Initialize column information
@@ -211,7 +243,7 @@ export default {
       const columnSample = this.formateData[0];
       if (columnSample) {
         columnSample.forEach((num, numIndex) => {
-          const order = numIndex;
+          const order = numIndex + this.tableStartIndex.colStartIndex;
           this.columnsData.push({
             id: order,
             name: order,
@@ -248,11 +280,11 @@ export default {
         return value;
       } else if (value < 0) {
         return `<span class="table-item-span" style="background:rgba(227, 125, 41, ${
-          value / this.statistics.min
+          value / this.statistics.overall_min
         })">${value}</span>`;
       } else {
         return `<span class="table-item-span" style="background:rgba(0, 165, 167, ${
-          value / this.statistics.max
+          value / this.statistics.overall_max
         })">${value}</span>`;
       }
     },
@@ -280,13 +312,13 @@ export default {
           return `<span class="table-item-span" title="${value[0]}→${
             value[1]
           }" style="background:rgba(227, 125, 41, ${
-            valueNum / this.statistics.min
+            valueNum / this.statistics.overall_min
           })">${valueNum}</span>`;
         } else {
           return `<span class="table-item-span" title="${value[0]}→${
             value[1]
           }" style="background:rgba(0, 165, 167, ${
-            valueNum / this.statistics.max
+            valueNum / this.statistics.overall_max
           })">${valueNum}</span>`;
         }
       } else {
@@ -324,13 +356,17 @@ export default {
       if (this.gridType === this.gridTypeKeys.compare) {
         this.formateData.forEach((outerData, outerIndex) => {
           const tempData = {
-            '-1': outerIndex,
+            '-1': outerIndex + this.tableStartIndex.rowStartIndex,
           };
           outerData.forEach((innerData, innerIndex) => {
-            const innerOrder = innerIndex;
+            const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
             const tempArr = [];
             innerData.forEach((innerValue) => {
-              if (isNaN(innerValue) || innerValue === 'Infinity' || innerValue === '-Infinity') {
+              if (
+                isNaN(innerValue) ||
+                innerValue === 'Infinity' ||
+                innerValue === '-Infinity'
+              ) {
                 tempArr.push(innerValue);
               } else {
                 tempArr.push(innerValue.toFixed(this.accuracy));
@@ -343,11 +379,15 @@ export default {
       } else {
         this.formateData.forEach((outerData, outerIndex) => {
           const tempData = {
-            '-1': outerIndex,
+            '-1': outerIndex + this.tableStartIndex.rowStartIndex,
           };
           outerData.forEach((innerData, innerIndex) => {
-            const innerOrder = innerIndex;
-            if (isNaN(innerData) || innerData === 'Infinity' || innerData === '-Infinity') {
+            const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
+            if (
+              isNaN(innerData) ||
+              innerData === 'Infinity' ||
+              innerData === '-Infinity'
+            ) {
               tempData[innerOrder] = innerData;
             } else {
               tempData[innerOrder] = innerData.toFixed(this.accuracy);
@@ -417,12 +457,18 @@ export default {
             filter.showError = false;
             value = Number(value);
           }
-        } else if (value === ':') {
-          filter.showError = false;
-          if (!limitCount) {
-            incorrectData = true;
+        } else if (value.indexOf(':') !== -1) {
+          const tempResult = this.checkCombinatorialInput(filter);
+          if (tempResult) {
+            filter.showError = false;
+            if (!limitCount) {
+              incorrectData = true;
+            } else {
+              limitCount--;
+            }
           } else {
-            limitCount--;
+            filter.showError = true;
+            filterCorrect = false;
           }
         } else {
           filter.showError = true;
@@ -438,7 +484,56 @@ export default {
         this.incorrectData = false;
       }
       if (filterCorrect) {
+        this.viewResizeFlag = true;
         this.$emit('martixFilterChange', tempArr);
+      }
+    },
+    /**
+     * check combinatorial input
+     * @param {Object} filter filter item
+     * @return {Boolean} verification result
+     */
+    checkCombinatorialInput(filter) {
+      const value = filter.model.trim();
+      const tempArr = value.split(':');
+      const startValue = tempArr[0];
+      const endValue = tempArr[1];
+      const limitCount = 2;
+      if (
+        !!startValue &&
+        (isNaN(startValue) ||
+          startValue < -(filter.max + 1) ||
+          startValue > filter.max)
+      ) {
+        return false;
+      }
+      if (
+        !!endValue &&
+        (isNaN(endValue) ||
+          endValue <= -(filter.max + 1) ||
+          endValue > filter.max ||
+          !Number(endValue))
+      ) {
+        return false;
+      }
+      if (tempArr.length > limitCount) {
+        return false;
+      } else if (!startValue && !endValue) {
+        return true;
+      } else if (!!startValue && !!endValue) {
+        const sv =
+          startValue < 0
+            ? filter.max + Number(startValue) + 1
+            : Number(startValue);
+        const ev =
+          endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
+        if (ev <= sv) {
+          return false;
+        } else {
+          return true;
+        }
+      } else {
+        return true;
       }
     },
     /**
@@ -462,7 +557,7 @@ export default {
         } else if (!this.filterArr.length && dimension && filterStr) {
           this.initializeFilterArr(dimension, filterStr);
         }
-        if (newDataFlag || this.statistics.max === undefined) {
+        if (newDataFlag || this.statistics.overall_max === undefined) {
           this.statistics = statistics;
         }
         this.formateGridArray();
@@ -502,7 +597,7 @@ export default {
      */
     showRequestErrorMessage(errorMsg, dimension, filterStr, isUpdate) {
       this.errorMsg = errorMsg;
-      if ((!this.filterArr.length && dimension && filterStr)|| isUpdate) {
+      if ((!this.filterArr.length && dimension && filterStr) || isUpdate) {
         this.initializeFilterArr(dimension, filterStr);
       }
       this.requestError = true;
@@ -599,7 +694,7 @@ export default {
         }
       }
       .filter-input {
-        width: 65px;
+        width: 120px;
         text-align: center;
       }
       .input-behind {
