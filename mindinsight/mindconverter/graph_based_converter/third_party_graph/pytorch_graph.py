@@ -103,6 +103,24 @@ class PyTorchGraph(Graph):
                 log.exception(error)
                 raise error
 
+    @staticmethod
+    def _extract_shape(shape):
+        """
+        Extract shape from string-type shape.
+
+        Args:
+            shape (str): Shape value in string-type.
+
+        Returns:
+            list, shape.
+        """
+        if "," not in shape:
+            return []
+        for s in shape.split(","):
+            if not s:
+                return []
+        return [int(x.split(":")[0].replace("!", "")) for x in shape.split(',')]
+
     def build(self, input_shape):
         """
         Build graph tree.
@@ -118,23 +136,6 @@ class PyTorchGraph(Graph):
         from .torch_utils import onnx_tracer
 
         self._check_input_shape(input_shape)
-
-        def _extract_shape(shape):
-            """
-            Extract shape from string-type shape.
-
-            Args:
-                shape (str): Shape value in string-type.
-
-            Returns:
-                list, shape.
-            """
-            if "," not in shape:
-                return []
-            for s in shape.split(","):
-                if not s:
-                    return []
-            return [int(x.split(":")[0].replace("!", "")) for x in shape.split(',')]
 
         feed_forward_ipt_shape = (1, *input_shape)
         batched_sample = create_autograd_variable(torch.rand(*feed_forward_ipt_shape))
@@ -158,7 +159,7 @@ class PyTorchGraph(Graph):
             node_name = normalize_scope_name(node)
             output_shape_str_list = re.findall(r'[^()!]+', str(node))
             output_shape_str = output_shape_str_list[1]
-            output_shape = _extract_shape(output_shape_str)
+            output_shape = self._extract_shape(output_shape_str)
             weight_scope = '.'.join(
                 re.findall(r'\[([\w\d.]+)]', node.scopeName())
             )
