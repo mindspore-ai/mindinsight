@@ -67,7 +67,7 @@ class InputNode(GraphNode):
         self._op_name = 'Input'
         self._op_params = {'input_shape': input_shape,
                            "output_shape": input_shape}
-        self._node_type = NodeType.INPUT.value
+        self._node_type = NodeType.INPUTS.value
 
     @property
     def input_shape(self):
