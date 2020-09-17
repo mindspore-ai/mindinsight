@@ -74,7 +74,7 @@ class SearchModelConditionParameter(Schema):
     def check_dict_value_type(data, value_type):
         """Check dict value type and int scope."""
         for key, value in data.items():
-            if key == "in":
+            if key in ["in", "not_in"]:
                 if not isinstance(value, (list, tuple)):
                     raise ValidationError("The value of `in` operation must be list or tuple.")
             else:
@@ -101,10 +101,8 @@ class SearchModelConditionParameter(Schema):
     @staticmethod
     def check_operation(data):
         """Check input param's compare operation."""
-        if not set(data.keys()).issubset(['in', 'eq']):
-            raise ValidationError("Its operation should be `in` or `eq`.")
-        if len(data.keys()) > 1:
-            raise ValidationError("More than one operation.")
+        if not set(data.keys()).issubset(['in', 'eq', 'not_in']):
+            raise ValidationError("Its operation should be `eq`, `in` or `not_in`.")
 
     @validates("loss")
     def check_loss(self, data):
@@ -222,9 +220,9 @@ class SearchModelConditionParameter(Schema):
                                             .format(attr))
 
             for key in condition.keys():
-                if key not in ["eq", "lt", "gt", "le", "ge", "in"]:
+                if key not in ["eq", "lt", "gt", "le", "ge", "in", "not_in"]:
                     raise LineageParamValueError("The compare condition should be in "
-                                                 "('eq', 'lt', 'gt', 'le', 'ge', 'in').")
+                                                 "('eq', 'lt', 'gt', 'le', 'ge', 'in', 'not_in').")
 
             if attr.startswith('metric/'):
                 if len(attr) == 7:

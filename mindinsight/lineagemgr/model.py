@@ -167,18 +167,19 @@ def _convert_relative_path_to_abspath(summary_base_dir, search_condition):
 
     summary_dir_condition = search_condition.get("summary_dir")
 
-    if 'in' in summary_dir_condition:
-        summary_paths = []
-        for summary_dir in summary_dir_condition.get('in'):
-            if summary_dir.startswith('./'):
-                abs_dir = os.path.join(
-                    summary_base_dir, summary_dir[2:]
-                )
-                abs_dir = validate_path(abs_dir)
-            else:
-                abs_dir = validate_path(summary_dir)
-            summary_paths.append(abs_dir)
-        search_condition.get('summary_dir')['in'] = summary_paths
+    for key in ['in', 'not_in']:
+        if key in summary_dir_condition:
+            summary_paths = []
+            for summary_dir in summary_dir_condition.get(key):
+                if summary_dir.startswith('./'):
+                    abs_dir = os.path.join(
+                        summary_base_dir, summary_dir[2:]
+                    )
+                    abs_dir = validate_path(abs_dir)
+                else:
+                    abs_dir = validate_path(summary_dir)
+                summary_paths.append(abs_dir)
+            search_condition.get('summary_dir')[key] = summary_paths
 
     if 'eq' in summary_dir_condition:
         summary_dir = summary_dir_condition.get('eq')

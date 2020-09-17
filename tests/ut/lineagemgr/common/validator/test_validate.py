@@ -136,7 +136,7 @@ class TestValidateSearchModelCondition(TestCase):
         }
         self._assert_raise_of_mindinsight_exception(
             "The parameter loss_function is invalid. "
-            "Its operation should be `in` or `eq`.",
+            "Its operation should be `eq`, `in` or `not_in`.",
             condition
         )
 
@@ -160,7 +160,7 @@ class TestValidateSearchModelCondition(TestCase):
         }
         self._assert_raise_of_mindinsight_exception(
             "The parameter network is invalid. "
-            "Its operation should be `in` or `eq`.",
+            "Its operation should be `eq`, `in` or `not_in`.",
             condition
         )
 
