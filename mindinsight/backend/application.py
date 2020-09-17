@@ -71,13 +71,14 @@ class CustomResponse(Response):
     """Define custom response."""
     def __init__(self, response=None, **kwargs):
         headers = kwargs.get("headers")
+        security_headers = list(SECURITY_HEADERS)
         if isinstance(response, bytes):
             mimetype = get_img_mimetype(response)
-            SECURITY_HEADERS.append(('Content-Type', mimetype))
+            security_headers.append(('Content-Type', mimetype))
         if headers is None:
-            headers = Headers(SECURITY_HEADERS)
+            headers = Headers(security_headers)
         else:
-            for header in SECURITY_HEADERS:
+            for header in security_headers:
                 headers.add(*header)
         kwargs['headers'] = headers
         super(CustomResponse, self).__init__(response, **kwargs)
