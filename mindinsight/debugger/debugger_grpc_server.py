@@ -171,7 +171,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def _get_next_command(self):
         """Get next command."""
         self._pos, event = self._cache_store.get_command(self._pos)
-        log.debug("Received event :%s", event)
         if event is None:
             return event
         if isinstance(event, dict):
@@ -188,7 +187,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """Deal with view cmd."""
         view_cmd = event.get('view_cmd')
         node_name = event.get('node_name')
-        log.debug("Receive view cmd %s for node: %s.", view_cmd, node_name)
+        log.debug("Receive view cmd for node: %s.", node_name)
         if not (view_cmd and node_name):
             log.debug("Invalid view command. Ignore it.")
             return None
@@ -265,10 +264,10 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         for tensor in request_iterator:
             tensor_construct.append(tensor)
             if tensor.finished:
-                if self._received_view_cmd.get('wait_for_tensor') and tensor.tensor_content:
+                update_flag = tensor_stream.put({'step': step, 'tensor_protos': tensor_construct})
+                if self._received_view_cmd.get('wait_for_tensor') and update_flag:
                     self._received_view_cmd['wait_for_tensor'] = False
                     log.debug("Set wait for tensor flag to False.")
-                tensor_stream.put({'step': step, 'tensor_protos': tensor_construct})
                 tensor_construct = []
                 tensor_names.append(':'.join([tensor.node_name, tensor.slot]))
                 continue

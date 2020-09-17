@@ -50,8 +50,13 @@ class BaseTensor(ABC):
     def value(self):
         """The property of tensor shape."""
 
+    @property
+    def empty(self):
+        """If the tensor value is valid."""
+        return self.value is None
+
     @abstractmethod
-    def get_tensor_value_by_shape(self, shape=None):
+    def get_tensor_serializable_value_by_shape(self, shape=None):
         """Get tensor value by shape."""
 
     def _to_dict(self):
@@ -67,8 +72,9 @@ class BaseTensor(ABC):
 
     def get_basic_info(self):
         """Return basic info about tensor info."""
+        tensor_value = self.value
         if not self.shape:
-            value = self.value
+            value = tensor_value.tolist() if isinstance(tensor_value, np.ndarray) else tensor_value
         else:
             value = 'click to view'
         res = self._to_dict()
@@ -91,7 +97,7 @@ class OpTensor(BaseTensor):
         # the type of tensor_proto is TensorProto
         super(OpTensor, self).__init__(step)
         self._tensor_proto = tensor_proto
-        self._value = self.generate_value(tensor_proto)
+        self._value = self.generate_value_from_proto(tensor_proto)
 
     @property
     def name(self):
@@ -115,19 +121,18 @@ class OpTensor(BaseTensor):
     @property
     def value(self):
         """The property of tensor value."""
-        tensor_value = None
-        if self._value is not None:
-            tensor_value = self._value.tolist()
-
-        return tensor_value
-
-    @property
-    def numpy_value(self):
-        """The property of tensor value in numpy type."""
         return self._value
 
-    def generate_value(self, tensor_proto):
-        """Generate tensor value from proto."""
+    def generate_value_from_proto(self, tensor_proto):
+        """
+        Generate tensor value from proto.
+
+        Args:
+            tensor_proto (TensorProto): The tensor proto.
+
+        Returns:
+            Union[None, np.ndarray], the value of the tensor.
+        """
         tensor_value = None
         if tensor_proto.tensor_content:
             tensor_value = tensor_proto.tensor_content
@@ -166,7 +171,7 @@ class OpTensor(BaseTensor):
             shape (tuple): The specified shape.
 
         Returns:
-            Union[None, str, numpy.ndarray], the sub-tensor.
+            Union[None, str, numpy.ndarray], the value of parsed tensor.
         """
         if self._value is None:
             log.warning("%s has no value yet.", self.name)
@@ -199,6 +204,7 @@ class ConstTensor(BaseTensor):
         # the type of const_proto is NamedValueProto
         super(ConstTensor, self).__init__()
         self._const_proto = const_proto
+        self._value = self.generate_value_from_proto(const_proto)
 
     def set_step(self, step):
         """Set step value."""
@@ -222,16 +228,29 @@ class ConstTensor(BaseTensor):
     @property
     def value(self):
         """The property of tensor shape."""
-        fields = self._const_proto.value.ListFields()
+        return self._value
+
+    @staticmethod
+    def generate_value_from_proto(tensor_proto):
+        """
+        Generate tensor value from proto.
+
+        Args:
+            tensor_proto (TensorProto): The tensor proto.
+
+        Returns:
+            Union[None, np.ndarray], the value of the tensor.
+        """
+        fields = tensor_proto.value.ListFields()
         if len(fields) != 2:
-            log.warning("Unexpected const proto <%s>.\n Please check offline.", self._const_proto)
+            log.warning("Unexpected const proto <%s>.\n Please check offline.", tensor_proto)
         for field_name, field_value in fields:
             if field_name != 'dtype':
                 return field_value
         return None
 
-    def get_tensor_value_by_shape(self, shape=None):
+    def get_tensor_serializable_value_by_shape(self, shape=None):
         """Get tensor info with value."""
         if shape is not None:
             log.warning("Invalid shape for const value.")
-        return self.value
+        return self._value

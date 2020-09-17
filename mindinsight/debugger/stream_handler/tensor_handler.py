@@ -42,6 +42,9 @@ class TensorHandler(StreamHandlerBase):
                 - step (int): The current step of tensor.
 
                 - tensor_protos (list[TensorProto]): The tensor proto.
+
+        Returns:
+            bool, the tensor has updated successfully.
         """
         tensor_protos = value.get('tensor_protos')
         merged_tensor = self._get_merged_tensor(tensor_protos)
@@ -50,8 +53,9 @@ class TensorHandler(StreamHandlerBase):
             log.debug("Received previous tensor.")
             step -= 1
         tensor = OpTensor(merged_tensor, step)
-        self._put_tensor_into_cache(tensor, step)
-        log.info("Put tensor %s of step: %d, into cache", tensor.name, step)
+        flag = self._put_tensor_into_cache(tensor, step)
+        log.info("Put tensor %s of step: %d, into cache. Flag: %s", tensor.name, step, flag)
+        return flag
 
     @staticmethod
     def _get_merged_tensor(tensor_protos):
@@ -83,12 +87,34 @@ class TensorHandler(StreamHandlerBase):
 
         Args:
             tensor (OpTensor): The tensor value.
+            step (int): The step of tensor.
+
+        Returns:
+            bool, the tensor has updated successfully.
         """
         cache_tensor = self._tensors.get(tensor.name)
         if cache_tensor is None:
             cache_tensor = {}
             self._tensors[tensor.name] = cache_tensor
+
+        old_tensor = cache_tensor.get(step)
+        if old_tensor and not self.is_value_diff(old_tensor.value, tensor.value):
+            log.debug("Tensor %s of step %s has no change. Ignore it.")
+            return False
         cache_tensor[step] = tensor
+        log.debug("Put updated tensor value for %s of step %s.", tensor.name, step)
+        return True
+
+    @staticmethod
+    def is_value_diff(old_value, new_value):
+        """Check tensor value if there are equal."""
+        log.debug("old value type: %s, new_value type: %s", type(old_value), type(new_value))
+        if old_value is None and new_value is None:
+            return False
+        flag = old_value != new_value
+        if isinstance(flag, np.ndarray):
+            return flag.any()
+        return flag
 
     def put_const_vals(self, const_vals):
         """
@@ -224,7 +250,7 @@ class TensorHandler(StreamHandlerBase):
         if prev_step < 0:
             return flag
         tensor = self._get_tensor(tensor_name, step=prev_step)
-        return bool(tensor and tensor.value)
+        return bool(tensor and not tensor.empty)
 
     def get_tensor_value_by_name(self, tensor_name, prev=False):
         """Get tensor value by name in numpy type."""
@@ -249,7 +275,6 @@ class TensorHandler(StreamHandlerBase):
                 expired_tensor.append(tensor_name)
         for tensor_name in expired_tensor:
             self._tensors.pop(tensor_name)
-        self._tensors = {}
 
     def get_tensors_diff(self, tensor_name, shape, tolerance=0):
         """
