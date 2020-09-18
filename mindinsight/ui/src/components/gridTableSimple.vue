@@ -39,7 +39,7 @@ limitations under the License.
         <div v-for="(item, itemIndex) in filterArr"
              :key="itemIndex">
           <el-input class="filter-input"
-                    :class="item.showError ? 'error-border' : ''"
+                    :class="[item.showError ? 'error-border' : '', fullScreen ? 'long-input' : 'short-input']"
                     v-model="item.model"></el-input>
           <span class="input-behind"
                 v-if="itemIndex === filterArr.length - 1">{{$t('symbols.slashes')}}</span>
@@ -137,6 +137,10 @@ export default {
         frozenColumn: 0,
         frozenRow: 0,
       },
+      tableStartIndex: {
+        rowStartIndex: 0,
+        colStartIndex: 0,
+      },
     };
   },
   computed: {},
@@ -166,14 +170,42 @@ export default {
       }
       const tempFilterArr = filterStr.slice(1, filterStr.length - 1).split(',');
       const tempArr = [];
+      const multiDimsArr = [];
       for (let i = 0; i < tempFilterArr.length; i++) {
         tempArr.push({
           model: tempFilterArr[i],
           max: dimension[i] - 1,
           showError: false,
         });
+        if (tempFilterArr[i].indexOf(':') !== -1) {
+          const curFilterArr = tempFilterArr[i].split(':');
+          if (curFilterArr[0]) {
+            let startIndex = Number(curFilterArr[0]);
+            startIndex =
+              startIndex < 0 ? dimension[i] + startIndex : startIndex;
+            multiDimsArr.push(startIndex);
+          } else {
+            multiDimsArr.push(0);
+          }
+        }
       }
       this.filterArr = tempArr;
+      if (!multiDimsArr.length) {
+        this.tableStartIndex = {
+          rowStartIndex: 0,
+          colStartIndex: 0,
+        };
+      } else if (multiDimsArr.length >= 2) {
+        this.tableStartIndex = {
+          rowStartIndex: multiDimsArr[0],
+          colStartIndex: multiDimsArr[1],
+        };
+      } else {
+        this.tableStartIndex = {
+          rowStartIndex: 0,
+          colStartIndex: multiDimsArr[0],
+        };
+      }
     },
     /**
      * Initialize column information
@@ -191,7 +223,7 @@ export default {
       const columnSample = this.formateData[0];
       if (columnSample) {
         columnSample.forEach((num, numIndex) => {
-          const order = numIndex;
+          const order = numIndex + this.tableStartIndex.colStartIndex;
           this.columnsData.push({
             id: order,
             name: order,
@@ -225,11 +257,11 @@ export default {
         return value;
       } else if (value < 0) {
         return `<span class="table-item-span" style="background:rgba(227, 125, 41, ${
-          value / this.statistics.min
+          value / this.statistics.overall_min
         })">${value}</span>`;
       } else {
         return `<span class="table-item-span" style="background:rgba(0, 165, 167, ${
-          value / this.statistics.max
+          value / this.statistics.overall_max
         })">${value}</span>`;
       }
     },
@@ -254,10 +286,10 @@ export default {
       const tempArr = [];
       this.formateData.forEach((outerData, outerIndex) => {
         const tempData = {
-          '-1': outerIndex,
+          '-1': outerIndex + this.tableStartIndex.rowStartIndex,
         };
         outerData.forEach((innerData, innerIndex) => {
-          const innerOrder = innerIndex;
+          const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
           if (isNaN(innerData)) {
             tempData[innerOrder] = innerData;
           } else {
@@ -326,12 +358,18 @@ export default {
             filter.showError = false;
             value = Number(value);
           }
-        } else if (value === ':') {
-          filter.showError = false;
-          if (!limitCount) {
-            incorrectData = true;
+        } else if (value.indexOf(':') !== -1) {
+          const tempResult = this.checkCombinatorialInput(filter);
+          if (tempResult) {
+            filter.showError = false;
+            if (!limitCount) {
+              incorrectData = true;
+            } else {
+              limitCount--;
+            }
           } else {
-            limitCount--;
+            filter.showError = true;
+            filterCorrect = false;
           }
         } else {
           filter.showError = true;
@@ -347,7 +385,56 @@ export default {
         this.incorrectData = false;
       }
       if (filterCorrect) {
+        this.viewResizeFlag = true;
         this.$emit('martixFilterChange', tempArr);
+      }
+    },
+    /**
+     * check combinatorial input
+     * @param {Object} filter filter item
+     * @return {Boolean} verification result
+     */
+    checkCombinatorialInput(filter) {
+      const value = filter.model.trim();
+      const tempArr = value.split(':');
+      const startValue = tempArr[0];
+      const endValue = tempArr[1];
+      const limitCount = 2;
+      if (
+        !!startValue &&
+        (isNaN(startValue) ||
+          startValue < -(filter + 1) ||
+          startValue > filter.max)
+      ) {
+        return false;
+      }
+      if (
+        !!endValue &&
+        (isNaN(endValue) ||
+          endValue <= -(filter.max + 1) ||
+          endValue > filter.max ||
+          !Number(endValue))
+      ) {
+        return false;
+      }
+      if (tempArr.length > limitCount) {
+        return false;
+      } else if (!startValue && !endValue) {
+        return true;
+      } else if (!!startValue && !!endValue) {
+        const sv =
+          startValue < 0
+            ? filter.max + Number(startValue) + 1
+            : Number(startValue);
+        const ev =
+          endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
+        if (ev <= sv) {
+          return false;
+        } else {
+          return true;
+        }
+      } else {
+        return true;
       }
     },
     /**
@@ -368,7 +455,7 @@ export default {
           this.initializeFilterArr(dimension, filterStr);
           this.scrollTop = true;
         }
-        if (newDataFlag || this.statistics.max === undefined) {
+        if (newDataFlag || this.statistics.overall_max === undefined) {
           this.statistics = statistics;
         }
         this.formateGridArray();
@@ -499,8 +586,13 @@ export default {
         }
       }
       .filter-input {
-        width: 50px;
         text-align: center;
+      }
+      .short-input {
+        width: 50px;
+      }
+      .long-input {
+        width: 120px;
       }
       .input-behind {
         padding: 0 5px;
