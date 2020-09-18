@@ -14,13 +14,34 @@
 # ==============================================================================
 """Test name manager module."""
 from unittest import TestCase
-from mindinsight.mindconverter.graph_based_converter.hierarchical_tree.name_mgr import GlobalVarNameMgr
+from mindinsight.mindconverter.graph_based_converter.hierarchical_tree.name_mgr import NameMgr, GlobalVarNameMgr, \
+    global_op_namespace
 
 
 class TestNameMgr(TestCase):
     """Tester of name mgr."""
 
-    def test_global_name_mgr(self):
+    def test_global_get_name_not_in_record(self):
         """Test global name mgr."""
         name = GlobalVarNameMgr().get_name("onnx::Conv")
+        assert isinstance(name, str)
+
+    def test_global_get_name_in_record(self):
+        """Test global name mgr."""
+        global_op_namespace['abc'] = 0
+        name_mgr = GlobalVarNameMgr()
+        name = name_mgr.get_name('abc')
+        assert isinstance(name, str)
+
+    def test_get_name_not_in_record(self):
+        """Test get_name old_name not in self.record"""
+        name_mgr = NameMgr()
+        name = name_mgr.get_name('abc')
+        assert isinstance(name, str)
+
+    def test_get_name_in_record(self):
+        """Test get_name old_name in self.record"""
+        name_mgr = NameMgr()
+        name_mgr.record = {'abc': ['123']}
+        name = name_mgr.get_name('abc')
         assert isinstance(name, str)
