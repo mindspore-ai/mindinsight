@@ -1,5 +1,25 @@
 ## MindInsight
 
+# Release 1.0.0
+
+## Major Features and Improvements
+* Release MindSpore Debugger.
+* MindConverter ability is enhanced, supporting scripts generation based on PyTorch model.
+* Support training hyper-parameter importance visualization.
+* Support GPU timeline.
+
+## Bugfixes
+* Optimize aicpu display method. ([!595](https://gitee.com/mindspore/mindinsight/pulls/595/files))
+* Add the summary loading switch mechanism. ([!601](https://gitee.com/mindspore/mindinsight/pulls/601/files))
+* Detect a summary dir having summary files or not. ([!632](https://gitee.com/mindspore/mindinsight/pulls/632/files))
+
+## Thanks to our Contributors
+Thanks goes to these wonderful people:
+
+Congli Gao, Jianfeng Zhu, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Yongxiu Qu, Luyu Qiu, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Shuide Wang, Hong Sheng, Ran Mo, Zhaohong Guo, Hui Pan, Junyan Qin, Weining Wang, Weifeng Huang, Yifan Xia.
+
+Contributions of any kind are welcome!
+
 # Release 0.7.0-beta
 
 ## Major Features and Improvements
