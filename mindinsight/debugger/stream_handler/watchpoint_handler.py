@@ -98,7 +98,6 @@ class WatchpointHandler(StreamHandlerBase):
         """
         if not (watch_point_id and graph):
             return
-        self.validate_watchpoint_id(watch_point_id)
         log.debug("add watch flags")
         watchpoint = self._watchpoints.get(watch_point_id)
         self._set_watch_status_recursively(graph, watchpoint)
@@ -192,6 +191,9 @@ class WatchpointHandler(StreamHandlerBase):
 
     def validate_watchpoint_id(self, watch_point_id):
         """Validate watchpoint id."""
+        if not isinstance(watch_point_id, int):
+            log.error("Invalid watchpoint id %s. The watch point id should be int.", watch_point_id)
+            raise DebuggerParamTypeError("Watchpoint id should be int type.")
         if watch_point_id and watch_point_id not in self._watchpoints:
             log.error("Invalid watchpoint id: %d.", watch_point_id)
             raise DebuggerParamValueError("Invalid watchpoint id: {}".format(watch_point_id))
