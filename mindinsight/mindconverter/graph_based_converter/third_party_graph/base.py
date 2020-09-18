@@ -100,6 +100,18 @@ class Graph(BaseGraph, abc.ABC):
         self._topological_order = []
         self._input_shape = dict()
 
+    def get_input_shape(self, name):
+        """
+        Get node input shape.
+
+        Args:
+            name (str): Node name.
+
+        Returns:
+            list, shape.
+        """
+        return self._input_shape.get(name)
+
     def get_output_shape(self, name):
         """
         Get node output shape.
@@ -112,7 +124,7 @@ class Graph(BaseGraph, abc.ABC):
         """
         return self._shape_dict.get(name)
 
-    def get_input_shape(self, name):
+    def get_input_shape_from_input(self, name):
         """
         Get node input shape.
 
@@ -482,7 +494,7 @@ class GraphNode(abc.ABC):
         """Return op_name."""
 
     @abc.abstractmethod
-    def replace_with_arg(self, arg):
+    def replace_with_arg(self, src_arg, tgt_arg):
         """Replace actual parameter with formal parameter."""
 
     @abc.abstractmethod

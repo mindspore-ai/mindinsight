@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Define PyTorch graph."""
-import warnings
 import re
 from typing import Dict, NoReturn
 
@@ -27,8 +26,11 @@ from ..constant import SEPARATOR_IN_SCOPE, LINK_IN_SCOPE
 from ..constant import LEFT_BUCKET, RIGHT_BUCKET
 
 NONE_SCOPE_OP = {
-    'onnx::Add': 'Add',
-    'onnx::Flatten': 'Flatten',
+    "onnx::Add": "Add",
+    "onnx::Flatten": "Flatten",
+    "onnx::Concat": "Concat",
+    "onnx::Squeeze": "Squeeze",
+    "onnx::Unsqueeze": "Unsqueeze",
 }
 
 
@@ -59,6 +61,7 @@ def normalize_scope_name(node):
             scopes.append(segment)
     if node.kind() in NONE_SCOPE_OP.keys():
         scopes.append(NONE_SCOPE_OP[node.kind()])
+    scopes = [s for s in scopes if s]
     return f"{SEPARATOR_IN_SCOPE.join(scopes)}_{PyTorchGraph.get_node_id(node)}"
 
 
@@ -90,18 +93,16 @@ class PyTorchGraph(Graph):
 
         """
         if not input_shape:
-            error = ValueError("`input_shape` can not be None.")
-            log.error(str(error))
-            log.exception(error)
-            raise error
+            err_msg = "`input_shape` can not be None."
+            log.error(err_msg)
+            raise ValueError(err_msg)
 
         for item in input_shape:
             if not isinstance(item, int):
-                error = ValueError(f"Only support model with one input now, "
-                                   f"and each shape value in `input_shape` should be int.")
-                log.error(str(error))
-                log.exception(error)
-                raise error
+                err_msg = f"Only support model with one input now, " \
+                          f"and each shape value in `input_shape` should be int."
+                log.error(err_msg)
+                raise ValueError(err_msg)
 
     @staticmethod
     def _extract_shape(shape):
@@ -116,10 +117,51 @@ class PyTorchGraph(Graph):
         """
         if "," not in shape:
             return []
+
+        shape_arr = []
         for s in shape.split(","):
+            s = s.strip()
             if not s:
                 return []
-        return [int(x.split(":")[0].replace("!", "")) for x in shape.split(',')]
+            if ":" in s:
+                s = s.split(":")[0]
+            s = s.replace("!", "")
+            if not s.isdigit():
+                return []
+            shape_arr.append(int(s))
+        return shape_arr
+
+    def _trace_torch_graph(self, input_shape):
+        """
+        Trace torch computational graph.
+
+        Args:
+            input_shape (tuple): Shape.
+
+        Returns:
+            object, pytorch graph.
+        """
+        import torch
+        from torch.onnx import OperatorExportTypes
+        from .torch_utils import OverloadTorchModuleTemporarily
+        from .torch_utils import create_autograd_variable
+        from .torch_utils import onnx_tracer
+
+        batched_sample = create_autograd_variable(torch.rand(*input_shape))
+
+        try:
+            # Assign execution mode to eval.
+            self.model.eval()
+
+            with OverloadTorchModuleTemporarily() as _:
+                # In pytorch higher version, trace function has a known.
+                graph = onnx_tracer(self.model, batched_sample,
+                                    OperatorExportTypes.ONNX)
+            return graph
+        except RuntimeError as error:
+            log.error(str(error))
+            log.exception(error)
+            raise error
 
     def build(self, input_shape):
         """
@@ -129,30 +171,10 @@ class PyTorchGraph(Graph):
             input_shape (tuple): Input shape of model.
 
         """
-        import torch
-        from torch.onnx import OperatorExportTypes
-        from .torch_utils import OverloadTorchModuleTemporarily
-        from .torch_utils import create_autograd_variable
-        from .torch_utils import onnx_tracer
-
         self._check_input_shape(input_shape)
 
         feed_forward_ipt_shape = (1, *input_shape)
-        batched_sample = create_autograd_variable(torch.rand(*feed_forward_ipt_shape))
-
-        # Assign execution mode to eval.
-        self.model.eval()
-
-        try:
-            with OverloadTorchModuleTemporarily() as _:
-                # In pytorch higher version, trace function has a known.
-                graph = onnx_tracer(self.model, batched_sample,
-                                    OperatorExportTypes.ONNX)
-        except RuntimeError as error:
-            log.error(str(error))
-            log.exception(error)
-            raise error
-
+        graph = self._trace_torch_graph(feed_forward_ipt_shape)
         nodes = list(graph.nodes())
 
         for node in nodes:
@@ -174,34 +196,47 @@ class PyTorchGraph(Graph):
 
             for node_input in list(node.inputs()):
                 # Connect input node and src node.
-                if PyTorchGraph.get_node_id(node_input.node()) and node_input.node().scopeName():
+                nd_id = PyTorchGraph.get_node_id(node_input.node())
+                nd_scope_name = node_input.node().kind() in NONE_SCOPE_OP or \
+                                node_input.node().scopeName()
+
+                if nd_id and nd_scope_name:
                     node_input_name = normalize_scope_name(
                         node_input.node()
                     )
                     self.build_connection(node_input_name, node_name)
 
         super(PyTorchGraph, self).build(input_shape=input_shape)
+        self._collect_ipt_shape_of_each_node(feed_forward_ipt_shape)
 
-        # Add Input Node
+    def _collect_ipt_shape_of_each_node(self, input_shape):
+        """
+        Collect input tensor shape of each node.
+
+        Args:
+            input_shape (tuple): Input shape.
+
+        """
         input_node = InputNode(input_shape)
+        input_node_name = "{}InputNode"
         for node_name, node in self._nodes_collection.items():
             if node_name in self._input_nodes:
+                ipt_nd_name = input_node_name.format(input_node.scope_name)
                 input_node.set_scope_name(node.scope_name)
-                node.precursor_nodes.append(input_node.scope_name)
+                node.precursor_nodes.insert(0, ipt_nd_name)
                 input_node.set_successor_nodes(node_name)
-                self._nodes_collection[input_node.scope_name] = input_node
-                self._input_shape[node_name] = feed_forward_ipt_shape
-                break
+                self._shape_dict[ipt_nd_name] = input_node.output_shape
+
+            ipt_shape = []
+            for p_nd in node.precursor_nodes:
+                shp = self._shape_dict.get(p_nd)
+                ipt_shape.append(tuple(shp))
+
+            self._input_shape[node_name] = ipt_shape[0] if len(ipt_shape) == 1 else ipt_shape
 
     def sub_graph_merging(self):
         """
         Merge split operation into one.
-        """
-        raise NotImplementedError()
-
-    def to_ir(self, mapper):
-        """
-        Convert graph to IR graph.
         """
         raise NotImplementedError()
 
@@ -215,13 +250,11 @@ class PyTorchGraph(Graph):
 
         """
         # If src and tgt are the same node, src not in node_collection or
-        # tgt not in node_collection,
-        # then skip this edge.
+        # tgt not in node_collection, then skip this edge.
         if src == tgt or src not in self._nodes_collection or tgt not in self._nodes_collection:
             if src.split(':')[0] not in self._nodes_collection:
-                warnings.warn(f"Graph construct a self-loop node {src}. Ignored.")
+                log.warning("Graph construct a self-loop node %s. Ignored.", src)
                 return
-
         if tgt not in self._nodes_collection[src.split(':')[0]].successor_nodes:
             self._nodes_collection[src.split(':')[0]].successor_nodes.append(tgt)
         if src not in self._nodes_collection[tgt].precursor_nodes:
@@ -244,11 +277,10 @@ class PyTorchGraph(Graph):
         """
         Load graph metadata.
         """
-        error = NotImplementedError("class `PyTorchGraph` has not implemented "
-                                    "`load_metadata()`.")
-        log.error(str(error))
-        log.exception(error)
-        raise error
+        err_msg = "class `PyTorchGraph` has not implemented " \
+                  "`load_metadata()`."
+        log.error(err_msg)
+        raise NotImplementedError(err_msg)
 
     @staticmethod
     def load_graph(graph_path: str):

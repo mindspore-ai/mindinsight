@@ -20,6 +20,7 @@ from importlib.util import find_spec
 import mindinsight
 from mindinsight.mindconverter.common.log import logger as log
 from .mapper import ONNXToMindSporeMapper
+from ..common.exceptions import NodeTypeNotSupport
 
 permissions = os.R_OK | os.W_OK | os.X_OK
 os.umask(permissions << 3 | permissions)
@@ -92,7 +93,13 @@ def graph_based_converter(graph_path: str, sample_shape: tuple,
 
     graph_obj = GraphFactory.init(graph_path, sample_shape=sample_shape,
                                   checkpoint=checkpoint_path)
-    hierarchical_tree = HierarchicalTreeFactory.create(graph_obj)
+    try:
+        hierarchical_tree = HierarchicalTreeFactory.create(graph_obj)
+    except Exception as e:
+        log.exception(e)
+        log.error("Error occur when create hierarchical tree.")
+        raise NodeTypeNotSupport("This model is not supported now.")
+
     hierarchical_tree.save_source_files(output_folder, mapper=ONNXToMindSporeMapper,
                                         report_folder=report_folder)
 

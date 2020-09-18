@@ -53,6 +53,9 @@ class ModuleNameMgr(NameMgr):
     """Module name manager."""
 
 
+# Manage variable name of different modules.
+global_var_namespace = set()
+# Manage variable name of different type.
 global_op_namespace = dict()
 START_IDX = 0
 
@@ -81,14 +84,21 @@ class GlobalVarNameMgr:
         Returns:
             str, module name.
         """
-        op_type = op_type.lower()
-        if op_type not in global_op_namespace:
-            global_op_namespace[op_type] = START_IDX
-            suffix = ""
-        else:
-            global_op_namespace[op_type] += 1
-            suffix = f"{global_op_namespace[op_type] - 1}"
 
-        new_name = f"{self._get_name(op_type)}{suffix}"
+        def _gen(t):
+            t = t.lower()
+            if t not in global_op_namespace:
+                global_op_namespace[t] = START_IDX
+                suffix = ""
+            else:
+                global_op_namespace[t] += 1
+                suffix = f"{global_op_namespace[t] - 1}"
 
+            return f"{self._get_name(t)}{suffix}"
+
+        new_name = _gen(op_type)
+        while new_name in global_var_namespace:
+            new_name = _gen(op_type)
+
+        global_var_namespace.add(new_name)
         return new_name

@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Hierarchical tree module."""
+from mindinsight.mindconverter.common.log import logger as log
 from .hierarchical_tree import HierarchicalTree
 
 __all__ = [
@@ -35,23 +36,14 @@ class HierarchicalTreeFactory:
             HierarchicalTree, tree.
         """
         tree = HierarchicalTree()
-        node_input = None
         for _, node_name in enumerate(graph.nodes_in_topological_order):
             node_inst = graph.get_node(node_name)
+            node_input = graph.get_input_shape(node_name)
             node_output = graph.get_output_shape(node_name)
-            if node_inst.in_degree == 0:
-                # If in-degree equals to zero, then it's a input node.
-                continue
-
-            # If the node is on the top, then fetch its input
-            # from input table.
             if not node_input:
-                node_input = graph.get_input_shape(node_name)
-
-            if not node_input:
-                raise ValueError(f"This model is not supported now. "
-                                 f"Cannot find {node_name}'s input shape.")
+                err_msg = f"This model is not supported now. " \
+                          f"Cannot find {node_name}'s input shape."
+                log.error(err_msg)
 
             tree.insert(node_inst, node_name, node_input, node_output)
-            node_input = node_output
         return tree

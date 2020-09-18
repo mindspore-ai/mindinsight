@@ -18,6 +18,7 @@ import importlib
 import json
 import os
 from typing import Dict
+from mindinsight.mindconverter.common.log import logger as log
 
 CONFIG_JSON = "onnx_to_ms.json"
 OPERATION_TABLE = os.path.join(
@@ -91,7 +92,8 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             weights_converter = getattr(converter, GET_OP_WEIGHTS)
         except (ModuleNotFoundError,) as e:
             # If mapper can not be found, then skip it.
-            print(f"Converting {op_name} failed, see {e}")
+            err_msg = f"Converting {op_name} failed, see {str(e)}"
+            log.error(err_msg)
             return None, dict()
 
         try:
@@ -99,8 +101,9 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             converted_params = params_converter(params, weights)
             converted_weights = weights_converter(weights) if weights else dict()
             converted_params.update(converted_weights)
-        except (AttributeError, KeyError, ValueError, TypeError) as _:
-            print(f"Converting {op_name} failed.")
+        except (AttributeError, KeyError, ValueError, TypeError, IndexError) as e:
+            err_msg = f"Converting {op_name} failed, see {str(e)}"
+            log.error(err_msg)
             return None, dict()
 
         return converter_name, converted_params

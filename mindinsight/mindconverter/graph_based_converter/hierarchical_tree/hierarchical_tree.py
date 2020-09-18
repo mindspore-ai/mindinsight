@@ -31,6 +31,7 @@ from ..constant import SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVE
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT
 from ..constant import NodeType
 from ..report_generator import ReportGenerator
+from ...common.exceptions import NodeTypeNotSupport
 
 GLOBAL_VAR_NAME_MGR = GlobalVarNameMgr()
 
@@ -56,7 +57,7 @@ class HierarchicalTree(Tree):
         # Manage module name to used.
         self._module_mgr = ModuleNameMgr()
         # Manage variable name in a module.
-        self._args_mgr_in_module = dict()
+        self._vars_mgr_in_module = dict()
         self._module_vars = dict()
 
     @property
@@ -86,7 +87,7 @@ class HierarchicalTree(Tree):
             parent = SEPARATOR_IN_SCOPE.join(scopes[:idx])
             identifier = SEPARATOR_IN_SCOPE.join(scopes[:idx + 1])
             try_parent = f"{parent}{SEPARATOR_IN_SCOPE}{scope}" \
-                if not parent else scope
+                if parent else scope
             if self.contains(try_parent):
                 # Whether current node existed.
                 parent = try_parent
@@ -132,6 +133,8 @@ class HierarchicalTree(Tree):
         """
         Shrink sub-tree into one node.
 
+        Use child node to replace its ancestor.
+
         Args:
             node (Node): List of nodes to be merged.
 
@@ -140,6 +143,8 @@ class HierarchicalTree(Tree):
         parent_node = self[node.predecessor(self.tree_identifier)]
         # Keep successors of parent.
         brothers = deepcopy(parent_node.successors(self.tree_identifier))
+        # Because shrink occurs when node has only one child,
+        # so we take index-0.
         child = node.successors(self.tree_identifier)[0]
         self.move_node(source=child,
                        destination=node.predecessor(self.tree_identifier))
@@ -158,9 +163,13 @@ class HierarchicalTree(Tree):
             out_folder (str): Output folder.
 
         """
-        self._adjust_structure()
-
-        code_fragments = self._generate_codes(mapper)
+        try:
+            self._adjust_structure()
+            code_fragments = self._generate_codes(mapper)
+        except Exception as e:
+            log.exception(e)
+            log.error("Error occur when create hierarchical tree.")
+            raise NodeTypeNotSupport("This model is not supported now.")
 
         out_folder = os.path.abspath(out_folder)
         if not report_folder:
@@ -176,9 +185,8 @@ class HierarchicalTree(Tree):
         for file_name in code_fragments:
             code, report = code_fragments[file_name]
             try:
-                with os.fdopen(
-                        os.open(os.path.join(os.path.abspath(out_folder), f"{file_name}.py"),
-                                self.flags, self.modes), 'w') as file:
+                with os.fdopen(os.open(os.path.join(os.path.abspath(out_folder), f"{file_name}.py"),
+                                       self.flags, self.modes), "w") as file:
                     file.write(code)
             except IOError as error:
                 log.error(str(error))
@@ -186,9 +194,8 @@ class HierarchicalTree(Tree):
                 raise error
 
             try:
-                with os.fdopen(
-                        os.open(os.path.join(report_folder, f"report_of_{file_name}.txt"),
-                                self.flags, stat.S_IRUSR), "w") as rpt_f:
+                with os.fdopen(os.open(os.path.join(report_folder, f"report_of_{file_name}.txt"),
+                                       self.flags, stat.S_IRUSR), "w") as rpt_f:
                     rpt_f.write(report)
             except IOError as error:
                 log.error(str(error))
@@ -223,7 +230,8 @@ class HierarchicalTree(Tree):
         Returns:
             Node, node.
         """
-        if node.data.node_type == NodeType.MODULE.value:
+        if node.data.node_type in {NodeType.MODULE.value, NodeType.CLASS.value,
+                                   NodeType.FUNC.value}:
             # If current node is class or function, then
             # remove unused args in __init__.
             cur_module_key = node.data.hash_key or self.hash_key(node)
@@ -231,13 +239,15 @@ class HierarchicalTree(Tree):
                 node = self._clear_unused_args(node,
                                                self._merged_module_args[cur_module_key])
 
+        # `self._merged_module_args` records formal args.
+        # We need to replace actual args.
         if precursor_module_key in self._merged_module_args:
             # If parent node is in `_merged_module_args`, then
             # replace current node args with arg name declared
             # in _merged_module_args.
             for arg in node.data.args_in_code.keys():
                 if arg in self._merged_module_args[precursor_module_key]:
-                    node.data.replace_with_arg(arg)
+                    node.data.replace_with_arg(arg, arg)
         return node
 
     @staticmethod
@@ -254,7 +264,8 @@ class HierarchicalTree(Tree):
         """
         args_in_code = list(node.data.args_in_code.keys())
         for arg in args_in_code:
-            if arg not in used_args:
+            ori_arg = arg.replace(f"_{node.data.variable_name}", "")
+            if ori_arg not in used_args:
                 node.data.args_in_code.pop(arg)
         return node
 
@@ -287,9 +298,11 @@ class HierarchicalTree(Tree):
                 if node.data.node_type == NodeType.MODULE.value:
                     self._create_module_args_and_vars(node, mapper)
 
-            # 2. Get nodes can be merged.
-            self._module_merging(node_collection)
+        # Module merging based on all nodes.
+        self._module_merging()
 
+        for depth in depths:
+            node_collection = self._hierarchical_order[depth]
             snippets = set()
             for node_name in node_collection:
                 nd_inst = self.get_node(node_name)
@@ -297,8 +310,7 @@ class HierarchicalTree(Tree):
                     continue
 
                 # Generate hash key for node.
-                module_key = self.hash_key(nd_inst)
-
+                module_key = nd_inst.data.hash_key
                 # Get code generation func.
                 func, node_type = self._fetch_func_and_type(nd_inst)
 
@@ -325,9 +337,8 @@ class HierarchicalTree(Tree):
                 # 3. Pre-process node args.
                 nd_inst = self._preprocess_node_args(nd_inst, module_key)
                 # 4. Post-process child node args.
-                for scsr_nd_name in nd_inst.successors(self.tree_identifier):
-                    self._postprocess_node_args(self.get_node(scsr_nd_name),
-                                                module_key)
+                for _, scsr_nd_name in enumerate(nd_inst.successors(self.tree_identifier)):
+                    self._postprocess_node_args(self.get_node(scsr_nd_name), module_key)
                 # 5. Generate code.
                 snippets.add(func(nd_inst, nd_inst.data.module_name, module_key))
 
@@ -335,7 +346,6 @@ class HierarchicalTree(Tree):
 
         formatted_code, _ = FormatCode("".join(code_blocks),
                                        style_config=CodeFormatConfig.PEP8.value)
-
         report_generator = ReportGenerator()
         report = report_generator.gen_report(formatted_code)
 
@@ -403,9 +413,9 @@ class HierarchicalTree(Tree):
                              "output_shape": c_nd.data.output_shape})
 
             # Generate code statement.
-            expr = ", ".join([f"{k}={v}" for k, v in args.items()])
+            expr = ", ".join([f"{k.replace(f'_{c_nd.data.variable_name}', '')}={v}"
+                              for k, v in args.items()])
             code_line = f"{operator}({expr})"
-
             module_list.append(code_line)
 
         body = f",{NEW_LINE}{SECOND_LEVEL_INDENT}".join(module_list)
@@ -435,6 +445,7 @@ class HierarchicalTree(Tree):
         if class_key.lower() in self._merged_module_args and \
                 self._merged_module_args[class_key.lower()]:
             args = f"{', '.join(self._merged_module_args[class_key.lower()])}"
+
             class_init = f"{FIRST_LEVEL_INDENT}def __init__(self, " \
                          f"{args}):" \
                          f"{NEW_LINE}{SECOND_LEVEL_INDENT}" \
@@ -455,7 +466,8 @@ class HierarchicalTree(Tree):
             construct_block.append(construct)
             init_block.append(init)
 
-        class_construct = f"{NEW_LINE}{FIRST_LEVEL_INDENT}def construct(self, x):{NEW_LINE}{SECOND_LEVEL_INDENT}"
+        class_construct = f"{NEW_LINE}{FIRST_LEVEL_INDENT}def construct(self, x):" \
+                          f"{NEW_LINE}{SECOND_LEVEL_INDENT}"
         init_body = f"{NEW_LINE}{SECOND_LEVEL_INDENT}".join(init_block)
         csrt_body = f"{NEW_LINE}{SECOND_LEVEL_INDENT}".join(construct_block)
         csrt_rtn = f"{NEW_LINE}{SECOND_LEVEL_INDENT}return output{NEW_LINE}"
@@ -514,7 +526,7 @@ class HierarchicalTree(Tree):
 
     def _find_all_previous_opt_var_(self, cur_nd, pre_nd):
         """
-        Find all input varian names.
+        Find all input variable names.
 
         Args:
             cur_nd (Node): Current node.
@@ -585,61 +597,46 @@ class HierarchicalTree(Tree):
         node.data.hash_key = unique_key
         return unique_key
 
-    def _module_merging(self, nodes):
-        """
-        Generate sub-module and corresponding params.
-
-        Args:
-            nodes (List[str]): Nodes name.
-
-        """
-        merged_module = dict()
+    def _module_merging(self):
+        """Generate sub-module and corresponding params."""
         merged_module_args = dict()
-        for node_name in nodes:
-            nd_inst = self.get_node(node_name)
-            if nd_inst.data.node_type != NodeType.MODULE.value:
-                continue
-
-            module_key = self.hash_key(nd_inst)
-            if module_key not in merged_module:
-                merged_module[module_key] = [nd_inst.data.args_in_code]
-            else:
-                merged_module[module_key].append(nd_inst.data.args_in_code)
-
-        for module_key, module_args in merged_module.items():
+        for module_key, module_args in self._merged_module.items():
             if module_key not in merged_module_args:
                 merged_module_args[module_key] = []
             # Take first element's args as base.
             keys = module_args[0].keys()
             for key in keys:
                 for i in range(1, len(module_args)):
-                    if module_args[0][key] != module_args[i][key]:
+                    if key in module_args[i] and module_args[0][key] != module_args[i][key]:
+                        merged_module_args[module_key].append(key)
+                        break
+                    if key not in module_args[i]:
                         merged_module_args[module_key].append(key)
                         break
 
-        self._merged_module.update(merged_module)
         self._merged_module_args.update(merged_module_args)
 
     def _create_module_args_and_vars(self, node, mapper):
         """
-        Create module args.
+        Create module args and variables in current node.
 
         Args:
             node (Node): Node on tree.
             mapper (Mapper): Mapper of params.
 
         """
+        # All args and value pair in current node module.
         module_args = dict()
         module_key = self.hash_key(node)
-
         created = False
 
-        if module_key not in self._args_mgr_in_module:
-            self._args_mgr_in_module[module_key] = GLOBAL_VAR_NAME_MGR
+        if module_key not in self._vars_mgr_in_module:
+            self._vars_mgr_in_module[module_key] = GLOBAL_VAR_NAME_MGR
             self._module_vars[module_key] = []
         else:
             created = True
 
+        # Sub-modules in the module could have arg name conflicts.
         for idx, successor_name in enumerate(node.successors(self.tree_identifier)):
             nd_inst = self.get_node(successor_name)
             # Generate variable name here, then
@@ -648,12 +645,11 @@ class HierarchicalTree(Tree):
                 nd_inst.data.variable_name = self._module_vars[module_key][idx]
             else:
                 variable_name = nd_inst.data.op_name or nd_inst.data.module_name
-                variable_name = self._args_mgr_in_module[module_key].get_name(variable_name)
+                variable_name = self._vars_mgr_in_module[module_key].get_name(variable_name)
                 nd_inst.data.variable_name = variable_name
 
-            if nd_inst.data.node_type == NodeType.OPERATION.value:
-                # Generation of params must behind variable assigment.
-                nd_inst.data.param_transform(mapper)
+            # Generation of params must behind variable assigment.
+            nd_inst.data.param_transform(mapper)
 
             module_args.update(nd_inst.data.args_in_code)
 
@@ -661,6 +657,12 @@ class HierarchicalTree(Tree):
                 self._module_vars[module_key].append(nd_inst.data.variable_name)
 
         node.data.args_in_code = module_args
+
+        # Collect module args of `module_key`.
+        if module_key not in self._merged_module:
+            self._merged_module[module_key] = [node.data.args_in_code]
+        else:
+            self._merged_module[module_key].append(node.data.args_in_code)
 
     @staticmethod
     def _create_operation_args(node, mapper):
@@ -692,21 +694,20 @@ class HierarchicalTree(Tree):
         self._hierarchical_order = hierarchical_order
 
     def sub_graph_merging(self) -> NoReturn:
-        """
-        Shrink subtree.
-        """
+        """Shrink the module has only one child."""
         self.update_hierarchical_order()
         depths = sorted(list(self._hierarchical_order.keys()), reverse=True)
         for depth in depths:
             for node_name in self._hierarchical_order[depth]:
                 node_inst = self[node_name]
-                if not node_inst.data and len(node_inst.successors(self.tree_identifier)) == 1:
+                # If the node type is module and has only one child,
+                # then merge it with its child.
+                if node_inst.data.node_type == NodeType.MODULE.value and \
+                        len(node_inst.successors(self.tree_identifier)) == 1:
                     self.shrink(node_inst)
 
     def _adjust_structure(self) -> NoReturn:
-        """
-        Adjust tree structure to generate source code.
-        """
+        """Adjust tree structure to generate source code."""
         self.sub_graph_merging()
         self.update_hierarchical_order()
 

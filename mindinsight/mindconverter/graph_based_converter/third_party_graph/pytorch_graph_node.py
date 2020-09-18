@@ -13,6 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 """Define PyTorch graph node."""
+from copy import deepcopy
+
 from .base import GraphNode
 
 from ..constant import NodeType, SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, LEFT_BUCKET, RIGHT_BUCKET, \
@@ -140,7 +142,7 @@ class PyTorchGraphNode(GraphNode):
         Returns:
             str, op name.
         """
-        return self._op_name  # if self.is_empty() else self.tag
+        return self._op_name
 
     @property
     def real_name(self):
@@ -177,8 +179,14 @@ class PyTorchGraphNode(GraphNode):
             args.update({"input_shape": self.input_shape,
                          "output_shape": self.output_shape})
 
-        expr = ", ".join([f"{k.replace(f'_{self._variable_name}', '')}={v}"
-                          for k, v in args.items()])
+        if self._node_type == NodeType.OPERATION.value:
+            expr = ", ".join([f"{k.replace(f'_{self._variable_name}', '')}={v}"
+                              for k, v in args.items()])
+        else:
+            # When it's type is module, class or func,
+            # it's not necessary to replace var.
+            expr = ", ".join([f"{k.replace(f'_{self._variable_name}', '')}={v}"
+                              for k, v in args.items()])
         declare = f"self.{self._variable_name} = {operator}({expr})"
         call = f"{self._opt_var_name} = self.{self._variable_name}({ipt_args_in_construct})"
 
@@ -211,15 +219,16 @@ class PyTorchGraphNode(GraphNode):
             raw_params[k] = getitem_of_node(node, k)
         return raw_params
 
-    def replace_with_arg(self, arg):
+    def replace_with_arg(self, src_arg, tgt_arg):
         """
         Replace actual parameter with formal parameter.
 
         Args:
-            arg (str): Arg name.
+            src_arg (str): Original arg name.
+            tgt_arg (str): Target arg name.
 
         """
-        self._args_in_code[arg] = arg
+        self._args_in_code[src_arg] = tgt_arg
 
     @staticmethod
     def _extract_var_name(scope_name: str):
@@ -241,6 +250,13 @@ class PyTorchGraphNode(GraphNode):
             mapper (Mapper): Mapper of params.
 
         """
+        if self._node_type != NodeType.OPERATION.value:
+            args = deepcopy(self._args_in_code)
+            self._args_in_code = dict()
+            for arg, value in args.items():
+                self._args_in_code[self._get_arg_name(arg)] = value
+            return None, None
+
         if not self.transformed:
             _, _ = super(PyTorchGraphNode, self).param_transform(mapper)
 
