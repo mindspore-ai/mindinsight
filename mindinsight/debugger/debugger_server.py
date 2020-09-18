@@ -212,7 +212,7 @@ class DebuggerServer:
         Returns:
             dict, reply with graph.
         """
-        log.info("Retrieve node %s.", filter_condition)
+        log.debug("Retrieve node %s.", filter_condition)
         # validate node name
         node_name = filter_condition.get('name')
         if node_name:
@@ -262,7 +262,11 @@ class DebuggerServer:
         """
         log.info("Retrieve tensor history for node: %s.", node_name)
         self._validate_leaf_name(node_name)
-        res = self._get_tensor_history(node_name)
+        try:
+            res = self._get_tensor_history(node_name)
+        except MindInsightException:
+            log.warning("Failed to get tensor history for %s.", node_name)
+            res = {}
         return res
 
     def _validate_leaf_name(self, node_name):
