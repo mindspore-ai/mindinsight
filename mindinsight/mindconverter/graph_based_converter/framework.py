@@ -14,6 +14,7 @@
 # ==============================================================================
 """Graph based scripts converter workflow."""
 import os
+import re
 import argparse
 from importlib.util import find_spec
 
@@ -73,6 +74,21 @@ def torch_installation_validation(func):
     return _f
 
 
+def _extract_model_name(model_path):
+    """
+    Extract model name from model path.
+
+    Args:
+        model_path(str): Path of Converted model.
+
+    Returns:
+        str: Name of Converted model.
+    """
+
+    model_name = re.findall(r".*[/](.*).pth", model_path)[-1]
+    return model_name
+
+
 @torch_installation_validation
 def graph_based_converter(graph_path: str, sample_shape: tuple,
                           output_folder: str, report_folder: str = None,
@@ -100,7 +116,10 @@ def graph_based_converter(graph_path: str, sample_shape: tuple,
         log.error("Error occur when create hierarchical tree.")
         raise NodeTypeNotSupport("This model is not supported now.")
 
+    model_name = _extract_model_name(graph_path)
+
     hierarchical_tree.save_source_files(output_folder, mapper=ONNXToMindSporeMapper,
+                                        model_name=model_name,
                                         report_folder=report_folder)
 
 
