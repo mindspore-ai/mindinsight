@@ -247,7 +247,8 @@ limitations under the License.
             summaryDirList && summaryDirList.length">
               <p class="no-data-text">{{ $t('dataTraceback.noDataFound') }}</p>
             </div>
-            <div v-show="(hideTableIdList && hideTableIdList.length) && !summaryDirList">
+            <div v-show="(hideTableIdList && hideTableIdList.length) &&
+            (!summaryDirList || (summaryDirList && summaryDirList.length))">
               <p class="no-data-text">{{ $t('modelTraceback.allHide') }}</p>
               <p class="no-data-text">
                 <el-button type="primary"
