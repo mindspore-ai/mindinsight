@@ -225,7 +225,7 @@ class MSGraph(Graph):
                 'data_type': ''
             }
 
-            node.add_input(src_name=input_proto.name, input_attr=input_attr)
+            node.add_inputs(src_name=input_proto.name, input_attr=input_attr)
 
     def _parse_attributes(self, attributes, node):
         """
@@ -246,8 +246,8 @@ class MSGraph(Graph):
     def _update_input_after_create_node(self):
         """Update the input of node after create node."""
         for node in self._normal_node_map.values():
-            for src_node_id, input_attr in dict(node.input).items():
-                node.delete_input(src_node_id)
+            for src_node_id, input_attr in dict(node.inputs).items():
+                node.delete_inputs(src_node_id)
                 if not self._is_node_exist(node_id=src_node_id):
                     message = f"The input node could not be found by node id({src_node_id}) " \
                               f"while updating the input of the node({node})"
@@ -258,19 +258,19 @@ class MSGraph(Graph):
                 src_node = self._get_normal_node(node_id=src_node_id)
                 input_attr['shape'] = src_node.output_shape
                 input_attr['data_type'] = src_node.output_data_type
-                node.add_input(src_name=src_node.name, input_attr=input_attr)
+                node.add_inputs(src_name=src_node.name, input_attr=input_attr)
 
     def _update_output_after_create_node(self):
         """Update the output of node after create node."""
         # Constants and parameter should not exist for input and output.
         filtered_node = {NodeTypeEnum.CONST.value, NodeTypeEnum.PARAMETER.value}
         for node in self._normal_node_map.values():
-            for src_name, input_attr in node.input.items():
+            for src_name, input_attr in node.inputs.items():
                 src_node = self._get_normal_node(node_name=src_name)
                 if src_node.type in filtered_node:
                     continue
 
-                src_node.add_output(node.name, input_attr)
+                src_node.add_outputs(node.name, input_attr)
 
     @staticmethod
     def _get_data_type_name_by_value(data_type, value, field_name='data_type'):
