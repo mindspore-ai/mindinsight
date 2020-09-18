@@ -192,6 +192,10 @@ def _check_server_start_stat(log_abspath, start_pos=None):
             state_result.update(_check_state_from_log(log_abspath, log_pos))
             break
 
+    if not state_result['prompt_message']:
+        state_result["prompt_message"].append(
+            "service start state: %s" % state_result["state"])
+
     return state_result
 
 
