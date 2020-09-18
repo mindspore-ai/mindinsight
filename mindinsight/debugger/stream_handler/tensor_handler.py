@@ -214,7 +214,7 @@ class TensorHandler(StreamHandlerBase):
             # add `has_prev_step` field to tensor basic info.
             if basic_info:
                 tensor_info.update(basic_info)
-                if not basic_info.get('value'):
+                if basic_info.get('value') is None:
                     missed_tensors.append(tensor_info)
                     log.debug("Add view cmd for %s", tensor_name)
             else:
