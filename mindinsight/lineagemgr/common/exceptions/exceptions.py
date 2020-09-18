@@ -23,7 +23,8 @@ class LineageParamTypeError(MindInsightException):
     def __init__(self, msg):
         super(LineageParamTypeError, self).__init__(
             error=LineageErrors.PARAM_TYPE_ERROR,
-            message=LineageErrorMsg.PARAM_TYPE_ERROR.value.format(msg)
+            message=LineageErrorMsg.PARAM_TYPE_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -33,27 +34,8 @@ class LineageParamValueError(MindInsightException):
     def __init__(self, msg):
         super(LineageParamValueError, self).__init__(
             error=LineageErrors.PARAM_VALUE_ERROR,
-            message=LineageErrorMsg.PARAM_VALUE_ERROR.value.format(msg)
-        )
-
-
-class LineageParamRunContextError(MindInsightException):
-    """The input parameter run_context error in lineage module."""
-
-    def __init__(self, msg):
-        super(LineageParamRunContextError, self).__init__(
-            error=LineageErrors.PARAM_RUN_CONTEXT_ERROR,
-            message=LineageErrorMsg.PARAM_RUN_CONTEXT_ERROR.value.format(msg)
-        )
-
-
-class LineageGetModelFileError(MindInsightException):
-    """The get model file error in lineage module."""
-
-    def __init__(self, msg):
-        super(LineageGetModelFileError, self).__init__(
-            error=LineageErrors.LINEAGE_GET_MODEL_FILE_ERROR,
-            message=LineageErrorMsg.LINEAGE_GET_MODEL_FILE_ERROR.value.format(msg)
+            message=LineageErrorMsg.PARAM_VALUE_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -65,7 +47,8 @@ class LineageSummaryAnalyzeException(MindInsightException):
             msg = ''
         super(LineageSummaryAnalyzeException, self).__init__(
             error=LineageErrors.SUMMARY_ANALYZE_ERROR,
-            message=LineageErrorMsg.SUMMARY_ANALYZE_ERROR.value.format(msg)
+            message=LineageErrorMsg.SUMMARY_ANALYZE_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -74,16 +57,8 @@ class LineageVerificationException(MindInsightException):
     def __init__(self, msg):
         super(LineageVerificationException, self).__init__(
             error=LineageErrors.SUMMARY_VERIFICATION_ERROR,
-            message=LineageErrorMsg.SUMMARY_VERIFICATION_ERROR.value.format(msg)
-        )
-
-
-class LineageLogError(MindInsightException):
-    """The lineage collector error."""
-    def __init__(self, msg):
-        super(LineageLogError, self).__init__(
-            error=LineageErrors.LOG_LINEAGE_INFO_ERROR,
-            message=LineageErrorMsg.LOG_LINEAGE_INFO_ERROR.value.format(msg)
+            message=LineageErrorMsg.SUMMARY_VERIFICATION_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -93,7 +68,8 @@ class LineageEventNotExistException(MindInsightException):
     def __init__(self):
         super(LineageEventNotExistException, self).__init__(
             error=LineageErrors.EVENT_NOT_EXIST_ERROR,
-            message=LineageErrorMsg.EVENT_NOT_EXIST_ERROR.value
+            message=LineageErrorMsg.EVENT_NOT_EXIST_ERROR.value,
+            http_code=400
         )
 
 
@@ -103,7 +79,8 @@ class LineageQuerierParamException(MindInsightException):
     def __init__(self, *msg):
         super(LineageQuerierParamException, self).__init__(
             error=LineageErrors.QUERIER_PARAM_ERROR,
-            message=LineageErrorMsg.QUERIER_PARAM_ERROR.value.format(*msg)
+            message=LineageErrorMsg.QUERIER_PARAM_ERROR.value.format(*msg),
+            http_code=400
         )
 
 
@@ -113,7 +90,8 @@ class LineageSummaryParseException(MindInsightException):
     def __init__(self):
         super(LineageSummaryParseException, self).__init__(
             error=LineageErrors.SUMMARY_PARSE_FAIL_ERROR,
-            message=LineageErrorMsg.SUMMARY_PARSE_FAIL_ERROR.value
+            message=LineageErrorMsg.SUMMARY_PARSE_FAIL_ERROR.value,
+            http_code=400
         )
 
 
@@ -123,7 +101,8 @@ class LineageEventFieldNotExistException(MindInsightException):
     def __init__(self, msg):
         super(LineageEventFieldNotExistException, self).__init__(
             error=LineageErrors.EVENT_FIELD_NOT_EXIST_ERROR,
-            message=LineageErrorMsg.EVENT_FIELD_NOT_EXIST_ERROR.value.format(msg)
+            message=LineageErrorMsg.EVENT_FIELD_NOT_EXIST_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -132,7 +111,8 @@ class LineageParamSummaryPathError(MindInsightException):
     def __init__(self, msg):
         super(LineageParamSummaryPathError, self).__init__(
             error=LineageErrors.LINEAGE_PARAM_SUMMARY_PATH_ERROR,
-            message=LineageErrorMsg.LINEAGE_PARAM_SUMMARY_PATH_ERROR.value.format(msg)
+            message=LineageErrorMsg.LINEAGE_PARAM_SUMMARY_PATH_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -141,7 +121,8 @@ class LineageQuerySummaryDataError(MindInsightException):
     def __init__(self, msg):
         super(LineageQuerySummaryDataError, self).__init__(
             error=LineageErrors.LINEAGE_SUMMARY_DATA_ERROR,
-            message=LineageErrorMsg.LINEAGE_SUMMARY_DATA_ERROR.value.format(msg)
+            message=LineageErrorMsg.LINEAGE_SUMMARY_DATA_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -150,7 +131,8 @@ class LineageFileNotFoundError(MindInsightException):
     def __init__(self, msg):
         super(LineageFileNotFoundError, self).__init__(
             error=LineageErrors.LINEAGE_FILE_NOT_FOUND_ERROR,
-            message=LineageErrorMsg.LINEAGE_FILE_NOT_FOUND_ERROR.value.format(msg)
+            message=LineageErrorMsg.LINEAGE_FILE_NOT_FOUND_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -159,7 +141,8 @@ class LineageDirNotExistError(MindInsightException):
     def __init__(self, msg):
         super(LineageDirNotExistError, self).__init__(
             error=LineageErrors.LINEAGE_DIR_NOT_EXIST_ERROR,
-            message=LineageErrorMsg.LINEAGE_DIR_NOT_EXIST_ERROR.value.format(msg)
+            message=LineageErrorMsg.LINEAGE_DIR_NOT_EXIST_ERROR.value.format(msg),
+            http_code=400
         )
 
 
@@ -168,5 +151,6 @@ class LineageSearchConditionParamError(MindInsightException):
     def __init__(self, msg):
         super(LineageSearchConditionParamError, self).__init__(
             error=LineageErrors.LINEAGE_SEARCH_CONDITION_PARAM_ERROR,
-            message=LineageErrorMsg.LINEAGE_SEARCH_CONDITION_PARAM_ERROR.value.format(msg)
+            message=LineageErrorMsg.LINEAGE_SEARCH_CONDITION_PARAM_ERROR.value.format(msg),
+            http_code=400
         )
