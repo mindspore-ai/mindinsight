@@ -96,6 +96,9 @@ limitations under the License.
                     <div class="item-content">
                       {{$t('debugger.watchPoint')}} {{item.id}}: {{item.label}} {{item.param}}
                     </div>
+                    <i class="el-icon-check"
+                       v-if="item.selected && watchPointPending"
+                       @click.stop="showOrigin()"></i>
                     <i class="el-icon-close"
                        v-if="item.selected"
                        @click.stop="deleteWatchpoint(item)"></i>
@@ -258,11 +261,11 @@ limitations under the License.
           <el-button v-if="version==='Ascend'"
                      type="primary"
                      size="mini"
-                     class="custom-btn green"
+                     class="custom-btn green notShow"
                      @click="getNodeByBfs(false)">
             {{ $t('debugger.previousNode')}}
           </el-button>
-          <el-button v-else
+          <el-button v-if="version==='GPU'"
                      type="primary"
                      size="mini"
                      class="custom-btn green"
@@ -274,11 +277,11 @@ limitations under the License.
           <el-button v-if="version==='Ascend'"
                      type="primary"
                      size="mini"
-                     class="custom-btn white"
+                     class="custom-btn white notShow"
                      @click="getNodeByBfs(true)">
             {{ $t('debugger.nextNode')}}
           </el-button>
-          <el-button v-else
+          <el-button v-if="version==='GPU'"
                      type="primary"
                      size="mini"
                      class="custom-btn white"
@@ -384,7 +387,13 @@ limitations under the License.
           <div class="deb-slide-width">
             <el-slider v-model="tolerance"
                        :format-tooltip="formatTolenrance"
-                       @change="tensorComparisons(curRowObj,dims)"></el-slider>
+                       @change="tensorComparisons(curRowObj,dims)"
+                       @input="toleranceInputChange()"></el-slider>
+          </div>
+          <div class="deb-slide-input">
+            <el-input v-model="toleranceInput"
+                      @input="toleranceValueChange"
+                      @keyup.native.enter="tensorComparisons(curRowObj,dims)"></el-input>
           </div>
         </div>
         <div class="deb-con-slide-right">
@@ -501,7 +510,7 @@ export default {
       tensorValue: [],
       loadingOption: {
         lock: true,
-        text: 'Loading',
+        text: this.$t('public.dataLoading'),
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.3)',
       },
@@ -544,6 +553,9 @@ export default {
       gridType: 'compare',
       curRowObj: {},
       dims: null,
+      node: null,
+      resolve: null,
+      toleranceInput: 0,
     };
   },
   components: {debuggerGridTable},
@@ -572,6 +584,33 @@ export default {
     },
   },
   methods: {
+    toleranceInputChange() {
+      this.toleranceInput = this.tolerance;
+    },
+    toleranceValueChange(val) {
+      if (!isNaN(val)) {
+        if (Number(val) === 0) {
+          this.tolerance = 0;
+        }
+        if (Number(val) < 0) {
+          this.tolerance = 0;
+          this.toleranceInput = 0;
+        }
+        if (Number(val) > 0) {
+          if (Number(val) > 100) {
+            this.tolerance = 100;
+            this.toleranceInput = 100;
+          } else {
+            this.tolerance = Number(val);
+          }
+        }
+      }
+    },
+    showOrigin() {
+      this.watchPointPending = true;
+      this.loadOriginalTree();
+      this.queryWatchPoints();
+    },
     /**
      * format tolenrance
      * @param {Number} value
@@ -678,7 +717,7 @@ export default {
         MEAN_GT: 'MEAN >',
         MEAN_LT: 'MEAN <',
       };
-      this.conditions.noValue = ['INF', 'NAN'];
+      this.conditions.noValue = ['INF'];
       this.conditions.hasValue = [
         'MAX_GT',
         'MAX_LT',
@@ -690,8 +729,8 @@ export default {
         'MEAN_LT',
       ];
 
-      if (this.version !== 'GPU') {
-        this.conditions.noValue.push('OVERFLOW');
+      if (this.version === 'GPU') {
+        this.conditions.noValue.push('NAN');
       }
 
       this.conditions.options = this.conditions.noValue
@@ -758,7 +797,7 @@ export default {
       const params = {
         mode: 'node',
         params: {
-          watch_point_id: this.curWatchPointId,
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
           name: this.nodeName,
           single_node: true,
           node_type: 'leaf',
@@ -821,7 +860,11 @@ export default {
       ) {
         name = this.curLeafNodeName;
       }
-      const params = {ascend, name, watch_point_id: this.curWatchPointId};
+      const params = {
+        ascend,
+        name,
+        watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
+      };
       RequestService.retrieveNodeByBfs(params).then(
           (res) => {
             if (res.data && res.data.graph && res.data.name) {
@@ -913,7 +956,7 @@ export default {
      * @return { Object }
      */
     discountHeaderStyle({row, column, rowIndex, columnIndex}) {
-      if (rowIndex == 1) {
+      if (rowIndex === 1) {
         return {display: 'none'};
       }
     },
@@ -1166,7 +1209,9 @@ export default {
      * @param {Number} type
      */
     control(type) {
-      this.watchPointHits = [];
+      if (type !== 3) {
+        this.watchPointHits = [];
+      }
       const params = {};
       if (type === 0) {
         if (!this.step) {
@@ -1313,7 +1358,7 @@ export default {
           });
         }
         const params = {
-          watch_point_id: this.curWatchPointId,
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
           watch_nodes: watchNodes,
           mode: check ? 1 : 0,
         };
@@ -1368,6 +1413,7 @@ export default {
           param: '',
           pending: true,
         });
+        this.resetGraph();
       }
       this.curWatchPointId = '';
     },
@@ -1398,8 +1444,7 @@ export default {
       if (this.searchWord) {
         const params = {
           name: this.searchWord,
-          watch_point_id:
-            this.curWatchPointId === '' ? null : this.curWatchPointId,
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
         };
         RequestService.search(params).then(
             (res) => {
@@ -1441,8 +1486,10 @@ export default {
       if (node.level === 0) {
         const loadingInstance = this.$loading(this.loadingOption);
         node.childNodes = [];
-        this.node = node;
-        this.resolve = resolve;
+        if (!this.node && !this.resolve) {
+          this.node = node;
+          this.resolve = resolve;
+        }
         const params = {
           mode: 'all',
         };
@@ -1483,7 +1530,9 @@ export default {
                       label: this.conditionMappings[
                           val.watch_condition.condition
                       ],
-                      param: val.watch_condition.param || '',
+                      param:
+                      val.watch_condition.param ||
+                      (val.watch_condition.param === 0 ? 0 : ''),
                     };
                   });
                 }
@@ -1514,7 +1563,7 @@ export default {
           mode: 'node',
           params: {
             node_type: node.data.type,
-            watch_point_id: this.curWatchPointId,
+            watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
             name: node.data.name,
           },
         };
@@ -1591,8 +1640,7 @@ export default {
      */
     selectWatchPoint(key) {
       if (!this.watchPointPending) {
-        this.watchPointArr.pop();
-        this.watchPointPending = true;
+        return;
       }
       this.curLeafNodeName = null;
       this.curHalfCheckedKeys = [];
@@ -1687,7 +1735,9 @@ export default {
                   selected: false,
                   condition: val.watch_condition.condition,
                   label: this.conditionMappings[val.watch_condition.condition],
-                  param: val.watch_condition.param,
+                  param:
+                  val.watch_condition.param ||
+                  (val.watch_condition.param === 0 ? 0 : ''),
                 };
               });
             }
@@ -1793,7 +1843,7 @@ export default {
         params: {
           name,
           single_node: true,
-          watch_point_id: this.curWatchPointId,
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
         },
       };
       this.watchPointHits.forEach((val, index) => {
@@ -1843,7 +1893,7 @@ export default {
         params: {
           name,
           single_node: true,
-          watch_point_id: this.curWatchPointId,
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
         },
       };
       RequestService.retrieve(params).then(
@@ -2502,7 +2552,7 @@ export default {
       };
       if (name) {
         params.params = {
-          watch_point_id: this.curWatchPointId,
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
           name: name,
           node_type: type,
           single_node: false,
@@ -3795,6 +3845,22 @@ export default {
         }
       }
     },
+    resetGraph() {
+      const temp = {};
+      this.firstFloorNodes.forEach((key) => {
+        const node = this.allGraphData[key];
+        node.isUnfold = false;
+        node.children = [];
+        node.size = [];
+        node.html = '';
+        temp[node.name] = node;
+      });
+      this.allGraphData = JSON.parse(JSON.stringify(temp));
+      d3.select('#graph svg').remove();
+      this.selectedNode.name = '';
+      const dot = this.packageGraphData();
+      this.initGraph(dot);
+    },
     /**
      * Search for all data of a specific node and its namespace.
      * @param {Object} graphs Selected node data object
@@ -4075,6 +4141,11 @@ export default {
                   .el-icon-close {
                     position: absolute;
                     right: 10px;
+                    top: 0;
+                  }
+                  .el-icon-check {
+                    position: absolute;
+                    right: 40px;
                     top: 0;
                   }
                 }
@@ -4464,6 +4535,9 @@ export default {
       background-color: #f5f5f6;
     }
   }
+  .notShow {
+    display: none;
+  }
   .el-dialog__wrapper.pendingTips {
     position: absolute;
     .dialog-icon {
@@ -4543,6 +4617,10 @@ export default {
 
         .deb-slide-width {
           width: 400px;
+        }
+        .deb-slide-input {
+          width: 100px;
+          margin-left: 10px;
         }
       }
       .deb-con-slide-right {
