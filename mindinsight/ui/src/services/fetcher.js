@@ -28,11 +28,14 @@ axios.interceptors.request.use(
     function(config) {
       config.headers['Pragma'] = 'no-cache';
       config.headers['Cache-Control'] = 'no-cache,no-store,must-revalidate';
-      config.cancelToken = new axios.CancelToken((cancel) => {
-        store.commit('pushToken', {
-          cancelToken: cancel,
+      if (router.currentRoute.path !== '/debugger') {
+        config.cancelToken = new axios.CancelToken((cancel) => {
+          store.commit('pushToken', {
+            cancelToken: cancel,
+          });
         });
-      });
+      }
+
       return config;
     },
     function(error) {
@@ -48,7 +51,8 @@ axios.interceptors.response.use(
         response.data = JSON.parse(
             response.data
                 .replace(/NaN/g, '"NaN"')
-                .replace(/-Infinity/g, variant).replace(/Infinity/g, '"Infinity"')
+                .replace(/-Infinity/g, variant)
+                .replace(/Infinity/g, '"Infinity"')
                 .replace(new RegExp(variant, 'g'), '"-Infinity"'),
         );
       }

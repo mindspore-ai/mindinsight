@@ -528,6 +528,7 @@
     "5054B180": "Failed to create the watchpoint. Please stop training and try again.",
     "5054B181": "Failed to update the watchpoint. Please stop training and try again.",
     "5054B182": "Failed to delete the watchpoint. Please stop training and try again.",
-    "5054B183": "Backend training is in progress or has ended. Please try again later"
+    "5054B183": "Backend training is in progress or has ended. Please try again later",
+    "5054B184": "The operation is too fast, the backend service has been suspended."
   }
 }
