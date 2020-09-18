@@ -1253,6 +1253,7 @@ export default {
       this.curWatchPointId = null;
       this.defaultCheckedArr = [];
       this.resolve(this.origialTree);
+      this.resetGraph();
     },
     /**
      * delete new watchpoint
@@ -1413,7 +1414,6 @@ export default {
           param: '',
           pending: true,
         });
-        this.resetGraph();
       }
       this.curWatchPointId = '';
     },
