@@ -413,12 +413,14 @@ limitations under the License.
         <div class="deb-compare-wrap">
           <debuggerGridTable v-if="gridType==='value'"
                              :fullData="tensorValue"
+                             :showFilterInput="showFilterInput"
                              ref="tensorValue"
                              gridType="value"
                              @martixFilterChange="tensorFilterChange($event)">
           </debuggerGridTable>
           <debuggerGridTable v-else
                              :fullData="tensorValue"
+                             :showFilterInput="showFilterInput"
                              ref="tensorValue"
                              gridType="compare"
                              @martixFilterChange="tensorFilterChange($event)">
@@ -556,6 +558,7 @@ export default {
       node: null,
       resolve: null,
       toleranceInput: 0,
+      showFilterInput: true,
     };
   },
   components: {debuggerGridTable},
@@ -664,6 +667,11 @@ export default {
             if (res && res.data && res.data.tensor_value) {
               this.tensorCompareFlag = true;
               this.gridType = 'compare';
+              if (row.shape === '[]') {
+                this.showFilterInput = false;
+              } else {
+                this.showFilterInput = true;
+              }
               const tensorValue = res.data.tensor_value;
               if (tensorValue.diff === 'Too large to show.') {
                 this.tensorValue = [];
@@ -1070,6 +1078,11 @@ export default {
             loadingInstance.close();
             this.curRowObj = JSON.parse(JSON.stringify(row));
             this.tensorCompareFlag = true;
+            if (row.shape === '[]') {
+              this.showFilterInput = false;
+            } else {
+              this.showFilterInput = true;
+            }
             if (res.data.tensor_value) {
               const value = res.data.tensor_value.value;
               if (value === 'Too large to show.') {
