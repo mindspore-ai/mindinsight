@@ -247,6 +247,15 @@ def exception_wrapper(func):
     return wrapper
 
 
+def exception_no_raise_wrapper(func):
+    """Don't raise exception to avoid printing error in stdout and log error in the log file."""
+    def wrapper(*args, **kwargs):
+        try:
+            return exception_wrapper(func)(*args, **kwargs)
+        except UnknownError as err:
+            logger.error(str(err))
+    return wrapper
+
 class Counter:
     """Count accumulator with limit checking."""
 
