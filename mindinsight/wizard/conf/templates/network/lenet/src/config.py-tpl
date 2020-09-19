@@ -28,7 +28,7 @@ cfg = edict({
     'lr': 0.001,
     {% endif %}
     'epoch_size': 1,
-    'batch_size': 32,
+    'batch_size': 16,
     'buffer_size': 1000,
     'image_height': 32,
     'image_width': 32,

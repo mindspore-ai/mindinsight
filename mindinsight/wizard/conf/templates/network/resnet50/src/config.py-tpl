@@ -23,7 +23,7 @@ cfg = ed({
     {% elif dataset=='ImageNet' %}
     'num_classes': 1001,
     {% endif %}
-    'batch_size': 32,
+    'batch_size': 16,
     'loss_scale': 1024,
     {% if optimizer=='Momentum' %}
     'lr': 0.01,
