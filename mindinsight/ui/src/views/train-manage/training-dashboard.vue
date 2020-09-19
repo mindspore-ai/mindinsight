@@ -21,9 +21,10 @@ limitations under the License.
       <div class="cl-dashboard-top-title">
         {{$t('trainingDashboard.trainingDashboardTitle')}}
       </div>
-      <div :title="$t('trainingDashboard.loadingTip')"
+      <div :title="trainJobCached > 1 ? $t('trainingDashboard.loadingTip') :  $t('trainingDashboard.waitLoading')"
            v-if="trainJobCached"
-           class="el-icon-loading loading-icon"></div>
+           class="loading-icon"
+           :class="trainJobCached > 1 ? 'el-icon-loading' : 'el-icon-time'"></div>
       <div class="path-message">
         <span>{{$t('symbols.leftbracket')}}</span>
         <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
@@ -314,7 +315,7 @@ export default {
         mousedown: 'mousedown',
         mouseup: 'mouseup',
       },
-      trainJobCached: false,
+      trainJobCached: 0,
       cacheKey: {
         notInCache: 'NOT_IN_CACHE',
         caching: 'CACHING',
@@ -2110,13 +2111,16 @@ export default {
           response.data.train_jobs.length
         ) {
           const curTrain = response.data.train_jobs[0];
-          if (curTrain.cache_status !== this.cacheKey.cached) {
-            this.trainJobCached = true;
+          const showIcon = curTrain.graph_files || curTrain.summary_files;
+          if (showIcon && curTrain.cache_status === this.cacheKey.notInCache) {
+            this.trainJobCached = 1;
+          } else if (showIcon && curTrain.cache_status === this.cacheKey.caching) {
+            this.trainJobCached = 2;
           } else {
-            this.trainJobCached = false;
+            this.trainJobCached = 0;
           }
         } else {
-          this.trainJobCached = false;
+          this.trainJobCached = 0;
         }
       });
     },

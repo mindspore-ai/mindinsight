@@ -143,6 +143,7 @@
     "invalidId": "无效的训练作业",
     "summaryDirPath": "训练日志路径：",
     "loadingTip": "加载中",
+    "waitLoading": "待加载",
     "switchTitle": "计算图和数据图模块不支持自动刷新"
   },
   "scalar": {
@@ -449,7 +450,6 @@
     "gridAccuracy": "保留小数位",
     "inCorrectInput": "无效输入",
     "gridTableNoData": "表格无数据",
-    "cache": "正在加载",
     "value": "数值",
     "dimsFilterInputTitle": "维度选择",
     "dimsFilterInputTip": "维度输入值可以是具体的索引（和Python的索引含义一致,支持负号）或者冒号\":\"，其中冒号\":\"表示当前维度的所有值"

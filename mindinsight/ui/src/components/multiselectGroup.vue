@@ -49,9 +49,12 @@ limitations under the License.
                         :content="item.label"
                         placement="top">
               <span class="select-disable">
-                <i :title="$t('components.cache')"
+                <i :title="$t('trainingDashboard.waitLoading')"
                    class="el-icon-time"
-                   v-if="item.checked && (item.loading==='CACHING' || item.loading==='NOT_IN_CACHE')"></i>
+                   v-if="item.checked && item.loading==='NOT_IN_CACHE'"></i>
+                <i :title="$t('trainingDashboard.loadingTip')"
+                   class="el-icon-loading"
+                   v-if="item.checked && item.loading==='CACHING'"></i>
                 {{item.label}}</span>
             </el-tooltip>
           </span>
@@ -83,9 +86,12 @@ limitations under the License.
                       :content="item.label"
                       placement="top">
             <span class="select-disable">
-              <i :title="$t('components.cache')"
-                 class="el-icon-time"
-                 v-if="item.checked && (item.loading==='CACHING' || item.loading==='NOT_IN_CACHE')"></i>
+              <i :title="$t('trainingDashboard.waitLoading')"
+                   class="el-icon-time"
+                   v-if="item.checked && item.loading==='NOT_IN_CACHE'"></i>
+              <i :title="$t('trainingDashboard.loadingTip')"
+                   class="el-icon-loading"
+                   v-if="item.checked && item.loading==='CACHING'"></i>
               {{item.label}}</span>
           </el-tooltip>
         </span>

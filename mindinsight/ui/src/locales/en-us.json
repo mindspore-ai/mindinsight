@@ -143,6 +143,7 @@
     "invalidId": "Invalid training job.",
     "summaryDirPath": "Summary path:",
     "loadingTip": "Loading...",
+    "waitLoading": "waiting to be loaded",
     "switchTitle": "The Computational Graph and Data Graph modules do not support auto refresh."
   },
   "scalar": {
@@ -450,7 +451,6 @@
     "gridAccuracy": "Decimal places are reserved.",
     "inCorrectInput": "Invalid input.",
     "gridTableNoData": "No data in the table.",
-    "cache": "CACHING",
     "value": "Value",
     "dimsFilterInputTitle": "Dimension Selection",
     "dimsFilterInputTip": "The dimension value can be a specific index (consistent with the Python index meaning and supporting negative signs) or a colon (:) that indicates all values of the current dimension."
