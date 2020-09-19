@@ -109,12 +109,14 @@ class ReportGenerator(metaclass=abc.ABCMeta):
         code_lines = code.split(NEW_LINE)
         num_all_lines = len(code_lines)
 
-        num_unconverted_line = 0
+        num_unconverted_operator = 0
+        num_converted_operator = 0
         self._content = self._extra['start']
         for num_line in range(0, num_all_lines):
             code_line = code_lines[num_line]
+
             if 'onnx.' in code_line:
-                num_unconverted_line += 1
+                num_unconverted_operator += 1
                 unconverted_operator = SEPARATOR_IN_ONNX_OP.join(
                     ('onnx', re.findall(r".*onnx.(.*)[(]", code_line)[0]))
                 info_unconverted_line = self._gen_unconverted_operator_content(
@@ -123,9 +125,17 @@ class ReportGenerator(metaclass=abc.ABCMeta):
                 )
                 self._content = f"{NEW_LINE}".join((self._content,
                                                     info_unconverted_line))
+
+            if 'P.' in code_line or 'nn.' in code_line:
+                converted_operator = re.findall(r".*(?:nn.|P.)(.*)[(]", code_line)
+
+                if converted_operator:
+                    num_converted_operator += 1
+
         self._content = f"{NEW_LINE}".join((self._content, self._extra['end']))
 
-        converted_rate = (num_all_lines - num_unconverted_line) / num_all_lines
+        converted_rate = \
+            num_converted_operator / (num_converted_operator + num_unconverted_operator)
         info_converted_rate = f"Converted Rate: {converted_rate * 100:.2f}%.{NEW_LINE}"
         self._content = f"{NEW_LINE}".join((self._content, info_converted_rate))
 

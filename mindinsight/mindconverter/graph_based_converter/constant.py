@@ -39,4 +39,4 @@ class NodeType(Enum):
     OPERATION = "operation"
     CLASS = "class"
     FUNC = "func"
-    INPUT = "DataInput"
+    INPUTS = "DataInput"
