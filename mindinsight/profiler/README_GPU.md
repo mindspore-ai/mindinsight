@@ -2,7 +2,7 @@
 
 <!-- TOC -->
 
-- [性能调试（GPU）](#性能调试（GPU）)
+- [性能调试（GPU）](#性能调试gpu)
     - [概述](#概述)
     - [操作流程](#操作流程)
     - [准备训练脚本](#准备训练脚本)
@@ -19,7 +19,7 @@
 
 > 操作流程可以参考Ascend 910上profiler的操作：
 >
-> https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/performance_profiling.html#id3
+> https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/performance_profiling.html#id3
 
 ## 准备训练脚本
 
@@ -29,11 +29,11 @@
 
 > 样例代码与Ascend使用方式一致可以参考：
 >
-> https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/performance_profiling.html#id4
+> https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/performance_profiling.html#id4
 
 ## 启动MindInsight
 
-启动命令请参考[MindInsight相关命令](https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/mindinsight_commands.html)。
+启动命令请参考[MindInsight相关命令](https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/mindinsight_commands.html)。
 
 
 ### 性能分析

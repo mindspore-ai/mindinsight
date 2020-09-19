@@ -4,18 +4,18 @@
 
 <!-- TOC -->
 
-- [MindConverter教程](#MindConverter教程)
-  - [概述](#概述)
-  - [安装](#安装)
-  - [用法](#用法)
-  - [使用场景](#使用场景)
-  - [使用示例](#使用示例)
-    - [基于AST的脚本转换示例](#基于AST的脚本转换示例)
-    - [基于图结构的脚本生成示例](#基于图结构的脚本生成示例)
-  - [注意事项](#注意事项)
-  - [AST方案不支持场景](#AST方案不支持场景)
-    - [场景1](#场景1)
-    - [场景1](#场景2)
+- [MindConverter教程](#mindconverter教程)
+    - [概述](#概述)
+    - [安装](#安装)
+    - [命令行用法](#命令行用法)
+    - [使用场景](#使用场景)
+    - [使用示例](#使用示例)
+        - [基于AST的脚本转换示例](#基于ast的脚本转换示例)
+        - [基于图结构的脚本生成示例](#基于图结构的脚本生成示例)
+    - [注意事项](#注意事项)
+    - [AST方案不支持场景](#ast方案不支持场景)
+        - [场景1](#场景1)
+        - [场景2](#场景2)
 
 <!-- /TOC -->
 
@@ -107,7 +107,7 @@ mindconverter --in_file /home/user/model.py \
               --report /home/user/output/report
 ```
 
-转换报告中，对于未转换的代码行形式为如下，其中x, y指明的是原PyTorch脚本中代码的行、列号。对于未成功转换的算子，可参考[MindSporeAPI映射查询功能](https://www.mindspore.cn/docs/zh-CN/master/index.html#operator_api) 手动对代码进行迁移。对于工具无法迁移的算子，会保留原脚本中的代码。
+转换报告中，对于未转换的代码行形式为如下，其中x, y指明的是原PyTorch脚本中代码的行、列号。对于未成功转换的算子，可参考[MindSporeAPI映射查询功能](https://www.mindspore.cn/doc/note/zh-CN/master/specification_note.html#operator_api) 手动对代码进行迁移。对于工具无法迁移的算子，会保留原脚本中的代码。
 
 ```text
 line x:y: [UnConvert] 'operator' didn't convert. ...

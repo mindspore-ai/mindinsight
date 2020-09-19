@@ -20,4 +20,4 @@ In `Graph Mode` training, the computation results of intermediate nodes in the c
 
 ## Debugger Instructions
 
-For the details of how to use MindSpore Debugger, please refer to [https://www.mindspore.cn/tutorial/en/master/advanced_use/debugger.html](https://www.mindspore.cn/tutorial/en/master/advanced_use/debugger.html)
+For the details of how to use MindSpore Debugger, please refer to <https://www.mindspore.cn/tutorial/training/en/master/advanced_use/debugger.html>.
