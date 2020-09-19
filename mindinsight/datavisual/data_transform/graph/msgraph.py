@@ -20,6 +20,7 @@ from .node import Node
 from .node import NodeTypeEnum
 from .graph import Graph
 from .graph import EdgeTypeEnum
+from .graph import escape_html
 
 
 class MSGraph(Graph):
@@ -63,6 +64,12 @@ class MSGraph(Graph):
                                                   base_name=f'{node_proto.op_type}{node_proto.name}')
             else:
                 node_name = node_proto.full_name
+
+            # Because the Graphviz plug-in that the UI USES can't handle these special characters,
+            # the special characters are HTML escaped to avoid UI crash.
+            # Doing this on the backend prevents the frontend from doing it every time.
+            node_name = escape_html(node_name)
+
             node = Node(name=node_name, node_id=node_proto.name)
             node.full_name = node_proto.full_name
             node.type = node_proto.op_type

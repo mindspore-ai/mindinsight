@@ -28,6 +28,14 @@ from .node import NodeTypeEnum
 from .node import Node
 
 
+def escape_html(string):
+    """Escape some html special string to avoid the frontend crash."""
+    string = string.replace('<', '&lt;')
+    string = string.replace('>', '&gt;')
+    string = string.replace('"', '&quot;')
+    return string
+
+
 class EdgeTypeEnum(Enum):
     """Node edge type enum."""
     CONTROL = 'control'

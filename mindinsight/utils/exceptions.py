@@ -32,14 +32,14 @@ class MindInsightException(Exception):
     LEVEL = 0
     SYSID = 42
 
-    def __init__(self, error, message, http_code=500):
+    def __init__(self, error, message, http_code=400):
         """
         Initialization of MindInsightException.
 
         Args:
             error (Enum): Error value for specified case.
             message (str): Description for exception.
-            http_code (int): Http code for exception. Default is 500.
+            http_code (int): Http code for exception. Default is 400.
         """
         if isinstance(message, str):
             message = ' '.join(message.split())
