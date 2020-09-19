@@ -14,9 +14,10 @@
 # ============================================================================
 """Constants module for wizard."""
 import os
+from mindinsight import __version__
 
 
 TEMPLATES_BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
-SUPPORT_MINDSPORE_VERSION = '0.7.0'
+SUPPORT_MINDSPORE_VERSION = __version__
 
 QUESTION_START = '>>> '
