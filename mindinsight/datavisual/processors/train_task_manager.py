@@ -150,15 +150,10 @@ class TrainTaskManager(BaseProcessor):
             lineage_files=basic_info.lineage_files
         )
 
-        if train_job.cache_status == CacheStatus.CACHED:
-            plugins = self.get_plugins(train_id)
+        if train_job.cache_status != CacheStatus.NOT_IN_CACHE:
+            plugins = self.get_plugins(train_id, manual_update=False)
         else:
-            plugins = dict(plugins={
-                'graph': [],
-                'scalar': [],
-                'image': [],
-                'histogram': [],
-            })
+            plugins = dict(plugins={plugin: [] for plugin in PluginNameEnum.list_members()})
 
         train_job_item.update(plugins)
         return train_job_item
