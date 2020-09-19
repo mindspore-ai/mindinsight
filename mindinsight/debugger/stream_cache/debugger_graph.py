@@ -16,7 +16,6 @@
 from collections import deque
 
 from mindinsight.datavisual.data_transform.graph.msgraph import MSGraph
-from mindinsight.datavisual.data_transform.graph.node import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import \
     DebuggerNodeNotInGraphError, DebuggerParamValueError
 from mindinsight.debugger.common.log import logger as log
@@ -90,14 +89,14 @@ class DebuggerGraph(MSGraph):
 
     def search_nodes_by_pattern(self, pattern):
         """
-        Search node names by a given pattern.
+        Search node by a given pattern.
 
         Args:
             pattern (Union[str, None]): The pattern of the node to search,
                 if None, return all node names.
 
         Returns:
-            list[(str, str)], a list of tuple (node name, node type).
+            list[Node], a list of node.
         """
         if pattern is not None:
             pattern = pattern.lower()
@@ -106,7 +105,7 @@ class DebuggerGraph(MSGraph):
                 if pattern in name.lower()
             ]
         else:
-            searched_nodes = [node for name, node in self._leaf_nodes.items()]
+            searched_nodes = [node for _, node in self._leaf_nodes.items()]
         return searched_nodes
 
     def _build_node_tree(self, node_name, node_type):
@@ -147,13 +146,8 @@ class DebuggerGraph(MSGraph):
         if node_name and not self.exist_node(name=node_name):
             raise DebuggerNodeNotInGraphError(node_name=node_name)
 
-        node = self._leaf_nodes.get(node_name)
-        if node is not None:
-            node_type = node.type
-        else:
-            node_type = NodeTypeEnum.NAME_SCOPE.value
-
-        return node_type
+        node = self._normal_node_map.get(node_name)
+        return node.type
 
     def get_tensor_history(self, node_name, depth=0):
         """

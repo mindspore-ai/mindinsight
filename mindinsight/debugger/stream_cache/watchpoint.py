@@ -71,17 +71,21 @@ class WatchNodeTree:
         """The property of watch status about current node."""
         return self._watch_status
 
-    def enable_watch_status(self):
-        """The property of watch status about current node."""
-        self._watch_status = WatchNodeTree.TOTAL_WATCH
+    def update_metadata(self, node_type, full_name, watch_status):
+        """Update the metadata for watched node."""
+        self._full_name = full_name
+        self._node_type = self._translate_node_type(node_type)
+        self._watch_status = watch_status
 
     @staticmethod
     def _translate_node_type(node_type):
         """Translate node type to watch node type."""
-        if not node_type or node_type == NodeTypeEnum.NAME_SCOPE.value or \
-                node_type == NodeTypeEnum.AGGREGATION_SCOPE.value:
-            return 'scope'
-        return 'leaf'
+        flag = node_type
+        if not node_type or node_type == NodeTypeEnum.NAME_SCOPE.value:
+            flag = 'scope'
+        elif node_type != NodeTypeEnum.AGGREGATION_SCOPE.value:
+            flag = 'leaf'
+        return flag
 
     def get(self, sub_name):
         """Get sub node."""
@@ -104,10 +108,11 @@ class WatchNodeTree:
         log.debug("Add node %s with type: %s, full_name: %s", node_name, node_type, full_name)
         scope_names = node_name.split('/', 1)
         if len(scope_names) == 1:
-            if not self.get(node_name):
+            target_node = self.get(node_name)
+            if not target_node:
                 self.add(node_name, node_type, full_name, watch_status=WatchNodeTree.TOTAL_WATCH)
             else:
-                self.get(node_name).enable_watch_status()
+                target_node.update_metadata(node_type, full_name, WatchNodeTree.TOTAL_WATCH)
             return
 
         scope_name, sub_names = scope_names
@@ -232,7 +237,8 @@ class Watchpoint:
             cur_watch_node (WatchNodeTree): The current watch node.
             watch_node_list (list[WatchNodeTree]): The list of total watched node.
         """
-        if cur_watch_node.watch_status == WatchNodeTree.TOTAL_WATCH:
+        if cur_watch_node.watch_status == WatchNodeTree.TOTAL_WATCH and \
+                cur_watch_node.node_type != NodeTypeEnum.AGGREGATION_SCOPE.value:
             watch_node_list.append(cur_watch_node)
             return
         for _, watch_node in cur_watch_node.get_children():

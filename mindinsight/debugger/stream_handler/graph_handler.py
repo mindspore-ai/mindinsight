@@ -143,9 +143,17 @@ class GraphHandler(StreamHandlerBase):
 
         return {'nodes': nodes}
 
-    def get_node_names(self, pattern=None):
-        """Get graph nodes according to pattern."""
-        return self._graph.search_nodes_by_pattern(pattern)
+    def get_nodes_by_scope(self, scope_name):
+        """
+        Get node by a given scope name.
+
+        Args:
+            scope_name (str): The name of scope.
+
+        Returns:
+            list[Node], a list of node.
+        """
+        return self._graph.search_nodes_by_pattern(scope_name)
 
     def get_searched_node_list(self):
         """Get searched node list."""

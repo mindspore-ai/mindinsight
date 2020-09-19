@@ -18,8 +18,8 @@ from collections import namedtuple
 
 import numpy as np
 
+from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
-from mindinsight.debugger.stream_cache.debugger_graph import NodeTypeEnum
 
 # translate the MindSpore type to numpy type.
 NUMPY_TYPE_MAP = {
