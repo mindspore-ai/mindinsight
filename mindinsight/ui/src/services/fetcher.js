@@ -75,7 +75,7 @@ axios.interceptors.response.use(
 
         const ignoreCode = {
           ignoreError: ['50545005'],
-          regardError: ['50545013', '50545014'],
+          regardError: ['50545013', '50545014', '5054500D'],
         };
 
         if (

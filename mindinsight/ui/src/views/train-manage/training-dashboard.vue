@@ -1510,13 +1510,12 @@ export default {
                 // Initialize the current step information
                 if (sampleItem.sampleData.length) {
                   const sampleIndex = sampleItem.sampleData.length - 1;
-                  const sampleStep = sampleItem.sampleData[sampleIndex].step;
                   const sampleWallTime =
                 sampleItem.sampleData[sampleIndex].wall_time;
                   sampleItem.curImgUrl =
                 `${basePath}${this.imageBasePath}` +
                 `train_id=${sampleItem.runId}&tag=${sampleItem.tagName}` +
-                `&step=${sampleStep}&wt=${sampleWallTime}`;
+                `&step=-1&wt=${sampleWallTime}`;
                 } else {
                   this.curImageShowSample = {};
                 }

@@ -85,11 +85,18 @@ limitations under the License.
             <!-- Image container -->
             <div class="image-container"
                  @click="sampleToggleFullScreen($event, sampleItem)">
+              <div v-if="sampleItem.showErrMsg"
+                   class="error-message-container select-disable"
+                   :style='{width:sampleItem.fullScreen ? sampleItem.curImageSize[0]+"px" : "100%",
+                          height: sampleItem.fullScreen ? sampleItem.curImageSize[1]+"px" : "356px"}'>
+                <div>{{sampleItem.errMsg}}</div>
+              </div>
               <!-- Image -->
               <img class="sample-img select-disable"
+                   v-else
                    :src='sampleItem.curImgUrl'
                    :width='sampleItem.fullScreen ? sampleItem.curImageSize[0] : "100%"'
-                   :height='sampleItem.fullScreen ? sampleItem.curImageSize[1] : "359px"'
+                   :height='sampleItem.fullScreen ? sampleItem.curImageSize[1] : "356px"'
                    :style='{filter:`brightness(${brightness/50}) contrast(${contrast/50})`,
                           "-webkit-filter": `brightness(${brightness/50}) contrast(${contrast/50})`}'>
             </div>
@@ -291,6 +298,8 @@ export default {
                   curImgUrl: '',
                   curTime: '',
                   curImageSize: [0, 0],
+                  showErrMsg: false,
+                  errMsg: '',
                 });
               }
             });
@@ -375,9 +384,13 @@ export default {
                   // Initialize the current step information
                   if (curSampleData) {
                     sampleItem.curStep = curSampleData.step;
-                    sampleItem.curImgUrl =
-                  `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
-                  `&tag=${sampleItem.tagName}&step=${curSampleData.step}&wt=${curSampleData.wall_time}`;
+                    const params = {
+                      train_id: sampleItem.summaryId,
+                      tag: sampleItem.tagName,
+                      step: curSampleData.step,
+                      wt: curSampleData.wall_time,
+                    };
+                    this.getImageData(params, sampleItem);
                     sampleItem.curTime = this.dealrelativeTime(
                         new Date(curSampleData.wall_time * 1000).toString(),
                     );
@@ -415,13 +428,44 @@ export default {
       }
       const curStepData = sampleItem.sampleData[sliderValue];
       sampleItem.curStep = curStepData.step;
-      sampleItem.curImgUrl =
-        `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
-        `&tag=${sampleItem.tagName}&step=${curStepData.step}&wt=${curStepData.wall_time}`;
+      const params = {
+        train_id: sampleItem.summaryId,
+        tag: sampleItem.tagName,
+        step: curStepData.step,
+        wt: curStepData.wall_time,
+      };
+      this.getImageData(params, sampleItem);
       sampleItem.curTime = this.dealrelativeTime(
           new Date(curStepData.wall_time * 1000).toString(),
       );
       sampleItem.curImageSize = [curStepData.width, curStepData.height];
+    },
+    /**
+     * get image data
+     * @param {Object} params Current params
+     * @param {Object} sampleItem Current picture object.
+     */
+    getImageData(params, sampleItem) {
+      RequestService.getImageData(params).then(
+          (res) => {
+            sampleItem.showErrMsg = false;
+            sampleItem.curImgUrl =
+            `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
+            `&tag=${sampleItem.tagName}&step=${params.step}&wt=${params.wt}`;
+          },
+          (e) => {
+            if (e.response && e.response.data && e.response.data.error_code) {
+              sampleItem.curImgUrl = '';
+              sampleItem.showErrMsg = true;
+              sampleItem.errMsg = this.$t('error')[e.response.data.error_code];
+            } else {
+              sampleItem.showErrMsg = false;
+              sampleItem.curImgUrl =
+              `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
+              `&tag=${sampleItem.tagName}&step=${params.step}&wt=${params.wt}`;
+            }
+          },
+      );
     },
     /**
      * Image click event
@@ -578,6 +622,8 @@ export default {
             curImgUrl: '',
             curTime: '',
             curImageSize: [0, 0],
+            showErrMsg: false,
+            errMsg: '',
           });
           dataAddFlag = true;
         }
@@ -778,6 +824,14 @@ export default {
             object-fit: contain;
             background: #f0f3fa;
           }
+          .error-message-container {
+            height: 100%;
+            display: flex;
+            background-color: #f0f3fa;
+            div {
+              margin: auto;
+            }
+          }
         }
         .sample-data-show {
           padding: 32px 16px;
@@ -785,6 +839,7 @@ export default {
           white-space: nowrap;
           overflow: hidden;
           background-color: #f0f3fa;
+          margin-top: 3px;
           .tag-title,
           .summary-title {
             font-size: 14px;
