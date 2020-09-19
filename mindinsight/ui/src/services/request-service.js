@@ -163,6 +163,18 @@ export default {
     });
   },
 
+  // query image data
+  getImageData(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/datavisual/image/single-image',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+
   // query training job visualization plugins
   getDatavisualPlugins(params) {
     return axios({
