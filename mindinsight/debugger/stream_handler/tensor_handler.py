@@ -226,9 +226,10 @@ class TensorHandler(StreamHandlerBase):
     def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type):
         """Update has_prev_step field in tensor info."""
         flag = None
-        if node_type == NodeTypeEnum.PARAMETER.value:
+        cur_tensor_value = bool(tensor_info and tensor_info.get('value') is not None)
+        if node_type == NodeTypeEnum.PARAMETER.value and cur_tensor_value:
             flag = self._get_prev_tensor_value_status(tensor_name)
-            if flag and tensor_info:
+            if flag:
                 tensor_info['has_prev_step'] = True
         return flag
 

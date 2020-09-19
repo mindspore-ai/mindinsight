@@ -536,13 +536,11 @@ class DebuggerServer:
         node_infos = []
         for node_name in node_names:
             node_type = graph_stream.get_node_type(node_name)
-            # optimizer later
             if node_type == NodeTypeEnum.AGGREGATION_SCOPE.value:
-                sub_nodes = graph_stream.get_nodes(node_name)
+                sub_nodes = graph_stream.get_nodes_by_scope(node_name)
                 sub_infos = [NodeBasicInfo(name=node.name, full_name=node.full_name, type=node.type)
                              for node in sub_nodes]
                 node_infos.extend(sub_infos)
-                continue
             full_name = graph_stream.get_full_name(node_name)
             node_infos.append(NodeBasicInfo(name=node_name, full_name=full_name, type=node_type))
         return node_infos
@@ -615,17 +613,6 @@ class DebuggerServer:
 
         return {'metadata': {'state': current_state}}
 
-    def _validate_node_type(self, node_name):
-        """Check the node type in node control."""
-        if not node_name:
-            return
-        node_type = self.cache_store.get_stream_handler(Streams.GRAPH).get_node_type(node_name)
-        unsupported_types = [item.value for item in list(NodeTypeEnum)]
-        if node_type in unsupported_types:
-            log.error("Invalid node type. %s", node_name)
-            raise DebuggerParamValueError(f"The type of node {node_name} is unsupported for "
-                                          "continue to command.")
-
     def _construct_run_event(self, params):
         """
         Construct run cmd from input control params.
@@ -639,7 +626,7 @@ class DebuggerServer:
                 - steps (int): Specify the steps that training should run.
                     Used when `level` is `step`.
 
-                - full_name (str): Specify the name of the node. Used when `level` is `node`.
+                - name (str): Specify the name of the node. Used when `level` is `node`.
 
         Returns:
             EventReply, control event with run command.
@@ -652,10 +639,11 @@ class DebuggerServer:
                 steps = 1
             run_cmd = RunCMD(run_level='step', run_steps=steps)
         elif level == 'node':
-            self._validate_node_type(params.get('name'))
-            name = self.cache_store.get_stream_handler(Streams.GRAPH).get_full_name(
-                params['name'])
-            if not name:
+            name = params.get('name')
+            if name:
+                self._validate_leaf_name(name)
+                name = self.cache_store.get_stream_handler(Streams.GRAPH).get_full_name(name)
+            else:
                 name = ''
             run_cmd = RunCMD(run_level='node', node_name=name)
         else:
