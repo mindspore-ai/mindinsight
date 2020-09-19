@@ -2865,7 +2865,7 @@ export default {
 }
 .select-inner-input {
   width: calc(100% - 130px);
-  min-width:70px;
+  min-width:78px;
   margin: 2px 4px;
   display: inline-block;
 }
