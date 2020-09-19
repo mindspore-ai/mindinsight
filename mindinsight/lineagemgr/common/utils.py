@@ -15,52 +15,17 @@
 """Lineage utils."""
 import os
 import re
-from functools import wraps
 from pathlib import Path
 
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamRunContextError, \
-    LineageGetModelFileError, LineageLogError, LineageParamValueError, LineageParamTypeError, \
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamValueError, LineageParamTypeError, \
     LineageDirNotExistError, LineageParamSummaryPathError
 from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.validator.validate import validate_path
-from mindinsight.utils.exceptions import MindInsightException
 
 
 def enum_to_list(enum):
     return [enum_ele.value for enum_ele in enum]
-
-
-def try_except(logger):
-    """
-    Catch or raise exceptions while collecting lineage.
-
-    Args:
-        logger (logger): The logger instance which logs the warning info.
-
-    Returns:
-        function, the decorator which we use to retry the decorated function.
-    """
-    def try_except_decorate(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            try:
-                func(self, *args, **kwargs)
-            except (AttributeError, MindInsightException,
-                    LineageParamRunContextError, LineageLogError,
-                    LineageGetModelFileError, IOError) as err:
-                logger.error(err)
-
-                try:
-                    raise_except = self.raise_exception
-                except AttributeError:
-                    raise_except = False
-
-                if raise_except is True:
-                    raise
-
-        return wrapper
-    return try_except_decorate
 
 
 def normalize_summary_dir(summary_dir):
@@ -82,7 +47,6 @@ def get_timestamp(filename):
 
 def make_directory(path):
     """Make directory."""
-    real_path = None
     if path is None or not isinstance(path, str) or not path.strip():
         log.error("Invalid input path: %r.", path)
         raise LineageParamTypeError("Invalid path type")
