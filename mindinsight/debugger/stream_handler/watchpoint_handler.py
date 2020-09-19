@@ -205,6 +205,11 @@ class WatchpointHitHandler(StreamHandlerBase):
     def __init__(self):
         self._hits = {}
 
+    @property
+    def empty(self):
+        """Whether the watchpoint hit is empty."""
+        return not self._hits
+
     def put(self, value):
         """
         Put value into watchpoint hit cache. Called by grpc server.
@@ -235,7 +240,7 @@ class WatchpointHitHandler(StreamHandlerBase):
         Get watchpoint hit list.
 
         Args:
-            filter_condition (str): Get the watchpoint hit according to specifiled node name.
+            filter_condition (str): Get the watchpoint hit according to specified node name.
                 If not given, get all watchpoint hits. Default: None.
 
         Returns:
