@@ -70,7 +70,7 @@ class ImageProcessor(BaseProcessor):
         Args:
             train_id (str): The ID of the events data the image belongs to.
             tag (str): The name of the tag the images belongs to.
-            step (int): The step of the image in the current reservoir.
+            step (int): The step of the image in the current reservoir. If step = -1, return image of final step.
 
         Returns:
             bytes, a byte string of the raw image bytes.
@@ -84,16 +84,23 @@ class ImageProcessor(BaseProcessor):
         except ParamValueError as ex:
             raise ImageNotExistError(ex.message)
 
-        image = None
-        for tensor in tensors:
-            if tensor.step == step:
-                # Default value for bytes field is empty byte string normally,
-                # see also "Optional Fields And Default Values" in protobuf
-                # documentation.
-                image = tensor.value.encoded_image
-                break
-
+        image = _find_image(tensors, step)
         if image is None:
             raise ImageNotExistError("Can not find the step with given train job id and tag.")
 
         return image
+
+
+def _find_image(tensors, step):
+    """Find the specific image by step from tensors. If step = -1, return image of final step."""
+    if not tensors:
+        return None
+    if step == -1:
+        return tensors[-1].value.encoded_image
+    for tensor in tensors:
+        if tensor.step == step:
+            # Default value for bytes field is empty byte string normally,
+            # see also "Optional Fields And Default Values" in protobuf
+            # documentation.
+            return tensor.value.encoded_image
+    return None
