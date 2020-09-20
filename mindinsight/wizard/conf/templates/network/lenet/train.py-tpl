@@ -28,10 +28,13 @@ from mindspore.train import Model
 from mindspore.context import ParallelMode
 from mindspore.train.serialization import load_checkpoint, load_param_into_net
 from mindspore.nn.metrics import Accuracy
+from mindspore.common import set_seed
 
 from src.config import cfg
 from src.dataset import create_dataset
 from src.lenet import LeNet5
+
+set_seed(1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='MindSpore Lenet Example')
