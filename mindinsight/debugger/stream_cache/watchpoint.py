@@ -290,11 +290,6 @@ class WatchpointHit:
         return tensor_name
 
     @property
-    def tensor_name(self):
-        """The property of tensor_name."""
-        return ':'.join([self._node_name, self._slot])
-
-    @property
     def watchpoint(self):
         """The property of watchpoint."""
         watchpoint = self._watchpoint.get_watch_condition_info()

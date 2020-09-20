@@ -108,9 +108,10 @@ class DebuggerServer:
         log.info("receive search request for node:%s, in watchpoint:%d", name, watch_point_id)
         watchpoint_stream = self.cache_store.get_stream_handler(Streams.WATCHPOINT)
         watchpoint_stream.validate_watchpoint_id(watch_point_id)
-        graph = self.cache_store.get_stream_handler(Streams.GRAPH).search_nodes(name)
+        graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH)
+        graph = graph_stream.search_nodes(name)
         # add watched label to graph
-        watchpoint_stream.set_watch_nodes(graph, watch_point_id)
+        watchpoint_stream.set_watch_nodes(graph, graph_stream, watch_point_id)
         return graph
 
     def tensor_comparisons(self, name, shape, detail='data', tolerance='0'):
@@ -247,7 +248,7 @@ class DebuggerServer:
         reply = graph_stream.get(filter_condition)
         graph = reply.get('graph')
         # add watched label to graph
-        watchpoint_stream.set_watch_nodes(graph, watch_point_id)
+        watchpoint_stream.set_watch_nodes(graph, graph_stream, watch_point_id)
         return reply
 
     def retrieve_tensor_history(self, node_name):

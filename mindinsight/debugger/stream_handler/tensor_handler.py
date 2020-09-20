@@ -99,7 +99,7 @@ class TensorHandler(StreamHandlerBase):
 
         old_tensor = cache_tensor.get(step)
         if old_tensor and not self.is_value_diff(old_tensor.value, tensor.value):
-            log.debug("Tensor %s of step %s has no change. Ignore it.")
+            log.debug("Tensor %s of step %s has no change. Ignore it.", tensor.name, step)
             return False
         cache_tensor[step] = tensor
         log.debug("Put updated tensor value for %s of step %s.", tensor.name, step)

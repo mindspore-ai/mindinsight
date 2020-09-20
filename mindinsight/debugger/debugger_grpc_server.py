@@ -52,6 +52,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._status = None
         self._continue_steps = None
         self._received_view_cmd = None
+        self._received_hit = None
         self.init()
 
     def init(self):
@@ -60,6 +61,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._status = ServerStatus.PENDING
         self._continue_steps = 0
         self._received_view_cmd = {}
+        self._received_hit = False
         self._cache_store.clean()
 
     @debugger_wrap
@@ -152,8 +154,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def _send_watchpoint_hit_flag(self):
         """Send Watchpoint hit flag."""
         watchpoint_hit_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
-        if watchpoint_hit_stream.empty:
+        if watchpoint_hit_stream.empty or not self._received_hit:
             return
+        self._received_hit = False
         watchpoint_hits_info = watchpoint_hit_stream.get()
         self._cache_store.put_data(watchpoint_hits_info)
         log.debug("Send the watchpoint hits to DataQueue.\nSend the reply.")
@@ -302,6 +305,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """Send watchpoint hits info DebuggerCache."""
         log.info("Received WatchpointHits. Left steps %d change to 0.", self._continue_steps)
         self._continue_steps = 0
+        self._received_hit = True
         watchpoint_hit_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
         graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)

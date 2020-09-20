@@ -88,27 +88,28 @@ class WatchpointHandler(StreamHandlerBase):
 
         return {'watch_points': reply}
 
-    def set_watch_nodes(self, graph, watch_point_id):
+    def set_watch_nodes(self, graph, graph_stream, watch_point_id):
         """
         set watch nodes for graph.
 
         Args:
             graph (dict): The graph with list of nodes.
+            graph_stream (GraphHandler): The graph handler.
             watch_point_id (int): The id of watchpoint.
         """
         if not (watch_point_id and graph):
             return
         log.debug("add watch flags")
         watchpoint = self._watchpoints.get(watch_point_id)
-        self._set_watch_status_recursively(graph, watchpoint)
+        self._set_watch_status_recursively(graph, graph_stream, watchpoint)
 
-    def _set_watch_status_recursively(self, graph, watchpoint):
+    def _set_watch_status_recursively(self, graph, graph_stream, watchpoint):
         """Set watch status to graph."""
         if not isinstance(graph, dict):
             log.warning("The graph is not dict.")
             return
         if graph.get('children'):
-            self._set_watch_status_recursively(graph.get('children'), watchpoint)
+            self._set_watch_status_recursively(graph.get('children'), graph_stream, watchpoint)
 
         for node in graph.get('nodes', []):
             if not isinstance(node, dict):
@@ -117,10 +118,11 @@ class WatchpointHandler(StreamHandlerBase):
             node_name = node.get('name')
             if not node_name:
                 continue
-            flag = watchpoint.get_node_status(node_name, node.get('type'), node.get('full_name'))
+            full_name = graph_stream.get_full_name(node_name)
+            flag = watchpoint.get_node_status(node_name, node.get('type'), full_name)
             node['watched'] = flag
             if node.get('nodes'):
-                self._set_watch_status_recursively(node, watchpoint)
+                self._set_watch_status_recursively(node, graph_stream, watchpoint)
 
     def create_watchpoint(self, watch_condition, watch_nodes=None, watch_point_id=None):
         """
@@ -220,6 +222,8 @@ class WatchpointHitHandler(StreamHandlerBase):
                 - tensor_proto (TensorProto): The message about hit tensor.
 
                 - watchpoint (Watchpoint): The Watchpoint that a node hit.
+
+                - node_name (str): The UI node name.
         """
         watchpoint_hit = WatchpointHit(
             tensor_proto=value.get('tensor_proto'),
@@ -268,14 +272,22 @@ class WatchpointHitHandler(StreamHandlerBase):
         return {'watch_point_hits': watch_point_hits}
 
     def _is_tensor_hit(self, tensor_name):
-        """Check if the tensor is record in hit cache."""
+        """
+        Check if the tensor is record in hit cache.
+
+        Args:
+            tensor_name (str): The name of full tensor name.
+
+        Returns:
+            bool, if the tensor is hit.
+        """
         node_name = tensor_name.split(':')[0]
         watchpoint_hits = self.get(node_name)
         if watchpoint_hits is None:
             return False
 
         for watchpoint_hit in watchpoint_hits:
-            if tensor_name == watchpoint_hit.tensor_name:
+            if tensor_name == watchpoint_hit.tensor_full_name:
                 return True
 
         return False
