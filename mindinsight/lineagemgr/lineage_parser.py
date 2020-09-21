@@ -15,7 +15,6 @@
 """This file is used to parse lineage info."""
 import os
 
-from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageSummaryAnalyzeException, \
     LineageEventNotExistException, LineageEventFieldNotExistException, LineageFileNotFoundError, \
     MindInsightException
@@ -64,8 +63,9 @@ class SuperLineageObj:
 
 class LineageParser:
     """Lineage parser."""
-    def __init__(self, summary_dir, update_time=None, added_info=None):
+    def __init__(self, train_id, summary_dir, update_time=None, added_info=None):
         self._summary_dir = summary_dir
+        self._train_id = train_id
         self._update_time = update_time
         self._added_info = added_info
 
@@ -154,7 +154,7 @@ class LineageParser:
         """Update lineage object."""
         if self._super_lineage_obj is None:
             lineage_obj = LineageObj(
-                self._summary_dir,
+                self._train_id,
                 train_lineage=lineage_info.train_lineage,
                 evaluation_lineage=lineage_info.eval_lineage,
                 dataset_graph=lineage_info.dataset_graph,
@@ -177,52 +177,13 @@ class LineageParser:
 
 class LineageOrganizer:
     """Lineage organizer."""
-    def __init__(self, data_manager=None, summary_base_dir=None):
+    def __init__(self, data_manager):
         self._data_manager = data_manager
-        self._summary_base_dir = summary_base_dir
-        self._check_params()
         self._super_lineage_objs = {}
         self._organize_from_cache()
-        self._organize_from_disk()
-
-    def _check_params(self):
-        """Check params."""
-        if self._data_manager is not None and self._summary_base_dir is not None:
-            self._summary_base_dir = None
-
-    def _organize_from_disk(self):
-        """Organize lineage objs from disk."""
-        if self._summary_base_dir is None:
-            return
-        summary_watcher = SummaryWatcher()
-        relative_dirs = summary_watcher.list_summary_directories(
-            summary_base_dir=self._summary_base_dir
-        )
-
-        no_lineage_count = 0
-        for item in relative_dirs:
-            relative_dir = item.get('relative_path')
-            update_time = item.get('update_time')
-            abs_summary_dir = os.path.realpath(os.path.join(self._summary_base_dir, relative_dir))
-
-            try:
-                lineage_parser = LineageParser(abs_summary_dir, update_time)
-                super_lineage_obj = lineage_parser.super_lineage_obj
-                if super_lineage_obj is not None:
-                    self._super_lineage_objs.update({abs_summary_dir: super_lineage_obj})
-            except LineageFileNotFoundError:
-                no_lineage_count += 1
-
-        if no_lineage_count == len(relative_dirs):
-            logger.info('There is no summary log file under summary_base_dir.')
-            raise LineageFileNotFoundError(
-                'There is no summary log file under summary_base_dir.'
-            )
 
     def _organize_from_cache(self):
         """Organize lineage objs from cache."""
-        if self._data_manager is None:
-            return
         brief_cache = self._data_manager.get_brief_cache()
         cache_items = brief_cache.cache_items
         for relative_dir, cache_train_job in cache_items.items():

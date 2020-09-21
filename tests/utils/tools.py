@@ -19,11 +19,13 @@ import io
 import os
 import shutil
 import json
+from pathlib import Path
 
 from urllib.parse import urlencode
-
 import numpy as np
 from PIL import Image
+
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamValueError
 
 
 def get_url(url, params):
@@ -138,3 +140,25 @@ def assert_equal_lineages(lineages1, lineages2, assert_func, decimal_num=2):
     else:
         deal_float_for_dict(lineages1, lineages2, decimal_num)
     assert_func(lineages1, lineages2)
+
+
+def get_relative_path(path, base_path):
+    """
+    Get relative path based on base_path.
+
+    Args:
+        path (str): absolute path.
+        base_path: absolute base path.
+
+    Returns:
+        str, relative path based on base_path.
+
+    """
+    try:
+        r_path = str(Path(path).relative_to(Path(base_path)))
+    except ValueError:
+        raise LineageParamValueError("The path %r does not start with %r." % (path, base_path))
+
+    if r_path == ".":
+        r_path = ""
+    return os.path.join("./", r_path)

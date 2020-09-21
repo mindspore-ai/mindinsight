@@ -72,12 +72,13 @@ class LineageCacheItemUpdater(BaseCacheItemUpdater):
 
     def _lineage_parsing(self, cache_item):
         """Parse summaries and return lineage parser."""
+        train_id = cache_item.train_id
         summary_dir = cache_item.abs_summary_dir
         update_time = cache_item.basic_info.update_time
 
         cached_lineage_item = cache_item.get(key=LINEAGE, raise_exception=False)
         if cached_lineage_item is None:
-            lineage_parser = LineageParser(summary_dir, update_time)
+            lineage_parser = LineageParser(train_id, summary_dir, update_time)
         else:
             lineage_parser = cached_lineage_item
             with cache_item.lock_key(LINEAGE):

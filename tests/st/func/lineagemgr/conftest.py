@@ -21,6 +21,9 @@ import tempfile
 
 import pytest
 
+from mindinsight.datavisual.data_transform.data_manager import DataManager
+from mindinsight.lineagemgr.cache_item_updater import LineageCacheItemUpdater
+
 from ....utils import mindspore
 from ....utils.mindspore.dataset.engine.serializer_deserializer import SERIALIZED_PIPELINE
 
@@ -30,6 +33,9 @@ BASE_SUMMARY_DIR = tempfile.NamedTemporaryFile(prefix='test_lineage_summary_dir_
 SUMMARY_DIR = os.path.join(BASE_SUMMARY_DIR, 'run1')
 SUMMARY_DIR_2 = os.path.join(BASE_SUMMARY_DIR, 'run2')
 SUMMARY_DIR_3 = os.path.join(BASE_SUMMARY_DIR, 'except_run')
+
+LINEAGE_DATA_MANAGER = DataManager(BASE_SUMMARY_DIR)
+LINEAGE_DATA_MANAGER.register_brief_cache_item_updater(LineageCacheItemUpdater())
 
 COLLECTION_MODULE = 'TestModelLineage'
 API_MODULE = 'TestModelApi'

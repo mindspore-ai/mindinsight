@@ -15,28 +15,14 @@
 """Lineage utils."""
 import os
 import re
-from pathlib import Path
 
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamValueError, LineageParamTypeError, \
-    LineageDirNotExistError, LineageParamSummaryPathError
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError
 from mindinsight.lineagemgr.common.log import logger as log
-from mindinsight.lineagemgr.common.validator.validate import validate_path
 
 
 def enum_to_list(enum):
     return [enum_ele.value for enum_ele in enum]
-
-
-def normalize_summary_dir(summary_dir):
-    """Normalize summary dir."""
-    try:
-        summary_dir = validate_path(summary_dir)
-    except (LineageParamValueError, LineageDirNotExistError) as error:
-        log.error(str(error))
-        log.exception(error)
-        raise LineageParamSummaryPathError(str(error.message))
-    return summary_dir
 
 
 def get_timestamp(filename):
@@ -68,25 +54,3 @@ def make_directory(path):
             log.error("No write permission on the directory(%r), error = %r", path, err)
             raise LineageParamTypeError("No write permission on the directory.")
     return real_path
-
-
-def get_relative_path(path, base_path):
-    """
-    Get relative path based on base_path.
-
-    Args:
-        path (str): absolute path.
-        base_path: absolute base path.
-
-    Returns:
-        str, relative path based on base_path.
-
-    """
-    try:
-        r_path = str(Path(path).relative_to(Path(base_path)))
-    except ValueError:
-        raise LineageParamValueError("The path %r does not start with %r." % (path, base_path))
-
-    if r_path == ".":
-        r_path = ""
-    return os.path.join("./", r_path)

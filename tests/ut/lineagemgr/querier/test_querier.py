@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Test the querier module."""
+import os
 import time
 
 from unittest import TestCase, mock
@@ -22,7 +23,7 @@ from google.protobuf.json_format import ParseDict
 
 import mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 as summary_pb2
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, LineageQuerierParamException
-from mindinsight.lineagemgr.lineage_parser import LineageOrganizer
+from mindinsight.lineagemgr.lineage_parser import LineageParser
 from mindinsight.lineagemgr.querier.querier import Querier
 from mindinsight.lineagemgr.summary.lineage_summary_analyzer import LineageInfo
 
@@ -104,6 +105,7 @@ def create_filtration_result(summary_dir, train_event_dict,
             "user_defined": {}
         },
         "dataset_graph": dataset_dict,
+        'added_info': {}
     }
     return filtration_result
 
@@ -162,42 +164,42 @@ LINEAGE_INFO_1 = {
     'dataset_graph': event_data.DATASET_DICT_0
 }
 LINEAGE_FILTRATION_0 = create_filtration_result(
-    '/path/to/summary0',
+    './summary0',
     event_data.EVENT_TRAIN_DICT_0,
     event_data.EVENT_EVAL_DICT_0,
     event_data.METRIC_0,
     event_data.DATASET_DICT_0
 )
 LINEAGE_FILTRATION_1 = create_filtration_result(
-    '/path/to/summary1',
+    './summary1',
     event_data.EVENT_TRAIN_DICT_1,
     event_data.EVENT_EVAL_DICT_1,
     event_data.METRIC_1,
     event_data.DATASET_DICT_0
 )
 LINEAGE_FILTRATION_2 = create_filtration_result(
-    '/path/to/summary2',
+    './summary2',
     event_data.EVENT_TRAIN_DICT_2,
     event_data.EVENT_EVAL_DICT_2,
     event_data.METRIC_2,
     event_data.DATASET_DICT_0
 )
 LINEAGE_FILTRATION_3 = create_filtration_result(
-    '/path/to/summary3',
+    './summary3',
     event_data.EVENT_TRAIN_DICT_3,
     event_data.EVENT_EVAL_DICT_3,
     event_data.METRIC_3,
     event_data.DATASET_DICT_0
 )
 LINEAGE_FILTRATION_4 = create_filtration_result(
-    '/path/to/summary4',
+    './summary4',
     event_data.EVENT_TRAIN_DICT_4,
     event_data.EVENT_EVAL_DICT_4,
     event_data.METRIC_4,
     event_data.DATASET_DICT_0
 )
 LINEAGE_FILTRATION_5 = {
-    "summary_dir": '/path/to/summary5',
+    "summary_dir": './summary5',
     "model_lineage": {
         "loss_function":
             event_data.EVENT_TRAIN_DICT_5['train_lineage']['hyper_parameters']['loss_function'],
@@ -219,10 +221,11 @@ LINEAGE_FILTRATION_5 = {
         "dataset_mark": '2',
         "user_defined": {}
     },
-    "dataset_graph": event_data.DATASET_DICT_0
+    "dataset_graph": event_data.DATASET_DICT_0,
+    "added_info": {}
 }
 LINEAGE_FILTRATION_6 = {
-    "summary_dir": '/path/to/summary6',
+    "summary_dir": './summary6',
     "model_lineage": {
         "loss_function": None,
         "train_dataset_path": None,
@@ -243,15 +246,16 @@ LINEAGE_FILTRATION_6 = {
         "dataset_mark": '2',
         "user_defined": {}
     },
-    "dataset_graph": event_data.DATASET_DICT_0
+    "dataset_graph": event_data.DATASET_DICT_0,
+    "added_info": {}
 }
 
 
 class TestQuerier(TestCase):
     """Test the class of `Querier`."""
+    _MOCK_DATA_MANAGER = MagicMock()
 
     @mock.patch('mindinsight.lineagemgr.lineage_parser.SummaryPathParser.get_lineage_summaries')
-    @mock.patch('mindinsight.lineagemgr.lineage_parser.SummaryWatcher.list_summary_directories')
     @mock.patch('mindinsight.lineagemgr.lineage_parser.LineageSummaryAnalyzer.get_user_defined_info')
     @mock.patch('mindinsight.lineagemgr.lineage_parser.LineageSummaryAnalyzer.get_summary_infos')
     @mock.patch('mindinsight.lineagemgr.lineage_parser.FileHandler')
@@ -263,139 +267,23 @@ class TestQuerier(TestCase):
             event_data.EVENT_DATASET_DICT_0
         )
         args[1].return_value = []
-        args[3].return_value = ['path']
+        args[2].return_value = ['path']
         mock_file_handler = MagicMock()
         mock_file_handler.size = 1
 
-        args[2].return_value = [{'relative_path': './', 'update_time': 1}]
-        single_summary_path = '/path/to/summary0'
-        lineage_objects = LineageOrganizer(summary_base_dir=single_summary_path).super_lineage_objs
-        self.single_querier = Querier(lineage_objects)
+        summary_dir = '/path/test/'
 
         lineage_infos = get_lineage_infos()
         args[0].side_effect = lineage_infos
-        summary_base_dir = '/path/to'
-        relative_dirs = []
+        lineage_objects = {}
         for i in range(7):
-            relative_dirs.append(dict(relative_path=f'./summary{i}', update_time=time.time() - i))
-        args[2].return_value = relative_dirs
-        lineage_objects = LineageOrganizer(summary_base_dir=summary_base_dir).super_lineage_objs
+            train_id = f'./summary{i}'
+            summary_dir = os.path.join(summary_dir, train_id)
+            update_time = time.time() - i
+            lineage_parser = LineageParser(train_id, summary_dir, update_time)
+            lineage_objects.update({train_id: lineage_parser.super_lineage_obj})
+
         self.multi_querier = Querier(lineage_objects)
-
-    def test_get_summary_lineage_success_1(self):
-        """Test the success of get_summary_lineage."""
-        expected_result = [LINEAGE_INFO_0]
-        result = self.single_querier.get_summary_lineage()
-        assert_equal_lineages(expected_result, result, self.assertListEqual)
-
-    def test_get_summary_lineage_success_2(self):
-        """Test the success of get_summary_lineage."""
-        expected_result = [LINEAGE_INFO_0]
-        result = self.single_querier.get_summary_lineage()
-        assert_equal_lineages(expected_result, result, self.assertListEqual)
-
-    def test_get_summary_lineage_success_3(self):
-        """Test the success of get_summary_lineage."""
-        expected_result = [
-            {
-                'summary_dir': '/path/to/summary0',
-                'model': event_data.EVENT_TRAIN_DICT_0['train_lineage']['model'],
-                'algorithm': event_data.EVENT_TRAIN_DICT_0['train_lineage']['algorithm']
-            }
-        ]
-        result = self.single_querier.get_summary_lineage(
-            filter_keys=['model', 'algorithm']
-        )
-        assert_equal_lineages(expected_result, result, self.assertListEqual)
-
-    def test_get_summary_lineage_success_4(self):
-        """Test the success of get_summary_lineage."""
-        expected_result = [
-            LINEAGE_INFO_0,
-            LINEAGE_INFO_1,
-            {
-                'summary_dir': '/path/to/summary2',
-                **event_data.EVENT_TRAIN_DICT_2['train_lineage'],
-                'metric': event_data.METRIC_2,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_2['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            },
-            {
-                'summary_dir': '/path/to/summary3',
-                **event_data.EVENT_TRAIN_DICT_3['train_lineage'],
-                'metric': event_data.METRIC_3,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_3['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            },
-            {
-                'summary_dir': '/path/to/summary4',
-                **event_data.EVENT_TRAIN_DICT_4['train_lineage'],
-                'metric': event_data.METRIC_4,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_4['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            },
-            {
-                'summary_dir': '/path/to/summary5',
-                **event_data.EVENT_TRAIN_DICT_5['train_lineage'],
-                'metric': {},
-                'valid_dataset': {},
-                'dataset_graph': event_data.DATASET_DICT_0
-            },
-            {
-                'summary_dir': '/path/to/summary6',
-                'hyper_parameters': {},
-                'algorithm': {},
-                'model': {},
-                'train_dataset': {},
-                'metric': event_data.METRIC_5,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_5['evaluation_lineage']['valid_dataset'],
-                'dataset_graph': event_data.DATASET_DICT_0
-            }
-        ]
-        result = self.multi_querier.get_summary_lineage()
-        assert_equal_lineages(expected_result, result, self.assertListEqual)
-
-    def test_get_summary_lineage_success_5(self):
-        """Test the success of get_summary_lineage."""
-        expected_result = [LINEAGE_INFO_1]
-        result = self.multi_querier.get_summary_lineage(
-            summary_dir='/path/to/summary1'
-        )
-        assert_equal_lineages(expected_result, result, self.assertListEqual)
-
-    def test_get_summary_lineage_success_6(self):
-        """Test the success of get_summary_lineage."""
-        expected_result = [
-            {
-                'summary_dir': '/path/to/summary0',
-                'hyper_parameters': event_data.EVENT_TRAIN_DICT_0['train_lineage']['hyper_parameters'],
-                'train_dataset': event_data.EVENT_TRAIN_DICT_0['train_lineage']['train_dataset'],
-                'metric': event_data.METRIC_0,
-                'valid_dataset': event_data.EVENT_EVAL_DICT_0['evaluation_lineage']['valid_dataset']
-            }
-        ]
-        filter_keys = [
-            'metric', 'hyper_parameters', 'train_dataset', 'valid_dataset'
-        ]
-        result = self.multi_querier.get_summary_lineage(
-            summary_dir='/path/to/summary0', filter_keys=filter_keys
-        )
-        assert_equal_lineages(expected_result, result, self.assertListEqual)
-
-    def test_get_summary_lineage_fail(self):
-        """Test the function of get_summary_lineage with exception."""
-        filter_keys = ['xxx']
-        self.assertRaises(
-            LineageQuerierParamException,
-            self.multi_querier.get_summary_lineage,
-            filter_keys=filter_keys
-        )
-
-        self.assertRaises(
-            LineageQuerierParamException,
-            self.multi_querier.get_summary_lineage,
-            summary_dir='xxx'
-        )
 
     def test_filter_summary_lineage_success_1(self):
         """Test the success of filter_summary_lineage."""

@@ -210,6 +210,11 @@ class CachedTrainJob:
         """Threading lock with given key."""
         return self._key_locks.setdefault(key, threading.Lock())
 
+    @property
+    def train_id(self):
+        """Get train id."""
+        return self._basic_info.train_id
+
 
 class TrainJob:
     """
