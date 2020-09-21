@@ -893,6 +893,8 @@ class DataManager:
                 except UnknownError as exc:
                     # Not raising the exception here to ensure that data reloading does not crash.
                     logger.warning(exc.message)
+                finally:
+                    self._status = DataManagerStatus.DONE.value
                 if not reload_interval:
                     break
                 time.sleep(reload_interval)
