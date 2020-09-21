@@ -73,13 +73,13 @@
     "dataProcessTipSecond": "以供展示单次模型训练的数据处理和数据增强信息。",
     "imageTipFirst": "指定图片",
     "imageTipSecond": "以供展示。",
-    "guidUrl": "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/summary_record.html",
-    "scalarUrl": "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/dashboard.html#id3",
-    "histogramUrl": "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/dashboard.html#id4",
-    "tensorUrl": "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/dashboard.html#id8",
-    "graphUrl": "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/dashboard.html#id5",
-    "dataProcessUrl": "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/dashboard.html#id6",
-    "imageUrl": "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/dashboard.html#id7"
+    "guidUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/summary_record.html",
+    "scalarUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id3",
+    "histogramUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id4",
+    "tensorUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id8",
+    "graphUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id5",
+    "dataProcessUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id6",
+    "imageUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id7"
   },
   "modelTraceback": {
     "summaryPath": "训练日志路径",
@@ -297,10 +297,10 @@
       "desc": "如何使用Profiler进行性能分析",
       "anchor": ["desc"],
       "url": [
-        "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/performance_profiling.html"
+        "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/performance_profiling.html"
       ],
       "gpuUrl": [
-        "https://www.mindspore.cn/tutorial/zh-CN/master/advanced_use/performance_profiling_gpu.html"
+        "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/performance_profiling_gpu.html"
       ]
     },
     "step_trace-proposer_type_label": {

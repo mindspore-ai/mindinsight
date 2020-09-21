@@ -73,13 +73,13 @@
     "dataProcessTipSecond": "to display the data processing and augmentation information of single model training.",
     "imageTipFirst": "specified image ",
     "imageTipSecond": "for display.",
-    "guidUrl": "https://www.mindspore.cn/tutorial/en/master/advanced_use/summary_record.html",
-    "scalarUrl": "https://www.mindspore.cn/tutorial/en/master/advanced_use/dashboard.html#scalar-visualization",
-    "histogramUrl": "https://www.mindspore.cn/tutorial/en/master/advanced_use/dashboard.html#parameter-distribution-visualization",
-    "tensorUrl": "https://www.mindspore.cn/tutorial/en/master/advanced_use/dashboard.html#tensor-visualization",
-    "graphUrl": "https://www.mindspore.cn/tutorial/en/master/advanced_use/dashboard.html#computational-graph-visualization",
-    "dataProcessUrl": "https://www.mindspore.cn/tutorial/en/master/advanced_use/dashboard.html#dataset-graph-visualization",
-    "imageUrl": "https://www.mindspore.cn/tutorial/en/master/advanced_use/dashboard.html#image-visualization"
+    "guidUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/summary_record.html",
+    "scalarUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#scalar-visualization",
+    "histogramUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#parameter-distribution-visualization",
+    "tensorUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#tensor-visualization",
+    "graphUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#computational-graph-visualization",
+    "dataProcessUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#dataset-graph-visualization",
+    "imageUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#image-visualization"
   },
   "modelTraceback": {
     "summaryPath": "Summary Path",
@@ -298,10 +298,10 @@
       "desc": "How Do I Use Profiler for Profiling?",
       "anchor": ["desc"],
       "url": [
-        "https://www.mindspore.cn/tutorial/en/master/advanced_use/performance_profiling.html"
+        "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/performance_profiling.html"
       ],
       "gpuUrl": [
-        "https://www.mindspore.cn/tutorial/en/master/advanced_use/performance_profiling_gpu.html"
+        "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/performance_profiling_gpu.html"
       ]
     },
     "step_trace-proposer_type_label": {
