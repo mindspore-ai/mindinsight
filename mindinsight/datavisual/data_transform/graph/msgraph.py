@@ -20,7 +20,7 @@ from .node import Node
 from .node import NodeTypeEnum
 from .graph import Graph
 from .graph import EdgeTypeEnum
-from .graph import escape_html
+from .graph import check_invalid_character
 
 
 class MSGraph(Graph):
@@ -65,10 +65,8 @@ class MSGraph(Graph):
             else:
                 node_name = node_proto.full_name
 
-            # Because the Graphviz plug-in that the UI USES can't handle these special characters,
-            # the special characters are HTML escaped to avoid UI crash.
-            # Doing this on the backend prevents the frontend from doing it every time.
-            node_name = escape_html(node_name)
+            # The Graphviz plug-in that the UI USES can't handle these special characters.
+            check_invalid_character(node_name)
 
             node = Node(name=node_name, node_id=node_proto.name)
             node.full_name = node_proto.full_name
@@ -97,6 +95,7 @@ class MSGraph(Graph):
             if not parameter.name:
                 logger.warning("Finding a parameter with an empty name will not save it.")
                 continue
+            check_invalid_character(parameter.name)
             node = Node(name=parameter.name, node_id=parameter.name)
             node.type = NodeTypeEnum.PARAMETER.value
             node.output_shape = self._get_shape_by_parse_type_proto(parameter.type)
@@ -124,6 +123,7 @@ class MSGraph(Graph):
             if not const.key:
                 logger.warning("Finding a const with an empty key will not save it.")
                 continue
+            check_invalid_character(const.key)
             node = Node(name=const.key, node_id=const.key)
             node.type = NodeTypeEnum.CONST.value
             if const.value.ByteSize() > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:

@@ -28,12 +28,13 @@ from .node import NodeTypeEnum
 from .node import Node
 
 
-def escape_html(string):
-    """Escape some html special string to avoid the frontend crash."""
-    string = string.replace('<', '&lt;')
-    string = string.replace('>', '&gt;')
-    string = string.replace('"', '&quot;')
-    return string
+def check_invalid_character(string):
+    """Check for invalid characters. These characters will cause frontend crash."""
+    invalid_char = {'>', '<', '"'}
+    result = set(string).intersection(invalid_char)
+    if result:
+        raise ParamValueError(f"There are some invalid characters in graph node, invalid string: {string}, "
+                              f"unexpected characters: {result}")
 
 
 class EdgeTypeEnum(Enum):
