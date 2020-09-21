@@ -287,7 +287,7 @@ class WatchpointHitHandler(StreamHandlerBase):
             return False
 
         for watchpoint_hit in watchpoint_hits:
-            if tensor_name == watchpoint_hit.tensor_full_name:
+            if tensor_name == watchpoint_hit.tensor_name:
                 return True
 
         return False
@@ -304,7 +304,7 @@ class WatchpointHitHandler(StreamHandlerBase):
 
         # add hit tensor names to `tensor_names`
         for tensor_info in tensor_history.get('tensor_history'):
-            tensor_name = tensor_info['full_name']
+            tensor_name = tensor_info['name']
             hit_flag = self._is_tensor_hit(tensor_name)
             tensor_info['is_hit'] = hit_flag
 

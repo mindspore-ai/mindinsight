@@ -285,8 +285,14 @@ class WatchpointHit:
 
     @property
     def tensor_full_name(self):
-        """The property of tensor_name."""
+        """The property of tensor full name."""
         tensor_name = ':'.join([self._full_name, self._slot])
+        return tensor_name
+
+    @property
+    def tensor_name(self):
+        """The property of tensor ui name."""
+        tensor_name = ':'.join([self._node_name, self._slot])
         return tensor_name
 
     @property

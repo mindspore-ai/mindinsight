@@ -177,6 +177,12 @@ class DebuggerServer:
             log.error("Invalid param <mode>. <mode> should be in ['all', 'node', 'watchpoint', "
                       "'watchpoint_hit', 'tensor'], but got %s.", mode_mapping)
             raise DebuggerParamTypeError("Invalid mode.")
+        # validate backend status
+        metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
+        if metadata_stream.state == ServerStatus.PENDING.value:
+            log.info("The backend is in pending status.")
+            return metadata_stream.get()
+
         filter_condition = {} if filter_condition is None else filter_condition
         reply = mode_mapping[mode](filter_condition)
 
@@ -262,12 +268,12 @@ class DebuggerServer:
             dict, the tensor history and metadata.
         """
         log.info("Retrieve tensor history for node: %s.", node_name)
+        metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
+        if metadata_stream.state == ServerStatus.PENDING.value:
+            log.info("The backend is in pending status.")
+            return metadata_stream.get()
         self._validate_leaf_name(node_name)
-        try:
-            res = self._get_tensor_history(node_name)
-        except MindInsightException:
-            log.warning("Failed to get tensor history for %s.", node_name)
-            res = {}
+        res = self._get_tensor_history(node_name)
         return res
 
     def _validate_leaf_name(self, node_name):
