@@ -39,6 +39,7 @@ from mindinsight.datavisual.data_transform.tensor_container import TensorContain
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
 from mindinsight.datavisual.utils import crc32
+from mindinsight.datavisual.utils.tools import exception_no_raise_wrapper
 from mindinsight.utils.computing_resource_mgr import ComputingResourceManager, Executor
 from mindinsight.utils.exceptions import UnknownError
 
@@ -199,14 +200,10 @@ class _PbParser(_Parser):
                 continue
             future = executor.submit(self._parse_pb_file, self._summary_dir, filename)
             def add_tensor_event(future_value):
-                try:
-                    tensor_event = future_value.result()
-                    if tensor_event is not None:
-                        events_data.add_tensor_event(tensor_event)
-                except Exception as ex:
-                    logger.exception(ex)
-                    raise UnknownError(str(ex))
-            future.add_done_callback(add_tensor_event)
+                tensor_event = future_value.result()
+                if tensor_event is not None:
+                    events_data.add_tensor_event(tensor_event)
+            future.add_done_callback(exception_no_raise_wrapper(add_tensor_event))
             return False
         return True
 
@@ -386,26 +383,21 @@ class _SummaryParser(_Parser):
                 future = executor.submit(self._event_parse, event_str, self._latest_filename)
 
                 def _add_tensor_event_callback(future_value):
-                    try:
-                        tensor_values = future_value.result()
-                        for tensor_value in tensor_values:
-                            if tensor_value.plugin_name == PluginNameEnum.GRAPH.value:
-                                try:
-                                    graph_tags = events_data.list_tags_by_plugin(PluginNameEnum.GRAPH.value)
-                                except KeyError:
-                                    graph_tags = []
+                    tensor_values = future_value.result()
+                    for tensor_value in tensor_values:
+                        if tensor_value.plugin_name == PluginNameEnum.GRAPH.value:
+                            try:
+                                graph_tags = events_data.list_tags_by_plugin(PluginNameEnum.GRAPH.value)
+                            except KeyError:
+                                graph_tags = []
 
-                                summary_tags = self.filter_files(graph_tags)
-                                for tag in summary_tags:
-                                    events_data.delete_tensor_event(tag)
+                            summary_tags = self.filter_files(graph_tags)
+                            for tag in summary_tags:
+                                events_data.delete_tensor_event(tag)
 
-                            events_data.add_tensor_event(tensor_value)
-                    except Exception as exc:
-                        # Log exception for debugging.
-                        logger.exception(exc)
-                        raise
+                        events_data.add_tensor_event(tensor_value)
 
-                future.add_done_callback(_add_tensor_event_callback)
+                future.add_done_callback(exception_no_raise_wrapper(_add_tensor_event_callback))
                 return False
             except exceptions.CRCFailedError:
                 file_handler.reset_offset(start_offset)
