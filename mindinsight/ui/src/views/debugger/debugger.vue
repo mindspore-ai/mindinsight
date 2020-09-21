@@ -994,11 +994,13 @@ export default {
             if (res.data && res.data.metadata) {
               this.dealMetadata(res.data.metadata);
             }
-            if (res.data && res.data.tensor_history) {
-              this.tableData = res.data.tensor_history;
-              this.dealTableData(this.tableData);
-            } else {
-              this.tableData = [];
+            if (data.name === this.nodeName) {
+              if (res.data && res.data.tensor_history) {
+                this.tableData = res.data.tensor_history;
+                this.dealTableData(this.tableData);
+              } else {
+                this.tableData = [];
+              }
             }
           },
           (err) => {
@@ -1160,8 +1162,7 @@ export default {
                 res.data.receive_tensor &&
               res.data.metadata &&
               res.data.metadata.step >= this.metadata.step &&
-              res.data.receive_tensor.node_name ===
-                this.$refs.tree.getCurrentKey()
+              res.data.receive_tensor.node_name === this.nodeName
               ) {
                 this.retrieveTensorHistory({
                   name: res.data.receive_tensor.node_name,
@@ -1851,6 +1852,8 @@ export default {
      */
     updateTensorValue(key) {
       const name = this.watchPointHits[key].node_name;
+      const temName = this.nodeName;
+      this.nodeName = name;
       const params = {
         mode: 'watchpoint_hit',
         params: {
@@ -1872,10 +1875,7 @@ export default {
             if (res.data.metadata) {
               this.dealMetadata(res.data.metadata, false);
             }
-            if (res.data && res.data.tensor_history) {
-              this.tableData = res.data.tensor_history;
-              this.dealTableData(this.tableData);
-            }
+            this.retrieveTensorHistory({name: this.nodeName});
             if (res.data && res.data.graph) {
               const graph = res.data.graph;
               if (graph.children) {
@@ -1891,6 +1891,7 @@ export default {
           },
           (err) => {
             this.showErrorMsg(err);
+            this.nodeName = temName;
           },
       );
     },
@@ -3570,6 +3571,8 @@ export default {
           }
           if (ignoreType.includes(type)) {
             this.tableData = [];
+          } else {
+            this.nodeName = this.selectedNode.name;
           }
         }
       }
@@ -4018,6 +4021,10 @@ export default {
               this.$t('error')[`${error.response.data.error_code}`],
           );
         } else {
+          if (error.response.data.error_code === '5054B101') {
+            // The error "The graph does not exist" should not display in front page;
+            return;
+          }
           this.$message.error(error.response.data.error_msg);
         }
       }
