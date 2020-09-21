@@ -13,13 +13,11 @@
 # limitations under the License.
 # ============================================================================
 """Validate the parameters."""
-import os
 import re
 from marshmallow import ValidationError
 
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors, LineageErrorMsg
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, \
-    LineageParamValueError, LineageDirNotExistError
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, LineageParamValueError
 from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.validator.validate_path import safe_normalize_path
 from mindinsight.lineagemgr.querier.query_model import FIELD_MAPPING
@@ -224,38 +222,6 @@ def validate_raise_exception(raise_exception):
         )
 
 
-def validate_filter_key(keys):
-    """
-    Verify the keys of filtering is valid or not.
-
-    Args:
-        keys (list): The keys to get the relative lineage info.
-
-    Raises:
-        LineageParamTypeError: If keys is not list.
-        LineageParamValueError: If the value of keys is invalid.
-    """
-    filter_keys = [
-        'metric', 'hyper_parameters', 'algorithm',
-        'train_dataset', 'model', 'valid_dataset',
-        'dataset_graph'
-    ]
-
-    if not isinstance(keys, list):
-        log.error("Keys must be list.")
-        raise LineageParamTypeError("Keys must be list.")
-
-    for element in keys:
-        if not isinstance(element, str):
-            log.error("Element of keys must be str.")
-            raise LineageParamTypeError("Element of keys must be str.")
-
-    if not set(keys).issubset(filter_keys):
-        err_msg = "Keys must be in {}.".format(filter_keys)
-        log.error(err_msg)
-        raise LineageParamValueError(err_msg)
-
-
 def validate_condition(search_condition):
     """
     Verify the param in search_condition is valid or not.
@@ -308,31 +274,6 @@ def validate_condition(search_condition):
             err_msg = "The sorted_type must be ascending or descending."
             log.error(err_msg)
             raise LineageParamValueError(err_msg)
-
-
-def validate_path(summary_path):
-    """
-    Verify the summary path is valid or not.
-
-    Args:
-        summary_path (str): The summary path which is a dir.
-
-    Raises:
-        LineageParamValueError: If the input param value is invalid.
-        LineageDirNotExistError: If the summary path is invalid.
-    """
-    try:
-        summary_path = safe_normalize_path(
-            summary_path, "summary_path", None, check_absolute_path=True
-        )
-    except ValidationError:
-        log.error("The summary path is invalid.")
-        raise LineageParamValueError("The summary path is invalid.")
-    if not os.path.isdir(summary_path):
-        log.error("The summary path does not exist or is not a dir.")
-        raise LineageDirNotExistError("The summary path does not exist or is not a dir.")
-
-    return summary_path
 
 
 def validate_user_defined_info(user_defined_info):

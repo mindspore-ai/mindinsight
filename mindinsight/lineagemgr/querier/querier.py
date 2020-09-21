@@ -189,53 +189,7 @@ class Querier:
             raise LineageParamTypeError("Init param should be a dict.")
         return super_lineage_objs
 
-    def get_summary_lineage(self, summary_dir=None, filter_keys=None):
-        """
-        Get summary lineage information.
-
-        If a summary dir is specified, the special summary lineage information
-        will be found. If the summary dir is `None`, all summary lineage
-        information will be found.
-
-        Returns the content corresponding to the specified field in the filter
-        key. The contents of the filter key include `metric`, `hyper_parameters`,
-        `algorithm`, `train_dataset`, `valid_dataset` and `model`. You can
-        specify multiple filter keys in the `filter_keys`. If the parameter is
-        `None`, complete information will be returned.
-
-        Args:
-            summary_dir (Union[str, None]): Summary log dir. Default: None.
-            filter_keys (Union[list[str], None]): Filter keys. Default: None.
-
-        Returns:
-            list[dict], summary lineage information.
-        """
-
-        if filter_keys is None:
-            filter_keys = LineageFilterKey.get_key_list()
-        else:
-            for key in filter_keys:
-                if not LineageFilterKey.is_valid_filter_key(key):
-                    raise LineageQuerierParamException(
-                        filter_keys, 'The filter key {} is invalid.'.format(key)
-                    )
-
-        if summary_dir is None:
-            result = [
-                item.lineage_obj.get_summary_info(filter_keys) for item in self._super_lineage_objs.values()
-            ]
-        elif summary_dir in self._super_lineage_objs:
-            lineage_obj = self._super_lineage_objs[summary_dir].lineage_obj
-            result = [lineage_obj.get_summary_info(filter_keys)]
-        else:
-            raise LineageQuerierParamException(
-                'summary_dir',
-                'Summary dir {} does not exist.'.format(summary_dir)
-            )
-
-        return result
-
-    def filter_summary_lineage(self, condition=None, added=False):
+    def filter_summary_lineage(self, condition=None):
         """
         Filter and sort lineage information based on the specified condition.
 
@@ -298,8 +252,7 @@ class Querier:
                 lineage_object.update(item.lineage_obj.to_model_lineage_dict())
             if LineageType.DATASET.value in lineage_types:
                 lineage_object.update(item.lineage_obj.to_dataset_lineage_dict())
-            if added:
-                lineage_object.update({"added_info": item.added_info})
+            lineage_object.update({"added_info": item.added_info})
             object_items.append(lineage_object)
 
         lineage_info = {
