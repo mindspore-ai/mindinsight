@@ -28,8 +28,7 @@ rename_wheel() {
         PYTHON_VERSION_NUM=$(echo "$VERSION" | awk -F"." '{print $1$2}')
         PYTHON_VERSION_TAG="cp$PYTHON_VERSION_NUM"
         PYTHON_ABI_TAG="cp${PYTHON_VERSION_NUM}m"
-        OS_NAME=$(uname | tr '[:upper:]' '[:lower:]')
-        MACHINE_TAG="${OS_NAME}_$(uname -i)"
+        MACHINE_TAG="$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)"
         PACKAGE_NEW="mindinsight-$MINDINSIGHT_VERSION-$PYTHON_VERSION_TAG-$PYTHON_ABI_TAG-$MACHINE_TAG.whl"
         mv "$PACKAGE_ORIG" "$PACKAGE_NEW"
     done
