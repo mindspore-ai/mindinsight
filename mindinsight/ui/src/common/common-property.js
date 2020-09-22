@@ -112,7 +112,7 @@ export default {
     '.edge path {stroke: rgb(120, 120, 120);}.edge polygon {fill: rgb(120, 120, 120);}' +
     '.node.aggregation > polygon {stroke: #e3aa00;fill: #ffe794;}.node.cluster.aggregation > ' +
     'rect {stroke: #e3aa00;fill: #ffe794;stroke-dasharray: 3, 3;}' +
-    '.node.cluster > rect:hover {stroke: #8df1f2;}.node > polygon {stroke: #00a5a7;fill: #rgb(141,241,242);}' +
+    '.node.cluster > rect:hover {stroke: #8df1f2;}.node > polygon {stroke: #00a5a7;fill: rgb(141,241,242);}' +
     '.node > ellipse {stroke: #4ea6e6;fill: #b8e0ff;}.node > path {stroke: #e37d29;fill: #ffd0a6;' +
     'stroke-dasharray: 3, 3;}' +
     '.hide {visibility: hidden;}.show {visibility: visible;}' +
