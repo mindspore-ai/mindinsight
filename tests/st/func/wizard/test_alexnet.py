@@ -18,6 +18,7 @@ Function:
     Test the various combinations based on AlexNet.
 """
 import os
+import shutil
 import pytest
 
 from mindinsight.wizard.base.utility import load_network_maker
@@ -50,21 +51,6 @@ class TestAlexNet:
                    'dataset': 'Cifar10'},
         'dataset_loader_name': 'Cifar10Dataset'
     }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Momentum',
-                   'dataset': 'Cifar10'},
-        'dataset_loader_name': 'Cifar10Dataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Adam',
-                   'dataset': 'Cifar10'},
-        'dataset_loader_name': 'Cifar10Dataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'SGD',
-                   'dataset': 'Cifar10'},
-        'dataset_loader_name': 'Cifar10Dataset'
-    }, {
         'config': {'loss': 'SoftmaxCrossEntropyWithLogits',
                    'optimizer': 'Momentum',
                    'dataset': 'ImageNet'},
@@ -76,21 +62,6 @@ class TestAlexNet:
         'dataset_loader_name': 'ImageFolderDataset'
     }, {
         'config': {'loss': 'SoftmaxCrossEntropyWithLogits',
-                   'optimizer': 'SGD',
-                   'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Momentum',
-                   'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Adam',
-                   'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
                    'optimizer': 'SGD',
                    'dataset': 'ImageNet'},
         'dataset_loader_name': 'ImageFolderDataset'
@@ -105,33 +76,51 @@ class TestAlexNet:
         network_maker = load_network_maker(network_maker_name)
         network_maker.configure(config)
 
-        self.source_files = network_maker.generate(**config)
+        source_files = network_maker.generate(**config)
 
-        self.check_scripts()
-        self.check_src(dataset_loader_name, config)
-        self.check_train_eval_readme(config['dataset'], config['loss'], config['optimizer'])
+        self.output_dir = os.path.realpath('test_folder')
+        for source_file in source_files:
+            source_file.write(self.output_dir)
+
+        try:
+            self.check_scripts()
+            self.check_src(dataset_loader_name, config)
+            self.check_train_eval_readme(config['dataset'], config['loss'], config['optimizer'])
+        finally:
+            shutil.rmtree(self.output_dir)
 
     def check_src(self, dataset_name, config):
         """Check src file."""
+        unexpected_file_exists = False
         dataset_is_right = False
         config_dataset_is_right = False
         config_optimizer_is_right = False
         network_is_right = False
         generator_lr_is_right = False
-        for source_file in self.source_files:
-            if source_file.file_relative_path == 'src/dataset.py':
-                if dataset_name in source_file.content:
-                    dataset_is_right = True
-            if source_file.file_relative_path == os.path.join('src', NETWORK_NAME.lower()+'.py'):
-                network_is_right = True
-            if source_file.file_relative_path == 'src/generator_lr.py':
-                generator_lr_is_right = True
-            if source_file.file_relative_path == 'src/config.py':
-                content = source_file.content
 
-                config_dataset_is_right = self._check_config_dataset(config, content)
-                config_optimizer_is_right = self._check_config_optimizer(config, content)
+        sub_output_dir_list = os.walk(self.output_dir)
+        for sub_output_dir in sub_output_dir_list:
+            for sub_output_file in sub_output_dir[-1]:
+                content_dir = os.path.relpath(
+                    os.path.join(sub_output_dir[0], sub_output_file),
+                    self.output_dir)
 
+                try:
+                    with open(os.path.realpath(os.path.join(self.output_dir, content_dir))) as file:
+                        content = file.read()
+                        if content_dir == 'src/dataset.py' and dataset_name in content:
+                            dataset_is_right = True
+                        elif content_dir == os.path.join('src', NETWORK_NAME.lower() + '.py'):
+                            network_is_right = True
+                        elif content_dir == 'src/generator_lr.py':
+                            generator_lr_is_right = True
+                        elif content_dir == 'src/config.py':
+                            config_dataset_is_right = self._check_config_dataset(config, content)
+                            config_optimizer_is_right = self._check_config_optimizer(config, content)
+                except IOError:
+                    unexpected_file_exists = True
+
+        assert not unexpected_file_exists
         assert dataset_is_right
         assert config_dataset_is_right
         assert config_optimizer_is_right
@@ -168,24 +157,33 @@ class TestAlexNet:
     def check_train_eval_readme(self, dataset_name, loss_name, optimizer_name):
         """Check train and eval."""
 
+        unexpected_file_exists = False
         train_is_right = False
         eval_is_right = False
         readme_is_right = False
-        for source_file in self.source_files:
-            if source_file.file_relative_path == 'train.py':
-                content = source_file.content
-                if 'alexnet' in content and loss_name in content and optimizer_name in content:
-                    train_is_right = True
 
-            if source_file.file_relative_path == 'eval.py':
-                content = source_file.content
-                if 'alexnet' in content and loss_name in content:
-                    eval_is_right = True
+        sub_output_dir_list = os.walk(self.output_dir)
+        for sub_output_dir in sub_output_dir_list:
+            for sub_output_file in sub_output_dir[-1]:
+                content_dir = os.path.relpath(
+                    os.path.join(sub_output_dir[0], sub_output_file),
+                    self.output_dir)
 
-            if source_file.file_relative_path == 'README.md':
-                content = source_file.content
-                if 'AlexNet' in content and dataset_name in content:
-                    readme_is_right = True
+                try:
+                    with open(os.path.realpath(os.path.join(self.output_dir, content_dir))) as file:
+                        content = file.read()
+                        if content_dir == 'train.py' \
+                                and 'alexnet' in content \
+                                and loss_name in content and optimizer_name in content:
+                            train_is_right = True
+                        elif content_dir == 'eval.py' and 'alexnet' in content and loss_name in content:
+                            eval_is_right = True
+                        elif content_dir == 'README.md' and 'AlexNet' in content and dataset_name in content:
+                            readme_is_right = True
+                except IOError:
+                    unexpected_file_exists = True
+
+        assert not unexpected_file_exists
         assert train_is_right
         assert eval_is_right
         assert readme_is_right
@@ -200,19 +198,25 @@ class TestAlexNet:
         exist_run_standalone_train = False
         exist_run_standalone_train_gpu = False
 
-        for source_file in self.source_files:
-            if source_file.file_relative_path == 'scripts/run_distribute_train.sh':
-                exist_run_distribute_train = True
-            if source_file.file_relative_path == 'scripts/run_distribute_train_gpu.sh':
-                exist_run_distribute_train_gpu = True
-            if source_file.file_relative_path == 'scripts/run_eval.sh':
-                exist_run_eval = True
-            if source_file.file_relative_path == 'scripts/run_eval_gpu.sh':
-                exist_run_eval_gpu = True
-            if source_file.file_relative_path == 'scripts/run_standalone_train.sh':
-                exist_run_standalone_train = True
-            if source_file.file_relative_path == 'scripts/run_standalone_train_gpu.sh':
-                exist_run_standalone_train_gpu = True
+        sub_output_dir_list = os.walk(self.output_dir)
+        for sub_output_dir in sub_output_dir_list:
+            for sub_output_file in sub_output_dir[-1]:
+                content_dir = os.path.relpath(
+                    os.path.join(sub_output_dir[0], sub_output_file),
+                    self.output_dir)
+
+                if content_dir == 'scripts/run_distribute_train.sh':
+                    exist_run_distribute_train = True
+                elif content_dir == 'scripts/run_distribute_train_gpu.sh':
+                    exist_run_distribute_train_gpu = True
+                elif content_dir == 'scripts/run_eval.sh':
+                    exist_run_eval = True
+                elif content_dir == 'scripts/run_eval_gpu.sh':
+                    exist_run_eval_gpu = True
+                elif content_dir == 'scripts/run_standalone_train.sh':
+                    exist_run_standalone_train = True
+                elif content_dir == 'scripts/run_standalone_train_gpu.sh':
+                    exist_run_standalone_train_gpu = True
 
         assert exist_run_distribute_train
         assert exist_run_distribute_train_gpu

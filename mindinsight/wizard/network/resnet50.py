@@ -14,5 +14,5 @@ class Network(GenericNetwork):
     """Network code generator."""
     name = 'resnet50'
     supported_datasets = ['Cifar10', 'ImageNet']
-    supported_loss_functions = ['SoftmaxCrossEntropyWithLogits', 'SoftmaxCrossEntropyExpand']
+    supported_loss_functions = ['SoftmaxCrossEntropyWithLogits']
     supported_optimizers = ['Momentum', 'Adam', 'SGD']

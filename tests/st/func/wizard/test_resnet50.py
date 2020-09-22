@@ -50,21 +50,6 @@ class TestResNet50:
                    'dataset': 'Cifar10'},
         'dataset_loader_name': 'Cifar10Dataset'
     }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Momentum',
-                   'dataset': 'Cifar10'},
-        'dataset_loader_name': 'Cifar10Dataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Adam',
-                   'dataset': 'Cifar10'},
-        'dataset_loader_name': 'Cifar10Dataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'SGD',
-                   'dataset': 'Cifar10'},
-        'dataset_loader_name': 'Cifar10Dataset'
-    }, {
         'config': {'loss': 'SoftmaxCrossEntropyWithLogits',
                    'optimizer': 'Momentum',
                    'dataset': 'ImageNet'},
@@ -76,21 +61,6 @@ class TestResNet50:
         'dataset_loader_name': 'ImageFolderDataset'
     }, {
         'config': {'loss': 'SoftmaxCrossEntropyWithLogits',
-                   'optimizer': 'SGD',
-                   'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Momentum',
-                   'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Adam',
-                   'dataset': 'ImageNet'},
-        'dataset_loader_name': 'ImageFolderDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
                    'optimizer': 'SGD',
                    'dataset': 'ImageNet'},
         'dataset_loader_name': 'ImageFolderDataset'

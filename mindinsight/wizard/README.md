@@ -27,11 +27,17 @@ Run the mindwizard command and answer the following questions as prompted：
 
 1. Select a network（LeNet / AlexNet / ResNet50 / ...）
 
-    1.1. Select a Loss Function（SoftmaxCrossEntropyExpand / SoftmaxCrossEntropyWithLogits / ...）
+    1.1. Select a Loss Function（SoftmaxCrossEntropyWithLogits / ...）
+    
+    Default: SoftmaxCrossEntropyWithLogits
 
     1.2. Select a Optimizer（Adam / Momentum / SGD ...）
+    
+    Default: Momentum
 
 2. Select a Dataset（MNIST / Cifar10 / ImageNet / ...）
+
+Default: MNIST or ImageNet
 
 After the project is generated, user can perform training and evaluation. For details, see README in the network project.
 
@@ -66,18 +72,21 @@ $ mindwizard project
    2: lenet
    3: resnet50
  : 2
+Your choice is lenet.
 >>> Please select a loss function:
-   1: SoftmaxCrossEntropyExpand
-   2: SoftmaxCrossEntropyWithLogits
- [2]: 2
+   1: SoftmaxCrossEntropyWithLogits
+ [1]: 1
+Your choice is SoftmaxCrossEntropyWithLogits.
 >>> Please select an optimizer:
    1: Adam
    2: Momentum
    3: SGD
  [2]: 2
+Your choice is Momentum.
 >>> Please select a dataset:
    1: MNIST
  [1]: 1
+Your choice is MNIST.
 
 project is generated in $PWD/project
 
