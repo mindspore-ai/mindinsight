@@ -559,6 +559,7 @@ export default {
       resolve: null,
       toleranceInput: 0,
       showFilterInput: true,
+      currentNodeName: '',
     };
   },
   components: {debuggerGridTable},
@@ -806,7 +807,7 @@ export default {
         mode: 'node',
         params: {
           watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
-          name: this.nodeName,
+          name: this.currentNodeName,
           single_node: true,
           node_type: 'leaf',
         },
@@ -820,12 +821,12 @@ export default {
               if (res.data.graph) {
                 const graph = res.data.graph;
                 if (graph.children) {
-                  this.dealTreeData(graph.children, this.nodeName);
+                  this.dealTreeData(graph.children, this.currentNodeName);
                   this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
                 }
                 this.querySingleNode(
                     JSON.parse(JSON.stringify(res.data.graph)),
-                    this.nodeName,
+                    this.currentNodeName,
                     false,
                 );
               }
@@ -1130,16 +1131,14 @@ export default {
       if (metadata.node_name !== undefined && metadata.step !== undefined) {
         const nodeName = metadata.node_name;
         if (
-          (nodeName !== this.nodeName && nodeName !== '') ||
+          (nodeName !== this.currentNodeName && nodeName !== '') ||
           this.metadata.step !== metadata.step
         ) {
           this.nodeName = nodeName ? nodeName : this.nodeName;
+          this.currentNodeName = nodeName ? nodeName : this.currentNodeName;
           this.metadata.step = metadata.step;
           if (isQuery) {
-            this.queryAllTreeData(
-              nodeName ? nodeName : this.$refs.tree.getCurrentKey(),
-              true,
-            );
+            this.queryAllTreeData(this.nodeName, true);
           }
         }
       }
@@ -1557,6 +1556,7 @@ export default {
                   }
                   this.initCondition();
                   this.nodeName = this.metadata.node_name;
+                  this.currentNodeName = this.metadata.node_name;
                   if (this.pollInit) {
                     this.pollData();
                     this.pollInit = false;
