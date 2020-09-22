@@ -20,5 +20,5 @@ class Network(GenericNetwork):
     """Network code generator."""
     name = 'lenet'
     supported_datasets = ['MNIST']
-    supported_loss_functions = ['SoftmaxCrossEntropyWithLogits', 'SoftmaxCrossEntropyExpand']
+    supported_loss_functions = ['SoftmaxCrossEntropyWithLogits']
     supported_optimizers = ['Momentum', 'Adam', 'SGD']

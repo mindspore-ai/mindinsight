@@ -27,7 +27,7 @@ Run the mindwizard command and answer the following questions as prompted：
 
 1. Select a network（LeNet / AlexNet / ResNet50 / ...）
 
-    1.1. Select a Loss Function（SoftmaxCrossEntropyExpand / SoftmaxCrossEntropyWithLogits / ...）
+    1.1. Select a Loss Function（SoftmaxCrossEntropyWithLogits / ...）
 
     1.2. Select a Optimizer（Adam / Momentum / SGD ...）
 
@@ -67,9 +67,8 @@ $ mindwizard project
    3: resnet50
  : 2
 >>> Please select a loss function:
-   1: SoftmaxCrossEntropyExpand
-   2: SoftmaxCrossEntropyWithLogits
- [2]: 2
+   1: SoftmaxCrossEntropyWithLogits
+ [1]: 1
 >>> Please select an optimizer:
    1: Adam
    2: Momentum

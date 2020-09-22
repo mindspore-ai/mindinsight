@@ -27,7 +27,7 @@ optional arguments:
 
 1. 请选择网络（LeNet / AlexNet / ResNet50 / ...）
 
-    1.1. 请选择损失函数（SoftmaxCrossEntropyExpand / SoftmaxCrossEntropyWithLogits / ...）
+    1.1. 请选择损失函数（SoftmaxCrossEntropyWithLogits / ...）
 
     1.2. 请选择优化器（Adam / Momentum / SGD ...）
 
@@ -67,9 +67,8 @@ $ mindwizard project
    3: resnet50
  : 2
 >>> Please select a loss function:
-   1: SoftmaxCrossEntropyExpand
-   2: SoftmaxCrossEntropyWithLogits
- [2]: 2
+   1: SoftmaxCrossEntropyWithLogits
+ [1]: 1
 >>> Please select an optimizer:
    1: Adam
    2: Momentum
