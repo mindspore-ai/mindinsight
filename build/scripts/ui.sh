@@ -28,7 +28,6 @@ build_ui() {
     rm -rf node_modules
     rm -rf dist
     mkdir -p public/static/js
-    cp ../../third_party/hpcc/graphvizlib.wasm public/static/js
 
     npm config set strict-ssl false
     npm config set unsafe-perm true
@@ -41,6 +40,8 @@ build_ui() {
         echo "dist does not have file index.html, build failed"
         exit 1
     fi
+
+    cp -f node_modules/@hpcc-js/wasm/dist/graphvizlib.wasm public/static/js
 }
 
 build_ui
