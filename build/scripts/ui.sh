@@ -41,8 +41,7 @@ build_ui() {
         exit 1
     fi
 
-    rm -f public/static/js/graphvizlib.wasm
-    cp node_modules/@hpcc-js/wasm/dist/graphvizlib.wasm public/static/js
+    cp node_modules/@hpcc-js/wasm/dist/graphvizlib.wasm dist/static/js
 }
 
 build_ui
