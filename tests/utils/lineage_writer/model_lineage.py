@@ -529,7 +529,7 @@ class AnalyzeObject:
             return output_dataset.dataset_dir
         if isinstance(output_dataset, dataset_files_set):
             return output_dataset.dataset_files[0]
-        return self.get_dataset_path(output_dataset.input[0])
+        return self.get_dataset_path(output_dataset.inputs[0])
 
     @staticmethod
     def get_dataset_path_wrapped(dataset):
