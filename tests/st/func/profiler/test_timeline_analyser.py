@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """
-Fuction:
+Function:
     Test profiler to watch the performance of training.
 Usage:
     pytest tests/st/func/profiler
@@ -23,8 +23,9 @@ import os
 import pytest
 
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
-from . import PROFILER_DIR
-from ....utils.tools import compare_result_with_file
+from tests.st.func.profiler import PROFILER_DIR
+from tests.utils.tools import compare_result_with_file
+
 
 class TestTimelineAnalyser:
     """Test timeline analyser module."""
@@ -44,7 +45,6 @@ class TestTimelineAnalyser:
         self._analyser = AnalyserFactory.instance().get_analyser(
             'timeline', self.profiler, self.device_id)
 
-
     @pytest.mark.level0
     @pytest.mark.env_single
     @pytest.mark.platform_x86_cpu
@@ -52,7 +52,7 @@ class TestTimelineAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_get_display_timeline(self):
-        """Test the function of get timeline data for UI display."""
+        """Test the function of get timeline detail data for UI display."""
         gpu_file_path = os.path.join(
             self.profiler,
             self.gpu_display_filename.format(self.device_id)
@@ -75,7 +75,7 @@ class TestTimelineAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_get_timeline_summary(self):
-        """Test the function of get timeline data for UI display."""
+        """Test the function of get timeline summary data for UI display."""
         gpu_file_path = os.path.join(
             self.profiler,
             self.gpu_timeline_summary_filename.format(self.device_id)
@@ -97,22 +97,10 @@ class TestTimelineAnalyser:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    def test_timeline_summary_file_not_exist(self):
+    def test_timeline_file_not_exist(self):
         """Test the function of get timeline data for UI display."""
         device_id = 1
         analyser = AnalyserFactory.instance().get_analyser(
             'timeline', self.profiler, device_id)
         analyser.get_timeline_summary("gpu")
-
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    def test_timeline_display_file_not_exist(self):
-        """Test the function of get timeline data for UI display."""
-        device_id = 1
-        analyser = AnalyserFactory.instance().get_analyser(
-            'timeline', self.profiler, device_id)
         analyser.get_display_timeline("gpu")
