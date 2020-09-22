@@ -61,8 +61,8 @@ class TestValidate:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    def test_validate_condition_exception(self):
-        """Test the exception of validate condition."""
+    def test_validate_op_type_exception(self):
+        """Test the operate type exception."""
         condition = "not a dict"
         exception_message = 'Param type error. Invalid search_condition type, it should be dict.'
         with pytest.raises(ProfilerParamTypeErrorException) as exc_info:
@@ -70,7 +70,6 @@ class TestValidate:
         assert exc_info.value.error_code == '50546082'
         assert exc_info.value.message == exception_message
 
-        # test the ProfilerOpTypeException
         condition_list = [{'op_type': "xxx"}, {}]
         exception_message = "The op_type in search_condition error, The op_type must in " \
                             "['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "\
@@ -81,7 +80,14 @@ class TestValidate:
             assert exc_info.value.error_code == '50546183'
             assert exc_info.value.message == exception_message
 
-        # test the ProfilerGroupConditionException
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    def test_validate_group_condition_exception(self):
+        """test the group condition exception."""
         condition_list = [
             {
                 'op_type': 'aicpu_type',
