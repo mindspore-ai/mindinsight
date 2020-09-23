@@ -1,0 +1,131 @@
+====================op compute time====================
+optype_name compute_time(ms, per-step) called_times(per-step) percent
+AssignAdd 0.00492 3 0.02
+TransData 0.193765 3 0.84
+OneHot 0.00176 1 0.01
+GatherV2 0.00153 1 0.01
+Cast 0.14809 28 0.64
+Conv2D 0.46107 5 2.0
+ReLUV2 0.03328 5 0.14
+MaxPool 0.01223 3 0.05
+MatMul 20.65774 9 89.47
+ReLU 0.00477 2 0.02
+SoftmaxCrossEntropyWithLogits 0.00364 1 0.02
+AtomicAddrClean 0.03012 9 0.13
+ReduceMean 0.00139 1 0.01
+Mul 0.00132 1 0.01
+BiasAddGrad 0.00504 3 0.02
+ReluGrad 0.0085 2 0.04
+MaxPoolGrad 0.05418 3 0.23
+ReluGradV2 0.03079 5 0.13
+Conv2DBackpropFilter 0.10674 5 0.46
+Conv2DBackpropInput 0.08594 4 0.37
+ApplyMomentum 1.24128 11 5.38
+
+Detail:
+op_name op_type avg_execution_time subgraph full_op_name
+AssignAdd-op142 AssignAdd 0.00219 Default Default/AssignAdd-op142
+AssignAdd-op138 AssignAdd 0.00148 Default Default/AssignAdd-op138
+AssignAdd-op31 AssignAdd 0.00125 Default Default/network-TrainOneStepCell/optimizer-Momentum/AssignAdd-op31
+TransData-op124 TransData 0.08231 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/TransData-op124
+TransData-op125 TransData 0.06442 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/flatten-Flatten/gradReshape/TransData-op125
+TransData-op118 TransData 0.047035 Default Default/TransData-op118
+OneHot-op3 OneHot 0.00176 Default Default/network-TrainOneStepCell/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op3
+GatherV2-op32 GatherV2 0.00153 Default Default/network-TrainOneStepCell/optimizer-Momentum/learning_rate-_IteratorLearningRate/GatherV2-op32
+Cast-op110 Cast 0.00932 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/Cast-op110
+Cast-op91 Cast 0.00804 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Cast-op91
+Cast-op116 Cast 0.00781 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv3-Conv2d/Cast-op116
+Cast-op111 Cast 0.00773 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv5-Conv2d/Cast-op111
+Cast-op115 Cast 0.00696 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/Cast-op115
+Cast-op108 Cast 0.00652 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Cast-op108
+Cast-op100 Cast 0.00633 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/gradMaxPool/Cast-op100
+Cast-op98 Cast 0.00588 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/Cast-op98
+Cast-op90 Cast 0.00574 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/gradConv2D/Cast-op90
+Cast-op99 Cast 0.00559 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/Cast-op99
+Cast-op92 Cast 0.00546 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/gradConv2D/Cast-op92
+Cast-op101 Cast 0.00524 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/gradMaxPool/Cast-op101
+Cast-op109 Cast 0.00515 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/Cast-op109
+Cast-op117 Cast 0.00514 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Cast-op117
+Cast-op95 Cast 0.0047 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/Cast-op95
+Cast-op114 Cast 0.00465 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv5-Conv2d/Cast-op114
+Cast-op94 Cast 0.0045 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/gradConv2D/Cast-op94
+Cast-op93 Cast 0.00438 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/gradConv2D/Cast-op93
+Cast-op97 Cast 0.00435 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv5-Conv2d/Cast-op97
+Cast-op104 Cast 0.0042 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/gradMaxPool/Cast-op104
+Cast-op106 Cast 0.00419 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv3-Conv2d/Cast-op106
+Cast-op105 Cast 0.00399 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/Cast-op105
+Cast-op103 Cast 0.00397 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv5-Conv2d/gradConv2D/Cast-op103
+Cast-op102 Cast 0.00387 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/gradConv2D/Cast-op102
+Cast-op96 Cast 0.00377 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv5-Conv2d/gradConv2D/Cast-op96
+Cast-op112 Cast 0.00376 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/Cast-op112
+Cast-op107 Cast 0.00372 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/Cast-op107
+Cast-op113 Cast 0.00313 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/gradMaxPool/Cast-op113
+Conv2D-op11 Conv2D 0.16997 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv3-Conv2d/Conv2D-op11
+Conv2D-op15 Conv2D 0.10168 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv5-Conv2d/Conv2D-op15
+Conv2D-op13 Conv2D 0.09617 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/Conv2D-op13
+Conv2D-op5 Conv2D 0.06913 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Conv2D-op5
+Conv2D-op8 Conv2D 0.02412 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/Conv2D-op8
+ReLUV2-op119 ReLUV2 0.0094 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/ReLUV2-op119
+ReLUV2-op120 ReLUV2 0.0067 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/ReLUV2-op120
+ReLUV2-op122 ReLUV2 0.00626 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/ReLUV2-op122
+ReLUV2-op121 ReLUV2 0.00624 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/ReLUV2-op121
+ReLUV2-op123 ReLUV2 0.00468 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/ReLUV2-op123
+MaxPool-op7 MaxPool 0.00591 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/MaxPool-op7
+MaxPool-op10 MaxPool 0.00335 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/MaxPool-op10
+MaxPool-op17 MaxPool 0.00297 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/MaxPool-op17
+MatMul-op19 MatMul 9.17408 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/MatMul-op19
+MatMul-op56 MatMul 4.24336 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradMatMul/MatMul-op56
+MatMul-op22 MatMul 4.04837 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/MatMul-op22
+MatMul-op48 MatMul 2.61685 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradMatMul/MatMul-op48
+MatMul-op53 MatMul 0.33999 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradMatMul/MatMul-op53
+MatMul-op45 MatMul 0.22636 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradMatMul/MatMul-op45
+MatMul-op25 MatMul 0.00348 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/MatMul-op25
+MatMul-op37 MatMul 0.00278 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradMatMul/MatMul-op37
+MatMul-op40 MatMul 0.00247 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradMatMul/MatMul-op40
+ReLU-op21 ReLU 0.00256 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/ReLU-op21
+ReLU-op24 ReLU 0.00221 Default Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/ReLU-op24
+SoftmaxCrossEntropyWithLogits-op27 SoftmaxCrossEntropyWithLogits 0.00364 Default Default/network-TrainOneStepCell/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/SoftmaxCrossEntropyWithLogits-op27
+AtomicAddrClean-op150 AtomicAddrClean 0.00615 Default Default/AtomicAddrClean-op150
+AtomicAddrClean-op149 AtomicAddrClean 0.00546 Default Default/AtomicAddrClean-op149
+AtomicAddrClean-op152 AtomicAddrClean 0.00523 Default Default/AtomicAddrClean-op152
+AtomicAddrClean-op151 AtomicAddrClean 0.00506 Default Default/AtomicAddrClean-op151
+AtomicAddrClean-op153 AtomicAddrClean 0.00294 Default Default/AtomicAddrClean-op153
+AtomicAddrClean-op148 AtomicAddrClean 0.00144 Default Default/AtomicAddrClean-op148
+AtomicAddrClean-op147 AtomicAddrClean 0.00143 Default Default/AtomicAddrClean-op147
+AtomicAddrClean-op145 AtomicAddrClean 0.00128 Default Default/AtomicAddrClean-op145
+AtomicAddrClean-op146 AtomicAddrClean 0.00113 Default Default/AtomicAddrClean-op146
+ReduceMean-op87 ReduceMean 0.00139 Default Default/network-TrainOneStepCell/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/ReduceMean-op87
+Mul-op29 Mul 0.00132 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/gradSoftmaxCrossEntropyWithLogits/Mul-op29
+BiasAddGrad-op50 BiasAddGrad 0.00183 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradBiasAdd/BiasAddGrad-op50
+BiasAddGrad-op42 BiasAddGrad 0.00182 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradBiasAdd/BiasAddGrad-op42
+BiasAddGrad-op30 BiasAddGrad 0.00139 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/fc3-Dense/gradBiasAdd/BiasAddGrad-op30
+ReluGrad-op41 ReluGrad 0.00426 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/gradReLU/ReluGrad-op41
+ReluGrad-op49 ReluGrad 0.00424 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/gradReLU/ReluGrad-op49
+MaxPoolGrad-op80 MaxPoolGrad 0.03258 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/gradMaxPool/MaxPoolGrad-op80
+MaxPoolGrad-op74 MaxPoolGrad 0.01593 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/gradMaxPool/MaxPoolGrad-op74
+MaxPoolGrad-op58 MaxPoolGrad 0.00567 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/gradMaxPool/MaxPoolGrad-op58
+ReluGradV2-op130 ReluGradV2 0.00868 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/gradReLU/ReluGradV2-op130
+ReluGradV2-op129 ReluGradV2 0.00653 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/gradReLU/ReluGradV2-op129
+ReluGradV2-op126 ReluGradV2 0.00532 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/gradReLU/ReluGradV2-op126
+ReluGradV2-op127 ReluGradV2 0.00526 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/gradReLU/ReluGradV2-op127
+ReluGradV2-op128 ReluGradV2 0.005 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/relu-ReLU/gradReLU/ReluGradV2-op128
+Conv2DBackpropFilter-op82 Conv2DBackpropFilter 0.04572 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/gradConv2D/Conv2DBackpropFilter-op82
+Conv2DBackpropFilter-op76 Conv2DBackpropFilter 0.02361 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/gradConv2D/Conv2DBackpropFilter-op76
+Conv2DBackpropFilter-op65 Conv2DBackpropFilter 0.01301 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/gradConv2D/Conv2DBackpropFilter-op65
+Conv2DBackpropFilter-op70 Conv2DBackpropFilter 0.01246 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/gradConv2D/Conv2DBackpropFilter-op70
+Conv2DBackpropFilter-op60 Conv2DBackpropFilter 0.01194 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv5-Conv2d/gradConv2D/Conv2DBackpropFilter-op60
+Conv2DBackpropInput-op79 Conv2DBackpropInput 0.03911 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/gradConv2D/Conv2DBackpropInput-op79
+Conv2DBackpropInput-op73 Conv2DBackpropInput 0.02185 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/gradConv2D/Conv2DBackpropInput-op73
+Conv2DBackpropInput-op68 Conv2DBackpropInput 0.01392 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv4-Conv2d/gradConv2D/Conv2DBackpropInput-op68
+Conv2DBackpropInput-op63 Conv2DBackpropInput 0.01106 Gradients Gradients/Default/network-TrainOneStepCell/network-WithLossCell/_backbone-AlexNet/conv5-Conv2d/gradConv2D/Conv2DBackpropInput-op63
+ApplyMomentum-op54 ApplyMomentum 0.78189 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op54
+ApplyMomentum-op46 ApplyMomentum 0.34771 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op46
+ApplyMomentum-op66 ApplyMomentum 0.0318 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op66
+ApplyMomentum-op61 ApplyMomentum 0.02337 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op61
+ApplyMomentum-op71 ApplyMomentum 0.02209 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op71
+ApplyMomentum-op77 ApplyMomentum 0.01652 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op77
+ApplyMomentum-op83 ApplyMomentum 0.00769 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op83
+ApplyMomentum-op38 ApplyMomentum 0.00303 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op38
+ApplyMomentum-op43 ApplyMomentum 0.0028 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op43
+ApplyMomentum-op51 ApplyMomentum 0.00276 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op51
+ApplyMomentum-op35 ApplyMomentum 0.00162 Default Default/network-TrainOneStepCell/optimizer-Momentum/ApplyMomentum-op35

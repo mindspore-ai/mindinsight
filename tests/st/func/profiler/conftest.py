@@ -23,3 +23,10 @@ from tests.utils import mindspore
 sys.modules['mindspore'] = mindspore
 
 BASE_SUMMARY_DIR = os.path.realpath(os.path.join(RAW_DATA_BASE, "run_1"))
+# Notice:
+# 1. Run_2 is new performance data.
+# 2. The names of some files have been changed. \
+#    For example, timeline_display_1.json becomes ascend_timeline_display_1.json.
+# 3. Some new files have been added. For example, aicpu_intermediate_1.csv.
+# 4. It is recommended that the new mindinsight st ut test be based on this version of the performance file.
+BASE_SUMMARY_DIR_RUN_2 = os.path.realpath(os.path.join(RAW_DATA_BASE, "run_2"))
