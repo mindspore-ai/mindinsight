@@ -14,6 +14,7 @@
 # ============================================================================
 """The converter between proto format event of lineage and dict."""
 
+
 def organize_graph(graph_message):
     """
     Convert a dataset graph to its dict format.

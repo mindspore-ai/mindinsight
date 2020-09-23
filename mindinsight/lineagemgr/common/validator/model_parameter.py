@@ -15,36 +15,12 @@
 """Define schema of model lineage input parameters."""
 from marshmallow import Schema, fields, ValidationError, pre_load, validates
 
-from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrorMsg, \
-    LineageErrors
-from mindinsight.lineagemgr.common.exceptions.exceptions import \
-    LineageParamTypeError, LineageParamValueError
-from mindinsight.lineagemgr.common.log import logger
+from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrorMsg, LineageErrors
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, LineageParamValueError
 from mindinsight.lineagemgr.common.utils import enum_to_list
 from mindinsight.lineagemgr.querier.querier import LineageType
 from mindinsight.lineagemgr.querier.query_model import FIELD_MAPPING
 from mindinsight.utils.exceptions import MindInsightException
-
-try:
-    from mindspore.dataset.engine import Dataset
-except (ImportError, ModuleNotFoundError):
-    logger.error('MindSpore Not Found!')
-
-
-
-class EvalParameter(Schema):
-    """Define the parameter schema for Evaluation job."""
-    valid_dataset = fields.Function(allow_none=True)
-    metrics = fields.Dict(allow_none=True)
-
-    @pre_load
-    def check_valid_dataset(self, data, **kwargs):
-        valid_dataset = data.get("valid_dataset")
-        if valid_dataset and not isinstance(valid_dataset, Dataset):
-            raise ValidationError({'valid_dataset': [
-                "Parameter valid_dataset must be an instance of "
-                "mindspore.dataengine.datasets.Dataset"]})
-        return data
 
 
 class SearchModelConditionParameter(Schema):

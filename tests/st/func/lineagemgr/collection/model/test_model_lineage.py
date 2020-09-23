@@ -28,8 +28,6 @@ from unittest import TestCase, mock
 import numpy as np
 import pytest
 from mindinsight.lineagemgr.model import filter_summary_lineage
-from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors
-from mindinsight.utils.exceptions import MindInsightException
 
 from mindspore.application.model_zoo.resnet import ResNet
 from mindspore.common.tensor import Tensor
@@ -213,14 +211,12 @@ class TestModelLineage(TestCase):
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.platform_x86_cpu
     @pytest.mark.env_single
-    @mock.patch('tests.utils.lineage_writer.model_lineage.validate_eval_run_context')
-    @mock.patch.object(AnalyzeObject, 'get_file_size', return_value=64)
-    def test_raise_exception_record_trainlineage(self, *args):
+    @mock.patch.object(AnalyzeObject, 'get_file_size')
+    def test_raise_exception_record_trainlineage(self, mock_analyze):
         """Test exception when error happened after recording training infos."""
+        mock_analyze.return_value = 64
         if os.path.exists(SUMMARY_DIR_3):
             shutil.rmtree(SUMMARY_DIR_3)
-        args[1].side_effect = MindInsightException(error=LineageErrors.PARAM_RUN_CONTEXT_ERROR,
-                                                   message="RunContext error.")
         train_callback = TrainLineage(SUMMARY_DIR_3, True)
         train_callback.begin(RunContext(self.run_context))
         full_file_name = train_callback.lineage_summary.lineage_log_path

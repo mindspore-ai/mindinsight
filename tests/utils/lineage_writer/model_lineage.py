@@ -19,17 +19,13 @@ import os
 import numpy as np
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrorMsg, LineageErrors
 from mindinsight.lineagemgr.common.log import logger as log
-from mindinsight.lineagemgr.common.utils import make_directory
-from mindinsight.lineagemgr.common.validator.model_parameter import EvalParameter
-from mindinsight.lineagemgr.common.validator.validate import (validate_eval_run_context, validate_file_path,
-                                                              validate_int_params,
-                                                              validate_raise_exception,
-                                                              validate_user_defined_info)
 from mindinsight.utils.exceptions import MindInsightException
 
 from ._summary_record import LineageSummary
 from .base import Metadata
-from .utils import try_except, LineageParamRunContextError, LineageGetModelFileError, LineageLogError
+from .utils import try_except, LineageParamRunContextError, LineageGetModelFileError, LineageLogError, \
+    validate_int_params, validate_file_path, validate_raise_exception, \
+    validate_user_defined_info, make_directory
 
 try:
     from mindspore.common.tensor import Tensor
@@ -308,7 +304,6 @@ class EvalLineage(Callback):
             raise LineageParamRunContextError(error_msg)
 
         run_context_args = run_context.original_args()
-        validate_eval_run_context(EvalParameter, run_context_args)
 
         valid_dataset = run_context_args.get('valid_dataset')
 

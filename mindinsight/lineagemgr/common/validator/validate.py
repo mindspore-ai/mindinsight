@@ -13,33 +13,11 @@
 # limitations under the License.
 # ============================================================================
 """Validate the parameters."""
-import re
-from marshmallow import ValidationError
-
 from mindinsight.lineagemgr.common.exceptions.error_code import LineageErrors, LineageErrorMsg
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, LineageParamValueError
 from mindinsight.lineagemgr.common.log import logger as log
-from mindinsight.lineagemgr.common.validator.validate_path import safe_normalize_path
 from mindinsight.lineagemgr.querier.query_model import FIELD_MAPPING
 from mindinsight.utils.exceptions import MindInsightException, ParamValueError
-
-
-# Named string regular expression
-_name_re = r"^\w+[0-9a-zA-Z\_\.]*$"
-
-TRAIN_RUN_CONTEXT_ERROR_MAPPING = {
-    'optimizer': LineageErrors.PARAM_OPTIMIZER_ERROR,
-    'loss_fn': LineageErrors.PARAM_LOSS_FN_ERROR,
-    'net_outputs': LineageErrors.PARAM_NET_OUTPUTS_ERROR,
-    'train_network': LineageErrors.PARAM_TRAIN_NETWORK_ERROR,
-    'train_dataset': LineageErrors.PARAM_DATASET_ERROR,
-    'epoch_num': LineageErrors.PARAM_EPOCH_NUM_ERROR,
-    'batch_num': LineageErrors.PARAM_BATCH_NUM_ERROR,
-    'parallel_mode': LineageErrors.PARAM_TRAIN_PARALLEL_ERROR,
-    'device_number': LineageErrors.PARAM_DEVICE_NUMBER_ERROR,
-    'list_callback': LineageErrors.PARAM_CALLBACK_LIST_ERROR,
-    'train_dataset_size': LineageErrors.PARAM_DATASET_SIZE_ERROR,
-}
 
 SEARCH_MODEL_ERROR_MAPPING = {
     'summary_dir': LineageErrors.LINEAGE_PARAM_SUMMARY_DIR_ERROR,
@@ -62,19 +40,6 @@ SEARCH_MODEL_ERROR_MAPPING = {
     'sorted_type': LineageErrors.LINEAGE_PARAM_SORTED_TYPE_ERROR,
     'dataset_mark': LineageErrors.LINEAGE_PARAM_DATASET_MARK_ERROR,
     'lineage_type': LineageErrors.LINEAGE_PARAM_LINEAGE_TYPE_ERROR
-}
-
-
-TRAIN_RUN_CONTEXT_ERROR_MSG_MAPPING = {
-    'optimizer': LineageErrorMsg.PARAM_OPTIMIZER_ERROR.value,
-    'loss_fn': LineageErrorMsg.PARAM_LOSS_FN_ERROR.value,
-    'net_outputs': LineageErrorMsg.PARAM_NET_OUTPUTS_ERROR.value,
-    'train_network': LineageErrorMsg.PARAM_TRAIN_NETWORK_ERROR.value,
-    'epoch_num': LineageErrorMsg.PARAM_EPOCH_NUM_ERROR.value,
-    'batch_num': LineageErrorMsg.PARAM_BATCH_NUM_ERROR.value,
-    'parallel_mode': LineageErrorMsg.PARAM_TRAIN_PARALLEL_ERROR.value,
-    'device_number': LineageErrorMsg.PARAM_DEVICE_NUMBER_ERROR.value,
-    'list_callback': LineageErrorMsg.PARAM_CALLBACK_LIST_ERROR.value
 }
 
 SEARCH_MODEL_ERROR_MSG_MAPPING = {
@@ -101,84 +66,6 @@ SEARCH_MODEL_ERROR_MSG_MAPPING = {
 }
 
 
-EVAL_RUN_CONTEXT_ERROR_MAPPING = {
-    'valid_dataset': LineageErrors.PARAM_DATASET_ERROR,
-    'metrics': LineageErrors.PARAM_EVAL_METRICS_ERROR
-}
-
-EVAL_RUN_CONTEXT_ERROR_MSG_MAPPING = {
-    'metrics': LineageErrorMsg.PARAM_EVAL_METRICS_ERROR.value,
-}
-
-
-def validate_int_params(int_param, param_name):
-    """
-    Verify the parameter which type is integer valid or not.
-
-    Args:
-        int_param (int): parameter that is integer,
-            including epoch, dataset_batch_size, step_num
-        param_name (str): the name of parameter,
-            including epoch, dataset_batch_size, step_num
-
-    Raises:
-        MindInsightException: If the parameters are invalid.
-    """
-    if not isinstance(int_param, int) or int_param <= 0 or int_param > pow(2, 63) - 1:
-        if param_name == 'step_num':
-            log.error('Invalid step_num. The step number should be a positive integer.')
-            raise MindInsightException(error=LineageErrors.PARAM_STEP_NUM_ERROR,
-                                       message=LineageErrorMsg.PARAM_STEP_NUM_ERROR.value)
-
-        if param_name == 'dataset_batch_size':
-            log.error('Invalid dataset_batch_size. '
-                      'The batch size should be a positive integer.')
-            raise MindInsightException(error=LineageErrors.PARAM_BATCH_SIZE_ERROR,
-                                       message=LineageErrorMsg.PARAM_BATCH_SIZE_ERROR.value)
-
-
-def validate_file_path(file_path, allow_empty=False):
-    """
-    Verify that the file_path is valid.
-
-    Args:
-        file_path (str): Input file path.
-        allow_empty (bool): Whether file_path can be empty.
-
-    Raises:
-        MindInsightException: If the parameters are invalid.
-    """
-    try:
-        if allow_empty and not file_path:
-            return file_path
-        return safe_normalize_path(file_path, raise_key='dataset_path', safe_prefixes=None)
-    except ValidationError as error:
-        log.error(str(error))
-        raise MindInsightException(error=LineageErrors.PARAM_FILE_PATH_ERROR,
-                                   message=str(error))
-
-
-def validate_eval_run_context(schema, data):
-    """
-    Validate mindspore evaluation job run_context data according to schema.
-
-    Args:
-        schema (Schema): data schema.
-        data (dict): data to check schema.
-
-    Raises:
-        MindInsightException: If the parameters are invalid.
-    """
-    errors = schema().validate(data)
-    for error_key, error_msg in errors.items():
-        if error_key in EVAL_RUN_CONTEXT_ERROR_MAPPING.keys():
-            error_code = EVAL_RUN_CONTEXT_ERROR_MAPPING.get(error_key)
-            if EVAL_RUN_CONTEXT_ERROR_MSG_MAPPING.get(error_key):
-                error_msg = EVAL_RUN_CONTEXT_ERROR_MSG_MAPPING.get(error_key)
-            log.error(error_msg)
-            raise MindInsightException(error=error_code, message=error_msg)
-
-
 def validate_search_model_condition(schema, data):
     """
     Validate search model condition.
@@ -201,25 +88,6 @@ def validate_search_model_condition(schema, data):
                     break
             log.error(error_msg)
             raise MindInsightException(error=error_code, message=error_msg)
-
-
-def validate_raise_exception(raise_exception):
-    """
-    Validate raise_exception.
-
-    Args:
-        raise_exception (bool): decide raise exception or not,
-            if True, raise exception; else, catch exception and continue.
-
-    Raises:
-        MindInsightException: If the parameters are invalid.
-    """
-    if not isinstance(raise_exception, bool):
-        log.error("Invalid raise_exception. It should be True or False.")
-        raise MindInsightException(
-            error=LineageErrors.PARAM_RAISE_EXCEPTION_ERROR,
-            message=LineageErrorMsg.PARAM_RAISE_EXCEPTION_ERROR.value
-        )
 
 
 def validate_condition(search_condition):
@@ -274,44 +142,6 @@ def validate_condition(search_condition):
             err_msg = "The sorted_type must be ascending or descending."
             log.error(err_msg)
             raise LineageParamValueError(err_msg)
-
-
-def validate_user_defined_info(user_defined_info):
-    """
-    Validate user defined info， delete the item if its key is in lineage.
-
-    Args:
-        user_defined_info (dict): The user defined info.
-
-    Raises:
-        LineageParamTypeError: If the type of parameters is invalid.
-        LineageParamValueError: If user defined keys have been defined in lineage.
-
-    """
-    if not isinstance(user_defined_info, dict):
-        log.error("Invalid user defined info. It should be a dict.")
-        raise LineageParamTypeError("Invalid user defined info. It should be dict.")
-    for key, value in user_defined_info.items():
-        if not isinstance(key, str):
-            error_msg = "Dict key type {} is not supported in user defined info." \
-                        "Only str is permitted now.".format(type(key))
-            log.error(error_msg)
-            raise LineageParamTypeError(error_msg)
-        if not isinstance(value, (int, str, float)):
-            error_msg = "Dict value type {} is not supported in user defined info." \
-                        "Only str, int and float are permitted now.".format(type(value))
-            log.error(error_msg)
-            raise LineageParamTypeError(error_msg)
-
-    field_map = set(FIELD_MAPPING.keys())
-    user_defined_keys = set(user_defined_info.keys())
-    insertion = list(field_map & user_defined_keys)
-
-    if insertion:
-        for key in insertion:
-            user_defined_info.pop(key)
-        raise LineageParamValueError("There are some keys have defined in lineage. "
-                                     "Duplicated key(s): %s. " % insertion)
 
 
 def validate_train_id(relative_path):
@@ -385,27 +215,3 @@ def validate_added_info(added_info: dict):
                 raise LineageParamValueError("'remark' must be str.")
             # length of remark should be in [0, 128].
             validate_range("length of remark", len(value), min_value=0, max_value=128)
-
-
-def validate_str_by_regular(target, reg=None, flag=re.ASCII):
-    """
-    Validate string by given regular.
-
-    Args:
-        target: target string.
-        reg: pattern.
-        flag: pattern mode.
-
-    Raises:
-        LineageParamValueError, if string not match given pattern.
-
-    Returns:
-        bool, if target matches pattern, return True.
-
-    """
-    if reg is None:
-        reg = _name_re
-    if re.match(reg, target, flag) is None:
-        raise LineageParamValueError("'{}' is illegal, it should be match "
-                                     "regular'{}' by flags'{}'".format(target, reg, flag))
-    return True
