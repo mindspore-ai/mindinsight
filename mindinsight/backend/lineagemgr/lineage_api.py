@@ -21,6 +21,7 @@ from mindinsight.conf import settings
 from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
 from mindinsight.lineagemgr.cache_item_updater import update_lineage_object
+from mindinsight.lineagemgr.common.validator.validate import validate_train_id
 from mindinsight.lineagemgr.model import filter_summary_lineage
 from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 
@@ -116,6 +117,7 @@ def get_dataset_graph():
     """
 
     train_id = get_train_id(request)
+    validate_train_id(train_id)
     search_condition = {
         'summary_dir': {
             'in': [train_id]
