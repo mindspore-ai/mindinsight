@@ -21,7 +21,7 @@ class Dataset:
     def __init__(self, dataset_size=None, dataset_path=None):
         self.dataset_size = dataset_size
         self.dataset_path = dataset_path
-        self.input = []
+        self.inputs = []
 
     def get_dataset_size(self):
         """Mocked get_dataset_size."""
