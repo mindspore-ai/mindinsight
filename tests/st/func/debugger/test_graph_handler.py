@@ -13,7 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """
-Description: This file is used for testing graph handler.
+Function:
+    Test query debugger graph handler.
+Usage:
+    pytest tests/st/func/debugger/test_graph_handler.py
 """
 import os
 

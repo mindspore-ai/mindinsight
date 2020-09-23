@@ -1,0 +1,1 @@
+{"tensor_value": {"full_name": "Default/TransData-op99:0", "step": 1, "dtype": "DT_FLOAT32", "shape": [2, 3], "has_prev_step": false, "statistics": {"max": 6.0, "min": 5.0, "avg": 5.5, "count": 2, "nan_count": 0, "neg_inf_count": 0, "pos_inf_count": 0, "overall_max": 6.0, "overall_min": 1.0}, "value": [5.0, 6.0], "name": "Default/TransData-op99:0"}}

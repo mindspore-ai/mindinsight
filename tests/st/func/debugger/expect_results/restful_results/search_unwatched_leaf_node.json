@@ -1,0 +1,1 @@
+{"nodes": [{"name": "Default", "type": null, "nodes": [{"name": "Default/optimizer-Momentum", "type": null, "nodes": [{"name": "Default/optimizer-Momentum/Parameter[18]_7", "type": null, "nodes": [{"name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias", "type": "Parameter", "nodes": [], "watched": 0}], "watched": 1}], "watched": 1}], "watched": 1}]}
