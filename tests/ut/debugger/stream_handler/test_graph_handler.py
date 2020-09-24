@@ -16,31 +16,30 @@
 Function:
     Test query debugger graph handler.
 Usage:
-    pytest tests/st/func/debugger/test_graph_handler.py
+    pytest tests/ut/debugger
 """
 import os
 
 import pytest
 
-from ....utils.tools import compare_result_with_file
-from .conftest import init_graph_handler
+from tests.ut.debugger.configurations import init_graph_handler
+from tests.utils.tools import compare_result_with_file
 
 
 class TestGraphHandler:
     """Test GraphHandler."""
-    graph_results_dir = os.path.join(os.path.dirname(__file__), 'expect_results')
-    graph_handler = init_graph_handler()
+    @classmethod
+    def setup_class(cls):
+        """Init WatchpointHandler for watchpoint unittest."""
+        cls.graph_results_dir = os.path.join(os.path.dirname(__file__),
+                                             '../expected_results/graph')
+        cls.graph_handler = init_graph_handler()
 
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("filter_condition, result_file", [
         (None, "graph_handler_get_1_no_filter_condintion.json"),
         ({'name': 'Default'}, "graph_handler_get_2_list_nodes.json"),
-        ({'name': 'Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op190', 'single_node': True},
+        ({'name': 'Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op190',
+          'single_node': True},
          "graph_handler_get_3_single_node.json")
     ])
     def test_get(self, filter_condition, result_file):
@@ -49,12 +48,6 @@ class TestGraphHandler:
         file_path = os.path.join(self.graph_results_dir, result_file)
         compare_result_with_file(result, file_path)
 
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("node_name, result_file", [
         ("Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op190",
          "tenor_hist_0.json"),
@@ -67,12 +60,6 @@ class TestGraphHandler:
         file_path = os.path.join(self.graph_results_dir, result_file)
         compare_result_with_file(result, file_path)
 
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("pattern, result_file", [
         ("withlogits", "search_nodes_0.json"),
         ("cst", "search_node_1.json")
@@ -83,12 +70,6 @@ class TestGraphHandler:
         file_path = os.path.join(self.graph_results_dir, result_file)
         compare_result_with_file(result, file_path)
 
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("node_name, expect_type", [
         ("Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/cst1", 'Const'),
         ("Default/TransData-op99", "TransData")
@@ -98,12 +79,6 @@ class TestGraphHandler:
         node_type = self.graph_handler.get_node_type(node_name)
         assert node_type == expect_type
 
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("node_name, expect_full_name", [
         (None, ""),
         ("Default/make_tuple[9]_3/make_tuple-op284", "Default/make_tuple-op284"),
@@ -114,12 +89,6 @@ class TestGraphHandler:
         full_name = self.graph_handler.get_full_name(node_name)
         assert full_name == expect_full_name
 
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("full_name, expect_node_name", [
         (None, ""),
         ("Default/make_tuple-op284", "Default/make_tuple[9]_3/make_tuple-op284"),
@@ -130,14 +99,9 @@ class TestGraphHandler:
         node_name = self.graph_handler.get_node_name_by_full_name(full_name)
         assert node_name == expect_node_name
 
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("node_name, ascend, expect_next", [
-        (None, True, "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0"),
+        (None, True,
+         "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0"),
         (None, False, None),
         ("Default/tuple_getitem[10]_0/tuple_getitem-op206", True,
          "Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89"),
