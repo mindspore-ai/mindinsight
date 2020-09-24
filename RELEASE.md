@@ -122,7 +122,7 @@ Contributions of any kind are welcome!
 
 ## Major Features and Improvements
 * Parameter distribution graph (Histogram).
-Now you can use [`HistogramSummary`](https://www.mindspore.cn/doc/api_python/en/master/mindspore/mindspore.ops.html#mindspore.ops.HistogramSummary) (visit [`HistogramSummary`](https://www.mindspore.cn/api/en/master/api/python/mindspore/mindspore.ops.html#mindspore.ops.HistogramSummary) before Sep. 24) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html) (visit [tutorial](https://www.mindspore.cn/tutorial/en/master/advanced_use/visualization_tutorials.html) before Sep. 24) for details.
+Now you can use [`HistogramSummary`](https://www.mindspore.cn/doc/api_python/en/master/mindspore/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html).
 * Lineage support Custom information
 * GPU support
 * Model and dataset tracking linkage support
