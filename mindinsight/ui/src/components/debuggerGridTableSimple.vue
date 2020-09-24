@@ -113,14 +113,14 @@ export default {
   data() {
     return {
       itemId: '', // Dom id
-      gridObj: null, // slickgrid object
+      gridObj: null, // Slickgrid object
       columnsData: [], // Column information
       columnsLength: 0, // Column length
       filterArr: [], // Dimension selection array
-      formateData: [], // formatted data
-      formateArr: [], // formatted Array
+      formateData: [], // Formatted data
+      formateArr: [], // Formatted array
       statistics: {}, // Object contain maximun and minimun
-      accuracy: 10, // accuracy value
+      accuracy: 10, // Accuracy value
       incorrectData: false, // Wheather the dimension is correctly selected
       updated: false, // Updated
       scrollTop: false, // Wheather scroll to the top
@@ -289,7 +289,7 @@ export default {
       }
     },
     /**
-     * Setting the Background color of data
+     * Setting the background color of data
      * @param {Number} row
      * @param {Number} cell
      * @param {String} value,
@@ -424,7 +424,7 @@ export default {
       });
     },
     /**
-     * accuracy changed
+     * Accuracy changed
      * @param {Number} value The value after changed
      */
     accuracyChange(value) {
@@ -489,9 +489,9 @@ export default {
       }
     },
     /**
-     * check combinatorial input
-     * @param {Object} filter filter item
-     * @return {Boolean} verification result
+     * Check combinatorial input
+     * @param {Object} filter Filter item
+     * @return {Boolean} Verification result
      */
     checkCombinatorialInput(filter) {
       const value = filter.model.trim();
@@ -589,7 +589,7 @@ export default {
       this.$emit('toggleFullScreen');
     },
     /**
-     * Show Error message
+     * Show error message
      * @param {String} errorMsg Error message
      * @param {Array} dimension Array of dimension
      * @param {String} filterStr String of dimension selection

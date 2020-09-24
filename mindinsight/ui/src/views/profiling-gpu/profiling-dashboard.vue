@@ -249,7 +249,7 @@ export default {
       this.initPieChart();
     },
     /**
-     * router link
+     * Router link
      * @param { String } path  router path
      */
     viewDetail(path) {
@@ -263,7 +263,7 @@ export default {
       });
     },
     /**
-     * chart setOption
+     * Chart setOption
      */
     setPieOption() {
       const option = {};
@@ -311,7 +311,7 @@ export default {
       }, 10);
     },
     /**
-     * init chart
+     * Init chart
      */
     initPieChart() {
       const params = {};

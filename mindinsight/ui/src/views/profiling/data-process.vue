@@ -1012,7 +1012,7 @@ export default {
     },
     /**
      * Encapsulates graph data into dot data.
-     * @return {String} dot string for packing graph data
+     * @return {String} Dot string for packing graph data
      */
     packageGraphData() {
       let nodeStr = '';
@@ -1043,7 +1043,7 @@ export default {
 
     /**
      * Initializing the dataset graph
-     * @param {String} dot dot statement encapsulated in graph data
+     * @param {String} dot Dot statement encapsulated in graph data
      */
     initGraph(dot) {
       this.graphviz = d3
@@ -1249,7 +1249,7 @@ export default {
     /**
      * Obtains the transform data of a node.
      * @param {Object} node Node dom data
-     * @return {Object} transform data of a node
+     * @return {Object} Transform data of a node
      */
     getTransformData(node) {
       if (!node) {

@@ -127,8 +127,10 @@ import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import echarts from 'echarts';
 import {format, precisionRound} from 'd3';
+import autoUpdate from '../../mixins/autoUpdate.vue';
 const d3 = {format, precisionRound};
 export default {
+  mixins: [autoUpdate],
   data() {
     return {
       tagList: [], // Tag list.
@@ -145,8 +147,6 @@ export default {
       pageIndex: 0, // Current page number.
       pageSizes: [6], // The number of records on each page is optional.
       pageNum: 6, // Number of records on each page.
-      isReloading: false, // Manually refresh.
-      autoUpdateTimer: null, // Automatic refresh timer.
       zrDrawElement: {hoverDots: []},
       chartTipFlag: false,
       charResizeTimer: null,
@@ -154,76 +154,13 @@ export default {
       changeViewTimer: null,
     };
   },
-  computed: {
-    /**
-     * Global refresh switch
-     * @return {Boolean}
-     */
-    isReload() {
-      return this.$store.state.isReload;
-    },
-    /**
-     * Automatic refresh switch
-     * @return {Boolean}
-     */
-    isTimeReload() {
-      return this.$store.state.isTimeReload;
-    },
-    /**
-     * Automatic refresh value
-     * @return {Boolean}
-     */
-    timeReloadValue() {
-      return this.$store.state.timeReloadValue;
-    },
-  },
+  computed: {},
   components: {
     multiselectGroupComponents,
   },
-  watch: {
-    /**
-     * Global refresh switch listener
-     * @param {Boolean} newVal Value after change
-     * @param {Boolean} oldVal Value before change
-     */
-    isReload(newVal, oldVal) {
-      if (newVal) {
-        this.isReloading = true;
-        // Automatic refresh and retiming
-        if (this.isTimeReload) {
-          this.autoUpdateSamples();
-        }
-        this.updateAllData(false);
-      }
-    },
-    /**
-     * Automatic refresh switch listener
-     * @param {Boolean} newVal Value after change
-     * @param {Boolean} oldVal Value before change
-     */
-    isTimeReload(newVal, oldVal) {
-      if (newVal) {
-        // Enable automatic refresh
-        this.autoUpdateSamples();
-      } else {
-        // Disable automatic refresh
-        this.stopUpdateSamples();
-      }
-    },
-    /**
-     * The refresh time is changed
-     */
-    timeReloadValue() {
-      this.autoUpdateSamples();
-    },
-  },
+  watch: {},
   destroyed() {
     window.removeEventListener('resize', this.resizeCallback);
-    // Disable the automatic refresh function
-    if (this.autoUpdateTimer) {
-      clearInterval(this.autoUpdateTimer);
-      this.autoUpdateTimer = null;
-    }
     if (this.curPageArr.length) {
       this.curPageArr.forEach((item) => {
         this.clearZrData(item);
@@ -282,7 +219,7 @@ export default {
       }
     },
     /**
-     * jump back to train dashboard
+     * Jump back to train dashboard
      */
     jumpToTrainDashboard() {
       this.$router.push({
@@ -487,7 +424,7 @@ export default {
       });
     },
     /**
-     * error
+     * Error callback
      * @param {Object} error error object
      */
     requestErrorCallback(error) {
@@ -507,28 +444,6 @@ export default {
           // Clear data
           this.clearAllData();
         }
-      }
-    },
-    /**
-     * Enable automatic refresh
-     */
-    autoUpdateSamples() {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-      this.autoUpdateTimer = setInterval(() => {
-        this.$store.commit('clearToken');
-        this.updateAllData(true);
-      }, this.timeReloadValue * 1000);
-    },
-    /**
-     * Disable automatic refresh
-     */
-    stopUpdateSamples() {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
       }
     },
     /**
@@ -645,7 +560,7 @@ export default {
       return dataAddFlag;
     },
     /**
-     * update sample data
+     * Update sample data
      * @param {Object} sampleObject sampleObject
      */
     updateSampleData(sampleObject) {
@@ -787,7 +702,7 @@ export default {
         }</td><td style="text-align:center;">${this.formateNUmber(
             hoveredItem.step,
         )}</td><td>${this.formateNUmber(
-            (hoveredItem.relative_time).toFixed(0),
+            hoveredItem.relative_time.toFixed(0),
         )}${unit}</td><td>${this.dealrelativeTime(
             new Date(hoveredItem.wall_time * 1000).toString(),
         )}</td>`;
@@ -886,18 +801,18 @@ export default {
       }
     },
     /**
-     * get convert point
-     * @param {Array} pt value
-     * @param {Object} sampleObject sampleObject
+     * Get convert point
+     * @param {Array} pt Value
+     * @param {Object} sampleObject SampleObject
      * @return {Array}
      */
     getCoord(pt, sampleObject) {
       return sampleObject.charObj.convertToPixel('grid', pt);
     },
     /**
-     * find nearest value
-     * @param {Object} sampleObject sampleObject
-     * @param {Array} eventPoint value
+     * Find nearest value
+     * @param {Object} sampleObject SampleObject
+     * @param {Array} eventPoint Value
      * @return {Object}
      */
     findNearestValue(sampleObject, eventPoint) {
@@ -1003,8 +918,8 @@ export default {
       }
     },
     /**
-     * remove tooltip
-     * @param {Number} sampleObject sampleObject
+     * Remove tooltip
+     * @param {Number} sampleObject SampleObject
      */
     removeTooltip(sampleObject) {
       if (sampleObject && sampleObject.zr) {
@@ -1040,7 +955,7 @@ export default {
         const y = this.getValue(rawData, dataIndex, i++);
         const z = this.getValue(rawData, dataIndex, i++);
         const pt = getCoord([x, y], sampleObject);
-        // linear map in z axis
+        // Linear map in z axis
         if (maxZ !== minZ) {
           pt[1] -= ((z - minZ) / (maxZ - minZ)) * yValueMapHeight;
         }
@@ -1268,9 +1183,7 @@ export default {
             )
             : [];
         } else if (this.curAxisName === 1) {
-          data = `${this.formateNUmber(
-              (filter[0].relative_time).toFixed(0),
-          )}s`;
+          data = `${this.formateNUmber(filter[0].relative_time.toFixed(0))}s`;
         } else {
           data = this.formateNUmber(filter[0].step);
         }

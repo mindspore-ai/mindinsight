@@ -30,19 +30,19 @@ import {format, precisionRound} from 'd3';
 const d3 = {format, precisionRound};
 export default {
   props: {
-    // histogram data
+    // Histogram data
     fullData: {
       type: Array,
       default() {
         return [];
       },
     },
-    // view name
+    // View name
     viewName: {
       type: Number,
       default: 1,
     },
-    // axis name
+    // Axis name
     axisName: {
       type: Number,
       default: 0,
@@ -58,7 +58,7 @@ export default {
       itemId: '', // Dom id
       oriData: {}, // Original data
       charOption: {}, // Chart configuration
-      charObj: null, // chart Object
+      charObj: null, // Chart Object
       updated: false, // Updated
       zrDrawElement: {hoverDots: []},
       zr: null,
@@ -126,7 +126,7 @@ export default {
       };
     },
     /**
-     * update sample data
+     * Update sample data
      */
     updateSampleData() {
       this.charOption = this.formatCharOption();
@@ -316,7 +316,7 @@ export default {
       this.$emit('toggleFullScreen');
     },
     /**
-     * remove tooltip
+     * Remove tooltip
      */
     removeTooltip() {
       if (this.zr) {
@@ -354,7 +354,7 @@ export default {
         const y = this.getValue(rawData, dataIndex, i++);
         const z = this.getValue(rawData, dataIndex, i++);
         const pt = getCoord([x, y]);
-        // linear map in z axis
+        // Linear map in z axis
         if (maxZ !== minZ) {
           pt[1] -= ((z - minZ) / (maxZ - minZ)) * yValueMapHeight;
         }
@@ -363,7 +363,7 @@ export default {
       return points;
     },
     /**
-     * get convert point
+     * Get convert point
      * @param {Array} pt value
      * @return {Array}
      */
@@ -635,8 +635,8 @@ export default {
       }
     },
     /**
-     * find nearest value
-     * @param {Array} eventPoint value
+     * Find nearest value
+     * @param {Array} eventPoint Value
      * @return {Object}
      */
     findNearestValue(eventPoint) {

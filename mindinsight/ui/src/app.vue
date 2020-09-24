@@ -24,7 +24,7 @@ limitations under the License.
     </div>
     <Header></Header>
     <div class="cl-center"
-         :class="showWarmText ? 'cl-top-104' : 'cl-top-64'">
+         :class="showWarmText ? 'cl-center-height' : ''">
 
       <router-view></router-view>
     </div>
@@ -103,11 +103,9 @@ export default {
   overflow: hidden;
   color: #333;
 }
-.cl-top-64 {
-  top: 64px;
-}
-.cl-top-104 {
-  top: 104px;
+
+.cl-center-height {
+  height: calc(100% - 104px);
 }
 .cl-title {
   height: 50px;

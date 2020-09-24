@@ -15,18 +15,18 @@ limitations under the License.
 -->
 <template>
   <div class="compareFlex">
-    <!-- operation area -->
+    <!-- Operation area -->
     <div class="cl-eval-operate-content">
-      <!-- tag select -->
+      <!-- Tag select -->
       <div class="tag-select-content">
         <div class="title mr24">{{$t("scalar.tagSelectTitle")}}</div>
-        <!-- tag search -->
+        <!-- Tag search -->
         <el-input class="w261"
                   v-model="tagInput"
                   @input="filterByTagName"
                   v-if="headTagFullScreen"
                   :placeholder="$t('public.tagFilterPlaceHolder')"></el-input>
-        <!-- tag list -->
+        <!-- Tag list -->
         <div class="select-item-content"
              v-if="!headTagFullScreen"
              ref="tagSelectItemContent">
@@ -46,7 +46,7 @@ limitations under the License.
             </span>
           </div>
         </div>
-        <!-- tag Expand/Collapse -->
+        <!-- Tag expand/collapse -->
         <div class="run-select-content-open"
              @click="toggleHeadTagFullScreen"
              v-if="tagOverRowFlag || tagInput"
@@ -139,27 +139,27 @@ import echarts from 'echarts';
 
 export default {
   props: {
-    tagPropsList: Array, // prop tagList
-    initOver: Boolean, // prop initOver
-    propsList: Array, // prop list
-    compare: Boolean, // prop isCompare
+    tagPropsList: Array, // Prop tagList
+    initOver: Boolean, // Prop initOver
+    propsList: Array, // Prop list
+    compare: Boolean, // Prop isCompare
   },
   data() {
     return {
       trainingJobId: '',
       // Number of predefined colors
-      defColorCount: CommonProperty.commonColorArr.length, // default colors num
+      defColorCount: CommonProperty.commonColorArr.length, // Default colors num
       colorNum: 0, // Number of colors
       isActive: 0, // Horizontal axis selected value
-      tagList: [], // tag list
-      dataList: [], // dataList
-      initOk: false, // isInit
-      tagInput: '', // tag input value
-      tagInputTimer: '', // tag Filtering Timing
+      tagList: [], // Tag list
+      dataList: [], // DataList
+      initOk: false, // IsInit
+      tagInput: '', // Tag input value
+      tagInputTimer: '', // Tag filtering timing
       charResizeTimer: null, // Delay after the window size is changed
-      multiSelectedTagNames: {}, // selected tag name
+      multiSelectedTagNames: {}, // Selected tag name
       curFilterTagIndexArr: [], // Chart subscript
-      curPageArr: [], // data of the current page
+      curPageArr: [], // Data of the current page
       headTagFullScreen: false, // Indicates whether tag is expanded
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
@@ -168,12 +168,12 @@ export default {
       smoothSliderValueTimer: null, // Smoothness slider timer
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
       backendString: 'scalarBackend', // Background layer suffix
-      charObj: null, // chart object
-      charOption: {}, // option of chart
-      charData: [], // data of chart
-      isCompare: false, // isCompare
-      tagOverRowFlag: false, // the value of tag is greater than one line
-      perSelectItemMarginBottom: 1, // bottom of each selection box
+      charObj: null, // Chart object
+      charOption: {}, // Option of chart
+      charData: [], // Data of chart
+      isCompare: false, // IsCompare
+      tagOverRowFlag: false, // The value of tag is greater than one line
+      perSelectItemMarginBottom: 1, // Bottom of each selection box
     };
   },
   computed: {},
@@ -282,13 +282,13 @@ export default {
     }
 
     this.$bus.$on('updateTag', (val) => {
-      // Update Chart by tag
+      // Update chart by tag
       this.updateTagInPage();
     });
   },
   methods: {
     /**
-     *window resize
+     *Window resize
      */
 
     resizeCallback() {
@@ -307,7 +307,7 @@ export default {
       }
     },
     /**
-     * tag filtering
+     * Tag filtering
      */
 
     filterByTagName() {
@@ -340,7 +340,7 @@ export default {
 
     /**
      *
-     * tag click
+     * Tag click
      * @param {Object} tagItem Current tag
      */
     tagItemClick(tagItem) {
@@ -401,7 +401,7 @@ export default {
 
     /**
      * The time display type is changed
-     * @param {String} val radio group value
+     * @param {String} val Radio group value
      */
 
     timeTypeChange(val) {
@@ -533,7 +533,7 @@ export default {
     },
 
     /**
-     * clear data
+     * Clear data
      */
 
     clearAll() {
@@ -548,7 +548,7 @@ export default {
     },
 
     /**
-     * Update Chart by tag
+     * Update chart by tag
      */
 
     updateTagInPage() {
@@ -631,7 +631,7 @@ export default {
                 if (resData.metadatas.length) {
                   relativeTimeBench = resData.metadatas[0].wall_time;
                 }
-                // Initializing Chart Data
+                // Initializing chart Data
                 resData.metadatas.forEach((metaData) => {
                   tempObject.valueData.stepData.push([
                     metaData.step,
@@ -663,10 +663,10 @@ export default {
 
 
     /**
-     * add request
+     * Add request
      * @param {Object} params
      * @param {Number} yIndex
-     * @return {Object} response or error
+     * @return {Object} Response or error
      */
 
     addAjax(params, yIndex) {
@@ -688,7 +688,7 @@ export default {
     },
 
     /**
-     * Formatting Chart Data
+     * Formatting chart data
      */
 
     formateCharOption() {
@@ -941,7 +941,7 @@ export default {
     },
 
     /**
-     * format smooth data
+     * Format smooth data
      * @param {String} oriData
      */
 
@@ -974,8 +974,8 @@ export default {
     },
 
     /**
-     * Updating or Creating a Specified chart
-     * @param {Boolen} resetAnimate restart the animation
+     * Updating or creating a specified chart
+     * @param {Boolen} resetAnimate Restart the animation
      */
 
     updateOrCreateChar(resetAnimate) {
@@ -996,8 +996,8 @@ export default {
     },
 
     /**
-     * Format the value of the Y axis
-     * @param {String} value number y
+     * Format the value of the y axis
+     * @param {String} value Number y
      * @return {Number}
      */
 
@@ -1016,9 +1016,9 @@ export default {
     },
 
     /**
-     * Format Absolute Time
-     * @param {String} time string
-     * @return string
+     * Format absolute time
+     * @param {String} time String
+     * @return String
      */
 
     dealrelativeTime(time) {
@@ -1028,10 +1028,10 @@ export default {
     },
   },
   destroyed() {
-    // remove the size of a window and change the listener
+    // Remove the size of a window and change the listener
     window.removeEventListener('resize', this.resizeCallback);
 
-    // remove slider value change timing
+    // Remove slider value change timing
     if (this.smoothSliderValueTimer) {
       clearTimeout(this.smoothSliderValueTimer);
       this.smoothSliderValueTimer = null;
@@ -1041,7 +1041,7 @@ export default {
       clearTimeout(this.tagInputTimer);
       this.tagInputTimer = null;
     }
-    // Remove Chart Calculation Delay
+    // Remove chart calculation delay
     if (this.charResizeTimer) {
       clearTimeout(this.charResizeTimer);
       this.charResizeTimer = null;

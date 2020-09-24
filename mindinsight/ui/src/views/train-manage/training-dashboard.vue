@@ -64,7 +64,7 @@ limitations under the License.
               <a class="link-text"
                  :href="$t('summaryManage.scalarUrl')"
                  target="_blank">{{$t("summaryManage.scalarTipFirst")}}</a>
-              {{$t("summaryManage.scalarTipSecond")}}
+              {{$t("summaryManage.guidTipForth")}}
             </p>
             <p v-else
                class='no-data-text'>
@@ -99,7 +99,7 @@ limitations under the License.
               <a class="link-text"
                  :href="$t('summaryManage.histogramUrl')"
                  target="_blank">{{$t("summaryManage.histogramGuidTipFirst")}}</a>
-              {{$t("summaryManage.histogramGuidTipSecond")}}
+              {{$t("summaryManage.guidTipForth")}}
             </p>
             <p v-else
                class='no-data-text'>
@@ -140,7 +140,7 @@ limitations under the License.
               <a class="link-text"
                  :href="$t('summaryManage.tensorUrl')"
                  target="_blank">{{$t("summaryManage.tensorTipFirst")}}</a>
-              {{$t("summaryManage.tensorTipSecond")}}
+              {{$t("summaryManage.guidTipForth")}}
             </p>
             <p v-else
                class='no-data-text'>
@@ -205,7 +205,7 @@ limitations under the License.
               <a class="link-text"
                  :href="$t('summaryManage.dataProcessUrl')"
                  target="_blank">{{$t("summaryManage.dataProcessTipFirst")}}</a>
-              {{$t("summaryManage.dataProcessTipSecond")}}
+              {{$t("symbols.fullStop")}}
             </p>
             <p v-else
                class='no-data-text'>
@@ -246,7 +246,7 @@ limitations under the License.
               <a class="link-text"
                  :href="$t('summaryManage.imageUrl')"
                  target="_blank">{{$t("summaryManage.imageTipFirst")}}</a>
-              {{$t("summaryManage.imageTipSecond")}}
+              {{$t("symbols.fullStop")}}
             </p>
             <p class='no-data-text'
                v-show="(!originImageDataArr.length || wrongPlugin) && !initOverKey.image">
@@ -1672,7 +1672,7 @@ export default {
             `<${node.name}>[id="${node.name}";shape="octagon";` +
             `label="${name}";class="polymeric"];`;
         } else if (node.type === 'name_scope') {
-          const fillColor = CommonProperty.graphColorArr[this.curColorIndex];
+          const fillColor = CommonProperty.graphColorArrPhg[this.curColorIndex];
           this.curColorIndex = this.curColorIndex % 4;
           this.curColorIndex++;
           tempStr +=

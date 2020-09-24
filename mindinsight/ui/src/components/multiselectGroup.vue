@@ -133,7 +133,7 @@ export default {
       operateSelectAll: true, // Indicates whether to select all tags.
       perSelectItemMarginBottom: 1, // Outer margin of the bottom of each selection box.
       selectedNumber: 0, // Number of Selected items
-      itemId: '', // component Id
+      itemId: '', // Component Id
       searching: false,
     };
   },

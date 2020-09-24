@@ -144,11 +144,12 @@ limitations under the License.
 import multiselectGroupComponents from '../../components/multiselectGroup.vue';
 import RequestService from '../../services/request-service';
 import {basePath} from '@/services/fetcher';
+import autoUpdate from '../../mixins/autoUpdate.vue';
 export default {
+  mixins: [autoUpdate],
   data() {
     return {
       initOver: false, // Indicates whether the initialization is complete.
-      autoUpdateTimer: null, // Automatic refresh timer
       brightness: 50, // Brightness
       contrast: 50, // Contrast
       trainingJobId: this.$route.query.train_id, // ID of the current training job
@@ -162,77 +163,13 @@ export default {
       pageIndex: 0, // Current page number
       pageSizes: [8, 16, 24], // The number of records on each page is optional
       pageNum: 8, // Number of records on each page
-      isReloading: false, // Manually refresh
       imageBasePath: '/v1/mindinsight/datavisual/image/single-image?', // Relative path header of the picture
     };
   },
-  computed: {
-    /**
-     * Global refresh switch
-     * @return {Boolean}
-     */
-    isReload() {
-      return this.$store.state.isReload;
-    },
-    /**
-     * Automatic refresh switch
-     * @return {Boolean}
-     */
-    isTimeReload() {
-      return this.$store.state.isTimeReload;
-    },
-    /**
-     * Automatic refresh value
-     * @return {Boolean}
-     */
-    timeReloadValue() {
-      return this.$store.state.timeReloadValue;
-    },
-  },
-  watch: {
-    /**
-     * Global refresh switch Listener
-     * @param {Boolean} newVal Value After Change
-     * @param {Boolean} oldVal Value Before Change
-     */
-    isReload(newVal, oldVal) {
-      if (newVal) {
-        this.isReloading = true;
-        // Automatic refresh and retiming
-        if (this.isTimeReload) {
-          this.autoUpdateSamples();
-        }
-        this.updateAllData(false);
-      }
-    },
-    /**
-     * Automatic refresh switch Listener
-     * @param {Boolean} newVal Value After Change
-     * @param {Boolean} oldVal Value Before Change
-     */
-    isTimeReload(newVal, oldVal) {
-      if (newVal) {
-        // Enable automatic refresh
-        this.autoUpdateSamples();
-      } else {
-        // Disable automatic refresh
-        this.stopUpdateSamples();
-      }
-    },
-    /**
-     * The refresh time is changed.
-     */
-    timeReloadValue() {
-      this.autoUpdateSamples();
-    },
-  },
+  computed: {},
+  watch: {},
   destroyed() {
-    // Disable the automatic refresh function
-    if (this.autoUpdateTimer) {
-      clearInterval(this.autoUpdateTimer);
-      this.autoUpdateTimer = null;
-    }
-    // Stop Refreshing
+    // Stop refreshing
     if (this.isReloading) {
       this.$store.commit('setIsReload', false);
       this.isReloading = false;
@@ -441,7 +378,7 @@ export default {
       sampleItem.curImageSize = [curStepData.width, curStepData.height];
     },
     /**
-     * get image data
+     * Get image data
      * @param {Object} params Current params
      * @param {Object} sampleItem Current picture object.
      */
@@ -549,7 +486,7 @@ export default {
         if (
           !(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))
         ) {
-          // Clear Display Data
+          // Clear display Data
           this.clearAllData();
         }
       }
@@ -632,7 +569,7 @@ export default {
     },
     /**
      * Update all data.
-     * @param {Boolean} ignoreError whether ignore error tip
+     * @param {Boolean} ignoreError Whether ignore error tip
      */
     updateAllData(ignoreError) {
       const params = {
@@ -670,29 +607,7 @@ export default {
             this.$message.error(this.$t('public.dataError'));
           });
     },
-    /**
-     * Enable automatic refresh
-     */
-    autoUpdateSamples() {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-      this.autoUpdateTimer = setInterval(() => {
-        this.$store.commit('clearToken');
-        this.updateAllData(true);
-      }, this.timeReloadValue * 1000);
-    },
-    /**
-     * Disable automatic refresh
-     */
-    stopUpdateSamples() {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-    },
-    // jump back to train dashboard
+    // Jump back to train dashboard
     jumpToTrainDashboard() {
       this.$router.push({
         path: '/train-manage/training-dashboard',
@@ -702,9 +617,9 @@ export default {
       });
     },
     /**
-     * Format Absolute Time
-     * @param {String} time string
-     * @return {string} str
+     * Format absolute Time
+     * @param {String} time String
+     * @return {string}
      */
 
     dealrelativeTime(time) {

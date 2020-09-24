@@ -15,7 +15,6 @@ limitations under the License.
 -->
 <template>
   <div class="cl-scalar-manage">
-
     <div class="scalar-bk">
       <div class="cl-title cl-scalar-title"
            v-show="originDataArr.length>0">
@@ -39,7 +38,7 @@ limitations under the License.
         </div>
       </div>
 
-      <!--operation area -->
+      <!--Operation area -->
       <div class="cl-eval-operate-content"
            v-show="!compare && originDataArr.length>0">
         <multiselectGroupComponents ref="multiselectGroupComponents"
@@ -114,7 +113,7 @@ limitations under the License.
                       @click="delThreshold(sampleItem)">{{$t("scalar.deleteThreshold")}}</span>
               </div>
             </div>
-            <!-- tag name -->
+            <!-- Tag name -->
             <div class="tag-name">{{sampleItem.tagName}}
               <el-tooltip v-if="sampleItem.invalidData"
                           class="item"
@@ -270,30 +269,31 @@ import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import ScalarCompare from './scalar-compare';
 import multiselectGroupComponents from '../../components/multiselectGroup.vue';
+import autoUpdate from '../../mixins/autoUpdate.vue';
+import threshold from '../../mixins/threshold.vue';
 
 export default {
+  mixins: [threshold, autoUpdate],
   data() {
     return {
       firstNum: 0, // First time
       isActive: 0, // Horizontal axis selected value
-      initOver: false, // Indicates whether the initialization is complete.
-      autoUpdateTimer: null, // Automatic refresh timer
+      initOver: false, // Indicates whether the initialization is complete
       charResizeTimer: null, // Delay after the window size is changed
-      multiSelectedTagNames: {}, // selected tag name
+      multiSelectedTagNames: {}, // Selected tag name
       curFilterSamples: [], // List of chart that meet the current filter criteria
       tagOperateList: [], // Array selected by tag
-      tagPropsList: [], // tag props
-      propsList: [], // dataList props
+      tagPropsList: [], // Tag props
+      propsList: [], // DataList props
       smoothValue: 0, // Initial smoothness of the slider
       smoothValueNumber: 0,
       smoothSliderValueTimer: null, // Smoothness slider timer
       DomIdIndex: 0, // DomId num
       originDataArr: [], // Original data
       oriDataDictionaries: {}, // Dictionary that contains all the current tags
-      curPageArr: [], // data of the current page
+      curPageArr: [], // Data of the current page
       pageIndex: 0, // Current page number
       pageNum: 6, // Number of records per page
-      isReloading: false, // Refreshing
       backendString: 'scalarBackend', // Background layer suffix
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
@@ -303,95 +303,15 @@ export default {
       scalarCompare: this.$t('scalar')['comparison'],
       trainingJobId: this.$route.query.train_id, // ID of the current training job
       summaryPath: this.$route.query.summaryPath,
-      thresholdDialogVisible: false,
-      delThresholdVisible: false,
-      currentTagName: '',
-      currentSample: {},
-      thresholdErrorMsg: '',
-      thresholdRelational: '',
-      thresholdValue: [
-        { filterCondition: this.$t('scalar.lessThan'), value: '' },
-        { filterCondition: this.$t('scalar.lessThan'), value: '' },
-      ],
-      filterOptions: [
-        {
-          value: this.$t('scalar.lessThan'),
-          label: this.$t('scalar.lessThan'),
-        },
-        {
-          value: this.$t('scalar.greaterThan'),
-          label: this.$t('scalar.greaterThan'),
-        },
-      ],
-      thresholdLocal: null,
-      thresholdSwitch: false,
-      delThresholdSwitch: false,
-      thresholdColor: '#f00',
       decodeTrainingJobId: '',
     };
   },
-  computed: {
-    /**
-     * Global Refresh
-     * @return {Boolen}
-     */
 
-    isReload() {
-      return this.$store.state.isReload;
-    },
-    /**
-     * auto refresh
-     * @return {Boolen}
-     */
-
-    isTimeReload() {
-      return this.$store.state.isTimeReload;
-    },
-
-    timeReloadValue() {
-      return this.$store.state.timeReloadValue;
-    },
-  },
-  watch: {
-    /**
-     * Listener Global Refresh
-     * @param {Boolen} newVal new Value
-     * @param {Boolen} oldVal old value
-     */
-
-    isReload(newVal, oldVal) {
-      if (newVal) {
-        this.isReloading = true;
-        // Retiming
-        if (this.isTimeReload) {
-          this.autoUpdateSamples();
-        }
-        this.updateAllData(false);
-      }
-    },
-    /**
-     * Listener auto refresh
-     * @param {Boolen} newVal new Value
-     * @param {Boolen} oldVal old Value
-     */
-
-    isTimeReload(newVal, oldVal) {
-      if (newVal) {
-        this.autoUpdateSamples();
-      } else {
-        this.stopUpdateSamples();
-      }
-    },
-
-    timeReloadValue() {
-      this.autoUpdateSamples();
-    },
-  },
   destroyed() {
-    // remove the size of a window and change the listener
+    // Remove the size of a window and change the listener
     window.removeEventListener('resize', this.resizeCallback);
 
-    // remove slider value change timing
+    // Remove slider value change timing
     if (this.smoothSliderValueTimer) {
       clearTimeout(this.smoothSliderValueTimer);
       this.smoothSliderValueTimer = null;
@@ -403,11 +323,6 @@ export default {
       this.charResizeTimer = null;
     }
 
-    // Disable the automatic refresh timer
-    if (this.autoUpdateTimer) {
-      clearInterval(this.autoUpdateTimer);
-      this.autoUpdateTimer = null;
-    }
     if (this.axisBenchChangeTimer) {
       clearTimeout(this.axisBenchChangeTimer);
       this.axisBenchChangeTimer = null;
@@ -424,7 +339,7 @@ export default {
       return;
     }
     document.title = `${decodeURIComponent(
-      this.$route.query.train_id
+        this.$route.query.train_id,
     )}-${this.$t('scalar.titleText')}-MindInsight`;
     // Adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
@@ -438,54 +353,12 @@ export default {
 
     this.getCache();
 
-    // auto refresh
+    // Auto refresh
     if (this.isTimeReload) {
       this.autoUpdateSamples();
     }
   },
   methods: {
-    /**
-     * get localStorge
-     */
-
-    getCache() {
-      if (localStorage.getItem('thresholdCache')) {
-        try {
-          this.thresholdLocal = JSON.parse(
-            localStorage.getItem('thresholdCache')
-          );
-          this.clearCache();
-        } catch (e) {
-          localStorage.removeItem('thresholdCache');
-          this.thresholdLocal = {};
-        }
-      } else {
-        this.thresholdLocal = {};
-      }
-    },
-
-    /**
-     * clear localStorge
-     */
-
-    clearCache() {
-      if (
-        this.thresholdLocal &&
-        this.thresholdLocal[this.decodeTrainingJobId]
-      ) {
-        if (
-          Object.keys(this.thresholdLocal[this.decodeTrainingJobId]).length ===
-          0
-        ) {
-          delete this.thresholdLocal[this.decodeTrainingJobId];
-          localStorage.setItem(
-            'thresholdCache',
-            JSON.stringify(this.thresholdLocal)
-          );
-        }
-      }
-    },
-
     /**
      * Obtain the tag and run list.
      */
@@ -496,81 +369,81 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, false)
-        .then((res) => {
-          // error;
-          if (
-            !res ||
+          .then((res) => {
+          // Error
+            if (
+              !res ||
             !res.data ||
             !res.data.train_jobs ||
             !res.data.train_jobs.length
-          ) {
-            this.initOver = true;
-            return;
-          }
-          const tempTagList = [];
-          const dataList = [];
-          const propsList = [];
-          const data = res.data.train_jobs[0];
-          const runNmeColor = CommonProperty.commonColorArr[0];
-          data.tags.forEach((tagObj) => {
-            if (!this.oriDataDictionaries[tagObj]) {
-              this.oriDataDictionaries[tagObj] = true;
-              // Add the tag list
-              tempTagList.push({
-                label: tagObj,
-                checked: true,
-                show: true,
-              });
-              const sampleIndex = dataList.length;
-              // Adding Chart Data
-              dataList.push({
-                tagName: tagObj,
-                runNames: data.name,
-                colors: runNmeColor,
-                show: false,
-                updateFlag: false,
-                dataRemove: false,
-                fullScreen: false,
-                sampleIndex: sampleIndex,
-                domId: 'prDom' + this.DomIdIndex,
-                charData: {
-                  oriData: [],
-                  charOption: {},
-                },
-                zoomData: [null, null],
-                zoomDataTimer: null,
-                charObj: null,
-                invalidData: false,
-              });
-
-              propsList.push({
-                tagName: tagObj,
-                runNames: data.name,
-                colors: '',
-              });
-              this.DomIdIndex++;
+            ) {
+              this.initOver = true;
+              return;
             }
-          });
-          this.tagOperateList = tempTagList;
-          this.tagPropsList = JSON.parse(JSON.stringify(tempTagList));
-          if (dataList.length === 1) {
-            dataList[0].fullScreen = true;
-          }
-          this.originDataArr = dataList;
-          this.propsList = propsList;
-          this.initOver = true;
+            const tempTagList = [];
+            const dataList = [];
+            const propsList = [];
+            const data = res.data.train_jobs[0];
+            const runNmeColor = CommonProperty.commonColorArr[0];
+            data.tags.forEach((tagObj) => {
+              if (!this.oriDataDictionaries[tagObj]) {
+                this.oriDataDictionaries[tagObj] = true;
+                // Add the tag list
+                tempTagList.push({
+                  label: tagObj,
+                  checked: true,
+                  show: true,
+                });
+                const sampleIndex = dataList.length;
+                // Adding chart data
+                dataList.push({
+                  tagName: tagObj,
+                  runNames: data.name,
+                  colors: runNmeColor,
+                  show: false,
+                  updateFlag: false,
+                  dataRemove: false,
+                  fullScreen: false,
+                  sampleIndex: sampleIndex,
+                  domId: 'prDom' + this.DomIdIndex,
+                  charData: {
+                    oriData: [],
+                    charOption: {},
+                  },
+                  zoomData: [null, null],
+                  zoomDataTimer: null,
+                  charObj: null,
+                  invalidData: false,
+                });
 
-          this.$nextTick(() => {
-            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-            // Obtains data on the current page
-            this.updateTagInPage();
-            this.resizeCallback();
+                propsList.push({
+                  tagName: tagObj,
+                  runNames: data.name,
+                  colors: '',
+                });
+                this.DomIdIndex++;
+              }
+            });
+            this.tagOperateList = tempTagList;
+            this.tagPropsList = JSON.parse(JSON.stringify(tempTagList));
+            if (dataList.length === 1) {
+              dataList[0].fullScreen = true;
+            }
+            this.originDataArr = dataList;
+            this.propsList = propsList;
+            this.initOver = true;
+
+            this.$nextTick(() => {
+              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+              // Obtains data on the current page
+              this.updateTagInPage();
+              this.resizeCallback();
+            });
+          }, this.requestErrorCallback)
+          .catch((e) => {
+            this.initOver = true;
+            this.$message.error(this.$t('public.dataError'));
           });
-        }, this.requestErrorCallback)
-        .catch((e) => {
-          this.initOver = true;
-          this.$message.error(this.$t('public.dataError'));
-        });
     },
 
     /**
@@ -618,208 +491,115 @@ export default {
         };
 
         RequestService.getScalarsSample(params)
-          .then((res) => {
-            // error
-            if (!res || !res.data || !res.data.metadatas) {
-              // canceled
-              if (res.toString() === 'false') {
+            .then((res) => {
+            // Error
+              if (!res || !res.data || !res.data.metadatas) {
+              // Canceled
+                if (res.toString() === 'false') {
+                  return;
+                }
+                if (sampleObject.charObj) {
+                  sampleObject.charObj.clear();
+                  sampleObject.onePoint = false;
+                }
                 return;
               }
+              let hasInvalidData = false;
+
+              if (sampleObject.charObj) {
+                sampleObject.charObj.showLoading();
+              }
+
+              const resData = res.data;
+
+              const tempObject = {
+                valueData: {
+                  stepData: [],
+                  absData: [],
+                  relativeData: [],
+                },
+                logData: {
+                  stepData: [],
+                  absData: [],
+                  relativeData: [],
+                },
+              };
+              let relativeTimeBench = 0;
+              if (resData.metadatas.length) {
+                relativeTimeBench = resData.metadatas[0].wall_time;
+              }
+
+              // Initializing chart data
+              resData.metadatas.forEach((metaData) => {
+                if (metaData.value === null && !hasInvalidData) {
+                  hasInvalidData = true;
+                }
+                tempObject.valueData.stepData.push([
+                  metaData.step,
+                  metaData.value,
+                ]);
+                tempObject.valueData.absData.push([
+                  metaData.wall_time,
+                  metaData.value,
+                ]);
+                tempObject.valueData.relativeData.push([
+                  metaData.wall_time - relativeTimeBench,
+                  metaData.value,
+                ]);
+                const logValue = metaData.value >= 0 ? metaData.value : '';
+                tempObject.logData.stepData.push([metaData.step, logValue]);
+                tempObject.logData.absData.push([metaData.wall_time, logValue]);
+                tempObject.logData.relativeData.push([
+                  metaData.wall_time - relativeTimeBench,
+                  logValue,
+                ]);
+              });
+
+              sampleObject.charData.oriData[0] = tempObject;
+
+              if (hasInvalidData) {
+                this.$set(sampleObject, 'invalidData', true);
+              } else {
+                this.$set(sampleObject, 'invalidData', false);
+              }
+
+              sampleObject.charData.charOption = this.formateCharOption(
+                  sampleIndex,
+              );
+              const tempOption = sampleObject.charData.charOption;
+              if (
+                tempOption.series[0].data.length === 1 ||
+              sampleObject.onePoint
+              ) {
+                tempOption.series[0].showSymbol = true;
+              } else {
+                tempOption.series[0].showSymbol = false;
+              }
+
+              this.$forceUpdate();
+
+              this.$nextTick(() => {
+                if (sampleObject.charObj) {
+                  sampleObject.charObj.hideLoading();
+                }
+                // Draw chart
+                if (!this.compare) {
+                  this.updateOrCreateChar(sampleIndex, true);
+                }
+              });
+            })
+            .catch((e) => {
               if (sampleObject.charObj) {
                 sampleObject.charObj.clear();
-                sampleObject.onePoint = false;
-              }
-              return;
-            }
-            let hasInvalidData = false;
-
-            if (sampleObject.charObj) {
-              sampleObject.charObj.showLoading();
-            }
-
-            const resData = res.data;
-
-            const tempObject = {
-              valueData: {
-                stepData: [],
-                absData: [],
-                relativeData: [],
-              },
-              logData: {
-                stepData: [],
-                absData: [],
-                relativeData: [],
-              },
-            };
-            let relativeTimeBench = 0;
-            if (resData.metadatas.length) {
-              relativeTimeBench = resData.metadatas[0].wall_time;
-            }
-
-            // Initializing Chart Data
-            resData.metadatas.forEach((metaData) => {
-              if (metaData.value === null && !hasInvalidData) {
-                hasInvalidData = true;
-              }
-              tempObject.valueData.stepData.push([
-                metaData.step,
-                metaData.value,
-              ]);
-              tempObject.valueData.absData.push([
-                metaData.wall_time,
-                metaData.value,
-              ]);
-              tempObject.valueData.relativeData.push([
-                metaData.wall_time - relativeTimeBench,
-                metaData.value,
-              ]);
-              const logValue = metaData.value >= 0 ? metaData.value : '';
-              tempObject.logData.stepData.push([metaData.step, logValue]);
-              tempObject.logData.absData.push([metaData.wall_time, logValue]);
-              tempObject.logData.relativeData.push([
-                metaData.wall_time - relativeTimeBench,
-                logValue,
-              ]);
-            });
-
-            sampleObject.charData.oriData[0] = tempObject;
-
-            if (hasInvalidData) {
-              this.$set(sampleObject, 'invalidData', true);
-            } else {
-              this.$set(sampleObject, 'invalidData', false);
-            }
-
-            sampleObject.charData.charOption = this.formateCharOption(
-              sampleIndex
-            );
-            const tempOption = sampleObject.charData.charOption;
-            if (
-              tempOption.series[0].data.length === 1 ||
-              sampleObject.onePoint
-            ) {
-              tempOption.series[0].showSymbol = true;
-            } else {
-              tempOption.series[0].showSymbol = false;
-            }
-
-            this.$forceUpdate();
-
-            this.$nextTick(() => {
-              if (sampleObject.charObj) {
-                sampleObject.charObj.hideLoading();
-              }
-              // Draw chart
-              if (!this.compare) {
-                this.updateOrCreateChar(sampleIndex, true);
               }
             });
-          })
-          .catch((e) => {
-            if (sampleObject.charObj) {
-              sampleObject.charObj.clear();
-            }
-          });
       });
     },
 
     /**
-     * set one point style
-     * @param {Object} sampleObject
-     */
-
-    setOnePoint(sampleObject) {
-      const that = this;
-      sampleObject.charObj.on('datazoom', function (params) {
-        const xAxisObject = params.batch[0];
-        const yAxisObject = params.batch[1];
-        const charData = sampleObject.charData.charOption.series[0].data;
-        const tempCharOption = sampleObject.charData.charOption;
-        // one point
-        if (charData.length === 1) {
-          sampleObject.onePoint = true;
-          tempCharOption.series[0].showSymbol = true;
-          sampleObject.charObj.setOption(tempCharOption, false);
-          return;
-        }
-        let filtetArr = [];
-        for (let i = 0; i < charData.length; i++) {
-          if (
-            Math.ceil(charData[i][0] * 10000) / 10000 >=
-              xAxisObject.startValue &&
-            Math.floor(charData[i][0] * 10000) / 10000 <=
-              xAxisObject.endValue &&
-            Math.ceil(charData[i][1] * 10000) / 10000 >=
-              yAxisObject.startValue &&
-            Math.floor(charData[i][1] * 10000) / 10000 <= yAxisObject.endValue
-          ) {
-            filtetArr.push(charData[i]);
-            if (filtetArr.length > 1) {
-              filtetArr = [];
-              break;
-            }
-          }
-        }
-        if (filtetArr.length === 1) {
-          sampleObject.onePoint = true;
-          tempCharOption.series[0].showSymbol = true;
-        } else {
-          sampleObject.onePoint = false;
-          tempCharOption.series[0].showSymbol = false;
-        }
-
-        if (
-          tempCharOption.visualMap &&
-          tempCharOption.visualMap['pieces'] &&
-          tempCharOption.visualMap['pieces'].length > 0
-        ) {
-          tempCharOption.visualMap = null;
-          tempCharOption.series[0].markLine = null;
-          that.updateVisualMap(sampleObject);
-        } else {
-          sampleObject.charObj.setOption(tempCharOption, false);
-        }
-      });
-    },
-
-    /**
-     * set restore
-     * @param {Object} sampleObject
-     */
-
-    setRestore(sampleObject) {
-      const that = this;
-      sampleObject.charObj.on('restore', function (params) {
-        const charData = sampleObject.charData.charOption.series[0].data;
-        const tempCharOption = sampleObject.charData.charOption;
-
-        // one point
-        if (charData.length === 1) {
-          sampleObject.onePoint = true;
-          tempCharOption.series[0].showSymbol = true;
-          sampleObject.charObj.setOption(tempCharOption, false);
-          return;
-        }
-        sampleObject.onePoint = false;
-        tempCharOption.series[0].showSymbol = false;
-        if (
-          tempCharOption.visualMap &&
-          tempCharOption.visualMap['pieces'] &&
-          tempCharOption.visualMap['pieces'].length > 0
-        ) {
-          tempCharOption.visualMap = null;
-          tempCharOption.series[0].markLine = null;
-          that.updateVisualMap(sampleObject);
-        } else {
-          sampleObject.charObj.setOption(tempCharOption, false);
-        }
-      });
-    },
-
-    /**
-     * Formatting Chart Data
+     * Formatting chart data
      * @param {Number} sampleIndex Chart subscript
-     * @return {Object} echar option
+     * @return {Object} Echar option
      */
 
     formateCharOption(sampleIndex) {
@@ -858,12 +638,12 @@ export default {
       if (curOriData) {
         if (sampleObject.log) {
           dataObj.data = this.formateSmoothData(
-            curOriData.logData[this.curBenchX]
+              curOriData.logData[this.curBenchX],
           );
           dataObjBackend.data = curOriData.logData[this.curBenchX];
         } else {
           dataObj.data = this.formateSmoothData(
-            curOriData.valueData[this.curBenchX]
+              curOriData.valueData[this.curBenchX],
           );
           dataObjBackend.data = curOriData.valueData[this.curBenchX];
         }
@@ -993,23 +773,23 @@ export default {
           position: (point, params, dom, rect, size) => {
             const curDom = document.getElementById(sampleObject.domId);
             if (!curDom) {
-              return { left: 0, bottom: '100%' };
+              return {left: 0, bottom: '100%'};
             }
             if (sampleObject.fullScreen) {
               if (point[0] + size.contentSize[0] <= size.viewSize[0]) {
-                return { left: point[0], bottom: '10%' };
+                return {left: point[0], bottom: '10%'};
               } else {
-                return { right: size.viewSize[0] - point[0], bottom: '10%' };
+                return {right: size.viewSize[0] - point[0], bottom: '10%'};
               }
             } else {
               const parentNode = curDom.parentNode;
               if (!parentNode) {
-                return { left: 0, bottom: '100%' };
+                return {left: 0, bottom: '100%'};
               }
               if (parentNode.offsetLeft > size.contentSize[0]) {
-                return { right: '100%', bottom: 0 };
+                return {right: '100%', bottom: 0};
               } else {
-                return { left: '100%', bottom: 0 };
+                return {left: '100%', bottom: 0};
               }
             }
           },
@@ -1094,16 +874,16 @@ export default {
                     `display:inline-block;"></td><td>${parma.seriesName}</td>` +
                     `<td>${that.formateYaxisValue(parma.value[1])}</td>` +
                     `<td>${that.formateYaxisValue(
-                      curSerieOriData.stepData[parma.dataIndex][1]
+                        curSerieOriData.stepData[parma.dataIndex][1],
                     )}</td>` +
                     `<td>${curSerieOriData.stepData[parma.dataIndex][0]}</td>` +
                     `<td>${curSerieOriData.relativeData[
-                      parma.dataIndex
+                        parma.dataIndex
                     ][0].toFixed(3)}${unit}</td>` +
                     `<td>${that.dealrelativeTime(
-                      new Date(
-                        curSerieOriData.absData[parma.dataIndex][0] * 1000
-                      ).toString()
+                        new Date(
+                            curSerieOriData.absData[parma.dataIndex][0] * 1000,
+                        ).toString(),
                     )}</td>` +
                     `</tr>`;
                 }
@@ -1124,9 +904,9 @@ export default {
               borderColor: '#00A5A7',
             },
           },
-          // toolbox
+          // Toolbox
           feature: {
-            // fullScreen
+            // FullScreen
             myToolFullScreen: {
               show: true,
               title: this.$t('scalar.fullScreen'),
@@ -1154,7 +934,7 @@ export default {
               },
             },
 
-            // Selection and Rollback
+            // Selection and rollback
             dataZoom: {
               textStyle: false,
               title: {
@@ -1164,7 +944,7 @@ export default {
               show: true,
             },
 
-            // restore
+            // Restore
             restore: {
               title: this.$t('scalar.restore'),
             },
@@ -1177,43 +957,9 @@ export default {
     },
 
     /**
-     * update visualMap
-     * @param {Object} sampleObject
-     */
-
-    updateVisualMap(sampleObject) {
-      this.getCache();
-      if (
-        this.thresholdLocal &&
-        this.thresholdLocal[this.decodeTrainingJobId] &&
-        this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
-      ) {
-        const tempStorgeArr = JSON.parse(
-          JSON.stringify(
-            this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
-          )
-        );
-        let pieceStr = '';
-        pieceStr = this.formatePieceStr(tempStorgeArr);
-        sampleObject.pieceStr = pieceStr;
-
-        tempStorgeArr.forEach((item) => {
-          item.color = this.thresholdColor;
-        });
-
-        if (sampleObject.charObj) {
-          this.setVisualMap(sampleObject, tempStorgeArr);
-        }
-      } else {
-        sampleObject.pieceStr = '';
-        sampleObject.charData.charOption.series[0].markLine = null;
-      }
-    },
-
-    /**
-     * Updating or Creating a Specified chart
+     * Updating or creating a specified chart
      * @param {Number} sampleIndex Chart subscript
-     * @param {Boolean} isSetVisualMap isSetVisualMap
+     * @param {Boolean} isSetVisualMap IsSetVisualMap
      */
 
     updateOrCreateChar(sampleIndex, isSetVisualMap) {
@@ -1225,17 +971,17 @@ export default {
         // Updating chart option
         if (sampleObject.updateFlag) {
           sampleObject.charObj.setOption(
-            sampleObject.charData.charOption,
-            sampleObject.dataRemove
+              sampleObject.charData.charOption,
+              sampleObject.dataRemove,
           );
           sampleObject.updateFlag = false;
           sampleObject.dataRemove = false;
         }
       } else {
-        // creat chart
+        // Create chart
         sampleObject.charObj = echarts.init(
-          document.getElementById(sampleObject.domId),
-          null
+            document.getElementById(sampleObject.domId),
+            null,
         );
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
         this.setOnePoint(sampleObject);
@@ -1247,7 +993,7 @@ export default {
     },
 
     /**
-     * Enabling/Disabling Full Screen
+     * Enabling/Disabling full screen
      * @param {Number} sampleIndex Chart subscript
      */
 
@@ -1280,7 +1026,7 @@ export default {
     },
 
     /**
-     * Update Chart by tag
+     * Update chart by tag
      * @param {Boolean} noPageDataNumChange No new data is added or deleted
      */
 
@@ -1341,13 +1087,13 @@ export default {
               const oriIndexData = sampleObject.charData.oriData[index];
               if (sampleObject.log) {
                 seriesData[index * 2].data = this.formateSmoothData(
-                  oriIndexData.logData[this.curBenchX]
+                    oriIndexData.logData[this.curBenchX],
                 );
                 seriesData[index * 2 + 1].data =
                   oriIndexData.logData[this.curBenchX];
               } else {
                 seriesData[index * 2].data = this.formateSmoothData(
-                  oriIndexData.valueData[this.curBenchX]
+                    oriIndexData.valueData[this.curBenchX],
                 );
                 seriesData[index * 2 + 1].data =
                   oriIndexData.valueData[this.curBenchX];
@@ -1386,7 +1132,7 @@ export default {
     },
 
     /**
-     * the selected label is changed
+     * The selected label is changed
      * @param {Object} selectedItemDict Dictionary containing the selected tags
      */
 
@@ -1404,7 +1150,7 @@ export default {
     },
 
     /**
-     *window resize
+     *Window resize
      */
 
     resizeCallback() {
@@ -1444,8 +1190,8 @@ export default {
     },
 
     /**
-     * error
-     * @param {Object} error error object
+     * Error
+     * @param {Object} error Error object
      */
 
     requestErrorCallback(error) {
@@ -1552,7 +1298,7 @@ export default {
 
     /**
      * Update all data
-     * @param {Boolean} ignoreError whether ignore error tip
+     * @param {Boolean} ignoreError Whether ignore error tip
      */
 
     updateAllData(ignoreError) {
@@ -1561,87 +1307,61 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, ignoreError)
-        .then((res) => {
-          if (this.isReloading) {
-            this.$store.commit('setIsReload', false);
-            this.isReloading = false;
-          }
+          .then((res) => {
+            if (this.isReloading) {
+              this.$store.commit('setIsReload', false);
+              this.isReloading = false;
+            }
 
-          // Fault tolerance processing
-          if (!res || !res.data) {
-            return;
-          } else if (!res.data.train_jobs || !res.data.train_jobs.length) {
-            this.clearAllData();
-            return;
-          }
-          const data = res.data.train_jobs[0];
-          // Delete the data that does not exist
-          const tagRemoveFlag = this.removeNonexistentData(data);
+            // Fault tolerance processing
+            if (!res || !res.data) {
+              return;
+            } else if (!res.data.train_jobs || !res.data.train_jobs.length) {
+              this.clearAllData();
+              return;
+            }
+            const data = res.data.train_jobs[0];
+            // Delete the data that does not exist
+            const tagRemoveFlag = this.removeNonexistentData(data);
 
-          // Check whether new data exists and add it to the page
-          const tagAddFlag = this.checkNewDataAndComplete(data);
+            // Check whether new data exists and add it to the page
+            const tagAddFlag = this.checkNewDataAndComplete(data);
 
-          this.$nextTick(() => {
-            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-            this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
-            this.resizeCallback();
-          });
+            this.$nextTick(() => {
+              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+              this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
+              this.resizeCallback();
+            });
 
-          const tempTagList = [];
-          const propsList = [];
-          // Initial chart data
-          data.tags.forEach((tagObj) => {
+            const tempTagList = [];
+            const propsList = [];
+            // Initial chart data
+            data.tags.forEach((tagObj) => {
             // Check whether the tag with the same name exists
-            tempTagList.push({
-              label: tagObj,
-              checked: true,
-              show: true,
-            });
+              tempTagList.push({
+                label: tagObj,
+                checked: true,
+                show: true,
+              });
 
-            // Add the tag list.
-            propsList.push({
-              tagName: tagObj,
-              runNames: data.name,
-              colors: '',
+              // Add the tag list
+              propsList.push({
+                tagName: tagObj,
+                runNames: data.name,
+                colors: '',
+              });
             });
+            this.tagPropsList = tempTagList;
+            this.propsList = propsList;
+          }, this.requestErrorCallback)
+          .catch((e) => {
+            this.$message.error(this.$t('public.dataError'));
           });
-          this.tagPropsList = tempTagList;
-          this.propsList = propsList;
-        }, this.requestErrorCallback)
-        .catch((e) => {
-          this.$message.error(this.$t('public.dataError'));
-        });
     },
 
     /**
-     * Enable automatic refresh
-     */
-
-    autoUpdateSamples() {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-      this.autoUpdateTimer = setInterval(() => {
-        this.$store.commit('clearToken');
-        this.updateAllData(true);
-      }, this.timeReloadValue * 1000);
-    },
-
-    /**
-     * Disable automatic refresh
-     */
-
-    stopUpdateSamples() {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-    },
-
-    /**
-     * updata smoothness
-     * @param {String} value slide value
+     * Updata smoothness
+     * @param {String} value Slide value
      */
 
     updataInputValue(val) {
@@ -1684,9 +1404,9 @@ export default {
     },
 
     /**
-     * Format Absolute Time
-     * @param {String} time string
-     * @return {string} str
+     * Format absolute Time
+     * @param {String} time String
+     * @return {string} Str
      */
 
     dealrelativeTime(time) {
@@ -1716,15 +1436,15 @@ export default {
             if (index % 2 === 0) {
               if (log) {
                 serie.data = this.formateSmoothData(
-                  sampleObject.charData.oriData[index / 2].logData[
-                    this.curBenchX
-                  ]
+                    sampleObject.charData.oriData[index / 2].logData[
+                        this.curBenchX
+                    ],
                 );
               } else {
                 serie.data = this.formateSmoothData(
-                  sampleObject.charData.oriData[index / 2].valueData[
-                    this.curBenchX
-                  ]
+                    sampleObject.charData.oriData[index / 2].valueData[
+                        this.curBenchX
+                    ],
                 );
               }
             }
@@ -1736,9 +1456,9 @@ export default {
     },
 
     /**
-     * format smooth data
+     * Format smooth data
      * @param {Object} oriData
-     * @return {Object} data
+     * @return {Object} Data
      */
 
     formateSmoothData(oriData) {
@@ -1790,8 +1510,8 @@ export default {
     },
 
     /**
-     * y Axis Scale
-     * @param {Number} sampleIndex number
+     * YAxis Scale
+     * @param {Number} sampleIndex Number
      */
 
     yAxisScale(sampleIndex) {
@@ -1820,13 +1540,13 @@ export default {
         tempOriData.forEach((originData, index) => {
           if (log) {
             tempOption.series[index * 2].data = this.formateSmoothData(
-              tempOriData[index].logData[this.curBenchX]
+                tempOriData[index].logData[this.curBenchX],
             );
             tempOption.series[index * 2 + 1].data =
               tempOriData[index].logData[this.curBenchX];
           } else {
             tempOption.series[index * 2].data = this.formateSmoothData(
-              tempOriData[index].valueData[this.curBenchX]
+                tempOriData[index].valueData[this.curBenchX],
             );
             tempOption.series[index * 2 + 1].data =
               tempOriData[index].valueData[this.curBenchX];
@@ -1838,7 +1558,7 @@ export default {
 
         const dataObj = tempOption.series[0];
 
-        // one point
+        // One point
         if (dataObj.data.length === 1) {
           tempOption.series[0].showSymbol = true;
           sampleObject.onePoint = true;
@@ -1862,7 +1582,7 @@ export default {
     },
 
     /**
-     * Scalar Synthesis
+     * Scalar synthesis
      */
 
     compareClick() {
@@ -1887,7 +1607,7 @@ export default {
     },
 
     /**
-     * jump back to train dashboard
+     * Jump back to train dashboard
      */
 
     jumpToTrainDashboard() {
@@ -1897,509 +1617,6 @@ export default {
           id: this.trainingJobId,
         },
       });
-    },
-
-    /**
-     * set threshold
-     * @param {Object} sampleItem sampleItem
-     */
-
-    setThreshold(sampleItem) {
-      this.stopUpdateSamples();
-      this.getCache();
-      if (
-        this.thresholdLocal &&
-        this.thresholdLocal[this.decodeTrainingJobId] &&
-        this.thresholdLocal[this.decodeTrainingJobId][sampleItem.tagName]
-      ) {
-        delete this.thresholdLocal[this.decodeTrainingJobId][
-          sampleItem.tagName
-        ];
-      }
-      this.currentTagName = sampleItem.tagName;
-      this.currentSample = sampleItem;
-      this.thresholdDialogVisible = true;
-    },
-
-    /**
-     * delete threshold
-     * @param {Object} sampleItem sampleItem
-     */
-
-    delThreshold(sampleItem) {
-      this.stopUpdateSamples();
-      this.currentTagName = sampleItem.tagName;
-      this.currentSample = sampleItem;
-      this.delThresholdVisible = true;
-    },
-
-    /**
-     * threshold validate
-     */
-
-    thresholdValidate() {
-      let isValidate = true;
-
-      const valueFirst = this.thresholdValue[0].value;
-      const valueSec = this.thresholdValue[1].value;
-      const filterConditionFirst = this.thresholdValue[0].filterCondition;
-      const filterConditionSec = this.thresholdValue[1].filterCondition;
-
-      if (!this.thresholdRelational) {
-        if (!valueFirst) {
-          this.thresholdErrorMsg = this.$t('scalar.placeHolderThreshold');
-          isValidate = false;
-        } else if (valueFirst.indexOf(' ') > -1) {
-          this.thresholdErrorMsg = this.$t('scalar.noSpace');
-          isValidate = false;
-        } else if (isNaN(valueFirst) || valueFirst.indexOf('Infinity') > -1) {
-          this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
-          isValidate = false;
-        }
-      } else {
-        if (filterConditionFirst === filterConditionSec) {
-          this.thresholdErrorMsg = this.$t('scalar.sameCompare');
-          isValidate = false;
-        } else if (!valueFirst || !valueSec) {
-          this.thresholdErrorMsg = this.$t('scalar.placeHolderThreshold');
-          isValidate = false;
-        } else if (valueFirst.indexOf(' ') > -1 || valueSec.indexOf(' ') > -1) {
-          this.thresholdErrorMsg = this.$t('scalar.noSpace');
-          isValidate = false;
-        } else if (valueFirst === valueSec) {
-          this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-          isValidate = false;
-        } else if (isNaN(valueFirst) || isNaN(valueSec)) {
-          this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
-          isValidate = false;
-        } else if (
-          valueFirst.indexOf('Infinity') > -1 ||
-          valueSec.indexOf('Infinity') > -1
-        ) {
-          this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
-          isValidate = false;
-        } else {
-          if (this.thresholdRelational === this.$t('scalar.or')) {
-            if (
-              filterConditionFirst === this.$t('scalar.greaterThan') &&
-              Number(valueFirst) < Number(valueSec)
-            ) {
-              this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-              isValidate = false;
-            } else if (
-              filterConditionFirst === this.$t('scalar.lessThan') &&
-              Number(valueFirst) > Number(valueSec)
-            ) {
-              this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-              isValidate = false;
-            }
-          }
-          if (this.thresholdRelational === this.$t('scalar.and')) {
-            if (
-              filterConditionFirst === this.$t('scalar.greaterThan') &&
-              Number(valueFirst) > Number(valueSec)
-            ) {
-              this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-              isValidate = false;
-            } else if (
-              filterConditionFirst === this.$t('scalar.lessThan') &&
-              Number(valueFirst) < Number(valueSec)
-            ) {
-              this.thresholdErrorMsg = this.$t('scalar.unreasonable');
-              isValidate = false;
-            }
-          }
-        }
-      }
-      return isValidate;
-    },
-
-    /**
-     * set visualMap
-     * @param {Object} sampleObject sampleObject
-     * @param {Array} chartPieces chartPieces
-     */
-
-    setVisualMap(sampleObject, chartPieces) {
-      // empty array
-      if (chartPieces.length === 0) {
-        return;
-      }
-      const markLineData = [];
-      chartPieces.forEach((item) => {
-        if (!isNaN(item.lt)) {
-          const markLineDataItem = {};
-          markLineDataItem.yAxis = item.lt;
-          markLineData.push(markLineDataItem);
-        }
-        if (!isNaN(item.gt)) {
-          const markLineDataItem = {};
-          markLineDataItem.yAxis = item.gt;
-          markLineData.push(markLineDataItem);
-        }
-      });
-      const tempCharOption = sampleObject.charData.charOption;
-
-      let chartPiecesTemp = JSON.parse(JSON.stringify(chartPieces));
-      chartPiecesTemp.forEach((item) => {
-        item.color = this.thresholdColor;
-      });
-
-      // one filter condition
-      if (chartPiecesTemp.length === 1) {
-        if (
-          !isNaN(chartPiecesTemp[0]['lt']) &&
-          isNaN(chartPiecesTemp[0]['gt'])
-        ) {
-          if (chartPiecesTemp[0]['lt'] <= sampleObject.zoomData[0]) {
-            chartPiecesTemp = [];
-          } else if (
-            chartPiecesTemp[0]['lt'] < sampleObject.zoomData[1] &&
-            chartPiecesTemp[0]['lt'] > sampleObject.zoomData[0]
-          ) {
-            chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
-          } else if (chartPiecesTemp[0]['lt'] >= sampleObject.zoomData[1]) {
-            chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
-            chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
-          }
-        } else if (
-          !isNaN(chartPiecesTemp[0]['gt']) &&
-          isNaN(chartPiecesTemp[0]['lt'])
-        ) {
-          if (chartPiecesTemp[0]['gt'] >= sampleObject.zoomData[1]) {
-            chartPiecesTemp = [];
-          } else if (
-            chartPiecesTemp[0]['gt'] > sampleObject.zoomData[0] &&
-            chartPiecesTemp[0]['gt'] < sampleObject.zoomData[1]
-          ) {
-            chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
-          } else if (chartPiecesTemp[0]['gt'] <= sampleObject.zoomData[0]) {
-            chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
-            chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
-          }
-        } else if (
-          !isNaN(chartPiecesTemp[0]['lt']) &&
-          !isNaN(chartPiecesTemp[0]['gt'])
-        ) {
-          if (chartPiecesTemp[0]['gt'] >= sampleObject.zoomData[1]) {
-            chartPiecesTemp = [];
-          } else {
-            if (chartPiecesTemp[0]['gt'] <= sampleObject.zoomData[0]) {
-              chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
-            }
-            if (chartPiecesTemp[0]['lt'] >= sampleObject.zoomData[1]) {
-              chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
-            }
-            if (chartPiecesTemp[0]['lt'] <= sampleObject.zoomData[0]) {
-              chartPiecesTemp = [];
-            }
-          }
-        }
-      }
-
-      // two filter condition
-      if (chartPiecesTemp.length === 2) {
-        const relationalArr = [];
-        relationalArr[0] = chartPiecesTemp[0].lt || chartPiecesTemp[1].lt;
-        relationalArr[1] = chartPiecesTemp[0].gt || chartPiecesTemp[1].gt;
-        if (
-          relationalArr[0] >= sampleObject.zoomData[1] ||
-          relationalArr[1] <= sampleObject.zoomData[0]
-        ) {
-          chartPiecesTemp = [
-            {
-              gt: sampleObject.zoomData[0],
-              lt: sampleObject.zoomData[1],
-              color: this.thresholdColor,
-            },
-          ];
-        } else {
-          if (relationalArr[0] <= sampleObject.zoomData[0]) {
-            if (!isNaN(chartPiecesTemp[0].lt)) {
-              chartPiecesTemp[0].lt = sampleObject.zoomData[0];
-            } else {
-              chartPiecesTemp[1].lt = sampleObject.zoomData[0];
-            }
-          }
-          if (relationalArr[1] >= sampleObject.zoomData[1]) {
-            if (!isNaN(chartPiecesTemp[0].gt)) {
-              chartPiecesTemp[0].gt = sampleObject.zoomData[1];
-            } else {
-              chartPiecesTemp[1].gt = sampleObject.zoomData[1];
-            }
-          }
-        }
-      }
-      if (chartPiecesTemp.length > 0) {
-        tempCharOption.series[0].lineStyle['color'] = null;
-        tempCharOption.visualMap = {};
-        tempCharOption.visualMap['show'] = false;
-        tempCharOption.visualMap['pieces'] = chartPiecesTemp;
-        tempCharOption.visualMap['outOfRange'] = {
-          color: sampleObject.colors,
-        };
-        tempCharOption.series[0]['markLine'] = {
-          precision: 5,
-          silent: true,
-          data: markLineData,
-        };
-
-        sampleObject.charObj.setOption(tempCharOption, false);
-      }
-    },
-
-    /**
-     * formate PieceStr
-     * @param {Array} piecesArr piecesArr
-     * @return {String}
-     */
-
-    formatePieceStr(piecesArr) {
-      // empty array
-      if (piecesArr.length === 0) {
-        return;
-      }
-      piecesArr.forEach((item) => {
-        if (item.lt) {
-          item.lt = Number(item.lt.toFixed(5));
-        }
-        if (item.gt) {
-          item.gt = Number(item.gt.toFixed(5));
-        }
-      });
-      let pieceStr;
-      // only one filter condition
-      if (piecesArr.length === 1) {
-        if (!isNaN(piecesArr[0].gt) && !isNaN(piecesArr[0].lt)) {
-          pieceStr = `(${piecesArr[0].gt},${piecesArr[0].lt})`;
-        } else if (!isNaN(piecesArr[0].gt) && isNaN(piecesArr[0].lt)) {
-          pieceStr = `(${piecesArr[0].gt},Infinity)`;
-        } else if (!isNaN(piecesArr[0].lt) && isNaN(piecesArr[0].gt)) {
-          pieceStr = `(-Infinity,${piecesArr[0].lt})`;
-        }
-      }
-      //  two filter condition
-      if (piecesArr.length === 2) {
-        if (!isNaN(piecesArr[0].lt) && !isNaN(piecesArr[1].gt)) {
-          pieceStr = `(-Infinity,${piecesArr[0].lt}),(${piecesArr[1].gt},Infinity)`;
-        } else if (!isNaN(piecesArr[0].gt) && !isNaN(piecesArr[1].lt)) {
-          pieceStr = `(-Infinity,${piecesArr[1].lt}),(${piecesArr[0].gt},Infinity)`;
-        }
-      }
-      return pieceStr;
-    },
-
-    /**
-     * threshold commit
-     */
-
-    thresholdCommit() {
-      const isValidate = this.thresholdValidate();
-
-      if (isValidate) {
-        const chartPieces = [];
-        if (this.thresholdValue[0].value && this.thresholdValue[1].value) {
-          if (this.thresholdRelational === this.$t('scalar.or')) {
-            this.thresholdValue.forEach((item) => {
-              const chartPiecesData = {};
-              if (item.filterCondition === this.$t('scalar.greaterThan')) {
-                chartPiecesData.gt = Number(item.value);
-                chartPieces.push(chartPiecesData);
-              } else {
-                chartPiecesData.lt = Number(item.value);
-                chartPieces.push(chartPiecesData);
-              }
-            });
-          } else {
-            const tempArr = [];
-            const chartPiecesData = {};
-            this.thresholdValue.forEach((item) => {
-              tempArr.push(item.value);
-            });
-
-            if (Number(tempArr[0]) > Number(tempArr[1])) {
-              chartPiecesData.gt = Number(tempArr[1]);
-              chartPiecesData.lt = Number(tempArr[0]);
-              chartPieces.push(chartPiecesData);
-            } else {
-              chartPiecesData.gt = Number(tempArr[0]);
-              chartPiecesData.lt = Number(tempArr[1]);
-              chartPieces.push(chartPiecesData);
-            }
-          }
-        } else {
-          this.thresholdValue.forEach((item) => {
-            const chartPiecesData = {};
-            if (!item.value) {
-              return;
-            } else if (item.filterCondition === this.$t('scalar.greaterThan')) {
-              chartPiecesData.gt = Number(item.value);
-              chartPieces.push(chartPiecesData);
-            } else if (item.filterCondition === this.$t('scalar.lessThan')) {
-              chartPiecesData.lt = Number(item.value);
-              chartPieces.push(chartPiecesData);
-            }
-          });
-        }
-
-        let pieceStr = '';
-        pieceStr = this.formatePieceStr(chartPieces);
-
-        if (!this.thresholdLocal) {
-          this.thresholdLocal = {};
-        }
-        if (!this.thresholdLocal[this.decodeTrainingJobId]) {
-          this.thresholdLocal[this.decodeTrainingJobId] = {};
-        }
-
-        const chartPiecesTemp = JSON.parse(JSON.stringify(chartPieces));
-
-        chartPiecesTemp.forEach((item) => {
-          item.color = this.thresholdColor;
-        });
-
-        if (this.thresholdSwitch) {
-          this.originDataArr.forEach((sampleObject) => {
-            if (this.multiSelectedTagNames[sampleObject.tagName]) {
-              this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
-              ] = chartPieces;
-              sampleObject.pieceStr = pieceStr;
-
-              if (sampleObject.charObj) {
-                this.setVisualMap(sampleObject, chartPieces);
-              }
-            }
-          });
-        } else {
-          this.thresholdLocal[this.decodeTrainingJobId][
-            this.currentTagName
-          ] = chartPieces;
-          this.currentSample.pieceStr = pieceStr;
-          this.setVisualMap(this.currentSample, chartPieces);
-        }
-        localStorage.setItem(
-          'thresholdCache',
-          JSON.stringify(this.thresholdLocal)
-        );
-
-        this.thresholdDialogVisible = false;
-      }
-    },
-
-    /**
-     * relational change
-     */
-
-    relationalChange(val) {
-      if (!val) {
-        this.thresholdValue[1].value = '';
-        this.thresholdErrorMsg = '';
-        this.thresholdValue[1].filterCondition = this.$t('scalar.lessThan');
-      }
-    },
-
-    /**
-     * threshold cancel
-     */
-
-    thresholdCancel() {
-      this.thresholdValue[0].value = '';
-      this.thresholdValue[1].value = '';
-      this.thresholdErrorMsg = '';
-      this.currentTagName = '';
-      this.currentSample = {};
-      this.thresholdSwitch = false;
-      this.thresholdRelational = '';
-      this.thresholdValue[1].filterCondition = this.$t('scalar.lessThan');
-      this.thresholdDialogVisible = false;
-      if (this.isTimeReload) {
-        this.autoUpdateSamples();
-      }
-    },
-
-    /**
-     * delete threshold cancel
-     */
-
-    delThresholdCancel() {
-      this.currentTagName = '';
-      this.currentSample = {};
-      this.delThresholdSwitch = false;
-      this.delThresholdVisible = false;
-      if (this.isTimeReload) {
-        this.autoUpdateSamples();
-      }
-    },
-
-    /**
-     * delete threshold commit
-     */
-
-    delThresholdCommit() {
-      this.getCache();
-      if (this.delThresholdSwitch) {
-        this.originDataArr.forEach((sampleObject) => {
-          if (this.multiSelectedTagNames[sampleObject.tagName]) {
-            if (
-              this.thresholdLocal &&
-              this.thresholdLocal[this.decodeTrainingJobId] &&
-              this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
-              ]
-            ) {
-              delete this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
-              ];
-              sampleObject.pieceStr = '';
-              const tempCharOption = sampleObject.charData.charOption;
-              if (
-                tempCharOption.visualMap &&
-                tempCharOption.visualMap['pieces'] &&
-                tempCharOption.visualMap['pieces'].length > 0
-              ) {
-                tempCharOption.visualMap = null;
-                tempCharOption.series[0].markLine = null;
-                tempCharOption.series[0].lineStyle['color'] =
-                  sampleObject.colors;
-              }
-              if (sampleObject.charObj) {
-                sampleObject.charObj.setOption(tempCharOption, false);
-              }
-            }
-          }
-        });
-      } else {
-        if (
-          this.thresholdLocal &&
-          this.thresholdLocal[this.decodeTrainingJobId] &&
-          this.thresholdLocal[this.decodeTrainingJobId][this.currentTagName]
-        ) {
-          delete this.thresholdLocal[this.decodeTrainingJobId][
-            this.currentTagName
-          ];
-          this.currentSample.pieceStr = '';
-          const tempCharOption = this.currentSample.charData.charOption;
-          if (
-            tempCharOption.visualMap &&
-            tempCharOption.visualMap['pieces'] &&
-            tempCharOption.visualMap['pieces'].length > 0
-          ) {
-            tempCharOption.visualMap = null;
-            tempCharOption.series[0].markLine = null;
-            tempCharOption.series[0].lineStyle[
-              'color'
-            ] = this.currentSample.colors;
-          }
-          this.currentSample.charObj.setOption(tempCharOption, false);
-        }
-      }
-      this.clearCache();
-      localStorage.setItem(
-        'thresholdCache',
-        JSON.stringify(this.thresholdLocal)
-      );
-      this.delThresholdVisible = false;
     },
   },
   components: {
@@ -2756,7 +1973,7 @@ export default {
   }
   .select-disable {
     -moz-user-select: none; /*Firefox*/
-    -webkit-user-select: none; /*webkit*/
+    -webkit-user-select: none; /*Webkit*/
     -ms-user-select: none; /*IE10*/
     -khtml-user-select: none;
     user-select: none;
