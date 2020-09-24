@@ -16,8 +16,8 @@ MindInsight provides MindSpore with easy-to-use debugging and tuning capabilitie
 
 ![MindInsight Architecture](docs/arch.png)
 
-Click to view the [Design document](https://www.mindspore.cn/doc/note/en/master/design.html) (visit [Design document](https://www.mindspore.cn/docs/en/master/design.html) before Sep. 24)，learn more about the design.
-Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html) (visit [Tutorial documentation](https://www.mindspore.cn/tutorial/en/master/advanced_use/visualization_tutorials.html) before Sep. 24) learn more about the MindInsight tutorial.
+Click to view the [Design document](https://www.mindspore.cn/doc/note/en/master/design/overall.html)，learn more about the design.
+Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html) learn more about the MindInsight tutorial.
 
 ## Installation
 Download whl package from [MindSpore download page](https://www.mindspore.cn/versions/en), and install the package.
@@ -31,7 +31,7 @@ For more details on how to install MindInsight, click on the MindInsight section
 ## Quick Start
 Before using MindInsight, the data in the training process should be recorded. When starting MindInsight, the directory of the saved data should be specified. After successful startup, the data can be viewed through the web page. Here is a brief introduction to recording training data, as well as starting and stopping MindInsight.
 
-[SummaryCollector](https://www.mindspore.cn/doc/api_python/en/master/mindspore/mindspore.train.html#mindspore.train.callback.SummaryCollector) (visit [SummaryCollector](https://www.mindspore.cn/api/en/master/api/python/mindspore/mindspore.train.html#mindspore.train.callback.SummaryCollector) before Sep. 24) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
+[SummaryCollector](https://www.mindspore.cn/doc/api_python/en/master/mindspore/mindspore.train.html#mindspore.train.callback.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
 ```
 ...
 
@@ -40,7 +40,7 @@ summary_collector = SummaryCollector(summary_dir='./summary_dir')
 model.train(epoch=1, ds_train, callbacks=[summary_collector])
 ```
 
-For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html) (visit [MindInsight Tutorial](https://www.mindspore.cn/tutorial/en/master/advanced_use/visualization_tutorials.html) before Sep. 24).
+For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html).
 
 After you've collected the data, when you launch MindInsight, specify the directory in which the data has been stored.
 ```
