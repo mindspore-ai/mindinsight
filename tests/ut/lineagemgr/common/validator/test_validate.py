@@ -17,14 +17,15 @@ from unittest import TestCase
 
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageParamTypeError, LineageParamValueError
 from mindinsight.lineagemgr.common.validator.model_parameter import SearchModelConditionParameter
-from mindinsight.lineagemgr.common.validator.validate import validate_search_model_condition
-from mindinsight.utils.exceptions import MindInsightException
+from mindinsight.lineagemgr.common.validator.validate import \
+    validate_search_model_condition, validate_condition, validate_train_id
+from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 
 
 class TestValidateSearchModelCondition(TestCase):
     """Test the mothod of validate_search_model_condition."""
     def test_validate_search_model_condition_param_type_error(self):
-        """Test the mothod of validate_search_model_condition with LineageParamTypeError."""
+        """Test the method of validate_search_model_condition with LineageParamTypeError."""
         condition = {
             'summary_dir': 'xxx'
         }
@@ -282,3 +283,65 @@ class TestValidateSearchModelCondition(TestCase):
             condition (dict): The parameter of search condition.
         """
         self._assert_raise(LineageParamTypeError, msg, condition)
+
+    def test_validate_condition(self):
+        """Test the method of validate_condition."""
+        condition = [1, 2, 3]
+        self._assert_raise_2(LineageParamTypeError, "Invalid search_condition type, it should be dict.", condition)
+
+        condition = {
+            'limit': False
+        }
+        self._assert_raise_2(LineageParamTypeError, "The limit must be int.", condition)
+
+        condition = {
+            'offset': False
+        }
+        self._assert_raise_2(LineageParamTypeError, "The offset must be int.", condition)
+
+        condition = {
+            'sorted_type': 'ascending'
+        }
+        msg = "The sorted_name must exist when sorted_type exists."
+        self._assert_raise_2(LineageParamValueError, msg, condition)
+
+        condition = {
+            'sorted_type': 'invalid',
+            'sorted_name': 'tag'
+        }
+        msg = "The sorted_type must be ascending or descending."
+        self._assert_raise_2(LineageParamValueError, msg, condition)
+
+    def _assert_raise_2(self, exception, msg, condition):
+        """
+        Assert raise by unittest.
+
+        Args:
+            exception (Type): Exception class expected to be raised.
+            msg (msg): Expected error message.
+            condition (dict): The parameter of search condition.
+        """
+        self.assertRaisesRegex(
+            exception,
+            msg,
+            validate_condition,
+            condition
+        )
+
+    def test_validate_train_id(self):
+        """Test the test_validate_train_id function."""
+        path = 'invalid'
+        self.assertRaisesRegex(
+            ParamValueError,
+            "Summary dir should be relative path starting with './'.",
+            validate_train_id,
+            path
+        )
+
+        path = './a/b/c'
+        self.assertRaisesRegex(
+            ParamValueError,
+            "Summary dir should be relative path starting with './'.",
+            validate_train_id,
+            path
+        )

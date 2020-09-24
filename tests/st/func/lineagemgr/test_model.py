@@ -395,7 +395,7 @@ class TestModelApi(TestCase):
         }
         self.assertRaisesRegex(
             LineageSearchConditionParamError,
-            'The sorted_name have to exist when sorted_type exists.',
+            'The sorted_name must exist when sorted_type exists.',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
             search_condition

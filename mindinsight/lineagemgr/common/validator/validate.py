@@ -135,8 +135,8 @@ def validate_condition(search_condition):
     sorted_type_param = ['ascending', 'descending', None]
     if "sorted_type" in search_condition:
         if "sorted_name" not in search_condition:
-            log.error("The sorted_name have to exist when sorted_type exists.")
-            raise LineageParamValueError("The sorted_name have to exist when sorted_type exists.")
+            log.error("The sorted_name must exist when sorted_type exists.")
+            raise LineageParamValueError("The sorted_name must exist when sorted_type exists.")
 
         if search_condition.get("sorted_type") not in sorted_type_param:
             err_msg = "The sorted_type must be ascending or descending."
