@@ -12,3 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""
+Lineage manager.
+
+Lineagemgr provides model training information, including data processing information,
+hyperparameters and model evaluation results, etc.
+"""
