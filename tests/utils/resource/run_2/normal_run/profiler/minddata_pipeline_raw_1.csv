@@ -1,0 +1,5 @@
+op_id,op_type,num_workers,output_queue_size,output_queue_average_size,output_queue_length,output_queue_usage_rate,sample_interval,parent_id,children_id
+0,BatchOp,4,"[0, 2]",1.0,64,0.015625,10,,[1]
+1,MapOp,8,"[0, 0]",0.0,128,0.0,10,0,[2]
+2,MapOp,8,"[0, 0]",0.0,128,0.0,10,1,[3]
+3,ImageFolderOp,8,"[0, 0]",0.0,128,0.0,10,2,

@@ -19,3 +19,4 @@ RAW_DATA_BASE = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../
 RAW_DATA = os.path.realpath(os.path.join(RAW_DATA_BASE, 'JOB1'))
 RAW_DATA_JOB2 = os.path.realpath(os.path.join(RAW_DATA_BASE, 'JOB2'))
 PROFILER_DIR = os.path.realpath(os.path.join(RAW_DATA_BASE, 'profiler'))
+BASE_SUMMARY_DIR = os.path.realpath(os.path.join(RAW_DATA_BASE, "run_2"))
