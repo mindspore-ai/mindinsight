@@ -112,7 +112,7 @@ limitations under the License.
                :class="sampleItem.fullScreen ? 'char-full-screen' : ''"
                v-show="sampleItem.show">
             <div class="chars-container">
-              <!-- components -->
+              <!-- Components -->
               <gridTableComponents v-if="!curDataType"
                                    :ref="sampleItem.ref"
                                    :fullScreen="sampleItem.fullScreen"
@@ -185,7 +185,9 @@ import multiselectGroupComponents from '../../components/multiselectGroup.vue';
 import gridTableComponents from '../../components/gridTableSimple';
 import histogramUntil from '../../components/histogramUnit';
 import RequestService from '../../services/request-service';
+import autoUpdate from '../../mixins/autoUpdate.vue';
 export default {
+  mixins: [autoUpdate],
   data() {
     return {
       tagList: [], // Tag list.
@@ -200,89 +202,24 @@ export default {
       pageIndex: 0, // Current page number.
       pageSizes: [6], // The number of records on each page is optional.
       pageNum: 6, // Number of records on each page.
-      isReloading: false, // Manually refresh.
-      autoUpdateTimer: null, // Automatic refresh timer.
       dataTypeChangeTimer: null, // View switching timer
       viewNameChangeTimer: null, // ViewName switching timer
       axisNameChangeTimer: null, // Vertical axis switching timer
-      curDataType: 0, // current data type
-      curViewName: 1, // current histogram view type
-      curAxisName: 0, // current histogran axis type
+      curDataType: 0, // Current data type
+      curViewName: 1, // Current histogram view type
+      curAxisName: 0, // Current histogran axis type
       chartTipFlag: false, // Wheather to display tips of the histogram
     };
   },
-  computed: {
-    /**
-     * Global refresh switch
-     * @return {Boolean}
-     */
-    isReload() {
-      return this.$store.state.isReload;
-    },
-    /**
-     * Automatic refresh switch
-     * @return {Boolean}
-     */
-    isTimeReload() {
-      return this.$store.state.isTimeReload;
-    },
-    /**
-     * Automatic refresh value
-     * @return {Boolean}
-     */
-    timeReloadValue() {
-      return this.$store.state.timeReloadValue;
-    },
-  },
+  computed: {},
   components: {
     multiselectGroupComponents,
     gridTableComponents,
     histogramUntil,
   },
-  watch: {
-    /**
-     * Global refresh switch listener
-     * @param {Boolean} newVal Value after change
-     * @param {Boolean} oldVal Value before change
-     */
-    isReload(newVal, oldVal) {
-      if (newVal) {
-        this.isReloading = true;
-        // Automatic refresh and retiming
-        if (this.isTimeReload) {
-          this.autoUpdateSamples();
-        }
-        this.updateAllData(false);
-      }
-    },
-    /**
-     * Automatic refresh switch listener
-     * @param {Boolean} newVal Value after change
-     * @param {Boolean} oldVal Value before change
-     */
-    isTimeReload(newVal, oldVal) {
-      if (newVal) {
-        // Enable automatic refresh
-        this.autoUpdateSamples();
-      } else {
-        // Disable automatic refresh
-        this.stopUpdateSamples();
-      }
-    },
-    /**
-     * The refresh time is changed
-     */
-    timeReloadValue() {
-      this.autoUpdateSamples();
-    },
-  },
+  watch: {},
   destroyed() {
     window.removeEventListener('resize', this.resizeCallback);
-    // Disable the automatic refresh function
-    if (this.autoUpdateTimer) {
-      clearInterval(this.autoUpdateTimer);
-      this.autoUpdateTimer = null;
-    }
     // Stop refreshing
     if (this.isReloading) {
       this.$store.commit('setIsReload', false);
@@ -345,7 +282,7 @@ export default {
       }
     },
     /**
-     * jump back to train dashboard
+     * Jump back to train dashboard
      */
     jumpToTrainDashboard() {
       this.$router.push({
@@ -780,8 +717,8 @@ export default {
     },
     /**
      * Formate absolute time
-     * @param {String} time time string
-     * @return {String} str Formatted time
+     * @param {String} time Time string
+     * @return {String} String Formatted time
      */
     dealrelativeTime(time) {
       const arr = time.split(' ');
@@ -851,30 +788,8 @@ export default {
       }
     },
     /**
-     * Enable automatic refresh
-     */
-    autoUpdateSamples() {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-      this.autoUpdateTimer = setInterval(() => {
-        this.$store.commit('clearToken');
-        this.updateAllData(true);
-      }, this.timeReloadValue * 1000);
-    },
-    /**
-     * Disable automatic refresh
-     */
-    stopUpdateSamples() {
-      if (this.autoUpdateTimer) {
-        clearInterval(this.autoUpdateTimer);
-        this.autoUpdateTimer = null;
-      }
-    },
-    /**
      * Update all data.
-     * @param {Boolean} ignoreError whether ignore error tip.
+     * @param {Boolean} ignoreError Whether ignore error tip.
      */
     updateAllData(ignoreError) {
       const params = {
@@ -991,7 +906,7 @@ export default {
       return dataAddFlag;
     },
     /**
-     * Expand/Collapse in Full Screen
+     * Expand/Collapse in full Screen
      * @param {Object} sampleItem The object that is being operated
      */
     toggleFullScreen(sampleItem) {
@@ -1009,7 +924,7 @@ export default {
     },
     /**
      * Callback after the step slider changes
-     * @param {Number} sliderValue changed slider value
+     * @param {Number} sliderValue Changed slider value
      * @param {Object} sampleItem The object that is being operated
      */
     sliderChange(sliderValue, sampleItem) {

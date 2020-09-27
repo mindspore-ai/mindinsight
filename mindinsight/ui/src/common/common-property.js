@@ -91,7 +91,6 @@ export default {
     '#FFD1D2',
   ],
   // define graph color array
-  graphColorArr: ['#FFF8F5', '#FDEEE7', '#FFE5D9', '#FFDAC9'],
   graphColorArrPhg: ['#F5FBFB', '#EDF9F9', '#DEF5F5', '#C9F5F5'],
   // define fullscreen icon
   fullScreenIcon:

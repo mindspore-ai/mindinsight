@@ -23,11 +23,11 @@ limitations under the License.
           {{$t("summaryManage.comparePlate")}}</div>
       </div>
 
-      <!--operation area -->
+      <!--Operation area -->
       <div class="cl-eval-operate-content"
            v-show="originDataArr.length>0">
 
-        <!--summary select-->
+        <!--Summary select-->
         <div class="cl-eval-operate-component">
           <multiSelectGroupComponents ref="summaryGroup"
                                       :checkListArr="summaryOperateList"
@@ -37,7 +37,7 @@ limitations under the License.
                                       :componentsLabel="componentsLabel.summary"></multiSelectGroupComponents>
         </div>
 
-        <!--tag select-->
+        <!--Tag select-->
         <div class="cl-eval-operate-component">
           <multiSelectGroupComponents ref="tagsGroup"
                                       :checkListArr="tagOperateList"
@@ -99,7 +99,7 @@ limitations under the License.
               <div class="char-item-content"
                    :id="sampleItem.domId"></div>
             </div>
-            <!-- tag name -->
+            <!-- Tag name -->
             <div class="tag-name"
                  :title="sampleItem.tagName">{{sampleItem.tagName}}
               <el-tooltip v-if="sampleItem.invalidData"
@@ -135,8 +135,10 @@ import echarts from 'echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import multiSelectGroupComponents from '../../components/multiselectGroup.vue';
+import autoUpdate from '../../mixins/autoUpdate.vue';
 
 export default {
+  mixins: [autoUpdate],
   data() {
     return {
       componentsLabel: {
@@ -149,11 +151,10 @@ export default {
       },
       firstNum: 0, // First num
       isActive: 0, // Horizontal axis selected value
-      initOver: false, // Indicates whether the initialization is complete.
-      autoUpdateTimer: null, // Automatic refresh timer
+      initOver: false, // Indicates whether the initialization is complete
       charResizeTimer: null, // Delay after the window size is changed
-      multiSelectedSummaryNames: {}, // selected summary name
-      multiSelectedTagNames: {}, // selected tag name
+      multiSelectedSummaryNames: {}, // Selected summary name
+      multiSelectedTagNames: {}, // Selected tag name
       curFilterSamples: [], // Chart subscript
       summaryOperateList: [], // Array selected by summary
       tagOperateList: [], // Array selected by tag
@@ -162,88 +163,31 @@ export default {
       smoothSliderValueTimer: null, // Smoothness slider timer
       // Number of predefined colors
       defColorCount: CommonProperty.commonColorArr.length,
-      curAvlColorIndexArr: [], // color subscript
+      curAvlColorIndexArr: [], // Color subscript
       DomIdIndex: 0, // DomId num
       originDataArr: [], // Original data
       oriDataDictionaries: {}, // Dictionary that contains all the current tags
-      curPageArr: [], // data of the current page
+      curPageArr: [], // Data of the current page
       pageIndex: 0, // Current page number
       pageNum: 6, // Number of records per page
-      isReloading: false, // Refreshing
       backendString: 'comparePlate', // Background layer suffix
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
     };
   },
-  computed: {
-    /**
-     * Global Refresh
-     * @return {Boolen}
-     */
 
-    isReload() {
-      return this.$store.state.isReload;
-    },
-    /**
-     * auto refresh
-     * @return {Boolen}
-     */
-
-    isTimeReload() {
-      return this.$store.state.isTimeReload;
-    },
-
-    timeReloadValue() {
-      return this.$store.state.timeReloadValue;
-    },
-  },
-  watch: {
-    /**
-     * Listener Global Refresh
-     * @param {Boolen} newVal new Value
-     * @param {Boolen} oldVal old value
-     */
-
-    isReload(newVal, oldVal) {
-      if (newVal) {
-        this.isReloading = true;
-        // Retiming
-        if (this.isTimeReload) {
-          this.autoUpdateSamples();
-        }
-        this.updateAllData(false);
-      }
-    },
-    /**
-     * Listener auto refresh
-     * @param {Boolen} newVal new Value
-     * @param {Boolen} oldVal old Value
-     */
-
-    isTimeReload(newVal, oldVal) {
-      if (newVal) {
-        this.autoUpdateSamples();
-      } else {
-        this.stopUpdateSamples();
-      }
-    },
-
-    timeReloadValue() {
-      this.autoUpdateSamples();
-    },
-  },
   destroyed() {
-    // remove the size of a window and change the listener
+    // Remove the size of a window and change the listener
     window.removeEventListener('resize', this.resizeCallback);
 
-    // remove axisBench value change timing
+    // Remove axisBench value change timing
     if (this.axisBenchChangeTimer) {
       clearTimeout(this.axisBenchChangeTimer);
       this.axisBenchChangeTimer = null;
     }
 
-    // remove slider value change timing
+    // Remove slider value change timing
     if (this.smoothSliderValueTimer) {
       clearTimeout(this.smoothSliderValueTimer);
       this.smoothSliderValueTimer = null;
@@ -254,28 +198,22 @@ export default {
       clearTimeout(this.charResizeTimer);
       this.charResizeTimer = null;
     }
-
-    // Disable the automatic refresh timer
-    if (this.autoUpdateTimer) {
-      clearInterval(this.autoUpdateTimer);
-      this.autoUpdateTimer = null;
-    }
   },
   mounted() {
     document.title = `${this.$t('summaryManage.comparePlate')}-MindInsight`;
     this.$nextTick(() => {
-      // Adding a Listener
+      // Adding a listener
       window.addEventListener('resize', this.resizeCallback, false);
 
       // Initialize available colors
       this.initAvlColorArr();
 
-      // Initializing Data
+      // Initializing data
       this.getScalarsList();
 
       this.firstNum = 1;
 
-      // auto refresh
+      // Auto refresh
       if (this.isTimeReload) {
         this.autoUpdateSamples();
       }
@@ -283,7 +221,7 @@ export default {
   },
   methods: {
     /**
-     * Obtain the tag and summary list.
+     * Obtain the tag and summary list
      */
     getScalarsList() {
       const params = {};
@@ -291,117 +229,119 @@ export default {
       params.limit = 999;
 
       RequestService.querySummaryList(params)
-        .then((res) => {
-          // error;
-          if (
-            !res ||
+          .then((res) => {
+          // Error
+            if (
+              !res ||
             !res.data ||
             !res.data.train_jobs ||
             !res.data.train_jobs.length
-          ) {
-            this.initOver = true;
-            return;
-          }
-          const tempSummaryList = [];
-          const tempTagList = [];
-          const dataList = [];
-          const data = res.data.train_jobs.filter(({summary_files}) => summary_files > 0);
-          if (!data.length) {
-            this.initOver = true;
-            return;
-          }
-          data.forEach((summaryObj, summaryIndex) => {
-            const colorIndex = this.curAvlColorIndexArr.length
+            ) {
+              this.initOver = true;
+              return;
+            }
+            const tempSummaryList = [];
+            const tempTagList = [];
+            const dataList = [];
+            const data = res.data.train_jobs.filter((item) => {
+              return item.summary_files > 0;
+            });
+            if (!data.length) {
+              this.initOver = true;
+              return;
+            }
+            data.forEach((summaryObj, summaryIndex) => {
+              const colorIndex = this.curAvlColorIndexArr.length
               ? this.curAvlColorIndexArr.shift()
               : this.defColorCount - 1;
-            const summaryNmeColor = CommonProperty.commonColorArr[colorIndex];
+              const summaryNmeColor = CommonProperty.commonColorArr[colorIndex];
 
-            tempSummaryList.push({
-              label: summaryObj.train_id,
-              checked: true,
-              show: true,
-              color: summaryNmeColor,
-              colorIndex: colorIndex,
-            });
+              tempSummaryList.push({
+                label: summaryObj.train_id,
+                checked: true,
+                show: true,
+                color: summaryNmeColor,
+                colorIndex: colorIndex,
+              });
 
-            tempSummaryList.forEach((item) => {
-              if (item.label === summaryObj.train_id) {
-                item.loading = summaryObj.cache_status;
-              }
-            });
-
-            summaryObj.plugins.scalar.forEach((tagObj) => {
-              // tag with the same name exists
-
-              let sameTagIndex = -1;
-              dataList.some((tagItem, curIndex) => {
-                if (tagItem.tagName === tagObj) {
-                  sameTagIndex = curIndex;
-                  return true;
+              tempSummaryList.forEach((item) => {
+                if (item.label === summaryObj.train_id) {
+                  item.loading = summaryObj.cache_status;
                 }
               });
 
-              if (!this.oriDataDictionaries[tagObj]) {
+              summaryObj.plugins.scalar.forEach((tagObj) => {
+              // Tag with the same name exists
+
+                let sameTagIndex = -1;
+                dataList.some((tagItem, curIndex) => {
+                  if (tagItem.tagName === tagObj) {
+                    sameTagIndex = curIndex;
+                    return true;
+                  }
+                });
+
+                if (!this.oriDataDictionaries[tagObj]) {
                 // Add the tag list
-                this.oriDataDictionaries[tagObj] = true;
-                tempTagList.push({
-                  label: tagObj,
-                  checked: true,
-                  show: true,
-                });
+                  this.oriDataDictionaries[tagObj] = true;
+                  tempTagList.push({
+                    label: tagObj,
+                    checked: true,
+                    show: true,
+                  });
 
-                const sampleIndex = dataList.length;
+                  const sampleIndex = dataList.length;
 
-                // Adding Chart Data
-                dataList.push({
-                  tagName: tagObj,
-                  summaryNames: [summaryObj.train_id],
-                  colors: [summaryNmeColor],
-                  show: false,
-                  updateFlag: false,
-                  dataRemove: false,
-                  fullScreen: false,
-                  sampleIndex: sampleIndex,
-                  domId: 'prDom' + this.DomIdIndex,
-                  charData: {
-                    oriData: [],
-                    charOption: {},
-                  },
-                  zoomData: [null, null],
-                  zoomDataTimer: null,
-                  charObj: null,
-                });
+                  // Adding chart data
+                  dataList.push({
+                    tagName: tagObj,
+                    summaryNames: [summaryObj.train_id],
+                    colors: [summaryNmeColor],
+                    show: false,
+                    updateFlag: false,
+                    dataRemove: false,
+                    fullScreen: false,
+                    sampleIndex: sampleIndex,
+                    domId: 'prDom' + this.DomIdIndex,
+                    charData: {
+                      oriData: [],
+                      charOption: {},
+                    },
+                    zoomData: [null, null],
+                    zoomDataTimer: null,
+                    charObj: null,
+                  });
 
-                this.DomIdIndex++;
-              } else {
-                const sameTagObj = dataList[sameTagIndex];
-                sameTagObj.summaryNames.push(summaryObj.train_id);
-                sameTagObj.colors.push(summaryNmeColor);
+                  this.DomIdIndex++;
+                } else {
+                  const sameTagObj = dataList[sameTagIndex];
+                  sameTagObj.summaryNames.push(summaryObj.train_id);
+                  sameTagObj.colors.push(summaryNmeColor);
+                }
+              });
+            });
+            this.summaryOperateList = tempSummaryList;
+
+            this.tagOperateList = tempTagList;
+            if (dataList.length === 1) {
+              dataList[0].fullScreen = true;
+            }
+            this.originDataArr = dataList;
+            this.initOver = true;
+
+            this.$nextTick(() => {
+              this.multiSelectedTagNames = this.$refs.tagsGroup.updateSelectedDic();
+              this.multiSelectedSummaryNames = this.$refs.summaryGroup.updateSelectedDic();
+              this.updateTagInPage();
+              this.resizeCallback();
+              if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
+                this.trainJobsCaches();
               }
             });
+          })
+          .catch((e) => {
+            this.requestErrorCallback(e);
           });
-          this.summaryOperateList = tempSummaryList;
-
-          this.tagOperateList = tempTagList;
-          if (dataList.length === 1) {
-            dataList[0].fullScreen = true;
-          }
-          this.originDataArr = dataList;
-          this.initOver = true;
-
-          this.$nextTick(() => {
-            this.multiSelectedTagNames = this.$refs.tagsGroup.updateSelectedDic();
-            this.multiSelectedSummaryNames = this.$refs.summaryGroup.updateSelectedDic();
-            this.updateTagInPage();
-            this.resizeCallback();
-            if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
-              this.trainJobsCaches();
-            }
-          });
-        })
-        .catch((e) => {
-          this.requestErrorCallback(e);
-        });
     },
 
     trainJobsCaches() {
@@ -468,88 +408,88 @@ export default {
         }
 
         RequestService.getSummarySample(params)
-          .then((res) => {
-            if (sampleObject.charObj) {
-              sampleObject.charObj.showLoading();
-            }
-            let scalarIndex = 0;
-            let hasInvalidData = false;
-            if (!res || !res.data || !res.data.scalars) {
-              return;
-            }
-            const resData = res.data.scalars;
-            resData.forEach((scalarItem) => {
-              const tempObject = {
-                valueData: {
-                  stepData: [],
-                  absData: [],
-                  relativeData: [],
-                },
-                logData: {
-                  stepData: [],
-                  absData: [],
-                  relativeData: [],
-                },
-              };
-              let relativeTimeBench = 0;
-              if (scalarItem.values.length) {
-                relativeTimeBench = scalarItem.values[0].wall_time;
+            .then((res) => {
+              if (sampleObject.charObj) {
+                sampleObject.charObj.showLoading();
               }
-              // Initializing Chart Data
-              scalarItem.values.forEach((metaData) => {
-                if (metaData.value === null && !hasInvalidData) {
-                  hasInvalidData = true;
+              let scalarIndex = 0;
+              let hasInvalidData = false;
+              if (!res || !res.data || !res.data.scalars) {
+                return;
+              }
+              const resData = res.data.scalars;
+              resData.forEach((scalarItem) => {
+                const tempObject = {
+                  valueData: {
+                    stepData: [],
+                    absData: [],
+                    relativeData: [],
+                  },
+                  logData: {
+                    stepData: [],
+                    absData: [],
+                    relativeData: [],
+                  },
+                };
+                let relativeTimeBench = 0;
+                if (scalarItem.values.length) {
+                  relativeTimeBench = scalarItem.values[0].wall_time;
                 }
+                // Initializing chart data
+                scalarItem.values.forEach((metaData) => {
+                  if (metaData.value === null && !hasInvalidData) {
+                    hasInvalidData = true;
+                  }
 
-                tempObject.valueData.stepData.push([
-                  metaData.step,
-                  metaData.value,
-                ]);
-                tempObject.valueData.absData.push([
-                  metaData.wall_time,
-                  metaData.value,
-                ]);
-                tempObject.valueData.relativeData.push([
-                  metaData.wall_time - relativeTimeBench,
-                  metaData.value,
-                ]);
-                const logValue = metaData.value >= 0 ? metaData.value : '';
-                tempObject.logData.stepData.push([metaData.step, logValue]);
-                tempObject.logData.absData.push([metaData.wall_time, logValue]);
-                tempObject.logData.relativeData.push([
-                  metaData.wall_time - relativeTimeBench,
-                  logValue,
-                ]);
+                  tempObject.valueData.stepData.push([
+                    metaData.step,
+                    metaData.value,
+                  ]);
+                  tempObject.valueData.absData.push([
+                    metaData.wall_time,
+                    metaData.value,
+                  ]);
+                  tempObject.valueData.relativeData.push([
+                    metaData.wall_time - relativeTimeBench,
+                    metaData.value,
+                  ]);
+                  const logValue = metaData.value >= 0 ? metaData.value : '';
+                  tempObject.logData.stepData.push([metaData.step, logValue]);
+                  tempObject.logData.absData.push([metaData.wall_time, logValue]);
+                  tempObject.logData.relativeData.push([
+                    metaData.wall_time - relativeTimeBench,
+                    logValue,
+                  ]);
+                });
+
+                sampleObject.charData.oriData[scalarIndex] = tempObject;
+                scalarIndex++;
               });
 
-              sampleObject.charData.oriData[scalarIndex] = tempObject;
-              scalarIndex++;
-            });
-
-            if (hasInvalidData) {
-              this.$set(this.originDataArr[sampleIndex], 'invalidData', true);
-            }
-            sampleObject.charData.charOption = this.formateCharOption(
-              sampleIndex
-            );
-
-            this.$nextTick(() => {
-              if (sampleObject.charObj) {
-                sampleObject.charObj.hideLoading();
+              if (hasInvalidData) {
+                this.$set(this.originDataArr[sampleIndex], 'invalidData', true);
               }
+              sampleObject.charData.charOption = this.formateCharOption(
+                  sampleIndex,
+              );
 
-              // Draw chart
-              this.updateOrCreateChar(sampleIndex);
-            });
-          })
-          .catch((error) => {});
+              this.$nextTick(() => {
+                if (sampleObject.charObj) {
+                  sampleObject.charObj.hideLoading();
+                }
+
+                // Draw chart
+                this.updateOrCreateChar(sampleIndex);
+              });
+            })
+            .catch((error) => {});
       });
     },
 
     /**
-     * Formatting Chart Data
+     * Formatting chart data
      * @param {Number} sampleIndex Chart subscript
-     * @return {Object} echar option
+     * @return {Object} Echar option
      */
 
     formateCharOption(sampleIndex) {
@@ -591,12 +531,12 @@ export default {
         if (curOriData) {
           if (sampleObject.log) {
             dataObj.data = this.formateSmoothData(
-              curOriData.logData[this.curBenchX]
+                curOriData.logData[this.curBenchX],
             );
             dataObjBackend.data = curOriData.logData[this.curBenchX];
           } else {
             dataObj.data = this.formateSmoothData(
-              curOriData.valueData[this.curBenchX]
+                curOriData.valueData[this.curBenchX],
             );
             dataObjBackend.data = curOriData.valueData[this.curBenchX];
           }
@@ -738,23 +678,23 @@ export default {
           position: (point, params, dom, rect, size) => {
             const curDom = document.getElementById(sampleObject.domId);
             if (!curDom) {
-              return { left: 0, bottom: '100%' };
+              return {left: 0, bottom: '100%'};
             }
             if (sampleObject.fullScreen) {
               if (point[0] + size.contentSize[0] <= size.viewSize[0]) {
-                return { left: point[0], bottom: '10%' };
+                return {left: point[0], bottom: '10%'};
               } else {
-                return { right: size.viewSize[0] - point[0], bottom: '10%' };
+                return {right: size.viewSize[0] - point[0], bottom: '10%'};
               }
             } else {
               const parentNode = curDom.parentNode;
               if (!parentNode) {
-                return { left: 0, bottom: '100%' };
+                return {left: 0, bottom: '100%'};
               }
               if (parentNode.offsetLeft > size.contentSize[0]) {
-                return { right: '100%', bottom: 0 };
+                return {right: '100%', bottom: 0};
               } else {
-                return { left: '100%', bottom: 0 };
+                return {left: '100%', bottom: 0};
               }
             }
           },
@@ -833,16 +773,16 @@ export default {
                     `display:inline-block;"></td><td>${parma.seriesName}</td>` +
                     `<td>${that.formateYaxisValue(parma.value[1])}</td>` +
                     `<td>${that.formateYaxisValue(
-                      curSerieOriData.stepData[parma.dataIndex][1]
+                        curSerieOriData.stepData[parma.dataIndex][1],
                     )}</td>` +
                     `<td>${curSerieOriData.stepData[parma.dataIndex][0]}</td>` +
                     `<td>${curSerieOriData.relativeData[
-                      parma.dataIndex
+                        parma.dataIndex
                     ][0].toFixed(3)}${unit}</td>` +
                     `<td>${that.dealrelativeTime(
-                      new Date(
-                        curSerieOriData.absData[parma.dataIndex][0] * 1000
-                      ).toString()
+                        new Date(
+                            curSerieOriData.absData[parma.dataIndex][0] * 1000,
+                        ).toString(),
                     )}</td>` +
                     `</tr>`;
                 }
@@ -859,12 +799,13 @@ export default {
           emphasis: {
             iconStyle: {
               textPosition: 'top',
+              textAlign: 'right',
               borderColor: '#00A5A7',
             },
           },
-          // toolbox
+          // Toolbox
           feature: {
-            // fullScreen
+            // FullScreen
             myToolFullScreen: {
               show: true,
               title: this.$t('scalar.fullScreen'),
@@ -892,7 +833,7 @@ export default {
               },
             },
 
-            // Selection and Rollback
+            // Selection and rollback
             dataZoom: {
               textStyle: false,
               title: {
@@ -902,7 +843,7 @@ export default {
               show: true,
             },
 
-            // restore
+            // Restore
             restore: {
               title: this.$t('scalar.restore'),
             },
@@ -914,9 +855,9 @@ export default {
     },
 
     /**
-     * Updating or Creating a Specified chart
+     * Updating or creating a specified chart
      * @param {Number} sampleIndex Chart subscript
-     * @param {Boolen} resetAnimate restart the animation
+     * @param {Boolen} resetAnimate Restart the animation
      */
 
     updateOrCreateChar(sampleIndex, resetAnimate) {
@@ -929,29 +870,29 @@ export default {
         // Updating chart option
         if (sampleObject.updateFlag) {
           sampleObject.charObj.setOption(
-            sampleObject.charData.charOption,
-            sampleObject.dataRemove
+              sampleObject.charData.charOption,
+              sampleObject.dataRemove,
           );
           sampleObject.updateFlag = false;
           sampleObject.dataRemove = false;
         }
       } else {
-        // creat chart
+        // Creat chart
         sampleObject.charObj = echarts.init(
-          document.getElementById(sampleObject.domId),
-          null
+            document.getElementById(sampleObject.domId),
+            null,
         );
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
       }
 
-      // if summary's display reopen the animation
+      // If summary's display reopen the animation
       if (resetAnimate) {
         sampleObject.charData.charOption.animation = true;
       }
     },
 
     /**
-     * Enabling/Disabling Full Screen
+     * Enabling/Disabling full screen
      * @param {Number} sampleIndex Chart subscript
      */
 
@@ -984,7 +925,7 @@ export default {
     },
 
     /**
-     * update chart by tag
+     * Update chart by tag
      * @param {Boolean} noPageDataNumChange No new data is added or deleted
      */
 
@@ -1038,21 +979,21 @@ export default {
             sampleObject.charData.oriData.forEach((originData, index) => {
               if (sampleObject.log) {
                 sampleObject.charData.charOption.series[
-                  index * 2
+                    index * 2
                 ].data = this.formateSmoothData(
-                  sampleObject.charData.oriData[index].logData[this.curBenchX]
+                    sampleObject.charData.oriData[index].logData[this.curBenchX],
                 );
                 sampleObject.charData.charOption.series[index * 2 + 1].data =
                   sampleObject.charData.oriData[index].logData[this.curBenchX];
               } else {
                 sampleObject.charData.charOption.series[
-                  index * 2
+                    index * 2
                 ].data = this.formateSmoothData(
-                  sampleObject.charData.oriData[index].valueData[this.curBenchX]
+                    sampleObject.charData.oriData[index].valueData[this.curBenchX],
                 );
                 sampleObject.charData.charOption.series[index * 2 + 1].data =
                   sampleObject.charData.oriData[index].valueData[
-                    this.curBenchX
+                      this.curBenchX
                   ];
               }
             });
@@ -1082,7 +1023,7 @@ export default {
     },
 
     /**
-     * the selected label is changed
+     * The selected label is changed
      * @param {Object} selectItemDict Dictionary containing the selected tags
      */
 
@@ -1091,13 +1032,13 @@ export default {
         return;
       }
       this.multiSelectedTagNames = selectedItemDict;
-      // reset to the first page
+      // Reset to the first page
       this.pageIndex = 0;
       this.updateTagInPage();
     },
 
     /**
-     * the selected label is changed
+     * The selected label is changed
      * @param {Object} selectedItemDict Dictionary containing the selected summary
      */
 
@@ -1116,10 +1057,10 @@ export default {
     },
 
     /**
-     * update chart by summary
+     * Update chart by summary
      */
     updateSummary() {
-      // update the data display area
+      // Update the data display area
       this.originDataArr.forEach((sampleObject) => {
         if (sampleObject.charObj) {
           sampleObject.updateFlag = true;
@@ -1150,7 +1091,7 @@ export default {
     },
 
     /**
-     *window resize
+     *Window resize
      */
 
     resizeCallback() {
@@ -1201,8 +1142,8 @@ export default {
     },
 
     /**
-     * error
-     * @param {Object} error error object
+     * Error
+     * @param {Object} error Error object
      */
 
     requestErrorCallback(error) {
@@ -1225,8 +1166,8 @@ export default {
       if (!oriData) {
         return false;
       }
-      const summaryList = []; // summary list
-      const tagList = []; // tag list
+      const summaryList = []; // Summary list
+      const tagList = []; // Tag list
       const oriSummaryList = []; // Original list
       let dataRemoveFlag = false;
       // Obtains the current tag and summary list
@@ -1282,7 +1223,7 @@ export default {
           const oldSummaryLength = oldSample.summaryNames.length;
           for (let j = oldSummaryLength - 1; j >= 0; j--) {
             const sameSummaryIndex = summaryList[sameTagIndex].indexOf(
-              oldSample.summaryNames[j]
+                oldSample.summaryNames[j],
             );
             if (sameSummaryIndex === -1) {
               oldSample.summaryNames.splice(j, 1);
@@ -1394,7 +1335,7 @@ export default {
 
     /**
      * Updating all data
-     * @param {Boolean} ignoreError whether ignore error tip
+     * @param {Boolean} ignoreError Whether ignore error tip
      */
 
     updateAllData(ignoreError) {
@@ -1402,54 +1343,56 @@ export default {
       params.offset = 0;
       params.limit = 999;
       RequestService.querySummaryList(params, ignoreError)
-        .then((res) => {
-          if (this.isReloading) {
-            this.$store.commit('setIsReload', false);
-            this.isReloading = false;
-          }
+          .then((res) => {
+            if (this.isReloading) {
+              this.$store.commit('setIsReload', false);
+              this.isReloading = false;
+            }
 
-          // Fault tolerance processing
-          if (
-            !res ||
+            // Fault tolerance processing
+            if (
+              !res ||
             !res.data ||
             !res.data.train_jobs ||
             !res.data.train_jobs.length
-          ) {
-            if (res.toString() === 'false') {
+            ) {
+              if (res.toString() === 'false') {
+                return;
+              }
+
+              this.clearAllData();
+              return;
+            }
+            const data = res.data.train_jobs.filter((item) => {
+              return item.summary_files > 0;
+            });
+            if (!data.length) {
+              this.clearAllData();
               return;
             }
 
-            this.clearAllData();
-            return;
-          }
-          const data = res.data.train_jobs.filter(({summary_files}) => summary_files > 0);
-          if (!data.length) {
-            this.clearAllData();
-            return;
-          }
+            // Delete the data that does not exist
+            const tagRemoveFlag = this.removeNonexistentData(data);
 
-          // Delete the data that does not exist
-          const tagRemoveFlag = this.removeNonexistentData(data);
+            // Check whether new data exists and add it to the page
+            const tagAddFlag = this.checkNewDataAndComplete(data);
 
-          // Check whether new data exists and add it to the page
-          const tagAddFlag = this.checkNewDataAndComplete(data);
+            this.$nextTick(() => {
+              this.multiSelectedTagNames = this.$refs.tagsGroup.updateSelectedDic();
+              this.multiSelectedSummaryNames = this.$refs.summaryGroup.updateSelectedDic();
+              this.$refs.summaryGroup.$forceUpdate();
+              this.$refs.tagsGroup.$forceUpdate();
 
-          this.$nextTick(() => {
-            this.multiSelectedTagNames = this.$refs.tagsGroup.updateSelectedDic();
-            this.multiSelectedSummaryNames = this.$refs.summaryGroup.updateSelectedDic();
-            this.$refs.summaryGroup.$forceUpdate();
-            this.$refs.tagsGroup.$forceUpdate();
-
-            this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
-            this.resizeCallback();
-            if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
-              this.trainJobsCaches();
-            }
+              this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
+              this.resizeCallback();
+              if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
+                this.trainJobsCaches();
+              }
+            });
+          }, this.requestErrorCallback)
+          .catch((e) => {
+            this.$message.error(this.$t('public.dataError'));
           });
-        }, this.requestErrorCallback)
-        .catch((e) => {
-          this.$message.error(this.$t('public.dataError'));
-        });
     },
 
     /**
@@ -1479,8 +1422,8 @@ export default {
     },
 
     /**
-     * updata smoothness
-     * @param {String} value slide value
+     * Updata smoothness
+     * @param {String} value Slide value
      */
 
     updataInputValue(val) {
@@ -1523,9 +1466,9 @@ export default {
     },
 
     /**
-     * Format Absolute Time
-     * @param {String} time string
-     * @return {string} str
+     * Format absolute time
+     * @param {String} time String
+     * @return {string} Str
      */
 
     dealrelativeTime(time) {
@@ -1551,15 +1494,15 @@ export default {
             if (index % 2 === 0) {
               if (log) {
                 serie.data = this.formateSmoothData(
-                  sampleObject.charData.oriData[index / 2].logData[
-                    this.curBenchX
-                  ]
+                    sampleObject.charData.oriData[index / 2].logData[
+                        this.curBenchX
+                    ],
                 );
               } else {
                 serie.data = this.formateSmoothData(
-                  sampleObject.charData.oriData[index / 2].valueData[
-                    this.curBenchX
-                  ]
+                    sampleObject.charData.oriData[index / 2].valueData[
+                        this.curBenchX
+                    ],
                 );
               }
             }
@@ -1571,9 +1514,9 @@ export default {
     },
 
     /**
-     * format smooth data
+     * Format smooth data
      * @param {Object} oriData
-     * @return {Object} data
+     * @return {Object} Data
      */
 
     formateSmoothData(oriData) {
@@ -1606,7 +1549,7 @@ export default {
 
     /**
      * Format the value of the Y axis
-     * @param {String} value number y
+     * @param {String} value Number y
      * @return {Number}
      */
 
@@ -1625,8 +1568,8 @@ export default {
     },
 
     /**
-     * y Axis Scale
-     * @param {Number} sampleIndex number
+     * YAxis scale
+     * @param {Number} sampleIndex Number
      */
 
     yAxisScale(sampleIndex) {
@@ -1647,17 +1590,17 @@ export default {
       sampleObject.charData.oriData.forEach((originData, index) => {
         if (log) {
           sampleObject.charData.charOption.series[
-            index * 2
+              index * 2
           ].data = this.formateSmoothData(
-            sampleObject.charData.oriData[index].logData[this.curBenchX]
+              sampleObject.charData.oriData[index].logData[this.curBenchX],
           );
           sampleObject.charData.charOption.series[index * 2 + 1].data =
             sampleObject.charData.oriData[index].logData[this.curBenchX];
         } else {
           sampleObject.charData.charOption.series[
-            index * 2
+              index * 2
           ].data = this.formateSmoothData(
-            sampleObject.charData.oriData[index].valueData[this.curBenchX]
+              sampleObject.charData.oriData[index].valueData[this.curBenchX],
           );
           sampleObject.charData.charOption.series[index * 2 + 1].data =
             sampleObject.charData.oriData[index].valueData[this.curBenchX];
@@ -1671,7 +1614,7 @@ export default {
     },
 
     /**
-     * jump back to train dashboard
+     * Jump back to train dashboard
      */
 
     jumpToSummary() {
@@ -1854,7 +1797,7 @@ export default {
   }
   .select-disable {
     -moz-user-select: none; /*Firefox*/
-    -webkit-user-select: none; /*webkit*/
+    -webkit-user-select: none; /*Webkit*/
     -ms-user-select: none; /*IE10*/
     -khtml-user-select: none;
     user-select: none;

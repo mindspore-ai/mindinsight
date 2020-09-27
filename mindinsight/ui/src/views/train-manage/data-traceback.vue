@@ -362,8 +362,6 @@ export default {
       disabledFilterBtn: true,
       // Hide button disabled
       disabledHideBtn: true,
-      // Hide table rows
-      hideTableRows: [],
       // Id list of hidden table
       hideTableIdList: undefined,
       // List of selected option IDs in the table
@@ -568,7 +566,7 @@ export default {
     },
     /** Data source page initialization**/
     /**
-     * init
+     * Init
      */
     init() {
       this.customizedColumnOptions =
@@ -1312,7 +1310,7 @@ export default {
     },
 
     /**
-     *  icon value change
+     *  Icon value change
      * @param {Object} row
      * @param {Number} num
      * @param {Object} event
@@ -1358,7 +1356,7 @@ export default {
     },
 
     /**
-     * clear icon
+     * Clear icon
      * @param {Object} scope
      * @param {Object} event
      */
@@ -1432,7 +1430,7 @@ export default {
     },
 
     /**
-     * deselect all
+     * Deselect all
      */
     deselectAll() {
       this.selectArrayValue = [];
@@ -1497,7 +1495,7 @@ export default {
     },
 
     selectinputFocus() {
-      // the text box is restored to empty
+      // The text box is restored to empty
       this.keyWord = '';
       this.checkOptions = this.basearr;
     },
@@ -1535,7 +1533,7 @@ export default {
       }
     },
     /**
-     * jump to train dashboard
+     * Jump to train dashboard
      * @param {String} val
      */
     jumpToTrainDashboard(val) {
@@ -1640,7 +1638,7 @@ export default {
     },
 
     /**
-     * set object value
+     * Set object value
      * @param {Array} array
      * @param {boolean} booleanValue
      */
@@ -1654,7 +1652,7 @@ export default {
     },
 
     /**
-     * get data of table
+     * Get data of table
      * @param {Object} params
      */
     queryTableLineagesData(params) {
@@ -1764,7 +1762,9 @@ export default {
         this.disabledHideBtn = true;
       }
     },
-    // Show selected data
+    /**
+    * Show selected data
+    */
     showSelectedTableData() {
       // At this time only need to pass in the filter data
       this.tableFilter.summary_dir = {
@@ -1780,7 +1780,9 @@ export default {
       this.pagination.currentPage = 1;
       this.init();
     },
-    // Hide selected table columns
+    /**
+    * Hide selected table columns
+    */
     hideSelectedRows() {
       // Get previous filter data
       this.summaryDirList = this.$store.state.summaryDirList;
@@ -1809,7 +1811,7 @@ export default {
     },
 
     /**
-     * reset echart data.Show all data
+     * Reset echart data.Show all data
      */
     showAllDataBtn() {
       // The first page is displayed.

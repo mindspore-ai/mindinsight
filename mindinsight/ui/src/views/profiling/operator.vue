@@ -551,7 +551,7 @@ export default {
       });
     },
     /**
-     * clear cpu data
+     * Clear cpu data
      */
     clearCpuData() {
       this.searchByCpuTypeInput = '';
@@ -576,7 +576,7 @@ export default {
       };
     },
     /**
-     * clear core data
+     * Clear core data
      */
     clearCoreData() {
       this.searchByTypeInput = '';
@@ -601,7 +601,7 @@ export default {
       };
     },
     /**
-     * get core type list
+     * Get core type list
      */
     getCoreTypeList() {
       const params = {};
@@ -693,7 +693,7 @@ export default {
           });
     },
     /**
-     * get core detail list
+     * Get core detail list
      * @param {Object} row type row
      * @param {Boolean} isSort if sort
      */
@@ -740,7 +740,7 @@ export default {
           .catch(() => {});
     },
     /**
-     * get cpu type list
+     * Get cpu type list
      */
     getCpuTypeList() {
       const params = {};
@@ -832,7 +832,7 @@ export default {
           });
     },
     /**
-     * get cpu list
+     * Get cpu list
      * @param {Object} row type row
      * @param {Boolean} isSort if sort
      */
@@ -879,7 +879,7 @@ export default {
           .catch(() => {});
     },
     /**
-     * operator detail list page change
+     * Operator detail list page change
      * @param {Object} row table cell
      * @param {Number} pageIndex current page
      */
@@ -888,7 +888,7 @@ export default {
       this.getCoreDetailList(row, false);
     },
     /**
-     * cpu list page change
+     * Cpu list page change
      * @param {Object} row table cell
      * @param {Number} pageIndex current page
      */
@@ -897,7 +897,7 @@ export default {
       this.getCpuDetailList(row, false);
     },
     /**
-     * get core list by search
+     * Get core list by search
      */
     searchOpCoreList() {
       if (this.coreStatisticType) {
@@ -931,7 +931,7 @@ export default {
       }
     },
     /**
-     * get cpu list by search
+     * Get cpu list by search
      */
     searchOpCpuList() {
       if (this.cpuStatisticType) {
@@ -965,7 +965,7 @@ export default {
       }
     },
     /**
-     * core detail sort
+     * Core detail sort
      * @param {Object} row table cell
      * @param {Object} column table cell
      */
@@ -978,7 +978,7 @@ export default {
       this.getCoreDetailList(row, false);
     },
     /**
-     * cpu detail sort
+     * Cpu detail sort
      * @param {Object} row table cell
      * @param {Object} column table cell
      */
@@ -991,7 +991,7 @@ export default {
       this.getCpuDetailList(row, false);
     },
     /**
-     * format detail data
+     * Format detail data
      * @param {Object} row table cell
      * @param {Object} detailsDataList table detail
      */
@@ -1014,7 +1014,7 @@ export default {
       }
     },
     /**
-     * expand core type table
+     * Expand core type table
      * @param {Object} row table cell
      */
     expandCoreTypeItem(row) {
@@ -1049,7 +1049,7 @@ export default {
       }
     },
     /**
-     * expand cpu type table
+     * Expand cpu type table
      * @param {Object} row table cell
      */
     expandCpuTypeItem(row) {
@@ -1084,7 +1084,7 @@ export default {
       }
     },
     /**
-     * tab change
+     * Tab change
      */
     tabChange() {
       if (
@@ -1107,7 +1107,7 @@ export default {
       });
     },
     /**
-     * core table type change
+     * Core table type change
      */
     coreTableChange() {
       if (this.coreStatisticType && !this.opAllTypeList.opDetailCol.length) {
@@ -1119,7 +1119,7 @@ export default {
       }
     },
     /**
-     * cpu table type change
+     * Cpu table type change
      */
     cpuTableChange() {
       if (this.cpuStatisticType && !this.opCpuAllTypeList.opDetailCol.length) {
@@ -1131,19 +1131,19 @@ export default {
       }
     },
     /**
-     * operator cpu chart change
+     * Operator cpu chart change
      */
     cpuChartChange() {
       this.setOption(this.cpuCharts);
     },
     /**
-     * operator core chart change
+     * Operator core chart change
      */
     coreChartChange() {
       this.setOption(this.coreCharts);
     },
     /**
-     * set chart option
+     * Set chart option
      * @param {Object} chart chart
      */
     setOption(chart) {
@@ -1309,7 +1309,7 @@ export default {
       }, 10);
     },
     /**
-     * show operator info deteail
+     * Show operator info deteail
      * @param {Object} cellData cell data
      * @param {Object} column column
      */
@@ -1400,7 +1400,7 @@ export default {
       });
     },
     /**
-     * window resize
+     * Window resize
      */
     resizeCallback() {
       if (this.coreCharts.chartDom && this.apiType === 'core') {

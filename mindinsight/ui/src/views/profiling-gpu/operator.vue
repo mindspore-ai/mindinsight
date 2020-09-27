@@ -446,7 +446,7 @@ export default {
       });
     },
     /**
-     * clear core data
+     * Clear core data
      */
     clearCoreData() {
       this.searchByCoreInput = '';
@@ -466,7 +466,7 @@ export default {
       };
     },
     /**
-     * clear operator data
+     * Clear operator data
      */
     clearOpData() {
       this.searchByTypeInput = '';
@@ -491,7 +491,7 @@ export default {
       };
     },
     /**
-     * get operator type list
+     * Get operator type list
      */
     getOpTypeList() {
       const params = {};
@@ -583,7 +583,7 @@ export default {
           });
     },
     /**
-     * get operator detail list
+     * Get operator detail list
      * @param {Object} row type row
      * @param {Boolean} isSort if sort
      */
@@ -630,7 +630,7 @@ export default {
           .catch(() => {});
     },
     /**
-     * get core list
+     * Get core list
      * @param {Boolean} isSort if sort
      */
     getCoreList(isSort) {
@@ -687,7 +687,7 @@ export default {
           });
     },
     /**
-     * operator detail list page change
+     * Operator detail list page change
      * @param {Object} row table cell
      * @param {Number} pageIndex current page
      */
@@ -696,7 +696,7 @@ export default {
       this.getOperatorDetailList(row, false);
     },
     /**
-     * core list page change
+     * Core list page change
      * @param {Object} row table cell
      * @param {Number} pageIndex current page
      */
@@ -705,7 +705,7 @@ export default {
       this.getCoreList(false);
     },
     /**
-     * get operator list by search
+     * Get operator list by search
      */
     searchOperatorList() {
       if (this.statisticType) {
@@ -739,7 +739,7 @@ export default {
       }
     },
     /**
-     * get core list by search
+     * Get core list by search
      */
     searchCoreList() {
       this.coreList.op_filter_condition = {};
@@ -760,7 +760,7 @@ export default {
       this.getCoreList(false);
     },
     /**
-     * operator detail sort
+     * Operator detail sort
      * @param {Object} row table cell
      * @param {Object} column table cell
      */
@@ -773,7 +773,7 @@ export default {
       this.getOperatorDetailList(row, false);
     },
     /**
-     * core detail sort
+     * Core detail sort
      * @param {Object} row table cell
      * @param {Object} column table cell
      */
@@ -786,7 +786,7 @@ export default {
       this.getCoreList(false);
     },
     /**
-     * format detail data
+     * Format detail data
      * @param {Object} row table cell
      * @param {Object} detailsDataList table detail
      */
@@ -809,7 +809,7 @@ export default {
       }
     },
     /**
-     * expand operator type table
+     * Expand operator type table
      * @param {Object} row table cell
      */
     expandTypeItem(row) {
@@ -844,7 +844,7 @@ export default {
       }
     },
     /**
-     * tab change
+     * Tab change
      */
     tabChange() {
       if (
@@ -867,7 +867,7 @@ export default {
       });
     },
     /**
-     * operator table type change
+     * Operator table type change
      */
     operatorTableChange() {
       if (this.statisticType && !this.opAllTypeList.opDetailCol.length) {
@@ -879,19 +879,19 @@ export default {
       }
     },
     /**
-     * core chart change
+     * Core chart change
      */
     coreChartChange() {
       this.setOption(this.coreCharts);
     },
     /**
-     * operator chart change
+     * Operator chart change
      */
     operatorChartChange() {
       this.setOption(this.operatorCharts);
     },
     /**
-     * set chart option
+     * Set chart option
      * @param {Object} chart chart
      */
     setOption(chart) {
@@ -1080,7 +1080,7 @@ export default {
       });
     },
     /**
-     * window resize
+     * Window resize
      */
     resizeCallback() {
       if (this.operatorCharts.chartDom && this.apiType === 'operator') {

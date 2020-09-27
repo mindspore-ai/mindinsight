@@ -106,14 +106,14 @@ export default {
   data() {
     return {
       itemId: '', // Dom id
-      gridObj: null, // slickgrid object
+      gridObj: null, // Slickgrid object
       columnsData: [], // Column information
       columnsLength: 0, // Column length
       filterArr: [], // Dimension selection array
-      formateData: [], // formatted data
-      formateArr: [], // formatted Array
+      formateData: [], // Formatted data
+      formateArr: [], // Formatted array
       statistics: {}, // Object contain maximun and minimun
-      accuracy: 5, // accuracy value
+      accuracy: 5, // Accuracy value
       incorrectData: false, // Wheather the dimension is correctly selected
       updated: false, // Updated
       scrollTop: false, // Wheather scroll to the top
@@ -326,7 +326,7 @@ export default {
       });
     },
     /**
-     * accuracy changed
+     * Accuracy changed
      */
     accuracyChange() {
       this.formateGridArray();
@@ -390,9 +390,9 @@ export default {
       }
     },
     /**
-     * check combinatorial input
-     * @param {Object} filter filter item
-     * @return {Boolean} verification result
+     * Check combinatorial input
+     * @param {Object} filter Filter item
+     * @return {Boolean} Verification result
      */
     checkCombinatorialInput(filter) {
       const value = filter.model.trim();
@@ -487,7 +487,7 @@ export default {
       this.$emit('toggleFullScreen');
     },
     /**
-     * Show Error message
+     * Show error message
      * @param {String} errorMsg Error message
      * @param {Array} dimension Array of dimension
      * @param {String} filterStr String of dimension selection
