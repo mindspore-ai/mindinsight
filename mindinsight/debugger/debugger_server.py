@@ -24,7 +24,8 @@ from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.utils.tools import to_float
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerParamTypeError, DebuggerCreateWatchPointError, DebuggerUpdateWatchPointError, \
-    DebuggerDeleteWatchPointError, DebuggerContinueError, DebuggerPauseError, DebuggerCompareTensorError
+    DebuggerDeleteWatchPointError, DebuggerContinueError, DebuggerPauseError, \
+    DebuggerCompareTensorError
 from mindinsight.debugger.common.log import logger as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
     create_view_event_from_tensor_history, Streams, is_scope_type, NodeBasicInfo
@@ -146,13 +147,10 @@ class DebuggerServer:
         node_type, tensor_name = self._get_tensor_name_and_type_by_ui_name(name)
         tolerance = to_float(tolerance, 'tolerance')
         tensor_stream = self.cache_store.get_stream_handler(Streams.TENSOR)
-        if detail == 'data':
-            if node_type == NodeTypeEnum.PARAMETER.value:
-                reply = tensor_stream.get_tensors_diff(tensor_name, parsed_shape, tolerance)
-            else:
-                raise DebuggerParamValueError("The node type must be parameter, but got {}.".format(node_type))
+        if node_type == NodeTypeEnum.PARAMETER.value:
+            reply = tensor_stream.get_tensors_diff(tensor_name, parsed_shape, tolerance)
         else:
-            raise DebuggerParamValueError("The value of detail: {} is not support.".format(detail))
+            raise DebuggerParamValueError("The node type must be parameter, but got {}.".format(node_type))
         return reply
 
     def retrieve(self, mode, filter_condition=None):
@@ -177,8 +175,8 @@ class DebuggerServer:
         # validate param <mode>
         if mode not in mode_mapping.keys():
             log.error("Invalid param <mode>. <mode> should be in ['all', 'node', 'watchpoint', "
-                      "'watchpoint_hit', 'tensor'], but got %s.", mode_mapping)
-            raise DebuggerParamTypeError("Invalid mode.")
+                      "'watchpoint_hit'], but got %s.", mode_mapping)
+            raise DebuggerParamValueError("Invalid mode.")
         # validate backend status
         metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
         if metadata_stream.state == ServerStatus.PENDING.value:

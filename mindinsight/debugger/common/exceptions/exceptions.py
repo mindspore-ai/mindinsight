@@ -78,7 +78,8 @@ class DebuggerCompareTensorError(MindInsightException):
     def __init__(self, msg):
         super(DebuggerCompareTensorError, self).__init__(
             error=DebuggerErrors.COMPARE_TENSOR_ERROR,
-            message=DebuggerErrorMsg.COMPARE_TENSOR_ERROR.value.format(msg)
+            message=msg,
+            http_code=400
         )
 
 
@@ -111,7 +112,8 @@ class DebuggerNodeNotInGraphError(MindInsightException):
             err_msg = f"Cannot find the node in graph by the given name. node name: {node_name}."
         super(DebuggerNodeNotInGraphError, self).__init__(
             error=DebuggerErrors.NODE_NOT_IN_GRAPH_ERROR,
-            message=err_msg
+            message=err_msg,
+            http_code=400
         )
 
 
@@ -120,5 +122,6 @@ class DebuggerGraphNotExistError(MindInsightException):
     def __init__(self):
         super(DebuggerGraphNotExistError, self).__init__(
             error=DebuggerErrors.GRAPH_NOT_EXIST_ERROR,
-            message=DebuggerErrorMsg.GRAPH_NOT_EXIST_ERROR.value
+            message=DebuggerErrorMsg.GRAPH_NOT_EXIST_ERROR.value,
+            http_code=400
         )
