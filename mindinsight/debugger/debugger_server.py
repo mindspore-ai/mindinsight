@@ -72,6 +72,8 @@ class DebuggerServer:
 
     def stop(self):
         """Stop debugger server."""
+        log.info("Send terminate info to client.")
+        self.control({'mode': 'terminate'})
         self.grpc_server_manager.stop(grace=None)
         self.back_server.join()
         log.info("Stop debugger server.")
@@ -698,6 +700,7 @@ class DebuggerServer:
             metadata_stream (MetadataHandler): The metadata stream handler.
         """
         metadata_stream.state = 'pending'
+        self.cache_store.clean_data()
         event = get_ack_reply()
         event.exit = True
         self.cache_store.put_command(event)

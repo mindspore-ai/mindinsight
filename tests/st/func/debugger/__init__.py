@@ -12,3 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""
+Function:
+    Test debugger system test.
+Usage:
+    pytest tests/st/func/debugger
+"""

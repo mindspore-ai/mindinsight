@@ -1,0 +1,23 @@
+{
+  "tensor_history": [
+    {
+      "name": "Default/TransData-op99:0",
+      "full_name": "Default/TransData-op99:0",
+      "node_type": "TransData",
+      "type": "output"
+    },
+    {
+      "name": "Default/args0:0",
+      "full_name": "Default/args0:0",
+      "node_type": "Parameter",
+      "type": "input"
+    }
+  ],
+  "metadata": {
+    "state": "waiting",
+    "step": 1,
+    "device_name": "0",
+    "node_name": "",
+    "backend": "Ascend"
+  }
+}

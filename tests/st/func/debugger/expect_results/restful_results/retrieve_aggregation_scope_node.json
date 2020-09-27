@@ -1,0 +1,672 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/fc3.bias",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[10]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22": {
+            "shape": [
+              [
+                10
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[10]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22": {
+            "shape": [
+              [
+                10
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/learning_rate",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op25": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op30": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op33": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op41": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op49": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op56": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/momentum",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op25": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op30": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op33": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op41": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op49": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          },
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op56": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/fc3.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[10, 84]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op25": {
+            "shape": [
+              [
+                10,
+                84
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[10, 84]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op25": {
+            "shape": [
+              [
+                10,
+                84
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/fc2.bias",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[84]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op30": {
+            "shape": [
+              [
+                84
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc2.bias",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[84]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op30": {
+            "shape": [
+              [
+                84
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/fc2.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[84, 120]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op33": {
+            "shape": [
+              [
+                84,
+                120
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc2.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[84, 120]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op33": {
+            "shape": [
+              [
+                84,
+                120
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/fc1.bias",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[120]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38": {
+            "shape": [
+              [
+                120
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[120]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38": {
+            "shape": [
+              [
+                120
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/fc1.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[120, 400]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op41": {
+            "shape": [
+              [
+                120,
+                400
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[120, 400]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op41": {
+            "shape": [
+              [
+                120,
+                400
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/conv2.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[16, 6, 5, 5]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op49": {
+            "shape": [
+              [
+                16,
+                6,
+                5,
+                5
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.conv2.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[16, 6, 5, 5]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op49": {
+            "shape": [
+              [
+                16,
+                6,
+                5,
+                5
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/conv1.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[6, 1, 5, 5]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op56": {
+            "shape": [
+              [
+                6,
+                1,
+                5,
+                5
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.conv1.weight",
+        "type": "Parameter",
+        "attr": {
+          "type": "DT_TENSOR[DT_FLOAT32]",
+          "shape": "[[6, 1, 5, 5]]"
+        },
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op56": {
+            "shape": [
+              [
+                6,
+                1,
+                5,
+                5
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]"
+          }
+        },
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1": {
+            "edge_type": "data"
+          }
+        },
+        "subnode_count": 0,
+        "independent_layout": true
+      }
+    ]
+  }
+}
