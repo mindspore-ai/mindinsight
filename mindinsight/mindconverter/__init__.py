@@ -12,3 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""
+MindConverter.
+
+MindConverter is a migration tool to transform the model scripts from PyTorch to Mindspore.
+Users can migrate their PyTorch models to Mindspore rapidly with minor changes according to the conversion report.
+"""
