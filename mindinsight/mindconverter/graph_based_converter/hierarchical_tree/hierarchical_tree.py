@@ -372,6 +372,9 @@ class HierarchicalTree(Tree):
             """
             nonlocal node
 
+            if node.predecessor(self.tree_identifier) is None:
+                return False
+
             tgt_type = {NodeType.MODULE.value,
                         NodeType.FUNC.value, NodeType.CLASS.value}
             md_type_lst = [self.get_node(child).data.node_type

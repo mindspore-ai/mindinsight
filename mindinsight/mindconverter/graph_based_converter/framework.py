@@ -20,8 +20,8 @@ from importlib.util import find_spec
 
 import mindinsight
 from mindinsight.mindconverter.common.log import logger as log
-from .mapper import ONNXToMindSporeMapper
-from ..common.exceptions import NodeTypeNotSupport
+from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
+from mindinsight.mindconverter.common.exceptions import NodeTypeNotSupport
 
 permissions = os.R_OK | os.W_OK | os.X_OK
 os.umask(permissions << 3 | permissions)

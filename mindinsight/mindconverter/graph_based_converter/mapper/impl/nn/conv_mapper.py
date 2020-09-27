@@ -67,4 +67,9 @@ class ConvMapper(ONNXToMindSporeMapper):
     def _convert_padding(params):
         if sum(params['pads']) == 0:
             return '\"valid\"', 0
-        return '\"pad\"', tuple(params['pads'])
+        pads_onnx = params['pads']
+        half_index = len(pads_onnx) // 2
+        padding = []
+        for num_begin, num_end in zip(pads_onnx[:half_index], pads_onnx[half_index:]):
+            padding += [num_begin, num_end]
+        return '\"pad\"', tuple(padding)

@@ -429,6 +429,17 @@ class GraphNode(abc.ABC):
         """
         return self._scope_name
 
+    @scope_name.setter
+    def scope_name(self, name):
+        """
+        Setter of scope name.
+
+        Args:
+            name(str): Scope name.
+
+        """
+        self._scope_name = name
+
     @property
     def node_params(self):
         """Get node params (ONNX op params)."""
