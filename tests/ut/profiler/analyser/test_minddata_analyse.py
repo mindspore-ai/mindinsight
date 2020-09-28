@@ -19,39 +19,58 @@ Usage:
     pytest tests/ut/profiler
 """
 import os
-from unittest import TestCase
 
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 
-from ...profiler import BASE_SUMMARY_DIR
+from tests.ut.profiler import BASE_SUMMARY_DIR
 
 
-class TestMinddataAnalyser(TestCase):
+class TestMinddataAnalyser:
     """Test minddata  analyser module."""
 
-    def setUp(self) -> None:
+    @classmethod
+    def setup_class(cls):
         """Initialization before test case execution."""
-        self.summary_dir = os.path.join(BASE_SUMMARY_DIR, "normal_run")
-        self.profiler = os.path.join(self.summary_dir, "profiler")
+        cls.summary_dir = os.path.join(BASE_SUMMARY_DIR, "normal_run")
+        cls.profiler = os.path.join(cls.summary_dir, "profiler")
+
+    def setup_method(self):
+        """Setup before each test."""
         self._analyser = AnalyserFactory.instance().get_analyser(
             'minddata', self.profiler, '1')
 
-    def test_analyse_get_next_info_queue(self):
+    def test_analyse_get_next_info_all(self):
         """Test analysing the get_next operation info for info_type="queue" """
-        expect_result = {
+        expect_queue_result = {
             "info": {"queue": [3, 2, 1]},
             "size": 3,
             "summary": {"queue_summary": {"empty_queue": 0}}
         }
-        result, _ = self._analyser.analyse_get_next_info(info_type="queue")
-        self.assertDictEqual(expect_result, result)
 
-    def test_analyse_device_queue_info_queue(self):
+        expect_time_result = {
+            "info": {"get_next": [0.001, 0, 0.001]},
+            "size": 3,
+            "summary": {"time_summary": {"avg_cost": "0.0006666666666666666"}}
+        }
+
+        queue_result, time_result = self._analyser.analyse_get_next_info(info_type="all")
+        assert expect_queue_result == queue_result
+        assert expect_time_result == time_result
+
+    def test_analyse_device_queue_info_all(self):
         """Test analysing the device_queue operation info for info_type="queue" """
-        expect_result = {
+        expect_queue_result = {
             "info": {"queue": [0]},
             "size": 1,
             "summary": {"queue_summary": {"empty_queue": 1, "full_queue": 0}}
         }
-        result, _ = self._analyser.analyse_device_queue_info(info_type="queue")
-        self.assertDictEqual(expect_result, result)
+
+        expect_time_result = {
+            "info": {"total_cost": [4], "push_cost": [4], "get_cost": [0]},
+            "size": 1,
+            "summary": {"time_summary": {"avg_cost": 4, "get_cost": 0, "push_cost": 4}}
+        }
+
+        queue_result, time_result = self._analyser.analyse_device_queue_info(info_type="all")
+        assert expect_queue_result == queue_result
+        assert expect_time_result == time_result
