@@ -43,7 +43,7 @@ limitations under the License.
         </div>
         <div v-for="(item, itemIndex) in filterArr"
              :key="itemIndex">
-          <el-input class="filter-input"
+          <el-input class="filter-input long-input"
                     :class="item.showError ? 'error-border' : ''"
                     v-model="item.model"></el-input>
           <span class="input-behind"
@@ -694,8 +694,10 @@ export default {
         }
       }
       .filter-input {
-        width: 120px;
         text-align: center;
+      }
+      .long-input {
+        width: 120px;
       }
       .input-behind {
         padding: 0 5px;
