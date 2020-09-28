@@ -12,3 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""
+MindWizard.
+
+MindWizard is a tool for quickly generating classic network scripts.
+It collects user preference on the combination of network parameters,
+such models, hyperparameters and datasets, then automatically generates target network scripts.
+The generated scripts can be used for training and evaluation in the Ascend or GPU environment.
+"""

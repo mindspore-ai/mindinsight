@@ -12,3 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""Scripts module used to define start and stop command for mindinsight."""
