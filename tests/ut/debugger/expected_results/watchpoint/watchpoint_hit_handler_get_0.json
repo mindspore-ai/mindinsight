@@ -1,0 +1,1 @@
+{"watch_point_hits": [{"node_name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92", "watch_points": [{"id": 1, "watch_condition": {"condition": "MAX_GT", "param": 1}}]}]}

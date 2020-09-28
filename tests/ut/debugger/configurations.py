@@ -18,17 +18,20 @@ import os
 
 from google.protobuf import json_format
 
+from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
+from mindinsight.debugger.common.utils import NodeBasicInfo
 from mindinsight.debugger.proto import ms_graph_pb2
 from mindinsight.debugger.stream_handler.graph_handler import GraphHandler
+from mindinsight.debugger.stream_handler.watchpoint_handler import WatchpointHitHandler
 
-graph_proto_file = os.path.join(
+GRAPH_PROTO_FILE = os.path.join(
     os.path.dirname(__file__), '../../utils/resource/graph_pb/lenet.pb'
 )
 
 
 def get_graph_proto():
     """Get graph proto."""
-    with open(graph_proto_file, 'rb') as f:
+    with open(GRAPH_PROTO_FILE, 'rb') as f:
         content = f.read()
 
     graph = ms_graph_pb2.GraphProto()
@@ -38,12 +41,53 @@ def get_graph_proto():
 
 
 def init_graph_handler():
-    """Init graph proto."""
+    """Init GraphHandler."""
     graph = get_graph_proto()
     graph_handler = GraphHandler()
     graph_handler.put(graph)
 
     return graph_handler
+
+
+def init_watchpoint_hit_handler(value):
+    """Init WatchpointHitHandler."""
+    wph_handler = WatchpointHitHandler()
+    wph_handler.put(value)
+
+    return wph_handler
+
+
+def get_node_basic_infos(node_names):
+    """Get node info according to node names."""
+    if not node_names:
+        return []
+    graph_stream = init_graph_handler()
+    node_infos = []
+    for node_name in node_names:
+        node_type = graph_stream.get_node_type(node_name)
+        if node_type == NodeTypeEnum.AGGREGATION_SCOPE.value:
+            sub_nodes = graph_stream.get_nodes_by_scope(node_name)
+            sub_infos = [NodeBasicInfo(name=node.name, full_name=node.full_name, type=node.type)
+                         for node in sub_nodes]
+            node_infos.extend(sub_infos)
+        full_name = graph_stream.get_full_name(node_name)
+        node_infos.append(NodeBasicInfo(name=node_name, full_name=full_name, type=node_type))
+    return node_infos
+
+
+def get_watch_nodes_by_search(watch_nodes):
+    """Get watched leaf nodes by search name."""
+    watched_leaf_nodes = []
+    graph_stream = init_graph_handler()
+    for search_name in watch_nodes:
+        search_nodes = graph_stream.get_searched_node_list()
+        search_node_names = [
+            NodeBasicInfo(name=node.name, full_name=node.full_name, type=node.type)
+            for node in search_nodes
+            if node.name.startswith(search_name)]
+        watched_leaf_nodes.extend(search_node_names)
+
+    return watched_leaf_nodes
 
 
 def mock_tensor_proto():
