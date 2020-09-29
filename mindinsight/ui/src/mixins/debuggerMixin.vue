@@ -8,6 +8,7 @@ export default {
     toleranceValueChange(val) {
       val = val.replace(/[^0-9]+/g, '');
       if (Number(val) === 0) {
+        this.toleranceInput = 0;
         this.tolerance = 0;
       }
       if (Number(val) < 0) {
