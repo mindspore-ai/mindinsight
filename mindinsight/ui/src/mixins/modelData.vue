@@ -207,7 +207,7 @@ export default {
             data: this.barYAxisData,
             axisLabel: {
               formatter: function(params) {
-                const maxLength = 12;
+                const maxLength = 10;
                 if (params.length > maxLength) {
                   return params.substring(0, maxLength) + '...';
                 } else {
