@@ -21,7 +21,6 @@ from flask import Response
 from mindinsight.backend.application import APP
 
 
-
 class TestProfilerRestfulApi(TestCase):
     """Test the restful api of profiler."""
 
