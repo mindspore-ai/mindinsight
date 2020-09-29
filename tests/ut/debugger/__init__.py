@@ -12,4 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Test for debugger module."""
+"""
+Function:
+    Unit test for debugger module.
+Usage:
+    pytest tests/ut/debugger/
+"""

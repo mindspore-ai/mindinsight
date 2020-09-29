@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Test WatchpointHandler."""
+"""
+Function:
+    Test query debugger watchpoint handler.
+Usage:
+    pytest tests/ut/debugger
+"""
 import json
 import os
 from unittest import mock, TestCase

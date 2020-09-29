@@ -23,10 +23,12 @@ from mindinsight.debugger.common.utils import NodeBasicInfo
 from mindinsight.debugger.proto import ms_graph_pb2
 from mindinsight.debugger.stream_handler.graph_handler import GraphHandler
 from mindinsight.debugger.stream_handler.watchpoint_handler import WatchpointHitHandler
+from tests.utils.tools import compare_result_with_file
 
 GRAPH_PROTO_FILE = os.path.join(
     os.path.dirname(__file__), '../../utils/resource/graph_pb/lenet.pb'
 )
+DEBUGGER_EXPECTED_RESULTS = os.path.join(os.path.dirname(__file__), 'expected_results')
 
 
 def get_graph_proto():
@@ -137,3 +139,15 @@ def mock_tensor_history():
     }
 
     return tensor_history
+
+
+def compare_debugger_result_with_file(res, expect_file):
+    """
+    Compare debugger result with file.
+
+    Args:
+        res (dict): The debugger result in dict type.
+        expect_file: The expected file name.
+    """
+    real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, expect_file)
+    compare_result_with_file(res, real_path)
