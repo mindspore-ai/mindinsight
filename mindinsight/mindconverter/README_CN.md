@@ -95,6 +95,17 @@ MindConverter提供两种技术方案，以应对不同脚本迁移场景：
 > 2. 基于图结构的脚本生成方案，由于要基于推理模式加载PyTorch模型，会导致转换后网络中Dropout算子丢失，需要用户手动补齐；
 > 3. 基于图结构的脚本生成方案持续优化中。
 
+支持网络列表:   
+
+|  支持网络 | PyTorch脚本 |
+| :----: | :----:|  
+| ResNet18 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) |
+| ResNet34 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) |
+| ResNet50 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) |
+| ResNet101 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) |
+| VGG11 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
+| VGG11_BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
+| VGG19 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
 
 ## 使用示例
 ### 基于AST的脚本转换示例
