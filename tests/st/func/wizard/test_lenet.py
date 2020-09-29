@@ -48,21 +48,6 @@ class TestLeNet:
                    'optimizer': 'SGD',
                    'dataset': 'MNIST'},
         'dataset_loader_name': 'MnistDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Momentum',
-                   'dataset': 'MNIST'},
-        'dataset_loader_name': 'MnistDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyExpand',
-                   'optimizer': 'Adam',
-                   'dataset': 'MNIST'},
-        'dataset_loader_name': 'MnistDataset'
-    }, {
-        'config': {'loss': 'SoftmaxCrossEntropyWithLogits',
-                   'optimizer': 'SGD',
-                   'dataset': 'MNIST'},
-        'dataset_loader_name': 'MnistDataset'
     }])
     def test_combinations(self, params):
         """Do testing."""

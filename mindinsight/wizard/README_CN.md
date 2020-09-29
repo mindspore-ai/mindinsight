@@ -27,11 +27,17 @@ optional arguments:
 
 1. 请选择网络（LeNet / AlexNet / ResNet50 / ...）
 
-    1.1. 请选择损失函数（SoftmaxCrossEntropyExpand / SoftmaxCrossEntropyWithLogits / ...）
-
+    1.1. 请选择损失函数（SoftmaxCrossEntropyWithLogits / ...）
+    
+    缺省值: SoftmaxCrossEntropyWithLogits
+    
     1.2. 请选择优化器（Adam / Momentum / SGD ...）
+    
+    缺省值: Momentum
 
 2. 请选择数据集（MNIST / Cifar10 / ImageNet / ...）
+
+缺省值: MNIST or ImageNet
 
 生成脚本后，用户可执行训练和评估，详细介绍可参考网络脚本工程中的README。
 
@@ -66,18 +72,21 @@ $ mindwizard project
    2: lenet
    3: resnet50
  : 2
+Your choice is lenet.
 >>> Please select a loss function:
-   1: SoftmaxCrossEntropyExpand
-   2: SoftmaxCrossEntropyWithLogits
- [2]: 2
+   1: SoftmaxCrossEntropyWithLogits
+ [1]: 1
+Your choice is SoftmaxCrossEntropyWithLogits.
 >>> Please select an optimizer:
    1: Adam
    2: Momentum
    3: SGD
  [2]: 2
+Your choice is Momentum.
 >>> Please select a dataset:
    1: MNIST
  [1]: 1
+Your choice is MNIST.
 
 project is generated in $PWD/project
 
