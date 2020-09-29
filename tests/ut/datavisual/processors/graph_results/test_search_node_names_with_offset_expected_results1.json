@@ -1,1 +1,1 @@
-{"names":["Default/bn1-BatchNorm2d/Parameter[22]_3/conv1.weight","Default/bn1-BatchNorm2d/Parameter[22]_3/x","Default/bn1-BatchNorm2d/Parameter[22]_3/x1"]}
+{"nodes": [{"name": "Default", "type": "name_scope", "nodes": [{"name": "Default/bn1", "type": "name_scope", "nodes": []}]}]}

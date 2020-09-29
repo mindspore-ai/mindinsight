@@ -19,14 +19,10 @@ from mindinsight.datavisual.data_transform.graph.msgraph import MSGraph
 from mindinsight.debugger.common.exceptions.exceptions import \
     DebuggerNodeNotInGraphError, DebuggerParamValueError
 from mindinsight.debugger.common.log import logger as log
-from .node import NodeTree
 
 
 class DebuggerGraph(MSGraph):
     """The `DebuggerGraph` object provides interfaces to describe a debugger graph."""
-    def __init__(self):
-        super(DebuggerGraph, self).__init__()
-        self._node_tree = None
 
     def get_node_name_by_full_name(self, full_name):
         """Get node name by full names."""
@@ -43,95 +39,6 @@ class DebuggerGraph(MSGraph):
             log.warning("Node %s is not leaf node.", node_name)
 
         return node.full_name if node else ''
-
-    def get_nodes(self, searched_node_list):
-        """
-        Search node names by a given pattern.
-
-        Args:
-            searched_node_list (list[Node]): A list of leaf nodes that
-                matches the given search pattern.
-
-        Returns:
-            A list of dict including the searched nodes.
-            [{
-                "name": "Default",
-                "type": "name_scope",
-                "nodes": [{
-                    "name": "Default/Conv2D1",
-                    "type": "name_scope",
-                    "nodes": [{
-                        ...
-                    }]
-                }]
-            },
-            {
-                "name": "Gradients",
-                "type": "name_scope",
-                "nodes": [{
-                    "name": "Gradients/Default",
-                    "type": "name_scope",
-                    "nodes": [{
-                        ...
-                }]
-            }]
-        """
-        # save the node in the NodeTree
-        self._node_tree = NodeTree()
-        for node in searched_node_list:
-            self._build_node_tree(node.name, node.type)
-
-        # get the searched nodes in the NodeTree and reorganize them
-        searched_list = []
-        self._traverse_node_tree(self._node_tree, searched_list)
-
-        return searched_list
-
-    def search_nodes_by_pattern(self, pattern):
-        """
-        Search node by a given pattern.
-
-        Args:
-            pattern (Union[str, None]): The pattern of the node to search,
-                if None, return all node names.
-
-        Returns:
-            list[Node], a list of node.
-        """
-        if pattern is not None:
-            pattern = pattern.lower()
-            searched_nodes = [
-                node for name, node in self._leaf_nodes.items()
-                if pattern in name.lower()
-            ]
-        else:
-            searched_nodes = [node for _, node in self._leaf_nodes.items()]
-        return searched_nodes
-
-    def _build_node_tree(self, node_name, node_type):
-        """Build node tree."""
-        scope_names = node_name.split('/')
-        cur_node = self._node_tree
-        for scope_name in scope_names[:-1]:
-            sub_node = cur_node.get(scope_name)
-            if not sub_node:
-                sub_node = cur_node.add(scope_name)
-            cur_node = sub_node
-        cur_node.add(scope_names[-1], node_type)
-
-    def _traverse_node_tree(self, cur_node, search_node_list):
-        """Traverse the watch nodes and update the total watched node list."""
-        if not cur_node.get_children():
-            return
-        for _, sub_node in cur_node.get_children():
-            sub_nodes = []
-            self._traverse_node_tree(sub_node, sub_nodes)
-            sub_node_dict = {
-                'name': sub_node.node_name,
-                'type': sub_node.node_type,
-                'nodes': sub_nodes
-            }
-            search_node_list.append(sub_node_dict)
 
     def get_node_type(self, node_name):
         """

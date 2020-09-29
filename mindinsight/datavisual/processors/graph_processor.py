@@ -103,12 +103,15 @@ class GraphProcessor(BaseProcessor):
             limit (int): The max data items for per page.
 
         Returns:
-            TypedDict('Names', {'names': list[str]}), {"names": ["node_names"]}.
+            Dict, the searched nodes.
         """
         offset = Validation.check_offset(offset=offset)
         limit = Validation.check_limit(limit, min_value=1, max_value=1000)
-        names = self._graph.search_node_names(search_content, offset, limit)
-        return {"names": names}
+        nodes = self._graph.search_nodes_by_pattern(search_content)
+        real_offset = offset * limit
+        search_nodes = self._graph.get_nodes(nodes[real_offset:real_offset + limit])
+
+        return {"nodes": search_nodes}
 
     def search_single_node(self, name):
         """

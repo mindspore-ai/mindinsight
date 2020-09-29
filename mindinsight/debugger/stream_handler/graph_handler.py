@@ -153,7 +153,7 @@ class GraphHandler(StreamHandlerBase):
         Returns:
             list[Node], a list of node.
         """
-        return self._graph.search_nodes_by_pattern(scope_name)
+        return self._graph.search_leaf_nodes_by_pattern(scope_name)
 
     def get_searched_node_list(self):
         """Get searched node list."""

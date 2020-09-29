@@ -16,6 +16,7 @@
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from .node_tree import NodeTree
 from .node import Node
 from .node import NodeTypeEnum
 from .graph import Graph
@@ -204,6 +205,128 @@ class MSGraph(Graph):
         node.elem_types.append(data_type_name)
 
         return data_type_name
+
+    def get_nodes(self, searched_node_list):
+        """
+        Get node tree by a searched_node_list.
+
+        Args:
+            searched_node_list (list[Node]): A list of nodes that
+                matches the given search pattern.
+
+        Returns:
+            A list of dict including the searched nodes.
+            [{
+                "name": "Default",
+                "type": "name_scope",
+                "nodes": [{
+                    "name": "Default/Conv2D1",
+                    "type": "name_scope",
+                    "nodes": [{
+                        ...
+                    }]
+                }]
+            },
+            {
+                "name": "Gradients",
+                "type": "name_scope",
+                "nodes": [{
+                    "name": "Gradients/Default",
+                    "type": "name_scope",
+                    "nodes": [{
+                        ...
+                }]
+            }]
+        """
+        # save the node in the NodeTree
+        root = NodeTree()
+        for node in searched_node_list:
+            self._build_node_tree(root, node.name, node.type)
+
+        # get the searched nodes in the NodeTree and reorganize them
+        searched_list = []
+        self._traverse_node_tree(root, searched_list)
+
+        return searched_list
+
+    def search_leaf_nodes_by_pattern(self, pattern):
+        """
+        Search leaf node by a given pattern.
+
+        Args:
+            pattern (Union[str, None]): The pattern of the node to search,
+                if None, return all node names.
+
+        Returns:
+            list[Node], a list of nodes.
+        """
+        if pattern is not None:
+            pattern = pattern.lower()
+            searched_nodes = [
+                node for name, node in self._leaf_nodes.items()
+                if pattern in name.lower()
+            ]
+        else:
+            searched_nodes = [node for node in self._leaf_nodes.values()]
+        return searched_nodes
+
+    def search_nodes_by_pattern(self, pattern):
+        """
+        Search node by a given pattern.
+
+        Search node which pattern is the part of the last node. Example: pattern=ops, node1=default/ops,
+        node2=default/ops/weight, so node2 will be ignore and only node1 will be return.
+
+        Args:
+            pattern (Union[str, None]): The pattern of the node to search.
+
+        Returns:
+            list[Node], a list of nodes.
+        """
+        searched_nodes = []
+        if pattern and pattern != '/':
+            pattern = pattern.lower()
+            for name, node in self._normal_node_map.items():
+                name = name.lower()
+                pattern_index = name.rfind(pattern)
+                if pattern_index >= 0 and name.find('/', pattern_index + len(pattern)) == -1:
+                    searched_nodes.append(node)
+        return searched_nodes
+
+    def _build_node_tree(self, root, node_name, node_type):
+        """
+        Build node tree.
+
+        Args:
+            root (NodeTree): Root node of node tree.
+            node_name (str): Node name.
+            node_type (str): Node type.
+        """
+        scope_names = node_name.split('/')
+        cur_node = root
+        full_name = ""
+        for scope_name in scope_names[:-1]:
+            full_name = '/'.join([full_name, scope_name]) if full_name else scope_name
+            scope_node = self._get_normal_node(node_name=full_name)
+            sub_node = cur_node.get(scope_name)
+            if not sub_node:
+                sub_node = cur_node.add(scope_name, scope_node.type)
+            cur_node = sub_node
+        cur_node.add(scope_names[-1], node_type)
+
+    def _traverse_node_tree(self, cur_node, search_node_list):
+        """Traverse the node tree and construct the searched nodes list."""
+        if not cur_node.get_children():
+            return
+        for _, sub_node in cur_node.get_children():
+            sub_nodes = []
+            self._traverse_node_tree(sub_node, sub_nodes)
+            sub_node_dict = {
+                'name': sub_node.node_name,
+                'type': sub_node.node_type,
+                'nodes': sub_nodes
+            }
+            search_node_list.append(sub_node_dict)
 
     def _parse_inputs(self, input_protos, node):
         """
