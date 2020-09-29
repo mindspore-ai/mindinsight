@@ -48,10 +48,15 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """
         cache_store.initialize()
         self._cache_store = cache_store
+        # the next position of command queue to be queried
         self._pos = None
+        # the status of grpc server, the value is in ServerStatus
         self._status = None
-        self._continue_steps = None
+        # the run command cache, used to deal with left continue steps or nodes
+        self._old_run_cmd = None
+        # the view command cache, used to update tensor history through data queue
         self._received_view_cmd = None
+        # the flag of receiving watch point hit
         self._received_hit = None
         self.init()
 
@@ -59,7 +64,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """Init debugger grpc server."""
         self._pos = '0'
         self._status = ServerStatus.PENDING
-        self._continue_steps = 0
+        self._old_run_cmd = {}
         self._received_view_cmd = {}
         self._received_hit = False
         self._cache_store.clean()
@@ -167,15 +172,63 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         while self._cache_store.has_command(self._pos) and event is None:
             event = self._get_next_command()
             log.debug("Deal with old %s-th command:\n%s.", self._pos, event)
-        # continue multiple steps training
-        if event is None and self._continue_steps:
-            event = get_ack_reply()
-            event.run_cmd.run_steps = 1
-            event.run_cmd.run_level = 'step'
-            self._continue_steps = self._continue_steps - 1 if self._continue_steps > 0 else -1
+        # deal with continue run command
+        if event is None and self._old_run_cmd:
+            left_step_count = self._old_run_cmd.get('left_step_count')
+            node_name = self._old_run_cmd.get('node_name')
+            # node_name and left_step_count should not set at the same time
+            if not (left_step_count or node_name) or (left_step_count and node_name):
+                log.warning("Invalid old run command. %s", self._old_run_cmd)
+                self._old_run_cmd.clear()
+                return None
+            if left_step_count:
+                event = self._deal_with_left_continue_step(left_step_count)
+            else:
+                event = self._deal_with_left_continue_node(node_name)
             self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
-            log.debug("Send RunCMD. Clean watchpoint hit.")
+            log.debug("Send old RunCMD. Clean watchpoint hit.")
+        return event
 
+    def _deal_with_left_continue_step(self, left_step_count):
+        """
+        Construct run command with left continue step count.
+
+        Args:
+            left_step_count (int): The count of left steps to be executed.
+
+        Returns:
+            Event, the run command event.
+        """
+        event = get_ack_reply()
+        event.run_cmd.run_steps = 1
+        event.run_cmd.run_level = 'step'
+        left_step_count = left_step_count - 1 if left_step_count > 0 else -1
+        if not left_step_count:
+            self._old_run_cmd.clear()
+        else:
+            self._old_run_cmd['left_step_count'] = left_step_count
+        log.debug("Send old step RunCMD. Left step count: %s", left_step_count)
+        return event
+
+    def _deal_with_left_continue_node(self, node_name):
+        """
+        Construct run command with left continue nodes.
+
+        Args:
+            node_name (str): The target node name.
+
+        Returns:
+            Union[None, Event], the run command event.
+        """
+        cur_full_name = self._cache_store.get_stream_handler(Streams.METADATA).full_name
+        if cur_full_name == node_name:
+            log.info("Execute to target node: %s", node_name)
+            self._old_run_cmd.clear()
+            return None
+        event = get_ack_reply()
+        event.run_cmd.run_level = 'node'
+        event.run_cmd.node_name = ''
+        log.debug("Send old node RunCMD, cur node: %s, target node: %s", cur_full_name, node_name)
         return event
 
     def _wait_for_next_command(self):
@@ -227,13 +280,18 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         # receive step command
         if run_cmd.run_level == 'step':
             # receive pause cmd
-            if run_cmd.run_steps == 0:
+            if not run_cmd.run_steps:
                 log.debug("Pause training and wait for next command.")
-                self._continue_steps = 0
+                self._old_run_cmd.clear()
                 return None
             # receive step cmd
-            self._continue_steps = run_cmd.run_steps - 1
+            left_steps = run_cmd.run_steps - 1
             event.run_cmd.run_steps = 1
+            if left_steps:
+                self._old_run_cmd['left_step_count'] = left_steps if left_steps > 0 else -1
+        elif run_cmd.node_name:
+            self._old_run_cmd['node_name'] = run_cmd.node_name
+            run_cmd.node_name = ''
         self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
         log.debug("Receive RunCMD. Clean watchpoint hit cache.")
 
@@ -303,8 +361,8 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     @debugger_wrap
     def SendWatchpointHits(self, request_iterator, context):
         """Send watchpoint hits info DebuggerCache."""
-        log.info("Received WatchpointHits. Left steps %d change to 0.", self._continue_steps)
-        self._continue_steps = 0
+        log.info("Received WatchpointHits. Left run cmd %s change to emtpy.", self._old_run_cmd)
+        self._old_run_cmd.clear()
         self._received_hit = True
         watchpoint_hit_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
