@@ -19,8 +19,10 @@ Usage:
     pytest tests/ut/profiler
 """
 import os
+import pytest
 
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
+from mindinsight.profiler.common.exceptions.exceptions import StepNumNotSupportedException
 from tests.ut.profiler import BASE_SUMMARY_DIR
 
 
@@ -80,3 +82,12 @@ class TestTrainingTraceAnalyser:
                 'proc_name': proc_name
             }})
         assert expect_result == result
+
+    def test_analyse_get_training_trace_graph_with_wrong_id(self):
+        with pytest.raises(StepNumNotSupportedException) as exc:
+            self._analyser.query({
+                'filter_condition': {
+                    'mode': 'step',
+                    'step_id': 10
+                }})
+        assert exc.value.message == 'The step num must be in [0, 1]'
