@@ -29,7 +29,7 @@ import localezh from 'element-ui/lib/locale/lang/zh-CN';
 let language = window.localStorage.getItem('milang');
 const languageList = ['zh-cn', 'en-us'];
 if (!language || !languageList.includes(language)) {
-  language = languageList[0];
+  language = languageList[1];
   window.localStorage.setItem('milang', language);
 }
 
