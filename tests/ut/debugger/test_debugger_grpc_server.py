@@ -160,7 +160,7 @@ class TestDebuggerGrpcServer:
     def test_deal_with_old_command_with_continue_steps(self, *args):
         """Test deal with old command with continue steps."""
         args[0].side_effect = [True, False]
-        setattr(self._server, '_continue_steps', 1)
+        setattr(self._server, '_old_run_cmd', {'left_step_count': 1})
         res = self._server._deal_with_old_command()
         assert res == MockDataGenerator.get_run_cmd(steps=1)
 
@@ -192,7 +192,7 @@ class TestDebuggerGrpcServer:
         setattr(self._server, '_status', ServerStatus.WAITING)
         res = self._server._wait_for_next_command()
         assert res == MockDataGenerator.get_run_cmd(steps=1)
-        assert getattr(self._server, '_continue_steps') == 1
+        assert getattr(self._server, '_old_run_cmd') == {'left_step_count': 1}
 
     @mock.patch.object(DebuggerCache, 'get_command')
     def test_wait_for_pause_and_run_command(self, *args):
@@ -205,7 +205,7 @@ class TestDebuggerGrpcServer:
         setattr(self._server, '_status', ServerStatus.WAITING)
         res = self._server._wait_for_next_command()
         assert res == run_cmd
-        assert getattr(self._server, '_continue_steps') == 1
+        assert getattr(self._server, '_old_run_cmd') == {'left_step_count': 1}
 
     def test_send_matadata(self):
         """Test SendMatadata interface."""
