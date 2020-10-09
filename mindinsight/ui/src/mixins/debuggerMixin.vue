@@ -155,6 +155,8 @@ export default {
 
       if (this.version === 'GPU') {
         this.conditions.noValue.push('NAN');
+      } else {
+        this.conditions.noValue.push('OVERFLOW');
       }
 
       this.conditions.options = this.conditions.noValue
@@ -1118,16 +1120,6 @@ export default {
             this.showErrorMsg(err);
           },
       );
-    },
-    /**
-     * Tree linkage with graph   Collapse of current node
-     * @param {Obejct} name  The name of the current node
-     */
-    nodeCollapseLinkage(name) {
-      const node = this.$refs.tree.getNode(name.replace('_unfold', ''));
-      node.expanded = false;
-      node.loaded = false;
-      node.childNodes = [];
     },
     /**
      * Tree linkage with graph  Expand of current node
