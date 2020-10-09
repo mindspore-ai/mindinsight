@@ -18,9 +18,9 @@ import pytest
 from mindinsight.profiler.common.exceptions.exceptions import \
     ProfilerParamTypeErrorException, ProfilerDeviceIdException, \
     ProfilerGroupConditionException, ProfilerSortConditionException, \
-    ProfilerFilterConditionException
+    ProfilerFilterConditionException, ProfilerOpTypeException
 from mindinsight.profiler.common.validator.validate import \
-    validate_minddata_pipeline_condition
+    validate_minddata_pipeline_condition, validate_condition
 
 
 class TestMinddataPipelineCondition:
@@ -210,3 +210,97 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.error_code == '50546186'
         assert exc_info.value.message == 'The filter_condition in search_condition error, ' \
                                          'The item in filter value must be int.'
+
+
+class TestValidateCondition:
+    """Test the function of validate condition."""
+    def test_validate_condition_normal(self):
+        """Test the validate condition of normal input."""
+        op_type_list = ['aicpu_type', 'aicpu_detail', 'aicore_type', 'aicore_detail',
+                        'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']
+        sort_name_list = ['op_type', 'serial_number', 'op_type', 'op_name',
+                          'op_type', 'op_side', 'name']
+        for idx, op_type in enumerate(op_type_list):
+            condition = {
+                'device_id': '0',
+                'op_type': op_type,
+                'filter_condition': {
+                    'op_id': 0
+                },
+                'group_condition': {
+                    'limit': 1,
+                    'offset': 1
+                },
+                'sort_condition': {
+                    'name': sort_name_list[idx],
+                    'type': 'ascending'
+                }
+            }
+            validate_condition(condition)
+
+    def test_validate_condition_param_type_error_exception(self):
+        """Test the exception of parameter type error."""
+        condition = "not a dict"
+        exception_message = 'Param type error. Invalid search_condition type, it should be dict.'
+        with pytest.raises(ProfilerParamTypeErrorException) as exc_info:
+            validate_condition(condition)
+        assert exc_info.value.error_code == '50546082'
+        assert exc_info.value.message == exception_message
+
+    def test_validate_condition_op_type_exception(self):
+        """Test the exception of profiler operation type."""
+        condition_list = [{'op_type': "xxx"}, {}]
+        exception_message = "The op_type in search_condition error, The op_type must in " \
+                            "['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "\
+                            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']"
+        for condition in condition_list:
+            with pytest.raises(ProfilerOpTypeException) as exc_info:
+                validate_condition(condition)
+            assert exc_info.value.error_code == '50546183'
+            assert exc_info.value.message == exception_message
+
+    def test_validate_condition_group_exception(self):
+        """Test the exception of group condition related."""
+        condition_list = [
+            {
+                'op_type': 'aicpu_type',
+                'group_condition': 0
+            },
+            {
+                'op_type': 'aicpu_type',
+                'group_condition': {'limit': True}
+            },
+            {
+                'op_type': 'aicpu_type',
+                'group_condition': {'limit': 0}
+            },
+            {
+                'op_type': 'aicpu_type',
+                'group_condition': {'offset': True}
+            },
+            {
+                'op_type': 'aicpu_type',
+                'group_condition': {'offset': -1}
+            },
+            {
+                'op_type': 'aicpu_type',
+                'group_condition': {'offset': 10000000}
+            },
+        ]
+        exception_message_list = [
+            "The group condition must be dict.",
+            "The limit must be int.",
+            "The limit must in [1, 100].",
+            "The offset must be int.",
+            "The offset must ge 0.",
+            "The offset must le 1000000."
+        ]
+        exception_message_list = [
+            'The group_condition in search_condition error, ' + message
+            for message in exception_message_list
+        ]
+        for idx, condition in enumerate(condition_list):
+            with pytest.raises(ProfilerGroupConditionException) as exc_info:
+                validate_condition(condition)
+            assert exc_info.value.error_code == '50546184'
+            assert exc_info.value.message == exception_message_list[idx]
