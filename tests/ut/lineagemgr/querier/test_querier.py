@@ -27,7 +27,7 @@ from mindinsight.lineagemgr.querier.querier import Querier
 from mindinsight.lineagemgr.summary.lineage_summary_analyzer import LineageInfo
 
 from . import event_data
-from ....utils.tools import deal_float_for_dict
+from ....utils.tools import assert_equal_lineages
 
 
 def create_lineage_info(train_event_dict, eval_event_dict, dataset_event_dict):
@@ -282,31 +282,17 @@ class TestQuerier(TestCase):
         lineage_objects = LineageOrganizer(summary_base_dir=summary_base_dir).super_lineage_objs
         self.multi_querier = Querier(lineage_objects)
 
-    def _deal_float_for_list(self, list1, list2):
-        index = 0
-        for _ in list1:
-            deal_float_for_dict(list1[index], list2[index])
-            index += 1
-
-    def _assert_list_equal(self, list1, list2):
-        self._deal_float_for_list(list1, list2)
-        self.assertListEqual(list1, list2)
-
-    def _assert_lineages_equal(self, lineages1, lineages2):
-        self._deal_float_for_list(lineages1['object'], lineages2['object'])
-        self.assertDictEqual(lineages1, lineages2)
-
     def test_get_summary_lineage_success_1(self):
         """Test the success of get_summary_lineage."""
         expected_result = [LINEAGE_INFO_0]
         result = self.single_querier.get_summary_lineage()
-        self._assert_list_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertListEqual)
 
     def test_get_summary_lineage_success_2(self):
         """Test the success of get_summary_lineage."""
         expected_result = [LINEAGE_INFO_0]
         result = self.single_querier.get_summary_lineage()
-        self._assert_list_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertListEqual)
 
     def test_get_summary_lineage_success_3(self):
         """Test the success of get_summary_lineage."""
@@ -320,7 +306,7 @@ class TestQuerier(TestCase):
         result = self.single_querier.get_summary_lineage(
             filter_keys=['model', 'algorithm']
         )
-        self._assert_list_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertListEqual)
 
     def test_get_summary_lineage_success_4(self):
         """Test the success of get_summary_lineage."""
@@ -367,7 +353,7 @@ class TestQuerier(TestCase):
             }
         ]
         result = self.multi_querier.get_summary_lineage()
-        self._assert_list_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertListEqual)
 
     def test_get_summary_lineage_success_5(self):
         """Test the success of get_summary_lineage."""
@@ -375,7 +361,7 @@ class TestQuerier(TestCase):
         result = self.multi_querier.get_summary_lineage(
             summary_dir='/path/to/summary1'
         )
-        self._assert_list_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertListEqual)
 
     def test_get_summary_lineage_success_6(self):
         """Test the success of get_summary_lineage."""
@@ -394,7 +380,7 @@ class TestQuerier(TestCase):
         result = self.multi_querier.get_summary_lineage(
             summary_dir='/path/to/summary0', filter_keys=filter_keys
         )
-        self._assert_list_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertListEqual)
 
     def test_get_summary_lineage_fail(self):
         """Test the function of get_summary_lineage with exception."""
@@ -437,7 +423,7 @@ class TestQuerier(TestCase):
             'count': 2,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_success_2(self):
         """Test the success of filter_summary_lineage."""
@@ -462,7 +448,7 @@ class TestQuerier(TestCase):
             'count': 2,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_success_3(self):
         """Test the success of filter_summary_lineage."""
@@ -479,7 +465,7 @@ class TestQuerier(TestCase):
             'count': 7,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_success_4(self):
         """Test the success of filter_summary_lineage."""
@@ -497,7 +483,7 @@ class TestQuerier(TestCase):
             'count': 7,
         }
         result = self.multi_querier.filter_summary_lineage()
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_success_5(self):
         """Test the success of filter_summary_lineage."""
@@ -512,7 +498,7 @@ class TestQuerier(TestCase):
             'count': 1,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_success_6(self):
         """Test the success of filter_summary_lineage."""
@@ -534,7 +520,7 @@ class TestQuerier(TestCase):
             'count': 7,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_success_7(self):
         """Test the success of filter_summary_lineage."""
@@ -556,7 +542,7 @@ class TestQuerier(TestCase):
             'count': 7,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_success_8(self):
         """Test the success of filter_summary_lineage."""
@@ -572,7 +558,7 @@ class TestQuerier(TestCase):
             'count': 1,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_success_9(self):
         """Test the success of filter_summary_lineage."""
@@ -586,7 +572,7 @@ class TestQuerier(TestCase):
             'count': 7,
         }
         result = self.multi_querier.filter_summary_lineage(condition=condition)
-        self._assert_lineages_equal(expected_result, result)
+        assert_equal_lineages(expected_result, result, self.assertDictEqual)
 
     def test_filter_summary_lineage_fail(self):
         """Test the function of filter_summary_lineage with exception."""

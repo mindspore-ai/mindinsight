@@ -73,6 +73,10 @@ class TestModelLineage(TestCase):
                     TrainLineage(cls.summary_record)
                     ]
         cls.run_context['list_callback'] = _ListCallback(callback)
+        cls.user_defined_info = {
+            "info": "info1",
+            "version": "v1"
+        }
 
     @pytest.mark.scene_train(2)
     @pytest.mark.level0
@@ -83,7 +87,7 @@ class TestModelLineage(TestCase):
     @pytest.mark.env_single
     def test_train_begin(self):
         """Test the begin function in TrainLineage."""
-        train_callback = TrainLineage(self.summary_record, True)
+        train_callback = TrainLineage(self.summary_record, True, self.user_defined_info)
         train_callback.begin(RunContext(self.run_context))
         assert train_callback.initial_learning_rate == 0.12
         lineage_log_path = train_callback.lineage_summary.lineage_log_path
@@ -98,30 +102,6 @@ class TestModelLineage(TestCase):
     @pytest.mark.env_single
     def test_train_begin_with_user_defined_info(self):
         """Test TrainLineage with nested user defined info."""
-        user_defined_info = {"info": {"version": "v1"}}
-        train_callback = TrainLineage(
-            self.summary_record,
-            False,
-            user_defined_info
-        )
-        train_callback.begin(RunContext(self.run_context))
-        assert train_callback.initial_learning_rate == 0.12
-        lineage_log_path = train_callback.lineage_summary.lineage_log_path
-        assert os.path.isfile(lineage_log_path) is True
-
-    @pytest.mark.scene_train(2)
-    @pytest.mark.level0
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.env_single
-    def test_train_begin_with_user_defined_key_in_lineage(self):
-        """Test TrainLineage with nested user defined info."""
-        expected_res = {
-            "info": "info1",
-            "version": "v1"
-        }
         user_defined_info = {
             "info": "info1",
             "version": "v1",
@@ -137,7 +117,7 @@ class TestModelLineage(TestCase):
         lineage_log_path = train_callback.lineage_summary.lineage_log_path
         assert os.path.isfile(lineage_log_path) is True
         res = filter_summary_lineage(os.path.dirname(lineage_log_path))
-        assert expected_res == res['object'][0]['model_lineage']['user_defined']
+        assert self.user_defined_info == res['object'][0]['model_lineage']['user_defined']
 
     @pytest.mark.scene_train(2)
     @pytest.mark.level0
@@ -168,7 +148,7 @@ class TestModelLineage(TestCase):
     def test_training_end(self, *args):
         """Test the end function in TrainLineage."""
         args[0].return_value = 64
-        train_callback = TrainLineage(self.summary_record, True)
+        train_callback = TrainLineage(self.summary_record, True, self.user_defined_info)
         train_callback.initial_learning_rate = 0.12
         train_callback.end(RunContext(self.run_context))
         res = get_summary_lineage(SUMMARY_DIR)
@@ -188,7 +168,7 @@ class TestModelLineage(TestCase):
     @pytest.mark.env_single
     def test_eval_end(self):
         """Test the end function in EvalLineage."""
-        eval_callback = EvalLineage(self.summary_record, True)
+        eval_callback = EvalLineage(self.summary_record, True, {'eval_version': 'version2'})
         eval_run_context = self.run_context
         eval_run_context['metrics'] = {'accuracy': 0.78}
         eval_run_context['valid_dataset'] = self.run_context['train_dataset']
@@ -361,7 +341,7 @@ class TestModelLineage(TestCase):
     def test_train_with_customized_network(self, *args):
         """Test train with customized network."""
         args[0].return_value = 64
-        train_callback = TrainLineage(self.summary_record, True)
+        train_callback = TrainLineage(self.summary_record, True, self.user_defined_info)
         run_context_customized = self.run_context
         del run_context_customized['optimizer']
         del run_context_customized['net_outputs']
