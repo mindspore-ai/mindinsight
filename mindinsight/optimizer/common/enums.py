@@ -30,3 +30,46 @@ class ReasonCode(BaseEnum):
     NOT_ALL_NUMBERS = 1
     SAMPLES_NOT_ENOUGH = 2
     CORRELATION_NAN = 3
+
+
+class AcquisitionFunctionEnum(BaseEnum):
+    """Enum for acquisition function method."""
+    # Upper confidence bound
+    UCB = 'ucb'
+    # Probability of improvement
+    PI = 'pi'
+    # Expected improvement
+    EI = 'ei'
+
+
+class TuneMethod(BaseEnum):
+    """Enum for tuning method."""
+    # Gaussian process regressor
+    GP = 'gp'
+
+
+class HyperParamKey(BaseEnum):
+    """Config keys for hyper parameters."""
+    BOUND = 'bounds'
+    CHOICE = 'choice'
+    DECIMAL = 'decimal'
+    TYPE = 'type'
+
+
+class HyperParamType(BaseEnum):
+    """Config keys for hyper parameters."""
+    INT = 'int'
+    FLOAT = 'float'
+
+
+class TargetKey(BaseEnum):
+    """Config keys for target."""
+    GROUP = 'group'
+    NAME = 'name'
+    GOAL = 'goal'
+
+
+class TargetGoal(BaseEnum):
+    """Goal for target."""
+    MAXIMUM = 'maximize'
+    MINIMUM = 'minimize'

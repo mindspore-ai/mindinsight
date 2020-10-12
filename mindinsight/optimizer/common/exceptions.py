@@ -32,3 +32,19 @@ class CorrelationNanError(MindInsightException):
         super(CorrelationNanError, self).__init__(OptimizerErrors.CORRELATION_NAN,
                                                   error_msg,
                                                   http_code=400)
+
+
+class HyperConfigError(MindInsightException):
+    """Hyper config error."""
+    def __init__(self, error_msg="Hyper config is not correct."):
+        super(HyperConfigError, self).__init__(OptimizerErrors.HYPER_CONFIG_ERROR,
+                                               error_msg,
+                                               http_code=400)
+
+
+class OptimizerTerminateError(MindInsightException):
+    """Hyper config error."""
+    def __init__(self, error_msg="Auto tuning has been terminated."):
+        super(OptimizerTerminateError, self).__init__(OptimizerErrors.OPTIMIZER_TERMINATE,
+                                                      error_msg,
+                                                      http_code=400)

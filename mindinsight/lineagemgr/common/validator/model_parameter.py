@@ -179,8 +179,8 @@ class SearchModelConditionParameter(Schema):
             raise ValidationError("Given lineage type should be one of %s." % lineage_types)
 
     @pre_load
-    def check_comparision(self, data, **kwargs):
-        """Check comparision for all parameters in schema."""
+    def check_comparison(self, data, **kwargs):
+        """Check comparison for all parameters in schema."""
         for attr, condition in data.items():
             if attr in ["limit", "offset", "sorted_name", "sorted_type", 'lineage_type']:
                 continue

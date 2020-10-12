@@ -27,8 +27,8 @@ from mindinsight.optimizer.common.enums import ReasonCode
 from mindinsight.optimizer.utils.utils import is_simple_numpy_number
 from mindinsight.utils.exceptions import MindInsightException
 
-_METRIC_PREFIX = "[M]"
-_USER_DEFINED_PREFIX = "[U]"
+METRIC_PREFIX = "[M]"
+USER_DEFINED_PREFIX = "[U]"
 
 USER_DEFINED_INFO_LIMIT = 100
 
@@ -85,7 +85,7 @@ def get_flattened_lineage(data_manager, search_condition=None):
     for index, lineage in enumerate(lineages):
         flatten_dict['train_id'].append(lineage.get("summary_dir"))
         for key, val in _flatten_lineage(lineage.get('model_lineage', {})):
-            if key.startswith(_USER_DEFINED_PREFIX) and key not in flatten_dict:
+            if key.startswith(USER_DEFINED_PREFIX) and key not in flatten_dict:
                 if user_count > USER_DEFINED_INFO_LIMIT:
                     log.warning("The user_defined_info has reached the limit %s. %r is ignored",
                                 USER_DEFINED_INFO_LIMIT, key)
@@ -105,10 +105,10 @@ def _flatten_lineage(lineage):
     for key, val in lineage.items():
         if key == 'metric':
             for k, v in val.items():
-                yield f'{_METRIC_PREFIX}{k}', v
+                yield f'{METRIC_PREFIX}{k}', v
         elif key == 'user_defined':
             for k, v in val.items():
-                yield f'{_USER_DEFINED_PREFIX}{k}', v
+                yield f'{USER_DEFINED_PREFIX}{k}', v
         else:
             yield key, val
 
@@ -144,7 +144,7 @@ class LineageTable:
             self._df = self._df.drop(columns=columns_to_drop)
 
         for name in columns_to_drop:
-            if not name.startswith(_USER_DEFINED_PREFIX):
+            if not name.startswith(USER_DEFINED_PREFIX):
                 continue
             self._drop_columns_info.append({
                 "name": name,
@@ -155,7 +155,7 @@ class LineageTable:
     @property
     def target_names(self):
         """Get names for optimize targets (eg loss, accuracy)."""
-        target_names = [name for name in self._df.columns if name.startswith(_METRIC_PREFIX)]
+        target_names = [name for name in self._df.columns if name.startswith(METRIC_PREFIX)]
         if self._LOSS_NAME in self._df.columns:
             target_names.append(self._LOSS_NAME)
         return target_names
@@ -167,7 +167,7 @@ class LineageTable:
 
         hyper_param_names = [
             name for name in self._df.columns
-            if not name.startswith(_METRIC_PREFIX) and name not in blocked_names]
+            if not name.startswith(METRIC_PREFIX) and name not in blocked_names]
 
         if self._LOSS_NAME in hyper_param_names:
             hyper_param_names.remove(self._LOSS_NAME)
@@ -184,7 +184,7 @@ class LineageTable:
     @property
     def user_defined_hyper_param_names(self):
         """Get user defined hyper param names."""
-        names = [name for name in self._df.columns if name.startswith(_USER_DEFINED_PREFIX)]
+        names = [name for name in self._df.columns if name.startswith(USER_DEFINED_PREFIX)]
         return names
 
     def get_column(self, name):
@@ -220,3 +220,11 @@ class LineageTable:
     def drop_column_info(self):
         """Get dropped columns info."""
         return self._drop_columns_info
+
+
+def get_lineage_table(data_manager, search_condition=None):
+    """Get lineage table from data_manager."""
+    lineage_table = get_flattened_lineage(data_manager, search_condition)
+    lineage_table = LineageTable(pd.DataFrame(lineage_table))
+
+    return lineage_table

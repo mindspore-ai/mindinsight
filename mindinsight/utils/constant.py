@@ -96,3 +96,5 @@ class OptimizerErrors(Enum):
     """Enum definition for optimizer errors."""
     SAMPLES_NOT_ENOUGH = 1
     CORRELATION_NAN = 2
+    HYPER_CONFIG_ERROR = 3
+    OPTIMIZER_TERMINATE = 4

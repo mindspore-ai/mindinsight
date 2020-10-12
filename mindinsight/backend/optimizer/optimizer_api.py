@@ -14,12 +14,11 @@
 # ============================================================================
 """Optimizer API module."""
 import json
-import pandas as pd
 from flask import Blueprint, jsonify, request
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
-from mindinsight.lineagemgr.model import get_flattened_lineage, LineageTable
+from mindinsight.lineagemgr.model import get_lineage_table
 from mindinsight.optimizer.common.enums import ReasonCode
 from mindinsight.optimizer.common.exceptions import SamplesNotEnoughError, CorrelationNanError
 from mindinsight.optimizer.utils.importances import calc_hyper_param_importance
@@ -44,8 +43,7 @@ def get_optimize_targets():
 
 def _get_optimize_targets(data_manager, search_condition=None):
     """Get optimize targets."""
-    flatten_lineage = get_flattened_lineage(data_manager, search_condition)
-    table = LineageTable(pd.DataFrame(flatten_lineage))
+    table = get_lineage_table(data_manager, search_condition)
 
     target_summaries = []
     for target in table.target_names:
