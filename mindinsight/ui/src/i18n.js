@@ -48,8 +48,8 @@ let langflag;
 if (langStorge && languageList.includes(langStorge)) {
   langflag = langStorge;
 } else {
-  // set Chinese if no default language
-  langflag = languageList[0];
+  // set English if no default language
+  langflag = languageList[1];
   window.localStorage.setItem('milang', langflag);
 }
 
