@@ -13,12 +13,40 @@
 # limitations under the License.
 # ==============================================================================
 """Hierarchical tree module."""
+import re
 from mindinsight.mindconverter.common.log import logger as log
 from .hierarchical_tree import HierarchicalTree
+from ..third_party_graph.onnx_graph_node import OnnxGraphNode
 
 __all__ = [
     "HierarchicalTreeFactory"
 ]
+
+
+def _tf_model_node_name_reformat(node: OnnxGraphNode, node_name):
+    """
+    Rename the node name by combining scope name and its original name.
+
+    Args:
+        node (OnnxGraphNode): OnnxGraphNode instance.
+        node_name (str): node name saved in Graph.
+
+    Returns:
+        str, re-formatted node name.
+    """
+    scope_name = node.scope_name
+    new_name = None
+    parent = ""
+    regex = r"(?P<parent>.+/)(?P<op>\w+)"
+    match = re.match(regex, scope_name)
+    parent = match.group("parent")
+    node_name = '$' + node_name + '$'
+
+    if scope_name:
+        new_name = parent + node_name
+    if new_name:
+        return new_name
+    return node_name
 
 
 class HierarchicalTreeFactory:
@@ -36,6 +64,7 @@ class HierarchicalTreeFactory:
             HierarchicalTree, tree.
         """
         tree = HierarchicalTree()
+        node_scope_name = dict()
         for _, node_name in enumerate(graph.nodes_in_topological_order):
             node_inst = graph.get_node(node_name)
             node_input = graph.get_input_shape(node_name)
@@ -44,6 +73,13 @@ class HierarchicalTreeFactory:
                 err_msg = f"This model is not supported now. " \
                           f"Cannot find {node_name}'s input shape."
                 log.error(err_msg)
+            if isinstance(node_inst, OnnxGraphNode):
+                node_name_with_scope = _tf_model_node_name_reformat(
+                    node_inst, node_name)
+                node_scope_name[node_name] = node_name_with_scope
+                node_name = node_name_with_scope
 
             tree.insert(node_inst, node_name, node_input, node_output)
+        if node_scope_name:
+            return tree, node_scope_name
         return tree
