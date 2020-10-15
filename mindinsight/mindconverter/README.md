@@ -111,9 +111,11 @@ Some typical image classification networks such as ResNet and VGG have been test
 | ResNet34 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) |
 | ResNet50 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) |
 | ResNet101 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) |
-| VGG11 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
-| VGG11_BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
-| VGG19 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
+| VGG11/11BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
+| VGG13/13BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
+| VGG16/16BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
+| VGG19/19BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) |
+| AlexNet | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) |
 
 ## Example
 
