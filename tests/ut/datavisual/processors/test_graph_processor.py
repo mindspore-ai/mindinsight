@@ -149,7 +149,7 @@ class TestGraphProcessor:
         graph_processor = GraphProcessor(self._train_id, self._mock_data_manager)
         results = graph_processor.search_node_names(search_content, test_offset, test_limit)
         if search_content == 'not_exist_search_content':
-            expected_results = {'names': []}
+            expected_results = {'nodes': []}
             assert results == expected_results
         else:
             expected_file_path = os.path.join(self.graph_results_dir, result_file)
@@ -173,7 +173,7 @@ class TestGraphProcessor:
         """Test search node names with offset."""
         test_search_content = "Default/bn1"
         test_offset = offset
-        test_limit = 3
+        test_limit = 1
 
         graph_processor = GraphProcessor(self._train_id, self._mock_data_manager)
         results = graph_processor.search_node_names(test_search_content, test_offset, test_limit)

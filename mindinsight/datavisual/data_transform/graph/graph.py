@@ -147,28 +147,6 @@ class Graph:
                 nodes.append(node.to_dict())
         return nodes
 
-    def search_node_names(self, content, offset, limit):
-        """
-        Search node names by content.
-
-        Args:
-            content (Union[str, None]): This content can be the key content of the node to search,
-                                        if None, will get all node names.
-            offset (int): An offset for page. Ex, offset is 0, mean current page is 1.
-            limit (int): An offset for page. Ex, offset is 0, mean current page is 1.
-
-        Returns:
-            list[str], a list of node names.
-        """
-        if content is not None:
-            content = content.lower()
-            catch_names = [name for name in self._normal_node_map if content in name.lower()]
-        else:
-            catch_names = list(self._normal_node_map)
-        catch_names = sorted(catch_names)
-        real_offset = offset * limit
-        return catch_names[real_offset:real_offset+limit]
-
     def search_single_node(self, node_name):
         """
         Search node, and return every layer nodes until this node.
