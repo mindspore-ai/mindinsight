@@ -131,17 +131,82 @@ limitations under the License.
                 </el-option>
               </el-select>
               <!-- Search box -->
-              <Autocomplete class="search"
-                            v-model="searchBox.value"
-                            :disabled="!fileSearchBox.value"
-                            :fetch-suggestions="searchNodesNames"
-                            :placeholder="$t('graph.inputNodeName')"
-                            :popper-append-to-body="false"
-                            clearable
-                            @select="querySingleNode"
-                            @blur="selectBoxVisibleTriggle"
-                            @focus="selectBoxVisibleTriggle"
-                            select-when-unmatched></Autocomplete>
+              <div class="search-wrap">
+                <el-input class="search"
+                          :placeholder="$t('graph.inputNodeName')"
+                          v-model="searchBox.value"
+                          @input="filterChange"
+                          @keyup.enter.native="searchNodesNames"
+                          clearable>
+                  <el-button slot="append"
+                             @click="treeWrapFlag=!treeWrapFlag"
+                             class="collapse_i">
+                    <i class="el-icon-caret-bottom"
+                       v-if="!treeWrapFlag"></i>
+                    <i class="el-icon-caret-top"
+                       v-else></i>
+                  </el-button>
+                </el-input>
+                <div class="tree-wrap"
+                     v-show="treeWrapFlag">
+                  <el-tree v-show="treeFlag"
+                           :props="props"
+                           :load="loadNode"
+                           @node-collapse="nodeCollapse"
+                           @node-click="handleNodeClick"
+                           node-key="name"
+                           :expand-on-click-node="false"
+                           :lazy="true"
+                           :highlight-current="true"
+                           ref="tree">
+                    <span class="custom-tree-node"
+                          slot-scope="{ node ,data }">
+                      <span>
+                        <img v-if="data.type ==='name_scope'"
+                             :src="require('@/assets/images/name-scope.svg')"
+                             class="image-type" />
+                        <img v-else-if="data.type ==='Const'"
+                             :src="require('@/assets/images/constant-node.svg')"
+                             class="image-type" />
+                        <img v-else-if="data.type ==='aggregation_scope'"
+                             :src="require('@/assets/images/polymetric.svg')"
+                             class="image-type" />
+                        <img v-else
+                             :src="require('@/assets/images/operator-node.svg')"
+                             class="image-type" />
+                      </span>
+                      <span class="custom-tree-node">{{ node.label }}</span>
+                    </span>
+                  </el-tree>
+                  <el-tree v-show="!treeFlag"
+                           :props="defaultProps"
+                           :load="loadSearchNode"
+                           :lazy="true"
+                           node-key="name"
+                           @node-click="handleNodeClick"
+                           :expand-on-click-node="false"
+                           ref="searchTree">
+                    <span class="custom-tree-node"
+                          slot-scope="{ node ,data }">
+                      <span>
+                        <img v-if="data.type ==='name_scope'"
+                             :src="require('@/assets/images/name-scope.svg')"
+                             class="image-type" />
+                        <img v-else-if="data.type ==='Const'"
+                             :src="require('@/assets/images/constant-node.svg')"
+                             class="image-type" />
+                        <img v-else-if="data.type ==='aggregation_scope'"
+                             :src="require('@/assets/images/polymetric.svg')"
+                             class="image-type" />
+                        <img v-else
+                             :src="require('@/assets/images/operator-node.svg')"
+                             class="image-type" />
+                      </span>
+                      <span class="custom-tree-node">{{ node.label }}</span>
+                    </span>
+                  </el-tree>
+                </div>
+              </div>
               <!-- Functional Area -->
               <div id="small-container">
                 <div id="small-resize">
@@ -417,7 +482,6 @@ limitations under the License.
 </template>
 
 <script>
-import Autocomplete from '@/components/autocomplete';
 import CommonProperty from '@/common/common-property.js';
 import RequestService from '@/services/request-service';
 import {select, selectAll, zoom} from 'd3';
@@ -490,6 +554,23 @@ export default {
         title: '',
       },
       language: '',
+      defaultProps: {
+        children: 'nodes',
+        label: 'label',
+        isLeaf: 'leaf',
+      },
+      treeFlag: true,
+      props: {
+        label: 'label',
+        children: 'children',
+        isLeaf: 'leaf',
+      },
+      node: null,
+      resolve: null,
+      treeWrapFlag: true,
+      searchNode: null,
+      searchResolve: null,
+      isIntoView: true,
     };
   },
   computed: {},
@@ -553,6 +634,149 @@ export default {
     window.onresize = null;
   },
   methods: {
+    /**
+     * Tree linkage with graph  Expand of current node
+     * @param {Obejct} nodes Data of children of current node
+     * @param {Obejct} name  The name of the current node
+     */
+    nodeExpandLinkage(nodes, name) {
+      const curNodeData = nodes.map((val) => {
+        return {
+          label: val.name.split('/').pop(),
+          ...val,
+        };
+      });
+      const node = this.$refs.tree.getNode(name);
+      curNodeData.forEach((val) => {
+        this.$refs.tree.append(val, name);
+      });
+      node.childNodes.forEach((val) => {
+        if (
+          val.data.type !== 'name_scope' &&
+          val.data.type !== 'aggregation_scope'
+        ) {
+          val.isLeaf = true;
+        }
+      });
+      node.expanded = true;
+      node.loading = false;
+      this.$refs.tree.setCurrentKey(name);
+      this.$nextTick(() => {
+        setTimeout(() => {
+          const dom = document.querySelector(
+              '.el-tree-node.is-current.is-focusable',
+          );
+          if (dom) {
+            dom.scrollIntoView();
+          }
+        }, 800);
+      });
+    },
+    /**
+     * Collapse node
+     * @param {Object} _
+     * @param {Object} node node data
+     */
+    nodeCollapse(_, node) {
+      node.loaded = false;
+      if (this.treeFlag) {
+        this.dealDoubleClick(node.data.name);
+      }
+    },
+    /**
+     * Draw the tree
+     * @param {Object} node tree root node
+     * @param {Function} resolve callback function ,return next node data
+     */
+    loadNode(node, resolve) {
+      if (node.level === 0) {
+        node.childNodes = [];
+        if (!this.node && !this.resolve) {
+          this.node = node;
+          this.resolve = resolve;
+        }
+      } else if (node.level >= 1) {
+        this.isIntoView = false;
+        this.queryGraphData(node.data.name, resolve);
+      }
+    },
+    /**
+     * Draw the tree
+     * @param {Object} node tree root node
+     * @param {Function} resolve callback function ,return next node data
+     */
+    loadSearchNode(node, resolve) {
+      if (node.level === 0) {
+        node.childNodes = [];
+        if (!this.searchNode && !this.searchResolve) {
+          this.searchNode = node;
+          this.searchResolve = resolve;
+        }
+      } else if (node.level >= 1) {
+        const params = {
+          name: node.data.name,
+          train_id: this.trainJobID,
+          tag: this.fileSearchBox.value,
+        };
+        if (node.childNodes && node.childNodes.length) {
+          node.expanded = true;
+          node.loaded = true;
+          node.loading = false;
+          return;
+        }
+        RequestService.queryGraphData(params).then((res) => {
+          if (res && res.data && res.data.nodes) {
+            const data = res.data.nodes.map((val) => {
+              return {
+                label: val.name.split('/').pop(),
+                leaf:
+                  val.type === 'name_scope' || val.type === 'aggregation_scope'
+                    ? false
+                    : true,
+                ...val,
+              };
+            });
+            resolve(data);
+          }
+        });
+      }
+    },
+    /**
+     * Deal search data
+     * @param {Array} arr search tree data
+     */
+    dealSearchResult(arr) {
+      arr.forEach((val) => {
+        if (val.nodes) {
+          this.dealSearchResult(val.nodes);
+        }
+        val.label = val.name.split('/').pop();
+      });
+    },
+    filterChange() {
+      if (this.searchBox.value === '') {
+        this.treeFlag = true;
+        this.$nextTick(() => {
+          setTimeout(() => {
+            const dom = document.querySelector(
+                '.el-tree-node.is-current.is-focusable',
+            );
+            if (dom) {
+              dom.scrollIntoView();
+            }
+          }, 800);
+        });
+      }
+    },
+    handleNodeClick(data) {
+      this.isIntoView = false;
+      this.selectedNode.name = data.name;
+      if (this.treeFlag) {
+        this.selectNode(true);
+      } else {
+        this.querySingleNode({value: data.name});
+      }
+    },
     /**
      * Add the location attribute to each node to facilitate the obtaining of node location parameters.
      */
@@ -643,9 +867,9 @@ export default {
     /**
      * To obtain graph data, initialize and expand the namespace or aggregate nodes.
      * @param {String} name Name of the current node.
-     * @param {String} type Type of the current node.
+     * @param {Function} resolve Callback function.
      */
-    queryGraphData(name) {
+    queryGraphData(name, resolve) {
       const namescopeChildLimit = 3500;
       const independentLayout = this.allGraphData[name]
         ? this.allGraphData[name].independent_layout
@@ -702,6 +926,27 @@ export default {
                     } else {
                       this.initGraphRectData();
                       this.loading.show = false;
+                    }
+                    const data = response.data.nodes.map((val) => {
+                      return {
+                        label: val.name.split('/').pop(),
+                        leaf:
+                      val.type === 'name_scope' ||
+                      val.type === 'aggregation_scope'
+                        ? false
+                        : true,
+                        ...val,
+                      };
+                    });
+                    if (name) {
+                      if (resolve) {
+                        resolve(JSON.parse(JSON.stringify(data)));
+                      } else {
+                        this.nodeExpandLinkage(response.data.nodes, name);
+                      }
+                    } else {
+                      this.node.childNodes = [];
+                      this.resolve(JSON.parse(JSON.stringify(data)));
                     }
                   }
                 }
@@ -831,6 +1076,20 @@ export default {
           .select('polygon, rect, ellipse, path')
           .classed('selected', true);
       this.highlightProxyNodes(id.replace('_unfold', ''));
+      this.$refs.tree.setCurrentKey(id.replace('_unfold', ''));
+      if (this.isIntoView) {
+        this.$nextTick(() => {
+          setTimeout(() => {
+            const dom = document.querySelector(
+                '.el-tree-node.is-current.is-focusable',
+            );
+            if (dom) {
+              dom.scrollIntoView();
+            }
+          }, 800);
+        });
+      }
+      this.isIntoView = true;
       this.setNodeData();
     },
     /**
@@ -1017,6 +1276,7 @@ export default {
       d3.select('#graph svg').remove();
       this.firstFloorNodes = [];
       this.queryGraphData();
+      this.treeFlag = true;
     },
     /**
      * refresh select list
@@ -1032,13 +1292,9 @@ export default {
      * @param {String} content Input parameters
      * @param {Object} callback Callback Function
      */
-    searchNodesNames(content, callback) {
-      if (!this.trainJobID) {
-        callback([]);
-        return;
-      }
+    searchNodesNames() {
       const params = {
-        search: content,
+        search: this.searchBox.value,
         train_id: this.trainJobID,
         tag: this.fileSearchBox.value,
         offset: 0,
@@ -1048,23 +1304,58 @@ export default {
           .then(
               (response) => {
                 if (response && response.data) {
-                  const names = response.data.names || response.data;
-                  callback(
-                      names.map((name) => {
-                        return {value: name};
-                      }),
-                  );
+                  this.treeFlag = false;
+                  this.searchNode.childNodes = [];
+                  const data = response.data.nodes.map((val) => {
+                    return {
+                      label: val.name.split('/').pop(),
+                      ...val,
+                    };
+                  });
+                  const currentData = JSON.parse(JSON.stringify(data));
+                  currentData.forEach((val) => {
+                    val.nodes = [];
+                  });
+                  this.searchResolve(currentData);
+                  data.forEach((val, key) => {
+                    if (val.nodes && val.nodes.length) {
+                      val.nodes.forEach((value) => {
+                        value.parentName = val.name;
+                      });
+                      this.dealSearchTreeData(val.nodes);
+                    }
+                  });
                 }
               },
               (e) => {
-                callback([]);
                 this.loading.show = false;
               },
           )
           .catch((e) => {
-            callback([]);
             this.$message.error(this.$t('public.dataError'));
           });
+    },
+    /**
+     * Draw the tree
+     * @param {Object} children child node
+     */
+    dealSearchTreeData(children) {
+      children.forEach((val) => {
+        const node = this.$refs.searchTree.getNode(val.parentName);
+        val.label = val.name.split('/').pop();
+        val.leaf =
+          val.type === 'name_scope' || val.type === 'aggregation_scope'
+            ? false
+            : true;
+        this.$refs.searchTree.append(val, node);
+        node.expanded = true;
+        if (val.nodes && val.nodes.length) {
+          val.nodes.forEach((value) => {
+            value.parentName = val.name;
+          });
+          this.dealSearchTreeData(val.nodes);
+        }
+      });
     },
     /**
      * Search for all data of a specific node and its namespace.
@@ -1138,6 +1429,9 @@ export default {
                     if (data) {
                       this.dealAutoUnfoldNamescopesData(data);
                     }
+                    if (!this.treeFlag && response.data.children) {
+                      this.dealTreeData(response.data.children, option.value);
+                    }
                   }
                 },
                 (e) => {
@@ -1148,6 +1442,61 @@ export default {
               this.loading.show = false;
               this.$message.error(this.$t('public.dataError'));
             });
+      }
+    },
+    /**
+     * Draw the tree
+     * @param {Object} children child node
+     * @param {String} name The name of the node that needs to be highlighted
+     */
+    dealTreeData(children, name) {
+      if (children.nodes) {
+        const data = children.nodes.map((val) => {
+          return {
+            label: val.name.split('/').pop(),
+            ...val,
+          };
+        });
+        data.forEach((val) => {
+          const node = this.$refs.tree.getNode(children.scope_name);
+          if (node.childNodes) {
+            if (
+              node.childNodes
+                  .map((value) => value.data.name)
+                  .indexOf(val.name) === -1
+            ) {
+              this.$refs.tree.append(val, node);
+            }
+          } else {
+            this.$refs.tree.append(val, node);
+          }
+        });
+        const node = this.$refs.tree.getNode(children.scope_name);
+        node.childNodes.forEach((val) => {
+          if (
+            val.data.type !== 'name_scope' &&
+            val.data.type !== 'aggregation_scope'
+          ) {
+            val.isLeaf = true;
+          }
+        });
+        node.expanded = true;
+        node.loading = false;
+      } else {
+        this.$refs.tree.setCurrentKey(name);
+        this.$nextTick(() => {
+          setTimeout(() => {
+            const dom = document.querySelector(
+                '.el-tree-node.is-current.is-focusable',
+            );
+            if (dom) {
+              dom.scrollIntoView();
+            }
+          }, 800);
+        });
+      }
+      if (children.children) {
+        this.dealTreeData(children.children, name);
       }
     },
     /**
@@ -1351,9 +1700,7 @@ export default {
     },
   },
   // Components imported by the page
-  components: {
-    Autocomplete,
-  },
+  components: {},
 };
 </script>
 <style lang="scss">
@@ -1458,10 +1805,38 @@ export default {
     .search {
       margin-bottom: 15px;
       width: 100%;
-      .el-autocomplete-suggestion {
+    }
+    .search-wrap {
+      position: relative;
+      .tree-wrap {
         position: absolute;
+        left: 0;
+        top: 32px;
+        z-index: 101;
         width: 100%;
-        z-index: 200;
+        max-height: 224px;
+        overflow: auto;
+        border: 1px solid #dcdfe6;
+        border-top: none;
+        .image-type {
+          width: 20px;
+          height: 10px;
+          margin-right: 10px;
+        }
+        .el-tree {
+          overflow-x: auto;
+          overflow-y: hidden;
+          & > .el-tree-node {
+            min-width: 100%;
+            display: inline-block;
+          }
+          .custom-tree-node {
+            padding-right: 8px;
+          }
+        }
+      }
+      .collapse_i {
+        cursor: pointer;
       }
     }
     .cl-graph {

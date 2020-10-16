@@ -120,9 +120,18 @@ export default {
           this.selectNode(false);
         }
       }
-      if (pageKey === 'debugger') {
-        this.nodeCollapseLinkage(this.selectedNode.name);
-      }
+      this.nodeCollapseLinkage(this.selectedNode.name);
+    },
+    /**
+     * Tree linkage with graph
+     * Collapse of current node
+     * @param {Obejct} name  The name of the current node
+     */
+    nodeCollapseLinkage(name) {
+      const node = this.$refs.tree.getNode(name.replace('_unfold', ''));
+      node.expanded = false;
+      node.loaded = false;
+      node.childNodes = [];
     },
     /**
      * Initializing the graph
