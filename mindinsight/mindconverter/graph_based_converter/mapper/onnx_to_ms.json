@@ -8,5 +8,8 @@
   "onnx::GlobalAveragePool": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.global_pool_mapper.GlobalPoolMapper",
   "onnx::Flatten": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.flatten_mapper.FlattenMapper",
   "onnx::Add": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.add_mapper.AddMapper",
-  "onnx::Pad": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.pad_mapper.PadMapper"
+  "onnx::Pad": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.pad_mapper.PadMapper",
+  "onnx::ReduceMean": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.reduce_mean_mapper.ReduceMeanMapper",
+  "onnx::Concat": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.concat_mapper.ConcatMapper",
+  "onnx::Clip": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.relu_mapper.ReLUMapper"
 }

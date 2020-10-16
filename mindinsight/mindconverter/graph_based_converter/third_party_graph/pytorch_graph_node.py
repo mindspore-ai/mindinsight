@@ -18,8 +18,9 @@ from copy import deepcopy
 from .base import GraphNode
 
 from ..constant import NodeType, SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, LEFT_BUCKET, RIGHT_BUCKET, \
-    SEPARATOR_IN_ONNX_OP
+    SEPARATOR_IN_ONNX_OP, InputType
 from ..mapper.base import Mapper
+from ...common.exceptions import NodeInputTypeNotSupport
 
 
 class PyTorchGraphNode(GraphNode):
@@ -186,6 +187,8 @@ class PyTorchGraphNode(GraphNode):
         self._opt_var_name = output_var
 
         args = self.args_in_code
+        settings = self.settings_in_code
+
         if self._node_type == NodeType.OPERATION.value and not self.convert_successful():
             args.update({"input_shape": self.input_shape,
                          "output_shape": self.output_shape})
@@ -193,15 +196,48 @@ class PyTorchGraphNode(GraphNode):
         if self._node_type == NodeType.OPERATION.value:
             expr = ", ".join([f"{k.replace(f'_{self._variable_name}', '')}={v}"
                               for k, v in args.items()])
+            ipt_args_settings_in_construct = self._generate_ipt_args_settings_in_construct(ipt_args_in_construct,
+                                                                                           settings)
         else:
             # When it's type is module, class or func,
             # it's not necessary to replace var.
             expr = ", ".join([f"{k.replace(f'_{self._variable_name}', '')}={v}"
                               for k, v in args.items()])
+            ipt_args_settings_in_construct = ipt_args_in_construct
+
         declare = f"self.{self._variable_name} = {operator}({expr})"
-        call = f"{self._opt_var_name} = self.{self._variable_name}({ipt_args_in_construct})"
+        call = f"{self._opt_var_name} = self.{self._variable_name}({ipt_args_settings_in_construct})"
 
         return declare, call
+
+    @staticmethod
+    def _generate_ipt_args_settings_in_construct(ipt_args_in_construct, settings):
+        """
+        Generate input with args and settings in construct.
+
+        Args:
+            ipt_args_in_construct(str): input args in construct.
+            settings(dict): settings in operator.
+
+        """
+        if settings.get('input_type'):
+            input_type = settings['input_type']
+            if input_type == InputType.TENSOR.value:
+                ipt_args_settings_in_construct = ipt_args_in_construct
+            elif input_type == InputType.LIST.value:
+                ipt_args_settings_in_construct = f"({ipt_args_in_construct})"
+            else:
+                raise NodeInputTypeNotSupport(f"Input type[{input_type}] is not supported now.")
+        else:
+            ipt_args_settings_in_construct = ipt_args_in_construct
+
+        if settings.get('values'):
+            settings_value = settings['values']
+            if settings_value:
+                settings_in_construct = ', '.join([f"{setting_val}" for _, setting_val in settings_value.items()])
+                ipt_args_settings_in_construct = ', '.join((ipt_args_settings_in_construct, settings_in_construct))
+
+        return ipt_args_settings_in_construct
 
     def to_ir(self):
         """
@@ -266,17 +302,20 @@ class PyTorchGraphNode(GraphNode):
             self._args_in_code = dict()
             for arg, value in args.items():
                 self._args_in_code[self._get_arg_name(arg)] = value
-            return None, None
+            return None, None, None
 
         if not self.transformed:
-            _, _ = super(PyTorchGraphNode, self).param_transform(mapper)
+            _, _, _ = super(PyTorchGraphNode, self).param_transform(mapper)
 
             for arg, value in self._params_in_ms.items():
                 self._args_in_code[self._get_arg_name(arg)] = value
 
+            for arg, value in self._settings_in_ms.items():
+                self._settings_in_code[arg] = value
+
             self.transformed = True
 
-        return self._op_in_ms, self._params_in_ms
+        return self._op_in_ms, self._params_in_ms, self._settings_in_ms
 
     def froze_node_type_and_module_name(self, node_type, module_name):
         """

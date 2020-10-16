@@ -40,3 +40,9 @@ class NodeType(Enum):
     CLASS = "class"
     FUNC = "func"
     INPUTS = "DataInput"
+
+
+@unique
+class InputType(Enum):
+    TENSOR = "tensor"
+    LIST = "list"

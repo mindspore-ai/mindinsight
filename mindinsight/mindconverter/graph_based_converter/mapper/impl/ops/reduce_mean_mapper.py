@@ -16,24 +16,18 @@
 from ...base import ONNXToMindSporeMapper
 
 
-class DenseMapper(ONNXToMindSporeMapper):
-    """Dense mapper."""
+class ReduceMeanMapper(ONNXToMindSporeMapper):
+    """ReduceMean mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "nn.Dense"
+        return "P.ReduceMean"
 
     @staticmethod
     def _convert_params(**kwargs):
-        weights = kwargs['weights']
-        has_bias = bool('bias' in weights)
-        weight = weights['weight'].numpy().transpose()
-        in_channels, out_channels = weight.shape
-        return {
-            'in_channels': in_channels,
-            'out_channels': out_channels,
-            'has_bias': has_bias
-        }
+        params = kwargs['params']
+        keep_dims = not params['keepdims'] == 0
+        return {'keep_dims': keep_dims}
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
@@ -41,4 +35,9 @@ class DenseMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_settings(**kwargs):
-        return dict()
+        params = kwargs['params']
+        if params.get('axes'):
+            axis = params['axes'][0] if len(params['axes']) == 1 else tuple(params['axes'])
+        else:
+            axis = tuple()
+        return {'values': {'axis': axis}}

@@ -24,13 +24,13 @@ class AddMapper(ONNXToMindSporeMapper):
         return "P.TensorAdd"
 
     @staticmethod
-    def _convert_params(params, weights):
-        if params:
-            pass
+    def _convert_params(**kwargs):
         return dict()
 
     @staticmethod
-    def _convert_trained_weights(weights):
-        if weights:
-            pass
+    def _convert_trained_weights(**kwargs):
+        return dict()
+
+    @staticmethod
+    def _convert_settings(**kwargs):
         return dict()

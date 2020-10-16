@@ -35,6 +35,7 @@ with open(OPERATION_TABLE) as file:
 GET_OP_NAME = "_operation_name_in_ms"
 GET_OP_PARAMS = "_convert_params"
 GET_OP_WEIGHTS = "_convert_trained_weights"
+GET_OP_SETTINGS = "_convert_settings"
 
 
 class Mapper(metaclass=abc.ABCMeta):
@@ -47,13 +48,18 @@ class Mapper(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def _convert_params(params, weights):
+    def _convert_params(**kwargs):
         """Convert third party operation's param into MindSpore operation."""
 
     @staticmethod
     @abc.abstractmethod
-    def _convert_trained_weights(weights):
+    def _convert_trained_weights(**kwargs):
         """Convert third party operation's weights into MindSpore operation."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def _convert_settings(**kwargs):
+        """Convert third party operation's params into MindSpore OP operator."""
 
     @classmethod
     @abc.abstractmethod
@@ -75,13 +81,13 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             weights (dict): Weights in onnx.
 
         Returns:
-            Tuple[str, dict], operation name and params.
+            Tuple[str, dict, dict], operation name and params and settings.
         """
         global TABLE
         module_name = TABLE.get(op_name)
 
         if not module_name:
-            return None, dict()
+            return None, dict(), dict()
 
         pos = module_name.rfind(".")
         try:
@@ -90,32 +96,38 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             op_name_converter = getattr(converter, GET_OP_NAME)
             params_converter = getattr(converter, GET_OP_PARAMS)
             weights_converter = getattr(converter, GET_OP_WEIGHTS)
+            settings_converter = getattr(converter, GET_OP_SETTINGS)
         except (ModuleNotFoundError,) as e:
             # If mapper can not be found, then skip it.
             err_msg = f"Converting {op_name} failed, see {str(e)}"
             log.error(err_msg)
-            return None, dict()
+            return None, dict(), dict()
 
         try:
             converter_name = op_name_converter(params=params, weights=weights, op_name=op_name)
-            converted_params = params_converter(params, weights)
-            converted_weights = weights_converter(weights) if weights else dict()
+            converted_params = params_converter(params=params, weights=weights)
+            converted_weights = weights_converter(weights=weights) if weights else dict()
             converted_params.update(converted_weights)
+            converted_settings = settings_converter(params=params)
         except (AttributeError, KeyError, ValueError, TypeError, IndexError) as e:
             err_msg = f"Converting {op_name} failed, see {str(e)}"
             log.error(err_msg)
-            return None, dict()
+            return None, dict(), dict()
 
-        return converter_name, converted_params
+        return converter_name, converted_params, converted_settings
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
         raise NotImplementedError
 
     @staticmethod
-    def _convert_params(params, weights):
+    def _convert_params(**kwargs):
         raise NotImplementedError
 
     @staticmethod
-    def _convert_trained_weights(weights):
+    def _convert_trained_weights(**kwargs):
+        raise NotImplementedError
+
+    @staticmethod
+    def _convert_settings(**kwargs):
         raise NotImplementedError

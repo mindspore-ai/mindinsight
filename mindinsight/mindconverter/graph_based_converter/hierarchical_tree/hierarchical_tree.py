@@ -633,6 +633,7 @@ class HierarchicalTree(Tree):
         """
         # All args and value pair in current node module.
         module_args = dict()
+        module_settings = dict()
         module_key = self.hash_key(node)
         created = False
 
@@ -658,6 +659,7 @@ class HierarchicalTree(Tree):
             nd_inst.data.param_transform(mapper)
 
             module_args.update(nd_inst.data.args_in_code)
+            module_settings.update(nd_inst.data.settings_in_code)
 
             if not created:
                 self._module_vars[module_key].append(nd_inst.data.variable_name)

@@ -24,17 +24,18 @@ class PadMapper(ONNXToMindSporeMapper):
         return "nn.Pad"
 
     @staticmethod
-    def _convert_params(params, weights):
+    def _convert_params(**kwargs):
+        params = kwargs['params']
         if params['mode'] == 'constant':
             if params['value'] == 0:
                 mode = '\"CONSTANT\"'
             else:
-                msg = f"[NOT support value is NOT 0]\"CONSTANT\""
+                msg = "{UNSUPPORTED: value is NOT 0}\"CONSTANT\""
                 mode = msg
         elif params['mode'] == 'reflect':
             mode = '\"REFLECT\"'
         else:
-            msg = f"[NOT support {params['mode']}]\"UNKNOWN\""
+            msg = f"{{UNSUPPORTED: \"{params['mode']}\"}}\"UNKNOWN\""
             mode = msg
         pads_onnx = params['pads']
         half_index = len(pads_onnx) // 2
@@ -44,7 +45,9 @@ class PadMapper(ONNXToMindSporeMapper):
                 'mode': mode}
 
     @staticmethod
-    def _convert_trained_weights(weights):
-        if weights:
-            pass
+    def _convert_trained_weights(**kwargs):
+        return dict()
+
+    @staticmethod
+    def _convert_settings(**kwargs):
         return dict()

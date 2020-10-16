@@ -13,27 +13,21 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
+from mindinsight.mindconverter.graph_based_converter.constant import InputType
 from ...base import ONNXToMindSporeMapper
 
 
-class DenseMapper(ONNXToMindSporeMapper):
-    """Dense mapper."""
+class ConcatMapper(ONNXToMindSporeMapper):
+    """Concat mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "nn.Dense"
+        return "P.Concat"
 
     @staticmethod
     def _convert_params(**kwargs):
-        weights = kwargs['weights']
-        has_bias = bool('bias' in weights)
-        weight = weights['weight'].numpy().transpose()
-        in_channels, out_channels = weight.shape
-        return {
-            'in_channels': in_channels,
-            'out_channels': out_channels,
-            'has_bias': has_bias
-        }
+        params = kwargs['params']
+        return {'axis': params['axis']}
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
@@ -41,4 +35,5 @@ class DenseMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_settings(**kwargs):
-        return dict()
+        input_type = InputType.LIST.value
+        return {'input_type': input_type}

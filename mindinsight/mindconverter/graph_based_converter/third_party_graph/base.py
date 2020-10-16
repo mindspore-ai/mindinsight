@@ -289,12 +289,16 @@ class GraphNode(abc.ABC):
         self._op_in_ms = None
         # Params in mindspore.
         self._params_in_ms = dict()
+        # Settings in mindspore.
+        self._settings_in_ms = dict()
         # Node type of current node, e.g. class, module, operation.
         self._node_type = None
         # Tag name on tree.
         self._tag_on_tree = None
         # Function, class or operation needed args.
         self._args_in_code = dict()
+        # Operation needed settings.
+        self._settings_in_code = dict()
         # Variable name declared in init block.
         self._variable_name = None
         # Output variable name declared in construct block.
@@ -363,6 +367,27 @@ class GraphNode(abc.ABC):
 
         """
         self._args_in_code = args
+
+    @property
+    def settings_in_code(self):
+        """
+        Settings in code.
+
+        Returns:
+            dict, settings.
+        """
+        return self._settings_in_code
+
+    @settings_in_code.setter
+    def settings_in_code(self, settings):
+        """
+        Settings in code.
+
+        Args:
+            settings(dict): Settings.
+
+        """
+        self._settings_in_code = settings
 
     @property
     def input_shape(self):
@@ -567,14 +592,16 @@ class GraphNode(abc.ABC):
         params.update({"input_shape": self.input_shape,
                        "output_shape": self.output_shape})
 
-        op_name_in_mindspore, ms_params = mapper.convert(op_name=self.op_name,
-                                                         params=params,
-                                                         weights=self._weight)
+        op_name_in_mindspore, ms_params, ms_settings = mapper.convert(op_name=self.op_name,
+                                                                      params=params,
+                                                                      weights=self._weight)
         if op_name_in_mindspore:
             self._op_in_ms = op_name_in_mindspore
             self._params_in_ms = ms_params
+            self._settings_in_ms = ms_settings
         else:
             self._op_in_ms = self._op_name
             self._params_in_ms = self._op_params
+            self._settings_in_ms = dict()
 
-        return self._op_in_ms, self._params_in_ms
+        return self._op_in_ms, self._params_in_ms, self._settings_in_ms
