@@ -247,7 +247,7 @@ parser.add_argument(
         default=None,
         required=False,
         help="""
-            Optional, excepted input tensor shape of
+            Optional, expected input tensor shape of
             `--model_file`. It's required when use graph based
             schema. 
             Usage: --shape 3,244,244

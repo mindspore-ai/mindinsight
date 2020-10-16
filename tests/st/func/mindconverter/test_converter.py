@@ -14,7 +14,7 @@
 # ============================================================================
 
 """
-Fuction:
+Function:
     Test mindconverter to convert user's PyTorch network script.
 Usage:
     pytest tests/st/func/mindconverter
@@ -36,6 +36,7 @@ class TestConverter:
     def setup_class(cls):
         """Setup method."""
         cls.script_dir = os.path.join(os.path.dirname(__file__), 'data')
+        cls.pytorch_dir = '/home/test/mindinsight_sample'
         sys.path.insert(0, cls.script_dir)
 
     @classmethod

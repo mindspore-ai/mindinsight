@@ -144,6 +144,17 @@ class PyTorchGraphNode(GraphNode):
         """
         return self._op_name
 
+    @op_name.setter
+    def op_name(self, name):
+        """
+        Setter of op name.
+
+        Args:
+            name(str): op_name.
+
+        """
+        self._op_name = name
+
     @property
     def real_name(self):
         return
