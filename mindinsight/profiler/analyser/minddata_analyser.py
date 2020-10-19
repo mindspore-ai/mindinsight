@@ -48,13 +48,19 @@ class MinddataAnalyser(BaseAnalyser):
         file_name = "minddata_aicpu_" + self._device_id + ".txt"
         file_path = MinddataAnalyser.find_target_file(self._profiling_dir, file_name)
 
+        # the GPU minddata profiler file
+        if not file_path:
+            file_name = "minddata_getnext_profiling_" + self._device_id + ".txt"
+            file_path = MinddataAnalyser.find_target_file(self._profiling_dir, file_name)
+
         if file_path:
             file_path = validate_and_normalize_path(
-                file_path, raise_key="Invaild minddata_aicpu file path.")
+                file_path, raise_key="Invaild minddata_getnext file path.")
             with open(file_path) as data_file:
                 for line in data_file.readlines():
                     node_info = line.split()
-                    if node_info and node_info[0] == "GetNext_dequeue_wait":
+                    # Ascend:GetNext_dequeue_wait GPU:GetNext
+                    if node_info and node_info[0][0:7] == "GetNext":
                         # analyse target info type
                         if len(node_info) > 3 and info_type in ["all", "queue"]:
                             queue_size_list.append(int(node_info[3]))
