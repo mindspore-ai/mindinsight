@@ -1305,6 +1305,7 @@ export default {
               (response) => {
                 if (response && response.data) {
                   this.treeFlag = false;
+                  this.treeWrapFlag = true;
                   this.searchNode.childNodes = [];
                   const data = response.data.nodes.map((val) => {
                     return {
@@ -1824,8 +1825,6 @@ export default {
           margin-right: 10px;
         }
         .el-tree {
-          overflow-x: auto;
-          overflow-y: hidden;
           & > .el-tree-node {
             min-width: 100%;
             display: inline-block;

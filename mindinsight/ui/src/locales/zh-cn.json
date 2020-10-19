@@ -436,6 +436,22 @@
     "gpuunit": "us/次",
     "chartTitle": "平均耗时排行"
   },
+  "profilingGPU": {
+    "minddata_device_queue": {
+      "desc": "主队列为空比例{n1}/{n2}，为满比例{n3}/{n4}。"
+    },
+    "minddata_get_next_queue": {
+      "desc": "数据队列为空比例{n1}/{n2}。"
+    },
+    "connectorQuene": "主队列",
+    "dataProcess": "该图展示了数据处理阶段的流程，数据通过数据处理阶段存入主队列，再通过数据传输阶段存入数据队列，最终由数据传输算子get_next发送给前向训练使用。",
+    "dataProcessInfo": "综合分析该阶段的流程，通过判断主队列和数据队列为空的情况就可以初步判断可能出现性能异常的阶段。",
+    "analysisOne": "1、如果迭代间隙较长，并且数据队列部分batch为空，那么可能由于数据处理和数据传输阶段导致的性能异常，参考2，反之则定位数据传输算子get_next内部问题；",
+    "analysisTwo": "2、如果通过1定位为数据处理、数据传输阶段异常，则查看主队列情况，如果大概率为空，则可能为数据处理阶段导致异常，如果大概率不为空，则可能数据传输阶段异常；",
+    "chipInfo": "数据队列为空比例：",
+    "hostIsEmpty": "主队列为空比例：",
+    "hostIsFull": "主队列为满比例："
+  },
   "components": {
     "summaryTitle": "训练选择",
     "tagSelectTitle": "标签选择",
