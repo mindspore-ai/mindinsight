@@ -145,6 +145,18 @@ class TestHierarchicalTree:
                 shutil.rmtree(report_folder)
 
     @staticmethod
+    def _create_node(key, val, weight, input_shape, output_shape):
+        """Create node."""
+        node = PyTorchGraphNode(weight=weight)
+        node.add_input_and_output_shape(input_shape, output_shape)
+        node.tag = key.split('/')[-1] if len(key.split('/')) > 1 else key
+        node.op_name = val['op_name'] if val.get('op_name') else None
+        node.precursor_nodes = val['precursor_nodes'] if val.get('precursor_nodes') else []
+        node.successor_nodes = val['successor_nodes'] if val.get('successor_nodes') else []
+        node.node_type = val['node_type'] if val.get('node_type') else None
+        return node
+
+    @staticmethod
     def _create_tree(get_raw_params, params):
         """Create tree."""
         tree = HierarchicalTree()
@@ -154,13 +166,7 @@ class TestHierarchicalTree:
             get_raw_params.return_value = val['op_params'] if val.get('op_params') else dict()
             weight = val['weight'] if val.get('weight') else None
 
-            node = PyTorchGraphNode(weight=weight)
-            node.add_input_and_output_shape(input_shape, output_shape)
-            node.tag = key.split('/')[-1] if len(key.split('/')) > 1 else key
-            node.op_name = val['op_name'] if val.get('op_name') else None
-            node.precursor_nodes = val['precursor_nodes'] if val.get('precursor_nodes') else []
-            node.successor_nodes = val['successor_nodes'] if val.get('successor_nodes') else []
-            node.node_type = val['node_type'] if val.get('node_type') else None
+            node = TestHierarchicalTree._create_node(key, val, weight, input_shape, output_shape)
 
             tree.create_node(
                 tag=node.tag,

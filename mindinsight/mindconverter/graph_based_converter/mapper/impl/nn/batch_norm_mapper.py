@@ -25,7 +25,8 @@ class BatchNormMapper(ONNXToMindSporeMapper):
         return f"nn.BatchNorm{dim}d"
 
     @staticmethod
-    def _convert_params(params, weights):
+    def _convert_params(**kwargs):
+        params = kwargs['params']
         return {
             'num_features': params['output_shape'][1],
             'eps': params['epsilon'],
@@ -33,7 +34,9 @@ class BatchNormMapper(ONNXToMindSporeMapper):
         }
 
     @staticmethod
-    def _convert_trained_weights(weights):
-        if weights:
-            pass
+    def _convert_trained_weights(**kwargs):
+        return dict()
+
+    @staticmethod
+    def _convert_settings(**kwargs):
         return dict()

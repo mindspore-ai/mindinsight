@@ -25,6 +25,7 @@ class ConverterErrors(ScriptConverterErrors):
     SCRIPT_NOT_SUPPORT = 1
     NODE_TYPE_NOT_SUPPORT = 2
     CODE_SYNTAX_ERROR = 3
+    NODE_INPUT_TYPE_NOT_SUPPORT = 4
 
 
 class ScriptNotSupport(MindInsightException):
@@ -52,3 +53,12 @@ class CodeSyntaxError(MindInsightException):
         super(CodeSyntaxError, self).__init__(ConverterErrors.CODE_SYNTAX_ERROR,
                                               msg,
                                               http_code=400)
+
+
+class NodeInputTypeNotSupport(MindInsightException):
+    """The node input type NOT support error."""
+
+    def __init__(self, msg):
+        super(NodeInputTypeNotSupport, self).__init__(ConverterErrors.NODE_INPUT_TYPE_NOT_SUPPORT,
+                                                      msg,
+                                                      http_code=400)

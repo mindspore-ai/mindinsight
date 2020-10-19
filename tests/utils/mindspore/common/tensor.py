@@ -28,3 +28,7 @@ class Tensor:
 
     def __repr__(self):
         return str(self.asnumpy())
+
+    def numpy(self):
+        """Get value in numpy format, the torch format."""
+        return np.array(self._value)

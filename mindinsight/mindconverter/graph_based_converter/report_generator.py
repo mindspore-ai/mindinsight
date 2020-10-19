@@ -96,6 +96,21 @@ class ReportGenerator(metaclass=abc.ABCMeta):
                   f"[UnConvert] '{unconverted_operator_name}' didn't convert."
         return content
 
+    @staticmethod
+    def _get_unsupported_params(num_line, code_line):
+        """Get unsupported params in converted operator."""
+        if 'UNSUPPORTED' in code_line:
+            unsupported_params = re.findall(r"(.*).*[=][{]SUPPORTED", code_line)
+            unsupported_msg = re.findall(r".*UNSUPPORTED[:] (.*)[}]", code_line)
+            location = [f"{num_line + 1}", f"{code_line.index('UNSUPPORTED') + 1}"]
+            unsupported_params_info = \
+                f"line {':'.join(location)}: " \
+                f"[Unsupported params] {unsupported_params}: {unsupported_msg}."
+        else:
+            unsupported_params_info = None
+
+        return unsupported_params_info
+
     def gen_report(self, code: str):
         """
         Generate report.
@@ -111,6 +126,7 @@ class ReportGenerator(metaclass=abc.ABCMeta):
 
         num_unconverted_operator = 0
         num_converted_operator = 0
+        converted_operator = None
         self._content = self._extra['start']
         for num_line in range(0, num_all_lines):
             code_line = code_lines[num_line]
@@ -131,6 +147,14 @@ class ReportGenerator(metaclass=abc.ABCMeta):
 
                 if converted_operator:
                     num_converted_operator += 1
+
+            info_unsupported_params = self._get_unsupported_params(
+                num_line,
+                code_line
+            )
+            if info_unsupported_params:
+                self._content = f"{NEW_LINE}".join((self._content,
+                                                    info_unsupported_params))
 
         self._content = f"{NEW_LINE}".join((self._content, self._extra['end']))
 

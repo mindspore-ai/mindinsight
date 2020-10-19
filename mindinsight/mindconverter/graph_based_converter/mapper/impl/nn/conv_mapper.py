@@ -27,7 +27,10 @@ class ConvMapper(ONNXToMindSporeMapper):
         return f"nn.Conv{dim}d"
 
     @staticmethod
-    def _convert_params(params, weights):
+    def _convert_params(**kwargs):
+        weights = kwargs['weights']
+        params = kwargs['params']
+
         weight = weights['weight'].numpy()
         weight = np.transpose(weight, list(range(2, weight.ndim)) + [1, 0])
         if isinstance(params['dilations'], list):
@@ -46,7 +49,7 @@ class ConvMapper(ONNXToMindSporeMapper):
             kernel_size = kernel_size[0]
         else:
             kernel_size = tuple(kernel_size)
-        pad_mode, padding = ConvMapper._convert_padding(params)
+        pad_mode, padding = ConvMapper._convert_padding(params=params)
         return {
             'in_channels': in_channels,
             'out_channels': out_channels,
@@ -58,13 +61,13 @@ class ConvMapper(ONNXToMindSporeMapper):
             'group': params['group']}
 
     @staticmethod
-    def _convert_trained_weights(weights):
-        if weights:
-            pass
+    def _convert_trained_weights(**kwargs):
         return dict()
 
     @staticmethod
-    def _convert_padding(params):
+    def _convert_padding(**kwargs):
+        """Convert padding."""
+        params = kwargs['params']
         if sum(params['pads']) == 0:
             return '\"valid\"', 0
         pads_onnx = params['pads']
@@ -73,3 +76,7 @@ class ConvMapper(ONNXToMindSporeMapper):
         for num_begin, num_end in zip(pads_onnx[:half_index], pads_onnx[half_index:]):
             padding += [num_begin, num_end]
         return '\"pad\"', tuple(padding)
+
+    @staticmethod
+    def _convert_settings(**kwargs):
+        return dict()

@@ -21,16 +21,28 @@ class ReLUMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "nn.ReLU"
+        if not kwargs.get('params'):
+            name = "nn.ReLU"
+        else:
+            params = kwargs['params']
+            max_clip = params['max'] if params.get('max') else 0
+            min_clip = params['min'] if params.get('min') else 0
+            if max_clip == 6 and min_clip == 0:
+                name = "nn.ReLU6"
+            elif max_clip == min_clip == 0:
+                name = "nn.ReLU"
+            else:
+                name = None
+        return name
 
     @staticmethod
-    def _convert_params(params, weights):
-        if params:
-            pass
+    def _convert_params(**kwargs):
         return dict()
 
     @staticmethod
-    def _convert_trained_weights(weights):
-        if weights:
-            pass
+    def _convert_trained_weights(**kwargs):
+        return dict()
+
+    @staticmethod
+    def _convert_settings(**kwargs):
         return dict()

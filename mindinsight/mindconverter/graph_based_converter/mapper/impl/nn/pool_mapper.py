@@ -29,7 +29,8 @@ class PoolMapper(ONNXToMindSporeMapper):
         return op_name.format(dim)
 
     @staticmethod
-    def _convert_params(params, weights):
+    def _convert_params(**kwargs):
+        params = kwargs['params']
         transformed_params = dict()
         transformed_params["kernel_size"] = tuple(params['kernel_shape'])
         transformed_params["stride"] = tuple(params['strides'])
@@ -43,7 +44,9 @@ class PoolMapper(ONNXToMindSporeMapper):
         return transformed_params
 
     @staticmethod
-    def _convert_trained_weights(weights):
-        if weights:
-            pass
+    def _convert_trained_weights(**kwargs):
+        return dict()
+
+    @staticmethod
+    def _convert_settings(**kwargs):
         return dict()
