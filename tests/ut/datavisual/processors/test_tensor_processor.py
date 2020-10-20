@@ -185,7 +185,7 @@ class TestTensorProcessor:
             # Compare tensor shape when recv_tensor shape is not empty.
             if recv_tensor.shape != (0,):
                 assert recv_tensor.shape == expected_tensor.shape
-            assert np.sum(np.isclose(recv_tensor, expected_tensor, rtol=1e-6) == 0) == 0
+                assert np.allclose(recv_tensor, expected_tensor, rtol=1e-6)
 
     @pytest.mark.usefixtures('load_tensor_record')
     def test_get_tensor_stats_success(self):
