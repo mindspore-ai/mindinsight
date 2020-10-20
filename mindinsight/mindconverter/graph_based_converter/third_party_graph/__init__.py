@@ -25,15 +25,16 @@ class GraphFactory:
 
     @classmethod
     def init(cls, graph_path: str,
-             input_nodes: str, output_nodes: str,
-             sample_shape: tuple):
+             sample_shape: tuple,
+             input_nodes: str = None, output_nodes: str = None):
         """
         Init an instance of graph.
 
         Args:
             graph_path (str): Graph or model file path.
             sample_shape (tuple): Input shape of the model.
-            checkpoint (str): Checkpoint file path.
+            input_nodes(str): Input nodes.
+            output_nodes(str): Output nodes.
 
         Returns:
             Graph, graph instance.

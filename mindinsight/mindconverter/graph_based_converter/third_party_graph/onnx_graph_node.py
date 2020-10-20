@@ -18,8 +18,9 @@ from copy import deepcopy
 from .base import GraphNode
 
 from ..constant import NodeType, SEPARATOR_IN_SCOPE, \
-    SEPARATOR_BTW_NAME_AND_ID, LEFT_BUCKET, RIGHT_BUCKET, SEPARATOR_IN_ONNX_OP
+    SEPARATOR_BTW_NAME_AND_ID, LEFT_BUCKET, RIGHT_BUCKET, SEPARATOR_IN_ONNX_OP, InputType
 from ..mapper.base import Mapper
+from ...common.exceptions import NodeInputTypeNotSupport
 
 
 class OnnxGraphNode(GraphNode):
@@ -160,10 +161,10 @@ class OnnxGraphNode(GraphNode):
         Args:
             op_name (str): Add the tensor to args if the current node has this
                            op_name.
-            t_identifier (str): The unique strinf appeared in the target tensor
+            t_identifier (str): The unique string appeared in the target tensor
                                 name.
-            declare_s (str): Declare statement generated in to_code().
-            init_s (str): init statement generated in to_code().
+            declare (str): Declare statement generated in to_code().
+            args (str): Args statement generated in to_code().
 
         Returns:
             declare_list list, multiple declare statements.
@@ -226,9 +227,9 @@ class OnnxGraphNode(GraphNode):
         declare, ipt_args_settings_in_construct = self._add_tensor_args_to_code(
             'onnx::MatMul', 'MatMul', declare, ipt_args_settings_in_construct)
 
-        # Extra Tensor generator for onnx::BiasAdd
+        # Extra Tensor generator for onnx::Add
         declare, ipt_args_settings_in_construct = self._add_tensor_args_to_code(
-            'onnx::MatMul', 'BiasAdd', declare, ipt_args_settings_in_construct)
+            'onnx::Add', 'BiasAdd', declare, ipt_args_settings_in_construct)
 
         call = f"{self._opt_var_name} = self.{self._variable_name}({ipt_args_settings_in_construct})"
 
@@ -320,7 +321,7 @@ class OnnxGraphNode(GraphNode):
 
     def param_transform(self, mapper: Mapper):
         """
-        Transform torch params into mindspore.
+        Transform tensorflow params into mindspore.
 
         Args:
             mapper (Mapper): Mapper of params.

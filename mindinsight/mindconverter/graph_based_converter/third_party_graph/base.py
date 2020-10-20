@@ -246,17 +246,11 @@ class Graph(BaseGraph, abc.ABC):
             model_path (str): Graph or model file path.
             sample_shape (tuple): Input shape of the model.
             checkpoint (str): Checkpoint file path.
-            input_nodes (list[str]): list of input nodes' name
-            output_nodes (list[str]): list of output nodes' name
 
         Returns:
             cls, graph instance.
         """
-        tf_input_nodes = kwargs.get('input_nodes')
-        tf_output_nodes = kwargs.get('output_nodes')
-        src_graph = cls.load_graph(graph_path=model_path,
-                                   input_nodes=tf_input_nodes,
-                                   output_nodes=tf_output_nodes)
+        src_graph = cls.load_graph(graph_path=model_path, **kwargs)
         ckpt = cls.load_checkpoint(
             ckpt_path=checkpoint) if checkpoint else None
 

@@ -35,6 +35,15 @@ ONNX_TYPE_FLOAT = 1
 ONNX_TYPE_FLOATS = 6
 ONNX_TYPE_STRING = 3
 
+BINARY_HEADER_PYTORCH_FILE = \
+    b'\x80\x02\x8a\nl\xfc\x9cF\xf9 j\xa8P\x19.\x80\x02M\xe9\x03.\x80\x02}q\x00(X\x10\x00\x00\x00'
+
+BINARY_HEADER_PYTORCH_BITS = 32
+
+ARGUMENT_LENGTH_LIMIT = 512
+
+EXPECTED_SHAPE_NUMBER = 1
+
 
 @unique
 class CodeFormatConfig(Enum):
@@ -54,3 +63,9 @@ class NodeType(Enum):
 class InputType(Enum):
     TENSOR = "tensor"
     LIST = "list"
+
+
+@unique
+class FrameworkType(Enum):
+    PYTORCH = 0
+    TENSORFLOW = 1

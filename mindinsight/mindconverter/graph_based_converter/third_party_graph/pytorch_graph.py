@@ -173,7 +173,7 @@ class PyTorchGraph(Graph):
         """
         self._check_input_shape(input_shape)
 
-        feed_forward_ipt_shape = (1, *input_shape)
+        feed_forward_ipt_shape = tuple(input_shape)
         graph = self._trace_torch_graph(feed_forward_ipt_shape)
         nodes = list(graph.nodes())
 
@@ -283,7 +283,7 @@ class PyTorchGraph(Graph):
         raise NotImplementedError(err_msg)
 
     @staticmethod
-    def load_graph(graph_path: str):
+    def load_graph(graph_path: str, **kwargs):
         """
         Load graph.
 

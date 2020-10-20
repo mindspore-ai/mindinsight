@@ -117,12 +117,14 @@ class ConvMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        if not kwargs['weights'].get('weight'):  # is from tf
+        weight = kwargs['weights'].get('weight', 'empty')
+
+        if weight == 'empty':  # is from tf
             kernel_size = kwargs['params'].get('kernel_shape')
             dim = len(kernel_size)
             return f"nn.Conv{dim}d"
 
-        weight = kwargs['weights']['weight'].numpy()
+        weight = weight.numpy()
         dim = weight.ndim - 2
         return f"nn.Conv{dim}d"
 
@@ -131,7 +133,7 @@ class ConvMapper(ONNXToMindSporeMapper):
         weights = kwargs['weights']
         params = kwargs['params']
 
-        if not weights.get('weight'):  # is from tf
+        if weights.get('weight', 'empty') == 'empty':  # is from tf
             return ConvMapper.convert_params_tf(params=params, weights=weights)
         return ConvMapper.convert_params_torch(params=params, weights=weights)
 
