@@ -55,7 +55,7 @@ class TestMinddataAnalyser:
             "device_queue_op": {"status": "normal"},
             "get_next": {"status": "normal"},
             "get_next_queue_info": {"summary": {"empty_batch_count": 0, "total_batch": 3}},
-            "tdt": {"status": "normal"}
+            "data_transmission": {"status": "normal"}
         }
 
         get_next_queue_info, _ = self._analyser.analyse_get_next_info(info_type="queue")
