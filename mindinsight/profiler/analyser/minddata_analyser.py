@@ -198,7 +198,7 @@ class MinddataAnalyser(BaseAnalyser):
         if get_next_queue_info and device_queue_info:
             result = {"data_process": {"status": "normal"},
                       "device_queue_op": {"status": "normal"},
-                      "tdt": {"status": "normal"},
+                      "data_transmission": {"status": "normal"},
                       "get_next": {"status": "normal"}}
 
             get_next_queue_empty_count = get_next_queue_info.get(
@@ -220,13 +220,14 @@ class MinddataAnalyser(BaseAnalyser):
                 "full_batch_count": device_queue_full_count,
                 "total_batch": device_queue_info.get("size")}}
 
-            if get_next_queue_empty_count:
+            # Adapt to the case that the first step data in the GPU is always empty
+            if get_next_queue_empty_count > 1:
                 if device_queue_empty_count > device_queue_info.get("size", 0)*\
                         MinddataAnalyser.DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD:
                     result["data_process"]["status"] = "warning"
                 elif device_queue_empty_count < device_queue_info.get("size", 0)*\
                         MinddataAnalyser.DEVICE_QUEUE_NOT_EMPTY_THRESHOLD:
-                    result["tdt"]["status"] = "warning"
+                    result["data_transmission"]["status"] = "warning"
                     result["device_queue_op"]["status"] = "warning"
 
         elif device_queue_info and not get_next_queue_info:
