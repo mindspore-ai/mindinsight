@@ -36,13 +36,147 @@ limitations under the License.
       <div class="minddata">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.mindData') }}</div>
+          <div class="view-detail">
+            <button @click="viewDetail('data-process')"
+                    :disabled="processSummary.noData"
+                    :class="{disabled:processSummary.noData}">
+              {{ $t('profiling.viewDetail') }}
+              <i class="el-icon-d-arrow-right"></i></button>
+          </div>
+          <div class="tip-icon">
+            <el-tooltip placement="bottom"
+                        effect="light">
+              <div slot="content"
+                   class="tooltip-container">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+               <div>{{$t('profilingGPU.dataProcess')}}</div>
+                <div>{{$t('profilingGPU.dataProcessInfo')}}</div>
+                <div>{{$t('profilingGPU.analysisOne')}}</div>
+                <div>{{$t('profilingGPU.analysisTwo')}}</div>
+                <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
+                <br />
+                <div v-show="deviceInfoShow || queueInfoShow"
+                     class="font-size-style">{{$t('profiling.statistics')}}</div>
+                <div v-show="queueInfoShow">{{$t('profilingGPU.chipInfo')}}
+                  <span>{{processSummary.get_next.empty}} / {{processSummary.get_next.total}}</span>
+                </div>
+                <div v-show="deviceInfoShow">
+                  <div>{{$t('profilingGPU.hostIsEmpty')}}
+                    <span>{{processSummary.device.empty}} / {{processSummary.device.total}}</span>
+                  </div>
+                  <div>{{$t('profilingGPU.hostIsFull')}}
+                    <span>{{processSummary.device.full}} / {{processSummary.device.total}}</span>
+                  </div>
+                </div>
+              </div>
+              <i class="el-icon-info"></i>
+            </el-tooltip>
+          </div>
         </div>
-        <div class="image-noData">
+        <div class="pipeline-container"
+             v-show="!processSummary.noData">
+          <div class="cell-container data-process">
+            <div class="title">
+              {{$t('profiling.pipeline')}}
+            </div>
+          </div>
+
+          <div class="queue-container">
+            <div class="img">
+              <div class="edge">
+                <img src="@/assets/images/data-flow.png"
+                     alt="" />
+              </div>
+              <div class="icon">
+                <img src="@/assets/images/queue.svg"
+                     alt=""
+                     clickKey="connector_queue" />
+              </div>
+              <div class="edge">
+                <img src="@/assets/images/data-flow.png"
+                     alt="" />
+              </div>
+            </div>
+            <div class="title">{{$t('profilingGPU.connectorQuene')}}</div>
+            <div class="description">
+              <div class="line"></div>
+              <div class="item"
+                   v-if="processSummary.device.empty || processSummary.device.empty === 0">
+                {{$t('profiling.queueTip2')}}
+                <span class="num">
+                  {{processSummary.device.empty}} / {{processSummary.device.total}}
+                </span>
+              </div>
+              <div class="item"
+                   v-if="processSummary.device.full || processSummary.device.full === 0">
+                {{$t('profiling.queueTip1')}}
+                <span class="num">
+                  {{processSummary.device.full}} / {{processSummary.device.total}}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cell-container device_queue_op"
+               clickKey="device_queue_op">
+            <div class="title">
+              {{$t('profiling.deviceQueueOp')}}
+            </div>
+          </div>
+
+          <div class="queue-container"
+               v-if="processSummary.count === processSummary.maxCount">
+            <div class="img">
+              <div class="edge">
+                <img src="@/assets/images/data-flow.png"
+                     alt="" />
+              </div>
+              <div class="icon">
+                <img src="@/assets/images/queue.svg"
+                     clickKey="data_queue"
+                     alt="" />
+              </div>
+              <div class="edge">
+                <img src="@/assets/images/data-flow.png"
+                     alt="" />
+              </div>
+            </div>
+            <div class="title">{{$t('profiling.dataQueue')}}</div>
+            <div class="description">
+              <div class="line"></div>
+              <div class="item"
+                   v-if="processSummary.get_next.empty || processSummary.get_next.empty === 0">
+                {{$t('profiling.queueTip2')}}
+                <span class="num">
+                  {{processSummary.get_next.empty}} / {{processSummary.get_next.total}}
+                </span>
+              </div>
+              <div class="item"
+                   v-if="processSummary.get_next.full || processSummary.get_next.full === 0">
+                {{$t('profiling.queueTip1')}}
+                <span class="num">
+                  {{processSummary.get_next.full}} / {{processSummary.get_next.total}}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cell-container get-next"
+               clickKey="get_next"
+               v-if="processSummary.count === processSummary.maxCount">
+            <div class="title">
+              {{$t('profiling.getData')}}
+            </div>
+          </div>
+        </div>
+        <div class="image-noData"
+             v-if="processSummary.noData">
           <div>
-            <img :src="require('@/assets/images/coming-soon.png')"
+            <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.stayTuned")}}</p>
+          <p v-show="!processSummary.initOver">{{$t("public.dataLoading")}}</p>
+          <p v-show="processSummary.initOver">{{$t("public.noData")}}</p>
         </div>
       </div>
     </div>
@@ -103,7 +237,8 @@ limitations under the License.
                     :disabled="timeLine.disable"
                     :class="{disabled:timeLine.disable}">{{ $t('profiling.downloadTimeline') }}
             </button>
-            <div class="el-icon-loading loading-icon" v-show="timeLine.waiting"></div>
+            <div class="el-icon-loading loading-icon"
+                 v-show="timeLine.waiting"></div>
           </div>
           <div class="tip-icon">
             <el-tooltip placement="bottom"
@@ -150,7 +285,8 @@ limitations under the License.
             <span>{{$t('profiling.streamNum')}}</span><span>{{timelineInfo.streamNum}}</span>
           </div>
           <div class="info-line">
-            <span>{{$t('profiling.opNum')}}</span><span>{{timelineInfo.opNum}}</span></div>
+            <span>{{$t('profiling.opNum')}}</span><span>{{timelineInfo.opNum}}</span>
+          </div>
           <div class="info-line">
             <span>{{$t('profiling.opTimes')}}</span><span>{{timelineInfo.opTimes}}{{$t('profiling.times')}}</span>
           </div>
@@ -180,6 +316,25 @@ export default {
       summaryPath: this.$route.query.dir, // Summary path data
       relativePath: this.$route.query.path, // Relative path of summary log
       currentCard: '', // Data of current card
+      queueInfoShow: false, // Whether to show queue information
+      deviceInfoShow: false, // Whether to show device information
+      processSummary: {
+        // Data of process summary
+        noData: true,
+        count: 6,
+        maxCount: 6,
+        device: {
+          empty: 0, // Number of empty devices
+          full: 0, // Number of full devices
+          total: 0, // Total number of devices
+        },
+        get_next: {
+          empty: 0,
+          full: 0,
+          total: 0,
+        },
+        initOver: false, // Is initialization complete
+      },
       pieChart: {
         // Pie graph information of operators
         chartDom: null,
@@ -247,6 +402,65 @@ export default {
     init() {
       this.queryTimeline();
       this.initPieChart();
+      this.getProccessSummary();
+    },
+    /**
+     * Get the data of proccess summary
+     */
+    getProccessSummary() {
+      const params = {
+        train_id: this.trainingJobId,
+        profile: this.summaryPath,
+        device_id: this.currentCard,
+      };
+      RequestService.queryProcessSummary(params).then((resp) => {
+        this.processSummary.initOver = true;
+        if (resp && resp.data) {
+          const data = JSON.parse(JSON.stringify(resp.data));
+          this.processSummary.count = Object.keys(data).length;
+          this.dealProcess(data);
+        } else {
+          this.dealProcess(null);
+          this.processSummary.initOver = true;
+        }
+      });
+    },
+    /**
+     * Set the data of process
+     * @param {Object} data The data of process
+     */
+    dealProcess(data) {
+      this.processSummary.device = {
+        empty: 0,
+        full: 0,
+        total: 0,
+      };
+      this.processSummary.get_next = {
+        empty: 0,
+        full: 0,
+        total: 0,
+      };
+      this.processSummary.noData = true;
+
+      if (data && Object.keys(data).length) {
+        if (data.device_queue_info && data.device_queue_info.summary) {
+          this.deviceInfoShow = true;
+          this.processSummary.device = {
+            empty: data.device_queue_info.summary.empty_batch_count,
+            full: data.device_queue_info.summary.full_batch_count,
+            total: data.device_queue_info.summary.total_batch,
+          };
+        }
+        if (data.get_next_queue_info && data.get_next_queue_info.summary) {
+          this.queueInfoShow = true;
+          this.processSummary.get_next = {
+            empty: data.get_next_queue_info.summary.empty_batch_count,
+            full: data.get_next_queue_info.summary.full_batch_count,
+            total: data.get_next_queue_info.summary.total_batch,
+          };
+        }
+        this.processSummary.noData = false;
+      }
     },
     /**
      * Router link
@@ -576,6 +790,103 @@ export default {
     }
     .minddata {
       height: calc(55% - 15px);
+      .pipeline-container {
+        width: 100%;
+        padding: 20px 20px;
+        height: calc(100% - 52px);
+        display: flex;
+        font-size: 0;
+        align-items: baseline;
+        .cell-container {
+          width: 20%;
+          min-width: 110px;
+          padding: 20px 0;
+          border: 2px solid transparent;
+          .title {
+            font-size: 14px;
+            line-height: 20px;
+            padding: 0 0 0 10px;
+            font-weight: bold;
+          }
+        }
+        .data-process {
+          background-color: #e3f8eb;
+          .title {
+            border-left: 2px solid #00a5a7;
+          }
+        }
+        .device_queue_op {
+          background-color: #e1f2ff;
+          .title {
+            border-left: 2px solid #6cbfff;
+          }
+        }
+        .get-next {
+          background-color: #fef4dd;
+          .title {
+            border-left: 2px solid #fdca5a;
+          }
+        }
+        .queue-container {
+          width: 20%;
+          position: relative;
+          .img {
+            width: 100%;
+            height: 24px;
+            margin-top: 30px;
+            .edge {
+              width: calc(50% - 40px);
+              display: inline-block;
+              vertical-align: middle;
+              img {
+                width: 100%;
+              }
+            }
+            .icon {
+              padding: 0 20px;
+              display: inline-block;
+              vertical-align: middle;
+              img {
+                padding: 3px;
+                border: 2px solid transparent;
+              }
+            }
+          }
+
+          .title {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: bold;
+          }
+          .description {
+            position: absolute;
+            font-size: 12px;
+            line-height: 12px;
+            white-space: nowrap;
+            overflow: visible;
+            width: 100%;
+            text-align: center;
+            .line {
+              width: 1px;
+              height: 40px;
+              margin: 20px 0;
+              border-left: 1px solid #979797;
+              display: inline-block;
+            }
+            .item {
+              font-size: 12px;
+              line-height: 16px;
+              white-space: normal;
+              overflow: visible;
+              .num {
+                white-space: nowrap;
+                color: #07a695;
+              }
+            }
+          }
+        }
+      }
     }
   }
   .pro-router-right {

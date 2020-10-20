@@ -112,6 +112,10 @@ export default new Router({
             import('./views/profiling-gpu/profiling-dashboard.vue'),
         },
         {
+          path: 'data-process',
+          component: () => import('./views/profiling/data-process.vue'),
+        },
+        {
           path: 'operator',
           component: () => import('./views/profiling-gpu/operator.vue'),
         },

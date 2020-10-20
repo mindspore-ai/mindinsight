@@ -211,7 +211,7 @@ export default {
                     : '--';
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
-                  const content = `${this.$t(`profiling`)[item].desc}`
+                  const content = `${this.$t(`profilingGPU`)[item].desc}`
                       .replace(
                           `{n1}`,
                           `<span class="nowrap-style"> ${deviceEmpty}</span>`,
@@ -242,7 +242,7 @@ export default {
                     : '--';
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
-                  const content = `${this.$t(`profiling`)[item].desc}`
+                  const content = `${this.$t(`profilingGPU`)[item].desc}`
                       .replace(
                           `{n1}`,
                           `<span class="nowrap-style"> ${getNextEmpty}</span>`,

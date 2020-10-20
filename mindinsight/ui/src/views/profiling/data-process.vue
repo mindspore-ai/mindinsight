@@ -48,7 +48,7 @@ limitations under the License.
                      alt="" />
               </div>
             </div>
-            <div class="title">{{$t('profiling.connectorQuene')}}</div>
+            <div class="title">{{connectorQuene}}</div>
             <div class="description">
               <div class="item"
                    v-if="processSummary.device.empty || processSummary.device.empty === 0">
@@ -132,7 +132,7 @@ limitations under the License.
             <div class="chart-content">
               <div class="chart-wrap"
                    :class="{highlight:selected==='connector_queue'}">
-                <div class="title">{{$t('profiling.connectorQuene')}}</div>
+                <div class="title">{{connectorQuene}}</div>
                 <template v-if="!connectQueueChart.noData">
                   <div class="data-tips">
                     <div v-if="connectQueueChart.queueSummary.empty_queue!==undefined">
@@ -208,7 +208,7 @@ limitations under the License.
             <div class="chart-content">
               <div class="chart-wrap"
                    :class="{highlight:selected==='connector_queue'}">
-                <div class="title">{{$t('profiling.connectorQuene')}}</div>
+                <div class="title">{{connectorQuene}}</div>
                 <template v-if="!connectQueueChart.noData">
                   <div class="data-tips">
                     <div v-if="connectQueueChart.queueSummary.empty_queue!==undefined">
@@ -268,12 +268,14 @@ limitations under the License.
                   <div class="item"><span>{{current_op.name}} type:</span>{{current_op.op_type}}</div>
                   <div class="item">
                     <span>{{current_op.name}} {{$t('profiling.workersNum')}}:</span>
-                    {{current_op.num_workers}}</div>
+                    {{current_op.num_workers}}
+                  </div>
                   <div class="item"><span>{{parent_op.name}} ID:</span>{{parent_op.op_id}}</div>
                   <div class="item"><span>{{parent_op.name}} type:</span>{{parent_op.op_type}}</div>
                   <div class="item">
                     <span>{{parent_op.name}} {{$t('profiling.workersNum')}}:</span>
-                    {{parent_op.num_workers}}</div>
+                    {{parent_op.num_workers}}
+                  </div>
                 </div>
               </div>
             </div>
@@ -392,6 +394,7 @@ export default {
       initQueue: '',
       trainId: '',
       selected: '',
+      connectorQuene: '',
     };
   },
   watch: {
@@ -457,6 +460,11 @@ export default {
       });
     },
     init() {
+      this.connectorQuene = this.$t(
+          `profiling${
+          location.href.includes('#/profiling-gpu/') ? 'GPU' : ''
+          }.connectorQuene`,
+      );
       this.queryProcessSummary();
     },
     /**

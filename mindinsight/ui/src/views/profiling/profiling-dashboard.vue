@@ -130,14 +130,14 @@ limitations under the License.
                 <div v-show="deviceInfoShow || queueInfoShow"
                      class="font-size-style">{{$t('profiling.statistics')}}</div>
                 <div v-show="queueInfoShow">{{$t('profiling.chipInfo')}}
-                  <span>{{queueInfoEmptyNum}} / {{queueInfoTotalNum}}</span>
+                  <span>{{processSummary.get_next.empty}} / {{processSummary.get_next.total}}</span>
                 </div>
                 <div v-show="deviceInfoShow">
                   <div>{{$t('profiling.hostIsEmpty')}}
-                    <span>{{deviceInfoEmptyNum}} / {{deviceInfoTotalNum}}</span>
+                    <span>{{processSummary.device.empty}} / {{processSummary.device.total}}</span>
                   </div>
                   <div>{{$t('profiling.hostIsFull')}}
-                    <span>{{deviceInfoFullNum}} / {{deviceInfoTotalNum}}</span>
+                    <span>{{processSummary.device.full}} / {{processSummary.device.total}}</span>
                   </div>
                 </div>
               </div>
@@ -309,7 +309,8 @@ limitations under the License.
                     :disabled="timeLine.disable"
                     :class="{disabled:timeLine.disable}">{{ $t('profiling.downloadTimeline') }}
             </button>
-            <div class="el-icon-loading loading-icon" v-show="timeLine.waiting"></div>
+            <div class="el-icon-loading loading-icon"
+                 v-show="timeLine.waiting"></div>
           </div>
           <div class="tip-icon">
             <el-tooltip placement="bottom"
@@ -357,7 +358,8 @@ limitations under the License.
             <span>{{$t('profiling.streamNum')}}</span><span>{{timelineInfo.streamNum}}</span>
           </div>
           <div class="info-line">
-            <span>{{$t('profiling.opNum')}}</span><span>{{timelineInfo.opNum}}</span></div>
+            <span>{{$t('profiling.opNum')}}</span><span>{{timelineInfo.opNum}}</span>
+          </div>
           <div class="info-line">
             <span>{{$t('profiling.opTimes')}}</span><span>{{timelineInfo.opTimes + $t('profiling.times')}}</span>
           </div>
@@ -390,11 +392,6 @@ export default {
       tailPercent: '--', // Ratio of time consumed by step tail
       queueInfoShow: false, // Whether to show queue information
       deviceInfoShow: false, // Whether to show device information
-      queueInfoEmptyNum: '--', // The number of empty queue information
-      queueInfoTotalNum: '--', // Total number of queues
-      deviceInfoEmptyNum: '--', // Number of empty device information
-      deviceInfoTotalNum: '--', // Total number of devices
-      deviceInfoFullNum: '--', // Number of full queues
       svg: {
         // Step trace svg information
         data: [], // Data of svg
@@ -546,24 +543,6 @@ export default {
           const data = JSON.parse(JSON.stringify(resp.data));
           this.processSummary.count = Object.keys(data).length;
           this.dealProcess(data);
-          // Chip side
-          if (resp.data.get_next_queue_info) {
-            this.queueInfoShow = true;
-            this.queueInfoEmptyNum =
-              resp.data.get_next_queue_info.summary.empty_batch_count;
-            this.queueInfoTotalNum =
-              resp.data.get_next_queue_info.summary.total_batch;
-          }
-          // Host side
-          if (resp.data.device_queue_info) {
-            this.deviceInfoShow = true;
-            this.deviceInfoEmptyNum =
-              resp.data.device_queue_info.summary.empty_batch_count;
-            this.deviceInfoTotalNum =
-              resp.data.device_queue_info.summary.total_batch;
-            this.deviceInfoFullNum =
-              resp.data.device_queue_info.summary.full_batch_count;
-          }
         } else {
           this.dealProcess(null);
           this.processSummary.initOver = true;
@@ -1176,6 +1155,7 @@ export default {
 
       if (data && Object.keys(data).length) {
         if (data.device_queue_info && data.device_queue_info.summary) {
+          this.deviceInfoShow = true;
           this.processSummary.device = {
             empty: data.device_queue_info.summary.empty_batch_count,
             full: data.device_queue_info.summary.full_batch_count,
@@ -1183,6 +1163,7 @@ export default {
           };
         }
         if (data.get_next_queue_info && data.get_next_queue_info.summary) {
+          this.queueInfoShow = true;
           this.processSummary.get_next = {
             empty: data.get_next_queue_info.summary.empty_batch_count,
             full: data.get_next_queue_info.summary.full_batch_count,
@@ -1360,7 +1341,7 @@ export default {
         align-items: baseline;
         .cell-container {
           width: 20%;
-          min-width:110px;
+          min-width: 110px;
           padding: 20px 0;
           border: 2px solid transparent;
           .title {
