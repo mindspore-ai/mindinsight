@@ -12,10 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Optimizer.
+"""Transformer."""
+from mindinsight.optimizer.utils.param_handler import match_value_type
 
-Optimizer provides optimization target distribution, parameter importance, etc.
-"""
 
-from mindinsight.optimizer.hyper_config import HyperConfig
+class Transformer:
+    """Transformer."""
+    @staticmethod
+    def transform_list_to_dict(params_info, suggest_list):
+        """Transform from tuner."""
+        suggest_list = match_value_type(suggest_list, params_info)
+        param_dict = {}
+        for index, param_name in enumerate(params_info):
+            param_dict.update({param_name: suggest_list[index]})
+
+        return param_dict

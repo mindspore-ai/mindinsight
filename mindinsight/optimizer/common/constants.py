@@ -12,10 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Optimizer.
-
-Optimizer provides optimization target distribution, parameter importance, etc.
-"""
-
-from mindinsight.optimizer.hyper_config import HyperConfig
+"""Common constants for optimizer."""
+HYPER_CONFIG_ENV_NAME = "MINDINSIGHT_HYPER_CONFIG"

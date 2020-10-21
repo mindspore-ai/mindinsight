@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Optimizer.
+"""Base tuner."""
+from abc import abstractmethod
 
-Optimizer provides optimization target distribution, parameter importance, etc.
-"""
 
-from mindinsight.optimizer.hyper_config import HyperConfig
+class BaseTuner:
+    @abstractmethod
+    def suggest(self, *args):
+        """Suggest method should be implemented."""
