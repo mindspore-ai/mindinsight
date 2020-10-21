@@ -434,7 +434,7 @@
     "countUnit": "次",
     "unit": "ms/次",
     "gpuunit": "us/次",
-    "chartTitle": "平均耗时排行"
+    "chartTitle": "平均耗时排名"
   },
   "profilingGPU": {
     "minddata_device_queue": {

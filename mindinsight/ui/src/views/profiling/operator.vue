@@ -465,6 +465,15 @@ export default {
     // Remove the listener of window size change
     window.removeEventListener('resize', this.resizeCallback);
     this.$bus.$off('collapse');
+
+    if (this.cpuCharts.chartDom) {
+      this.cpuCharts.chartDom.off('mouseover');
+      this.cpuCharts.chartDom.off('mouseout');
+    }
+    if (this.coreCharts.chartDom) {
+      this.coreCharts.chartDom.off('mouseover');
+      this.coreCharts.chartDom.off('mouseout');
+    }
   },
   methods: {
     getHeaderField(key) {
@@ -1279,6 +1288,7 @@ export default {
             rotate: -30,
           },
           data: [],
+          triggerEvent: true,
         };
         option.grid = {
           left: 50,
@@ -1300,11 +1310,46 @@ export default {
           chart.chartDom = echarts.init(cpuDom, null);
         } else {
           if (chart.chartDom) {
+            chart.chartDom.off('mouseover');
+            chart.chartDom.off('mouseout');
             chart.chartDom.clear();
           }
           return;
         }
         chart.chartDom.setOption(option, true);
+        if (chart.type) {
+          chart.chartDom.off('mouseover');
+          chart.chartDom.off('mouseout');
+          chart.chartDom.on('mouseover', (params) => {
+            if (params.componentType === 'xAxis') {
+              const offsetX = params.event.offsetX + 10;
+              const offsetY = params.event.offsetY + 10;
+              chart.chartDom.setOption({
+                tooltip: {
+                  formatter: params.value,
+                  alwaysShowContent: true,
+                },
+              });
+              chart.chartDom.dispatchAction({
+                type: 'showTip',
+                seriesIndex: 0,
+                dataIndex: 0,
+                position: [offsetX, offsetY],
+              });
+            }
+          });
+
+          chart.chartDom.on('mouseout', (params) => {
+            if (params.componentType === 'xAxis') {
+              chart.chartDom.setOption({
+                tooltip: {
+                  formatter: '',
+                  alwaysShowContent: false,
+                },
+              });
+            }
+          });
+        }
         chart.chartDom.resize();
       }, 10);
     },
@@ -1326,7 +1371,7 @@ export default {
      */
     showDialogData(val, column) {
       this.detailsDataList = [];
-      if (typeof val !== 'string' || val == '{}') {
+      if (typeof val !== 'string' || val === '{}') {
         return;
       } else {
         const isJson = this.isJSON(val);
