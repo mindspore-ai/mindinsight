@@ -48,12 +48,17 @@ class TuneMethod(BaseEnum):
     GP = 'gp'
 
 
+class GPSupportArgs(BaseEnum):
+    METHOD = 'method'
+
+
 class HyperParamKey(BaseEnum):
     """Config keys for hyper parameters."""
     BOUND = 'bounds'
     CHOICE = 'choice'
     DECIMAL = 'decimal'
     TYPE = 'type'
+    SOURCE = 'source'
 
 
 class HyperParamType(BaseEnum):
@@ -73,3 +78,25 @@ class TargetGoal(BaseEnum):
     """Goal for target."""
     MAXIMUM = 'maximize'
     MINIMUM = 'minimize'
+
+
+class HyperParamSource(BaseEnum):
+    SYSTEM_DEFINED = 'system_defined'
+    USER_DEFINED = 'user_defined'
+
+
+class TargetGroup(BaseEnum):
+    SYSTEM_DEFINED = 'system_defined'
+    METRIC = 'metric'
+
+
+class TunableSystemDefinedParams(BaseEnum):
+    """Tunable metadata keys of lineage collection."""
+    BATCH_SIZE = 'batch_size'
+    EPOCH = 'epoch'
+    LEARNING_RATE = 'learning_rate'
+
+
+class SystemDefinedTargets(BaseEnum):
+    """System defined targets"""
+    LOSS = 'loss'

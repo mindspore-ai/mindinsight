@@ -22,10 +22,11 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 
 from mindinsight.optimizer.common.enums import AcquisitionFunctionEnum, HyperParamKey
+from mindinsight.optimizer.common.log import logger
+from mindinsight.optimizer.tuners.base_tuner import BaseTuner
 from mindinsight.optimizer.utils.param_handler import generate_arrays, match_value_type
 from mindinsight.optimizer.utils.transformer import Transformer
 from mindinsight.utils.exceptions import ParamValueError
-from mindinsight.optimizer.tuners.base_tuner import BaseTuner
 
 
 class AcquisitionFunction:
@@ -141,8 +142,10 @@ class GPBaseTuner(BaseTuner):
 
         x_seeds = generate_arrays(params_info, n_iter)
         for x_try in x_seeds:
-            res = minimize(lambda x: -self._utility_function.ac(x.reshape(1, -1), gp=gp, y_max=y_max),
-                           x_try.reshape(1, -1), bounds=bounds, method="L-BFGS-B")
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                res = minimize(lambda x: -self._utility_function.ac(x.reshape(1, -1), gp=gp, y_max=y_max),
+                               x_try.reshape(1, -1), bounds=bounds, method="L-BFGS-B")
 
             if not res.success:
                 continue
@@ -164,6 +167,8 @@ class GPBaseTuner(BaseTuner):
 
         min_lineage_rows = 2
         if not np.array(params).any() or params.shape[0] < min_lineage_rows:
+            logger.info("Without valid histories or the rows of lineages < %s, "
+                        "parameters will be recommended randomly.", min_lineage_rows)
             suggestion = generate_arrays(params_info)
         else:
             self._gp.fit(params, target)
@@ -174,5 +179,5 @@ class GPBaseTuner(BaseTuner):
                 params_info=params_info
             )
 
-        suggestion = Transformer.transform_list_to_dict(params_info, suggestion)
-        return suggestion
+        suggestion, user_defined_info = Transformer.transform_list_to_dict(params_info, suggestion)
+        return suggestion, user_defined_info

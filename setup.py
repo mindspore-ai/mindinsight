@@ -208,6 +208,7 @@ if __name__ == '__main__':
                 'mindinsight=mindinsight.utils.command:main',
                 'mindconverter=mindinsight.mindconverter.cli:cli_entry',
                 'mindwizard=mindinsight.wizard.cli:cli_entry',
+                'mindoptimizer=mindinsight.optimizer.cli:cli_entry',
             ],
         },
         python_requires='>=3.7',

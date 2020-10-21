@@ -23,7 +23,7 @@ from mindinsight.utils.exceptions import MindInsightException, ParamValueError
 
 
 class TestValidateSearchModelCondition(TestCase):
-    """Test the mothod of validate_search_model_condition."""
+    """Test the method of validate_search_model_condition."""
     def test_validate_search_model_condition_param_type_error(self):
         """Test the method of validate_search_model_condition with LineageParamTypeError."""
         condition = {

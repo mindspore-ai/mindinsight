@@ -14,8 +14,9 @@
 # ============================================================================
 """Utils for params."""
 import numpy as np
-from mindinsight.lineagemgr.model import LineageTable
-from mindinsight.optimizer.common.enums import HyperParamKey, HyperParamType
+from mindinsight.lineagemgr.model import LineageTable, USER_DEFINED_PREFIX, METRIC_PREFIX
+from mindinsight.optimizer.common.enums import HyperParamKey, HyperParamType, HyperParamSource, TargetKey, \
+    TargetGoal, TunableSystemDefinedParams, TargetGroup, SystemDefinedTargets
 from mindinsight.optimizer.common.log import logger
 
 
@@ -54,7 +55,6 @@ def match_value_type(array, params_info: dict):
     array_new = []
     index = 0
     for _, param_info in params_info.items():
-        param_type = param_info[HyperParamKey.TYPE.value]
         value = array[index]
         if HyperParamKey.BOUND.value in param_info:
             bound = param_info[HyperParamKey.BOUND.value]
@@ -64,7 +64,7 @@ def match_value_type(array, params_info: dict):
             choices = param_info[HyperParamKey.CHOICE.value]
             nearest_index = int(np.argmin(np.fabs(np.array(choices) - value)))
             value = choices[nearest_index]
-        if param_type == HyperParamType.INT.value:
+        if param_info.get(HyperParamKey.TYPE.value) == HyperParamType.INT.value:
             value = int(value)
         if HyperParamKey.DECIMAL.value in param_info:
             value = np.around(value, decimals=param_info[HyperParamKey.DECIMAL.value])
@@ -73,20 +73,51 @@ def match_value_type(array, params_info: dict):
     return array_new
 
 
-def organize_params_target(lineage_table: LineageTable, params_info: dict, target_name):
+def organize_params_target(lineage_table: LineageTable, params_info: dict, target_info):
     """Organize params and target."""
     empty_result = np.array([])
     if lineage_table is None:
         return empty_result, empty_result
 
-    param_keys = list(params_info.keys())
+    param_keys = []
+    for param_key, param_info in params_info.items():
+        # It will be a user_defined param:
+        # 1. if 'source' is specified as 'user_defined'
+        # 2. if 'source' is not specified and the param is not a system_defined key
+        source = param_info.get(HyperParamKey.SOURCE.value)
+        prefix = _get_prefix(param_key, source, HyperParamSource.USER_DEFINED.value,
+                             USER_DEFINED_PREFIX, TunableSystemDefinedParams.list_members())
+        param_key = f'{prefix}{param_key}'
+        if prefix == USER_DEFINED_PREFIX:
+            param_info[HyperParamKey.SOURCE.value] = HyperParamSource.USER_DEFINED.value
+        else:
+            param_info[HyperParamKey.SOURCE.value] = HyperParamSource.SYSTEM_DEFINED.value
 
+        param_keys.append(param_key)
+
+    target_name = target_info[TargetKey.NAME.value]
+    group = target_info.get(TargetKey.GROUP.value)
+    prefix = _get_prefix(target_name, group, TargetGroup.METRIC.value,
+                         METRIC_PREFIX, SystemDefinedTargets.list_members())
+    target_name = prefix + target_name
     lineage_df = lineage_table.dataframe_data
     try:
         lineage_df = lineage_df[param_keys + [target_name]]
         lineage_df = lineage_df.dropna(axis=0, how='any')
-        return lineage_df[param_keys], lineage_df[target_name]
+
+        target_column = np.array(lineage_df[target_name])
+        if TargetKey.GOAL.value in target_info and \
+                target_info.get(TargetKey.GOAL.value) == TargetGoal.MAXIMUM.value:
+            target_column = -target_column
+
+        return np.array(lineage_df[param_keys]), target_column
     except KeyError as exc:
         logger.warning("Some keys not exist in specified params or target. It will suggest params randomly."
                        "Detail: %s.", str(exc))
     return empty_result, empty_result
+
+
+def _get_prefix(name, field, other_defined_field, other_defined_prefix, system_defined_fields):
+    if (field == other_defined_field) or (field is None and name not in system_defined_fields):
+        return other_defined_prefix
+    return ''
