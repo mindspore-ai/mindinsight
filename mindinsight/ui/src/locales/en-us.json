@@ -437,6 +437,22 @@
     "gpuunit": "us/time",
     "chartTitle": "Average Time Consumption Ranking"
   },
+  "profilingGPU": {
+    "minddata_device_queue": {
+      "desc": "The ratio of empty primary queues is {n1}/{n2}, and the ratio of full queues is {n3}/{n4}."
+    },
+    "minddata_get_next_queue": {
+      "desc": "The ratio of empty data queues is {n1}/{n2}."
+    },
+    "connectorQuene": "Primary Queues",
+    "dataProcess": "This shows the data processing. Data is stored in the primary queue during data processing, and then stored in the data queue during data transmission. Finally, the forward and backward propagation get_next transmits the data to forward propagation.",
+    "dataProcessInfo": "By determining the empty primary and data queues, you can preliminarily determine the stage where the performance is abnormal.",
+    "analysisOne": "1. If the step interval is long and some batches of the data queue are empty, the performance is abnormal during data processing and transmission. Otherwise, locate the internal problem of the forward and backward propagation get_next.",
+    "analysisTwo": "2. If the performance is abnormal during data processing and transmission, check the primary queue. If the primary queue is empty at a high probability, the exception may occur during data transmission.",
+    "chipInfo": "Ratio of empty data queues:",
+    "hostIsEmpty": "Ratio of empty primary queues:",
+    "hostIsFull": "Ratio of full primary queues:"
+  },
   "components": {
     "summaryTitle": "Training Selection",
     "tagSelectTitle": "Tag Selection",
