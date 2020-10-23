@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Define ONNX related opertions."""
+"""Define ONNX related operations."""
 import re
 import abc
 from collections import OrderedDict
 
 from mindinsight.mindconverter.common.log import logger as log
 
-from ..constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING,\
+from ..constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
     ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT
 
 
@@ -27,7 +27,7 @@ def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=None
     """
     Convert Tensorflow model to ONNX model.
 
-    Note: shape overide is supported by tf2onnx but we
+    Note: shape override is supported by tf2onnx but we
           have not supported yet.
 
     Args:
@@ -87,6 +87,7 @@ class OnnxTensor:
         raw_tensor (onnx.TensorProto): onnx.TensorProto instance.
     """
     import onnx
+
     def __init__(self, raw_tensor):
         self.raw_tensor = raw_tensor
         self.name = raw_tensor.name
@@ -279,8 +280,9 @@ class OnnxDataLoader:
         self.inferred_model = onnx.shape_inference.infer_shapes(self.model)
 
     def _parse_value_info(self):  # no input node & output node
-        """Parse onnx defined value_info class attribtues"""
+        """Parse onnx defined value_info class attributes."""
         import onnx
+
         def _parse_value_info_re(i):
             """
             Parse the value_info by regular expression
@@ -297,7 +299,7 @@ class OnnxDataLoader:
             i_type = group_match.group('type')
             i_dim_str = group_match.group('dim_str')
 
-            return (i_name, i_type, i_dim_str)
+            return i_name, i_type, i_dim_str
 
         if not self.inferred_model:
             return
@@ -333,18 +335,17 @@ class OnnxDataLoader:
             This function has a prerequisite of the shape inference.
         """
         for (node_name, (_, shape_str)) in self.value_info_dict.items():
-            l = []
+            lst = []
             # split shape by 'x'
             shape_list = shape_str.split('x')
             # replace unknown shape by '-1'
             for s in shape_list:
                 if 'unk' in s:
                     s = '-1'
-
                 # convert str to int
                 s = int(s)
-                l.append(s)
-            self.node_output_shape_dict[node_name] = l
+                lst.append(s)
+            self.node_output_shape_dict[node_name] = lst
 
     def get_node(self, node_name):
         """Get the OnnxNode instance by node name."""
