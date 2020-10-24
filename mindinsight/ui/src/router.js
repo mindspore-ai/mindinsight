@@ -125,5 +125,18 @@ export default new Router({
       path: '/debugger',
       component: () => import('./views/debugger/debugger.vue'),
     },
+    {
+      path: '/explain',
+      component: () => import('./views/explain/summary-list.vue'),
+    },
+    {
+      path: '/explain/saliency-map',
+      component: () =>
+        import('./views/explain/saliency-map.vue'),
+    },
+    {
+      path: '/explain/xai-metric',
+      component: () => import('./views/explain/xai-metric.vue'),
+    },
   ],
 });
