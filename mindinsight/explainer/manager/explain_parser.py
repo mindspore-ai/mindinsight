@@ -28,20 +28,36 @@ from mindinsight.explainer.common.log import logger
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.ms_data_loader import _SummaryParser
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
+from mindinsight.datavisual.proto_files.mindinsight_summary_pb2 import Explain
 from mindinsight.utils.exceptions import UnknownError
 
 HEADER_SIZE = 8
 CRC_STR_SIZE = 4
 MAX_EVENT_STRING = 500000000
-ImageDataContainer = collections.namedtuple('ImageDataContainer',
-                                            ['image_id', 'image_data', 'ground_truth_label',
-                                             'inference', 'explanation', 'status'])
 BenchmarkContainer = collections.namedtuple('BenchmarkContainer', ['benchmark', 'status'])
 MetadataContainer = collections.namedtuple('MetadataContainer', ['metadata', 'status'])
 
 
+class ImageDataContainer:
+    """
+    Container for image data to allow pickling.
+
+    Args:
+        explain_message (Explain): Explain proto buffer message.
+    """
+
+    def __init__(self, explain_message: Explain):
+        self.image_id = explain_message.image_id
+        self.image_data = explain_message.image_data
+        self.ground_truth_label = explain_message.ground_truth_label
+        self.inference = explain_message.inference
+        self.explanation = explain_message.explanation
+        self.status = explain_message.status
+
+
 class _ExplainParser(_SummaryParser):
     """The summary file parser."""
+
     def __init__(self, summary_dir):
         super(_ExplainParser, self).__init__(summary_dir)
         self._latest_filename = ''
@@ -165,7 +181,6 @@ class _ExplainParser(_SummaryParser):
             tensor_value_list.append(tensor_value)
         return field_list, tensor_value_list
 
-
     @staticmethod
     def _add_image_data(tensor_event_value):
         """
@@ -174,16 +189,8 @@ class _ExplainParser(_SummaryParser):
         Args:
             tensor_event_value: the object of Explain message
         """
-        image_data = ImageDataContainer(
-            image_id=tensor_event_value.image_id,
-            image_data=tensor_event_value.image_data,
-            ground_truth_label=tensor_event_value.ground_truth_label,
-            inference=tensor_event_value.inference,
-            explanation=tensor_event_value.explanation,
-            status=tensor_event_value.status
-        )
+        image_data = ImageDataContainer(tensor_event_value)
         return image_data
-
 
     @staticmethod
     def _add_benchmark(tensor_event_value):
