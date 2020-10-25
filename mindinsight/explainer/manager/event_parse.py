@@ -13,8 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """EventParser for summary event."""
-from collections import namedtuple
-from typing import Dict, Iterable, List, Optional, Tuple
+from collections import namedtuple, defaultdict
+from typing import Dict, List, Optional, Tuple
 
 from mindinsight.explainer.common.enums import PluginNameEnum
 from mindinsight.explainer.common.log import logger
@@ -35,32 +35,34 @@ class EventParser:
         self._job = job
         self._sample_pool = {}
 
-    def clear(self):
-        """Clear the loaded data."""
-        self._sample_pool.clear()
-
-    def parse_metadata(self, metadata) -> Tuple[List, List, List]:
+    @staticmethod
+    def parse_metadata(metadata) -> Tuple[List, List, List]:
         """Parse the metadata event."""
         explainers = list(metadata.explain_method)
         metrics = list(metadata.benchmark_method)
         labels = list(metadata.label)
         return explainers, metrics, labels
 
-    def parse_benchmark(self, benchmark) -> Dict:
+    @staticmethod
+    def parse_benchmark(benchmarks) -> Tuple[Dict, Dict]:
         """Parse the benchmark event."""
-        imported_benchmark = {}
-        for explainer_result in benchmark:
-            explainer = explainer_result.explain_method
-            total_score = explainer_result.total_score
-            label_score = explainer_result.label_score
+        explainer_score_dict = defaultdict(list)
+        label_score_dict = defaultdict(dict)
 
-            explainer_benchmark = {
-                'explainer': explainer,
-                'evaluations': EventParser._total_score_to_dict(total_score),
-                'class_scores': EventParser._label_score_to_dict(label_score, self._job.labels)
-            }
-            imported_benchmark[explainer] = explainer_benchmark
-        return imported_benchmark
+        for benchmark in benchmarks:
+            explainer = benchmark.explain_method
+            metric = benchmark.benchmark_method
+            metric_score = benchmark.total_score
+            label_score_event = benchmark.label_score
+
+            explainer_score_dict[explainer].append({
+                'metric': metric,
+                'score': metric_score})
+            new_label_score_dict = EventParser._score_event_to_dict(label_score_event, metric)
+            for label, label_scores in new_label_score_dict.items():
+                label_score_dict[explainer][label] = label_score_dict[explainer].get(label, []) + label_scores
+
+        return explainer_score_dict, label_score_dict
 
     def parse_sample(self, sample: namedtuple) -> Optional[namedtuple]:
         """Parse the sample event."""
@@ -83,68 +85,13 @@ class EventParser:
                                " detail: %r", tag, str(ex))
                 continue
 
-        if EventParser._is_sample_data_complete(self._sample_pool[sample_id]):
-            return self._sample_pool.pop(sample_id)
         if EventParser._is_ready_for_display(self._sample_pool[sample_id]):
             return self._sample_pool[sample_id]
         return None
 
-    def _parse_inference(self, event, sample_id):
-        """Parse the inference event."""
-        self._sample_pool[sample_id].inference.ground_truth_prob.extend(
-            event.inference.ground_truth_prob)
-        self._sample_pool[sample_id].inference.predicted_label.extend(
-            event.inference.predicted_label)
-        self._sample_pool[sample_id].inference.predicted_prob.extend(
-            event.inference.predicted_prob)
-
-    def _parse_explanation(self, event, sample_id):
-        """Parse the explanation event."""
-        if event.explanation:
-            for explanation_item in event.explanation:
-                new_explanation = self._sample_pool[sample_id].explanation.add()
-                new_explanation.explain_method = explanation_item.explain_method
-                new_explanation.label = explanation_item.label
-                new_explanation.heatmap = explanation_item.heatmap
-
-    def _parse_sample_info(self, event, sample_id, tag):
-        """Parse the event containing image info."""
-        if not getattr(self._sample_pool[sample_id], tag):
-            setattr(self._sample_pool[sample_id], tag, getattr(event, tag))
-
-    @staticmethod
-    def _total_score_to_dict(total_scores: Iterable):
-        """Transfer a list of benchmark score to a list of dict."""
-        evaluation_info = []
-        for total_score in total_scores:
-            metric_result = {
-                'metric': total_score.benchmark_method,
-                'score': total_score.score}
-            evaluation_info.append(metric_result)
-        return evaluation_info
-
-    @staticmethod
-    def _label_score_to_dict(label_scores: Iterable, labels: List[str]):
-        """Transfer a list of benchmark score."""
-        evaluation_info = [{'label': label, 'evaluations': []}
-                           for label in labels]
-        for label_score in label_scores:
-            metric = label_score.benchmark_method
-            for i, score in enumerate(label_score.score):
-                label_metric_score = {
-                    'metric': metric,
-                    'score': score}
-                evaluation_info[i]['evaluations'].append(label_metric_score)
-        return evaluation_info
-
-    @staticmethod
-    def _is_sample_data_complete(image_container: namedtuple) -> bool:
-        """Check whether sample data completely loaded."""
-        required_attrs = ['image_id', 'image_data', 'ground_truth_label', 'inference', 'explanation']
-        for attr in required_attrs:
-            if not EventParser.is_attr_ready(image_container, attr):
-                return False
-        return True
+    def clear(self):
+        """Clear the loaded data."""
+        self._sample_pool.clear()
 
     @staticmethod
     def _is_ready_for_display(image_container: namedtuple) -> bool:
@@ -178,3 +125,34 @@ class EventParser:
         if getattr(image_container, attr, False):
             return True
         return False
+
+    @staticmethod
+    def _score_event_to_dict(label_score_event, metric):
+        """Transfer metric scores per label to pre-defined structure."""
+        new_label_score_dict = defaultdict(list)
+        for label_id, label_score in enumerate(label_score_event):
+            new_label_score_dict[label_id].append({
+                'metric': metric,
+                'score': label_score,
+            })
+        return new_label_score_dict
+
+    def _parse_inference(self, event, sample_id):
+        """Parse the inference event."""
+        self._sample_pool[sample_id].inference.ground_truth_prob.extend(event.inference.ground_truth_prob)
+        self._sample_pool[sample_id].inference.predicted_label.extend(event.inference.predicted_label)
+        self._sample_pool[sample_id].inference.predicted_prob.extend(event.inference.predicted_prob)
+
+    def _parse_explanation(self, event, sample_id):
+        """Parse the explanation event."""
+        if event.explanation:
+            for explanation_item in event.explanation:
+                new_explanation = self._sample_pool[sample_id].explanation.add()
+                new_explanation.explain_method = explanation_item.explain_method
+                new_explanation.label = explanation_item.label
+                new_explanation.heatmap = explanation_item.heatmap
+
+    def _parse_sample_info(self, event, sample_id, tag):
+        """Parse the event containing image info."""
+        if not getattr(self._sample_pool[sample_id], tag):
+            setattr(self._sample_pool[sample_id], tag, getattr(event, tag))

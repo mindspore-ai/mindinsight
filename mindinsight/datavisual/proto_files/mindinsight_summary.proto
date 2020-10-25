@@ -116,22 +116,14 @@ message Explain {
     message Explanation{
 		optional string explain_method = 1;
 		optional int32 label = 2;
-		optional bytes hitmap = 3;
+		optional bytes heatmap = 3;
 	}
 
     message Benchmark{
-		message TotalScore{
-			optional string benchmark_method = 1;
-			optional float score = 2;
-		}
-		message LabelScore{
-			repeated float score = 1;
-			optional string benchmark_method = 2;
-		}
-
-		optional string explain_method = 1;
-		repeated TotalScore total_score = 2;
-		repeated LabelScore label_score = 3;
+		optional string benchmark_method = 1;
+		optional string explain_method = 2;
+		optional float total_score = 3;
+		repeated float label_score = 4;
 	}
 
     message Metadata{
