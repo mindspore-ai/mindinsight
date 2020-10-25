@@ -40,7 +40,7 @@ def _tf_model_node_name_reformat(node: OnnxGraphNode, node_name):
     regex = r"(?P<parent>.+/)(?P<op>\w+)"
     match = re.match(regex, scope_name)
     parent = match.group("parent")
-    node_name = '$' + node_name + '$'
+    node_name = '$' + node_name.replace('/', '::') + '$'
 
     if scope_name:
         new_name = parent + node_name

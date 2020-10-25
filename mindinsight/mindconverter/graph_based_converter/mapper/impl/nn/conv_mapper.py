@@ -22,7 +22,7 @@ def _convert_padding(**kwargs):
     """Convert padding."""
     params = kwargs['params']
     if not params.get('pads'):
-        return '\"same\"', 0
+        return '\"valid\"', 0
     if sum(params['pads']) == 0:
         return '\"valid\"', 0
     pads_onnx = params['pads']
@@ -75,10 +75,14 @@ class ConvMapper(ONNXToMindSporeMapper):
         weights = kwargs['weights']
         params = kwargs['params']
         # regex to find Conv weight
-        regex = r".+\/Conv2D\/ReadVariableOp:0$"
+        regex = r".+\/(Conv2D|depthwise)\/ReadVariableOp:0$"
+        regex2 = r"const_fold_opt__\d+"
         weight = None
         for w_name, w in weights.items():
             if re.match(regex, w_name):
+                weight = w
+                break
+            if re.match(regex2, w_name):
                 weight = w
                 break
         if weight is None:
@@ -96,7 +100,8 @@ class ConvMapper(ONNXToMindSporeMapper):
             stride = params.get('strides')
 
         kernel_size = params.get('kernel_shape')
-        in_channels = weight.shape[1]
+        # Onnx inchannel = ms inchannel / group
+        in_channels = weight.shape[1] * params.get('group', 1)
         out_channels = weight.shape[0]
         if len(kernel_size) == 1:
             kernel_size = kernel_size[0]
