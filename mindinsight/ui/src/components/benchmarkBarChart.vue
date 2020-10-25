@@ -187,7 +187,6 @@ export default {
         series: [],
       };
     },
-    
   },
 };
 </script>
