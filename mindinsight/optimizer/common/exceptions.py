@@ -48,3 +48,19 @@ class OptimizerTerminateError(MindInsightException):
         super(OptimizerTerminateError, self).__init__(OptimizerErrors.OPTIMIZER_TERMINATE,
                                                       error_msg,
                                                       http_code=400)
+
+
+class ConfigParamError(MindInsightException):
+    """Hyper config error."""
+    def __init__(self, error_msg="Invalid parameter."):
+        super(ConfigParamError, self).__init__(OptimizerErrors.OPTIMIZER_TERMINATE,
+                                               error_msg,
+                                               http_code=400)
+
+
+class HyperConfigEnvError(MindInsightException):
+    """Hyper config error."""
+    def __init__(self, error_msg="Hyper config is not correct."):
+        super(HyperConfigEnvError, self).__init__(OptimizerErrors.HYPER_CONFIG_ENV_ERROR,
+                                                  error_msg,
+                                                  http_code=400)

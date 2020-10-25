@@ -12,6 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Common constants for optimizer."""
-HYPER_CONFIG_ENV_NAME = "MINDINSIGHT_HYPER_CONFIG"
-HYPER_CONFIG_LEN_LIMIT = 100000
+"""Common validator modules for optimizer."""

@@ -190,7 +190,7 @@ class TestModelApi(TestCase):
         search_condition = {
             'sorted_name': 'summary_dir'
         }
-        res = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition)
+        res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -228,7 +228,7 @@ class TestModelApi(TestCase):
             ],
             'count': 2
         }
-        partial_res = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition)
+        partial_res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -266,7 +266,7 @@ class TestModelApi(TestCase):
             ],
             'count': 2
         }
-        partial_res = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition)
+        partial_res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -295,7 +295,7 @@ class TestModelApi(TestCase):
             ],
             'count': 3
         }
-        partial_res1 = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition1)
+        partial_res1 = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition1)
         expect_objects = expect_result.get('object')
         for idx, res_object in enumerate(partial_res1.get('object')):
             expect_objects[idx]['model_lineage']['dataset_mark'] = res_object['model_lineage'].get('dataset_mark')
@@ -314,7 +314,7 @@ class TestModelApi(TestCase):
             'object': [],
             'count': 0
         }
-        partial_res2 = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition2)
+        partial_res2 = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition2)
         assert expect_result == partial_res2
 
     @pytest.mark.level0
@@ -335,7 +335,7 @@ class TestModelApi(TestCase):
                 'eq': self._empty_train_id
             }
         }
-        res = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition)
+        res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition)
         assert expect_result == res
 
     @pytest.mark.level0
@@ -366,7 +366,7 @@ class TestModelApi(TestCase):
             ],
             'count': 1
         }
-        res = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition)
+        res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition)
         assert expect_result == res
 
     @pytest.mark.level0
@@ -386,6 +386,7 @@ class TestModelApi(TestCase):
             'The search_condition element summary_dir should be dict.',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -398,6 +399,7 @@ class TestModelApi(TestCase):
             'The sorted_name must exist when sorted_type exists.',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -408,6 +410,7 @@ class TestModelApi(TestCase):
             'Invalid search_condition type, it should be dict.',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -420,6 +423,7 @@ class TestModelApi(TestCase):
             'The limit must be int.',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -440,6 +444,7 @@ class TestModelApi(TestCase):
             'The offset must be int.',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -454,6 +459,7 @@ class TestModelApi(TestCase):
             'The search attribute not supported.',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -475,6 +481,7 @@ class TestModelApi(TestCase):
             'The sorted_type must be ascending or descending',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -489,6 +496,7 @@ class TestModelApi(TestCase):
             'The compare condition should be in',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -503,6 +511,7 @@ class TestModelApi(TestCase):
             'The parameter metric/accuracy is invalid.',
             filter_summary_lineage,
             LINEAGE_DATA_MANAGER,
+            None,
             search_condition
         )
 
@@ -526,7 +535,7 @@ class TestModelApi(TestCase):
             'object': [],
             'count': 0
         }
-        partial_res1 = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition1)
+        partial_res1 = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition1)
         assert expect_result == partial_res1
 
         # the (offset + 1) * limit > count
@@ -542,7 +551,7 @@ class TestModelApi(TestCase):
             'object': [],
             'count': 2
         }
-        partial_res2 = filter_summary_lineage(LINEAGE_DATA_MANAGER, search_condition2)
+        partial_res2 = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=search_condition2)
         assert expect_result == partial_res2
 
     @pytest.mark.level0
@@ -566,6 +575,7 @@ class TestModelApi(TestCase):
                 f'The parameter {condition_key} is invalid. Its operation should be `eq`, `in` or `not_in`.',
                 filter_summary_lineage,
                 LINEAGE_DATA_MANAGER,
+                None,
                 search_condition
             )
 
@@ -589,6 +599,7 @@ class TestModelApi(TestCase):
                 "The parameter lineage_type is invalid. It should be 'dataset' or 'model'.",
                 filter_summary_lineage,
                 LINEAGE_DATA_MANAGER,
+                None,
                 search_condition
             )
 
@@ -610,6 +621,7 @@ class TestModelApi(TestCase):
                 'The sorted_name must be in',
                 filter_summary_lineage,
                 LINEAGE_DATA_MANAGER,
+                None,
                 search_condition
             )
 

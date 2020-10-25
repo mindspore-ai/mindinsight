@@ -14,6 +14,7 @@
 # ============================================================================
 """Transformer."""
 from mindinsight.optimizer.utils.param_handler import match_value_type
+from mindinsight.optimizer.common.enums import HyperParamSource, HyperParamKey
 
 
 class Transformer:
@@ -23,7 +24,12 @@ class Transformer:
         """Transform from tuner."""
         suggest_list = match_value_type(suggest_list, params_info)
         param_dict = {}
+        user_defined_info = {}
         for index, param_name in enumerate(params_info):
-            param_dict.update({param_name: suggest_list[index]})
+            param_item = {param_name: suggest_list[index]}
+            param_dict.update(param_item)
+            source = params_info.get(param_name).get(HyperParamKey.SOURCE.value)
+            if source is not None and source == HyperParamSource.USER_DEFINED.value:
+                user_defined_info.update(param_item)
 
-        return param_dict
+        return param_dict, user_defined_info

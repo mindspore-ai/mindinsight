@@ -43,7 +43,7 @@ def get_optimize_targets():
 
 def _get_optimize_targets(data_manager, search_condition=None):
     """Get optimize targets."""
-    table = get_lineage_table(data_manager, search_condition)
+    table = get_lineage_table(data_manager=data_manager, search_condition=search_condition)
 
     target_summaries = []
     for target in table.target_names:
