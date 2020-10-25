@@ -16,13 +16,17 @@
 from .base import Graph
 from .pytorch_graph import PyTorchGraph
 from .pytorch_graph_node import PyTorchGraphNode
+from .onnx_graph import OnnxGraph
+from .onnx_graph_node import OnnxGraphNode
 
 
 class GraphFactory:
     """Graph factory."""
 
     @classmethod
-    def init(cls, graph_path: str, sample_shape: tuple, checkpoint: str = None):
+    def init(cls, graph_path: str,
+             input_nodes: str, output_nodes: str,
+             sample_shape: tuple):
         """
         Init an instance of graph.
 
@@ -34,8 +38,9 @@ class GraphFactory:
         Returns:
             Graph, graph instance.
         """
-        if checkpoint:
-            pass
+        if all([input_nodes, output_nodes]):
+            return OnnxGraph.load(model_path=graph_path, input_nodes=input_nodes,
+                                  output_nodes=output_nodes, sample_shape=sample_shape)
 
         return PyTorchGraph.load(model_path=graph_path, sample_shape=sample_shape)
 

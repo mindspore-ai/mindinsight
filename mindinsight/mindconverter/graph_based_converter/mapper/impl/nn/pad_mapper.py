@@ -16,6 +16,25 @@
 from ...base import ONNXToMindSporeMapper
 
 
+def _padding_format_convert(padding: list):
+    """Convert Onnx padding format to Mindspore"""
+    num = len(padding)
+    if num % 2 != 0:
+        raise ValueError(f"Padding list should be even length but got {num}")
+
+    low = 0
+    mid = num // 2
+    lst = []
+    ms_pad_front = low
+    ms_pad_back = mid
+    while ms_pad_front < mid and ms_pad_back < num:
+        lst.append((padding[ms_pad_front], padding[ms_pad_back]))
+        ms_pad_front += 1
+        ms_pad_back += 1
+
+    return tuple(lst)
+
+
 class PadMapper(ONNXToMindSporeMapper):
     """Pad mapper."""
 
@@ -26,16 +45,24 @@ class PadMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_params(**kwargs):
         params = kwargs['params']
-        if params['mode'] == 'constant':
+        mode = params.get('mode', 'constant')
+        if mode == 'constant' and params.get('value') is None:
+            if params.get('pads'):
+                pads_onnx = params.get('pads')
+                if isinstance(pads_onnx, list):
+                    paddings = _padding_format_convert(pads_onnx)
+                    return {'paddings': paddings,
+                            'mode': '\"CONSTANT\"'}
+        if mode == 'constant':
             if params['value'] == 0:
                 mode = '\"CONSTANT\"'
             else:
                 msg = "{UNSUPPORTED: value is NOT 0}\"CONSTANT\""
                 mode = msg
-        elif params['mode'] == 'reflect':
+        elif mode == 'reflect':
             mode = '\"REFLECT\"'
         else:
-            msg = f"{{UNSUPPORTED: \"{params['mode']}\"}}\"UNKNOWN\""
+            msg = f"{{UNSUPPORTED: \"{mode}\"}}\"UNKNOWN\""
             mode = msg
         pads_onnx = params['pads']
         half_index = len(pads_onnx) // 2

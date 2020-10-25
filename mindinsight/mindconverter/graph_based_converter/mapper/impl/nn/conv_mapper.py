@@ -13,24 +13,33 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
+import re
 import numpy as np
 from ...base import ONNXToMindSporeMapper
 
 
+def _convert_padding(**kwargs):
+    """Convert padding."""
+    params = kwargs['params']
+    if not params.get('pads'):
+        return '\"same\"', 0
+    if sum(params['pads']) == 0:
+        return '\"valid\"', 0
+    pads_onnx = params['pads']
+    half_index = len(pads_onnx) // 2
+    padding = []
+    for num_begin, num_end in zip(pads_onnx[:half_index], pads_onnx[half_index:]):
+        padding += [num_begin, num_end]
+    return '\"pad\"', tuple(padding)
+
+
 class ConvMapper(ONNXToMindSporeMapper):
     """Conv2d mapper."""
-
     @staticmethod
-    def _operation_name_in_ms(*args, **kwargs):
-        weight = kwargs['weights']['weight'].numpy()
-        dim = weight.ndim - 2
-        return f"nn.Conv{dim}d"
-
-    @staticmethod
-    def _convert_params(**kwargs):
+    def convert_params_torch(**kwargs):
+        """Convert params from PyTorch to MindSpore"""
         weights = kwargs['weights']
         params = kwargs['params']
-
         weight = weights['weight'].numpy()
         weight = np.transpose(weight, list(range(2, weight.ndim)) + [1, 0])
         if isinstance(params['dilations'], list):
@@ -49,7 +58,7 @@ class ConvMapper(ONNXToMindSporeMapper):
             kernel_size = kernel_size[0]
         else:
             kernel_size = tuple(kernel_size)
-        pad_mode, padding = ConvMapper._convert_padding(params=params)
+        pad_mode, padding = _convert_padding(params=params)
         return {
             'in_channels': in_channels,
             'out_channels': out_channels,
@@ -61,21 +70,74 @@ class ConvMapper(ONNXToMindSporeMapper):
             'group': params['group']}
 
     @staticmethod
-    def _convert_trained_weights(**kwargs):
-        return dict()
+    def convert_params_tf(**kwargs):
+        """Convert params from Tensorflow to MindSpore"""
+        weights = kwargs['weights']
+        params = kwargs['params']
+        # regex to find Conv weight
+        regex = r".+\/Conv2D\/ReadVariableOp:0$"
+        weight = None
+        for w_name, w in weights.items():
+            if re.match(regex, w_name):
+                weight = w
+                break
+        if weight is None:
+            raise ValueError("Conv. Mapper cannot get the weight.")
+
+        # tmp tf translated ver. mapping
+        if isinstance(params.get('dilations'), list):
+            dilation = tuple(params.get('dilations'))
+        else:
+            dilation = params.get('dilations')
+
+        if isinstance(params.get('strides'), list):
+            stride = tuple(params.get('strides'))
+        else:
+            stride = params.get('strides')
+
+        kernel_size = params.get('kernel_shape')
+        in_channels = weight.shape[1]
+        out_channels = weight.shape[0]
+        if len(kernel_size) == 1:
+            kernel_size = kernel_size[0]
+        else:
+            kernel_size = tuple(kernel_size)
+
+        pad_mode, padding = _convert_padding(params=params)
+
+        return {
+            'in_channels': in_channels,
+            'out_channels': out_channels,
+            'kernel_size': kernel_size,
+            'stride': stride,
+            'padding': padding,
+            'pad_mode': pad_mode,
+            'dilation': dilation,
+            'group': params.get('group', 1)}
 
     @staticmethod
-    def _convert_padding(**kwargs):
-        """Convert padding."""
+    def _operation_name_in_ms(*args, **kwargs):
+        if not kwargs['weights'].get('weight'):  # is from tf
+            kernel_size = kwargs['params'].get('kernel_shape')
+            dim = len(kernel_size)
+            return f"nn.Conv{dim}d"
+
+        weight = kwargs['weights']['weight'].numpy()
+        dim = weight.ndim - 2
+        return f"nn.Conv{dim}d"
+
+    @staticmethod
+    def _convert_params(**kwargs):
+        weights = kwargs['weights']
         params = kwargs['params']
-        if sum(params['pads']) == 0:
-            return '\"valid\"', 0
-        pads_onnx = params['pads']
-        half_index = len(pads_onnx) // 2
-        padding = []
-        for num_begin, num_end in zip(pads_onnx[:half_index], pads_onnx[half_index:]):
-            padding += [num_begin, num_end]
-        return '\"pad\"', tuple(padding)
+
+        if not weights.get('weight'):  # is from tf
+            return ConvMapper.convert_params_tf(params=params, weights=weights)
+        return ConvMapper.convert_params_torch(params=params, weights=weights)
+
+    @staticmethod
+    def _convert_trained_weights(**kwargs):
+        return dict()
 
     @staticmethod
     def _convert_settings(**kwargs):

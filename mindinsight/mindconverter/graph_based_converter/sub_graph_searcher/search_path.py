@@ -98,7 +98,7 @@ class MergedONNXNode(BaseNode):
     """Define merged onnx node."""
 
     def __init__(self, name, module_name, ori_nodes):
-        super(MergedONNXNode, self).__init__(name, module_name)
+        super(MergedONNXNode, self).__init__(node_name=name, op_type=module_name)
         self.nodes = ori_nodes
 
     def get_name(self):

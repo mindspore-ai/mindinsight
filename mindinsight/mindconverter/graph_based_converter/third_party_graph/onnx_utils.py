@@ -15,7 +15,9 @@
 """Define ONNX related operations."""
 import re
 import abc
+from importlib import import_module
 from collections import OrderedDict
+from typing import Union
 
 from mindinsight.mindconverter.common.log import logger as log
 
@@ -39,10 +41,15 @@ def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=None
     Returns:
         onnx.ModelProto, onnx defined model proto.
     """
-    import tensorflow as tf
-    from tf2onnx.tfonnx import process_tf_graph
-    from tf2onnx import constants, utils, optimizer
-    from tf2onnx import tf_loader
+    tf = import_module('tensorflow')
+    tf2onnx = import_module("tf2onnx")
+    tfonnx = getattr(tf2onnx, "tfonnx")
+    process_tf_graph = getattr(tfonnx, "process_tf_graph")
+    constants = getattr(tf2onnx, "constants")
+    utils = getattr(tf2onnx, "utils")
+    optimizer = getattr(tf2onnx, "optimizer")
+    tf_loader = getattr(tf2onnx, "tf_loader")
+
     target = ",".join(constants.DEFAULT_TARGET)
     shape_override = None
 
@@ -80,13 +87,9 @@ class OnnxTensor:
     """
     Define Onnx Tensor structure for convenience.
 
-    Note:
-        parameter from_nodes and to_nodes.
-
     Args:
         raw_tensor (onnx.TensorProto): onnx.TensorProto instance.
     """
-    import onnx
 
     def __init__(self, raw_tensor):
         self.raw_tensor = raw_tensor
@@ -97,7 +100,8 @@ class OnnxTensor:
         self.to_nodes = []
 
     def to_array(self):
-        """Convert binary data to np.array"""
+        onnx = import_module("onnx")
+        # Convert binary data to np.array
         return onnx.numpy_helper.to_array(self.raw_tensor)
 
 
@@ -136,7 +140,6 @@ class ParamsAttribute:
         for attribute in attrs:
             self.attribute_name_list.append(attribute.name)
             type_num = attribute.type
-
             # get attribute value by determining its type
             # Can Convert to np.array if needed
             if type_num == ONNX_TYPE_INTS:
@@ -219,8 +222,8 @@ class OnnxNode(BaseNode):
         self.raw_node = raw_node
         self.params = ParamsAttribute(raw_node.attribute, raw_node)
         self.scope_name = None
-        self.input_name_list = raw_node.input
-        self.output_name_list = raw_node.output
+        self.input_name_list = getattr(raw_node, 'input')
+        self.output_name_list = getattr(raw_node, 'output')
 
 
 class OnnxDataLoader:
@@ -238,11 +241,11 @@ class OnnxDataLoader:
             Default: True
     """
 
-    def __init__(self, onnx_model, infer_shape=True):
+    def __init__(self, onnx_model, graph_input_shape: Union[tuple, list] = None, infer_shape=True):
         self.model = onnx_model
         self.graph = onnx_model.graph
         self.nodes = onnx_model.graph.node
-
+        self.graph_input_shape = graph_input_shape
         # args for init
         self._is_infer_shape = infer_shape
 
@@ -251,9 +254,7 @@ class OnnxDataLoader:
 
         self.nodes_dict = OrderedDict()  # {node_name: OnnxNode} NO INPUT NODE
         self.tensors_dict = {}  # {tensor_name: OnnxTensor}
-        self.weight_dict = {}  # {tensor_name: OnnxTensor} NOT USED
-        self.bias_dict = {}  # {tensor_name: OnnxTensor}  NOT USED
-        # {node_name : (type, dim)} NO INPUT & OUTPUT NODE!
+        # {node_name : (type, dim)} NO INPUT & OUTPUT NODE
         self.value_info_dict = {}
 
         self.tensor_name_set = set()  # [str]
@@ -265,6 +266,20 @@ class OnnxDataLoader:
     def _check_initialization(self):
         """Define conditions checked before init."""
         if all([self.model, self.graph, self.nodes]):
+            if self.graph_input_shape is None:  # do not check
+                return True
+            onnx = import_module("onnx")
+            # check input shape eligible
+            input_node = getattr(self.graph, 'input')[0]
+            type_str = onnx.helper.printable_type(input_node.type)
+            regex = r".*(unk.+)x(?P<h>\d+)x(?P<w>\d+)x(?P<c>\d+)"
+            match = re.match(regex, type_str)
+            h = int(match.group('h'))
+            w = int(match.group('w'))
+            c = int(match.group('c'))
+            if [h, w, c] != list(self.graph_input_shape)[1:4]:
+                raise ValueError(
+                    f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
             return True
         return False
 
@@ -276,12 +291,12 @@ class OnnxDataLoader:
             The method will be replaced by self-implemented
             in future development.
         """
-        import onnx
+        onnx = import_module("onnx")
         self.inferred_model = onnx.shape_inference.infer_shapes(self.model)
 
     def _parse_value_info(self):  # no input node & output node
-        """Parse onnx defined value_info class attributes."""
-        import onnx
+        """Parse onnx defined value_info class attribtues"""
+        onnx = import_module("onnx")
 
         def _parse_value_info_re(i):
             """
@@ -341,7 +356,11 @@ class OnnxDataLoader:
             # replace unknown shape by '-1'
             for s in shape_list:
                 if 'unk' in s:
-                    s = '-1'
+                    if self.graph_input_shape is not None:
+                        s = self.graph_input_shape[0]
+                    else:
+                        s = '1'
+
                 # convert str to int
                 s = int(s)
                 lst.append(s)

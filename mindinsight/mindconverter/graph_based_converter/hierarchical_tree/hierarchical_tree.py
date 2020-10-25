@@ -27,6 +27,7 @@ from mindinsight.mindconverter.common.log import logger as log
 from .name_mgr import ModuleNameMgr, GlobalVarNameMgr
 from ..mapper.base import Mapper
 from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
+from ..third_party_graph.onnx_graph_node import OnnxGraphNode
 from ..constant import SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVEL_INDENT, CodeFormatConfig
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT
 from ..constant import NodeType
@@ -59,6 +60,8 @@ class HierarchicalTree(Tree):
         # Manage variable name in a module.
         self._vars_mgr_in_module = dict()
         self._module_vars = dict()
+        # scope name mapping record for easy node searching
+        self._scope_name_map = dict()
 
     @property
     def tree_identifier(self):
@@ -70,13 +73,23 @@ class HierarchicalTree(Tree):
         """
         return self.identifier
 
-    def insert(self, node: PyTorchGraphNode, node_name: str, input_shape, output_shape):
+    def get_node(self, nid):
+        """Override get_node method to support tf ver. generated scope."""
+        if nid is None or not self.contains(nid):
+            if self._scope_name_map and nid in self._scope_name_map:
+                nid = self._scope_name_map.get(nid)
+            else:
+                return None
+        return self._nodes[nid]
+
+    def insert(self, node: Union[PyTorchGraphNode, OnnxGraphNode],
+               node_name: str, input_shape, output_shape):
         """
         Insert node into hierarchical tree.
 
         Args:
             node_name (str): Node name.
-            node (PyTorchGraphNode): Node to be inserted.
+            node (Union[PyTorchGraphNode, OnnxGraphNode]): Node to be inserted.
             output_shape (tuple): Output tensor shape.
             input_shape (tuple): Input tensor shape.
 
@@ -102,7 +115,12 @@ class HierarchicalTree(Tree):
 
             if not self.contains(identifier):
                 # Insert node into tree.
-                tgt_node = node if idx == len(scopes) - 1 else PyTorchGraphNode()
+                if isinstance(node, OnnxGraphNode):
+                    tgt_node = node if idx == len(
+                        scopes) - 1 else OnnxGraphNode()
+                else:
+                    tgt_node = node if idx == len(
+                        scopes) - 1 else PyTorchGraphNode()
                 tgt_node.successor_nodes = node.successor_nodes
                 tgt_node.precursor_nodes = node.precursor_nodes
                 tgt_node.node_type = (NodeType.OPERATION if idx == len(scopes) - 1
@@ -154,7 +172,8 @@ class HierarchicalTree(Tree):
 
     def save_source_files(self, out_folder: str, mapper: Mapper,
                           model_name: str,
-                          report_folder: str = None) -> NoReturn:
+                          report_folder: str = None,
+                          scope_name_map: dict = None) -> NoReturn:
         """
         Save source codes to target folder.
 
@@ -165,6 +184,8 @@ class HierarchicalTree(Tree):
             out_folder (str): Output folder.
 
         """
+        if scope_name_map:
+            self._scope_name_map = scope_name_map
         try:
             self._adjust_structure()
             code_fragments = self._generate_codes(mapper)
@@ -217,7 +238,8 @@ class HierarchicalTree(Tree):
             Node, node.
         """
         if module_key in self._merged_module_args:
-            node = self._clear_unused_args(node, self._merged_module_args[module_key])
+            node = self._clear_unused_args(
+                node, self._merged_module_args[module_key])
         else:
             node.data.clear_args_of_declaration()
         return node
@@ -341,11 +363,20 @@ class HierarchicalTree(Tree):
                 nd_inst = self._preprocess_node_args(nd_inst, module_key)
                 # 4. Post-process child node args.
                 for _, scsr_nd_name in enumerate(nd_inst.successors(self.tree_identifier)):
-                    self._postprocess_node_args(self.get_node(scsr_nd_name), module_key)
+                    self._postprocess_node_args(
+                        self.get_node(scsr_nd_name), module_key)
                 # 5. Generate code.
-                snippets.add(func(nd_inst, nd_inst.data.module_name, module_key))
+                snippets.add(
+                    func(nd_inst, nd_inst.data.module_name, module_key))
 
             code_blocks.extend(snippets)
+
+        if self._scope_name_map:  # from tf. conversion
+            c_blocks = []
+            for s in code_blocks:
+                s = s.replace('$', '')
+                c_blocks.append(s)
+            code_blocks = c_blocks
 
         formatted_code, _ = FormatCode("".join(code_blocks),
                                        style_config=CodeFormatConfig.PEP8.value)
@@ -469,8 +500,16 @@ class HierarchicalTree(Tree):
             # Generate code statement.
             init, construct = self._generate_stat(nd_inst, node, idx)
 
-            construct_block.append(construct)
-            init_block.append(init)
+            # support multiple construct and init block returns:
+            if isinstance(construct, list):
+                construct_block += construct
+            else:
+                construct_block.append(construct)
+
+            if isinstance(init, list):
+                init_block += init
+            else:
+                init_block.append(init)
 
         class_construct = f"{NEW_LINE}{FIRST_LEVEL_INDENT}def construct(self, x):" \
                           f"{NEW_LINE}{SECOND_LEVEL_INDENT}"
@@ -507,7 +546,8 @@ class HierarchicalTree(Tree):
 
         if idx != 0:
             # Get previous node output variable name.
-            ipt_args_in_construct = self._get_previous_opt_var(cur_nd_inst, pre_nd_inst)
+            ipt_args_in_construct = self._get_previous_opt_var(
+                cur_nd_inst, pre_nd_inst)
         if idx != len(pre_nd_inst.successors(self.tree_identifier)) - 1:
             # Set opt variable name.
             opt_arg_in_construct = cur_nd_inst.data.opt_var_name
@@ -652,7 +692,8 @@ class HierarchicalTree(Tree):
                 nd_inst.data.variable_name = self._module_vars[module_key][idx]
             else:
                 variable_name = nd_inst.data.op_name or nd_inst.data.module_name
-                variable_name = self._vars_mgr_in_module[module_key].get_name(variable_name)
+                variable_name = self._vars_mgr_in_module[module_key].get_name(
+                    variable_name)
                 nd_inst.data.variable_name = variable_name
 
             # Generation of params must behind variable assigment.
@@ -662,7 +703,8 @@ class HierarchicalTree(Tree):
             module_settings.update(nd_inst.data.settings_in_code)
 
             if not created:
-                self._module_vars[module_key].append(nd_inst.data.variable_name)
+                self._module_vars[module_key].append(
+                    nd_inst.data.variable_name)
 
         node.data.args_in_code = module_args
 
@@ -727,5 +769,8 @@ class HierarchicalTree(Tree):
         Returns:
             str, imported module.
         """
-        return f"from mindspore import nn{NEW_LINE}" \
+        return f"import numpy as np{NEW_LINE}" \
+               f"import mindspore{NEW_LINE}" \
+               f"from mindspore import nn{NEW_LINE}" \
+               f"from mindspore import Tensor{NEW_LINE}" \
                f"from mindspore.ops import operations as P{NEW_LINE * 3}"

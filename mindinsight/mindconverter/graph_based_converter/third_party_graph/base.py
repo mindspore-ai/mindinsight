@@ -26,7 +26,7 @@ class GraphParser(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def parse(cls, model_path: str):
+    def parse(cls, model_path: str, **kwargs):
         """Parse graph into readable format."""
 
 
@@ -54,18 +54,19 @@ class BaseGraph(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def load_graph(graph_path: str):
+    def load_graph(graph_path: str, **kwargs):
         """Load graph file."""
 
     @classmethod
     @abc.abstractmethod
     def load(cls, model_path: str, sample_shape: tuple = None,
-             checkpoint: str = None):
+             checkpoint: str = None, **kwargs):
         """Factory method to initialize an graph object."""
 
     def __new__(cls, *args, **kwargs):
         """Control the create action of graph."""
-        model_param = args[0] if args else kwargs.get(cls._REQUIRED_PARAM_OF_MODEL)
+        model_param = args[0] if args else kwargs.get(
+            cls._REQUIRED_PARAM_OF_MODEL)
         if not model_param:
             error = ValueError(f"`{cls._REQUIRED_PARAM_OF_MODEL}` "
                                f"can not be None.")
@@ -229,12 +230,12 @@ class Graph(BaseGraph, abc.ABC):
         raise NotImplementedError
 
     @staticmethod
-    def load_graph(graph_path: str):
+    def load_graph(graph_path: str, **kwargs):
         raise NotImplementedError
 
     @classmethod
     def load(cls, model_path: str, sample_shape: tuple = None,
-             checkpoint: str = None) -> BaseGraph:
+             checkpoint: str = None, **kwargs) -> BaseGraph:
         """
         Load third party graph, metadata and checkpoint.
 
@@ -245,12 +246,19 @@ class Graph(BaseGraph, abc.ABC):
             model_path (str): Graph or model file path.
             sample_shape (tuple): Input shape of the model.
             checkpoint (str): Checkpoint file path.
+            input_nodes (list[str]): list of input nodes' name
+            output_nodes (list[str]): list of output nodes' name
 
         Returns:
             cls, graph instance.
         """
-        src_graph = cls.load_graph(graph_path=model_path)
-        ckpt = cls.load_checkpoint(ckpt_path=checkpoint) if checkpoint else None
+        tf_input_nodes = kwargs.get('input_nodes')
+        tf_output_nodes = kwargs.get('output_nodes')
+        src_graph = cls.load_graph(graph_path=model_path,
+                                   input_nodes=tf_input_nodes,
+                                   output_nodes=tf_output_nodes)
+        ckpt = cls.load_checkpoint(
+            ckpt_path=checkpoint) if checkpoint else None
 
         if ckpt is not None:
             # Create an instance of TensorflowGraph.
@@ -258,7 +266,7 @@ class Graph(BaseGraph, abc.ABC):
                        checkpoint=ckpt)
 
         # Create an instance of PyTorchGraph.
-        return cls(model=src_graph, sample_shape=sample_shape)
+        return cls(src_graph, sample_shape=sample_shape)
 
 
 class GraphNode(abc.ABC):

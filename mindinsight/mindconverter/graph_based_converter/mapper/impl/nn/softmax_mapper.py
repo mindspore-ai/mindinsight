@@ -16,22 +16,20 @@
 from ...base import ONNXToMindSporeMapper
 
 
-class BatchNormMapper(ONNXToMindSporeMapper):
-    """BatchNorm mapper."""
+class SoftmaxMapper(ONNXToMindSporeMapper):
+    """Softmax mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        dim = len(kwargs['params']['output_shape']) - 2
-        return f"nn.BatchNorm{dim}d"
+        return "nn.Softmax"
 
     @staticmethod
     def _convert_params(**kwargs):
-        params = kwargs['params']
-        return {
-            'num_features': params.get('output_shape')[1],
-            'eps': params.get('epsilon', 1e-5),
-            'momentum': params.get('momentum', 0.9)
-        }
+        params = kwargs.get('params')
+        converted_params = {}
+        if params.get('axis'):
+            converted_params['axis'] = params.get('axis')
+        return converted_params
 
     @staticmethod
     def _convert_trained_weights(**kwargs):

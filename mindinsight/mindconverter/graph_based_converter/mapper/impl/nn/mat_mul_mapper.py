@@ -16,22 +16,16 @@
 from ...base import ONNXToMindSporeMapper
 
 
-class BatchNormMapper(ONNXToMindSporeMapper):
-    """BatchNorm mapper."""
+class MatMulMapper(ONNXToMindSporeMapper):
+    """MatMul mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        dim = len(kwargs['params']['output_shape']) - 2
-        return f"nn.BatchNorm{dim}d"
+        return "nn.MatMul"
 
     @staticmethod
     def _convert_params(**kwargs):
-        params = kwargs['params']
-        return {
-            'num_features': params.get('output_shape')[1],
-            'eps': params.get('epsilon', 1e-5),
-            'momentum': params.get('momentum', 0.9)
-        }
+        return dict()
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
