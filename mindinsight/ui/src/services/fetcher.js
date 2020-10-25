@@ -78,12 +78,18 @@ axios.interceptors.response.use(
           regardError: ['50545013', '50545014', '5054500D'],
         };
 
+        if (ignoreCode.ignoreError.includes(errorCode)) {
+          if (errorData[errorCode]) {
+            Vue.prototype.$message.error(errorData[errorCode]);
+          }
+          setTimeout(()=>{
+            router.push('/');
+          }, 3000);
+          return Promise.reject(error);
+        }
         if (
           path.includes('-dashboard') ||
-        ignoreCode.regardError.includes(errorCode) ||
-        (ignoreCode.ignoreError.includes(errorCode) &&
-          error.config.headers.ignoreError)
-        ) {
+        ignoreCode.regardError.includes(errorCode)) {
           return Promise.reject(error);
         }
         if (errorData[errorCode]) {

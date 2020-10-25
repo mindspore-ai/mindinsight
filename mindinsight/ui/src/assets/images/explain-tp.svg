@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="19px" viewBox="0 0 24 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>tp</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M17.1480906,0.0392739336 L18.3266093,0.00728953835 C18.6341197,-0.00105613749 18.9283586,0.132596377 19.1243929,0.369667804 L20,1.42857143 L20,1.42857143 L10.4761905,1.42857143 L10.4761905,0.0392739336 L17.1480906,0.0392739336 Z" id="path-1"></path>
+        <filter x="-36.8%" y="-174.5%" width="173.5%" height="589.5%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.2 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <path d="M1,0 L18.04761,0 C18.5998948,-2.12475365e-16 19.04761,0.44771525 19.04761,1 L19.04761,10.875081 C19.0475959,11.6828644 18.5616641,12.411342 17.8158526,12.721631 C14.1649895,14.2405437 11.4009752,15 9.52380952,15 C7.64664694,15 4.88263611,14.2405461 1.23177702,12.7216384 C0.485941676,12.4113657 9.8926869e-17,11.682874 0,10.8750748 L0,1 C-6.76353751e-17,0.44771525 0.44771525,1.01453063e-16 1,0 Z" id="path-3"></path>
+        <filter x="-18.4%" y="-16.7%" width="136.8%" height="146.7%" filterUnits="objectBoundingBox" id="filter-4">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.2 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="tp" transform="translate(12.000000, 8.500000) scale(-1, 1) translate(-12.000000, -8.500000) translate(2.000000, 1.000000)">
+            <g id="Rectangle-34" fill-rule="nonzero">
+                <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                <use fill="#1F68A0" xlink:href="#path-1"></use>
+            </g>
+            <g id="Rectangle-34" fill-rule="nonzero">
+                <use fill="black" fill-opacity="1" filter="url(#filter-4)" xlink:href="#path-3"></use>
+                <use fill="#6CBFFF" xlink:href="#path-3"></use>
+            </g>
+            <text id="TP" transform="translate(9.500000, 7.000000) scale(-1, 1) translate(-9.500000, -7.000000) " font-family="PingFangSC-Medium, PingFang SC" font-size="8" font-weight="400" line-spacing="12" fill="#FFFFFF">
+                <tspan x="4" y="9">TP</tspan>
+            </text>
+        </g>
+    </g>
+</svg>

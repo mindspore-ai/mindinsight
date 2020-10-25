@@ -30,6 +30,7 @@ limitations under the License.
                  mode="horizontal">
           <el-menu-item index="/summary-manage">{{$t("summaryManage.summaryList")}}</el-menu-item>
           <el-menu-item index="/debugger">{{$t("debugger.debugger")}}</el-menu-item>
+          <el-menu-item index="/explain">{{$t("explain.explain")}}</el-menu-item>
         </el-menu>
       </div>
     </div>
@@ -189,8 +190,12 @@ export default {
     // get active menu item
     getActive() {
       const str = this.$route.path.split('/');
-      if (str.length > 1 && str[1] === 'debugger') {
-        return this.$route.path;
+      if (str.length > 1) {
+        if (str[1] === 'debugger') {
+          return this.$route.path;
+        } else if (str[1] === 'explain') {
+          return `/${str[1]}`;
+        }
       }
       return '/summary-manage';
     },

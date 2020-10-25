@@ -389,4 +389,43 @@ export default {
       data: params,
     });
   },
+  // explain list
+  getExplainList(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/explainer/explain-jobs',
+      params: params,
+    });
+  },
+  // Explain query train base information
+  queryTrainInfo(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/explainer/explain-job',
+      params: params,
+    });
+  },
+  // Explain query page table information
+  queryPageInfo(params) {
+    return axios({
+      method: 'post',
+      url: '/v1/mindinsight/explainer/saliency',
+      data: params,
+    });
+  },
+  // Explain query similar pictures
+  querySimilarPic(params) {
+    return axios({
+      method: 'get',
+      url: '/v1/mindinsight/explainer/similar',
+      params: params,
+    });
+  },
+  getEvaluation(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/explainer/evaluation',
+      params: params,
+    });
+  },
 };
