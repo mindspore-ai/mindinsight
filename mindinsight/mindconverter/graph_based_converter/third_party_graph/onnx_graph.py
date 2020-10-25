@@ -193,8 +193,6 @@ class OnnxGraph(Graph):
 
         Args:
             graph_path (str): Graph path.
-            tf_input_nodes (str): input nodes of tf graph
-            tf_output_nodes (str): output nodes of tf graph
 
         Returns:
             object, ONNX model.

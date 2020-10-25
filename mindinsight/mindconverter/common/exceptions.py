@@ -26,6 +26,7 @@ class ConverterErrors(ScriptConverterErrors):
     NODE_TYPE_NOT_SUPPORT = 2
     CODE_SYNTAX_ERROR = 3
     NODE_INPUT_TYPE_NOT_SUPPORT = 4
+    UNKNOWN_MODEL = 5
 
 
 class ScriptNotSupport(MindInsightException):
@@ -62,3 +63,12 @@ class NodeInputTypeNotSupport(MindInsightException):
         super(NodeInputTypeNotSupport, self).__init__(ConverterErrors.NODE_INPUT_TYPE_NOT_SUPPORT,
                                                       msg,
                                                       http_code=400)
+
+
+class UnknownModel(MindInsightException):
+    """The unknown model error."""
+
+    def __init__(self, msg):
+        super(UnknownModel, self).__init__(ConverterErrors.UNKNOWN_MODEL,
+                                           msg,
+                                           http_code=400)

@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Graph based scripts converter definition."""
-from .framework import graph_based_converter
+from .framework import graph_based_converter_pytorch_to_ms
+from .framework import graph_based_converter_tf_to_ms
 
-__all__ = ["graph_based_converter"]
+__all__ = ["graph_based_converter_pytorch_to_ms", "graph_based_converter_tf_to_ms"]

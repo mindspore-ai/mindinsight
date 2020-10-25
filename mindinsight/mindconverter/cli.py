@@ -19,6 +19,7 @@ import argparse
 
 import mindinsight
 from mindinsight.mindconverter.converter import main
+from mindinsight.mindconverter.graph_based_converter.constant import ARGUMENT_LENGTH_LIMIT, EXPECTED_SHAPE_NUMBER
 from mindinsight.mindconverter.graph_based_converter.framework import main_graph_base_converter
 
 from mindinsight.mindconverter.common.log import logger as log
@@ -38,6 +39,11 @@ class FileDirAction(argparse.Action):
             option_string (str): Optional string for specific argument name. Default: None.
         """
         outfile = values
+
+        if len(outfile) > ARGUMENT_LENGTH_LIMIT:
+            parser_in.error(
+                f"The length of {option_string}{outfile} should be no more than {ARGUMENT_LENGTH_LIMIT}.")
+
         if outfile.startswith('~'):
             outfile = os.path.realpath(os.path.expanduser(outfile))
 
@@ -160,9 +166,6 @@ class ModelFileAction(argparse.Action):
         if not os.path.isfile(outfile_dir):
             parser_in.error(f'{option_string} {outfile_dir} is not a file')
 
-        if not outfile_dir.endswith('.pth'):
-            parser_in.error(f"{option_string} {outfile_dir} should be a Pytorch model, ending with '.pth'.")
-
         setattr(namespace, self.dest, outfile_dir)
 
 
@@ -200,12 +203,40 @@ class ShapeAction(argparse.Action):
         """
         in_shape = None
         shape_str = values
+
+        shape_list = shape_str.split(';')
+        if not len(shape_list) == EXPECTED_SHAPE_NUMBER:
+            parser_in.error(f"Only support one shape now, but get {len(shape_list)}.")
+
         try:
-            in_shape = [int(num_shape) for num_shape in shape_str.split(',')]
+            in_shape = [int(num_shape) for num_shape in shape_list[0].split(',')]
         except ValueError:
             parser_in.error(
                 f"{option_string} {shape_str} should be a list of integer split by ',', check it please.")
         setattr(namespace, self.dest, in_shape)
+
+
+class NodeAction(argparse.Action):
+    """Node action class definition."""
+
+    def __call__(self, parser_in, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from FileDirAction.
+
+        Args:
+            parser_in (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+
+        """
+        node_str = values
+        if len(node_str) > ARGUMENT_LENGTH_LIMIT:
+            parser_in.error(
+                f"The length of {option_string}{node_str} should be no more than {ARGUMENT_LENGTH_LIMIT}."
+            )
+
+        setattr(namespace, self.dest, node_str)
 
 
 parser = argparse.ArgumentParser(
@@ -234,7 +265,7 @@ parser.add_argument(
         action=ModelFileAction,
         required=False,
         help="""
-            PyTorch .pth model file path to use graph 
+            PyTorch .pth or Tensorflow .pb model file path to use graph 
             based schema to do script generation. When 
             `--in_file` and `--model_file` are both provided,
             use AST schema as default.
@@ -250,7 +281,29 @@ parser.add_argument(
             Optional, expected input tensor shape of
             `--model_file`. It's required when use graph based
             schema. 
-            Usage: --shape 3,244,244
+            Usage: --shape 1,3,244,244
+        """)
+
+parser.add_argument(
+        '--input_nodes',
+        type=str,
+        action=NodeAction,
+        default=None,
+        required=False,
+        help="""
+            Optional, input node(s) name of `--model_file`. It's required when use Tensorflow model.
+            Usage: --input_nodes input_1:0,input_2:0
+        """)
+
+parser.add_argument(
+        '--output_nodes',
+        type=str,
+        action=NodeAction,
+        default=None,
+        required=False,
+        help="""
+            Optional, output node(s) name of `--model_file`. It's required when use Tensorflow model.
+            Usage: --output_nodes output_1:0,output_2:0
         """)
 
 parser.add_argument(
@@ -305,10 +358,14 @@ def cli_entry():
     if args.report is None:
         args.report = args.output
     os.makedirs(args.report, mode=mode, exist_ok=True)
-    _run(args.in_file, args.model_file, args.shape, args.output, args.report, args.project_path)
+    _run(args.in_file, args.model_file,
+         args.shape,
+         args.input_nodes, args.output_nodes,
+         args.output, args.report,
+         args.project_path)
 
 
-def _run(in_files, model_file, shape, out_dir, report, project_path):
+def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report, project_path):
     """
     Run converter command.
 
@@ -316,6 +373,8 @@ def _run(in_files, model_file, shape, out_dir, report, project_path):
         in_files (str): The file path or directory to convert.
         model_file(str): The pytorch .pth to convert on graph based schema.
         shape(list): The input tensor shape of module_file.
+        input_nodes(str): The input node(s) name of Tensorflow model, split by ','.
+        output_nodes(str): The output node(s) name of Tensorflow model, split by ','.
         out_dir (str): The output directory to save converted file.
         report (str): The report file path.
         project_path(str): Pytorch scripts project path.
@@ -341,6 +400,8 @@ def _run(in_files, model_file, shape, out_dir, report, project_path):
         file_config = {
             'model_file': model_file,
             'shape': shape if shape else [],
+            'input_nodes': input_nodes,
+            'output_nodes': output_nodes,
             'outfile_dir': out_dir,
             'report_dir': report if report else out_dir
         }

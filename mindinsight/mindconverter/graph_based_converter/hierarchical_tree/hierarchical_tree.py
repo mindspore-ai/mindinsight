@@ -182,6 +182,7 @@ class HierarchicalTree(Tree):
             mapper (Mapper): Mapper of third party framework and mindspore.
             model_name(str): Name of Converted model.
             out_folder (str): Output folder.
+            scope_name_map(str): Scope name map of tensorflow.
 
         """
         if scope_name_map:
