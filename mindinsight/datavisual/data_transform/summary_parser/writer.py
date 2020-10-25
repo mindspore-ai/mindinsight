@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Create a logger."""
-from mindinsight.utils.log import setup_logger
+"""Base writer."""
+from abc import abstractmethod
 
-logger = setup_logger("datavisual", "datavisual")
-restful_logger = setup_logger("restful_api", "restful_api")
-parse_summary_logger = setup_logger("parse_summary", "parse_summary", console=True,
-                                    formatter='[%(levelname)s]%(message)s')
+
+class Writer:
+    """Base writer for writers."""
+    @abstractmethod
+    def add(self, value):
+        """
+        Abstract method for adding value.
+
+        Args:
+            value (object): scalar, tensor or image value with wall_time, tag and step.
+        """
+
+    @abstractmethod
+    def write(self):
+        """Abstract method for writing file."""

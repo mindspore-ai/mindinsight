@@ -1,0 +1,45 @@
+syntax = "proto2";
+
+package mindinsight.summary;
+option cc_enable_arenas = true;
+
+// Event Protocol buffer, Top define
+message Event {
+  // Timestamp
+  required double wall_time = 1;
+
+  // The step of train.
+  optional int64 step = 2;
+
+  oneof what {
+    // An event file was started, with the specified version.
+    // Now version is "Mindspore.Event:1"
+    string version = 3;
+
+    // Summary data
+    Summary summary = 5;
+
+  }
+}
+
+
+// A Summary is a set of named values that be produced regularly during training
+message Summary {
+    message Image {
+        required bytes encoded_image = 4;
+    }
+
+    message Value {
+        // Tag name for the data.
+        required string tag = 1;
+
+        // Value associated with the tag.
+        oneof value {
+            float scalar_value = 3;
+            Image image = 4;
+        }
+    }
+
+    // Set of values for the summary.
+    repeated Value value = 1;
+}
