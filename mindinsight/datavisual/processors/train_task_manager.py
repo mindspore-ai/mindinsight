@@ -79,6 +79,9 @@ class TrainTaskManager(BaseProcessor):
                 default_result.update({plugin_name: list()})
             return dict(plugins=default_result)
 
+        for plugin_name, value in plugins.items():
+            plugins[plugin_name] = sorted(value)
+
         return dict(
             plugins=plugins
         )

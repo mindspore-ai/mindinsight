@@ -201,8 +201,9 @@ class SummaryWatcher:
         if entry.is_file():
             summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
             pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
-            if summary_pattern is None and pb_pattern is None:
+            if not self._is_valid_pattern_result(summary_pattern, pb_pattern, list_explain, entry):
                 return
+
             if summary_pattern is not None:
                 timestamp = int(summary_pattern.groupdict().get('timestamp'))
                 try:
@@ -210,11 +211,6 @@ class SummaryWatcher:
                     ctime = datetime.datetime.fromtimestamp(timestamp).astimezone()
                 except OverflowError:
                     return
-
-            if list_explain and not entry.name.endswith(EXPLAIN_SUMMARY_SUFFIX):
-                return
-            if not list_explain and entry.name.endswith(EXPLAIN_SUMMARY_SUFFIX):
-                return
 
             if relative_path not in summary_dict:
                 summary_dict[relative_path] = _new_entry(ctime, mtime)
@@ -249,6 +245,17 @@ class SummaryWatcher:
                 summary_dict[relative_path]['profiler'] = profiler
             else:
                 summary_dict[relative_path] = _new_entry(ctime, mtime, profiler)
+
+    def _is_valid_pattern_result(self, summary_pattern, pb_pattern, list_explain, entry):
+        """Check the pattern result is valid."""
+        if summary_pattern is None and pb_pattern is None:
+            return False
+        if list_explain and not entry.name.endswith(EXPLAIN_SUMMARY_SUFFIX):
+            return False
+        if not list_explain and entry.name.endswith(EXPLAIN_SUMMARY_SUFFIX):
+            return False
+
+        return True
 
     def is_summary_directory(self, summary_base_dir, relative_path):
         """
