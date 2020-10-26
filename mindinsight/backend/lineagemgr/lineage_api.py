@@ -125,7 +125,7 @@ def get_dataset_graph():
     }
     result = {}
     try:
-        objects = filter_summary_lineage(DATA_MANAGER, search_condition).get('object')
+        objects = filter_summary_lineage(data_manager=DATA_MANAGER, search_condition=search_condition).get('object')
     except MindInsightException as exception:
         raise MindInsightException(exception.error, exception.message, http_code=400)
 
