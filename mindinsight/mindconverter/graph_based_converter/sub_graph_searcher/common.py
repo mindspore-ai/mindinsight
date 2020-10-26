@@ -20,6 +20,8 @@ from typing import List
 
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import BaseNode
 
+MAX_OUT_DEGREE = 1
+
 
 class CmpRelation:
     """Define cmp relation between `x` and `y`."""
@@ -122,7 +124,6 @@ class AlgorithmContext:
 
 
 context = AlgorithmContext()
-
 
 __all__ = ["context",
            "gen_hash_key",
