@@ -97,15 +97,17 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """Pre-process before dealing with command."""
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
         is_new_step = metadata_stream.step < request.cur_step
+        is_new_node = metadata_stream.full_name != request.cur_node
         # clean cache data at the beginning of new step
-        if is_new_step:
+        if is_new_step or is_new_node:
             self._cache_store.clean_data()
+        if is_new_step:
             self._cache_store.get_stream_handler(Streams.TENSOR).clean_tensors(request.cur_step)
         # receive graph at the beginning of the training
         if self._status == ServerStatus.RECEIVE_GRAPH:
             self._send_graph_flag(metadata_stream)
         # receive new metadata
-        if is_new_step or metadata_stream.full_name != request.cur_node:
+        if is_new_step or is_new_node:
             self._update_metadata(metadata_stream, request)
         self._send_received_tensor_tag()
         self._send_watchpoint_hit_flag()
