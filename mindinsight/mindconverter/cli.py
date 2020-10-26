@@ -85,6 +85,11 @@ class OutputDirAction(argparse.Action):
             option_string (str): Optional string for specific argument name. Default: None.
         """
         output = values
+
+        if len(output) > ARGUMENT_LENGTH_LIMIT:
+            parser_in.error(
+                f"The length of {option_string}{output} should be no more than {ARGUMENT_LENGTH_LIMIT}.")
+
         if output.startswith('~'):
             output = os.path.realpath(os.path.expanduser(output))
 
@@ -204,7 +209,7 @@ class ShapeAction(argparse.Action):
         in_shape = None
         shape_str = values
 
-        shape_list = shape_str.split(';')
+        shape_list = shape_str.split(':')
         if not len(shape_list) == EXPECTED_SHAPE_NUMBER:
             parser_in.error(f"Only support one shape now, but get {len(shape_list)}.")
 
