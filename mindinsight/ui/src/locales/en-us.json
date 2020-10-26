@@ -559,7 +559,7 @@
     "weightError": "Weight calculation error",
     "weightSum": "The sum of weights must be 1",
     "radarChart": "Explanation Method Comparison Radar Chart",
-    "comprehensiveTooltip": "The page of comprehensive assessment provides configurable weights for different scoring dimensions and calculates the comprehensive scores to sort and filter the explanation methods. The explanation method has advantages and disadvantages in different scoring dimensions. You can refer to the description of each dimension, adjust the weight based on the actual requirements, and assess the explanation method with emphasis. By default, weights for each dimension are the same.",
+    "comprehensiveTooltip": "On the comprehensive assessment page, you can configure weights for different scoring dimensions to calculate the comprehensive scores of explanation methods to sort and filter the methods. Each explanation method has advantages in different scoring dimensions. You can refer to the description of each dimension and adjust weights based on the actual requirements to assess the explanation method. By default, the same weight is set for each dimension.",
     "classifyTooltip": "Classification assessment groups datasets by tag and measures the explanation methods based on data with different tags.",
     "scoreSystemtooltipOne": "Function description:",
     "scoreSystemtooltiptwo": "The scoring system provides multiple dimensions for scoring explanation methods.",
