@@ -32,7 +32,7 @@ export default {
       barEnd: 100, // Zoom end value
       firstInit: true, // Identification of the first load data
       limitCount: 20, // Limit number of bars
-      legendLimit: 10, // Limit number of characters in legend
+      legendLimit: 16, // Limit number of characters in legend
     };
   },
 
@@ -147,7 +147,7 @@ export default {
         },
         grid: {
           left: '10%',
-          right: 200,
+          right: 260,
           bottom: '3%',
           top: 30,
         },
