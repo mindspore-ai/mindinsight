@@ -509,7 +509,7 @@
     "largeDataTip": "The requested data is too large. Try another dimension.",
     "continueTo": "Continue to"
   },
-     "explain": {
+  "explain": {
     "explain": "Model Explanation",
     "explainSummary": "Explanation List",
     "explainSummaryCurrentFolder": "Root path of the explanation log:",
@@ -533,11 +533,11 @@
     "FP": "FP: indicates false positive. The tag is a negative sample, and the classification is a positive sample;",
     "TN": "TN: indicates true negative. The tag is a negative sample, and the classification is a negative sample;",
     "mainTipTitle": "Function description:",
-    "mainTipPartOne":"This function visualizes the basis for model classification. After the to-be-explained model, the image, and the tag are selected, a contribution degree of each pixel in the original image to the selected tag is calculated by using an explanation method, and visualization is performed by using a saliency map similar to a heatmap. A brighter color indicates that the corresponding area contributes more to the selected tag of the model prediction. The darker the color, the smaller the contribution of the area to the selected tag.",
-    "mainTipPartTwo":"A saliency map helps you understand the features related to the specified tag during deep neural network inference. When the inference basis and expectation of a model are different, you can debug the model by referring to the saliency map so that the model can perform inference based on proper features.",
-    "mainTipPartThree":"For details about how to generate saliency maps, see section 3.2 'Local Methods' in",
-    "mainTipPartFour":"https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9050829",
-    "noExplainer":"Select Explanation Method"
+    "mainTipPartOne": "This function visualizes the basis for model classification. After the to-be-explained model, the image, and the tag are selected, a contribution degree of each pixel in the original image to the selected tag is calculated by using an explanation method, and visualization is performed by using a saliency map similar to a heatmap. A brighter color indicates that the corresponding area contributes more to the selected tag of the model prediction. The darker the color, the smaller the contribution of the area to the selected tag.",
+    "mainTipPartTwo": "A saliency map helps you understand the features related to the specified tag during deep neural network inference. When the inference basis and expectation of a model are different, you can debug the model by referring to the saliency map so that the model can perform inference based on proper features.",
+    "mainTipPartThree": "For details about how to generate saliency maps, see section 3.2 'Local Methods' in",
+    "mainTipPartFour": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9050829",
+    "noExplainer": "Select Explanation Method"
   },
   "metric": {
     "scoreSystem": "Scoring System",
@@ -559,7 +559,7 @@
     "weightError": "Weight calculation error",
     "weightSum": "The sum of weights must be 1",
     "radarChart": "Explanation Method Comparison Radar Chart",
-    "comprehensiveTooltip": "The comprehensive assessment provides configurable weights for different scoring dimensions and calculates the comprehensive scores to sort and filter the explanation methods. The explanation method has advantages and disadvantages in different scoring dimensions. You can refer to the description of each dimension, adjust the weight based on the actual requirements, and assess the explanation method with emphasis. By default, weights for each dimension are the same.",
+    "comprehensiveTooltip": "The page of comprehensive assessment provides configurable weights for different scoring dimensions and calculates the comprehensive scores to sort and filter the explanation methods. The explanation method has advantages and disadvantages in different scoring dimensions. You can refer to the description of each dimension, adjust the weight based on the actual requirements, and assess the explanation method with emphasis. By default, weights for each dimension are the same.",
     "classifyTooltip": "Classification assessment groups datasets by tag and measures the explanation methods based on data with different tags.",
     "scoreSystemtooltipOne": "Function description:",
     "scoreSystemtooltiptwo": "The scoring system provides multiple dimensions for scoring explanation methods.",
@@ -593,7 +593,6 @@
     "50545013": "The requested data is too large. Try another dimension.",
     "50545014": "The queried tensor data has been replaced by new data. Please refresh.",
     "50548001": "Ascend AI Processor information query timed out.",
-
     "5054B080": "Incorrect parameter type. Please check the input parameter type.",
     "5054B081": "Incorrect parameter value. Please check the input parameter.",
     "5054B180": "Failed to create the watchpoint. Please stop training and try again.",
