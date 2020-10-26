@@ -619,11 +619,12 @@ class HierarchicalTree(Tree):
                 cur_nd = self.get_node(p_nd[0])
         return ", ".join(self._find_all_previous_opt_var_(cur_nd, pre_nd))
 
-    def hash_key(self, node):
+    def hash_key(self, node, depth: int = 0):
         """
         Generate hash key for each node.
 
         Args:
+            depth (int): Recursion depth.
             node (Node): Node.
 
         Returns:
@@ -633,12 +634,12 @@ class HierarchicalTree(Tree):
         for s in node.successors(self.tree_identifier):
             cur_nd = self.get_node(s)
             if cur_nd.data.hash_key:
-                scsr_topo_order.append(cur_nd.data.hash_key)
+                scsr_topo_order.append(f"{cur_nd.data.hash_key}[{depth}]")
                 continue
             if cur_nd.data.node_type in {NodeType.MODULE.value,
                                          NodeType.FUNC.value,
                                          NodeType.CLASS.value}:
-                scsr_topo_order.append(self.hash_key(cur_nd))
+                scsr_topo_order.append(self.hash_key(cur_nd, depth + 1))
                 continue
         unique_key = "->".join(scsr_topo_order)
         node.data.hash_key = unique_key
