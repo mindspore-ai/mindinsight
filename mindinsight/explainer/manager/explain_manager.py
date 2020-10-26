@@ -24,7 +24,7 @@ from mindinsight.explainer.common.log import logger
 from mindinsight.explainer.manager.explain_job import ExplainJob
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
-from mindinsight.utils.exceptions import MindInsightException, ParamValueError
+from mindinsight.utils.exceptions import MindInsightException, ParamValueError, UnknownError
 
 _MAX_LOADER_NUM = 3
 _MAX_INTERVAL = 3
@@ -54,11 +54,14 @@ class ExplainManager:
     def _reload_data(self):
         """periodically load summary from file."""
         while True:
-            self._load_data()
+            try:
+                self._load_data()
 
-            if not self._reload_interval:
-                break
-            time.sleep(self._reload_interval)
+                if not self._reload_interval:
+                    break
+                time.sleep(self._reload_interval)
+            except UnknownError:
+                self._status = _ExplainManagerStatus.INVALID.value
 
     def _load_data(self):
         """Loading the summary in the given base directory."""
@@ -73,8 +76,11 @@ class ExplainManager:
 
             self._status = _ExplainManagerStatus.LOADING.value
 
-            self._generate_loaders()
-            self._execute_load_data()
+            try:
+                self._generate_loaders()
+                self._execute_load_data()
+            except Exception as ex:
+                raise UnknownError(ex)
 
             if not self._loader_pool:
                 self._status = _ExplainManagerStatus.INVALID.value

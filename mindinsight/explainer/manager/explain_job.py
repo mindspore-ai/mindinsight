@@ -15,8 +15,9 @@
 """ExplainJob."""
 
 import os
+from collections import defaultdict
 from datetime import datetime
-from typing import List, Iterable, Union
+from typing import Union
 
 from mindinsight.explainer.common.enums import PluginNameEnum
 from mindinsight.explainer.common.log import logger
@@ -47,7 +48,8 @@ class ExplainJob:
         self._explainers = []
         self._samples_info = {}
         self._labels_info = {}
-        self._benchmark = {}
+        self._explainer_score_dict = defaultdict(list)
+        self._label_score_dict = defaultdict(dict)
         self._overlay_dict = {}
         self._image_dict = {}
 
@@ -66,9 +68,10 @@ class ExplainJob:
         """
         all_classes_return = []
         for label_id, label_info in self._labels_info.items():
-            single_info = {'id': label_id,
-                           'label': label_info['label'],
-                           'sample_count': len(label_info['sample_ids'])}
+            single_info = {
+                'id': label_id,
+                'label': label_info['label'],
+                'sample_count': len(label_info['sample_ids'])}
             all_classes_return.append(single_info)
         return all_classes_return
 
@@ -85,7 +88,21 @@ class ExplainJob:
     @property
     def explainer_scores(self):
         """Return evaluation results for every explainer."""
-        return [score for score in self._benchmark.values()]
+        merged_scores = []
+        for explainer, explainer_score_on_metric in self._explainer_score_dict.items():
+            label_scores = []
+            for label, label_score_on_metric in self._label_score_dict[explainer].items():
+                score_single_label = {
+                    'label': self._labels[label],
+                    'evaluations': label_score_on_metric,
+                }
+                label_scores.append(score_single_label)
+            merged_scores.append({
+                'explainer': explainer,
+                'evaluations': explainer_score_on_metric,
+                'class_scores': label_scores,
+            })
+        return merged_scores
 
     @property
     def sample_count(self):
@@ -164,10 +181,10 @@ class ExplainJob:
         """
         if isinstance(new_time, datetime):
             self._latest_update_time = new_time.timestamp()
-        elif isinstance(new_time, str):
+        elif isinstance(new_time, float):
             self._latest_update_time = new_time
         else:
-            raise TypeError('new_time should have type of str or datetime')
+            raise TypeError('new_time should have type of float or datetime')
 
     @property
     def loader_id(self):
@@ -190,30 +207,6 @@ class ExplainJob:
         """Return timestamp of update time of specific path."""
         update_time = os.stat(file_path).st_mtime
         return update_time
-
-    @staticmethod
-    def _total_score_to_dict(total_scores: Iterable):
-        """Transfer a list of benchmark score to a list of dict."""
-        evaluation_info = []
-        for total_score in total_scores:
-            metric_result = {'metric': total_score.benchmark_method,
-                             'score': total_score.score}
-            evaluation_info.append(metric_result)
-        return evaluation_info
-
-    @staticmethod
-    def _label_score_to_dict(label_scores: Iterable, labels: List[str]):
-        """Transfer a list of benchmark score."""
-        evaluation_info = [{'label': label, 'evaluations': []}
-                           for label in labels]
-        for label_score in label_scores:
-            metric = label_score.benchmark_method
-            for i, score in enumerate(label_score.score):
-                label_metric_score = dict()
-                label_metric_score['metric'] = metric
-                label_metric_score['score'] = score
-                evaluation_info[i]['evaluations'].append(label_metric_score)
-        return evaluation_info
 
     def _initialize_labels_info(self):
         """Initialize a dict for labels in the job."""
@@ -288,7 +281,6 @@ class ExplainJob:
 
         Return:
             string, image data in base64 byte
-
         """
         return self._image_dict.get(image_id, None)
 
@@ -332,8 +324,7 @@ class ExplainJob:
         }
 
         if 'metadata' not in event and self._is_metadata_empty():
-            raise ValueError('metadata is empty, should write metadata first'
-                             'in the summary.')
+            raise ValueError('metadata is empty, should write metadata first in the summary.')
         for tag in tags:
             if tag not in event:
                 continue
@@ -347,12 +338,12 @@ class ExplainJob:
 
             if tag == PluginNameEnum.BENCHMARK.value:
                 benchmark_event = event[tag].benchmark
-                benchmark = self._event_parser.parse_benchmark(benchmark_event)
-                self._benchmark = benchmark
+                explain_score_dict, label_score_dict = EventParser.parse_benchmark(benchmark_event)
+                self._update_benchmark(explain_score_dict, label_score_dict)
 
             elif tag == PluginNameEnum.METADATA.value:
                 metadata_event = event[tag].metadata
-                metadata = self._event_parser.parse_metadata(metadata_event)
+                metadata = EventParser.parse_metadata(metadata_event)
                 self._explainers, self._metrics, self._labels = metadata
                 self._initialize_labels_info()
 
@@ -389,7 +380,18 @@ class ExplainJob:
         self._explainers.clear()
         self._samples_info.clear()
         self._labels_info.clear()
-        self._benchmark.clear()
+        self._explainer_score_dict.clear()
+        self._label_score_dict.clear()
         self._overlay_dict.clear()
         self._image_dict.clear()
         self._event_parser.clear()
+
+    def _update_benchmark(self, explainer_score_dict, labels_score_dict):
+        """Update the benchmark info."""
+        for explainer, score in explainer_score_dict.items():
+            self._explainer_score_dict[explainer].extend(score)
+
+        for explainer, score in labels_score_dict.items():
+            for label, score_of_label in score.items():
+                self._label_score_dict[explainer][label] = (self._label_score_dict[explainer].get(label, [])
+                                                            + score_of_label)
