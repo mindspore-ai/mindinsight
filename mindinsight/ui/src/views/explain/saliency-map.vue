@@ -190,8 +190,7 @@ limitations under the License.
                     'tag-active': index == scope.row.activeLabelIndex,
                     'tag-tp': tag.type == 'tp',
                     'tag-fn': tag.type == 'fn',
-                    'tag-fp': tag.type == 'fp',
-                    'tag-tn': tag.type == 'tn'
+                    'tag-fp': tag.type == 'fp'
                   }"
                        @click="changeActiveLabel(scope.row, index)">
                     <div class="first">{{ tag.label }}</div>
@@ -227,8 +226,7 @@ limitations under the License.
                         'tag-active': index == scope.row.activeLabelIndex,
                         'tag-tp': tag.type == 'tp',
                         'tag-fn': tag.type == 'fn',
-                        'tag-fp': tag.type == 'fp',
-                        'tag-tn': tag.type == 'tn'
+                        'tag-fp': tag.type == 'fp'
                       }"
                       @click="changeActiveLabel(scope.row, index)">
                       <div></div>
@@ -584,25 +582,31 @@ export default {
      */
     queryPageInfo(params) {
       this.queryParameters = params;
-      this.ifTableLoading = true;
       requestService.queryPageInfo(params)
           .then(
               (res) => {
                 if (res && res.data && res.data.samples) {
                   if (this.minConfidence === '--') {
                     this.tableData = this.processTableData(res.data.samples, false);
+                    this.pageInfo.total = res.data.count !== undefined ? res.data.count : 0;
                   } else {
                     this.tableData = this.processTableData(res.data.samples, this.minConfidence);
+                    this.pageInfo.total = res.data.count !== undefined ? res.data.count : 0;
                   }
+                } else {
+                  this.pageInfo.total = 0;
                 }
+                this.ifError = false;
                 this.ifTableLoading = false;
               },
               (error) => {
-                this.ifTableLoading = false;
+                this.ifError = true;
+                this.ifTableLoading = true;
               },
           )
           .catch((e) => {
-            this.ifTableLoading = false;
+            this.ifError = true;
+            this.ifTableLoading = true;
           });
     },
     /**
