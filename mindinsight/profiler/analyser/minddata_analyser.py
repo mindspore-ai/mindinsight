@@ -68,6 +68,9 @@ class MinddataAnalyser(BaseAnalyser):
                                 empty_step_count += 1
                         if len(node_info) > 2 and info_type in ["all", "time"]:
                             one_step_cost_time = (float(node_info[2]) - float(node_info[1]))/1e3
+                            # The time stamp in Ascend is μs but in GPU is ns.
+                            if 'minddata_getnext_profiling' in file_name:
+                                one_step_cost_time = one_step_cost_time/1e3
                             time_list.append(one_step_cost_time)
                             total_cost += one_step_cost_time
                 if info_type in ["all", "queue"]:
