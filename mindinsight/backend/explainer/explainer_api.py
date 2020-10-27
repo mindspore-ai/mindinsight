@@ -15,6 +15,7 @@
 """Explainer restful api."""
 
 import os
+import json
 import urllib.parse
 
 from flask import Blueprint
@@ -36,8 +37,6 @@ from mindinsight.explainer.encapsulator.evaluation_encap import EvaluationEncap
 URL_PREFIX = settings.URL_PATH_PREFIX+settings.API_PREFIX
 BLUEPRINT = Blueprint("explainer", __name__, url_prefix=URL_PREFIX)
 
-STATIC_EXPLAIN_MGR = True
-
 
 class ExplainManagerHolder:
     """ExplainManger instance holder."""
@@ -46,25 +45,38 @@ class ExplainManagerHolder:
 
     @classmethod
     def get_instance(cls):
-        if cls.static_instance:
-            return cls.static_instance
-        instance = ExplainManager(settings.SUMMARY_BASE_DIR)
-        instance.start_load_data()
-        return instance
+        return cls.static_instance
 
     @classmethod
     def initialize(cls):
-        if STATIC_EXPLAIN_MGR:
-            cls.static_instance = ExplainManager(settings.SUMMARY_BASE_DIR)
-            cls.static_instance.start_load_data()
+        cls.static_instance = ExplainManager(settings.SUMMARY_BASE_DIR)
+        cls.static_instance.start_load_data()
 
 
 def _image_url_formatter(train_id, image_id, image_type):
-    """returns image url."""
+    """Returns image url."""
     train_id = urllib.parse.quote(str(train_id))
     image_id = urllib.parse.quote(str(image_id))
     image_type = urllib.parse.quote(str(image_type))
     return f"{URL_PREFIX}/explainer/image?train_id={train_id}&image_id={image_id}&type={image_type}"
+
+
+def _read_post_request(post_request):
+    """
+    Extract the body of post request.
+
+    Args:
+        post_request (object): The post request.
+
+    Returns:
+        dict, the deserialized body of request.
+    """
+    body = post_request.stream.read()
+    try:
+        body = json.loads(body if body else "{}")
+    except json.decoder.JSONDecodeError:
+        raise ParamValueError("Json data parse failed.")
+    return body
 
 
 @BLUEPRINT.route("/explainer/explain-jobs", methods=["GET"])
@@ -72,12 +84,11 @@ def query_explain_jobs():
     """Query explain jobs."""
     offset = request.args.get("offset", default=0)
     limit = request.args.get("limit", default=10)
-    train_id = get_train_id(request)
     offset = Validation.check_offset(offset=offset)
     limit = Validation.check_limit(limit, min_value=1, max_value=SummaryWatcher.MAX_SUMMARY_DIR_COUNT)
 
     encapsulator = ExplainJobEncap(ExplainManagerHolder.get_instance())
-    total, jobs = encapsulator.query_explain_jobs(offset, limit, train_id)
+    total, jobs = encapsulator.query_explain_jobs(offset, limit)
 
     return jsonify({
         'name': os.path.basename(os.path.realpath(settings.SUMMARY_BASE_DIR)),
@@ -102,7 +113,7 @@ def query_explain_job():
 def query_saliency():
     """Query saliency map related results."""
 
-    data = request.get_json(silent=True)
+    data = _read_post_request(request)
 
     train_id = data.get("train_id")
     if train_id is None:
@@ -149,7 +160,7 @@ def query_evaluation():
 
 @BLUEPRINT.route("/explainer/image", methods=["GET"])
 def query_image():
-    """Query image"""
+    """Query image."""
     train_id = get_train_id(request)
     if train_id is None:
         raise ParamMissError("train_id")

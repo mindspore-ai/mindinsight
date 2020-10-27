@@ -282,6 +282,28 @@ class ExplainManager:
         """Return the base directory for summary records."""
         return self._summary_base_dir
 
+    def get_job_list(self, offset=0, limit=None):
+        """
+        Return List of explain jobs. includes job ID, create and update time.
+
+        Args:
+            offset (int): An offset for page. Ex, offset is 0, mean current page is 1. Default value is 0.
+            limit (int): The max data items for per page. Default value is 10.
+
+        Returns:
+            tuple[total, directories], total indicates the overall number of explain directories and directories
+                    indicate list of summary directory info including the following attributes.
+                - relative_path (str): Relative path of summary directory, referring to settings.SUMMARY_BASE_DIR,
+                                        starting with "./".
+                - create_time (datetime): Creation time of summary file.
+                - update_time (datetime): Modification time of summary file.
+        """
+        watcher = SummaryWatcher()
+        total, dir_infos = \
+            watcher.list_explain_directories(self._summary_base_dir,
+                                             offset=offset, limit=limit)
+        return total, dir_infos
+
     def get_job(self, train_id):
         """
         Return ExplainJob given train_id.

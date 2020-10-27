@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2019 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Module init file."""
-from mindinsight.backend.explainer.explainer_api import init_module as init_query_module
-
-
-def init_module(app):
-    """
-    Init module entry.
-
-    Args:
-        app (Flask): A Flask instance.
-
-    Returns:
-
-    """
-    init_query_module(app)
+"""UT for backend.explainer."""
