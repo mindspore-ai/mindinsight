@@ -18,18 +18,19 @@ import uuid
 from typing import Dict, List, Callable, Union
 from collections import OrderedDict
 from .common import context, gen_hash_key, DagGraph, MAX_OUT_DEGREE
+from .pattern import Pattern, scope_name_mapping
+from .built_in_pattern import BUILT_IN_PATTERN
 from ..third_party_graph.onnx_utils import OnnxNode, BaseNode
 
-scope_name_mapping = {}
 module_name_to_src = {}
 global_idx = 0
 
 
 class OptimizeRules:
     """Define optimize rules."""
-    CAN_NOT_BE_HEAD = {"Relu", "Add"}
+    ACTIVATION = {"Relu", "Clip", "Tanh"}
+    CAN_NOT_BE_HEAD = ACTIVATION.union({"Add", "BatchNormalization"})
     HAS_MULTI_IPTS = {"Add", "Concat"}
-    ACTIVATION = {"Relu", "Tanh"}
 
 
 def _is_connected(parent, child, dag):
@@ -106,45 +107,6 @@ class MergedONNXNode(BaseNode):
 
     def get_op(self):
         return self.op_type
-
-
-class Pattern:
-    """Define Pattern object."""
-
-    def __init__(self, pattern, pattern_length, in_degree, out_degree):
-        self.pattern = pattern
-        self.count = 0
-        self.start_index = []
-        self.end_index = []
-        self.module_name = None
-        self.ptn_length = pattern_length
-        self.ptn_items = pattern.split("->")
-        self.in_degree = in_degree
-        self.out_degree = out_degree
-
-    def insert(self, idx, seq_len):
-        """
-        Insert a new position.
-
-        Args:
-            idx (int): Start index.
-            seq_len (int): Pattern length.
-        """
-        if idx in self.start_index:
-            return
-        self.start_index.append(idx)
-        self.end_index.append(idx + seq_len)
-        self.count += 1
-
-    def __str__(self):
-        """Override `str()` method."""
-        return self.__repr__()
-
-    def __repr__(self):
-        """Override `repr()` method."""
-        return f"Ptn: {self.pattern}[" \
-               f"{scope_name_mapping.get(self.pattern, 'Not init')}], " \
-               f"count={self.count}"
 
 
 def _find_idx(sequence: List[BaseNode], target: str, equal_func: Callable,
@@ -286,6 +248,48 @@ def _supply_sequence(sequence: List[BaseNode], pattern: Dict[str, str], offset: 
                             offset + len(found_sequence) - ori_seq_len)
 
 
+def find_built_in_pattern(topo_order: List[BaseNode], dag: DagGraph) -> Dict[str, Pattern]:
+    """
+    Find built-in pattern.
+
+    Args:
+        dag (DagGraph): Graph object.
+        topo_order (list): Topo sequence.
+
+    Returns:
+        dict[str, Pattern], found pattern.
+    """
+    pattern = dict()
+    cur_idx, total_len = 0, len(topo_order)
+    for k in BUILT_IN_PATTERN:
+        ptn_len = BUILT_IN_PATTERN[k].ptn_length
+        while cur_idx < total_len:
+            matched = True
+            init_pattern = OrderedDict()
+            if cur_idx + ptn_len > total_len:
+                break
+            for i in range(ptn_len):
+                init_pattern[topo_order[cur_idx + i].name] = topo_order[cur_idx + i].op_type
+                if topo_order[cur_idx + i].op_type != BUILT_IN_PATTERN[k].ptn_items[i]:
+                    matched = False
+                    break
+            if not matched:
+                cur_idx += 1
+                continue
+            in_degree, out_degree = _get_pattern_degree(init_pattern, dag)
+            if in_degree != BUILT_IN_PATTERN[k].in_degree or out_degree != BUILT_IN_PATTERN[k].out_degree:
+                cur_idx += 1
+                continue
+            ptn_key = f"{BUILT_IN_PATTERN[k].pattern}" \
+                      f"[{BUILT_IN_PATTERN[k].in_degree}, {BUILT_IN_PATTERN[k].out_degree}]"
+            if ptn_key not in pattern:
+                pattern[ptn_key] = BUILT_IN_PATTERN[k]
+
+            pattern[ptn_key].insert(cur_idx, ptn_len)
+            cur_idx = cur_idx + 1
+    return pattern
+
+
 def generate_pattern(topo_order: List[BaseNode], dag: DagGraph,
                      sub_graph_size: int = 2) -> Dict[str, Pattern]:
     """
@@ -336,7 +340,7 @@ def generate_pattern(topo_order: List[BaseNode], dag: DagGraph,
                                              dag=dag)
 
         in_degree, out_degree = _get_pattern_degree(found_sequence, dag)
-        if out_degree > MAX_OUT_DEGREE:
+        if out_degree > MAX_OUT_DEGREE or in_degree > MAX_OUT_DEGREE:
             cur_idx += 1
             continue
 
@@ -344,8 +348,7 @@ def generate_pattern(topo_order: List[BaseNode], dag: DagGraph,
         ptn_key = f"{ptn}[{in_degree}, {out_degree}]"
         if ptn_key not in pattern:
             pattern[ptn_key] = Pattern(ptn, len(found_sequence),
-                                       in_degree=in_degree,
-                                       out_degree=out_degree)
+                                       in_degree=in_degree, out_degree=out_degree)
 
         pattern[ptn_key].insert(cur_idx - sub_graph_size + 1, len(found_sequence))
         cur_idx = cur_idx + 1
@@ -381,8 +384,12 @@ class SearchPath:
         self.node_collection = dict()
         self.hash_of_aft_repl = gen_hash_key(self.topo_order_aft_repl)
         if self.hash_of_aft_repl not in context.found_pattern:
+            built_in_ptn = find_built_in_pattern(self.topo_order_aft_repl, self.graph)
+            auto_search_ptn = generate_pattern(self.topo_order_aft_repl, dag=self.graph,
+                                               sub_graph_size=sub_graph_size)
+            built_in_ptn.update(auto_search_ptn)
             context.found_pattern[self.hash_of_aft_repl] = context.sort_with_beam(
-                generate_pattern(self.topo_order_aft_repl, dag=self.graph, sub_graph_size=sub_graph_size)
+                built_in_ptn
             )
 
         self.new_pattern = context.found_pattern[self.hash_of_aft_repl]
@@ -397,7 +404,6 @@ class SearchPath:
             tuple[list, dict], topo sequence and inverted index
             to recover the sequence.
         """
-        global scope_name_mapping
         if self.pattern.pattern not in scope_name_mapping:
             module_name = generate_module_name()
             scope_name_mapping[self.pattern.pattern] = module_name
@@ -447,13 +453,13 @@ class SearchPath:
             for j in range(pattern_len):
                 visited_node.append(original_topo_order[index + j])
                 if original_topo_order[index + j].op_type != pattern.ptn_items[j]:
-                    topo_order.extend(visited_node)
-                    index += j + 1
-                    path_length += j + 1
                     matched = False
                     break
 
             if not matched:
+                topo_order.append(original_topo_order[index])
+                index += 1
+                path_length += 1
                 continue
 
             in_degree, out_degree = _get_pattern_degree(visited_node, self.graph)

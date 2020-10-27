@@ -19,7 +19,7 @@ from typing import Dict, List
 from .common import context, DagGraph, gen_hash_key
 from ..constant import MINI_FREQUENCY
 from ..third_party_graph.onnx_utils import BaseNode
-from .search_path import SearchPath, Pattern, generate_pattern
+from .search_path import SearchPath, Pattern, generate_pattern, find_built_in_pattern
 
 
 def _is_satisfied(path):
@@ -114,7 +114,9 @@ def _sub_graph_matching(init_dag, beam_width=5, sub_graph_size=4):
 
     topo_order = [node for _, (_, node) in enumerate(context.node_collection.items())]
     context.set_sequence_length(len(topo_order))
+    built_in_pattern = find_built_in_pattern(topo_order, init_dag)
     pattern = generate_pattern(topo_order, dag=init_dag, sub_graph_size=sub_graph_size)
+    pattern.update(built_in_pattern)
     found_path = _search(pattern, topo_order, init_graph=init_dag,
                          sub_graph_size=sub_graph_size)
     return _get_top_1(found_path)
