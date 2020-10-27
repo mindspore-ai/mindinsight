@@ -176,7 +176,7 @@ export default {
       const that = this;
       const option = {
         grid: {
-          left: 24,
+          left: 40,
           top: 60,
           right: 80,
           bottom: 60,
