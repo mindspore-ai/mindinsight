@@ -35,10 +35,12 @@ limitations under the License.
           <span>{{$t("symbols.rightbracket")}}</span>
           <div class="btn-wrap">
             <el-button size="mini"
-                       class="custom-btn green"
+                       class="custom-btn white"
+                       :disabled="disableState"
                        @click="goToTracebackAnalysis()">{{ $t('summaryManage.tracebackAnalysis') }}</el-button>
             <el-button size="mini"
                        class="custom-btn white"
+                       :disabled="disableState"
                        @click="goToCompareAnalysis()">{{ $t('summaryManage.compareAnalysis') }}</el-button>
           </div>
         </div>
@@ -168,6 +170,7 @@ export default {
       tableFilter: {lineage_type: {in: ['model']}},
       showDialogModel: false,
       summaryList: [],
+      disableState: true,
       modelData: [],
       objectType: 'object',
       rowName: '--',
@@ -285,10 +288,12 @@ export default {
                   this.currentFolder = res.data.name ? res.data.name : '--';
                   this.pagination.total = res.data.total;
                   this.summaryList = summaryList;
+                  this.disableState = !summaryList.length;
                 } else {
                   this.currentFolder = '--';
                   this.pagination.total = 0;
                   this.summaryList = [];
+                  this.disableState = true;
                 }
               },
               (error) => {
@@ -669,20 +674,21 @@ export default {
       }
     }
   }
+  .is-disabled.custom-btn {
+    background-color: #f5f5f6;
+    border: 1px solid #dfe1e6 !important;
+    color: #adb0b8;
+    &:hover {
+      background-color: #f5f5f6;
+    }
+  }
   .custom-btn {
     border: 1px solid #00a5a7;
     border-radius: 2px;
   }
-  .green {
-    background-color: #00a5a7;
-    color: white;
-  }
   .white {
     background-color: white;
     color: #00a5a7;
-  }
-  .green:hover {
-    background-color: #33b7b9;
   }
   .white:hover {
     background-color: #e9f7f7;
