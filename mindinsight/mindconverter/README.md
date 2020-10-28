@@ -8,14 +8,14 @@
     - [Overview](#overview)
     - [Installation](#installation)
     - [Usage](#usage)
-        - [PyTorch Model Scripts Migration](#PyTorch-model-scripts-migration)
-        - [TensorFlow Model Scripts Migration](#TensorFlow-model-scripts-migration)
+        - [PyTorch Model Scripts Migration](#pytorch-model-scripts-migration)
+        - [TensorFlow Model Scripts Migration](#tensorflow-model-scripts-migration)
     - [Scenario](#scenario)
     - [Example](#example)
         - [AST-Based Conversion](#ast-based-conversion)
         - [Graph-Based Conversion](#graph-based-conversion)
-            - [PyTorch Model Scripts Conversion](#PyTorch-Model-Scripts-Conversion)
-            - [TensorFlow Model Scripts Conversion](#TensorFlow-Model-Scripts-Conversion)
+            - [PyTorch Model Scripts Conversion](#pytorch-model-scripts-conversion)
+            - [TensorFlow Model Scripts Conversion](#tensorflow-model-scripts-conversion)
     - [Caution](#caution)
     - [Unsupported situation of AST mode](#unsupported-situation-of-ast-mode)
         - [Situation1](#situation1)
@@ -25,13 +25,11 @@
 
 ## Overview
 
-MindConverter is a migration tool to transform the model scripts from PyTorch or TensorFlow to Mindspore. Users can migrate their PyTorch or TensorFlow models to Mindspore rapidly with minor changes according to the conversion report.
-
+MindConverter is a migration tool to transform the model scripts from PyTorch or TensorFlow to MindSpore. Users can migrate their PyTorch or TensorFlow models to MindSpore rapidly with minor changes according to the conversion report.
 
 ## Installation
 
-Mindconverter is a submodule in MindInsight. Please follow the [Guide](https://www.mindspore.cn/install/en) here to install MindInsight.
-
+MindConverter is a submodule in MindInsight. Please follow the [Guide](https://www.mindspore.cn/install/en) here to install MindInsight.
 
 ## Usage
 
@@ -46,7 +44,7 @@ usage: mindconverter [-h] [--version] [--in_file IN_FILE]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --version             show program's version number and exit
+  --version             show program version number and exit
   --in_file IN_FILE     Specify path for script file to use AST schema to do
                         script conversation.
   --model_file MODEL_FILE
@@ -55,14 +53,14 @@ optional arguments:
                         `--in_file` and `--model_file` are both provided, use
                         AST schema as default.
   --shape SHAPE         Optional, expected input tensor shape of
-                        `--model_file`. It's required when use graph based
+                        `--model_file`. It is required when use graph based
                         schema. Usage: --shape 1,3,244,244
-  --input_node INPUT_NODE
-                        Optional, input node(s) name of `--model_file`. It's
+  --input_nodes INPUT_NODE
+                        Optional, input node(s) name of `--model_file`. It is
                         required when use Tensorflow model. Usage:
                         --input_node input_1:0,input_2:0
-  --output_node OUTPUT_NODE
-                        Optional, output node(s) name of `--model_file`. It's
+  --output_nodes OUTPUT_NODE
+                        Optional, output node(s) name of `--model_file`. It is
                         required when use Tensorflow model. Usage:
                         --output_node output_1:0,output_2:0
   --output OUTPUT       Optional, specify path for converted script file
@@ -82,12 +80,13 @@ optional arguments:
 
 **MindConverter provides two modes for PyTorch：**
 
-1. **Abstract Syntax Tree (AST) based conversion**：Use the argument `--in_file` will enable the AST mode.
-2. **Computational Graph based conversion**：Use `--model_file` and `--shape` arguments will enable the Graph mode.
+1. **Abstract Syntax Tree (AST) based conversion**: Use the argument `--in_file` will enable the AST mode.
+2. **Computational Graph based conversion**: Use `--model_file` and `--shape` arguments will enable the Graph mode.
+
 
 > The AST mode will be enabled, if both `--in_file` and `--model_file` are specified.
 
-For the Graph mode, `--shape` is mandatory. 
+For the Graph mode, `--shape` is mandatory.
 
 For the AST mode, `--shape` is ignored.
 
@@ -95,8 +94,7 @@ For the AST mode, `--shape` is ignored.
 
 Please note that your original PyTorch project is included in the module search path (PYTHONPATH). Use the python interpreter and test your module can be successfully loaded by `import` command. Use `--project_path` instead if your project is not in the PYTHONPATH to ensure MindConverter can load it.
 
-> Assume the project is located at `/home/user/project/model_training`, users can use this command to add the project to `PYTHONPATH` : `export PYTHONPATH=/home/user/project/model_training:$PYTHONPATH`
-
+> Assume the project is located at `/home/user/project/model_training`, users can use this command to add the project to `PYTHONPATH` : `export PYTHONPATH=/home/user/project/model_training:$PYTHONPATH`  
 > MindConverter needs the original PyTorch scripts because of the reverse serialization.
 
 ### TensorFlow Model Scripts Migration
@@ -104,6 +102,7 @@ Please note that your original PyTorch project is included in the module search 
 **MindConverter provides computational graph based conversion for TensorFlow**: Transformation will be done given `--model_file`, `--shape`, `--input_node` and `--output_node`.
 
 > AST mode is not supported for TensorFlow, only computational graph based mode is available.
+
 
 ## Scenario
 
@@ -116,13 +115,13 @@ The AST mode is recommended for the first demand (AST mode is only supported for
 
 For the second demand, the Graph mode is recommended. As the computational graph is a standard descriptive language, it is not affected by user's coding style. This mode may have more operators converted as long as these operators are supported by MindConverter.
 
-Some typical image classification networks such as ResNet and VGG have been tested for the Graph mode. Note that: 
+Some typical image classification networks such as ResNet and VGG have been tested for the Graph mode. Note that:
 
 > 1. Currently, the Graph mode does not support models with multiple inputs. Only models with a single input and single output are supported.
 > 2. The Dropout operator will be lost after conversion because the inference mode is used to load the PyTorch or TensorFlow model. Manually re-implement is necessary.
 > 3. The Graph-based mode will be continuously developed and optimized with further updates.
 
- Supported models list:
+Supported models list:
 
 |  Supported Model | PyTorch Script | TensorFlow Script |
 | :----: | :----: | :----: |
@@ -138,6 +137,7 @@ Some typical image classification networks such as ResNet and VGG have been test
 | AlexNet | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | / |
 | GoogLeNet | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | / |
 | MobileNetV2 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |
+| InceptionV3 | / | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |
 
 ## Example
 
@@ -159,8 +159,8 @@ line <row>:<col> [UnConvert] 'operator' didn't convert. ...
 
 For non-transformed operators, the original code keeps. Please manually migrate them. [Click here](https://www.mindspore.cn/doc/note/en/master/index.html#operator_api) for more information about operator mapping.
 
-
 Here is an example of the conversion report:
+
 ```text
  [Start Convert]
  [Insert] 'import mindspore.ops.operations as P' is inserted to the converted file.
@@ -172,7 +172,6 @@ Here is an example of the conversion report:
 ```
 
 For non-transformed operators, suggestions are provided in the report. For instance, MindConverter suggests that replace `torch.nn.AdaptiveAvgPool2d` with `mindspore.ops.operations.ReduceMean`.
-
 
 ### Graph-Based Conversion
 
@@ -232,8 +231,7 @@ class Classifier(nn.Cell):
 
 ```
 
-> Note: `--output` and `--report` are optional. MindConverter creates an `output` folder under the current working directory, and outputs generated scripts and conversion reports to it.   
-
+> `--output` and `--report` are optional. MindConverter creates an `output` folder under the current working directory, and outputs generated scripts and conversion reports to it.
 
 #### TensorFlow Model Scripts Conversion
 
@@ -265,7 +263,7 @@ print(f"Input node name: {INPUT_NODE}, output node name: {OUTPUT_NODE}")
 
 ```
 
-After the above code is executed, the model will be saved to `/home/user/xxx/frozen_model.pb`. `INPUT_NODE` is input node name, and `OUTPUT_NODE` is output node's.
+After the above code is executed, the model will be saved to `/home/user/xxx/frozen_model.pb`. `INPUT_NODE` can be passed into `--input_nodes`, and `OUTPUT_NODE` is the corresponding `--output_nodes`.
 
 Suppose the input node name is `input_1:0`, output node name is `predictions/Softmax:0`, the input shape of model is `1,224,224,3`, the following command can be used to generate the script:
 ```shell script
@@ -276,7 +274,7 @@ mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
               --report /home/user/output/report
 ```
 
-After executed，MindSpore script, and report file can be found in corresponding directory.
+After executed MindSpore script, and report file can be found in corresponding directory.
 
 
 The format of conversion report generated by script generation scheme based on graph structure is the same as that of AST scheme. However, since the graph based scheme is a generative method, the original pytorch script is not referenced in the conversion process. Therefore, the code line and column numbers involved in the generated conversion report refer to the generated script.
@@ -287,9 +285,9 @@ In addition, for operators that are not converted successfully, the input and ou
 
 ## Caution
 
-1. PyTorch, TensorFlow, TF2ONNX is not an explicitly stated dependency library in MindInsight. The Graph conversion requires the consistent PyTorch or TensorFlow version as the model is trained. (MindConverter recommends PyTorch 1.4.0 or 1.6.0)
-2. This script conversion tool relies on operators which supported by MindConverter and MindSpore. Unsupported operators may not successfully mapped to MindSpore operators. You can manually edit, or implement the mapping based on MindConverter, and contribute to our MindInsight repository. We appreciate your support for the MindSpore community. 
-
+1. PyTorch, TensorFlow, TF2ONNX(1.7.1) are not an explicitly stated dependency libraries in MindInsight. The Graph conversion requires the consistent PyTorch or TensorFlow version as the model is trained. (MindConverter recommends PyTorch 1.4.0 or 1.6.0)
+2. This script conversion tool relies on operators which supported by MindConverter and MindSpore. Unsupported operators may not be successfully mapped to MindSpore operators. You can manually edit, or implement the mapping based on MindConverter, and contribute to our MindInsight repository. We appreciate your support for the MindSpore community.
+3. MindConverter can only guarantee that the converted model scripts require a minor revision or no revision when the inputs' shape fed to the generated model script are equal to the value of `--shape` (The batch size dimension is not limited).
 
 ## Unsupported situation of AST mode
 
