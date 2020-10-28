@@ -138,7 +138,7 @@ limitations under the License.
                        :yTitle="yTitle"
                        :xTitle="xTitle"
                        :tooltipsData="tooltipsData"
-                       :showTooltip="false">
+                       :showTooltip="true">
               </Scatter>
             </div>
           </div>
@@ -358,7 +358,8 @@ limitations under the License.
               </template>
               <template slot-scope="scope">
                 <div class="edit-text-container"
-                     v-show="scope.row.editShow">{{scope.row.remark}}</div>
+                     v-show="scope.row.editShow"
+                     :title="scope.row.remark">{{scope.row.remark}}</div>
                 <div class="inline-block-set">
                   <i class="el-icon-edit"
                      @click="editRemarks(scope.row)"
@@ -548,6 +549,7 @@ export default {
       pieSeriesData: [],
       barYAxisData: [],
       barSeriesData: [],
+      currentBarData: {},
       scatterChartData: [],
       largeScatterChartData: [],
       // Scatter chart tips data
@@ -1672,21 +1674,6 @@ export default {
             });
       }, this.delayTime);
     },
-    /**
-     * Resizing Chart
-     */
-    resizeChart() {
-      if (
-        document.getElementById('echart') &&
-        document.getElementById('echart').style.display !== 'none' &&
-        this.echart &&
-        this.echart.chart
-      ) {
-        this.$nextTick(() => {
-          this.echart.chart.resize();
-        });
-      }
-    },
   },
   /**
    * Destroy the page
@@ -1715,6 +1702,9 @@ export default {
 // Set the maximum width of the drop-down box
 .el-select-dropdown {
   max-width: 300px;
+  li.is-disabled {
+    color: #c0c4cc !important;
+  }
 }
 .el-select__tags {
   overflow: hidden;
@@ -1914,10 +1904,11 @@ export default {
   }
   .edit-text-container {
     display: inline-block;
-    max-width: 140px;
+    max-width: 190px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: bottom;
   }
   .btn-container-margin {
     margin: 0 10%;
@@ -1960,7 +1951,7 @@ export default {
     display: inline-block;
   }
   .remark-input-style {
-    width: 140px;
+    width: 190px;
   }
   .tag-icon-container {
     width: 21px;
@@ -2194,5 +2185,9 @@ export default {
       }
     }
   }
+}
+.tooltip-msg {
+  white-space: normal;
+  max-width: 180px;
 }
 </style>

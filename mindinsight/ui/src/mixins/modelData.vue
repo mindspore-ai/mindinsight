@@ -15,6 +15,7 @@ limitations under the License.
 -->
 <script>
 import Echarts from 'echarts';
+import CommonProperty from '@/common/common-property.js';
 export default {
   data() {
     return {};
@@ -47,43 +48,43 @@ export default {
       // Data of pie
       for (let i = 0; i < pieHBuckets.length; i++) {
         const objData = {};
-        let preNum = pieHBuckets[i][0];
-        let numSum = undefined;
-        preNum = Math.round(preNum * Math.pow(10, 4)) / Math.pow(10, 4);
-        if (i < pieHBuckets.length - 1) {
-          numSum =
-            Math.round(pieHBuckets[i + 1][0] * Math.pow(10, 4)) /
-            Math.pow(10, 4);
-        } else {
-          let nextNumber = pieHBuckets[i][1];
-          nextNumber =
-            Math.round(nextNumber * Math.pow(10, 4)) / Math.pow(10, 4);
-          numSum = preNum + nextNumber;
-          numSum = Math.round(numSum * Math.pow(10, 4)) / Math.pow(10, 4);
+        if (pieHBuckets[i] && pieHBuckets[i].length >= 3) {
+          let preNum = pieHBuckets[i][0];
+          let numSum = undefined;
+          const baseNum = Math.pow(10, 4);
+          preNum = Math.round(preNum * baseNum) / baseNum;
+          if (i < pieHBuckets.length - 1) {
+            numSum = Math.round(pieHBuckets[i + 1][0] * baseNum) / baseNum;
+          } else {
+            let nextNumber = pieHBuckets[i][1];
+            nextNumber = Math.round(nextNumber * baseNum) / baseNum;
+            numSum = preNum + nextNumber;
+            numSum = Math.round(numSum * baseNum) / baseNum;
+          }
+          const minNegativeNum = -10000;
+          const maxNegativeNum = -0.0001;
+          const minPositiveNum = 0.0001;
+          const maxPositiveNum = 10000;
+          if (
+            ((preNum > maxPositiveNum || preNum < minPositiveNum) &&
+              preNum > 0) ||
+            ((preNum < minNegativeNum || preNum > maxNegativeNum) && preNum < 0)
+          ) {
+            preNum = preNum.toExponential(2);
+          }
+          if (
+            ((numSum > maxPositiveNum || numSum < minPositiveNum) &&
+              numSum > 0) ||
+            ((numSum < minNegativeNum || numSum > maxNegativeNum) && numSum < 0)
+          ) {
+            numSum = numSum.toExponential(2);
+          }
+          const numSumString = `${preNum}~${numSum}`;
+          this.pieLegendData.push(numSumString);
+          objData.value = pieHBuckets[i][2];
+          objData.name = numSumString;
+          this.pieSeriesData.push(objData);
         }
-        const minNegativeNum = -10000;
-        const maxNegativeNum = -0.0001;
-        const minPositiveNum = 0.0001;
-        const maxPositiveNum = 10000;
-        if (
-          ((preNum > maxPositiveNum || preNum < minPositiveNum) &&
-            preNum > 0) ||
-          ((preNum < minNegativeNum || preNum > maxNegativeNum) && preNum < 0)
-        ) {
-          preNum = preNum.toExponential(2);
-        }
-        if (
-          ((numSum > maxPositiveNum || numSum < minPositiveNum) &&
-            numSum > 0) ||
-          ((numSum < minNegativeNum || numSum > maxNegativeNum) && numSum < 0)
-        ) {
-          numSum = numSum.toExponential(2);
-        }
-        const numSumString = preNum + '~' + numSum;
-        this.pieLegendData.push(numSumString);
-        objData.value = pieHBuckets[i][2];
-        objData.name = numSumString;
-        this.pieSeriesData.push(objData);
       }
       this.setBarSelectOptionData(index);
     },
@@ -113,7 +114,7 @@ export default {
           left: 'left',
           top: 'bottom',
         },
-        color: ['#6c91fb', '#7cdc9f', '#fc8b5d', '#f1689b', '#ab74ff'],
+        color: CommonProperty.barColorArr,
         series: [
           {
             name: this.targetLabel,
@@ -143,48 +144,79 @@ export default {
     },
 
     setChartOfBar() {
-      if (!this.barSeriesData.length) {
+      const barDataLength = this.barYAxisData.length;
+      if (!barDataLength) {
         this.viewBigBtnDisabled = true;
       }
-      if (this.barSeriesData.length === 0 && this.myBarChart) {
+      if (barDataLength === 0 && this.myBarChart) {
         this.myBarChart.clear();
         this.$refs.smallScatter.clearScatter();
         return;
       }
       this.viewBigBtnDisabled = false;
-      this.xTitle = this.barYAxisData[this.barYAxisData.length - 1];
+      this.xTitle = this.barYAxisData[barDataLength - 1];
       // Set up a scatter chart
       this.setChartOfScatters();
       if (!this.myBarChart) {
         this.myBarChart = Echarts.init(document.getElementById('bar-chart'));
+      } else {
+        this.myBarChart.off('datazoom');
+        if (this.myBarChart.getZr()) {
+          this.myBarChart.getZr().off('click');
+        }
       }
+
+      const showDataZoomLimitLength = 10;
+      const dataZoomShowFlag = barDataLength > showDataZoomLimitLength;
+
+      this.barStart = Math.max(0, barDataLength - 1 - showDataZoomLimitLength);
+      this.barEnd = barDataLength - 1;
+
+      const toolTipFormatter = (val) => {
+        this.tooltipsBarData = val;
+        const maxTooltipLen = 30;
+        let name = val[0].name;
+        name = name.replace(/</g, '< ');
+        const breakCount = Math.ceil(name.length / maxTooltipLen);
+        let str = '';
+        for (let i = 0; i < breakCount; i++) {
+          const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
+          str += str ? `<br/>${temp}` : temp;
+        }
+
+        const item = this.currentBarData[val[0].axisValue];
+        const msg =
+          item && item.message
+            ? item.message
+            : item.disabled
+            ? this.$t('modelTraceback.mustExist')
+            : '';
+        const res = `<div class="tooltip-msg"><p>${str}</p><p>${
+          this.$t('modelTraceback.parameterImportance') +
+          this.$t('symbols.colon')
+        }${val[0].value}</p><p>${
+          msg
+            ? this.$t('modelTraceback.explan') + this.$t('symbols.colon') + msg
+            : ''
+        }</p></div>`;
+        return res;
+      };
+
       const barOption = {
         tooltip: {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow',
           },
-          formatter: (val) => {
-            this.tooltipsBarData = val;
-            const maxTooltipLen = 30;
-            let name = val[0].name;
-            name = name.replace(/</g, '< ');
-            const breakCount = Math.ceil(name.length / maxTooltipLen);
-            let str = '';
-            for (let i = 0; i < breakCount; i++) {
-              const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
-              str += str ? '<br/>' + temp : temp;
-            }
-            const res =
-              '<p>' +
-              str +
-              '</p><p>' +
-              this.$t('modelTraceback.parameterImportance') +
-              ':' +
-              '&nbsp;&nbsp;' +
-              val[0].value +
-              '</p>';
-            return res;
+          formatter: toolTipFormatter,
+        },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: (params) => {
+            return this.barEnd - this.barStart > showDataZoomLimitLength
+              ? ''
+              : params.value;
           },
         },
         xAxis: {
@@ -205,9 +237,10 @@ export default {
             type: 'category',
             axisTick: {show: false},
             data: this.barYAxisData,
+            triggerEvent: true,
             axisLabel: {
               formatter: function(params) {
-                const maxLength = 10;
+                const maxLength = 12;
                 if (params.length > maxLength) {
                   return params.substring(0, maxLength) + '...';
                 } else {
@@ -253,35 +286,62 @@ export default {
         },
         dataZoom: [
           {
-            show: this.barYAxisData.length > 15 ? true : false,
+            show: dataZoomShowFlag,
             type: 'slider',
             yAxisIndex: 0,
             width: '30px',
-            start: 100, // The starting percentage of the data frame range
-            end: this.barYAxisData.length > 15 ? 40 : 0, // The end percentage of the data frame range
+            startValue: this.barStart,
+            endValue: this.barEnd,
             showDetail: false,
           },
         ],
       };
-      this.barEnd = this.barYAxisData.length > 15 ? 40 : 0;
-      this.barStart = 100;
+
       this.$nextTick(() => {
         this.myBarChart.setOption(barOption);
       });
       this.myBarChart.on('datazoom', (params) => {
-        this.barStart = params.start;
-        this.barEnd = params.end;
+        this.barStart = Math.round((barDataLength * params.start) / 100) - 1;
+        this.barEnd = Math.round((barDataLength * params.end) / 100) - 1;
+      });
+      this.myBarChart.on('mouseover', (params) => {
+        if (params.componentType === 'yAxis') {
+          const offsetX = params.event.offsetX + 10;
+          const offsetY = params.event.offsetY + 10;
+          this.myBarChart.setOption({
+            tooltip: {
+              formatter: params.value,
+              alwaysShowContent: true,
+            },
+          });
+          this.myBarChart.dispatchAction({
+            type: 'showTip',
+            seriesIndex: 0,
+            dataIndex: 0,
+            position: [offsetX, offsetY],
+          });
+        }
+      });
+      this.myBarChart.on('mouseout', (params) => {
+        if (params.componentType === 'yAxis') {
+          this.myBarChart.setOption({
+            tooltip: {
+              formatter: toolTipFormatter,
+              alwaysShowContent: false,
+            },
+          });
+        }
       });
       this.myBarChart.getZr().on('click', (params) => {
         this.xTitle = this.tooltipsBarData[0].name;
         barOption.dataZoom = [
           {
-            show: this.barYAxisData.length > 15 ? true : false,
+            show: dataZoomShowFlag,
             type: 'slider',
             yAxisIndex: 0,
             width: '30px',
-            start: this.barStart,
-            end: this.barEnd,
+            startValue: this.barStart,
+            endValue: this.barEnd,
           },
         ];
         barOption.yAxis = [
@@ -381,6 +441,7 @@ export default {
         if (this.targetValue === this.targetOptions[i].value) {
           this.targetLabel = this.targetOptions[i].label;
           index = i;
+          break;
         }
       }
       this.setTargetsData(index);
@@ -544,6 +605,11 @@ export default {
       };
       this.baseOptions = mustSelectOptions.concat(otherListOptions);
       this.searchOptions = this.baseOptions;
+      const barData = {};
+      this.baseOptions.forEach((i) => {
+        barData[i.value] = i;
+      });
+      this.currentBarData = JSON.parse(JSON.stringify(barData));
       // The displayed bar drop-down box content
       this.barNameList.push(nameObjMust, nameObjOther);
       // Save all the contents of the drop-down box
@@ -567,6 +633,7 @@ export default {
           this.barYAxisData.unshift(name);
           this.barSeriesData.unshift(importanceValue);
         }
+        this.currentBarData[name].value = importanceValue;
       }
       this.selectedAllBar =
         barHyper.length > this.barYAxisData.length ? false : true;
@@ -781,7 +848,7 @@ export default {
       for (let i = 1; i <= 10; i++) {
         const obj = {};
         obj.number = i;
-        obj.iconAdd = require('@/assets/images/icon' + obj.number + '.svg');
+        obj.iconAdd = require(`@/assets/images/icon${obj.number}.svg`);
         this.imageList.push(obj);
       }
     },
@@ -882,7 +949,7 @@ export default {
       this.tagScope.row.tag = this.iconValue;
       const imgDom = document.querySelectorAll('.img' + scope.$index);
       imgDom.forEach((item) => {
-        item.src = require('@/assets/images/icon' + this.iconValue + '.svg');
+        item.src = require(`@/assets/images/icon${this.iconValue}.svg`);
       });
       this.$forceUpdate();
       const params = {
@@ -1045,9 +1112,10 @@ export default {
      * Resizing Chart
      */
     resizeChart() {
+      const chartDom = document.getElementById('echart');
       if (
-        document.getElementById('echart') &&
-        document.getElementById('echart').style.display !== 'none' &&
+        chartDom &&
+        chartDom.style.display !== 'none' &&
         this.echart &&
         this.echart.chart
       ) {
