@@ -20,6 +20,8 @@ This module provides the utils.
 import os
 
 from mindinsight.datavisual.utils.tools import to_int
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerDirNotFoundException
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 
 # one sys count takes 10 ns, 1 ms has 100000 system count
 PER_MS_SYSCNT = 100000
@@ -172,7 +174,18 @@ def get_field_value(row_info, field_name, header, time_type='realtime'):
 
     return value
 
+
 def get_options(options):
+    """Get options."""
     if options is None:
         options = {}
     return options
+
+
+def check_train_job_and_profiler_dir(profiler_dir_abs):
+    """ check the existence of train_job and profiler dir """
+    train_job_dir_abs = os.path.abspath(os.path.join(profiler_dir_abs, '..'))
+    if not os.path.exists(train_job_dir_abs):
+        raise TrainJobNotExistError(error_detail=train_job_dir_abs)
+    if not os.path.exists(profiler_dir_abs):
+        raise ProfilerDirNotFoundException(msg=profiler_dir_abs)

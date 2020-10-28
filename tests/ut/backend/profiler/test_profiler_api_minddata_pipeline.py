@@ -31,6 +31,7 @@ class TestMinddataPipelineApi:
         self._url_op_queue = '/v1/mindinsight/profile/minddata-pipeline/op-queue'
         self._url_queue = '/v1/mindinsight/profile/minddata-pipeline/queue'
 
+    @mock.patch('mindinsight.backend.profiler.profile_api.check_train_job_and_profiler_dir')
     @mock.patch('mindinsight.backend.profiler.profile_api.settings')
     @mock.patch('mindinsight.profiler.analyser.base_analyser.BaseAnalyser.query')
     def test_get_minddata_pipeline_op_queue_info_1(self, *args):
@@ -83,6 +84,7 @@ class TestMinddataPipelineApi:
         assert response.status_code == 400
         assert expect_result == response.get_json()
 
+    @mock.patch('mindinsight.backend.profiler.profile_api.check_train_job_and_profiler_dir')
     @mock.patch('mindinsight.backend.profiler.profile_api.settings')
     def test_get_minddata_pipeline_op_queue_info_4(self, *args):
         """Test the function of querying operator and queue information."""
@@ -98,6 +100,7 @@ class TestMinddataPipelineApi:
         assert response.status_code == 400
         assert expect_result == response.get_json()
 
+    @mock.patch('mindinsight.backend.profiler.profile_api.check_train_job_and_profiler_dir')
     @mock.patch('mindinsight.backend.profiler.profile_api.settings')
     @mock.patch('mindinsight.profiler.analyser.minddata_pipeline_analyser.'
                 'MinddataPipelineAnalyser.get_op_and_parent_op_info')
@@ -141,6 +144,7 @@ class TestMinddataPipelineApi:
         assert response.status_code == 400
         assert expect_result == response.get_json()
 
+    @mock.patch('mindinsight.backend.profiler.profile_api.check_train_job_and_profiler_dir')
     @mock.patch('mindinsight.backend.profiler.profile_api.validate_and_normalize_path')
     @mock.patch('mindinsight.backend.profiler.profile_api.settings')
     def test_get_minddata_pipeline_queue_info_3(self, *args):
@@ -158,6 +162,7 @@ class TestMinddataPipelineApi:
         assert response.status_code == 400
         assert expect_result == response.get_json()
 
+    @mock.patch('mindinsight.backend.profiler.profile_api.check_train_job_and_profiler_dir')
     @mock.patch('mindinsight.backend.profiler.profile_api.settings')
     def test_get_minddata_pipeline_queue_info_4(self, *args):
         """Test the function of querying queue information."""
@@ -174,6 +179,7 @@ class TestMinddataPipelineApi:
         assert response.status_code == 400
         assert expect_result == response.get_json()
 
+    @mock.patch('mindinsight.backend.profiler.profile_api.check_train_job_and_profiler_dir')
     @mock.patch('mindinsight.backend.profiler.profile_api.settings')
     def test_get_minddata_pipeline_queue_info_5(self, *args):
         """Test the function of querying queue information."""

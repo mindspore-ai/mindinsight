@@ -52,8 +52,6 @@ class ProfilerErrors(ProfilerMgrErrors):
     PIPELINE_OP_NOT_EXIST_ERROR = 8 | _ANALYSER_MASK
 
 
-
-
 @unique
 class ProfilerErrorMsg(Enum):
     """Profiler error messages."""
