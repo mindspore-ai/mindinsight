@@ -511,7 +511,7 @@ export default {
         !!endValue &&
         (isNaN(endValue) ||
           endValue <= -(filter.max + 1) ||
-          endValue > filter.max ||
+          endValue > (filter.max + 1) ||
           !Number(endValue))
       ) {
         return false;

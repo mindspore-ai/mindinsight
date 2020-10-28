@@ -348,6 +348,9 @@ export default {
                 });
               }
             });
+            if (dataList.length === 1) {
+              dataList[0].fullScreen = true;
+            }
             this.tagList = tagList;
             this.originDataArr = dataList;
             this.$nextTick(() => {
