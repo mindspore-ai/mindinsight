@@ -175,7 +175,7 @@ class EventParser():
         if not crc32.CheckValueAgainstData(event_crc_str, event_str, event_len):
             raise exceptions.CRCFailedError()
         self._current += HEADER_SIZE + 2 * CRC_STR_SIZE + event_len
-        if self._current > self._process_info:
+        if self._current >= self._process_info:
             parse_summary_logger.info("current process: %d/%d, %d%%", self._current, self._file_size,
                                       100 * self._current // self._file_size)
             self._process_info += self._file_size // 10
