@@ -46,6 +46,7 @@ class ScalarWriter(Writer):
 
     def write(self):
         """Write file."""
-        with os.fdopen(os.open('{}/scalar.csv'.format(self._file_path), os.O_WRONLY | os.O_CREAT, 0o600), 'w') as fp:
+        with os.fdopen(os.open('{}/scalar.csv'.format(self._file_path), os.O_WRONLY | os.O_CREAT, 0o600), 'w',
+                       encoding='utf-8') as fp:
             writer = csv.writer(fp, dialect='excel')
             writer.writerows(self._scalar_data)
