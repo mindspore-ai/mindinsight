@@ -33,7 +33,7 @@ class ScalarWriter(Writer):
             file_path (str): A directory path, e.g. '/output/'.
         """
         self._file_path = file_path
-        self._scalar_data = [("tag", "step", "wall_time", "value")]
+        self._scalar_data = [("tag", "step", "wall_time (unit: seconds)", "value")]
 
     def add(self, value):
         """
