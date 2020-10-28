@@ -1,5 +1,19 @@
 ## MindInsight
 
+# Release 1.0.1
+
+## Bugfixes
+* Update reference links of README and RELEASE. ([!731](https://gitee.com/mindspore/mindinsight/pulls/731/files))
+* Remove unused libs in requirements.txt. ([!745](https://gitee.com/mindspore/mindinsight/pulls/745/files))
+* Update securec repository link. ([!754](https://gitee.com/mindspore/mindinsight/pulls/754/files))
+
+## Thanks to our Contributors
+Thanks goes to these wonderful people:
+
+Congli Gao, Jianfeng Zhu, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Yongxiu Qu, Luyu Qiu, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Shuide Wang, Hong Sheng, Ran Mo, Zhaohong Guo, Hui Pan, Junyan Qin, Weining Wang, Weifeng Huang, Yifan Xia.
+
+Contributions of any kind are welcome!
+
 # Release 1.0.0
 
 ## Major Features and Improvements
