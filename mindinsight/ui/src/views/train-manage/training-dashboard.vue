@@ -1308,6 +1308,7 @@ export default {
 
               return {
                 type: 'polyline',
+                z2: params.dataIndex,
                 silent: true,
                 shape: {
                   points,
@@ -1514,7 +1515,9 @@ export default {
                 sampleItem.sampleData[sampleIndex].wall_time;
                   sampleItem.curImgUrl =
                 `${basePath}${this.imageBasePath}` +
-                `train_id=${sampleItem.runId}&tag=${sampleItem.tagName}` +
+                `train_id=${sampleItem.runId}&tag=${encodeURIComponent(
+                    sampleItem.tagName,
+                )}` +
                 `&step=-1&wt=${sampleWallTime}`;
                 } else {
                   this.curImageShowSample = {};

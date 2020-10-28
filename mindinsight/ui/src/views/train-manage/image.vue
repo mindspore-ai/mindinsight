@@ -388,7 +388,9 @@ export default {
             sampleItem.showErrMsg = false;
             sampleItem.curImgUrl =
             `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
-            `&tag=${sampleItem.tagName}&step=${params.step}&wt=${params.wt}`;
+            `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${
+              params.step
+            }&wt=${params.wt}`;
           },
           (e) => {
             if (e.response && e.response.data && e.response.data.error_code) {
@@ -399,7 +401,9 @@ export default {
               sampleItem.showErrMsg = false;
               sampleItem.curImgUrl =
               `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
-              `&tag=${sampleItem.tagName}&step=${params.step}&wt=${params.wt}`;
+              `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${
+                params.step
+              }&wt=${params.wt}`;
             }
           },
       );
