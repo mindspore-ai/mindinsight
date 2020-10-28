@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 export default {
+  barColorArr: ['#6c91fb', '#7cdc9f', '#fc8b5d', '#f1689b', '#ab74ff'],
   pieColorArr: [
     '#6C92FA',
     '#6CBFFF',
