@@ -29,20 +29,19 @@ from mindinsight.datavisual.proto_files import lazy_read_pb2
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.summary_parser.image_writer import ImageWriter
 from mindinsight.datavisual.data_transform.summary_parser.scalar_writer import ScalarWriter
-from mindinsight.datavisual.data_transform.ms_data_loader import _SummaryParser
-from mindinsight.utils.exceptions import UnknownError
 
 HEADER_SIZE = 8
 CRC_STR_SIZE = 4
 MAX_EVENT_STRING = 500000000
 SCALAR = 'scalar_value'
 IMAGE = 'image'
+INFO_INTERVAL = 10
 
 
 class EventParser():
     """Parse summary file and save it to csv file and image."""
-    def __init__(self, summary_dir, output):
-        self._summary_dir = summary_dir
+    def __init__(self, summary_file, output):
+        self.summary_file = summary_file
         self._output = output
         self._scalar_writer = ScalarWriter(self._output)
         self._image_writer = ImageWriter(FileHandler.join(self._output, IMAGE))
@@ -54,52 +53,28 @@ class EventParser():
 
     def parse(self):
         """Load summary file and parse file content."""
-        try:
-            if not (self._check_filepath() and self._check_create_filepath(
-                    self._output) and self._check_create_filepath(FileHandler.join(self._output, IMAGE))):
-                return
 
-            summary_parser = _SummaryParser(self._summary_dir)
-            summary_files = summary_parser.filter_files(os.listdir(self._summary_dir))
+        summary_file_handler = FileHandler(self.summary_file, 'rb')
 
-            if not summary_files:
-                parse_summary_logger.error('Path %s has no summary file.', self._summary_dir)
-                return
+        self._file_size = os.path.getsize(self.summary_file)
+        # when current parsed size bigger than self._process_info, print process
+        self._process_info = self._file_size // INFO_INTERVAL
 
-            summary_files = summary_parser.sort_files(summary_files)
+        parse_summary_logger.info("Loading %s.", self.summary_file)
+        result = self._load(summary_file_handler)
 
-            filename = summary_files[-1]
-            file_path = FileHandler.join(self._summary_dir, filename)
+        parse_summary_logger.info("Writing scalar.csv")
+        self._scalar_writer.write()
 
-            if not os.access(file_path, os.R_OK):
-                parse_summary_logger.error('Path %s is not accessible, please check the file-authority.', file_path)
-                return
-
-            self._summary_file_handler = FileHandler(file_path, 'rb')
-
-            self._file_size = os.path.getsize(file_path)
-            # when current parsed size bigger than self._process_info, print process
-            self._process_info = self._file_size // 10
-
-            parse_summary_logger.info("loading %s", file_path)
-            result = self._load(self._summary_file_handler)
-
-            self._scalar_writer.write()
-
-            warning = ''
-
-            if not self._scalar_check:
-                warning = warning + " the summary file contains no scalar value"
-            if not self._image_check:
-                warning = warning + " the summary file contains no image"
-            if result:
-                if warning:
-                    parse_summary_logger.warning(warning)
-                parse_summary_logger.info("parsing summary file finished")
-
-        except Exception as ex:
-            parse_summary_logger.error("Parse summary file failed, detail: %r", str(ex))
-            raise UnknownError(str(ex))
+        warning = ''
+        if not self._scalar_check:
+            warning = warning + " the summary file contains no scalar value."
+        if not self._image_check:
+            warning = warning + " the summary file contains no image."
+        if result:
+            if warning:
+                parse_summary_logger.warning(warning)
+            parse_summary_logger.info("Finished loading %s.", self.summary_file)
 
     def _load(self, file_handler):
         """
@@ -154,6 +129,7 @@ class EventParser():
             parse_summary_logger.error("Check header size and crc, record truncated at offset %s, file_path=%s.",
                                        file_handler.offset, file_handler.file_path)
             return None
+
         if not crc32.CheckValueAgainstData(header_crc_str, header_str, HEADER_SIZE):
             raise exceptions.CRCFailedError()
 
@@ -176,9 +152,9 @@ class EventParser():
             raise exceptions.CRCFailedError()
         self._current += HEADER_SIZE + 2 * CRC_STR_SIZE + event_len
         if self._current >= self._process_info:
-            parse_summary_logger.info("current process: %d/%d, %d%%", self._current, self._file_size,
+            parse_summary_logger.info("Current parsing process: %d/%d, %d%%.", self._current, self._file_size,
                                       100 * self._current // self._file_size)
-            self._process_info += self._file_size // 10
+            self._process_info += self._file_size // INFO_INTERVAL
         return event_str
 
     def _event_parse(self, event_str):
@@ -219,27 +195,3 @@ class EventParser():
             self._image_writer.add((tag, step, value.image.encoded_image))
             self._image_writer.write()
             self._image_check = True
-
-    def _check_filepath(self):
-        """Check file path existence, accessible and available"""
-        if os.path.exists(self._summary_dir):
-            if not os.path.isdir(self._summary_dir):
-                parse_summary_logger.error('Path of summary directory is not a valid directory.')
-                return False
-            if not os.access(self._summary_dir, os.R_OK | os.X_OK):
-                parse_summary_logger.error('Path %s is not accessible, please check the file-authority.',
-                                           self._summary_dir)
-            return True
-        parse_summary_logger.error('Path of summary directory not exists.')
-        return False
-
-    def _check_create_filepath(self, filepath):
-        """Check file path existence, accessible and available, if not exist create the file"""
-        permissions = os.R_OK | os.W_OK | os.X_OK
-        os.umask(permissions << 3 | permissions)
-        if os.path.exists(filepath):
-            parse_summary_logger.error('Path %s has already existed, please choose a new output path.', filepath)
-            return False
-        mode = permissions << 6
-        os.makedirs(filepath, mode=mode)
-        return True

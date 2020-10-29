@@ -18,7 +18,7 @@ Image Writer.
 This module write scalar into a  csv file.
 """
 import os
-import re
+from urllib.parse import quote
 
 from mindinsight.datavisual.data_transform.summary_parser.writer import Writer
 
@@ -47,9 +47,7 @@ class ImageWriter(Writer):
     def write(self):
         """Write file."""
         for i in range(len(self._image_data)):
-            tag = self._image_data[i][0]
-            tag = tag.replace('/', '_')
-            tag = re.sub(r'[^a-zA-Z0-9_]+', '', tag)
+            tag = quote(self._image_data[i][0], safe="")
             with os.fdopen(os.open("{}/{}_{}.png".format(self._file_path, tag, self._image_data[i][1]),
                                    os.O_WRONLY | os.O_CREAT, 0o600), 'wb') as fp:
                 fp.write(self._image_data[i][2])
