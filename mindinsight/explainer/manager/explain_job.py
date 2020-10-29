@@ -26,6 +26,8 @@ from mindinsight.explainer.manager.event_parse import EventParser
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 
+_NUM_DIGIT = 7
+
 
 class ExplainJob:
     """ExplainJob which manage the record in the summary file."""
@@ -255,7 +257,7 @@ class ExplainJob:
                 ground_truth_probs + predicted_probs):
             inference_info[label] = {
                 'label': self._labels_info[label]['label'],
-                'confidence': prob,
+                'confidence': round(prob, _NUM_DIGIT),
                 'saliency_maps': []}
 
         if EventParser.is_attr_ready(sample_data, 'explanation'):
@@ -281,6 +283,7 @@ class ExplainJob:
 
         Return:
             string, image data in base64 byte
+
         """
         return self._image_dict.get(image_id, None)
 

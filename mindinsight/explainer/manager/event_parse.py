@@ -27,6 +27,8 @@ _IMAGE_DATA_TAGS = {
     'explanation': PluginNameEnum.EXPLANATION.value
 }
 
+_NUM_DIGIT = 7
+
 
 class EventParser:
     """Parser for event data."""
@@ -57,7 +59,7 @@ class EventParser:
 
             explainer_score_dict[explainer].append({
                 'metric': metric,
-                'score': metric_score})
+                'score': round(metric_score, _NUM_DIGIT)})
             new_label_score_dict = EventParser._score_event_to_dict(label_score_event, metric)
             for label, label_scores in new_label_score_dict.items():
                 label_score_dict[explainer][label] = label_score_dict[explainer].get(label, []) + label_scores
@@ -81,8 +83,7 @@ class EventParser:
                 else:
                     self._parse_sample_info(sample, sample_id, tag)
             except UnknownError as ex:
-                logger.warning("Parse %s data failed within image related data,"
-                               " detail: %r", tag, str(ex))
+                logger.warning("Parse %s data failed within image related data, detail: %r", tag, str(ex))
                 continue
 
         if EventParser._is_ready_for_display(self._sample_pool[sample_id]):
@@ -133,7 +134,7 @@ class EventParser:
         for label_id, label_score in enumerate(label_score_event):
             new_label_score_dict[label_id].append({
                 'metric': metric,
-                'score': label_score,
+                'score': round(label_score, _NUM_DIGIT),
             })
         return new_label_score_dict
 

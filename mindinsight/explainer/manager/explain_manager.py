@@ -60,18 +60,19 @@ class ExplainManager:
                 if not self._reload_interval:
                     break
                 time.sleep(self._reload_interval)
-            except UnknownError:
+            except UnknownError as ex:
+                logger.exception(ex)
+                logger.error('Unknown Error raise when loading summary files, status: %r, and loader pool size is %r.'
+                             'Detail: %s', self._status, len(self._loader_pool), str(ex))
                 self._status = _ExplainManagerStatus.INVALID.value
 
     def _load_data(self):
         """Loading the summary in the given base directory."""
-        logger.info(
-            'Start to load data, reload interval: %r.', self._reload_interval)
+        logger.info('Start to load data, reload interval: %r.', self._reload_interval)
 
         with self._status_mutex:
             if self._status == _ExplainManagerStatus.LOADING.value:
-                logger.info('Current status is %s, will ignore to load data.',
-                            self._status)
+                logger.info('Current status is %s, will ignore to load data.', self._status)
                 return
 
             self._status = _ExplainManagerStatus.LOADING.value
@@ -87,8 +88,7 @@ class ExplainManager:
             else:
                 self._status = _ExplainManagerStatus.DONE.value
 
-            logger.info('Load event data end, status: %r, '
-                        'and loader pool size is %r',
+            logger.info('Load event data end, status: %r, and loader pool size is %r',
                         self._status, len(self._loader_pool))
 
     def _update_loader_latest_update_time(self, loader_id, latest_update_time=None):
@@ -206,8 +206,8 @@ class ExplainManager:
                     return
             loader.load()
 
-        except MindInsightException as e:
-            logger.warning('Data loader %r load data failed. Delete data_loader. Detail: %s', loader_id, e)
+        except MindInsightException as ex:
+            logger.warning('Data loader %r load data failed. Delete data_loader. Detail: %s', loader_id, ex)
             with self._loader_pool_mutex:
                 self._delete_loader(loader_id)
 
@@ -302,8 +302,7 @@ class ExplainManager:
             return None
         return loader
 
-    def start_load_data(self,
-                        reload_interval=_MAX_INTERVAL):
+    def start_load_data(self, reload_interval=_MAX_INTERVAL):
         """
         Start threads for loading data.
 
