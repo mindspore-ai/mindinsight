@@ -95,7 +95,7 @@ class AlgorithmContext:
         """
         Sort patterns according to its frequency and prune by beam width.
 
-        When frequency equals, choose shorter pattern.
+        When frequency equals, choose longer pattern.
 
         Args:
             pattern_arr (dict): Pattern dict.
@@ -110,9 +110,9 @@ class AlgorithmContext:
                 return CmpRelation.GREATER
             if x[1].count < y[1].count:
                 return CmpRelation.LESS
-            if x[1].ptn_length < y[1].ptn_length:
-                return CmpRelation.GREATER
             if x[1].ptn_length > y[1].ptn_length:
+                return CmpRelation.GREATER
+            if x[1].ptn_length < y[1].ptn_length:
                 return CmpRelation.LESS
             return CmpRelation.EQUAL
 
@@ -127,4 +127,5 @@ context = AlgorithmContext()
 
 __all__ = ["context",
            "gen_hash_key",
-           "DagGraph"]
+           "DagGraph",
+           "MAX_OUT_DEGREE"]
