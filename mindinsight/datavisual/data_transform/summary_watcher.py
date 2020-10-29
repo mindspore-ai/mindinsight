@@ -230,10 +230,9 @@ class SummaryWatcher:
         elif entry.is_dir():
             if list_explain:
                 return
-            profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
-            full_dir_path = os.path.join(summary_base_dir, relative_path, entry.name)
-            is_valid_profiler_dir, profiler_type = self._is_valid_profiler_directory(full_dir_path)
-            if profiler_pattern is None or not is_valid_profiler_dir:
+
+            profiler_type, is_find = self._find_profiler_dir(entry, summary_base_dir, relative_path)
+            if not is_find:
                 return
 
             profiler = {
@@ -247,6 +246,16 @@ class SummaryWatcher:
                 summary_dict[relative_path]['profiler'] = profiler
             else:
                 summary_dict[relative_path] = _new_entry(ctime, mtime, profiler)
+
+    def _find_profiler_dir(self, entry, summary_base_dir, relative_path):
+        """Find profiler dir by the given relative path."""
+        profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
+        full_dir_path = os.path.join(summary_base_dir, relative_path, entry.name)
+        is_valid_profiler_dir, profiler_type = self._is_valid_profiler_directory(full_dir_path)
+        if profiler_pattern is None or not is_valid_profiler_dir:
+            return profiler_type, False
+
+        return profiler_type, True
 
     def _is_valid_pattern_result(self, summary_pattern, pb_pattern, list_explain, entry):
         """Check the pattern result is valid."""
