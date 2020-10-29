@@ -182,7 +182,8 @@ limitations under the License.
                 <!-- The system determines whether to display the pen icon and
               text box based on the values of editShow -->
                 <div class="edit-text-container"
-                     v-show="scope.row.editShow">{{ scope.row.remark }}</div>
+                     v-show="scope.row.editShow"
+                     :title="scope.row.remark">{{ scope.row.remark }}</div>
                 <div class="inline-block-set">
                   <i class="el-icon-edit"
                      @click="editRemarks(scope.row)"
@@ -2238,7 +2239,7 @@ export default {
   }
   .edit-text-container {
     display: inline-block;
-    max-width: 140px;
+    max-width: 190px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2266,7 +2267,7 @@ export default {
     padding-right: 6px;
   }
   .remark-input-style {
-    width: 140px;
+    width: 190px;
   }
   .cl-data-right {
     display: flex;

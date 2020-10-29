@@ -18,7 +18,9 @@ import Echarts from 'echarts';
 import CommonProperty from '@/common/common-property.js';
 export default {
   data() {
-    return {};
+    return {
+      learningRate: this.$t('modelTraceback.learningRate'),
+    };
   },
 
   methods: {
@@ -164,6 +166,8 @@ export default {
         if (this.myBarChart.getZr()) {
           this.myBarChart.getZr().off('click');
         }
+        this.myBarChart.off('mouseover');
+        this.myBarChart.off('mouseout');
       }
 
       const showDataZoomLimitLength = 10;
@@ -173,10 +177,11 @@ export default {
       this.barEnd = barDataLength - 1;
 
       const toolTipFormatter = (val) => {
-        this.tooltipsBarData = val;
         const maxTooltipLen = 30;
         let name = val[0].name;
+        this.tooltipsBarName = name;
         name = name.replace(/</g, '< ');
+        name = name === 'learning_rate' ? this.learningRate : name;
         const breakCount = Math.ceil(name.length / maxTooltipLen);
         let str = '';
         for (let i = 0; i < breakCount; i++) {
@@ -239,12 +244,14 @@ export default {
             data: this.barYAxisData,
             triggerEvent: true,
             axisLabel: {
-              formatter: function(params) {
+              formatter: (params) => {
                 const maxLength = 12;
-                if (params.length > maxLength) {
-                  return params.substring(0, maxLength) + '...';
+                const axisName =
+                  params === 'learning_rate' ? this.learningRate : params;
+                if (axisName.length > maxLength) {
+                  return axisName.substring(0, maxLength) + '...';
                 } else {
-                  return params;
+                  return axisName;
                 }
               },
               textStyle: {
@@ -310,7 +317,10 @@ export default {
           const offsetY = params.event.offsetY + 10;
           this.myBarChart.setOption({
             tooltip: {
-              formatter: params.value,
+              formatter:
+                params.value === 'learning_rate'
+                  ? this.learningRate
+                  : params.value,
               alwaysShowContent: true,
             },
           });
@@ -333,48 +343,19 @@ export default {
         }
       });
       this.myBarChart.getZr().on('click', (params) => {
-        this.xTitle = this.tooltipsBarData[0].name;
-        barOption.dataZoom = [
-          {
-            show: dataZoomShowFlag,
-            type: 'slider',
-            yAxisIndex: 0,
-            width: '30px',
-            startValue: this.barStart,
-            endValue: this.barEnd,
-          },
-        ];
-        barOption.yAxis = [
-          {
-            type: 'category',
-            axisTick: {show: false},
-            data: this.barYAxisData,
-          },
-        ];
-        barOption.series = [
-          {
-            type: 'bar',
-            barWidth: 10,
-            data: this.barSeriesData,
-            itemStyle: {
-              normal: {
-                color: (params) => {
-                  // Determine the selected name to change the color setting of the column
-                  if (params.name === this.xTitle) {
-                    return '#cc5b58';
-                  } else {
-                    return '#6c92fa';
-                  }
-                },
-              },
-            },
-          },
-        ];
-        this.$nextTick(() => {
-          this.myBarChart.setOption(barOption);
-        });
-        // Draw a scatter chart after click
-        this.setChartOfScatters();
+        if (params.topTarget) {
+          setTimeout(() => {
+            this.xTitle = this.tooltipsBarName;
+            this.$nextTick(() => {
+              this.myBarChart.setOption(barOption);
+            });
+            // Draw a scatter chart after click
+            this.setChartOfScatters();
+          }, 100);
+        }
+      });
+      this.myBarChart.on('click', 'yAxis', (params) => {
+        this.tooltipsBarName = params.value;
       });
     },
 
@@ -388,6 +369,8 @@ export default {
       this.tooltipsData = [];
       const hyper = this.scatterData.metadata.possible_hyper_parameters;
       for (let m = 0; m < hyper.length; m++) {
+        hyper[m].name =
+          hyper[m].name === 'learning_rate' ? this.learningRate : hyper[m].name;
         if (hyper[m].name === this.xTitle) {
           xvalue = hyper[m].data;
         }
@@ -520,6 +503,8 @@ export default {
         arrayTotal = tempData;
       }
       tempData.forEach((item) => {
+        item.name =
+          item.name === 'learning_rate' ? this.learningRate : item.name;
         if (!item.unselected) {
           if (item.name.startsWith('[U]')) {
             barHyper.unshift(item);
@@ -612,6 +597,14 @@ export default {
       this.currentBarData = JSON.parse(JSON.stringify(barData));
       // The displayed bar drop-down box content
       this.barNameList.push(nameObjMust, nameObjOther);
+      this.barNameList.forEach((item) => {
+        item.options.forEach((options) => {
+          options.label =
+            options.label === 'learning_rate'
+              ? this.learningRate
+              : options.label;
+        });
+      });
       // Save all the contents of the drop-down box
       this.baseSelectOptions.push(nameObjMust, nameObjOther);
       this.barYAxisData = [];

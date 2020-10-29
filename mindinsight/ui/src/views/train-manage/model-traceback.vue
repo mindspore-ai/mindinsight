@@ -573,7 +573,7 @@ export default {
       // bar datazoom scroll bar settings
       barStart: 100,
       barEnd: 0,
-      tooltipsBarData: [],
+      tooltipsBarName: '',
       echartDialogVisible: false,
 
       // right data
