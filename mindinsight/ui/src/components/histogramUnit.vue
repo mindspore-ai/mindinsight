@@ -257,6 +257,7 @@ export default {
 
               return {
                 type: 'polyline',
+                z2: params.dataIndex,
                 silent: true,
                 shape: {
                   points,
