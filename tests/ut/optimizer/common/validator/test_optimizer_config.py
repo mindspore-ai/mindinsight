@@ -65,12 +65,14 @@ class TestOptimizerConfig:
         config_dict['target']['goal'] = init_list
         config_dict['parameters']['learning_rate']['bounds'] = init_str
         config_dict['parameters']['learning_rate']['choice'] = init_str
+        config_dict['parameters']['learning_rate']['type'] = init_list
         expected_err = {
             'command': ["Value type should be 'str'."],
             'parameters': {
                 'learning_rate': {
                     'bounds': ["Value type should be 'list'."],
-                    'choice': ["Value type should be 'list'."]
+                    'choice': ["Value type should be 'list'."],
+                    'type': ["Value type should be 'str'."]
                 }
             },
             'summary_base_dir': ["Value type should be 'str'."],

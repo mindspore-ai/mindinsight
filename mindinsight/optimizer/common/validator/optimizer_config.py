@@ -79,7 +79,7 @@ class ParameterSchema(Schema):
 
     bounds = fields.List(fields.Number(error_messages=number_err_msg), error_messages=list_err_msg)
     choice = fields.List(fields.Number(error_messages=number_err_msg), error_messages=list_err_msg)
-    type = fields.Str(error_messages=list_err_msg)
+    type = fields.Str(error_messages=str_err_msg)
     source = fields.Str(error_messages=str_err_msg)
 
     @validates("bounds")
