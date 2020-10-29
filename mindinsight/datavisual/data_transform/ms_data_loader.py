@@ -20,6 +20,7 @@ Each instance will read an entire run, a run can contain one or
 more log file.
 """
 import re
+import time
 import struct
 
 from google.protobuf.message import DecodeError
@@ -46,6 +47,7 @@ from mindinsight.utils.exceptions import UnknownError
 HEADER_SIZE = 8
 CRC_STR_SIZE = 4
 MAX_EVENT_STRING = 500000000
+RETRY_TIMES = 2
 
 
 class MSDataLoader:
@@ -368,10 +370,12 @@ class _SummaryParser(_Parser):
         Returns:
             bool, True if the summary file is finished loading.
         """
+        crc_check_time = 0
         while True:
             start_offset = file_handler.offset
             try:
                 event_str = self._event_load(file_handler)
+                crc_check_time = 0
                 if event_str is None:
                     file_handler.reset_offset(start_offset)
                     return True
@@ -399,6 +403,18 @@ class _SummaryParser(_Parser):
 
                 future.add_done_callback(exception_no_raise_wrapper(_add_tensor_event_callback))
                 return False
+            except exceptions.CRCLengthFailedError:
+                if crc_check_time > RETRY_TIMES:
+                    logger.warning(
+                        "Check crc length failed, please check the summary file integrity, "
+                        "the file may be in transfer, file_path: %s, offset=%s.",
+                        file_handler.file_path, start_offset)
+                    return True
+                logger.info(
+                    "Check crc failed, retrying %d/%d times.", crc_check_time + 1, RETRY_TIMES + 1)
+                file_handler.reset_offset(start_offset)
+                crc_check_time += 1
+                time.sleep(0.5)
             except exceptions.CRCFailedError:
                 file_handler.reset_offset(start_offset)
                 logger.warning("Check crc faild and ignore this file, file_path=%s, "
@@ -432,9 +448,7 @@ class _SummaryParser(_Parser):
             header_crc_str = ''
 
         if len(header_str) != HEADER_SIZE or len(header_crc_str) != CRC_STR_SIZE:
-            logger.warning("Check header size and crc, record truncated at offset %s, "
-                           "file_path=%s.", file_handler.offset, file_handler.file_path)
-            return None
+            raise exceptions.CRCLengthFailedError
         if not crc32.CheckValueAgainstData(header_crc_str, header_str, HEADER_SIZE):
             raise exceptions.CRCFailedError()
 
@@ -450,9 +464,7 @@ class _SummaryParser(_Parser):
             event_crc_str = ''
 
         if len(event_str) != event_len or len(event_crc_str) != CRC_STR_SIZE:
-            logger.warning("Check event crc, record truncated at offset %d, file_path: %s.",
-                           file_handler.offset, file_handler.file_path)
-            return None
+            raise exceptions.CRCLengthFailedError
         if not crc32.CheckValueAgainstData(event_crc_str, event_str, event_len):
             raise exceptions.CRCFailedError()
 

@@ -26,7 +26,7 @@ from mindinsight.datavisual.data_transform.ms_data_loader import _SummaryParser
 from mindinsight.datavisual.data_transform.summary_parser.event_parser import EventParser
 
 
-class FileDirAction(argparse.Action):
+class DirAction(argparse.Action):
     """File directory action class definition."""
 
     @staticmethod
@@ -72,7 +72,7 @@ class OutputDirAction(argparse.Action):
             values (object): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-        output = FileDirAction.check_path(values)
+        output = DirAction.check_path(values)
 
         setattr(namespace, self.dest, output)
 
@@ -94,7 +94,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--summary-dir',
             type=str,
-            action=FileDirAction,
+            action=DirAction,
             default=os.path.realpath(os.getcwd()),
             help="""
                     Optional, specify path for summary file directory. 
@@ -120,7 +120,7 @@ class Command(BaseCommand):
         """
         try:
             date_time = datetime.datetime.now().strftime('output_%Y%m%d_%H%M%S_%f')
-            output_filename = os.path.join(args.output, date_time)
+            output_path = os.path.join(args.output, date_time)
 
 
             summary_dir = args.summary_dir
@@ -140,10 +140,10 @@ class Command(BaseCommand):
             summary_file = FileHandler.join(summary_dir, filename)
 
             if not (self._check_filepath(summary_file) and self._check_create_filepath(
-                    output_filename) and self._check_create_filepath(FileHandler.join(output_filename, 'image'))):
+                    output_path) and self._check_create_filepath(FileHandler.join(output_path, 'image'))):
                 return
 
-            eventparser = EventParser(summary_file, output_filename)
+            eventparser = EventParser(summary_file, output_path)
             eventparser.parse()
 
         except Exception as ex:
@@ -158,15 +158,13 @@ class Command(BaseCommand):
         Args:
             filepath (str): File path.
         """
-        if os.path.exists(filepath):
-            if not os.path.isfile(filepath):
-                parse_summary_logger.error('Summary file %s is not a valid file.', filepath)
-                return False
-            if not os.access(filepath, os.R_OK):
-                parse_summary_logger.error('Path %s is not accessible, please check the file-authority.', filepath)
-            return True
-        parse_summary_logger.error('Summary file %s not exists.', filepath)
-        return False
+        if not os.path.isfile(filepath):
+            parse_summary_logger.error('Summary file %s is not a valid file.', filepath)
+            return False
+        if not os.access(filepath, os.R_OK):
+            parse_summary_logger.error('Path %s is not accessible, please check the file-authority.', filepath)
+            return False
+        return True
 
     @staticmethod
     def _check_dirpath(filepath):
@@ -182,6 +180,7 @@ class Command(BaseCommand):
                 return False
             if not os.access(filepath, os.R_OK | os.X_OK):
                 parse_summary_logger.error('Path %s is not accessible, please check the file-authority.', filepath)
+                return False
             return True
         parse_summary_logger.error('Summary directory %s not exists.', filepath)
         return False
