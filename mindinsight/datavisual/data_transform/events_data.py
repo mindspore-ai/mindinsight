@@ -155,7 +155,7 @@ class EventsData:
             raise KeyError('Plugin %r could not be found.' % plugin_name)
         with self._tags_by_plugin_mutex_lock[plugin_name]:
             # Return a snapshot to avoid concurrent mutation and iteration issues.
-            return list(self._tags_by_plugin[plugin_name])
+            return sorted(list(self._tags_by_plugin[plugin_name]))
 
     def tensors(self, tag):
         """
