@@ -536,6 +536,7 @@ export default {
       myPieChart: undefined,
       // bar chart
       myBarChart: undefined,
+      barOption: {},
       // Check whether the big scatter icon can be clicked
       viewBigBtnDisabled: false,
       // Options that can be selected in the multiple selection drop-down box on the left
@@ -1679,8 +1680,23 @@ export default {
    * Destroy the page
    */
   destroyed() {
-    this.myPieChart = null;
-    this.myBarChart = null;
+    if (this.myPieChart) {
+      this.myPieChart.clear();
+      this.myPieChart = null;
+    }
+
+    if (this.myBarChart) {
+      this.myBarChart.off('datazoom');
+      this.myBarChart.off('click');
+      if (this.myBarChart.getZr()) {
+        this.myBarChart.getZr().off('click');
+      }
+      this.myBarChart.off('mouseover');
+      this.myBarChart.off('mouseout');
+      this.myBarChart.clear();
+      this.myBarChart = null;
+    }
+
     this.sortChangeTimer = null;
     if (this.echart.chart) {
       window.removeEventListener('resize', this.resizeChart, false);
@@ -2188,6 +2204,6 @@ export default {
 }
 .tooltip-msg {
   white-space: normal;
-  max-width: 180px;
+  max-width: 150px;
 }
 </style>

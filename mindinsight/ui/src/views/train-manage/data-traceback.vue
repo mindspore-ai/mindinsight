@@ -2243,6 +2243,7 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: bottom;
   }
   .btns-container {
     padding: 6px 32px 4px;

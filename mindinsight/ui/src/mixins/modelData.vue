@@ -147,27 +147,13 @@ export default {
 
     setChartOfBar() {
       const barDataLength = this.barYAxisData.length;
-      if (!barDataLength) {
-        this.viewBigBtnDisabled = true;
-      }
-      if (barDataLength === 0 && this.myBarChart) {
+      this.xTitle = this.barYAxisData[barDataLength - 1];
+      this.viewBigBtnDisabled = !barDataLength;
+
+      if (!barDataLength && this.myBarChart) {
         this.myBarChart.clear();
         this.$refs.smallScatter.clearScatter();
         return;
-      }
-      this.viewBigBtnDisabled = false;
-      this.xTitle = this.barYAxisData[barDataLength - 1];
-      // Set up a scatter chart
-      this.setChartOfScatters();
-      if (!this.myBarChart) {
-        this.myBarChart = Echarts.init(document.getElementById('bar-chart'));
-      } else {
-        this.myBarChart.off('datazoom');
-        if (this.myBarChart.getZr()) {
-          this.myBarChart.getZr().off('click');
-        }
-        this.myBarChart.off('mouseover');
-        this.myBarChart.off('mouseout');
       }
 
       const showDataZoomLimitLength = 10;
@@ -176,44 +162,13 @@ export default {
       this.barStart = Math.max(0, barDataLength - 1 - showDataZoomLimitLength);
       this.barEnd = barDataLength - 1;
 
-      const toolTipFormatter = (val) => {
-        const maxTooltipLen = 30;
-        let name = val[0].name;
-        this.tooltipsBarName = name;
-        name = name.replace(/</g, '< ');
-        name = name === 'learning_rate' ? this.learningRate : name;
-        const breakCount = Math.ceil(name.length / maxTooltipLen);
-        let str = '';
-        for (let i = 0; i < breakCount; i++) {
-          const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
-          str += str ? `<br/>${temp}` : temp;
-        }
-
-        const item = this.currentBarData[val[0].axisValue];
-        const msg =
-          item && item.message
-            ? item.message
-            : item.disabled
-            ? this.$t('modelTraceback.mustExist')
-            : '';
-        const res = `<div class="tooltip-msg"><p>${str}</p><p>${
-          this.$t('modelTraceback.parameterImportance') +
-          this.$t('symbols.colon')
-        }${val[0].value}</p><p>${
-          msg
-            ? this.$t('modelTraceback.explan') + this.$t('symbols.colon') + msg
-            : ''
-        }</p></div>`;
-        return res;
-      };
-
-      const barOption = {
+      this.barOption = {
         tooltip: {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow',
           },
-          formatter: toolTipFormatter,
+          formatter: this.barToolTipFormatter,
         },
         label: {
           show: true,
@@ -285,12 +240,7 @@ export default {
             },
           },
         ],
-        grid: {
-          x: 94,
-          y: 30,
-          x2: 50,
-          y2: 30,
-        },
+        grid: {x: 94, y: 30, x2: 50, y2: 30},
         dataZoom: [
           {
             show: dataZoomShowFlag,
@@ -304,51 +254,89 @@ export default {
         ],
       };
 
-      this.$nextTick(() => {
-        this.myBarChart.setOption(barOption);
-      });
+      if (this.myBarChart) {
+        this.myBarChart.setOption(this.barOption, true);
+      } else {
+        this.myBarChart = Echarts.init(document.getElementById('bar-chart'));
+        this.myBarChart.setOption(this.barOption, true);
+        this.setBarChartEvent();
+      }
+      // Set up a scatter chart
+      this.setChartOfScatters();
+    },
+
+    barToolTipFormatter(value) {
+      const maxTooltipLen = 30;
+      let name = value[0].name;
+      this.tooltipsBarName = name;
+      name = name.replace(/</g, '< ');
+      name = name === 'learning_rate' ? this.learningRate : name;
+      const breakCount = Math.ceil(name.length / maxTooltipLen);
+      let str = '';
+      for (let i = 0; i < breakCount; i++) {
+        const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
+        str += str ? `<br/>${temp}` : temp;
+      }
+
+      const item = this.currentBarData[value[0].axisValue];
+      const msg =
+        item && item.message
+          ? item.message
+          : item.disabled
+          ? this.$t('modelTraceback.mustExist')
+          : '';
+      const res = `<div class="tooltip-msg"><p>${str}</p><p>${
+        this.$t('modelTraceback.parameterImportance') + this.$t('symbols.colon')
+      }${value[0].value}</p><p>${
+        msg
+          ? this.$t('modelTraceback.explan') + this.$t('symbols.colon') + msg
+          : ''
+      }</p></div>`;
+      return res;
+    },
+
+    /**
+     * Set event of bar echart
+     */
+    setBarChartEvent() {
       this.myBarChart.on('datazoom', (params) => {
-        this.barStart = Math.round((barDataLength * params.start) / 100) - 1;
-        this.barEnd = Math.round((barDataLength * params.end) / 100) - 1;
+        this.barStart =
+          Math.round((this.barYAxisData.length * params.start) / 100) - 1;
+        this.barEnd =
+          Math.round((this.barYAxisData.length * params.end) / 100) - 1;
       });
-      this.myBarChart.on('mouseover', (params) => {
-        if (params.componentType === 'yAxis') {
-          const offsetX = params.event.offsetX + 10;
-          const offsetY = params.event.offsetY + 10;
-          this.myBarChart.setOption({
-            tooltip: {
-              formatter:
-                params.value === 'learning_rate'
-                  ? this.learningRate
-                  : params.value,
-              alwaysShowContent: true,
-            },
-          });
-          this.myBarChart.dispatchAction({
-            type: 'showTip',
-            seriesIndex: 0,
-            dataIndex: 0,
-            position: [offsetX, offsetY],
-          });
-        }
+      this.myBarChart.on('mouseover', 'yAxis', (params) => {
+        const offsetX = params.event.offsetX + 10;
+        const offsetY = params.event.offsetY + 10;
+        this.myBarChart.setOption({
+          tooltip: {
+            formatter:
+              params.value === 'learning_rate'
+                ? this.learningRate
+                : params.value,
+            alwaysShowContent: true,
+          },
+        });
+        this.myBarChart.dispatchAction({
+          type: 'showTip',
+          seriesIndex: 0,
+          dataIndex: 0,
+          position: [offsetX, offsetY],
+        });
       });
-      this.myBarChart.on('mouseout', (params) => {
-        if (params.componentType === 'yAxis') {
-          this.myBarChart.setOption({
-            tooltip: {
-              formatter: toolTipFormatter,
-              alwaysShowContent: false,
-            },
-          });
-        }
+      this.myBarChart.on('mouseout', 'yAxis', (params) => {
+        this.myBarChart.setOption({
+          tooltip: {
+            formatter: this.barToolTipFormatter,
+            alwaysShowContent: false,
+          },
+        });
       });
       this.myBarChart.getZr().on('click', (params) => {
         if (params.topTarget) {
           setTimeout(() => {
             this.xTitle = this.tooltipsBarName;
-            this.$nextTick(() => {
-              this.myBarChart.setOption(barOption);
-            });
+            this.myBarChart.setOption(this.barOption, true);
             // Draw a scatter chart after click
             this.setChartOfScatters();
           }, 100);
