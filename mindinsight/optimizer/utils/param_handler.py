@@ -13,7 +13,9 @@
 # limitations under the License.
 # ============================================================================
 """Utils for params."""
+import math
 import numpy as np
+
 from mindinsight.lineagemgr.model import LineageTable, USER_DEFINED_PREFIX, METRIC_PREFIX
 from mindinsight.optimizer.common.enums import HyperParamKey, HyperParamType, HyperParamSource, TargetKey, \
     TargetGoal, TunableSystemDefinedParams, TargetGroup, SystemDefinedTargets
@@ -56,16 +58,21 @@ def match_value_type(array, params_info: dict):
     index = 0
     for _, param_info in params_info.items():
         value = array[index]
-        if HyperParamKey.BOUND.value in param_info:
-            bound = param_info[HyperParamKey.BOUND.value]
+        bound = param_info.get(HyperParamKey.BOUND.value)
+        choice = param_info.get(HyperParamKey.CHOICE.value)
+        if bound is not None:
             value = max(bound[0], array[index])
             value = min(bound[1], value)
-        if HyperParamKey.CHOICE.value in param_info:
-            choices = param_info[HyperParamKey.CHOICE.value]
-            nearest_index = int(np.argmin(np.fabs(np.array(choices) - value)))
-            value = choices[nearest_index]
+        if choice is not None:
+            nearest_index = int(np.argmin(np.fabs(np.array(choice) - value)))
+            value = choice[nearest_index]
         if param_info.get(HyperParamKey.TYPE.value) == HyperParamType.INT.value:
             value = int(value)
+            if bound is not None and value < bound[0]:
+                value = math.ceil(bound[0])
+            elif bound is not None and value >= bound[1]:
+                # bound[1] is 2.0, value is 1; bound[1] is 2.1, value is 2
+                value = math.floor(bound[1]) - 1
         if HyperParamKey.DECIMAL.value in param_info:
             value = np.around(value, decimals=param_info[HyperParamKey.DECIMAL.value])
         array_new.append(value)

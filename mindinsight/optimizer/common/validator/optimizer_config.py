@@ -34,6 +34,17 @@ def _generate_schema_err_msg(err_msg, *args):
     return {"invalid": err_msg}
 
 
+def _generate_err_msg_for_nested_keys(err_msg, *args):
+    """Organize error messages for system defined parameters."""
+    err_dict = {}
+    for name in args[::-1]:
+        if not err_dict:
+            err_dict.update({name: err_msg})
+        else:
+            err_dict = {name: err_dict}
+    return err_dict
+
+
 def include_integer(low, high):
     """Check if the range [low, high) includes integer."""
     def _in_range(num, low, high):
@@ -91,11 +102,17 @@ class ParameterSchema(Schema):
             raise ValidationError("The upper bound must be greater than lower bound. "
                                   "The range is [lower_bound, upper_bound).")
 
+    @validates("choice")
+    def check_choice(self, choice):
+        """Check if choice is valid."""
+        if not choice:
+            raise ValidationError("It is empty, please fill in at least one value.")
+
     @validates("type")
     def check_type(self, type_in):
         """Check if type is valid."""
         if type_in not in HyperParamType.list_members():
-            raise ValidationError("The type should be in %s." % HyperParamType.list_members())
+            raise ValidationError("It should be in %s." % HyperParamType.list_members())
 
     @validates("source")
     def check_source(self, source):
@@ -170,6 +187,38 @@ class OptimizerConfig(Schema):
     target = fields.Dict(required=True, error_messages=dict_err_msg)
     parameters = fields.Dict(required=True, error_messages=dict_err_msg)
 
+    def _check_tunable_system_parameters(self, name, value):
+        """Check tunable system parameters."""
+        bound = value.get(HyperParamKey.BOUND.value)
+        choice = value.get(HyperParamKey.CHOICE.value)
+        param_type = value.get(HyperParamKey.TYPE.value)
+
+        err_msg = "The value(s) should be positive number."
+        if bound is not None and bound[0] <= 0:
+            raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.BOUND.value))
+        if choice is not None and min(choice) <= 0:
+            raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.CHOICE.value))
+
+        if name == TunableSystemDefinedParams.LEARNING_RATE.value:
+            if bound is not None and bound[1] > 1:
+                err_msg = "The upper bound should be less than and equal to 1."
+                raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.BOUND.value))
+            if choice is not None and max(choice) >= 1:
+                err_msg = "The values should be float number less than to 1."
+                raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.CHOICE.value))
+            if param_type == HyperParamType.INT.value:
+                err_msg = "The value(s) should be float number, please config it as %s." % HyperParamType.FLOAT.value
+                raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.TYPE.value))
+        else:
+            if choice is not None and list(filter(lambda x: not isinstance(x, int), choice)):
+                # if the choice contains value(s) which is not integer
+                err_msg = "The value(s) should be integer."
+                raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.CHOICE.value))
+            if bound is not None and param_type != HyperParamType.INT.value:
+                # if bound is configured, need to config its type as int.
+                err_msg = "The value(s) should be integer, please config its type as %r." % HyperParamType.INT.value
+                raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.TYPE.value))
+
     @validates("tuner")
     def check_tuner(self, data):
         """Check tuner."""
@@ -185,10 +234,16 @@ class OptimizerConfig(Schema):
             if err:
                 raise ValidationError({name: err})
 
-            if HyperParamKey.SOURCE.value not in value:
+            source = value.get(HyperParamKey.SOURCE.value)
+
+            if source in [None, HyperParamSource.SYSTEM_DEFINED.value] and \
+                    name in TunableSystemDefinedParams.list_members():
+                self._check_tunable_system_parameters(name, value)
+
+            if source is None:
                 # if params is in system_defined keys, group will be 'system_defined', else will be 'user_defined'.
                 continue
-            source = value.get(HyperParamKey.SOURCE.value)
+
             if source == HyperParamSource.SYSTEM_DEFINED.value and \
                     name not in TunableSystemDefinedParams.list_members():
                 raise ValidationError({

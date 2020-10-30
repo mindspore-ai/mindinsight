@@ -15,6 +15,8 @@
 """Test optimizer config schema."""
 from copy import deepcopy
 
+import pytest
+
 from mindinsight.optimizer.common.validator.optimizer_config import OptimizerConfig
 from mindinsight.optimizer.common.enums import TargetGroup, HyperParamSource
 
@@ -105,7 +107,7 @@ class TestOptimizerConfig:
                     'choice': {
                         0: ['Value(s) should be integer or float.']
                     },
-                    'type': ["The type should be in ['int', 'float']."]
+                    'type': ["It should be in ['int', 'float']."]
                 }
             },
             'target': {
@@ -156,6 +158,101 @@ class TestOptimizerConfig:
             'parameters': {
                 'decay_step': {
                     '_schema': ["Only one of ['bounds', 'choice'] should be specified."]
+                }
+            }
+        }
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
+    def test_learning_rate(self):
+        """Test parameters combination."""
+        config_dict = deepcopy(self._config_dict)
+
+        config_dict['parameters']['learning_rate']['bounds'] = [-0.1, 1]
+        expected_err = {
+            'parameters': {
+                'learning_rate': {
+                    'bounds': 'The value(s) should be positive number.'
+                }
+            }
+        }
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
+        config_dict['parameters']['learning_rate']['bounds'] = [0.1, 1.1]
+        expected_err = {
+            'parameters': {
+                'learning_rate': {
+                    'bounds': 'The upper bound should be less than and equal to 1.'
+                }
+            }
+        }
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
+        config_dict['parameters']['learning_rate']['type'] = 'int'
+        expected_err = {
+            'parameters': {
+                'learning_rate': {
+                    'bounds': 'The upper bound should be less than and equal to 1.'
+                }
+            }
+        }
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
+    @pytest.mark.parametrize("param_name", ['batch_size', 'epoch'])
+    def test_batch_size_and_epoch(self, param_name):
+        """Test parameters combination."""
+        config_dict = deepcopy(self._config_dict)
+        config_dict['parameters'] = {}
+
+        config_dict['parameters'][param_name] = {'choice': [-0.1, 1]}
+        expected_err = {
+            'parameters': {
+                param_name: {
+                    'choice': 'The value(s) should be positive number.'
+                }
+            }
+        }
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
+        config_dict['parameters'][param_name] = {'choice': [0.1, 0.2]}
+        expected_err = {
+            'parameters': {
+                param_name: {
+                    'choice': 'The value(s) should be integer.'
+                }
+            }
+        }
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
+        config_dict['parameters'] = {}
+        config_dict['parameters'][param_name] = {
+            'bounds': [1, 22],
+            'type': 'float'
+        }
+        expected_err = {
+            'parameters': {
+                param_name: {
+                    'type': "The value(s) should be integer, please config its type as 'int'."
+                }
+            }
+        }
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
+        config_dict['parameters'] = {}
+        config_dict['parameters'][param_name] = {
+            'bounds': [0.1, 1.2],
+            'type': 'float'
+        }
+        expected_err = {
+            'parameters': {
+                param_name: {
+                    'type': "The value(s) should be integer, please config its type as 'int'."
                 }
             }
         }
