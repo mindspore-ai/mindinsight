@@ -19,6 +19,7 @@ This module generate loaders from summary logs.
 """
 import os
 from mindinsight.datavisual.common.log import logger
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.data_loader import DataLoader
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
@@ -26,6 +27,7 @@ from mindinsight.datavisual.data_transform.loader_generators.loader_struct impor
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import LoaderGenerator
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.utils.exceptions import PathNotExistError
 
 
 class DataLoaderGenerator(LoaderGenerator):
@@ -241,6 +243,9 @@ class DataLoaderGenerator(LoaderGenerator):
 
         """
         relative_path = self._get_relative_path_from_train_id(train_id)
-        loader = self._generate_loader_by_relative_path(relative_path)
+        try:
+            loader = self._generate_loader_by_relative_path(relative_path)
+        except PathNotExistError as ex:
+            raise TrainJobNotExistError(str(ex))
 
         return loader

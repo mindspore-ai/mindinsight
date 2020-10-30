@@ -141,6 +141,26 @@ class TestPlugins:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.usefixtures("init_summary_logs")
+    @pytest.mark.parametrize("manual_update", [True, False])
+    def test_manual_update_with_train_job_not_exit(self, client, manual_update):
+        """Test passing manual_update with special character, wrong value, and wrong type."""
+        params = dict(train_id='./123', manual_update=manual_update)
+        url = get_url(BASE_URL, params)
+
+        response = client.get(url)
+        assert response.status_code == 400
+
+        response = response.get_json()
+        assert response['error_code'] == '50545005'
+        assert 'Train job is not exist' in response['error_msg']
+
+    @pytest.mark.level1
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.usefixtures("init_summary_logs")
     def test_plugins_with_train_id_not_in_cache(self, client):
         """Test getting plugins with train id that not in loader pool."""
         train_id = "./summary0"
