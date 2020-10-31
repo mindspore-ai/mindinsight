@@ -30,6 +30,7 @@ class TestProfilerRestfulApi(TestCase):
         self.app_client = APP.test_client()
         self.url = '/v1/mindinsight/profile/ops/search?train_id=run1&profile=profiler'
 
+    @mock.patch('mindinsight.backend.profiler.profile_api.check_train_job_and_profiler_dir')
     @mock.patch('mindinsight.backend.lineagemgr.lineage_api.settings')
     @mock.patch('mindinsight.profiler.analyser.base_analyser.BaseAnalyser.query')
     def test_ops_search_success(self, *args):
