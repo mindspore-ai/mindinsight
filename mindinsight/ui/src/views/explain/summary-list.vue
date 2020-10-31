@@ -224,26 +224,6 @@ export default {
         query: {id: trainId},
       });
     },
-    /**
-     * go to Profiler
-     * @param {Object} row select row
-     */
-    // goToConterfactualinterpretation(row) {
-    //   this.contextMenu.show = false;
-    //   const profilerDir = encodeURIComponent(row.profiler_dir);
-    //   const trainId = encodeURIComponent(row.train_id);
-    //   const path = encodeURIComponent(row.relative_path);
-    //   const router = '/explain/conterfactual-interpretation';
-
-    //   this.$router.push({
-    //     path: router,
-    //     query: {
-    //       dir: profilerDir,
-    //       id: trainId,
-    //       path: path,
-    //     },
-    //   });
-    // },
 
     rightClick(row, event, type) {
       const maxWidth = 175;

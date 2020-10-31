@@ -141,22 +141,16 @@ limitations under the License.
                            @change="getSingalMethodChartData">
                   <el-option v-for="(item, index) in classifyAllMethods"
                              :key="index"
-                             :value="item"
-                             :label="item"></el-option>
+                             :value="item.label"
+                             :label="item.label"></el-option>
                 </el-select>
               </span>
             </div>
             <div class="methods-show">
-              <span class="show-name">{{$t('metric.measurement')}}</span>
-              <span>
-                <el-checkbox-group v-model="multiMetricForm.selectedMetrics"
-                                   @change="getSingalMethodChartData">
-                  <el-checkbox v-for="(item, index) in classifyAllMetrics"
-                               :key="index"
-                               :value="item"
-                               :label="item"></el-checkbox>
-                </el-checkbox-group>
-              </span>
+              <SelectGroup :checkboxes="classifyAllMetrics"
+                           @updateCheckedList="getSingalMethodChartData"
+                           :title="$t('metric.measurement')">
+              </SelectGroup>
             </div>
           </div>
           <div class="chart-container">
@@ -182,22 +176,16 @@ limitations under the License.
                            @change="getSingalMetricChartData">
                   <el-option v-for="(item, index) in classifyAllMetrics"
                              :key="index"
-                             :value="item"
-                             :label="item"></el-option>
+                             :value="item.label"
+                             :label="item.label"></el-option>
                 </el-select>
               </span>
             </div>
             <div class="methods-show">
-              <span class="show-name">{{$t('metric.interpretation')}}</span>
-              <span>
-                <el-checkbox-group v-model="multiMethodForm.selectedMethods"
-                                   @change="getSingalMetricChartData">
-                  <el-checkbox v-for="(item, index) in classifyAllMethods"
-                               :key="index"
-                               :value="item"
-                               :label="item"></el-checkbox>
-                </el-checkbox-group>
-              </span>
+              <SelectGroup :checkboxes="classifyAllMethods"
+                           @updateCheckedList="getSingalMetricChartData"
+                           :title="$t('metric.interpretation')">
+              </SelectGroup>
             </div>
           </div>
           <div class="chart-container">
@@ -229,10 +217,12 @@ limitations under the License.
 <script>
 import BenchmarkBarChart from '@/components/benchmarkBarChart';
 import RequestService from '../../services/request-service';
+import SelectGroup from '../../components/selectGroup';
 
 export default {
   components: {
     BenchmarkBarChart,
+    SelectGroup,
   },
   data() {
     return {
@@ -299,7 +289,9 @@ export default {
       document.title = `${this.$t('metric.scoreSystem')}-MindInsight`;
       return;
     }
-    document.title = `${this.$t('metric.scoreSystem')}-MindInsight`;
+    document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t(
+        'metric.scoreSystem',
+    )}-MindInsight`;
     this.getEvaluationData();
     window.addEventListener('resize', this.resizeCallback, false);
   },
@@ -460,7 +452,10 @@ export default {
       oriData.explainer_scores.forEach((explainerScore) => {
         const curMethod = explainerScore.explainer;
         if (!fullDataDict[curMethod]) {
-          classifyAllMethods.push(curMethod);
+          classifyAllMethods.push({
+            label: curMethod,
+            checked: true,
+          });
           fullDataDict[curMethod] = {};
           explainerScore.class_scores.forEach((classScore) => {
             const curLabel = classScore.label;
@@ -475,7 +470,10 @@ export default {
                   evaluation.score;
                 if (!metricsDic[evaluation.metric]) {
                   metricsDic[evaluation.metric] = true;
-                  classifyAllMetrics.push(evaluation.metric);
+                  classifyAllMetrics.push({
+                    label: evaluation.metric,
+                    checked: true,
+                  });
                 }
               });
             }
@@ -489,10 +487,10 @@ export default {
       this.multiMethodForm.selectedMethods = classifyAllMethods;
       this.allLabels = allLabels;
       if (classifyAllMethods.length) {
-        this.multiMetricForm.selectedMethods = classifyAllMethods[0];
+        this.multiMetricForm.selectedMethods = classifyAllMethods[0].label;
       }
       if (classifyAllMetrics.length) {
-        this.multiMethodForm.selectedMetrics = classifyAllMetrics[0];
+        this.multiMethodForm.selectedMetrics = classifyAllMetrics[0].label;
       }
       // Get single explain method chart data
       this.getSingalMethodChartData();
@@ -505,22 +503,26 @@ export default {
     getSingalMethodChartData() {
       const tempData = this.fullDict[this.multiMetricForm.selectedMethods];
       const series = [];
+      const tempLegend = [];
       this.multiMetricForm.selectedMetrics.forEach((metric) => {
-        const tempSerData = {
-          name: metric,
-          values: [],
-        };
-        this.allLabels.forEach((label) => {
-          if (tempData && tempData[label] && tempData[label][metric]) {
-            tempSerData.values.push(tempData[label][metric]);
-          } else {
-            tempSerData.values.push(0);
-          }
-        });
-        series.push(tempSerData);
+        if (metric.checked) {
+          const tempSerData = {
+            name: metric.label,
+            values: [],
+          };
+          tempLegend.push(metric.label);
+          this.allLabels.forEach((label) => {
+            if (tempData && tempData[label] && tempData[label][metric.label]) {
+              tempSerData.values.push(tempData[label][metric.label]);
+            } else {
+              tempSerData.values.push(0);
+            }
+          });
+          series.push(tempSerData);
+        }
       });
       this.multiMetricData = {
-        legend: this.multiMetricForm.selectedMetrics,
+        legend: tempLegend,
         yAxis: this.allLabels,
         series: series,
       };
@@ -531,23 +533,27 @@ export default {
     getSingalMetricChartData() {
       const tempMetric = this.multiMethodForm.selectedMetrics;
       const series = [];
+      const tempLegend = [];
       this.multiMethodForm.selectedMethods.forEach((method) => {
-        const tempData = this.fullDict[method];
-        const tempSerData = {
-          name: method,
-          values: [],
-        };
-        this.allLabels.forEach((label) => {
-          if (tempData && tempData[label] && tempData[label][tempMetric]) {
-            tempSerData.values.push(tempData[label][tempMetric]);
-          } else {
-            tempSerData.values.push(0);
-          }
-        });
-        series.push(tempSerData);
+        if (method.checked) {
+          const tempData = this.fullDict[method.label];
+          const tempSerData = {
+            name: method.label,
+            values: [],
+          };
+          tempLegend.push(method.label);
+          this.allLabels.forEach((label) => {
+            if (tempData && tempData[label] && tempData[label][tempMetric]) {
+              tempSerData.values.push(tempData[label][tempMetric]);
+            } else {
+              tempSerData.values.push(0);
+            }
+          });
+          series.push(tempSerData);
+        }
       });
       this.multiMethodData = {
-        legend: this.multiMethodForm.selectedMethods,
+        legend: tempLegend,
         yAxis: this.allLabels,
         series: series,
       };
@@ -639,32 +645,32 @@ export default {
     }
   }
   .el-tabs__active-bar {
-    width: 76px !important;
+    width: 76px;
   }
   .el-tabs__item:nth-child(2) {
-    margin-right: 10px !important;
+    margin-right: 10px;
   }
   .el-tabs__item:last-child {
-    margin-left: 10px !important;
+    margin-left: 10px;
   }
   .is-active:nth-child(2) {
-    margin-right: 10px !important;
+    margin-right: 10px;
   }
   .is-active:last-child {
-    margin-left: 10px !important;
+    margin-left: 10px;
   }
   .el-tabs__active-bar {
-    width: 0px !important;
-    height: 0px !important;
+    width: 0px;
+    height: 0px;
   }
   .el-tabs__item {
     font-size: 14px;
     color: #303133;
-    height: 40px !important;
-    line-height: 36px !important;
-    padding: 0px !important;
+    height: 40px;
+    line-height: 36px;
+    padding: 0px;
     span {
-      font-weight: 500 !important;
+      font-weight: 500;
       font-size: 14px;
       color: #303133;
     }
@@ -685,7 +691,7 @@ export default {
 
     span {
       color: #00a5a7;
-      font-weight: 700 !important;
+      font-weight: 700;
       font-size: 14px;
     }
     i {
@@ -699,14 +705,14 @@ export default {
   }
 
   .cl-xai-con {
-    flex: 1;
+    height: calc(100% - 95px);
   }
 
   .comprehensiveEvaluation {
     padding: 25px 0;
 
     .resultFalse {
-      color: #f00 !important;
+      color: #f00;
     }
 
     .firstColumn {
@@ -773,6 +779,7 @@ export default {
         .select-name {
           display: inline-block;
           padding-right: 10px;
+          width: 100px;
         }
       }
       .chart-container {
@@ -785,9 +792,6 @@ export default {
           display: inline-block;
           margin-right: 10px;
           padding-bottom: 10px;
-        }
-        div {
-          display: inline;
         }
       }
     }
@@ -812,14 +816,16 @@ export default {
 }
 .el-tooltip__popper {
   .tooltip-container {
+    word-break: normal;
     .tooltip-style {
       .tooltip-title {
-        font-size: 16px !important;
+        font-size: 16px;
         font-weight: bold;
         color: #333333;
       }
       .tooltip-content {
         line-height: 20px;
+        word-break: normal;
       }
     }
   }
