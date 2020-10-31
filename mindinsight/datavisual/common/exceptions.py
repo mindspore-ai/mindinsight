@@ -64,6 +64,15 @@ class CRCFailedError(MindInsightException):
                                              http_code=400)
 
 
+class CRCLengthFailedError(MindInsightException):
+    """CRC fail, record corrupted."""
+    def __init__(self):
+        error_msg = 'CRC Length Failed.'
+        super(CRCLengthFailedError, self).__init__(DataVisualErrors.CRC_LENGTH_FAILED,
+                                                   error_msg,
+                                                   http_code=400)
+
+
 class SummaryLogIsLoading(MindInsightException):
     """Data is loading."""
 

@@ -18,6 +18,7 @@ Scalar Writer.
 This module write scalar into a  csv file.
 """
 import os
+import time
 import struct
 
 from google.protobuf.message import DecodeError
@@ -36,6 +37,7 @@ MAX_EVENT_STRING = 500000000
 SCALAR = 'scalar_value'
 IMAGE = 'image'
 INFO_INTERVAL = 10
+RETRY_TIMES = 2
 
 
 class EventParser():
@@ -45,7 +47,6 @@ class EventParser():
         self._output = output
         self._scalar_writer = ScalarWriter(self._output)
         self._image_writer = ImageWriter(FileHandler.join(self._output, IMAGE))
-        self._current = 0
         self._file_size = 0
         self._process_info = 0
         self._image_check = False
@@ -63,15 +64,14 @@ class EventParser():
         parse_summary_logger.info("Loading %s.", self.summary_file)
         result = self._load(summary_file_handler)
 
-        parse_summary_logger.info("Writing scalar.csv")
-        self._scalar_writer.write()
-
         warning = ''
         if not self._scalar_check:
             warning = warning + " the summary file contains no scalar value."
         if not self._image_check:
             warning = warning + " the summary file contains no image."
         if result:
+            parse_summary_logger.info("Writing parsed data into scalar.csv")
+            self._scalar_writer.write()
             if warning:
                 parse_summary_logger.warning(warning)
             parse_summary_logger.info("Finished loading %s.", self.summary_file)
@@ -86,9 +86,12 @@ class EventParser():
         Returns:
             bool, True if the summary file is finished loading.
         """
+        crc_check_time = 0
         while True:
+            start_offset = file_handler.offset
             try:
                 event_str = self._event_load(file_handler)
+                crc_check_time = 0
                 if event_str is None:
                     return True
                 if len(event_str) > MAX_EVENT_STRING:
@@ -96,10 +99,23 @@ class EventParser():
                                                  file_handler.file_path, len(event_str), MAX_EVENT_STRING)
                     continue
                 self._event_parse(event_str)
+            except exceptions.CRCLengthFailedError:
+                if crc_check_time > RETRY_TIMES:
+                    parse_summary_logger.error(
+                        "Check crc length failed, please check the summary file integrity, "
+                        "the file may be in transfer, file_path: %s, offset=%s.",
+                        file_handler.file_path, start_offset)
+                    return True
+                parse_summary_logger.warning(
+                    "Check crc failed, retrying %d/%d times.", crc_check_time + 1, RETRY_TIMES + 1)
+                file_handler.reset_offset(start_offset)
+                crc_check_time += 1
+                time.sleep(0.5)
             except exceptions.CRCFailedError:
-                parse_summary_logger.error("Check crc faild, file_path=%s, offset=%s.", file_handler.file_path,
-                                           file_handler.offset)
-                return False
+                parse_summary_logger.error(
+                    "Check crc failed, the file may have been modified, file_path=%s, offset=%s.",
+                    file_handler.file_path, start_offset)
+                return True
             except (OSError, DecodeError, exceptions.MindInsightException) as ex:
                 parse_summary_logger.error("Parse file fail, detail: %r, file path: %s.", str(ex),
                                            file_handler.file_path)
@@ -126,9 +142,7 @@ class EventParser():
             header_crc_str = ''
 
         if len(header_str) != HEADER_SIZE or len(header_crc_str) != CRC_STR_SIZE:
-            parse_summary_logger.error("Check header size and crc, record truncated at offset %s, file_path=%s.",
-                                       file_handler.offset, file_handler.file_path)
-            return None
+            raise exceptions.CRCLengthFailedError
 
         if not crc32.CheckValueAgainstData(header_crc_str, header_str, HEADER_SIZE):
             raise exceptions.CRCFailedError()
@@ -145,16 +159,18 @@ class EventParser():
             event_crc_str = ''
 
         if len(event_str) != event_len or len(event_crc_str) != CRC_STR_SIZE:
-            parse_summary_logger.error("Check event crc, record truncated at offset %d, file_path: %s.",
-                                       file_handler.offset, file_handler.file_path)
-            return None
+            raise exceptions.CRCLengthFailedError
+
         if not crc32.CheckValueAgainstData(event_crc_str, event_str, event_len):
             raise exceptions.CRCFailedError()
-        self._current += HEADER_SIZE + 2 * CRC_STR_SIZE + event_len
-        if self._current >= self._process_info:
-            parse_summary_logger.info("Current parsing process: %d/%d, %d%%.", self._current, self._file_size,
-                                      100 * self._current // self._file_size)
+
+        current_offset = file_handler.offset
+        if current_offset >= self._process_info:
+            parse_summary_logger.info("Current parsing process: %d/%d, %d%%.", current_offset, self._file_size,
+                                      100 * current_offset // os.path.getsize(self.summary_file))
             self._process_info += self._file_size // INFO_INTERVAL
+            if self._process_info > os.path.getsize(self.summary_file):
+                self._process_info = os.path.getsize(self.summary_file)
         return event_str
 
     def _event_parse(self, event_str):
