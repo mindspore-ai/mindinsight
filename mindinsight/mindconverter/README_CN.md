@@ -20,6 +20,7 @@
     - [AST方案不支持场景](#ast方案不支持场景)
         - [场景1](#场景1)
         - [场景2](#场景2)
+    - [常见问题](#常见问题)
 
 <!-- /TOC -->
 
@@ -311,3 +312,9 @@ class ConvBNReLU(nn.Sequential):
             nn.ReLU6(inplace=True)
         )
 ```
+
+## 常见问题
+
+Q1. `terminate called after throwing an instance of 'std::system_error', what(): Resource temporarily unavailable, Aborted (core dumped)`:
+
+> 答: 该问题由TensorFlow导致。脚本转换时，需要通过TensorFlow库加载TensorFlow的模型文件，此时TensorFlow会申请相关资源进行初始化，若申请资源失败（可能由于系统进程数超过Linux最大进程数限制），TensorFlow C/C++层会出现Core Dumped问题。详细信息请参考TensorFlow官方ISSUE，如下ISSUE仅供参考：[TF ISSUE 14885](https://github.com/tensorflow/tensorflow/issues/14885), [TF ISSUE 37449](https://github.com/tensorflow/tensorflow/issues/37449)
