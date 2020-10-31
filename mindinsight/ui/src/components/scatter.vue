@@ -78,6 +78,7 @@ export default {
           axisPointer: {
             type: 'cross',
           },
+          confine: true,
           formatter: (params) => {
             const dataIndex = params.dataIndex;
             const item = this.tooltipsData[dataIndex];
@@ -94,11 +95,10 @@ export default {
                       Math.pow(10, 4);
                   }
                 }
-                res +=
-                  '<p>' + obj[i] + ':' + '&nbsp;&nbsp;' + item[obj[i]] + '</p>';
+                res += `<p>${obj[i]}:&nbsp;&nbsp;${item[obj[i]]}</p>`;
               }
             }
-            return res;
+            return `<div class="tooltip-msg">${res}</div>`;
           },
         },
         xAxis: {
@@ -204,5 +204,10 @@ export default {
 <style lang="scss">
 .scatter {
   height: 100%;
+}
+.tooltip-msg {
+  white-space: normal;
+  word-break: break-all;
+  max-width: 250px;
 }
 </style>
