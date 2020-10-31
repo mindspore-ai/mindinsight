@@ -25,6 +25,7 @@ from flask import request
 from mindinsight.conf import settings
 from mindinsight.utils.exceptions import ParamMissError
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.datavisual.common.exceptions import ImageNotExistError
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.datavisual.utils.tools import get_train_id
@@ -125,8 +126,13 @@ def query_saliency():
     limit = Validation.check_limit(limit, min_value=1, max_value=100)
     offset = data.get("offset", 0)
     offset = Validation.check_offset(offset=offset)
-    sorted_name = data.get("sorted_name")
+    sorted_name = data.get("sorted_name", "")
     sorted_type = data.get("sorted_type", "descending")
+
+    if sorted_name not in ("", "confidence"):
+        raise ParamValueError("sorted_name")
+    if sorted_type not in ("ascending", "descending"):
+        raise ParamValueError("sorted_type")
 
     encapsulator = SaliencyEncap(
         _image_url_formatter,
@@ -175,6 +181,8 @@ def query_image():
 
     encapsulator = ExplainJobEncap(ExplainManagerHolder.get_instance())
     image = encapsulator.query_image_binary(train_id, image_id, image_type)
+    if image is None:
+        raise ImageNotExistError(f"image_id:{image_id}")
 
     return image
 
