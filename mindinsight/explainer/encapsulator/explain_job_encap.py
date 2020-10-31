@@ -18,7 +18,6 @@ import copy
 from datetime import datetime
 
 from mindinsight.utils.exceptions import ParamValueError
-from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.explainer.encapsulator.explain_data_encap import ExplainDataEncap
 
 
@@ -26,48 +25,29 @@ class ExplainJobEncap(ExplainDataEncap):
     """Explain job list encapsulator."""
 
     DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+    DEFAULT_MIN_CONFIDENCE = 0.5
 
-    def query_explain_jobs(self, offset, limit, train_id):
+    def query_explain_jobs(self, offset, limit):
         """
         Query explain job list.
         Args:
-            offset (int): offset
-            limit (int): max. no. of items to be returned
-            train_id (str): job id
+            offset (int): Page offset.
+            limit (int): Max. no. of items to be returned.
         Returns:
-            Tuple[int, List[Dict]], total no. of jobs and job list
+            Tuple[int, List[Dict]], total no. of jobs and job list.
         """
-        watcher = SummaryWatcher()
-        total, dir_infos = \
-            watcher.list_explain_directories(self.job_manager.summary_base_dir,
-                                             offset=offset, limit=limit)
-        obj_offset = offset * limit
-        job_infos = []
-
-        if train_id is None:
-            end = total
-            if obj_offset + limit < end:
-                end = obj_offset + limit
-
-            for i in range(obj_offset, end):
-                job_id = dir_infos[i]["relative_path"]
-                job = self.job_manager.get_job(job_id)
-                if job is not None:
-                    job_infos.append(self._job_2_info(job))
-        else:
-            job = self.job_manager.get_job(train_id)
-            if job is not None:
-                job_infos.append(self._job_2_info(job))
+        total, dir_infos = self.job_manager.get_job_list(offset=offset, limit=limit)
+        job_infos = [self._dir_2_info(dir_info) for dir_info in dir_infos]
 
         return total, job_infos
 
     def query_meta(self, train_id):
         """
-        Query explain job meta-data
+        Query explain job meta-data.
         Args:
-            train_id (str): job id
+            train_id (str): Job ID.
         Returns:
-            Dict, the metadata
+            Dict, the metadata.
         """
         job = self.job_manager.get_job(train_id)
         if job is None:
@@ -78,11 +58,11 @@ class ExplainJobEncap(ExplainDataEncap):
         """
         Query image binary content.
         Args:
-            train_id (str): job id
-            image_id (str): image id
-            image_type (str) 'original' or 'overlay'
+            train_id (str): Job ID.
+            image_id (str): Image ID.
+            image_type (str): Image type, 'original' or 'overlay'.
         Returns:
-            bytes, image binary
+            bytes, image binary.
         """
         job = self.job_manager.get_job(train_id)
 
@@ -98,8 +78,17 @@ class ExplainJobEncap(ExplainDataEncap):
         return binary
 
     @classmethod
+    def _dir_2_info(cls, dir_info):
+        """Convert ExplainJob object to jsonable info object."""
+        info = dict()
+        info["train_id"] = dir_info["relative_path"]
+        info["create_time"] = dir_info["create_time"].strftime(cls.DATETIME_FORMAT)
+        info["update_time"] = dir_info["update_time"].strftime(cls.DATETIME_FORMAT)
+        return info
+
+    @classmethod
     def _job_2_info(cls, job):
-        """Convert ExplainJob object to jsonable info object"""
+        """Convert ExplainJob object to jsonable info object."""
         info = dict()
         info["train_id"] = job.train_id
         info["create_time"] = datetime.fromtimestamp(job.create_time)\
@@ -110,13 +99,13 @@ class ExplainJobEncap(ExplainDataEncap):
 
     @classmethod
     def _job_2_meta(cls, job):
-        """Convert ExplainJob's meta-data to jsonable info object"""
+        """Convert ExplainJob's meta-data to jsonable info object."""
         info = cls._job_2_info(job)
         info["sample_count"] = job.sample_count
         info["classes"] = copy.deepcopy(job.all_classes)
         saliency_info = dict()
         if job.min_confidence is None:
-            saliency_info["min_confidence"] = 0.5
+            saliency_info["min_confidence"] = cls.DEFAULT_MIN_CONFIDENCE
         else:
             saliency_info["min_confidence"] = job.min_confidence
         saliency_info["explainers"] = list(job.explainers)

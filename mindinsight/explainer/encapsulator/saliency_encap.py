@@ -19,8 +19,8 @@ import copy
 from mindinsight.explainer.encapsulator.explain_data_encap import ExplainDataEncap
 
 
-def _sort_key_confid(sample):
-    """Samples sort key by the max. confidence"""
+def _sort_key_confidence(sample):
+    """Samples sort key by the max. confidence."""
     max_confid = None
     for inference in sample["inferences"]:
         if max_confid is None or inference["confidence"] > max_confid:
@@ -44,23 +44,23 @@ class SaliencyEncap(ExplainDataEncap):
                             sorted_name,
                             sorted_type):
         """
-        Query saliency maps
+        Query saliency maps.
         Args:
-            train_id (str): job id
-            labels (List[str]): labels filter
-            explainers (List[str]): explainers of saliency maps to be shown
-            limit (int): max. no. of items to be returned
-            offset (int): item offset
-            sorted_name (str): field to be sorted
-            sorted_type (str): 'ascending' or 'descending' order
+            train_id (str): Job ID.
+            labels (List[str]): Label filter.
+            explainers (List[str]): Explainers of saliency maps to be shown.
+            limit (int): Max. no. of items to be returned.
+            offset (int): Page offset.
+            sorted_name (str): Field to be sorted.
+            sorted_type (str): Sorting order, 'ascending' or 'descending'.
 
         Returns:
             Tuple[int, List[dict]], total no. of samples after filtering and
-                list of sample result
+                list of sample result.
         """
         job = self.job_manager.get_job(train_id)
         if job is None:
-            return None
+            return 0, None
 
         samples = copy.deepcopy(job.get_all_samples())
         if labels:
@@ -77,7 +77,7 @@ class SaliencyEncap(ExplainDataEncap):
 
         reverse = sorted_type == "descending"
         if sorted_name == "confidence":
-            samples.sort(key=_sort_key_confid, reverse=reverse)
+            samples.sort(key=_sort_key_confidence, reverse=reverse)
 
         sample_infos = []
         obj_offset = offset*limit
@@ -93,13 +93,13 @@ class SaliencyEncap(ExplainDataEncap):
 
     def _touch_sample(self, sample, job, explainers):
         """
-        Final editing the sample info
+        Final editing the sample info.
         Args:
-            sample (dict): sample info
-            job (ExplainJob): job
-            explainers (List[str]): explainer names
+            sample (dict): Sample info.
+            job (ExplainJob): Explain job.
+            explainers (List[str]): Explainer names.
         Returns:
-            Dict, edited sample info
+            Dict, the edited sample info.
         """
         sample["image"] = self._get_image_url(job.train_id, sample["id"], "original")
         for inference in sample["inferences"]:
@@ -116,7 +116,7 @@ class SaliencyEncap(ExplainDataEncap):
         return sample
 
     def _get_image_url(self, train_id, image_id, image_type):
-        """Returns image's url"""
+        """Returns image's url."""
         if self._image_url_formatter is None:
             return image_id
         return self._image_url_formatter(train_id, image_id, image_type)
