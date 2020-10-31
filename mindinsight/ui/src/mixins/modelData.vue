@@ -168,6 +168,7 @@ export default {
           axisPointer: {
             type: 'shadow',
           },
+          confine: true,
           formatter: this.barToolTipFormatter,
         },
         label: {

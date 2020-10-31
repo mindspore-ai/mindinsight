@@ -2042,6 +2042,7 @@ export default {
       border-bottom: 1px solid #b9bcc1;
       border-top: 1px solid #b9bcc1;
       padding: 10px 0;
+      overflow: hidden;
       .bar-select {
         display: flex;
         flex: 1.35;
@@ -2091,7 +2092,7 @@ export default {
       }
     }
     .left-scatters-container {
-      overflow: auto;
+      overflow: hidden;
       width: 100%;
       height: calc(100% - 32px);
     }
@@ -2204,6 +2205,7 @@ export default {
 }
 .tooltip-msg {
   white-space: normal;
-  max-width: 150px;
+  word-break: break-all;
+  max-width: 250px;
 }
 </style>
