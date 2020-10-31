@@ -74,7 +74,7 @@ axios.interceptors.response.use(
         const errorCode = error.response.data.error_code.toString();
 
         const ignoreCode = {
-          ignoreError: ['50545005'],
+          ignoreError: ['50545005', '50546083'],
           regardError: ['50545013', '50545014', '5054500D'],
         };
 
@@ -84,7 +84,7 @@ axios.interceptors.response.use(
           }
           setTimeout(()=>{
             router.push('/');
-          }, 3000);
+          }, 2500);
           return Promise.reject(error);
         }
         if (

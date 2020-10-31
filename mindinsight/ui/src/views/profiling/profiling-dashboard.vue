@@ -670,6 +670,7 @@ export default {
             }
           })
           .catch(() => {
+            this.pieChart.data = [];
             this.pieChart.noData = true;
             this.pieChart.initOver = true;
           });

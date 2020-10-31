@@ -61,10 +61,10 @@ limitations under the License.
                   <span>{{processSummary.get_next.empty}} / {{processSummary.get_next.total}}</span>
                 </div>
                 <div v-show="deviceInfoShow">
-                  <div>{{$t('profilingGPU.hostIsEmpty')}}
+                  <div>{{$t('profiling.hostIsEmpty')}}
                     <span>{{processSummary.device.empty}} / {{processSummary.device.total}}</span>
                   </div>
-                  <div>{{$t('profilingGPU.hostIsFull')}}
+                  <div>{{$t('profiling.hostIsFull')}}
                     <span>{{processSummary.device.full}} / {{processSummary.device.total}}</span>
                   </div>
                 </div>
@@ -97,7 +97,7 @@ limitations under the License.
                      alt="" />
               </div>
             </div>
-            <div class="title">{{$t('profilingGPU.connectorQuene')}}</div>
+            <div class="title">{{$t('profiling.connectorQuene')}}</div>
             <div class="description">
               <div class="line"></div>
               <div class="item"
@@ -369,10 +369,15 @@ export default {
         if (newValue.curCardNum === '') {
           this.pieChart.noData = true;
           this.pieChart.initOver = true;
+          this.processSummary.initOver = true;
           this.timelineInfo.initOver = true;
           this.timeLine.waiting = false;
         }
-        if (newValue.query.dir && newValue.query.id && newValue.query.path) {
+        if (newValue.query.dir &&
+            newValue.query.id &&
+            newValue.query.path &&
+            newValue.curCardNum
+        ) {
           this.summaryPath = newValue.query.dir;
           this.trainingJobId = newValue.query.id;
           this.relativePath = newValue.query.path;
@@ -387,6 +392,7 @@ export default {
             )}-MindInsight`;
           }
           this.pieChart.initOver = false;
+          this.processSummary.initOver = false;
           this.timelineInfo.initOver = false;
           this.init();
         }
@@ -583,6 +589,7 @@ export default {
             }
           })
           .catch(() => {
+            this.pieChart.data = [];
             this.pieChart.noData = true;
             this.pieChart.initOver = true;
           });
