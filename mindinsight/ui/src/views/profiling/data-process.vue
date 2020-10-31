@@ -460,11 +460,7 @@ export default {
       });
     },
     init() {
-      this.connectorQuene = this.$t(
-          `profiling${
-          location.href.includes('#/profiling-gpu/') ? 'GPU' : ''
-          }.connectorQuene`,
-      );
+      this.connectorQuene = this.$t('profiling.connectorQuene');
       this.queryProcessSummary();
     },
     /**
@@ -588,9 +584,6 @@ export default {
     setOption(chart) {
       const myChart = echarts.init(document.getElementById(chart.id));
       const option = {
-        title: {
-          text: '',
-        },
         tooltip: {
           trigger: 'axis',
         },

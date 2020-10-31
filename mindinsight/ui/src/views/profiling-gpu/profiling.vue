@@ -80,7 +80,7 @@ export default {
       collapse: false,
       curDashboardInfo: {
         // Current Select card info
-        curCardNum: '',
+        curCardNum: null,
         query: {},
       },
     };

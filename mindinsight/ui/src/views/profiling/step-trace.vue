@@ -290,10 +290,7 @@ export default {
         label: this.$t('profiling.stepInputTip'),
       };
 
-      this.getTimeInfo('fp-bp', 'fp_and_bp');
-      this.getTimeInfo('iter-gap', 'iteration_interval');
-      this.getTimeInfo('tailing', 'tail');
-      this.queryTrainingTrace(0);
+      this.queryTrainingTrace(0, true);
     },
     /**
      * Change the current step value
@@ -303,13 +300,13 @@ export default {
       if (value === 0 || (!this.steps.step && this.steps.step !== 0)) {
         this.steps.step = null;
         this.steps.trueStep = null;
-        this.queryTrainingTrace(0);
+        this.queryTrainingTrace(0, false);
       } else if (
         /^[0-9]*[1-9][0-9]*$/.test(this.steps.step) &&
         this.steps.step <= this.steps.max
       ) {
         this.steps.trueStep = this.steps.step;
-        this.queryTrainingTrace(this.steps.step);
+        this.queryTrainingTrace(this.steps.step, false);
       } else {
         this.steps.step = this.steps.trueStep;
         this.$message.error(
@@ -471,8 +468,9 @@ export default {
     /**
      * Get training trace information
      * @param {Number} step Current step value
+     * @param {Boolean} init Init flag
      */
-    queryTrainingTrace(step) {
+    queryTrainingTrace(step, init) {
       const params = {
         dir: this.relativePath,
         type: step,
@@ -506,6 +504,11 @@ export default {
                     JSON.parse(JSON.stringify(res.data.training_trace_graph)),
                 );
               });
+              if (init) {
+                this.getTimeInfo('fp-bp', 'fp_and_bp');
+                this.getTimeInfo('iter-gap', 'iteration_interval');
+                this.getTimeInfo('tailing', 'tail');
+              }
             } else {
               this.fp_start = '--';
               this.bp_end = '--';
