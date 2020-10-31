@@ -20,6 +20,7 @@ from marshmallow import Schema, fields, ValidationError, validates, validate, va
 from mindinsight.optimizer.common.enums import TuneMethod, AcquisitionFunctionEnum, GPSupportArgs, \
     HyperParamSource, HyperParamType, TargetGoal, TargetKey, TunableSystemDefinedParams, TargetGroup, \
     HyperParamKey, SystemDefinedTargets
+from mindinsight.optimizer.utils.utils import is_param_name_valid
 
 _BOUND_LEN = 2
 _NUMBER_ERR_MSG = "Value(s) should be integer or float."
@@ -230,6 +231,10 @@ class OptimizerConfig(Schema):
     def check_parameters(self, parameters):
         """Check parameters."""
         for name, value in parameters.items():
+            if not is_param_name_valid(name):
+                raise ValidationError("Parameter name %r is not a valid name, only number(0-9), alphabet(a-z, A-Z) "
+                                      "and underscore(_) characters are allowed in name." % name)
+
             err = ParameterSchema().validate(value)
             if err:
                 raise ValidationError({name: err})

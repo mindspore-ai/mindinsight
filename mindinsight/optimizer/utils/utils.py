@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Utils for optimizer."""
+import string
+
 import numpy as np
 
 _DEFAULT_HISTOGRAM_BINS = 5
@@ -83,3 +85,32 @@ def get_nested_message(info: dict, out_err_msg=""):
             else:
                 out_err_msg = key
         return get_nested_message(info[key], out_err_msg)
+
+
+def is_number(uchar):
+    """If it is a number, return True."""
+    if uchar in string.digits:
+        return True
+    return False
+
+
+def is_alphabet(uchar):
+    """If it is a alphabet, return True."""
+    if uchar in string.ascii_letters:
+        return True
+    return False
+
+
+def is_allowed_symbols(uchar):
+    """If it is a allowed symbol, return True."""
+    if uchar in ['_']:
+        return True
+    return False
+
+
+def is_param_name_valid(param_name: str):
+    """If parameter name only contains number or alphabet."""
+    for uchar in param_name:
+        if not is_number(uchar) and not is_alphabet(uchar) and not is_allowed_symbols(uchar):
+            return False
+    return True
