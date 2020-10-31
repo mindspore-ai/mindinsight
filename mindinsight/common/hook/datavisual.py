@@ -35,8 +35,8 @@ class ReloadIntervalAction(argparse.Action):
             option_string (str): Option string for specific argument name.
         """
         reload_interval = values
-        if reload_interval < 0:
-            parser.error(f'{option_string} should be greater than or equal to 0')
+        if reload_interval < 0 or reload_interval > settings.MAX_RELOAD_INTERVAL:
+            parser.error(f'{option_string} should be greater than or equal to 0 or less than or equal to 300 ')
         setattr(namespace, self.dest, reload_interval)
 
 
