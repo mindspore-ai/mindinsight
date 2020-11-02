@@ -68,7 +68,7 @@ def compare_result_with_file(result, expected_file_path):
         assert result == expected_results
 
 
-def deal_float_for_dict(res: dict, expected_res: dict, decimal_num=5):
+def deal_float_for_dict(res: dict, expected_res: dict, decimal_num):
     """
     Deal float rounded to specified decimals in dict.
 
@@ -117,7 +117,7 @@ def deal_float_for_dict(res: dict, expected_res: dict, decimal_num=5):
         value = res[key]
         expected_value = expected_res[key]
         if isinstance(value, dict):
-            deal_float_for_dict(value, expected_value)
+            deal_float_for_dict(value, expected_value, decimal_num)
         elif isinstance(value, float):
             res[key] = round(value, decimal_num)
             expected_res[key] = round(expected_value, decimal_num)
@@ -131,7 +131,7 @@ def _deal_float_for_list(list1, list2, decimal_num):
         index += 1
 
 
-def assert_equal_lineages(lineages1, lineages2, assert_func, decimal_num=2):
+def assert_equal_lineages(lineages1, lineages2, assert_func, decimal_num=5):
     """Assert lineages."""
     if isinstance(lineages1, list) and isinstance(lineages2, list):
         _deal_float_for_list(lineages1, lineages2, decimal_num)

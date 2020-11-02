@@ -69,18 +69,16 @@ class TestOptimizerConfig:
         config_dict['parameters']['learning_rate']['choice'] = init_str
         config_dict['parameters']['learning_rate']['type'] = init_list
         expected_err = {
-            'command': ["Value type should be 'str'."],
+            'command': ['Value should be a string.'],
             'parameters': {
                 'learning_rate': {
-                    'bounds': ["Value type should be 'list'."],
-                    'choice': ["Value type should be 'list'."],
-                    'type': ["Value type should be 'str'."]
+                    'type': "The value(s) should be float number, please config its type as 'float'."
                 }
             },
-            'summary_base_dir': ["Value type should be 'str'."],
+            'summary_base_dir': ['Value should be a string.'],
             'target': {
-                'name': ["Value type should be 'str'."],
-                'goal': ["Value type should be 'str'."]
+                'goal': ['Value should be a string.'],
+                'name': ['Value should be a string.']
             }
         }
         err = OptimizerConfig().validate(config_dict)
@@ -101,18 +99,13 @@ class TestOptimizerConfig:
         expected_err = {
             'parameters': {
                 'learning_rate': {
-                    'bounds': {
-                        0: ['Value(s) should be integer or float.']
-                    },
-                    'choice': {
-                        0: ['Value(s) should be integer or float.']
-                    },
-                    'type': ["It should be in ['int', 'float']."]
+                    'type': "The value(s) should be float number, please config its type as 'float'."
                 }
             },
             'target': {
-                'goal': ["Value should be in ['maximize', 'minimize']. Current value is a."],
-                'group': ["Value should be in ['system_defined', 'metric']. Current value is a."]},
+                'goal': ["Value should be in ['maximize', 'minimize']. Current value is 'a'."],
+                'group': ["Value should be in ['system_defined', 'metric']. Current value is 'a'."]
+            },
             'tuner': {
                 'name': ['Must be one of: gp.']
             }
@@ -128,7 +121,7 @@ class TestOptimizerConfig:
         config_dict['target']['name'] = 'a'
         expected_err = {
             'target': {
-                'group': 'This target is not system defined. Current group is: system_defined.'
+                'group': "This target is not system defined. Current group is 'system_defined'."
             }
         }
         err = OptimizerConfig().validate(config_dict)
@@ -142,7 +135,7 @@ class TestOptimizerConfig:
         expected_err = {
             'parameters': {
                 'decay_step': {
-                    'source': 'This param is not system defined. Current source is: system_defined.'
+                    'source': "This param is not system defined. Current source is 'system_defined'."
                 }
             }
         }
@@ -165,7 +158,7 @@ class TestOptimizerConfig:
         assert expected_err == err
 
     def test_learning_rate(self):
-        """Test parameters combination."""
+        """Test learning rate with wrong value."""
         config_dict = deepcopy(self._config_dict)
 
         config_dict['parameters']['learning_rate']['bounds'] = [-0.1, 1]
@@ -190,11 +183,14 @@ class TestOptimizerConfig:
         err = OptimizerConfig().validate(config_dict)
         assert expected_err == err
 
+    def test_learning_rate_type(self):
+        """Test learning rate with wrong type."""
+        config_dict = deepcopy(self._config_dict)
         config_dict['parameters']['learning_rate']['type'] = 'int'
         expected_err = {
             'parameters': {
                 'learning_rate': {
-                    'bounds': 'The upper bound should be less than and equal to 1.'
+                    'type': "The value(s) should be float number, please config its type as 'float'."
                 }
             }
         }
@@ -205,9 +201,9 @@ class TestOptimizerConfig:
     def test_batch_size_and_epoch(self, param_name):
         """Test parameters combination."""
         config_dict = deepcopy(self._config_dict)
-        config_dict['parameters'] = {}
-
-        config_dict['parameters'][param_name] = {'choice': [-0.1, 1]}
+        config_dict['parameters'] = {
+            param_name: {'choice': [-0.1, 1]}
+        }
         expected_err = {
             'parameters': {
                 param_name: {
