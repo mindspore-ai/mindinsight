@@ -286,7 +286,7 @@ export default {
       originImageDataArr: [], // List of all image data.
       curImageShowSample: {}, // Image object to be displayed.
       imageRandomLoopCount: 0,
-      imageBasePath: '/v1/mindinsight/datavisual/image/single-image?', // Relative path header of the picture
+      imageBasePath: 'v1/mindinsight/datavisual/image/single-image?', // Relative path header of the picture
       autoUpdateTimer: null, // Automatic refresh timer
       histogramTag: '', // Label of the currently displayed histogram.
       allGraphData: {}, // graph Original input data

@@ -167,7 +167,7 @@ export default {
   getImageData(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/datavisual/image/single-image',
+      url: 'v1/mindinsight/datavisual/image/single-image',
       params: params,
       headers: {
         ignoreError: true,
