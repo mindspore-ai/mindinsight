@@ -178,7 +178,7 @@ export default {
             yAxisIndex: 0,
             start: this.barStart,
             end: this.barEnd,
-            right: 150,
+            right: 200,
             top: 50,
             bottom: 30,
           },

@@ -16,7 +16,6 @@ limitations under the License.
 <template>
   <div class="cl-superpose-image"
        :style="{'height': `${containerSize}px`,'width': `${containerSize}px`}">
-    <!-- <canvas ref="canvas" class="second-level" v-show="ifSuperpose"></canvas> -->
     <img :src="backgroundImg"
          class="second-level"
          v-show="ifSuperpose"
@@ -24,15 +23,13 @@ limitations under the License.
          @error="backgroundError()"
          :style="{'position': 'absolute', 'top':`${backTop}px`,'left':`${backLeft}px`,
                   'height': `${imageHeight}px`, 'width':`${imageWidth}px`}">
-    <div v-if="targetReady"
-         class="first-level-container"
-         :style="{'position': 'absolute', 'top': `${targetTop}px`, 'left':`${targetLeft}px`,
-                 'height': `${imageHeight}px`, 'width':`${imageWidth}px`}">
-      <img :src="targetImg"
-           class="first-level"
-           :class="!ifSuperpose?'overlay-background':''"
-           @error="targetError()">
-    </div>
+    <img v-if="targetReady"
+          :src="targetImg"
+          :style="{'position': 'absolute', 'top': `${targetTop}px`, 'left':`${targetLeft}px`,
+                'height': `${imageHeight}px`, 'width':`${imageWidth}px`}"
+          class="first-level"
+          :class="!ifSuperpose?'overlay-background':''"
+          @error="targetError()">
   </div>
 </template>
 <script>
@@ -103,13 +100,6 @@ export default {
 .cl-superpose-image {
   position: relative;
   overflow: hidden;
-  .first-level-container {
-    & img {
-      height: 100%;
-      width: 100%;
-      object-fit: fill;
-    }
-  }
   .overlay-background {
     background: #371956;
   }

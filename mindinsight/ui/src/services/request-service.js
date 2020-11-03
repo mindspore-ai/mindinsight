@@ -413,14 +413,7 @@ export default {
       data: params,
     });
   },
-  // Explain query similar pictures
-  querySimilarPic(params) {
-    return axios({
-      method: 'get',
-      url: '/v1/mindinsight/explainer/similar',
-      params: params,
-    });
-  },
+
   getEvaluation(params) {
     return axios({
       method: 'get',
