@@ -163,7 +163,7 @@ export default {
       pageIndex: 0, // Current page number
       pageSizes: [8, 16, 24], // The number of records on each page is optional
       pageNum: 8, // Number of records on each page
-      imageBasePath: '/v1/mindinsight/datavisual/image/single-image?', // Relative path header of the picture
+      imageBasePath: 'v1/mindinsight/datavisual/image/single-image?', // Relative path header of the picture
     };
   },
   computed: {},
