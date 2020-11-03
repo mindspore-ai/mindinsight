@@ -25,9 +25,9 @@ import random
 import shutil
 import tempfile
 
-from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
-
 import pytest
+
+from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 
 
 def gen_directories_and_files(summary_base_dir, file_count, directory_count):
