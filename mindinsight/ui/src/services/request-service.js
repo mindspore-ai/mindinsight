@@ -37,7 +37,7 @@ export default {
   putLineagesData(params) {
     return axios({
       method: 'put',
-      url: 'v1/mindinsight/lineagemgr/lineages?train_id=' + params.train_id,
+      url: 'v1/mindinsight/lineagemgr/lineages?train_id=' + encodeURIComponent(params.train_id),
       data: params.body,
     });
   },
@@ -144,7 +144,7 @@ export default {
         requestStr += `train_id=${encodeURIComponent(item)}&`;
       }
     });
-    requestStr += `tag=${params.tag}`;
+    requestStr += `tag=${encodeURIComponent(params.tag)}`;
     return axios({
       method: 'get',
       url: `v1/mindinsight/datavisual/scalars?${requestStr}`,
