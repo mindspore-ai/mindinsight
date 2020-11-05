@@ -167,7 +167,7 @@ export default {
   getImageData(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/datavisual/image/single-image',
+      url: 'v1/mindinsight/datavisual/image/single-image',
       params: params,
       headers: {
         ignoreError: true,
@@ -401,7 +401,7 @@ export default {
   queryTrainInfo(params) {
     return axios({
       method: 'get',
-      url: '/v1/mindinsight/explainer/explain-job',
+      url: 'v1/mindinsight/explainer/explain-job',
       params: params,
     });
   },
@@ -409,7 +409,7 @@ export default {
   queryPageInfo(params) {
     return axios({
       method: 'post',
-      url: '/v1/mindinsight/explainer/saliency',
+      url: 'v1/mindinsight/explainer/saliency',
       data: params,
     });
   },
