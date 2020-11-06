@@ -226,8 +226,10 @@ limitations under the License.
           </el-table>
           <div class="pagination-container">
             <el-pagination @current-change="handleCurrentChange"
+                           @size-change="currentPagesizeChange"
                            :current-page="pagination.currentPage"
                            :page-size="pagination.pageSize"
+                           :page-sizes="pagination.pageSizes"
                            :layout="pagination.layout"
                            :total="pagination.total">
             </el-pagination>
@@ -446,9 +448,10 @@ export default {
       // Page data
       pagination: {
         currentPage: 1,
-        pageSize: 8,
+        pageSize: 10,
+        pageSizes: [10, 20, 50],
         total: 0,
-        layout: 'total, prev, pager, next, jumper',
+        layout: 'total, sizes, prev, pager, next, jumper',
       },
       // Summary path column
       dirPathList: ['summary_dir'],
@@ -1882,7 +1885,14 @@ export default {
         this.queryLineagesData(params);
       }, this.delayTime);
     },
-
+    /**
+     * Setting Table Data.Table flip
+     * @param {Number} pageSize
+     */
+    currentPagesizeChange(pageSize) {
+      this.pagination.pageSize = pageSize;
+      this.handleCurrentChange(this.pagination.currentPage);
+    },
     /**
      * Setting Table Data.Table flip
      * @param {Number} val
@@ -2136,9 +2146,11 @@ export default {
   overflow-y: auto;
   position: relative;
   background: #fff;
-  .el-select > .el-input {
-    width: 280px !important;
-    max-width: 500px !important;
+  .select-container {
+    .el-select > .el-input {
+      width: 280px !important;
+      max-width: 500px !important;
+    }
   }
   .el-table th.is-leaf {
     background: #f5f7fa;

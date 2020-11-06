@@ -402,8 +402,10 @@ limitations under the License.
           </el-table>
           <div class="pagination-container">
             <el-pagination @current-change="pagination.pageChange"
+                           @size-change="pagination.currentPagesizeChange"
                            :current-page="pagination.currentPage"
                            :page-size="pagination.pageSize"
+                           :page-sizes="pagination.pageSizes"
                            :layout="pagination.layout"
                            :total="pagination.total">
             </el-pagination>
@@ -625,10 +627,12 @@ export default {
       },
       pagination: {
         currentPage: 1,
-        pageSize: 8,
+        pageSize: 10,
+        pageSizes: [10, 20, 50],
         total: 0,
-        layout: 'total, prev, pager, next, jumper',
+        layout: 'total, sizes, prev, pager, next, jumper',
         pageChange: {},
+        currentPagesizeChange: {},
       },
       chartFilter: {}, // chart filter condition
       tableFilter: {lineage_type: {in: ['model']}}, // table filter condition
@@ -675,6 +679,10 @@ export default {
     this.getStoreList();
     this.pagination.pageChange = (page) => {
       this.pagination.currentPage = page;
+      this.queryLineagesData(false);
+    };
+    this.pagination.currentPagesizeChange = (pageSize) => {
+      this.pagination.pageSize = pageSize;
       this.queryLineagesData(false);
     };
     this.$nextTick(() => {
@@ -2132,9 +2140,11 @@ export default {
     box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
     overflow: hidden;
     // select
-    .el-select > .el-input {
-      min-width: 280px !important;
-      max-width: 500px !important;
+    .select-container {
+      .el-select > .el-input {
+        min-width: 280px !important;
+        max-width: 500px !important;
+      }
     }
     .top-area {
       margin: 0px 32px 6px;

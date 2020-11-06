@@ -114,8 +114,10 @@ limitations under the License.
       <!--   outer Page   -->
       <div class="pagination-content">
         <el-pagination @current-change="currentPageChange"
+                       @size-change="currentPagesizeChange"
                        :current-page="pagination.currentPage"
                        :page-size="pagination.pageSize"
+                       :page-sizes="pagination.pageSizes"
                        :layout="pagination.layout"
                        :total="pagination.total"
                        class="page">
@@ -208,9 +210,10 @@ export default {
       },
       pagination: {
         currentPage: 1,
-        pageSize: 16,
+        pageSize: 20,
+        pageSizes: [10, 20, 50],
         total: 0,
-        layout: 'total, prev, pager, next, jumper',
+        layout: 'total, sizes, prev, pager, next, jumper',
       },
       contextMenu: {
         show: false,
@@ -303,6 +306,14 @@ export default {
           .catch((e) => {
             this.loading = false;
           });
+    },
+    currentPagesizeChange(pageSize) {
+      this.pagination.pageSize = pageSize;
+      const params = {
+        offset: this.pagination.currentPage - 1,
+        limit: this.pagination.pageSize,
+      };
+      this.querySummaryList(params);
     },
     currentPageChange(currentPage) {
       this.pagination.currentPage = currentPage;
