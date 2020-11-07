@@ -70,12 +70,6 @@ class TestMetadataHandler:
         res = self.metadata_handler.client_ip
         assert res == ""
 
-    def test_client_ip_setter(self):
-        """test Set the property of client ip"""
-        self.metadata_handler.client_ip = "0.0.0.0"
-        res = self.metadata_handler.client_ip
-        assert res == "0.0.0.0"
-
     def test_put(self):
         """test put value into metadata cache"""
         value = Metadata()
