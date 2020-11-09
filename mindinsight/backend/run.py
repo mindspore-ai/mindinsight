@@ -18,7 +18,9 @@ import re
 import shlex
 import stat
 import subprocess
+import sys
 import time
+from enum import Enum, unique
 
 from gunicorn.glogging import Logger
 from mindinsight.backend.config import WEB_CONFIG_DIR
@@ -30,6 +32,16 @@ GUNICORN_LOGGER = "mindinsight.backend.run.GunicornLogger"
 
 _MIN_PORT = 1
 _MAX_PORT = 65535
+
+
+@unique
+class ServerStateEnum(Enum):
+    """
+    The service startup status are as follows: "unknown", "failed" and "success"
+    """
+    UNKNOWN = "unknown"
+    FAILED = "failed"
+    SUCCESS = "success"
 
 
 def _get_file_size(file_path):
@@ -76,7 +88,7 @@ def _check_stat_from_log(log_info):
     Returns:
         str, the state value that is one of the follows: "unknown", "failed" and "success".
     """
-    server_state = "unknown"
+    server_state = ServerStateEnum.UNKNOWN.value
     match_success_info = "Listening at: http://%s:%d" % \
                          (settings.HOST, int(settings.PORT))
     common_failed_info_list = [
@@ -90,10 +102,10 @@ def _check_stat_from_log(log_info):
     # matched failed output log by fuzzy match
     if re.search(re_pattern, log_info) or \
             _is_match_one(common_failed_info_list, log_info):
-        server_state = "failed"
+        server_state = ServerStateEnum.FAILED.value
 
     if match_success_info in log_info:
-        server_state = "success"
+        server_state = ServerStateEnum.SUCCESS.value
 
     return server_state
 
@@ -133,7 +145,7 @@ def _check_state_from_log(log_abspath, start_pos=0):
 
     """
     server_is_start = False
-    state_result = {"state": "unknown", "prompt_message": []}
+    state_result = {"state": ServerStateEnum.UNKNOWN.value, "prompt_message": []}
     prompt_messages = []
     match_start_log = "Starting gunicorn"
     with open(log_abspath) as f_log:
@@ -147,10 +159,10 @@ def _check_state_from_log(log_abspath, start_pos=0):
             if server_is_start:
                 log_result = _check_stat_from_log(line)
                 # ignore "unknown" result
-                if log_result != "unknown":
+                if log_result != ServerStateEnum.UNKNOWN.value:
                     state_result["state"] = log_result
 
-                if log_result == "failed":
+                if log_result == ServerStateEnum.FAILED.value:
                     prompt_messages.append(line.strip())
                     prompt_messages.append(
                         "more failed details in log: %s" % log_abspath)
@@ -176,7 +188,7 @@ def _check_server_start_stat(log_abspath, start_pos=None):
         The state values are as follows: "unknown", "failed" and "success".
 
     """
-    state_result = {"state": "unknown", "prompt_message": []}
+    state_result = {"state": ServerStateEnum.UNKNOWN.value, "prompt_message": []}
     # return unknown when not config gunicorn error log file
     if not log_abspath:
         return state_result
@@ -277,6 +289,7 @@ def start():
     # check if gunicorn application is running
     if process.poll() is not None:
         console.error("Start MindInsight failed. See log for details.")
+        sys.exit(1)
     else:
         state_result = _check_server_start_stat(errorlog_abspath, log_size)
         # print gunicorn start state to stdout
@@ -287,6 +300,8 @@ def start():
             label = '.' * len(label)
         for line in state_result["prompt_message"]:
             console.info(line)
+        if state_result["state"] == ServerStateEnum.FAILED_STATE.value:
+            sys.exit(1)
 
 
 if __name__ == '__main__':
