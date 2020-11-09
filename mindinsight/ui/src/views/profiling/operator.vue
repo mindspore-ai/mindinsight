@@ -113,8 +113,10 @@ limitations under the License.
                     </el-table>
                     <el-pagination :current-page="props.row.opDetailPage.offset + 1"
                                    :page-size="props.row.opDetailPage.limit"
+                                   :page-sizes="[10, 20, 50]"
                                    @current-change="(...args)=>{opDetailPageChange(props.row, ...args)}"
-                                   layout="total, prev, pager, next, jumper"
+                                   @size-change="(...args)=>{opDetailPageSizeChange(props.row, ...args)}"
+                                   layout="total, sizes, prev, pager, next, jumper"
                                    :total="props.row.pageTotal">
                     </el-pagination>
                     <div class="clear"></div>
@@ -160,8 +162,10 @@ limitations under the License.
                            v-if="opAllTypeList.opDetailList.length"
                            :current-page="opAllTypeList.opDetailPage.offset + 1"
                            :page-size="opAllTypeList.opDetailPage.limit"
+                           :page-sizes="[10, 20, 50]"
                            @current-change="(...args)=>{opDetailPageChange(opAllTypeList, ...args)}"
-                           layout="total, prev, pager, next, jumper"
+                           @size-change="(...args)=>{opDetailPageSizeChange(opAllTypeList, ...args)}"
+                           layout="total, sizes, prev, pager, next, jumper"
                            :total="opAllTypeList.pageTotal">
             </el-pagination>
           </div>
@@ -268,8 +272,10 @@ limitations under the License.
                     </el-table>
                     <el-pagination :current-page="props.row.opDetailPage.offset + 1"
                                    :page-size="props.row.opDetailPage.limit"
+                                   :page-sizes="[10, 20, 50]"
                                    @current-change="(...args)=>{opCpuDetailPageChange(props.row, ...args)}"
-                                   layout="total, prev, pager, next, jumper"
+                                   @size-change="(...args)=>{opCpuDetailPageSizeChange(props.row, ...args)}"
+                                   layout="total, sizes, prev, pager, next, jumper"
                                    :total="props.row.pageTotal">
                     </el-pagination>
                     <div class="clear"></div>
@@ -310,11 +316,13 @@ limitations under the License.
               </el-table-column>
             </el-table>
             <el-pagination v-show="cpuStatisticType"
-                            v-if="opCpuAllTypeList.opDetailList.length"
+                           v-if="opCpuAllTypeList.opDetailList.length"
                            :current-page="opCpuAllTypeList.opDetailPage.offset + 1"
                            :page-size="opCpuAllTypeList.opDetailPage.limit"
+                           :page-sizes="[10, 20, 50]"
                            @current-change="(...args)=>{opCpuDetailPageChange(opCpuAllTypeList, ...args)}"
-                           layout="total, prev, pager, next, jumper"
+                           @size-change="(...args)=>{opCpuDetailPageSizeChange(opCpuAllTypeList, ...args)}"
+                           layout="total, sizes, prev, pager, next, jumper"
                            :total="opCpuAllTypeList.pageTotal">
             </el-pagination>
           </div>
@@ -393,7 +401,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 15,
+          limit: 10,
         },
         op_filter_condition: {},
         op_sort_condition: {
@@ -407,7 +415,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 15,
+          limit: 10,
         },
         op_filter_condition: {},
         op_sort_condition: {},
@@ -555,7 +563,10 @@ export default {
       this.$nextTick(() => {
         const item = this.$refs['expandCpuChild'];
         if (item && this.curCpuActiveRow.rowItem) {
-          item.sort(this.curCpuActiveRow.childProp, this.curCpuActiveRow.childOrder);
+          item.sort(
+              this.curCpuActiveRow.childProp,
+              this.curCpuActiveRow.childOrder,
+          );
         }
       });
     },
@@ -578,7 +589,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 15,
+          limit: 10,
         },
         op_filter_condition: {},
         op_sort_condition: {},
@@ -603,7 +614,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 15,
+          limit: 10,
         },
         op_filter_condition: {},
         op_sort_condition: {},
@@ -639,7 +650,7 @@ export default {
                     opDetailCol: [],
                     opDetailPage: {
                       offset: 0,
-                      limit: 15,
+                      limit: 10,
                     },
                     pageTotal: 0,
                     op_filter_condition: {
@@ -778,7 +789,7 @@ export default {
                     opDetailCol: [],
                     opDetailPage: {
                       offset: 0,
-                      limit: 15,
+                      limit: 10,
                     },
                     pageTotal: 0,
                     op_filter_condition: {
@@ -809,10 +820,7 @@ export default {
                   this.cpuCharts.device_id = this.currentCard;
                   this.cpuCharts.data = [];
                   res.data.object.forEach((k) => {
-                    if (
-                      this.cpuCharts.data &&
-                    this.cpuCharts.data.length < 19
-                    ) {
+                    if (this.cpuCharts.data && this.cpuCharts.data.length < 19) {
                       this.cpuCharts.data.push({
                         name: k[0],
                         value: k[1],
@@ -897,12 +905,32 @@ export default {
       this.getCoreDetailList(row, false);
     },
     /**
+     * Operator detail list page size change
+     * @param {Object} row table cell
+     * @param {Number} pageSize current page size
+     */
+    opDetailPageSizeChange(row, pageSize) {
+      row.opDetailPage.offset = 0;
+      row.opDetailPage.limit = pageSize;
+      this.getCoreDetailList(row, false);
+    },
+    /**
      * Cpu list page change
      * @param {Object} row table cell
      * @param {Number} pageIndex current page
      */
     opCpuDetailPageChange(row, pageIndex) {
       row.opDetailPage.offset = pageIndex - 1;
+      this.getCpuDetailList(row, false);
+    },
+    /**
+     * Cpu list page size change
+     * @param {Object} row table cell
+     * @param {Number} pageSize current page size
+     */
+    opCpuDetailPageSizeChange(row, pageSize) {
+      row.opDetailPage.offset = 0;
+      row.opDetailPage.limit = pageSize;
       this.getCpuDetailList(row, false);
     },
     /**

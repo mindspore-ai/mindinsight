@@ -114,8 +114,10 @@ limitations under the License.
                     </el-table>
                     <el-pagination :current-page="props.row.opDetailPage.offset + 1"
                                    :page-size="props.row.opDetailPage.limit"
+                                   :page-sizes="[10, 20, 50]"
                                    @current-change="(...args)=>{opDetailPageChange(props.row, ...args)}"
-                                   layout="total, prev, pager, next, jumper"
+                                   @size-change="(...args)=>{opDetailPageSizeChange(props.row, ...args)}"
+                                   layout="total, sizes, prev, pager, next, jumper"
                                    :total="props.row.pageTotal">
                     </el-pagination>
                     <div class="clear"></div>
@@ -162,8 +164,10 @@ limitations under the License.
                            v-if="opAllTypeList.opDetailList.length"
                            :current-page="opAllTypeList.opDetailPage.offset + 1"
                            :page-size="opAllTypeList.opDetailPage.limit"
+                           :page-sizes="[10, 20, 50]"
                            @current-change="(...args)=>{opDetailPageChange(opAllTypeList, ...args)}"
-                           layout="total, prev, pager, next, jumper"
+                           @size-change="(...args)=>{opDetailPageSizeChange(opAllTypeList, ...args)}"
+                           layout="total, sizes, prev, pager, next, jumper"
                            :total="opAllTypeList.pageTotal">
             </el-pagination>
           </div>
@@ -244,8 +248,10 @@ limitations under the License.
             <el-pagination v-if="coreList.opDetailList.length"
                            :current-page="coreList.opDetailPage.offset + 1"
                            :page-size="coreList.opDetailPage.limit"
-                           @current-change="(...args)=>{opCorePageChange(coreList, ...args)}"
-                           layout="total, prev, pager, next, jumper"
+                           :page-sizes="[10, 20, 50]"
+                           @current-change="opCorePageChange"
+                           @size-change="opCorePageSizeChange"
+                           layout="total, sizes, prev, pager, next, jumper"
                            :total="coreList.pageTotal">
             </el-pagination>
           </div>
@@ -296,7 +302,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 15,
+          limit: 10,
         },
         op_filter_condition: {},
         op_sort_condition: {
@@ -310,7 +316,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 15,
+          limit: 10,
         },
         op_filter_condition: {},
         op_sort_condition: {},
@@ -465,7 +471,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 15,
+          limit: 10,
         },
         op_filter_condition: {},
         op_sort_condition: {
@@ -493,7 +499,7 @@ export default {
         pageTotal: 0,
         opDetailPage: {
           offset: 0,
-          limit: 15,
+          limit: 10,
         },
         op_filter_condition: {},
         op_sort_condition: {},
@@ -529,7 +535,7 @@ export default {
                     opDetailCol: [],
                     opDetailPage: {
                       offset: 0,
-                      limit: 15,
+                      limit: 10,
                     },
                     pageTotal: 0,
                     op_filter_condition: {
@@ -705,12 +711,30 @@ export default {
       this.getOperatorDetailList(row, false);
     },
     /**
-     * Core list page change
+     * Operator detail list page size change
      * @param {Object} row table cell
+     * @param {Number} pageSize current page
+     */
+    opDetailPageSizeChange(row, pageSize) {
+      row.opDetailPage.offset = 0;
+      row.opDetailPage.limit = pageSize;
+      this.getOperatorDetailList(row, false);
+    },
+    /**
+     * Core list page change
      * @param {Number} pageIndex current page
      */
-    opCorePageChange(row, pageIndex) {
-      row.opDetailPage.offset = pageIndex - 1;
+    opCorePageChange(pageIndex) {
+      this.coreList.opDetailPage.offset = pageIndex - 1;
+      this.getCoreList(false);
+    },
+    /**
+     * Core list page size change
+     * @param {Number} pageSize current page size
+     */
+    opCorePageSizeChange(pageSize) {
+      this.coreList.opDetailPage.offset = 0;
+      this.coreList.opDetailPage.limit = pageSize;
       this.getCoreList(false);
     },
     /**
