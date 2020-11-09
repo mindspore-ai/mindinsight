@@ -79,8 +79,8 @@ class MSDataLoader:
         """
         deleted_files = set(old_filenames) - set(filenames)
         if deleted_files:
-            logger.warning("There are some files has been deleted, "
-                           "we will reload all files in path %s.", self._summary_dir)
+            logger.info("There are some files has been deleted, "
+                        "we will reload all files in path %s.", self._summary_dir)
             self.__init__(self._summary_dir)
 
     def load(self, executor=None):

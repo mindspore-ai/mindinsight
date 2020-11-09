@@ -74,7 +74,7 @@ class TestMsDataLoader:
         ms_loader = MSDataLoader(summary_dir)
         ms_loader._check_files_deleted(new_file_list, old_file_list)
         shutil.rmtree(summary_dir)
-        assert MockLogger.log_msg['warning'] == "There are some files has been deleted, " \
+        assert MockLogger.log_msg['info'] == "There are some files has been deleted, " \
                                                 "we will reload all files in path {}.".format(summary_dir)
 
     @pytest.mark.usefixtures('crc_pass')
