@@ -4,6 +4,7 @@
     "browserWarning": "Your browser may cause some functions to become invalid or unavailable. You are advised to use Chrome 65 or later.",
     "timeout": "Timeout. Try again.",
     "noData": "No data",
+    "emptyData": "No data",
     "reset": "Reset",
     "tagFilterPlaceHolder": "Enter tag (regular expression supported)",
     "dataError": "The obtained data is abnormal.",

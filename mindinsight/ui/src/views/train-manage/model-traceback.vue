@@ -72,7 +72,8 @@ limitations under the License.
                     <div class="select-inner-input">
                       <el-input v-model="barKeyWord"
                                 @input="myfilter('left')"
-                                :placeholder="$t('public.search')"></el-input>
+                                :placeholder="$t('public.search')"
+                                ref="barKeyInput"></el-input>
                     </div>
                     <button type="text"
                             @click="barAllSelect"
@@ -103,6 +104,27 @@ limitations under the License.
                                $t('modelTraceback.mustExist') : ''">
                     </el-option>
                   </el-option-group>
+                  <div slot="empty">
+                    <div class="select-input-button empty-container">
+                      <div class="select-inner-input">
+                        <el-input v-model="barKeyWord"
+                                  @input="myfilter('left')"
+                                  :placeholder="$t('public.search')"
+                                  ref="barKeyEmptyInput"></el-input>
+                      </div>
+                      <button type="text"
+                              class="select-all-button"
+                              disabled>
+                        {{$t('public.selectAll')}}
+                      </button>
+                      <button type="text"
+                              class="deselect-all-button"
+                              disabled>
+                        {{$t('public.deselectAll')}}
+                      </button>
+                      <div class="search-no-data">{{$t('public.emptyData')}}</div>
+                    </div>
+                  </div>
                 </el-select>
               </div>
             </div>
@@ -172,7 +194,8 @@ limitations under the License.
                     <div class="select-inner-input">
                       <el-input v-model="keyWord"
                                 @input="myfilter"
-                                :placeholder="$t('public.search')"></el-input>
+                                :placeholder="$t('public.search')"
+                                ref="keyInput"></el-input>
                     </div>
                     <button type="text"
                             @click="allSelect"
@@ -202,6 +225,28 @@ limitations under the License.
                                :title="item.disabled ? $t('modelTraceback.mustExist') : ''">
                     </el-option>
                   </el-option-group>
+                  <div slot="empty">
+                    <div class="select-input-button empty-container">
+                      <div class="select-inner-input">
+                        <el-input v-model="keyWord"
+                                  @input="myfilter"
+                                  :placeholder="$t('public.search')"
+                                  ref="keyEmptyInput"></el-input>
+                      </div>
+                      <button type="text"
+                              class="select-all-button"
+                              disabled>
+                        {{$t('public.selectAll')}}
+                      </button>
+                      <button type="text"
+                              @click="deselectAll"
+                              class="deselect-all-button"
+                              disabled>
+                        {{$t('public.deselectAll')}}
+                      </button>
+                      <div class="search-no-data">{{$t('public.emptyData')}}</div>
+                    </div>
+                  </div>
                 </el-select>
               </div>
               <div class="label-legend"
@@ -1824,6 +1869,16 @@ export default {
   height: 32px;
   border: none;
   background: none;
+}
+.empty-container {
+  padding-top: 6px;
+}
+.search-no-data {
+  padding: 10px 0;
+  margin: 0;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
 }
 
 #model-traceback-con {

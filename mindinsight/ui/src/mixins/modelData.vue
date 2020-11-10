@@ -773,6 +773,19 @@ export default {
           list = list.concat(item.options);
         });
         this.searchOptions = list;
+        if (!this.searchOptions.length) {
+          this.$nextTick(()=>{
+            if (this.$refs.barKeyEmptyInput) {
+              this.$refs.barKeyEmptyInput.focus();
+            }
+          });
+        } else {
+          this.$nextTick(()=>{
+            if (this.$refs.barKeyInput) {
+              this.$refs.barKeyInput.focus();
+            }
+          });
+        }
       } else {
         // Model traceability drop-down box on the right
         const queryString = this.keyWord;
@@ -787,6 +800,19 @@ export default {
           list = list.concat(item.options);
         });
         this.showOptions = list;
+        if (!this.showOptions.length) {
+          this.$nextTick(()=>{
+            if (this.$refs.keyEmptyInput) {
+              this.$refs.keyEmptyInput.focus();
+            }
+          });
+        } else {
+          this.$nextTick(()=>{
+            if (this.$refs.keyInput) {
+              this.$refs.keyInput.focus();
+            }
+          });
+        }
       }
     },
 

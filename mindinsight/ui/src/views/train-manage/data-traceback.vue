@@ -52,7 +52,8 @@ limitations under the License.
                   <div class="select-inner-input">
                     <el-input v-model="keyWord"
                               v-on:input="myfilter"
-                              :placeholder="$t('public.search')">
+                              :placeholder="$t('public.search')"
+                              ref="keyInput">
                     </el-input>
                   </div>
                   <button type="text"
@@ -79,6 +80,28 @@ limitations under the License.
                            :disabled="item.disabled"
                            :title="item.disabled ? $t('modelTraceback.mustExist') : ''">
                 </el-option>
+                <div slot="empty">
+                  <div class="select-input-button empty-container">
+                  <div class="select-inner-input">
+                    <el-input v-model="keyWord"
+                              v-on:input="myfilter"
+                              :placeholder="$t('public.search')"
+                              ref="keyEmptyInput">
+                    </el-input>
+                  </div>
+                  <button type="text"
+                          class="select-all-button"
+                          disabled>
+                    {{ $t('public.selectAll')}}
+                  </button>
+                  <button type="text"
+                          class="deselect-all-button"
+                          disabled>
+                    {{ $t('public.deselectAll')}}
+                  </button>
+                  <div class="search-no-data">{{$t('public.emptyData')}}</div>
+                </div>
+                </div>
               </el-select>
             </div>
           </div>
@@ -1473,6 +1496,19 @@ export default {
         ? this.createFilter(queryString, restaurants)
         : restaurants;
       this.checkOptions = results;
+      if (!this.checkOptions.length) {
+        this.$nextTick(()=>{
+          if (this.$refs.keyEmptyInput) {
+            this.$refs.keyEmptyInput.focus();
+          }
+        });
+      } else {
+        this.$nextTick(()=>{
+          if (this.$refs.keyInput) {
+            this.$refs.keyInput.focus();
+          }
+        });
+      }
     },
 
     /**
@@ -2136,6 +2172,16 @@ export default {
   height: 32px;
   border: none;
   background: none;
+}
+.empty-container {
+  padding-top: 6px;
+}
+.search-no-data {
+  padding: 10px 0;
+  margin: 0;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
 }
 .btn-disabled {
   cursor: not-allowed !important;
