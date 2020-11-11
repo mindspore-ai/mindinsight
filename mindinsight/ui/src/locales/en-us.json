@@ -465,6 +465,7 @@
   },
   "debugger": {
     "debugger": "Debugger",
+    "nodeTypes": "Node Types",
     "nodeList": "Node List",
     "watchList": "Watch Point List",
     "watchPoint": "Watch Point",
@@ -502,7 +503,17 @@
     "shape": "Shape",
     "value": "Value",
     "largeDataTip": "The requested data is too large. Try another dimension.",
-    "continueTo": "Continue to"
+    "continueTo": "Continue to",
+    "inf": "INF:",
+    "negativeInf": "-INF:",
+    "max": "MAX:",
+    "min": "MIN:",
+    "mean": "MEAN:",
+    "nan": "NAN:",
+    "zero": "0:",
+    "positiveNum": "Positive number:",
+    "negativeNum": "Negative number:",
+    "all": "All"
   },
   "explain": {
     "explain": "Model Explanation",

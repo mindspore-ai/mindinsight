@@ -20,7 +20,7 @@ limitations under the License.
       <div class="left"
            v-show="!leftShow">
         <div class="header">
-          {{$t('debugger.nodeList')}}
+          {{radio1==='tree' ? $t('debugger.nodeList') : $t('debugger.curHitNode')}}
           <div class="radio-tabs">
             <el-radio-group v-model="radio1"
                             size='mini'
@@ -36,6 +36,27 @@ limitations under the License.
         </div>
         <div class="content"
              v-show="radio1==='tree'">
+          <div class="node-type">
+            <div class="label">{{ $t('debugger.graphFile') }}</div>
+            <el-select v-model="graphFiles.value"
+                       @change="queryGraphByFile">
+              <el-option v-for="item in graphFiles.options"
+                         :key="item"
+                         :value="item">
+              </el-option>
+            </el-select>
+          </div>
+          <div class="node-type">
+            <div class="label">{{$t('debugger.nodeTypes')}}</div>
+            <el-select v-model="nodeTypes.value"
+                       @change="nodeTypesChange">
+              <el-option v-for="item in nodeTypes.options"
+                         :key="item"
+                         :label="nodeTypes.label[item]"
+                         :value="item">
+              </el-option>
+            </el-select>
+          </div>
           <div class="select-wrap">
             <el-input :placeholder="$t('graph.inputNodeName')"
                       v-model="searchWord"
@@ -46,6 +67,18 @@ limitations under the License.
             </el-input>
           </div>
           <div class="tree-wrap">
+            <div class="select-all-files"
+                 v-if="curWatchPointId && graphFiles.options.length > 1 &&
+                 graphFiles.value === $t('debugger.all')">
+              <el-button type="primary"
+                         size="mini"
+                         class="custom-btn"
+                         @click="selectAllFiles(true)">{{ $t('debugger.selectAll') }}</el-button>
+              <el-button type="primary"
+                         size="mini"
+                         class="custom-btn"
+                         @click="selectAllFiles(false)">{{ $t('debugger.selectNone') }}</el-button>
+            </div>
             <el-tree v-show="treeFlag"
                      :props="props"
                      :load="loadNode"
@@ -58,166 +91,156 @@ limitations under the License.
                      :highlight-current="true"
                      ref="tree"
                      @check="check"
-                     :show-checkbox="curWatchPointId!==null">
-              <span slot-scope="{ node , data}">
-                <span class="custom-tree-node "
-                      :class="{highlight:data.highlight}">{{ node.label }}</span>
+                     :show-checkbox="!!curWatchPointId">
+              <span class="custom-tree-node"
+                    slot-scope="{ node ,data }">
+                <span>
+                  <img v-if="data.type ==='name_scope'"
+                       :src="require('@/assets/images/name-scope.svg')"
+                       class="image-type" />
+                  <img v-else-if="data.type ==='Const'"
+                       :src="require('@/assets/images/constant-node.svg')"
+                       class="image-type" />
+                  <img v-else-if="data.type ==='aggregation_scope'"
+                       :src="require('@/assets/images/polymetric.svg')"
+                       class="image-type" />
+                  <img v-else
+                       :src="require('@/assets/images/operator-node.svg')"
+                       class="image-type" />
+                </span>
+                <span class="custom-tree-node">{{ node.label }}</span>
               </span>
             </el-tree>
             <el-tree v-show="!treeFlag"
-                     :data="searchTreeData"
                      :props="defaultProps"
+                     :load="loadSearchNode"
+                     :lazy="true"
                      node-key="name"
                      :default-checked-keys="searchCheckedArr"
-                     default-expand-all
+                     :expand-on-click-node="false"
                      @node-click="handleNodeClick"
                      ref="searchTree">
+              <span class="custom-tree-node"
+                    slot-scope="{ node ,data }">
+                <span>
+                  <img v-if="data.type ==='name_scope'"
+                       :src="require('@/assets/images/name-scope.svg')"
+                       class="image-type" />
+                  <img v-else-if="data.type ==='Const'"
+                       :src="require('@/assets/images/constant-node.svg')"
+                       class="image-type" />
+                  <img v-else-if="data.type ==='aggregation_scope'"
+                       :src="require('@/assets/images/polymetric.svg')"
+                       class="image-type" />
+                  <img v-else
+                       :src="require('@/assets/images/operator-node.svg')"
+                       class="image-type" />
+                </span>
+                <span class="custom-tree-node">{{ node.label }}</span>
+              </span>
             </el-tree>
           </div>
           <div class="watch-point-wrap">
             <div class="title-wrap">
               {{$t('debugger.watchList')}}
+
+              <div class="check-wrap">
+                <i class="el-icon-circle-check"
+                   :title="$t('debugger.recheck')"
+                   :class="{disable: !enableRecheck}"
+                   @click="recheckWatchpoint()"></i>
+              </div>
+
+              <div class="delete-wrap">
+                <i class="el-icon-delete"
+                   :title="$t('debugger.clearWatchpoint')"
+                   :class="{disable: !watchPointArr.length}"
+                   @click="deleteWatchpoint()"></i>
+              </div>
               <div class="add-wrap">
                 <i class="el-icon-circle-plus"
+                   :title="$t('debugger.addWatchpoint')"
                    @click="addWatchPoint"></i>
               </div>
             </div>
             <div class="content-wrap">
-              <ul class="list-wrap"
+              <ul id="watch-point-list"
+                  class="list-wrap"
                   v-show="allWatchPointFlag">
                 <li class="list"
                     v-for="(item,key) in watchPointArr"
                     :key="key"
-                    :title="$t('debugger.watchPoint') + ' ' + item.id + ': ' +
-                    item.label + ' ' + item.param">
+                    :title="getWatchPointContent(item)">
                   <div class="name"
                        :class="{selected:item.selected}"
                        @click="selectWatchPoint(key)">
                     <div class="item-content">
-                      {{$t('debugger.watchPoint')}} {{item.id}}: {{item.label}} {{item.param}}
+                      {{getWatchPointContent(item)}}
                     </div>
                     <i class="el-icon-check"
-                       v-if="item.selected && watchPointPending"
+                       v-if="item.selected"
                        @click.stop="showOrigin()"></i>
                     <i class="el-icon-close"
                        v-if="item.selected"
                        @click.stop="deleteWatchpoint(item)"></i>
                   </div>
-                  <div v-show="!watchPointPending && key === watchPointArr.length - 1">
-                    <div class="condition">
-                      <el-select v-model="item.condition"
-                                 :placeholder="$t('debugger.selectCondition')"
-                                 @change="conditionChange(item)">
-                        <el-option v-for="i in conditions.options"
-                                   :key="i.value"
-                                   :label="i.label"
-                                   :value="i.value">
-                        </el-option>
-                      </el-select>
-                      <el-input v-model="item.param"
-                                :placeholder="$t('scalar.placeHolderNumber')"
-                                v-if="conditions.hasValue.includes(item.condition)"
-                                @input="validateParam(item)"
-                                class="condition-param"></el-input>
-                      <div class="btn-wrap">
-                        <el-button type="primary"
-                                   size="mini"
-                                   class="custom-btn"
-                                   @click="createWatchPoint(item)"
-                                   :disabled="!(conditions.noValue.includes(item.condition) ||
-                                   (conditions.hasValue.includes(item.condition) && validPram))">
-                          {{ $t('public.sure') }}
-                        </el-button>
-                      </div>
-                    </div>
-                  </div>
                 </li>
               </ul>
             </div>
           </div>
-          <div class="btn-wrap">
-            <div class="step">
-              <el-input v-model="step"
-                        :placeholder="$t('debugger.inputStep')"
-                        @input="stepChange"
-                        @keyup.native.enter="control(0)">
-              </el-input>
-              <el-button type="primary"
-                         size="mini"
-                         class="custom-btn green"
-                         :disabled="!step || metadata.state==='running' || metadata.state==='pending'"
-                         @click="control(0)">{{ $t('public.sure') }}</el-button>
-            </div>
-            <div class="btn-two">
-              <el-button size="mini"
-                         class="custom-btn white"
-                         :disabled="metadata.state==='running'|| metadata.state==='pending'"
-                         @click="control(1)">{{$t('debugger.continue')}}</el-button>
-              <el-button size="mini"
-                         class="custom-btn white"
-                         :disabled="metadata.state!=='running'"
-                         @click="control(3)">{{$t('debugger.pause')}}</el-button>
-              <el-button size="mini"
-                         class="custom-btn white"
-                         :disabled="metadata.state==='pending'"
-                         @click="terminate">{{$t('debugger.terminate')}}</el-button>
-            </div>
+        </div>
+        <div class="content"
+             v-show="radio1==='hit'">
+          <div class="hit-list-wrap">
+            <el-table :data="watchPointHits"
+                      row-key="id"
+                      :expand-row-keys="expandKeys">
+              <el-table-column type="expand"
+                               width="40">
+                <template slot-scope="props">
+                  <ul>
+                    <li v-for="(i, index) in props.row.lists"
+                        :key="index">{{i.name}}</li>
+                  </ul>
+                </template>
+              </el-table-column>
+              <el-table-column prop="name"
+                               :label="$t('graph.name')">
+                <template slot-scope="scope">
+                  <div class="hit-item"
+                       :class="{selected:scope.row.selected}"
+                       @click="updateTensorValue(scope.$index)">{{scope.row.name}}</div>
+                </template>
+              </el-table-column>
+            </el-table>
           </div>
         </div>
-        <div class="hit"
-             v-show="radio1==='hit'">
-          <div class="content">
-            <div class="title">{{ $t('debugger.curHitNode') }}</div>
-            <div class="hit-list-wrap">
-              <div class="hit-list"
-                   v-for="(item,key) in watchPointHits"
-                   :key="key">
-                <div>
-                  <div class="node-name"
-                       :class="{selected:item.selected}"
-                       @click="updateTensorValue(key)">{{ item.node_name }}</div>
-                  <div class="watch-points"
-                       v-for="(watchpoint,index) in item.watch_points"
-                       :key="index">
-                    id:{{ watchpoint.id }}&nbsp;condition :{{
-                      conditionMappings[watchpoint.watch_condition.condition]
-                         }} {{watchpoint.watch_condition.param}}
-                  </div>
-                </div>
-              </div>
-              <div class="no-data"
-                   v-if="!watchPointHits.length">
-                {{ $t('public.noData') }}
-              </div>
-            </div>
+        <div class="btn-wrap">
+          <div class="step">
+            <el-input v-model="step"
+                      :placeholder="$t('debugger.inputStep')"
+                      @input="stepChange"
+                      @keyup.native.enter="control(0)">
+            </el-input>
+            <el-button type="primary"
+                       size="mini"
+                       class="custom-btn green"
+                       :disabled="!step || metadata.state==='running' || metadata.state==='pending'"
+                       @click="control(0)">{{ $t('public.sure') }}</el-button>
           </div>
-          <div class="btn-wrap">
-            <div class="step">
-              <el-input v-model="step"
-                        :placeholder="$t('debugger.inputStep')"
-                        @input="stepChange"
-                        @keyup.native.enter="control(0)">
-              </el-input>
-              <el-button type="primary"
-                         size="mini"
-                         class="custom-btn green"
-                         :disabled="!step || metadata.state==='running' || metadata.state==='pending'"
-                         @click="control(0)">{{ $t('public.sure') }}</el-button>
-            </div>
-            <div class="btn-two">
-              <el-button size="mini"
-                         class="custom-btn white"
-                         :disabled="metadata.state==='running'|| metadata.state==='pending'"
-                         @click="control(1)">{{$t('debugger.continue')}}</el-button>
-              <el-button size="mini"
-                         class="custom-btn white"
-                         :disabled="metadata.state!=='running'"
-                         @click="control(3)">{{$t('debugger.pause')}}</el-button>
-              <el-button size="mini"
-                         class="custom-btn white"
-                         :disabled="metadata.state==='pending'"
-                         @click="terminate">{{$t('debugger.terminate')}}</el-button>
-            </div>
+          <div class="btn-two">
+            <el-button size="mini"
+                       class="custom-btn white"
+                       :disabled="metadata.state==='running'|| metadata.state==='pending'"
+                       @click="control(1)">{{$t('debugger.continue')}}</el-button>
+            <el-button size="mini"
+                       class="custom-btn white"
+                       :disabled="metadata.state!=='running'"
+                       @click="control(3)">{{$t('debugger.pause')}}</el-button>
+            <el-button size="mini"
+                       class="custom-btn white"
+                       :disabled="metadata.state==='pending'"
+                       @click="terminate">{{$t('debugger.terminate')}}</el-button>
           </div>
         </div>
       </div>
@@ -300,78 +323,114 @@ limitations under the License.
              v-show="!collapseTable"
              @click="collapseTable=!collapseTable"
              alt="" />
-        <div class="table-title">{{ $t('debugger.tensorMsg')}}</div>
 
-        <div class="table-content">
-          <div class="table-wrap">
-            <el-table ref="singleTable"
-                      :data="tableData"
-                      :header-cell-style="discountHeaderStyle"
-                      :span-method="objectSpanMethod"
-                      :row-class-name="tableRowClassName"
-                      tooltip-effect="light">
-              <el-table-column :label="$t('graph.name')">
-                <el-table-column property="type"
-                                 width="80"></el-table-column>
-                <el-table-column label=""
-                                 show-overflow-tooltip>
-                  <template slot-scope="scope">
-                    <span class="value"
-                          @click="queryAllTreeData(scope.row.name,false)">
-                      {{ scope.row.name }}
-                    </span>
-                  </template>
-                </el-table-column>
-              </el-table-column>
-              <el-table-column property="step"
-                               :label="$t('debugger.step')"
-                               width="80">
-              </el-table-column>
-              <el-table-column property="dtype"
-                               :label="$t('debugger.dType')"
-                               width="200">
-              </el-table-column>
-              <el-table-column property="shape"
-                               :label="$t('debugger.shape')"
-                               width="120">
-              </el-table-column>
-              <el-table-column :label="$t('debugger.value')"
-                               width="260">
-                <template slot="header">
-                  <span class="center">{{ $t('debugger.value')}}</span>
-                </template>
-                <template slot-scope="scope">
-                  <div class="value-wrap">
-                    <el-button size="mini"
-                               type="text"
-                               v-if="scope.row.value === 'click to view'"
-                               @click="viewValueDetail(scope.row)">
-                      {{ $t('debugger.view') }}
-                    </el-button>
-                    <span v-else
-                          class="value-tip"
-                          :title="isNaN(scope.row.value)?'':scope.row.value">{{ scope.row.value }}</span>
-                    <el-button size="mini"
-                               type="text"
-                               :disabled="!scope.row.has_prev_step"
-                               @click="tensorComparisons(scope.row)">
-                      {{ $t('debugger.compareToPre') }}
-                    </el-button>
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-        </div>
+        <el-tabs v-model="tabs.activeName">
+          <el-tab-pane :label="$t('debugger.tensorMsg')"
+                       name="tensor">
+            <div class="table-content">
+              <div class="table-wrap">
+                <el-table ref="singleTable"
+                          :data="tableData"
+                          :header-cell-style="discountHeaderStyle"
+                          :span-method="objectSpanMethod"
+                          :row-class-name="tableRowClassName"
+                          tooltip-effect="light">
+                  <el-table-column :label="$t('graph.name')">
+                    <el-table-column property="type"
+                                     width="80"></el-table-column>
+                    <el-table-column label=""
+                                     show-overflow-tooltip>
+                      <template slot-scope="scope">
+                        <span class="value"
+                              @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name)">
+                          {{ scope.row.name }}
+                        </span>
+                      </template>
+                    </el-table-column>
+                  </el-table-column>
+                  <el-table-column property="step"
+                                   :label="$t('debugger.step')"
+                                   width="80">
+                  </el-table-column>
+                  <el-table-column property="dtype"
+                                   :label="$t('debugger.dType')"
+                                   width="200">
+                  </el-table-column>
+                  <el-table-column property="shape"
+                                   :label="$t('debugger.shape')"
+                                   width="120">
+                  </el-table-column>
+                  <el-table-column :label="$t('debugger.value')"
+                                   width="260">
+                    <template slot="header">
+                      <span class="center">{{ $t('debugger.value')}}</span>
+                    </template>
+                    <template slot-scope="scope">
+                      <div class="value-wrap">
+                        <el-button size="mini"
+                                   type="text"
+                                   v-if="scope.row.value === 'click to view'"
+                                   @click="viewValueDetail(scope.row)">
+                          {{ $t('debugger.view') }}
+                        </el-button>
+                        <span v-else
+                              class="value-tip"
+                              :title="isNaN(scope.row.value)?'':scope.row.value">{{ scope.row.value }}</span>
+                        <el-button size="mini"
+                                   type="text"
+                                   :disabled="!scope.row.has_prev_step"
+                                   @click="tensorComparisons(scope.row)">
+                          {{ $t('debugger.compareToPre') }}
+                        </el-button>
+                      </div>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane :label="$t('graph.nodeInfo')"
+                       name="detail">
+            <div class="table-content">
+              <div class="table-wrap">
+                <el-table ref="nodeInfo"
+                          :data="selectedNode.IOInfo"
+                          :header-cell-style="discountHeaderStyle"
+                          :span-method="objectSpanMethod"
+                          :row-class-name="tableRowClassName"
+                          tooltip-effect="light">
+                  <el-table-column :label="$t('graph.name')">
+                    <el-table-column property="IOType"
+                                     width="80"></el-table-column>
+                    <el-table-column label=""
+                                     show-overflow-tooltip>
+                      <template slot-scope="scope">
+                        <span class="value"
+                              @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name)">
+                          {{ scope.row.name }}
+                        </span>
+                      </template>
+                    </el-table-column>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
       </div>
     </div>
     <div class="deb-con"
          v-if="tensorCompareFlag">
       <div class="deb-con-title">
-        <div class="deb-con-title-left">
+        <div class="deb-con-title-left"
+             :title="curRowObj.name">
           {{ curRowObj.name }}
         </div>
-
+        <div class="deb-con-title-middle">
+          MIN
+          <div class="grident">0</div>
+          MAX
+        </div>
         <div class="deb-con-title-right">
           <div class="close-btn">
             <img src="@/assets/images/close-page.png"
@@ -427,10 +486,106 @@ limitations under the License.
           </debuggerGridTable>
         </div>
         <div class="deb-compare-detail">
-          {{ $t('tensors.dimension') }} {{ curRowObj.shape }}
+          <span>{{ $t('tensors.dimension') }} {{ curRowObj.shape }}</span>
+          <div v-for="(statistics,key) in statisticsArr"
+               :key="key">
+            <label v-if="key===0">{{$t('debugger.curStatisticsLabel')}}</label>
+            <label v-if="key===1">{{$t('debugger.preStatisticsLabel')}}</label>
+            <label v-if="key===2">{{$t('debugger.diffStatisticsLabel')}}</label>
+            <span>{{ $t('debugger.max') }} {{ statistics.overall_max }}</span>
+            <span>{{ $t('debugger.min') }} {{ statistics.overall_min }}</span>
+            <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg }}</span>
+            <span>{{ $t('debugger.nan') }} {{ statistics.overall_nan_count }}</span>
+            <span>{{ $t('debugger.negativeInf') }} {{ statistics.overall_neg_inf_count }}</span>
+            <span>{{ $t('debugger.inf') }} {{ statistics.overall_pos_inf_count }}</span>
+            <span>{{ $t('debugger.zero') }} {{ statistics.overall_zero_count }}</span>
+            <span>{{ $t('debugger.negativeNum') }} {{ statistics.overall_neg_zero_count }}</span>
+            <span>{{ $t('debugger.positiveNum') }} {{ statistics.overall_pos_zero_count }}</span>
+          </div>
         </div>
       </div>
     </div>
+    <el-dialog :title="$t('debugger.createWP')"
+               :visible.sync="createWPDialogVisible"
+               :close-on-click-modal="false"
+               :modal-append-to-body="false"
+               class="creat-watch-point-dialog"
+               width="900px">
+
+      <div class="conditions-container">
+        <div class="condition-item"
+             v-for="(item, index) in createWatchPointArr"
+             :key="index">
+          <el-select v-model="item.collection.selectedId"
+                     :placeholder="$t('debugger.chooseTemp')"
+                     class="collection"
+                     @change="collectionChange(item)">
+            <el-option v-for="i in conditionCollections"
+                       :key="i.id"
+                       :label="transCondition(i.id)"
+                       :value="i.id">
+            </el-option>
+          </el-select>
+          <el-select v-model="item.condition.selectedId"
+                     :placeholder="$t('debugger.chooseTemp')"
+                     class="condition"
+                     @change="conditionChange(item)">
+            <el-option v-for="i in item.condition.options"
+                       :key="i.id"
+                       :label="transCondition(i.id)"
+                       :value="i.id">
+            </el-option>
+          </el-select>
+
+          <el-select v-model="item.param.name"
+                     :placeholder="$t('debugger.chooseParam')"
+                     @change="paramChange(item)"
+                     v-if="item.param.options.length"
+                     class="param">
+            <el-option v-for="i in item.param.options"
+                       :key="i.name"
+                       :label="transCondition(i.name)"
+                       :value="i.name">
+            </el-option>
+          </el-select>
+
+          <el-input v-model="item.param.value"
+                    :placeholder="$t('scalar.placeHolderNumber')"
+                    v-if="item.param.options.length &&
+                                item.param.type !== 'BOOL'"
+                    @input="validateParam(item)"
+                    class="param-value"></el-input>
+          <el-select v-model="item.param.value"
+                     v-if="item.param.options.length &&
+                                item.param.type === 'BOOL'"
+                     class="param-value">
+            <el-option :key="true"
+                       label="true"
+                       :value="true">
+            </el-option>
+            <el-option :key="false"
+                       label="false"
+                       :value="false">
+            </el-option>
+          </el-select>
+        </div>
+      </div>
+      <span slot="footer"
+            class="dialog-footer">
+        <el-button type="primary"
+                   size="mini"
+                   class="custom-btn green"
+                   :disabled="!validPram"
+                   @click="createWatchPoint(true)">{{$t('public.sure')}}</el-button>
+        <el-button type="primary"
+                   size="mini"
+                   class="custom-btn"
+                   @click="createWatchPoint(false)">
+          {{ $t('public.cancel') }}
+        </el-button>
+      </span>
+    </el-dialog>
+
     <el-dialog :title="$t('public.notice')"
                :visible.sync="dialogVisible"
                :show-close="false"
@@ -483,24 +638,27 @@ export default {
       defaultProps: {
         children: 'nodes',
         label: 'label',
+        isLeaf: 'leaf',
       },
       curNodeData: [],
       lazy: true,
       radio1: 'tree',
+      nodeTypes: {
+        options: ['all', 'weight', 'activation', 'gradient'],
+        label: {},
+        value: 'all',
+      },
       watchPointArr: [],
       allWatchPointFlag: true,
+      enableRecheck: false,
       dynamicTreeData: [],
       watchPointHits: [],
       defaultCheckedArr: [],
-      watchPointPending: true,
       origialTree: [],
-      conditions: {
-        options: [],
-        hasValue: [],
-        noValue: [],
-      },
+      conditionCollections: [],
+      createWatchPointArr: [],
+      createWPDialogVisible: false,
       validPram: false,
-      conditionMappings: {},
       curWatchPointId: null,
       step: '',
       metadata: {},
@@ -521,6 +679,11 @@ export default {
       inputLength: 0,
       curLeafNodeName: null,
 
+      graphFiles: {
+        options: [],
+        value: '',
+        graphs: {},
+      },
       allGraphData: {}, // Graph Original input data
       firstFloorNodes: [], // ID array of the first layer node.
       nodesCountLimit: 1500, // Maximum number of sub-nodes in a namespace.
@@ -554,14 +717,27 @@ export default {
       toleranceInput: 0,
       showFilterInput: true,
       currentNodeName: '',
+      statisticsArr: [],
+      tabs: {
+        activeName: 'tensor',
+      },
+      searchNode: null,
+      searchResolve: null,
+      isCurrentGraph: true, // Check whether the new and old graphs are the same.
+      expandKeys: [],
+      isHitIntoView: true,
     };
   },
   components: {debuggerGridTable},
   computed: {},
   mounted() {
-    document.title = `Debugger-MindInsight`;
-    window.addEventListener('resize', this.resizeCallback, false);
-    this.initCondition();
+    document.title = `${this.$t('debugger.debugger')}-MindInsight`;
+    window.addEventListener(
+        'resize',
+        this.debounce(this.resizeCallback, 200),
+        false,
+    );
+    this.nodeTypes.label = this.$t('debugger.nodeType');
   },
   watch: {
     'metadata.state': {
@@ -571,6 +747,9 @@ export default {
         }
         if (oldValue === 'pending' && newValue === 'waiting') {
           this.loadNode(this.node, this.resolve);
+        }
+        if (oldValue === 'running' && newValue === 'waiting') {
+          this.getWatchpointHits();
         }
         if (newValue === 'pending') {
           this.dialogVisible = true;
@@ -582,7 +761,113 @@ export default {
     },
   },
   methods: {
-
+    queryGraphByFile() {
+      this.searchWord = '';
+      this.nodeTypes.value = 'all';
+      this.treeFlag = true;
+      const params = {
+        mode: 'node',
+        params: {
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
+          graph_name: this.graphFiles.value,
+        },
+      };
+      if (this.graphFiles.value === this.$t('debugger.all')) {
+        delete params.params.graph_name;
+      }
+      RequestService.retrieve(params).then(
+          (res) => {
+            if (res.data && res.data.metadata) {
+              this.dealMetadata(res.data.metadata);
+            }
+            if (res.data && res.data.graph) {
+              const graph = res.data.graph;
+              this.origialTree = res.data.graph.nodes.map((val) => {
+                return {
+                  label: val.name.split('/').pop(),
+                  leaf:
+                  val.type === 'name_scope' || val.type === 'aggregation_scope'
+                    ? false
+                    : true,
+                  ...val,
+                };
+              });
+              this.node.childNodes = [];
+              this.resolve(this.origialTree);
+              this.defaultCheckedArr = this.origialTree
+                  .filter((val) => {
+                    return val.watched === 2;
+                  })
+                  .map((val) => val.name);
+              this.node.childNodes.forEach((val) => {
+                if (val.data.watched === 1) {
+                  val.indeterminate = true;
+                }
+                if (val.data.watched === 0) {
+                  val.checked = false;
+                }
+                if (val.data.watched === 2) {
+                  val.checked = true;
+                }
+              });
+              this.firstFloorNodes = [];
+              this.allGraphData = {};
+              d3.select('#graph svg').remove();
+              this.selectedNode.name = '';
+              this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)));
+            }
+          },
+          (err) => {
+            this.showErrorMsg(err);
+            this.resolve([]);
+          },
+      );
+    },
+    selectAllFiles(type) {
+      if (!type && !this.$refs.tree.getCheckedKeys().length) {
+        return;
+      }
+      if (type && !this.node.childNodes.find((val) => val.checked === false)) {
+        return;
+      }
+      const watchNodes = [];
+      this.node.childNodes.forEach((val) => {
+        val.checked = type;
+        watchNodes.push(val.data.name);
+        if (val.childNodes) {
+          this.dealCheckPro(val.childNodes, type);
+        }
+      });
+      if (this.curWatchPointId) {
+        const params = {
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
+          watch_nodes: watchNodes,
+          mode: type ? 1 : 0,
+          graph_name: this.graphFiles.value,
+        };
+        if (this.graphFiles.value === this.$t('debugger.all')) {
+          delete params.graph_name;
+        }
+        RequestService.updateWatchpoint(params).then(
+            (res) => {
+              this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
+            },
+            (err) => {
+              this.showErrorMsg(err);
+            },
+        );
+      }
+    },
+    nodeTypesChange() {
+      if (this.nodeTypes.value === 'all' && !this.searchWord) {
+        this.treeFlag = true;
+        this.node.level = 0;
+        this.queryGraphByFile();
+      } else {
+        this.treeFlag = false;
+        this.filter();
+      }
+    },
     /**
      * Query graph data by watchpoint id
      * @param {Number} id Wacthpoint id
@@ -590,12 +875,16 @@ export default {
     queryGraphByWatchpoint(id) {
       const params = {
         mode: 'watchpoint',
-        params: {watch_point_id: id},
+        params: {watch_point_id: id, graph_name: this.graphFiles.value},
       };
+      if (this.graphFiles.value === this.$t('debugger.all')) {
+        delete params.params.graph_name;
+      }
       RequestService.retrieve(params).then(
           (res) => {
-            if (res.data && res.data.graph && res.data.graph.nodes) {
-              this.curNodeData = res.data.graph.nodes.map((val) => {
+            if (res.data && res.data.graph) {
+              const graph = res.data.graph;
+              this.curNodeData = graph.nodes.map((val) => {
                 return {
                   label: val.name.split('/').pop(),
                   ...val,
@@ -623,20 +912,43 @@ export default {
                 }
               });
 
-              Object.keys(this.allGraphData).forEach((key) => {
-                delete this.allGraphData[key];
-              });
+              this.firstFloorNodes = [];
+              this.allGraphData = {};
               d3.select('#graph svg').remove();
               this.selectedNode.name = '';
-              this.dealGraphData(
-                  JSON.parse(JSON.stringify(res.data.graph.nodes)),
-              );
+              this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)));
             }
           },
           (err) => {
             this.showErrorMsg(err);
           },
       );
+    },
+    /** ************************ graph **********************/
+
+    /**
+     * Get watchpoint messages
+     * @param {Object} item Wacthpoint data
+     * @return {String}
+     */
+    getWatchPointContent(item) {
+      let param = '';
+      if (item.params.length) {
+        item.params.forEach((i, ind) => {
+          const name = this.transCondition(i.name);
+          if (!ind) {
+            param += `${name}:${i.value}`;
+          } else {
+            param += `, ${name}:${i.value}`;
+          }
+        });
+        param = `(${param})`;
+      }
+
+      const str = `${this.$t('debugger.watchPoint')} ${
+        item.id
+      }: ${this.transCondition(item.condition)} ${param}`;
+      return str;
     },
     /** ************************ graph **********************/
 
@@ -812,7 +1124,11 @@ export default {
         mode: 'continue',
         level: 'node',
         name: this.selectedNode.name.replace('_unfold', ''),
+        graph_name: this.graphFiles.value,
       };
+      if (this.graphFiles.value === this.$t('debugger.all')) {
+        delete params.graph_name;
+      }
       RequestService.control(params).then(
           (res) => {
             if (res && res.data) {
@@ -885,20 +1201,18 @@ export default {
           name: name,
           node_type: type,
           single_node: false,
+          graph_name: this.graphFiles.value,
         };
+        if (this.graphFiles.value === this.$t('debugger.all')) {
+          delete params.params.graph_name;
+        }
       }
       RequestService.retrieve(params)
           .then(
               (response) => {
-                if (
-                  response &&
-              response.data &&
-              response.data.graph &&
-              response.data.graph.nodes
-                ) {
-                  const nodes = JSON.parse(
-                      JSON.stringify(response.data.graph.nodes),
-                  );
+                if (response && response.data && response.data.graph) {
+                  const graph = response.data.graph;
+                  const nodes = JSON.parse(JSON.stringify(graph.nodes));
                   if (this.treeFlag) {
                     this.nodeExpandLinkage(nodes, name);
                   }
@@ -1023,17 +1337,77 @@ export default {
               clearTimeout(this.graph.timer);
             }
             this.graph.timer = setTimeout(() => {
-              this.retrieveTensorHistory({
-                name: path[0].replace('_unfold', ''),
-              });
+              const name = path[0].replace('_unfold', '');
+              if (this.graphFiles.value === this.$t('debugger.all')) {
+                this.retrieveTensorHistory(
+                    {name: name.replace(`${name.split('/')[0]}/`, '')},
+                    name.split('/')[0],
+                );
+              } else {
+                this.retrieveTensorHistory(
+                    {
+                      name,
+                    },
+                    this.graphFiles.value,
+                );
+              }
             }, 500);
           }
           if (ignoreType.includes(type)) {
             this.tableData = [];
           } else {
-            this.nodeName = this.selectedNode.name;
+            if (this.graphFiles.value === this.$t('debugger.all')) {
+              this.nodeName = this.selectedNode.name.replace(
+                  `${this.selectedNode.name.split('/')[0]}/`,
+                  '',
+              );
+            } else {
+              this.nodeName = this.selectedNode.name;
+            }
           }
         }
+      }
+      this.setSelectedNodeData(node.data);
+      if (
+        this.watchPointHits.length &&
+        this.radio1 === 'hit' &&
+        this.isHitIntoView
+      ) {
+        this.focusWatchpointHit();
+      }
+      this.isHitIntoView = true;
+    },
+    /**
+     * The node information of the selected node.
+     * @param {Object} selectedNode Node data
+     */
+    setSelectedNodeData(selectedNode = {}) {
+      this.selectedNode.IOInfo = [];
+      this.selectedNode.inputNum = 0;
+      this.selectedNode.outputNum = 0;
+      if (selectedNode.output) {
+        Object.keys(selectedNode.output).forEach((key) => {
+          let graphName = this.graphFiles.value;
+          if (this.graphFiles.value === this.$t('debugger.all')) {
+            graphName = key.split('/')[0];
+            key = key.replace(`${graphName}/`, '');
+          }
+          const obj = {name: key, IOType: 'output', graph_name: graphName};
+          this.selectedNode.IOInfo.push(obj);
+          this.selectedNode.outputNum++;
+        });
+      }
+      if (selectedNode.input) {
+        Object.keys(selectedNode.input).forEach((key) => {
+          let graphName = this.graphFiles.value;
+          if (this.graphFiles.value === this.$t('debugger.all')) {
+            graphName = key.split('/')[0];
+            key = key.replace(`${graphName}/`, '');
+          }
+          const obj = {name: key, IOType: 'input', graph_name: graphName};
+          this.selectedNode.IOInfo.push(obj);
+          this.selectedNode.inputNum++;
+        });
       }
     },
     /**
@@ -1243,7 +1617,11 @@ export default {
     },
   },
   destroyed() {
-    window.removeEventListener('resize', this.resizeCallback);
+    window.removeEventListener(
+        'resize',
+        this.debounce(this.resizeCallback, 200),
+        false,
+    );
   },
 };
 </script>
@@ -1283,7 +1661,18 @@ export default {
         }
       }
       .content {
-        height: calc(100% - 50px);
+        height: calc(100% - 145px);
+        .node-type {
+          height: 50px;
+          padding: 15px 15px 0 15px;
+          .label {
+            display: inline-block;
+            width: 80px;
+          }
+          .el-select {
+            width: calc(100% - 80px);
+          }
+        }
         .select-wrap {
           padding: 10px 15px;
           font-size: 14px;
@@ -1300,14 +1689,17 @@ export default {
           }
         }
         .tree-wrap {
-          height: calc(60% - 180px);
+          height: calc(70% - 155px);
           overflow-y: auto;
           padding: 0 15px 15px;
           position: relative;
           z-index: 2;
+          .image-type {
+            width: 20px;
+            height: 10px;
+            margin-right: 10px;
+          }
           .el-tree {
-            overflow-x: auto;
-            overflow-y: hidden;
             & > .el-tree-node {
               min-width: 100%;
               display: inline-block;
@@ -1315,9 +1707,8 @@ export default {
           }
         }
         .watch-point-wrap {
-          height: 40%;
+          height: 30%;
           border-top: 1px solid #ebeef5;
-          border-bottom: 1px solid #ebeef5;
           .title-wrap {
             height: 30px;
             line-height: 30px;
@@ -1325,6 +1716,33 @@ export default {
             position: relative;
             border-bottom: 1px solid #ebeef5;
             font-weight: bold;
+          }
+          .check-wrap {
+            position: absolute;
+            right: 60px;
+            top: 0px;
+            .el-icon-circle-check {
+              color: #00a5a7;
+              cursor: pointer;
+              display: none;
+            }
+            .disable:before {
+              cursor: not-allowed;
+              color: #adb0b8;
+            }
+          }
+          .delete-wrap {
+            position: absolute;
+            right: 35px;
+            top: 0px;
+            .el-icon-delete:before {
+              color: #00a5a7;
+              cursor: pointer;
+            }
+            .disable:before {
+              cursor: not-allowed;
+              color: #adb0b8;
+            }
           }
           .add-wrap {
             position: absolute;
@@ -1348,7 +1766,7 @@ export default {
                 .name {
                   .item-content {
                     display: inline-block;
-                    width: 320px;
+                    width: 310px;
                     text-overflow: ellipsis;
                     white-space: nowrap;
                     overflow: hidden;
@@ -1364,55 +1782,16 @@ export default {
                   .el-icon-close {
                     position: absolute;
                     right: 10px;
-                    top: 0;
+                    top: 3px;
                   }
                   .el-icon-check {
                     position: absolute;
-                    right: 40px;
-                    top: 0;
-                  }
-                }
-                .condition {
-                  margin: 10px 0;
-                  .el-select {
-                    width: 150px;
-                  }
-                  .condition-param {
-                    width: 120px;
-                    margin-left: 10px;
-                  }
-                  .btn-wrap {
-                    display: inline-block;
-                    margin-left: 10px;
-                    padding: 0;
+                    right: 30px;
+                    top: 3px;
                   }
                 }
               }
             }
-          }
-        }
-        .btn-wrap {
-          padding: 10px 20px 0;
-          .step {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            .custom-btn {
-              margin-left: 10px;
-            }
-          }
-          .btn-two {
-            width: 100%;
-            .custom-btn {
-              height: 30px;
-              margin-top: 10px;
-            }
-          }
-          .el-button + .el-button {
-            margin-left: 0px;
-          }
-          .el-button:not(:last-child) {
-            margin-right: 10px;
           }
         }
         .custom-tree-node {
@@ -1421,60 +1800,62 @@ export default {
         .custom-tree-node.highlight {
           color: red;
         }
-      }
-      .hit {
-        height: 100%;
-        .content {
-          height: calc(100% - 185px);
-          padding-left: 15px;
-        }
-        .title {
-          margin: 10px 0 30px;
-        }
         .hit-list-wrap {
-          height: calc(100% - 50px);
+          height: 100%;
           overflow-y: auto;
-          .hit-list {
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ebeef5;
-            .node-name {
-              padding-left: 10px;
-              line-height: 20px;
-              &:hover {
-                color: #00a5a7;
-                cursor: pointer;
+          padding: 10px;
+          .hit-item {
+            word-break: break-all;
+            line-height: 18px;
+            padding: 10px;
+            &:hover {
+              cursor: pointer;
+            }
+          }
+          .selected {
+            color: #00a5a7;
+          }
+          .el-table__expanded-cell[class*='cell'] {
+            padding: 0px 10px 0 50px;
+            ul {
+              background-color: #f5f7fa;
+              li {
+                line-height: 18px;
+                padding: 10px;
+                word-break: break-all;
+                border-top: 1px solid white;
+                border-bottom: 1px solid white;
+                &:hover {
+                  background-color: #ebeef5;
+                }
               }
             }
-            .node-name.selected {
-              color: #00a5a7;
-            }
-            .watch-points {
-              padding-left: 20px;
-              margin: 5px 0;
-            }
-          }
-          .no-data {
-            text-align: center;
-            color: #909399;
           }
         }
-        .btn-wrap {
-          padding: 10px 20px 0;
-          .step {
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            .custom-btn {
-              margin-left: 10px;
-            }
+      }
+      .btn-wrap {
+        padding: 10px 20px;
+        border-top: 1px solid #ebeef5;
+        .step {
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          .custom-btn {
+            margin-left: 10px;
           }
-          .el-button + .el-button {
-            margin-bottom: 10px;
-            margin-left: 0px;
+        }
+        .btn-two {
+          width: 100%;
+          .custom-btn {
+            height: 30px;
+            margin-top: 10px;
           }
-          .el-button:not(:last-child) {
-            margin-right: 10px;
-          }
+        }
+        .el-button + .el-button {
+          margin-left: 0px;
+        }
+        .el-button:not(:last-child) {
+          margin-right: 10px;
         }
       }
     }
@@ -1635,20 +2016,13 @@ export default {
     .table-container {
       background: #fff;
       height: calc(50% - 60px);
-      padding-left: 15px;
       position: relative;
       img {
         position: absolute;
         right: 10px;
-        top: 20px;
+        top: 12px;
         cursor: pointer;
         z-index: 99;
-      }
-      .table-title {
-        height: 50px;
-        line-height: 30px;
-        padding: 10px 0;
-        font-weight: bold;
       }
       .el-tabs.el-tabs--top {
         height: 100%;
@@ -1660,7 +2034,7 @@ export default {
         }
       }
       .table-content {
-        height: calc(100% - 50px);
+        height: 100%;
         overflow: hidden;
         position: relative;
         .table-wrap {
@@ -1726,6 +2100,9 @@ export default {
     }
     .table-container.collapse {
       height: 35px;
+      .el-tabs__header {
+        margin: 0;
+      }
       .table-content {
         display: none;
       }
@@ -1760,6 +2137,20 @@ export default {
   }
   .notShow {
     display: none;
+  }
+  .conditions-container {
+    .collection {
+      width: 200px;
+    }
+    .condition {
+      width: 200px;
+    }
+    .param {
+      width: 200px;
+    }
+    .param-value {
+      width: 200px;
+    }
   }
   .el-dialog__wrapper.pendingTips {
     position: absolute;
@@ -1806,6 +2197,29 @@ export default {
         left: 32px;
         font-weight: bold;
         font-size: 16px;
+        width: 50%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .deb-con-title-middle {
+        position: absolute;
+        left: calc(50% + 32px);
+        width: 300px;
+        padding: 10px 0;
+        line-height: 36px;
+        .grident {
+          display: inline-block;
+          width: calc(100% - 70px);
+          background-image: linear-gradient(
+            to right,
+            rgba(227, 125, 41),
+            #fff,
+            rgba(0, 165, 167)
+          );
+          text-align: center;
+          color: transparent;
+        }
       }
       .deb-con-title-right {
         position: absolute;
@@ -1870,7 +2284,19 @@ export default {
       flex: 1;
       padding: 0 32px;
       .deb-compare-wrap {
-        height: calc(100% - 50px);
+        height: calc(100% - 120px);
+      }
+      .deb-compare-detail {
+        span {
+          margin-right: 15px;
+        }
+        & > div {
+          margin-top: 10px;
+        }
+        label {
+          display: inline-block;
+          min-width: 100px;
+        }
       }
     }
   }
