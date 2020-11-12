@@ -17,6 +17,7 @@
 import copy
 
 from mindinsight.explainer.encapsulator.explain_data_encap import ExplainDataEncap
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 
 
 class EvaluationEncap(ExplainDataEncap):
@@ -26,5 +27,5 @@ class EvaluationEncap(ExplainDataEncap):
         """Query evaluation scores."""
         job = self.job_manager.get_job(train_id)
         if job is None:
-            return None
+            raise TrainJobNotExistError(train_id)
         return copy.deepcopy(job.explainer_scores)

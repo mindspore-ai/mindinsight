@@ -21,7 +21,7 @@ from mindinsight.explainer.common.log import logger
 from mindinsight.utils.exceptions import UnknownError
 
 _IMAGE_DATA_TAGS = {
-    'image_data': PluginNameEnum.IMAGE_DATA.value,
+    'sample_id': PluginNameEnum.SAMPLE_ID.value,
     'ground_truth_label': PluginNameEnum.GROUND_TRUTH_LABEL.value,
     'inference': PluginNameEnum.INFERENCE.value,
     'explanation': PluginNameEnum.EXPLANATION.value
@@ -68,7 +68,7 @@ class EventParser:
 
     def parse_sample(self, sample: namedtuple) -> Optional[namedtuple]:
         """Parse the sample event."""
-        sample_id = sample.image_id
+        sample_id = sample.sample_id
 
         if sample_id not in self._sample_pool:
             self._sample_pool[sample_id] = sample
@@ -100,12 +100,12 @@ class EventParser:
         Check whether the image_container is ready for frontend display.
 
         Args:
-            image_container (nametuple): container consists of sample data
+            image_container (namedtuple): container consists of sample data
 
         Return:
             bool: whether the image_container if ready for display
         """
-        required_attrs = ['image_id', 'image_data', 'ground_truth_label', 'inference']
+        required_attrs = ['image_path', 'ground_truth_label', 'inference']
         for attr in required_attrs:
             if not EventParser.is_attr_ready(image_container, attr):
                 return False
@@ -117,7 +117,7 @@ class EventParser:
         Check whether the given attribute is ready in image_container.
 
         Args:
-            image_container (nametuple): container consist of sample data
+            image_container (namedtuple): container consist of sample data
             attr (str): attribute to check
 
         Returns:
@@ -141,8 +141,17 @@ class EventParser:
     def _parse_inference(self, event, sample_id):
         """Parse the inference event."""
         self._sample_pool[sample_id].inference.ground_truth_prob.extend(event.inference.ground_truth_prob)
+        self._sample_pool[sample_id].inference.ground_truth_prob_sd.extend(event.inference.ground_truth_prob_sd)
+        self._sample_pool[sample_id].inference.ground_truth_prob_itl95_low.\
+            extend(event.inference.ground_truth_prob_itl95_low)
+        self._sample_pool[sample_id].inference.ground_truth_prob_itl95_hi.\
+            extend(event.inference.ground_truth_prob_itl95_hi)
+
         self._sample_pool[sample_id].inference.predicted_label.extend(event.inference.predicted_label)
         self._sample_pool[sample_id].inference.predicted_prob.extend(event.inference.predicted_prob)
+        self._sample_pool[sample_id].inference.predicted_prob_sd.extend(event.inference.predicted_prob_sd)
+        self._sample_pool[sample_id].inference.predicted_prob_itl95_low.extend(event.inference.predicted_prob_itl95_low)
+        self._sample_pool[sample_id].inference.predicted_prob_itl95_hi.extend(event.inference.predicted_prob_itl95_hi)
 
     def _parse_explanation(self, event, sample_id):
         """Parse the explanation event."""
@@ -151,7 +160,7 @@ class EventParser:
                 new_explanation = self._sample_pool[sample_id].explanation.add()
                 new_explanation.explain_method = explanation_item.explain_method
                 new_explanation.label = explanation_item.label
-                new_explanation.heatmap = explanation_item.heatmap
+                new_explanation.heatmap_path = explanation_item.heatmap_path
 
     def _parse_sample_info(self, event, sample_id, tag):
         """Parse the event containing image info."""

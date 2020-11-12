@@ -20,6 +20,7 @@ from unittest.mock import patch
 from mindinsight.explainer.encapsulator.explain_job_encap import ExplainJobEncap
 from mindinsight.explainer.encapsulator.saliency_encap import SaliencyEncap
 from mindinsight.explainer.encapsulator.evaluation_encap import EvaluationEncap
+from mindinsight.explainer.encapsulator.datafile_encap import DatafileEncap
 from .conftest import EXPLAINER_ROUTES
 
 
@@ -182,13 +183,13 @@ class TestExplainerApi:
         expect_result = {"explainer_scores": explainer_scores}
         assert response.get_json() == expect_result
 
-    @patch.object(ExplainJobEncap, "query_image_binary")
+    @patch.object(DatafileEncap, "query_image_binary")
     def test_query_image(self, mock_query_image_binary, client):
         """Test query a image's binary content."""
 
         mock_query_image_binary.return_value = b'123'
 
-        response = client.get(f"{EXPLAINER_ROUTES['image']}?train_id=.%2Fmock_job_1&image_id=1&type=original")
+        response = client.get(f"{EXPLAINER_ROUTES['image']}?train_id=.%2Fmock_job_1&path=1&type=original")
 
         assert response.status_code == 200
         assert response.data == b'123'
