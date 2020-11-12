@@ -19,7 +19,7 @@ import numpy as np
 
 from mindinsight.utils.tensor import TensorUtils
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
-from mindinsight.debugger.common.log import logger as log
+from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import NUMPY_TYPE_MAP
 from mindinsight.debugger.proto.ms_graph_pb2 import DataType
 
@@ -176,6 +176,18 @@ class OpTensor(BaseTensor):
             res['value'] = tensor_value
 
         return res
+
+    def get_tensor_statistics(self):
+        """
+        Get Tensor statistics.
+
+        Returns:
+            dict, overall statistics.
+        """
+        if not self._stats:
+            self._stats = TensorUtils.get_statistics_from_tensor(self.value)
+        statistics = TensorUtils.get_overall_statistic_dict(self._stats)
+        return statistics
 
     def update_tensor_comparisons(self, tensor_comparison):
         """

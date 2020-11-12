@@ -15,11 +15,13 @@
 """Implement the debugger grpc server."""
 from functools import wraps
 
-from mindinsight.debugger.common.log import logger as log
+import mindinsight.conditionmgr.recommender
+from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
-    Streams
+    Streams, RunLevel
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.debugger.proto.ms_graph_pb2 import GraphProto
+from mindinsight.conditionmgr.condition import ConditionContext
 
 
 def debugger_wrap(func):
@@ -39,7 +41,7 @@ def debugger_wrap(func):
 class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     """The grpc server used to interactive with grpc client."""
 
-    def __init__(self, cache_store):
+    def __init__(self, cache_store, condition_mgr):
         """
         Initialize.
 
@@ -48,6 +50,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """
         cache_store.initialize()
         self._cache_store = cache_store
+        self._condition_mgr = condition_mgr
         # the next position of command queue to be queried
         self._pos = None
         # the status of grpc server, the value is in ServerStatus
@@ -66,7 +69,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._status = ServerStatus.PENDING
         self._old_run_cmd = {}
         self._received_view_cmd = {}
-        self._received_hit = False
+        self._received_hit = []
         self._cache_store.clean()
 
     @debugger_wrap
@@ -90,25 +93,46 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             reply = get_ack_reply(1)
             log.warning("Failed to get command event.")
         else:
-            log.info("Reply to WaitCMD: %s", reply)
+            log.debug("Reply to WaitCMD: %s", reply)
         return reply
+
+    def _add_predefined_watchpoints(self, condition_context):
+        """Add predefined watchpoints."""
+        log.debug("Add predefined watchpoints.")
+        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
+        watchpoints = mindinsight.conditionmgr.recommender.recommend_watchpoints(self._condition_mgr, graph_stream,
+                                                                                 condition_context)
+        watch_point_stream_handler = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
+        for watchpoint in watchpoints:
+            watch_point_stream_handler.create_watchpoint(
+                watch_condition=watchpoint.get_watch_condition_dict(),
+                watch_nodes=watchpoint.watch_nodes,
+                condition_mgr=self._condition_mgr
+            )
 
     def _pre_process(self, request):
         """Pre-process before dealing with command."""
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
+        watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
         is_new_step = metadata_stream.step < request.cur_step
         is_new_node = metadata_stream.full_name != request.cur_node
-        # clean cache data at the beginning of new step
+        # clean cache data at the beginning of new step or node has been changed.
         if is_new_step or is_new_node:
             self._cache_store.clean_data()
         if is_new_step:
+            self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
             self._cache_store.get_stream_handler(Streams.TENSOR).clean_tensors(request.cur_step)
+            watchpoint_stream.clean_temp_cached_names()
         # receive graph at the beginning of the training
         if self._status == ServerStatus.RECEIVE_GRAPH:
+            condition_context = ConditionContext(backend=request.backend, debugger_capability=(1, 0))
+            self._add_predefined_watchpoints(condition_context)
             self._send_graph_flag(metadata_stream)
         # receive new metadata
         if is_new_step or is_new_node:
             self._update_metadata(metadata_stream, request)
+        # save the full name of the node which MindSpore has stored the tensor.
+        watchpoint_stream.add_temp_cached_name(request.cur_node)
         self._send_received_tensor_tag()
         self._send_watchpoint_hit_flag()
 
@@ -139,9 +163,14 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """
         # put new metadata into cache
         metadata_stream.put(metadata_proto)
-        cur_node = self._cache_store.get_stream_handler(Streams.GRAPH).get_node_name_by_full_name(
-            metadata_proto.cur_node) if metadata_proto.cur_node else ''
+        # update current node name and graph name
+        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
+        full_name = metadata_proto.cur_node
+        graph_name = graph_stream.get_graph_id_by_full_name(
+            full_name) if full_name else metadata_stream.graph_name
+        cur_node = graph_stream.get_node_name_by_full_name(full_name, graph_name)
         metadata_stream.node_name = cur_node
+        metadata_stream.graph_name = graph_name
         metadata = metadata_stream.get()
         self._cache_store.put_data(metadata)
         log.debug("Put new metadata into data queue.")
@@ -151,7 +180,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         node_name = self._received_view_cmd.get('node_name')
         if not node_name or self._received_view_cmd.get('wait_for_tensor'):
             return
-        metadata = self._cache_store.get_stream_handler(Streams.METADATA).get()
+        metadata = self._cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
         ret = {'receive_tensor': {'node_name': node_name}}
         ret.update(metadata)
         self._cache_store.put_data(ret)
@@ -161,9 +190,12 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def _send_watchpoint_hit_flag(self):
         """Send Watchpoint hit flag."""
         watchpoint_hit_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
-        if watchpoint_hit_stream.empty or not self._received_hit:
+        if not self._received_hit:
             return
-        self._received_hit = False
+        watchpoint_hits = self._received_hit
+        self._received_hit = []
+        for watchpoint_hit in watchpoint_hits:
+            watchpoint_hit_stream.put(watchpoint_hit)
         watchpoint_hits_info = watchpoint_hit_stream.get()
         self._cache_store.put_data(watchpoint_hits_info)
         log.debug("Send the watchpoint hits to DataQueue.\nSend the reply.")
@@ -187,7 +219,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                 event = self._deal_with_left_continue_step(left_step_count)
             else:
                 event = self._deal_with_left_continue_node(node_name)
-            self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
             log.debug("Send old RunCMD. Clean watchpoint hit.")
         return event
 
@@ -260,7 +291,10 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             event = self._deal_with_run_cmd(event)
         elif event.HasField('exit'):
             self._cache_store.clean()
-            log.info("Clean cache for exit cmd.")
+            log.debug("Clean cache for exit cmd.")
+        else:
+            self._cache_store.get_stream_handler(Streams.WATCHPOINT).clean_cache_set_cmd(event.set_cmd)
+            log.debug("get set cmd.")
 
         return event
 
@@ -294,7 +328,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         elif run_cmd.node_name:
             self._old_run_cmd['node_name'] = run_cmd.node_name
             run_cmd.node_name = ''
-        self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
+        # clean watchpoint hit cache
+        if run_cmd.run_level == RunLevel.RECHECK.value:
+            self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
         log.debug("Receive RunCMD. Clean watchpoint hit cache.")
 
         return event
@@ -330,9 +366,34 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         for chunk in request_iterator:
             serial_graph += chunk.buffer
         graph = GraphProto.FromString(serial_graph)
-        log.debug("Deserialize the graph. Receive %s nodes", len(graph.node))
-        self._cache_store.get_stream_handler(Streams.GRAPH).put(graph)
+        log.debug("Deserialize the graph %s. Receive %s nodes", graph.name, len(graph.node))
+        graph_dict = {graph.name: graph}
+        self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_dict)
         self._cache_store.get_stream_handler(Streams.TENSOR).put_const_vals(graph.const_vals)
+        self._cache_store.get_stream_handler(Streams.METADATA).graph_name = graph.name
+        self._status = ServerStatus.RECEIVE_GRAPH
+        reply = get_ack_reply()
+        log.debug("Send the reply for graph.")
+        return reply
+
+    @debugger_wrap
+    def SendMultiGraphs(self, request_iterator, context):
+        """Send graph into DebuggerCache."""
+        log.info("Received graph.")
+        serial_graph = b""
+        graph_dict = {}
+        for chunk in request_iterator:
+            serial_graph += chunk.buffer
+            if chunk.finished:
+                sub_graph = GraphProto.FromString(serial_graph)
+                graph_dict[sub_graph.name] = sub_graph
+                log.debug("Deserialize the graph %s. Receive %s nodes", sub_graph.name,
+                          len(sub_graph.node))
+                serial_graph = b""
+                self._cache_store.get_stream_handler(Streams.TENSOR).put_const_vals(
+                    sub_graph.const_vals)
+
+        self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_dict)
         self._status = ServerStatus.RECEIVE_GRAPH
         reply = get_ack_reply()
         log.debug("Send the reply for graph.")
@@ -365,22 +426,30 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """Send watchpoint hits info DebuggerCache."""
         log.info("Received WatchpointHits. Left run cmd %s change to emtpy.", self._old_run_cmd)
         self._old_run_cmd.clear()
-        self._received_hit = True
-        watchpoint_hit_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
+        if self._cache_store.get_stream_handler(Streams.METADATA).state == ServerStatus.RUNNING.value:
+            # if the client session is running a script, all the cached command should be cleared
+            # when received watchpoint_hits.
+            self._cache_store.clean_command()
+
+        # save the watchpoint_hits data
+        watchpoint_hits = []
         watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
         graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
         for watchpoint_hit_proto in request_iterator:
-            ui_node_name = graph_stream.get_node_name_by_full_name(
-                watchpoint_hit_proto.tensor.node_name)
+            node_full_name = watchpoint_hit_proto.tensor.node_name
+            graph_name = graph_stream.get_graph_id_by_full_name(node_full_name)
+            ui_node_name = graph_stream.get_node_name_by_full_name(node_full_name, graph_name)
             log.debug("Receive watch point hit: %s", watchpoint_hit_proto)
             if not ui_node_name:
-                log.info("Not support to show %s on graph.", watchpoint_hit_proto.tensor.node_name)
+                log.info("Not support to show %s on graph.", node_full_name)
                 continue
             watchpoint_hit = {
                 'tensor_proto': watchpoint_hit_proto.tensor,
                 'watchpoint': watchpoint_stream.get_watchpoint_by_id(watchpoint_hit_proto.id),
-                'node_name': ui_node_name
+                'node_name': ui_node_name,
+                'graph_name': graph_name
             }
-            watchpoint_hit_stream.put(watchpoint_hit)
+            watchpoint_hits.append(watchpoint_hit)
+        self._received_hit = watchpoint_hits
         reply = get_ack_reply()
         return reply

@@ -54,7 +54,7 @@ class MSGraph(Graph):
             node_protos (list[anf_ir_pb2.NodeProto]): Refer to anf_ir_pb2.NodeProto.
         """
         logger.debug("Start to parse op nodes from proto.")
-        for node_proto in node_protos:
+        for topological_index, node_proto in enumerate(node_protos):
             if not node_proto.name:
                 logger.warning("Finding a node with an empty name will not save it.")
                 continue
@@ -69,7 +69,7 @@ class MSGraph(Graph):
             # The Graphviz plug-in that the UI USES can't handle these special characters.
             check_invalid_character(node_name)
 
-            node = Node(name=node_name, node_id=node_proto.name)
+            node = Node(name=node_name, node_id=node_proto.name, topological_index=topological_index)
             node.full_name = node_proto.full_name
             node.type = node_proto.op_type
 

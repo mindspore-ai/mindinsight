@@ -3,31 +3,23 @@
     "watchCondition": {
       "condition": "inf"
     },
-    "id": 1
+    "id": 1,
+    "watch_nodes_num": 0
   },
   {
     "watchCondition": {
       "condition": "inf"
     },
     "id": 2,
-    "watchNodes": [
-      {
-        "nodeName": "Default",
-        "nodeType": "scope"
-      }
-    ]
+    "watch_nodes_num": 172
   },
   {
     "watchCondition": {
       "condition": "max_gt",
-      "value": 1.0
+      "params": [{"name": "param", "value": 1}],
+      "value": 1
     },
     "id": 3,
-    "watchNodes": [
-      {
-        "nodeName": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92",
-        "nodeType": "leaf"
-      }
-    ]
+    "watch_nodes_num": 1
   }
 ]

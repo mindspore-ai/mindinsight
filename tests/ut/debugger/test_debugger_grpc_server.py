@@ -23,6 +23,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
+from mindinsight.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_grpc_server import DebuggerGrpcServer
@@ -117,7 +118,7 @@ class TestDebuggerGrpcServer:
     def setup_method(self):
         """Initialize for each testcase."""
         cache_store = DebuggerCache()
-        self._server = DebuggerGrpcServer(cache_store)
+        self._server = DebuggerGrpcServer(cache_store, condition_mgr=ConditionMgr())
 
     def test_waitcmd_with_pending_status(self):
         """Test wait command interface when status is pending."""
@@ -125,6 +126,7 @@ class TestDebuggerGrpcServer:
         assert res.status == EventReply.Status.FAILED
 
     @mock.patch.object(WatchpointHitHandler, 'empty', False)
+    @mock.patch.object(WatchpointHitHandler, 'put')
     @mock.patch.object(DebuggerGrpcServer, '_deal_with_old_command')
     def test_waitcmd_with_old_command(self, *args):
         """Test wait command interface with old command."""
@@ -132,8 +134,8 @@ class TestDebuggerGrpcServer:
         args[0].return_value = old_command
         setattr(self._server, '_status', ServerStatus.WAITING)
         setattr(self._server, '_received_view_cmd', {'node_name': 'mock_node_name'})
-        setattr(self._server, '_received_hit', True)
-        res = self._server.WaitCMD(MagicMock(cur_step=1), MagicMock())
+        setattr(self._server, '_received_hit', [MagicMock()])
+        res = self._server.WaitCMD(MagicMock(cur_step=1, cur_node=''), MagicMock())
         assert res == old_command
 
     @mock.patch.object(DebuggerGrpcServer, '_deal_with_old_command', return_value=None)
@@ -143,7 +145,7 @@ class TestDebuggerGrpcServer:
         old_command = MockDataGenerator.get_run_cmd(steps=1)
         args[0].return_value = old_command
         setattr(self._server, '_status', ServerStatus.WAITING)
-        res = self._server.WaitCMD(MagicMock(cur_step=1), MagicMock())
+        res = self._server.WaitCMD(MagicMock(cur_step=1, cur_node=''), MagicMock())
         assert res == old_command
 
     @mock.patch.object(DebuggerGrpcServer, '_deal_with_old_command', return_value=None)
@@ -152,7 +154,7 @@ class TestDebuggerGrpcServer:
         """Test wait command interface with next command is None."""
         args[0].return_value = None
         setattr(self._server, '_status', ServerStatus.RECEIVE_GRAPH)
-        res = self._server.WaitCMD(MagicMock(cur_step=1), MagicMock())
+        res = self._server.WaitCMD(MagicMock(cur_step=1, cur_node=''), MagicMock())
         assert res == get_ack_reply(1)
 
     @mock.patch.object(DebuggerCache, 'get_command', return_value=(0, None))
@@ -228,6 +230,7 @@ class TestDebuggerGrpcServer:
         assert res == get_ack_reply()
 
     @mock.patch.object(WatchpointHandler, 'get_watchpoint_by_id')
+    @mock.patch.object(GraphHandler, 'get_graph_id_by_full_name', return_value='mock_graph_name')
     @mock.patch.object(GraphHandler, 'get_node_name_by_full_name')
     def test_send_watchpoint_hit(self, *args):
         """Test SendWatchpointHits interface."""

@@ -27,6 +27,7 @@ service EventListener {
   rpc SendGraph (stream Chunk) returns (EventReply) {};
   rpc SendTensors (stream TensorProto) returns (EventReply) {};
   rpc SendWatchpointHits (stream WatchpointHit) returns (EventReply) {};
+  rpc SendMultiGraphs (stream Chunk) returns (EventReply) {};
 }
 
 message Metadata {
@@ -38,11 +39,15 @@ message Metadata {
   string cur_node = 4;
   // check if training is done.
   bool training_done = 5;
+  // the number of total graphs
+  int32 graph_num = 6;
 }
 
 message Chunk {
     bytes buffer = 1;
+    bool finished = 2;
 }
+
 message EventReply {
   enum Status {
     OK = 0;
@@ -61,13 +66,11 @@ message EventReply {
 }
 
 message RunCMD {
-    // running level. 'step' or 'node'
+    // step level or node level.  "step", "node" or "recheck".
     string run_level = 1;
-
     oneof cmd {
         int32 run_steps = 2;
-
-        // the full name of next node
+        // the next node full name
         string node_name = 3;
     }
 }
@@ -96,9 +99,27 @@ message WatchCondition {
     max_min_lt = 8;
     mean_gt = 9;
     mean_lt = 10;
+    sd_gt = 11;
+    sd_lt = 12;
+    tensor_general_overflow = 13;
+    tensor_initialization = 14;
+    tensor_too_large = 15;
+    tensor_too_small = 16;
+    tensor_all_zero = 17;
+    tensor_change_too_large = 18;
+    tensor_change_too_small = 19;
+    tensor_not_changed = 20;
   }
   Condition condition = 1;
-  float value = 2;  // for between condition, there will be two values
+  float value = 2;
+  message Parameter {
+    string name = 1;
+    bool disabled = 2;
+    double value = 3;
+    bool hit = 4;  // Whether this parameter is hit when checking tensor.
+  }
+  // The ID 3 has been used on the mindspore side repeated bool include=3, so skip 3 for backward compatibility.
+  repeated Parameter params = 4;
 }
 
 message WatchNode {

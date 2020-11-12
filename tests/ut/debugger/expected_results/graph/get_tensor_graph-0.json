@@ -1,0 +1,197 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/args1",
+        "full_name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/args1",
+        "type": "Parameter",
+        "input": {},
+        "output": {
+          "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0": {
+            "shape": [
+              [
+                32
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_INT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0"
+          }
+        ]
+      },
+      {
+        "name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/cst1",
+        "full_name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/cst1",
+        "type": "Const",
+        "input": {},
+        "output": {
+          "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0"
+          }
+        ]
+      },
+      {
+        "name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/cst2",
+        "full_name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/cst2",
+        "type": "Const",
+        "input": {},
+        "output": {
+          "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0"
+          }
+        ]
+      },
+      {
+        "name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/SoftmaxCrossEntropyWithLogits-op18",
+        "full_name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/SoftmaxCrossEntropyWithLogits-op18",
+        "type": "SoftmaxCrossEntropyWithLogits",
+        "input": {
+          "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0": {
+            "shape": [
+              [
+                32,
+                10
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {},
+        "slots": [
+          {
+            "slot": "0"
+          },
+          {
+            "slot": "1"
+          }
+        ]
+      },
+      {
+        "name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0",
+        "full_name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0",
+        "type": "OneHot",
+        "input": {
+          "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/args1": {
+            "shape": [
+              [
+                32
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_INT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          },
+          "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/cst1": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          },
+          "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/cst2": {
+            "shape": [
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {
+          "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/SoftmaxCrossEntropyWithLogits-op18": {
+            "shape": [
+              [
+                32,
+                10
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,1 +1,53 @@
-{"tensor_history": [{"name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22:0", "full_name": "Default/optimizer-Momentum/ApplyMomentum-op22:0", "node_type": "ApplyMomentum", "type": "output"}, {"name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22:1", "full_name": "Default/optimizer-Momentum/ApplyMomentum-op22:1", "node_type": "ApplyMomentum", "type": "output"}, {"name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/gradBiasAdd/BiasAddGrad-op21:0", "full_name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/gradBiasAdd/BiasAddGrad-op21:0", "node_type": "BiasAddGrad", "type": "input"}, {"name": "Default/optimizer-Momentum/Parameter[18]_7/fc3.bias:0", "full_name": "Default/optimizer-Momentum/Parameter[18]_7/fc3.bias:0", "node_type": "Parameter", "type": "input"}, {"name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias:0", "full_name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias:0", "node_type": "Parameter", "type": "input"}, {"name": "Default/optimizer-Momentum/Parameter[18]_7/learning_rate:0", "full_name": "Default/optimizer-Momentum/Parameter[18]_7/learning_rate:0", "node_type": "Parameter", "type": "input"}, {"name": "Default/optimizer-Momentum/Parameter[18]_7/momentum:0", "full_name": "Default/optimizer-Momentum/Parameter[18]_7/momentum:0", "node_type": "Parameter", "type": "input"}]}
+{
+  "tensor_history": [
+    {
+      "name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22:0",
+      "full_name": "Default/optimizer-Momentum/ApplyMomentum-op22:0",
+      "node_type": "ApplyMomentum",
+      "type": "output",
+      "graph_name": "kernel_graph_0"
+    },
+    {
+      "name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22:1",
+      "full_name": "Default/optimizer-Momentum/ApplyMomentum-op22:1",
+      "node_type": "ApplyMomentum",
+      "type": "output",
+      "graph_name": "kernel_graph_0"
+    },
+    {
+      "name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/gradBiasAdd/BiasAddGrad-op21:0",
+      "full_name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/gradBiasAdd/BiasAddGrad-op21:0",
+      "node_type": "BiasAddGrad",
+      "type": "input",
+      "graph_name": "kernel_graph_0"
+    },
+    {
+      "name": "Default/optimizer-Momentum/Parameter[18]_7/fc3.bias:0",
+      "full_name": "Default/optimizer-Momentum/Parameter[18]_7/fc3.bias:0",
+      "node_type": "Parameter",
+      "type": "input",
+      "graph_name": "kernel_graph_0"
+    },
+    {
+      "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias:0",
+      "full_name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias:0",
+      "node_type": "Parameter",
+      "type": "input",
+      "graph_name": "kernel_graph_0"
+    },
+    {
+      "name": "Default/optimizer-Momentum/Parameter[18]_7/learning_rate:0",
+      "full_name": "Default/optimizer-Momentum/Parameter[18]_7/learning_rate:0",
+      "node_type": "Parameter",
+      "type": "input",
+      "graph_name": "kernel_graph_0"
+    },
+    {
+      "name": "Default/optimizer-Momentum/Parameter[18]_7/momentum:0",
+      "full_name": "Default/optimizer-Momentum/Parameter[18]_7/momentum:0",
+      "node_type": "Parameter",
+      "type": "input",
+      "graph_name": "kernel_graph_0"
+    }
+  ]
+}

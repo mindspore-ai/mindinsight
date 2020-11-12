@@ -16,7 +16,7 @@
 This file is used to define the node of graph and associated base types.
 """
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
-from mindinsight.debugger.common.log import logger as log
+from mindinsight.debugger.common.log import LOGGER as log
 
 
 class NodeTree:

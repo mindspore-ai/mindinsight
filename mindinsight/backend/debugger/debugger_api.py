@@ -88,11 +88,16 @@ def search():
         str, the required data.
 
     Examples:
-        >>> Get http://xxxx/v1/mindinsight/debugger/retrive?mode=all
+        >>> Get http://xxxx/v1/mindinsight/debugger/search?name=mock_name&watch_point_id=1
     """
     name = request.args.get('name')
+    graph_name = request.args.get('graph_name')
     watch_point_id = int(request.args.get('watch_point_id', 0))
-    reply = _wrap_reply(BACKEND_SERVER.search, name, watch_point_id)
+    node_category = request.args.get('node_category')
+    reply = _wrap_reply(BACKEND_SERVER.search, {'name': name,
+                                                'graph_name': graph_name,
+                                                'watch_point_id': watch_point_id,
+                                                'node_category': node_category})
 
     return reply
 
@@ -109,9 +114,10 @@ def retrieve_node_by_bfs():
         >>> Get http://xxxx/v1/mindinsight/debugger/retrieve_node_by_bfs?name=node_name&ascend=true
     """
     name = request.args.get('name')
+    graph_name = request.args.get('graph_name')
     ascend = request.args.get('ascend', 'false')
     ascend = ascend == 'true'
-    reply = _wrap_reply(BACKEND_SERVER.retrieve_node_by_bfs, name, ascend)
+    reply = _wrap_reply(BACKEND_SERVER.retrieve_node_by_bfs, name, graph_name, ascend)
 
     return reply
 
@@ -167,7 +173,8 @@ def retrieve_tensor_history():
     """
     body = _read_post_request(request)
     name = body.get('name')
-    reply = _wrap_reply(BACKEND_SERVER.retrieve_tensor_history, name)
+    graph_name = body.get('graph_name')
+    reply = _wrap_reply(BACKEND_SERVER.retrieve_tensor_history, name, graph_name)
     return reply
 
 
@@ -180,12 +187,15 @@ def retrieve_tensor_value():
         str, the required data.
 
     Examples:
-        >>> GET http://xxxx/v1/mindinsight/debugger/tensors?name=node_name&detail=data&shape=[1,1,:,:]
+        >>> GET http://xxxx/v1/mindinsight/debugger/tensors?name=tensor_name&detail=data&shape=[1,1,:,:]
     """
     name = request.args.get('name')
     detail = request.args.get('detail')
     shape = request.args.get('shape')
-    reply = _wrap_reply(BACKEND_SERVER.retrieve_tensor_value, name, detail, shape)
+    graph_name = request.args.get('graph_name')
+    prev = bool(request.args.get('prev') == 'true')
+
+    reply = _wrap_reply(BACKEND_SERVER.retrieve_tensor_value, name, detail, shape, graph_name, prev)
     return reply
 
 
@@ -199,7 +209,6 @@ def create_watchpoint():
 
     Raises:
         MindInsightException: If method fails to be called.
-        ParamValueError: If parsing json data search_condition fails.
 
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/create_watchpoint
@@ -207,9 +216,12 @@ def create_watchpoint():
     body = _read_post_request(request)
 
     condition = body.get('condition')
+    graph_name = body.get('graph_name')
     watch_nodes = body.get('watch_nodes')
     watch_point_id = body.get('watch_point_id')
-    reply = _wrap_reply(BACKEND_SERVER.create_watchpoint, condition, watch_nodes, watch_point_id)
+    search_pattern = body.get('search_pattern')
+    reply = _wrap_reply(BACKEND_SERVER.create_watchpoint,
+                        condition, watch_nodes, watch_point_id, search_pattern, graph_name)
     return reply
 
 
@@ -223,7 +235,6 @@ def update_watchpoint():
 
     Raises:
         MindInsightException: If method fails to be called.
-        ParamValueError: If parsing json data search_condition fails.
 
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/update_watchpoint
@@ -232,10 +243,10 @@ def update_watchpoint():
 
     watch_point_id = body.get('watch_point_id')
     watch_nodes = body.get('watch_nodes')
+    graph_name = body.get('graph_name')
     mode = body.get('mode')
-    name = body.get('name')
-    reply = _wrap_reply(BACKEND_SERVER.update_watchpoint, watch_point_id, watch_nodes, mode, name)
-
+    pattern = body.get('search_pattern')
+    reply = _wrap_reply(BACKEND_SERVER.update_watchpoint, watch_point_id, watch_nodes, mode, pattern, graph_name)
     return reply
 
 
@@ -249,7 +260,6 @@ def delete_watchpoint():
 
     Raises:
         MindInsightException: If method fails to be called.
-        ParamValueError: If parsing json data search_condition fails.
 
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/delete_watchpoint
@@ -273,7 +283,6 @@ def control():
 
     Raises:
         MindInsightException: If method fails to be called.
-        ParamValueError: If parsing json data search_condition fails.
 
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/control
@@ -281,6 +290,59 @@ def control():
     params = _read_post_request(request)
     reply = _wrap_reply(BACKEND_SERVER.control, params)
 
+    return reply
+
+
+@BLUEPRINT.route("/debugger/recheck", methods=["POST"])
+def recheck():
+    """
+    Recheck request.
+
+    Returns:
+        str, reply message.
+
+    Raises:
+        MindInsightException: If method fails to be called.
+
+    Examples:
+        >>> POST http://xxxx/v1/mindinsight/debugger/recheck
+    """
+    reply = _wrap_reply(BACKEND_SERVER.recheck)
+
+    return reply
+
+
+@BLUEPRINT.route("/debugger/tensor_graphs", methods=["GET"])
+def retrieve_tensor_graph():
+    """
+    Retrieve tensor value according to name and shape.
+
+    Returns:
+        str, the required data.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/debugger/tensor_graphs?tensor_name=tensor_name$graph_name=graph_name
+    """
+    tensor_name = request.args.get('tensor_name')
+    graph_name = request.args.get('graph_name')
+    reply = _wrap_reply(BACKEND_SERVER.retrieve_tensor_graph, tensor_name, graph_name)
+    return reply
+
+
+@BLUEPRINT.route("/debugger/tensor_hits", methods=["GET"])
+def retrieve_tensor_hits():
+    """
+    Retrieve tensor value according to name and shape.
+
+    Returns:
+        str, the required data.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/debugger/tensor_hits?tensor_name=tensor_name$graph_name=graph_name
+    """
+    tensor_name = request.args.get('tensor_name')
+    graph_name = request.args.get('graph_name')
+    reply = _wrap_reply(BACKEND_SERVER.retrieve_tensor_hits, tensor_name, graph_name)
     return reply
 
 

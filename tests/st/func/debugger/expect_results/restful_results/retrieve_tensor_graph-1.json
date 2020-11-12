@@ -1,0 +1,72 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38",
+        "full_name": "Default/optimizer-Momentum/ApplyMomentum-op38",
+        "type": "ApplyMomentum",
+        "input": {
+          "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias": {
+            "shape": [
+              [
+                120
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {},
+        "slots": [
+          {
+            "slot": "0",
+            "statistics": {}
+          },
+          {
+            "slot": "1",
+            "statistics": {}
+          }
+        ],
+        "graph_name": "graph_0"
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias",
+        "full_name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias",
+        "type": "Parameter",
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38": {
+            "shape": [
+              [
+                120
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": true,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0",
+            "statistics": {}
+          }
+        ],
+        "graph_name": "graph_0"
+      }
+    ]
+  }
+}

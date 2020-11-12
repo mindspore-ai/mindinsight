@@ -35,7 +35,7 @@ class Node:
         node_id (str): The id of this node, and node id is unique in graph.
     """
 
-    def __init__(self, name, node_id):
+    def __init__(self, name, node_id, topological_index=-1):
         self._node_id = node_id
         self.name = name
         self.type = ""
@@ -53,6 +53,8 @@ class Node:
         self.output_nums = 0
         self.elem_types = []
         self.full_name = ""
+        # This value will be used as the priority field.
+        self.topological_index = topological_index
 
     def to_dict(self):
         """Converts the node object to dictionary format."""

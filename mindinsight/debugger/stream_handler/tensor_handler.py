@@ -17,7 +17,7 @@ import numpy as np
 
 from mindinsight.datavisual.data_transform.graph.node import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
-from mindinsight.debugger.common.log import logger as log
+from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.proto.ms_graph_pb2 import DataType
 from mindinsight.debugger.stream_cache.tensor import OpTensor, ConstTensor
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
@@ -31,6 +31,16 @@ class TensorHandler(StreamHandlerBase):
         self._const_vals = {}
         self._tensors = {}
         self._cur_step = 0
+
+    @property
+    def cur_step(self):
+        """The property of current step."""
+        return self._cur_step
+
+    @property
+    def prev_step(self):
+        """The property of previous step."""
+        return self._cur_step - 1
 
     def put(self, value):
         """
@@ -98,7 +108,7 @@ class TensorHandler(StreamHandlerBase):
             self._tensors[tensor.name] = cache_tensor
 
         old_tensor = cache_tensor.get(step)
-        if old_tensor and not self.is_value_diff(old_tensor.value, tensor.value):
+        if old_tensor and not self._is_value_diff(old_tensor.value, tensor.value):
             log.debug("Tensor %s of step %s has no change. Ignore it.", tensor.name, step)
             return False
         cache_tensor[step] = tensor
@@ -106,7 +116,7 @@ class TensorHandler(StreamHandlerBase):
         return True
 
     @staticmethod
-    def is_value_diff(old_value, new_value):
+    def _is_value_diff(old_value, new_value):
         """Check tensor value if there are equal."""
         log.debug("old value type: %s, new_value type: %s", type(old_value), type(new_value))
         if old_value is None and new_value is None:
@@ -142,9 +152,11 @@ class TensorHandler(StreamHandlerBase):
         Args:
             filter_condition (dict): Filter condition.
 
-                - name (str): The name of tensor.
+                - name (str): The full name of tensor.
 
                 - node_type (str): The type of the node.
+
+                - prev (bool): Whether to get previous tensor.
 
         Returns:
             dict, the tensor_value.
@@ -152,12 +164,16 @@ class TensorHandler(StreamHandlerBase):
         name = filter_condition.get('name')
         node_type = filter_condition.get('node_type')
         shape = filter_condition.get('shape')
-        tensor = self._get_tensor(name, node_type)
+        if filter_condition.get('prev'):
+            step = self.prev_step
+        else:
+            step = self.cur_step
+        tensor = self._get_tensor(name, node_type, step)
         if not tensor:
-            log.error("No tensor named %s", name)
+            log.error("No tensor named %s at the step %s", name, step)
             raise DebuggerParamValueError("No tensor named {}".format(name))
         tensor_info = tensor.get_full_info(shape)
-        self._update_has_prev_step_field(tensor_info, name, node_type)
+        self._update_has_prev_step_field(tensor_info, name, node_type, step)
         return {'tensor_value': tensor_info}
 
     def _get_tensor(self, tensor_name, node_type=None, step=None):
@@ -167,7 +183,7 @@ class TensorHandler(StreamHandlerBase):
         Args:
             tensor_name (str): Tensor name, format like `node_name:slot`.
             node_type (str): Node type.
-            step (int): The step of tensor info. Default: None. Noe
+            step (int): The step of tensor info. Default: None.
 
         Returns:
             Union[OPTensor, ConstTensor], the tensor object.
@@ -178,7 +194,8 @@ class TensorHandler(StreamHandlerBase):
         if not tensor and node_type == NodeTypeEnum.CONST.value:
             const_name = tensor_name.rsplit('/', 1)[-1]
             tensor = self._const_vals.get(const_name)
-            self._tensors[tensor_name] = {step: tensor}
+            if tensor:
+                self._tensors[tensor_name] = {step: tensor}
 
         return tensor
 
@@ -205,7 +222,7 @@ class TensorHandler(StreamHandlerBase):
             tensor_name = tensor_info.get('full_name')
             node_type = tensor_info.get('node_type')
             basic_info = self._get_basic_info(tensor_name, node_type)
-            flag = self._update_has_prev_step_field(basic_info, tensor_name, node_type)
+            flag = self._update_has_prev_step_field(basic_info, tensor_name, node_type, self.cur_step)
             if flag is False:
                 missed_tensor = tensor_info.copy()
                 missed_tensor['iter'] = 'prev'
@@ -223,22 +240,23 @@ class TensorHandler(StreamHandlerBase):
 
         return missed_tensors
 
-    def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type):
+    def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type, step):
         """Update has_prev_step field in tensor info."""
         flag = None
         cur_tensor_value = bool(tensor_info and tensor_info.get('value') is not None)
         if node_type == NodeTypeEnum.PARAMETER.value:
-            flag = self._get_prev_tensor_value_status(tensor_name)
+            flag = self._get_prev_tensor_value_status(tensor_name, step)
             if flag and cur_tensor_value:
                 tensor_info['has_prev_step'] = True
         return flag
 
-    def _get_prev_tensor_value_status(self, tensor_name):
+    def _get_prev_tensor_value_status(self, tensor_name, step):
         """
         Get the status of tensor value of previous step.
 
         Args:
             tensor_name (str): Tensor name.
+            step (int): The step of the tensor.
 
         Returns:
             Union[None, bool], the status of previous tensor value. If True, there is valid previous
@@ -247,7 +265,7 @@ class TensorHandler(StreamHandlerBase):
         """
         flag = None
         # check if the tensor has previous step value.
-        prev_step = self._cur_step - 1
+        prev_step = step - 1
         if prev_step < 0:
             return flag
         tensor = self._get_tensor(tensor_name, step=prev_step)
@@ -314,6 +332,8 @@ class TensorHandler(StreamHandlerBase):
         tensor_comparison = curr_tensor.tensor_comparison
         if not tensor_comparison or tensor_comparison.tolerance != tolerance:
             if isinstance(curr_tensor.value, np.ndarray) and isinstance(prev_tensor.value, np.ndarray):
+                if curr_tensor.value.shape != prev_tensor.value.shape:
+                    raise DebuggerParamValueError("The shape of these two step tensors is not the same.")
                 tensor_diff = TensorUtils.calc_diff_between_two_tensor(curr_tensor.value, prev_tensor.value, tolerance)
                 if not tensor_comparison:
                     stats = TensorUtils.get_statistics_from_tensor(tensor_diff)
@@ -333,9 +353,34 @@ class TensorHandler(StreamHandlerBase):
             result = np.stack([prev_tensor_slice, curr_tensor_slice, tensor_diff_slice], axis=-1)
             tensor_info['diff'] = result.tolist()
             stats = TensorUtils.get_statistics_from_tensor(tensor_diff_slice)
+            curr_tensor_stats = TensorUtils.get_statistics_from_tensor(curr_tensor.value)
+            curr_tensor_slice_stats = TensorUtils.get_statistics_from_tensor(curr_tensor_slice)
+            prev_tensor_stats = TensorUtils.get_statistics_from_tensor(prev_tensor.value)
+            prev_tensor_slice_stats = TensorUtils.get_statistics_from_tensor(prev_tensor_slice)
+            tensor_info['curr_step_statistics'] = TensorUtils.get_statistics_dict(stats=curr_tensor_slice_stats,
+                                                                                  overall_stats=curr_tensor_stats)
+            tensor_info['prev_step_statistics'] = TensorUtils.get_statistics_dict(stats=prev_tensor_slice_stats,
+                                                                                  overall_stats=prev_tensor_stats)
             tensor_info['statistics'] = TensorUtils.get_statistics_dict(stats=stats,
                                                                         overall_stats=tensor_comparison.stats)
         elif isinstance(curr_tensor_slice, str):
             tensor_info['diff'] = curr_tensor_slice
         reply = {'tensor_value': tensor_info}
         return reply
+
+    def get_tensor_statistics(self, tensor_name, node_type):
+        """
+        Get Tensor statistics.
+
+        Args:
+            tensor_name (str): Tensor name, format like `node_name:slot`.
+            node_type (str): Node type.
+
+        Returns:
+            dict, overall statistics.
+        """
+        res = {}
+        tensor = self._get_tensor(tensor_name, node_type)
+        if tensor:
+            res = tensor.get_tensor_statistics()
+        return res

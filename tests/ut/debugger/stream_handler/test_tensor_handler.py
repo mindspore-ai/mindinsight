@@ -14,11 +14,10 @@
 # ============================================================================
 """Test tensor_handler.py"""
 from unittest import mock
-from unittest.mock import MagicMock
 import pytest
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
-from mindinsight.debugger.common.log import logger as log
+from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.stream_handler.tensor_handler import TensorHandler
 
 
@@ -40,34 +39,6 @@ class TestTensorHandler:
         with pytest.raises(DebuggerParamValueError) as ex:
             self.tensor_handler.get(filter_condition)
         assert "No tensor named {}".format(None) in str(ex.value)
-
-    @mock.patch.object(TensorHandler, '_get_prev_tensor_value_status')
-    @pytest.mark.parametrize(
-        "node_type, tensor_name, tensor_info", [('Parameter', 'name', {'full_name': 'name', 'step': 1})])
-    def test_update_has_prev_step_field(self, mock_get_pre, node_type, tensor_name, tensor_info):
-        """Test update has_prev_step field in tensor info."""
-        mock_get_pre.return_value = True
-        res = self.tensor_handler._update_has_prev_step_field(tensor_info, tensor_name, node_type)
-        assert res
-
-    def test_get_prev_tensor_value_status_none(self):
-        """
-        test _get_prev_tensor_value_status.
-        """
-        res = self.tensor_handler._get_prev_tensor_value_status('tensor_name')
-        assert res is None
-
-    @mock.patch.object(TensorHandler, '_get_tensor')
-    def test_get_prev_tensor_value_status_false(self, mock_get_tensor):
-        """
-        test _get_prev_tensor_value_status.
-        """
-        self.tensor_handler._cur_step = 1
-        mock_tensor = MagicMock()
-        mock_tensor.value = None
-        mock_get_tensor.return_value = mock_tensor
-        res = self.tensor_handler._get_prev_tensor_value_status('tensor_name')
-        assert not res
 
     def test_get_tensor_value_by_name_none(self):
         """Test get_tensor_value_by_name."""

@@ -13,23 +13,45 @@
 # limitations under the License.
 # ============================================================================
 """Define the watchpoint stream."""
-from mindinsight.datavisual.data_transform.graph.node import NodeTypeEnum
+from mindinsight.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
-from mindinsight.debugger.common.log import logger as log
+from mindinsight.debugger.common.log import LOGGER as log
+from mindinsight.debugger.common.utils import is_scope_type
 from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD, WatchCondition
+from mindinsight.conditionmgr.condition import ConditionIdEnum
+
 
 WATCHPOINT_CONDITION_MAPPING = {
-    'INF': WatchCondition.Condition.inf,
-    'NAN': WatchCondition.Condition.nan,
-    'OVERFLOW': WatchCondition.Condition.overflow,
-    'MAX_GT': WatchCondition.Condition.max_gt,
-    'MAX_LT': WatchCondition.Condition.max_lt,
-    'MIN_GT': WatchCondition.Condition.min_gt,
-    'MIN_LT': WatchCondition.Condition.min_lt,
-    'MAX_MIN_GT': WatchCondition.Condition.max_min_gt,
-    'MAX_MIN_LT': WatchCondition.Condition.max_min_lt,
-    'MEAN_GT': WatchCondition.Condition.mean_gt,
-    'MEAN_LT': WatchCondition.Condition.mean_lt
+    ConditionIdEnum.NAN.value: WatchCondition.Condition.nan,
+    ConditionIdEnum.INF.value: WatchCondition.Condition.inf,
+    ConditionIdEnum.OVERFLOW_ASCEND_CHIP.value: WatchCondition.Condition.overflow,
+    ConditionIdEnum.MAX_GT.value: WatchCondition.Condition.max_gt,
+    ConditionIdEnum.MAX_LT.value: WatchCondition.Condition.max_lt,
+    ConditionIdEnum.MIN_GT.value: WatchCondition.Condition.min_gt,
+    ConditionIdEnum.MIN_LT.value: WatchCondition.Condition.min_lt,
+    ConditionIdEnum.MAX_MIN_GT.value: WatchCondition.Condition.max_min_gt,
+    ConditionIdEnum.MAX_MIN_LT.value: WatchCondition.Condition.max_min_lt,
+    ConditionIdEnum.MEAN_GT.value: WatchCondition.Condition.mean_gt,
+    ConditionIdEnum.MEAN_LT.value: WatchCondition.Condition.mean_lt,
+    ConditionIdEnum.TENSOR_OVERFLOW.value: WatchCondition.Condition.tensor_general_overflow,
+    ConditionIdEnum.WEIGHT_OVERFLOW.value: WatchCondition.Condition.tensor_general_overflow,
+    ConditionIdEnum.OPERATOR_OVERFLOW.value: WatchCondition.Condition.overflow,
+    ConditionIdEnum.TENSOR_INITIALIZATION.value: WatchCondition.Condition.tensor_initialization,
+    ConditionIdEnum.WEIGHT_INITIALIZATION.value: WatchCondition.Condition.tensor_initialization,
+    ConditionIdEnum.TENSOR_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
+    ConditionIdEnum.WEIGHT_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
+    ConditionIdEnum.GRADIENT_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
+    ConditionIdEnum.GRADIENT_EXPLODING.value: WatchCondition.Condition.tensor_general_overflow,
+    ConditionIdEnum.TENSOR_TOO_SMALL.value: WatchCondition.Condition.tensor_too_small,
+    ConditionIdEnum.WEIGHT_TOO_SMALL.value: WatchCondition.Condition.tensor_too_small,
+    ConditionIdEnum.GRADIENT_VANISHING.value: WatchCondition.Condition.tensor_too_small,
+    ConditionIdEnum.TENSOR_ALL_ZERO.value: WatchCondition.Condition.tensor_all_zero,
+    ConditionIdEnum.TENSOR_CHANGE_TOO_LARGE.value: WatchCondition.Condition.tensor_change_too_large,
+    ConditionIdEnum.WEIGHT_CHANGE_TOO_LARGE.value: WatchCondition.Condition.tensor_change_too_large,
+    ConditionIdEnum.TENSOR_CHANGE_TOO_SMALL.value: WatchCondition.Condition.tensor_change_too_small,
+    ConditionIdEnum.WEIGHT_CHANGE_TOO_SMALL.value: WatchCondition.Condition.tensor_change_too_small,
+    ConditionIdEnum.TENSOR_NOT_CHANGED.value: WatchCondition.Condition.tensor_not_changed,
+    ConditionIdEnum.WEIGHT_NOT_CHANGED.value: WatchCondition.Condition.tensor_not_changed
 }
 
 
@@ -81,10 +103,8 @@ class WatchNodeTree:
     def _translate_node_type(node_type):
         """Translate node type to watch node type."""
         flag = node_type
-        if not node_type or node_type == NodeTypeEnum.NAME_SCOPE.value:
+        if not node_type or is_scope_type(node_type):
             flag = 'scope'
-        elif node_type != NodeTypeEnum.AGGREGATION_SCOPE.value:
-            flag = 'leaf'
         return flag
 
     def get(self, sub_name):
@@ -191,7 +211,7 @@ class Watchpoint:
         self._watch_node = other_watchpoint.nodes
 
     def add_nodes(self, nodes):
-        """Add node into watchcpoint."""
+        """Add node into watchpoint."""
         if not nodes:
             log.warning("Add empty nodes.")
             return
@@ -208,8 +228,7 @@ class Watchpoint:
         if not isinstance(nodes, list):
             nodes = [nodes]
         for node in nodes:
-            node_name = node.split(':')[0]
-            self._watch_node.remove_node(node_name)
+            self._watch_node.remove_node(node.name)
 
     def get_node_status(self, node_name, node_type, full_name):
         """Judge if the node is in watch nodes."""
@@ -229,40 +248,56 @@ class Watchpoint:
 
         return status
 
-    def get_watch_node(self, cur_watch_node, watch_node_list):
+    def _get_watch_node(self, cur_watch_node, watch_node_list):
         """
         Traverse the watch nodes and add total watched node list to `watch_node_list`.
 
         Args:
             cur_watch_node (WatchNodeTree): The current watch node.
-            watch_node_list (list[WatchNodeTree]): The list of total watched node.
+            watch_node_list (list[NodeBasicInfo]): The list of watch node basic infos.
         """
-        if cur_watch_node.watch_status == WatchNodeTree.TOTAL_WATCH and \
-                cur_watch_node.node_type != NodeTypeEnum.AGGREGATION_SCOPE.value:
-            watch_node_list.append(cur_watch_node)
+        if cur_watch_node.watch_status == WatchNodeTree.TOTAL_WATCH:
+            node_info = NodeBasicInfo(name=cur_watch_node.node_name,
+                                      full_name=cur_watch_node.full_name,
+                                      type=cur_watch_node.node_type)
+            watch_node_list.append(node_info)
             return
         for _, watch_node in cur_watch_node.get_children():
-            self.get_watch_node(watch_node, watch_node_list)
+            self._get_watch_node(watch_node, watch_node_list)
 
-    def get_set_cmd(self):
-        """Return the watchpoint in proto format."""
-        # get watch nodes.
+    def get_watch_nodes(self):
+        """
+        Get the name of all total watched nodes.
+
+        Returns:
+            list[NodeBasicInfo], the list of watch node basic infos.
+        """
         watch_nodes = []
-        self.get_watch_node(self._watch_node, watch_nodes)
+        self._get_watch_node(self._watch_node, watch_nodes)
+        return watch_nodes
+
+    def get_pending_cmd(self, watch_nodes):
+        """Return the watchpoint in proto format."""
         # construct SetCMD
         set_cmd = SetCMD()
         set_cmd.id = self._id
         set_cmd.delete = False
         set_cmd.watch_condition.condition = WATCHPOINT_CONDITION_MAPPING.get(
-            self._condition.get('condition'))
-        if self._condition.get('param'):
+            self._condition.get('id'))
+        for param in self._condition.get('params'):
             # at most one param is provided
-            set_cmd.watch_condition.value = self._condition.get('param')
+            param_proto = set_cmd.watch_condition.params.add()
+            param_proto.name = param.get('name')
+            param_proto.value = param.get('value')
+            param_proto.disabled = param.get('disable')
+
+            # Only one parameter of condition in current version.
+            set_cmd.watch_condition.value = param.get('value')
+
         for watch_node in watch_nodes:
             event_node = set_cmd.watch_nodes.add()
             event_node.node_name = watch_node.full_name
-            event_node.node_type = watch_node.node_type
-
+            event_node.node_type = watch_node.type
         return set_cmd
 
     def get_watch_condition_info(self):
@@ -277,22 +312,17 @@ class Watchpoint:
 class WatchpointHit:
     """The watchpoint hit structure."""
 
-    def __init__(self, tensor_proto, watchpoint, node_name):
-        self._node_name = node_name
+    def __init__(self, tensor_proto, watchpoint, node_name, graph_name):
         self._full_name = tensor_proto.node_name
-        self._slot = tensor_proto.slot
         self._watchpoint = watchpoint
+        self.node_name = node_name
+        self.slot = tensor_proto.slot
+        self.graph_name = graph_name
 
     @property
     def tensor_full_name(self):
         """The property of tensor full name."""
-        tensor_name = ':'.join([self._full_name, self._slot])
-        return tensor_name
-
-    @property
-    def tensor_name(self):
-        """The property of tensor ui name."""
-        tensor_name = ':'.join([self._node_name, self._slot])
+        tensor_name = ':'.join([self._full_name, self.slot])
         return tensor_name
 
     @property
@@ -303,5 +333,7 @@ class WatchpointHit:
 
     def __eq__(self, other):
         """Define the equal condition."""
-        flag = self.tensor_full_name == other.tensor_full_name and self.watchpoint == other.watchpoint
+        flag = self.tensor_full_name == other.tensor_full_name \
+               and self.watchpoint == other.watchpoint \
+               and self.graph_name == other.graph_name
         return flag

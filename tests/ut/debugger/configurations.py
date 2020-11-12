@@ -18,8 +18,6 @@ import os
 
 from google.protobuf import json_format
 
-from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
-from mindinsight.debugger.common.utils import NodeBasicInfo
 from mindinsight.debugger.proto import ms_graph_pb2
 from mindinsight.debugger.stream_handler.graph_handler import GraphHandler
 from mindinsight.debugger.stream_handler.watchpoint_handler import WatchpointHitHandler
@@ -46,7 +44,7 @@ def init_graph_handler():
     """Init GraphHandler."""
     graph = get_graph_proto()
     graph_handler = GraphHandler()
-    graph_handler.put(graph)
+    graph_handler.put({graph.name: graph})
 
     return graph_handler
 
@@ -64,16 +62,10 @@ def get_node_basic_infos(node_names):
     if not node_names:
         return []
     graph_stream = init_graph_handler()
+    graph_name = graph_stream.graph_names[0]
     node_infos = []
     for node_name in node_names:
-        node_type = graph_stream.get_node_type(node_name)
-        if node_type == NodeTypeEnum.AGGREGATION_SCOPE.value:
-            sub_nodes = graph_stream.get_nodes_by_scope(node_name)
-            sub_infos = [NodeBasicInfo(name=node.name, full_name=node.full_name, type=node.type)
-                         for node in sub_nodes]
-            node_infos.extend(sub_infos)
-        full_name = graph_stream.get_full_name(node_name)
-        node_infos.append(NodeBasicInfo(name=node_name, full_name=full_name, type=node_type))
+        node_infos.append(graph_stream.get_node_basic_info(node_name, graph_name))
     return node_infos
 
 
@@ -81,13 +73,10 @@ def get_watch_nodes_by_search(watch_nodes):
     """Get watched leaf nodes by search name."""
     watched_leaf_nodes = []
     graph_stream = init_graph_handler()
+    graph_name = graph_stream.graph_names[0]
     for search_name in watch_nodes:
-        search_nodes = graph_stream.get_searched_node_list()
-        search_node_names = [
-            NodeBasicInfo(name=node.name, full_name=node.full_name, type=node.type)
-            for node in search_nodes
-            if node.name.startswith(search_name)]
-        watched_leaf_nodes.extend(search_node_names)
+        search_node_info = graph_stream.get_node_basic_info_by_scope(search_name, graph_name)
+        watched_leaf_nodes.extend(search_node_info)
 
     return watched_leaf_nodes
 
@@ -141,7 +130,7 @@ def mock_tensor_history():
     return tensor_history
 
 
-def compare_debugger_result_with_file(res, expect_file):
+def compare_debugger_result_with_file(res, expect_file, save=False):
     """
     Compare debugger result with file.
 
@@ -150,4 +139,8 @@ def compare_debugger_result_with_file(res, expect_file):
         expect_file: The expected file name.
     """
     real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, expect_file)
-    compare_result_with_file(res, real_path)
+    if save:
+        with open(real_path, 'w') as file_handler:
+            json.dump(res, file_handler)
+    else:
+        compare_result_with_file(res, real_path)

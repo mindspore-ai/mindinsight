@@ -27,19 +27,24 @@ def check_waiting_state(app_client):
     body_data = {'mode': 'all'}
     max_try_times = 30
     count = 0
+    flag = False
     while count < max_try_times:
         res = get_request_result(app_client, url, body_data)
         state = res.get('metadata', {}).get('state')
         if state == 'waiting':
-            return True
+            flag = True
+            break
         count += 1
         time.sleep(0.1)
-    return False
+    assert flag is True
 
 
-def get_request_result(app_client, url, body_data, method='post', expect_code=200):
+def get_request_result(app_client, url, body_data, method='post', expect_code=200, full_url=False):
     """Get request result."""
-    real_url = os.path.join(DEBUGGER_BASE_URL, url)
+    if not full_url:
+        real_url = os.path.join(DEBUGGER_BASE_URL, url)
+    else:
+        real_url = url
     if method == 'post':
         response = app_client.post(real_url, data=json.dumps(body_data))
     else:
@@ -50,9 +55,9 @@ def get_request_result(app_client, url, body_data, method='post', expect_code=20
     return res
 
 
-def send_and_compare_result(app_client, url, body_data, expect_file=None, method='post'):
+def send_and_compare_result(app_client, url, body_data, expect_file=None, method='post', full_url=False):
     """Send and compare result."""
-    res = get_request_result(app_client, url, body_data, method=method)
+    res = get_request_result(app_client, url, body_data, method=method, full_url=full_url)
     delete_random_items(res)
     if expect_file:
         real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, 'restful_results', expect_file)
