@@ -126,7 +126,7 @@ class EventsData:
             logger.warning(
                 'Too many deleted tags, %d upper limit reached, tags updating may not function hereafter',
                 _MAX_DELETED_TAGS_SIZE)
-        logger.warning('%r and all related samples are going to be deleted', tag)
+        logger.info('%r and all related samples are going to be deleted', tag)
         self._tags.remove(tag)
         for plugin_name, lock in self._tags_by_plugin_mutex_lock.items():
             with lock:

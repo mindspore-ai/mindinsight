@@ -162,7 +162,7 @@ class SummaryWatcher:
         summary_directory = os.path.realpath(os.path.join(summary_base_dir, relative_path))
 
         if not os.path.exists(summary_directory):
-            logger.warning('Path of summary directory not exists.')
+            logger.info('Path of summary directory not exists.')
             return False
 
         if not os.path.isdir(summary_directory):

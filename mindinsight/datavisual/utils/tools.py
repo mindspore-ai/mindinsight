@@ -21,6 +21,7 @@ from numbers import Number
 from urllib.parse import unquote
 
 from mindinsight.datavisual.common.exceptions import MaxCountExceededError
+from mindinsight.datavisual.common.exceptions import PathNotDirectoryError
 from mindinsight.datavisual.common.log import logger
 from mindinsight.utils import exceptions
 from mindinsight.utils.exceptions import UnknownError
@@ -238,9 +239,13 @@ def if_nan_inf_to_none(name, value):
 
 
 def exception_wrapper(func):
+    """Exception wrapper"""
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except (PathNotDirectoryError, FileNotFoundError) as err:
+            # except PathNotDirectoryError and FileNotFoundError as they are on warning level
+            logger.warning(str(err))
         except Exception as exc:
             logger.exception(exc)
             raise UnknownError(str(exc))
