@@ -389,6 +389,18 @@ export default {
       data: params,
     });
   },
+  queryConditions(trainId) {
+    return axios({
+      method: 'get',
+      url: `v1/mindinsight/conditionmgr/train-jobs/${trainId}/condition-collections`,
+    });
+  },
+  recheckWatchPoints() {
+    return axios({
+      method: 'post',
+      url: `v1/mindinsight/debugger/recheck`,
+    });
+  },
   // explain list
   getExplainList(params) {
     return axios({
