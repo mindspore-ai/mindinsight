@@ -379,7 +379,7 @@ class TestAscendDebugger:
     ])
     def test_retrieve_tensor_graph(self, app_client, body_data, expect_file):
         """Test retrieve tensor graph."""
-        url = 'tensor_graphs'
+        url = 'tensor-graphs'
         with self._debugger_client.get_thread_instance():
             create_watchpoint_and_wait(app_client)
             send_and_compare_result(app_client, url, body_data, expect_file, method='GET')
@@ -637,7 +637,7 @@ class TestMultiGraphDebugger:
     ])
     def test_retrieve_tensor_hits(self, app_client, body_data, expect_file):
         """Test retrieve tensor graph."""
-        url = 'tensor_hits'
+        url = 'tensor-hits'
         with self._debugger_client.get_thread_instance():
             check_waiting_state(app_client)
             send_and_compare_result(app_client, url, body_data, expect_file, method='GET')

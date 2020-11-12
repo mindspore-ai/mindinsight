@@ -478,7 +478,6 @@ class DebuggerServer:
                 }
 
                 - id (str): Id of condition.
-
                 - params (list[dict]): The list of param for this condition.
             watch_nodes (list[str]): The list of node names.
             watch_point_id (int): The id of watchpoint.

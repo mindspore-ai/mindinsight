@@ -123,7 +123,6 @@ class DebuggerGraph(MSGraph):
 
                 - activation_func (Union[str, list[str]): The target functions. Used when node_type
                     is TargetTypeEnum.ACTIVATION.
-
                 - search_range (list[Node]): The list of nodes to be searched from.
 
         Returns:
