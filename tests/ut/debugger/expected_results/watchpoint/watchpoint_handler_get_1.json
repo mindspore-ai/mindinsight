@@ -1,1 +1,1 @@
-[{"id": 1, "watch_condition": {"condition": "INF"}}, {"id": 2, "watch_condition": {"condition": "INF"}}, {"id": 3, "watch_condition": {"condition": "MAX_GT", "param": 1}}]
+[{"id": 1, "watch_condition": {"id": "inf", "params": [], "abbr": "INF"}}, {"id": 2, "watch_condition": {"id": "inf", "params": [], "abbr": "INF"}}, {"id": 3, "watch_condition": {"id": "max_gt", "params": [{"name": "param", "value": 1, "disable": false}], "abbr": "MAX>"}}]

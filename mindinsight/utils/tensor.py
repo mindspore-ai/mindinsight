@@ -32,16 +32,23 @@ class Statistics:
         avg_value (float): avg value of tensor data.
         count (int): total count of tensor data.
         nan_count (int): count of NAN.
+        neg_zero_count (int): count of negative zero.
+        pos_zero_count (int): count of positive zero.
+        zero_count (int): count of zero.
         neg_inf_count (int): count of negative INF.
         pos_inf_count (int): count of positive INF.
     """
 
-    def __init__(self, max_value=0, min_value=0, avg_value=0,
-                 count=0, nan_count=0, neg_inf_count=0, pos_inf_count=0):
+    def __init__(self, max_value=0, min_value=0, avg_value=0, count=0,
+                 neg_zero_count=0, pos_zero_count=0, zero_count=0,
+                 nan_count=0, neg_inf_count=0, pos_inf_count=0):
         self._max = max_value
         self._min = min_value
         self._avg = avg_value
         self._count = count
+        self._neg_zero_count = neg_zero_count
+        self._pos_zero_count = pos_zero_count
+        self._zero_count = zero_count
         self._nan_count = nan_count
         self._neg_inf_count = neg_inf_count
         self._pos_inf_count = pos_inf_count
@@ -80,6 +87,21 @@ class Statistics:
     def pos_inf_count(self):
         """Get count of positive INF."""
         return self._pos_inf_count
+
+    @property
+    def neg_zero_count(self):
+        """Get count of negative zero."""
+        return self._neg_zero_count
+
+    @property
+    def pos_zero_count(self):
+        """Get count of positive zero."""
+        return self._pos_zero_count
+
+    @property
+    def zero_count(self):
+        """Get count of zero."""
+        return self._zero_count
 
 class TensorComparison:
     """TensorComparison class.
@@ -204,7 +226,7 @@ class TensorUtils:
             tensors (numpy.ndarray): An numpy.ndarray of tensor data.
 
         Returns:
-             an instance of Statistics.
+             Statistics, an instance of Statistics.
         """
         ma_value = np.ma.masked_invalid(tensors)
         total, valid = tensors.size, ma_value.count()
@@ -240,10 +262,19 @@ class TensorUtils:
             tensor_min = ma_value.min()
             tensor_max = ma_value.max()
         tensor_sum = ma_value.sum(dtype=np.float64)
+        with np.errstate(invalid='ignore'):
+            neg_zero_count = np.sum(ma_value < 0)
+        with np.errstate(invalid='ignore'):
+            pos_zero_count = np.sum(ma_value > 0)
+        with np.errstate(invalid='ignore'):
+            zero_count = np.sum(ma_value == 0)
         statistics = Statistics(max_value=tensor_max,
                                 min_value=tensor_min,
                                 avg_value=tensor_sum / valid,
                                 count=total,
+                                neg_zero_count=neg_zero_count,
+                                pos_zero_count=pos_zero_count,
+                                zero_count=zero_count,
                                 nan_count=nan_count,
                                 neg_inf_count=neg_inf_count,
                                 pos_inf_count=pos_inf_count)
@@ -269,11 +300,35 @@ class TensorUtils:
             "count": stats.count,
             "nan_count": stats.nan_count,
             "neg_inf_count": stats.neg_inf_count,
-            "pos_inf_count": stats.pos_inf_count,
-            "overall_max": float(overall_stats.max),
-            "overall_min": float(overall_stats.min)
-        }
+            "pos_inf_count": stats.pos_inf_count}
+        overall_statistics = TensorUtils.get_overall_statistic_dict(overall_stats)
+        statistics.update(overall_statistics)
         return statistics
+
+    @staticmethod
+    def get_overall_statistic_dict(overall_stats):
+        """
+        Get overall statistics dict according to statistics value.
+
+        Args:
+            overall_stats (Statistics): An instance of Statistics for whole tensor.
+
+        Returns:
+            dict, overall statistics.
+        """
+        res = {
+            "overall_max": float(overall_stats.max),
+            "overall_min": float(overall_stats.min),
+            "overall_avg": float(overall_stats.avg),
+            "overall_count": overall_stats.count,
+            "overall_nan_count": overall_stats.nan_count,
+            "overall_neg_inf_count": overall_stats.neg_inf_count,
+            "overall_pos_inf_count": overall_stats.pos_inf_count,
+            "overall_zero_count": float(overall_stats.zero_count),
+            "overall_neg_zero_count": float(overall_stats.neg_zero_count),
+            "overall_pos_zero_count": float(overall_stats.pos_zero_count)
+        }
+        return res
 
     @staticmethod
     def calc_diff_between_two_tensor(first_tensor, second_tensor, tolerance):

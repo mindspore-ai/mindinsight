@@ -18,7 +18,7 @@ from queue import Queue, Empty
 from threading import Lock
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
-from mindinsight.debugger.common.log import logger as log
+from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
 
 

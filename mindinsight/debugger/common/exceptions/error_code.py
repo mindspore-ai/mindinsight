@@ -37,6 +37,7 @@ class DebuggerErrors(DebuggerErrorCodes):
     CONTINUE_ERROR = 3 | _DEBUGGER_RUNNING_ERROR
     PAUSE_ERROR = 4 | _DEBUGGER_RUNNING_ERROR
     COMPARE_TENSOR_ERROR = 5 | _DEBUGGER_RUNNING_ERROR
+    RECHECK_ERROR = 6 | _DEBUGGER_RUNNING_ERROR
 
 
 @unique
@@ -52,3 +53,4 @@ class DebuggerErrorMsg(Enum):
     DELETE_WATCHPOINT_ERROR = "Delete watchpoint failed. {}"
     CONTINUE_ERROR = "Continue debugging failed. {}"
     PAUSE_ERROR = "Pause debugging failed. {}"
+    RECHECK_ERROR = "Recheck failed. {}"

@@ -28,7 +28,7 @@ from tests.st.func.debugger.conftest import GRAPH_PROTO_FILE
 class MockDebuggerClient:
     """Mocked Debugger client."""
 
-    def __init__(self, hostname='localhost:50051', backend='Ascend'):
+    def __init__(self, hostname='localhost:50051', backend='Ascend', graph_num=1):
         channel = grpc.insecure_channel(hostname)
         self.stub = EventListenerStub(channel)
         self.flag = True
@@ -37,6 +37,7 @@ class MockDebuggerClient:
         self._leaf_node = []
         self._cur_node = ''
         self._backend = backend
+        self._graph_num = graph_num
 
     def _clean(self):
         """Clean cache."""
@@ -122,16 +123,32 @@ class MockDebuggerClient:
         assert response.status == EventReply.Status.OK
         if training_done is False:
             self.send_graph_cmd()
+        print("finish")
 
     def send_graph_cmd(self):
         """Send graph to debugger server."""
         self._step = 1
+        if self._graph_num > 1:
+            chunks = []
+            for i in range(self._graph_num):
+                chunks.extend(self._get_graph_chunks('graph_' + str(i)))
+            response = self.stub.SendMultiGraphs(self._generate_graph(chunks))
+        else:
+            chunks = self._get_graph_chunks()
+            response = self.stub.SendGraph(self._generate_graph(chunks))
+        assert response.status == EventReply.Status.OK
+        # go to command loop
+        self.command_loop()
+
+    def _get_graph_chunks(self, graph_name='graph_0'):
+        """Get graph chunks."""
         with open(GRAPH_PROTO_FILE, 'rb') as file_handle:
             content = file_handle.read()
         size = len(content)
         graph = ms_graph_pb2.GraphProto()
         graph.ParseFromString(content)
-        graph.name = 'graph_name'
+        graph.name = graph_name
+        content = graph.SerializeToString()
         self._leaf_node = [node.full_name for node in graph.node]
         # the max limit of grpc data size is 4kb
         # split graph into 3kb per chunk
@@ -141,10 +158,8 @@ class MockDebuggerClient:
             sub_size = min(chunk_size, size - index)
             sub_chunk = Chunk(buffer=content[index: index + sub_size])
             chunks.append(sub_chunk)
-        response = self.stub.SendGraph(self._generate_graph(chunks))
-        assert response.status == EventReply.Status.OK
-        # go to command loop
-        self.command_loop()
+        chunks[-1].finished = True
+        return chunks
 
     @staticmethod
     def _generate_graph(chunks):
@@ -202,5 +217,5 @@ class MockDebuggerClientThread:
         return self._debugger_client_thread
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._debugger_client_thread.join(timeout=5)
+        self._debugger_client_thread.join(timeout=3)
         self._debugger_client.flag = False

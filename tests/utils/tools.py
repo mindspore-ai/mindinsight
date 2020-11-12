@@ -34,11 +34,10 @@ def get_url(url, params):
 
     Args:
         url (str): A link requested. For example, http://example.com.
-        params (dict): A dict consists of params. For example, {'offset': 1, 'limit':'100}.
+        params (dict): A dict consists of params. For example, {'offset': 1, 'limit': 100}.
 
     Returns:
         str, like http://example.com?offset=1&limit=100
-
     """
 
     return url + '?' + urlencode(params)

@@ -17,4 +17,4 @@ from mindinsight.utils.log import setup_logger
 
 LOG_NAME = "debugger"
 LOG_MODULE = "debugger"
-logger = setup_logger(sub_module=LOG_MODULE, log_name=LOG_NAME)
+LOGGER = setup_logger(sub_module=LOG_MODULE, log_name=LOG_NAME)

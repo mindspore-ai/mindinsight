@@ -22,7 +22,7 @@ import os
 
 import pytest
 
-from tests.ut.debugger.configurations import init_graph_handler
+from tests.ut.debugger.configurations import init_graph_handler, compare_debugger_result_with_file
 from tests.utils.tools import compare_result_with_file
 
 
@@ -46,11 +46,12 @@ class TestGraphHandler:
         """Test get."""
         result = self.graph_handler.get(filter_condition)
         file_path = os.path.join(self.graph_results_dir, result_file)
+        compare_debugger_result_with_file(result, file_path, True)
         compare_result_with_file(result, file_path)
 
     @pytest.mark.parametrize("node_name, result_file", [
         ("Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op190",
-         "tenor_hist_0.json"),
+         "tensor_hist_0.json"),
         ("Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op22",
          "tensor_hist_1.json")
     ])
@@ -66,8 +67,20 @@ class TestGraphHandler:
     ])
     def test_search_nodes(self, pattern, result_file):
         """Test search nodes."""
-        result = self.graph_handler.search_nodes(pattern)
+        result = self.graph_handler.search_nodes({'name': pattern})
         file_path = os.path.join(self.graph_results_dir, result_file)
+        compare_result_with_file(result, file_path)
+
+    @pytest.mark.parametrize("node_type, condition, result_file", [
+        ("weight", None, "search_nodes_by_type_0.json"),
+        ("activation", {'activation_func': ['ReLU', 'Softmax']}, "search_nodes_by_type_1.json")
+    ])
+    def test_search_nodes_by_type(self, node_type, condition, result_file):
+        """Test search nodes by type."""
+        search_nodes = self.graph_handler.get_searched_node_list(
+            {'node_category': node_type, 'condition': condition}, 'kernel_graph_0')
+        file_path = os.path.join(self.graph_results_dir, result_file)
+        result = {'node_names': [node.name for node in search_nodes]}
         compare_result_with_file(result, file_path)
 
     @pytest.mark.parametrize("node_name, expect_type", [
@@ -96,7 +109,7 @@ class TestGraphHandler:
     ])
     def test_get_node_name_by_full_name(self, full_name, expect_node_name):
         """Test get node name by full name."""
-        node_name = self.graph_handler.get_node_name_by_full_name(full_name)
+        node_name = self.graph_handler.get_node_name_by_full_name(full_name, 'kernel_graph_0')
         assert node_name == expect_node_name
 
     @pytest.mark.parametrize("node_name, ascend, expect_next", [
@@ -112,3 +125,13 @@ class TestGraphHandler:
         """Test get node by BFS order."""
         next_node = self.graph_handler.get_node_by_bfs_order(node_name, ascend)
         assert next_node == expect_next
+
+    @pytest.mark.parametrize("tensor_name, expect_file", [
+        ("Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0:0", "get_tensor_graph-0.json"),
+        ("Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89:1", "get_tensor_graph-1.json"),
+        ("Default/tuple_getitem[10]_0/tuple_getitem-op206:1", "get_tensor_graph-2.json"),
+    ])
+    def test_get_tensor_graph(self, tensor_name, expect_file):
+        """Test get tensor graph."""
+        res = self.graph_handler.get_tensor_graph(tensor_name, None)
+        compare_debugger_result_with_file(res, expect_file=os.path.join('graph', expect_file))

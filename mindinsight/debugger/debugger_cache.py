@@ -15,7 +15,7 @@
 """Implement the debugger data cache manager."""
 import sys
 
-from mindinsight.debugger.common.log import logger as log
+from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams
 from mindinsight.debugger.stream_handler import EventHandler, MetadataHandler, GraphHandler, \
     TensorHandler, WatchpointHandler, WatchpointHitHandler

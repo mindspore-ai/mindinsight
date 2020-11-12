@@ -72,6 +72,17 @@ class DebuggerDeleteWatchPointError(MindInsightException):
         )
 
 
+class DebuggerRecheckError(MindInsightException):
+    """The error about deleting watch point."""
+
+    def __init__(self, msg):
+        super(DebuggerRecheckError, self).__init__(
+            error=DebuggerErrors.RECHECK_ERROR,
+            message=DebuggerErrorMsg.RECHECK_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
 class DebuggerCompareTensorError(MindInsightException):
     """The error about comparing tensors."""
 

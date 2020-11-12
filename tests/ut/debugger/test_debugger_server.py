@@ -28,6 +28,7 @@ import pytest
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerCompareTensorError, DebuggerCreateWatchPointError, DebuggerDeleteWatchPointError
+from mindinsight.debugger.common.utils import Streams
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_server import DebuggerServer
 from mindinsight.debugger.debugger_server import grpc_server_base
@@ -81,7 +82,7 @@ class TestDebuggerServer:
         """Test search node."""
         mock_graph = {'nodes': ['mock_nodes']}
         args[0].return_value = mock_graph
-        res = self._server.search('mock_name')
+        res = self._server.search({'name': 'mock_name'})
         assert res == mock_graph
 
     def test_tensor_comparision_with_wrong_status(self):
@@ -93,6 +94,7 @@ class TestDebuggerServer:
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
     @mock.patch.object(GraphHandler, 'get_node_type')
+    @mock.patch.object(GraphHandler, 'get_graph_id_by_name')
     @mock.patch.object(GraphHandler, 'get_full_name', return_value='mock_node_name')
     def test_tensor_comparision_with_wrong_type(self, *args):
         """Test tensor comparison with wrong type."""
@@ -101,6 +103,7 @@ class TestDebuggerServer:
             self._server.tensor_comparisons(name='mock_node_name:0', shape='[:, :]')
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
+    @mock.patch.object(GraphHandler, 'get_graph_id_by_name')
     @mock.patch.object(GraphHandler, 'get_node_type', return_value='Parameter')
     @mock.patch.object(GraphHandler, 'get_full_name', return_value='mock_node_name')
     @mock.patch.object(TensorHandler, 'get_tensors_diff')
@@ -156,7 +159,7 @@ class TestDebuggerServer:
         """Test validate leaf name."""
         args[0].return_value = 'name_scope'
         with pytest.raises(DebuggerParamValueError, match='Invalid leaf node name.'):
-            self._server._validate_leaf_name(node_name='mock_node_name')
+            self._server._validate_leaf_name(node_name='mock_node_name', graph_name='mock_graph_name')
 
     @mock.patch.object(TensorHandler, 'get')
     @mock.patch.object(DebuggerServer, '_get_tensor_name_and_type_by_ui_name')
@@ -199,40 +202,42 @@ class TestDebuggerServer:
             self._server.create_watchpoint(watch_condition={'condition': 'INF'})
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
-    @mock.patch.object(GraphHandler, 'get_full_name', return_value='mock_full_name')
-    @mock.patch.object(GraphHandler, 'get_full_name', return_value='mock_full_name')
-    @mock.patch.object(GraphHandler, 'get_nodes_by_scope', return_value=[MagicMock()])
+    @mock.patch.object(GraphHandler, 'get_node_basic_info', return_value=[MagicMock()])
     @mock.patch.object(GraphHandler, 'get_node_type', return_value='aggregation_scope')
     @mock.patch.object(WatchpointHandler, 'create_watchpoint')
     def test_create_watchpoint(self, *args):
         """Test create watchpoint."""
         args[0].return_value = 1
         res = self._server.create_watchpoint({'condition': 'INF'}, ['watch_node_name'])
-        assert res == {'id': 1}
+        assert res == {'id': 1, 'metadata': {'enable_recheck': False, 'state': 'waiting'}}
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
+    @mock.patch.object(GraphHandler, 'validate_graph_name', return_value='kernel_graph_0')
     @mock.patch.object(GraphHandler, 'get_searched_node_list')
     @mock.patch.object(WatchpointHandler, 'validate_watchpoint_id')
     @mock.patch.object(WatchpointHandler, 'update_watchpoint')
     def test_update_watchpoint(self, *args):
         """Test update watchpoint."""
-        args[2].return_value = [MagicMock(name='seatch_name/op_name')]
+        args[2].return_value = [MagicMock(name='search_name/op_name')]
         res = self._server.update_watchpoint(
-            watch_point_id=1, watch_nodes=['search_name'], mode=1, name='search_name')
-        assert res == {}
+            watch_point_id=1, watch_nodes=['search_name'],
+            mode=1, search_pattern={'name': 'search_name'}, graph_name='kernel_graph_0')
+        assert res == {'metadata': {'enable_recheck': False, 'state': 'waiting'}}
 
     def test_delete_watchpoint_with_wrong_state(self):
         """Test delete watchpoint with wrong state."""
         with pytest.raises(DebuggerDeleteWatchPointError, match='Failed to delete watchpoint'):
             self._server.delete_watchpoint(watch_point_id=1)
 
-    @mock.patch.object(MetadataHandler, 'state', 'waiting')
+    @mock.patch.object(MetadataHandler, 'enable_recheck', True)
+    @mock.patch.object(WatchpointHandler, 'is_recheckable', return_value=True)
     @mock.patch.object(WatchpointHandler, 'delete_watchpoint')
     def test_delete_watchpoint(self, *args):
         """Test delete watchpoint with wrong state."""
+        self._server.cache_store.get_stream_handler(Streams.METADATA).state = 'waiting'
         args[0].return_value = None
         res = self._server.delete_watchpoint(1)
-        assert res == {}
+        assert res == {'metadata': {'enable_recheck': True, 'state': 'waiting'}}
 
     @pytest.mark.parametrize('mode, cur_state, state', [
         ('continue', 'waiting', 'running'),
@@ -242,7 +247,7 @@ class TestDebuggerServer:
         """Test control request."""
         with mock.patch.object(MetadataHandler, 'state', cur_state):
             res = self._server.control({'mode': mode})
-            assert res == {'metadata': {'state': state}}
+            assert res == {'metadata': {'enable_recheck': False, 'state': state}}
 
     def test_construct_run_event(self):
         """Test construct run event."""

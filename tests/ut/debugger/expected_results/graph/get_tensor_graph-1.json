@@ -1,0 +1,176 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "name": "Default/network-WithLossCell/_backbone-LeNet5/conv2-Conv2d/Cast-op201",
+        "full_name": "Default/network-WithLossCell/_backbone-LeNet5/conv2-Conv2d/Cast-op201",
+        "type": "Cast",
+        "input": {},
+        "output": {
+          "Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89": {
+            "shape": [
+              [
+                32,
+                16,
+                10,
+                10
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0"
+          }
+        ]
+      },
+      {
+        "name": "Default/tuple_getitem[10]_0/tuple_getitem-op203",
+        "full_name": "Default/tuple_getitem-op203",
+        "type": "tuple_getitem",
+        "input": {
+          "Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89": {
+            "shape": [
+              [],
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TUPLE['DT_TENSOR[DT_FLOAT32]', 'DT_TENSOR[DT_UINT8]']",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ],
+              [
+                "1",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {},
+        "slots": [
+          {
+            "slot": "0"
+          }
+        ]
+      },
+      {
+        "name": "Default/tuple_getitem[10]_0/tuple_getitem-op202",
+        "full_name": "Default/tuple_getitem-op202",
+        "type": "tuple_getitem",
+        "input": {
+          "Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89": {
+            "shape": [
+              [],
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TUPLE['DT_TENSOR[DT_FLOAT32]', 'DT_TENSOR[DT_UINT8]']",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ],
+              [
+                "1",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {},
+        "slots": [
+          {
+            "slot": "0"
+          }
+        ]
+      },
+      {
+        "name": "Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89",
+        "full_name": "Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89",
+        "type": "ReLUV2",
+        "input": {
+          "Default/network-WithLossCell/_backbone-LeNet5/conv2-Conv2d/Cast-op201": {
+            "shape": [
+              [
+                32,
+                16,
+                10,
+                10
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {
+          "Default/tuple_getitem[10]_0/tuple_getitem-op203": {
+            "shape": [
+              [],
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TUPLE['DT_TENSOR[DT_FLOAT32]', 'DT_TENSOR[DT_UINT8]']",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ],
+              [
+                "1",
+                ""
+              ]
+            ]
+          },
+          "Default/tuple_getitem[10]_0/tuple_getitem-op202": {
+            "shape": [
+              [],
+              []
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TUPLE['DT_TENSOR[DT_FLOAT32]', 'DT_TENSOR[DT_UINT8]']",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ],
+              [
+                "1",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0"
+          },
+          {
+            "slot": "1"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "name": "Default/args0",
+        "full_name": "Default/args0",
+        "type": "Parameter",
+        "input": {},
+        "output": {
+          "Default/TransData-op99": {
+            "shape": [
+              [
+                32,
+                1,
+                32,
+                32
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0",
+            "statistics": {}
+          }
+        ],
+        "graph_name": "graph_0"
+      },
+      {
+        "name": "Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op190",
+        "full_name": "Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op190",
+        "type": "Cast",
+        "input": {
+          "Default/TransData-op99": {
+            "shape": [
+              [
+                32,
+                1,
+                32,
+                32
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {},
+        "slots": [
+          {
+            "slot": "0",
+            "statistics": {}
+          }
+        ],
+        "graph_name": "graph_0"
+      },
+      {
+        "name": "Default/TransData-op99",
+        "full_name": "Default/TransData-op99",
+        "type": "TransData",
+        "input": {
+          "Default/args0": {
+            "shape": [
+              [
+                32,
+                1,
+                32,
+                32
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {
+          "Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op190": {
+            "shape": [
+              [
+                32,
+                1,
+                32,
+                32
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0",
+            "watch_points": [
+              {
+                "id": 1,
+                "watch_condition": {
+                  "id": "inf",
+                  "params": [],
+                  "abbr": "INF"
+                }
+              }
+            ],
+            "statistics": {}
+          }
+        ],
+        "graph_name": "graph_0"
+      }
+    ]
+  }
+}

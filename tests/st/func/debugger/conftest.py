@@ -51,8 +51,9 @@ def init_graph_handler():
 @pytest.fixture(scope='session')
 def app_client():
     """This fixture is flask server."""
-    packages = ["mindinsight.backend.debugger"]
+    packages = ["mindinsight.backend.debugger", "mindinsight.backend.conditionmgr"]
     settings.ENABLE_DEBUGGER = True
+
     mock_obj = Mock(return_value=packages)
     tools.find_app_package = mock_obj
 
@@ -60,5 +61,10 @@ def app_client():
     from mindinsight.backend.debugger.debugger_api import BACKEND_SERVER
     APP.response_class = Response
     client = APP.test_client()
-    yield client
+    original_val = settings.ENABLE_RECOMMENDED_WATCHPOINTS
+    settings.ENABLE_RECOMMENDED_WATCHPOINTS = False
+    try:
+        yield client
+    finally:
+        settings.ENABLE_RECOMMENDED_WATCHPOINTS = original_val
     BACKEND_SERVER.stop()

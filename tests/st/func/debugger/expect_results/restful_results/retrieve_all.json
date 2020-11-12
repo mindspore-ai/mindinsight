@@ -4,9 +4,14 @@
     "step": 1,
     "device_name": "0",
     "node_name": "",
-    "backend": "Ascend"
+    "backend": "Ascend",
+    "enable_recheck": false,
+    "graph_name": "graph_0"
   },
   "graph": {
+    "graph_names": [
+      "graph_0"
+    ],
     "nodes": [
       {
         "name": "Default",

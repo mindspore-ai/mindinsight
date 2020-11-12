@@ -14,7 +14,6 @@
 # ============================================================================
 """Define the utils."""
 import enum
-from collections import namedtuple
 
 import numpy as np
 
@@ -72,7 +71,12 @@ class Streams(enum.Enum):
     WATCHPOINT_HIT = 'watchpoint_hit'
 
 
-NodeBasicInfo = namedtuple('node_basic_info', ['name', 'full_name', 'type'])
+class RunLevel(enum.Enum):
+    """Run Level enum, it depends on whether the program is executed node by node,
+    step by step, or in recheck phase"""
+    NODE = "node"
+    STEP = "step"
+    RECHECK = "recheck"
 
 
 def get_ack_reply(state=0):
@@ -140,5 +144,4 @@ def create_view_event_from_tensor_history(tensor_history):
 
 def is_scope_type(node_type):
     """Judge whether the type is scope type."""
-    scope_types = [NodeTypeEnum.NAME_SCOPE.value, NodeTypeEnum.AGGREGATION_SCOPE.value]
-    return node_type in scope_types
+    return node_type.endswith('scope')

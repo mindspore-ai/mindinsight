@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Define the metadata stream handler."""
-from mindinsight.debugger.common.log import logger as log
+from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import ServerStatus
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
 
@@ -29,6 +29,8 @@ class MetadataHandler(StreamHandlerBase):
         self._cur_node_name = ""
         self._cur_full_name = ""
         self._backend = ""
+        self._enable_recheck = False
+        self._cur_graph_name = ""
 
     @property
     def device_name(self):
@@ -49,6 +51,16 @@ class MetadataHandler(StreamHandlerBase):
     def node_name(self, node_name):
         """The property of current node name."""
         self._cur_node_name = node_name
+
+    @property
+    def graph_name(self):
+        """The property of current node name."""
+        return self._cur_graph_name
+
+    @graph_name.setter
+    def graph_name(self, graph_name):
+        """The property of current node name."""
+        self._cur_graph_name = graph_name if graph_name else ''
 
     @property
     def full_name(self):
@@ -90,6 +102,21 @@ class MetadataHandler(StreamHandlerBase):
         """
         self._client_ip = str(value)
 
+    @property
+    def enable_recheck(self):
+        """The property of enable_recheck."""
+        return self._enable_recheck and self._state == ServerStatus.WAITING and self._step > 0
+
+    @enable_recheck.setter
+    def enable_recheck(self, value):
+        """
+        Set the property of enable_recheck.
+
+        Args:
+            value (bool): The new ip.
+        """
+        self._enable_recheck = bool(value)
+
     def put(self, value):
         """
         Put value into metadata cache. Called by grpc server.
@@ -108,7 +135,7 @@ class MetadataHandler(StreamHandlerBase):
         Get updated value. Called by main server.
 
         Args:
-            filter_condition (str): The filter property.
+            filter_condition (Union[str, list[str]]): The filter property.
 
         Returns:
             dict, the metadata.
@@ -122,10 +149,15 @@ class MetadataHandler(StreamHandlerBase):
                 'pos': '0',
                 'ip': self.client_ip,
                 'node_name': self.node_name,
-                'backend': self.backend
+                'backend': self.backend,
+                'enable_recheck': self.enable_recheck,
+                'graph_name': self.graph_name
             }
         else:
-            metadata[filter_condition] = getattr(self, filter_condition) if \
-                hasattr(self, filter_condition) else ''
+            if not isinstance(filter_condition, list):
+                filter_condition = [filter_condition]
+            for field in filter_condition:
+                metadata[field] = getattr(self, field) if \
+                    hasattr(self, field) else None
 
         return {'metadata': metadata}
