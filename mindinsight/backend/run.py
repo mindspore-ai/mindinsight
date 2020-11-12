@@ -300,7 +300,7 @@ def start():
             label = '.' * len(label)
         for line in state_result["prompt_message"]:
             console.info(line)
-        if state_result["state"] == ServerStateEnum.FAILED_STATE.value:
+        if state_result["state"] == ServerStateEnum.FAILED.value:
             sys.exit(1)
 
 
