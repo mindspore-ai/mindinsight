@@ -129,9 +129,11 @@ export default {
      */
     nodeCollapseLinkage(name) {
       const node = this.$refs.tree.getNode(name.replace('_unfold', ''));
-      node.expanded = false;
-      node.loaded = false;
-      node.childNodes = [];
+      if (node) {
+        node.expanded = false;
+        node.loaded = false;
+        node.childNodes = [];
+      }
     },
     /**
      * Initializing the graph

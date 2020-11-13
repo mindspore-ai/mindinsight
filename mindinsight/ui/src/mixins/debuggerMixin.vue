@@ -4,6 +4,11 @@ import {select, selectAll, zoom, dispatch} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom, dispatch};
 export default {
+  data() {
+    return {
+      conditionRulesMap: this.$t('debugger.tensorTuningRule'),
+    };
+  },
   methods: {
     toleranceInputChange() {
       this.toleranceInput = this.tolerance;
@@ -150,7 +155,9 @@ export default {
         return '';
       }
       let temp;
-      if (str.endsWith('_lt')) {
+      if (this.conditionRulesMap[str]) {
+        temp = this.conditionRulesMap[str];
+      } else if (str.endsWith('_lt')) {
         temp = str.replace(/_lt$/, ' <');
       } else if (str.endsWith('_gt')) {
         temp = str.replace(/_gt$/, ' >');
@@ -158,6 +165,10 @@ export default {
         temp = str.replace(/_ge$/, ' >=');
       } else {
         temp = str;
+      }
+
+      if (temp.includes('max_min')) {
+        temp = temp.replace('max_min', 'max-min');
       }
       return temp;
     },
@@ -646,7 +657,14 @@ export default {
           this.metadata.graph_name = metadata.graph_name
             ? metadata.graph_name
             : this.metadata.graph_name;
-          this.queryAllTreeData(this.nodeName, true, metadata.graph_name);
+          let graphName = this.graphFiles.value;
+          if (this.graphFiles.value === this.$t('debugger.all')) {
+            graphName = this.selectedNode.name.split('/')[0];
+          }
+          if (metadata.graph_name) {
+            graphName = metadata.graph_name;
+          }
+          this.queryAllTreeData(this.nodeName, true, graphName);
         }
       }
       if (metadata.step && metadata.step > this.metadata.step) {
@@ -1345,8 +1363,12 @@ export default {
             node_type: node.data.type,
             watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
             name: node.data.name,
+            graph_name: this.graphFiles.value,
           },
         };
+        if (this.graphFiles.value === this.$t('debugger.all')) {
+          delete params.params.graph_name;
+        }
         RequestService.retrieve(params).then((res) => {
           if (res.data && res.data.metadata) {
             this.dealMetadata(res.data.metadata);
