@@ -445,13 +445,13 @@ class DebuggerServer:
         if node_name is None:
             reply = self.cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).get()
             return reply
+        graph_name = self.cache_store.get_stream_handler(Streams.GRAPH).validate_graph_name(
+            filter_condition.get('graph_name'))
         # get tensor history
-        reply = self._get_tensor_history(node_name)
+        reply = self._get_tensor_history(node_name, graph_name)
         log.debug("Get tensor history for watchpoint hit node.")
         # get single graph
         if filter_condition.get('single_node'):
-            graph_name = self.cache_store.get_stream_handler(Streams.GRAPH).validate_graph_name(
-                filter_condition.get('graph_name'))
             filter_condition['graph_name'] = graph_name
             graph = self._get_nodes_info(filter_condition)
             reply.update(graph)
