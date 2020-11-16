@@ -438,6 +438,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         for watchpoint_hit_proto in request_iterator:
             node_full_name = watchpoint_hit_proto.tensor.node_name
             graph_name = graph_stream.get_graph_id_by_full_name(node_full_name)
+            if not graph_name:
+                log.warning("Cannot find node %s in graph. Skip it.", node_full_name)
+                continue
             ui_node_name = graph_stream.get_node_name_by_full_name(node_full_name, graph_name)
             log.debug("Receive watch point hit: %s", watchpoint_hit_proto)
             if not ui_node_name:

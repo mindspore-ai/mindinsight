@@ -419,8 +419,7 @@ class GraphHandler(StreamHandlerBase):
         """
         graph_id = self.graph_node_map.get(node_name) if node_name else None
         if not graph_id:
-            log.error("Failed to get graph id by full name: %s", node_name)
-            raise DebuggerNodeNotInGraphError(node_name)
+            log.warning("Failed to get graph id by full name: %s", node_name)
         return graph_id
 
     def get_node_type(self, node_name, graph_name=None):
