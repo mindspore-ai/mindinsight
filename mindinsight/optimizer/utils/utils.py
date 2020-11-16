@@ -95,21 +95,21 @@ def is_number(uchar):
 
 
 def is_alphabet(uchar):
-    """If it is a alphabet, return True."""
+    """If it is an alphabet, return True."""
     if uchar in string.ascii_letters:
         return True
     return False
 
 
 def is_allowed_symbols(uchar):
-    """If it is a allowed symbol, return True."""
+    """If it is an allowed symbol, return True."""
     if uchar in ['_']:
         return True
     return False
 
 
 def is_param_name_valid(param_name: str):
-    """If parameter name only contains number or alphabet."""
+    """If parameter name only contains underscore, number or alphabet, return True."""
     for uchar in param_name:
         if not is_number(uchar) and not is_alphabet(uchar) and not is_allowed_symbols(uchar):
             return False
