@@ -42,28 +42,7 @@ class DebuggerMultiGraph(DebuggerGraph):
                 # add nodes
                 normal_nodes = copy.deepcopy(graph.normal_node_map)
                 for _, node_obj in normal_nodes.items():
-                    pre_scope = graph_name + "/"
-                    node_obj.name = pre_scope + node_obj.name
-                    node_obj.full_name = pre_scope + node_obj.full_name
-                    if node_obj.scope:
-                        node_obj.scope = pre_scope + node_obj.scope
-                    else:
-                        node_obj.scope = graph_name
-
-                    # update inputs
-                    old_inputs = copy.deepcopy(node_obj.inputs)
-                    for src_name, input_attr in old_inputs.items():
-                        new_src_name = graph_name + "/" + src_name
-                        node_obj.add_inputs(new_src_name, input_attr)
-                        node_obj.delete_inputs(src_name)
-
-                    # update_outputs
-                    old_outputs = copy.deepcopy(node_obj.outputs)
-                    for dst_name, output_attr in old_outputs.items():
-                        new_dst_name = graph_name + "/" + dst_name
-                        node_obj.add_outputs(new_dst_name, output_attr)
-                        node_obj.delete_outputs(dst_name)
-
+                    self._add_graph_scope(node_obj, graph_name)
                     self._cache_node(node_obj)
 
                 # add graph_node
@@ -79,3 +58,43 @@ class DebuggerMultiGraph(DebuggerGraph):
                 "Build multi_graph end, all node count: %s, const count: %s, parameter count: %s.",
                 self.normal_node_count, len(self._const_node_temp_cache),
                 len(self._parameter_node_temp_cache))
+
+    def _add_graph_scope(self, node, graph_name):
+        """Add graph scope to the inputs and outputs in node"""
+
+        # add graph scope to node name
+        pre_scope = graph_name + "/"
+        node.name = pre_scope + node.name
+        node.full_name = pre_scope + node.full_name
+        if node.scope:
+            node.scope = pre_scope + node.scope
+        else:
+            node.scope = graph_name
+
+        # update inputs
+        old_inputs = copy.deepcopy(node.inputs)
+        for src_name, input_attr in old_inputs.items():
+            new_src_name = graph_name + "/" + src_name
+            node.add_inputs(new_src_name, input_attr)
+            node.delete_inputs(src_name)
+
+        # update outputs
+        old_outputs = copy.deepcopy(node.outputs)
+        for dst_name, output_attr in old_outputs.items():
+            new_dst_name = graph_name + "/" + dst_name
+            node.add_outputs(new_dst_name, output_attr)
+            node.delete_outputs(dst_name)
+
+        # update proxy_inputs
+        old_proxy_inputs = copy.deepcopy(node.proxy_inputs)
+        for src_name, input_attr in old_proxy_inputs.items():
+            new_src_name = graph_name + "/" + src_name
+            node.add_proxy_inputs(new_src_name, input_attr)
+            node.delete_proxy_inputs(src_name)
+
+        # update proxy_outputs
+        old_proxy_outputs = copy.deepcopy(node.proxy_outputs)
+        for dst_name, output_attr in old_proxy_outputs.items():
+            new_dst_name = graph_name + "/" + dst_name
+            node.add_proxy_outputs(new_dst_name, output_attr)
+            node.delete_proxy_outputs(dst_name)
