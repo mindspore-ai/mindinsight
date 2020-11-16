@@ -53,7 +53,8 @@ limitations under the License.
               <el-option v-for="item in nodeTypes.options"
                          :key="item"
                          :label="nodeTypes.label[item]"
-                         :value="item">
+                         :value="item"
+                         :class="{'deb-indent': item != 'all'}">
               </el-option>
             </el-select>
           </div>
@@ -68,16 +69,15 @@ limitations under the License.
           </div>
           <div class="tree-wrap">
             <div class="select-all-files"
-                 v-if="curWatchPointId && graphFiles.options.length > 1 &&
-                 graphFiles.value === $t('debugger.all')">
+                 v-if="curWatchPointId">
               <el-button type="primary"
                          size="mini"
                          class="custom-btn"
-                         @click="selectAllFiles(true)">{{ $t('debugger.selectAll') }}</el-button>
+                         @click="selectAllFiles(true)">{{ $t('public.selectAll') }}</el-button>
               <el-button type="primary"
                          size="mini"
                          class="custom-btn"
-                         @click="selectAllFiles(false)">{{ $t('debugger.selectNone') }}</el-button>
+                         @click="selectAllFiles(false)">{{ $t('public.deselectAll') }}</el-button>
             </div>
             <el-tree v-show="treeFlag"
                      :props="props"
@@ -159,7 +159,7 @@ limitations under the License.
               </div>
               <div class="add-wrap">
                 <i class="el-icon-circle-plus"
-                   :title="$t('debugger.addWatchpoint')"
+                   :title="$t('debugger.createWP')"
                    @click="addWatchPoint"></i>
               </div>
             </div>
@@ -507,6 +507,7 @@ limitations under the License.
     </div>
     <el-dialog :title="$t('debugger.createWP')"
                :visible.sync="createWPDialogVisible"
+               :show-close="false"
                :close-on-click-modal="false"
                :modal-append-to-body="false"
                class="creat-watch-point-dialog"
@@ -517,7 +518,6 @@ limitations under the License.
              v-for="(item, index) in createWatchPointArr"
              :key="index">
           <el-select v-model="item.collection.selectedId"
-                     :placeholder="$t('debugger.chooseTemp')"
                      class="collection"
                      @change="collectionChange(item)">
             <el-option v-for="i in conditionCollections"
@@ -527,7 +527,6 @@ limitations under the License.
             </el-option>
           </el-select>
           <el-select v-model="item.condition.selectedId"
-                     :placeholder="$t('debugger.chooseTemp')"
                      class="condition"
                      @change="conditionChange(item)">
             <el-option v-for="i in item.condition.options"
@@ -538,7 +537,6 @@ limitations under the License.
           </el-select>
 
           <el-select v-model="item.param.name"
-                     :placeholder="$t('debugger.chooseParam')"
                      @change="paramChange(item)"
                      v-if="item.param.options.length"
                      class="param">
@@ -832,8 +830,11 @@ export default {
       }
       const watchNodes = [];
       this.node.childNodes.forEach((val) => {
+        if (type !== val.checked) {
+          watchNodes.push(val.data.name);
+        }
         val.checked = type;
-        watchNodes.push(val.data.name);
+
         if (val.childNodes) {
           this.dealCheckPro(val.childNodes, type);
         }
@@ -2143,12 +2144,15 @@ export default {
       width: 200px;
     }
     .condition {
+      margin-left: 10px;
       width: 200px;
     }
     .param {
+      margin-left: 10px;
       width: 200px;
     }
     .param-value {
+      margin-left: 10px;
       width: 200px;
     }
   }
@@ -2300,6 +2304,9 @@ export default {
       }
     }
   }
+}
+.deb-indent {
+  padding-left: 40px;
 }
 #graphTemp,
 #subgraphTemp {
