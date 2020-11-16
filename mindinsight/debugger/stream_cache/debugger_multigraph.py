@@ -65,7 +65,6 @@ class DebuggerMultiGraph(DebuggerGraph):
         # add graph scope to node name
         pre_scope = graph_name + "/"
         node.name = pre_scope + node.name
-        node.full_name = pre_scope + node.full_name
         if node.scope:
             node.scope = pre_scope + node.scope
         else:
