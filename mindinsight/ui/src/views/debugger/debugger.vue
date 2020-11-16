@@ -317,11 +317,11 @@ limitations under the License.
            :class="{collapse: collapseTable}">
         <img :src="require('@/assets/images/all-drop-down.png')"
              v-show="collapseTable"
-             @click="collapseTable=!collapseTable"
+             @click="rightCollapse()"
              alt="" />
         <img :src="require('@/assets/images/all-uptake.png')"
              v-show="!collapseTable"
-             @click="collapseTable=!collapseTable"
+             @click="rightCollapse()"
              alt="" />
 
         <el-tabs v-model="tabs.activeName">
@@ -1615,6 +1615,12 @@ export default {
       this.$router.push({
         path: '/summary-manage',
       });
+    },
+    rightCollapse() {
+      this.collapseTable = !this.collapseTable;
+      setTimeout(() => {
+        this.initSvg(false);
+      }, 500);
     },
   },
   destroyed() {

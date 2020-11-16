@@ -1560,6 +1560,7 @@ export default {
             lists: [],
             selected: false,
             id: hit.node_name,
+            graph_name: hit.graph_name,
           };
           if (hit.tensors && hit.tensors.length) {
             hit.tensors.forEach((i) => {
@@ -1636,6 +1637,8 @@ export default {
       if (this.graphFiles.value === this.$t('debugger.all')) {
         delete params.params.graph_name;
         params.params.name = `${this.watchPointHits[key].graph_name}/${name}`;
+      } else {
+        this.graphFiles.value = this.watchPointHits[key].graph_name;
       }
       this.watchPointHits.forEach((val, index) => {
         if (key === index) {
@@ -1662,8 +1665,8 @@ export default {
               }
               this.querySingleNode(
                   JSON.parse(JSON.stringify(graph)),
-                  name,
-                  false,
+                  params.params.name,
+                  true,
               );
             }
           },
