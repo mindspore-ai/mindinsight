@@ -1483,7 +1483,10 @@ export default {
         this.$refs.tree.append(val, name);
       });
       node.childNodes.forEach((val) => {
-        if (node.checked) {
+        if (
+          node.checked &&
+          !node.childNodes.find((val) => val.data.watched !== 2)
+        ) {
           val.checked = true;
         }
         if (val.data.watched === 2) {
@@ -1502,6 +1505,7 @@ export default {
       node.expanded = true;
       node.loading = false;
       this.$refs.tree.setCurrentKey(name);
+      this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
       this.$nextTick(() => {
         setTimeout(() => {
           const dom = document.querySelector(
