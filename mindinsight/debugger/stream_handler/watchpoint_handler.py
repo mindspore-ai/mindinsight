@@ -389,11 +389,8 @@ class WatchpointHitHandler(StreamHandlerBase):
             value (dict): The watchpoint hit info.
 
                 - tensor_proto (TensorProto): The message about hit tensor.
-
                 - watchpoint (Watchpoint): The Watchpoint that a node hit.
-
                 - node_name (str): The UI node name.
-
                 - graph_name (str): The graph name.
         """
         watchpoint_hit = WatchpointHit(
@@ -561,7 +558,6 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
         watch_condition (dict): Watch condition.
 
             - id (str): Condition id. Should be in WATCHPOINT_CONDITION_MAPPING.
-
             - param (list): Condition value. Should be given for comparison condition. The value
                 will be translated to np.float32.
     """

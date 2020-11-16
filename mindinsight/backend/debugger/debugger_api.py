@@ -312,7 +312,7 @@ def recheck():
     return reply
 
 
-@BLUEPRINT.route("/debugger/tensor_graphs", methods=["GET"])
+@BLUEPRINT.route("/debugger/tensor-graphs", methods=["GET"])
 def retrieve_tensor_graph():
     """
     Retrieve tensor value according to name and shape.
@@ -321,7 +321,7 @@ def retrieve_tensor_graph():
         str, the required data.
 
     Examples:
-        >>> GET http://xxxx/v1/mindinsight/debugger/tensor_graphs?tensor_name=tensor_name$graph_name=graph_name
+        >>> GET http://xxxx/v1/mindinsight/debugger/tensor-graphs?tensor_name=tensor_name&graph_name=graph_name
     """
     tensor_name = request.args.get('tensor_name')
     graph_name = request.args.get('graph_name')
@@ -329,7 +329,7 @@ def retrieve_tensor_graph():
     return reply
 
 
-@BLUEPRINT.route("/debugger/tensor_hits", methods=["GET"])
+@BLUEPRINT.route("/debugger/tensor-hits", methods=["GET"])
 def retrieve_tensor_hits():
     """
     Retrieve tensor value according to name and shape.
@@ -338,7 +338,7 @@ def retrieve_tensor_hits():
         str, the required data.
 
     Examples:
-        >>> GET http://xxxx/v1/mindinsight/debugger/tensor_hits?tensor_name=tensor_name$graph_name=graph_name
+        >>> GET http://xxxx/v1/mindinsight/debugger/tensor-hits?tensor_name=tensor_name&graph_name=graph_name
     """
     tensor_name = request.args.get('tensor_name')
     graph_name = request.args.get('graph_name')

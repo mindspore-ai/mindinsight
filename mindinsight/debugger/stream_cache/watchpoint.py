@@ -178,7 +178,6 @@ class Watchpoint:
         watch_condition (dict): The condition of Watchpoint.
 
             - condition (str): Accept `INF` or `NAN`.
-
             - param (list[float]): Not defined yet.
     """
 

@@ -18,12 +18,14 @@ from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.datavisual.data_transform.graph.node import Node, NodeTypeEnum
 from .debugger_graph import DebuggerGraph
 
+
 class DebuggerMultiGraph(DebuggerGraph):
     """The `DebuggerMultiGraph` object provides interfaces to describe a debugger multigraph."""
 
     def add_graph(self, graph_dict):
         """
-        add graphs to DebuggerMultiGraph
+        Add graphs to DebuggerMultiGraph.
+
         Args:
             graph_dict (dict): The <graph_name, graph_object> dict.
         """

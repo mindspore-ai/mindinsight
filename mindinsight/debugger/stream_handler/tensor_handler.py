@@ -50,7 +50,6 @@ class TensorHandler(StreamHandlerBase):
             value (dict): The Tensor proto message.
 
                 - step (int): The current step of tensor.
-
                 - tensor_protos (list[TensorProto]): The tensor proto.
 
         Returns:
@@ -153,9 +152,7 @@ class TensorHandler(StreamHandlerBase):
             filter_condition (dict): Filter condition.
 
                 - name (str): The full name of tensor.
-
                 - node_type (str): The type of the node.
-
                 - prev (bool): Whether to get previous tensor.
 
         Returns:
