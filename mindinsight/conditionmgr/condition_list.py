@@ -24,6 +24,10 @@ from mindinsight.conditionmgr.condition import ValueTypeEnum
 from mindinsight.conditionmgr.condition import TargetTypeEnum
 from mindinsight.conditionmgr.condition import PlatformEnum
 from mindinsight.conditionmgr.condition import check_initialization_available
+from mindinsight.conditionmgr.condition import check_normal_param_range
+from mindinsight.conditionmgr.condition import check_percentage_param_range
+from mindinsight.conditionmgr.condition import check_abs_param_range
+
 
 CONDITION_LIST = [
     Condition(
@@ -35,21 +39,24 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="zero_percentage_ge",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_percentage_param_range,
                 default_value=100
             ),
             ConditionParameter(
                 name="max_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="min_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.WEIGHT,
         supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
         minimum_debugger_capability=(1, 1),
-        available_test_func=check_initialization_available
+        availability_test_func=check_initialization_available
     ),
     Condition(
         condition_id="weight_overflow",
@@ -69,19 +76,23 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="abs_mean_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range
             ),
             ConditionParameter(
                 name="max_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="min_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="mean_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.WEIGHT,
@@ -96,19 +107,23 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="abs_mean_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range
             ),
             ConditionParameter(
                 name="max_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="min_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="mean_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.WEIGHT,
@@ -123,19 +138,23 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="abs_mean_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range
             ),
             ConditionParameter(
                 name="max_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="min_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="mean_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.GRADIENT,
@@ -150,19 +169,23 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="abs_mean_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range
             ),
             ConditionParameter(
                 name="max_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="min_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="mean_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.GRADIENT,
@@ -237,7 +260,8 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="param",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -252,7 +276,8 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="param",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -267,7 +292,8 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="param",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -282,7 +308,8 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="param",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -297,7 +324,8 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="param",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -312,7 +340,8 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="param",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -327,7 +356,8 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="param",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -342,7 +372,8 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="param",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -358,21 +389,24 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="zero_percentage_ge",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_percentage_param_range,
                 default_value=100
             ),
             ConditionParameter(
                 name="max_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="min_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
         supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
         minimum_debugger_capability=(1, 1),
-        available_test_func=check_initialization_available
+        availability_test_func=check_initialization_available
     ),
     Condition(
         condition_id="tensor_too_large",
@@ -382,19 +416,23 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="abs_mean_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range
             ),
             ConditionParameter(
                 name="max_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="min_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="mean_gt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -409,19 +447,23 @@ CONDITION_LIST = [
         parameters=[
             ConditionParameter(
                 name="abs_mean_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range
             ),
             ConditionParameter(
                 name="max_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="min_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             ),
             ConditionParameter(
                 name="mean_lt",
-                value_type=ValueTypeEnum.FLOAT64
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
@@ -437,6 +479,7 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="zero_percentage_ge",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_percentage_param_range,
                 default_value=100
             )
         ],
@@ -453,6 +496,7 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="rtol",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range,
                 default_value=1e-5
             ),
             ConditionParameter(
@@ -483,6 +527,7 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="abs_update_ratio_mean_gt",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range,
                 default_value=1e-1
             ),
             ConditionParameter(
@@ -506,6 +551,7 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="abs_update_ratio_mean_lt",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range,
                 default_value=1e-4
             ),
             ConditionParameter(
@@ -529,6 +575,7 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="abs_update_ratio_mean_gt",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range,
                 default_value=1e-1
             ),
             ConditionParameter(
@@ -552,6 +599,7 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="abs_update_ratio_mean_lt",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range,
                 default_value=1e-4
             ),
             ConditionParameter(
@@ -575,6 +623,7 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="rtol",
                 value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_abs_param_range,
                 default_value=1e-5
             ),
             ConditionParameter(

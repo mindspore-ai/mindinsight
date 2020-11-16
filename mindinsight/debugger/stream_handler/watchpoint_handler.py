@@ -575,12 +575,13 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
         return
 
     for param in params:
-        if param.get("name") not in condition.names:
+        condition_param_name = param.get("name")
+        if condition_param_name not in condition.names:
             log.error("Invalid name of parameter for condition: %s, available values: %s",
                       condition_id, condition.names)
             raise DebuggerParamValueError("Invalid name of parameter.")
 
-        condition_param = condition.get_parameter_definition(param.get("name"))
+        condition_param = condition.get_parameter_definition(condition_param_name)
         if condition_param.type.name in (ValueTypeEnum.FLOAT64.name, ValueTypeEnum.INT64.name) \
                 and not isinstance(param.get("value"), (float, int)):
             log.error("Number param should be given for condition: %s", condition_id)
@@ -590,6 +591,10 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
                 and not isinstance(param.get("value"), bool):
             log.error("Bool param should be given for condition: %s", condition_id)
             raise DebuggerParamValueError("Bool param should be given.")
+
+        if not condition_param.is_valid(param.get("value")):
+            log.error("Param %s out of range for condition: %s", condition_param_name, condition_id)
+            raise DebuggerParamValueError("Parameter out of range.")
 
 
 def set_default_param(condition_mgr, watch_condition):

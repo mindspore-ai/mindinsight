@@ -122,13 +122,17 @@ class ConditionParameter:
     Args:
         name (str): parameter name.
         value_type (ValueTypeEnum): the type of value.
+        valid_test_func (func): the function used to test whether the param is valid.
         support_disable (bool): whether the param support no assignment.
         default_value (float): default value.
         visible_on_ui (bool): whether the param visible on ui.
     """
-    def __init__(self, name, value_type: ValueTypeEnum, support_disable=True, default_value=None, visible_on_ui=True):
+
+    def __init__(self, name, value_type: ValueTypeEnum, valid_test_func=None, support_disable=True, default_value=None,
+                 visible_on_ui=True):
         self._name = name
         self._type = value_type
+        self._valid_test_func = valid_test_func
         self._support_disable = support_disable
         self._default_value = default_value
         self._visible_on_ui = visible_on_ui
@@ -158,6 +162,12 @@ class ConditionParameter:
         """Get visible_on_ui of parameter."""
         return self._visible_on_ui
 
+    def is_valid(self, value):
+        """Check is the parameter valid."""
+        if self._valid_test_func is None:
+            return True
+        return self._valid_test_func(value)
+
 
 class Condition:
     """
@@ -171,10 +181,10 @@ class Condition:
         supported_target_type (TargetTypeEnum): the supported target type.
         supported_platforms (tuple[PlatformEnum, PlatformEnum]): the supported platforms.
         minimum_debugger_capability (tuple): the minimum debugger capability required.
-        available_test_func (func): the function used to test whether the condition is available
+        availability_test_func (func): the function used to test whether the condition is available.
     """
     def __init__(self, condition_id, abbr, optimize_phase, parameters, supported_target_type, supported_platforms,
-                 minimum_debugger_capability, available_test_func=None):
+                 minimum_debugger_capability, availability_test_func=None):
         self.id = condition_id
         self._abbr = abbr
         self.optimize_phase = optimize_phase
@@ -184,7 +194,7 @@ class Condition:
         self._supported_target_type = supported_target_type
         self.supported_platforms = supported_platforms
         self.minimum_debugger_capability = minimum_debugger_capability
-        self.available_test_func = available_test_func
+        self.availability_test_func = availability_test_func
 
     def get_parameter_definition(self, name):
         """Return parameter definition by the name"""
@@ -200,9 +210,9 @@ class Condition:
         if backend not in [platform.value for platform in self.supported_platforms]:
             logger.debug("The condition %s is not supported on the platform.", self.id)
             return False
-        if self.available_test_func is None:
+        if self.availability_test_func is None:
             return True
-        return self.available_test_func(condition_context)
+        return self.availability_test_func(condition_context)
 
     @property
     def abbr(self):
@@ -228,5 +238,23 @@ class Condition:
 def check_initialization_available(condition_context):
     """Check if initialization is available at this step"""
     if condition_context.step == 0:
+        return True
+    return False
+
+
+def check_percentage_param_range(value):
+    if 0 <= value <= 100:
+        return True
+    return False
+
+
+def check_normal_param_range(value):
+    if float("-inf") < value < float("inf"):
+        return True
+    return False
+
+
+def check_abs_param_range(value):
+    if 0 <= value < float("inf"):
         return True
     return False
