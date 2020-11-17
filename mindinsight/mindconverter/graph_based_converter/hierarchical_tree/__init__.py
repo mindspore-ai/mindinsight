@@ -23,6 +23,8 @@ __all__ = [
     "HierarchicalTreeFactory"
 ]
 
+from ...common.exceptions import NodeInputMissing, TreeNodeInsertFail
+
 
 def _tf_model_node_name_reformat(node: OnnxGraphNode, node_name):
     """
@@ -53,6 +55,7 @@ class HierarchicalTreeFactory:
     """Hierarchical tree factory."""
 
     @classmethod
+    @TreeNodeInsertFail.check_except("Tree node inserts failed.")
     def create(cls, graph):
         """
         Factory method of hierarchical tree.
@@ -72,7 +75,9 @@ class HierarchicalTreeFactory:
             if not node_input:
                 err_msg = f"This model is not supported now. " \
                           f"Cannot find {node_name}'s input shape."
-                log.error(err_msg)
+                error = NodeInputMissing(err_msg)
+                log.error(str(error))
+                raise error
             if isinstance(node_inst, OnnxGraphNode):
                 node_name_with_scope = _tf_model_node_name_reformat(node_inst, node_name)
                 node_scope_name[node_name] = node_name_with_scope

@@ -35,7 +35,7 @@ from ..constant import SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVEL_INDENT
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT
 from ..constant import NodeType
 from ..report_generator import ReportGenerator
-from ...common.exceptions import NodeTypeNotSupport
+from ...common.exceptions import ReportGenerateFail, ScriptGenerateFail, NodeInputTypeNotSupport
 
 
 class HierarchicalTree(Tree):
@@ -189,10 +189,9 @@ class HierarchicalTree(Tree):
         try:
             self._adjust_structure()
             code_fragments = self._generate_codes(mapper)
-        except Exception as e:
-            log.exception(e)
-            log.error("Error occur when create hierarchical tree.")
-            raise NodeTypeNotSupport("This model is not supported now.")
+        except (NodeInputTypeNotSupport, ScriptGenerateFail, ReportGenerateFail) as e:
+            log.error("Error occur when generating codes.")
+            raise e
 
         out_folder = os.path.realpath(out_folder)
         if not report_folder:
@@ -295,6 +294,8 @@ class HierarchicalTree(Tree):
                 node.data.args_in_code.pop(arg)
         return node
 
+    @ScriptGenerateFail.check_except("FormatCode run error. Check detailed information in log.")
+    @ReportGenerateFail.check_except("Not find valid operators in converted script.")
     def _generate_codes(self, mapper):
         """
         Generate code files.
@@ -382,6 +383,7 @@ class HierarchicalTree(Tree):
 
         formatted_code, _ = FormatCode("".join(code_blocks),
                                        style_config=CodeFormatConfig.PEP8.value)
+
         report_generator = ReportGenerator()
         report = report_generator.gen_report(formatted_code)
 

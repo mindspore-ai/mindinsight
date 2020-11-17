@@ -175,7 +175,10 @@ def setup_logger(sub_module, log_name, **kwargs):
         >>> logger = logging.getLogger('datavisual.flask.request')
     """
 
-    logger = get_logger(sub_module, log_name)
+    if kwargs.get('sub_log_name', False):
+        logger = get_logger(sub_module, kwargs['sub_log_name'])
+    else:
+        logger = get_logger(sub_module, log_name)
     if logger.hasHandlers():
         return logger
 
