@@ -6,7 +6,8 @@
     "node_name": "Default/TransData-op99",
     "backend": "GPU",
     "enable_recheck": false,
-    "graph_name": "graph_0"
+    "graph_name": "graph_0",
+    "recommendation_confirmed":  false
   },
   "graph": {
     "graph_names": [
