@@ -98,6 +98,12 @@ export default {
                 this.showFilterInput = true;
               }
               const tensorValue = res.data.tensor_value;
+              const statistics = tensorValue.statistics || {};
+              this.statisticsArr = [
+                tensorValue.curr_step_statistics || {},
+                tensorValue.prev_step_statistics || {},
+                tensorValue.statistics || {},
+              ];
               if (tensorValue.diff === 'Too large to show.') {
                 this.tensorValue = [];
                 this.$nextTick(() => {
@@ -118,12 +124,7 @@ export default {
               ) {
                 this.tensorValue = [this.tensorValue];
               }
-              const statistics = tensorValue.statistics || {};
-              this.statisticsArr = [
-                tensorValue.curr_step_statistics || {},
-                tensorValue.prev_step_statistics || {},
-                tensorValue.statistics || {},
-              ];
+
               this.$nextTick(() => {
                 this.$refs.tensorValue.updateGridData(
                     this.tensorValue,
@@ -218,6 +219,9 @@ export default {
       this.step = Number(this.step);
       if (this.step === 0) {
         this.step = 1;
+      }
+      if (this.step >= 1000000000) {
+        this.step = 999999999;
       }
     },
     /**
@@ -595,6 +599,8 @@ export default {
             }
             if (res.data.tensor_value) {
               const value = res.data.tensor_value.value;
+              const statistics = res.data.tensor_value.statistics || {};
+              this.statisticsArr = [statistics];
               if (value === 'Too large to show.') {
                 this.tensorValue = [];
                 this.$nextTick(() => {
@@ -608,8 +614,6 @@ export default {
                 return;
               }
               this.tensorValue = value instanceof Array ? value : [value];
-              const statistics = res.data.tensor_value.statistics || {};
-              this.statisticsArr = [statistics];
               this.$nextTick(() => {
                 this.$refs.tensorValue.updateGridData(
                     this.tensorValue,
@@ -657,14 +661,22 @@ export default {
           this.metadata.graph_name = metadata.graph_name
             ? metadata.graph_name
             : this.metadata.graph_name;
-          let graphName = this.graphFiles.value;
-          if (this.graphFiles.value === this.$t('debugger.all')) {
+          let graphName =
+            this.graphFiles.value === this.$t('debugger.all')
+              ? ''
+              : this.graphFiles.value;
+          if (
+            this.graphFiles.value === this.$t('debugger.all') &&
+            this.selectedNode.name
+          ) {
             graphName = this.selectedNode.name.split('/')[0];
           }
           if (metadata.graph_name) {
             graphName = metadata.graph_name;
           }
-          this.queryAllTreeData(this.nodeName, true, graphName);
+          if (this.nodeName) {
+            this.queryAllTreeData(this.nodeName, true, graphName);
+          }
         }
       }
       if (metadata.step && metadata.step > this.metadata.step) {
@@ -716,32 +728,6 @@ export default {
               ) {
                 this.radio1 = 'hit';
                 this.dealWatchpointHits(res.data.watch_point_hits);
-              }
-              if (
-                res.data.tensor_history &&
-              this.metadata.step <= res.data.metadata.step
-              ) {
-                setTimeout(() => {
-                  const tableData = res.data.tensor_history;
-
-                  if (this.tableData.length) {
-                    this.tableData.forEach((val, key, arr) => {
-                      tableData.forEach((value) => {
-                        if (val.name === value.name) {
-                          val.dtype = value.dtype;
-                          val.shape = value.shape;
-                          val.step = value.step;
-                          val.value = value.value;
-                        }
-                      });
-                    });
-                  } else {
-                    this.tableData = tableData;
-                  }
-
-                  this.dealTableData(this.tableData);
-                  this.tableData = JSON.parse(JSON.stringify(this.tableData));
-                }, 200);
               }
               this.pollData();
             }
@@ -1029,6 +1015,7 @@ export default {
      */
     dealCheckPro(childNodes, check) {
       childNodes.forEach((val) => {
+        val.indeterminate = false;
         val.checked = check;
         if (val.childNodes) {
           this.dealCheckPro(val.childNodes, check);
@@ -1039,8 +1026,6 @@ export default {
      * Add watchpoint
      */
     addWatchPoint() {
-      this.searchWord = '';
-      this.treeFlag = true;
       this.createWatchPointArr.push({
         collection: {
           selectedId: this.conditionCollections[0].id,
@@ -1075,7 +1060,7 @@ export default {
      * Function to be executed after the search value changes
      */
     filterChange() {
-      if (this.searchWord === '') {
+      if (this.searchWord === '' && this.nodeTypes.value === 'all') {
         this.treeFlag = true;
         this.$nextTick(() => {
           setTimeout(() => {
@@ -1093,6 +1078,7 @@ export default {
      * Filter tree data by node name
      */
     filter() {
+      this.treeFlag = this.searchWord === '' && this.nodeTypes.value === 'all';
       if (this.searchWord || this.nodeTypes.value !== 'all') {
         const params = {
           name: this.searchWord,
@@ -1108,12 +1094,10 @@ export default {
         RequestService.search(params).then(
             (res) => {
               if (res.data && res.data.nodes) {
-                this.treeFlag = false;
                 this.searchTreeData = res.data.nodes;
                 this.searchCheckedArr = [];
                 this.dealSearchResult(this.searchTreeData);
                 this.defaultCheckedArr = this.searchCheckedArr;
-                this.treeFlag = false;
                 this.searchNode.childNodes = [];
                 const data = res.data.nodes.map((val) => {
                   return {
@@ -1439,12 +1423,15 @@ export default {
                   selected: false,
                 };
               });
+
               if (focusLast) {
-                this.loadOriginalTree();
-                this.$refs.tree.getCheckedKeys().forEach((val) => {
-                  this.$refs.tree.setChecked(val, false);
-                });
-                this.defaultCheckedArr = [];
+                if (this.nodeTypes.value === 'all' && !this.searchWord) {
+                  this.loadOriginalTree();
+                  this.$refs.tree.getCheckedKeys().forEach((val) => {
+                    this.$refs.tree.setChecked(val, false);
+                  });
+                  this.defaultCheckedArr = [];
+                }
 
                 const obj = this.watchPointArr[this.watchPointArr.length - 1];
                 obj.selected = true;
@@ -1595,37 +1582,40 @@ export default {
       }
     },
     focusWatchpointHit() {
-      let selectedNodeName = this.selectedNode.name;
-      if (this.graphFiles.value === this.$t('debugger.all')) {
-        selectedNodeName = selectedNodeName.replace(
-            `${selectedNodeName.split('/')[0]}/`,
-            '',
-        );
-      }
-      this.expandKeys = [];
-      this.watchPointHits.forEach((val) => {
-        if (val.name === selectedNodeName) {
-          val.selected = true;
-          this.expandKeys.push(val.id);
-        } else {
-          val.selected = false;
+      if (this.selectedNode.name) {
+        let selectedNodeName = this.selectedNode.name;
+        if (this.graphFiles.value === this.$t('debugger.all')) {
+          selectedNodeName = selectedNodeName.replace(
+              `${selectedNodeName.split('/')[0]}/`,
+              '',
+          );
         }
-      });
-      this.$nextTick(() => {
-        setTimeout(() => {
-          const dom = document.querySelector('.hit-item.selected');
-          if (dom) {
-            dom.scrollIntoView();
+        this.expandKeys = [];
+        this.watchPointHits.forEach((val) => {
+          if (val.name === selectedNodeName) {
+            val.selected = true;
+            this.expandKeys.push(val.id);
+          } else {
+            val.selected = false;
           }
-        }, 200);
-      });
+        });
+        this.$nextTick(() => {
+          setTimeout(() => {
+            const dom = document.querySelector('.hit-item.selected');
+            if (dom) {
+              dom.scrollIntoView();
+            }
+          }, 200);
+        });
+      }
     },
     /**
      * Update tensor value
      * @param {number} key The index of the node of the watchPointHits currently clicked
      */
     updateTensorValue(key) {
-      const name = this.watchPointHits[key].name;
+      const currentHit = this.watchPointHits[key];
+      const name = currentHit.name;
       const temName = this.nodeName;
       this.nodeName = name;
       this.isHitIntoView = false;
@@ -1635,14 +1625,12 @@ export default {
           name,
           single_node: true,
           watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
-          graph_name: this.watchPointHits[key].graph_name,
+          graph_name: currentHit.graph_name,
         },
       };
       if (this.graphFiles.value === this.$t('debugger.all')) {
         delete params.params.graph_name;
-        params.params.name = `${this.watchPointHits[key].graph_name}/${name}`;
-      } else {
-        this.graphFiles.value = this.watchPointHits[key].graph_name;
+        params.params.name = `${currentHit.graph_name}/${name}`;
       }
       this.watchPointHits.forEach((val, index) => {
         if (key === index) {
@@ -1659,19 +1647,28 @@ export default {
             }
             this.retrieveTensorHistory(
                 {name: this.nodeName},
-                this.watchPointHits[key].graph_name,
+                currentHit.graph_name,
             );
             if (res.data && res.data.graph) {
               const graph = res.data.graph;
+
+              if (
+                this.graphFiles.value !== currentHit.graph_name &&
+              this.graphFiles.value !== this.$t('debugger.all')
+              ) {
+                this.graphFiles.value = currentHit.graph_name;
+                this.resetAllData(graph, params.params.name);
+              } else {
+                this.querySingleNode(
+                    JSON.parse(JSON.stringify(graph)),
+                    params.params.name,
+                    true,
+                );
+              }
               if (graph.children) {
                 this.dealTreeData(graph.children, name);
                 this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
               }
-              this.querySingleNode(
-                  JSON.parse(JSON.stringify(graph)),
-                  params.params.name,
-                  true,
-              );
             }
           },
           (err) => {
@@ -1696,11 +1693,13 @@ export default {
           watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
         },
       };
-      if (this.graphFiles.value === this.$t('debugger.all')) {
-        if (graphName !== name) {
-          name = `${graphName}/${name}`;
-          params.params.name = name;
-        }
+      if (
+        this.graphFiles.value === this.$t('debugger.all') &&
+        graphName &&
+        name
+      ) {
+        name = `${graphName}/${name}`;
+        params.params.name = name;
       } else {
         params.params.graph_name = graphName;
       }
@@ -1712,42 +1711,8 @@ export default {
             if (res.data && res.data.graph) {
               const graph = res.data.graph;
               if (graph.nodes && !this.isCurrentGraph) {
-                this.node.childNodes = [];
-                this.origialTree = graph.nodes.map((val) => {
-                  return {
-                    label: val.name.split('/').pop(),
-                    leaf:
-                    val.type === 'name_scope' ||
-                    val.type === 'aggregation_scope'
-                      ? false
-                      : true,
-                    ...val,
-                  };
-                });
-                this.resolve(this.origialTree);
-                this.node.childNodes.forEach((val) => {
-                  if (val.data.watched === 2) {
-                    val.checked = true;
-                  }
-                  if (val.data.watched === 1) {
-                    val.indeterminate = true;
-                  }
-                });
+                this.resetAllData(graph, name);
                 this.isCurrentGraph = true;
-                this.firstFloorNodes = [];
-                this.allGraphData = {};
-                d3.select('#graph svg').remove();
-                this.selectedNode.name = '';
-                this.packageDataToObject(
-                    '',
-                    true,
-                    JSON.parse(JSON.stringify(graph.nodes)),
-                );
-                this.querySingleNode(
-                    JSON.parse(JSON.stringify(graph)),
-                    name,
-                    true,
-                );
               } else {
                 this.querySingleNode(
                     JSON.parse(JSON.stringify(graph)),
@@ -1825,6 +1790,41 @@ export default {
       }
       if (children.children) {
         this.dealTreeData(children.children, name);
+      }
+    },
+    resetAllData(graph, name) {
+      this.node.childNodes = [];
+      this.origialTree = graph.nodes.map((val) => {
+        return {
+          label: val.name.split('/').pop(),
+          leaf:
+            val.type === 'name_scope' || val.type === 'aggregation_scope'
+              ? false
+              : true,
+          ...val,
+        };
+      });
+      this.resolve(this.origialTree);
+      this.node.childNodes.forEach((val) => {
+        if (val.data.watched === 2) {
+          val.checked = true;
+        }
+        if (val.data.watched === 1) {
+          val.indeterminate = true;
+        }
+      });
+      this.firstFloorNodes = [];
+      this.allGraphData = {};
+      d3.select('#graph svg').remove();
+      this.packageDataToObject(
+          '',
+          true,
+          JSON.parse(JSON.stringify(graph.nodes)),
+      );
+      if (name) {
+        this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
+      } else {
+        this.resetGraph();
       }
     },
   },
