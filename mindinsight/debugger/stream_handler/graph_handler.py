@@ -71,7 +71,8 @@ class GraphHandler(StreamHandlerBase):
             value (GraphProto): The Graph proto message.
         """
         log.info("Put graph into cache.")
-        for graph_name, graph_value in value.items():
+        sorted_value_list = self._sort_graph(value)
+        for graph_name, graph_value in sorted_value_list:
             self._graph_proto[graph_name] = graph_value
             # build sub graph
             graph = DebuggerGraph()
@@ -686,3 +687,20 @@ class GraphHandler(StreamHandlerBase):
         if not graph.exist_node(name=node_name):
             log.error("graph %s doesn't find node: %s.", graph_name, node_name)
             raise DebuggerNodeNotInGraphError(node_name)
+
+    def _sort_graph(self, graphs):
+        """
+        Sort graph by graph_name.
+
+        Args:
+            graphs(dict): <graph_name, GraphProto object>.
+        """
+        if len(graphs) == 1:
+            return graphs.items()
+        sorted_graphs = sorted(graphs.items(), key=lambda x: get_graph_number(x[0]))
+        return sorted_graphs
+
+
+def get_graph_number(graph_name):
+    number = graph_name.split("_")[-1]
+    return int(number)
