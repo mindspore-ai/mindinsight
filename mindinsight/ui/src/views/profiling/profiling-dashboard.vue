@@ -16,7 +16,7 @@ limitations under the License.
 <template>
   <div class="pro-router-wrap">
     <div class="pro-router-left">
-      <!-- Timeline display area -->
+      <!-- Step trace area -->
       <div class="step-trace">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.stepTrace') }}</div>
@@ -26,7 +26,7 @@ limitations under the License.
                     :class="{disabled:svg.noData && svg.data.length === 0}">{{ $t('profiling.viewDetail') }}
               <i class="el-icon-d-arrow-right"></i></button>
           </div>
-          <!-- Timeline description -->
+          <!-- Step trace description -->
           <div class="tip-icon">
             <el-tooltip placement="bottom"
                         effect="light">
@@ -60,7 +60,7 @@ limitations under the License.
             </el-tooltip>
           </div>
         </div>
-        <!-- Timeline SVG container -->
+        <!-- Step trace SVG container -->
         <div class="trace-container">
           <div id="trace"
                class="training-trace"
@@ -387,8 +387,8 @@ export default {
     return {
       fpBpPercent: '--', // Ratio of time consumed by forward and backward propagation
       iterationIntervalPercent: '--', // Ratio of time consumed by step interval
-      totalSteps: '--', // Total steps
-      totalTime: '--', // Total time
+      totalSteps: '--',
+      totalTime: '--',
       tailPercent: '--', // Ratio of time consumed by step tail
       queueInfoShow: false, // Whether to show queue information
       deviceInfoShow: false, // Whether to show device information
@@ -397,7 +397,7 @@ export default {
         data: [], // Data of svg
         svgPadding: 20, // Padding of svg
         totalWidth: 0, // Total width of svg
-        totalTime: 0, // Total time
+        totalTime: 0,
         cellHeight: 40,
         cellPadding: 0,
         rowPadding: 20,
@@ -424,7 +424,7 @@ export default {
       trainingJobId: this.$route.query.id, // Training job id
       summaryPath: this.$route.query.dir, // Summary path data
       relativePath: this.$route.query.path, // Relative path of summary log
-      currentCard: '', // Data of current card
+      currentCard: '', // current device card
       pieChart: {
         // Pie graph information of operators
         chartDom: null,
