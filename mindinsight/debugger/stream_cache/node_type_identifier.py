@@ -123,7 +123,9 @@ def is_gradient_node(node):
     Returns:
         bool, if the node is gradient type.
     """
-    if node.name.startswith('Gradients/') and node.type != NodeTypeEnum.PARAMETER.value:
+    node_name = node.name.lower()
+    if node_name.startswith('gradients/') and \
+            node.type not in [NodeTypeEnum.PARAMETER.value, NodeTypeEnum.CONST.value]:
         return True
     return False
 

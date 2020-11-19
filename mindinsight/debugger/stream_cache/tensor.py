@@ -174,6 +174,7 @@ class OpTensor(BaseTensor):
             res['value'] = tensor_value.tolist()
         elif isinstance(tensor_value, str):
             res['value'] = tensor_value
+            res['statistics'] = TensorUtils.get_overall_statistic_dict(self._stats)
 
         return res
 
