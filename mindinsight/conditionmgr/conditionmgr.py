@@ -114,7 +114,9 @@ class ConditionMgr:
                     "name": param.name,
                     "type": param.type.name,
                     "support_disable": param.support_disable,
-                    "default_value": param.default_value
+                    "default_value": param.default_value,
+                    "param_type": param.param_type,
+                    "required_params": param.required_params
                 })
             collections[condition.supported_target_type.value].append({
                 "id": condition.id,

@@ -23,15 +23,18 @@ from mindinsight.conditionmgr.condition import ConditionParameter
 from mindinsight.conditionmgr.condition import ValueTypeEnum
 from mindinsight.conditionmgr.condition import TargetTypeEnum
 from mindinsight.conditionmgr.condition import PlatformEnum
+from mindinsight.conditionmgr.condition import ParamTypeEnum
+from mindinsight.conditionmgr.condition import ConditionIdEnum
 from mindinsight.conditionmgr.condition import check_initialization_available
 from mindinsight.conditionmgr.condition import check_normal_param_range
 from mindinsight.conditionmgr.condition import check_percentage_param_range
 from mindinsight.conditionmgr.condition import check_abs_param_range
+from mindinsight.conditionmgr.condition import check_not_nan
 
 
 CONDITION_LIST = [
     Condition(
-        condition_id="weight_initialization",
+        condition_id=ConditionIdEnum.WEIGHT_INITIALIZATION,
         abbr="WI",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_initialization
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -59,7 +62,7 @@ CONDITION_LIST = [
         availability_test_func=check_initialization_available
     ),
     Condition(
-        condition_id="weight_overflow",
+        condition_id=ConditionIdEnum.WEIGHT_OVERFLOW,
         abbr="WO",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_general_overflow
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -69,7 +72,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="weight_too_large",
+        condition_id=ConditionIdEnum.WEIGHT_TOO_LARGE,
         abbr="WL",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_too_large
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -100,7 +103,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="weight_too_small",
+        condition_id=ConditionIdEnum.WEIGHT_TOO_SMALL,
         abbr="WS",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_too_small
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -131,7 +134,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="gradient_vanishing",
+        condition_id=ConditionIdEnum.GRADIENT_VANISHING,
         abbr="GV",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_too_small
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -162,7 +165,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="gradient_too_large",
+        condition_id=ConditionIdEnum.GRADIENT_TOO_LARGE,
         abbr="GL",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_too_large
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -193,7 +196,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="gradient_exploding",
+        condition_id=ConditionIdEnum.GRADIENT_EXPLODING,
         abbr="GE",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_general_overflow
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -203,7 +206,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="tensor_overflow",
+        condition_id=ConditionIdEnum.TENSOR_OVERFLOW,
         abbr="TO",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_general_overflow
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -213,7 +216,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="operator_overflow",
+        condition_id=ConditionIdEnum.OPERATOR_OVERFLOW,
         abbr="OO",
         # Send this condition to MindSpore will use WatchCondition.Condition.overflow
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -223,7 +226,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="nan",
+        condition_id=ConditionIdEnum.NAN,
         abbr="NAN",
         # Send this condition to MindSpore will use WatchCondition.Condition.nan
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -233,7 +236,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="overflow",
+        condition_id=ConditionIdEnum.OVERFLOW_ASCEND_CHIP,
         abbr="OVERFLOW",
         # Send this condition to MindSpore will use WatchCondition.Condition.overflow
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -243,7 +246,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="inf",
+        condition_id=ConditionIdEnum.INF,
         abbr="INF",
         # Send this condition to MindSpore will use WatchCondition.Condition.inf
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -253,7 +256,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="max_gt",
+        condition_id=ConditionIdEnum.MAX_GT,
         abbr="MAX>",
         # Send this condition to MindSpore will use WatchCondition.Condition.max_gt
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -269,7 +272,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="max_lt",
+        condition_id=ConditionIdEnum.MAX_LT,
         abbr="MAX<",
         # Send this condition to MindSpore will use WatchCondition.Condition.max_lt
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -285,7 +288,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="min_gt",
+        condition_id=ConditionIdEnum.MIN_GT,
         abbr="MIN>",
         # Send this condition to MindSpore will use WatchCondition.Condition.min_gt
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -301,7 +304,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="min_lt",
+        condition_id=ConditionIdEnum.MIN_LT,
         abbr="MIN<",
         # Send this condition to MindSpore will use WatchCondition.Condition.min_lt
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -317,7 +320,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="max_min_gt",
+        condition_id=ConditionIdEnum.MAX_MIN_GT,
         abbr="MAX-MIN>",
         # Send this condition to MindSpore will use WatchCondition.Condition.max_min_gt
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -333,7 +336,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="max_min_lt",
+        condition_id=ConditionIdEnum.MAX_MIN_LT,
         abbr="MAX-Min<",
         # Send this condition to MindSpore will use WatchCondition.Condition.max_min_lt
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -349,7 +352,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="mean_gt",
+        condition_id=ConditionIdEnum.MEAN_GT,
         abbr="MEAN>",
         # Send this condition to MindSpore will use WatchCondition.Condition.mean_gt
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -365,7 +368,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="mean_lt",
+        condition_id=ConditionIdEnum.MEAN_LT,
         abbr="MEAN<",
         # Send this condition to MindSpore will use WatchCondition.Condition.mean_lt
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -381,7 +384,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 0)
     ),
     Condition(
-        condition_id="tensor_initialization",
+        condition_id=ConditionIdEnum.TENSOR_INITIALIZATION,
         abbr="TI",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_initialization
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -409,7 +412,7 @@ CONDITION_LIST = [
         availability_test_func=check_initialization_available
     ),
     Condition(
-        condition_id="tensor_too_large",
+        condition_id=ConditionIdEnum.TENSOR_TOO_LARGE,
         abbr="TL",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_too_large
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -440,7 +443,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="tensor_too_small",
+        condition_id=ConditionIdEnum.TENSOR_TOO_SMALL,
         abbr="TS",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_too_small
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -471,7 +474,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="tensor_all_zero",
+        condition_id=ConditionIdEnum.TENSOR_ALL_ZERO,
         abbr="TZ",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_all_zero
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -488,7 +491,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="weight_not_changed",
+        condition_id=ConditionIdEnum.WEIGHT_NOT_CHANGED,
         abbr="WNC",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_not_changed
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -519,7 +522,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="weight_change_too_large",
+        condition_id=ConditionIdEnum.WEIGHT_CHANGE_TOO_LARGE,
         abbr="WCL",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_change_too_large
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -543,7 +546,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="weight_change_too_small",
+        condition_id=ConditionIdEnum.WEIGHT_CHANGE_TOO_SMALL,
         abbr="WCS",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_change_too_small
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -567,7 +570,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="tensor_change_too_large",
+        condition_id=ConditionIdEnum.TENSOR_CHANGE_TOO_LARGE,
         abbr="TCL",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_change_too_large
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -591,7 +594,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="tensor_change_too_small",
+        condition_id=ConditionIdEnum.TENSOR_CHANGE_TOO_SMALL,
         abbr="TCS",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_change_too_small
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -615,7 +618,7 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id="tensor_not_changed",
+        condition_id=ConditionIdEnum.TENSOR_NOT_CHANGED,
         abbr="TNC",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_not_changed
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
@@ -639,6 +642,96 @@ CONDITION_LIST = [
                 support_disable=False,
                 default_value=False,
                 visible_on_ui=False
+            )
+        ],
+        supported_target_type=TargetTypeEnum.TENSOR,
+        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
+        minimum_debugger_capability=(1, 1)
+    ),
+    Condition(
+        condition_id=ConditionIdEnum.ACTIVATION_RANGE,
+        abbr="AR",
+        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_not_changed
+        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
+        parameters=[
+            ConditionParameter(
+                name="range_start_inclusive",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_not_nan,
+                param_type=ParamTypeEnum.SUPPORT_PARAM
+            ),
+            ConditionParameter(
+                name="range_end_inclusive",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_not_nan,
+                param_type=ParamTypeEnum.SUPPORT_PARAM
+            ),
+            ConditionParameter(
+                name="range_percentage_lt",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_percentage_param_range,
+                required_params=["range_start_inclusive", "range_end_inclusive"]
+            ),
+            ConditionParameter(
+                name="range_percentage_gt",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_percentage_param_range,
+                required_params=["range_start_inclusive", "range_end_inclusive"]
+            ),
+            ConditionParameter(
+                name="max_min_lt",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
+            ),
+            ConditionParameter(
+                name="max_min_gt",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
+            )
+        ],
+        supported_target_type=TargetTypeEnum.ACTIVATION,
+        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
+        minimum_debugger_capability=(1, 1)
+    ),
+    Condition(
+        condition_id=ConditionIdEnum.TENSOR_RANGE,
+        abbr="TR",
+        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_not_changed
+        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
+        parameters=[
+            ConditionParameter(
+                name="range_start_inclusive",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_not_nan,
+                param_type=ParamTypeEnum.SUPPORT_PARAM
+            ),
+            ConditionParameter(
+                name="range_end_inclusive",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_not_nan,
+                param_type=ParamTypeEnum.SUPPORT_PARAM
+            ),
+            ConditionParameter(
+                name="range_percentage_lt",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_percentage_param_range,
+                required_params=["range_start_inclusive", "range_end_inclusive"]
+            ),
+            ConditionParameter(
+                name="range_percentage_gt",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_percentage_param_range,
+                required_params=["range_start_inclusive", "range_end_inclusive"]
+            ),
+            ConditionParameter(
+                name="max_min_lt",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
+            ),
+            ConditionParameter(
+                name="max_min_gt",
+                value_type=ValueTypeEnum.FLOAT64,
+                valid_test_func=check_normal_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
