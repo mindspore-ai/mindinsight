@@ -16,35 +16,33 @@
 import signal
 from concurrent import futures
 from threading import Thread
+
 import grpc
 
-from mindinsight.conditionmgr.conditionmgr import ConditionMgr
+from mindinsight.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.conditionmgr.condition import ConditionContext, ConditionIdEnum
+from mindinsight.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.conditionmgr.recommender import recommend_watchpoints
 from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.utils.tools import to_float
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerParamTypeError, DebuggerCreateWatchPointError, DebuggerUpdateWatchPointError, \
-    DebuggerDeleteWatchPointError, DebuggerContinueError, DebuggerPauseError, \
-    DebuggerCompareTensorError, DebuggerRecheckError, DebuggerStepNumError
+    DebuggerDeleteWatchPointError, DebuggerCompareTensorError, DebuggerTensorGraphError, \
+    DebuggerTensorHitError
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
-    create_view_event_from_tensor_history, Streams, is_scope_type, RunLevel
-from mindinsight.conditionmgr.common.utils import NodeBasicInfo
+from mindinsight.debugger.common.utils import ServerStatus, \
+    create_view_event_from_tensor_basic_info, Streams
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_grpc_server import DebuggerGrpcServer
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
-from mindinsight.debugger.proto.debug_grpc_pb2 import RunCMD
 from mindinsight.debugger.stream_operator.tensor_detail_info import TensorDetailInfo
-from mindinsight.utils.exceptions import MindInsightException
+from mindinsight.debugger.stream_operator.training_control_operator import TrainingControlOperator
 from mindinsight.utils.tensor import TensorUtils, MAX_DIMENSIONS_FOR_TENSOR
 
 
 class DebuggerServer:
     """The server manager of debugger."""
-    # max step number should be less than int32
-    _MAX_STEP_NUM = 2 ** 31 - 1
 
     def __init__(self, grpc_port=None):
         self.grpc_port = grpc_port
@@ -355,7 +353,7 @@ class DebuggerServer:
         graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH)
         tensor_history = graph_stream.get_tensor_history(node_name, graph_name)
         # add tensor value for tensor history
-        self._add_tensor_value_for_tensor_history(tensor_history, node_name)
+        self._add_tensor_value_for_tensor_history(tensor_history, node_name, graph_name)
         # add hit label for tensor history
         watchpoint_hit_stream = self.cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         watchpoint_hit_stream.update_tensor_history(tensor_history)
@@ -364,13 +362,14 @@ class DebuggerServer:
         tensor_history.update(metadata)
         return tensor_history
 
-    def _add_tensor_value_for_tensor_history(self, tensor_history, node_name):
+    def _add_tensor_value_for_tensor_history(self, tensor_history, node_name, graph_name):
         """
         Add tensor value for_tensor_history and send ViewCMD if tensor value missed.
 
         Args:
             tensor_history (list[dict]): A list of tensor info, including name and type.
             node_name (str): The UI node name.
+            graph_name (str): The graph name. Default: None.
 
         Returns:
             dict, the tensor info.
@@ -378,8 +377,8 @@ class DebuggerServer:
         tensor_stream = self.cache_store.get_stream_handler(Streams.TENSOR)
         missed_tensors = tensor_stream.update_tensor_history(tensor_history)
         if missed_tensors:
-            view_cmd = create_view_event_from_tensor_history(missed_tensors)
-            self.cache_store.put_command({'view_cmd': view_cmd, 'node_name': node_name})
+            view_cmd = create_view_event_from_tensor_basic_info(missed_tensors)
+            self.cache_store.put_command({'view_cmd': view_cmd, 'node_name': node_name, 'graph_name': graph_name})
             log.debug("Send view cmd.")
 
     def retrieve_tensor_value(self, name, detail, shape, graph_name=None, prev=False):
@@ -679,189 +678,10 @@ class DebuggerServer:
             dict, the response.
         """
         log.info("Receive control request: %s.", params)
-        mode = params.get('mode')
-        metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
-        if mode == 'continue':
-            reply = self._continue(metadata_stream, params)
-        elif mode in ['pause', 'terminate']:
-            mode_mapping = {
-                'pause': self._pause,
-                'terminate': self._terminate
-            }
-            reply = mode_mapping.get(mode)(metadata_stream)
-        else:
-            log.error("Invalid control mode %s", mode)
-            raise DebuggerParamValueError("Invalid control mode.")
-
-        return reply
-
-    def _continue(self, metadata_stream, params):
-        """
-        Send RunCMD to MindSpore.
-
-        Args:
-            metadata_stream (MetadataHandler): The metadata_handler
-            params (dict): The control params.
-
-        Returns:
-            dict, metadata info.
-        """
-        if metadata_stream.state != ServerStatus.WAITING.value:
-            self.cache_store.put_data(metadata_stream.get())
-            log.error("MindSpore is not ready to run. Current state is: %s", metadata_stream.state)
-            raise DebuggerContinueError(
-                "MindSpore is not ready to run or is running currently."
-            )
-        metadata_stream.state = ServerStatus.RUNNING.value
-        try:
-            self._validate_continue_params(params)
-            event = self._construct_run_event(params)
-            self._send_watchpoints()
-            self.cache_store.put_command(event)
-        except MindInsightException as err:
-            log.error("Failed to send run event.")
-            log.exception(err)
-            metadata_stream.state = ServerStatus.WAITING.value
-            raise DebuggerContinueError("Failed to send run command.")
-        else:
-            metadata_stream.enable_recheck = False
-            log.debug("Send the RunCMD to command queue.")
-        return metadata_stream.get(['state', 'enable_recheck'])
-
-    def _validate_continue_params(self, params):
-        """
-        Validate continue params.
-
-        Args:
-            params (dict): The control params.
-
-                - level (str): The control granularity, `node`, `step` or `recheck` level.
-                    Default: `step`.
-                - steps (int): Specify the steps that training should run.
-                    Used when `level` is `step`.
-                - name (str): Specify the name of the node. Used when `level` is `node`.
-                - graph_name (str): The graph name.
-
-        Raises:
-            DebuggerParamValueError: Params are invalid.
-        """
-        # validate level
-        level = params.get('level', 'step')
-        if level not in [RunLevel.NODE.value, RunLevel.STEP.value, RunLevel.RECHECK.value]:
-            log.error("Invalid Value. `level` should be `step`, `node` or `recheck`. Got %s", level)
-            raise DebuggerParamValueError("level` should be `step`, `node` or `recheck`.")
-
-        # validate steps
-        step_num = params.get('steps', 1)
-        if not isinstance(step_num, int) or not (step_num == -1 or 0 < step_num <= self._MAX_STEP_NUM):
-            log.error("Invalid step value. Step number should be integer and in [1, 2^31 - 1] or -1.")
-            raise DebuggerStepNumError
-
-        # validate node name
-        if level == RunLevel.NODE.value:
-            node_name = params.get('name')
-            graph_name = params.get('graph_name')
-            self._validate_continue_node_name(node_name, graph_name)
-
-    def _construct_run_event(self, params):
-        """
-        Construct run cmd from input control params.
-
-        Args:
-            params (dict): The control params.
-
-                - level (str): The control granularity, `node`, `step` or `recheck` level.
-                    Default: `step`.
-                - steps (int): Specify the steps that training should run.
-                    Used when `level` is `step`.
-                - name (str): Specify the name of the node. Used when `level` is `node`.
-                - graph_name (str): The graph name.
-
-        Returns:
-            EventReply, control event with run command.
-        """
-        level = params.get('level', 'step')
-        # construct run command events
-        event = get_ack_reply()
-        if level == 'step':
-            steps = params.get('steps', 1)
-            run_cmd = RunCMD(run_level='step', run_steps=steps)
-        elif level == 'node':
-            name = params.get('name', '')
-            graph_name = params.get('graph_name')
-            if name:
-                name = self.cache_store.get_stream_handler(Streams.GRAPH).get_full_name(name, graph_name)
-            run_cmd = RunCMD(run_level='node', node_name=name)
-        else:
-            run_cmd = RunCMD(run_level='recheck')
-
-        event.run_cmd.CopyFrom(run_cmd)
-        log.debug("Construct run event. %s", event)
-        return event
-
-    def _validate_continue_node_name(self, node_name, graph_name):
-        """Validate if the node is a leaf node."""
-        if not node_name:
-            return
-        graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH)
-        node_type = graph_stream.get_node_type(node_name, graph_name)
-        if is_scope_type(node_type):
-            log.error("Scope type node has no tensor history.")
-            raise DebuggerParamValueError("Invalid leaf node name.")
-
-    def _send_watchpoints(self):
-        """Set watchpoints."""
-        watchpoint_stream = self.cache_store.get_stream_handler(Streams.WATCHPOINT)
-        set_commands = watchpoint_stream.get_pending_commands(self.cache_store.get_stream_handler(Streams.GRAPH))
-        if set_commands:
-            for set_cmd in set_commands:
-                event = get_ack_reply()
-                event.set_cmd.CopyFrom(set_cmd)
-                self.cache_store.put_command(event)
-            watchpoint_stream.sync_set_cmd(set_commands)
-            log.debug("Send SetCMD to MindSpore. %s", event)
-
-    def _pause(self, metadata_stream):
-        """
-        Pause the training.
-
-        Args:
-            metadata_stream (MetadataHandler): The metadata stream handler.
-
-        Returns:
-            dict, metadata info.
-        """
-        if metadata_stream.state != ServerStatus.RUNNING.value:
-            self.cache_store.put_data(metadata_stream.get())
-            log.error("The MindSpore is not running.")
-            raise DebuggerPauseError("The MindSpore is not running.")
-        metadata_stream.state = 'waiting'
-        event = get_ack_reply()
-        event.run_cmd.CopyFrom(RunCMD(run_level='step', run_steps=0))
-        self.cache_store.put_command(event)
-        metadata_stream.enable_recheck = False
-        log.debug("Send the Pause command")
-        return metadata_stream.get(['state', 'enable_recheck'])
-
-    def _terminate(self, metadata_stream):
-        """
-        Terminate the training.
-
-        Args:
-            metadata_stream (MetadataHandler): The metadata stream handler.
-
-        Returns:
-            dict, metadata info.
-        """
-        metadata_stream.state = 'pending'
-        self.cache_store.clean_data()
-        self.cache_store.clean_command()
-        event = get_ack_reply()
-        event.exit = True
-        self.cache_store.put_command(event)
-        metadata_stream.enable_recheck = False
-        log.debug("Send the ExitCMD.")
-        return metadata_stream.get(['state', 'enable_recheck'])
+        mode = params.pop('mode', None)
+        training_controller = TrainingControlOperator(self.cache_store)
+        training_controller.validate_mode(mode)
+        return training_controller.control(mode, params)
 
     def retrieve_node_by_bfs(self, node_name, graph_name=None, ascend=False):
         """
@@ -904,27 +724,7 @@ class DebuggerServer:
         Returns:
             dict, metadata info.
         """
-        metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
-        # validate backend status is able to recheck watchpoint
-        if not metadata_stream.enable_recheck:
-            log.error("Recheck is not available.")
-            raise DebuggerRecheckError("Recheck is not available.")
-        metadata_stream.state = ServerStatus.RUNNING.value
-        metadata_stream.enable_recheck = False
-        # send updated watchpoint and recheck command
-        try:
-            event = self._construct_run_event({'level': 'recheck'})
-            self._send_watchpoints()
-            self.cache_store.put_command(event)
-        except MindInsightException as err:
-            log.error("Failed to send recheck event.")
-            log.exception(err)
-            metadata_stream.state = ServerStatus.WAITING.value
-            metadata_stream.enable_recheck = True
-            raise DebuggerContinueError("Failed to send run command.")
-        else:
-            log.debug("Send the recheck to command queue.")
-        return metadata_stream.get(['state', 'enable_recheck'])
+        return TrainingControlOperator(self.cache_store).recheck()
 
     def retrieve_tensor_graph(self, tensor_name, graph_name):
         """
@@ -937,6 +737,9 @@ class DebuggerServer:
         Returns:
             dict, tensor graph object.
         """
+        if self.cache_store.get_stream_handler(Streams.METADATA).state != ServerStatus.WAITING.value:
+            log.error("Failed to get tensor graph the MindSpore is not in waiting state.")
+            raise DebuggerTensorGraphError
         log.info("Retrieve tensor graph for %s from %s", tensor_name, graph_name)
         tensor_graph_ops = TensorDetailInfo(self.cache_store).get_tensor_graph(tensor_name, graph_name)
         return tensor_graph_ops
@@ -952,6 +755,9 @@ class DebuggerServer:
         Returns:
             dict, tensor hit info.
         """
+        if self.cache_store.get_stream_handler(Streams.METADATA).state != ServerStatus.WAITING.value:
+            log.error("Failed to get tensor hits as the MindSpore is not in waiting state.")
+            raise DebuggerTensorHitError
         log.info("Retrieve tensor hits for %s from %s", tensor_name, graph_name)
         watch_points = TensorDetailInfo(self.cache_store).get_tensor_watch_points(tensor_name, graph_name)
         return {'watch_points': watch_points}

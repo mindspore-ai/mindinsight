@@ -316,6 +316,8 @@ class TensorUtils:
         Returns:
             dict, overall statistics.
         """
+        if not overall_stats:
+            return {}
         res = {
             "overall_max": float(overall_stats.max),
             "overall_min": float(overall_stats.min),

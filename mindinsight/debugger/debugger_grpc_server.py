@@ -159,15 +159,15 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
     def _send_received_tensor_tag(self):
         """Send received_finish_tag."""
-        node_name = self._received_view_cmd.get('node_name')
-        if not node_name or self._received_view_cmd.get('wait_for_tensor'):
+        node_info = self._received_view_cmd.get('node_info')
+        if not node_info or self._received_view_cmd.get('wait_for_tensor'):
             return
         metadata = self._cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
-        ret = {'receive_tensor': {'node_name': node_name}}
+        ret = {'receive_tensor': node_info.copy()}
         ret.update(metadata)
         self._cache_store.put_data(ret)
         self._received_view_cmd.clear()
-        log.debug("Send receive tensor flag for %s", node_name)
+        log.debug("Send receive tensor flag for %s", node_info)
 
     def _send_watchpoint_hit_flag(self):
         """Send Watchpoint hit flag."""
@@ -281,14 +281,26 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         return event
 
     def _deal_with_view_cmd(self, event):
-        """Deal with view cmd."""
-        view_cmd = event.get('view_cmd')
-        node_name = event.get('node_name')
-        log.debug("Receive view cmd for node: %s.", node_name)
-        if not (view_cmd and node_name):
+        """
+        Deal with view cmd.
+
+        Args:
+            event (dict): View command params.
+
+                - view_cmd (EventReply): EventReply with view command.
+                - node_name (str): The center node name for view command.
+                - tensor_name (str): The center tensor name for view command.
+                - graph_name (str): The graph name of center node.
+
+        Returns:
+            EventReply, view command to be sent to client.
+        """
+        view_cmd = event.pop('view_cmd', None)
+        log.debug("Receive view cmd for node: %s.", event)
+        if not (view_cmd and event):
             log.debug("Invalid view command. Ignore it.")
             return None
-        self._received_view_cmd['node_name'] = node_name
+        self._received_view_cmd['node_info'] = event
         self._received_view_cmd['wait_for_tensor'] = True
         return view_cmd
 
@@ -395,6 +407,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             if tensor.finished:
                 update_flag = tensor_stream.put({'step': step, 'tensor_protos': tensor_construct})
                 if self._received_view_cmd.get('wait_for_tensor') and update_flag:
+                    # update_flag is used to avoid querying empty tensors again
                     self._received_view_cmd['wait_for_tensor'] = False
                     log.debug("Set wait for tensor flag to False.")
                 tensor_construct = []

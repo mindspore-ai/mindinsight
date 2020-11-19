@@ -115,29 +115,29 @@ def wrap_reply_response(error_code=None, error_message=None):
     return reply
 
 
-def create_view_event_from_tensor_history(tensor_history):
+def create_view_event_from_tensor_basic_info(tensors_info):
     """
     Create view event reply according to tensor names.
 
     Args:
-        tensor_history (list[dict]): The list of tensor history. Each element has keys:
-            `name`, `node_type`.
+        tensors_info (list[TensorBasicInfo]): The list of TensorBasicInfo. Each element has keys:
+            `full_name`, `node_type`, `iter`.
 
     Returns:
         EventReply, the event reply with view cmd.
     """
     view_event = get_ack_reply()
-    for tensor_info in tensor_history:
-        node_type = tensor_info.get('node_type')
+    for tensor_info in tensors_info:
+        node_type = tensor_info.node_type
         if node_type == NodeTypeEnum.CONST.value:
             continue
-        truncate_tag = tensor_info.get('node_type') == NodeTypeEnum.PARAMETER.value
-        tensor_name = tensor_info.get('full_name', '')
+        truncate_tag = node_type == NodeTypeEnum.PARAMETER.value
+        tensor_name = tensor_info.full_name
         # create view command
         ms_tensor = view_event.view_cmd.tensors.add()
         ms_tensor.node_name, ms_tensor.slot = tensor_name.rsplit(':', 1)
         ms_tensor.truncate = truncate_tag
-        ms_tensor.iter = 'prev' if tensor_info.get('iter') else ''
+        ms_tensor.iter = tensor_info.iter
 
     return view_event
 

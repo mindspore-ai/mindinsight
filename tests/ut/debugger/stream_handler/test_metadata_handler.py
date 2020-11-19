@@ -17,6 +17,7 @@ from mindinsight.debugger.common.utils import ServerStatus
 from mindinsight.debugger.stream_handler.metadata_handler import MetadataHandler
 from mindinsight.debugger.proto.debug_grpc_pb2 import Metadata
 
+
 class TestMetadataHandler:
     """test class for MetadataHandler"""
     def setup_method(self):

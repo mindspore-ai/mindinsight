@@ -32,7 +32,6 @@ from mindinsight.debugger.common.utils import Streams
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_server import DebuggerServer
 from mindinsight.debugger.debugger_server import grpc_server_base
-from mindinsight.debugger.proto.debug_grpc_pb2 import RunCMD
 from mindinsight.debugger.stream_handler import GraphHandler, WatchpointHandler, MetadataHandler, \
     TensorHandler
 from tests.ut.debugger.configurations import compare_debugger_result_with_file, mock_tensor_history
@@ -154,13 +153,6 @@ class TestDebuggerServer:
         res = self._server.retrieve_tensor_history('mock_node_name')
         compare_debugger_result_with_file(res, 'debugger_server/retrieve_tensor_history.json')
 
-    @mock.patch.object(GraphHandler, 'get_node_type')
-    def test_validate_leaf_name(self, *args):
-        """Test validate leaf name."""
-        args[0].return_value = 'name_scope'
-        with pytest.raises(DebuggerParamValueError, match='Invalid leaf node name.'):
-            self._server._validate_continue_node_name(node_name='mock_node_name', graph_name='mock_graph_name')
-
     @mock.patch.object(TensorHandler, 'get')
     @mock.patch.object(DebuggerServer, '_get_tensor_name_and_type_by_ui_name')
     def test_retrieve_tensor_value(self, *args):
@@ -187,7 +179,6 @@ class TestDebuggerServer:
         res = self._server._retrieve_watchpoint({'watch_point_id': 1})
         assert res == mock_watchpoint
 
-    @mock.patch.object(DebuggerServer, '_validate_continue_node_name')
     @mock.patch.object(DebuggerServer, '_get_tensor_history')
     @mock.patch.object(DebuggerServer, '_get_nodes_info', return_value={'graph': {}})
     def test_retrieve_watchpoint_hit(self, *args):
@@ -238,18 +229,3 @@ class TestDebuggerServer:
         args[0].return_value = None
         res = self._server.delete_watchpoint(1)
         assert res == {'metadata': {'enable_recheck': True, 'state': 'waiting'}}
-
-    @pytest.mark.parametrize('mode, cur_state, state', [
-        ('continue', 'waiting', 'running'),
-        ('pause', 'running', 'waiting'),
-        ('terminate', 'waiting', 'pending')])
-    def test_control(self, mode, cur_state, state):
-        """Test control request."""
-        with mock.patch.object(MetadataHandler, 'state', cur_state):
-            res = self._server.control({'mode': mode})
-            assert res == {'metadata': {'enable_recheck': False, 'state': state}}
-
-    def test_construct_run_event(self):
-        """Test construct run event."""
-        res = self._server._construct_run_event({'level': 'node'})
-        assert res.run_cmd == RunCMD(run_level='node', node_name='')

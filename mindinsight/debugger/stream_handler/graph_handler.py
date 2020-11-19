@@ -467,7 +467,7 @@ class GraphHandler(StreamHandlerBase):
         Get tensor graph according to node name.
 
         Args:
-            tensor_name (str): Tensor name, format is "node_name:<node_value>".
+            tensor_name (str): Tensor name from UI, format is "node_name:slot".
             graph_name (str): The relative graph_name of the node. Default: None.
 
         Returns:
@@ -623,7 +623,6 @@ class GraphHandler(StreamHandlerBase):
         if not graph_name and len(self._graph) == 1:
             graph_name = self.graph_names[0]
         return graph_name
-
 
     def _add_graph_scope_for_nodes(self, nodes, graph_name):
         """

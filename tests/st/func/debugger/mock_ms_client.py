@@ -217,5 +217,5 @@ class MockDebuggerClientThread:
         return self._debugger_client_thread
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._debugger_client_thread.join(timeout=3)
+        self._debugger_client_thread.join(timeout=2)
         self._debugger_client.flag = False
