@@ -75,51 +75,68 @@ limitations under the License.
     </el-tabs>
 
     <div class="cl-xai-con comprehensiveEvaluation"
-         ref="xaiCon"
          v-show="tabType==='overall' && !isNoData">
-      <el-table :data="evaluationTableData"
-                border
-                header-row-class-name="evaluation-table-header"
-                show-summary
-                :summary-method="getSummaries"
-                :sum-text="$t('metric.compositeScore')"
-                ref="sortTable">
-        <el-table-column prop="metric"
-                         :label="$t('metric.metric')"
-                         width="180"
-                         class-name="firstColumn"
-                         fixed
-                         :resizable="false">
-        </el-table-column>
-        <el-table-column prop="weight"
-                         :label="$t('metric.weightAllocatgion')"
-                         width="180"
-                         :class-name="!resultShow ? 'resultFalse':''"
-                         fixed
-                         :resizable="false">
-          <template slot-scope="scope">
-            <el-input-number v-model="scope.row.weight"
-                             controls-position="right"
-                             @change="weightChange"
-                             :min="0"
-                             :max="1"
-                             :precision="2"
-                             size="small"
-                             :step="0.01"></el-input-number>
-          </template>
-        </el-table-column>
-        <el-table-column v-for="(item,index) in tableHead"
-                         :key="index"
-                         :prop="item"
-                         sortable
-                         min-width="120"
-                         :resizable="false">
-          <template slot="header">
-            <div :title="item"
-                 class="thTooltip">{{item}}</div>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="cl-xai-con-flex">
+        <div class="cl-xai-con-flex-item">
+          <el-table :data="evaluationTableData"
+                    border
+                    header-row-class-name="evaluation-table-header"
+                    show-summary
+                    :summary-method="getSummaries"
+                    :sum-text="$t('metric.compositeScore')"
+                    ref="sortTable"
+                    :max-height="maxHeight"
+                    @cell-mouse-enter="cellHover"
+                    @cell-mouse-leave="cellLeave">
+            <el-table-column prop="metric"
+                             :label="$t('metric.metric')"
+                             width="180"
+                             class-name="firstColumn"
+                             fixed
+                             :resizable="false">
+            </el-table-column>
+            <el-table-column prop="weight"
+                             :label="$t('metric.weightAllocatgion')"
+                             width="180"
+                             :class-name="!resultShow ? 'resultFalse':''"
+                             fixed
+                             :resizable="false">
+              <template slot-scope="scope">
+                <div @mouseenter="numberFocus(scope)"
+                     @mouseleave="numberBlur(scope,$event)"
+                     class="input-container">
+                  <el-input-number v-model="scope.row.weight"
+                                   controls-position="right"
+                                   @change="weightChange()"
+                                   :min="0"
+                                   :max="1"
+                                   :precision="2"
+                                   size="small"
+                                   :step="0.01"
+                                   :controls="scope.row.controls"></el-input-number>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column v-for="(item,index) in tableHead"
+                             :key="index"
+                             :prop="item"
+                             sortable
+                             min-width="120"
+                             :resizable="false"
+                             :class-name="property===item?'columnHover':'columnNoHover'">
+              <template slot="header">
+                <div :title="item"
+                     class="thTooltip">{{item}}</div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <div class="cl-xai-con-flex-chart"
+             v-if="evaluationTableData.length >= minimumDimension">
+          <RadarChart :data="propChartData"
+                      :nowHoverName="property"></RadarChart>
+        </div>
+      </div>
     </div>
     <div class="cl-xai-con"
          v-show="tabType==='detail' && !isNoData">
@@ -198,7 +215,8 @@ limitations under the License.
     </div>
     <!-- No data -->
     <div class="cl-xai-con"
-         v-show="isNoData">
+         v-show="isNoData"
+         ref="xaiCon">
       <div class="image-noData">
         <div>
           <img :src="require('@/assets/images/nodata.png')"
@@ -215,14 +233,16 @@ limitations under the License.
 </template>
 
 <script>
-import BenchmarkBarChart from '@/components/benchmarkBarChart';
+import BenchmarkBarChart from '@/components/benchmark-bar-chart';
 import RequestService from '../../services/request-service';
-import SelectGroup from '../../components/selectGroup';
+import SelectGroup from '../../components/select-group';
+import RadarChart from '@/components/radar-chart';
 
 export default {
   components: {
     BenchmarkBarChart,
     SelectGroup,
+    RadarChart,
   },
   data() {
     return {
@@ -234,6 +254,10 @@ export default {
       resultShow: true, // Result show
       isNoData: true, // Is no data
       initOver: false, // Initialization completion flag
+      maxHeight: 'auto', // Table max height
+      isChange: false, // Value is change
+      propChartData: [], // Prop chart data
+      property: '', // Table current property
       fullDict: {}, // Full data dictionary
       classifyAllMethods: [], // all explain methods
       // The currently selected exlpain method and all selected metrics
@@ -263,6 +287,7 @@ export default {
       allLabels: [], // all labels
       resizeFlag: false, // Chart drawing area change sign
       resizeTimer: null, // Chart redraw delay indicator
+      minimumDimension: 3,
     };
   },
   watch: {
@@ -292,11 +317,62 @@ export default {
     document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t(
         'metric.scoreSystem',
     )}-MindInsight`;
+    this.maxHeight = this.$refs.xaiCon.clientHeight;
     this.getEvaluationData();
     window.addEventListener('resize', this.resizeCallback, false);
   },
 
   methods: {
+    /**
+     * Table cell hover
+     * @param {Object} row Table row
+     * @param {Object} column Table column
+     */
+    cellHover(row, column) {
+      this.property = column.property;
+    },
+    
+    /**
+     * The logic execute when table cell mouse leave
+     */
+    cellLeave() {
+      this.property = null;
+    },
+
+    /**
+     * Input number focus
+     * @param {Object} scope Table row scope
+     */
+    numberFocus(scope) {
+      const tableData = this.$refs.sortTable.tableData;
+      tableData.forEach((item, index) => {
+        if (index === scope.$index) {
+          item.controls = true;
+        } else {
+          item.controls = false;
+        }
+      });
+    },
+
+    /**
+     * Input number blur
+     * @param {Object} scope Table row scope
+     * @param {Object} event event
+     */
+    numberBlur(scope, event) {
+      const path = event.path || (event.composedPath && event.composedPath());
+      let noBlur = false;
+      path.some((item) => {
+        if (item.className && item.className.indexOf('el-input-number') > -1) {
+          return (noBlur = true);
+        }
+      });
+      if (noBlur) {
+        return;
+      }
+      scope.row.controls = false;
+    },
+
     /**
      * Jump back to train dashboard
      */
@@ -334,12 +410,13 @@ export default {
             score = 1 - score;
             data.weight = score;
           }
+          data.controls = false;
           tableData.push(data);
         });
 
         const tableHead = [];
         Object.keys(tableData[0]).forEach((item) => {
-          if (item !== 'metric' && item !== 'weight') {
+          if (item !== 'metric' && item !== 'weight' && item !== 'controls') {
             tableHead.push(item);
           }
         });
@@ -352,6 +429,7 @@ export default {
      * Weight change
      */
     weightChange() {
+      this.isChange = true;
       this.getSummaries(this.tableParam);
     },
 
@@ -377,7 +455,7 @@ export default {
         } else if (index === 1) {
           sums[index] = 0;
           values.forEach((value) => {
-            sums[index] += value;
+            sums[index] = this.floatAdd(sums[index], value);
           });
 
           if (sums[index] !== 1) {
@@ -404,6 +482,30 @@ export default {
     },
 
     /**
+     * Float add
+     * @param {Number} arg1 arg1
+     * @param {Number} arg2 arg2
+     * @return {Number}
+     */
+    floatAdd(arg1, arg2) {
+      let r1;
+      let r2;
+      let m=0;
+      try {
+        r1=arg1.toString().split('.')[1].length;
+      } catch (e) {
+        r1=0;
+      }
+      try {
+        r2=arg2.toString().split('.')[1].length;
+      } catch (e) {
+        r2=0;
+      }
+      m=Math.pow(10, Math.max(r1, r2));
+      return (arg1*m+arg2*m)/m;
+    },
+
+    /**
      * Get evaluation data
      */
     getEvaluationData() {
@@ -416,11 +518,13 @@ export default {
             if (res && res.data) {
               const resData = JSON.parse(JSON.stringify(res.data));
               if (
-                resData.explainer_scores.length &&
+                resData.explainer_scores &&
+              resData.explainer_scores.length &&
               resData.explainer_scores[0].evaluations.length
               ) {
                 this.isNoData = false;
                 this.initEvaluationTable(resData);
+                this.processRadarData(resData);
                 this.initializeClassifyData(resData);
               } else {
                 this.isNoData = true;
@@ -431,6 +535,36 @@ export default {
             this.initOver = true;
           },
       );
+    },
+
+    /**
+     * Init evaluation table
+     * @param {Object} originalData Original data
+     */
+    processRadarData(originalData) {
+      const data = {
+        legend: [],
+        indicator: [],
+        series: [],
+      };
+      const oriData = originalData.explainer_scores;
+      for (let i = 0; i < oriData.length; i++) {
+        data.legend.push(oriData[i].explainer);
+        data.series.push({
+          value: [],
+          name: oriData[i].explainer,
+        });
+        for (let j = 0; j < oriData[i].evaluations.length; j++) {
+          data.series[i].value.push(oriData[i].evaluations[j].score);
+          if (i === 0) {
+            data.indicator.push({
+              name: oriData[i].evaluations[j].metric,
+            });
+          }
+        }
+      }
+      data.title=this.$t('metric.radarChart');
+      this.propChartData = data;
     },
 
     /**
@@ -663,6 +797,11 @@ export default {
     width: 0px;
     height: 0px;
   }
+  .el-table__footer {
+    tr td:nth-child(2) {
+      text-align: center;
+    }
+  }
   .el-tabs__item {
     font-size: 14px;
     color: #303133;
@@ -706,6 +845,27 @@ export default {
 
   .cl-xai-con {
     height: calc(100% - 95px);
+    .cl-xai-con-flex {
+      height: 100%;
+      display: flex;
+    }
+
+    .cl-xai-con-flex-item {
+      flex: 1;
+      overflow: hidden;
+      .input-container {
+        .el-input-number {
+          width: 100%;
+        }
+      }
+    }
+
+    .cl-xai-con-flex-chart {
+      width: 400px;
+      flex-shrink: 0;
+      border: 1px solid #e6ebf5;
+      margin-left: 20px;
+    }
   }
 
   .comprehensiveEvaluation {
@@ -730,104 +890,107 @@ export default {
         background: #f5f7fa;
       }
     }
-  }
 
-  .image-noData {
-    // Set the width and white on the right.
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    .noData-text {
-      margin-top: 33px;
-      font-size: 18px;
-    }
-  }
+      td.columnHover {
+        background: rgba(0, 165, 167, 0.05);
+      }
 
-  .classify-container {
-    height: 100%;
+      td.columnNoHover {
+        background: none;
+      }
+    }
 
-    .left-item {
-      padding-right: 10px;
-    }
-    .right-itemm {
-      padding-left: 10px;
-    }
-    .half-item {
-      width: 50%;
-      float: left;
+    .image-noData {
+      // Set the width and white on the right.
+      width: 100%;
       height: 100%;
-      overflow: hidden;
       display: flex;
+      justify-content: center;
+      align-items: center;
       flex-direction: column;
-      .operate-container {
-        width: 100%;
-        .container-name {
-          font-size: 16px;
-          font-weight: 700;
-          padding: 15px 0px;
-        }
-        .select-see {
-          padding-bottom: 10px;
-        }
-        .see-methods {
-          font-size: 13px;
-          // font-weight: bold;
-        }
-        .select-name {
-          display: inline-block;
-          padding-right: 10px;
-          width: 100px;
-        }
+      .noData-text {
+        margin-top: 33px;
+        font-size: 18px;
       }
-      .chart-container {
-        flex: 1;
+    }
+
+    .classify-container {
+      height: 100%;
+
+      .left-item {
+        padding-right: 10px;
+      }
+      .right-itemm {
+        padding-left: 10px;
+      }
+      .half-item {
+        width: 50%;
+        float: left;
+        height: 100%;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        .operate-container {
+          width: 100%;
+          .container-name {
+            font-size: 16px;
+            font-weight: 700;
+            padding: 15px 0px;
+          }
+          .select-see {
+            padding-bottom: 10px;
+          }
+          .see-methods {
+            font-size: 13px;
+            // font-weight: bold;
+          }
+          .select-name {
+            display: inline-block;
+            padding-right: 10px;
+          }
+        }
+        .chart-container {
+          flex: 1;
+          overflow: hidden;
+        }
+        .methods-show {
+          padding: 10px 0px;
+        }
       }
-      .methods-show {
-        padding: 10px 0px;
-        .show-name {
-          display: inline-block;
-          margin-right: 10px;
-          padding-bottom: 10px;
+    }
+
+    .classify {
+      border-right: solid 1px #ddd;
+    }
+    .slectMethod {
+      color: darkmagenta;
+    }
+
+    .el-select {
+      height: 32px;
+      width: 217px;
+    }
+    .el-input__inner {
+      height: 32px;
+      line-height: 32px;
+      padding: 0px 15px;
+    }
+  }
+  .el-tooltip__popper {
+    .tooltip-container {
+      word-break: normal;
+      .tooltip-style {
+        .tooltip-title {
+          font-size: 16px;
+          font-weight: bold;
+          color: #333333;
+        }
+        .tooltip-content {
+          line-height: 20px;
+          word-break: normal;
         }
       }
     }
   }
 
-  .classify {
-    border-right: solid 1px #ddd;
-  }
-  .slectMethod {
-    color: darkmagenta;
-  }
-
-  .el-select {
-    height: 32px;
-    width: 217px;
-  }
-  .el-input__inner {
-    height: 32px;
-    line-height: 32px;
-    padding: 0px 15px;
-  }
-}
-.el-tooltip__popper {
-  .tooltip-container {
-    word-break: normal;
-    .tooltip-style {
-      .tooltip-title {
-        font-size: 16px;
-        font-weight: bold;
-        color: #333333;
-      }
-      .tooltip-content {
-        line-height: 20px;
-        word-break: normal;
-      }
-    }
-  }
-}
 </style>

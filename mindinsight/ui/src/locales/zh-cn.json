@@ -442,6 +442,9 @@
     "minddata_get_next_queue": {
       "desc": "数据队列为空比例{n1}/{n2}。"
     },
+    "minddata_device_queue": {
+      "desc": "主机侧队列为空比例{n1}/{n2}，为满比例{n3}/{n4}。"
+    },
     "dataProcess": "该图展示了数据处理阶段的流程，数据通过数据处理阶段存入主机队列，再通过数据传输阶段存入数据队列，最终由数据传输算子get_next发送给前向训练使用。",
     "dataProcessInfo": "综合分析该阶段的流程，通过判断主机队列和数据队列为空的情况就可以初步判断可能出现性能异常的阶段。",
     "analysisOne": "1、如果迭代间隙较长，并且数据队列部分batch为空，那么可能由于数据处理和数据传输阶段导致的性能异常，参考2，反之则定位数据传输算子get_next内部问题；",
@@ -581,25 +584,29 @@
     "viewScore": "查看评分",
     "fetch": "筛选",
     "minConfidence": "概率阈值",
+    "confidenceRange": "概率(区间)",
     "imgSort": "图片排序",
     "default": "默认",
     "byProbability": "概率值降序",
+    "byUncertainty": "不确定性值降序",
+    "uncertainty": "不确定性",
     "superposeImg": "叠加于原图",
     "originalPicture": "原始图片",
     "forecastTag": "预测标签",
     "tag": "标签",
     "confidence": "概率",
     "forecastTagTip": "当推理图片带有正确标签时，标签行会显示下列四种旗标",
-    "TP": "TP：代表Ture Positive，标签为正样本，分类为正样本；",
-    "FN": "FN：代表False Negative，标签为正样本，分类为负样本；",
-    "FP": "FP：代表Fasle Positive，标签为负样本，分类为正样本；",
-    "TN": "TN：代表Ture Negative，标签为负样本，分类为负样本；",
+    "TP": "TP，代表Ture Positive，标签为正样本，分类为正样本；",
+    "FN": "FN，代表False Negative，标签为正样本，分类为负样本；",
+    "FP": "FP，代表Fasle Positive，标签为负样本，分类为正样本；",
+    "TN": "TN，代表Ture Negative，标签为负样本，分类为负样本；",
     "mainTipTitle": "功能说明:",
     "mainTipPartOne": "本功能对模型分类的依据进行可视化。选定待解释模型、图片和标签后，解释方法计算得到原始图像中每个像素对选定标签的贡献度，以类似热力图的显著图进行可视。显著图颜色越亮，表示对应区域对于模型预测选定标签的贡献越多；颜色越暗，该区域对选定标签的贡献越小。",
     "mainTipPartTwo": "显著图可以帮助我们了解深度神经网络推理时，和指定标签有关系的特征。当模型推理依据和期望不同时，可以参考显著图对模型进行调试，让模型依据合理的特征进行推理。",
     "mainTipPartThree": "主流生成显著图的解释方法可以参考论文3.2节Local Methods:",
     "mainTipPartFour": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9050829",
-    "noExplainer": "请选择解释方法"
+    "noExplainer": "请选择解释方法",
+    "minConfidenceTip": "预测标签的概率阈值，当一个标签的输出概率大于阈值时就会被记为预测标签。"
   },
   "metric": {
     "scoreSystem": "评分体系",

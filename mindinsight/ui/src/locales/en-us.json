@@ -443,6 +443,9 @@
     "minddata_get_next_queue": {
       "desc": "The ratio of empty data queues is {n1}/{n2}."
     },
+    "minddata_device_queue": {
+      "desc": "The ratio of empty queues on a host is {n1}/{n2}, and the ratio of full queues is {n3}/{n4}."
+    },
     "dataProcess": "This shows the data processing. Data is stored in the host queue during data processing, and then stored in the data queue during data transmission. Finally, the forward and backward propagation get_next transmits the data to forward propagation.",
     "dataProcessInfo": "By determining the empty host and data queues, you can preliminarily determine the stage where the performance is abnormal.",
     "analysisOne": "1. If the step interval is long and some batches of the data queue are empty, the performance is abnormal during data processing and transmission. Otherwise, locate the internal problem of the forward and backward propagation get_next.",
@@ -526,25 +529,29 @@
     "viewScore": "View Score",
     "fetch": "Filter",
     "minConfidence": "Probability Threshold",
+    "confidenceRange": "Probability and Range",
     "imgSort": "Sort Images By",
     "default": "Default",
     "byProbability": "Probabilities in descending order",
+    "byUncertainty": "Uncertainties in descending order",
+    "uncertainty": "uncertainty",
     "superposeImg": "Overlay on Original Image",
     "originalPicture": "Original Image",
     "forecastTag": "Prediction Tag",
     "tag": "Tag",
     "confidence": "Probability",
     "forecastTagTip": "When the inference image has the correct tag, the following four flags are displayed in the tag row",
-    "TP": "TP: indicates true positive. The tag is a positive sample, and the classification is a positive sample;",
-    "FN": "FN: indicates false negative. The tag is a positive sample, and the classification is a negative sample;",
-    "FP": "FP: indicates false positive. The tag is a negative sample, and the classification is a positive sample;",
-    "TN": "TN: indicates true negative. The tag is a negative sample, and the classification is a negative sample;",
+    "TP": "TP, indicates true positive. The tag is a positive sample, and the classification is a positive sample;",
+    "FN": "FN, indicates false negative. The tag is a positive sample, and the classification is a negative sample;",
+    "FP": "FP, indicates false positive. The tag is a negative sample, and the classification is a positive sample;",
+    "TN": "TN, Indicates true negative. The tag is a negative sample, and the classification is a negative sample;",
     "mainTipTitle": "Function description:",
     "mainTipPartOne": "This function visualizes the basis for model classification. After the to-be-explained model, the image, and the tag are selected, a contribution degree of each pixel in the original image to the selected tag is calculated by using an explanation method, and visualization is performed by using a saliency map similar to a heatmap. A brighter color indicates that the corresponding area contributes more to the selected tag of the model prediction. The darker the color, the smaller the contribution of the area to the selected tag.",
     "mainTipPartTwo": "A saliency map helps you understand the features related to the specified tag during deep neural network inference. When the inference basis and expectation of a model are different, you can debug the model by referring to the saliency map so that the model can perform inference based on proper features.",
     "mainTipPartThree": "For details about how to generate saliency maps, see section 3.2 'Local Methods' in",
     "mainTipPartFour": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9050829",
-    "noExplainer": "Select Explanation Method"
+    "noExplainer": "Select Explanation Method",
+    "minConfidenceTip": "Probability threshold of a prediction tag. A tag is recorded as a prediction tag if its output probability is greater than the threshold. "
   },
   "metric": {
     "scoreSystem": "Scoring System",
