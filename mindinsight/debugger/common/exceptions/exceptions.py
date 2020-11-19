@@ -136,3 +136,13 @@ class DebuggerGraphNotExistError(MindInsightException):
             message=DebuggerErrorMsg.GRAPH_NOT_EXIST_ERROR.value,
             http_code=400
         )
+
+
+class DebuggerStepNumError(MindInsightException):
+    """The graph does not exist."""
+    def __init__(self):
+        super(DebuggerStepNumError, self).__init__(
+            error=DebuggerErrors.STEP_NUM_ERROR,
+            message="The type of step number should be int32.",
+            http_code=400
+        )

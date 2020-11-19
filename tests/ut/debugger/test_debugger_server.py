@@ -159,7 +159,7 @@ class TestDebuggerServer:
         """Test validate leaf name."""
         args[0].return_value = 'name_scope'
         with pytest.raises(DebuggerParamValueError, match='Invalid leaf node name.'):
-            self._server._validate_leaf_name(node_name='mock_node_name', graph_name='mock_graph_name')
+            self._server._validate_continue_node_name(node_name='mock_node_name', graph_name='mock_graph_name')
 
     @mock.patch.object(TensorHandler, 'get')
     @mock.patch.object(DebuggerServer, '_get_tensor_name_and_type_by_ui_name')
@@ -187,7 +187,7 @@ class TestDebuggerServer:
         res = self._server._retrieve_watchpoint({'watch_point_id': 1})
         assert res == mock_watchpoint
 
-    @mock.patch.object(DebuggerServer, '_validate_leaf_name')
+    @mock.patch.object(DebuggerServer, '_validate_continue_node_name')
     @mock.patch.object(DebuggerServer, '_get_tensor_history')
     @mock.patch.object(DebuggerServer, '_get_nodes_info', return_value={'graph': {}})
     def test_retrieve_watchpoint_hit(self, *args):
