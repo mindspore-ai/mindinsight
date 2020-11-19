@@ -239,18 +239,3 @@ class TestOptimizerConfig:
         }
         err = OptimizerConfig().validate(config_dict)
         assert expected_err == err
-
-        config_dict['parameters'] = {}
-        config_dict['parameters'][param_name] = {
-            'bounds': [0.1, 1.2],
-            'type': 'float'
-        }
-        expected_err = {
-            'parameters': {
-                param_name: {
-                    'type': "The value(s) should be integer, please config its type as 'int'."
-                }
-            }
-        }
-        err = OptimizerConfig().validate(config_dict)
-        assert expected_err == err
