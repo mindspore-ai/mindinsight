@@ -16,19 +16,91 @@ limitations under the License.
 <template>
   <div class="pro-router-wrap">
     <div class="pro-router-left">
-      <!-- Timeline display area -->
+     <!-- Step trace area -->
       <div class="step-trace">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.stepTrace') }}</div>
+          <div class="view-detail">
+            <button @click="viewDetail('step-trace')"
+                    :disabled="svg.noData && svg.data.length === 0"
+                    :class="{disabled:svg.noData && svg.data.length === 0}">{{ $t('profiling.viewDetail') }}
+              <i class="el-icon-d-arrow-right"></i></button>
+          </div>
+          <!-- Step trace description -->
+          <div class="tip-icon">
+            <el-tooltip placement="bottom"
+                        effect="light">
+              <div slot="content"
+                   class="tooltip-container">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+                <div>{{$t('profiling.iterationInfo')}}</div>
+                <div>
+                  <span class="font-style">{{$t('profiling.queueInfo')}}&nbsp;</span>
+                  <span>{{$t('profiling.iterationGapInfo')}}</span>
+                </div>
+                <div>
+                  <span class="font-style">{{$t('profiling.fpbpTitle')}}&nbsp;</span>
+                  <span>{{$t('profiling.fpbpInfo')}}</span>
+                </div>
+                <div>
+                  <span class="font-style">{{$t('profiling.iterativeTailingTitle')}}&nbsp;</span>
+                  <span>{{$t('profiling.iterativeTailingInfo')}}</span>
+                </div>
+                <br />
+                <div class="font-size-style">{{$t('profiling.statistics')}}</div>
+                <div>{{$t('profiling.totalTime')}}
+                  <span>{{totalTime}}{{$t('profiling.millisecond')}}</span>
+                </div>
+                <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
+                <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationIntervalPercent}}</span></div>
+                <div>{{$t('profiling.fpbpTimeRatio')}}<span>{{fpBpPercent}}</span></div>
+                <div>{{$t('profiling.iterativeTailingTimeRatio')}}<span>{{tailPercent}}</span></div>
+              </div>
+              <i class="el-icon-info"></i>
+            </el-tooltip>
+          </div>
         </div>
-        <!-- Timeline SVG container -->
+        <!-- Step trace SVG container -->
         <div class="trace-container">
-          <div class="image-noData">
+          <div id="trace"
+               class="training-trace"
+               :style="{height: svg.totalHeight + 'px'}">
+            <svg version="1.1"
+                 xmlns="http://www.w3.org/2000/svg"
+                 height="100%"
+                 width="100%">
+              <defs>
+                <marker id="marker_end"
+                        refX="5"
+                        refY="4"
+                        markerWidth="10"
+                        markerHeight="8"
+                        orient="auto">
+                  <path d="M1,1 L1,7 L9,4 z"
+                        fill="#6c7280"
+                        stroke="#6c7280"></path>
+                </marker>
+                <marker id="marker_start"
+                        refX="5"
+                        refY="4"
+                        markerWidth="10"
+                        markerHeight="8"
+                        orient="auto">
+                  <path d="M9,1 L9,7 L1,4 z"
+                        fill="#6c7280"
+                        stroke="#6c7280"></path>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+          <div class="image-noData"
+               v-if="svg.noData">
             <div>
-              <img :src="require('@/assets/images/coming-soon.png')"
+              <img :src="require('@/assets/images/nodata.png')"
                    alt="" />
             </div>
-            <p>{{$t("public.stayTuned")}}</p>
+            <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
+            <p v-show="svg.initOver">{{$t("public.noData")}}</p>
           </div>
         </div>
       </div>
@@ -315,9 +387,43 @@ export default {
       trainingJobId: this.$route.query.id, // Training job id
       summaryPath: this.$route.query.dir, // Summary path data
       relativePath: this.$route.query.path, // Relative path of summary log
-      currentCard: '', // Data of current card
+      currentCard: '', // current device card
       queueInfoShow: false, // Whether to show queue information
       deviceInfoShow: false, // Whether to show device information
+      fpBpPercent: '--', // Ratio of time consumed by forward and backward propagation
+      iterationIntervalPercent: '--', // Ratio of time consumed by step interval
+      totalSteps: '--',
+      totalTime: '--',
+      tailPercent: '--', // Ratio of time consumed by step tail
+      svg: {
+        // Step trace svg information
+        data: [], // Data of svg
+        svgPadding: 20, // Padding of svg
+        totalWidth: 0, // Total width of svg
+        totalTime: 0,
+        cellHeight: 40,
+        cellPadding: 0,
+        rowPadding: 20,
+        rowMargin: 10,
+        totalHeight: 0,
+        markerPadding: 4,
+        minRate: 0.1, // Minimum time share threshold of non wrapping display
+        minTime: 0, // Minimum time for non wrapping display
+        minWidth: 1, // Minimum width of graphics in SVG
+        fontSize: 12,
+        textMargin: 21, // The minimum margin of the text from the border
+        namespaceURI: 'http://www.w3.org/2000/svg', // XML namespace
+        resizeTimer: null, // Response delay of resize event
+        colors: {
+          // Colors of different types of data presentation
+          iteration_interval: ['#A6DD82', '#edf8e6'],
+          fp_and_bp: ['#6CBFFF', '#e2f2ff'],
+          tail: ['#fa8e5b', '#fff4de'],
+          stream_parallel: ['#01a5a7', '#cceded'],
+        },
+        noData: true,
+        initOver: false,
+      },
       processSummary: {
         // Data of process summary
         noData: true,
@@ -361,12 +467,18 @@ export default {
       },
     };
   },
-  mounted() {},
+  mounted() {
+    setTimeout(() => {
+      this.$bus.$on('collapse', this.resizeTrace);
+    }, 500);
+  },
   watch: {
     // Monitor current card information
     '$parent.curDashboardInfo': {
       handler(newValue, oldValue) {
         if (newValue.curCardNum === '') {
+          this.svg.noData = true;
+          this.svg.initOver = true;
           this.pieChart.noData = true;
           this.pieChart.initOver = true;
           this.processSummary.initOver = true;
@@ -391,6 +503,7 @@ export default {
                 'profiling.profilingDashboard',
             )}-MindInsight`;
           }
+          this.svg.initOver = false;
           this.pieChart.initOver = false;
           this.processSummary.initOver = false;
           this.timelineInfo.initOver = false;
@@ -409,6 +522,8 @@ export default {
       this.queryTimeline();
       this.initPieChart();
       this.getProccessSummary();
+      this.queryTrainingTrace();
+      window.addEventListener('resize', this.resizeTrace, false);
     },
     /**
      * Get the data of proccess summary
@@ -686,8 +801,407 @@ export default {
       }
       return Math.round(num * Math.pow(10, pow)) / Math.pow(10, pow);
     },
+    /**
+     * Get the data of training trace
+     */
+    queryTrainingTrace() {
+      const params = {
+        dir: this.relativePath,
+        type: 0,
+        device_id: this.currentCard,
+      };
+      RequestService.queryTrainingTrace(params).then(
+          (res) => {
+            this.svg.initOver = true;
+            if (res && res.data && res.data.training_trace_graph && res.data.training_trace_graph.length) {
+              this.svg.noData = false;
+              this.removeTrace();
+              this.$nextTick(() => {
+                this.packageTraceData(
+                    JSON.parse(JSON.stringify(res.data.training_trace_graph)),
+                );
+              });
+
+              // Set the display information in tip
+              if (res.data.summary) {
+                this.fpBpPercent = res.data.summary.fp_and_bp_percent;
+                this.iterationIntervalPercent = res.data.summary.iteration_interval_percent;
+                this.totalSteps = res.data.summary.total_steps;
+                this.totalTime = res.data.summary.total_time;
+                this.tailPercent = res.data.summary.tail_percent;
+              } else {
+                this.fpBpPercent = '--';
+                this.iterationIntervalPercent = '--';
+                this.totalSteps = '--';
+                this.totalTime = '--';
+                this.tailPercent = '--';
+              }
+            } else {
+              this.svg.totalHeight = 0;
+              this.svg.noData = true;
+              this.svg.data = [];
+              this.svg.initOver = true;
+              this.removeTrace();
+            }
+          },
+          (error) => {
+            this.svg.totalHeight = 0;
+            this.svg.noData = true;
+            this.svg.data = [];
+            this.svg.initOver = true;
+            this.removeTrace();
+          },
+      );
+    },
+    /**
+     * Encapsulating the data of training trace
+     * @param {Object} traceGraph Data of training trace
+     */
+    packageTraceData(traceGraph) {
+      this.svg.totalTime = 0;
+      this.svg.minTime = 0;
+      this.svg.totalHeight = 0;
+      const data = [];
+
+      if (traceGraph && traceGraph[0] && traceGraph[0][0]) {
+        this.svg.totalTime = traceGraph[0][0].duration;
+        this.svg.minTime = this.svg.minRate * this.svg.totalTime;
+
+        // If there is data less than the minimum time in each row,
+        // the data in each row is divided into several rows
+        traceGraph.forEach((row, index) => {
+          const rowObj = {
+            rowCount: 0,
+            data: [],
+            height: 0,
+            startY: this.svg.totalHeight,
+          };
+          let obj = [];
+          for (let i = 0; i < row.length; i++) {
+            if (row[i].duration < this.svg.minTime) {
+              if (obj.length) {
+                rowObj.data.push(obj);
+                obj = [];
+                rowObj.rowCount++;
+              }
+              rowObj.data.push([row[i]]);
+              rowObj.rowCount++;
+            } else {
+              obj.push(row[i]);
+            }
+
+            if (i === row.length - 1 && obj.length) {
+              rowObj.data.push(obj);
+              obj = [];
+              rowObj.rowCount++;
+            }
+          }
+          rowObj.height =
+            rowObj.rowCount * this.svg.cellHeight +
+            (rowObj.rowCount - 1) * this.svg.cellPadding +
+            (index ? this.svg.rowPadding * 2 : 0);
+
+          this.svg.totalHeight += rowObj.height + this.svg.rowMargin;
+          data.push(rowObj);
+        });
+
+        this.svg.totalHeight += this.svg.rowPadding;
+        this.svg.data = JSON.parse(JSON.stringify(data));
+
+        this.$nextTick(() => {
+          this.dealTraceData();
+        });
+      }
+    },
+    /**
+     * Processing the data of training trace, Control data generation svg
+     */
+    dealTraceData() {
+      const traceDom = document.querySelector('#trace');
+      if (traceDom) {
+        this.svg.totalWidth = traceDom.offsetWidth - this.svg.svgPadding * 2;
+
+        if (this.svg.data[0] && this.svg.data[0].data.length) {
+          const svg = traceDom.querySelector('svg');
+          if (this.svg.totalTime) {
+            this.svg.data.forEach((item, index) => {
+              let itemDom = {};
+              if (index) {
+                itemDom = this.createMultipleRowContainer(item);
+              } else {
+                itemDom = this.createRowContainer(item.data, item.startY);
+              }
+              svg.appendChild(itemDom);
+            });
+          }
+        } else {
+          this.removeTrace();
+        }
+      }
+    },
+    /**
+     * Generate a container with multiple rows
+     * @param {Object} item Multi row data
+     * @return {Object} Generated DOM object
+     */
+    createMultipleRowContainer(item) {
+      const rectContainer = document.createElementNS(
+          this.svg.namespaceURI,
+          'g',
+      );
+      rectContainer.setAttribute('class', 'container');
+
+      const rect = document.createElementNS(this.svg.namespaceURI, 'rect');
+      rect.setAttribute('x', this.svg.svgPadding);
+      rect.setAttribute('y', item.startY + this.svg.rowPadding);
+      rect.setAttribute('height', item.height);
+      rect.setAttribute('width', this.svg.totalWidth);
+      rect.setAttribute('style', 'fill:#edf0f5;stroke:#E2E2E2;stroke-width:1');
+      rectContainer.appendChild(rect);
+
+      const temp = this.createRowContainer(
+          item.data,
+          item.startY + this.svg.rowPadding,
+      );
+      rectContainer.appendChild(temp);
+      return rectContainer;
+    },
+    /**
+     * DOM for generating a single SVG image
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of box
+     * @return {Object}
+     */
+    createRowContainer(data, startY) {
+      const g = document.createElementNS(this.svg.namespaceURI, 'g');
+
+      data.forEach((row, index) => {
+        const y =
+          startY +
+          this.svg.rowPadding +
+          index * (this.svg.cellPadding + this.svg.cellHeight);
+        row.forEach((i) => {
+          if (i.duration) {
+            let temp;
+            if (i.name) {
+              temp = this.createRect(i, y);
+              g.insertBefore(temp, g.querySelector('g'));
+            } else {
+              temp = this.createArrow(i, y);
+              g.appendChild(temp);
+            }
+          }
+        });
+      });
+      return g;
+    },
+    /**
+     * Create a box DOM from the data
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of box
+     * @return {Object}
+     */
+    createRect(data, startY) {
+      const color =
+        data.name && this.svg.colors[data.name]
+          ? this.svg.colors[data.name]
+          : this.svg.colors.stream_parallel;
+      // Start x position of box
+      const x1 =
+        (data.start / this.svg.totalTime) * this.svg.totalWidth +
+        this.svg.svgPadding;
+      // The width of the box
+      const width = Math.max(
+          this.svg.minWidth,
+          (data.duration / this.svg.totalTime) * this.svg.totalWidth,
+      );
+
+      // Contents of the box
+      let name = '';
+      switch (data.name) {
+        case 'iteration_interval':
+          name = this.$t('profiling.lterationGap');
+          break;
+        case 'fp_and_bp':
+          name = this.$t('profiling.deviceQueueOpTip');
+          break;
+        case 'tail':
+          name = this.$t('profiling.lterationTail');
+          break;
+        default:
+          name = data.name;
+          break;
+      }
+
+      const textContent = `${name}: ${this.toFixedFun(data.duration, 4)}ms`;
+      const textWidth = this.getTextWidth(textContent);
+      const normalSize = data.duration >= this.svg.minTime;
+
+      const g = document.createElementNS(this.svg.namespaceURI, 'g');
+      g.setAttribute('class', 'rect');
+
+      const rect = document.createElementNS(this.svg.namespaceURI, 'rect');
+      rect.setAttribute('x', x1);
+      rect.setAttribute('y', startY);
+      rect.setAttribute('height', this.svg.cellHeight);
+      rect.setAttribute('width', width);
+      rect.setAttribute('style', `fill:${color[1]};stroke:${color[0]};`);
+
+      const foreignObject = document.createElementNS(
+          this.svg.namespaceURI,
+          'foreignObject',
+      );
+      foreignObject.textContent = textContent;
+      foreignObject.setAttribute(
+          'x',
+        normalSize
+          ? x1
+          : Math.min(
+              this.svg.svgPadding * 2 +
+                this.svg.totalWidth -
+                textWidth -
+                this.svg.textMargin,
+              Math.max(this.svg.textMargin, x1 + width / 2 - textWidth / 2),
+          ),
+      );
+
+      foreignObject.setAttribute('y', startY);
+      foreignObject.setAttribute('height', this.svg.cellHeight);
+      foreignObject.setAttribute('width', width);
+      foreignObject.setAttribute('style', `color:${color[0]}`);
+      foreignObject.setAttribute(
+          'class',
+          `content${normalSize ? '' : ' content-mini'}`,
+      );
+
+      const title = document.createElementNS(this.svg.namespaceURI, 'title');
+      title.textContent = textContent;
+
+      g.appendChild(rect);
+      g.appendChild(foreignObject);
+      g.appendChild(title);
+      return g;
+    },
+    /**
+     * Create a arrow DOM from the data
+     * @param {Object} data Data of single SVG image
+     * @param {Number} startY Start y position of arrow
+     * @return {Object}
+     */
+    createArrow(data, startY) {
+      const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
+      const x1 =
+        (data.start / this.svg.totalTime) * this.svg.totalWidth +
+        this.svg.svgPadding;
+      const centerY = startY + this.svg.cellHeight / 2;
+
+      const g = document.createElementNS(this.svg.namespaceURI, 'g');
+      g.setAttribute('class', 'arrow');
+
+      const line = document.createElementNS(this.svg.namespaceURI, 'line');
+      line.setAttribute('y1', centerY);
+      line.setAttribute('y2', centerY);
+      line.setAttribute('style', 'stroke:#6c7280;stroke-width:1');
+      if (width > this.svg.markerPadding) {
+        line.setAttribute('x1', x1 + this.svg.markerPadding);
+        line.setAttribute('x2', x1 + width - this.svg.markerPadding);
+        line.setAttribute('marker-end', 'url(#marker_end)');
+        line.setAttribute('marker-start', 'url(#marker_start)');
+      } else {
+        line.setAttribute('x1', x1);
+        line.setAttribute('x2', x1 + width);
+      }
+
+      const text = document.createElementNS(this.svg.namespaceURI, 'text');
+      text.textContent = `${
+        data.duration === this.svg.totalTime
+          ? this.$t('profiling.approximateTime')
+          : ''
+      }${this.toFixedFun(data.duration, 4)}ms`;
+      const textWidth = text.textContent
+        ? this.getTextWidth(text.textContent)
+        : 0;
+      // The position of the text cannot go beyond the border of the SVG
+      text.setAttribute(
+          'x',
+          Math.min(
+              this.svg.svgPadding * 2 +
+            this.svg.totalWidth -
+            textWidth -
+            this.svg.textMargin,
+              Math.max(this.svg.textMargin, width / 2 + x1 - textWidth / 2),
+          ),
+      );
+      text.setAttribute('y', centerY - this.svg.fontSize / 2);
+      text.setAttribute('font-size', this.svg.fontSize);
+      text.setAttribute('fill', 'black');
+
+      const startLine = document.createElementNS(this.svg.namespaceURI, 'line');
+      startLine.setAttribute('x1', x1);
+      startLine.setAttribute('y1', startY);
+      startLine.setAttribute('x2', x1);
+      startLine.setAttribute('y2', startY + this.svg.cellHeight);
+      startLine.setAttribute('style', 'stroke:#6c7280;stroke-width:1');
+      g.appendChild(startLine);
+
+      const endLine = document.createElementNS(this.svg.namespaceURI, 'line');
+      endLine.setAttribute('x1', x1 + width);
+      endLine.setAttribute('y1', startY);
+      endLine.setAttribute('x2', x1 + width);
+      endLine.setAttribute('y2', startY + this.svg.cellHeight);
+      endLine.setAttribute('style', 'stroke:#6c7280;stroke-width:1');
+      g.appendChild(endLine);
+      g.appendChild(line);
+      g.appendChild(text);
+      return g;
+    },
+    /**
+     * Gets the width of a string
+     * @param {String} text
+     * @return {Number}
+     */
+    getTextWidth(text) {
+      const body = document.querySelector('body');
+      const temp = document.createElement('span');
+      temp.style['font-size'] = '12px';
+      temp.textContent = text;
+      body.appendChild(temp);
+      const textWidth = temp.offsetWidth;
+      body.removeChild(temp);
+      return textWidth;
+    },
+    /**
+     * Remove SVG DOM from page
+     */
+    removeTrace() {
+      const svgDom = document.querySelector('#trace svg');
+      if (svgDom) {
+        const gDoms = svgDom.children;
+        if (gDoms) {
+          for (let i = 0; i < gDoms.length; i++) {
+            if (gDoms[i].nodeName === 'g') {
+              svgDom.removeChild(gDoms[i--]);
+            }
+          }
+        }
+      }
+    },
+    /**
+     * Respond to the reset event and update the page display
+     */
+    resizeTrace() {
+      if (this.svg.resizeTimer) {
+        clearTimeout(this.svg.resizeTimer);
+      }
+      this.svg.resizeTimer = setTimeout(() => {
+        this.removeTrace();
+        this.dealTraceData();
+        this.svg.resizeTimer = null;
+      }, 500);
+    },
   },
   destroyed() {
+    window.removeEventListener('resize', this.resizeTrace, false);
     this.$bus.$off('collapse');
   },
 };
@@ -793,6 +1307,21 @@ export default {
         width: 100%;
         height: calc(100% - 54px);
         overflow: auto;
+        .training-trace {
+          position: relative;
+          height: 0;
+          .content {
+            overflow: hidden;
+            text-align: center;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            line-height: 40px;
+          }
+          .content-mini {
+            overflow: visible;
+          }
+        }
       }
     }
     .minddata {

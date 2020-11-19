@@ -119,6 +119,10 @@ export default new Router({
           path: 'operator',
           component: () => import('./views/profiling-gpu/operator.vue'),
         },
+        {
+          path: 'step-trace',
+          component: () => import('./views/profiling/step-trace.vue'),
+        },
       ],
     },
     {
