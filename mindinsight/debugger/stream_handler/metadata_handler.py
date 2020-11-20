@@ -31,6 +31,9 @@ class MetadataHandler(StreamHandlerBase):
         self._backend = ""
         self._enable_recheck = False
         self._cur_graph_name = ""
+        # If recommendation_confirmed is true, it only means the user has answered yes or no to the question,
+        # it does not necessarily mean that the user will use the recommended watch points.
+        self._recommendation_confirmed = False
 
     @property
     def device_name(self):
@@ -117,6 +120,21 @@ class MetadataHandler(StreamHandlerBase):
         """
         self._enable_recheck = bool(value)
 
+    @property
+    def recommendation_confirmed(self):
+        """The property of recommendation_confirmed."""
+        return self._recommendation_confirmed
+
+    @recommendation_confirmed.setter
+    def recommendation_confirmed(self, value):
+        """
+        Set the property of recommendation_confirmed.
+
+        Args:
+            value (str): The new ip.
+        """
+        self._recommendation_confirmed = value
+
     def put(self, value):
         """
         Put value into metadata cache. Called by grpc server.
@@ -151,7 +169,8 @@ class MetadataHandler(StreamHandlerBase):
                 'node_name': self.node_name,
                 'backend': self.backend,
                 'enable_recheck': self.enable_recheck,
-                'graph_name': self.graph_name
+                'graph_name': self.graph_name,
+                'recommendation_confirmed': self._recommendation_confirmed
             }
         else:
             if not isinstance(filter_condition, list):

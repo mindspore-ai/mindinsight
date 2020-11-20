@@ -15,13 +15,11 @@
 """Implement the debugger grpc server."""
 from functools import wraps
 
-import mindinsight.conditionmgr.recommender
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
     Streams, RunLevel
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.debugger.proto.ms_graph_pb2 import GraphProto
-from mindinsight.conditionmgr.condition import ConditionContext
 
 
 def debugger_wrap(func):
@@ -96,20 +94,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             log.debug("Reply to WaitCMD: %s", reply)
         return reply
 
-    def _add_predefined_watchpoints(self, condition_context):
-        """Add predefined watchpoints."""
-        log.debug("Add predefined watchpoints.")
-        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
-        watchpoints = mindinsight.conditionmgr.recommender.recommend_watchpoints(self._condition_mgr, graph_stream,
-                                                                                 condition_context)
-        watch_point_stream_handler = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
-        for watchpoint in watchpoints:
-            watch_point_stream_handler.create_watchpoint(
-                watch_condition=watchpoint.get_watch_condition_dict(),
-                watch_nodes=watchpoint.watch_nodes,
-                condition_mgr=self._condition_mgr
-            )
-
     def _pre_process(self, request):
         """Pre-process before dealing with command."""
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
@@ -125,8 +109,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             watchpoint_stream.clean_temp_cached_names()
         # receive graph at the beginning of the training
         if self._status == ServerStatus.RECEIVE_GRAPH:
-            condition_context = ConditionContext(backend=request.backend, debugger_capability=(1, 0))
-            self._add_predefined_watchpoints(condition_context)
             self._send_graph_flag(metadata_stream)
         # receive new metadata
         if is_new_step or is_new_node:
