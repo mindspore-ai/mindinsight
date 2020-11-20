@@ -146,3 +146,25 @@ class DebuggerStepNumError(MindInsightException):
             message="The type of step number should be int32.",
             http_code=400
         )
+
+
+class DebuggerTensorGraphError(MindInsightException):
+    """The error about comparing tensors."""
+
+    def __init__(self):
+        super(DebuggerTensorGraphError, self).__init__(
+            error=DebuggerErrors.TENSOR_GRAPH_ERROR,
+            message=DebuggerErrorMsg.TENSOR_GRAPH_ERROR.value,
+            http_code=400
+        )
+
+
+class DebuggerTensorHitError(MindInsightException):
+    """The error about comparing tensors."""
+
+    def __init__(self):
+        super(DebuggerTensorHitError, self).__init__(
+            error=DebuggerErrors.TENSOR_HIT_ERROR,
+            message=DebuggerErrorMsg.TENSOR_HIT_ERROR.value,
+            http_code=400
+        )

@@ -17,13 +17,6 @@
 			]
 		],
 		"curr_step_statistics": {
-			"max": 6.0,
-			"min": 1.0,
-			"avg": 3.5,
-			"count": 6,
-			"nan_count": 0,
-			"neg_inf_count": 0,
-			"pos_inf_count": 0,
 			"overall_max": 6.0,
 			"overall_min": 1.0,
 			"overall_avg": 3.5,
@@ -36,13 +29,6 @@
 			"overall_pos_zero_count": 6.0
 		},
 		"prev_step_statistics": {
-			"max": 6.0,
-			"min": 1.0,
-			"avg": 3.5,
-			"count": 6,
-			"nan_count": 0,
-			"neg_inf_count": 0,
-			"pos_inf_count": 0,
 			"overall_max": 6.0,
 			"overall_min": 1.0,
 			"overall_avg": 3.5,
@@ -55,13 +41,6 @@
 			"overall_pos_zero_count": 6.0
 		},
 		"statistics": {
-			"max": 0.0,
-			"min": 0.0,
-			"avg": 0.0,
-			"count": 6,
-			"nan_count": 0,
-			"neg_inf_count": 0,
-			"pos_inf_count": 0,
 			"overall_max": 0.0,
 			"overall_min": 0.0,
 			"overall_avg": 0.0,

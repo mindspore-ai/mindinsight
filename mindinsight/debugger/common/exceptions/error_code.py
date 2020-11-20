@@ -27,7 +27,6 @@ class DebuggerErrors(DebuggerErrorCodes):
     """Debugger error codes."""
     PARAM_TYPE_ERROR = 0 | _PARAM_ERROR_MASK
     PARAM_VALUE_ERROR = 1 | _PARAM_ERROR_MASK
-
     STEP_NUM_ERROR = 2 | _PARAM_ERROR_MASK
 
     NODE_NOT_IN_GRAPH_ERROR = 0 | _DEBUGGER_GRAPH_ERROR
@@ -40,6 +39,8 @@ class DebuggerErrors(DebuggerErrorCodes):
     PAUSE_ERROR = 4 | _DEBUGGER_RUNNING_ERROR
     COMPARE_TENSOR_ERROR = 5 | _DEBUGGER_RUNNING_ERROR
     RECHECK_ERROR = 6 | _DEBUGGER_RUNNING_ERROR
+    TENSOR_GRAPH_ERROR = 7 | _DEBUGGER_RUNNING_ERROR
+    TENSOR_HIT_ERROR = 8 | _DEBUGGER_RUNNING_ERROR
 
 
 @unique
@@ -56,3 +57,5 @@ class DebuggerErrorMsg(Enum):
     CONTINUE_ERROR = "Continue debugging failed. {}"
     PAUSE_ERROR = "Pause debugging failed. {}"
     RECHECK_ERROR = "Recheck failed. {}"
+    TENSOR_GRAPH_ERROR = "Get tensor graphs failed."
+    TENSOR_HIT_ERROR = "Get tensor hits failed."

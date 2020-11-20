@@ -40,7 +40,7 @@ class TestTensorHandler:
 
     def test_get_tensor_value_by_name_none(self):
         """Test get_tensor_value_by_name."""
-        res = self.tensor_handler.get_tensor_value_by_name('tensor_name', True)
+        res = self.tensor_handler.get_valid_tensor_by_name('tensor_name', True)
         assert res is None
 
     @mock.patch.object(log, "error")

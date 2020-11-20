@@ -130,6 +130,16 @@ class OpTensor(BaseTensor):
         """The property of tensor stats."""
         return self._stats
 
+    @stats.setter
+    def stats(self, stats):
+        """
+        Update tensor stats.
+
+        Args:
+            stats (Statistics): Instance of Statistics.
+        """
+        self._stats = stats
+
     @property
     def tensor_comparison(self):
         """The property of tensor_comparison."""
@@ -167,15 +177,10 @@ class OpTensor(BaseTensor):
         res = {}
         # the type of tensor_value is one of None, np.ndarray or str
         if isinstance(tensor_value, np.ndarray):
-            statistics = TensorUtils.get_statistics_from_tensor(tensor_value)
-            if not self.stats:
-                self.update_tensor_stats(TensorUtils.get_statistics_from_tensor(self.value))
-            res['statistics'] = TensorUtils.get_statistics_dict(stats=statistics, overall_stats=self.stats)
             res['value'] = tensor_value.tolist()
         elif isinstance(tensor_value, str):
             res['value'] = tensor_value
-            res['statistics'] = TensorUtils.get_overall_statistic_dict(self._stats)
-
+        res['statistics'] = self.get_tensor_statistics()
         return res
 
     def get_tensor_statistics(self):
@@ -185,9 +190,11 @@ class OpTensor(BaseTensor):
         Returns:
             dict, overall statistics.
         """
-        if not self._stats:
-            self._stats = TensorUtils.get_statistics_from_tensor(self.value)
-        statistics = TensorUtils.get_overall_statistic_dict(self._stats)
+        if self.empty:
+            return {}
+        if not self.stats:
+            self.stats = TensorUtils.get_statistics_from_tensor(self.value)
+        statistics = TensorUtils.get_overall_statistic_dict(self.stats)
         return statistics
 
     def update_tensor_comparisons(self, tensor_comparison):
@@ -199,16 +206,6 @@ class OpTensor(BaseTensor):
 
         """
         self._tensor_comparison = tensor_comparison
-
-    def update_tensor_stats(self, stats):
-        """
-        Update tensor stats.
-
-        Args:
-            stats (Statistics) instance of Statistics.
-
-        """
-        self._stats = stats
 
     def get_tensor_value_by_shape(self, shape=None):
         """

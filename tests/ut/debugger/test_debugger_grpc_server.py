@@ -68,7 +68,7 @@ class MockDataGenerator:
         view_event = get_ack_reply()
         ms_tensor = view_event.view_cmd.tensors.add()
         ms_tensor.node_name, ms_tensor.slot = 'mock_node_name', '0'
-        event = {'view_cmd': view_event, 'node_name': 'mock_node_name'}
+        event = {'view_cmd': view_event, 'node_name': 'mock_node_name', 'graph_name': 'mock_graph_name'}
         return event
 
     @staticmethod
@@ -180,10 +180,10 @@ class TestDebuggerGrpcServer:
     def test_deal_with_old_command_with_view_cmd(self, *args):
         """Test deal with view command."""
         cmd = MockDataGenerator.get_view_cmd()
-        args[1].return_value = ('0', cmd)
+        args[1].return_value = ('0', cmd.copy())
         res = self._server._deal_with_old_command()
-        assert res == cmd.get('view_cmd')
-        expect_received_view_cmd = {'node_name': cmd.get('node_name'), 'wait_for_tensor': True}
+        assert res == cmd.pop('view_cmd')
+        expect_received_view_cmd = {'node_info': cmd, 'wait_for_tensor': True}
         assert getattr(self._server, '_received_view_cmd') == expect_received_view_cmd
 
     @mock.patch.object(DebuggerCache, 'get_command')
@@ -201,7 +201,7 @@ class TestDebuggerGrpcServer:
         """Test wait for run command."""
         pause_cmd = MockDataGenerator.get_run_cmd(steps=0)
         empty_view_cmd = MockDataGenerator.get_view_cmd()
-        empty_view_cmd.pop('node_name')
+        empty_view_cmd.pop('view_cmd')
         run_cmd = MockDataGenerator.get_run_cmd(steps=2)
         args[0].side_effect = [('0', pause_cmd), ('0', empty_view_cmd), ('0', run_cmd)]
         setattr(self._server, '_status', ServerStatus.WAITING)
