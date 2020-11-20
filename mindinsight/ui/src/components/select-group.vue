@@ -148,5 +148,9 @@ export default {
     margin-right: 20px;
     height: 32px;
   }
+  .checkboxes-last {
+    display: flex;
+    align-items: center;
+  }
 }
 </style>

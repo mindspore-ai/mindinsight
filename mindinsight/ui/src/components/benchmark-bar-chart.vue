@@ -147,7 +147,7 @@ export default {
         },
         grid: {
           left: '10%',
-          right: 260,
+          right: 280,
           bottom: '3%',
           top: 30,
         },

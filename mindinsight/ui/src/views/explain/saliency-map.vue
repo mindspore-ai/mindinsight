@@ -47,14 +47,12 @@ limitations under the License.
     <!-- Explanation Method -->
     <div class="cl-saliency-map-methods">
       <!-- Explainer Checkbox -->
-      <div class="methods-right">
-        <SelectGroup :checkboxes="allExplainers"
-                     @updateCheckedList="updateSelectedExplainers"
-                     :title="$t('explain.explainMethod')">
-          <span class="methods-action"
-                @click="goMetric">{{$t('explain.viewScore')}}</span>
-        </SelectGroup>
-      </div>
+      <select-group :checkboxes="allExplainers"
+                    @updateCheckedList="updateSelectedExplainers"
+                    :title="$t('explain.explainMethod')">
+        <span class="methods-action"
+              @click="goMetric">{{$t('explain.viewScore')}}</span>
+      </select-group>
     </div>
     <!-- Parameters Fetch -->
     <div class="cl-saliency-map-condition">
@@ -62,16 +60,17 @@ limitations under the License.
         <div class="condition-item line-title">{{ $t('explain.tag') }}</div>
         <!-- Truth Labels -->
         <div class="condition-item">
-          <el-select v-model="selectedTruthLabels"
-                     :placeholder="$t('public.select')"
-                     multiple
-                     filterable
-                     collapse-tags>
+          <search-select type="option"
+                         :multiple="true"
+                         :collapseTags="true"
+                         @selectedUpdate="updateSelected"
+                         :slotReady="labelReady">
             <el-option v-for="label in truthLabels"
                        :key="label"
                        :label="label"
-                       :value="label"></el-option>
-          </el-select>
+                       :value="label"
+                       slot="oriData"></el-option>
+          </search-select>
         </div>
         <!-- Button -->
         <div class="condition-item">
@@ -79,8 +78,21 @@ limitations under the License.
                      class="condition-button"
                      @click="fetch">{{ $t('explain.fetch') }}</el-button>
         </div>
+        <!-- Min Confidence -->
         <div class="condition-item">
-          {{ $t('explain.minConfidence') + $t('symbols.colon')}}{{minConfidence}}</div>
+          {{ $t('explain.minConfidence')}}
+          <el-tooltip placement="bottom-start"
+                      effect="light"
+                      popper-class="confidence-tooltip">
+            <div slot="content"
+                 class="tooltip-container">
+              {{$t('explain.minConfidenceTip')}}
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
+          {{$t('symbols.colon')}}
+          {{minConfidence}}
+        </div>
       </div>
       <div class="condition-right">
         <!-- Sorted Name -->
@@ -124,7 +136,7 @@ limitations under the License.
            v-else>
         <el-table :data="tableData"
                   border
-                  :height="tableHeight"
+                  height="100%"
                   :span-method="mergeTable">
           <!-- Original Picture Column-->
           <el-table-column :label="$t('explain.originalPicture')"
@@ -154,18 +166,28 @@ limitations under the License.
                       </div>
                       <div class="tip-item">
                         <img :src="require('@/assets/images/explain-tp.svg')"
-                             alt="">
-                        <img :src="require('@/assets/images/explain-fn.svg')"
-                             alt="">
-                        <img :src="require('@/assets/images/explain-fp.svg')"
-                             alt="">
-                        <img :src="require('@/assets/images/explain-tn.svg')"
-                             alt="">
+                             class="tip-icon">
+                        {{$t('symbols.colon')}}
+                        {{$t('explain.TP')}}
                       </div>
-                      <div class="tip-item">{{$t('explain.TP')}}</div>
-                      <div class="tip-item">{{$t('explain.FN')}}</div>
-                      <div class="tip-item">{{$t('explain.FP')}}</div>
-                      <div class="tip-item">{{$t('explain.TN')}}</div>
+                      <div class="tip-item">
+                        <img :src="require('@/assets/images/explain-fn.svg')"
+                             class="tip-icon">
+                        {{$t('symbols.colon')}}
+                        {{$t('explain.FN')}}
+                      </div>
+                      <div class="tip-item">
+                        <img :src="require('@/assets/images/explain-fp.svg')"
+                             class="tip-icon">
+                        {{$t('symbols.colon')}}
+                        {{$t('explain.FP')}}
+                      </div>
+                      <div class="tip-item">
+                        <img :src="require('@/assets/images/explain-tn.svg')"
+                             class="tip-icon">
+                        {{$t('symbols.colon')}}
+                        {{$t('explain.TN')}}
+                      </div>
                     </div>
                   </div>
                   <i class="el-icon-info"></i>
@@ -173,7 +195,43 @@ limitations under the License.
               </span>
             </template>
             <template slot-scope="scope">
-              <div class="table-forecast-tag">
+              <div class="table-forecast-tag"
+                   v-if="uncertaintyEnabled">
+                <!-- Tag Title -->
+                <div class="tag-title-true">
+                  <div class="first">{{ $t('explain.tag') }}</div>
+                  <div>{{ $t('explain.confidenceRange') }}</div>
+                  <div class="center">{{ $t('explain.uncertainty') }}</div>
+                </div>
+                <!-- Tag content -->
+                <div class="tag-content">
+                  <div v-for="(tag, index) in scope.row.inferences"
+                       :key="tag.label"
+                       class="tag-content-item tag-content-item-true"
+                       :class="{
+                          'tag-active': index === scope.row.activeLabelIndex,
+                          'tag-tp': tag.type === 'tp',
+                          'tag-fn': tag.type === 'fn',
+                          'tag-fp': tag.type === 'fp'
+                        }"
+                       @click="changeActiveLabel(scope.row, index)">
+                    <div class="first">{{ tag.label }}</div>
+                    <div>
+                      <div>{{ tag.confidence.toFixed(3) }}</div>
+                      <div>{{
+                        Math.floor(tag.confidence_itl95[0] * 100) / 100 +
+                          '-' +
+                          Math.ceil(tag.confidence_itl95[1] * 100) / 100
+                      }}</div>
+                    </div>
+                    <div class="center">
+                      {{ tag.confidence_sd.toFixed(2) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="table-forecast-tag"
+                   v-else>
                 <!--Tag Title-->
                 <div class="tag-title-false">
                   <div></div>
@@ -186,10 +244,10 @@ limitations under the License.
                        :key="tag.label"
                        class="tag-content-item tag-content-item-false"
                        :class="{
-                        'tag-active': index == scope.row.activeLabelIndex,
-                        'tag-tp': tag.type == 'tp',
-                        'tag-fn': tag.type == 'fn',
-                        'tag-fp': tag.type == 'fp'
+                        'tag-active': index === scope.row.activeLabelIndex,
+                        'tag-tp': tag.type === 'tp',
+                        'tag-fn': tag.type === 'fn',
+                        'tag-fp': tag.type === 'fp'
                       }"
                        @click="changeActiveLabel(scope.row, index)">
                     <div></div>
@@ -210,17 +268,17 @@ limitations under the License.
               <span :title="explainer">{{explainer}}</span>
             </template>
             <template slot-scope="scope">
-              <SuperpostImgComponent v-if="scope.row.inferences[scope.row.activeLabelIndex][explainer]"
-                                     containerSize="250"
-                                     :backgroundImg="getImgURL(scope.row.image)"
-                                     :targetImg="getImgURL(scope.row.inferences[scope.row.activeLabelIndex][explainer])"
-                                     :ifSuperpose="ifSuperpose"
-                                     @click.native="showImgDiglog(scope.row, explainer)">
-              </SuperpostImgComponent>
+              <superpose-img v-if="scope.row.inferences[scope.row.activeLabelIndex][explainer]"
+                             containerSize="250"
+                             :backgroundImg="getImgURL(scope.row.image)"
+                             :targetImg="getImgURL(scope.row.inferences[scope.row.activeLabelIndex][explainer])"
+                             :ifSuperpose="ifSuperpose"
+                             @click.native="showImgDiglog(scope.row, explainer)">
+              </superpose-img>
             </template>
           </el-table-column>
           <!-- None selected explainer Column-->
-          <el-table-column v-if="selectedExplainers.length == 0"
+          <el-table-column v-if="selectedExplainers.length === 0"
                            label=""
                            class-name="no-method-cell">
             <template>
@@ -247,92 +305,47 @@ limitations under the License.
                      :total="pageInfo.total"
                      v-show="!ifError"></el-pagination>
     </div>
-    <!-- The dialog of nine similar pictures -->
-    <el-dialog :title="$t('explain.ninePictures')"
-               :visible.sync="similarDialog.visible"
-               v-if="similarDialog.visible"
-               top="50px"
-               width="660px"
-               @close="dialogClose">
-      <div class="cl-saliency-map-dialog">
-        <div class="dialog-text">
-          <div class="dot"></div>
-          <div class="text">{{ $t('explain.theMeaningOfBorderColor') }}</div>
-        </div>
-        <div class="dialog-text">
-          <div class="dot"></div>
-          <div class="text">{{ $t('explain.theMeaningOfEightPicture') }}</div>
-        </div>
-        <div class="dialog-label">
-          {{$t('explain.tagAndLegend') + $t('symbols.colon')}}
-          <span class="label-item">{{ similarDialog.label }}</span>
-        </div>
-        <div class="dialog-grid-container">
-          <div class="dialog-grid"
-               v-if="!similarDialog.loading">
-            <div class="grid-item"
-                 v-for="dialogItem in similarDialog.around"
-                 :key="dialogItem.image"
-                 :style="{'backgroundColor': dialogItem.color}">
-              <img :src="getImgURL(dialogItem.image)"
-                   alt="">
-            </div>
-            <div class="grid-item grid-center">
-              <img :src="getImgURL(similarDialog.center.image)"
-                   alt="">
-            </div>
-          </div>
-          <div class="dialog-grid"
-               v-else
-               v-loading="true">
-            <div class="grid-item"
-                 v-for="index in 9"
-                 :key="index">
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </el-dialog>
+    <!-- Show Img Dialog -->
     <el-dialog :title="imageDetails.title"
                :visible.sync="imageDetails.imgShow"
                v-if="imageDetails.imgShow"
                top="100px"
                width="560px">
       <div class="detail-container">
-        <SuperpostImgComponent containerSize="500"
-                               :backgroundImg="imageDetails.imgUrl"
-                               :targetImg="imageDetails.targetUrl"
-                               :ifSuperpose="ifSuperpose">
-        </SuperpostImgComponent>
+        <superpose-img containerSize="500"
+                       :backgroundImg="imageDetails.imgUrl"
+                       :targetImg="imageDetails.targetUrl"
+                       :ifSuperpose="ifSuperpose">
+        </superpose-img>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import SelectGroup from '../../components/selectGroup';
-import SuperpostImgComponent from '../../components/superposeImg';
+import selectGroup from '../../components/select-group';
+import superposeImg from '../../components/superpose-img';
+import searchSelect from '../../components/search-select';
 import requestService from '../../services/request-service.js';
 import {basePath} from '@/services/fetcher';
 
 export default {
   components: {
-    SelectGroup,
-    SuperpostImgComponent,
+    selectGroup,
+    superposeImg,
+    searchSelect,
   },
   data() {
     return {
-      trainID: null, // The id of the train
+      trainID: '', // The id of the train
       selectedExplainers: [], // The selected explainer methods
       allExplainers: [], // The list of all explainer method
-      similarDialog: {
-        visible: false,
-        loading: true,
-        around: [], // The eight images around
-        center: null, // The center image
-        label: null,
-      }, // The object of similar dialog
+      imageDetails: {
+        title: '',
+        imgUrl: '',
+        targetUrl: '',
+        imgShow: false,
+      }, // The object of show img dialog
       ifSuperpose: false, // If open the superpose function
       ifTableLoading: true, // If the table waiting for the data
       ifError: false, // If request error
@@ -340,6 +353,7 @@ export default {
       tableData: null, // The table data
       selectedTruthLabels: [], // The selected truth labels
       truthLabels: [], // The list of all truth labels
+      // truthLabelsTemp: [], // The list of all truth labels
       sortedName: 'confidence', // The sorted Name of sort
       sortedNames: [
         {
@@ -355,17 +369,8 @@ export default {
       }, // The object of pagination information
       uncertaintyEnabled: null, // If open the uncertainty api
       tableHeight: 0, // The height of table to fix the table header
-      imageDetails: {
-        title: '',
-        imgUrl: '',
-        targetUrl: '',
-        imgShow: false,
-      }, // The object of click canvas dialog
       queryParameters: null, // The complete parameters of query table information, have pagination information
-      ifCalHeight: {
-        mounted: false,
-        serviced: false,
-      }, // The Effectiveness of calculate the height of table, when the doms and the explainer checkboxs are ready
+      labelReady: false, // If the truth labels are ready
     };
   },
   computed: {
@@ -380,8 +385,19 @@ export default {
     },
   },
   methods: {
-    updateSelectedExplainers(newList) {
-      this.selectedExplainers = newList;
+    /**
+     * The logic of update selected explainers
+     * @param {Object} newVal The updated list
+     */
+    updateSelectedExplainers(newVal) {
+      this.selectedExplainers = newVal;
+    },
+    /**
+     * The logic of update selected truth labels
+     * @param {Object} newVal The updated list
+     */
+    updateSelected(newVal) {
+      this.selectedTruthLabels = newVal;
     },
     /**
      * Get the complete url of image
@@ -389,20 +405,8 @@ export default {
      * @return {string} The complete url of image
      */
     getImgURL(url) {
-      return `${basePath}${url}&date=${new Date().getTime()}`;
-    },
-    /**
-     * The logic of click the explainer method canvas
-     * @param {Object} rowObj The object of table row in element-ui table
-     * @param {string} title The title of the dialog
-     */
-    showImgDiglog(rowObj, title) {
-      this.imageDetails.title = title;
-      this.imageDetails.imgUrl = this.getImgURL(rowObj.image);
-      this.imageDetails.targetUrl = this.getImgURL(
-          rowObj.inferences[rowObj.activeLabelIndex][title],
-      );
-      this.imageDetails.imgShow = true;
+      const newURL = `${basePath}${url}&date=${new Date().getTime()}`;
+      return newURL.replace(/(?<!:)\/\//g, '/');
     },
     /**
      * The logic of query page information by non-default parameters
@@ -437,14 +441,23 @@ export default {
      * @param {string} val The sorted name now
      */
     sortedNameChange(val) {
-      if (val !== null) {
-        this.queryParameters.sorted_name = val;
-      } else {
-        Reflect.deleteProperty(this.queryParameters, 'sorted_name');
-      }
+      this.queryParameters.sorted_name = val;
       this.pageInfo.currentPage = 1;
       this.queryParameters.offset = this.pageInfo.currentPage - 1;
       this.queryPageInfo(this.queryParameters);
+    },
+    /**
+     * The logic of click the explainer method canvas
+     * @param {Object} rowObj The object of table row in element-ui table
+     * @param {string} title The title of the dialog
+     */
+    showImgDiglog(rowObj, title) {
+      this.imageDetails.title = title;
+      this.imageDetails.imgUrl = this.getImgURL(rowObj.image);
+      this.imageDetails.targetUrl = this.getImgURL(
+          rowObj.inferences[rowObj.activeLabelIndex][title],
+      );
+      this.imageDetails.imgShow = true;
     },
     /**
      * Request basic inforamtion of train
@@ -472,23 +485,32 @@ export default {
                         truthLabels.push(res.data.classes[i].label);
                       }
                       this.truthLabels = truthLabels;
+                      this.$nextTick(() => {
+                        if (this.truthLabels.length !== 0) {
+                          this.labelReady = true;
+                        }
+                      });
                     }
                     if (res.data.uncertainty) {
                       this.uncertaintyEnabled = res.data.uncertainty.enabled
                     ? true
                     : false;
+                      // The sort by uncertainty only valid when uncertaintyEnabled is true
+                      if (this.uncertaintyEnabled) {
+                        this.sortedNames.push({
+                          label: this.$t('explain.byUncertainty'),
+                          value: 'uncertainty',
+                        });
+                      }
                     }
                   }
-                  this.ifCalHeight.serviced = true; // The explainer checkboxs are ready
                   resolve(true);
                 },
                 (error) => {
-                  this.ifCalHeight.serviced = true;
                   reject(error);
                 },
             )
             .catch((error) => {
-              this.ifCalHeight.serviced = true;
               reject(error);
             });
       });
@@ -663,22 +685,6 @@ export default {
       }
     },
     /**
-     * Calculate the height of table to let the table header fixed
-     */
-    calTableHeight() {
-      const table = document.getElementsByClassName('cl-saliency-map-table')[0];
-      if (table !== undefined || table !== null) {
-        this.$nextTick(() => {
-          const height = table.clientHeight;
-          this.tableHeight = height - 21; // The table container padding-top
-        });
-      }
-      window.onresize = () => {
-        const height = table.clientHeight;
-        this.tableHeight = height - 21;
-      };
-    },
-    /**
      * Go to the metric page
      */
     goMetric() {
@@ -686,17 +692,6 @@ export default {
         path: '/explain/xai-metric',
         query: {id: this.trainID},
       });
-    },
-  },
-  watch: {
-    // The watcher of ifCalHeight to calculate the table height at the right time
-    ifCalHeight: {
-      handler() {
-        if (this.ifCalHeight.serviced && this.ifCalHeight.mounted) {
-          this.calTableHeight();
-        }
-      },
-      deep: true,
     },
   },
   created() {
@@ -726,7 +721,6 @@ export default {
         });
   },
   mounted() {
-    this.ifCalHeight.mounted = true; // The doms are ready
     // Change the page title
     if (this.$route.query.id) {
       document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t(
@@ -806,6 +800,11 @@ export default {
         font-size: 12px;
         color: #575d6c;
         white-space: nowrap;
+        display: flex;
+        align-items: center;
+        .tip-icon {
+          margin-right: 4px;
+        }
       }
       .tip-item:last-of-type {
         margin-bottom: 0px;
@@ -818,20 +817,8 @@ export default {
 }
 </style>
 <style lang="scss" scoped>
-$horizontalPadding: 32px;
-$titleHeight: 56px;
-$titlePadding: 0 $horizontalPadding;
-$methodsPadding: 8px $horizontalPadding 12px $horizontalPadding;
-$methodsLineHeight: 19px;
-$conditionHeight: 58px;
-$conditionPadding: 0px $horizontalPadding 21px $horizontalPadding;
-$tablePadding: 21px $horizontalPadding 0 $horizontalPadding;
-$paginationHeight: 60px;
-$paginationPadding: 0 $horizontalPadding;
-$tagFontSize: 12px;
 .cl-saliency-map {
   height: 100%;
-  width: 100%;
   box-sizing: border-box;
   background-color: #ffffff;
   display: flex;
@@ -839,8 +826,8 @@ $tagFontSize: 12px;
   .cl-saliency-map-title {
     display: flex;
     align-items: center;
-    height: $titleHeight;
-    padding: $titlePadding;
+    height: 56px;
+    padding: 0 32px;
     font-size: 20px;
     color: #282b33;
     letter-spacing: -0.86px;
@@ -856,7 +843,7 @@ $tagFontSize: 12px;
     margin-right: 0px !important;
   }
   .cl-saliency-map-methods {
-    padding: $methodsPadding;
+    padding: 8px 32px 12px 32px;
     .methods-action {
       cursor: pointer;
       font-size: 14px;
@@ -865,8 +852,8 @@ $tagFontSize: 12px;
     }
   }
   .cl-saliency-map-condition {
-    padding: $conditionPadding;
-    height: $conditionHeight;
+    padding: 0px 32px 21px 32px;
+    height: 58px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -884,6 +871,10 @@ $tagFontSize: 12px;
           padding: 7px 15px;
           border-radius: 2px;
           border: 1px solid #00a5a7;
+        }
+        .el-icon-info {
+          margin-right: 4px;
+          margin-left: 2px;
         }
       }
     }
@@ -904,12 +895,11 @@ $tagFontSize: 12px;
     }
   }
   .cl-saliency-map-table {
-    padding: $tablePadding;
+    padding: 21px 32px 0 32px;
     flex-grow: 1;
     overflow: hidden;
     .table-nodata {
       height: 100%;
-      width: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -921,10 +911,8 @@ $tagFontSize: 12px;
     }
     .table-data {
       height: 100%;
-      width: 100%;
       .table-forecast-tag {
         height: 100%;
-        width: 100%;
         display: flex;
         flex-direction: column;
         .center {
@@ -932,7 +920,14 @@ $tagFontSize: 12px;
         }
         & div,
         span {
-          font-size: $tagFontSize;
+          font-size: 12px;
+        }
+        .tag-title-true {
+          display: grid;
+          grid-template-columns: 35% 35% 30%;
+          .first {
+            padding-left: 12px;
+          }
         }
         .tag-title-false {
           display: grid;
@@ -960,10 +955,14 @@ $tagFontSize: 12px;
               background-color: rgba(0, 0, 0, 0) !important;
             }
             .more-action {
-              color: #409eff;
               cursor: pointer;
               text-decoration: underline;
             }
+          }
+          .tag-content-item-true {
+            display: grid;
+            grid-template-columns: 35% 35% 30%;
+            align-items: center;
           }
           .tag-content-item-false {
             display: grid;
@@ -995,69 +994,11 @@ $tagFontSize: 12px;
     }
   }
   .cl-saliency-map-pagination {
-    padding: $paginationPadding;
-    height: $paginationHeight;
+    padding: 0 32px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-  }
-}
-.cl-saliency-map-dialog {
-  .dialog-text {
-    display: flex;
-    .text {
-      line-height: 22px;
-    }
-    .dot {
-      margin: 7px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: #00a5a7;
-    }
-  }
-  .dialog-label {
-    .label-item {
-      font-size: 12px;
-      display: inline-block;
-      background-color: #f5fbfb;
-      border: #dcdfe6 1px solid;
-      border-radius: 3px;
-      padding: 4px 10px;
-    }
-  }
-  .dialog-grid-container {
-    width: 620px;
-    height: 620px;
-    .dialog-loading {
-      width: 100%;
-      height: 100%;
-    }
-    .dialog-grid {
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: repeat(3, 200px);
-      grid-template-rows: repeat(3, 200px);
-      gap: 10px;
-      .grid-item {
-        height: 100%;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        & img {
-          object-fit: cover;
-          width: 90%;
-          height: 90%;
-        }
-      }
-      .grid-center {
-        background-color: rgba(00, 165, 167, 1);
-        grid-column: 2;
-        grid-row: 2;
-      }
-    }
   }
 }
 .detail-container {
