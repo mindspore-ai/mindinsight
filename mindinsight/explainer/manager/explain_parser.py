@@ -17,49 +17,41 @@ File parser for MindExplain data.
 
 This module is used to parse the MindExplain log file.
 """
-import re
-import collections
+from collections import namedtuple
 
 from google.protobuf.message import DecodeError
 
 from mindinsight.datavisual.common import exceptions
-from mindinsight.explainer.common.enums import PluginNameEnum
+from mindinsight.explainer.common.enums import ExplainFieldsEnum
 from mindinsight.explainer.common.log import logger
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.ms_data_loader import _SummaryParser
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
-from mindinsight.datavisual.proto_files.mindinsight_summary_pb2 import Explain
 from mindinsight.utils.exceptions import UnknownError
 
 HEADER_SIZE = 8
 CRC_STR_SIZE = 4
 MAX_EVENT_STRING = 500000000
-BenchmarkContainer = collections.namedtuple('BenchmarkContainer', ['benchmark', 'status'])
-MetadataContainer = collections.namedtuple('MetadataContainer', ['metadata', 'status'])
+BenchmarkContainer = namedtuple('BenchmarkContainer', ['benchmark', 'status'])
+MetadataContainer = namedtuple('MetadataContainer', ['metadata', 'status'])
+InferfenceContainer = namedtuple('InferenceContainer', ['ground_truth_prob',
+                                                        'ground_truth_prob_sd',
+                                                        'ground_truth_prob_itl95_low',
+                                                        'ground_truth_prob_itl95_hi',
+                                                        'predicted_label',
+                                                        'predicted_prob',
+                                                        'predicted_prob_sd',
+                                                        'predicted_prob_itl95_low',
+                                                        'predicted_prob_itl95_hi'])
+SampleContainer = namedtuple('SampleContainer', ['sample_id', 'image_path', 'ground_truth_label', 'inference',
+                                                 'explanation', 'status'])
 
 
-class ImageDataContainer:
-    """
-    Container for image data to allow pickling.
-
-    Args:
-        explain_message (Explain): Explain proto buffer message.
-    """
-
-    def __init__(self, explain_message: Explain):
-        self.sample_id = explain_message.sample_id
-        self.image_path = explain_message.image_path
-        self.ground_truth_label = explain_message.ground_truth_label
-        self.inference = explain_message.inference
-        self.explanation = explain_message.explanation
-        self.status = explain_message.status
-
-
-class _ExplainParser(_SummaryParser):
+class ExplainParser(_SummaryParser):
     """The summary file parser."""
 
     def __init__(self, summary_dir):
-        super(_ExplainParser, self).__init__(summary_dir)
+        super(ExplainParser, self).__init__(summary_dir)
         self._latest_filename = ''
 
     def parse_explain(self, filenames):
@@ -71,8 +63,7 @@ class _ExplainParser(_SummaryParser):
         Returns:
             bool, True if all the summary files are finished loading.
         """
-        summary_files = self.filter_files(filenames)
-        summary_files = self.sort_files(summary_files)
+        summary_files = self.sort_files(filenames)
 
         is_end = False
         is_clean = False
@@ -125,20 +116,6 @@ class _ExplainParser(_SummaryParser):
                 logger.exception(ex)
                 raise UnknownError(str(ex))
 
-    def filter_files(self, filenames):
-        """
-        Gets a list of summary files.
-
-        Args:
-            filenames (list[str]): File name list, like [filename1, filename2].
-
-        Returns:
-            list[str], filename list.
-        """
-        return list(filter(
-            lambda filename: (re.search(r'summary\.\d+', filename)
-                              and filename.endswith("_explain")), filenames))
-
     @staticmethod
     def _event_decode(event_str):
         """
@@ -153,9 +130,9 @@ class _ExplainParser(_SummaryParser):
         logger.debug("Deserialize event string completed.")
 
         fields = {
-            'sample_id': PluginNameEnum.SAMPLE_ID,
-            'benchmark': PluginNameEnum.BENCHMARK,
-            'metadata': PluginNameEnum.METADATA
+            'sample_id': ExplainFieldsEnum.SAMPLE_ID,
+            'benchmark': ExplainFieldsEnum.BENCHMARK,
+            'metadata': ExplainFieldsEnum.METADATA
         }
 
         tensor_event_value = getattr(event, 'explain')
@@ -163,19 +140,19 @@ class _ExplainParser(_SummaryParser):
         field_list = []
         tensor_value_list = []
         for field in fields:
-            if not getattr(tensor_event_value, field):
+            if not getattr(tensor_event_value, field, False):
                 continue
 
-            if PluginNameEnum.METADATA.value == field and not tensor_event_value.metadata.label:
+            if ExplainFieldsEnum.METADATA.value == field and not tensor_event_value.metadata.label:
                 continue
 
             tensor_value = None
-            if field == PluginNameEnum.SAMPLE_ID.value:
-                tensor_value = _ExplainParser._add_image_data(tensor_event_value)
-            elif field == PluginNameEnum.BENCHMARK.value:
-                tensor_value = _ExplainParser._add_benchmark(tensor_event_value)
-            elif field == PluginNameEnum.METADATA.value:
-                tensor_value = _ExplainParser._add_metadata(tensor_event_value)
+            if field == ExplainFieldsEnum.SAMPLE_ID.value:
+                tensor_value = ExplainParser._add_image_data(tensor_event_value)
+            elif field == ExplainFieldsEnum.BENCHMARK.value:
+                tensor_value = ExplainParser._add_benchmark(tensor_event_value)
+            elif field == ExplainFieldsEnum.METADATA.value:
+                tensor_value = ExplainParser._add_metadata(tensor_event_value)
             logger.debug("Event generated, label is %s, step is %s.", field, event.step)
             field_list.append(field)
             tensor_value_list.append(tensor_value)
@@ -189,8 +166,26 @@ class _ExplainParser(_SummaryParser):
         Args:
             tensor_event_value: the object of Explain message
         """
-        image_data = ImageDataContainer(tensor_event_value)
-        return image_data
+        inference = InferfenceContainer(
+            ground_truth_prob=tensor_event_value.inference.ground_truth_prob,
+            ground_truth_prob_sd=tensor_event_value.inference.ground_truth_prob_sd,
+            ground_truth_prob_itl95_low=tensor_event_value.inference.ground_truth_prob_itl95_low,
+            ground_truth_prob_itl95_hi=tensor_event_value.inference.ground_truth_prob_itl95_hi,
+            predicted_label=tensor_event_value.inference.predicted_label,
+            predicted_prob=tensor_event_value.inference.predicted_prob,
+            predicted_prob_sd=tensor_event_value.inference.predicted_prob_sd,
+            predicted_prob_itl95_low=tensor_event_value.inference.predicted_prob_itl95_low,
+            predicted_prob_itl95_hi=tensor_event_value.inference.predicted_prob_itl95_hi
+        )
+        sample_data = SampleContainer(
+            sample_id=tensor_event_value.sample_id,
+            image_path=tensor_event_value.image_path,
+            ground_truth_label=tensor_event_value.ground_truth_label,
+            inference=inference,
+            explanation=tensor_event_value.explanation,
+            status=tensor_event_value.status
+        )
+        return sample_data
 
     @staticmethod
     def _add_benchmark(tensor_event_value):

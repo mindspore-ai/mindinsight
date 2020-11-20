@@ -13,7 +13,9 @@
 # limitations under the License.
 # ============================================================================
 """Module init file."""
+from mindinsight.conf import settings
 from mindinsight.backend.explainer.explainer_api import init_module as init_query_module
+from mindinsight.explainer.manager.explain_manager import EXPLAIN_MANAGER
 
 
 def init_module(app):
@@ -27,3 +29,4 @@ def init_module(app):
 
     """
     init_query_module(app)
+    EXPLAIN_MANAGER.start_load_data(reload_interval=settings.RELOAD_INTERVAL)

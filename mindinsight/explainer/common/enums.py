@@ -31,7 +31,7 @@ class DataManagerStatus(BaseEnum):
     INVALID = 'INVALID'
 
 
-class PluginNameEnum(BaseEnum):
+class ExplainFieldsEnum(BaseEnum):
     """Plugin Name Enum."""
     EXPLAIN = 'explain'
     SAMPLE_ID = 'sample_id'

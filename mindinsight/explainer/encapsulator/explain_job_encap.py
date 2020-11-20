@@ -70,7 +70,7 @@ class ExplainJobEncap(ExplainDataEncap):
         info["train_id"] = job.train_id
         info["create_time"] = datetime.fromtimestamp(job.create_time)\
             .strftime(cls.DATETIME_FORMAT)
-        info["update_time"] = datetime.fromtimestamp(job.latest_update_time)\
+        info["update_time"] = datetime.fromtimestamp(job.update_time)\
             .strftime(cls.DATETIME_FORMAT)
         return info
 

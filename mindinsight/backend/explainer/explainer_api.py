@@ -29,30 +29,14 @@ from mindinsight.datavisual.common.exceptions import ImageNotExistError
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.datavisual.utils.tools import get_train_id
-from mindinsight.explainer.manager.explain_manager import ExplainManager
+from mindinsight.explainer.manager.explain_manager import EXPLAIN_MANAGER
 from mindinsight.explainer.encapsulator.explain_job_encap import ExplainJobEncap
 from mindinsight.explainer.encapsulator.datafile_encap import DatafileEncap
 from mindinsight.explainer.encapsulator.saliency_encap import SaliencyEncap
 from mindinsight.explainer.encapsulator.evaluation_encap import EvaluationEncap
 
-
-URL_PREFIX = settings.URL_PATH_PREFIX+settings.API_PREFIX
+URL_PREFIX = settings.URL_PATH_PREFIX + settings.API_PREFIX
 BLUEPRINT = Blueprint("explainer", __name__, url_prefix=URL_PREFIX)
-
-
-class ExplainManagerHolder:
-    """ExplainManger instance holder."""
-
-    static_instance = None
-
-    @classmethod
-    def get_instance(cls):
-        return cls.static_instance
-
-    @classmethod
-    def initialize(cls):
-        cls.static_instance = ExplainManager(settings.SUMMARY_BASE_DIR)
-        cls.static_instance.start_load_data()
 
 
 def _image_url_formatter(train_id, image_path, image_type):
@@ -91,7 +75,7 @@ def query_explain_jobs():
     offset = Validation.check_offset(offset=offset)
     limit = Validation.check_limit(limit, min_value=1, max_value=SummaryWatcher.MAX_SUMMARY_DIR_COUNT)
 
-    encapsulator = ExplainJobEncap(ExplainManagerHolder.get_instance())
+    encapsulator = ExplainJobEncap(EXPLAIN_MANAGER)
     total, jobs = encapsulator.query_explain_jobs(offset, limit)
 
     return jsonify({
@@ -107,7 +91,7 @@ def query_explain_job():
     train_id = get_train_id(request)
     if train_id is None:
         raise ParamMissError("train_id")
-    encapsulator = ExplainJobEncap(ExplainManagerHolder.get_instance())
+    encapsulator = ExplainJobEncap(EXPLAIN_MANAGER)
     metadata = encapsulator.query_meta(train_id)
 
     return jsonify(metadata)
@@ -139,7 +123,7 @@ def query_saliency():
 
     encapsulator = SaliencyEncap(
         _image_url_formatter,
-        ExplainManagerHolder.get_instance())
+        EXPLAIN_MANAGER)
     count, samples = encapsulator.query_saliency_maps(train_id=train_id,
                                                       labels=labels,
                                                       explainers=explainers,
@@ -160,7 +144,7 @@ def query_evaluation():
     train_id = get_train_id(request)
     if train_id is None:
         raise ParamMissError("train_id")
-    encapsulator = EvaluationEncap(ExplainManagerHolder.get_instance())
+    encapsulator = EvaluationEncap(EXPLAIN_MANAGER)
     scores = encapsulator.query_explainer_scores(train_id)
     return jsonify({
         "explainer_scores": scores,
@@ -182,7 +166,7 @@ def query_image():
     if image_type not in ("original", "overlay"):
         raise ParamValueError(f"type:{image_type}, valid options: 'original' 'overlay'")
 
-    encapsulator = DatafileEncap(ExplainManagerHolder.get_instance())
+    encapsulator = DatafileEncap(EXPLAIN_MANAGER)
     image = encapsulator.query_image_binary(train_id, image_path, image_type)
     if image is None:
         raise ImageNotExistError(f"{image_path}")
@@ -198,5 +182,4 @@ def init_module(app):
         app: the application obj.
 
     """
-    ExplainManagerHolder.initialize()
     app.register_blueprint(BLUEPRINT)
