@@ -69,7 +69,7 @@ limitations under the License.
           </div>
           <div class="tree-wrap">
             <div class="select-all-files"
-                 v-if="curWatchPointId">
+                 v-if="curWatchPointId && treeFlag">
               <el-button type="primary"
                          size="mini"
                          class="custom-btn"
@@ -209,7 +209,9 @@ limitations under the License.
                 <template slot-scope="scope">
                   <div class="hit-item"
                        :class="{selected:scope.row.selected}"
-                       @click="updateTensorValue(scope.$index)">{{scope.row.name}}</div>
+                       @click="updateTensorValue(scope.$index)">
+                    {{scope.row.graph_name}}/{{scope.row.name}}
+                  </div>
                 </template>
               </el-table-column>
             </el-table>
@@ -217,11 +219,17 @@ limitations under the License.
         </div>
         <div class="btn-wrap">
           <div class="step">
-            <el-input v-model="step"
-                      :placeholder="$t('debugger.inputStep')"
-                      @input="stepChange"
-                      @keyup.native.enter="control(0)">
-            </el-input>
+            <el-tooltip class="item"
+                        effect="light"
+                        :content="$t('debugger.inputTip')"
+                        placement="top-start">
+              <el-input v-model="step"
+                        :placeholder="$t('debugger.inputStep')"
+                        @input="stepChange"
+                        @keyup.native.enter="control(0)">
+              </el-input>
+            </el-tooltip>
+
             <el-button type="primary"
                        size="mini"
                        class="custom-btn green"
@@ -489,8 +497,8 @@ limitations under the License.
           <span>{{ $t('tensors.dimension') }} {{ curRowObj.shape }}</span>
           <div v-for="(statistics,key) in statisticsArr"
                :key="key">
-            <label v-if="key===0">{{$t('debugger.curStatisticsLabel')}}</label>
-            <label v-if="key===1">{{$t('debugger.preStatisticsLabel')}}</label>
+            <label v-if="key===0">{{$t('debugger.curStatisticsLabel')}}<span>{{ metadata.step }}</span></label>
+            <label v-if="key===1">{{$t('debugger.preStatisticsLabel')}}<span>{{ metadata.step-1 }}</span></label>
             <label v-if="key===2">{{$t('debugger.diffStatisticsLabel')}}</label>
             <span>{{ $t('debugger.max') }} {{ statistics.overall_max }}</span>
             <span>{{ $t('debugger.min') }} {{ statistics.overall_min }}</span>
@@ -822,7 +830,11 @@ export default {
       );
     },
     selectAllFiles(type) {
-      if (!type && !this.$refs.tree.getCheckedKeys().length) {
+      if (
+        !type &&
+        !this.$refs.tree.getCheckedKeys().length &&
+        !this.$refs.tree.getHalfCheckedKeys().length
+      ) {
         return;
       }
       if (type && !this.node.childNodes.find((val) => val.checked === false)) {
@@ -830,9 +842,10 @@ export default {
       }
       const watchNodes = [];
       this.node.childNodes.forEach((val) => {
-        if (type !== val.checked) {
+        if (type !== val.checked || (!type && val.indeterminate)) {
           watchNodes.push(val.data.name);
         }
+        val.indeterminate = false;
         val.checked = type;
 
         if (val.childNodes) {
@@ -1214,10 +1227,7 @@ export default {
                 if (response && response.data && response.data.graph) {
                   const graph = response.data.graph;
                   const nodes = JSON.parse(JSON.stringify(graph.nodes));
-                  if (this.treeFlag) {
-                    this.nodeExpandLinkage(nodes, name);
-                  }
-
+                  this.nodeExpandLinkage(nodes, name);
                   this.dealGraphData(nodes, name);
                 }
               },

@@ -479,7 +479,9 @@
     "backstageStatus": "The backend running status is ",
     "view": "View",
     "deleteWatchpointConfirm": "Are you sure you want to delete the watchpoint?",
+    "clearWatchpointConfirm": "All watchpoints will be deleted. Are you sure you want to continue? ",
     "ternimateConfirm": "Are you sure you want to end the status?",
+    "createWP": "Create Watchpoint",
     "successCreateWP": "The watchpoint is created.",
     "successDeleteWP": "The watchpoint is deleted.",
     "pendingTips": "Waiting for training connection...",
@@ -514,7 +516,188 @@
     "zero": "0:",
     "positiveNum": "Positive number:",
     "negativeNum": "Negative number:",
-    "all": "All"
+    "all": "All",
+    "tensorTip": "tensor",
+    "recheck": "Recheck",
+    "clearWatchpoint": "Clear Watchpoint",
+    "nodeType": {
+      "all": "All",
+      "weight": "Weight",
+      "gradient": "Gradient",
+      "activation": "Activation"
+    },
+    "recheckSuccess": "Rechecked.",
+    "curStatisticsLabel": "Current Step:",
+    "preStatisticsLabel": "Previous Step:",
+    "diffStatisticsLabel": "Comparison Result:",
+    "graphFile": "Graph File",
+    "tensorDiagram": "Tensor Relationship Diagram",
+    "selectDetail": "Select a tensor and double-click it to view details.",
+    "operator": "Operator",
+    "jumpFailInformation": "Redirection fails because the tensor information is empty.",
+    "optimizationOrientation": "Optimization Guide",
+    "tuningAdvice": "Optimization Suggestions",
+    "tensorTuningRule": {
+      "operator_real_data_validation": "Real data validation using single operator",
+      "loss_overflow": "Loss overflow (NAN,INF)",
+      "weight_condition_collection": "Weight check",
+      "weight_initialization": "Initial weight value",
+      "weight_overflow": "Weight overflow",
+      "weight_too_large": "Weight above threshold",
+      "weight_too_small": "Weight below threshold",
+      "weight_not_changed": "Unchanged weight",
+      "weight_change_too_large": "Weight change above threshold",
+      "weight_change_too_small": "Weight change below threshold",
+      "gradient_condition_collection": "Gradient check",
+      "gradient_vanishing": "Gradient disappearance",
+      "gradient_too_large": "Gradient above threshold",
+      "gradient_exploding": "Gradient explosion",
+      "activation_condition_collection": "Activation value check",
+      "activation_range": "Activation value range",
+      "tensor_condition_collection": "Tensor check",
+      "tensor_overflow": "Tensor overflow",
+      "operator_overflow": "Operator overflow",
+      "tensor_initialization": "Initial tensor value",
+      "tensor_too_large": "Tensor above threshold",
+      "tensor_too_small": "Tensor below threshold",
+      "tensor_range": "Tensor value range",
+      "tensor_all_zero": "Whether tensor values are all 0",
+      "tensor_change_too_large": "Tensor change above threshold",
+      "tensor_change_too_small": "Tensor change below threshold",
+      "tensor_not_changed": "Unchanged tensor"
+    },
+    "tensorTuningAdvice": {
+      "operator_real_data_validation": [
+        "Real data validation using single operator",
+        "The operator may be faulty. You can perform the following operations to locate the fault:",
+        ["1.Check whether the operator implementation is correct."]
+      ],
+      "loss_overflow": [
+        "Loss overflow (NAN,INF)",
+        "Loss overflow occurs. This may be an anomaly. You can perform the following operations to locate the fault:",
+        [
+          "1.Check whether a tensor overflow occurs on a network. Find the first overflow tensor for further analysis."
+        ]
+      ],
+      "weight_initialization": [
+        "Initial weight value",
+        "The initial weight value may be incorrect. This may be an anomaly. You can perform the following operations to locate the fault:",
+        [
+          "1.Check whether the weight initialization algorithm in the script is correct."
+        ]
+      ],
+      "weight_overflow": [
+        "Weight overflow",
+        "Weight value overflow occurs. This may be an anomaly. You can perform the following operations to locate the fault:",
+        [
+          "1.Check whether the learning rate is too high.",
+          "2.Check whether the gradient is too large.",
+          "3.Check whether the optimizer algorithm is correct."
+        ]
+      ],
+      "weight_too_large": [
+        "Weight above threshold",
+        "The weight value is greater than the threshold. This may be an anomaly. You can perform the following operations to locate the fault:",
+        [
+          "1.Check whether the learning rate is correct.",
+          "2.Check whether the gradient is correct.",
+          "3.Check whether the optimizer algorithm is correct.",
+          "4.Check whether the weight before the update is too large."
+        ]
+      ],
+      "weight_too_small": [
+        "Weight below threshold",
+        "The weight value is less than the threshold. This may be an anomaly. You can perform the following operations to locate the fault:",
+        [
+          "1.Check whether the learning rate is correct.",
+          "2.Check whether the gradient is correct.",
+          "3.Check whether the optimizer algorithm is correct.",
+          "4.Check whether the weight before the update is too small."
+        ]
+      ],
+      "gradient_vanishing": [
+        "Gradient disappearance",
+        "Gradient disappears. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "gradient_too_large": [
+        "Gradient above threshold",
+        "The gradient value is greater than the threshold. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "gradient_exploding": [
+        "Gradient explosion",
+        "Gradient value overflows. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "activation_range": [
+        "Activation value range",
+        "The activation value range is not within the specified range. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "tensor_overflow": [
+        "Tensor overflow",
+        "Tensor overflows. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "operator_overflow": [
+        "Operator overflow",
+        "Overflow occurs during operator computation. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "tensor_too_large": [
+        "Tensor above threshold",
+        "The tensor is greater than the threshold. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "tensor_too_small": [
+        "Tensor below threshold",
+        "The tensor is less than the threshold. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "tensor_range": [
+        "Tensor value range",
+        "The tensor value range is not within the configured range. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "tensor_all_zero": [
+        "Whether tensor values are all 0",
+        "There are too many 0 values in a tensor. This may be an anomaly. You can perform the following operations to locate the fault:",
+        ["1.Check whether the input tensor of the operator is normal."]
+      ],
+      "weight_not_changed": [
+        "Unchanged weight",
+        "The weight is not updated. This may be an anomaly. You can perform the following operations to locate the fault:",
+        [
+          "1.Check whether the learning rate is too low.",
+          "2.Check whether the gradient is too small.",
+          "3.Check whether the optimizer algorithm is correct.",
+          "4.Check whether the weight is fixed."
+        ]
+      ],
+      "weight_change_too_large": [
+        "Weight change above threshold",
+        "The weight change is greater than the threshold. This may be an anomaly. You can perform the following operations to locate the fault:",
+        [
+          "1.Check whether the learning rate is correct.",
+          "2.Check whether the gradient is correct.",
+          "3.Check whether the optimizer algorithm is correct."
+        ]
+      ],
+      "weight_change_too_small": [
+        "Weight change below threshold",
+        "The weight change is less than the threshold. This may be an anomaly. You can perform the following operations to locate the fault:",
+        [
+          "1.Check whether the learning rate is correct.",
+          "2.Check whether the gradient is correct.",
+          "3.Check whether the optimizer algorithm is correct."
+        ]
+      ]
+    },
+    "noAdvice": "No suggestions available",
+    "curStep": "Current Step",
+    "preStep": "Previous Step",
+    "compareResult": "Comparison Result"
   },
   "explain": {
     "explain": "Model Explanation",
