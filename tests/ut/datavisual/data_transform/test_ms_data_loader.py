@@ -75,7 +75,7 @@ class TestMsDataLoader:
         ms_loader._check_files_deleted(new_file_list, old_file_list)
         shutil.rmtree(summary_dir)
         assert MockLogger.log_msg['info'] == "There are some files has been deleted, " \
-                                                "we will reload all files in path {}.".format(summary_dir)
+                                             "we will reload all files in path {}.".format(summary_dir)
 
     @pytest.mark.usefixtures('crc_pass')
     def test_load_success_with_crc_pass(self):
@@ -100,7 +100,7 @@ class TestMsDataLoader:
         ms_loader = MSDataLoader(summary_dir)
         ms_loader.load()
         shutil.rmtree(summary_dir)
-        assert 'Check crc faild and ignore this file' in str(MockLogger.log_msg['warning'])
+        assert 'Check crc failed' in str(MockLogger.log_msg['error'])
 
     def test_filter_event_files(self):
         """Test filter_event_files function ok."""
