@@ -218,7 +218,7 @@
     "viewTypeTitle": "View",
     "chartViewType": "Table",
     "histogramViewType": "Histogram",
-    "tensorDashboardLimitErrorMsg": "The requested data is too large. Go to the tensor page and try another dimension."
+    "tensorDashboardLimitErrorMsg": "The requested data exceeds the upper limit 100,000. Go to the tensor page and try slicing or querying another dimensions."
   },
   "graph": {
     "titleText": "Computational Graph",
@@ -503,7 +503,7 @@
     "dType": "DType",
     "shape": "Shape",
     "value": "Value",
-    "largeDataTip": "The requested data is too large. Try another dimension.",
+    "largeDataTip": "The requested data exceeds the upper limit 100,000. Try slicing or querying another dimensions.",
     "continueTo": "Continue to",
     "inf": "INF:",
     "negativeInf": "-INF:",
@@ -597,7 +597,7 @@
     "50542217": "Incorrect summary log path.",
     "50542218": "Incorrect filtering parameter.",
     "50545012": "The tensor data does not exist. Please refresh.",
-    "50545013": "The requested data is too large. Try another dimension.",
+    "50545013": "The requested data exceeds the upper limit 100,000. Try slicing or querying another dimensions.",
     "50545014": "The queried tensor data has been replaced by new data. Please refresh.",
     "50546083": "The profiler directory does not exist.",
     "50548001": "Ascend AI Processor information query timed out.",
