@@ -228,8 +228,18 @@ class GunicornLogger(Logger):
         """Get log format."""
         return time.strftime('[%Y-%m-%d-%H:%M:%S %z]')
 
+    def rewrite_stdout(self, message):
+        if message.strip():
+            self.error_log.info(message)
+
+    def rewrite_stderr(self, message):
+        if message.strip():
+            self.error_log.error(message)
+
     def setup(self, cfg):
         """Rewrite the setup method of Logger, and we don't need to do anything"""
+        sys.stdout.write = self.rewrite_stdout
+        sys.stderr.write = self.rewrite_stderr
 
 
 def _get_all_ip_addresses(host):
