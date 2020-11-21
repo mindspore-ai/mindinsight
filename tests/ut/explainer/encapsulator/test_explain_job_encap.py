@@ -41,13 +41,3 @@ class TestExplainJobEncap:
         job = self.encapsulator.query_meta("./mock_job_1")
         assert job is not None
         assert job["train_id"] == "./mock_job_1"
-
-    def test_query_image_binary(self):
-        """Test query images' binary content."""
-        image = self.encapsulator.query_image_binary("./mock_job_1", "1", "original")
-        assert image is not None
-        assert image == b'123'
-
-        image = self.encapsulator.query_image_binary("./mock_job_1", "4", "overlay")
-        assert image is not None
-        assert image == b'456'

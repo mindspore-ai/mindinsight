@@ -30,6 +30,7 @@ class MockExplainJob:
         self.min_confidence = 0.5
         self.explainers = ["Gradient"]
         self.metrics = ["Localization"]
+        self.uncertainty_enabled = False
         self.all_classes = [
             {
                 "id": 0,
@@ -77,6 +78,7 @@ class MockExplainJob:
         sample = {
             "id": "123",
             "name": "123",
+            "image": "123",
             "labels": ["car"],
             "inferences": [
                 {

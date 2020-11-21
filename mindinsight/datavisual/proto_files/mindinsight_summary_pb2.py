@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='mindinsight',
   syntax='proto2',
   serialized_options=b'\370\001\001',
-  serialized_pb=b'\n\x19mindinsight_summary.proto\x12\x0bmindinsight\x1a\x18mindinsight_anf_ir.proto\"\xc3\x01\n\x05\x45vent\x12\x11\n\twall_time\x18\x01 \x02(\x01\x12\x0c\n\x04step\x18\x02 \x01(\x03\x12\x11\n\x07version\x18\x03 \x01(\tH\x00\x12,\n\tgraph_def\x18\x04 \x01(\x0b\x32\x17.mindinsight.GraphProtoH\x00\x12\'\n\x07summary\x18\x05 \x01(\x0b\x32\x14.mindinsight.SummaryH\x00\x12\'\n\x07\x65xplain\x18\x06 \x01(\x0b\x32\x14.mindinsight.ExplainH\x00\x42\x06\n\x04what\"\xc0\x04\n\x07Summary\x12)\n\x05value\x18\x01 \x03(\x0b\x32\x1a.mindinsight.Summary.Value\x1aQ\n\x05Image\x12\x0e\n\x06height\x18\x01 \x02(\x05\x12\r\n\x05width\x18\x02 \x02(\x05\x12\x12\n\ncolorspace\x18\x03 \x02(\x05\x12\x15\n\rencoded_image\x18\x04 \x02(\x0c\x1a\xf0\x01\n\tHistogram\x12\x36\n\x07\x62uckets\x18\x01 \x03(\x0b\x32%.mindinsight.Summary.Histogram.bucket\x12\x11\n\tnan_count\x18\x02 \x01(\x03\x12\x15\n\rpos_inf_count\x18\x03 \x01(\x03\x12\x15\n\rneg_inf_count\x18\x04 \x01(\x03\x12\x0b\n\x03max\x18\x05 \x01(\x01\x12\x0b\n\x03min\x18\x06 \x01(\x01\x12\x0b\n\x03sum\x18\x07 \x01(\x01\x12\r\n\x05\x63ount\x18\x08 \x01(\x03\x1a\x34\n\x06\x62ucket\x12\x0c\n\x04left\x18\x01 \x02(\x01\x12\r\n\x05width\x18\x02 \x02(\x01\x12\r\n\x05\x63ount\x18\x03 \x02(\x03\x1a\xc3\x01\n\x05Value\x12\x0b\n\x03tag\x18\x01 \x02(\t\x12\x16\n\x0cscalar_value\x18\x03 \x01(\x02H\x00\x12+\n\x05image\x18\x04 \x01(\x0b\x32\x1a.mindinsight.Summary.ImageH\x00\x12*\n\x06tensor\x18\x08 \x01(\x0b\x32\x18.mindinsight.TensorProtoH\x00\x12\x33\n\thistogram\x18\t \x01(\x0b\x32\x1e.mindinsight.Summary.HistogramH\x00\x42\x07\n\x05value\"\xff\x04\n\x07\x45xplain\x12\x10\n\x08image_id\x18\x01 \x01(\t\x12\x12\n\nimage_data\x18\x02 \x01(\x0c\x12\x1a\n\x12ground_truth_label\x18\x03 \x03(\x05\x12\x31\n\tinference\x18\x04 \x01(\x0b\x32\x1e.mindinsight.Explain.Inference\x12\x35\n\x0b\x65xplanation\x18\x05 \x03(\x0b\x32 .mindinsight.Explain.Explanation\x12\x31\n\tbenchmark\x18\x06 \x03(\x0b\x32\x1e.mindinsight.Explain.Benchmark\x12/\n\x08metadata\x18\x07 \x01(\x0b\x32\x1d.mindinsight.Explain.Metadata\x12\x0e\n\x06status\x18\x08 \x01(\t\x1aW\n\tInference\x12\x19\n\x11ground_truth_prob\x18\x01 \x03(\x02\x12\x17\n\x0fpredicted_label\x18\x02 \x03(\x05\x12\x16\n\x0epredicted_prob\x18\x03 \x03(\x02\x1a\x45\n\x0b\x45xplanation\x12\x16\n\x0e\x65xplain_method\x18\x01 \x01(\t\x12\r\n\x05label\x18\x02 \x01(\x05\x12\x0f\n\x07heatmap\x18\x03 \x01(\x0c\x1ag\n\tBenchmark\x12\x18\n\x10\x62\x65nchmark_method\x18\x01 \x01(\t\x12\x16\n\x0e\x65xplain_method\x18\x02 \x01(\t\x12\x13\n\x0btotal_score\x18\x03 \x01(\x02\x12\x13\n\x0blabel_score\x18\x04 \x03(\x02\x1aK\n\x08Metadata\x12\r\n\x05label\x18\x01 \x03(\t\x12\x16\n\x0e\x65xplain_method\x18\x02 \x03(\t\x12\x18\n\x10\x62\x65nchmark_method\x18\x03 \x03(\tB\x03\xf8\x01\x01'
+  serialized_pb=b'\n\x19mindinsight_summary.proto\x12\x0bmindinsight\x1a\x18mindinsight_anf_ir.proto\"\xc3\x01\n\x05\x45vent\x12\x11\n\twall_time\x18\x01 \x02(\x01\x12\x0c\n\x04step\x18\x02 \x01(\x03\x12\x11\n\x07version\x18\x03 \x01(\tH\x00\x12,\n\tgraph_def\x18\x04 \x01(\x0b\x32\x17.mindinsight.GraphProtoH\x00\x12\'\n\x07summary\x18\x05 \x01(\x0b\x32\x14.mindinsight.SummaryH\x00\x12\'\n\x07\x65xplain\x18\x06 \x01(\x0b\x32\x14.mindinsight.ExplainH\x00\x42\x06\n\x04what\"\xc0\x04\n\x07Summary\x12)\n\x05value\x18\x01 \x03(\x0b\x32\x1a.mindinsight.Summary.Value\x1aQ\n\x05Image\x12\x0e\n\x06height\x18\x01 \x02(\x05\x12\r\n\x05width\x18\x02 \x02(\x05\x12\x12\n\ncolorspace\x18\x03 \x02(\x05\x12\x15\n\rencoded_image\x18\x04 \x02(\x0c\x1a\xf0\x01\n\tHistogram\x12\x36\n\x07\x62uckets\x18\x01 \x03(\x0b\x32%.mindinsight.Summary.Histogram.bucket\x12\x11\n\tnan_count\x18\x02 \x01(\x03\x12\x15\n\rpos_inf_count\x18\x03 \x01(\x03\x12\x15\n\rneg_inf_count\x18\x04 \x01(\x03\x12\x0b\n\x03max\x18\x05 \x01(\x01\x12\x0b\n\x03min\x18\x06 \x01(\x01\x12\x0b\n\x03sum\x18\x07 \x01(\x01\x12\r\n\x05\x63ount\x18\x08 \x01(\x03\x1a\x34\n\x06\x62ucket\x12\x0c\n\x04left\x18\x01 \x02(\x01\x12\r\n\x05width\x18\x02 \x02(\x01\x12\r\n\x05\x63ount\x18\x03 \x02(\x03\x1a\xc3\x01\n\x05Value\x12\x0b\n\x03tag\x18\x01 \x02(\t\x12\x16\n\x0cscalar_value\x18\x03 \x01(\x02H\x00\x12+\n\x05image\x18\x04 \x01(\x0b\x32\x1a.mindinsight.Summary.ImageH\x00\x12*\n\x06tensor\x18\x08 \x01(\x0b\x32\x18.mindinsight.TensorProtoH\x00\x12\x33\n\thistogram\x18\t \x01(\x0b\x32\x1e.mindinsight.Summary.HistogramH\x00\x42\x07\n\x05value\"\xcb\x06\n\x07\x45xplain\x12\x11\n\tsample_id\x18\x01 \x01(\x05\x12\x12\n\nimage_path\x18\x02 \x01(\t\x12\x1a\n\x12ground_truth_label\x18\x03 \x03(\x05\x12\x31\n\tinference\x18\x04 \x01(\x0b\x32\x1e.mindinsight.Explain.Inference\x12\x35\n\x0b\x65xplanation\x18\x05 \x03(\x0b\x32 .mindinsight.Explain.Explanation\x12\x31\n\tbenchmark\x18\x06 \x03(\x0b\x32\x1e.mindinsight.Explain.Benchmark\x12/\n\x08metadata\x18\x07 \x01(\x0b\x32\x1d.mindinsight.Explain.Metadata\x12\x0e\n\x06status\x18\x08 \x01(\t\x1a\x9c\x02\n\tInference\x12\x19\n\x11ground_truth_prob\x18\x01 \x03(\x02\x12\x17\n\x0fpredicted_label\x18\x02 \x03(\x05\x12\x16\n\x0epredicted_prob\x18\x03 \x03(\x02\x12\x1c\n\x14ground_truth_prob_sd\x18\x04 \x03(\x02\x12#\n\x1bground_truth_prob_itl95_low\x18\x05 \x03(\x02\x12\"\n\x1aground_truth_prob_itl95_hi\x18\x06 \x03(\x02\x12\x19\n\x11predicted_prob_sd\x18\x07 \x03(\x02\x12 \n\x18predicted_prob_itl95_low\x18\x08 \x03(\x02\x12\x1f\n\x17predicted_prob_itl95_hi\x18\t \x03(\x02\x1aJ\n\x0b\x45xplanation\x12\x16\n\x0e\x65xplain_method\x18\x01 \x01(\t\x12\r\n\x05label\x18\x02 \x01(\x05\x12\x14\n\x0cheatmap_path\x18\x03 \x01(\t\x1ag\n\tBenchmark\x12\x18\n\x10\x62\x65nchmark_method\x18\x01 \x01(\t\x12\x16\n\x0e\x65xplain_method\x18\x02 \x01(\t\x12\x13\n\x0btotal_score\x18\x03 \x01(\x02\x12\x13\n\x0blabel_score\x18\x04 \x03(\x02\x1aK\n\x08Metadata\x12\r\n\x05label\x18\x01 \x03(\t\x12\x16\n\x0e\x65xplain_method\x18\x02 \x03(\t\x12\x18\n\x10\x62\x65nchmark_method\x18\x03 \x03(\tB\x03\xf8\x01\x01'
   ,
   dependencies=[mindinsight__anf__ir__pb2.DESCRIPTOR,])
 
@@ -389,6 +389,48 @@ _EXPLAIN_INFERENCE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ground_truth_prob_sd', full_name='mindinsight.Explain.Inference.ground_truth_prob_sd', index=3,
+      number=4, type=2, cpp_type=6, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ground_truth_prob_itl95_low', full_name='mindinsight.Explain.Inference.ground_truth_prob_itl95_low', index=4,
+      number=5, type=2, cpp_type=6, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ground_truth_prob_itl95_hi', full_name='mindinsight.Explain.Inference.ground_truth_prob_itl95_hi', index=5,
+      number=6, type=2, cpp_type=6, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='predicted_prob_sd', full_name='mindinsight.Explain.Inference.predicted_prob_sd', index=6,
+      number=7, type=2, cpp_type=6, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='predicted_prob_itl95_low', full_name='mindinsight.Explain.Inference.predicted_prob_itl95_low', index=7,
+      number=8, type=2, cpp_type=6, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='predicted_prob_itl95_hi', full_name='mindinsight.Explain.Inference.predicted_prob_itl95_hi', index=8,
+      number=9, type=2, cpp_type=6, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -401,8 +443,8 @@ _EXPLAIN_INFERENCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1145,
-  serialized_end=1232,
+  serialized_start=1147,
+  serialized_end=1431,
 )
 
 _EXPLAIN_EXPLANATION = _descriptor.Descriptor(
@@ -427,9 +469,9 @@ _EXPLAIN_EXPLANATION = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='heatmap', full_name='mindinsight.Explain.Explanation.heatmap', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"",
+      name='heatmap_path', full_name='mindinsight.Explain.Explanation.heatmap_path', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -445,8 +487,8 @@ _EXPLAIN_EXPLANATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1234,
-  serialized_end=1303,
+  serialized_start=1433,
+  serialized_end=1507,
 )
 
 _EXPLAIN_BENCHMARK = _descriptor.Descriptor(
@@ -496,8 +538,8 @@ _EXPLAIN_BENCHMARK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1305,
-  serialized_end=1408,
+  serialized_start=1509,
+  serialized_end=1612,
 )
 
 _EXPLAIN_METADATA = _descriptor.Descriptor(
@@ -540,8 +582,8 @@ _EXPLAIN_METADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1410,
-  serialized_end=1485,
+  serialized_start=1614,
+  serialized_end=1689,
 )
 
 _EXPLAIN = _descriptor.Descriptor(
@@ -552,16 +594,16 @@ _EXPLAIN = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='image_id', full_name='mindinsight.Explain.image_id', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='sample_id', full_name='mindinsight.Explain.sample_id', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='image_data', full_name='mindinsight.Explain.image_data', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"",
+      name='image_path', full_name='mindinsight.Explain.image_path', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -620,7 +662,7 @@ _EXPLAIN = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=846,
-  serialized_end=1485,
+  serialized_end=1689,
 )
 
 _EVENT.fields_by_name['graph_def'].message_type = mindinsight__anf__ir__pb2._GRAPHPROTO

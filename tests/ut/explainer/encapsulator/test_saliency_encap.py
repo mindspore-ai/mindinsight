@@ -18,9 +18,9 @@ from mindinsight.explainer.encapsulator.saliency_encap import SaliencyEncap
 from .mock_explain_manager import MockExplainManager
 
 
-def _image_url_formatter(_, image_id, image_type):
+def _image_url_formatter(_, image_path, image_type):
     """Return image url."""
-    return f"{image_type}-{image_id}"
+    return f"{image_type}-{image_path}"
 
 
 class TestEvaluationEncap:

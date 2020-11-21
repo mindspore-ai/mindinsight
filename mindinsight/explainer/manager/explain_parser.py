@@ -47,8 +47,8 @@ class ImageDataContainer:
     """
 
     def __init__(self, explain_message: Explain):
-        self.image_id = explain_message.image_id
-        self.image_data = explain_message.image_data
+        self.sample_id = explain_message.sample_id
+        self.image_path = explain_message.image_path
         self.ground_truth_label = explain_message.ground_truth_label
         self.inference = explain_message.inference
         self.explanation = explain_message.explanation
@@ -153,7 +153,7 @@ class _ExplainParser(_SummaryParser):
         logger.debug("Deserialize event string completed.")
 
         fields = {
-            'image_id': PluginNameEnum.IMAGE_ID,
+            'sample_id': PluginNameEnum.SAMPLE_ID,
             'benchmark': PluginNameEnum.BENCHMARK,
             'metadata': PluginNameEnum.METADATA
         }
@@ -170,7 +170,7 @@ class _ExplainParser(_SummaryParser):
                 continue
 
             tensor_value = None
-            if field == PluginNameEnum.IMAGE_ID.value:
+            if field == PluginNameEnum.SAMPLE_ID.value:
                 tensor_value = _ExplainParser._add_image_data(tensor_event_value)
             elif field == PluginNameEnum.BENCHMARK.value:
                 tensor_value = _ExplainParser._add_benchmark(tensor_event_value)
@@ -184,7 +184,7 @@ class _ExplainParser(_SummaryParser):
     @staticmethod
     def _add_image_data(tensor_event_value):
         """
-        Parse image data based on image_id in Explain message
+        Parse image data based on sample_id in Explain message
 
         Args:
             tensor_event_value: the object of Explain message

@@ -34,10 +34,9 @@ class DataManagerStatus(BaseEnum):
 class PluginNameEnum(BaseEnum):
     """Plugin Name Enum."""
     EXPLAIN = 'explain'
-    IMAGE_ID = 'image_id'
+    SAMPLE_ID = 'sample_id'
     BENCHMARK = 'benchmark'
     METADATA = 'metadata'
-    IMAGE_DATA = 'image_data'
     GROUND_TRUTH_LABEL = 'ground_truth_label'
     INFERENCE = 'inference'
     EXPLANATION = 'explanation'

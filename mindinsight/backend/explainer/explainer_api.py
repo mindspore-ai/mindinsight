@@ -31,6 +31,7 @@ from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.explainer.manager.explain_manager import ExplainManager
 from mindinsight.explainer.encapsulator.explain_job_encap import ExplainJobEncap
+from mindinsight.explainer.encapsulator.datafile_encap import DatafileEncap
 from mindinsight.explainer.encapsulator.saliency_encap import SaliencyEncap
 from mindinsight.explainer.encapsulator.evaluation_encap import EvaluationEncap
 
@@ -54,12 +55,14 @@ class ExplainManagerHolder:
         cls.static_instance.start_load_data()
 
 
-def _image_url_formatter(train_id, image_id, image_type):
+def _image_url_formatter(train_id, image_path, image_type):
     """Returns image url."""
-    train_id = urllib.parse.quote(str(train_id))
-    image_id = urllib.parse.quote(str(image_id))
-    image_type = urllib.parse.quote(str(image_type))
-    return f"{URL_PREFIX}/explainer/image?train_id={train_id}&image_id={image_id}&type={image_type}"
+    data = {
+        "train_id": train_id,
+        "path": image_path,
+        "type": image_type
+    }
+    return f"{URL_PREFIX}/explainer/image?{urllib.parse.urlencode(data)}"
 
 
 def _read_post_request(post_request):
@@ -129,10 +132,10 @@ def query_saliency():
     sorted_name = data.get("sorted_name", "")
     sorted_type = data.get("sorted_type", "descending")
 
-    if sorted_name not in ("", "confidence"):
-        raise ParamValueError("sorted_name")
+    if sorted_name not in ("", "confidence", "uncertainty"):
+        raise ParamValueError(f"sorted_name: {sorted_name}, valid options: '' 'confidence' 'uncertainty'")
     if sorted_type not in ("ascending", "descending"):
-        raise ParamValueError("sorted_type")
+        raise ParamValueError(f"sorted_type: {sorted_type}, valid options: 'confidence' 'uncertainty'")
 
     encapsulator = SaliencyEncap(
         _image_url_formatter,
@@ -170,19 +173,19 @@ def query_image():
     train_id = get_train_id(request)
     if train_id is None:
         raise ParamMissError("train_id")
-    image_id = request.args.get("image_id")
-    if image_id is None:
-        raise ParamMissError("image_id")
+    image_path = request.args.get("path")
+    if image_path is None:
+        raise ParamMissError("path")
     image_type = request.args.get("type")
     if image_type is None:
         raise ParamMissError("type")
     if image_type not in ("original", "overlay"):
-        raise ParamValueError(f"type:{image_type}")
+        raise ParamValueError(f"type:{image_type}, valid options: 'original' 'overlay'")
 
-    encapsulator = ExplainJobEncap(ExplainManagerHolder.get_instance())
-    image = encapsulator.query_image_binary(train_id, image_id, image_type)
+    encapsulator = DatafileEncap(ExplainManagerHolder.get_instance())
+    image = encapsulator.query_image_binary(train_id, image_path, image_type)
     if image is None:
-        raise ImageNotExistError(f"image_id:{image_id}")
+        raise ImageNotExistError(f"{image_path}")
 
     return image
 

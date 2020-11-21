@@ -17,8 +17,8 @@
 import copy
 from datetime import datetime
 
-from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.explainer.encapsulator.explain_data_encap import ExplainDataEncap
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 
 
 class ExplainJobEncap(ExplainDataEncap):
@@ -34,7 +34,7 @@ class ExplainJobEncap(ExplainDataEncap):
             offset (int): Page offset.
             limit (int): Max. no. of items to be returned.
         Returns:
-            Tuple[int, List[Dict]], total no. of jobs and job list.
+            tuple[int, list[Dict]], total no. of jobs and job list.
         """
         total, dir_infos = self.job_manager.get_job_list(offset=offset, limit=limit)
         job_infos = [self._dir_2_info(dir_info) for dir_info in dir_infos]
@@ -47,35 +47,12 @@ class ExplainJobEncap(ExplainDataEncap):
         Args:
             train_id (str): Job ID.
         Returns:
-            Dict, the metadata.
+            dict, the metadata.
         """
         job = self.job_manager.get_job(train_id)
         if job is None:
-            return None
+            raise TrainJobNotExistError(train_id)
         return self._job_2_meta(job)
-
-    def query_image_binary(self, train_id, image_id, image_type):
-        """
-        Query image binary content.
-        Args:
-            train_id (str): Job ID.
-            image_id (str): Image ID.
-            image_type (str): Image type, 'original' or 'overlay'.
-        Returns:
-            bytes, image binary.
-        """
-        job = self.job_manager.get_job(train_id)
-
-        if job is None:
-            return None
-        if image_type == "original":
-            binary = job.retrieve_image(image_id)
-        elif image_type == "overlay":
-            binary = job.retrieve_overlay(image_id)
-        else:
-            raise ParamValueError(f"image_type:{image_type}")
-
-        return binary
 
     @classmethod
     def _dir_2_info(cls, dir_info):
@@ -111,5 +88,5 @@ class ExplainJobEncap(ExplainDataEncap):
         saliency_info["explainers"] = list(job.explainers)
         saliency_info["metrics"] = list(job.metrics)
         info["saliency"] = saliency_info
-        info["uncertainty"] = {"enabled": False}
+        info["uncertainty"] = {"enabled": job.uncertainty_enabled}
         return info

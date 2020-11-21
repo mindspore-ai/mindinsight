@@ -45,6 +45,7 @@ class ExplainJob:
         self._event_parser = EventParser(self)
         self._latest_update_time = latest_update_time
         self._create_time = create_time
+        self._uncertainty_enabled = False
         self._labels = []
         self._metrics = []
         self._explainers = []
@@ -52,8 +53,6 @@ class ExplainJob:
         self._labels_info = {}
         self._explainer_score_dict = defaultdict(list)
         self._label_score_dict = defaultdict(dict)
-        self._overlay_dict = {}
-        self._image_dict = {}
 
     @property
     def all_classes(self):
@@ -148,6 +147,10 @@ class ExplainJob:
         return None
 
     @property
+    def uncertainty_enabled(self):
+        return self._uncertainty_enabled
+
+    @property
     def create_time(self):
         """
         Return the create time of summary file
@@ -220,36 +223,43 @@ class ExplainJob:
             self._labels_info[label_id] = {'label': label,
                                            'sample_ids': set()}
 
-    def _explanation_to_dict(self, explanation, sample_id):
+    def _explanation_to_dict(self, explanation):
         """Transfer the explanation from event to dict storage."""
-        explainer_name = explanation.explain_method
-        explain_label = explanation.label
-        saliency = explanation.heatmap
-        saliency_id = '{}_{}_{}'.format(
-            sample_id, explain_label, explainer_name)
         explain_info = {
-            'explainer': explainer_name,
-            'overlay': saliency_id,
+            'explainer': explanation.explain_method,
+            'overlay': explanation.heatmap_path,
         }
-        self._overlay_dict[saliency_id] = saliency
         return explain_info
 
     def _image_container_to_dict(self, sample_data):
         """Transfer the image container to dict storage."""
-        sample_id = sample_data.image_id
+        has_uncertainty = False
+        sample_id = sample_data.sample_id
 
         sample_info = {
             'id': sample_id,
-            'name': sample_id,
+            'image': sample_data.image_path,
+            'name': str(sample_id),
             'labels': [self._labels_info[x]['label']
                        for x in sample_data.ground_truth_label],
             'inferences': []}
-        self._image_dict[sample_id] = sample_data.image_data
 
         ground_truth_labels = list(sample_data.ground_truth_label)
         ground_truth_probs = list(sample_data.inference.ground_truth_prob)
         predicted_labels = list(sample_data.inference.predicted_label)
         predicted_probs = list(sample_data.inference.predicted_prob)
+
+        if sample_data.inference.predicted_prob_sd or sample_data.inference.ground_truth_prob_sd:
+            ground_truth_prob_sds = list(sample_data.inference.ground_truth_prob_sd)
+            ground_truth_prob_lows = list(sample_data.inference.ground_truth_prob_itl95_low)
+            ground_truth_prob_his = list(sample_data.inference.ground_truth_prob_itl95_hi)
+            predicted_prob_sds = list(sample_data.inference.predicted_prob_sd)
+            predicted_prob_lows = list(sample_data.inference.predicted_prob_itl95_low)
+            predicted_prob_his = list(sample_data.inference.predicted_prob_itl95_hi)
+            has_uncertainty = True
+        else:
+            ground_truth_prob_sds = ground_truth_prob_lows = ground_truth_prob_his = None
+            predicted_prob_sds = predicted_prob_lows = predicted_prob_his = None
 
         inference_info = {}
         for label, prob in zip(
@@ -260,41 +270,31 @@ class ExplainJob:
                 'confidence': round(prob, _NUM_DIGIT),
                 'saliency_maps': []}
 
+        if ground_truth_prob_sds or predicted_prob_sds:
+            for label, sd, low, hi in zip(
+                    ground_truth_labels + predicted_labels,
+                    ground_truth_prob_sds + predicted_prob_sds,
+                    ground_truth_prob_lows + predicted_prob_lows,
+                    ground_truth_prob_his + predicted_prob_his):
+                inference_info[label]['confidence_sd'] = sd
+                inference_info[label]['confidence_itl95'] = [low, hi]
+
         if EventParser.is_attr_ready(sample_data, 'explanation'):
             for explanation in sample_data.explanation:
-                explanation_dict = self._explanation_to_dict(
-                    explanation, sample_id)
+                explanation_dict = self._explanation_to_dict(explanation)
                 inference_info[explanation.label]['saliency_maps'].append(explanation_dict)
 
         sample_info['inferences'] = list(inference_info.values())
-        return sample_info
+        return sample_info, has_uncertainty
 
     def _import_sample(self, sample):
         """Add sample object of given sample id."""
         for label_id in sample.ground_truth_label:
-            self._labels_info[label_id]['sample_ids'].add(sample.image_id)
+            self._labels_info[label_id]['sample_ids'].add(sample.sample_id)
 
-        sample_info = self._image_container_to_dict(sample)
+        sample_info, has_uncertainty = self._image_container_to_dict(sample)
         self._samples_info.update({sample_info['id']: sample_info})
-
-    def retrieve_image(self, image_id: str):
-        """
-        Retrieve image data from the job given image_id.
-
-        Return:
-            string, image data in base64 byte
-
-        """
-        return self._image_dict.get(image_id, None)
-
-    def retrieve_overlay(self, overlay_id: str):
-        """
-        Retrieve sample map from the job given overlay_id.
-
-        Return:
-            string, saliency_map data in base64 byte
-        """
-        return self._overlay_dict.get(overlay_id, None)
+        self._uncertainty_enabled |= has_uncertainty
 
     def get_all_samples(self):
         """
@@ -321,7 +321,7 @@ class ExplainJob:
     def _import_data_from_event(self, event):
         """Parse and import data from the event data."""
         tags = {
-            'image_id': PluginNameEnum.IMAGE_ID,
+            'sample_id': PluginNameEnum.SAMPLE_ID,
             'benchmark': PluginNameEnum.BENCHMARK,
             'metadata': PluginNameEnum.METADATA
         }
@@ -332,7 +332,7 @@ class ExplainJob:
             if tag not in event:
                 continue
 
-            if tag == PluginNameEnum.IMAGE_ID.value:
+            if tag == PluginNameEnum.SAMPLE_ID.value:
                 sample_event = event[tag]
                 sample_data = self._event_parser.parse_sample(sample_event)
                 if sample_data is not None:
@@ -385,8 +385,6 @@ class ExplainJob:
         self._labels_info.clear()
         self._explainer_score_dict.clear()
         self._label_score_dict.clear()
-        self._overlay_dict.clear()
-        self._image_dict.clear()
         self._event_parser.clear()
 
     def _update_benchmark(self, explainer_score_dict, labels_score_dict):
