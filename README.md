@@ -94,10 +94,17 @@ You can choose any of the following installation methods:
 
 ### Installation Verification
 
-Execute the following command, if it prompts web address: <http://127.0.0.1:8080>, the installation is successful.
+Execute the following command:
 
 ```bash
 mindinsight start
+```
+
+If it prompts the following information, the installation is successful:
+
+```bash
+Web address: http://127.0.0.1:8080
+service start state: success
 ```
 
 ## Quick Start

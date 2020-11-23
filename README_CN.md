@@ -1,5 +1,4 @@
-[View English](./README.md)
-
+# MindInsight
 <!-- TOC -->
 
 - [MindInsight介绍](#mindinsight介绍)
@@ -21,6 +20,8 @@
 - [许可证](#许可证)
 
 <!-- /TOC -->
+
+[View English](./README.md)
 
 ## MindInsight介绍
 
@@ -93,10 +94,17 @@ git clone https://gitee.com/mindspore/mindinsight.git
 
 ### 验证是否成功安装
 
-执行如下命令，如果提示web address: <http://127.0.0.1:8080>，则说明安装成功。
+执行如下命令：
 
 ```bash
 mindinsight start
+```
+
+如果出现下列提示，说明安装成功：
+
+```bash
+Web address: http://127.0.0.1:8080
+service start state: success
 ```
 
 ## 快速入门
