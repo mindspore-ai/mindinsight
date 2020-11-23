@@ -382,6 +382,11 @@ class TestAscendDebugger:
         url = 'tensor-graphs'
         with self._debugger_client.get_thread_instance():
             create_watchpoint_and_wait(app_client)
+            get_request_result(app_client, url, body_data, method='GET')
+            # check full tensor history from poll data
+            res = get_request_result(
+                app_client=app_client, url='poll_data', body_data={'pos': 0}, method='get')
+            assert res.get('receive_tensor', {}).get('tensor_name') == body_data.get('tensor_name')
             send_and_compare_result(app_client, url, body_data, expect_file, method='GET')
             send_terminate_cmd(app_client)
 
