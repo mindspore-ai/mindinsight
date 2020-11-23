@@ -44,6 +44,8 @@ class WatchpointHandler(StreamHandlerBase):
         self._temp_cached_node_full_names = set()
         self._latest_id = 0
         self._cache_set_cmd = {}
+        # whether the watchpoint list has been changed since last step
+        self.outdated = False
 
     def put(self, value):
         """
@@ -176,7 +178,7 @@ class WatchpointHandler(StreamHandlerBase):
         Returns:
             bool, if enable to recheck.
         """
-        enable_recheck = bool(self._updated_watchpoints or self._deleted_watchpoints)
+        enable_recheck = self.outdated
         if backend == 'GPU' and enable_recheck:
             # on GPU, disable to recheck if there are new watched node of which the tensor
             # has not been stored on MindSpore
@@ -278,7 +280,7 @@ class WatchpointHandler(StreamHandlerBase):
             self.validate_watchpoint_id(watch_point_id)
             watchpoint.copy_nodes_from(self._watchpoints.get(watch_point_id))
         self.put(watchpoint)
-
+        self.outdated = True
         return new_id
 
     def update_watchpoint(self, watch_point_id, watch_nodes, watched=False):
@@ -300,6 +302,7 @@ class WatchpointHandler(StreamHandlerBase):
             watchpoint.remove_nodes(watch_nodes)
             self._remove_watch_node_from_cache(watch_nodes)
         self._updated_watchpoints[watch_point_id] = watchpoint
+        self.outdated = True
         log.debug("Update watchpoint %d in cache.", watch_point_id)
 
     def delete_watchpoint(self, watch_point_id=None):
@@ -317,6 +320,7 @@ class WatchpointHandler(StreamHandlerBase):
             watch_point_ids = [watch_point_id]
         for single_id in watch_point_ids:
             self._delete_single_watchpoint(single_id)
+        self.outdated = True
 
     def _delete_single_watchpoint(self, watch_point_id):
         """

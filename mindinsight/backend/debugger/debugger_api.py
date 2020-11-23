@@ -213,15 +213,9 @@ def create_watchpoint():
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/create_watchpoint
     """
-    body = _read_post_request(request)
-
-    condition = body.get('condition')
-    graph_name = body.get('graph_name')
-    watch_nodes = body.get('watch_nodes')
-    watch_point_id = body.get('watch_point_id')
-    search_pattern = body.get('search_pattern')
-    reply = _wrap_reply(BACKEND_SERVER.create_watchpoint,
-                        condition, watch_nodes, watch_point_id, search_pattern, graph_name)
+    params = _read_post_request(request)
+    params['watch_condition'] = params.pop('condition', None)
+    reply = _wrap_reply(BACKEND_SERVER.create_watchpoint, params)
     return reply
 
 
@@ -239,14 +233,8 @@ def update_watchpoint():
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/update_watchpoint
     """
-    body = _read_post_request(request)
-
-    watch_point_id = body.get('watch_point_id')
-    watch_nodes = body.get('watch_nodes')
-    graph_name = body.get('graph_name')
-    mode = body.get('mode')
-    pattern = body.get('search_pattern')
-    reply = _wrap_reply(BACKEND_SERVER.update_watchpoint, watch_point_id, watch_nodes, mode, pattern, graph_name)
+    params = _read_post_request(request)
+    reply = _wrap_reply(BACKEND_SERVER.update_watchpoint, params)
     return reply
 
 

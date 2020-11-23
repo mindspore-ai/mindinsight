@@ -190,7 +190,7 @@ class TestDebuggerServer:
     def test_create_watchpoint_with_wrong_state(self):
         """Test create watchpoint with wrong state."""
         with pytest.raises(DebuggerCreateWatchPointError, match='Failed to create watchpoint'):
-            self._server.create_watchpoint(watch_condition={'condition': 'INF'})
+            self._server.create_watchpoint({'watch_condition': {'condition': 'INF'}})
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
     @mock.patch.object(GraphHandler, 'get_node_basic_info', return_value=[MagicMock()])
@@ -199,7 +199,8 @@ class TestDebuggerServer:
     def test_create_watchpoint(self, *args):
         """Test create watchpoint."""
         args[0].return_value = 1
-        res = self._server.create_watchpoint({'condition': 'INF'}, ['watch_node_name'])
+        res = self._server.create_watchpoint({'watch_condition': {'condition': 'INF'},
+                                              'watch_nodes': ['watch_node_name']})
         assert res == {'id': 1, 'metadata': {'enable_recheck': False, 'state': 'waiting'}}
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
@@ -211,8 +212,11 @@ class TestDebuggerServer:
         """Test update watchpoint."""
         args[2].return_value = [MagicMock(name='search_name/op_name')]
         res = self._server.update_watchpoint(
-            watch_point_id=1, watch_nodes=['search_name'],
-            mode=1, search_pattern={'name': 'search_name'}, graph_name='kernel_graph_0')
+            {'watch_point_id': 1,
+             'watch_nodes': ['search_name'],
+             'mode': 1,
+             'search_pattern': {'name': 'search_name'},
+             'graph_name': 'kernel_graph_0'})
         assert res == {'metadata': {'enable_recheck': False, 'state': 'waiting'}}
 
     def test_delete_watchpoint_with_wrong_state(self):

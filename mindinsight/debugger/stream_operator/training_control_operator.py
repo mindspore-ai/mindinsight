@@ -91,7 +91,6 @@ class TrainingControlOperator:
         """
         metadata_stream = self._metadata_stream
         if metadata_stream.state != ServerStatus.WAITING.value:
-            self._cache_store.put_data(metadata_stream.get())
             log.error("MindSpore is not ready to run. Current state is: %s", metadata_stream.state)
             raise DebuggerContinueError(
                 "MindSpore is not ready to run or is running currently."
@@ -214,7 +213,6 @@ class TrainingControlOperator:
         """
         metadata_stream = self._metadata_stream
         if metadata_stream.state != ServerStatus.RUNNING.value:
-            self._cache_store.put_data(metadata_stream.get())
             log.error("The MindSpore is not running.")
             raise DebuggerPauseError("The MindSpore is not running.")
         metadata_stream.state = 'waiting'
