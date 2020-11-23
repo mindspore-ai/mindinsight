@@ -85,7 +85,7 @@ class ExplainParser(_SummaryParser):
         while True:
             start_offset = self._summary_file_handler.offset
             try:
-                event_str = self._event_load(self._summary_file_handler)
+                event_str = self.event_load(self._summary_file_handler)
                 if event_str is None:
                     self._summary_file_handler.reset_offset(start_offset)
                     is_end = True
