@@ -798,6 +798,36 @@ export default {
             margin-top: 10px;
           }
         }
+        ::-webkit-scrollbar-button {
+          z-index: 200;
+          width: 10px;
+          height: 10px;
+          background: #fff;
+          cursor: pointer;
+        }
+        ::-webkit-scrollbar-button:horizontal:single-button:start {
+          background-image: url('../../assets/images/scroll-btn-left.png');
+          background-position: center;
+        }
+        ::-webkit-scrollbar-button:horizontal:single-button:end {
+          background-image: url('../../assets/images/scroll-btn-right.png');
+          background-position: center;
+        }
+        ::-webkit-scrollbar-button:vertical:single-button:start {
+          background-image: url('../../assets/images/scroll-btn-up.png');
+          background-position: center;
+        }
+        ::-webkit-scrollbar-button:vertical:single-button:end {
+          background-image: url('../../assets/images/scroll-btn-down.png');
+          background-position: center;
+        }
+        ::-webkit-scrollbar-thumb {
+          background-color: #bac5cc;
+        }
+        ::-webkit-scrollbar {
+          width: 10px;
+          height: 10px;
+        }
       }
     }
 
