@@ -25,7 +25,7 @@ class MockExplainJob:
         self.create_time = datetime.timestamp(
             datetime.strptime("2020-10-01 20:21:23",
                               ExplainJobEncap.DATETIME_FORMAT))
-        self.latest_update_time = self.create_time
+        self.update_time = self.create_time
         self.sample_count = 1999
         self.min_confidence = 0.5
         self.explainers = ["Gradient"]

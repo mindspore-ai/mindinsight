@@ -17,17 +17,20 @@
 import os
 import threading
 import time
+from collections import OrderedDict
+from datetime import datetime
+from typing import Optional
 
+from mindinsight.conf import settings
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import BaseEnum
 from mindinsight.explainer.common.log import logger
-from mindinsight.explainer.manager.explain_job import ExplainJob
+from mindinsight.explainer.manager.explain_loader import ExplainLoader
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.utils.exceptions import MindInsightException, ParamValueError, UnknownError
 
-_MAX_LOADER_NUM = 3
-_MAX_INTERVAL = 3
+_MAX_LOADERS_NUM = 3
 
 
 class _ExplainManagerStatus(BaseEnum):
@@ -43,244 +46,62 @@ class ExplainManager:
 
     def __init__(self, summary_base_dir: str):
         self._summary_base_dir = summary_base_dir
-        self._loader_pool = {}
-        self._deleted_ids = []
-        self._status = _ExplainManagerStatus.INIT.value
+        self._loader_pool = OrderedDict()
+        self._loading_status = _ExplainManagerStatus.INIT.value
         self._status_mutex = threading.Lock()
         self._loader_pool_mutex = threading.Lock()
-        self._max_loader_num = _MAX_LOADER_NUM
-        self._reload_interval = None
-
-    def _reload_data(self):
-        """periodically load summary from file."""
-        while True:
-            try:
-                self._load_data()
-
-                if not self._reload_interval:
-                    break
-                time.sleep(self._reload_interval)
-            except UnknownError as ex:
-                logger.exception(ex)
-                logger.error('Unknown Error raise when loading summary files, status: %r, and loader pool size is %r.'
-                             'Detail: %s', self._status, len(self._loader_pool), str(ex))
-                self._status = _ExplainManagerStatus.INVALID.value
-
-    def _load_data(self):
-        """Loading the summary in the given base directory."""
-        logger.info('Start to load data, reload interval: %r.', self._reload_interval)
-
-        with self._status_mutex:
-            if self._status == _ExplainManagerStatus.LOADING.value:
-                logger.info('Current status is %s, will ignore to load data.', self._status)
-                return
-
-            self._status = _ExplainManagerStatus.LOADING.value
-
-            try:
-                self._generate_loaders()
-                self._execute_load_data()
-            except Exception as ex:
-                raise UnknownError(ex)
-
-            if not self._loader_pool:
-                self._status = _ExplainManagerStatus.INVALID.value
-            else:
-                self._status = _ExplainManagerStatus.DONE.value
-
-            logger.info('Load event data end, status: %r, and loader pool size is %r',
-                        self._status, len(self._loader_pool))
-
-    def _update_loader_latest_update_time(self, loader_id, latest_update_time=None):
-        """update the update time of loader of given id."""
-        if latest_update_time is None:
-            latest_update_time = time.time()
-        self._loader_pool[loader_id].latest_update_time = latest_update_time
-
-    def _delete_loader(self, loader_id):
-        """delete loader given loader_id"""
-        if self._loader_pool.get(loader_id, None) is not None:
-            self._loader_pool.pop(loader_id)
-            logger.debug('delete loader %s', loader_id)
-
-    def _add_loader(self, loader):
-        """add loader to the loader_pool."""
-        if len(self._loader_pool) >= _MAX_LOADER_NUM:
-            delete_num = len(self._loader_pool) - _MAX_LOADER_NUM + 1
-            sorted_loaders = sorted(
-                self._loader_pool.items(),
-                key=lambda x: x[1].latest_update_time)
-
-            for index in range(delete_num):
-                delete_loader_id = sorted_loaders[index][0]
-                self._delete_loader(delete_loader_id)
-        self._loader_pool.update({loader.loader_id: loader})
-
-    def _deal_loaders(self, latest_loaders):
-        """"update the loader pool."""
-        with self._loader_pool_mutex:
-            for loader_id, loader in latest_loaders:
-                if self._loader_pool.get(loader_id, None) is None:
-                    self._add_loader(loader)
-                    continue
-
-                if (self._loader_pool[loader_id].latest_update_time
-                        < loader.latest_update_time):
-                    self._update_loader_latest_update_time(
-                        loader_id, loader.latest_update_time)
-
-    @staticmethod
-    def _generate_loader_id(relative_path):
-        """Generate loader id for given path"""
-        loader_id = relative_path
-        return loader_id
-
-    @staticmethod
-    def _generate_loader_name(relative_path):
-        """Generate_loader name for given path."""
-        loader_name = relative_path
-        return loader_name
-
-    def _generate_loader_by_relative_path(self, relative_path: str) -> ExplainJob:
-        """Generate explain job from given relative path."""
-        current_dir = os.path.realpath(FileHandler.join(
-            self._summary_base_dir, relative_path
-        ))
-        loader_id = self._generate_loader_id(relative_path)
-        loader = ExplainJob(
-            job_id=loader_id,
-            summary_dir=current_dir,
-            create_time=ExplainJob.get_create_time(current_dir),
-            latest_update_time=ExplainJob.get_update_time(current_dir))
-        return loader
-
-    def _generate_loaders(self):
-        """Generate job loaders from the summary watcher."""
-        dir_map_mtime_dict = {}
-        loader_dict = {}
-        min_modify_time = None
-        _, summaries = SummaryWatcher().list_explain_directories(
-            self._summary_base_dir)
-
-        for item in summaries:
-            relative_path = item.get('relative_path')
-            modify_time = item.get('update_time').timestamp()
-            loader_id = self._generate_loader_id(relative_path)
-
-            loader = self._loader_pool.get(loader_id, None)
-            if loader is not None and loader.latest_update_time > modify_time:
-                modify_time = loader.latest_update_time
-
-            if min_modify_time is None:
-                min_modify_time = modify_time
-
-            if len(dir_map_mtime_dict) < _MAX_LOADER_NUM:
-                if modify_time < min_modify_time:
-                    min_modify_time = modify_time
-                dir_map_mtime_dict.update({relative_path: modify_time})
-            else:
-                if modify_time >= min_modify_time:
-                    dir_map_mtime_dict.update({relative_path: modify_time})
-
-        sorted_dir_tuple = sorted(dir_map_mtime_dict.items(),
-                                  key=lambda d: d[1])[-_MAX_LOADER_NUM:]
-
-        for relative_path, modify_time in sorted_dir_tuple:
-            loader_id = self._generate_loader_id(relative_path)
-            loader = self._generate_loader_by_relative_path(relative_path)
-            loader_dict.update({loader_id: loader})
-
-        sorted_loaders = sorted(loader_dict.items(),
-                                key=lambda x: x[1].latest_update_time)
-        latest_loaders = sorted_loaders[-_MAX_LOADER_NUM:]
-        self._deal_loaders(latest_loaders)
-
-    def _execute_loader(self, loader_id):
-        """Execute the data loading."""
-        try:
-            with self._loader_pool_mutex:
-                loader = self._loader_pool.get(loader_id, None)
-                if loader is None:
-                    logger.debug('Loader %r has been deleted, will not load'
-                                 'data', loader_id)
-                    return
-            loader.load()
-
-        except MindInsightException as ex:
-            logger.warning('Data loader %r load data failed. Delete data_loader. Detail: %s', loader_id, ex)
-            with self._loader_pool_mutex:
-                self._delete_loader(loader_id)
-
-    def _execute_load_data(self):
-        """Execute the loader in the pool to load data."""
-        loader_pool = self._get_snapshot_loader_pool()
-        for loader_id in loader_pool:
-            self._execute_loader(loader_id)
-
-    def _get_snapshot_loader_pool(self):
-        """Get snapshot of loader_pool."""
-        with self._loader_pool_mutex:
-            return dict(self._loader_pool)
-
-    def _check_status_valid(self):
-        """Check manager status."""
-        if self._status == _ExplainManagerStatus.INIT.value:
-            raise exceptions.SummaryLogIsLoading('Data is loading, current status is %s' % self._status)
-
-    @staticmethod
-    def _check_train_id_valid(train_id: str):
-        """Verify the train_id is valid."""
-        if not train_id.startswith('./'):
-            logger.warning('train_id does not start with "./"')
-            return False
-
-        if len(train_id.split('/')) > 2:
-            logger.warning('train_id contains multiple "/"')
-            return False
-        return True
-
-    def _check_train_job_exist(self, train_id):
-        """Verify thee train_job is existed given train_id."""
-        if train_id in self._loader_pool:
-            return
-        self._check_train_id_valid(train_id)
-        if SummaryWatcher().is_summary_directory(self._summary_base_dir, train_id):
-            return
-        raise ParamValueError('Can not find the train job in the manager, train_id: %s' % train_id)
-
-    def _reload_data_again(self):
-        """Reload the data one more time."""
-        logger.debug('Start to reload data again.')
-        thread = threading.Thread(target=self._load_data,
-                                  name='reload_data_thread')
-        thread.daemon = False
-        thread.start()
-
-    def _get_job(self, train_id):
-        """Retrieve train_job given train_id."""
-        is_reload = False
-        with self._loader_pool_mutex:
-            loader = self._loader_pool.get(train_id, None)
-
-            if loader is None:
-                relative_path = train_id
-                temp_loader = self._generate_loader_by_relative_path(
-                    relative_path)
-
-                if temp_loader is None:
-                    return None
-
-                self._add_loader(temp_loader)
-                is_reload = True
-
-        if is_reload:
-            self._reload_data_again()
-        return loader
+        self._max_loaders_num = _MAX_LOADERS_NUM
+        self._summary_watcher = SummaryWatcher()
 
     @property
     def summary_base_dir(self):
         """Return the base directory for summary records."""
         return self._summary_base_dir
+
+    def start_load_data(self, reload_interval: int = 0):
+        """
+        Start individual thread to cache explain_jobs and loading summary data periodically.
+
+        Args:
+            reload_interval (int): Specify the loading period in seconds. If interval == 0, data will only be loaded
+            once. Default: 0.
+        """
+        thread = threading.Thread(target=self._repeat_loading,
+                                  name='start_load_thread',
+                                  args=(reload_interval,),
+                                  daemon=True)
+        time.sleep(1)
+        thread.start()
+
+    def get_job(self, loader_id: str) -> Optional[ExplainLoader]:
+        """
+        Return ExplainLoader given loader_id.
+
+        If explain job w.r.t given loader_id is not found, None will be returned.
+
+        Args:
+            loader_id (str): The id of expected ExplainLoader
+
+        Return:
+            explain_job
+        """
+        self._check_status_valid()
+
+        with self._loader_pool_mutex:
+            if loader_id in self._loader_pool:
+                self._loader_pool[loader_id].query_time = datetime.now().timestamp()
+                self._loader_pool.move_to_end(loader_id, last=False)
+                return self._loader_pool[loader_id]
+
+            try:
+                loader = self._generate_loader_from_relative_path(loader_id)
+                loader.query_time = datetime.now().timestamp()
+                self._add_loader(loader)
+                self._reload_data_again()
+            except ParamValueError:
+                logger.warning('Cannot find summary in path: %s. No explain_job will be returned.', loader_id)
+                return None
+        return loader
 
     def get_job_list(self, offset=0, limit=None):
         """
@@ -298,44 +119,146 @@ class ExplainManager:
                 - create_time (datetime): Creation time of summary file.
                 - update_time (datetime): Modification time of summary file.
         """
-        watcher = SummaryWatcher()
         total, dir_infos = \
-            watcher.list_explain_directories(self._summary_base_dir,
-                                             offset=offset, limit=limit)
+            self._summary_watcher.list_explain_directories(self._summary_base_dir, offset=offset, limit=limit)
         return total, dir_infos
 
-    def get_job(self, train_id):
+    def _repeat_loading(self, repeat_interval):
+        """Periodically loading summary."""
+        while True:
+            try:
+                logger.info('Start to load data, repeat interval: %r.', repeat_interval)
+                self._load_data()
+                if not repeat_interval:
+                    return
+                time.sleep(repeat_interval)
+            except UnknownError as ex:
+                logger.exception(ex)
+                logger.error('Unexpected error happens when loading data. Loading status: %s, loading pool size: %d'
+                             'Detail: %s', self._loading_status, len(self._loader_pool), str(ex))
+
+    def _load_data(self):
         """
-        Return ExplainJob given train_id.
+        Prepare loaders in cache and start loading the data from summaries.
 
-        If explain job w.r.t given train_id is not found, None will be returned.
-
-        Args:
-            train_id (str): The id of expected ExplainJob
-
-        Return:
-            explain_job
+        Only a limited number of loaders will be cached in terms of updated_time or query_time. The size of cache
+        pool is determined by _MAX_LOADERS_NUM. When the manager start loading data, only the lastest _MAX_LOADER_NUM
+        summaries will be loaded in cache. If a cached loader if queries by 'get_job', the query_time of the loader
+        will be updated as well as the the loader moved to the end of cache. If an uncached summary is queried,
+        a new loader instance will be generated and put to the end cache.
         """
-        self._check_status_valid()
-        self._check_train_job_exist(train_id)
+        try:
+            with self._status_mutex:
+                if self._loading_status == _ExplainManagerStatus.LOADING.value:
+                    logger.info('Current status is %s, will ignore to load data.', self._loading_status)
+                    return
 
-        loader = self._get_job(train_id)
-        if loader is None:
-            return None
+                self._loading_status = _ExplainManagerStatus.LOADING.value
+
+                self._cache_loaders()
+                self._execute_loading()
+
+                if not self._loader_pool:
+                    self._loading_status = _ExplainManagerStatus.INVALID.value
+                else:
+                    self._loading_status = _ExplainManagerStatus.DONE.value
+
+                logger.info('Load event data end, status: %s, and loader pool size: %d',
+                            self._loading_status, len(self._loader_pool))
+
+        except Exception as ex:
+            self._loading_status = _ExplainManagerStatus.INVALID.value
+            logger.exception(ex)
+            raise UnknownError(str(ex))
+
+    def _cache_loaders(self):
+        """Cache explain loader in cache pool."""
+        dir_map_mtime_dict = []
+        _, summaries_info = self._summary_watcher.list_explain_directories(self._summary_base_dir)
+
+        for summary_info in summaries_info:
+            summary_path = summary_info.get('relative_path')
+            summary_update_time = summary_info.get('update_time').timestamp()
+
+            if summary_path in self._loader_pool:
+                summary_update_time = max(summary_update_time, self._loader_pool[summary_path].query_time)
+
+            dir_map_mtime_dict.append((summary_info, summary_update_time))
+
+        sorted_summaries_info = sorted(dir_map_mtime_dict, key=lambda x: x[1])[-_MAX_LOADERS_NUM:]
+
+        with self._loader_pool_mutex:
+            for summary_info, query_time in sorted_summaries_info:
+                summary_path = summary_info['relative_path']
+                if summary_path not in self._loader_pool:
+                    loader = self._generate_loader_from_relative_path(summary_path)
+                    self._add_loader(loader)
+                else:
+                    self._loader_pool[summary_path].query_time = query_time
+                    self._loader_pool.move_to_end(summary_path, last=False)
+
+    def _generate_loader_from_relative_path(self, relative_path: str) -> ExplainLoader:
+        """Generate explain loader from the given relative path."""
+        self._check_summary_exist(relative_path)
+        current_dir = os.path.realpath(FileHandler.join(self._summary_base_dir, relative_path))
+        loader_id = self._generate_loader_id(relative_path)
+        loader = ExplainLoader(loader_id=loader_id, summary_dir=current_dir)
         return loader
 
-    def start_load_data(self, reload_interval=_MAX_INTERVAL):
-        """
-        Start threads for loading data.
+    def _add_loader(self, loader):
+        """add loader to the loader_pool."""
+        if loader.train_id not in self._loader_pool:
+            self._loader_pool[loader.train_id] = loader
+        else:
+            self._loader_pool.move_to_end(loader.train_id)
 
-        Args:
-            reload_interval (int): interval to reload the summary from file
-        """
-        self._reload_interval = reload_interval
+        while len(self._loader_pool) > self._max_loaders_num:
+            self._loader_pool.popitem(last=False)
 
-        thread = threading.Thread(target=self._reload_data, name='start_load_data_thread')
-        thread.daemon = True
+    def _execute_loading(self):
+        """Execute the data loading."""
+        for loader_id in list(self._loader_pool.keys()):
+            try:
+                with self._loader_pool_mutex:
+                    loader = self._loader_pool.get(loader_id, None)
+                    if loader is None:
+                        logger.debug('Loader %r has been deleted, will not load data', loader_id)
+                        return
+                loader.load()
+
+            except MindInsightException as ex:
+                logger.warning('Data loader %r load data failed. Delete data_loader. Detail: %s', loader_id, ex)
+                with self._loader_pool_mutex:
+                    self._delete_loader(loader_id)
+
+    def _delete_loader(self, loader_id):
+        """delete loader given loader_id"""
+        if loader_id in self._loader_pool:
+            self._loader_pool.pop(loader_id)
+            logger.debug('delete loader %s', loader_id)
+
+    def _check_status_valid(self):
+        """Check manager status."""
+        if self._loading_status == _ExplainManagerStatus.INIT.value:
+            raise exceptions.SummaryLogIsLoading('Data is loading, current status is %s' % self._loading_status)
+
+    def _check_summary_exist(self, loader_id):
+        """Verify thee train_job is existed given loader_id."""
+        if not self._summary_watcher.is_summary_directory(self._summary_base_dir, loader_id):
+            raise ParamValueError('Can not find the train job in the manager.')
+
+    def _reload_data_again(self):
+        """Reload the data one more time."""
+        logger.debug('Start to reload data again.')
+        thread = threading.Thread(target=self._load_data, name='reload_data_thread')
+        thread.daemon = False
         thread.start()
 
-        # wait for data loading
-        time.sleep(1)
+    @staticmethod
+    def _generate_loader_id(relative_path):
+        """Generate loader id for given path"""
+        loader_id = relative_path
+        return loader_id
+
+
+EXPLAIN_MANAGER = ExplainManager(summary_base_dir=settings.SUMMARY_BASE_DIR)
