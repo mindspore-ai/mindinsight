@@ -223,22 +223,22 @@ class TensorHandler(StreamHandlerBase):
             node_type = tensor_info.get('node_type')
             basic_info = self._get_basic_info(tensor_name, node_type)
             # add `has_prev_step` field to tensor basic info.
-            missing_tensor_infos = self._update_has_prev_step_field(basic_info, tensor_name, node_type)
+            missing_tensors_info = self._update_has_prev_step_field(basic_info, tensor_name, node_type)
             if basic_info:
                 tensor_info.update(basic_info)
-            if missing_tensor_infos:
-                missed_tensors.extend(missing_tensor_infos)
+            if missing_tensors_info:
+                missed_tensors.extend(missing_tensors_info)
 
         return missed_tensors
 
     def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type):
         """Update has_prev_step field in tensor info."""
-        missing_tensor_infos = self.get_missing_tensor_info(tensor_name, node_type)
-        if not missing_tensor_infos and node_type == NodeTypeEnum.PARAMETER.value and self.cur_step > 0:
+        missing_tensors_info = self._get_missing_tensor_info(tensor_name, node_type)
+        if not missing_tensors_info and node_type == NodeTypeEnum.PARAMETER.value and self.cur_step > 0:
             tensor_info['has_prev_step'] = True
-        return missing_tensor_infos
+        return missing_tensors_info
 
-    def get_missing_tensor_info(self, tensor_name, node_type):
+    def _get_missing_tensor_info(self, tensor_name, node_type):
         """
         Get missing tensor infos.
 
@@ -250,16 +250,16 @@ class TensorHandler(StreamHandlerBase):
             list, list of missing tensor basic information.
         """
         step = self.cur_step
-        missing_tensor_infos = []
+        missing_tensors_info = []
         # check the current step value is missing
         if self._is_tensor_value_missing(tensor_name, step):
-            missing_tensor_infos.append(TensorBasicInfo(full_name=tensor_name, node_type=node_type, iter=''))
+            missing_tensors_info.append(TensorBasicInfo(full_name=tensor_name, node_type=node_type, iter=''))
             log.debug("Add current step view cmd for %s", tensor_name)
         # check the previous step value is missing
         if node_type == NodeTypeEnum.PARAMETER.value and self._is_tensor_value_missing(tensor_name, step - 1):
-            missing_tensor_infos.append(TensorBasicInfo(full_name=tensor_name, node_type=node_type, iter='prev'))
+            missing_tensors_info.append(TensorBasicInfo(full_name=tensor_name, node_type=node_type, iter='prev'))
             log.debug("Add previous view cmd for %s", tensor_name)
-        return missing_tensor_infos
+        return missing_tensors_info
 
     def _is_tensor_value_missing(self, tensor_name, step):
         """
@@ -374,19 +374,22 @@ class TensorHandler(StreamHandlerBase):
         stats_info['statistics'] = TensorUtils.get_overall_statistic_dict(overall_stats=diff_tensor_stats)
         return stats_info
 
-    def get_tensor_statistics(self, tensor_name, node_type):
+    def get_tensor_info_for_tensor_graph(self, tensor_name, node_type):
         """
-        Get Tensor statistics.
+        Get Tensor info for tensor graphs.
 
         Args:
             tensor_name (str): Tensor name, format like `node_name:slot`.
             node_type (str): Node type.
 
         Returns:
-            dict, overall statistics.
+            dict, tensor infos, including overall statistics, tensor shape and has_prev_step info.
+            list, list of missing tensor basic information.
         """
         res = {}
         tensor = self._get_tensor(tensor_name, node_type)
         if tensor and not tensor.empty:
-            res = tensor.get_tensor_statistics()
-        return res
+            res['statistics'] = tensor.get_tensor_statistics()
+            res['shape'] = tensor.shape
+        missing_tensors = self._update_has_prev_step_field(res, tensor_name, node_type)
+        return res, missing_tensors

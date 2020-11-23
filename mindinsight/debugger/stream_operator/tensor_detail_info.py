@@ -78,14 +78,14 @@ class TensorDetailInfo:
             node['graph_name'] = graph_name
             for slot_info in node.get('slots', []):
                 self._add_watchpoint_hit_info(slot_info, node)
-                self._add_statistic_info(slot_info, node, missing_tensors)
+                self._add_tensor_info(slot_info, node, missing_tensors)
         # query missing tensor values from client
         self._ask_for_missing_tensor_value(missing_tensors, tensor_name, graph_name)
         return graph
 
     def _add_watchpoint_hit_info(self, slot_info, node):
         """
-        Get the watchpoint that the tensor hit.
+        Add watchpoint hit info for the tensor.
 
         Args:
             slot_info (dict): Slot object.
@@ -94,9 +94,9 @@ class TensorDetailInfo:
         tensor_name = ':'.join([node.get('name'), slot_info.get('slot')])
         slot_info.update(self._hit_stream.get_tensor_hit_infos(tensor_name))
 
-    def _add_statistic_info(self, slot_info, node, missing_tensors):
+    def _add_tensor_info(self, slot_info, node, missing_tensors):
         """
-        Get the watchpoint that the tensor hit.
+        Add the tensor info and query for missed tensors.
 
         Args:
             slot_info (dict): Slot object.
@@ -105,10 +105,10 @@ class TensorDetailInfo:
         """
         tensor_name = ':'.join([node.get('full_name'), slot_info.get('slot')])
         node_type = node.get('type')
-        slot_info['statistics'] = self._tensor_stream.get_tensor_statistics(tensor_name, node_type)
-        if not slot_info.get('statistics'):
+        tensor_info, cur_missing_tensors = self._tensor_stream.get_tensor_info_for_tensor_graph(tensor_name, node_type)
+        slot_info.update(tensor_info)
+        if cur_missing_tensors:
             log.debug("Get missing tensor basic infos for %s", tensor_name)
-            cur_missing_tensors = self._tensor_stream.get_missing_tensor_info(tensor_name, node_type)
             missing_tensors.extend(cur_missing_tensors)
 
     def _ask_for_missing_tensor_value(self, missing_tensors, tensor_name, graph_name):
