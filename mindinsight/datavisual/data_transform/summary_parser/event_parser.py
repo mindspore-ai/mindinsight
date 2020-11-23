@@ -12,24 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Scalar Writer.
+"""Parse summary file and save it local file."""
 
-This module write scalar into a  csv file.
-"""
 import os
 import time
-import struct
 
 from google.protobuf.message import DecodeError
 
-from mindinsight.datavisual.utils import crc32
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.log import parse_summary_logger
 from mindinsight.datavisual.proto_files import lazy_read_pb2
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.summary_parser.image_writer import ImageWriter
 from mindinsight.datavisual.data_transform.summary_parser.scalar_writer import ScalarWriter
+
+from ..ms_data_loader import _SummaryParser
 
 HEADER_SIZE = 8
 CRC_STR_SIZE = 4
@@ -40,8 +37,8 @@ INFO_INTERVAL = 10
 RETRY_TIMES = 2
 
 
-class EventParser():
-    """Parse summary file and save it to csv file and image."""
+class EventParser:
+    """Parse summary file and save it to local file."""
     def __init__(self, summary_file, output):
         self.summary_file = summary_file
         self._output = output
@@ -90,7 +87,8 @@ class EventParser():
         while True:
             start_offset = file_handler.offset
             try:
-                event_str = self._event_load(file_handler)
+                event_str = _SummaryParser.event_load(file_handler)
+                self._print_process(file_handler)
                 crc_check_time = 0
                 if event_str is None:
                     return True
@@ -121,49 +119,8 @@ class EventParser():
                                            file_handler.file_path)
                 return False
 
-    def _event_load(self, file_handler):
-        """
-        Load binary string to event string.
-
-        Args:
-            file_handler (FileHandler): A file handler.
-
-        Returns:
-            bytes, MindSpore event in bytes.
-        """
-        # read the header
-        header_str = file_handler.read(HEADER_SIZE)
-
-        if not header_str:
-            return None
-
-        header_crc_str = file_handler.read(CRC_STR_SIZE)
-        if not header_crc_str:
-            header_crc_str = ''
-
-        if len(header_str) != HEADER_SIZE or len(header_crc_str) != CRC_STR_SIZE:
-            raise exceptions.CRCLengthFailedError
-
-        if not crc32.CheckValueAgainstData(header_crc_str, header_str, HEADER_SIZE):
-            raise exceptions.CRCFailedError()
-
-        # read the event body if integrity of header is verified
-        header = struct.unpack('Q', header_str)
-        event_len = int(header[0])
-
-        event_str = file_handler.read(event_len)
-        if not event_str:
-            event_str = ''
-        event_crc_str = file_handler.read(CRC_STR_SIZE)
-        if not event_crc_str:
-            event_crc_str = ''
-
-        if len(event_str) != event_len or len(event_crc_str) != CRC_STR_SIZE:
-            raise exceptions.CRCLengthFailedError
-
-        if not crc32.CheckValueAgainstData(event_crc_str, event_str, event_len):
-            raise exceptions.CRCFailedError()
-
+    def _print_process(self, file_handler):
+        """Prints the current parsing progress based on the progress of the read file."""
         current_offset = file_handler.offset
         if current_offset >= self._process_info:
             parse_summary_logger.info("Current parsing process: %d/%d, %d%%.", current_offset, self._file_size,
@@ -171,7 +128,6 @@ class EventParser():
             self._process_info += self._file_size // INFO_INTERVAL
             if self._process_info > os.path.getsize(self.summary_file):
                 self._process_info = os.path.getsize(self.summary_file)
-        return event_str
 
     def _event_parse(self, event_str):
         """

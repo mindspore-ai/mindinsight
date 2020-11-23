@@ -335,7 +335,7 @@ class _SummaryParser(_Parser):
                 else:
                     self._latest_file_size = new_size
                 # Wait for data in this file to be processed to avoid loading multiple files at the same time.
-                logger.info("Parse summary file offset %d, file path: %s.", self._latest_file_size, file_path)
+                logger.debug("Parse summary file offset %d, file path: %s.", self._latest_file_size, file_path)
                 return False
             except UnknownError as ex:
                 logger.warning("Parse summary file failed, detail: %r,"
@@ -371,7 +371,7 @@ class _SummaryParser(_Parser):
         while True:
             start_offset = file_handler.offset
             try:
-                event_str = self._event_load(file_handler)
+                event_str = self.event_load(file_handler)
                 if event_str is None:
                     file_handler.reset_offset(start_offset)
                     return True
@@ -399,27 +399,23 @@ class _SummaryParser(_Parser):
 
                 future.add_done_callback(exception_no_raise_wrapper(_add_tensor_event_callback))
                 return False
-            except exceptions.CRCLengthFailedError:
+            except (exceptions.CRCFailedError, exceptions.CRCLengthFailedError) as exc:
                 file_handler.reset_offset(start_offset)
-                logger.warning(
-                    "Check crc length failed, please check the summary file integrity, "
-                    "the file may be in transfer, file_path: %s, offset=%s.",
-                    file_handler.file_path, start_offset)
-                return True
-            except exceptions.CRCFailedError:
-                file_handler.reset_offset(start_offset)
-                logger.warning("Check crc faild and ignore this file, file_path=%s, "
-                               "offset=%s.", file_handler.file_path, file_handler.offset)
+                file_size = file_handler.file_stat(file_handler.file_path).size
+                logger.error("Check crc failed and ignore this file, please check the integrity of the file, "
+                             "file_path: %s, offset: %s, file size: %s. Detail: %s.",
+                             file_handler.file_path, file_handler.offset, file_size, str(exc))
                 return True
             except (OSError, DecodeError, exceptions.MindInsightException) as ex:
-                logger.warning("Parse log file fail, and ignore this file, detail: %r,"
-                               "file path: %s.", str(ex), file_handler.file_path)
+                logger.error("Parse log file fail, and ignore this file, detail: %r, "
+                             "file path: %s.", str(ex), file_handler.file_path)
                 return True
             except Exception as ex:
                 logger.exception(ex)
                 raise UnknownError(str(ex))
 
-    def _event_load(self, file_handler):
+    @staticmethod
+    def event_load(file_handler):
         """
         Load binary string to event string.
 
@@ -439,9 +435,9 @@ class _SummaryParser(_Parser):
             header_crc_str = ''
 
         if len(header_str) != HEADER_SIZE or len(header_crc_str) != CRC_STR_SIZE:
-            raise exceptions.CRCLengthFailedError
+            raise exceptions.CRCLengthFailedError("CRC header length or event header length is incorrect.")
         if not crc32.CheckValueAgainstData(header_crc_str, header_str, HEADER_SIZE):
-            raise exceptions.CRCFailedError()
+            raise exceptions.CRCFailedError("The header of event crc is failed.")
 
         # read the event body if integrity of header is verified
         header = struct.unpack('Q', header_str)
@@ -455,9 +451,9 @@ class _SummaryParser(_Parser):
             event_crc_str = ''
 
         if len(event_str) != event_len or len(event_crc_str) != CRC_STR_SIZE:
-            raise exceptions.CRCLengthFailedError
+            raise exceptions.CRCLengthFailedError("The event sting length or crc length is incorrect.")
         if not crc32.CheckValueAgainstData(event_crc_str, event_str, event_len):
-            raise exceptions.CRCFailedError()
+            raise exceptions.CRCFailedError("The event string crc is incorrect.")
 
         return event_str
 

@@ -122,7 +122,6 @@ class Command(BaseCommand):
             date_time = datetime.datetime.now().strftime('output_%Y%m%d_%H%M%S_%f')
             output_path = os.path.join(args.output, date_time)
 
-
             summary_dir = args.summary_dir
             if not self._check_dirpath(summary_dir):
                 return
@@ -139,8 +138,8 @@ class Command(BaseCommand):
 
             summary_file = FileHandler.join(summary_dir, filename)
 
-            if not (self._check_filepath(summary_file) and self._check_create_filepath(
-                    output_path) and self._check_create_filepath(FileHandler.join(output_path, 'image'))):
+            if not (self._check_filepath(summary_file) and self._check_create_filepath(output_path)
+                    and self._check_create_filepath(FileHandler.join(output_path, 'image'))):
                 return
 
             eventparser = EventParser(summary_file, output_path)
