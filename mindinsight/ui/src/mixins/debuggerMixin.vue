@@ -212,6 +212,7 @@ export default {
       if (this.step === '') {
         return;
       }
+      const maxStep = 2147483648;
       this.step = this.step
           .toString()
           .replace(/[^\.\d]/g, '')
@@ -220,8 +221,8 @@ export default {
       if (this.step === 0) {
         this.step = 1;
       }
-      if (this.step >= 1000000000) {
-        this.step = 999999999;
+      if (this.step >= maxStep) {
+        this.step = maxStep - 1;
       }
     },
     /**
@@ -267,14 +268,16 @@ export default {
                         ? false
                         : true,
                       ...val,
+                      showCheckbox: val.type !== this.unCheckedNodeType,
                     };
                   });
                   this.resolve(this.origialTree);
+                  // watched 0:unchecked  1:indeterminate 2:checked
                   this.node.childNodes.forEach((val) => {
-                    if (val.data.watched === 2) {
+                    if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
                       val.checked = true;
                     }
-                    if (val.data.watched === 1) {
+                    if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
                       val.indeterminate = true;
                     }
                   });
@@ -971,6 +974,12 @@ export default {
         this.dealCheckPro(node.childNodes, node.indeterminate || check);
       }
       if (this.curWatchPointId) {
+        this.$refs.tree.getCheckedKeys().forEach((val) => {
+          const node = this.$refs.tree.getNode(val);
+          if (node.data.type === this.unCheckedNodeType) {
+            node.checked = false;
+          }
+        });
         const checkedKeys = this.$refs.tree.getCheckedKeys();
         const watchNodes = [];
         if (this.defaultCheckedArr.length === checkedKeys.length) {
@@ -1002,11 +1011,33 @@ export default {
             (res) => {
               this.defaultCheckedArr = checkedKeys;
               this.enableRecheck = res.data.metadata.enable_recheck;
+              this.$nextTick(() => {
+                if (node.indeterminate) {
+                  node.checked = true;
+                  node.indeterminate = false;
+                }
+                if (check) {
+                  this.dealParentNode(node);
+                }
+              });
             },
             (err) => {
               this.showErrorMsg(err);
             },
         );
+      }
+    },
+    dealParentNode(node) {
+      const parent = node.parent;
+      if (
+        parent &&
+        !parent.childNodes
+            .filter((val) => val.data.type !== this.unCheckedNodeType)
+            .find((val) => val.checked === false)
+      ) {
+        parent.checked = true;
+        parent.indeterminate = false;
+        this.dealParentNode(parent);
       }
     },
     /** Deal tree data
@@ -1016,7 +1047,11 @@ export default {
     dealCheckPro(childNodes, check) {
       childNodes.forEach((val) => {
         val.indeterminate = false;
-        val.checked = check;
+        if (val.data.type !== this.unCheckedNodeType) {
+          val.checked = check;
+        } else {
+          val.checked = false;
+        }
         if (val.childNodes) {
           this.dealCheckPro(val.childNodes, check);
         }
@@ -1052,6 +1087,7 @@ export default {
      */
     nodeCollapse(_, node) {
       node.loaded = false;
+      node.childNodes = [];
       if (this.treeFlag) {
         this.dealDoubleClick(node.data.name);
       }
@@ -1153,7 +1189,8 @@ export default {
         if (val.nodes) {
           this.dealSearchResult(val.nodes);
         }
-        if (val.watched === 2) {
+        // watched 0:unchecked  1:indeterminate 2:checked
+        if (val.watched === 2 && val.type !== this.unCheckedNodeType) {
           this.searchCheckedArr.push(val.name);
         }
         val.label = val.name.split('/').pop();
@@ -1270,19 +1307,21 @@ export default {
                       ? false
                       : true,
                     ...val,
+                    showCheckbox: val.type !== this.unCheckedNodeType,
                   };
                 });
                 resolve(this.curNodeData);
+                // watched 0:unchecked  1:indeterminate 2:checked
                 this.defaultCheckedArr = this.defaultCheckedArr.concat(
                     this.curNodeData
                         .filter((val) => {
-                          return val.watched === 2;
+                          return val.watched === 2 && val.type !== this.unCheckedNodeType;
                         })
                         .map((val) => val.name),
                 );
                 const halfSelectArr = this.curNodeData
                     .filter((val) => {
-                      return val.watched === 1;
+                      return val.watched === 1 && val.type !== this.unCheckedNodeType;
                     })
                     .map((val) => val.name);
                 node.childNodes.forEach((val) => {
@@ -1366,6 +1405,7 @@ export default {
                     ? false
                     : true,
                 ...val,
+                showCheckbox: val.type !== this.unCheckedNodeType,
               };
             });
             resolve(this.curNodeData);
@@ -1463,23 +1503,26 @@ export default {
         return {
           label: val.name.split('/').pop(),
           ...val,
+          showCheckbox: val.type !== this.unCheckedNodeType,
         };
       });
       const node = this.$refs.tree.getNode(name);
       curNodeData.forEach((val) => {
         this.$refs.tree.append(val, name);
       });
+      // watched 0:unchecked  1:indeterminate 2:checked
       node.childNodes.forEach((val) => {
         if (
           node.checked &&
-          !node.childNodes.find((val) => val.data.watched !== 2)
+          !node.childNodes.find((val) => val.data.watched !== 2) &&
+          val.data.type !== this.unCheckedNodeType
         ) {
           val.checked = true;
         }
-        if (val.data.watched === 2) {
+        if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
           val.checked = true;
         }
-        if (val.data.watched === 1) {
+        if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
           val.indeterminate = true;
         }
         if (
@@ -1494,6 +1537,16 @@ export default {
       this.$refs.tree.setCurrentKey(name);
       this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
       this.$nextTick(() => {
+        if (
+          node.indeterminate &&
+          !node.childNodes
+              .filter((val) => val.data.type !== this.unCheckedNodeType)
+              .find((val) => val.checked === false)
+        ) {
+          node.indeterminate = false;
+          node.checked = true;
+          this.dealParentNode(node);
+        }
         setTimeout(() => {
           const dom = document.querySelector(
               '.el-tree-node.is-current.is-focusable',
@@ -1742,6 +1795,7 @@ export default {
           return {
             label: val.name.split('/').pop(),
             ...val,
+            showCheckbox: val.type !== this.unCheckedNodeType,
           };
         });
         data.forEach((val) => {
@@ -1759,11 +1813,12 @@ export default {
           }
         });
         const node = this.$refs.tree.getNode(children.scope_name);
+        // watched 0:unchecked  1:indeterminate 2:checked
         node.childNodes.forEach((val) => {
-          if (val.data.watched === 2) {
+          if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
             val.checked = true;
           }
-          if (val.data.watched === 1) {
+          if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
             val.indeterminate = true;
           }
           if (
@@ -1802,14 +1857,16 @@ export default {
               ? false
               : true,
           ...val,
+          showCheckbox: val.type !== this.unCheckedNodeType,
         };
       });
       this.resolve(this.origialTree);
+      // watched 0:unchecked  1:indeterminate 2:checked
       this.node.childNodes.forEach((val) => {
-        if (val.data.watched === 2) {
+        if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
           val.checked = true;
         }
-        if (val.data.watched === 1) {
+        if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
           val.indeterminate = true;
         }
       });

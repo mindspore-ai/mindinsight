@@ -79,22 +79,22 @@ limitations under the License.
                          class="custom-btn"
                          @click="selectAllFiles(false)">{{ $t('public.deselectAll') }}</el-button>
             </div>
-            <el-tree v-show="treeFlag"
-                     :props="props"
-                     :load="loadNode"
-                     @node-collapse="nodeCollapse"
-                     @node-click="handleNodeClick"
-                     node-key="name"
-                     :default-checked-keys="defaultCheckedArr"
-                     :expand-on-click-node="false"
-                     :lazy="lazy"
-                     :highlight-current="true"
-                     ref="tree"
-                     @check="check"
-                     :show-checkbox="!!curWatchPointId">
+            <tree v-show="treeFlag"
+                  :props="props"
+                  :load="loadNode"
+                  @node-collapse="nodeCollapse"
+                  @node-click="handleNodeClick"
+                  node-key="name"
+                  :default-checked-keys="defaultCheckedArr"
+                  :expand-on-click-node="false"
+                  :lazy="lazy"
+                  :highlight-current="true"
+                  ref="tree"
+                  @check="check"
+                  :show-checkbox="!!curWatchPointId">
               <span class="custom-tree-node"
                     slot-scope="{ node ,data }">
-                <span>
+                <span :class="{const:data.type==='Const'}">
                   <img v-if="data.type ==='name_scope'"
                        :src="require('@/assets/images/name-scope.svg')"
                        class="image-type" />
@@ -110,7 +110,7 @@ limitations under the License.
                 </span>
                 <span class="custom-tree-node">{{ node.label }}</span>
               </span>
-            </el-tree>
+            </tree>
             <el-tree v-show="!treeFlag"
                      :props="defaultProps"
                      :load="loadSearchNode"
@@ -626,6 +626,7 @@ const d3 = {select, selectAll, zoom, dispatch};
 import RequestService from '@/services/request-service';
 import commonGraph from '../../mixins/commonGraph.vue';
 import debuggerMixin from '../../mixins/debuggerMixin.vue';
+import tree from '../../components/tree.vue';
 
 export default {
   mixins: [commonGraph, debuggerMixin],
@@ -732,9 +733,10 @@ export default {
       isCurrentGraph: true, // Check whether the new and old graphs are the same.
       expandKeys: [],
       isHitIntoView: true,
+      unCheckedNodeType: 'Const',
     };
   },
-  components: {debuggerGridTable},
+  components: {debuggerGridTable, tree},
   computed: {},
   mounted() {
     document.title = `${this.$t('debugger.debugger')}-MindInsight`;
@@ -796,23 +798,25 @@ export default {
                     ? false
                     : true,
                   ...val,
+                  showCheckbox: val.type !== this.unCheckedNodeType,
                 };
               });
               this.node.childNodes = [];
               this.resolve(this.origialTree);
+              // watched 0:unchecked  1:indeterminate 2:checked
               this.defaultCheckedArr = this.origialTree
                   .filter((val) => {
-                    return val.watched === 2;
+                    return val.watched === 2 && val.type !== this.unCheckedNodeType;
                   })
                   .map((val) => val.name);
               this.node.childNodes.forEach((val) => {
-                if (val.data.watched === 1) {
+                if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
                   val.indeterminate = true;
                 }
                 if (val.data.watched === 0) {
                   val.checked = false;
                 }
-                if (val.data.watched === 2) {
+                if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
                   val.checked = true;
                 }
               });
@@ -840,7 +844,7 @@ export default {
       if (type && !this.node.childNodes.find((val) => val.checked === false)) {
         return;
       }
-      const watchNodes = [];
+      let watchNodes = [];
       this.node.childNodes.forEach((val) => {
         if (type !== val.checked || (!type && val.indeterminate)) {
           watchNodes.push(val.data.name);
@@ -852,6 +856,9 @@ export default {
           this.dealCheckPro(val.childNodes, type);
         }
       });
+      if (type) {
+        watchNodes = this.$refs.tree.getCheckedKeys();
+      }
       if (this.curWatchPointId) {
         const params = {
           watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
@@ -902,6 +909,7 @@ export default {
                 return {
                   label: val.name.split('/').pop(),
                   ...val,
+                  showCheckbox: val.type !== this.unCheckedNodeType,
                 };
               });
               this.node.childNodes = [];
@@ -910,14 +918,15 @@ export default {
               this.$refs.tree.getCheckedKeys().forEach((val) => {
                 this.$refs.tree.setChecked(val, false);
               });
+              // watched 0:unchecked  1:indeterminate 2:checked
               this.defaultCheckedArr = this.curNodeData
                   .filter((val) => {
-                    return val.watched === 2;
+                    return val.watched === 2 && val.type !== this.unCheckedNodeType;
                   })
                   .map((val) => val.name);
               const halfSelectArr = this.curNodeData
                   .filter((val) => {
-                    return val.watched === 1;
+                    return val.watched === 1 && val.type !== this.unCheckedNodeType;
                   })
                   .map((val) => val.name);
               this.node.childNodes.forEach((val) => {
@@ -1813,6 +1822,9 @@ export default {
         }
         .custom-tree-node {
           padding-right: 8px;
+          .const {
+            margin-left: 22px;
+          }
         }
         .custom-tree-node.highlight {
           color: red;
@@ -2307,6 +2319,8 @@ export default {
         height: calc(100% - 120px);
       }
       .deb-compare-detail {
+        height: 120px;
+        overflow: auto;
         span {
           margin-right: 15px;
         }
