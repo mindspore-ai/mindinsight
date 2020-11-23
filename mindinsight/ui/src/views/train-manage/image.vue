@@ -387,7 +387,9 @@ export default {
           (res) => {
             sampleItem.showErrMsg = false;
             sampleItem.curImgUrl =
-            `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
+            `${basePath}${this.imageBasePath}train_id=${encodeURIComponent(
+                sampleItem.summaryId,
+            )}` +
             `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${
               params.step
             }&wt=${params.wt}`;
@@ -400,7 +402,9 @@ export default {
             } else {
               sampleItem.showErrMsg = false;
               sampleItem.curImgUrl =
-              `${basePath}${this.imageBasePath}train_id=${sampleItem.summaryId}` +
+              `${basePath}${this.imageBasePath}train_id=${encodeURIComponent(
+                  sampleItem.summaryId,
+              )}` +
               `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${
                 params.step
               }&wt=${params.wt}`;
