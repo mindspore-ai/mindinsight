@@ -709,7 +709,7 @@
     "viewScore": "查看评分",
     "fetch": "筛选",
     "minConfidence": "概率阈值",
-    "confidenceRange": "概率(区间)",
+    "confidenceRange": "概率（区间）",
     "imgSort": "图片排序",
     "default": "默认",
     "byProbability": "概率值降序",
