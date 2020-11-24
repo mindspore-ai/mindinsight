@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Define the watchpoint stream handler."""
-from mindinsight.conditionmgr.condition import ValueTypeEnum
+from mindinsight.debugger.conditionmgr.condition import ValueTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerParamTypeError
 from mindinsight.debugger.common.log import LOGGER as log
@@ -256,7 +256,6 @@ class WatchpointHandler(StreamHandlerBase):
                     "params": [
                         {
                             "name": "abs_mean_gt",
-                            "disable": false,
                             "value": 1.1
                         }
                     ]
@@ -403,6 +402,8 @@ class WatchpointHitHandler(StreamHandlerBase):
             node_name=value.get('node_name'),
             graph_name=value.get('graph_name')
         )
+        if 'error_code' in value.keys():
+            watchpoint_hit.error_code = value.get('error_code')
         # get all hit watchpoints according to node name ans tensor slot
         watchpoint_hits = self._get_watchpoints_by_tensor_name(watchpoint_hit.node_name,
                                                                watchpoint_hit.slot)
@@ -482,10 +483,24 @@ class WatchpointHitHandler(StreamHandlerBase):
             dict, tensor hit info.
         """
         res = {}
-        watch_points = [tensor_hit.watchpoint for tensor_hit in tensor_hits]
+        watch_points = []
+        error_codes = set()
+        for tensor_hit in tensor_hits:
+            error_code = tensor_hit.error_code
+            watchpoint = tensor_hit.watchpoint
+            watchpoint['error_code'] = error_code
+            watch_points.append(watchpoint)
+            error_codes.add(error_code)
+
+        summarized_error_code = error_codes.pop()
+        while error_codes:
+            temp = error_codes.pop()
+            summarized_error_code = summarized_error_code | temp
+
         if watch_points:
             res = {
                 'slot': slot,
+                'summarized_error_code': summarized_error_code,
                 'watch_points': watch_points
             }
         return res
@@ -608,7 +623,6 @@ def set_default_param(condition_mgr, watch_condition):
                 "params": [
                     {
                         "name": "abs_mean_gt",
-                        "disable": false,
                         "value": 1.1
                     }
                 ]
@@ -625,7 +639,6 @@ def set_default_param(condition_mgr, watch_condition):
         if not param.visible_on_ui and not param.support_disable:
             watch_condition["params"].append({
                 "name": param.name,
-                "disable": False,
                 "value": param.default_value
             })
     watch_condition["abbr"] = condition.abbr

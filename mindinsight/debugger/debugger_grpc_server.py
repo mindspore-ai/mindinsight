@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Implement the debugger grpc server."""
+import copy
+
 from functools import wraps
 
 from mindinsight.debugger.common.log import LOGGER as log
@@ -443,10 +445,22 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                 continue
             watchpoint_hit = {
                 'tensor_proto': watchpoint_hit_proto.tensor,
-                'watchpoint': watchpoint_stream.get_watchpoint_by_id(watchpoint_hit_proto.id),
+                'watchpoint': copy.deepcopy(watchpoint_stream.get_watchpoint_by_id(watchpoint_hit_proto.id)),
                 'node_name': ui_node_name,
                 'graph_name': graph_name
             }
+            hit_params = {}
+            for param in watchpoint_hit_proto.watch_condition.params:
+                if param.actual_value:
+                    hit_params[param.name] = param.actual_value
+            for i, param in enumerate(watchpoint_hit['watchpoint'].condition['params']):
+                name = param['name']
+                if name in hit_params.keys():
+                    watchpoint_hit['watchpoint'].condition['params'][i]['actual_value'] = hit_params[name]
+                else:
+                    watchpoint_hit['watchpoint'].condition['params'][i]['actual_value'] = None
+            if watchpoint_hit_proto.error_code:
+                watchpoint_hit['error_code'] = watchpoint_hit_proto.error_code
             watchpoint_hits.append(watchpoint_hit)
         self._received_hit = watchpoint_hits
         reply = get_ack_reply()

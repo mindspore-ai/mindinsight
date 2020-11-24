@@ -21,7 +21,7 @@ This module also provide the available conditions to condition_collections api.
 import math
 
 from enum import Enum
-from mindinsight.conditionmgr.log import logger
+from mindinsight.debugger.conditionmgr.log import logger
 
 
 class ConditionIdEnum(Enum):
@@ -53,9 +53,6 @@ class ConditionIdEnum(Enum):
     WEIGHT_NOT_CHANGED = "weight_not_changed"
     WEIGHT_CHANGE_TOO_LARGE = "weight_change_too_large"
     WEIGHT_CHANGE_TOO_SMALL = "weight_change_too_small"
-    TENSOR_CHANGE_TOO_LARGE = "tensor_change_too_large"
-    TENSOR_CHANGE_TOO_SMALL = "tensor_change_too_small"
-    TENSOR_NOT_CHANGED = "tensor_not_changed"
     ACTIVATION_RANGE = "activation_range"
     TENSOR_RANGE = "tensor_range"
 

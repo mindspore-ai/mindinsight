@@ -20,9 +20,9 @@ from threading import Thread
 
 import grpc
 
-from mindinsight.conditionmgr.condition import ConditionContext
-from mindinsight.conditionmgr.conditionmgr import ConditionMgr
-from mindinsight.conditionmgr.recommender import recommend_watchpoints
+from mindinsight.debugger.conditionmgr.condition import ConditionContext
+from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
+from mindinsight.debugger.conditionmgr.recommender import recommend_watchpoints
 from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.utils.tools import to_float
@@ -517,7 +517,6 @@ class DebuggerServer:
                         "params": [
                             {
                                 "name": "abs_mean_gt",
-                                "disable": false,
                                 "value": 1.1
                             }
                         ]

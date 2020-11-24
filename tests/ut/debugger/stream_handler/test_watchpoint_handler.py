@@ -25,7 +25,7 @@ from unittest import mock, TestCase
 import pytest
 from google.protobuf import json_format
 
-from mindinsight.conditionmgr.conditionmgr import ConditionMgr
+from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerParamTypeError
 from mindinsight.debugger.common.log import LOGGER as log

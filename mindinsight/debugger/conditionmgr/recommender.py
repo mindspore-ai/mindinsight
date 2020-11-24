@@ -19,11 +19,11 @@ This module predefine recommend watchpoints.
 """
 import queue as Queue
 
-from mindinsight.conditionmgr.conditionmgr import ConditionMgr
-from mindinsight.conditionmgr.condition import TargetTypeEnum
-from mindinsight.conditionmgr.condition import ConditionIdEnum
-from mindinsight.conditionmgr.common.utils import NodeBasicInfo
-from mindinsight.conditionmgr.log import logger
+from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
+from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum
+from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
+from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
+from mindinsight.debugger.conditionmgr.log import logger
 from mindinsight.conf import settings
 
 
@@ -43,7 +43,6 @@ class _WatchPointData:
             "id": self.watch_condition.get("condition"),
             "params": [{
                 "name": param.get_parameter_name(),
-                "disable": False,
                 "value": param.value
             } for param in self.watch_condition.get("params")]
         }
@@ -81,7 +80,7 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_c
         return watch_points
 
     # add weight watch points
-    merged_info = _get_basic_node_info(TargetTypeEnum.WEIGHT.value, graph_stream)
+    merged_info = get_basic_node_info(TargetTypeEnum.WEIGHT.value, graph_stream)
     _recommend_weight_initialization(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_weight_change_too_large(merged_info, condition_mgr, watch_points, condition_context)
 
@@ -92,11 +91,11 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_c
     _recommend_weight_change_too_small(condition_mgr, trainable_weight_nodes, watch_points, condition_context)
 
     # add gradient watch points
-    merged_info = _get_basic_node_info(TargetTypeEnum.GRADIENT.value, graph_stream)
+    merged_info = get_basic_node_info(TargetTypeEnum.GRADIENT.value, graph_stream)
     _recommend_gradient_vanishing(merged_info, condition_mgr, watch_points, condition_context)
 
     # add tensor watch points
-    merged_info = _get_basic_node_info(TargetTypeEnum.TENSOR.value, graph_stream)
+    merged_info = get_basic_node_info(TargetTypeEnum.TENSOR.value, graph_stream)
     _recommend_overflow_ascend_chip(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_tensor_overflow(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_tensor_all_zero(merged_info, condition_mgr, watch_points, condition_context)
@@ -272,7 +271,7 @@ def _recommend_weight_initialization(basic_info_nodes, condition_mgr, watch_poin
     watch_points.append(weight_initialization_watchpoint)
 
 
-def _get_basic_node_info(node_category, graph_stream):
+def get_basic_node_info(node_category, graph_stream):
     """Get node merged info."""
     basic_info_nodes = _get_basic_node_info_by_node_category(node_category, graph_stream)
     merged_info = _merge_nodes(basic_info_nodes, graph_stream.whole_graph)

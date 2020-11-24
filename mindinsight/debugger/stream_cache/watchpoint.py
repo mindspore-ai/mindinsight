@@ -13,12 +13,12 @@
 # limitations under the License.
 # ============================================================================
 """Define the watchpoint stream."""
-from mindinsight.conditionmgr.common.utils import NodeBasicInfo
+from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import is_scope_type
 from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD, WatchCondition
-from mindinsight.conditionmgr.condition import ConditionIdEnum
+from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
 
 
 WATCHPOINT_CONDITION_MAPPING = {
@@ -46,11 +46,8 @@ WATCHPOINT_CONDITION_MAPPING = {
     ConditionIdEnum.WEIGHT_TOO_SMALL.value: WatchCondition.Condition.tensor_too_small,
     ConditionIdEnum.GRADIENT_VANISHING.value: WatchCondition.Condition.tensor_too_small,
     ConditionIdEnum.TENSOR_ALL_ZERO.value: WatchCondition.Condition.tensor_all_zero,
-    ConditionIdEnum.TENSOR_CHANGE_TOO_LARGE.value: WatchCondition.Condition.tensor_change_too_large,
     ConditionIdEnum.WEIGHT_CHANGE_TOO_LARGE.value: WatchCondition.Condition.tensor_change_too_large,
-    ConditionIdEnum.TENSOR_CHANGE_TOO_SMALL.value: WatchCondition.Condition.tensor_change_too_small,
     ConditionIdEnum.WEIGHT_CHANGE_TOO_SMALL.value: WatchCondition.Condition.tensor_change_too_small,
-    ConditionIdEnum.TENSOR_NOT_CHANGED.value: WatchCondition.Condition.tensor_not_changed,
     ConditionIdEnum.WEIGHT_NOT_CHANGED.value: WatchCondition.Condition.tensor_not_changed
 }
 
@@ -288,7 +285,7 @@ class Watchpoint:
             param_proto = set_cmd.watch_condition.params.add()
             param_proto.name = param.get('name')
             param_proto.value = param.get('value')
-            param_proto.disabled = param.get('disable')
+            param_proto.disabled = False
 
             # Only one parameter of condition in current version.
             set_cmd.watch_condition.value = param.get('value')
@@ -317,6 +314,7 @@ class WatchpointHit:
         self.node_name = node_name
         self.slot = tensor_proto.slot
         self.graph_name = graph_name
+        self.error_code = 0
 
     @property
     def tensor_full_name(self):

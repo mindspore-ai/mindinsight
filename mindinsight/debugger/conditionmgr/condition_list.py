@@ -17,19 +17,19 @@ Condition list.
 
 This module provide the detail conditions list.
 """
-from mindinsight.conditionmgr.condition import Condition
-from mindinsight.conditionmgr.condition import OptimizePhaseEnum
-from mindinsight.conditionmgr.condition import ConditionParameter
-from mindinsight.conditionmgr.condition import ValueTypeEnum
-from mindinsight.conditionmgr.condition import TargetTypeEnum
-from mindinsight.conditionmgr.condition import PlatformEnum
-from mindinsight.conditionmgr.condition import ParamTypeEnum
-from mindinsight.conditionmgr.condition import ConditionIdEnum
-from mindinsight.conditionmgr.condition import check_initialization_available
-from mindinsight.conditionmgr.condition import check_normal_param_range
-from mindinsight.conditionmgr.condition import check_percentage_param_range
-from mindinsight.conditionmgr.condition import check_abs_param_range
-from mindinsight.conditionmgr.condition import check_not_nan
+from mindinsight.debugger.conditionmgr.condition import Condition
+from mindinsight.debugger.conditionmgr.condition import OptimizePhaseEnum
+from mindinsight.debugger.conditionmgr.condition import ConditionParameter
+from mindinsight.debugger.conditionmgr.condition import ValueTypeEnum
+from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum
+from mindinsight.debugger.conditionmgr.condition import PlatformEnum
+from mindinsight.debugger.conditionmgr.condition import ParamTypeEnum
+from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
+from mindinsight.debugger.conditionmgr.condition import check_initialization_available
+from mindinsight.debugger.conditionmgr.condition import check_normal_param_range
+from mindinsight.debugger.conditionmgr.condition import check_percentage_param_range
+from mindinsight.debugger.conditionmgr.condition import check_abs_param_range
+from mindinsight.debugger.conditionmgr.condition import check_not_nan
 
 
 CONDITION_LIST = [
@@ -570,88 +570,9 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id=ConditionIdEnum.TENSOR_CHANGE_TOO_LARGE,
-        abbr="TCL",
-        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_change_too_large
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="abs_update_ratio_mean_gt",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_abs_param_range,
-                default_value=1e-1
-            ),
-            ConditionParameter(
-                name="epsilon",
-                value_type=ValueTypeEnum.FLOAT64,
-                support_disable=False,
-                default_value=1e-9,
-                visible_on_ui=False
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 1)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.TENSOR_CHANGE_TOO_SMALL,
-        abbr="TCS",
-        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_change_too_small
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="abs_update_ratio_mean_lt",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_abs_param_range,
-                default_value=1e-4
-            ),
-            ConditionParameter(
-                name="epsilon",
-                value_type=ValueTypeEnum.FLOAT64,
-                support_disable=False,
-                default_value=1e-9,
-                visible_on_ui=False
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 1)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.TENSOR_NOT_CHANGED,
-        abbr="TNC",
-        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_not_changed
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="rtol",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_abs_param_range,
-                default_value=1e-5
-            ),
-            ConditionParameter(
-                name="atol",
-                value_type=ValueTypeEnum.FLOAT64,
-                support_disable=False,
-                default_value=1e-8,
-                visible_on_ui=False
-            ),
-            ConditionParameter(
-                name="equal_nan",
-                value_type=ValueTypeEnum.BOOL,
-                support_disable=False,
-                default_value=False,
-                visible_on_ui=False
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 1)
-    ),
-    Condition(
         condition_id=ConditionIdEnum.ACTIVATION_RANGE,
         abbr="AR",
-        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_not_changed
+        # Send this condition to MindSpore will use WatchCondition.Condition.activation_range
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
         parameters=[
             ConditionParameter(
@@ -696,7 +617,7 @@ CONDITION_LIST = [
     Condition(
         condition_id=ConditionIdEnum.TENSOR_RANGE,
         abbr="TR",
-        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_not_changed
+        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_range
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
         parameters=[
             ConditionParameter(
