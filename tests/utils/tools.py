@@ -16,12 +16,13 @@
 Description: This file is used for some common util.
 """
 import io
+import json
 import os
 import shutil
-import json
 from pathlib import Path
-
 from urllib.parse import urlencode
+
+import yaml
 import numpy as np
 from PIL import Image
 
@@ -161,3 +162,11 @@ def get_relative_path(path, base_path):
     if r_path == ".":
         r_path = ""
     return os.path.join("./", r_path)
+
+
+def convert_dict_to_yaml(value: dict, output_dir, file_name='config.yaml'):
+    """Write dict to yaml file."""
+    yaml_file = os.path.join(output_dir, file_name)
+    with open(yaml_file, 'w', encoding='utf-8') as file:
+        yaml.dump(value, file)
+    return yaml_file
