@@ -5,9 +5,11 @@
       "tensors": [
         {
           "slot": "0",
+          "summarized_error_code": 0,
           "watch_points": [
             {
               "id": 1,
+              "error_code": 0,
               "watch_condition": {
                 "condition": "MAX_GT",
                 "param": 1

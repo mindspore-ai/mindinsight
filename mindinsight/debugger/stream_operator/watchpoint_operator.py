@@ -14,8 +14,10 @@
 # ============================================================================
 """This module is aimed to deal with watchpoint commands."""
 
-from mindinsight.conditionmgr.common.utils import NodeBasicInfo
-from mindinsight.conditionmgr.condition import ConditionIdEnum
+from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
+from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum, TargetTypeEnum
+from mindinsight.debugger.conditionmgr.recommender import get_basic_node_info
+from mindinsight.debugger.stream_handler.watchpoint_handler import validate_watch_condition
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerCreateWatchPointError, DebuggerUpdateWatchPointError, \
     DebuggerDeleteWatchPointError
@@ -44,7 +46,6 @@ class WatchpointOperator:
                         "params": [
                             {
                                 "name": "abs_mean_gt",
-                                "disable": false,
                                 "value": 1.1
                             }
                         ]
@@ -73,6 +74,14 @@ class WatchpointOperator:
             node_names=params.get('watch_nodes'),
             search_pattern=params.get('search_pattern'),
             graph_name=params.get('graph_name'))
+
+        validate_watch_condition(self._condition_mgr, watch_condition)
+        condition_id = watch_condition.get('id')
+        condition = self._condition_mgr.get_condition(condition_id)
+        if condition.supported_target_type in [TargetTypeEnum.ACTIVATION, TargetTypeEnum.GRADIENT,
+                                               TargetTypeEnum.WEIGHT]:
+            watch_nodes = get_basic_node_info(condition.supported_target_type.value, self._graph_stream).copy()
+
         watchpoint_stream = self._watchpoint_stream
         watch_point_id = watchpoint_stream.create_watchpoint(
             self._condition_mgr, watch_condition, watch_nodes, params.get('watch_point_id'))

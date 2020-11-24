@@ -23,7 +23,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
-from mindinsight.conditionmgr.conditionmgr import ConditionMgr
+from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_grpc_server import DebuggerGrpcServer

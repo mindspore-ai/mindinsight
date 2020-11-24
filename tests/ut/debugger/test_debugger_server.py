@@ -190,7 +190,7 @@ class TestDebuggerServer:
     def test_create_watchpoint_with_wrong_state(self):
         """Test create watchpoint with wrong state."""
         with pytest.raises(DebuggerCreateWatchPointError, match='Failed to create watchpoint'):
-            self._server.create_watchpoint({'watch_condition': {'condition': 'INF'}})
+            self._server.create_watchpoint({'watch_condition': {'id': 'inf'}})
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
     @mock.patch.object(GraphHandler, 'get_node_basic_info', return_value=[MagicMock()])
@@ -199,7 +199,7 @@ class TestDebuggerServer:
     def test_create_watchpoint(self, *args):
         """Test create watchpoint."""
         args[0].return_value = 1
-        res = self._server.create_watchpoint({'watch_condition': {'condition': 'INF'},
+        res = self._server.create_watchpoint({'watch_condition': {'id': 'inf'},
                                               'watch_nodes': ['watch_node_name']})
         assert res == {'id': 1, 'metadata': {'enable_recheck': False, 'state': 'waiting'}}
 

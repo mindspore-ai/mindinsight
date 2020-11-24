@@ -13,8 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Define the graph stream handler."""
-from mindinsight.conditionmgr.common.utils import NodeBasicInfo
-from mindinsight.conditionmgr.condition import TargetTypeEnum as CategoryTypeEnum
+from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
+from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum as CategoryTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerNodeNotInGraphError, DebuggerGraphNotExistError
 from mindinsight.debugger.common.log import LOGGER as log
