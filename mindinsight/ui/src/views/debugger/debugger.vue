@@ -621,11 +621,11 @@ limitations under the License.
 <script>
 import {select, selectAll, zoom, dispatch} from 'd3';
 import 'd3-graphviz';
-import debuggerGridTable from '../../components/debuggerGridTableSimple.vue';
+import debuggerGridTable from '../../components/debugger-grid-table-simple.vue';
 const d3 = {select, selectAll, zoom, dispatch};
 import RequestService from '@/services/request-service';
-import commonGraph from '../../mixins/commonGraph.vue';
-import debuggerMixin from '../../mixins/debuggerMixin.vue';
+import commonGraph from '../../mixins/common-graph.vue';
+import debuggerMixin from '../../mixins/debugger-mixin.vue';
 import tree from '../../components/tree.vue';
 
 export default {

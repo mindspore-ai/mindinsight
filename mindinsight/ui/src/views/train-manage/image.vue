@@ -141,10 +141,10 @@ limitations under the License.
 </template>
 
 <script>
-import multiselectGroupComponents from '../../components/multiselectGroup.vue';
+import multiselectGroupComponents from '../../components/multiselect-group.vue';
 import RequestService from '../../services/request-service';
 import {basePath} from '@/services/fetcher';
-import autoUpdate from '../../mixins/autoUpdate.vue';
+import autoUpdate from '../../mixins/auto-update.vue';
 export default {
   mixins: [autoUpdate],
   data() {
@@ -168,13 +168,7 @@ export default {
   },
   computed: {},
   watch: {},
-  destroyed() {
-    // Stop refreshing
-    if (this.isReloading) {
-      this.$store.commit('setIsReload', false);
-      this.isReloading = false;
-    }
-  },
+  destroyed() {},
   mounted() {
     if (!this.$route.query || !this.$route.query.train_id) {
       this.$message.error(this.$t('trainingDashboard.invalidId'));

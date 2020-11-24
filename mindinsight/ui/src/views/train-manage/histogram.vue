@@ -122,12 +122,12 @@ limitations under the License.
 </template>
 
 <script>
-import multiselectGroupComponents from '../../components/multiselectGroup.vue';
+import multiselectGroupComponents from '../../components/multiselect-group.vue';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import echarts from 'echarts';
 import {format, precisionRound} from 'd3';
-import autoUpdate from '../../mixins/autoUpdate.vue';
+import autoUpdate from '../../mixins/auto-update.vue';
 const d3 = {format, precisionRound};
 export default {
   mixins: [autoUpdate],
@@ -165,11 +165,6 @@ export default {
       this.curPageArr.forEach((item) => {
         this.clearZrData(item);
       });
-    }
-    // Stop refreshing
-    if (this.isReloading) {
-      this.$store.commit('setIsReload', false);
-      this.isReloading = false;
     }
     if (this.changeAxisTimer) {
       clearTimeout(this.changeAxisTimer);

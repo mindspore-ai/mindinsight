@@ -181,11 +181,11 @@ limitations under the License.
 </template>
 
 <script>
-import multiselectGroupComponents from '../../components/multiselectGroup.vue';
-import gridTableComponents from '../../components/gridTableSimple';
-import histogramUntil from '../../components/histogramUnit';
+import multiselectGroupComponents from '../../components/multiselect-group.vue';
+import gridTableComponents from '../../components/grid-table-simple';
+import histogramUntil from '../../components/histogram-unit';
 import RequestService from '../../services/request-service';
-import autoUpdate from '../../mixins/autoUpdate.vue';
+import autoUpdate from '../../mixins/auto-update.vue';
 export default {
   mixins: [autoUpdate],
   data() {
@@ -220,11 +220,6 @@ export default {
   watch: {},
   destroyed() {
     window.removeEventListener('resize', this.resizeCallback);
-    // Stop refreshing
-    if (this.isReloading) {
-      this.$store.commit('setIsReload', false);
-      this.isReloading = false;
-    }
 
     // Cancel the delay
     this.originDataArr.forEach((sampleItem) => {

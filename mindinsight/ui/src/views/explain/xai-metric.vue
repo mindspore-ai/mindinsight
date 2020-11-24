@@ -331,7 +331,6 @@ export default {
     cellHover(row, column) {
       this.property = column.property;
     },
-    
     /**
      * The logic execute when table cell mouse leave
      */

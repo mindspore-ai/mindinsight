@@ -267,7 +267,7 @@ import {select, selectAll, format, precisionRound} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, format, precisionRound};
 import echarts from 'echarts';
-import gridTableComponents from '../../components/gridTableSimple';
+import gridTableComponents from '../../components/grid-table-simple';
 export default {
   data() {
     return {

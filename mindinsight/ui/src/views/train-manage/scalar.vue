@@ -268,8 +268,8 @@ import echarts from 'echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import ScalarCompare from './scalar-compare';
-import multiselectGroupComponents from '../../components/multiselectGroup.vue';
-import autoUpdate from '../../mixins/autoUpdate.vue';
+import multiselectGroupComponents from '../../components/multiselect-group.vue';
+import autoUpdate from '../../mixins/auto-update.vue';
 import threshold from '../../mixins/threshold.vue';
 
 export default {

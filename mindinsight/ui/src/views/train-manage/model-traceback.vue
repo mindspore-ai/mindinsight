@@ -565,7 +565,7 @@ import RequestService from '../../services/request-service';
 import CommonProperty from '@/common/common-property.js';
 import Echarts from 'echarts';
 import Scatter from '@/components/scatter';
-import modelDataFun from '../../mixins/modelData.vue';
+import modelDataFun from '../../mixins/model-data.vue';
 
 export default {
   mixins: [modelDataFun],
