@@ -538,10 +538,10 @@
     "selectDetail": "单击张量选中，双击张量查看详情",
     "operator": "算子",
     "jumpFailInformation": "跳转失败，张量信息为空",
-    "tensorMax": "最大值",
-    "tensorMin": "最小值",
     "optimizationOrientation": "调优向导",
     "tuningAdvice": "调优建议",
+    "setValue": "设置值",
+    "actualValue": "实际值",
     "tensorTuningRule": {
       "operator_real_data_validation": "真实数据单算子验证",
       "loss_overflow": "检查loss值溢出（NAN，INF）",
@@ -569,7 +569,20 @@
       "tensor_all_zero": "检查张量是否全为0",
       "tensor_change_too_large": "检查张量变化过大",
       "tensor_change_too_small": "检查张量变化过小",
-      "tensor_not_changed": "检查未变化张量"
+      "tensor_not_changed": "检查未变化张量",
+      "zero_percentage_ge": "0值比例>=",
+      "abs_mean_gt": "绝对值的平均值>",
+      "abs_mean_lt": "绝对值的平均值<",
+      "range_start_inclusive": "范围下界（含）",
+      "range_end_inclusive": "范围上界（含）",
+      "range_percentage_lt": "在范围中的值所占百分比<",
+      "range_percentage_gt": "在范围中的值所占百分比>",
+      "rtol": "相对容忍度",
+      "abs_updata_ratio_mean_gt": "变化比例绝对值的平均值>",
+      "abs_updata_ratio_mean_lt": "变化比例绝对值的平均值<",
+      "param": "阈值",
+      "max_min_lt": "MAX-MIN>",
+      "max_min_gt": "MAX-MIN<"
     },
     "tensorTuningAdvice": {
       "operator_real_data_validation": [
@@ -698,7 +711,14 @@
     "noAdvice": "没有可用的建议",
     "curStep": "显示当前step",
     "preStep": "显示上一step",
-    "compareResult": "显示对比结果"
+    "compareResult": "显示对比结果",
+    "recommendTip": "是否使用推荐监测点?",
+    "recommendDetail": "推荐监测点包括针对张量全为零、梯度消失、权重更新过大等现象的监测点，有助于您更快发现训练中存在的问题。",
+    "use": "使用",
+    "notUse": "不使用",
+    "outdateTip": "监测点列表发生修改，结果可能过时，请重新检查或执行后续step训练。",
+    "versionConflictTip": "Mindspore和Mindinsight版本不匹配，Mindspore版本：{msv}；Mindinsight版本：{miv}；",
+    "checkTips": "提示：张量中含有{msg}，无法进行数值检查。"
   },
   "explain": {
     "explain": "模型解释",

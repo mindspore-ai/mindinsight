@@ -21,6 +21,15 @@ limitations under the License.
            v-show="!leftShow">
         <div class="header">
           {{radio1==='tree' ? $t('debugger.nodeList') : $t('debugger.curHitNode')}}
+          <div class="outdate-tip"
+               v-if="hitsOutdated && radio1==='hit'">
+            <el-tooltip class="item"
+                        effect="light"
+                        :content="$t('debugger.outdateTip')"
+                        placement="top">
+              <i class="el-icon-warning"></i>
+            </el-tooltip>
+          </div>
           <div class="radio-tabs">
             <el-radio-group v-model="radio1"
                             size='mini'
@@ -119,6 +128,8 @@ limitations under the License.
                      :default-checked-keys="searchCheckedArr"
                      :expand-on-click-node="false"
                      @node-click="handleNodeClick"
+                     :show-checkbox="!!curWatchPointId"
+                     @check="searchCheck"
                      ref="searchTree">
               <span class="custom-tree-node"
                     slot-scope="{ node ,data }">
@@ -200,7 +211,12 @@ limitations under the License.
                 <template slot-scope="props">
                   <ul>
                     <li v-for="(i, index) in props.row.lists"
-                        :key="index">{{i.name}}</li>
+                        :key="index">{{i.name}}
+                      <div class="hit-tip"
+                           v-if="i.tip">
+                        <i class="el-icon-warning"></i>{{i.tip}}
+                      </div>
+                    </li>
                   </ul>
                 </template>
               </el-table-column>
@@ -229,7 +245,6 @@ limitations under the License.
                         @keyup.native.enter="control(0)">
               </el-input>
             </el-tooltip>
-
             <el-button type="primary"
                        size="mini"
                        class="custom-btn green"
@@ -378,16 +393,19 @@ limitations under the License.
                         <el-button size="mini"
                                    type="text"
                                    v-if="scope.row.value === 'click to view'"
-                                   @click="viewValueDetail(scope.row)">
+                                   @click="showTensor(scope.row,'value')">
                           {{ $t('debugger.view') }}
                         </el-button>
                         <span v-else
                               class="value-tip"
-                              :title="isNaN(scope.row.value)?'':scope.row.value">{{ scope.row.value }}</span>
+                              :class="{point:!isNaN(scope.row.value)}"
+                              :title="isNaN(scope.row.value)?'':scope.row.value"
+                              @click="isNaN(scope.row.value)?'javascript:;':showTensor(scope.row,'value')">
+                          {{ scope.row.value }}</span>
                         <el-button size="mini"
                                    type="text"
                                    :disabled="!scope.row.has_prev_step"
-                                   @click="tensorComparisons(scope.row)">
+                                   @click="showTensor(scope.row,'compare')">
                           {{ $t('debugger.compareToPre') }}
                         </el-button>
                       </div>
@@ -429,89 +447,9 @@ limitations under the License.
     </div>
     <div class="deb-con"
          v-if="tensorCompareFlag">
-      <div class="deb-con-title">
-        <div class="deb-con-title-left"
-             :title="curRowObj.name">
-          {{ curRowObj.name }}
-        </div>
-        <div class="deb-con-title-middle">
-          MIN
-          <div class="grident">0</div>
-          MAX
-        </div>
-        <div class="deb-con-title-right">
-          <div class="close-btn">
-            <img src="@/assets/images/close-page.png"
-                 @click="tensorCompareFlag=false;dims=null;tolerance=0;">
-          </div>
-        </div>
-
-      </div>
-      <div class="deb-con-slide">
-        <div class="deb-con-slide-left"
-             v-if="gridType === 'compare'">
-          <div class="deb-slide-title">{{ $t('debugger.tolerance') }}</div>
-          <div class="deb-slide-width">
-            <el-slider v-model="tolerance"
-                       :format-tooltip="formatTolenrance"
-                       @change="tensorComparisons(curRowObj,dims)"
-                       @input="toleranceInputChange()"></el-slider>
-          </div>
-          <div class="deb-slide-input">
-            <el-input v-model="toleranceInput"
-                      @input="toleranceValueChange"
-                      @keyup.native.enter="tensorComparisons(curRowObj,dims)"></el-input>
-          </div>
-        </div>
-        <div class="deb-con-slide-right">
-          <el-button size="mini"
-                     class="custom-btn"
-                     :class="{green:gridType==='value'}"
-                     @click="tabChange('value')">{{ $t('debugger.curValue') }}</el-button>
-          <el-button size="mini"
-                     class="custom-btn"
-                     :class="{green:gridType==='compare'}"
-                     :disabled="!curRowObj.has_prev_step"
-                     @click="tabChange('compare')">{{ $t('debugger.compareToPre') }}</el-button>
-        </div>
-      </div>
-
-      <div class="deb-con-table">
-        <div class="deb-compare-wrap">
-          <debuggerGridTable v-if="gridType==='value'"
-                             :fullData="tensorValue"
-                             :showFilterInput="showFilterInput"
-                             ref="tensorValue"
-                             gridType="value"
-                             @martixFilterChange="tensorFilterChange($event)">
-          </debuggerGridTable>
-          <debuggerGridTable v-else
-                             :fullData="tensorValue"
-                             :showFilterInput="showFilterInput"
-                             ref="tensorValue"
-                             gridType="compare"
-                             @martixFilterChange="tensorFilterChange($event)">
-          </debuggerGridTable>
-        </div>
-        <div class="deb-compare-detail">
-          <span>{{ $t('tensors.dimension') }} {{ curRowObj.shape }}</span>
-          <div v-for="(statistics,key) in statisticsArr"
-               :key="key">
-            <label v-if="key===0">{{$t('debugger.curStatisticsLabel')}}<span>{{ metadata.step }}</span></label>
-            <label v-if="key===1">{{$t('debugger.preStatisticsLabel')}}<span>{{ metadata.step-1 }}</span></label>
-            <label v-if="key===2">{{$t('debugger.diffStatisticsLabel')}}</label>
-            <span>{{ $t('debugger.max') }} {{ statistics.overall_max }}</span>
-            <span>{{ $t('debugger.min') }} {{ statistics.overall_min }}</span>
-            <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg }}</span>
-            <span>{{ $t('debugger.nan') }} {{ statistics.overall_nan_count }}</span>
-            <span>{{ $t('debugger.negativeInf') }} {{ statistics.overall_neg_inf_count }}</span>
-            <span>{{ $t('debugger.inf') }} {{ statistics.overall_pos_inf_count }}</span>
-            <span>{{ $t('debugger.zero') }} {{ statistics.overall_zero_count }}</span>
-            <span>{{ $t('debugger.negativeNum') }} {{ statistics.overall_neg_zero_count }}</span>
-            <span>{{ $t('debugger.positiveNum') }} {{ statistics.overall_pos_zero_count }}</span>
-          </div>
-        </div>
-      </div>
+      <debugger-tensor :row="curRowObj"
+                       ref="deb-tensor"
+                       @close="tensorCompareFlag=false"></debugger-tensor>
     </div>
     <el-dialog :title="$t('debugger.createWP')"
                :visible.sync="createWPDialogVisible"
@@ -519,7 +457,7 @@ limitations under the License.
                :close-on-click-modal="false"
                :modal-append-to-body="false"
                class="creat-watch-point-dialog"
-               width="900px">
+               width="870px">
 
       <div class="conditions-container">
         <div class="condition-item"
@@ -551,7 +489,8 @@ limitations under the License.
             <el-option v-for="i in item.param.options"
                        :key="i.name"
                        :label="transCondition(i.name)"
-                       :value="i.name">
+                       :value="i.name"
+                       v-show="i.paran_type !== 'SUPPORT_PARAM'">
             </el-option>
           </el-select>
 
@@ -574,6 +513,33 @@ limitations under the License.
                        :value="false">
             </el-option>
           </el-select>
+
+          <div class="inclusive-param"
+               v-if="item.compositeParams.selections.length">
+            <div class="item"
+                 v-for="(i, index) in item.compositeParams.selections"
+                 :key="index">
+              {{transCondition(i.name)}}
+
+              <el-input v-model="item.compositeParams.selections[index].value"
+                        :placeholder="$t('scalar.placeHolderNumber')"
+                        v-if="i.type !== 'BOOL'"
+                        @input="validateParam(item)"
+                        class="param-value"></el-input>
+              <el-select v-model="i.value"
+                         v-if="i.type === 'BOOL'"
+                         class="param-value">
+                <el-option :key="true"
+                           label="true"
+                           :value="true">
+                </el-option>
+                <el-option :key="false"
+                           label="false"
+                           :value="false">
+                </el-option>
+              </el-select>
+            </div>
+          </div>
         </div>
       </div>
       <span slot="footer"
@@ -616,16 +582,70 @@ limitations under the License.
                    @click="toSummeryList()">{{$t('debugger.toSummeryList')}}</el-button>
       </span>
     </el-dialog>
+
+    <el-dialog :title="$t('debugger.recommendTip')"
+               :visible.sync="recommendWatchPointDialog"
+               :show-close="false"
+               :close-on-click-modal="false"
+               :modal-append-to-body="false"
+               class="pendingTips"
+               width="420px">
+
+      <span class="dialog-icon">
+        <span class="el-icon-warning"></span>
+      </span>
+      <span class="dialog-content">{{ $t('debugger.recommendDetail') }}</span>
+
+      <span slot="footer"
+            class="dialog-footer">
+        <el-button type="primary"
+                   size="mini"
+                   class="custom-btn green"
+                   @click="initRecommendWatchPoints(true)">
+          {{$t('debugger.use')}}
+        </el-button>
+        <el-button type="primary"
+                   size="mini"
+                   class="custom-btn"
+                   @click="initRecommendWatchPoints(false)">
+          {{ $t('debugger.notUse') }}
+        </el-button>
+      </span>
+
+    </el-dialog>
+    <el-dialog :title="$t('public.notice')"
+               :visible.sync="conflictFlag"
+               :show-close="false"
+               :close-on-click-modal="false"
+               :modal-append-to-body="false"
+               class="pendingTips"
+               width="420px">
+
+      <span class="dialog-icon">
+        <span class="el-icon-warning"></span>
+      </span>
+      <span class="dialog-content">
+        {{ $t('debugger.versionConflictTip',{msv:debuggerVersion.ms,miv:debuggerVersion.mi}) }}
+      </span>
+      <span slot="footer"
+            class="dialog-footer">
+        <el-button type="primary"
+                   size="mini"
+                   class="custom-btn green"
+                   @click="control(2)">{{$t('public.sure')}}</el-button>
+      </span>
+    </el-dialog>
+
   </div>
 </template>
 <script>
 import {select, selectAll, zoom, dispatch} from 'd3';
 import 'd3-graphviz';
-import debuggerGridTable from '../../components/debugger-grid-table-simple.vue';
 const d3 = {select, selectAll, zoom, dispatch};
 import RequestService from '@/services/request-service';
 import commonGraph from '../../mixins/common-graph.vue';
 import debuggerMixin from '../../mixins/debugger-mixin.vue';
+import debuggerTensor from '@/components/debugger-tensor.vue';
 import tree from '../../components/tree.vue';
 
 export default {
@@ -733,18 +753,19 @@ export default {
       isCurrentGraph: true, // Check whether the new and old graphs are the same.
       expandKeys: [],
       isHitIntoView: true,
+      searchedWord: '',
+      trainId: '',
+      recommendWatchPointDialog: false,
+      hitsOutdated: false,
       unCheckedNodeType: 'Const',
+      conflictFlag: false,
+      debuggerVersion: {},
     };
   },
-  components: {debuggerGridTable, tree},
+  components: {debuggerTensor, tree},
   computed: {},
   mounted() {
     document.title = `${this.$t('debugger.debugger')}-MindInsight`;
-    window.addEventListener(
-        'resize',
-        this.debounce(this.resizeCallback, 200),
-        false,
-    );
     this.nodeTypes.label = this.$t('debugger.nodeType');
   },
   watch: {
@@ -764,11 +785,23 @@ export default {
         } else {
           this.dialogVisible = false;
         }
+        if (newValue === 'mismatch') {
+          this.conflictFlag = true;
+        } else {
+          this.conflictFlag = false;
+        }
       },
       deep: true,
     },
   },
   methods: {
+    showTensor(row, type) {
+      this.curRowObj = row;
+      this.curRowObj.type = type;
+      this.curRowObj.curFileName = this.graphFiles.value;
+      this.curRowObj.step = this.metadata.step;
+      this.tensorCompareFlag = true;
+    },
     queryGraphByFile() {
       this.searchWord = '';
       this.nodeTypes.value = 'all';
@@ -793,10 +826,7 @@ export default {
               this.origialTree = res.data.graph.nodes.map((val) => {
                 return {
                   label: val.name.split('/').pop(),
-                  leaf:
-                  val.type === 'name_scope' || val.type === 'aggregation_scope'
-                    ? false
-                    : true,
+                  leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                   ...val,
                   showCheckbox: val.type !== this.unCheckedNodeType,
                 };
@@ -834,11 +864,7 @@ export default {
       );
     },
     selectAllFiles(type) {
-      if (
-        !type &&
-        !this.$refs.tree.getCheckedKeys().length &&
-        !this.$refs.tree.getHalfCheckedKeys().length
-      ) {
+      if (!type && !this.$refs.tree.getCheckedKeys().length && !this.$refs.tree.getHalfCheckedKeys().length) {
         return;
       }
       if (type && !this.node.childNodes.find((val) => val.checked === false)) {
@@ -968,9 +994,7 @@ export default {
         param = `(${param})`;
       }
 
-      const str = `${this.$t('debugger.watchPoint')} ${
-        item.id
-      }: ${this.transCondition(item.condition)} ${param}`;
+      const str = `${this.$t('debugger.watchPoint')} ${item.id}: ${this.transCondition(item.condition)} ${param}`;
       return str;
     },
     /** ************************ graph **********************/
@@ -1031,10 +1055,8 @@ export default {
       };
 
       this.graph.minScale =
-        Math.min(
-            this.svg.rect.width / 2 / graphRect.width,
-            this.svg.rect.height / 2 / graphRect.height,
-        ) * this.graph.transform.k;
+        Math.min(this.svg.rect.width / 2 / graphRect.width, this.svg.rect.height / 2 / graphRect.height) *
+        this.graph.transform.k;
 
       this.startApp();
     },
@@ -1071,14 +1093,7 @@ export default {
     initContextMenu() {
       this.contextmenu.dom = document.querySelector('#contextMenu');
       const svgDom = document.querySelector('#graph svg');
-      const ignoreType = [
-        'Parameter',
-        'Const',
-        'Depend',
-        'make_tuple',
-        'tuple_getitem',
-        'ControlDepend',
-      ];
+      const ignoreType = ['Parameter', 'Const', 'Depend', 'make_tuple', 'tuple_getitem', 'ControlDepend'];
 
       const dispatch = d3
           .dispatch('start', 'contextmenu')
@@ -1088,12 +1103,8 @@ export default {
           })
           .on('contextmenu', (target) => {
             const svgRect = svgDom.getBoundingClientRect();
-            this.contextmenu.dom.style.left = `${
-              this.contextmenu.point.x - svgRect.x
-            }px`;
-            this.contextmenu.dom.style.top = `${
-              this.contextmenu.point.y - svgRect.y
-            }px`;
+            this.contextmenu.dom.style.left = `${this.contextmenu.point.x - svgRect.x}px`;
+            this.contextmenu.dom.style.top = `${this.contextmenu.point.y - svgRect.y}px`;
             this.contextmenu.dom.style.display = 'block';
 
             this.selectedNode.name = target.name;
@@ -1105,9 +1116,7 @@ export default {
           'contextmenu',
           (target, index, nodesList) => {
             event.preventDefault();
-            const node = this.allGraphData[
-                nodesList[index].id.replace('_unfold', '')
-            ];
+            const node = this.allGraphData[nodesList[index].id.replace('_unfold', '')];
             if (node) {
               if (
                 !(
@@ -1211,9 +1220,7 @@ export default {
      * @param {String} name Name of the current node.
      */
     queryGraphData(name) {
-      const type = this.allGraphData[name]
-        ? this.allGraphData[name].type
-        : 'name_scope';
+      const type = this.allGraphData[name] ? this.allGraphData[name].type : 'name_scope';
       const mode = name ? 'node' : 'all';
       const params = {
         mode: mode,
@@ -1268,9 +1275,7 @@ export default {
     dealGraphData(nodes, name) {
       const namescopeChildLimit = 3500;
       const nodesCountLimit = name ? this.nodesCountLimit : namescopeChildLimit;
-      const independentLayout = this.allGraphData[name]
-        ? this.allGraphData[name].independent_layout
-        : false;
+      const independentLayout = this.allGraphData[name] ? this.allGraphData[name].independent_layout : false;
 
       if (!independentLayout && nodes.length > nodesCountLimit) {
         this.$message.error(this.$t('graph.tooManyNodes'));
@@ -1307,9 +1312,7 @@ export default {
      */
     selectNode(needFocus = false, isQueryTensor) {
       window.getSelection().removeAllRanges();
-      d3.selectAll(
-          '.node polygon, .node ellipse, .node rect, .node path',
-      ).classed('selected', false);
+      d3.selectAll('.node polygon, .node ellipse, .node rect, .node path').classed('selected', false);
       const path = this.selectedNode.name.split('^');
       const node = {};
       let id = path[0].replace('_unfold', '');
@@ -1325,9 +1328,7 @@ export default {
             this.selectNodePosition(id, needDelay);
           }
 
-          d3.select(`#graph g[id="${id}"]`)
-              .select('polygon, rect, ellipse, path')
-              .classed('selected', true);
+          d3.select(`#graph g[id="${id}"]`).select('polygon, rect, ellipse, path').classed('selected', true);
 
           this.highlightProxyNodes(id.replace('_unfold', ''));
           this.highLightEdges(node.data);
@@ -1336,9 +1337,7 @@ export default {
           if (this.isIntoView) {
             this.$nextTick(() => {
               setTimeout(() => {
-                const dom = document.querySelector(
-                    '.el-tree-node.is-current.is-focusable',
-                );
+                const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
                 if (dom) {
                   dom.scrollIntoView();
                 }
@@ -1348,21 +1347,14 @@ export default {
           this.isIntoView = true;
           const type = this.allGraphData[path[0].replace('_unfold', '')].type;
           const ignoreType = ['name_scope', 'aggregation_scope'];
-          if (
-            isQueryTensor &&
-            !this.selectedNode.name.includes('more...') &&
-            !ignoreType.includes(type)
-          ) {
+          if (isQueryTensor && !this.selectedNode.name.includes('more...') && !ignoreType.includes(type)) {
             if (this.graph.timer) {
               clearTimeout(this.graph.timer);
             }
             this.graph.timer = setTimeout(() => {
               const name = path[0].replace('_unfold', '');
               if (this.graphFiles.value === this.$t('debugger.all')) {
-                this.retrieveTensorHistory(
-                    {name: name.replace(`${name.split('/')[0]}/`, '')},
-                    name.split('/')[0],
-                );
+                this.retrieveTensorHistory({name: name.replace(`${name.split('/')[0]}/`, '')}, name.split('/')[0]);
               } else {
                 this.retrieveTensorHistory(
                     {
@@ -1377,10 +1369,7 @@ export default {
             this.tableData = [];
           } else {
             if (this.graphFiles.value === this.$t('debugger.all')) {
-              this.nodeName = this.selectedNode.name.replace(
-                  `${this.selectedNode.name.split('/')[0]}/`,
-                  '',
-              );
+              this.nodeName = this.selectedNode.name.replace(`${this.selectedNode.name.split('/')[0]}/`, '');
             } else {
               this.nodeName = this.selectedNode.name;
             }
@@ -1388,11 +1377,7 @@ export default {
         }
       }
       this.setSelectedNodeData(node.data);
-      if (
-        this.watchPointHits.length &&
-        this.radio1 === 'hit' &&
-        this.isHitIntoView
-      ) {
+      if (this.watchPointHits.length && this.radio1 === 'hit' && this.isHitIntoView) {
         this.focusWatchpointHit();
       }
       this.isHitIntoView = true;
@@ -1445,25 +1430,16 @@ export default {
       graphObj.initHeight = graphObj.rect.height / this.graph.transform.k;
 
       const screenChange = {
-        x:
-          nodeRect.left +
-          nodeRect.width / 2 -
-          (this.svg.rect.left + this.svg.rect.width / 2),
-        y:
-          nodeRect.top +
-          nodeRect.height / 2 -
-          (this.svg.rect.top + this.svg.rect.height / 2),
+        x: nodeRect.left + nodeRect.width / 2 - (this.svg.rect.left + this.svg.rect.width / 2),
+        y: nodeRect.top + nodeRect.height / 2 - (this.svg.rect.top + this.svg.rect.height / 2),
       };
 
-      this.graph.transform.x -=
-        screenChange.x * (this.svg.originSize.width / graphObj.initWidth);
-      this.graph.transform.y -=
-        screenChange.y * (this.svg.originSize.height / graphObj.initHeight);
+      this.graph.transform.x -= screenChange.x * (this.svg.originSize.width / graphObj.initWidth);
+      this.graph.transform.y -= screenChange.y * (this.svg.originSize.height / graphObj.initHeight);
 
       this.graph.dom.setAttribute(
           'transform',
-          `translate(${this.graph.transform.x},` +
-          `${this.graph.transform.y}) scale(${this.graph.transform.k})`,
+          `translate(${this.graph.transform.x},` + `${this.graph.transform.y}) scale(${this.graph.transform.k})`,
       );
 
       const transitionTime = Math.min(
@@ -1514,10 +1490,7 @@ export default {
           this.selectNode(true, isQueryTensor);
         } else {
           const parentId = name.substring(0, name.lastIndexOf('/'));
-          if (
-            this.allGraphData[parentId] &&
-            this.allGraphData[parentId].isUnfold
-          ) {
+          if (this.allGraphData[parentId] && this.allGraphData[parentId].isUnfold) {
             const aggregationNode = this.allGraphData[parentId];
             if (aggregationNode && aggregationNode.childIdsList) {
               for (let i = 0; i < aggregationNode.childIdsList.length; i++) {
@@ -1552,10 +1525,7 @@ export default {
         } else {
           // If the namespace is a namespace and the number of subnodes exceeds the upper limit,
           // an error is reported and the namespace is selected.
-          if (
-            this.allGraphData[data.scope_name].type === 'name_scope' &&
-            data.nodes.length > this.nodesCountLimit
-          ) {
+          if (this.allGraphData[data.scope_name].type === 'name_scope' && data.nodes.length > this.nodesCountLimit) {
             this.selectedNode.name = data.scope_name;
             this.querySingleNode(data, data.scope_name, true);
             this.selectNode(true, true);
@@ -1564,27 +1534,18 @@ export default {
             // Normal expansion
             const nodes = JSON.parse(JSON.stringify(data.nodes));
             this.packageDataToObject(data.scope_name, true, nodes);
-            if (
-              this.allGraphData[data.scope_name].type === 'aggregation_scope'
-            ) {
+            if (this.allGraphData[data.scope_name].type === 'aggregation_scope') {
               this.dealAggregationNodes(data.scope_name);
               const aggregationNode = this.allGraphData[data.scope_name];
               if (aggregationNode) {
                 for (let i = 0; i < aggregationNode.childIdsList.length; i++) {
-                  if (
-                    aggregationNode.childIdsList[i].includes(
-                        this.selectedNode.name,
-                    )
-                  ) {
+                  if (aggregationNode.childIdsList[i].includes(this.selectedNode.name)) {
                     aggregationNode.index = i;
                     break;
                   }
                 }
               }
-              if (
-                this.allGraphData[data.scope_name].maxChainNum >
-                this.maxChainNum
-              ) {
+              if (this.allGraphData[data.scope_name].maxChainNum > this.maxChainNum) {
                 this.selectedNode.name = data.scope_name;
                 this.allGraphData[data.scope_name].isUnfold = false;
                 this.deleteNamespace(data.scope_name);
@@ -1607,16 +1568,9 @@ export default {
      * @param {Object} error Error data
      */
     showErrorMsg(error) {
-      if (
-        error &&
-        error.response &&
-        error.response.data &&
-        error.response.data.error_code
-      ) {
+      if (error && error.response && error.response.data && error.response.data.error_code) {
         if (this.$t('error')[`${error.response.data.error_code}`]) {
-          this.$message.error(
-              this.$t('error')[`${error.response.data.error_code}`],
-          );
+          this.$message.error(this.$t('error')[`${error.response.data.error_code}`]);
         } else {
           if (error.response.data.error_code === '5054B101') {
             // The error "The graph does not exist" should not display in front page;
@@ -1642,13 +1596,7 @@ export default {
       }, 500);
     },
   },
-  destroyed() {
-    window.removeEventListener(
-        'resize',
-        this.debounce(this.resizeCallback, 200),
-        false,
-    );
-  },
+  destroyed() {},
 };
 </script>
 <style lang="scss">
@@ -1684,6 +1632,15 @@ export default {
           position: absolute;
           right: 10px;
           top: 10px;
+        }
+        .outdate-tip {
+          display: inline-block;
+          margin-left: 7px;
+          .el-icon-warning {
+            color: #e6a23c;
+            font-size: 16px;
+            cursor: pointer;
+          }
         }
       }
       .content {
@@ -1750,7 +1707,6 @@ export default {
             .el-icon-circle-check {
               color: #00a5a7;
               cursor: pointer;
-              display: none;
             }
             .disable:before {
               cursor: not-allowed;
@@ -1856,6 +1812,15 @@ export default {
                 border-bottom: 1px solid white;
                 &:hover {
                   background-color: #ebeef5;
+                }
+                .hit-tip {
+                  margin-top: 10px;
+                  font-size: 12px;
+                  .el-icon-warning {
+                    font-size: 14px;
+                    color: #e6a23c;
+                    padding-right: 4px;
+                  }
                 }
               }
             }
@@ -2010,7 +1975,7 @@ export default {
           }
           .plain > path,
           .plain ellipse {
-            stroke: #e37d29;
+            stroke: #e6a23c;
             fill: #ffd0a6;
             stroke-dasharray: 1.5, 1.5;
           }
@@ -2099,6 +2064,9 @@ export default {
           vertical-align: middle;
           text-align: center;
         }
+        .value-tip.point {
+          cursor: pointer;
+        }
         .el-table--border {
           border-right: none;
           border-left: none;
@@ -2171,17 +2139,21 @@ export default {
     .collection {
       width: 200px;
     }
-    .condition {
-      margin-left: 10px;
-      width: 200px;
-    }
-    .param {
-      margin-left: 10px;
-      width: 200px;
-    }
+    .condition,
+    .param,
     .param-value {
       margin-left: 10px;
       width: 200px;
+    }
+    .inclusive-param {
+      text-align: right;
+      .item {
+        margin-top: 10px;
+        display: inline-block;
+      }
+      .item + .item {
+        margin-left: 10px;
+      }
     }
   }
   .el-dialog__wrapper.pendingTips {
@@ -2189,7 +2161,7 @@ export default {
     .dialog-icon {
       .el-icon-warning {
         font-size: 24px;
-        color: #e37d29;
+        color: #e6a23c;
         vertical-align: bottom;
       }
     }
@@ -2215,124 +2187,6 @@ export default {
     height: 100%;
     background-color: #fff;
     z-index: 999;
-    display: flex;
-    flex-direction: column;
-
-    .deb-con-title {
-      height: 56px;
-      line-height: 56px;
-      flex-shrink: 0;
-      position: relative;
-
-      .deb-con-title-left {
-        position: absolute;
-        left: 32px;
-        font-weight: bold;
-        font-size: 16px;
-        width: 50%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .deb-con-title-middle {
-        position: absolute;
-        left: calc(50% + 32px);
-        width: 300px;
-        padding: 10px 0;
-        line-height: 36px;
-        .grident {
-          display: inline-block;
-          width: calc(100% - 70px);
-          background-image: linear-gradient(
-            to right,
-            rgba(227, 125, 41),
-            #fff,
-            rgba(0, 165, 167)
-          );
-          text-align: center;
-          color: transparent;
-        }
-      }
-      .deb-con-title-right {
-        position: absolute;
-        right: 32px;
-
-        .close-btn {
-          width: 20px;
-          height: 20px;
-          vertical-align: -3px;
-          cursor: pointer;
-          display: inline-block;
-          line-height: 20px;
-          margin-left: 32px;
-        }
-      }
-    }
-
-    .deb-con-slide {
-      height: 40px;
-      line-height: 40px;
-      flex-shrink: 0;
-      position: relative;
-
-      .deb-con-slide-left {
-        position: absolute;
-        left: 32px;
-        display: flex;
-
-        .deb-slide-title {
-          margin-right: 20px;
-        }
-
-        .deb-slide-width {
-          width: 400px;
-        }
-        .deb-slide-input {
-          width: 100px;
-          margin-left: 10px;
-        }
-      }
-      .deb-con-slide-right {
-        position: absolute;
-        right: 32px;
-
-        .custom-btn {
-          border: 1px solid #00a5a7;
-          border-radius: 2px;
-        }
-        .green {
-          background-color: #00a5a7;
-          color: white;
-        }
-        .white {
-          background-color: white;
-          color: #00a5a7;
-        }
-      }
-    }
-
-    .deb-con-table {
-      margin-top: 20px;
-      flex: 1;
-      padding: 0 32px;
-      .deb-compare-wrap {
-        height: calc(100% - 120px);
-      }
-      .deb-compare-detail {
-        height: 120px;
-        overflow: auto;
-        span {
-          margin-right: 15px;
-        }
-        & > div {
-          margin-top: 10px;
-        }
-        label {
-          display: inline-block;
-          min-width: 100px;
-        }
-      }
-    }
   }
 }
 .deb-indent {

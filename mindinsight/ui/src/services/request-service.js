@@ -433,4 +433,25 @@ export default {
       params: params,
     });
   },
+  tensorHitsData(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/debugger/tensor-hits',
+      params: params,
+    });
+  },
+  getTensorGraphData(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/debugger/tensor-graphs',
+      params: params,
+    });
+  },
+  setRecommendWatchPoints(params) {
+    return axios({
+      method: 'post',
+      url: `v1/mindinsight/conditionmgr/train-jobs/${params.trainId}/set-recommended-watch-points`,
+      data: params.body,
+    });
+  },
 };
