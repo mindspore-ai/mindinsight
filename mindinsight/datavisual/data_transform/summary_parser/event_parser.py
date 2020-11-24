@@ -88,7 +88,8 @@ class EventParser:
             start_offset = file_handler.offset
             try:
                 event_str = _SummaryParser.event_load(file_handler)
-                self._print_process(file_handler)
+                if start_offset != file_handler.offset:
+                    self._print_process(file_handler)
                 crc_check_time = 0
                 if event_str is None:
                     return True
