@@ -434,7 +434,7 @@ class TestGPUDebugger:
     @pytest.mark.parametrize("url, body_data, enable_recheck", [
         ('create_watchpoint',
          {'condition': {'id': 'inf', 'params': []},
-          'watch_nodes': ['Default']}, False),
+          'watch_nodes': ['Default']}, True),
         ('create_watchpoint',
          {'condition': {'id': 'inf', 'params': []},
           'watch_nodes': ['Default/TransData-op99']}, True),
@@ -443,7 +443,7 @@ class TestGPUDebugger:
           'mode': 0}, True),
         ('update_watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum'],
-          'mode': 1}, False),
+          'mode': 1}, True),
         ('update_watchpoint',
          [{'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum'],
            'mode': 1},
