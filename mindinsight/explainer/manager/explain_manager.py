@@ -133,7 +133,6 @@ class ExplainManager:
                     return
                 time.sleep(repeat_interval)
             except UnknownError as ex:
-                logger.exception(ex)
                 logger.error('Unexpected error happens when loading data. Loading status: %s, loading pool size: %d'
                              'Detail: %s', self._loading_status, len(self._loader_pool), str(ex))
 
