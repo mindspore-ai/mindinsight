@@ -20,7 +20,8 @@ from mindinsight.lineagemgr.model import filter_summary_lineage, get_flattened_l
 from mindinsight.lineagemgr.common.exceptions.exceptions import LineageSummaryParseException, \
     LineageQuerierParamException, LineageQuerySummaryDataError, LineageSearchConditionParamError, LineageParamTypeError
 from mindinsight.lineagemgr.common.path_parser import SummaryPathParser
-from ...st.func.lineagemgr.test_model import LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2
+from tests.st.func.lineagemgr.test_model import LINEAGE_FILTRATION_EXCEPT_RUN, \
+    LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2
 
 
 class TestFilterAPI(TestCase):
@@ -84,9 +85,9 @@ class TestFilterAPI(TestCase):
     def test_get_lineage_table(self, mock_filter_summary_lineage):
         """Test get_flattened_lineage with valid param."""
         mock_data = {
-            'object': [LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2]
+            'object': [LINEAGE_FILTRATION_EXCEPT_RUN, LINEAGE_FILTRATION_RUN1, LINEAGE_FILTRATION_RUN2]
         }
         mock_data_manager = MagicMock()
         mock_filter_summary_lineage.return_value = mock_data
         result = get_flattened_lineage(mock_data_manager)
-        assert result.get('[U]info') == ['info1', None]
+        assert result.get('[U]info') == [None, 'info1', 'info1']

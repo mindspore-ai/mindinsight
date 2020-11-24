@@ -108,16 +108,7 @@ class TestModelLineage(TestCase):
         res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=self._search_condition)
         assert res.get('object')[0].get('model_lineage', {}).get('epoch') == 14
 
-    @pytest.mark.scene_eval(3)
-    @pytest.mark.level0
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.env_single
-    def test_eval_end(self):
-        """Test the end function in EvalLineage."""
-        eval_callback = EvalLineage(self.summary_record, True, {'eval_version': 'version2'})
+        eval_callback = EvalLineage(self.summary_record, True, self.user_defined_info)
         eval_run_context = self.run_context
         eval_run_context['metrics'] = {'accuracy': 0.78}
         eval_run_context['valid_dataset'] = self.run_context['train_dataset']
@@ -152,7 +143,7 @@ class TestModelLineage(TestCase):
                 SUMMARY_DIR_2,
                 f'train_out.events.summary.{str(int(time.time()) + 2*i)}.ubuntu_lineage'
             )
-            train_callback = TrainLineage(summary_record, True)
+            train_callback = TrainLineage(summary_record, True, self.user_defined_info)
             train_callback.begin(RunContext(self.run_context))
             train_callback.end(RunContext(self.run_context))
 
@@ -160,7 +151,7 @@ class TestModelLineage(TestCase):
                 SUMMARY_DIR_2,
                 f'eval_out.events.summary.{str(int(time.time())+ 2*i + 1)}.ubuntu_lineage'
             )
-            eval_callback = EvalLineage(eval_record, True)
+            eval_callback = EvalLineage(eval_record, True, {'eval_version': 'version2'})
             eval_run_context = self.run_context
             eval_run_context['metrics'] = {'accuracy': 0.78 + i + 1}
             eval_run_context['valid_dataset'] = self.run_context['train_dataset']
@@ -169,7 +160,7 @@ class TestModelLineage(TestCase):
         file_num = os.listdir(SUMMARY_DIR_2)
         assert len(file_num) == 8
 
-    @pytest.mark.scene_train(2)
+    @pytest.mark.scene_train(3)
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
