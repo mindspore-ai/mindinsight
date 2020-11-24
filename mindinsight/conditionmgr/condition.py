@@ -18,6 +18,8 @@ Management of all conditions.
 This module is used to register all conditions, as well as their parameters.
 This module also provide the available conditions to condition_collections api.
 """
+import math
+
 from enum import Enum
 from mindinsight.conditionmgr.log import logger
 
@@ -54,6 +56,8 @@ class ConditionIdEnum(Enum):
     TENSOR_CHANGE_TOO_LARGE = "tensor_change_too_large"
     TENSOR_CHANGE_TOO_SMALL = "tensor_change_too_small"
     TENSOR_NOT_CHANGED = "tensor_not_changed"
+    ACTIVATION_RANGE = "activation_range"
+    TENSOR_RANGE = "tensor_range"
 
 
 class OptimizePhaseEnum(Enum):
@@ -83,6 +87,12 @@ class TargetTypeEnum(Enum):
     WEIGHT = 'weight'
     ACTIVATION = 'activation'
     GRADIENT = 'gradient'
+
+
+class ParamTypeEnum(Enum):
+    """Param types."""
+    CHECK_PARAM = "CHECK_PARAM"
+    SUPPORT_PARAM = "SUPPORT_PARAM"
 
 
 class ConditionContext:
@@ -126,16 +136,20 @@ class ConditionParameter:
         support_disable (bool): whether the param support no assignment.
         default_value (float): default value.
         visible_on_ui (bool): whether the param visible on ui.
+        param_type (ParamTypeEnum): parameters type.
+        required_params (list): the list of required parameters.
     """
 
     def __init__(self, name, value_type: ValueTypeEnum, valid_test_func=None, support_disable=True, default_value=None,
-                 visible_on_ui=True):
+                 visible_on_ui=True, param_type=ParamTypeEnum.CHECK_PARAM, required_params=None):
         self._name = name
         self._type = value_type
         self._valid_test_func = valid_test_func
         self._support_disable = support_disable
         self._default_value = default_value
         self._visible_on_ui = visible_on_ui
+        self._param_type = param_type.value
+        self._required_params = required_params
 
     @property
     def name(self):
@@ -162,6 +176,16 @@ class ConditionParameter:
         """Get visible_on_ui of parameter."""
         return self._visible_on_ui
 
+    @property
+    def param_type(self):
+        """Get param_type of parameter."""
+        return self._param_type
+
+    @property
+    def required_params(self):
+        """Get required_param of parameter."""
+        return self._required_params
+
     def is_valid(self, value):
         """Check is the parameter valid."""
         if self._valid_test_func is None:
@@ -174,7 +198,7 @@ class Condition:
     The class for parameters of conditions.
 
     Args:
-        condition_id (str): condition id.
+        condition_id (ConditionIdEnum): condition id.
         abbr (str): the abbreviation of condition id.
         optimize_phase (OptimizePhaseEnum): optimize phase.
         parameters (List[ConditionParameter]): parameters.
@@ -185,7 +209,7 @@ class Condition:
     """
     def __init__(self, condition_id, abbr, optimize_phase, parameters, supported_target_type, supported_platforms,
                  minimum_debugger_capability, availability_test_func=None):
-        self.id = condition_id
+        self.id = condition_id.value
         self._abbr = abbr
         self.optimize_phase = optimize_phase
         self._parameters = {
@@ -258,3 +282,7 @@ def check_abs_param_range(value):
     if 0 <= value < float("inf"):
         return True
     return False
+
+
+def check_not_nan(value):
+    return not math.isnan(value)
