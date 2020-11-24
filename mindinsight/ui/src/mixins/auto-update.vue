@@ -114,6 +114,11 @@ export default {
       clearInterval(this.autoUpdateTimer);
       this.autoUpdateTimer = null;
     }
+    // Stop refreshing
+    if (this.isReloading) {
+      this.$store.commit('setIsReload', false);
+      this.isReloading = false;
+    }
   },
 };
 </script>

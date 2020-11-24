@@ -487,8 +487,8 @@ import RequestService from '@/services/request-service';
 import {select, selectAll, zoom} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom};
-import commonGraph from '../../mixins/commonGraph.vue';
-import smallMap from '../../mixins/smallMap.vue';
+import commonGraph from '../../mixins/common-graph.vue';
+import smallMap from '../../mixins/small-map.vue';
 
 export default {
   mixins: [commonGraph, smallMap],

@@ -134,8 +134,8 @@ limitations under the License.
 import echarts from 'echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
-import multiSelectGroupComponents from '../../components/multiselectGroup.vue';
-import autoUpdate from '../../mixins/autoUpdate.vue';
+import multiSelectGroupComponents from '../../components/multiselect-group.vue';
+import autoUpdate from '../../mixins/auto-update.vue';
 
 export default {
   mixins: [autoUpdate],
