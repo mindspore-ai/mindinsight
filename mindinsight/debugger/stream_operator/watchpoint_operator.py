@@ -87,7 +87,7 @@ class WatchpointOperator:
             self._condition_mgr, watch_condition, watch_nodes, params.get('watch_point_id'))
         log.info("Create watchpoint %d", watch_point_id)
 
-        metadata_stream.enable_recheck = watchpoint_stream.is_recheckable(metadata_stream.backend)
+        metadata_stream.enable_recheck = watchpoint_stream.is_recheckable()
         res = metadata_stream.get(['state', 'enable_recheck'])
         res['id'] = watch_point_id
         return res
@@ -140,7 +140,7 @@ class WatchpointOperator:
             search_pattern=params.get('search_pattern'),
             graph_name=params.get('graph_name'))
         watchpoint_stream.update_watchpoint(watch_point_id, watch_nodes, params.get('mode'))
-        metadata_stream.enable_recheck = watchpoint_stream.is_recheckable(metadata_stream.backend)
+        metadata_stream.enable_recheck = watchpoint_stream.is_recheckable()
         log.info("Update watchpoint with id: %d", watch_point_id)
         return metadata_stream.get(['state', 'enable_recheck'])
 

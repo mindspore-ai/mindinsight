@@ -13,13 +13,15 @@
 # limitations under the License.
 # ============================================================================
 """Define the watchpoint stream."""
-from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
+
+import copy
+
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import is_scope_type
-from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD, WatchCondition
+from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
-
+from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD, WatchCondition
 
 WATCHPOINT_CONDITION_MAPPING = {
     ConditionIdEnum.NAN.value: WatchCondition.Condition.nan,
@@ -109,7 +111,7 @@ class WatchNodeTree:
         return self._children.get(sub_name)
 
     def get_children(self):
-        """Get all childrens."""
+        """Get all children."""
         for name_scope, sub_watch_node in self._children.items():
             yield name_scope, sub_watch_node
 
@@ -198,13 +200,17 @@ class Watchpoint:
         """The property of watch condition."""
         return self._condition
 
-    def copy_nodes_from(self, other_watchpoint):
+    def copy_nodes_from(self, other_watchpoint, deep_copy=False):
         """
         Copy nodes from other watchpoint.
         Args:
             other_watchpoint (Watchpoint): Other watchpoint.
+            deep_copy (bool): Whether using deepcopy.
         """
-        self._watch_node = other_watchpoint.nodes
+        if deep_copy:
+            self._watch_node = copy.deepcopy(other_watchpoint.nodes)
+        else:
+            self._watch_node = other_watchpoint.nodes
 
     def add_nodes(self, nodes):
         """Add node into watchpoint."""

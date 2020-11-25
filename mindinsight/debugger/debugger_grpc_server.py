@@ -99,7 +99,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def _pre_process(self, request):
         """Pre-process before dealing with command."""
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
-        watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
         is_new_step = metadata_stream.step < request.cur_step
         is_new_node = metadata_stream.full_name != request.cur_node
         # clean cache data at the beginning of new step or node has been changed.
@@ -108,15 +107,12 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         if is_new_step:
             self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
             self._cache_store.get_stream_handler(Streams.TENSOR).clean_tensors(request.cur_step)
-            watchpoint_stream.clean_temp_cached_names()
         # receive graph at the beginning of the training
         if self._status == ServerStatus.RECEIVE_GRAPH:
             self._send_graph_flag(metadata_stream)
         # receive new metadata
         if is_new_step or is_new_node:
             self._update_metadata(metadata_stream, request)
-        # save the full name of the node which MindSpore has stored the tensor.
-        watchpoint_stream.add_temp_cached_name(request.cur_node)
         self._send_received_tensor_tag()
         self._send_watchpoint_hit_flag()
 
