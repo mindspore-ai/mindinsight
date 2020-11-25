@@ -92,6 +92,13 @@ class ParamTypeEnum(Enum):
     SUPPORT_PARAM = "SUPPORT_PARAM"
 
 
+class ActivationFuncEnum(Enum):
+    """Activation functions."""
+    TANH = 'Tanh'
+    SIGMOID = 'Sigmoid'
+    RELU = 'ReLU'
+
+
 class ConditionContext:
     """
     The class for condition context.

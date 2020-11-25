@@ -84,11 +84,14 @@ class DebuggerServer:
 
     def set_recommended_watch_points(self, set_recommended, train_id):
         """set recommended watch points."""
+        if not isinstance(set_recommended, bool):
+            log.error("Bool param should be given for set_recommended")
+            raise DebuggerParamValueError("Bool param should be given.")
         metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
         condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step, (1, 0))
         log.debug("Train_id: %s, backend: %s", train_id, condition_context.backend)
         res = metadata_stream.get(['state', 'enable_recheck'])
-        if set_recommended:
+        if set_recommended and not metadata_stream.recommendation_confirmed:
             res['id'] = self._add_recommended_watchpoints(condition_context)
         metadata_stream.recommendation_confirmed = True
         return res
@@ -104,6 +107,7 @@ class DebuggerServer:
             watch_points_id = watch_point_stream_handler.create_watchpoint(
                 watch_condition=watchpoint.get_watch_condition_dict(),
                 watch_nodes=watchpoint.watch_nodes,
+                name=watchpoint.name,
                 condition_mgr=self.condition_mgr
             )
             watch_points_ids.append(watch_points_id)
