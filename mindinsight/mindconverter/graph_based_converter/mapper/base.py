@@ -87,7 +87,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         module_name = TABLE.get(op_name)
 
         if not module_name:
-            return None, dict(), dict()
+            return None, dict(), None, dict()
 
         pos = module_name.rfind(".")
         try:
@@ -101,7 +101,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             # If mapper can not be found, then skip it.
             err_msg = f"Converting {op_name} failed, see {str(e)}"
             log.error(err_msg)
-            return None, dict(), dict()
+            return None, dict(), None, dict()
 
         try:
             converter_name = op_name_converter(
@@ -110,13 +110,13 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             converted_weights = weights_converter(
                 weights=weights) if weights else dict()
             converted_params.update(converted_weights)
-            converted_settings = settings_converter(params=params)
+            converted_settings = settings_converter(params=params, weights=weights)
         except (AttributeError, KeyError, ValueError, TypeError, IndexError) as e:
             err_msg = f"Converting {op_name} failed, see {str(e)}"
             log.error(err_msg)
-            return None, dict(), dict()
+            return None, dict(), None, dict()
 
-        return converter_name, converted_params, converted_settings
+        return converter_name, converted_params, converted_settings, converted_weights
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):

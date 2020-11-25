@@ -14,6 +14,7 @@
 # ==============================================================================
 """Mapper module."""
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting
 
 
 class BatchNormMapper(ONNXToMindSporeMapper):
@@ -39,4 +40,4 @@ class BatchNormMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_settings(**kwargs):
-        return dict()
+        return Setting()

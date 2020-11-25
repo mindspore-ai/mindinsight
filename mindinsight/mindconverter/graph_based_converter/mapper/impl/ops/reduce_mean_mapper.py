@@ -14,6 +14,7 @@
 # ==============================================================================
 """Mapper module."""
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting
 
 
 class ReduceMeanMapper(ONNXToMindSporeMapper):
@@ -40,4 +41,4 @@ class ReduceMeanMapper(ONNXToMindSporeMapper):
             axis = params['axes'][0] if len(params['axes']) == 1 else tuple(params['axes'])
         else:
             axis = tuple()
-        return {'values': {'axis': axis}}
+        return Setting(op_extra_input={'axis': axis})

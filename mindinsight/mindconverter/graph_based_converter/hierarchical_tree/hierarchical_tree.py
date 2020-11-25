@@ -25,16 +25,17 @@ from treelib import Tree, Node
 from mindinsight.mindconverter.common.log import logger as log
 
 from .name_mgr import ModuleNameMgr, GlobalVarNameMgr
+from ..common.utils import is_converted
 from ..mapper.base import Mapper
 from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
-from ..constant import SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVEL_INDENT, CodeFormatConfig
+from ..constant import SEPARATOR_IN_SCOPE
+from ..constant import CodeFormatConfig
+from ..constant import SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVEL_INDENT
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT
 from ..constant import NodeType
 from ..report_generator import ReportGenerator
 from ...common.exceptions import NodeTypeNotSupport
-
-GLOBAL_VAR_NAME_MGR = GlobalVarNameMgr()
 
 
 class HierarchicalTree(Tree):
@@ -45,6 +46,8 @@ class HierarchicalTree(Tree):
 
     _root_created = False
     ROOT_LEVEL = 0
+
+    GLOBAL_VAR_NAME_MGR = GlobalVarNameMgr()
 
     def __init__(self):
         super(HierarchicalTree, self).__init__()
@@ -62,6 +65,7 @@ class HierarchicalTree(Tree):
         self._module_vars = dict()
         # scope name mapping record for easy node searching
         self._scope_name_map = dict()
+        self.code_fragment_recorder = dict()
 
     @property
     def tree_identifier(self):
@@ -82,19 +86,15 @@ class HierarchicalTree(Tree):
                 return None
         return self._nodes[nid]
 
-    def insert(self, node: Union[PyTorchGraphNode, OnnxGraphNode],
-               node_name: str, input_shape, output_shape):
+    def insert(self, node: Union[PyTorchGraphNode, OnnxGraphNode], node_name: str):
         """
         Insert node into hierarchical tree.
 
         Args:
             node_name (str): Node name.
             node (Union[PyTorchGraphNode, OnnxGraphNode]): Node to be inserted.
-            output_shape (tuple): Output tensor shape.
-            input_shape (tuple): Input tensor shape.
 
         """
-        node.add_input_and_output_shape(input_shape, output_shape)
         scopes = node_name.split(SEPARATOR_IN_SCOPE)
         for idx, scope in enumerate(scopes):
             parent = SEPARATOR_IN_SCOPE.join(scopes[:idx])
@@ -125,10 +125,9 @@ class HierarchicalTree(Tree):
                 tgt_node.precursor_nodes = node.precursor_nodes
                 tgt_node.node_type = (NodeType.OPERATION if idx == len(scopes) - 1
                                       else NodeType.MODULE).value
-                tgt_node.tag = scope.split(SEPARATOR_BTW_NAME_AND_ID)[0]
                 tgt_node.variable_name = self._get_var_name(identifier)
                 self.create_node(
-                    tag=tgt_node.tag,
+                    tag=scope.split(SEPARATOR_BTW_NAME_AND_ID)[0],
                     identifier=identifier,
                     parent=parent,
                     data=tgt_node
@@ -276,8 +275,7 @@ class HierarchicalTree(Tree):
                     node.data.replace_with_arg(arg, arg)
         return node
 
-    @staticmethod
-    def _clear_unused_args(node, used_args):
+    def _clear_unused_args(self, node, used_args):
         """
         Clear unused args.
 
@@ -290,7 +288,9 @@ class HierarchicalTree(Tree):
         """
         args_in_code = list(node.data.args_in_code.keys())
         for arg in args_in_code:
-            ori_arg = arg.replace(f"_{node.data.variable_name}", "")
+            ori_arg = arg.replace(
+                f"_{self.code_fragment_recorder[node.identifier].declared_var_name}", ""
+            )
             if ori_arg not in used_args:
                 node.data.args_in_code.pop(arg)
         return node
@@ -323,6 +323,8 @@ class HierarchicalTree(Tree):
                 # 1. Generate args for each node in this level.
                 if node.data.node_type == NodeType.MODULE.value:
                     self._create_module_args_and_vars(node, mapper)
+                if depth == depths[-1]:
+                    self.code_fragment_recorder[node.identifier] = node.data.param_transform(mapper, "")
 
         # Module merging based on all nodes.
         self._module_merging()
@@ -345,30 +347,29 @@ class HierarchicalTree(Tree):
                     # then assign the created module name to current node,
                     # and delete unused args.
                     module_name = self._created_module[module_key]
-                    nd_inst.data.froze_node_type_and_module_name(node_type,
-                                                                 module_name)
+                    self.code_fragment_recorder[nd_inst.identifier].operation = module_name
+                    self.code_fragment_recorder[nd_inst.identifier].node_type = node_type
                     self._preprocess_node_args(nd_inst, module_key)
                     continue
 
-                module_name = nd_inst.data.module_name
+                module_name = nd_inst.tag
+
                 if node_type == NodeType.CLASS.value:
                     module_name = f"{module_name[0].upper()}{module_name[1:]}"
 
                 # After node_type and module_name is frozen,
                 # then it's unchangeable.
                 module_name = self._module_mgr.get_name(module_name)
-                nd_inst.data.froze_node_type_and_module_name(node_type,
-                                                             module_name)
+                self.code_fragment_recorder[nd_inst.identifier].operation = module_name
+                self.code_fragment_recorder[nd_inst.identifier].node_type = node_type
 
                 # 3. Pre-process node args.
                 nd_inst = self._preprocess_node_args(nd_inst, module_key)
                 # 4. Post-process child node args.
                 for _, scsr_nd_name in enumerate(nd_inst.successors(self.tree_identifier)):
-                    self._postprocess_node_args(
-                        self.get_node(scsr_nd_name), module_key)
+                    self._postprocess_node_args(self.get_node(scsr_nd_name), module_key)
                 # 5. Generate code.
-                snippets.add(
-                    func(nd_inst, nd_inst.data.module_name, module_key))
+                snippets.add(func(nd_inst, self.code_fragment_recorder[nd_inst.identifier].operation, module_key))
 
             code_blocks.extend(snippets)
 
@@ -437,7 +438,7 @@ class HierarchicalTree(Tree):
         module_list = []
         for node_name in node.successors(self.tree_identifier):
             c_nd = self.get_node(node_name)
-            operator = c_nd.data.op_in_ms or c_nd.data.module_name
+            operator = self.code_fragment_recorder[c_nd.identifier].operation
 
             if c_nd.data.node_type != NodeType.OPERATION.value:
                 hash_key = c_nd.data.hash_key or self.hash_key(c_nd)
@@ -445,14 +446,16 @@ class HierarchicalTree(Tree):
                     operator = self._created_module[hash_key]
 
             args = c_nd.data.args_in_code
-            if c_nd.data.node_type == NodeType.OPERATION.value and \
-                    not c_nd.data.convert_successful():
+            if c_nd.data.node_type == NodeType.OPERATION.value and not is_converted(
+                    self.code_fragment_recorder[c_nd.identifier].operation):
                 args.update({"input_shape": c_nd.data.input_shape,
                              "output_shape": c_nd.data.output_shape})
 
             # Generate code statement.
-            expr = ", ".join([f"{k.replace(f'_{c_nd.data.variable_name}', '')}={v}"
-                              for k, v in args.items()])
+            expr = ", ".join(
+                [f"{k.replace(f'_{self.code_fragment_recorder[c_nd.identifier].declared_var_name}', '')}={v}"
+                 for k, v in args.items()]
+            )
             code_line = f"{operator}({expr})"
             module_list.append(code_line)
 
@@ -547,14 +550,16 @@ class HierarchicalTree(Tree):
 
         if idx != 0:
             # Get previous node output variable name.
-            ipt_args_in_construct = self._get_previous_opt_var(
-                cur_nd_inst, pre_nd_inst)
+            ipt_args_in_construct = self._get_previous_opt_var(cur_nd_inst, pre_nd_inst)
         if idx != len(pre_nd_inst.successors(self.tree_identifier)) - 1:
             # Set opt variable name.
-            opt_arg_in_construct = cur_nd_inst.data.opt_var_name
+            opt_arg_in_construct = f"{self.code_fragment_recorder[cur_nd_inst.identifier].declared_var_name}_opt"
 
         declare, call = cur_nd_inst.data.to_code(ipt_args_in_construct=ipt_args_in_construct,
-                                                 output_var=opt_arg_in_construct)
+                                                 variable_name=self.code_fragment_recorder[
+                                                     cur_nd_inst.identifier].declared_var_name,
+                                                 output_var=opt_arg_in_construct,
+                                                 code_fragment=self.code_fragment_recorder[cur_nd_inst.identifier])
 
         return declare, call
 
@@ -588,7 +593,9 @@ class HierarchicalTree(Tree):
             if e not in pre_nd.successors(self.tree_identifier):
                 while True:
                     if p_nd.identifier in pre_nd.successors(self.tree_identifier):
-                        ipt_lst.append(p_nd.data.opt_var_name)
+                        ipt_lst.append(
+                            f"{self.code_fragment_recorder[p_nd.identifier].declared_var_name}_opt"
+                        )
                         break
                     pre_nd_name = p_nd.predecessor(self.tree_identifier)
                     if not pre_nd_name:
@@ -597,7 +604,9 @@ class HierarchicalTree(Tree):
                     p_nd = self.get_node(pre_nd_name)
                 continue
 
-            ipt_lst.append(p_nd.data.opt_var_name)
+            ipt_lst.append(
+                f"{self.code_fragment_recorder[p_nd.identifier].declared_var_name}_opt"
+            )
         return ipt_lst
 
     def _get_previous_opt_var(self, cur_nd, pre_nd):
@@ -619,12 +628,11 @@ class HierarchicalTree(Tree):
                 cur_nd = self.get_node(p_nd[0])
         return ", ".join(self._find_all_previous_opt_var_(cur_nd, pre_nd))
 
-    def hash_key(self, node, depth: int = 0):
+    def hash_key(self, node):
         """
         Generate hash key for each node.
 
         Args:
-            depth (int): Recursion depth.
             node (Node): Node.
 
         Returns:
@@ -633,13 +641,17 @@ class HierarchicalTree(Tree):
         scsr_topo_order = []
         for s in node.successors(self.tree_identifier):
             cur_nd = self.get_node(s)
-            if cur_nd.data.hash_key:
-                scsr_topo_order.append(f"{cur_nd.data.hash_key}[{depth}]")
-                continue
             if cur_nd.data.node_type in {NodeType.MODULE.value,
                                          NodeType.FUNC.value,
                                          NodeType.CLASS.value}:
-                scsr_topo_order.append(self.hash_key(cur_nd, depth + 1))
+                if cur_nd.data.hash_key:
+                    scsr_topo_order.append(f"({cur_nd.data.hash_key})")
+                    continue
+
+                raise ValueError("Current node doesn't have hash key.")
+
+            if cur_nd.data.hash_key:
+                scsr_topo_order.append(cur_nd.data.hash_key)
                 continue
         unique_key = "->".join(scsr_topo_order)
         node.data.hash_key = unique_key
@@ -675,12 +687,11 @@ class HierarchicalTree(Tree):
         """
         # All args and value pair in current node module.
         module_args = dict()
-        module_settings = dict()
         module_key = self.hash_key(node)
         created = False
 
         if module_key not in self._vars_mgr_in_module:
-            self._vars_mgr_in_module[module_key] = GLOBAL_VAR_NAME_MGR
+            self._vars_mgr_in_module[module_key] = self.GLOBAL_VAR_NAME_MGR
             self._module_vars[module_key] = []
         else:
             created = True
@@ -688,33 +699,29 @@ class HierarchicalTree(Tree):
         # Sub-modules in the module could have arg name conflicts.
         for idx, successor_name in enumerate(node.successors(self.tree_identifier)):
             nd_inst = self.get_node(successor_name)
-            # Generate variable name here, then
-            # to generate args.
-            if created:
-                nd_inst.data.variable_name = self._module_vars[module_key][idx]
-            else:
-                variable_name = nd_inst.data.op_name or nd_inst.data.module_name
-                variable_name = self._vars_mgr_in_module[module_key].get_name(
-                    variable_name)
-                nd_inst.data.variable_name = variable_name
-
             # Generation of params must behind variable assigment.
-            nd_inst.data.param_transform(mapper)
+            if created:
+                variable_name = self._module_vars[module_key][idx]
+            else:
+                variable_name = nd_inst.data.op_name or nd_inst.tag
+                variable_name = self._vars_mgr_in_module[module_key].get_name(variable_name)
+
+            code_fragment = nd_inst.data.param_transform(mapper, variable_name)
+            code_fragment.declared_var_name = variable_name
+            self.code_fragment_recorder[nd_inst.identifier] = code_fragment
 
             module_args.update(nd_inst.data.args_in_code)
-            module_settings.update(nd_inst.data.settings_in_code)
 
             if not created:
-                self._module_vars[module_key].append(
-                    nd_inst.data.variable_name)
+                self._module_vars[module_key].append(variable_name)
 
         node.data.args_in_code = module_args
 
         # Collect module args of `module_key`.
         if module_key not in self._merged_module:
-            self._merged_module[module_key] = [node.data.args_in_code]
+            self._merged_module[module_key] = [deepcopy(node.data.args_in_code)]
         else:
-            self._merged_module[module_key].append(node.data.args_in_code)
+            self._merged_module[module_key].append(deepcopy(node.data.args_in_code))
 
     @staticmethod
     def _create_operation_args(node, mapper):

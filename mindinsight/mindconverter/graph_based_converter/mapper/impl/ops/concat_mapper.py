@@ -15,6 +15,7 @@
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.constant import InputType
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting
 
 
 class ConcatMapper(ONNXToMindSporeMapper):
@@ -36,4 +37,4 @@ class ConcatMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_settings(**kwargs):
         input_type = InputType.LIST.value
-        return {'input_type': input_type}
+        return Setting(op_ipt_type=input_type)

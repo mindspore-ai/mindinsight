@@ -16,6 +16,7 @@
 import re
 import numpy as np
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting
 
 
 def _convert_padding(**kwargs):
@@ -35,6 +36,7 @@ def _convert_padding(**kwargs):
 
 class ConvMapper(ONNXToMindSporeMapper):
     """Conv2d mapper."""
+
     @staticmethod
     def convert_params_torch(**kwargs):
         """Convert params from PyTorch to MindSpore"""
@@ -148,4 +150,4 @@ class ConvMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_settings(**kwargs):
-        return dict()
+        return Setting()

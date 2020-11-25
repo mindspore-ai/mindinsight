@@ -12,26 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Mapper module."""
-from ...base import ONNXToMindSporeMapper
-from ...gen_setting import Setting
+"""Operation mapping setting."""
+from collections import namedtuple
+import numpy as np
+
+from mindinsight.mindconverter.graph_based_converter.constant import InputType
+
+Tensor = namedtuple("Tensor", ["shape", "dtype", "reference"])
+
+Setting = namedtuple("Setting", ["opt_vars_suffix",
+                                 "op_ipt_type",
+                                 "op_extra_input",
+                                 "op_extra_tensor"])
+Setting.__new__.__defaults__ = ("_opt", InputType.TENSOR.value, dict(), None)
 
 
-class FlattenMapper(ONNXToMindSporeMapper):
-    """Flatten mapper."""
-
-    @staticmethod
-    def _operation_name_in_ms(*args, **kwargs):
-        return "nn.Flatten"
-
-    @staticmethod
-    def _convert_params(**kwargs):
-        return dict()
-
-    @staticmethod
-    def _convert_trained_weights(**kwargs):
-        return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        return Setting()
+def get_dtype(tensor: np.ndarray):
+    """Get tensor dtype."""
+    if tensor.dtype == np.float16:
+        return "mindspore.float16"
+    return "mindspore.float32"

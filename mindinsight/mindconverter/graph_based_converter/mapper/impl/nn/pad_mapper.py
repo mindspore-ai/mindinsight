@@ -14,6 +14,7 @@
 # ==============================================================================
 """Mapper module."""
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting
 
 
 def _padding_format_convert(padding: list):
@@ -77,4 +78,4 @@ class PadMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_settings(**kwargs):
-        return dict()
+        return Setting()

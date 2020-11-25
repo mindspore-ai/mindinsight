@@ -87,7 +87,8 @@ def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=None
                              inputs_as_nchw=None
                              )
     opt_map = getattr(optimizer.back_to_back_optimizer, '_func_map')
-    opt_map.pop(('Conv', 'BatchNormalization'))
+    if ('Conv', 'BatchNormalization') in opt_map:
+        opt_map.pop(('Conv', 'BatchNormalization'))
     onnx_graph = optimizer.optimize_graph(g)
     model_proto = onnx_graph.make_model("converted from {}".format(model_path))
 
@@ -228,8 +229,7 @@ class OnnxNode(BaseNode):
     """
 
     def __init__(self, raw_node):
-        super(OnnxNode, self).__init__(
-            node_name=raw_node.name, op_type=raw_node.op_type)
+        super(OnnxNode, self).__init__(node_name=raw_node.name, op_type=raw_node.op_type)
         self.raw_node = raw_node
         self.params = ParamsAttribute(raw_node.attribute, raw_node)
         self.scope_name = None

@@ -21,24 +21,18 @@ from ..constant import SEPARATOR_IN_SCOPE, NodeType
 
 class InputNode(GraphNode):
     """
-    Pytorch Input Node.
+    PyTorch Input Node.
 
     Args:
         input_shape: Input shape of module.
 
     """
 
-    def convert_successful(self):
-        """
-        Whether convert successful.
+    def _get_arg_name(self, arg, variable_name):
+        raise NotImplementedError()
 
-        Returns:
-            bool, true or false.
-        """
-        return False
-
-    def froze_node_type_and_module_name(self, node_type, module_name):
-        pass
+    def to_code(self, ipt_args_in_construct: str, variable_name: str, output_var: str, code_fragment):
+        raise NotImplementedError()
 
     def _get_raw_params(self, node):
         pass
@@ -54,9 +48,6 @@ class InputNode(GraphNode):
         pass
 
     def replace_with_arg(self, src_arg, tgt_arg):
-        pass
-
-    def _get_arg_name(self, arg):
         pass
 
     def add_input_and_output_shape(self, input_shape, output_shape):
@@ -116,15 +107,8 @@ class InputNode(GraphNode):
     def real_name(self):
         return
 
-    @property
-    def variable_name(self):
-        return
-
     def to_ir(self):
         """
         No need to implement for now.
         """
-        raise NotImplementedError()
-
-    def to_code(self, ipt_args_in_construct: str, output_var: str):
         raise NotImplementedError()

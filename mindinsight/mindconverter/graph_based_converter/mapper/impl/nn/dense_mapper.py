@@ -14,6 +14,7 @@
 # ==============================================================================
 """Mapper module."""
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting
 
 
 class DenseMapper(ONNXToMindSporeMapper):
@@ -41,4 +42,4 @@ class DenseMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_settings(**kwargs):
-        return dict()
+        return Setting()
