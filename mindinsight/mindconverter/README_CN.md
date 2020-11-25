@@ -79,7 +79,7 @@ optional arguments:
 
 ### PyTorch模型脚本迁移
 
-**MindConverter提供两种PyTorch模型脚本迁移方案：**
+#### MindConverter提供两种PyTorch模型脚本迁移方案：
 
 1. **基于抽象语法树(Abstract syntax tree, AST)的脚本转换**：指定`--in_file`的值，将使用基于AST的脚本转换方案；
 2. **基于图结构的脚本生成**：指定`--model_file`与`--shape`将使用基于图结构的脚本生成方案。
@@ -92,8 +92,7 @@ optional arguments:
 
 另外，当使用基于图结构的脚本生成方案时，请确保原PyTorch项目已在Python包搜索路径中，可通过CLI进入Python交互式命令行，通过import的方式判断是否已满足；若未加入，可通过`--project_path`命令手动将项目路径传入，以确保MindConverter可引用到原PyTorch脚本。
 
-> 假设用户项目目录为`/home/user/project/model_training`，用户可通过如下命令手动项目添加至包搜索路径中：`export PYTHONPATH=/home/user/project/model_training:$PYTHONPATH`
-
+> 假设用户项目目录为`/home/user/project/model_training`，用户可通过如下命令手动项目添加至包搜索路径中：`export PYTHONPATH=/home/user/project/model_training:$PYTHONPATH`；
 > 此处MindConverter需要引用原PyTorch脚本，是因为PyTorch模型反向序列化过程中会引用原脚本。
 
 ### TensorFlow模型脚本迁移
@@ -101,7 +100,6 @@ optional arguments:
 **MindConverter提供基于图结构的脚本生成方案**：指定`--model_file`、`--shape`、`--input_node`、`--output_node`进行脚本迁移。
 
 > AST方案不支持TensorFlow模型脚本迁移，TensorFlow脚本迁移仅支持基于图结构的方案。
-
 
 ## 使用场景
 
@@ -120,9 +118,9 @@ MindConverter提供两种技术方案，以应对不同脚本迁移场景：
 > 2. 基于图结构的脚本生成方案，由于要加载PyTorch、TensorFlow模型，会导致转换后网络中Dropout算子丢失，需要用户手动补齐；
 > 3. 基于图结构的脚本生成方案持续优化中。
 
-支持网络列表:   
+支持的模型列表（如下模型已基于x86 Ubuntu发行版，PyTorch 1.4.0以及TensorFlow 1.15.0测试通过）:
 
-|  支持网络 | PyTorch脚本 | TensorFlow脚本 |
+|  模型  | PyTorch脚本 | TensorFlow脚本 |
 | :----: | :----: | :----: |
 | ResNet18 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |
 | ResNet34 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |
@@ -235,11 +233,11 @@ class Classifier(nn.Cell):
 #### TensorFlow模型脚本生成示例
 
 使用TensorFlow模型脚本迁移，需要先将TensorFlow模型导出为pb格式，并且获取模型输入节点、输出节点名称，可参考如下方法进行导出、获取节点名称：
+
 ```python
 import tensorflow as tf
 from tensorflow.python.framework import graph_io
 from tensorflow.keras.applications.inception_v3 import InceptionV3
-
 
 def freeze_graph(graph, session, output):
     saved_path = "/home/user/xxx"
@@ -257,13 +255,13 @@ INPUT_NODE = base_model.inputs[0].op.name  # Get input node name of TensorFlow.
 OUTPUT_NODE = base_model.outputs[0].op.name  # Get output node name of TensorFlow.
 freeze_graph(session.graph, session, [out.op.name for out in base_model.outputs])
 print(f"Input node name: {INPUT_NODE}, output node name: {OUTPUT_NODE}")
-
 ```
 
 上述代码执行完毕，模型将会保存至`/home/user/xxx/frozen_model.pb`。其中，`INPUT_NODE`为输入节点名称，`OUTPUT_NODE`为输出节点名称。
 
 假设输入节点名称为`input_1:0`、输出节点名称为`predictions/Softmax:0`，模型输入样本尺寸为`1,224,224,3`，则可使用如下命令进行脚本生成：
-```shell script
+
+```bash
 mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
               --input_node input_1:0 \
               --output_node predictions/Softmax:0 \
@@ -273,12 +271,9 @@ mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
 
 执行该命令，MindSpore代码文件、转换报告生成至相应目录。
 
-
 基于图结构的脚本生成方案产生的转换报告格式与AST方案相同。然而，由于基于图结构方案属于生成式方法，转换过程中未参考原TensorFlow脚本，因此生成的转换报告中涉及的代码行、列号均指生成后脚本。
 
-
 另外，对于未成功转换的算子，在代码中会相应的标识该节点输入、输出Tensor的shape（以`input_shape`、`output_shape`标识），便于用户手动修改，示例见[PyTorch模型脚本生成示例](#manual_modify)。
-
 
 ## 注意事项
 
@@ -291,17 +286,19 @@ mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
 ### 场景1
 
 部分类和方法目前无法转换：
-* 使用```torch.Tensor```的```shape```，```ndim```和```dtype```成员
-* ```torch.nn.AdaptiveXXXPoolXd```和```torch.nn.functional.adaptive_XXX_poolXd()```
-* ```torch.nn.functional.Dropout```
-* ```torch.unsqueeze()```和```torch.Tensor.unsqueeze()```
-* ```torch.chunk()```和```torch.Tensor.chunk()```
+
+1. 使用`torch.Tensor`的`shape`，`ndim`和`dtype`成员；
+2. `torch.nn.AdaptiveXXXPoolXd`和`torch.nn.functional.adaptive_XXX_poolXd()`；
+3. `torch.nn.functional.Dropout`；
+4. `torch.unsqueeze()`和`torch.Tensor.unsqueeze()`；
+5. `torch.chunk()`和`torch.Tensor.chunk()`；
 
 ### 场景2
 
 继承的父类是nn.Module的子类。
 
 例如：(如下代码片段摘自torchvision.models.mobilenet)
+
 ```python
 from torch import nn
 
@@ -320,3 +317,6 @@ class ConvBNReLU(nn.Sequential):
 Q1. `terminate called after throwing an instance of 'std::system_error', what(): Resource temporarily unavailable, Aborted (core dumped)`:
 
 > 答: 该问题由TensorFlow导致。脚本转换时，需要通过TensorFlow库加载TensorFlow的模型文件，此时TensorFlow会申请相关资源进行初始化，若申请资源失败（可能由于系统进程数超过Linux最大进程数限制），TensorFlow C/C++层会出现Core Dumped问题。详细信息请参考TensorFlow官方ISSUE，如下ISSUE仅供参考：[TF ISSUE 14885](https://github.com/tensorflow/tensorflow/issues/14885), [TF ISSUE 37449](https://github.com/tensorflow/tensorflow/issues/37449)
+
+Q2. MindConverter是否可以在ARM平台运行？
+> 答：MindConverter已基于X86 Ubuntu发行版进行测试，ARM平台未进行测试。
