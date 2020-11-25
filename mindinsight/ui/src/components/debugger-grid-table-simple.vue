@@ -39,7 +39,7 @@ limitations under the License.
            @keyup.enter="filterChange">
         <div class="filter-input-title">{{$t('components.dimsFilterInputTitle')}}
           <span :title="$t('components.dimsFilterInputTip')"
-                class="el-icon-question"></span>
+                class="el-icon-warning"></span>
         </div>
         <div v-for="(item, itemIndex) in filterArr"
              :key="itemIndex">
@@ -552,6 +552,7 @@ export default {
      * @param {Boolean} isUpdate Whether to reset
      */
     showRequestErrorMessage(errorMsg, dimension, filterStr, isUpdate) {
+      this.shape = dimension;
       this.errorMsg = errorMsg;
       if ((!this.filterArr.length && dimension && filterStr) || isUpdate) {
         this.initializeFilterArr(dimension, filterStr);

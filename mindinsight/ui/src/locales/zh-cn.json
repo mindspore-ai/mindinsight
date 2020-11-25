@@ -521,7 +521,7 @@
     "negativeNum": "负数：",
     "all": "全部",
     "tensorTip": "张量",
-    "recheck": "重新检查",
+    "recheck": "重新检查（只针对目前有张量值的监测点）",
     "clearWatchpoint": "清空监测点",
     "nodeType": {
       "all": "全部节点",
@@ -581,8 +581,8 @@
       "abs_updata_ratio_mean_gt": "变化比例绝对值的平均值>",
       "abs_updata_ratio_mean_lt": "变化比例绝对值的平均值<",
       "param": "阈值",
-      "max_min_lt": "MAX-MIN>",
-      "max_min_gt": "MAX-MIN<"
+      "max_min_lt": "MAX-MIN<",
+      "max_min_gt": "MAX-MIN>"
     },
     "tensorTuningAdvice": {
       "operator_real_data_validation": [
@@ -717,7 +717,7 @@
     "use": "使用",
     "notUse": "不使用",
     "outdateTip": "监测点列表发生修改，结果可能过时，请重新检查或执行后续step训练。",
-    "versionConflictTip": "Mindspore和Mindinsight版本不匹配，Mindspore版本：{msv}；Mindinsight版本：{miv}；",
+    "versionConflictTip": "MindSpore和MindInsight版本不匹配，MindSpore版本：{msv}；MindInsight版本：{miv}；",
     "checkTips": "提示：张量中含有{msg}，无法进行数值检查。"
   },
   "explain": {

@@ -114,16 +114,16 @@ export default {
                       label: val.name.split('/').pop(),
                       leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                       ...val,
-                      showCheckbox: val.type !== this.unCheckedNodeType,
+                      showCheckbox: val.watched !== -1,
                     };
                   });
                   this.resolve(this.origialTree);
-                  // watched 0:unchecked  1:indeterminate 2:checked
+                  // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
                   this.node.childNodes.forEach((val) => {
-                    if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
+                    if (val.data.watched === this.checkboxStatus.checked) {
                       val.checked = true;
                     }
-                    if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
+                    if (val.data.watched === this.checkboxStatus.indeterminate) {
                       val.indeterminate = true;
                     }
                   });
@@ -536,7 +536,7 @@ export default {
             if (res && res.data && res.data.metadata) {
               this.enableRecheck = res.data.metadata.enable_recheck;
             }
-            this.$message.success(this.$t('debugger.recheckSucess'));
+            this.$message.success(this.$t('debugger.recheckSuccess'));
           },
           (err) => {},
       );
@@ -583,13 +583,13 @@ export default {
           cancelButtonText: this.$t('public.cancel'),
           type: 'warning',
         }).then(() => {
-          if (!item) {
-            this.curWatchPointId = null;
-            this.watchPointArr = [];
-          }
           const params = {watch_point_id: item ? item.id : null};
           RequestService.deleteWatchpoint(params).then(
               (res) => {
+                if (!item) {
+                  this.curWatchPointId = null;
+                  this.watchPointArr = [];
+                }
                 this.loadOriginalTree();
                 this.queryWatchPoints();
                 this.$message.success(this.$t('debugger.successDeleteWP'));
@@ -767,7 +767,7 @@ export default {
       if (this.curWatchPointId) {
         this.$refs.tree.getCheckedKeys().forEach((val) => {
           const node = this.$refs.tree.getNode(val);
-          if (node.data.type === this.unCheckedNodeType) {
+          if (node.data.watched === this.checkboxStatus.noCheckbox) {
             node.checked = false;
           }
         });
@@ -822,9 +822,7 @@ export default {
       const parent = node.parent;
       if (
         parent &&
-        !parent.childNodes
-            .filter((val) => val.data.type !== this.unCheckedNodeType)
-            .find((val) => val.checked === false)
+        !parent.childNodes.filter((val) => val.data.watched !== -1).find((val) => val.checked === false)
       ) {
         parent.checked = true;
         parent.indeterminate = false;
@@ -837,19 +835,45 @@ export default {
       if (node.childNodes) {
         this.dealCheckPro(node.childNodes, node.indeterminate || check);
       }
+      const checkedKeys = this.$refs.searchTree.getCheckedKeys();
+      const watchNodes = [];
+      if (this.searchCheckedArr.length === checkedKeys.length) {
+        return;
+      } else if (this.searchCheckedArr.length > checkedKeys.length) {
+        watchNodes.push(obj.name);
+      } else {
+        checkedKeys.forEach((val) => {
+          if (this.searchCheckedArr.indexOf(val) === -1) {
+            watchNodes.push(val);
+          }
+        });
+      }
       const params = {
         watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
-        watch_nodes: [obj.name],
+        watch_nodes: watchNodes,
         mode: check ? 1 : 0,
         graph_name: this.graphFiles.value,
-        search_pattern: {name: this.searchedWord, node_category: obj.type},
+        search_pattern: {name: this.searchedWord},
       };
       if (this.graphFiles.value === this.$t('debugger.all')) {
         delete params.graph_name;
       }
+      if (this.nodeTypes.value !== 'all') {
+        params.search_pattern.node_category = this.nodeTypes.value;
+      }
       RequestService.updateWatchpoint(params).then(
           (res) => {
+            this.searchCheckedArr = checkedKeys;
             this.enableRecheck = res.data.metadata.enable_recheck;
+            this.$nextTick(() => {
+              if (node.indeterminate) {
+                node.checked = true;
+                node.indeterminate = false;
+              }
+              if (check) {
+                this.dealParentNode(node);
+              }
+            });
           },
           (err) => {
             this.showErrorMsg(err);
@@ -863,7 +887,7 @@ export default {
     dealCheckPro(childNodes, check) {
       childNodes.forEach((val) => {
         val.indeterminate = false;
-        if (val.data.type !== this.unCheckedNodeType) {
+        if (val.data.watched !== -1) {
           val.checked = check;
         } else {
           val.checked = false;
@@ -924,13 +948,14 @@ export default {
               if (res.data && res.data.nodes) {
                 this.searchTreeData = res.data.nodes;
                 this.searchHalfCheckedArr = [];
+                this.searchCheckedArr = [];
                 this.dealSearchResult(this.searchTreeData);
-                this.defaultCheckedArr = this.searchCheckedArr;
                 this.searchNode.childNodes = [];
                 const data = res.data.nodes.map((val) => {
                   return {
                     label: val.name.split('/').pop(),
                     ...val,
+                    showCheckbox: val.watched !== -1,
                   };
                 });
                 const currentData = JSON.parse(JSON.stringify(data));
@@ -938,13 +963,16 @@ export default {
                   val.nodes = [];
                 });
                 this.searchResolve(currentData);
-                // watched 0:unchecked  1:indeterminate 2:checked
+                // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
                 this.searchNode.childNodes.forEach((val) => {
-                  if (val.data.watched === 1) {
+                  if (val.data.watched === this.checkboxStatus.indeterminate) {
                     val.indeterminate = true;
                   }
-                  if (val.data.watched === 2) {
+                  if (val.data.watched === this.checkboxStatus.checked) {
                     val.checked = true;
+                  }
+                  if (val.data.watched === this.checkboxStatus.unchecked) {
+                    val.checked = false;
                   }
                 });
                 data.forEach((val, key) => {
@@ -971,15 +999,19 @@ export default {
         const node = this.$refs.searchTree.getNode(val.parentName);
         val.label = val.name.split('/').pop();
         val.leaf = val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true;
+        val.showCheckbox = val.watched !== -1;
         this.$refs.searchTree.append(val, node);
         node.expanded = true;
-        // watched 0:unchecked  1:indeterminate 2:checked
+        // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
         node.childNodes.forEach((value) => {
-          if (value.data.watched === 1) {
+          if (value.data.watched === this.checkboxStatus.indeterminate) {
             value.indeterminate = true;
           }
-          if (value.data.watched === 2) {
+          if (value.data.watched === this.checkboxStatus.checked) {
             value.checked = true;
+          }
+          if (value.data.watched === this.checkboxStatus.unchecked) {
+            value.checked = false;
           }
         });
         if (val.nodes && val.nodes.length) {
@@ -999,8 +1031,8 @@ export default {
         if (val.nodes) {
           this.dealSearchResult(val.nodes);
         }
-        // watched 0:unchecked  1:indeterminate 2:checked
-        if (val.watched === 2 && val.type !== this.unCheckedNodeType) {
+        // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
+        if (val.watched === this.checkboxStatus.checked) {
           this.searchCheckedArr.push(val.name);
         }
         val.label = val.name.split('/').pop();
@@ -1113,31 +1145,31 @@ export default {
                     label: val.name.split('/').pop(),
                     leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                     ...val,
-                    showCheckbox: val.type !== this.unCheckedNodeType,
+                    showCheckbox: val.watched !== -1,
                   };
                 });
                 resolve(this.curNodeData);
-                // watched 0:unchecked  1:indeterminate 2:checked
+                // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
                 this.defaultCheckedArr = this.defaultCheckedArr.concat(
                     this.curNodeData
                         .filter((val) => {
-                          return val.watched === 2 && val.type !== this.unCheckedNodeType;
+                          return val.watched === this.checkboxStatus.checked;
                         })
                         .map((val) => val.name),
                 );
                 const halfSelectArr = this.curNodeData
                     .filter((val) => {
-                      return val.watched === 1 && val.type !== this.unCheckedNodeType;
+                      return val.watched === this.checkboxStatus.indeterminate;
                     })
                     .map((val) => val.name);
                 node.childNodes.forEach((val) => {
                   if (halfSelectArr.indexOf(val.data.name) !== -1) {
                     val.indeterminate = true;
                     node.indeterminate = true;
-                    [...new Set(curHalfCheckedKeys.concat(this.$refs.tree.getHalfCheckedKeys()))].forEach((val) => {
-                      this.$refs.tree.getNode(val).indeterminate = true;
-                    });
                   }
+                });
+                [...new Set(curHalfCheckedKeys.concat(this.$refs.tree.getHalfCheckedKeys()))].forEach((val) => {
+                  this.$refs.tree.getNode(val).indeterminate = true;
                 });
                 this.selectedNode.name = node.data.name;
                 if (!this.allGraphData[node.data.name].isUnfold) {
@@ -1200,27 +1232,34 @@ export default {
                 label: val.name.split('/').pop(),
                 leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                 ...val,
-                showCheckbox: val.type !== this.unCheckedNodeType,
+                showCheckbox: val.watched !== -1,
               };
             });
             resolve(this.curNodeData);
-            // watched 0:unchecked  1:indeterminate 2:checked
+            this.searchCheckedArr = this.searchCheckedArr.concat(
+                this.curNodeData
+                    .filter((val) => {
+                      return val.watched === this.checkboxStatus.checked;
+                    })
+                    .map((val) => val.name),
+            );
+            // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
             const halfSelectArr = this.curNodeData
                 .filter((val) => {
-                  return val.watched === 1;
+                  return val.watched === this.checkboxStatus.indeterminate;
                 })
                 .map((val) => val.name);
             node.childNodes.forEach((val) => {
-              if (val.data.watched === 2) {
+              if (val.data.watched === this.checkboxStatus.checked) {
                 val.checked = true;
               }
               if (halfSelectArr.indexOf(val.data.name) !== -1) {
                 val.indeterminate = true;
                 node.indeterminate = true;
-                [...new Set(curHalfCheckedKeys.concat(this.$refs.searchTree.getHalfCheckedKeys()))].forEach((val) => {
-                  this.$refs.searchTree.getNode(val).indeterminate = true;
-                });
               }
+            });
+            [...new Set(curHalfCheckedKeys.concat(this.$refs.searchTree.getHalfCheckedKeys()))].forEach((val) => {
+              this.$refs.searchTree.getNode(val).indeterminate = true;
             });
           }
         });
@@ -1256,7 +1295,7 @@ export default {
           if (val.id) {
             val.selected = true;
             this.curWatchPointId = val.id;
-            if (this.searchWord === '') {
+            if (this.searchWord === '' && this.nodeTypes.value === 'all') {
               this.queryGraphByWatchpoint(val.id);
             } else {
               this.filter();
@@ -1321,26 +1360,22 @@ export default {
         return {
           label: val.name.split('/').pop(),
           ...val,
-          showCheckbox: val.type !== this.unCheckedNodeType,
+          showCheckbox: val.watched !== -1,
         };
       });
       const node = this.$refs.tree.getNode(name);
       curNodeData.forEach((val) => {
         this.$refs.tree.append(val, name);
       });
-      // watched 0:unchecked  1:indeterminate 2:checked
+      // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
       node.childNodes.forEach((val) => {
-        if (
-          node.checked &&
-          !node.childNodes.find((val) => val.data.watched !== 2) &&
-          val.data.type !== this.unCheckedNodeType
-        ) {
+        if (node.checked && !node.childNodes.find((val) => val.data.watched !== 2) && val.data.watched !== -1) {
           val.checked = true;
         }
-        if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
+        if (val.data.watched === this.checkboxStatus.checked) {
           val.checked = true;
         }
-        if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
+        if (val.data.watched === this.checkboxStatus.indeterminate) {
           val.indeterminate = true;
         }
         if (val.data.type !== 'name_scope' && val.data.type !== 'aggregation_scope') {
@@ -1354,9 +1389,7 @@ export default {
       this.$nextTick(() => {
         if (
           node.indeterminate &&
-          !node.childNodes
-              .filter((val) => val.data.type !== this.unCheckedNodeType)
-              .find((val) => val.checked === false)
+          !node.childNodes.filter((val) => val.data.watched !== -1).find((val) => val.checked === false)
         ) {
           node.indeterminate = false;
           node.checked = true;
@@ -1431,7 +1464,7 @@ export default {
                         .map((k) =>
                         !k.actual_value
                           ? `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}`
-                          : `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}${this.$t(
+                          : `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}, ${this.$t(
                               'debugger.actualValue',
                           )}:${k.actual_value}`,
                         )
@@ -1443,9 +1476,7 @@ export default {
                   obj.lists.push({
                     name: item,
                     id: `${key}${hit.node_name}`,
-                    tip: j.watch_condition.error_code
-                      ? this.$t('debugger.checkTips', {msg: tipsMapping[j.watch_condition.error_code]})
-                      : '',
+                    tip: j.error_code ? this.$t('debugger.checkTips', {msg: tipsMapping[j.error_code]}) : '',
                   });
                 });
               }
@@ -1599,7 +1630,7 @@ export default {
           return {
             label: val.name.split('/').pop(),
             ...val,
-            showCheckbox: val.type !== this.unCheckedNodeType,
+            showCheckbox: val.watched !== -1,
           };
         });
         data.forEach((val) => {
@@ -1613,12 +1644,12 @@ export default {
           }
         });
         const node = this.$refs.tree.getNode(children.scope_name);
-        // watched 0:unchecked  1:indeterminate 2:checked
+        // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
         node.childNodes.forEach((val) => {
-          if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
+          if (val.data.watched === this.checkboxStatus.checked) {
             val.checked = true;
           }
-          if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
+          if (val.data.watched === this.checkboxStatus.indeterminate) {
             val.indeterminate = true;
           }
           if (val.data.type !== 'name_scope' && val.data.type !== 'aggregation_scope') {
@@ -1649,16 +1680,16 @@ export default {
           label: val.name.split('/').pop(),
           leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
           ...val,
-          showCheckbox: val.type !== this.unCheckedNodeType,
+          showCheckbox: val.watched !== -1,
         };
       });
       this.resolve(this.origialTree);
-      // watched 0:unchecked  1:indeterminate 2:checked
+      // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
       this.node.childNodes.forEach((val) => {
-        if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
+        if (val.data.watched === this.checkboxStatus.checked) {
           val.checked = true;
         }
-        if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
+        if (val.data.watched === this.checkboxStatus.indeterminate) {
           val.indeterminate = true;
         }
       });

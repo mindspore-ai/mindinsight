@@ -176,7 +176,7 @@ limitations under the License.
             <el-tooltip placement="bottom"
                         effect="light"
                         popper-class="legend-tip">
-              <i class="el-icon-question"></i>
+              <i class="el-icon-warning"></i>
               <div slot="content">
                 <div>{{$t('debugger.selectDetail')}}</div>
                 <div class="legend">
@@ -197,36 +197,36 @@ limitations under the License.
         </div>
         <div id="tensor-graph"
              class="deb-graph"></div>
-        <div class="deb-tensor-info"
-             v-show="tensorShow">
+        <div class="deb-tensor-info">
           <div class="tensor">
             <div class="tensor-title">{{$t('debugger.tensorMsg')}}</div>
             <div class="tensor-detail">
-              <span>{{ $t('debugger.max') }} {{ selectedStatistics.overall_max }}</span>
-              <span>{{ $t('debugger.min') }} {{ selectedStatistics.overall_min }}</span>
-              <span>{{ $t('debugger.mean') }} {{ selectedStatistics.overall_avg }}</span>
-              <span>{{ $t('debugger.nan') }} {{ selectedStatistics.overall_nan_count }}</span>
+              <span>{{ $t('debugger.max') }} {{ statistics.overall_max }}</span>
+              <span>{{ $t('debugger.min') }} {{ statistics.overall_min }}</span>
+              <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg }}</span>
+              <span>{{ $t('debugger.nan') }} {{ statistics.overall_nan_count }}</span>
               <span>{{ $t('debugger.negativeInf') }}
-                {{ selectedStatistics.overall_neg_inf_count }}</span>
-              <span>{{ $t('debugger.inf') }} {{ selectedStatistics.overall_pos_inf_count }}</span>
-              <span>{{ $t('debugger.zero') }} {{ selectedStatistics.overall_zero_count }}</span>
+                {{ statistics.overall_neg_inf_count }}</span>
+              <span>{{ $t('debugger.inf') }} {{ statistics.overall_pos_inf_count }}</span>
+              <span>{{ $t('debugger.zero') }} {{ statistics.overall_zero_count }}</span>
               <span>{{ $t('debugger.negativeNum') }}
-                {{ selectedStatistics.overall_neg_zero_count }}</span>
+                {{ statistics.overall_neg_zero_count }}</span>
               <span>{{ $t('debugger.positiveNum') }}
-                {{ selectedStatistics.overall_pos_zero_count }}</span>
+                {{ statistics.overall_pos_zero_count }}</span>
             </div>
           </div>
-          <div class="watchPoint">
+          <div class="watch-point">
             <div class="watchPoint-title">{{ $t('debugger.watchList') }}</div>
-            <div v-for="(item,key) in watchPoints"
-                 :key="key"
-                 class="point-list">
-              <div class="watch-judgment">
-                <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
-                <span>{{ $t('symbols.colon') }}</span>
-                <span>
-                  {{ getWatchPointContent(item) }}
-                </span>
+            <div class="point-list">
+              <div v-for="(item,key) in watchPoints"
+                   :key="key">
+                <div class="watch-judgment">
+                  <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
+                  <span>{{ $t('symbols.colon') }}</span>
+                  <span>
+                    {{ getWatchPointContent(item) }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -274,13 +274,11 @@ export default {
       tensorGraphData: {},
       tensorGraphviz: null,
       selectedNode: {},
-      selectedStatistics: {},
-      tensorShow: true,
+      statistics: {},
       leftDataShow: true,
       tuningAdvice: [],
       tuningAdviceTitle: '',
       watchPoints: [],
-      actualValue: '',
     };
   },
   mounted() {
@@ -326,39 +324,9 @@ export default {
                   });
                 }
               });
-              this.selectedNode = this.tensorGraphData[initPage ? this.curRowObj.name : this.selectedNode.name];
-
-              if (this.selectedNode.statistics && Object.keys(this.selectedNode.statistics).length) {
-                this.selectedStatistics = this.selectedNode.statistics;
-              } else {
-                const noStatistics = {
-                  overall_avg: '--',
-                  overall_count: '--',
-                  overall_max: '--',
-                  overall_min: '--',
-                  overall_nan_count: '--',
-                  overall_neg_inf_count: '--',
-                  overall_neg_zero_count: '--',
-                  overall_pos_inf_count: '--',
-                  overall_pos_zero_count: '--',
-                  overall_zero_count: '--',
-                };
-                this.selectedStatistics = noStatistics;
-              }
-              if (this.selectedNode.watch_points && this.selectedNode.watch_points.length) {
-                this.watchPoints = this.selectedNode.watch_points.map((val) => {
-                  return {
-                    id: val.id,
-                    condition: val.watch_condition.id,
-                    params: val.watch_condition.params || [],
-                    selected: false,
-                  };
-                });
-              } else {
-                this.watchPoints = [];
-              }
 
               if (initPage) {
+                this.selectedNode.name = this.curRowObj.name;
                 const dot = this.packageData();
                 this.initGraph(dot);
               }
@@ -402,13 +370,12 @@ export default {
                 }
                 item.params.forEach((element) => {
                   if (!element.actual_value) {
-                    this.actualValue = this.$t('symbols.rightbracket');
+                    element.actual = this.$t('symbols.rightbracket');
                   } else {
-                    this.actualValue = `${this.$t('debugger.actualValue')}${this.$t('symbols.colon')}${
+                    element.actual = `${this.$t('debugger.actualValue')}${this.$t('symbols.colon')}${
                       element.actual_value
                     }${this.$t('symbols.rightbracket')}`;
                   }
-                  element.actual = this.actualValue;
                 });
               });
             } else {
@@ -482,7 +449,9 @@ export default {
       this.$parent.uniqueEdges(edges);
 
       edges.forEach((edge) => {
-        edgeStr += `<${edge.source}>-><${edge.target}>[label="${edge.count > 1 ? edge.count + 'tensor' : ''}"]`;
+        edgeStr +=
+          `<${edge.source}>-><${edge.target}>[id="${edge.source}->${edge.target}";` +
+          `label="${edge.count > 1 ? edge.count + 'tensor' : ''}"]`;
       });
 
       const initSetting = 'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
@@ -507,7 +476,7 @@ export default {
         `{rank=min;<${subGraphInput}>[shape="circle";` +
         `id="${subGraphInput}";width=0.02;fixedsize=true;` +
         `label=""]};`;
-      edgeStr += `<${name}>-><${subGraphInput}>[label="${slots.length}tensor"]`;
+      edgeStr += `<${name}>-><${subGraphInput}>[id="${name}->${subGraphInput}";label="${slots.length}tensor"]`;
 
       const outputKeys = Object.keys(node.output || {});
       if (outputKeys.length) {
@@ -525,7 +494,7 @@ export default {
             slotName === this.curRowObj.name ? ' current selected' : ''
           }";fillcolor="#c5e0b3"];`;
 
-        edgeStr += `<${subGraphInput}>-><${slotName}>;`;
+        edgeStr += `<${subGraphInput}>-><${slotName}>[id="${subGraphInput}->${slotName}"];`;
       });
 
       strTemp =
@@ -581,49 +550,18 @@ export default {
       graphDom.selectAll('title').remove();
       this.initZooming();
 
-      const nodes = graphDom.selectAll('.node.slot');
+      const nodes = graphDom.selectAll('.node');
       nodes.on('click', (target, index, nodesList) => {
         const event = currentEvent;
         event.stopPropagation();
         event.preventDefault();
 
-        const selectedNode = nodesList[index];
-        d3.selectAll('.node').classed('selected', false);
-        selectedNode.classList.add('selected');
-        this.selectedNode = this.tensorGraphData[selectedNode.id];
-        if (this.selectedNode.statistics && Object.keys(this.selectedNode.statistics).length) {
-          this.selectedStatistics = this.selectedNode.statistics;
-          this.tensorShow = true;
-        } else {
-          const noStatistics = {
-            overall_avg: '--',
-            overall_count: '--',
-            overall_max: '--',
-            overall_min: '--',
-            overall_nan_count: '--',
-            overall_neg_inf_count: '--',
-            overall_neg_zero_count: '--',
-            overall_pos_inf_count: '--',
-            overall_pos_zero_count: '--',
-            overall_zero_count: '--',
-          };
-          this.selectedStatistics = noStatistics;
-        }
-        if (this.selectedNode.watch_points && this.selectedNode.watch_points.length) {
-          this.watchPoints = this.selectedNode.watch_points.map((val) => {
-            return {
-              id: val.id,
-              condition: val.watch_condition.id,
-              params: val.watch_condition.params || [],
-              selected: false,
-            };
-          });
-        } else {
-          this.watchPoints = [];
-        }
+        this.selectedNode.name = nodesList[index].id;
+        this.setNodeData();
       });
 
-      nodes.on('dblclick', (target, index, nodesList) => {
+      const slots = graphDom.selectAll('.node.slot');
+      slots.on('dblclick', (target, index, nodesList) => {
         const event = currentEvent;
         event.stopPropagation();
         event.preventDefault();
@@ -646,6 +584,10 @@ export default {
           }
         }
       });
+
+      if (this.selectedNode.name) {
+        this.setNodeData();
+      }
     },
     /**
      * Initializing the Zoom Function of a Graph
@@ -748,6 +690,84 @@ export default {
       graph0.on('.zoom', null);
       graph0.call(zoom);
     },
+    setNodeData() {
+      window.getSelection().removeAllRanges();
+      const selectedNode = document.querySelector(`g[id="${this.selectedNode.name}"]`);
+      d3.selectAll('.node').classed('selected', false);
+      selectedNode.classList.add('selected');
+      d3.selectAll('.edge').classed('selected', false);
+      this.selectedNode = JSON.parse(JSON.stringify(this.tensorGraphData[this.selectedNode.name]));
+
+      const keys = [
+        'overall_avg',
+        'overall_count',
+        'overall_max',
+        'overall_min',
+        'overall_nan_count',
+        'overall_neg_inf_count',
+        'overall_neg_zero_count',
+        'overall_pos_inf_count',
+        'overall_pos_zero_count',
+        'overall_zero_count',
+      ];
+      if (this.selectedNode.type === 'slot') {
+        if (!(this.selectedNode.statistics && Object.keys(this.selectedNode.statistics).length)) {
+          keys.forEach((key) => {
+            this.statistics[key] = '--';
+          });
+        } else {
+          this.statistics = JSON.parse(JSON.stringify(this.selectedNode.statistics));
+        }
+        if (this.selectedNode.watch_points && this.selectedNode.watch_points.length) {
+          this.watchPoints = this.selectedNode.watch_points.map((val) => {
+            return {
+              id: val.id,
+              condition: val.watch_condition.id,
+              params: val.watch_condition.params || [],
+              selected: false,
+            };
+          });
+        } else {
+          this.watchPoints = [];
+        }
+      } else {
+        keys.forEach((key) => {
+          this.statistics[key] = '--';
+        });
+        this.watchPoints = [];
+        this.highLightEdges();
+      }
+    },
+    highLightEdges() {
+      const edges = [];
+      const input = this.selectedNode.input || {};
+      const inputKeys = Object.keys(input);
+      if (inputKeys.length) {
+        inputKeys.forEach((key) => {
+          const mapping = input[key].slot_mapping;
+          if (mapping && mapping.length) {
+            mapping.forEach((map) => {
+              if (map && map.length) {
+                edges.push(`${key}:${map[0]}->outputOf${key}_slots`);
+                edges.push(`outputOf${key}_slots->${this.selectedNode.name}`);
+              }
+            });
+          }
+        });
+      }
+
+      const slots = this.selectedNode.slots || [];
+      if (slots.length) {
+        edges.push(`${this.selectedNode.name}->inputOf${this.selectedNode.name}_slots`);
+        slots.forEach((slot) => {
+          edges.push(`inputOf${this.selectedNode.name}_slots->${this.selectedNode.name}:${slot.slot}`);
+        });
+      }
+
+      edges.forEach((edge) => {
+        d3.select(`#tensor-graph g[id="${edge}"]`).classed('selected', true);
+      });
+    },
     resetTensor() {
       const svg = document.querySelector('#tensor-graph svg');
       if (svg) {
@@ -763,7 +783,7 @@ export default {
       this.init();
     },
     closeTensor() {
-      this.$emit('close');
+      this.$emit('close', this.selectedNode.name, this.curRowObj.graph_name);
     },
     /**
      * Collaspe btn click function
@@ -1042,6 +1062,7 @@ export default {
       .reason {
         display: flex;
         padding: 1px 15px;
+        width: 100%;
       }
       .tensor-icon {
         width: 6px;
@@ -1050,10 +1071,11 @@ export default {
       }
       .icon-secondary {
         background-color: #00a5a7;
-        margin-top: 7px;
+        margin-top: 8px;
       }
       .tensor-content {
-        padding: 0px 6px;
+        padding-left: 6px;
+        width: calc(100% - 12px);
       }
       .tensor-value {
         padding: 5px 2px;
@@ -1294,7 +1316,7 @@ export default {
             }
           }
         }
-        .node.slot {
+        .node {
           &:hover {
             cursor: pointer;
             & > polygon,
@@ -1308,57 +1330,84 @@ export default {
           stroke: #e4e7ed;
           fill: #e9fcf9;
         }
-        .selected {
+        .node.selected {
           polygon,
           ellipse {
             stroke: red !important;
             stroke-width: 2px;
           }
         }
+        .edge.selected {
+          path {
+            stroke: red;
+          }
+          polygon {
+            stroke: red;
+            fill: red;
+          }
+        }
       }
       .deb-tensor-info {
         width: 375px;
+        height: 100%;
         border-left: solid 2px #e4e7ed;
         padding-left: 20px;
-        .tensor-title {
-          font-size: 14px;
-          font-weight: bold;
-          padding-bottom: 8px;
-        }
-        .tensor-detail {
-          overflow: auto;
-          height: calc(100% - 30px);
-          span {
-            display: inline-block;
-            padding: 5px 0px;
-            min-width: 50%;
+        .tensor {
+          .tensor-title {
+            font-size: 14px;
+            font-weight: bold;
+            padding-bottom: 8px;
           }
-          ul {
-            li {
-              padding: 5px 10px;
-              & > div {
-                display: inline-block;
-                vertical-align: top;
-                word-break: break-all;
-                line-height: 16px;
-              }
-              .attr-key {
-                width: 30%;
-              }
-              .attr-value {
-                width: 70%;
-                padding-left: 10px;
-              }
-              &:hover {
-                background-color: #e9fcf9;
+          .tensor-detail {
+            overflow: auto;
+            height: calc(100% - 30px);
+            span {
+              display: inline-block;
+              padding: 5px 0px;
+              min-width: 50%;
+            }
+            ul {
+              li {
+                padding: 5px 10px;
+                & > div {
+                  display: inline-block;
+                  vertical-align: top;
+                  word-break: break-all;
+                  line-height: 16px;
+                }
+                .attr-key {
+                  width: 30%;
+                }
+                .attr-value {
+                  width: 70%;
+                  padding-left: 10px;
+                }
+                &:hover {
+                  background-color: #e9fcf9;
+                }
               }
             }
           }
         }
-        .watchPoint-title {
-          padding: 8px 0;
-          font-size: 14px;
-          font-weight: bold;
+        .tensor {
+          height: 50%;
+          overflow: auto;
+        }
+        .watch-point {
+          height: 50%;
+          .point-list {
+            height: calc(100% - 35px);
+            overflow: auto;
+            text-overflow: ellipsis;
+          }
+          .watchPoint-title {
+            padding: 8px 0;
+            font-size: 14px;
+            font-weight: bold;
+          }
+          .watch-judgment {
+            padding: 5px 0;
+          }
         }
       }
     }
