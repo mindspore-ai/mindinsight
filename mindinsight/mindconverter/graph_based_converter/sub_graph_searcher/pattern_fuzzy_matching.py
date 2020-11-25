@@ -18,7 +18,7 @@ from typing import List
 import numpy as np
 
 MIN_PATTERN_LEN = 3
-MATCHED_THRESHOLD = .75
+MATCHED_THRESHOLD = .8
 COMPLETELY_MATCHED = 1.
 
 
@@ -72,11 +72,11 @@ def pattern_fuzzy_matching(query: List[str], target: List[str]):
         target (list): Target pattern.
 
     Returns:
-        bool, true or false.
+        Tuple[bool, float], true or false and matching score.
     """
     edit_count = _levenshtein_distance(query, target)
     target_len = float(len(target))
     score = (target_len - edit_count) / target_len
     if target_len <= MIN_PATTERN_LEN:
-        return score == COMPLETELY_MATCHED
-    return score >= MATCHED_THRESHOLD
+        return score == COMPLETELY_MATCHED, score
+    return score >= MATCHED_THRESHOLD, score

@@ -18,11 +18,14 @@ import uuid
 from typing import Dict, List, Callable, Union
 from collections import OrderedDict
 from .common import context, gen_hash_key, DagGraph, MAX_OUT_DEGREE
+from .known_module_name import BUILT_IN_MODULE_NAME
 from .pattern import Pattern, scope_name_mapping
 from .built_in_pattern import BUILT_IN_PATTERN
+from .pattern_fuzzy_matching import pattern_fuzzy_matching
 from ..third_party_graph.onnx_utils import OnnxNode, BaseNode
 
 module_name_to_src = {}
+used_module_name = dict()
 global_idx = 0
 
 
@@ -82,8 +85,31 @@ def _is_valid_pattern(pattern, dag):
     return True
 
 
-def generate_module_name():
-    """Generate module name."""
+def generate_module_name(pattern):
+    """
+    Generate module name.
+
+    Args:
+        pattern (Pattern): To be replaced pattern.
+
+    """
+    matched_result = []
+    for ptn, module_name in BUILT_IN_MODULE_NAME.items():
+        if pattern.in_degree == ptn.in_degree and pattern.out_degree == ptn.out_degree and \
+                ptn.head == pattern.head and ptn.tail == pattern.tail:
+            is_matched, score = pattern_fuzzy_matching(pattern.ptn_items, ptn.ptn_items)
+            if is_matched:
+                matched_result.append((module_name, score))
+    if matched_result:
+        module_name = (matched_result if len(matched_result) == 1 else
+                       sorted(matched_result, key=lambda x: x[1], reverse=True))[0][0]
+        if pattern.pattern not in used_module_name:
+            used_module_name[pattern.pattern] = 1
+        else:
+            module_name = f"{module_name}{used_module_name[pattern.pattern]}"
+            used_module_name[pattern.pattern] += 1
+        return module_name
+
     global global_idx
     name = f"Module{global_idx}"
     global_idx += 1
@@ -126,7 +152,7 @@ def _find_idx(sequence: List[BaseNode], target: str, equal_func: Callable,
     """
     not_found = -1
     if not sequence:
-        msg = f"Empty sequence is not supported."
+        msg = "Empty sequence is not supported."
         raise ValueError(msg)
 
     end_idx = end_idx if end_idx else len(sequence)
@@ -263,6 +289,7 @@ def find_built_in_pattern(topo_order: List[BaseNode], dag: DagGraph) -> Dict[str
     cur_idx, total_len = 0, len(topo_order)
     for k in BUILT_IN_PATTERN:
         ptn_len = BUILT_IN_PATTERN[k].ptn_length
+        cur_idx = 0
         while cur_idx < total_len:
             matched = True
             init_pattern = OrderedDict()
@@ -393,6 +420,10 @@ class SearchPath:
             )
 
         self.new_pattern = context.found_pattern[self.hash_of_aft_repl]
+        self._created_modules = {
+            path.pattern.module_name: path.pattern for path in self.recursion_path
+        }
+        self._created_modules[self.pattern.module_name] = self.pattern
         self.heuristic_v = self._heuristic_val()
         self.actual_v = self._actual_val()
 
@@ -405,7 +436,7 @@ class SearchPath:
             to recover the sequence.
         """
         if self.pattern.pattern not in scope_name_mapping:
-            module_name = generate_module_name()
+            module_name = generate_module_name(self.pattern)
             scope_name_mapping[self.pattern.pattern] = module_name
             module_name_to_src[module_name] = self.pattern.pattern
         else:
@@ -542,14 +573,26 @@ class SearchPath:
 
     def evaluate_score(self):
         """Evaluate path score."""
-        return self.actual_v + self.heuristic_v
+        return .7 * self.actual_v + .3 * self.heuristic_v
+
+    def _cal_merged_module_length(self, ptn):
+        """Calculate module length."""
+        ptn_len = 0
+        for item in ptn.ptn_items:
+            if item in self._created_modules:
+                ptn_len += self._cal_merged_module_length(self._created_modules[item])
+                continue
+            ptn_len += 1
+        return ptn_len
 
     def _heuristic_val(self):
         """Calculate heuristic score of the path."""
         res = []
-        for _, ptn in enumerate(self.new_pattern.items()):
-            res.append(ptn[1].count * ptn[1].ptn_length / len(self.topo_order_aft_repl))
-        return sum(res) / len(res)
+        for ptn in self.new_pattern.items():
+            res.append(ptn[1].count * self._cal_merged_module_length(ptn[1]) / context.get_sequence_length())
+        if not res:
+            return 1.0
+        return max(res)
 
     def _actual_val(self):
         """Calculate ground-truth score of the path."""
@@ -580,6 +623,7 @@ class SearchPath:
                     chain.append(sub_module)
             return "->".join(chain)
 
-        repr_str = f"{self.pattern.pattern}[{self.pattern.module_name}], H: {self.heuristic_v}, G: {self.actual_v}"
+        repr_str = f"{self.pattern.pattern}[{self.pattern.module_name}], " \
+                   f"H: {self.heuristic_v}, G: {self.actual_v}, E: {self.evaluate_score()}"
 
         return repr_str

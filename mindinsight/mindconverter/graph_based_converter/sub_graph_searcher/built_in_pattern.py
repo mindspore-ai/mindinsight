@@ -22,6 +22,10 @@ def register_pattern(ptn_name, in_degree, out_degree):
     """
     Register pattern to MindConverter.
 
+    Notes:
+        The `out_degree` of pattern refers to the out-edge number in original graph,
+        not the output number of the pattern.
+
     Args:
         out_degree: Out degree of pattern.
         in_degree: In degree of pattern.
@@ -62,6 +66,14 @@ def _conv_bn_conv_bn_clip():
 def _conv_bn_conv_bn_relu():
     """Add conv-bn-conv-bn-relu pattern."""
     return ["Conv", "BatchNormalization", "Conv", "BatchNormalization", "Relu"]
+
+
+@register_pattern("ConvBnReLUx2+ConvBn+Add+Relu", 1, 2)
+def _convbnrelux3_convbn_add_relu():
+    """Add pattern."""
+    return ["Conv", "BatchNormalization", "Relu",
+            "Conv", "BatchNormalization", "Relu",
+            "Conv", "BatchNormalization", "Add", "Relu"]
 
 
 __all__ = ["BUILT_IN_PATTERN", "register_pattern"]
