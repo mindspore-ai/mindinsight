@@ -118,6 +118,18 @@ limitations under the License.
                 <i :class="rightShow ? 'icon-toggle' : 'icon-toggle icon-left'"></i>
               </div>
               <!-- Search box -->
+              <div class="sidebar-tooltip">
+                <el-tooltip placement="top"
+                            effect="light">
+                  <div slot="content"
+                       class="tooltip-container">
+                    <div class="cl-graph-sidebar-tip">
+                      {{$t('graph.sidebarTip')}}
+                    </div>
+                  </div>
+                  <i class="el-icon-info"></i>
+                </el-tooltip>
+              </div>
               <el-select @change="fileChange"
                          @visible-change="getSelectList"
                          :popper-append-to-body="false"
@@ -1705,6 +1717,11 @@ export default {
 };
 </script>
 <style lang="scss">
+.tooltip-container {
+  .cl-graph-sidebar-tip {
+    word-break: normal;
+  }
+}
 .cl-graph-manage {
   height: 100%;
   .cl-graph-title {
@@ -1883,6 +1900,16 @@ export default {
       font-size: 14px;
       line-height: 14px;
       padding: 18px 32px 24px;
+      .sidebar-tooltip {
+        position: absolute;
+        height: 32px;
+        top: 18px;
+        left: 10px;
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        color: #6c7280;
+      }
       div,
       span,
       pre {

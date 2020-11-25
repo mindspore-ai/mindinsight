@@ -259,7 +259,8 @@
     "next": "Next",
     "finish": "Complete",
     "dataTooLarge": "Failed to open the graph because of too many nodes and edges.",
-    "tooManyChain": "The direct subnode depth exceeds 70 and cannot be expanded."
+    "tooManyChain": "The direct subnode depth exceeds 70 and cannot be expanded.",
+    "sidebarTip": "Select computational graph files to be viewed. A maximum of 10 files are supported. When the number of files exceeds 10, some files are not displayed. To view files that are not displayed, move them to other summary log path. "
   },
   "operator": {
     "titleText": "Profiling",
