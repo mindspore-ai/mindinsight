@@ -192,6 +192,8 @@ class WatchpointHandler(StreamHandlerBase):
             int, the number of all watched nodes.
         """
         all_watched_num = 0
+        # the state of current node.
+        state = WatchNodeTree.NOT_WATCH
         for node in nodes:
             node_name = node.get('name')
             # search result could have `nodes` in nodes object
@@ -202,17 +204,14 @@ class WatchpointHandler(StreamHandlerBase):
                 new_node_name = node_name if graph_name is None else '/'.join([graph_name, node_name])
                 flag = watchpoint.get_node_status(new_node_name, node.get('type'), full_name)
             node['watched'] = flag
+            if flag == WatchNodeTree.NOT_WATCH:
+                continue
+            state = WatchNodeTree.PARTIAL_WATCH
             if flag == WatchNodeTree.TOTAL_WATCH:
                 all_watched_num += 1
 
-        # calculate the state of current node.
-        if not all_watched_num:
-            state = WatchNodeTree.NOT_WATCH
-        elif all_watched_num == len(nodes):
+        if all_watched_num == len(nodes):
             state = WatchNodeTree.TOTAL_WATCH
-        else:
-            state = WatchNodeTree.PARTIAL_WATCH
-
         return state
 
     def create_watchpoint(self, condition_mgr, watch_condition, watch_nodes=None, watch_point_id=None):

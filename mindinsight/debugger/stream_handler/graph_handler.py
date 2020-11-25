@@ -325,10 +325,7 @@ class GraphHandler(StreamHandlerBase):
         """
         temp_node_list = []
         node_category = pattern.get('node_category')
-        if graph_name:
-            graph = self._get_graph(graph_name=graph_name)
-        else:
-            graph = self._whole_graph
+        graph = self._get_graph(graph_name=graph_name)
         # filter nodes by name
         if pattern.get('name'):
             if node_category:
@@ -446,10 +443,7 @@ class GraphHandler(StreamHandlerBase):
         """Get full name according to ui node name."""
         full_name = ''
         if node_name:
-            if graph_name:
-                graph = self._get_graph(node_name=node_name, graph_name=graph_name)
-            else:
-                graph = self._whole_graph
+            graph = self._get_graph(node_name=node_name, graph_name=graph_name)
             full_name = graph.get_full_name_by_node_name(node_name)
 
         return full_name
@@ -600,11 +594,7 @@ class GraphHandler(StreamHandlerBase):
         Raises:
             DebuggerGraphNotExistError: If the graph does not exist.
         """
-        if not graph_name and not node_name and len(self._graph) == 1:
-            # get the graph if there is only one graph
-            return list(self._graph.values())[0]
-        graph_name = graph_name if graph_name else self.get_graph_id_by_name(node_name)
-        graph = self._graph.get(graph_name) if graph_name else None
+        graph = self._graph.get(graph_name) if graph_name else self._whole_graph
         # get graph according to graph name and check the node
         if graph and (not node_name or graph.exist_node(name=node_name)):
             return graph
