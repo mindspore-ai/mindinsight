@@ -88,11 +88,11 @@ class DatafileEncap(ExplainDataEncap):
                     return fp.read()
 
         except FileNotFoundError:
-            raise ImageNotExistError(image_path)
+            raise ImageNotExistError(f"train_id:{train_id} path:{image_path} type:{image_type}")
         except PermissionError:
-            raise FileSystemPermissionError(image_path)
+            raise FileSystemPermissionError(f"train_id:{train_id} path:{image_path} type:{image_type}")
         except UnidentifiedImageError:
-            raise UnknownError(f"Invalid image file: {image_path}")
+            raise UnknownError(f"Invalid image file: train_id:{train_id} path:{image_path} type:{image_type}")
 
         if image.mode == _SINGLE_CHANNEL_MODE:
             saliency = np.asarray(image)/_UINT8_MAX
@@ -102,10 +102,11 @@ class DatafileEncap(ExplainDataEncap):
         else:
             raise UnknownError(f"Invalid overlay image mode:{image.mode}.")
 
-        rgba = np.empty((saliency.shape[0], saliency.shape[1], 4))
+        saliency_stack = np.empty((saliency.shape[0], saliency.shape[1], 4))
         for c in range(3):
-            rgba[:, :, c] = saliency
-        rgba = rgba * _SALIENCY_CMAP_HI + (1-rgba) * _SALIENCY_CMAP_LOW
+            saliency_stack[:, :, c] = saliency
+        rgba = saliency_stack * _SALIENCY_CMAP_HI
+        rgba += (1-saliency_stack) * _SALIENCY_CMAP_LOW
         rgba[:, :, 3] = saliency * _UINT8_MAX
 
         overlay = Image.fromarray(np.uint8(rgba), mode=_RGBA_MODE)
