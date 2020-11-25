@@ -29,7 +29,7 @@ global_idx = 0
 class OptimizeRules:
     """Define optimize rules."""
     ACTIVATION = {"Relu", "Clip", "Tanh"}
-    CAN_NOT_BE_HEAD = ACTIVATION.union({"Add", "BatchNormalization"})
+    CAN_NOT_BE_HEAD = ACTIVATION.union({"Add"})
     HAS_MULTI_IPTS = {"Add", "Concat"}
 
 
