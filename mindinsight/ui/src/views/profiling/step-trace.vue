@@ -23,7 +23,8 @@ limitations under the License.
         <span class="el-icon-info"></span>
       </el-tooltip>
 
-      <div class="pf-content-right">
+      <div class="pf-content-right"
+           v-show="!(tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData)">
         <div class="input-wrap">
           <label>{{steps.label}}</label>
           <el-input ref="step"
@@ -42,11 +43,13 @@ limitations under the License.
       </div>
       <el-button class="show-average"
                  @click="changeStep(0)"
-                 :disabled="steps.disabled">
+                 :disabled="steps.disabled"
+                 v-show="!(tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData)">
         {{$t('profiling.showAverage')}}
       </el-button>
     </div>
-    <div class="step-message">
+    <div class="step-message"
+         v-show="!(tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData)">
       <div class="step-left-padding-right">
         <span class="font-weight-style">{{$t('profiling.FPMessage')}}</span>
         <span>{{fp_start}}</span>
@@ -56,7 +59,8 @@ limitations under the License.
         <span>{{bp_end}}</span>
       </div>
     </div>
-    <div class="pf-content-middle">
+    <div class="pf-content-middle"
+         v-show="!(tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData)">
       <div id="trace-container">
         <div id="trace"
              class="training-trace"
@@ -131,7 +135,7 @@ limitations under the License.
         <img :src="require('@/assets/images/nodata.png')"
              alt="" />
       </div>
-      <p>{{$t("public.noData")}}</p>
+      <p>{{svg.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
     </div>
   </div>
 </template>
@@ -515,6 +519,10 @@ export default {
               this.svg.data = [];
               this.svg.noData = true;
               this.removeTrace();
+              this.tabsArr.forEach((val)=> {
+                val.noData = true;
+                val.initOver = true;
+              });
             }
           },
           (error) => {
@@ -524,6 +532,10 @@ export default {
             this.svg.noData = true;
             this.svg.initOver = true;
             this.removeTrace();
+            this.tabsArr.forEach((val)=> {
+              val.noData = true;
+              val.initOver = true;
+            });
           },
       );
     },

@@ -14,24 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="md-wrap">
+  <div class="data-process-wrap">
     <div class="title">{{$t('profiling.minddataTitle')}}</div>
     <el-tabs v-model="activeName"
              @tab-click="handleClick">
       <el-tab-pane :label="$t('profiling.queueInfo')"
                    name="queueInfo">
-        <div class="md-top"
-             v-if="!(connectQueueChart.noData && dataQueueChart.noData &&
-              deviceQueueOpChart.noData && getNextChart.noData)">
-          <div class="cell-container data-process"
-               v-show="!processSummary.noData">
+        <div class="data-process-top"
+             v-show="!processSummary.noData">
+          <div class="cell-container data-process">
             <div class="title">
               {{$t('profiling.pipeline')}}
             </div>
           </div>
 
-          <div class="queue-container"
-               v-show="!processSummary.noData">
+          <div class="queue-container">
             <div class="img">
               <div class="edge">
                 <img src="@/assets/images/data-flow.png"
@@ -70,15 +67,14 @@ limitations under the License.
           <div class="cell-container device_queue_op"
                @click="highlight('device_queue_op')"
                clickKey="device_queue_op"
-               :style="{cursor: processSummary.count !== processSummary.maxCount ? 'default' : 'pointer'}"
-               v-show="!processSummary.noData">
+               :style="{cursor: processSummary.count !== processSummary.maxCount ? 'default' : 'pointer'}">
             <div class="title">
               {{$t('profiling.deviceQueueOp')}}
             </div>
           </div>
 
           <div class="queue-container"
-               v-show="processSummary.count === processSummary.maxCount && !processSummary.noData">
+               v-show="processSummary.count === processSummary.maxCount">
             <div class="img">
               <div class="edge">
                 <img src="@/assets/images/data-flow.png"
@@ -117,15 +113,13 @@ limitations under the License.
           <div class="cell-container get-next"
                @click="highlight('get_next')"
                clickKey="get_next"
-               v-if="processSummary.count === processSummary.maxCount && !processSummary.noData">
+               v-if="processSummary.count === processSummary.maxCount">
             <div class="title">
               {{$t('profiling.getData')}}
             </div>
           </div>
         </div>
-        <div class="md-bottom"
-             v-if="!(connectQueueChart.noData && dataQueueChart.noData && deviceQueueOpChart.noData
-             && getNextChart.noData)">
+        <div class="data-process-bottom" v-show="!processSummary.noData">
           <div class="queue-step-wrap"
                v-if="processSummary.count === processSummary.maxCount">
             <div class="title">{{$t('profiling.queueStep')}}</div>
@@ -226,14 +220,12 @@ limitations under the License.
           </div>
         </div>
         <div class="image-noData"
-             v-if="(connectQueueChart.noData && dataQueueChart.noData &&
-                deviceQueueOpChart.noData && getNextChart.noData)">
+             v-if="processSummary.noData">
           <div>
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{(connectQueueChart.initOver && dataQueueChart.initOver &&
-                deviceQueueOpChart.initOver && getNextChart.initOver)?$t("public.noData"):$t("public.dataLoading")}}</p>
+          <p>{{(initOver)?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </el-tab-pane>
       <el-tab-pane :label="$t('profiling.pipeline')"
@@ -317,7 +309,6 @@ export default {
         params: 'device_queue',
         noData: true,
         size: null,
-        initOver: false,
         deviceId: null,
       },
       dataQueueChart: {
@@ -331,7 +322,6 @@ export default {
         params: 'get_next',
         noData: true,
         size: null,
-        initOver: false,
       },
       deviceQueueOpChart: {
         // Device queue chart object
@@ -342,7 +332,6 @@ export default {
         type: 1,
         params: 'device_queue',
         noData: true,
-        initOver: false,
       },
       getNextChart: {
         // Get next chart object
@@ -353,7 +342,6 @@ export default {
         type: 1,
         params: 'get_next',
         noData: true,
-        initOver: false,
       },
       processSummary: {
         // Process summary object
@@ -390,7 +378,7 @@ export default {
       allGraphData: {},
       graphviz: null,
       totalMemory: 16777216 * 2, // Memory size of the graph plug-in
-      scaleRange: [0.0001, 10000], // graph zooms in and zooms out.
+      scaleRange: [0.0001, 10000], // Graph zooms in and zooms out.
       initQueue: '',
       trainId: '',
       selected: '',
@@ -398,12 +386,12 @@ export default {
     };
   },
   watch: {
-    '$parent.curDashboardInfo': {
+    '$parent.curDashboardInfo.curCardNum': {
       handler(newValue, oldValue) {
-        if (newValue.curCardNum || newValue.curCardNum === 0) {
-          this.dir = newValue.query.dir;
-          this.trainId = newValue.query.id;
-          this.currentCard = newValue.curCardNum;
+        if (newValue || newValue === 0) {
+          this.dir = this.$route.query.dir;
+          this.trainId = this.$route.query.id;
+          this.currentCard = newValue;
           if (this.trainId) {
             document.title =
               `${decodeURIComponent(this.trainId)}` +
@@ -412,20 +400,14 @@ export default {
             document.title = `${this.$t('profiling.mindData')}-MindInsight`;
           }
           if (this.activeName === 'queueInfo') {
-            this.connectQueueChart.initOver = false;
-            this.dataQueueChart.initOver = false;
-            this.deviceQueueOpChart.initOver = false;
-            this.getNextChart.initOver = false;
+            this.initOver = false;
             this.init();
           } else {
             this.queryAverageRate();
           }
         }
-        if (newValue.initOver) {
-          this.connectQueueChart.initOver = true;
-          this.dataQueueChart.initOver = true;
-          this.deviceQueueOpChart.initOver = true;
-          this.getNextChart.initOver = true;
+        if (this.activeName === 'queueInfo' && this.$parent.curDashboardInfo.initOver) {
+          this.initOver = true;
         }
       },
       deep: true,
@@ -434,12 +416,31 @@ export default {
   },
   computed: {},
   mounted() {
-    window.addEventListener('resize', this.resizeCallback, false);
+    window.addEventListener(
+        'resize',
+        this.debounce(this.resizeCallback, 200),
+        false,
+    );
     setTimeout(() => {
-      this.$bus.$on('collapse', this.resizeCallback);
+      this.$bus.$on('collapse', this.debounce(this.resizeCallback, 200));
     }, 500);
   },
   methods: {
+    /**
+     * Anti-shake
+     * @param { Function } fn callback function
+     * @param { Number } delay delay time
+     * @return { Function }
+     */
+    debounce(fn, delay) {
+      let timer = null;
+      return function() {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        timer = setTimeout(fn, delay);
+      };
+    },
     /**
      *  Tabs switch
      */
@@ -510,7 +511,6 @@ export default {
               chart.advise = result.advise;
               if (result.size > 0) {
                 chart.noData = false;
-                chart.initOver = true;
                 this.$nextTick(() => {
                   this.setOption(chart);
                 });
@@ -519,7 +519,6 @@ export default {
                   chart.chartDom.clear();
                 }
                 chart.noData = true;
-                chart.initOver = true;
               }
             }
           },
@@ -528,7 +527,6 @@ export default {
               chart.chartDom.clear();
             }
             chart.noData = true;
-            chart.initOver = true;
           },
       );
     },
@@ -554,7 +552,6 @@ export default {
               chart.advise = result.advise;
               if (result.size > 0) {
                 chart.noData = false;
-                chart.initOver = true;
                 chart.size = result.size;
                 this.$nextTick(() => {
                   this.setOption(chart);
@@ -564,13 +561,11 @@ export default {
                   chart.chartDom.clear();
                 }
                 chart.noData = true;
-                chart.initOver = true;
               }
             }
           },
           (err) => {
             chart.noData = true;
-            chart.initOver = true;
             if (chart.chartDom) {
               chart.chartDom.clear();
             }
@@ -663,29 +658,30 @@ export default {
         train_id: this.trainId,
       };
       this.connectQueueChart.deviceId = this.currentCard;
+      this.initOver = false;
       RequestService.queryProcessSummary(params).then(
           (res) => {
             if (res && res.data) {
               const data = JSON.parse(JSON.stringify(res.data));
               this.processSummary.count = Object.keys(data).length;
-
-              this.dealProcess(data);
-              this.$nextTick(() => {
-                if (this.processSummary.count < this.processSummary.maxCount) {
-                  this.queryQueueInfo(this.connectQueueChart);
-                  this.dataQueueChart.noData = false;
-                  this.deviceQueueOpChart.noData = false;
-                  this.getNextChart.noData = false;
-                  this.dataQueueChart.initOver = true;
-                  this.deviceQueueOpChart.initOver = true;
-                  this.getNextChart.initOver = true;
-                } else {
-                  this.queryQueueInfo(this.connectQueueChart);
-                  this.queryQueueInfo(this.dataQueueChart);
-                  this.queryMinddataOp(this.deviceQueueOpChart);
-                  this.queryMinddataOp(this.getNextChart);
-                }
-              });
+              if (this.processSummary.count) {
+                this.dealProcess(data);
+                this.$nextTick(() => {
+                  if (this.processSummary.count < this.processSummary.maxCount) {
+                    this.queryQueueInfo(this.connectQueueChart);
+                    this.dataQueueChart.noData = false;
+                    this.deviceQueueOpChart.noData = false;
+                    this.getNextChart.noData = false;
+                  } else {
+                    this.queryQueueInfo(this.connectQueueChart);
+                    this.queryQueueInfo(this.dataQueueChart);
+                    this.queryMinddataOp(this.deviceQueueOpChart);
+                    this.queryMinddataOp(this.getNextChart);
+                  }
+                });
+              } else {
+                this.dealProcess(null);
+              }
             } else {
               this.dealProcess(null);
             }
@@ -711,6 +707,7 @@ export default {
         total: 0,
       };
       this.processSummary.noData = true;
+      this.initOver = true;
 
       if (data) {
         if (data.device_queue_info && data.device_queue_info.summary) {
@@ -744,6 +741,7 @@ export default {
         },
       };
       this.averageRateChart.deviceId = this.currentCard;
+      this.initOver = false;
       RequestService.queryOpQueue(params).then(
           (res) => {
             this.initOver = true;
@@ -952,7 +950,7 @@ export default {
       ) {
         return;
       }
-      const domList = document.querySelectorAll('.md-top *[clickKey]');
+      const domList = document.querySelectorAll('.data-process-top *[clickKey]');
       Array.prototype.forEach.call(domList, (dom) => {
         if (dom.getAttribute('clickKey') === key) {
           dom.classList.add('selected');
@@ -1285,13 +1283,17 @@ export default {
   },
   destroyed() {
     // Remove the listener of window size change
-    window.removeEventListener('resize', this.resizeCallback);
+    window.removeEventListener(
+        'resize',
+        this.debounce(this.resizeCallback, 200),
+        false,
+    );
     this.$bus.$off('collapse');
   },
 };
 </script>
 <style lang="scss">
-.md-wrap {
+.data-process-wrap {
   height: 100%;
   background: #fff;
   padding: 0 16px;
@@ -1313,11 +1315,12 @@ export default {
     color: #00a5a7;
     font-weight: bold;
   }
-  .md-top {
-    height: 20%;
+  .data-process-top {
+    height: 156px;
     font-size: 0;
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
+    margin-top: 20px;
     .cell-container {
       width: 20%;
       cursor: pointer;
@@ -1354,17 +1357,18 @@ export default {
       position: relative;
       .img {
         width: 100%;
-        height: 24px;
-        margin-top: 30px;
+        height: 37px;
+        margin-top: 13px;
         .edge {
           width: calc(50% - 40px);
           display: inline-block;
-          vertical-align: middle;
+          padding-top: 11px;
           img {
             width: 100%;
           }
         }
         .icon {
+          width: 80px;
           padding: 0 20px;
           display: inline-block;
           vertical-align: middle;
@@ -1404,8 +1408,8 @@ export default {
       border: 2px solid #3399ff !important;
     }
   }
-  .md-bottom {
-    height: 80%;
+  .data-process-bottom {
+    height: calc(100% - 156px);
     .queue-step-wrap {
       &:first-child {
         height: 50%;
