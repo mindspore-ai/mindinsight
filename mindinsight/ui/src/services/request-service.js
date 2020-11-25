@@ -141,7 +141,7 @@ export default {
     let requestStr = '';
     trainIdsArr.forEach((item) => {
       if (item) {
-        requestStr += `train_id=${encodeURIComponent(item)}&`;
+        requestStr += `train_id=${item}&`;
       }
     });
     requestStr += `tag=${encodeURIComponent(params.tag)}`;

@@ -401,9 +401,9 @@ export default {
 
         for (let i = 0; i < summaryCount; i++) {
           if (i === summaryCount - 1) {
-            params.train_id += sampleObject.summaryNames[i];
+            params.train_id += encodeURIComponent(sampleObject.summaryNames[i]);
           } else {
-            params.train_id += sampleObject.summaryNames[i] + '&';
+            params.train_id += encodeURIComponent(sampleObject.summaryNames[i]) + '&';
           }
         }
 
