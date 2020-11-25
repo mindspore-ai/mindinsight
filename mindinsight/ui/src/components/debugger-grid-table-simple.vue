@@ -55,9 +55,13 @@ limitations under the License.
                    size="mini"
                    v-if="!!filterArr.length"
                    @click="filterChange">
-          <i class="el-icon-check"></i></el-button>
+          <i class="el-icon-check"></i>
+        </el-button>
         <span class="filter-incorrect-text"
               v-if="!filterCorrect">{{$t('components.inCorrectInput')}}</span>
+      </div>
+      <div class="shape-wrap">
+        <span>{{ $t('tensors.dimension') }} {{ shape }}</span>
       </div>
       <div class="accuracy-container">
         {{$t('components.gridAccuracy')}}<el-select v-model="accuracy"
@@ -157,6 +161,7 @@ export default {
         rowStartIndex: 0,
         colStartIndex: 0,
       },
+      shape: '',
     };
   },
   computed: {},
@@ -173,8 +178,7 @@ export default {
      * Initialize
      */
     init() {
-      this.itemId =
-        `${new Date().getTime()}` + `${this.$store.state.componentsCount}`;
+      this.itemId = `${new Date().getTime()}` + `${this.$store.state.componentsCount}`;
       this.$store.commit('componentsNum');
     },
     /**
@@ -201,8 +205,7 @@ export default {
           const curFilterArr = tempFilterArr[i].split(':');
           if (curFilterArr[0]) {
             let startIndex = Number(curFilterArr[0]);
-            startIndex =
-              startIndex < 0 ? dimension[i] + startIndex : startIndex;
+            startIndex = startIndex < 0 ? dimension[i] + startIndex : startIndex;
             multiDimsArr.push(startIndex);
           } else {
             multiDimsArr.push(0);
@@ -251,9 +254,7 @@ export default {
             width: 100,
             headerCssClass: 'headerStyle',
             formatter:
-              this.gridType === this.gridTypeKeys.compare
-                ? this.formateCompareColor
-                : this.formateValueColor,
+              this.gridType === this.gridTypeKeys.compare ? this.formateCompareColor : this.formateValueColor,
           });
         });
       } else {
@@ -270,13 +271,7 @@ export default {
      * @return {String}
      */
     formateValueColor(row, cell, value, columnDef, dataContext) {
-      if (
-        !cell ||
-        !value ||
-        isNaN(value) ||
-        value === Infinity ||
-        value === -Infinity
-      ) {
+      if (!cell || !value || isNaN(value) || value === Infinity || value === -Infinity) {
         return value;
       } else if (value < 0) {
         return `<span class="table-item-span" style="background:rgba(227, 125, 41, ${
@@ -300,24 +295,14 @@ export default {
     formateCompareColor(row, cell, value, columnDef, dataContext) {
       if (value instanceof Array && value.length >= 3) {
         const valueNum = value[2];
-        if (
-          !cell ||
-          !valueNum ||
-          isNaN(valueNum) ||
-          valueNum === Infinity ||
-          valueNum === -Infinity
-        ) {
+        if (!cell || !valueNum || isNaN(valueNum) || valueNum === Infinity || valueNum === -Infinity) {
           return `<span class="table-item-span" title="${value[0]}→${value[1]}">${valueNum}</span>`;
         } else if (valueNum < 0) {
           return `<span class="table-item-span" title="${value[0]}→${
             value[1]
-          }" style="background:rgba(227, 125, 41, ${
-            valueNum / this.statistics.overall_min
-          })">${valueNum}</span>`;
+          }" style="background:rgba(227, 125, 41, ${valueNum / this.statistics.overall_min})">${valueNum}</span>`;
         } else {
-          return `<span class="table-item-span" title="${value[0]}→${
-            value[1]
-          }" style="background:rgba(0, 165, 167, ${
+          return `<span class="table-item-span" title="${value[0]}→${value[1]}" style="background:rgba(0, 165, 167, ${
             valueNum / this.statistics.overall_max
           })">${valueNum}</span>`;
         }
@@ -362,11 +347,7 @@ export default {
             const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
             const tempArr = [];
             innerData.forEach((innerValue) => {
-              if (
-                isNaN(innerValue) ||
-                innerValue === 'Infinity' ||
-                innerValue === '-Infinity'
-              ) {
+              if (isNaN(innerValue) || innerValue === 'Infinity' || innerValue === '-Infinity') {
                 tempArr.push(innerValue);
               } else {
                 tempArr.push(innerValue.toFixed(this.accuracy));
@@ -383,11 +364,7 @@ export default {
           };
           outerData.forEach((innerData, innerIndex) => {
             const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
-            if (
-              isNaN(innerData) ||
-              innerData === 'Infinity' ||
-              innerData === '-Infinity'
-            ) {
+            if (isNaN(innerData) || innerData === 'Infinity' || innerData === '-Infinity') {
               tempData[innerOrder] = innerData;
             } else {
               tempData[innerOrder] = innerData.toFixed(this.accuracy);
@@ -404,12 +381,7 @@ export default {
     updateGrid() {
       this.$nextTick(() => {
         if (!this.gridObj) {
-          this.gridObj = new Slick.Grid(
-              `#${this.itemId}`,
-              this.formateArr,
-              this.columnsData,
-              this.optionObj,
-          );
+          this.gridObj = new Slick.Grid(`#${this.itemId}`, this.formateArr, this.columnsData, this.optionObj);
           this.columnsLength = this.columnsData.length;
         }
         this.gridObj.setData(this.formateArr, this.scrollTop);
@@ -445,12 +417,7 @@ export default {
       this.filterArr.forEach((filter) => {
         let value = filter.model.trim();
         if (!isNaN(value)) {
-          if (
-            value < -(filter.max + 1) ||
-            value > filter.max ||
-            value === '' ||
-            value % 1
-          ) {
+          if (value < -(filter.max + 1) || value > filter.max || value === '' || value % 1) {
             filter.showError = true;
             filterCorrect = false;
           } else {
@@ -499,20 +466,12 @@ export default {
       const startValue = tempArr[0];
       const endValue = tempArr[1];
       const limitCount = 2;
-      if (
-        !!startValue &&
-        (isNaN(startValue) ||
-          startValue < -(filter.max + 1) ||
-          startValue > filter.max)
-      ) {
+      if (!!startValue && (isNaN(startValue) || startValue < -(filter.max + 1) || startValue > filter.max)) {
         return false;
       }
       if (
         !!endValue &&
-        (isNaN(endValue) ||
-          endValue <= -(filter.max + 1) ||
-          endValue > (filter.max + 1) ||
-          !Number(endValue))
+        (isNaN(endValue) || endValue <= -(filter.max + 1) || endValue > filter.max + 1 || !Number(endValue))
       ) {
         return false;
       }
@@ -521,12 +480,8 @@ export default {
       } else if (!startValue && !endValue) {
         return true;
       } else if (!!startValue && !!endValue) {
-        const sv =
-          startValue < 0
-            ? filter.max + Number(startValue) + 1
-            : Number(startValue);
-        const ev =
-          endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
+        const sv = startValue < 0 ? filter.max + Number(startValue) + 1 : Number(startValue);
+        const ev = endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
         if (ev <= sv) {
           return false;
         } else {
@@ -544,6 +499,7 @@ export default {
      * @param {String} filterStr String of dimension selection
      */
     updateGridData(newDataFlag, dimension, statistics, filterStr) {
+      this.shape = dimension;
       this.updated = true;
       this.requestError = false;
       this.$nextTick(() => {
@@ -708,10 +664,16 @@ export default {
         color: red;
       }
     }
+    .shape-wrap {
+      float: left;
+      line-height: 34px;
+      margin-left: 10px;
+    }
     .accuracy-container {
       float: right;
       .select-item {
         width: 65px;
+        margin-left: 5px;
       }
     }
   }
