@@ -192,7 +192,8 @@ class WatchpointHandler(StreamHandlerBase):
             int, the number of all watched nodes.
         """
         all_watched_num = 0
-        # the state of current node.
+        valid_node_num = len(nodes)
+        # initialize the state of current node.
         state = WatchNodeTree.NOT_WATCH
         for node in nodes:
             node_name = node.get('name')
@@ -207,10 +208,14 @@ class WatchpointHandler(StreamHandlerBase):
             if flag == WatchNodeTree.NOT_WATCH:
                 continue
             state = WatchNodeTree.PARTIAL_WATCH
-            if flag == WatchNodeTree.TOTAL_WATCH:
+            if flag == WatchNodeTree.INVALID:
+                valid_node_num -= 1
+            elif flag == WatchNodeTree.TOTAL_WATCH:
                 all_watched_num += 1
-
-        if all_watched_num == len(nodes):
+        # update the watch status of current node
+        if not valid_node_num:
+            state = WatchNodeTree.INVALID
+        elif all_watched_num == valid_node_num:
             state = WatchNodeTree.TOTAL_WATCH
         return state
 
