@@ -24,33 +24,35 @@ from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
 from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD, WatchCondition
 
 WATCHPOINT_CONDITION_MAPPING = {
-    ConditionIdEnum.NAN.value: WatchCondition.Condition.nan,
+    ConditionIdEnum.ACTIVATION_RANGE.value: WatchCondition.Condition.tensor_range,
+    ConditionIdEnum.GRADIENT_EXPLODING.value: WatchCondition.Condition.tensor_general_overflow,
+    ConditionIdEnum.GRADIENT_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
+    ConditionIdEnum.GRADIENT_VANISHING.value: WatchCondition.Condition.tensor_too_small,
     ConditionIdEnum.INF.value: WatchCondition.Condition.inf,
-    ConditionIdEnum.OVERFLOW_ASCEND_CHIP.value: WatchCondition.Condition.overflow,
     ConditionIdEnum.MAX_GT.value: WatchCondition.Condition.max_gt,
     ConditionIdEnum.MAX_LT.value: WatchCondition.Condition.max_lt,
-    ConditionIdEnum.MIN_GT.value: WatchCondition.Condition.min_gt,
-    ConditionIdEnum.MIN_LT.value: WatchCondition.Condition.min_lt,
     ConditionIdEnum.MAX_MIN_GT.value: WatchCondition.Condition.max_min_gt,
     ConditionIdEnum.MAX_MIN_LT.value: WatchCondition.Condition.max_min_lt,
     ConditionIdEnum.MEAN_GT.value: WatchCondition.Condition.mean_gt,
     ConditionIdEnum.MEAN_LT.value: WatchCondition.Condition.mean_lt,
-    ConditionIdEnum.TENSOR_OVERFLOW.value: WatchCondition.Condition.tensor_general_overflow,
-    ConditionIdEnum.WEIGHT_OVERFLOW.value: WatchCondition.Condition.tensor_general_overflow,
+    ConditionIdEnum.MIN_GT.value: WatchCondition.Condition.min_gt,
+    ConditionIdEnum.MIN_LT.value: WatchCondition.Condition.min_lt,
+    ConditionIdEnum.NAN.value: WatchCondition.Condition.nan,
     ConditionIdEnum.OPERATOR_OVERFLOW.value: WatchCondition.Condition.overflow,
-    ConditionIdEnum.TENSOR_INITIALIZATION.value: WatchCondition.Condition.tensor_initialization,
-    ConditionIdEnum.WEIGHT_INITIALIZATION.value: WatchCondition.Condition.tensor_initialization,
-    ConditionIdEnum.TENSOR_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
-    ConditionIdEnum.WEIGHT_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
-    ConditionIdEnum.GRADIENT_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
-    ConditionIdEnum.GRADIENT_EXPLODING.value: WatchCondition.Condition.tensor_general_overflow,
-    ConditionIdEnum.TENSOR_TOO_SMALL.value: WatchCondition.Condition.tensor_too_small,
-    ConditionIdEnum.WEIGHT_TOO_SMALL.value: WatchCondition.Condition.tensor_too_small,
-    ConditionIdEnum.GRADIENT_VANISHING.value: WatchCondition.Condition.tensor_too_small,
+    ConditionIdEnum.OVERFLOW_ASCEND_CHIP.value: WatchCondition.Condition.overflow,
     ConditionIdEnum.TENSOR_ALL_ZERO.value: WatchCondition.Condition.tensor_all_zero,
+    ConditionIdEnum.TENSOR_INITIALIZATION.value: WatchCondition.Condition.tensor_initialization,
+    ConditionIdEnum.TENSOR_OVERFLOW.value: WatchCondition.Condition.tensor_general_overflow,
+    ConditionIdEnum.TENSOR_RANGE.value: WatchCondition.Condition.tensor_range,
+    ConditionIdEnum.TENSOR_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
+    ConditionIdEnum.TENSOR_TOO_SMALL.value: WatchCondition.Condition.tensor_too_small,
     ConditionIdEnum.WEIGHT_CHANGE_TOO_LARGE.value: WatchCondition.Condition.tensor_change_too_large,
     ConditionIdEnum.WEIGHT_CHANGE_TOO_SMALL.value: WatchCondition.Condition.tensor_change_too_small,
-    ConditionIdEnum.WEIGHT_NOT_CHANGED.value: WatchCondition.Condition.tensor_not_changed
+    ConditionIdEnum.WEIGHT_INITIALIZATION.value: WatchCondition.Condition.tensor_initialization,
+    ConditionIdEnum.WEIGHT_NOT_CHANGED.value: WatchCondition.Condition.tensor_not_changed,
+    ConditionIdEnum.WEIGHT_OVERFLOW.value: WatchCondition.Condition.tensor_general_overflow,
+    ConditionIdEnum.WEIGHT_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,
+    ConditionIdEnum.WEIGHT_TOO_SMALL.value: WatchCondition.Condition.tensor_too_small
 }
 
 
@@ -181,10 +183,11 @@ class Watchpoint:
             - param (list[float]): Not defined yet.
     """
 
-    def __init__(self, watchpoint_id, watch_condition):
+    def __init__(self, watchpoint_id, watch_condition, name=None):
         self._id = watchpoint_id
         self._condition = watch_condition
         self._watch_node = WatchNodeTree()
+        self.name = name
 
     @property
     def watchpoint_id(self):
@@ -311,6 +314,8 @@ class Watchpoint:
             'id': self._id,
             'watch_condition': self._condition
         }
+        if self.name:
+            watchpoint_info['name'] = self.name
         return watchpoint_info
 
 

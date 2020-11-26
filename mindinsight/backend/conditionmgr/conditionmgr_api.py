@@ -19,6 +19,7 @@ from flask import Blueprint, request
 
 from mindinsight.conf import settings
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.utils.exceptions import ParamMissError
 from mindinsight.backend.debugger.debugger_api import BACKEND_SERVER, _wrap_reply
 
 BLUEPRINT = Blueprint("conditionmgr", __name__,
@@ -42,12 +43,17 @@ def get_condition_collections(train_id):
 @BLUEPRINT.route("/conditionmgr/train-jobs/<train_id>/set-recommended-watch-points", methods=["POST"])
 def set_recommended_watch_points(train_id):
     """set recommended watch points."""
-    set_recommended = request.stream.read()
+    body = request.stream.read()
     try:
-        set_recommended = json.loads(set_recommended if set_recommended else "{}")
+        body = json.loads(body if body else "{}")
     except json.JSONDecodeError:
         raise ParamValueError("Json data parse failed.")
 
+    request_body = body.get('requestBody')
+    if request_body is None:
+        raise ParamMissError('requestBody')
+
+    set_recommended = request_body.get('set_recommended')
     reply = _wrap_reply(BACKEND_SERVER.set_recommended_watch_points, set_recommended, train_id)
     return reply
 

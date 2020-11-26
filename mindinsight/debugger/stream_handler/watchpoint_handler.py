@@ -219,7 +219,7 @@ class WatchpointHandler(StreamHandlerBase):
             state = WatchNodeTree.TOTAL_WATCH
         return state
 
-    def create_watchpoint(self, condition_mgr, watch_condition, watch_nodes=None, watch_point_id=None):
+    def create_watchpoint(self, condition_mgr, watch_condition, watch_nodes=None, watch_point_id=None, name=None):
         """
         Create watchpoint.
         Args:
@@ -238,6 +238,7 @@ class WatchpointHandler(StreamHandlerBase):
                 - param (list[dict]): The list of param for this condition.
             watch_nodes (list[NodeBasicInfo]): The list of node basic info.
             watch_point_id (int): The id of watchpoint.
+            name (str): The name of watchpoint.
 
         Returns:
             int, the new id of watchpoint.
@@ -245,7 +246,7 @@ class WatchpointHandler(StreamHandlerBase):
         validate_watch_condition(condition_mgr, watch_condition)
         watch_condition = set_default_param(condition_mgr, watch_condition)
         new_id = self._latest_id + 1
-        watchpoint = Watchpoint(new_id, watch_condition)
+        watchpoint = Watchpoint(new_id, watch_condition, name)
         if watch_nodes:
             watchpoint.add_nodes(watch_nodes)
         elif watch_point_id:

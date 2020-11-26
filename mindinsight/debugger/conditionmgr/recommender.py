@@ -17,11 +17,13 @@ Predefined watchpoints.
 
 This module predefine recommend watchpoints.
 """
+import math
 import queue as Queue
 
 from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum
 from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
+from mindinsight.debugger.conditionmgr.condition import ActivationFuncEnum
 from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.debugger.conditionmgr.log import logger
 from mindinsight.conf import settings
@@ -33,10 +35,18 @@ SELECTED_STATUS = 2
 
 
 class _WatchPointData:
-    """WatchPoint data container"""
-    def __init__(self, watch_condition, watch_nodes):
+    """
+    WatchPoint data container
+
+    Args:
+        watch_condition (dict): The dict of watch conditions.
+        watch_nodes (list[NodeBasicInfo]): The list of node basic info.
+        name (str): The name of watchpoint.
+    """
+    def __init__(self, watch_condition, watch_nodes, name):
         self.watch_condition = watch_condition
         self.watch_nodes = watch_nodes
+        self.name = name
 
     def get_watch_condition_dict(self):
         return {
@@ -99,6 +109,19 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_c
     _recommend_overflow_ascend_chip(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_tensor_overflow(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_tensor_all_zero(merged_info, condition_mgr, watch_points, condition_context)
+
+    # add activation watch points
+    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, graph_stream, ActivationFuncEnum.TANH.value)
+    _recommend_activation_range(merged_info, condition_mgr, watch_points, condition_context,
+                                ActivationFuncEnum.TANH.value)
+
+    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, graph_stream, ActivationFuncEnum.SIGMOID.value)
+    _recommend_activation_range(merged_info, condition_mgr, watch_points, condition_context,
+                                ActivationFuncEnum.SIGMOID.value)
+
+    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, graph_stream, ActivationFuncEnum.RELU.value)
+    _recommend_activation_range(merged_info, condition_mgr, watch_points, condition_context,
+                                ActivationFuncEnum.RELU.value)
     return watch_points
 
 
@@ -118,6 +141,7 @@ def _recommend_tensor_all_zero(basic_info_nodes, condition_mgr, watch_points, co
             )]
         },
         watch_nodes=basic_info_nodes.copy(),
+        name='recommend_tensor_all_zero_watchpoint'
     )
     watch_points.append(tensor_all_zero_watchpoint)
 
@@ -136,6 +160,7 @@ def _recommend_tensor_overflow(basic_info_nodes, condition_mgr, watch_points, co
             "params": []
         },
         watch_nodes=basic_info_nodes.copy(),
+        name='recommend_tensor_overflow_watchpoint'
     )
     watch_points.append(overflow_watchpoint)
 
@@ -154,6 +179,7 @@ def _recommend_overflow_ascend_chip(basic_info_nodes, condition_mgr, watch_point
             "params": []
         },
         watch_nodes=basic_info_nodes.copy(),
+        name='recommend_overflow_ascend_chip_watchpoint'
     )
     watch_points.append(overflow_d_watchpoint)
 
@@ -175,6 +201,7 @@ def _recommend_gradient_vanishing(basic_info_nodes, condition_mgr, watch_points,
             )]
         },
         watch_nodes=basic_info_nodes.copy(),
+        name='recommend_gradient_vanishing_watchpoint'
     )
     watch_points.append(gradient_vanishing_watchpoint)
 
@@ -198,6 +225,7 @@ def _recommend_weight_change_too_small(condition_mgr, trainable_weight_nodes, wa
             ]
         },
         watch_nodes=trainable_weight_nodes,
+        name='recommend_weight_change_too_small_watchpoint'
     )
     watch_points.append(weight_change_too_small_watchpoint)
 
@@ -225,6 +253,7 @@ def _recommend_weight_not_changed(condition_mgr, trainable_weight_nodes, watch_p
             ]
         },
         watch_nodes=trainable_weight_nodes,
+        name='recommend_weight_not_changed_watchpoint'
     )
     watch_points.append(weight_no_change_watchpoint)
 
@@ -246,6 +275,7 @@ def _recommend_weight_change_too_large(basic_info_nodes, condition_mgr, watch_po
             )]
         },
         watch_nodes=basic_info_nodes.copy(),
+        name='recommend_weight_change_too_large_watchpoint'
     )
     watch_points.append(weight_initialization_watchpoint)
 
@@ -267,21 +297,91 @@ def _recommend_weight_initialization(basic_info_nodes, condition_mgr, watch_poin
             )]
         },
         watch_nodes=basic_info_nodes.copy(),
+        name='recommend_weight_initialization_watchpoint'
     )
     watch_points.append(weight_initialization_watchpoint)
 
 
-def get_basic_node_info(node_category, graph_stream):
+def _recommend_activation_range(basic_info_nodes, condition_mgr, watch_points, condition_context, activation_func):
+    """Recommend activation range watchpoint."""
+    if not basic_info_nodes:
+        return
+    if not condition_mgr.has_condition(ConditionIdEnum.ACTIVATION_RANGE.value, condition_context):
+        return
+    condition = condition_mgr.get_condition(condition_id=ConditionIdEnum.ACTIVATION_RANGE.value)
+    params = []
+    if activation_func == ActivationFuncEnum.TANH.value:
+        # The recommend params for Tanh: The percentage of value in range (tanh(-8.8), tanh(8.8)) is lower than 50.0%
+        params = [
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_percentage_lt"),
+                value=50.0
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_start_inclusive"),
+                value=math.tanh(-8.8)
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_end_inclusive"),
+                value=math.tanh(8.8)
+            )]
+    if activation_func == ActivationFuncEnum.SIGMOID.value:
+        # The recommend params for Sigmoid:
+        # The percentage of value in range (sigmoid(-16.2)), sigmoid(16.2)) is lower than 50.0%
+        params = [
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_percentage_lt"),
+                value=50.0
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_start_inclusive"),
+                value=_sigmoid(-16.2)
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_end_inclusive"),
+                value=_sigmoid(16.2)
+            )]
+    if activation_func == ActivationFuncEnum.RELU.value:
+        # The recommend params for ReLU:
+        # The percentage of value in range (float('-inf'), 0) is greater than 50.0%
+        params = [
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_percentage_gt"),
+                value=50.0
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_start_inclusive"),
+                value=float('-inf')
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_end_inclusive"),
+                value=0
+            )]
+    activation_range_watchpoint = _WatchPointData(
+        watch_condition={
+            "condition": condition.id,
+            "params": params
+        },
+        watch_nodes=basic_info_nodes.copy(),
+        name='recommend_{}_activation_range_watchpoint'.format(activation_func.lower())
+    )
+    watch_points.append(activation_range_watchpoint)
+
+
+def get_basic_node_info(node_category, graph_stream, activation_func=None):
     """Get node merged info."""
-    basic_info_nodes = _get_basic_node_info_by_node_category(node_category, graph_stream)
+    basic_info_nodes = _get_basic_node_info_by_node_category(node_category, graph_stream, activation_func)
     merged_info = _merge_nodes(basic_info_nodes, graph_stream.whole_graph)
     merged_info = _add_graph_name(merged_info, graph_stream)
     return merged_info
 
 
-def _get_basic_node_info_by_node_category(node_category, graph_stream):
+def _get_basic_node_info_by_node_category(node_category, graph_stream, activation_func=None):
     """Get node basic info by node category."""
-    all_graph_nodes = graph_stream.get_searched_nodes(pattern={'node_category': node_category})
+    pattern = {'node_category': node_category}
+    if activation_func:
+        pattern['condition'] = {'activation_func': activation_func}
+    all_graph_nodes = graph_stream.get_searched_nodes(pattern)
     basic_info_nodes = []
     for graph_name, nodes in all_graph_nodes.items():
         if len(all_graph_nodes) == 1:
@@ -329,7 +429,7 @@ def _merge_nodes(leaf_nodes, graph):
         cur_node = watch_nodes.pop()
         node_name = cur_node["name"]
         sub_count = graph.normal_node_map.get(node_name).subnode_count
-        if len(cur_node["nodes"]) < sub_count or not cur_node["nodes"]:
+        if len(cur_node["nodes"]) < sub_count:
             continue
         is_all_chosen = True
         for sub_node in cur_node["nodes"]:
@@ -362,3 +462,8 @@ def _add_graph_name(nodes, graph_stream):
             full_name=node.name, graph_name=graph_name, node_name=node.name, node_type=node.type)
         output_nodes.append(node_basic_info)
     return output_nodes
+
+
+def _sigmoid(value):
+    """return sigmoid value"""
+    return 1.0 / (1.0 + math.exp(value))
