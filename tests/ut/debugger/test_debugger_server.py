@@ -205,12 +205,13 @@ class TestDebuggerServer:
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
     @mock.patch.object(GraphHandler, 'validate_graph_name', return_value='kernel_graph_0')
-    @mock.patch.object(GraphHandler, 'get_searched_node_list')
+    @mock.patch.object(GraphHandler, 'get_node_basic_info')
+    @mock.patch.object(GraphHandler, 'search_nodes')
     @mock.patch.object(WatchpointHandler, 'validate_watchpoint_id')
     @mock.patch.object(WatchpointHandler, 'update_watchpoint')
     def test_update_watchpoint(self, *args):
         """Test update watchpoint."""
-        args[2].return_value = [MagicMock(name='search_name/op_name')]
+        args[2].return_value = {'nodes': [{'name': 'mock_name', 'nodes': []}]}
         res = self._server.update_watchpoint(
             {'watch_point_id': 1,
              'watch_nodes': ['search_name'],

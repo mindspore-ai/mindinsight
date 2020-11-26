@@ -316,8 +316,6 @@ class MSGraph(Graph):
 
     def _traverse_node_tree(self, cur_node, search_node_list):
         """Traverse the node tree and construct the searched nodes list."""
-        if not cur_node.get_children():
-            return
         for _, sub_node in cur_node.get_children():
             sub_nodes = []
             self._traverse_node_tree(sub_node, sub_nodes)
