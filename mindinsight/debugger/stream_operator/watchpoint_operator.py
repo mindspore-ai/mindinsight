@@ -20,7 +20,7 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
     DebuggerDeleteWatchPointError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import ServerStatus, \
-    Streams
+    Streams, is_cst_type
 from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum, TargetTypeEnum
 from mindinsight.debugger.conditionmgr.recommender import get_basic_node_info
 from mindinsight.debugger.stream_handler.watchpoint_handler import validate_watch_condition
@@ -211,7 +211,7 @@ class WatchpointOperator:
             cur_node = tmp_queue.get()
             for node in cur_node.get('nodes'):
                 node_name = node.get('name')
-                if not target_node_name.startswith(node_name):
+                if not target_node_name.startswith(node_name) or is_cst_type(node.get('type')):
                     continue
                 if target_node_name == node_name:
                     self._add_leaf_node_collection(node, names)
@@ -263,14 +263,14 @@ class WatchpointOperator:
 
     def _get_node_basic_infos(self, node_names, graph_name=None):
         """
-        Get node info according to node names.
+        Get watch node info according to node names.
 
         Args:
             node_names (Union[set[str], list[str]]): A collection of node names.
             graph_name (str): The relative graph_name of the watched node. Default: None.
 
         Returns:
-            list[NodeBasicInfo], a list of basic node infos.
+            list[NodeBasicInfo], a list of basic watch nodes info.
         """
         if not node_names:
             return []
@@ -278,6 +278,7 @@ class WatchpointOperator:
         node_infos = []
         for node_name in node_names:
             node_info = graph_stream.get_node_basic_info(node_name, graph_name)
-            node_infos.append(node_info)
+            if not is_cst_type(node_info.type):
+                node_infos.append(node_info)
 
         return node_infos

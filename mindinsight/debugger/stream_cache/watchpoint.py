@@ -18,7 +18,7 @@ import copy
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import is_scope_type
+from mindinsight.debugger.common.utils import is_scope_type, is_cst_type
 from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
 from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD, WatchCondition
@@ -56,6 +56,7 @@ WATCHPOINT_CONDITION_MAPPING = {
 
 class WatchNodeTree:
     """The WatchNode Node Structure."""
+    INVALID = -1  # the scope node and the nodes below are invalid
     NOT_WATCH = 0  # the scope node and the nodes below are not watched
     PARTIAL_WATCH = 1  # at least one node under the scope node is not watched
     TOTAL_WATCH = 2  # the scope node and the nodes below are all watched
@@ -234,6 +235,8 @@ class Watchpoint:
 
     def get_node_status(self, node_name, node_type, full_name):
         """Judge if the node is in watch nodes."""
+        if is_cst_type(node_type):
+            return WatchNodeTree.INVALID
         scope_names = node_name.split('/')
         cur_node = self._watch_node
         status = 1

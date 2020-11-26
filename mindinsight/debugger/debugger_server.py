@@ -489,6 +489,7 @@ class DebuggerServer:
         # get all watchpoint hit list
         if node_name is None:
             reply = self.cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).get()
+            reply['outdated'] = self.cache_store.get_stream_handler(Streams.WATCHPOINT).is_recheckable()
             return reply
         graph_name = self.cache_store.get_stream_handler(Streams.GRAPH).validate_graph_name(
             filter_condition.get('graph_name'))

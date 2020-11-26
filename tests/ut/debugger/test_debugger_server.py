@@ -193,7 +193,7 @@ class TestDebuggerServer:
             self._server.create_watchpoint({'watch_condition': {'id': 'inf'}})
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
-    @mock.patch.object(GraphHandler, 'get_node_basic_info', return_value=[MagicMock()])
+    @mock.patch.object(GraphHandler, 'get_node_basic_info', return_value=MagicMock())
     @mock.patch.object(GraphHandler, 'get_node_type', return_value='aggregation_scope')
     @mock.patch.object(WatchpointHandler, 'create_watchpoint')
     def test_create_watchpoint(self, *args):

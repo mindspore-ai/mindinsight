@@ -145,3 +145,8 @@ def create_view_event_from_tensor_basic_info(tensors_info):
 def is_scope_type(node_type):
     """Judge whether the type is scope type."""
     return node_type.endswith('scope')
+
+
+def is_cst_type(node_type):
+    """Judge whether the type is const type."""
+    return node_type == NodeTypeEnum.CONST.value
