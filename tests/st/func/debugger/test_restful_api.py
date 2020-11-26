@@ -519,7 +519,7 @@ class TestGPUDebugger:
 
 
 class TestMultiGraphDebugger:
-    """Test debugger on Ascend backend."""
+    """Test debugger on Ascend backend for multi_graph."""
 
     @classmethod
     def setup_class(cls):
@@ -673,3 +673,27 @@ def create_watchpoint_and_wait(app_client):
     assert res == {'metadata': {'state': 'running', 'enable_recheck': False}}
     # wait for server has received watchpoint hit
     check_waiting_state(app_client)
+
+class TestMismatchDebugger:
+    """Test debugger when Mindinsight and Mindspore is mismatched."""
+
+    @classmethod
+    def setup_class(cls):
+        """Setup class."""
+        cls._debugger_client = MockDebuggerClient(backend='Ascend', ms_version='1.0.0')
+
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.parametrize("body_data, expect_file", [
+        ({'mode': 'all'}, 'version_mismatch.json')
+    ])
+    def test_retrieve_when_version_mismatch(self, app_client, body_data, expect_file):
+        """Test retrieve when train_begin."""
+        url = 'retrieve'
+        with self._debugger_client.get_thread_instance():
+            send_and_compare_result(app_client, url, body_data, expect_file)
+            send_terminate_cmd(app_client)

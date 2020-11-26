@@ -28,7 +28,7 @@ from tests.st.func.debugger.conftest import GRAPH_PROTO_FILE
 class MockDebuggerClient:
     """Mocked Debugger client."""
 
-    def __init__(self, hostname='localhost:50051', backend='Ascend', graph_num=1):
+    def __init__(self, hostname='localhost:50051', backend='Ascend', graph_num=1, ms_version='1.1.0'):
         channel = grpc.insecure_channel(hostname)
         self.stub = EventListenerStub(channel)
         self.flag = True
@@ -38,6 +38,7 @@ class MockDebuggerClient:
         self._cur_node = ''
         self._backend = backend
         self._graph_num = graph_num
+        self._ms_version = ms_version
 
     def _clean(self):
         """Clean cache."""
@@ -113,6 +114,7 @@ class MockDebuggerClient:
         metadata.cur_node = self._cur_node
         metadata.backend = self._backend
         metadata.training_done = training_done
+        metadata.ms_version = self._ms_version
         return metadata
 
     def send_metadata_cmd(self, training_done=False):
@@ -121,6 +123,8 @@ class MockDebuggerClient:
         metadata = self.get_metadata_cmd(training_done)
         response = self.stub.SendMetadata(metadata)
         assert response.status == EventReply.Status.OK
+        if response.version_matched is False:
+            self.command_loop()
         if training_done is False:
             self.send_graph_cmd()
         print("finish")
