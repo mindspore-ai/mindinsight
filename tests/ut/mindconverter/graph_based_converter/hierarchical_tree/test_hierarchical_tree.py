@@ -42,7 +42,7 @@ class TestHierarchicalTree:
         get_raw_params.return_value = []
         tree = HierarchicalTree()
         pt_node = PyTorchGraphNode()
-        tree.insert(pt_node, 'ResNet', (1, 3, 224, 224), (1, 64, 112, 112))
+        tree.insert(pt_node, 'ResNet')
         assert tree.root == 'ResNet'
 
     def test_remove(self):

@@ -14,6 +14,7 @@
 # ==============================================================================
 """Mapper module."""
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting
 
 
 class TransposeMapper(ONNXToMindSporeMapper):
@@ -40,4 +41,4 @@ class TransposeMapper(ONNXToMindSporeMapper):
             perm = tuple(perm)
             converted_params['input_perm'] = perm
 
-        return {'values': converted_params}
+        return Setting(op_extra_input=converted_params)

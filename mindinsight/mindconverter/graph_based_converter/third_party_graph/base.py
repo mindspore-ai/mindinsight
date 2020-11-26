@@ -15,10 +15,13 @@
 """Define graph entity."""
 import abc
 from collections import OrderedDict
+from copy import deepcopy
 
 from mindinsight.mindconverter.common.log import logger as log
-from ..constant import SEPARATOR_IN_ONNX_OP
+from ..common.code_fragment import CodeFragment
+from ..constant import NodeType, InputType
 from ..mapper.base import Mapper
+from ...common.exceptions import NodeInputTypeNotSupport
 
 
 class GraphParser(metaclass=abc.ABCMeta):
@@ -287,26 +290,10 @@ class GraphNode(abc.ABC):
         self._op_params = dict()
         self._scope_name = None
         self._op_shape = None
-        # Operation in mindspore.
-        self._op_in_ms = None
-        # Params in mindspore.
-        self._params_in_ms = dict()
-        # Settings in mindspore.
-        self._settings_in_ms = dict()
         # Node type of current node, e.g. class, module, operation.
         self._node_type = None
-        # Tag name on tree.
-        self._tag_on_tree = None
         # Function, class or operation needed args.
         self._args_in_code = dict()
-        # Operation needed settings.
-        self._settings_in_code = dict()
-        # Variable name declared in init block.
-        self._variable_name = None
-        # Output variable name declared in construct block.
-        self._opt_var_name = None
-        # Function or class name in code.
-        self._module_name = None
         # Unique key of node.
         self._hash_key = None
         # Input shape of current op.
@@ -317,37 +304,18 @@ class GraphNode(abc.ABC):
         self._weight = None
 
     @property
-    def opt_var_name(self):
+    def weight(self):
+        return self._weight
+
+    @staticmethod
+    def get_opt_var_name(variable_name):
         """
         Output variable name.
 
         Returns:
             str, variable name.
         """
-        return f"{self.variable_name}_opt"
-
-    @opt_var_name.setter
-    def opt_var_name(self, v):
-        """
-        Set variable name.
-
-        Args:
-            v (str): Name.
-
-        """
-        self._opt_var_name = v
-
-    @property
-    def op_in_ms(self):
-        """
-        Operation in mindspore.
-
-        Returns:
-            str, operation name.
-        """
-        if self._op_in_ms and SEPARATOR_IN_ONNX_OP in self._op_in_ms:
-            return self._op_in_ms.replace(SEPARATOR_IN_ONNX_OP, ".")
-        return self._op_in_ms
+        return f"{variable_name}_opt"
 
     @property
     def args_in_code(self):
@@ -371,27 +339,6 @@ class GraphNode(abc.ABC):
         self._args_in_code = args
 
     @property
-    def settings_in_code(self):
-        """
-        Settings in code.
-
-        Returns:
-            dict, settings.
-        """
-        return self._settings_in_code
-
-    @settings_in_code.setter
-    def settings_in_code(self, settings):
-        """
-        Settings in code.
-
-        Args:
-            settings(dict): Settings.
-
-        """
-        self._settings_in_code = settings
-
-    @property
     def input_shape(self):
         """
         Input tensor shape of current node.
@@ -410,16 +357,6 @@ class GraphNode(abc.ABC):
             tuple, output tensor shape.
         """
         return self._opt_shape
-
-    @property
-    def tag(self):
-        """Tag on hierarchical tree."""
-        return self._tag_on_tree
-
-    @tag.setter
-    def tag(self, t):
-        """Tag on hierarchical tree."""
-        self._tag_on_tree = t
 
     def is_empty(self):
         """
@@ -536,7 +473,7 @@ class GraphNode(abc.ABC):
         """Replace actual parameter with formal parameter."""
 
     @abc.abstractmethod
-    def _get_arg_name(self, arg):
+    def _get_arg_name(self, arg, variable_name):
         """Get arg name for func or class."""
 
     @abc.abstractmethod
@@ -553,13 +490,8 @@ class GraphNode(abc.ABC):
     def real_name(self, **kwargs):
         """Setter of `real_name`."""
 
-    @property
     @abc.abstractmethod
-    def variable_name(self):
-        """Getter of `variable_name`."""
-
-    @abc.abstractmethod
-    def to_code(self, ipt_args_in_construct: str, output_var: str):
+    def to_code(self, ipt_args_in_construct: str, variable_name: str, output_var: str, code_fragment):
         """Graph node to MindSpore code."""
 
     @abc.abstractmethod
@@ -570,40 +502,86 @@ class GraphNode(abc.ABC):
     def add_input_and_output_shape(self, input_shape, output_shape):
         """Add the node input shape."""
 
-    @abc.abstractmethod
-    def froze_node_type_and_module_name(self, node_type, module_name):
-        """Make node_type can not be changed."""
-
-    @abc.abstractmethod
-    def convert_successful(self):
-        """Whether convert successful."""
-
-    def param_transform(self, mapper: Mapper):
+    @staticmethod
+    def _generate_ipt_args_settings_in_construct(ipt_args_in_construct, settings):
         """
-        Transform param in pytorch operation into mindspore.
+        Generate input with args and settings in construct.
 
         Args:
+            ipt_args_in_construct (str): Input args in construct.
+            settings (Setting): Settings in operator.
+
+        Returns:
+            str, args of each node in generated construct statement.
+        """
+        if settings and settings.op_ipt_type:
+            input_type = settings.op_ipt_type
+            if input_type == InputType.TENSOR.value:
+                ipt_args_settings_in_construct = ipt_args_in_construct
+            elif input_type == InputType.LIST.value:
+                ipt_args_settings_in_construct = f"({ipt_args_in_construct})"
+            else:
+                raise NodeInputTypeNotSupport(f"Input type[{input_type}] is not supported now.")
+        else:
+            ipt_args_settings_in_construct = ipt_args_in_construct
+
+        if settings and settings.op_extra_input:
+            settings_value = settings.op_extra_input
+            if settings_value:
+                settings_in_construct = ', '.join([f"{setting_val}" for _, setting_val in settings_value.items()])
+                ipt_args_settings_in_construct = ', '.join((ipt_args_settings_in_construct, settings_in_construct))
+
+        return ipt_args_settings_in_construct
+
+    def param_transform(self, mapper: Mapper, variable_name):
+        """
+        Transform param in PyTorch operation into MindSpore.
+
+        Args:
+            variable_name (str): Variable name.
             mapper (ONNXToMindSporeMapper): Mapper between onnx operation
-                and mindspore.
+                and MindSpore.
 
         Returns:
             dict, transformed params.
         """
-        import copy
-        params = copy.deepcopy(self._op_params)
+        if self._node_type != NodeType.OPERATION.value:
+            args = deepcopy(self._args_in_code)
+            self._args_in_code = dict()
+            for arg, value in args.items():
+                self._args_in_code[self._get_arg_name(arg, variable_name)] = value
+            return CodeFragment(operation="", actual_args=args, settings=None,
+                                input_shape=self.input_shape, output_shape=self.output_shape)
+
+        if self.transformed:
+            raise ValueError("Already transformed.")
+
+        params = deepcopy(self._op_params)
         params.update({"input_shape": self.input_shape,
                        "output_shape": self.output_shape})
 
-        op_name_in_mindspore, ms_params, ms_settings = mapper.convert(op_name=self.op_name,
-                                                                      params=params,
-                                                                      weights=self._weight)
-        if op_name_in_mindspore:
-            self._op_in_ms = op_name_in_mindspore
-            self._params_in_ms = ms_params
-            self._settings_in_ms = ms_settings
-        else:
-            self._op_in_ms = self._op_name
-            self._params_in_ms = self._op_params
-            self._settings_in_ms = dict()
+        ms_op, ms_params, ms_settings, ms_weights = mapper.convert(op_name=self.op_name,
+                                                                   params=params,
+                                                                   weights=self._weight)
 
-        return self._op_in_ms, self._params_in_ms, self._settings_in_ms
+        if ms_op:
+            code_fragment = CodeFragment(operation=ms_op,
+                                         actual_args=ms_params,
+                                         settings=ms_settings,
+                                         input_shape=self.input_shape,
+                                         output_shape=self.output_shape,
+                                         trainable_params=ms_weights)
+        else:
+            code_fragment = CodeFragment(operation=self._op_name,
+                                         actual_args=self._op_params,
+                                         settings=None,
+                                         input_shape=self.input_shape,
+                                         output_shape=self.output_shape,
+                                         trainable_params=self._weight)
+
+        for arg, value in code_fragment.actual_args.items():
+            self._args_in_code[self._get_arg_name(arg, variable_name)] = value
+
+        self.transformed = True
+
+        return code_fragment

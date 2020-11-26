@@ -13,14 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 """Define PyTorch graph node."""
-from copy import deepcopy
-
 from .base import GraphNode
+from ..common.utils import is_converted
 
 from ..constant import NodeType, SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, LEFT_BUCKET, RIGHT_BUCKET, \
-    SEPARATOR_IN_ONNX_OP, InputType
-from ..mapper.base import Mapper
-from ...common.exceptions import NodeInputTypeNotSupport
+    SEPARATOR_IN_ONNX_OP
 
 
 class PyTorchGraphNode(GraphNode):
@@ -40,9 +37,6 @@ class PyTorchGraphNode(GraphNode):
         self._op_params = self._get_raw_params(node)
         self._op_name = node.kind() if node else None
         self._scope_name = node.scopeName() if node else None
-        self._opt_var_name = None
-        self._variable_name = self._extract_var_name(self._scope_name)
-        self._module_name = None
         self._weight = weight
 
     def clear_args_of_declaration(self):
@@ -51,7 +45,7 @@ class PyTorchGraphNode(GraphNode):
         """
         self._args_in_code = dict()
 
-    def _get_arg_name(self, arg):
+    def _get_arg_name(self, arg, variable_name):
         """
         Get arg name.
 
@@ -61,7 +55,7 @@ class PyTorchGraphNode(GraphNode):
         Returns:
             str, arg name in function or class declaration.
         """
-        return f"{arg}_{self._variable_name}"
+        return f"{arg}_{variable_name}"
 
     @property
     def hash_key(self):
@@ -87,53 +81,6 @@ class PyTorchGraphNode(GraphNode):
 
         """
         self._hash_key = h
-
-    @property
-    def variable_name(self):
-        """
-        Variable name.
-
-        Returns:
-            str, variable name declared in init.
-        """
-        return self._variable_name
-
-    @variable_name.setter
-    def variable_name(self, v):
-        """
-        Setter of variable name.
-
-        Args:
-            v (str): Variable name.
-
-        """
-        self._variable_name = v
-
-    @property
-    def module_name(self):
-        """
-        Module name.
-
-        Returns:
-            str, module name.
-        """
-        if not self._module_name_frozen:
-            module_name = self.tag
-            return module_name
-
-        return self._module_name
-
-    def _froze_module_name(self, m):
-        """
-        Once module_name is set, then it's unchangeable.
-
-        Args:
-            m (str): Module name.
-
-        """
-        if not self._module_name_frozen:
-            self._module_name = m
-            self._module_name_frozen = True
 
     @property
     def op_name(self):
@@ -172,72 +119,47 @@ class PyTorchGraphNode(GraphNode):
         self._ipt_shape = input_shape
         self._opt_shape = output_shape
 
-    def to_code(self, ipt_args_in_construct: str, output_var: str):
+    def to_code(self, ipt_args_in_construct: str, variable_name: str, output_var: str, code_fragment):
         """
         Generate statements.
 
         Args:
+            variable_name (str): Variable name.
             ipt_args_in_construct (str): Args of input.
             output_var (str): Output variable name in construct.
+            code_fragment (CodeFragment): CodeFragment instance.
 
         Returns:
             Union[str, str], declare in init and call in construct.
         """
-        operator = self.op_in_ms or self.module_name
-        self._opt_var_name = output_var
+        operator = code_fragment.operation
 
         args = self.args_in_code
-        settings = self.settings_in_code
+        settings = code_fragment.code_setting
 
-        if self._node_type == NodeType.OPERATION.value and not self.convert_successful():
+        if self._node_type == NodeType.OPERATION.value and not is_converted(code_fragment.operation):
             args.update({"input_shape": self.input_shape,
                          "output_shape": self.output_shape})
 
         if self._node_type == NodeType.OPERATION.value:
-            expr = ", ".join([f"{k.replace(f'_{self._variable_name}', '')}={v}"
+            expr = ", ".join([f"{k.replace(f'_{variable_name}', '')}={v}"
                               for k, v in args.items()])
-            ipt_args_settings_in_construct = self._generate_ipt_args_settings_in_construct(ipt_args_in_construct,
-                                                                                           settings)
+            ipt_args_settings_in_construct = self._generate_ipt_args_settings_in_construct(
+                ipt_args_in_construct, settings)
         else:
             # When it's type is module, class or func,
             # it's not necessary to replace var.
-            expr = ", ".join([f"{k.replace(f'_{self._variable_name}', '')}={v}"
+            expr = ", ".join([f"{k.replace(f'_{variable_name}', '')}={v}"
                               for k, v in args.items()])
             ipt_args_settings_in_construct = ipt_args_in_construct
 
-        declare = f"self.{self._variable_name} = {operator}({expr})"
-        call = f"{self._opt_var_name} = self.{self._variable_name}({ipt_args_settings_in_construct})"
+        if SEPARATOR_IN_ONNX_OP in operator:
+            operator = operator.replace(SEPARATOR_IN_ONNX_OP, ".")
+
+        declare = f"self.{variable_name} = {operator}({expr})"
+        call = f"{output_var} = self.{variable_name}({ipt_args_settings_in_construct})"
 
         return declare, call
-
-    @staticmethod
-    def _generate_ipt_args_settings_in_construct(ipt_args_in_construct, settings):
-        """
-        Generate input with args and settings in construct.
-
-        Args:
-            ipt_args_in_construct(str): input args in construct.
-            settings(dict): settings in operator.
-
-        """
-        if settings.get('input_type'):
-            input_type = settings['input_type']
-            if input_type == InputType.TENSOR.value:
-                ipt_args_settings_in_construct = ipt_args_in_construct
-            elif input_type == InputType.LIST.value:
-                ipt_args_settings_in_construct = f"({ipt_args_in_construct})"
-            else:
-                raise NodeInputTypeNotSupport(f"Input type[{input_type}] is not supported now.")
-        else:
-            ipt_args_settings_in_construct = ipt_args_in_construct
-
-        if settings.get('values'):
-            settings_value = settings['values']
-            if settings_value:
-                settings_in_construct = ', '.join([f"{setting_val}" for _, setting_val in settings_value.items()])
-                ipt_args_settings_in_construct = ', '.join((ipt_args_settings_in_construct, settings_in_construct))
-
-        return ipt_args_settings_in_construct
 
     def to_ir(self):
         """
@@ -288,62 +210,3 @@ class PyTorchGraphNode(GraphNode):
         var = var.replace(LEFT_BUCKET, SEPARATOR_BTW_NAME_AND_ID).replace(
             RIGHT_BUCKET, "")
         return var
-
-    def param_transform(self, mapper: Mapper):
-        """
-        Transform torch params into mindspore.
-
-        Args:
-            mapper (Mapper): Mapper of params.
-
-        """
-        if self._node_type != NodeType.OPERATION.value:
-            args = deepcopy(self._args_in_code)
-            self._args_in_code = dict()
-            for arg, value in args.items():
-                self._args_in_code[self._get_arg_name(arg)] = value
-            return None, None, None
-
-        if not self.transformed:
-            _, _, _ = super(PyTorchGraphNode, self).param_transform(mapper)
-
-            for arg, value in self._params_in_ms.items():
-                self._args_in_code[self._get_arg_name(arg)] = value
-
-            for arg, value in self._settings_in_ms.items():
-                self._settings_in_code[arg] = value
-
-            self.transformed = True
-
-        return self._op_in_ms, self._params_in_ms, self._settings_in_ms
-
-    def froze_node_type_and_module_name(self, node_type, module_name):
-        """
-        Froze node type and module name.
-
-        After node_type is frozen, then the `module_name`
-        will be affected when `node_type` is `class`.
-        Thus, this line must be placed before `nd_inst.data.module_name`.
-
-        Args:
-            module_name: Modified module name.
-            node_type (str): Node type, class of func.
-
-        """
-        if not self._type_frozen:
-            self._node_type = node_type
-            self._type_frozen = True
-
-        if not self._module_name_frozen:
-            self._froze_module_name(module_name)
-
-    def convert_successful(self):
-        """
-        Whether convert successfully.
-
-        Returns:
-            bool, true or false.
-        """
-        if self._op_in_ms and SEPARATOR_IN_ONNX_OP not in self._op_in_ms:
-            return True
-        return False

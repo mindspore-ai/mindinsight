@@ -12,26 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Mapper module."""
-from ...base import ONNXToMindSporeMapper
-from ...gen_setting import Setting
-
-
-class FlattenMapper(ONNXToMindSporeMapper):
-    """Flatten mapper."""
-
-    @staticmethod
-    def _operation_name_in_ms(*args, **kwargs):
-        return "nn.Flatten"
-
-    @staticmethod
-    def _convert_params(**kwargs):
-        return dict()
-
-    @staticmethod
-    def _convert_trained_weights(**kwargs):
-        return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        return Setting()
+"""Common instance and utils of graph based converter."""

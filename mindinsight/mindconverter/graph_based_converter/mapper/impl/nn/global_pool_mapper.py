@@ -14,6 +14,7 @@
 # ==============================================================================
 """Mapper module."""
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting
 
 
 class GlobalPoolMapper(ONNXToMindSporeMapper):
@@ -25,8 +26,7 @@ class GlobalPoolMapper(ONNXToMindSporeMapper):
             op_name = 'nn.AvgPool{}d'
         else:
             op_name = 'nn.MaxPool{}d'
-        dim = 1 if len(kwargs['params']['input_shape']) == 3\
-            else 2
+        dim = 1 if len(kwargs['params']['input_shape']) == 3 else 2
         return op_name.format(dim)
 
     @staticmethod
@@ -49,4 +49,4 @@ class GlobalPoolMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_settings(**kwargs):
-        return dict()
+        return Setting()

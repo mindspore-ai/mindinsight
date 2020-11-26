@@ -38,7 +38,6 @@ class PyTorchGraphParser(GraphParser):
             error = FileNotFoundError("`model_path` must be assigned with "
                                       "an existed file path.")
             log.error(str(error))
-            log.exception(error)
             raise error
 
         try:

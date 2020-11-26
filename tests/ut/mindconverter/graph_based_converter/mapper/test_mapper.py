@@ -17,11 +17,13 @@ import numpy as np
 import pytest
 
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
+from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 from tests.utils import mindspore
 
 
 class TestMappers:
     """Test Mappers."""
+
     @pytest.mark.parametrize('params', [{
         'input': {'op_name': 'onnx::Conv',
                   'params': {'dilations': [1, 1],
@@ -38,7 +40,7 @@ class TestMappers:
                                                  'pad_mode': '\"pad\"',
                                                  'dilation': (1, 1),
                                                  'group': 1},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Conv',
                   'params': {'dilations': [1, 1],
@@ -55,7 +57,7 @@ class TestMappers:
                                                  'pad_mode': '\"valid\"',
                                                  'dilation': (1, 1),
                                                  'group': 1},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Gemm',
                   'params': dict(),
@@ -65,7 +67,7 @@ class TestMappers:
                             'converted_params': {'in_channels': 3,
                                                  'out_channels': 10,
                                                  'has_bias': True},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::BatchNormalization',
                   'params': {'epsilon': 1e-5,
@@ -76,14 +78,14 @@ class TestMappers:
                             'converted_params': {'num_features': 6,
                                                  'eps': 1e-5,
                                                  'momentum': 0.9},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Relu',
                   'params': dict(),
                   'weights': dict()},
         'expected_output': {'converter_name': 'nn.ReLU',
                             'converted_params': dict(),
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::MaxPool',
                   'params': {'kernel_shape': [3, 3],
@@ -94,7 +96,7 @@ class TestMappers:
                             'converted_params': {'kernel_size': (3, 3),
                                                  'stride': (2, 2),
                                                  'pad_mode': '"same"'},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::AveragePool',
                   'params': {'kernel_shape': [3, 3],
@@ -105,7 +107,7 @@ class TestMappers:
                             'converted_params': {'kernel_size': (3, 3),
                                                  'stride': (2, 2),
                                                  'pad_mode': '"same"'},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::GlobalAveragePool',
                   'params': {'input_shape': (1, 3, 10, 10),
@@ -113,21 +115,21 @@ class TestMappers:
                   'weights': ''},
         'expected_output': {'converter_name': 'nn.AvgPool2d',
                             'converted_params': {'kernel_size': (10, 10)},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Flatten',
                   'params': dict(),
                   'weights': dict()},
         'expected_output': {'converter_name': 'nn.Flatten',
                             'converted_params': dict(),
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Add',
                   'params': dict(),
                   'weights': dict()},
         'expected_output': {'converter_name': 'P.TensorAdd',
                             'converted_params': dict(),
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Pad',
                   'params': {'pads': [0, 1, 2, 3],
@@ -137,7 +139,7 @@ class TestMappers:
         'expected_output': {'converter_name': 'nn.Pad',
                             'converted_params': {'paddings': ((0, 2), (1, 3)),
                                                  'mode': '\"CONSTANT\"'},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Pad',
                   'params': {'pads': [0, 1, 2, 3],
@@ -146,7 +148,7 @@ class TestMappers:
         'expected_output': {'converter_name': 'nn.Pad',
                             'converted_params': {'paddings': ((0, 2), (1, 3)),
                                                  'mode': '\"REFLECT\"'},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Pad',
                   'params': {'pads': [0, 1, 2, 3],
@@ -156,7 +158,7 @@ class TestMappers:
         'expected_output': {'converter_name': 'nn.Pad',
                             'converted_params': {'paddings': ((0, 2), (1, 3)),
                                                  'mode': '{UNSUPPORTED: value is NOT 0}\"CONSTANT\"'},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Pad',
                   'params': {'pads': [0, 1, 2, 3],
@@ -165,7 +167,7 @@ class TestMappers:
         'expected_output': {'converter_name': 'nn.Pad',
                             'converted_params': {'paddings': ((0, 2), (1, 3)),
                                                  'mode': '{UNSUPPORTED: \"edge\"}\"UNKNOWN\"'},
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::ReduceMean',
                   'params': {'keepdims': 0,
@@ -196,14 +198,14 @@ class TestMappers:
                   'weights': dict()},
         'expected_output': {'converter_name': 'nn.ReLU6',
                             'converted_params': dict(),
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Clip',
                   'params': dict(),
                   'weights': dict()},
         'expected_output': {'converter_name': 'nn.ReLU',
                             'converted_params': dict(),
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }, {
         'input': {'op_name': 'onnx::Clip',
                   'params': {'max': 3,
@@ -211,13 +213,13 @@ class TestMappers:
                   'weights': dict()},
         'expected_output': {'converter_name': None,
                             'converted_params': dict(),
-                            'converted_settings': dict()}
+                            'converted_settings': Setting()}
     }])
     def test_mapper(self, params):
         """Test mapper function."""
         mapper = ONNXToMindSporeMapper()
-        converter_name, converted_params, converted_settings = \
+        converter_name, converted_params, converted_settings, _ = \
             mapper.convert(params['input']['op_name'], params['input']['params'], params['input']['weights'])
         assert params['expected_output']['converter_name'] == converter_name
         assert params['expected_output']['converted_params'] == converted_params
-        assert params['expected_output']['converted_settings'] == converted_settings
+        assert isinstance(converted_settings, Setting)

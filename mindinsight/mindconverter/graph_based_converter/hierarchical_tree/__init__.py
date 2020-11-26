@@ -14,6 +14,7 @@
 # ==============================================================================
 """Hierarchical tree module."""
 import re
+
 from mindinsight.mindconverter.common.log import logger as log
 from .hierarchical_tree import HierarchicalTree
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
@@ -36,7 +37,6 @@ def _tf_model_node_name_reformat(node: OnnxGraphNode, node_name):
     """
     scope_name = node.scope_name
     new_name = None
-    parent = ""
     regex = r"(?P<parent>.+/)(?P<op>\w+)"
     match = re.match(regex, scope_name)
     parent = match.group("parent")
@@ -74,12 +74,13 @@ class HierarchicalTreeFactory:
                           f"Cannot find {node_name}'s input shape."
                 log.error(err_msg)
             if isinstance(node_inst, OnnxGraphNode):
-                node_name_with_scope = _tf_model_node_name_reformat(
-                    node_inst, node_name)
+                node_name_with_scope = _tf_model_node_name_reformat(node_inst, node_name)
                 node_scope_name[node_name] = node_name_with_scope
                 node_name = node_name_with_scope
 
-            tree.insert(node_inst, node_name, node_input, node_output)
+            node_inst.add_input_and_output_shape(node_input, node_output)
+            tree.insert(node_inst, node_name)
+
         if node_scope_name:
             return tree, node_scope_name
         return tree

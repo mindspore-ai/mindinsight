@@ -99,8 +99,8 @@ class PyTorchGraph(Graph):
 
         for item in input_shape:
             if not isinstance(item, int):
-                err_msg = f"Only support model with one input now, " \
-                          f"and each shape value in `input_shape` should be int."
+                err_msg = "Only support model with one input now, " \
+                          "and each shape value in `input_shape` should be int."
                 log.error(err_msg)
                 raise ValueError(err_msg)
 

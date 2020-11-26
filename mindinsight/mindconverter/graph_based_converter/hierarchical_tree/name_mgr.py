@@ -63,6 +63,10 @@ START_IDX = 0
 class GlobalVarNameMgr:
     """Global variable name mgr."""
 
+    def __init__(self):
+        global_op_namespace.clear()
+        global_var_namespace.clear()
+
     @staticmethod
     def _get_name(name):
         """Deal with op name."""

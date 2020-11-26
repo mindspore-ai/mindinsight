@@ -14,6 +14,7 @@
 # ==============================================================================
 """Mapper module."""
 from ...base import ONNXToMindSporeMapper
+from ...gen_setting import Setting, Tensor, get_dtype
 
 
 class AddMapper(ONNXToMindSporeMapper):
@@ -33,4 +34,12 @@ class AddMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_settings(**kwargs):
-        return dict()
+        weights = kwargs.get("weights")
+        if not weights:
+            return Setting()
+        tensor, ref = None, ""
+        for t_name, t_value in weights.items():
+            tensor = t_value
+            ref = t_name
+        return Setting(op_extra_tensor=Tensor(shape=tensor.shape,
+                                              dtype=get_dtype(tensor), reference=ref))
