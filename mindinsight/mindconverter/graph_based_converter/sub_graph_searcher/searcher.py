@@ -16,8 +16,8 @@
 from queue import PriorityQueue
 from typing import Dict, List
 
-from .common import context, DagGraph, gen_hash_key
-from ..constant import MINI_FREQUENCY
+from .common import context, DagGraph, gen_hash_key, ACCEPTABLE_RESULT_COUNT
+from .common import MINI_FREQUENCY, MAX_ITERATION_DEPTH, SATISFIED_SCORE
 from ..third_party_graph.onnx_utils import BaseNode
 from .search_path import SearchPath, Pattern, generate_pattern, find_built_in_pattern
 
@@ -32,10 +32,13 @@ def _is_satisfied(path):
     Returns:
         bool, True or False.
     """
-    if len(path.recursion_path) == 2:
+    if len(path.recursion_path) > MAX_ITERATION_DEPTH:
         return True
-    flag = [cur_pattern.count for _, cur_pattern in path.new_pattern.items()]
-    return float(sum(flag)) / len(flag) == 1 or path.actual_v >= 0.80
+    if not path.new_pattern or max([p.count for _, p in path.new_pattern.items()]) < MINI_FREQUENCY:
+        return True
+    if path.evaluate_score() > SATISFIED_SCORE:
+        return True
+    return False
 
 
 def _search(init_pattern: Dict[str, Pattern], init_topo_order: List[BaseNode],
@@ -74,14 +77,16 @@ def _search(init_pattern: Dict[str, Pattern], init_topo_order: List[BaseNode],
             available_path.append(cur_path)
             continue
 
-        if len(available_path) >= 8:
+        if len(available_path) >= ACCEPTABLE_RESULT_COUNT:
             break
 
         for _, cur_pattern in cur_path.new_pattern.items():
             if cur_pattern.count < MINI_FREQUENCY:
-                available_path.append(cur_path)
-                break
-            key = "/".join([cur_pattern.pattern, gen_hash_key(cur_topo_order)])
+                continue
+            key = "/".join([f"{cur_pattern.pattern}[{cur_pattern.in_degree},{cur_pattern.out_degree}]",
+                            gen_hash_key(cur_topo_order, without_module=True)])
+            if key in context.visited:
+                continue
             # c. create new SearchPath.
             new_path = SearchPath(pattern=cur_pattern, sequence=cur_topo_order, prev_path=cur_path,
                                   sub_graph_size=sub_graph_size)
@@ -107,18 +112,17 @@ def _sub_graph_matching(init_dag, beam_width=5, sub_graph_size=4):
     context.set_beam_width(beam_width)
 
     def _get_top_1(available_path: list):
-        if len(available_path) <= 1:
-            return available_path
+        if not available_path:
+            return None
         available_path = sorted(available_path, key=lambda x: x.actual_v, reverse=True)
-        return available_path[0] if available_path else None
+        return available_path[0]
 
     topo_order = [node for _, (_, node) in enumerate(context.node_collection.items())]
     context.set_sequence_length(len(topo_order))
     built_in_pattern = find_built_in_pattern(topo_order, init_dag)
     pattern = generate_pattern(topo_order, dag=init_dag, sub_graph_size=sub_graph_size)
     pattern.update(built_in_pattern)
-    found_path = _search(pattern, topo_order, init_graph=init_dag,
-                         sub_graph_size=sub_graph_size)
+    found_path = _search(pattern, topo_order, init_graph=init_dag, sub_graph_size=2)
     return _get_top_1(found_path)
 
 
@@ -183,7 +187,7 @@ def _retrieve_operators(module_path, module_dict):
         str: module_name, operators in module.
     """
     added_module = dict()
-    node_in_pattern = module_path.pattern.pattern.split('->')
+    node_in_pattern = module_path.pattern.ptn_items
     node_list = []
     for node in node_in_pattern:
         if module_dict.get(node):
@@ -192,9 +196,8 @@ def _retrieve_operators(module_path, module_dict):
                                                    added_module)
         else:
             node_list.append(node)
-    key = module_path.pattern.module_name
-    val = [f"{key}/{node}" for node in node_list]
-    return key, val
+    val = [f"{module_path.pattern.module_name}/{node}" for node in node_list]
+    return module_path.pattern.module_name, val
 
 
 def _build_connection(loader):
@@ -216,6 +219,19 @@ def _build_connection(loader):
     return dag
 
 
+def flatten_graph(graph):
+    """
+    Flatten graph into a sequence.
+
+    Args:
+        graph (DagGraph): DagGraph instance.
+
+    Returns:
+        list[str], corresponding scope name.
+    """
+    return [f"Model/{node.op_type}" for _, node in graph.node_collection.items()]
+
+
 def generate_scope_name(data_loader):
     """
     Generate scope name according to computation graph.
@@ -227,6 +243,13 @@ def generate_scope_name(data_loader):
         list[str], generated scope name.
     """
     init_dag = _build_connection(data_loader)
-    result = _sub_graph_matching(init_dag, beam_width=5, sub_graph_size=6)
-    topo_order_with_scope_name_list = _retrieve_scope_name(result)
+    try:
+        result = _sub_graph_matching(init_dag, beam_width=5, sub_graph_size=6)
+        topo_order_with_scope_name_list = _retrieve_scope_name(result) if result else flatten_graph(init_dag)
+
+        if len(topo_order_with_scope_name_list) != len(data_loader.nodes_dict):
+            topo_order_with_scope_name_list = flatten_graph(init_dag)
+
+    except (ValueError, IndexError, AttributeError, KeyError) as _:
+        topo_order_with_scope_name_list = flatten_graph(init_dag)
     return topo_order_with_scope_name_list

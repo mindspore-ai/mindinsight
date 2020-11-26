@@ -21,6 +21,10 @@ from typing import List
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import BaseNode
 
 MAX_OUT_DEGREE = 1
+MINI_FREQUENCY = 4
+MAX_ITERATION_DEPTH = 4
+SATISFIED_SCORE = 0.55
+ACCEPTABLE_RESULT_COUNT = 16
 
 
 class CmpRelation:
@@ -33,9 +37,14 @@ class CmpRelation:
     GREATER = 1
 
 
-def gen_hash_key(sequence: List[BaseNode], separator="->"):
+def gen_hash_key(sequence: List[BaseNode], separator="-", without_module: bool = False):
     """Generate hash key."""
-    seq = [item.op_type for item in sequence]
+    seq = []
+    for item in sequence:
+        if without_module and "module" in item.op_type.lower():
+            seq.append("_M_")
+            continue
+        seq.append(item.op_type)
     return separator.join(seq)
 
 
@@ -71,6 +80,7 @@ class AlgorithmContext:
     visited = set()
     beam_width = 5
     total_len = 0
+    MIN_FREQUENCY = 1
     node_collection = None
     precursor_table = {}
     successor_table = {}
@@ -120,7 +130,21 @@ class AlgorithmContext:
                              reverse=True)
         if len(pattern_arr) > self.beam_width:
             pattern_arr = pattern_arr[:self.beam_width]
-        return OrderedDict(pattern_arr)
+        res = OrderedDict()
+        for i, (key, ptn) in enumerate(pattern_arr):
+            if ptn.count <= self.MIN_FREQUENCY:
+                continue
+            skip = False
+            for j, (_, candidate) in enumerate(pattern_arr):
+                if i == j:
+                    continue
+                if candidate.ptn_length >= ptn.ptn_length and ptn.ptn_items == candidate.ptn_items[:ptn.ptn_length]:
+                    skip = True
+                    break
+            if skip:
+                continue
+            res[key] = ptn
+        return res
 
 
 context = AlgorithmContext()
@@ -128,4 +152,8 @@ context = AlgorithmContext()
 __all__ = ["context",
            "gen_hash_key",
            "DagGraph",
-           "MAX_OUT_DEGREE"]
+           "MAX_OUT_DEGREE",
+           "MAX_ITERATION_DEPTH",
+           "SATISFIED_SCORE",
+           "MINI_FREQUENCY",
+           "ACCEPTABLE_RESULT_COUNT"]

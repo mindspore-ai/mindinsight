@@ -29,6 +29,8 @@ class Pattern:
         self.ptn_items = pattern.split("->") if ptn_items is None else ptn_items
         self.in_degree = in_degree
         self.out_degree = out_degree
+        self.head = self.ptn_items[0]
+        self.tail = self.ptn_items[-1]
 
     def insert(self, idx, seq_len):
         """
@@ -53,3 +55,7 @@ class Pattern:
         return f"Ptn: {self.pattern}[" \
                f"{scope_name_mapping.get(self.pattern, 'Not init')}], " \
                f"count={self.count}"
+
+    def __hash__(self):
+        """Make Pattern hashable."""
+        return hash(f"{self.pattern}_{self.in_degree}_{self.out_degree}")
