@@ -51,21 +51,27 @@ class MultiCompatibleRotatingFileHandler(RotatingFileHandler):
         with open(self.baseFilename, 'a') as file_pointer:
             fcntl.lockf(file_pointer.fileno(), fcntl.LOCK_EX)
 
-        if self.backupCount > 0:
-            self.rolling_rename()
+        try:
+            if self.backupCount > 0:
+                self.rolling_rename()
 
-        dfn = self.rotation_filename(self.baseFilename + ".1")
-        if os.path.exists(dfn):
-            os.remove(dfn)
+            # dfn stands for destinated file name according to source codes in RotatingFileHandler.doRollover()
+            dfn = self.rotation_filename(self.baseFilename + ".1")
+            if os.path.exists(dfn):
+                os.remove(dfn)
 
-        os.chmod(self.baseFilename, stat.S_IREAD)
-        self.rotate(self.baseFilename, dfn)
+            os.chmod(self.baseFilename, stat.S_IREAD)
+            self.rotate(self.baseFilename, dfn)
 
-        with open(self.baseFilename, 'a'):
-            os.chmod(self.baseFilename, stat.S_IREAD | stat.S_IWRITE)
+            with open(self.baseFilename, 'a'):
+                os.chmod(self.baseFilename, stat.S_IREAD | stat.S_IWRITE)
 
-        if not self.delay:
-            self.stream = self._open()
+            if not self.delay:
+                self.stream = self._open()
+
+        except FileNotFoundError:
+            # Suppress this exception for concurrency.
+            pass
 
     def _open(self):
         """Open the current base file with the (original) mode and encoding."""
@@ -215,7 +221,7 @@ def setup_logger(sub_module, log_name, **kwargs):
         os.makedirs(logfile_dir, mode=mode, exist_ok=True)
 
         logfile_handler = MultiCompatibleRotatingFileHandler(
-            filename=os.path.join(logfile_dir, '{}.log'.format(log_name)),
+            filename=os.path.join(logfile_dir, '{}.{}.log'.format(log_name, settings.PORT)),
             maxBytes=max_bytes,
             backupCount=backup_count,
             encoding='utf8'
