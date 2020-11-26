@@ -20,7 +20,8 @@ limitations under the License.
       <div class="left"
            v-show="!leftShow">
         <div class="header">
-          {{radio1==='tree' ? $t('debugger.nodeList') : $t('debugger.curHitNode')}}
+          {{radio1==='tree' ? $t('debugger.nodeList') :
+          ($t('debugger.curHitNode') + '(' + watchPointHits.length + ')')}}
           <div class="outdate-tip"
                v-if="hitsOutdated && radio1==='hit'">
             <el-tooltip class="item"
@@ -120,20 +121,20 @@ limitations under the License.
                 <span class="custom-tree-node">{{ node.label }}</span>
               </span>
             </tree>
-            <el-tree v-show="!treeFlag"
-                     :props="defaultProps"
-                     :load="loadSearchNode"
-                     :lazy="true"
-                     node-key="name"
-                     :default-checked-keys="searchCheckedArr"
-                     :expand-on-click-node="false"
-                     @node-click="handleNodeClick"
-                     :show-checkbox="!!curWatchPointId"
-                     @check="searchCheck"
-                     ref="searchTree">
+            <tree v-show="!treeFlag"
+                  :props="defaultProps"
+                  :load="loadSearchNode"
+                  :lazy="true"
+                  node-key="name"
+                  :default-checked-keys="searchCheckedArr"
+                  :expand-on-click-node="false"
+                  @node-click="handleNodeClick"
+                  :show-checkbox="!!curWatchPointId"
+                  @check="searchCheck"
+                  ref="searchTree">
               <span class="custom-tree-node"
                     slot-scope="{ node ,data }">
-                <span>
+                <span :class="{const:data.type==='Const'}">
                   <img v-if="data.type ==='name_scope'"
                        :src="require('@/assets/images/name-scope.svg')"
                        class="image-type" />
@@ -149,7 +150,7 @@ limitations under the License.
                 </span>
                 <span class="custom-tree-node">{{ node.label }}</span>
               </span>
-            </el-tree>
+            </tree>
           </div>
           <div class="watch-point-wrap">
             <div class="title-wrap">
@@ -165,12 +166,13 @@ limitations under the License.
               <div class="delete-wrap">
                 <i class="el-icon-delete"
                    :title="$t('debugger.clearWatchpoint')"
-                   :class="{disable: !watchPointArr.length}"
+                   :class="{disable: !(watchPointArr.length && metadata.state !== 'running')}"
                    @click="deleteWatchpoint()"></i>
               </div>
               <div class="add-wrap">
                 <i class="el-icon-circle-plus"
                    :title="$t('debugger.createWP')"
+                   :class="{disable: metadata.state === 'running'}"
                    @click="addWatchPoint"></i>
               </div>
             </div>
@@ -449,7 +451,7 @@ limitations under the License.
          v-if="tensorCompareFlag">
       <debugger-tensor :row="curRowObj"
                        ref="deb-tensor"
-                       @close="tensorCompareFlag=false"></debugger-tensor>
+                       @close="closeTensor"></debugger-tensor>
     </div>
     <el-dialog :title="$t('debugger.createWP')"
                :visible.sync="createWPDialogVisible"
@@ -757,9 +759,14 @@ export default {
       trainId: '',
       recommendWatchPointDialog: false,
       hitsOutdated: false,
-      unCheckedNodeType: 'Const',
       conflictFlag: false,
       debuggerVersion: {},
+      checkboxStatus: {
+        unchecked: 0,
+        indeterminate: 1,
+        checked: 2,
+        noCheckbox: -1,
+      },
     };
   },
   components: {debuggerTensor, tree},
@@ -802,6 +809,12 @@ export default {
       this.curRowObj.step = this.metadata.step;
       this.tensorCompareFlag = true;
     },
+    closeTensor(tensor, graphName) {
+      this.tensorCompareFlag = false;
+      if (tensor && graphName) {
+        this.queryAllTreeData(tensor, true, graphName);
+      }
+    },
     queryGraphByFile() {
       this.searchWord = '';
       this.nodeTypes.value = 'all';
@@ -828,25 +841,25 @@ export default {
                   label: val.name.split('/').pop(),
                   leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                   ...val,
-                  showCheckbox: val.type !== this.unCheckedNodeType,
+                  showCheckbox: val.watched !== -1,
                 };
               });
               this.node.childNodes = [];
               this.resolve(this.origialTree);
-              // watched 0:unchecked  1:indeterminate 2:checked
+              // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
               this.defaultCheckedArr = this.origialTree
                   .filter((val) => {
-                    return val.watched === 2 && val.type !== this.unCheckedNodeType;
+                    return val.watched === this.checkboxStatus.checked;
                   })
                   .map((val) => val.name);
               this.node.childNodes.forEach((val) => {
-                if (val.data.watched === 1 && val.data.type !== this.unCheckedNodeType) {
+                if (val.data.watched === this.checkboxStatus.indeterminate) {
                   val.indeterminate = true;
                 }
-                if (val.data.watched === 0) {
+                if (val.data.watched === this.checkboxStatus.unchecked) {
                   val.checked = false;
                 }
-                if (val.data.watched === 2 && val.data.type !== this.unCheckedNodeType) {
+                if (val.data.watched === this.checkboxStatus.checked) {
                   val.checked = true;
                 }
               });
@@ -935,7 +948,7 @@ export default {
                 return {
                   label: val.name.split('/').pop(),
                   ...val,
-                  showCheckbox: val.type !== this.unCheckedNodeType,
+                  showCheckbox: val.watched !== -1,
                 };
               });
               this.node.childNodes = [];
@@ -944,15 +957,15 @@ export default {
               this.$refs.tree.getCheckedKeys().forEach((val) => {
                 this.$refs.tree.setChecked(val, false);
               });
-              // watched 0:unchecked  1:indeterminate 2:checked
+              // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
               this.defaultCheckedArr = this.curNodeData
                   .filter((val) => {
-                    return val.watched === 2 && val.type !== this.unCheckedNodeType;
+                    return val.watched === this.checkboxStatus.checked;
                   })
                   .map((val) => val.name);
               const halfSelectArr = this.curNodeData
                   .filter((val) => {
-                    return val.watched === 1 && val.type !== this.unCheckedNodeType;
+                    return val.watched === this.checkboxStatus.indeterminate;
                   })
                   .map((val) => val.name);
               this.node.childNodes.forEach((val) => {
@@ -1733,6 +1746,10 @@ export default {
             .el-icon-circle-plus:before {
               color: #00a5a7;
               cursor: pointer;
+            }
+            .disable:before {
+              cursor: not-allowed;
+              color: #adb0b8;
             }
           }
           .content-wrap {

@@ -522,7 +522,7 @@
     "negativeNum": "Negative number:",
     "all": "All",
     "tensorTip": "tensor",
-    "recheck": "Recheck",
+    "recheck": "Recheck (only for watchpoints with tensor values)",
     "clearWatchpoint": "Clear Watchpoint",
     "nodeType": {
       "all": "All",
@@ -541,6 +541,8 @@
     "jumpFailInformation": "Redirection fails because the tensor information is empty.",
     "optimizationOrientation": "Optimization Guide",
     "tuningAdvice": "Optimization Suggestions",
+    "setValue": "Preset Value",
+    "actualValue": "Actual Value",
     "tensorTuningRule": {
       "operator_real_data_validation": "Real data validation using single operator",
       "loss_overflow": "Loss overflow (NAN,INF)",
@@ -568,7 +570,21 @@
       "tensor_all_zero": "Whether tensor values are all 0",
       "tensor_change_too_large": "Tensor change above threshold",
       "tensor_change_too_small": "Tensor change below threshold",
-      "tensor_not_changed": "Unchanged tensor"
+      "tensor_not_changed": "Unchanged tensor",
+      "zero_percentage_ge": "Percentage of 0 values ≥",
+      "abs_mean_gt": "Average of the absolute value >",
+      "abs_mean_lt": "Average of the absolute value <",
+      "range_start_inclusive": "Lower limit of the range (inclusive)",
+      "range_end_inclusive": "Upper limit of the range (inclusive)",
+      "range_percentage_lt": "Percentage of the value in the range <",
+      "range_percentage_gt": "Percentage of the value in the range >",
+      "rtol": "Relative tolerance",
+      "abs_updata_ratio_mean_gt": "Average of the absolute value of the change ratio >",
+      "abs_updata_ratio_mean_lt": "Average of the absolute value of the change ratio <",
+      "param": "Threshold",
+      "max_min_lt": "MAX-MIN <",
+      "max_min_gt": "MAX-MIN >",
+      "outdateTip": "When a watchpoint list is modified, the result may be outdated. Check again or perform subsequent step training. "
     },
     "tensorTuningAdvice": {
       "operator_real_data_validation": [
@@ -701,7 +717,13 @@
     "noAdvice": "No suggestions available",
     "curStep": "Current Step",
     "preStep": "Previous Step",
-    "compareResult": "Comparison Result"
+    "compareResult": "Comparison Result",
+    "recommendTip": "Use the recommended watchpoints?",
+    "recommendDetail": "The recommended watchpoints check zero tensors, gradient disappearances, and update weight above threshold, helping you quickly detect faults in training. ",
+    "use": "Yes",
+    "notUse": "No",
+    "versionConflictTip": "MindSpore and MindInsight versions do not match. MindSpore version: {msv}; MindInsight version: {miv}",
+    "checkTips": "Note: The tensor contains {msg}, resulting in value check failure. "
   },
   "explain": {
     "explain": "Model Explanation",
