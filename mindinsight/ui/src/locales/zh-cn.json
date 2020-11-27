@@ -578,8 +578,8 @@
       "range_percentage_lt": "在范围中的值所占百分比<",
       "range_percentage_gt": "在范围中的值所占百分比>",
       "rtol": "相对容忍度",
-      "abs_updata_ratio_mean_gt": "变化比例绝对值的平均值>",
-      "abs_updata_ratio_mean_lt": "变化比例绝对值的平均值<",
+      "abs_update_ratio_mean_gt": "变化比例绝对值的平均值>",
+      "abs_update_ratio_mean_lt": "变化比例绝对值的平均值<",
       "param": "阈值",
       "max_min_lt": "MAX-MIN<",
       "max_min_gt": "MAX-MIN>"
