@@ -19,6 +19,7 @@ import copy
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import is_scope_type, is_cst_type
+from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
 from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD, WatchCondition
@@ -287,20 +288,29 @@ class Watchpoint:
     def get_pending_cmd(self, watch_nodes):
         """Return the watchpoint in proto format."""
         # construct SetCMD
+        condition_id = self._condition.get('id')
         set_cmd = SetCMD()
         set_cmd.id = self._id
         set_cmd.delete = False
-        set_cmd.watch_condition.condition = WATCHPOINT_CONDITION_MAPPING.get(
-            self._condition.get('id'))
-        for param in self._condition.get('params'):
-            # at most one param is provided
-            param_proto = set_cmd.watch_condition.params.add()
-            param_proto.name = param.get('name')
-            param_proto.value = param.get('value')
-            param_proto.disabled = False
-
-            # Only one parameter of condition in current version.
-            set_cmd.watch_condition.value = param.get('value')
+        set_cmd.watch_condition.condition = WATCHPOINT_CONDITION_MAPPING.get(condition_id)
+        condition_mgr = ConditionMgr()
+        condition = condition_mgr.get_condition(condition_id)
+        param_dict = {
+            param.get('name'): param for param in self._condition.get('params')
+        }
+        for param_name in condition.ordered_parameter_names:
+            param = param_dict.get(param_name)
+            if param:
+                param_proto = set_cmd.watch_condition.params.add()
+                param_proto.name = param.get('name')
+                param_proto.value = param.get('value')
+                param_proto.disabled = False
+                # Only one parameter of condition in old mindspore version.
+                set_cmd.watch_condition.value = param.get('value')
+            else:
+                param_proto = set_cmd.watch_condition.params.add()
+                param_proto.name = param_name
+                param_proto.disabled = True
 
         for watch_node in watch_nodes:
             event_node = set_cmd.watch_nodes.add()

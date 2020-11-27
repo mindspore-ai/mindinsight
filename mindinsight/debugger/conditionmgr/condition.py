@@ -219,6 +219,7 @@ class Condition:
         self._parameters = {
             parameter.name: parameter for parameter in parameters
         }
+        self.ordered_parameter_names = [parameter.name for parameter in parameters]
         self._supported_target_type = supported_target_type
         self.supported_platforms = supported_platforms
         self.minimum_debugger_capability = minimum_debugger_capability

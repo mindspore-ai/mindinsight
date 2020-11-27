@@ -63,7 +63,7 @@ class TestWatchpointHandler:
         watchpoints = [
             ({'id': 'inf', 'params': []}, None, None, 1),
             ({'id': 'inf', 'params': []}, ["Default"], None, 2),
-            ({'id': 'max_gt', 'params': [{'name': 'param', 'value': 1, 'disable': False}]},
+            ({'id': 'max_gt', 'params': [{'name': 'param', 'value': 1}]},
              ["Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92"],
              None, 3)
         ]
@@ -233,13 +233,13 @@ def test_validate_watch_condition_type_error():
 
 def test_validate_watch_condition_params_except():
     """Test validate_watch_condition_params."""
-    watch_condition = {'id': 'inf', 'params': [{'name': 'param', 'value': 0, 'disable': False}]}
+    watch_condition = {'id': 'inf', 'params': [{'name': 'param', 'value': 0}]}
     conditionmgr = ConditionMgr()
     with pytest.raises(DebuggerParamValueError) as err:
         validate_watch_condition_params(conditionmgr, watch_condition)
     assert err.value.error_code == '5054B081'
 
-    watch_condition = {'id': 'max_gt', 'params': [{'name': 'param', 'value': '0', 'disable': False}]}
+    watch_condition = {'id': 'max_gt', 'params': [{'name': 'param', 'value': '0'}]}
     with pytest.raises(DebuggerParamValueError) as err:
         validate_watch_condition_params(conditionmgr, watch_condition)
     assert err.value.error_code == '5054B081'
