@@ -224,7 +224,7 @@ limitations under the License.
                   <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
                   <span>{{ $t('symbols.colon') }}</span>
                   <span>
-                    {{ getWatchPointContent(item) }}
+                    {{ getFormateWatchPoint(item) }}
                   </span>
                 </div>
               </div>
@@ -372,7 +372,7 @@ export default {
                   if (!element.actual_value) {
                     element.actual = this.$t('symbols.rightbracket');
                   } else {
-                    element.actual = `${this.$t('debugger.actualValue')}${this.$t('symbols.colon')}${
+                    element.actual = `, ${this.$t('debugger.actualValue')}${this.$t('symbols.colon')}${
                       element.actual_value
                     }${this.$t('symbols.rightbracket')}`;
                   }
@@ -392,15 +392,27 @@ export default {
       const name = this.$parent.transCondition(watchName);
       return name;
     },
-    getWatchPointContent(item) {
+    getFormateWatchPoint(item) {
       let param = '';
       if (item.params.length) {
         item.params.forEach((i, ind) => {
           const name = this.$parent.transCondition(i.name);
           if (!ind) {
-            param += `${name}`;
+            param += !i.actual_value
+              ? `${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${i.value}${this.$t(
+                  'symbols.rightbracket',
+              )}`
+              : `${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${i.value}, ${this.$t(
+                  'debugger.actualValue',
+              )}:${i.actual_value}${this.$t('symbols.rightbracket')}`;
           } else {
-            param += `, ${name}`;
+            param += !i.actual_value
+              ? `, ${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${i.value}${this.$t(
+                  'symbols.rightbracket',
+              )}`
+              : `, ${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${i.value}, ${this.$t(
+                  'debugger.actualValue',
+              )}:${i.actual_value}${this.$t('symbols.rightbracket')}`;
           }
         });
         param = `(${param})`;

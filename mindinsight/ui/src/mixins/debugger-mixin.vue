@@ -466,7 +466,7 @@ export default {
               }
               if (res.data.watch_point_hits && res.data.watch_point_hits.length > 0) {
                 this.radio1 = 'hit';
-                this.dealWatchpointHits(res.data.watch_point_hits);
+                this.getWatchpointHits();
               }
               this.pollData();
             }
@@ -545,6 +545,7 @@ export default {
      * Add watchpoint
      */
     addWatchPoint() {
+      this.createWatchPointArr = [];
       this.createWatchPointArr.push({
         collection: {
           selectedId: this.conditionCollections[0].id,
