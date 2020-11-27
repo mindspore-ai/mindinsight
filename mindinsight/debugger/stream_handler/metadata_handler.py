@@ -34,6 +34,7 @@ class MetadataHandler(StreamHandlerBase):
         # If recommendation_confirmed is true, it only means the user has answered yes or no to the question,
         # it does not necessarily mean that the user will use the recommended watch points.
         self._recommendation_confirmed = False
+        self._debugger_version = {}
 
     @property
     def device_name(self):
@@ -135,6 +136,22 @@ class MetadataHandler(StreamHandlerBase):
         """
         self._recommendation_confirmed = value
 
+    @property
+    def debugger_version(self):
+        """The property of debugger_version."""
+        return self._debugger_version
+
+    @debugger_version.setter
+    def debugger_version(self, value):
+        """
+        Set the property of debugger_version.
+
+        Args:
+            value (dict): The  semantic versioning of mindinsight and mindspore,
+            format is {'ms': 'x.x.x', 'mi': 'x.x.x'}.
+        """
+        self._debugger_version = value
+
     def put(self, value):
         """
         Put value into metadata cache. Called by grpc server.
@@ -170,7 +187,8 @@ class MetadataHandler(StreamHandlerBase):
                 'backend': self.backend,
                 'enable_recheck': self.enable_recheck,
                 'graph_name': self.graph_name,
-                'recommendation_confirmed': self._recommendation_confirmed
+                'recommendation_confirmed': self._recommendation_confirmed,
+                'debugger_version': self.debugger_version
             }
         else:
             if not isinstance(filter_condition, list):

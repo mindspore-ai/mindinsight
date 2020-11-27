@@ -17,6 +17,7 @@ import copy
 
 from functools import wraps
 
+import mindinsight
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
     Streams, RunLevel
@@ -81,6 +82,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             log.warning("No graph received before WaitCMD.")
             reply = get_ack_reply(1)
             return reply
+
         # send graph if it has not been sent before
         self._pre_process(request)
         # deal with old command
@@ -98,6 +100,17 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
     def _pre_process(self, request):
         """Pre-process before dealing with command."""
+
+        # check if version is mismatch, if mismatch, send mismatch info to UI
+        if self._status == ServerStatus.MISMATCH:
+            log.warning("Version of Mindspore and Mindinsight re unmatched,"
+                        "waiting for user to terminate the script.")
+            metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
+            # put metadata into data queue
+            metadata = metadata_stream.get(['state', 'debugger_version'])
+            self._cache_store.put_data(metadata)
+            return
+
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
         is_new_step = metadata_stream.step < request.cur_step
         is_new_node = metadata_stream.full_name != request.cur_node
@@ -252,10 +265,11 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             EventReply, the command event.
         """
         log.info("Start to wait for command.")
-        self._cache_store.get_stream_handler(Streams.METADATA).state = 'waiting'
-        self._cache_store.put_data({'metadata': {'state': 'waiting'}})
+        if self._status != ServerStatus.MISMATCH:
+            self._cache_store.get_stream_handler(Streams.METADATA).state = ServerStatus.WAITING.value
+            self._cache_store.put_data({'metadata': {'state': 'waiting'}})
         event = None
-        while event is None and self._status == ServerStatus.WAITING:
+        while event is None and self._status in [ServerStatus.MISMATCH, ServerStatus.WAITING]:
             log.debug("Wait for %s-th command", self._pos)
             event = self._get_next_command()
         return event
@@ -337,16 +351,32 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
         client_ip = context.peer().split(':', 1)[-1]
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
+        reply = get_ack_reply()
         if request.training_done:
             log.info("The training from %s has finished.", client_ip)
         else:
+            ms_version = request.ms_version
+            if not ms_version:
+                ms_version = '1.0.0'
+            if version_match(ms_version, mindinsight.__version__) is False:
+                log.info("Version is mismatched, mindspore is: %s, mindinsight is: %s",
+                         ms_version, mindinsight.__version__)
+                self._status = ServerStatus.MISMATCH
+                reply.version_matched = False
+                metadata_stream.state = 'mismatch'
+            else:
+                log.info("version is matched.")
+                reply.version_matched = True
+
+            metadata_stream.debugger_version = {'ms': ms_version, 'mi': mindinsight.__version__}
+            log.debug("Put ms_version from %s into cache.", client_ip)
+
             metadata_stream.put(request)
             metadata_stream.client_ip = client_ip
             log.debug("Put new metadata from %s into cache.", client_ip)
         # put metadata into data queue
         metadata = metadata_stream.get()
         self._cache_store.put_data(metadata)
-        reply = get_ack_reply()
         log.debug("Send the reply to %s.", client_ip)
         return reply
 
@@ -354,6 +384,10 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def SendGraph(self, request_iterator, context):
         """Send graph into DebuggerCache."""
         log.info("Received graph.")
+        reply = get_ack_reply()
+        if self._status == ServerStatus.MISMATCH:
+            log.info("Mindspore and Mindinsight is unmatched, waiting for user to terminate the service.")
+            return reply
         serial_graph = b""
         for chunk in request_iterator:
             serial_graph += chunk.buffer
@@ -364,14 +398,17 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._cache_store.get_stream_handler(Streams.TENSOR).put_const_vals(graph.const_vals)
         self._cache_store.get_stream_handler(Streams.METADATA).graph_name = graph.name
         self._status = ServerStatus.RECEIVE_GRAPH
-        reply = get_ack_reply()
         log.debug("Send the reply for graph.")
         return reply
 
     @debugger_wrap
     def SendMultiGraphs(self, request_iterator, context):
         """Send graph into DebuggerCache."""
-        log.info("Received graph.")
+        log.info("Received multi_graphs.")
+        reply = get_ack_reply()
+        if self._status == ServerStatus.MISMATCH:
+            log.info("Mindspore and Mindinsight is unmatched, waiting for user to terminate the service.")
+            return reply
         serial_graph = b""
         graph_dict = {}
         for chunk in request_iterator:
@@ -387,7 +424,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
         self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_dict)
         self._status = ServerStatus.RECEIVE_GRAPH
-        reply = get_ack_reply()
         log.debug("Send the reply for graph.")
         return reply
 
@@ -461,3 +497,10 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._received_hit = watchpoint_hits
         reply = get_ack_reply()
         return reply
+
+
+def version_match(mi_version, ms_version):
+    """Judge if the version of Mindinsight and Mindspore is matched"""
+    mi_major, mi_minor = mi_version.split('.')[:2]
+    ms_major, ms_minor = ms_version.split('.')[:2]
+    return mi_major == ms_major and mi_minor == ms_minor

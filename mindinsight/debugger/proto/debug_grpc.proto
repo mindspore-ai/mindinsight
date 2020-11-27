@@ -41,6 +41,8 @@ message Metadata {
   bool training_done = 5;
   // the number of total graphs
   int32 graph_num = 6;
+  // the version number of mindspore
+  string ms_version = 7;
 }
 
 message Chunk {
@@ -62,6 +64,7 @@ message EventReply {
     RunCMD run_cmd = 3;
     SetCMD set_cmd = 4;
     ViewCMD view_cmd = 5;
+    bool version_matched = 6;
   }
 }
 
