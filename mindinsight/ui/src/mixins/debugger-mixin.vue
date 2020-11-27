@@ -300,8 +300,12 @@ export default {
         this.querySingleNode({}, data.name, true);
       } else {
         if (this.graphFiles.value === this.$t('debugger.all')) {
-          const graphName = data.name.split('/')[0];
-          this.queryAllTreeData(data.name.replace(`${graphName}/`, ''), true, graphName);
+          if (data.name.includes('/')) {
+            const graphName = data.name.split('/')[0];
+            this.queryAllTreeData(data.name.replace(`${graphName}/`, ''), true, graphName);
+          } else {
+            this.queryAllTreeData(data.name, true, data.name);
+          }
         } else {
           this.queryAllTreeData(data.name, true, this.graphFiles.value);
         }
@@ -1463,7 +1467,7 @@ export default {
                     item += ` ${this.transCondition(j.watch_condition.id)}`;
                     const param = (j.watch_condition.params || [])
                         .map((k) =>
-                        !k.actual_value
+                        k.actual_value === undefined || k.actual_value === null
                           ? `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}`
                           : `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}, ${this.$t(
                               'debugger.actualValue',
@@ -1591,8 +1595,10 @@ export default {
         },
       };
       if (this.graphFiles.value === this.$t('debugger.all') && graphName && name) {
-        name = `${graphName}/${name}`;
-        params.params.name = name;
+        if (name !== graphName) {
+          name = `${graphName}/${name}`;
+          params.params.name = name;
+        }
       } else {
         params.params.graph_name = graphName;
       }

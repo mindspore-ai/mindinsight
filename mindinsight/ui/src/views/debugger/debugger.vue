@@ -104,7 +104,7 @@ limitations under the License.
                   :show-checkbox="!!curWatchPointId">
               <span class="custom-tree-node"
                     slot-scope="{ node ,data }">
-                <span :class="{const:data.type==='Const'}">
+                <span :class="{const:data.type==='Const' && curWatchPointId}">
                   <img v-if="data.type ==='name_scope'"
                        :src="require('@/assets/images/name-scope.svg')"
                        class="image-type" />
@@ -134,7 +134,7 @@ limitations under the License.
                   ref="searchTree">
               <span class="custom-tree-node"
                     slot-scope="{ node ,data }">
-                <span :class="{const:data.type==='Const'}">
+                <span :class="{const:data.type==='Const' && curWatchPointId}">
                   <img v-if="data.type ==='name_scope'"
                        :src="require('@/assets/images/name-scope.svg')"
                        class="image-type" />
