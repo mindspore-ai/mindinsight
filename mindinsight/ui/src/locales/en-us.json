@@ -465,7 +465,9 @@
     "gridTableNoData": "No data in the table.",
     "value": "Value",
     "dimsFilterInputTitle": "Dimension Selection",
-    "dimsFilterInputTip": "The dimension value can be a specific index (consistent with the Python index meaning and supporting negative signs) or a colon (:) that indicates all values of the current dimension."
+    "dimsFilterInputTip": "The dimension value can be a specific index (consistent with the Python index meaning and supporting negative signs) or a colon (:) that indicates all values of the current dimension.",
+    "category": "Type",
+    "ScientificCounting": "Scientific notation"
   },
   "debugger": {
     "debugger": "Debugger",
@@ -581,6 +583,8 @@
       "rtol": "Relative tolerance",
       "abs_update_ratio_mean_gt": "Average of the absolute value of the change ratio >",
       "abs_update_ratio_mean_lt": "Average of the absolute value of the change ratio <",
+      "abs_mean_update_ratio_gt": "Ratio of mean update >",
+      "abs_mean_update_ratio_lt": "Ratio of mean update <",
       "param": "Threshold",
       "max_min_lt": "MAX-MIN <",
       "max_min_gt": "MAX-MIN >",

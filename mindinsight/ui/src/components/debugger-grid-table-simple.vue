@@ -64,6 +64,14 @@ limitations under the License.
         <span>{{ $t('tensors.dimension') }} {{ shape }}</span>
       </div>
       <div class="accuracy-container">
+        {{$t('components.category')}}<el-select v-model="category"
+                   class="select-category"
+                   @change="accuracyChange">
+          <el-option v-for="item in categoryArr"
+                     :key="item.label"
+                     :label="item.label"
+                     :value="item.value"></el-option>
+        </el-select>
         {{$t('components.gridAccuracy')}}<el-select v-model="accuracy"
                    class="select-item"
                    @change="accuracyChange">
@@ -162,6 +170,11 @@ export default {
         colStartIndex: 0,
       },
       shape: '',
+      categoryArr: [
+        {label: this.$t('components.value'), value: 'value'},
+        {label: this.$t('components.ScientificCounting'), value: 'science'},
+      ],
+      category: 'value', // value:Numerical notation      science:Scientific notation
     };
   },
   computed: {},
@@ -239,7 +252,7 @@ export default {
           id: -1,
           name: ' ',
           field: -1,
-          width: 100,
+          width: 120,
           headerCssClass: 'headerStyle',
         },
       ];
@@ -251,7 +264,7 @@ export default {
             id: order,
             name: order,
             field: order,
-            width: 100,
+            width: 120,
             headerCssClass: 'headerStyle',
             formatter:
               this.gridType === this.gridTypeKeys.compare ? this.formateCompareColor : this.formateValueColor,
@@ -350,7 +363,11 @@ export default {
               if (isNaN(innerValue) || innerValue === 'Infinity' || innerValue === '-Infinity') {
                 tempArr.push(innerValue);
               } else {
-                tempArr.push(innerValue.toFixed(this.accuracy));
+                if (this.category === 'science') {
+                  tempArr.push(innerValue.toExponential(this.accuracy));
+                } else {
+                  tempArr.push(innerValue.toFixed(this.accuracy));
+                }
               }
             });
             tempData[innerOrder] = tempArr;
@@ -367,7 +384,11 @@ export default {
             if (isNaN(innerData) || innerData === 'Infinity' || innerData === '-Infinity') {
               tempData[innerOrder] = innerData;
             } else {
-              tempData[innerOrder] = innerData.toFixed(this.accuracy);
+              if (this.category === 'science') {
+                tempData[innerOrder] = innerData.toExponential(this.accuracy);
+              } else {
+                tempData[innerOrder] = innerData.toFixed(this.accuracy);
+              }
             }
           });
           tempArr.push(tempData);
@@ -674,6 +695,10 @@ export default {
       float: right;
       .select-item {
         width: 65px;
+        margin-left: 5px;
+      }
+      .select-category {
+        width: 105px;
         margin-left: 5px;
       }
     }

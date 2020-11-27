@@ -279,12 +279,13 @@ export default {
       tuningAdvice: [],
       tuningAdviceTitle: '',
       watchPoints: [],
+      callbackFun: null,
     };
   },
   mounted() {
     this.$nextTick(() => {
-      window.addEventListener('resize', this.debounce(this.resizeCallback, 200), false);
-
+      this.callbackFun = this.debounce(this.resizeCallback, 200);
+      window.addEventListener('resize', this.callbackFun);
       this.init();
     });
   },
@@ -369,7 +370,7 @@ export default {
                   item.tuningAdvice = this.$t(`debugger.tensorTuningAdvice`)[tuning][2];
                 }
                 item.params.forEach((element) => {
-                  if (!element.actual_value) {
+                  if (element.actual_value === undefined || element.actual_value === null) {
                     element.actual = this.$t('symbols.rightbracket');
                   } else {
                     element.actual = `, ${this.$t('debugger.actualValue')}${this.$t('symbols.colon')}${
@@ -397,22 +398,18 @@ export default {
       if (item.params.length) {
         item.params.forEach((i, ind) => {
           const name = this.$parent.transCondition(i.name);
+          const actual =
+            i.actual_value === undefined || i.actual_value === null
+              ? ''
+              : `, ${this.$t('debugger.actualValue')}:${i.actual_value}`;
           if (!ind) {
-            param += !i.actual_value
-              ? `${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${i.value}${this.$t(
-                  'symbols.rightbracket',
-              )}`
-              : `${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${i.value}, ${this.$t(
-                  'debugger.actualValue',
-              )}:${i.actual_value}${this.$t('symbols.rightbracket')}`;
+            param += `${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${
+              i.value
+            }${actual}${this.$t('symbols.rightbracket')}`;
           } else {
-            param += !i.actual_value
-              ? `, ${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${i.value}${this.$t(
-                  'symbols.rightbracket',
-              )}`
-              : `, ${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${i.value}, ${this.$t(
-                  'debugger.actualValue',
-              )}:${i.actual_value}${this.$t('symbols.rightbracket')}`;
+            param += `, ${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${
+              i.value
+            }${actual}${this.$t('symbols.rightbracket')}`;
           }
         });
         param = `(${param})`;
@@ -1017,7 +1014,7 @@ export default {
     },
   },
   destroyed() {
-    window.removeEventListener('resize', this.debounce(this.resizeCallback, 200), false);
+    window.removeEventListener('resize', this.callbackFun);
   },
 };
 </script>
@@ -1207,7 +1204,7 @@ export default {
       }
       label {
         display: inline-block;
-        min-width: 100px;
+        min-width: 123px;
         span {
           border-left: none;
         }

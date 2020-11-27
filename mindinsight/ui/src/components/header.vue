@@ -191,6 +191,9 @@ export default {
     getActive() {
       const str = this.$route.path.split('/');
       if (str.length > 1) {
+        if (!str[1]) {
+          return;
+        }
         if (str[1] === 'debugger') {
           return this.$route.path;
         } else if (str[1] === 'explain') {
