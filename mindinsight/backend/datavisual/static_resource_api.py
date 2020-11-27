@@ -17,6 +17,7 @@ import os
 import sys
 
 from flask import current_app
+from flask import redirect
 from flask import send_from_directory
 from flask import Blueprint
 
@@ -32,6 +33,18 @@ def index():
     app_path = os.path.realpath(os.path.dirname(sys.argv[0]))
     index_resource_dir = os.path.realpath(os.path.join(app_path, current_app.static_folder, os.pardir))
     return send_from_directory(index_resource_dir, "index.html")
+
+
+@BLUEPRINT.route("/graphvizlib.wasm", methods=["GET"])
+def return_wasm_file():
+    """
+    Interface to redirect graphvizlib.wasm
+
+    When accessing the graphvizlib.wasm file in front module via Firefox browser, the file path will change to
+    "/graphvizlib.wasm" which makes the computed diagram inaccessible. Redirecting the path to correct address can
+    ensure the computed graph accessible properly.
+    """
+    return redirect(location="static/js/graphvizlib.wasm")
 
 
 def init_module(app):
