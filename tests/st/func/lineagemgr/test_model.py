@@ -97,8 +97,7 @@ LINEAGE_FILTRATION_RUN1 = {
         'test_dataset_count': 1024,
         'user_defined': {
             'info': 'info1',
-            'version': 'v1',
-            'eval_version': 'version2'
+            'version': 'v1'
         },
         'network': 'ResNet',
         'optimizer': 'Momentum',
@@ -124,7 +123,11 @@ LINEAGE_FILTRATION_RUN2 = {
         'train_dataset_count': 1024,
         'test_dataset_path': None,
         'test_dataset_count': 1024,
-        'user_defined': {},
+        'user_defined': {
+            'info': 'info1',
+            'version': 'v1',
+            'eval_version': 'version2'
+        },
         'network': "ResNet",
         'optimizer': "Momentum",
         'learning_rate': 0.12,
