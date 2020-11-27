@@ -20,11 +20,12 @@ from importlib import import_module
 from importlib.util import find_spec
 
 import mindinsight
-from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.constant import BINARY_HEADER_PYTORCH_FILE, FrameworkType, \
     BINARY_HEADER_PYTORCH_BITS
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
-from mindinsight.mindconverter.common.exceptions import NodeTypeNotSupport, UnknownModel
+from mindinsight.mindconverter.common.log import logger as log
+from mindinsight.mindconverter.common.exceptions import GraphInitFail, TreeCreateFail, SourceFilesSaveFail, \
+    BaseConverterFail, UnknownModel
 from mindinsight.utils.exceptions import ParamMissError
 
 permissions = os.R_OK | os.W_OK | os.X_OK
@@ -118,6 +119,9 @@ def _extract_model_name(model_path):
     return model_name
 
 
+@GraphInitFail.check_except_pytorch("Error occurred when init graph object.")
+@TreeCreateFail.check_except_pytorch("Error occurred when create hierarchical tree.")
+@SourceFilesSaveFail.check_except_pytorch("Error occurred when save source files.")
 @torch_installation_validation
 def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
                                         output_folder: str, report_folder: str = None):
@@ -139,12 +143,8 @@ def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
     cls_hierarchical_tree_factory = getattr(hierarchical_tree_module, 'HierarchicalTreeFactory')
 
     graph_obj = cls_graph_factory.init(graph_path, sample_shape=sample_shape)
-    try:
-        hierarchical_tree = cls_hierarchical_tree_factory.create(graph_obj)
-    except Exception as e:
-        log.exception(e)
-        log.error("Error occur when create hierarchical tree.")
-        raise NodeTypeNotSupport("This model is not supported now.")
+
+    hierarchical_tree = cls_hierarchical_tree_factory.create(graph_obj)
 
     model_name = _extract_model_name(graph_path)
 
@@ -153,6 +153,9 @@ def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
                                         report_folder=report_folder)
 
 
+@GraphInitFail.check_except_tf("Error occurred when init graph object.")
+@TreeCreateFail.check_except_tf("Error occurred when create hierarchical tree.")
+@SourceFilesSaveFail.check_except_tf("Error occurred when save source files.")
 @tf_installation_validation
 def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
                                    input_nodes: str, output_nodes: str,
@@ -181,28 +184,24 @@ def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
     graph_obj = cls_graph_factory.init(graph_path, sample_shape=sample_shape,
                                        input_nodes=input_nodes, output_nodes=output_nodes)
 
-    try:
-        hierarchical_tree, scope_name_map = cls_hierarchical_tree_factory.create(graph_obj)
-    except Exception as e:
-        log.exception(e)
-        log.error("Error occur when create hierarchical tree.")
-        raise NodeTypeNotSupport("This model is not supported now.")
+    hierarchical_tree, scope_name_map = cls_hierarchical_tree_factory.create(graph_obj)
 
     model_name = _extract_model_name(graph_path)
-
     hierarchical_tree.save_source_files(output_folder, mapper=ONNXToMindSporeMapper,
                                         model_name=model_name,
                                         report_folder=report_folder,
                                         scope_name_map=scope_name_map)
 
 
+@BaseConverterFail.check_except("Failed to start base converter.")
 def main_graph_base_converter(file_config):
     """
-        The entrance for converter, script files will be converted.
+    The entrance for converter, script files will be converted.
 
-        Args:
-            file_config (dict): The config of file which to convert.
-        """
+    Args:
+        file_config (dict): The config of file which to convert.
+
+    """
     graph_path = file_config['model_file']
     frame_type = get_framework_type(graph_path)
     if frame_type == FrameworkType.PYTORCH.value:
@@ -223,7 +222,6 @@ def main_graph_base_converter(file_config):
         error_msg = "Get UNSUPPORTED model."
         error = UnknownModel(error_msg)
         log.error(str(error))
-        log.exception(error)
         raise error
 
 
@@ -239,7 +237,6 @@ def get_framework_type(model_path):
         error_msg = "Get UNSUPPORTED model."
         error = UnknownModel(error_msg)
         log.error(str(error))
-        log.exception(error)
         raise error
 
     return framework_type
@@ -253,4 +250,6 @@ def check_params_exist(params: list, config):
             miss_param_list = ', '.join((miss_param_list, param)) if miss_param_list else param
 
     if miss_param_list:
-        raise ParamMissError(miss_param_list)
+        error = ParamMissError(miss_param_list)
+        log.error(str(error))
+        raise error

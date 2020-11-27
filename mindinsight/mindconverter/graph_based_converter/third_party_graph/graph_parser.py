@@ -16,12 +16,14 @@
 import os
 from mindinsight.mindconverter.common.log import logger as log
 from .base import GraphParser
+from ...common.exceptions import ModelNotSupport
 
 
 class PyTorchGraphParser(GraphParser):
     """Define pytorch graph parser."""
 
     @classmethod
+    @ModelNotSupport.check_except("Error occurs in loading model, make sure model.pth correct.")
     def parse(cls, model_path: str, **kwargs):
         """
         Parser pytorch graph.
@@ -51,13 +53,7 @@ class PyTorchGraphParser(GraphParser):
                 "set `--project_path` to the path of model scripts folder correctly."
             error = ModuleNotFoundError(error_msg)
             log.error(str(error))
-            log.exception(error)
-            raise error
-        except Exception as e:
-            error_msg = "Error occurs in loading model, make sure model.pth correct."
-            log.error(error_msg)
-            log.exception(e)
-            raise Exception(error_msg)
+            raise error from None
 
         return model
 
@@ -66,6 +62,7 @@ class TFGraphParser(GraphParser):
     """Define TF graph parser."""
 
     @classmethod
+    @ModelNotSupport.check_except("Error occurs in loading model, make sure model.pb correct.")
     def parse(cls, model_path: str, **kwargs):
         """
         Parse TF Computational Graph File (.pb)
@@ -85,7 +82,6 @@ class TFGraphParser(GraphParser):
             error = FileNotFoundError("`model_path` must be assigned with "
                                       "an existed file path.")
             log.error(str(error))
-            log.exception(error)
             raise error
 
         try:
@@ -99,13 +95,7 @@ class TFGraphParser(GraphParser):
                 "Cannot find model scripts in system path, " \
                 "set `--project_path` to the path of model scripts folder correctly."
             error = ModuleNotFoundError(error_msg)
-            log.error(error_msg)
-            log.exception(error)
-            raise error
-        except Exception as e:
-            error_msg = "Error occurs in loading model, make sure model.pb correct."
-            log.error(error_msg)
-            log.exception(e)
-            raise Exception(error_msg)
+            log.error(str(error))
+            raise error from None
 
         return model

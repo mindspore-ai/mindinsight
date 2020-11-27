@@ -16,3 +16,5 @@
 from mindinsight.utils.log import setup_logger
 
 logger = setup_logger("mindconverter", "mindconverter", console=False)
+logger_console = setup_logger("mindconverter", "mindconverter", console=True,
+                              sub_log_name="logger_console", formatter="%(message)s")
