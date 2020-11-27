@@ -528,7 +528,7 @@ CONDITION_LIST = [
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
         parameters=[
             ConditionParameter(
-                name="abs_update_ratio_mean_gt",
+                name="abs_mean_update_ratio_gt",
                 value_type=ValueTypeEnum.FLOAT64,
                 valid_test_func=check_abs_param_range,
                 default_value=1e-1
@@ -552,7 +552,7 @@ CONDITION_LIST = [
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
         parameters=[
             ConditionParameter(
-                name="abs_update_ratio_mean_lt",
+                name="abs_mean_update_ratio_lt",
                 value_type=ValueTypeEnum.FLOAT64,
                 valid_test_func=check_abs_param_range,
                 default_value=1e-4

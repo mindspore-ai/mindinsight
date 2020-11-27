@@ -130,14 +130,14 @@ class TestAscendDebugger:
         with self._debugger_client.get_thread_instance():
             check_waiting_state(app_client)
             conditions = [
-                {'id': 'max_gt', 'params': [{'name': 'param', 'value': 1.0, 'disable': False}]},
-                {'id': 'max_lt', 'params': [{'name': 'param', 'value': -1.0, 'disable': False}]},
-                {'id': 'min_gt', 'params': [{'name': 'param', 'value': 1e+32, 'disable': False}]},
-                {'id': 'min_lt', 'params': [{'name': 'param', 'value': -1e+32, 'disable': False}]},
-                {'id': 'max_min_gt', 'params': [{'name': 'param', 'value': 0, 'disable': False}]},
-                {'id': 'max_min_lt', 'params': [{'name': 'param', 'value': 0, 'disable': False}]},
-                {'id': 'mean_gt', 'params': [{'name': 'param', 'value': 0, 'disable': False}]},
-                {'id': 'mean_lt', 'params': [{'name': 'param', 'value': 0, 'disable': False}]},
+                {'id': 'max_gt', 'params': [{'name': 'param', 'value': 1.0}]},
+                {'id': 'max_lt', 'params': [{'name': 'param', 'value': -1.0}]},
+                {'id': 'min_gt', 'params': [{'name': 'param', 'value': 1e+32}]},
+                {'id': 'min_lt', 'params': [{'name': 'param', 'value': -1e+32}]},
+                {'id': 'max_min_gt', 'params': [{'name': 'param', 'value': 0}]},
+                {'id': 'max_min_lt', 'params': [{'name': 'param', 'value': 0}]},
+                {'id': 'mean_gt', 'params': [{'name': 'param', 'value': 0}]},
+                {'id': 'mean_lt', 'params': [{'name': 'param', 'value': 0}]},
                 {'id': 'inf', 'params': []},
                 {'id': 'overflow', 'params': []},
             ]

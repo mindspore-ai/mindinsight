@@ -219,7 +219,7 @@ def _recommend_weight_change_too_small(condition_mgr, trainable_weight_nodes, wa
             "condition": condition.id,
             "params": [
                 _ConditionParameterValue(
-                    parameter=condition.get_parameter_definition("abs_update_ratio_mean_lt"),
+                    parameter=condition.get_parameter_definition("abs_mean_update_ratio_lt"),
                     value=1.0e-4  # set default value to 1.0e-4
                 ),
             ]
@@ -270,8 +270,8 @@ def _recommend_weight_change_too_large(basic_info_nodes, condition_mgr, watch_po
         watch_condition={
             "condition": condition.id,
             "params": [_ConditionParameterValue(
-                parameter=condition.get_parameter_definition("abs_update_ratio_mean_gt"),
-                value=0.1  # set default value to 0.1
+                parameter=condition.get_parameter_definition("abs_mean_update_ratio_gt"),
+                value=1  # set default value to 1
             )]
         },
         watch_nodes=basic_info_nodes.copy(),
@@ -309,54 +309,7 @@ def _recommend_activation_range(basic_info_nodes, condition_mgr, watch_points, c
     if not condition_mgr.has_condition(ConditionIdEnum.ACTIVATION_RANGE.value, condition_context):
         return
     condition = condition_mgr.get_condition(condition_id=ConditionIdEnum.ACTIVATION_RANGE.value)
-    params = []
-    if activation_func == ActivationFuncEnum.TANH.value:
-        # The recommend params for Tanh: The percentage of value in range (tanh(-8.8), tanh(8.8)) is lower than 50.0%
-        params = [
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_percentage_lt"),
-                value=50.0
-            ),
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_start_inclusive"),
-                value=math.tanh(-8.8)
-            ),
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_end_inclusive"),
-                value=math.tanh(8.8)
-            )]
-    if activation_func == ActivationFuncEnum.SIGMOID.value:
-        # The recommend params for Sigmoid:
-        # The percentage of value in range (sigmoid(-16.2)), sigmoid(16.2)) is lower than 50.0%
-        params = [
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_percentage_lt"),
-                value=50.0
-            ),
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_start_inclusive"),
-                value=_sigmoid(-16.2)
-            ),
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_end_inclusive"),
-                value=_sigmoid(16.2)
-            )]
-    if activation_func == ActivationFuncEnum.RELU.value:
-        # The recommend params for ReLU:
-        # The percentage of value in range (float('-inf'), 0) is greater than 50.0%
-        params = [
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_percentage_gt"),
-                value=50.0
-            ),
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_start_inclusive"),
-                value=float('-inf')
-            ),
-            _ConditionParameterValue(
-                parameter=condition.get_parameter_definition("range_end_inclusive"),
-                value=0
-            )]
+    params = _get_recommend_activation_params(condition, activation_func)
     activation_range_watchpoint = _WatchPointData(
         watch_condition={
             "condition": condition.id,
@@ -465,5 +418,58 @@ def _add_graph_name(nodes, graph_stream):
 
 
 def _sigmoid(value):
-    """return sigmoid value"""
+    """calculate the sigmoid of value"""
     return 1.0 / (1.0 + math.exp(value))
+
+
+def _get_recommend_activation_params(condition, activation_func):
+    """Get recommend params for tanh, sigmoid and relu activation function."""
+    params = []
+    if activation_func == ActivationFuncEnum.TANH.value:
+        # The recommend params for Tanh: The percentage of value in range (tanh(-8.8), tanh(8.8)) is lower than 0.1%
+        params = [
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_percentage_lt"),
+                value=0.1
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_start_inclusive"),
+                value=math.tanh(-8.8)
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_end_inclusive"),
+                value=math.tanh(8.8)
+            )]
+    if activation_func == ActivationFuncEnum.SIGMOID.value:
+        # The recommend params for Sigmoid:
+        # The percentage of value in range (sigmoid(-16.2)), sigmoid(16.2)) is lower than 0.1%
+        params = [
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_percentage_lt"),
+                value=0.1
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_start_inclusive"),
+                value=_sigmoid(-16.2)
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_end_inclusive"),
+                value=_sigmoid(16.2)
+            )]
+    if activation_func == ActivationFuncEnum.RELU.value:
+        # The recommend params for ReLU:
+        # The percentage of value in range (-1, 0) is greater than 99.9%
+        params = [
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_percentage_gt"),
+                value=99.9
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_start_inclusive"),
+                value=-1
+            ),
+            _ConditionParameterValue(
+                parameter=condition.get_parameter_definition("range_end_inclusive"),
+                value=0
+            )]
+    return params

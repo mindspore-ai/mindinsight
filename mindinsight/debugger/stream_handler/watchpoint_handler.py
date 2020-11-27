@@ -14,6 +14,7 @@
 # ============================================================================
 """Define the watchpoint stream handler."""
 from mindinsight.debugger.conditionmgr.condition import ValueTypeEnum
+from mindinsight.debugger.conditionmgr.condition import ParamTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerParamTypeError
 from mindinsight.debugger.common.log import LOGGER as log
@@ -540,7 +541,14 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
             raise DebuggerParamValueError("No param is expected.")
         return
 
+    check_param_num = 0
+    support_params = set()
+    defined_support_params = set()
     for param in params:
+        if len(param) > 2:
+            log.error("Invalid param keys for condition: %s", condition_id)
+            raise DebuggerParamValueError("Invalid param keys.")
+
         condition_param_name = param.get("name")
         if condition_param_name not in condition.names:
             log.error("Invalid name of parameter for condition: %s, available values: %s",
@@ -561,6 +569,21 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
         if not condition_param.is_valid(param.get("value")):
             log.error("Param %s out of range for condition: %s", condition_param_name, condition_id)
             raise DebuggerParamValueError("Parameter out of range.")
+
+        if condition_param.param_type == ParamTypeEnum.CHECK_PARAM.value:
+            if condition_param.required_params:
+                defined_support_params = set(condition_param.required_params)
+            check_param_num += 1
+        else:
+            support_params.add(condition_param.name)
+
+        if check_param_num > 1:
+            log.error("Multiple check params for condition: %s", condition_id)
+            raise DebuggerParamValueError("Multiple check params.")
+
+    if support_params != defined_support_params:
+        log.error("Invalid support params for condition: %s", condition_id)
+        raise DebuggerParamValueError("Invalid support params.")
 
 
 def set_default_param(condition_mgr, watch_condition):
