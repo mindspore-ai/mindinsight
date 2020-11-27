@@ -18,24 +18,41 @@ limitations under the License.
     <!-- Title -->
     <div class="checkboxes-title left"
          v-if="typeof title !== 'undefined'">
-      {{title}}
+      {{ title }}
     </div>
     <!-- Group -->
     <div class="right">
       <el-tooltip v-for="checkbox in checkboxes"
                   :key="checkbox.label"
                   effect="dark"
-                  :content="checkbox.label"
+                  :content="
+          checkbox.label + (typeof checkbox.title === 'string' && checkbox.title !== ''
+            ? ($t('symbols.comma') + checkbox.title)
+            : '')
+        "
                   placement="top">
-        <div class="checkboxes-item item"
-             @click="checkedChange(checkbox)">
-          <div class="checkbox"
-               :class="{'is-checked': checkbox.checked, 'is-unchecked': !checkbox.checked}">
+        <template v-if="typeof checkbox.disabled === 'boolean' && checkbox.disabled">
+          <div class="checkboxes-item item item-disabled">
+            <div class="checkbox is-disabled"></div>
+            <div class="label label-disabled">
+              {{ checkbox.label }}
+            </div>
           </div>
-          <div class="label">
-            {{checkbox.label}}
+        </template>
+        <template v-else>
+          <div class="checkboxes-item item"
+               @click="checkedChange(checkbox)">
+            <div class="checkbox"
+                 :class="{
+                'is-checked': checkbox.checked,
+                'is-unchecked': !checkbox.checked,
+              }"></div>
+            <div class="label"
+                 :title="typeof checkbox.title === 'string' ? checkbox.title : ''">
+              {{ checkbox.label }}
+            </div>
           </div>
-        </div>
+        </template>
       </el-tooltip>
       <!-- Slot -->
       <div class="checkboxes-last item">
@@ -48,8 +65,15 @@ limitations under the License.
 <script>
 export default {
   props: {
-    // Array<Checkbox>
-    // Class Checkbox {checked: boolean, label: string}
+    /** The structure of checkboxes should be Array<Checkbox>
+    *   The structure of Checkbox should as follow
+    *   Class Checkbox {
+    *     checked: boolean,
+    *     label: string,
+    *     title?: string,
+    *     disabled?: Boolean,
+    *   }
+    */
     checkboxes: Array,
     title: String, // The title of group
   },
@@ -135,11 +159,18 @@ export default {
         font-size: 14px;
         color: #333333;
       }
+      .label-disabled {
+        color: #c0c4cc;
+      }
       .is-checked {
         background-image: url('../assets/images/mult-select.png');
       }
       .is-unchecked {
         background-image: url('../assets/images/mult-unselect.png');
+      }
+      .is-disabled {
+        border: 1px solid #dbdbdb;
+        background-color: #e7e7e7;
       }
     }
   }
@@ -147,6 +178,9 @@ export default {
     padding-bottom: 10px;
     margin-right: 20px;
     height: 32px;
+  }
+  .item-disabled {
+    cursor: not-allowed !important;
   }
   .checkboxes-last {
     display: flex;

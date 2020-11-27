@@ -30,7 +30,8 @@
     "point": "·",
     "slashes": "/",
     "colon": ":",
-    "fullStop": "."
+    "fullStop": ".",
+    "comma": ","
   },
   "header": {
     "refreshData": "Refresh Data",
@@ -767,6 +768,7 @@
     "multiMethod": "Single indicator and multiple methods",
     "interpretation": "Explanation",
     "measurement": "Measurement",
+    "disableMetricTip": "The result of this measurement method is irrelevant to the tag, the classification assessment result cannot be viewed.",
     "seeInterpretation": "You are viewing scores of the explanation method ",
     "seeMeasurement": "You are viewing scores of the measurement method ",
     "showGrade": " of different tag types",

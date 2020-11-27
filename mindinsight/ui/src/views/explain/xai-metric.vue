@@ -194,7 +194,9 @@ limitations under the License.
                   <el-option v-for="(item, index) in classifyAllMetrics"
                              :key="index"
                              :value="item.label"
-                             :label="item.label"></el-option>
+                             :label="item.label"
+                             :disabled="item.disabled"
+                             :title="item.title"></el-option>
                 </el-select>
               </span>
             </div>
@@ -581,6 +583,7 @@ export default {
       const metricsDic = {};
       const labelDic = {};
       const allLabels = [];
+      const compareMetric = {};
       // Simplify data to dictionary
       oriData.explainer_scores.forEach((explainerScore) => {
         const curMethod = explainerScore.explainer;
@@ -588,6 +591,8 @@ export default {
           classifyAllMethods.push({
             label: curMethod,
             checked: true,
+            disabled: false,
+            title: '',
           });
           fullDataDict[curMethod] = {};
           explainerScore.class_scores.forEach((classScore) => {
@@ -606,13 +611,31 @@ export default {
                   classifyAllMetrics.push({
                     label: evaluation.metric,
                     checked: true,
+                    disabled: false,
+                    title: '',
                   });
                 }
               });
             }
           });
+          explainerScore.evaluations.forEach((evaluation) => {
+            compareMetric[evaluation.metric] = true;
+          });
         }
       });
+
+      const compareArr = Object.keys(compareMetric);
+      compareArr.forEach((metricName) => {
+        if (!metricsDic[metricName]) {
+          classifyAllMetrics.push({
+            label: metricName,
+            checked: false,
+            disabled: true,
+            title: this.$t('metric.disableMetricTip'),
+          });
+        }
+      });
+
       this.fullDict = fullDataDict;
       this.classifyAllMethods = classifyAllMethods;
       this.classifyAllMetrics = classifyAllMetrics;
@@ -864,6 +887,11 @@ export default {
       flex-shrink: 0;
       border: 1px solid #e6ebf5;
       margin-left: 20px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      &::-webkit-scrollbar {
+        width: 0;
+      }
     }
   }
 
