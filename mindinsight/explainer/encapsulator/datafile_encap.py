@@ -18,7 +18,6 @@ import os
 import io
 
 from PIL import Image
-from PIL import UnidentifiedImageError
 import numpy as np
 
 from mindinsight.utils.exceptions import UnknownError
@@ -91,7 +90,7 @@ class DatafileEncap(ExplainDataEncap):
             raise ImageNotExistError(f"train_id:{train_id} path:{image_path} type:{image_type}")
         except PermissionError:
             raise FileSystemPermissionError(f"train_id:{train_id} path:{image_path} type:{image_type}")
-        except UnidentifiedImageError:
+        except OSError:
             raise UnknownError(f"Invalid image file: train_id:{train_id} path:{image_path} type:{image_type}")
 
         if image.mode == _SINGLE_CHANNEL_MODE:
