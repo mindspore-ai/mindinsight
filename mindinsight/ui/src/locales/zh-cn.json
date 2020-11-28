@@ -30,7 +30,8 @@
     "point": "·",
     "slashes": "/",
     "colon": "：",
-    "fullStop": "。"
+    "fullStop": "。",
+    "comma": "，"
   },
   "header": {
     "refreshData": "刷新数据",
@@ -767,6 +768,7 @@
     "multiMethod": "单指标多方法",
     "interpretation": "解释方法",
     "measurement": "度量方法",
+    "disableMetricTip": "该度量方法的结果与标签无关，不支持查看分类评估结果",
     "seeInterpretation": "您正在查看解释方法 ",
     "seeMeasurement": "您正在查看度量方法 ",
     "showGrade": " 在不同标签类型上的分数",
