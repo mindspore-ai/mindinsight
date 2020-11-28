@@ -39,6 +39,10 @@ class TestPropose(TestCase):
         proposal_dict = OrderedDict()
         proposal_dict["step_trace-proposer_type_label"] = None
         proposal_dict.update(self.step_trace_proposal_dict)
+        proposal_dict["minddata-proposer_type_label"] = None
+        proposal_dict["minddata_device_queue"] = [1, 1, 0, 1]
+        proposal_dict["minddata_warning_op"] = ["data_process"]
+        proposal_dict["minddata_cpu_utilization"] = [90]
         proposal_dict["common-proposer_type_label"] = None
         proposal_dict.update(self.common_proposal_dict)
         type_list = ['step_trace', 'minddata', 'minddata_pipeline', 'common']

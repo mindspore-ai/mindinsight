@@ -45,6 +45,7 @@ class MinddataProposer(Proposer):
             >>> result = proposer.analyze(options)
         """
         self.minddata_outer_bounds_analyze()
+        self.minddata_cpu_utilization_proposal()
         return self.__proposal_dict
 
     def minddata_outer_bounds_analyze(self):
@@ -82,3 +83,17 @@ class MinddataProposer(Proposer):
         if warning_op:
             minddata_dict["minddata_warning_op"] = [",".join(warning_op)]
             self.__proposal_dict.update(minddata_dict)
+
+    def minddata_cpu_utilization_proposal(self):
+        """Get the proposals of minddata cpu utilization"""
+        minddata_cpu_utilization = OrderedDict()
+        minddata_cpu_utilization_analyser = AnalyserFactory.instance().get_analyser(
+            'minddata_cpu_utilization', self.profiling_path, self.device_id)
+        result = minddata_cpu_utilization_analyser.query()
+        idle_utilization_avg = result.get("device_info").get("idle_utilization").get("avg_value")
+        # The maximum value of this cpu_activate_utilization_avg is 100%.
+        cpu_activate_utilization_avg = 100 - idle_utilization_avg
+        cpu_activate_utilization_threshold = 80
+        if cpu_activate_utilization_avg > cpu_activate_utilization_threshold:
+            minddata_cpu_utilization["minddata_cpu_utilization"] = [cpu_activate_utilization_avg]
+            self.__proposal_dict.update(minddata_cpu_utilization)

@@ -583,6 +583,52 @@ def get_memory_usage_breakdowns():
     return breakdowns
 
 
+@BLUEPRINT.route("/profile/minddata-cpu-utilization-summary", methods=["POST"])
+def get_minddata_cpu_utilization_info():
+    """
+    Get minddata cpu utilization info.
+
+    Returns:
+        str, the minddata cpu utilization info.
+
+    Raises:
+        ParamValueError: If the search condition contains some errors.
+
+    Examples:
+        >>>POST http://xxx/v1/mindinsight/profile/minddata-cpu-utilization-summary
+    """
+    profiler_dir = get_profiler_dir(request)
+    train_id = get_train_id(request)
+    if not profiler_dir or not train_id:
+        raise ParamValueError("No profiler_dir or train_id.")
+
+    profiler_dir_abs = os.path.join(
+        settings.SUMMARY_BASE_DIR, train_id, profiler_dir
+    )
+
+    try:
+        profiler_dir_abs = validate_and_normalize_path(
+            profiler_dir_abs, "profiler"
+        )
+    except ValidationError:
+        raise ParamValueError("Invalid profiler dir.")
+
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+    condition = request.stream.read()
+    try:
+        condition = json.loads(condition) if condition else {}
+    except (json.JSONDecodeError, ValueError):
+        raise ParamValueError("Json data parse failed.")
+
+    device_id = condition.get("device_id", "0")
+    to_int(device_id, 'device_id')
+    analyser = AnalyserFactory.instance().get_analyser(
+        'minddata_cpu_utilization', profiler_dir_abs, device_id
+    )
+    cpu_utilization = analyser.query(condition)
+    return jsonify(cpu_utilization)
+
+
 def init_module(app):
     """
     Init module entry.
