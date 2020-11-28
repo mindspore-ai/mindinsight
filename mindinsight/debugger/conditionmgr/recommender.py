@@ -106,7 +106,7 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_c
 
     # add tensor watch points
     merged_info = get_basic_node_info(TargetTypeEnum.TENSOR.value, graph_stream)
-    _recommend_overflow_ascend_chip(merged_info, condition_mgr, watch_points, condition_context)
+    _recommend_operator_overflow(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_tensor_overflow(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_tensor_all_zero(merged_info, condition_mgr, watch_points, condition_context)
 
@@ -165,21 +165,21 @@ def _recommend_tensor_overflow(basic_info_nodes, condition_mgr, watch_points, co
     watch_points.append(overflow_watchpoint)
 
 
-def _recommend_overflow_ascend_chip(basic_info_nodes, condition_mgr, watch_points, condition_context):
+def _recommend_operator_overflow(basic_info_nodes, condition_mgr, watch_points, condition_context):
     """Recommend tensor overflow watchpoint."""
     if not basic_info_nodes:
         return
-    if not condition_mgr.has_condition(ConditionIdEnum.OVERFLOW_ASCEND_CHIP.value, condition_context):
+    if not condition_mgr.has_condition(ConditionIdEnum.OPERATOR_OVERFLOW.value, condition_context):
         return
 
-    condition = condition_mgr.get_condition(condition_id=ConditionIdEnum.OVERFLOW_ASCEND_CHIP.value)
+    condition = condition_mgr.get_condition(condition_id=ConditionIdEnum.OPERATOR_OVERFLOW.value)
     overflow_d_watchpoint = _WatchPointData(
         watch_condition={
             "condition": condition.id,
             "params": []
         },
         watch_nodes=basic_info_nodes.copy(),
-        name='recommend_overflow_ascend_chip_watchpoint'
+        name='recommend_operator_overflow_watchpoint'
     )
     watch_points.append(overflow_d_watchpoint)
 

@@ -29,7 +29,6 @@ from mindinsight.debugger.conditionmgr.condition import check_initialization_ava
 from mindinsight.debugger.conditionmgr.condition import check_normal_param_range
 from mindinsight.debugger.conditionmgr.condition import check_percentage_param_range
 from mindinsight.debugger.conditionmgr.condition import check_abs_param_range
-from mindinsight.debugger.conditionmgr.condition import check_not_nan
 
 
 CONDITION_LIST = [
@@ -67,7 +66,7 @@ CONDITION_LIST = [
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_general_overflow
         optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
         parameters=[],
-        supported_target_type=TargetTypeEnum.TENSOR,
+        supported_target_type=TargetTypeEnum.WEIGHT,
         supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
         minimum_debugger_capability=(1, 1)
     ),
@@ -224,164 +223,6 @@ CONDITION_LIST = [
         supported_target_type=TargetTypeEnum.TENSOR,
         supported_platforms=(PlatformEnum.ASCEND,),
         minimum_debugger_capability=(1, 1)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.NAN,
-        abbr="NAN",
-        # Send this condition to MindSpore will use WatchCondition.Condition.nan
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.GPU,),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.OVERFLOW_ASCEND_CHIP,
-        abbr="OVERFLOW",
-        # Send this condition to MindSpore will use WatchCondition.Condition.overflow
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND,),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.INF,
-        abbr="INF",
-        # Send this condition to MindSpore will use WatchCondition.Condition.inf
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.MAX_GT,
-        abbr="MAX>",
-        # Send this condition to MindSpore will use WatchCondition.Condition.max_gt
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="param",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.MAX_LT,
-        abbr="MAX<",
-        # Send this condition to MindSpore will use WatchCondition.Condition.max_lt
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="param",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.MIN_GT,
-        abbr="MIN>",
-        # Send this condition to MindSpore will use WatchCondition.Condition.min_gt
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="param",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.MIN_LT,
-        abbr="MIN<",
-        # Send this condition to MindSpore will use WatchCondition.Condition.min_lt
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="param",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.MAX_MIN_GT,
-        abbr="MAX-MIN>",
-        # Send this condition to MindSpore will use WatchCondition.Condition.max_min_gt
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="param",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.MAX_MIN_LT,
-        abbr="MAX-Min<",
-        # Send this condition to MindSpore will use WatchCondition.Condition.max_min_lt
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="param",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.MEAN_GT,
-        abbr="MEAN>",
-        # Send this condition to MindSpore will use WatchCondition.Condition.mean_gt
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="param",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
-    ),
-    Condition(
-        condition_id=ConditionIdEnum.MEAN_LT,
-        abbr="MEAN<",
-        # Send this condition to MindSpore will use WatchCondition.Condition.mean_lt
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="param",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 0)
     ),
     Condition(
         condition_id=ConditionIdEnum.TENSOR_INITIALIZATION,
@@ -578,13 +419,13 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="range_start_inclusive",
                 value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_not_nan,
+                valid_test_func=check_normal_param_range,
                 param_type=ParamTypeEnum.SUPPORT_PARAM
             ),
             ConditionParameter(
                 name="range_end_inclusive",
                 value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_not_nan,
+                valid_test_func=check_normal_param_range,
                 param_type=ParamTypeEnum.SUPPORT_PARAM
             ),
             ConditionParameter(
@@ -623,13 +464,13 @@ CONDITION_LIST = [
             ConditionParameter(
                 name="range_start_inclusive",
                 value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_not_nan,
+                valid_test_func=check_normal_param_range,
                 param_type=ParamTypeEnum.SUPPORT_PARAM
             ),
             ConditionParameter(
                 name="range_end_inclusive",
                 value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_not_nan,
+                valid_test_func=check_normal_param_range,
                 param_type=ParamTypeEnum.SUPPORT_PARAM
             ),
             ConditionParameter(

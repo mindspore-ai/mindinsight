@@ -199,8 +199,9 @@ class TestDebuggerServer:
     def test_create_watchpoint(self, *args):
         """Test create watchpoint."""
         args[0].return_value = 1
-        res = self._server.create_watchpoint({'watch_condition': {'id': 'inf'},
-                                              'watch_nodes': ['watch_node_name']})
+        res = self._server.create_watchpoint(
+            {'watch_condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
+             'watch_nodes': ['watch_node_name']})
         assert res == {'id': 1, 'metadata': {'enable_recheck': False, 'state': 'waiting'}}
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')

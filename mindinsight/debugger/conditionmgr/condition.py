@@ -18,8 +18,6 @@ Management of all conditions.
 This module is used to register all conditions, as well as their parameters.
 This module also provide the available conditions to condition_collections api.
 """
-import math
-
 from enum import Enum
 from mindinsight.debugger.conditionmgr.log import logger
 
@@ -35,17 +33,6 @@ class ConditionIdEnum(Enum):
     GRADIENT_EXPLODING = "gradient_exploding"
     TENSOR_OVERFLOW = "tensor_overflow"
     OPERATOR_OVERFLOW = "operator_overflow"
-    NAN = "nan"
-    OVERFLOW_ASCEND_CHIP = "overflow"
-    INF = "inf"
-    MAX_GT = "max_gt"
-    MAX_LT = "max_lt"
-    MIN_GT = "min_gt"
-    MIN_LT = "min_lt"
-    MAX_MIN_GT = "max_min_gt"
-    MAX_MIN_LT = "max_min_lt"
-    MEAN_GT = "mean_gt"
-    MEAN_LT = "mean_lt"
     TENSOR_INITIALIZATION = "tensor_initialization"
     TENSOR_TOO_LARGE = "tensor_too_large"
     TENSOR_TOO_SMALL = "tensor_too_small"
@@ -287,7 +274,3 @@ def check_abs_param_range(value):
     if 0 <= value < float("inf"):
         return True
     return False
-
-
-def check_not_nan(value):
-    return not math.isnan(value)

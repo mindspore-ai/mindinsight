@@ -84,7 +84,7 @@ class TestAscendDebugger:
 
     def test_get_conditions(self, app_client):
         """Test get conditions for ascend."""
-        url = '/v1/mindinsight/conditionmgr/train-jobs/train-id/conditions'
+        url = '/v1/mindinsight/conditionmgr/train-jobs/train-id/condition-collections'
         body_data = {}
         expect_file = 'get_conditions_for_ascend.json'
         with self._debugger_client.get_thread_instance():
@@ -131,16 +131,12 @@ class TestAscendDebugger:
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
             conditions = [
-                {'id': 'max_gt', 'params': [{'name': 'param', 'value': 1.0}]},
-                {'id': 'max_lt', 'params': [{'name': 'param', 'value': -1.0}]},
-                {'id': 'min_gt', 'params': [{'name': 'param', 'value': 1e+32}]},
-                {'id': 'min_lt', 'params': [{'name': 'param', 'value': -1e+32}]},
-                {'id': 'max_min_gt', 'params': [{'name': 'param', 'value': 0}]},
-                {'id': 'max_min_lt', 'params': [{'name': 'param', 'value': 0}]},
-                {'id': 'mean_gt', 'params': [{'name': 'param', 'value': 0}]},
-                {'id': 'mean_lt', 'params': [{'name': 'param', 'value': 0}]},
-                {'id': 'inf', 'params': []},
-                {'id': 'overflow', 'params': []},
+                {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
+                {'id': 'tensor_too_small', 'params': [{'name': 'max_lt', 'value': -1.0}]},
+                {'id': 'tensor_too_large', 'params': [{'name': 'min_gt', 'value': 1e+32}]},
+                {'id': 'tensor_too_small', 'params': [{'name': 'min_lt', 'value': -1e+32}]},
+                {'id': 'tensor_too_large', 'params': [{'name': 'mean_gt', 'value': 0}]},
+                {'id': 'tensor_too_small', 'params': [{'name': 'mean_lt', 'value': 0}]}
             ]
             for idx, condition in enumerate(conditions):
                 create_watchpoint(app_client, condition, idx + 1)
@@ -167,7 +163,7 @@ class TestAscendDebugger:
         leaf_node_name = 'Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias'
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
-            condition = {'id': 'inf', 'params': []}
+            condition = {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]}
             create_watchpoint(app_client, condition, watch_point_id)
             # update watchpoint watchpoint list
             url = 'update_watchpoint'
@@ -327,7 +323,7 @@ class TestAscendDebugger:
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("url, body_data, enable_recheck", [
         ('create_watchpoint',
-         {'condition': {'id': 'inf', 'params': []},
+         {'condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
           'watch_nodes': ['Default']}, True),
         ('update_watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum/Parameter[18]_7'],
@@ -434,10 +430,10 @@ class TestGPUDebugger:
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("url, body_data, enable_recheck", [
         ('create_watchpoint',
-         {'condition': {'id': 'inf', 'params': []},
+         {'condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
           'watch_nodes': ['Default']}, True),
         ('create_watchpoint',
-         {'condition': {'id': 'inf', 'params': []},
+         {'condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
           'watch_nodes': ['Default/TransData-op99']}, True),
         ('update_watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum/Parameter[18]_7'],
@@ -472,7 +468,7 @@ class TestGPUDebugger:
 
     def test_get_conditions(self, app_client):
         """Test get conditions for gpu."""
-        url = '/v1/mindinsight/conditionmgr/train-jobs/train-id/conditions'
+        url = '/v1/mindinsight/conditionmgr/train-jobs/train-id/condition-collections'
         body_data = {}
         expect_file = 'get_conditions_for_gpu.json'
         with self._debugger_client.get_thread_instance():
@@ -493,7 +489,7 @@ class TestGPUDebugger:
             # send recheck when disable to do recheck
             get_request_result(app_client, 'recheck', {}, method='post', expect_code=400)
             # send recheck when enable to do recheck
-            create_watchpoint(app_client, {'id': 'inf', 'params': []}, 2)
+            create_watchpoint(app_client, {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]}, 2)
             res = get_request_result(app_client, 'recheck', {}, method='post')
             assert res['metadata']['enable_recheck'] is False
 
@@ -579,10 +575,10 @@ class TestMultiGraphDebugger:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("filter_condition, expect_id", [
-        ({'condition': {'id': 'inf'},
+        ({'condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
           'watch_nodes': ['Default/optimizer-Momentum/Parameter[18]_7'],
           'graph_name': 'graph_0'}, 1),
-        ({'condition': {'id': 'inf'},
+        ({'condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
           'watch_nodes': ['graph_0/Default/optimizer-Momentum/ApplyMomentum[8]_1'],
           'graph_name': None}, 1)
     ])
@@ -665,7 +661,8 @@ def create_watchpoint(app_client, condition, expect_id):
 def create_watchpoint_and_wait(app_client):
     """Preparation for recheck."""
     check_state(app_client)
-    create_watchpoint(app_client, condition={'id': 'inf', 'params': []}, expect_id=1)
+    create_watchpoint(app_client, condition={'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
+                      expect_id=1)
     # send run command to get watchpoint hit
     url = 'control'
     body_data = {'mode': 'continue',

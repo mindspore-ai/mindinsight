@@ -95,13 +95,9 @@ class WatchpointOperator:
     def _validate_watch_condition(self, watch_condition):
         """Validate watch condition."""
         metadata_stream = self._metadata_stream
-        if metadata_stream.backend == 'GPU' and watch_condition.get('id') in (
-                ConditionIdEnum.OVERFLOW_ASCEND_CHIP.value, ConditionIdEnum.OPERATOR_OVERFLOW.value):
+        if metadata_stream.backend == 'GPU' and watch_condition.get('id') == ConditionIdEnum.OPERATOR_OVERFLOW.value:
             log.error("GPU doesn't support overflow watch condition.")
             raise DebuggerParamValueError("GPU doesn't support overflow watch condition.")
-        if metadata_stream.backend == 'Ascend' and watch_condition.get('id') == ConditionIdEnum.NAN.value:
-            log.error("Ascend doesn't support nan watch condition.")
-            raise DebuggerParamValueError("Ascend doesn't support nan watch condition.")
 
     def update_watchpoint(self, params):
         """

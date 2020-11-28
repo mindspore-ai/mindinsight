@@ -46,30 +46,6 @@ class ConditionMgr:
         for condition in conditions:
             self.register_condition(condition)
 
-    def get_all(self, condition_context):
-        """Get all register conditions."""
-        conditions = []
-        for condition in self.conditions.values():
-            parameters = []
-            if not condition.is_available(condition_context):
-                continue
-            for param in condition.parameters:
-                if not param.visible_on_ui:
-                    continue
-                parameters.append({
-                    "name": param.name,
-                    "type": param.type.name,
-                    "support_disable": param.support_disable,
-                    "default_value": param.default_value
-                })
-            conditions.append({
-                "id": condition.id,
-                "parameters": parameters,
-                "supported_target_type": condition.supported_target_type.name
-            })
-        conditions = sorted(conditions, key=lambda x: x.get('id'))
-        return {"conditions": conditions}
-
     def get_condition(self, condition_id) -> Condition:
         """Get condition by condition id"""
         return self.conditions[condition_id]
@@ -126,9 +102,9 @@ class ConditionMgr:
             })
 
         reply = []
-        self.check_and_sort(collections, TargetTypeEnum.ACTIVATION.value, reply)
-        self.check_and_sort(collections, TargetTypeEnum.GRADIENT.value, reply)
         self.check_and_sort(collections, TargetTypeEnum.TENSOR.value, reply)
         self.check_and_sort(collections, TargetTypeEnum.WEIGHT.value, reply)
+        self.check_and_sort(collections, TargetTypeEnum.ACTIVATION.value, reply)
+        self.check_and_sort(collections, TargetTypeEnum.GRADIENT.value, reply)
 
         return reply

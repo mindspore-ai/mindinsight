@@ -61,9 +61,9 @@ class TestWatchpointHandler:
     def _create_watchpoint(self):
         """Test create_watchpoint."""
         watchpoints = [
-            ({'id': 'inf', 'params': []}, None, None, 1),
-            ({'id': 'inf', 'params': []}, ["Default"], None, 2),
-            ({'id': 'max_gt', 'params': [{'name': 'param', 'value': 1}]},
+            ({'id': 'tensor_too_small', 'params': [{'name': 'max_lt', 'value': 1.0}]}, None, None, 1),
+            ({'id': 'tensor_too_small', 'params': [{'name': 'min_lt', 'value': 1.0}]}, ["Default"], None, 2),
+            ({'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
              ["Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92"],
              None, 3)
         ]
@@ -160,7 +160,8 @@ class TestWatchpointHandler:
                                         expect_deleted_ids):
         """Test delete_watchpoint."""
         for _ in range(watch_point_id):
-            self.handler.create_watchpoint(self.conditionmgr, {'id': 'inf', 'param': []})
+            self.handler.create_watchpoint(self.conditionmgr,
+                                           {'id': 'tensor_too_small', 'params': [{'name': 'max_lt', 'value': 1.0}]})
         with TestCase().assertLogs(logger=log, level='DEBUG') as log_content:
             self.handler.delete_watchpoint(watch_point_id)
         TestCase().assertIn(
@@ -233,13 +234,13 @@ def test_validate_watch_condition_type_error():
 
 def test_validate_watch_condition_params_except():
     """Test validate_watch_condition_params."""
-    watch_condition = {'id': 'inf', 'params': [{'name': 'param', 'value': 0}]}
+    watch_condition = {'id': 'weight_overflow', 'params': [{'name': 'param', 'value': 0}]}
     conditionmgr = ConditionMgr()
     with pytest.raises(DebuggerParamValueError) as err:
         validate_watch_condition_params(conditionmgr, watch_condition)
     assert err.value.error_code == '5054B081'
 
-    watch_condition = {'id': 'max_gt', 'params': [{'name': 'param', 'value': '0'}]}
+    watch_condition = {'id': 'tensor_overflow', 'params': [{'name': 'param', 'value': '0'}]}
     with pytest.raises(DebuggerParamValueError) as err:
         validate_watch_condition_params(conditionmgr, watch_condition)
     assert err.value.error_code == '5054B081'
