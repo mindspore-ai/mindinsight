@@ -542,7 +542,6 @@
     "tensorDiagram": "Tensor Relationship Diagram",
     "selectDetail": "Select a tensor and double-click it to view details.",
     "operator": "Operator",
-    "jumpFailInformation": "Redirection fails because the tensor information is empty.",
     "optimizationOrientation": "Optimization Guide",
     "tuningAdvice": "Optimization Suggestions",
     "setValue": "Preset Value",

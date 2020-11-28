@@ -284,7 +284,7 @@ export default {
      * @return {String}
      */
     formateValueColor(row, cell, value, columnDef, dataContext) {
-      if (!cell || !value || isNaN(value) || value === Infinity || value === -Infinity) {
+      if (!cell || !value || this.judgeDataType(value)) {
         return value;
       } else if (value < 0) {
         return `<span class="table-item-span" style="background:rgba(227, 125, 41, ${
@@ -295,6 +295,15 @@ export default {
           value / this.statistics.overall_max
         })">${value}</span>`;
       }
+    },
+    judgeDataType(value) {
+      return (
+        isNaN(value) ||
+        value === 'Infinity' ||
+        value === '-Infinity' ||
+        typeof value === 'boolean' ||
+        value === 'null'
+      );
     },
     /**
      * Setting the background color of data
@@ -308,7 +317,7 @@ export default {
     formateCompareColor(row, cell, value, columnDef, dataContext) {
       if (value instanceof Array && value.length >= 3) {
         const valueNum = value[2];
-        if (!cell || !valueNum || isNaN(valueNum) || valueNum === Infinity || valueNum === -Infinity) {
+        if (!cell || !valueNum || this.judgeDataType(valueNum)) {
           return `<span class="table-item-span" title="${value[0]}→${value[1]}">${valueNum}</span>`;
         } else if (valueNum < 0) {
           return `<span class="table-item-span" title="${value[0]}→${
@@ -360,7 +369,7 @@ export default {
             const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
             const tempArr = [];
             innerData.forEach((innerValue) => {
-              if (isNaN(innerValue) || innerValue === 'Infinity' || innerValue === '-Infinity') {
+              if (this.judgeDataType(innerValue)) {
                 tempArr.push(innerValue);
               } else {
                 if (this.category === 'science') {
@@ -381,7 +390,7 @@ export default {
           };
           outerData.forEach((innerData, innerIndex) => {
             const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
-            if (isNaN(innerData) || innerData === 'Infinity' || innerData === '-Infinity') {
+            if (this.judgeDataType(innerData)) {
               tempData[innerOrder] = innerData;
             } else {
               if (this.category === 'science') {

@@ -214,6 +214,12 @@ limitations under the License.
                   <ul>
                     <li v-for="(i, index) in props.row.lists"
                         :key="index">{{i.name}}
+                      <div v-for="(j, ind) in i.params"
+                           :key="ind"
+                           class="param">
+                        <div class="tensor-icon"></div>
+                        {{j}}
+                      </div>
                       <div class="hit-tip"
                            v-if="i.tip">
                         <i class="el-icon-warning"></i>{{i.tip}}
@@ -394,19 +400,22 @@ limitations under the License.
                       <div class="value-wrap">
                         <el-button size="mini"
                                    type="text"
+                                   :disabled="metadata.state==='running'"
                                    v-if="scope.row.value === 'click to view'"
                                    @click="showTensor(scope.row,'value')">
                           {{ $t('debugger.view') }}
                         </el-button>
-                        <span v-else
-                              class="value-tip"
-                              :class="{point:!isNaN(scope.row.value)}"
-                              :title="isNaN(scope.row.value)?'':scope.row.value"
-                              @click="isNaN(scope.row.value)?'javascript:;':showTensor(scope.row,'value')">
-                          {{ scope.row.value }}</span>
+                        <el-button v-else
+                                   class="value-tip"
+                                   size="mini"
+                                   type="text"
+                                   :disabled="metadata.state==='running'"
+                                   :title="isNaN(scope.row.value)?'':scope.row.value"
+                                   @click="showTensor(scope.row,'value')">
+                          {{ scope.row.value }}</el-button>
                         <el-button size="mini"
                                    type="text"
-                                   :disabled="!scope.row.has_prev_step"
+                                   :disabled="metadata.state==='running' || !scope.row.has_pre_step"
                                    @click="showTensor(scope.row,'compare')">
                           {{ $t('debugger.compareToPre') }}
                         </el-button>
@@ -471,7 +480,8 @@ limitations under the License.
             <el-option v-for="i in conditionCollections"
                        :key="i.id"
                        :label="transCondition(i.id)"
-                       :value="i.id">
+                       :value="i.id"
+                       :class="{'deb-indent': i.id != 'tensor_condition_collection'}">
             </el-option>
           </el-select>
           <el-select v-model="item.condition.selectedId"
@@ -1830,6 +1840,16 @@ export default {
                 &:hover {
                   background-color: #ebeef5;
                 }
+                .param {
+                  .tensor-icon {
+                    display: inline-block;
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 3px;
+                    background-color: #00a5a7;
+                    margin-top: 8px;
+                  }
+                }
                 .hit-tip {
                   margin-top: 10px;
                   font-size: 12px;
@@ -2080,9 +2100,6 @@ export default {
           display: inline-block;
           vertical-align: middle;
           text-align: center;
-        }
-        .value-tip.point {
-          cursor: pointer;
         }
         .el-table--border {
           border-right: none;
