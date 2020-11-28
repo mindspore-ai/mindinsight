@@ -21,8 +21,8 @@ from tests.st.func.debugger.conftest import DEBUGGER_EXPECTED_RESULTS, DEBUGGER_
 from tests.utils.tools import compare_result_with_file, get_url
 
 
-def check_waiting_state(app_client):
-    """Wait for waiting state."""
+def check_state(app_client, server_state='waiting'):
+    """Check if the Server is ready."""
     url = 'retrieve'
     body_data = {'mode': 'all'}
     max_try_times = 30
@@ -31,7 +31,7 @@ def check_waiting_state(app_client):
     while count < max_try_times:
         res = get_request_result(app_client, url, body_data)
         state = res.get('metadata', {}).get('state')
-        if state == 'waiting':
+        if state == server_state:
             flag = True
             break
         count += 1
@@ -79,3 +79,5 @@ def delete_random_items(res):
             res['metadata'].pop('ip')
         if res['metadata'].get('pos'):
             res['metadata'].pop('pos')
+        if res['metadata'].get('debugger_version') and res['metadata']['debugger_version'].get('mi'):
+            res['metadata']['debugger_version'].pop('mi')
