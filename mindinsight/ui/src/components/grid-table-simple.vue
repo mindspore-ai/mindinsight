@@ -36,6 +36,10 @@ limitations under the License.
          v-if="showOperate && (fullData.length || requestError)">
       <div class="filter-container"
            @keyup.enter="filterChange">
+        <div class="filter-input-title">{{$t('components.dimsFilterInputTitle')}}
+          <span :title="$t('components.dimsFilterInputTip')"
+                class="el-icon-warning"></span>
+        </div>
         <div v-for="(item, itemIndex) in filterArr"
              :key="itemIndex">
           <el-input class="filter-input"
@@ -50,11 +54,20 @@ limitations under the License.
                    size="mini"
                    v-if="!!filterArr.length"
                    @click="filterChange">
-          <i class="el-icon-check"></i></el-button>
+          <i class="el-icon-check"></i>
+        </el-button>
         <span class="filter-incorrect-text"
               v-if="!filterCorrect">{{$t('components.inCorrectInput')}}</span>
       </div>
       <div class="accuracy-container">
+        {{$t('components.category')}}<el-select v-model="category"
+                   class="select-category"
+                   @change="accuracyChange">
+          <el-option v-for="item in categoryArr"
+                     :key="item.label"
+                     :label="item.label"
+                     :value="item.value"></el-option>
+        </el-select>
         {{$t('components.gridAccuracy')}}<el-select v-model="accuracy"
                    class="select-item"
                    @change="accuracyChange">
@@ -141,6 +154,17 @@ export default {
         rowStartIndex: 0,
         colStartIndex: 0,
       },
+      categoryArr: [
+        {
+          label: this.$t('components.value'),
+          value: 'value',
+        },
+        {
+          label: this.$t('components.scientificCounting'),
+          value: 'science',
+        },
+      ],
+      category: 'value', // value: Numerical; science: Scientific notation
     };
   },
   computed: {},
@@ -216,7 +240,7 @@ export default {
           id: -1,
           name: ' ',
           field: -1,
-          width: 100,
+          width: 120,
           headerCssClass: 'headerStyle',
         },
       ];
@@ -228,7 +252,7 @@ export default {
             id: order,
             name: order,
             field: order,
-            width: 100,
+            width: 120,
             headerCssClass: 'headerStyle',
             formatter: this.formateValueColor,
           });
@@ -293,7 +317,11 @@ export default {
           if (isNaN(innerData)) {
             tempData[innerOrder] = innerData;
           } else {
-            tempData[innerOrder] = innerData.toFixed(this.accuracy);
+            if (this.category === this.categoryArr[0].value) {
+              tempData[innerOrder] = innerData.toFixed(this.accuracy);
+            } else {
+              tempData[innerOrder] = innerData.toExponential(this.accuracy);
+            }
           }
         });
         tempArr.push(tempData);
@@ -602,11 +630,19 @@ export default {
         line-height: 32px;
         color: red;
       }
+      .filter-input-title {
+        line-height: 34px;
+        margin-right: 10px;
+      }
     }
     .accuracy-container {
       float: right;
       .select-item {
         width: 60px;
+      }
+      .select-category {
+        width: 105px;
+        margin-left: 5px;
       }
     }
   }

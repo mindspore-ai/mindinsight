@@ -1,6 +1,6 @@
 {
   "public": {
-    "netWorkError": "网络或后端服务错误，请检查。",
+    "netWorkError": "网络或后端服务错误，请确保服务正常并重新加载页面。",
     "browserWarning": "您当前的浏览器可能导致部分功能失效或不可使用，建议使用Chrome 65版本以上的浏览器。",
     "timeout": "超时，请重新请求。",
     "noData": "暂无数据",
@@ -466,9 +466,9 @@
     "gridTableNoData": "表格无数据",
     "value": "数值",
     "dimsFilterInputTitle": "维度选择",
-    "dimsFilterInputTip": "维度输入值可以是具体的索引（和Python的索引含义一致,支持负号）或者冒号\":\"，其中冒号\":\"表示当前维度的所有值",
+    "dimsFilterInputTip": "维度输入值可以是具体的索引（和Python的索引含义一致，支持负号）或者冒号\":\"，其中冒号\":\"表示当前维度的所有值",
     "category": "分类",
-    "ScientificCounting": "科学计数"
+    "scientificCounting": "科学计数"
   },
   "debugger": {
     "debugger": "调试器",

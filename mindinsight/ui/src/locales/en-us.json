@@ -1,6 +1,6 @@
 {
   "public": {
-    "netWorkError": "Network or backend service error. Please check.",
+    "netWorkError": "Network or backend service error. Ensure that the service is started successfully and reload the page.",
     "browserWarning": "Your browser may cause some functions to become invalid or unavailable. You are advised to use Chrome 65 or later.",
     "timeout": "Timeout. Try again.",
     "noData": "No data",
@@ -469,7 +469,7 @@
     "dimsFilterInputTitle": "Dimension Selection",
     "dimsFilterInputTip": "The dimension value can be a specific index (consistent with the Python index meaning and supporting negative signs) or a colon (:) that indicates all values of the current dimension.",
     "category": "Type",
-    "ScientificCounting": "Scientific notation"
+    "scientificCounting": "Scientific notation"
   },
   "debugger": {
     "debugger": "Debugger",

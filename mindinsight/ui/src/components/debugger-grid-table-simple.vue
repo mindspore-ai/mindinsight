@@ -172,7 +172,7 @@ export default {
       shape: '',
       categoryArr: [
         {label: this.$t('components.value'), value: 'value'},
-        {label: this.$t('components.ScientificCounting'), value: 'science'},
+        {label: this.$t('components.scientificCounting'), value: 'science'},
       ],
       category: 'value', // value:Numerical notation      science:Scientific notation
     };
