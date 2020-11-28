@@ -180,6 +180,8 @@ class OpTensor(BaseTensor):
             res['value'] = tensor_value.tolist()
         elif isinstance(tensor_value, str):
             res['value'] = tensor_value
+        else:
+            res['value'] = None
         res['statistics'] = self.get_tensor_statistics()
         return res
 
