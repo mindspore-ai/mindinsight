@@ -17,10 +17,10 @@ import copy
 import uuid
 from typing import Dict, List, Callable, Union
 from collections import OrderedDict
-from .common import context, gen_hash_key, DagGraph, MAX_OUT_DEGREE
-from .known_module_name import BUILT_IN_MODULE_NAME
+from .common import context, gen_hash_key, DagGraph, MAX_OUT_DEGREE, cal_matching_score
+from .known_module_name import BUILT_IN_MODULE_NAME, is_built_in_module_name
 from .pattern import Pattern, scope_name_mapping
-from .built_in_pattern import BUILT_IN_PATTERN
+from .built_in_pattern import BUILT_IN_PATTERN, is_built_in_pattern
 from .pattern_fuzzy_matching import pattern_fuzzy_matching
 from ..third_party_graph.onnx_utils import OnnxNode, BaseNode
 
@@ -376,6 +376,8 @@ def generate_pattern(topo_order: List[BaseNode], dag: DagGraph,
         if ptn_key not in pattern:
             pattern[ptn_key] = Pattern(ptn, len(found_sequence),
                                        in_degree=in_degree, out_degree=out_degree)
+            if is_built_in_pattern(pattern[ptn_key]):
+                pattern[ptn_key].additional_score = cal_matching_score(pattern[ptn_key].ptn_length)
 
         pattern[ptn_key].insert(cur_idx - sub_graph_size + 1, len(found_sequence))
         cur_idx = cur_idx + 1
@@ -425,6 +427,7 @@ class SearchPath:
         }
         self._created_modules[self.pattern.module_name] = self.pattern
         self.heuristic_v = self._heuristic_val()
+        self.replacement_ratio = self._repl_ratio()
         self.actual_v = self._actual_val()
 
     def _create_new_order(self):
@@ -442,6 +445,8 @@ class SearchPath:
         else:
             module_name = scope_name_mapping[self.pattern.pattern]
         self.pattern.module_name = module_name
+        if is_built_in_module_name(module_name):
+            self.pattern.additional_score += cal_matching_score(self.pattern.ptn_length)
         topo_order, inverted_index = self.replace_sub_graph_completely(self.pattern, self.topo_order_bef_repl)
         return topo_order, inverted_index
 
@@ -572,7 +577,12 @@ class SearchPath:
             self.graph.precursor_table[s_nd] = p_nodes
 
     def evaluate_score(self):
-        """Evaluate path score."""
+        """
+        Evaluate path score.
+
+        Expression = 0.7 * (0.1 * bonus + 0.9 * repl_ratio) + 0.3 * H
+            = 0.07 * bonus + 0.63 * repl_ratio + 0.3 * H
+        """
         return .7 * self.actual_v + .3 * self.heuristic_v
 
     def _cal_merged_module_length(self, ptn):
@@ -594,9 +604,21 @@ class SearchPath:
             return 1.0
         return max(res)
 
+    def _cal_bonus(self):
+        """Calculate total pattern length."""
+        score = self.pattern.additional_score
+        for search_path in self.recursion_path:
+            score += search_path.pattern.additional_score
+        return score
+
+    def _repl_ratio(self):
+        """Calculate replacement ratio of current path."""
+        return (context.get_sequence_length() - len(self.topo_order_aft_repl)) / context.get_sequence_length()
+
     def _actual_val(self):
         """Calculate ground-truth score of the path."""
-        return (context.get_sequence_length() - len(self.topo_order_aft_repl)) / context.get_sequence_length()
+        bonus = self._cal_bonus()
+        return bonus * 0.1 + self.replacement_ratio * 0.9
 
     def __lt__(self, other):
         """Override `<` operator."""

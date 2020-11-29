@@ -31,6 +31,9 @@ class Pattern:
         self.out_degree = out_degree
         self.head = self.ptn_items[0]
         self.tail = self.ptn_items[-1]
+        # If pattern in BUILD_IN_MODULE_NAME or BUILD_IN_PATTERN,
+        # the pattern will get additional score.
+        self.additional_score = 0
 
     def insert(self, idx, seq_len):
         """
