@@ -123,11 +123,10 @@ class MockDebuggerClient:
         metadata = self.get_metadata_cmd(training_done)
         response = self.stub.SendMetadata(metadata)
         assert response.status == EventReply.Status.OK
-        if response.version_matched is False:
+        if response.HasField('version_matched') and response.version_matched is False:
             self.command_loop()
         if training_done is False:
             self.send_graph_cmd()
-        print("finish")
 
     def send_graph_cmd(self):
         """Send graph to debugger server."""

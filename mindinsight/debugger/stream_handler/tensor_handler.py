@@ -27,11 +27,17 @@ from mindinsight.utils.tensor import TensorUtils, TensorComparison
 
 TensorBasicInfo = namedtuple('tensor_basic_info', ['full_name', 'node_type', 'iter'])
 
+
 class TensorHandler(StreamHandlerBase):
     """Metadata Handler."""
 
     def __init__(self):
+        # the collection of parameter full names
+        self._param_names = set()
+        # const value objects, the format is like: dict[<const name>, <OpTensor object>]
         self._const_vals = {}
+        # tensor values, the format is like:
+        # dict[<tensor full name>, dict[<step_num>, <OpTensor object>]]
         self._tensors = {}
         self._cur_step = 0
 
@@ -146,6 +152,19 @@ class TensorHandler(StreamHandlerBase):
             else:
                 const_tensor = ConstTensor(const_val)
             self._const_vals[const_tensor.name] = const_tensor
+
+    def record_parameter_names(self, names):
+        """
+        Record parameter names.
+
+        Note:
+            Parameter values could be changed during an iteration step. It must be cleaned after each node step.
+
+        Args:
+            names (list[str]): List of tensor full names.
+        """
+        self._param_names.update(names)
+        log.debug("Record %d parameters in cache. Total parameter number: %d", len(names), len(self._param_names))
 
     def get(self, filter_condition=None):
         """
@@ -293,7 +312,13 @@ class TensorHandler(StreamHandlerBase):
 
     def clean_tensors(self, cur_step):
         """Clean the tensor cache."""
-        self._cur_step = cur_step
+        if cur_step != self._cur_step:
+            self._cur_step = cur_step
+            self._clean_expired_tensors(cur_step)
+        self._clean_parameters()
+
+    def _clean_expired_tensors(self, cur_step):
+        """Clean expired tensors less than current steps."""
         expired_tensor = []
         for tensor_name, tensor in self._tensors.items():
             expired_step = [step for step in tensor.keys() if step <= cur_step - 2]
@@ -303,6 +328,13 @@ class TensorHandler(StreamHandlerBase):
                 expired_tensor.append(tensor_name)
         for tensor_name in expired_tensor:
             self._tensors.pop(tensor_name)
+
+    def _clean_parameters(self):
+        """Clean parameter cache."""
+        for param in self._param_names:
+            if param in self._tensors:
+                self._tensors.pop(param)
+                log.debug("Clean param %s in cache.", param)
 
     def get_tensors_diff(self, tensor_name, shape, tolerance=0):
         """

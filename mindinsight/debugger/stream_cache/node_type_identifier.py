@@ -66,6 +66,19 @@ class NodeTypeIdentifier:
         return self.identify_func(*args, **kwargs)
 
 
+def is_parameter_node(node):
+    """
+    Check if the node is weight type.
+
+    Args:
+        node (Node): The node object.
+
+    Returns:
+        bool, if the node is weight type.
+    """
+    return bool(node.type == NodeTypeEnum.PARAMETER.value)
+
+
 def is_weight_node(node):
     """
     Check if the node is weight type.

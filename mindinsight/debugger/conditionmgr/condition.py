@@ -68,9 +68,10 @@ class PlatformEnum(Enum):
 class TargetTypeEnum(Enum):
     """Target types."""
     TENSOR = 'tensor'
-    WEIGHT = 'weight'
     ACTIVATION = 'activation'
     GRADIENT = 'gradient'
+    PARAMETER = 'parameter'
+    WEIGHT = 'weight'
 
 
 class ParamTypeEnum(Enum):
