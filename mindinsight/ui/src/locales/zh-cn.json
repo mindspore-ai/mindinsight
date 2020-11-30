@@ -724,7 +724,12 @@
     "notUse": "不使用",
     "outdateTip": "监测点列表发生修改，结果可能过时，请重新检查或执行后续step训练。",
     "versionConflictTip": "MindSpore和MindInsight版本不匹配，MindSpore版本：{msv}；MindInsight版本：{miv}；",
-    "checkTips": "提示：张量中含有{msg}，无法进行数值检查。"
+    "checkTips": {
+      "nan": "张量中含有NaN，",
+      "inf": "张量中含有+/-INF，",
+      "no_prev_tensor": "找不到上一个迭代的值，",
+      "cannotCheck": "无法检查。"
+    }
   },
   "explain": {
     "explain": "模型解释",
