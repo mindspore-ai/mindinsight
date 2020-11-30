@@ -675,10 +675,8 @@ export default {
       this.$refs.tree.setCurrentKey(name);
       this.$nextTick(() => {
         setTimeout(() => {
-          const dom = document.querySelector(
-              '.el-tree-node.is-current.is-focusable',
-          );
-          if (dom) {
+          const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
+          if (dom && this.rightShow) {
             dom.scrollIntoView();
           }
         }, 800);
@@ -770,10 +768,8 @@ export default {
         this.treeFlag = true;
         this.$nextTick(() => {
           setTimeout(() => {
-            const dom = document.querySelector(
-                '.el-tree-node.is-current.is-focusable',
-            );
-            if (dom) {
+            const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
+            if (dom && this.rightShow) {
               dom.scrollIntoView();
             }
           }, 800);
@@ -1092,10 +1088,8 @@ export default {
       if (this.isIntoView) {
         this.$nextTick(() => {
           setTimeout(() => {
-            const dom = document.querySelector(
-                '.el-tree-node.is-current.is-focusable',
-            );
-            if (dom) {
+            const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
+            if (dom && this.rightShow) {
               dom.scrollIntoView();
             }
           }, 800);
@@ -1499,10 +1493,8 @@ export default {
         this.$refs.tree.setCurrentKey(name);
         this.$nextTick(() => {
           setTimeout(() => {
-            const dom = document.querySelector(
-                '.el-tree-node.is-current.is-focusable',
-            );
-            if (dom) {
+            const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
+            if (dom && this.rightShow) {
               dom.scrollIntoView();
             }
           }, 800);
@@ -1725,8 +1717,8 @@ export default {
 .cl-graph-manage {
   height: 100%;
   .cl-graph-title {
-    height: 56px;
-    line-height: 56px;
+    height: 50px;
+    line-height: 50px;
     .path-message {
       display: inline-block;
       line-height: 20px;
@@ -1860,7 +1852,7 @@ export default {
       width: 100%;
       height: 100%;
       background-color: #fff;
-      padding: 0 32px 24px;
+      padding: 0 32px 10px;
       min-height: 700px;
       overflow: hidden;
     }
@@ -1875,7 +1867,7 @@ export default {
       padding: 0;
       #sidebar {
         .node-info-con {
-          height: calc(100% - 280px);
+          height: calc(100% - 300px);
         }
       }
       .graph-container {
@@ -1899,7 +1891,7 @@ export default {
       color: #333333;
       font-size: 14px;
       line-height: 14px;
-      padding: 18px 32px 24px;
+      padding: 18px 32px 10px;
       .sidebar-tooltip {
         position: absolute;
         height: 32px;
@@ -2223,7 +2215,7 @@ export default {
       position: relative;
       display: inline-block;
       width: calc(100% - 442px);
-      height: 100%;
+      height: calc(100% - 5px);
       text-align: left;
       -webkit-touch-callout: none;
       -webkit-user-select: none;

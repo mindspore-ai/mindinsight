@@ -137,7 +137,7 @@ limitations under the License.
                 {{$t('modelTraceback.optimizationTitle')}}
                 <el-tooltip class="item"
                             effect="light"
-                            placement="top-start">
+                            placement="top">
                   <div slot="content"
                        class="tooltip-container">
                     {{$t('modelTraceback.targetTips')}}
