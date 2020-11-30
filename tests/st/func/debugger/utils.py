@@ -74,7 +74,7 @@ def send_and_save_result(app_client, url, body_data, file_path, method='post'):
 
 def delete_random_items(res):
     """delete the random items in metadata."""
-    if res.get('metadata'):
+    if isinstance(res, dict) and res.get('metadata'):
         if res['metadata'].get('ip'):
             res['metadata'].pop('ip')
         if res['metadata'].get('pos'):

@@ -26,13 +26,6 @@ BLUEPRINT = Blueprint("conditionmgr", __name__,
                       url_prefix=settings.URL_PATH_PREFIX + settings.API_PREFIX)
 
 
-@BLUEPRINT.route("/conditionmgr/train-jobs/<train_id>/conditions", methods=["GET"])
-def get_conditions(train_id):
-    """get conditions"""
-    reply = _wrap_reply(BACKEND_SERVER.get_conditions, train_id)
-    return reply
-
-
 @BLUEPRINT.route("/conditionmgr/train-jobs/<train_id>/condition-collections", methods=["GET"])
 def get_condition_collections(train_id):
     """get condition collections"""

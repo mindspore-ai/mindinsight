@@ -68,17 +68,10 @@ class DebuggerServer:
         self.grpc_server_manager = None
         self.back_server = None
 
-    def get_conditions(self, train_id):
-        """Get all default conditions"""
-        metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
-        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step, (1, 0))
-        log.debug("Train_id: %s, backend: %s", train_id, condition_context.backend)
-        return self.condition_mgr.get_all(condition_context)
-
     def get_condition_collections(self, train_id):
         """Get default condition_collections"""
         metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
-        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step, (1, 0))
+        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step, (1, 1))
         log.debug("Train_id: %s, backend: %s", train_id, condition_context.backend)
         return self.condition_mgr.get_all_collections(condition_context)
 
@@ -88,7 +81,7 @@ class DebuggerServer:
             log.error("Bool param should be given for set_recommended")
             raise DebuggerParamValueError("Bool param should be given.")
         metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
-        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step, (1, 0))
+        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step, (1, 1))
         log.debug("Train_id: %s, backend: %s", train_id, condition_context.backend)
         res = metadata_stream.get(['state', 'enable_recheck'])
         if set_recommended and not metadata_stream.recommendation_confirmed:
