@@ -14,26 +14,30 @@
 # ============================================================================
 """Test targets restful api."""
 import json
+import os
+import shutil
+
 import pytest
 
-from ..conftest import MOCK_DATA_MANAGER, SUMMARY_BASE_DIR
-from .....utils.lineage_writer import LineageWriter
-from .....utils.lineage_writer.base import Metadata
+from tests.utils.lineage_writer import LineageWriter
+from tests.utils.lineage_writer.base import Metadata
+from tests.st.func.optimizer.conftest import MOCK_DATA_MANAGER, SUMMARY_BASE_DIR
 
 BASE_URL = '/v1/mindinsight/optimizer/targets/search'
 
 
 class TestTargets:
-    """Test Histograms."""
+    """Test Targets."""
 
     def setup_class(self):
         """Setup class."""
         learning_rate = [0.01, 0.001, 0.02, 0.04, 0.05]
         acc = [0.8, 0.9, 0.8, 0.7, 0.6]
         self._train_ids = []
+        train_id_prefix = 'train_'
         params = {}
         for i, lr in enumerate(learning_rate):
-            train_id = f'./train_{i + 1}'
+            train_id = f'./{train_id_prefix}{i + 1}'
             self._train_ids.append(train_id)
             params.update({
                 train_id: {
@@ -43,9 +47,16 @@ class TestTargets:
             })
 
         lineage_writer = LineageWriter(SUMMARY_BASE_DIR)
-        lineage_writer.create_summaries(train_job_num=5, params=params)
+        lineage_writer.create_summaries(train_id_prefix=train_id_prefix, train_job_num=5, params=params)
 
         MOCK_DATA_MANAGER.start_load_data().join()
+
+    def teardown_class(self):
+        """Delete the summary directory."""
+        for train_id in self._train_ids:
+            summary_dir = os.path.join(SUMMARY_BASE_DIR, train_id)
+            if os.path.exists(summary_dir):
+                shutil.rmtree(summary_dir)
 
     @pytest.mark.level0
     @pytest.mark.env_single
