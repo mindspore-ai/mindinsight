@@ -672,6 +672,7 @@ def create_watchpoint_and_wait(app_client):
     # wait for server has received watchpoint hit
     check_state(app_client)
 
+
 class TestMismatchDebugger:
     """Test debugger when Mindinsight and Mindspore is mismatched."""
 

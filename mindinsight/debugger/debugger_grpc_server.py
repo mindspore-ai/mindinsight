@@ -21,6 +21,7 @@ import mindinsight
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
     Streams, RunLevel
+from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.debugger.proto.ms_graph_pb2 import GraphProto
 
@@ -117,9 +118,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         # clean cache data at the beginning of new step or node has been changed.
         if is_new_step or is_new_node:
             self._cache_store.clean_data()
+            self._cache_store.get_stream_handler(Streams.TENSOR).clean_tensors(request.cur_step)
         if is_new_step:
             self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
-            self._cache_store.get_stream_handler(Streams.TENSOR).clean_tensors(request.cur_step)
         # receive graph at the beginning of the training
         if self._status == ServerStatus.RECEIVE_GRAPH:
             self._send_graph_flag(metadata_stream)
@@ -397,6 +398,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_dict)
         self._cache_store.get_stream_handler(Streams.TENSOR).put_const_vals(graph.const_vals)
         self._cache_store.get_stream_handler(Streams.METADATA).graph_name = graph.name
+        self._record_parameter_names()
         self._status = ServerStatus.RECEIVE_GRAPH
         log.debug("Send the reply for graph.")
         return reply
@@ -423,9 +425,19 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                     sub_graph.const_vals)
 
         self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_dict)
+        self._record_parameter_names()
         self._status = ServerStatus.RECEIVE_GRAPH
         log.debug("Send the reply for graph.")
         return reply
+
+    def _record_parameter_names(self):
+        """Record parameter full names in tensor handler."""
+        parameter_nodes = self._cache_store.get_stream_handler(Streams.GRAPH).get_searched_nodes(
+            pattern={'node_category': TargetTypeEnum.PARAMETER.value})
+        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR)
+        for nodes in parameter_nodes.values():
+            tensor_names = [node.full_name + ':0' for node in nodes]
+            tensor_stream.record_parameter_names(tensor_names)
 
     @debugger_wrap
     def SendTensors(self, request_iterator, context):
