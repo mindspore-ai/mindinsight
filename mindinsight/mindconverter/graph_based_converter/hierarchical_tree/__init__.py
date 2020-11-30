@@ -13,15 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 """Hierarchical tree module."""
+__all__ = ["HierarchicalTreeFactory"]
+
 import re
 
 from mindinsight.mindconverter.common.log import logger as log
 from .hierarchical_tree import HierarchicalTree
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
-
-__all__ = [
-    "HierarchicalTreeFactory"
-]
 
 from ...common.exceptions import NodeInputMissing, TreeNodeInsertFail
 

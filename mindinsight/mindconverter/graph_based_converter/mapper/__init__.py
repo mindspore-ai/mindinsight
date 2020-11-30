@@ -13,8 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-from .base import ONNXToMindSporeMapper
 
-__all__ = [
-    "ONNXToMindSporeMapper"
-]
+__all__ = ["ONNXToMindSporeMapper"]
+
+from .base import ONNXToMindSporeMapper
