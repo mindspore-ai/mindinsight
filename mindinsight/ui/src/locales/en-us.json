@@ -189,6 +189,8 @@
   },
   "images": {
     "titleText": "Image",
+    "titleTip": "The Image only displays 10 images randomly.",
+    "imageErrorTip": "The current picture has been updated, Please wait until the data loading is complete.",
     "tagSelectTitle": "Tag Selection",
     "selectAll": "All",
     "open": "More",
