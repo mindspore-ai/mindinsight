@@ -376,8 +376,8 @@ limitations under the License.
                              :prop="key"
                              :label="table.columnOptions[key].label"
                              :fixed="table.columnOptions[key].label === text ? true : false"
-                             show-overflow-tooltip
-                             min-width="150"
+                             :show-overflow-tooltip="table.columnOptions[key].label === text ? false : true"
+                             :min-width="table.columnOptions[key].label === text ? 250 : 150"
                              sortable="custom">
               <template slot="header"
                         slot-scope="scope">

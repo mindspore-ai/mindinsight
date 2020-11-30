@@ -161,8 +161,8 @@ limitations under the License.
                              :label="table.columnOptions[key].label"
                              :sortable="sortArray.includes(table.columnOptions[key].label) ? 'custom' : false"
                              :fixed="table.columnOptions[key].label === text ? true : false"
-                             min-width="200"
-                             show-overflow-tooltip>
+                             :min-width="table.columnOptions[key].label === text ? 250 : 200"
+                             :show-overflow-tooltip="table.columnOptions[key].label === text ? false : true">
               <template slot="header"
                         slot-scope="scope">
                 <div class="custom-label"
