@@ -357,7 +357,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         else:
             ms_version = request.ms_version
             if not ms_version:
-                ms_version = '1.0.0'
+                ms_version = '1.0.x'
             if version_match(ms_version, mindinsight.__version__) is False:
                 log.info("Version is mismatched, mindspore is: %s, mindinsight is: %s",
                          ms_version, mindinsight.__version__)
