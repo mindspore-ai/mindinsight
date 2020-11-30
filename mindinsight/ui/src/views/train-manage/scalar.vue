@@ -528,7 +528,6 @@ export default {
               if (resData.metadatas.length) {
                 relativeTimeBench = resData.metadatas[0].wall_time;
               }
-
               // Initializing chart data
               resData.metadatas.forEach((metaData) => {
                 if (metaData.value === null && !hasInvalidData) {
@@ -546,7 +545,9 @@ export default {
                   metaData.wall_time - relativeTimeBench,
                   metaData.value,
                 ]);
-                const logValue = metaData.value >= 0 ? metaData.value : '';
+                // Values less than 0 have no logarithm
+                // Set empty string and echart does not render
+                const logValue = metaData.value > 0 ? metaData.value : '';
                 tempObject.logData.stepData.push([metaData.step, logValue]);
                 tempObject.logData.absData.push([metaData.wall_time, logValue]);
                 tempObject.logData.relativeData.push([
