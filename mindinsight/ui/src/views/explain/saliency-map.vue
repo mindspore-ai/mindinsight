@@ -195,43 +195,7 @@ limitations under the License.
               </span>
             </template>
             <template slot-scope="scope">
-              <div class="table-forecast-tag"
-                   v-if="uncertaintyEnabled">
-                <!-- Tag Title -->
-                <div class="tag-title-true">
-                  <div class="first">{{ $t('explain.tag') }}</div>
-                  <div>{{ $t('explain.confidenceRange') }}</div>
-                  <div class="center">{{ $t('explain.uncertainty') }}</div>
-                </div>
-                <!-- Tag content -->
-                <div class="tag-content">
-                  <div v-for="(tag, index) in scope.row.inferences"
-                       :key="tag.label"
-                       class="tag-content-item tag-content-item-true"
-                       :class="{
-                          'tag-active': index === scope.row.activeLabelIndex,
-                          'tag-tp': tag.type === 'tp',
-                          'tag-fn': tag.type === 'fn',
-                          'tag-fp': tag.type === 'fp'
-                        }"
-                       @click="changeActiveLabel(scope.row, index)">
-                    <div class="first">{{ tag.label }}</div>
-                    <div>
-                      <div>{{ tag.confidence.toFixed(3) }}</div>
-                      <div>{{
-                        Math.floor(tag.confidence_itl95[0] * 100) / 100 +
-                          '-' +
-                          Math.ceil(tag.confidence_itl95[1] * 100) / 100
-                      }}</div>
-                    </div>
-                    <div class="center">
-                      {{ tag.confidence_sd.toFixed(2) }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="table-forecast-tag"
-                   v-else>
+              <div class="table-forecast-tag">
                 <!--Tag Title-->
                 <div class="tag-title-false">
                   <div></div>
@@ -367,7 +331,6 @@ export default {
         pageSize: 2,
         total: 0,
       }, // The object of pagination information
-      uncertaintyEnabled: null, // If open the uncertainty api
       tableHeight: 0, // The height of table to fix the table header
       queryParameters: null, // The complete parameters of query table information, have pagination information
       labelReady: false, // If the truth labels are ready
@@ -490,18 +453,6 @@ export default {
                           this.labelReady = true;
                         }
                       });
-                    }
-                    if (res.data.uncertainty) {
-                      this.uncertaintyEnabled = res.data.uncertainty.enabled
-                    ? true
-                    : false;
-                      // The sort by uncertainty only valid when uncertaintyEnabled is true
-                      if (this.uncertaintyEnabled) {
-                        this.sortedNames.push({
-                          label: this.$t('explain.byUncertainty'),
-                          value: 'uncertainty',
-                        });
-                      }
                     }
                   }
                   resolve(true);
