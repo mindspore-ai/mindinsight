@@ -14,9 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="scatter"
-       ref="scatter">
+  <div class="chart-dialog">
+    <div class="y-axis">{{yTitle}}</div>
+    <div class="scatter"
+         ref="scatter">
+    </div>
+    <div class="x-axis">{{xTitle}}</div>
   </div>
+
 </template>
 <script>
 import echarts from 'echarts';
@@ -90,9 +95,7 @@ export default {
                   if (item[obj[i]] < 0.0001 && item[obj[i]] > 0) {
                     item[obj[i]] = item[obj[i]].toExponential(4);
                   } else {
-                    item[obj[i]] =
-                      Math.round(item[obj[i]] * Math.pow(10, 4)) /
-                      Math.pow(10, 4);
+                    item[obj[i]] = Math.round(item[obj[i]] * Math.pow(10, 4)) / Math.pow(10, 4);
                   }
                 }
                 res += `<p>${obj[i]}:&nbsp;&nbsp;${item[obj[i]]}</p>`;
@@ -102,12 +105,6 @@ export default {
           },
         },
         xAxis: {
-          name: this.xTitle,
-          nameLocation: 'end',
-          nameTextStyle: {
-            align: 'right',
-            padding: [60, 0, 0, 0],
-          },
           axisLine: {
             show: true,
           },
@@ -117,11 +114,6 @@ export default {
           axisLabel: {},
         },
         yAxis: {
-          name: this.yTitle,
-          nameGap: 20,
-          nameTextStyle: {
-            align: 'middle',
-          },
           axisLine: {
             show: true,
           },
@@ -202,9 +194,24 @@ export default {
 };
 </script>
 <style lang="scss">
-.scatter {
+.chart-dialog {
   height: 100%;
+  position: relative;
+  .y-axis {
+    position: absolute;
+    left: 50px;
+    top: 20px;
+  }
+  .scatter {
+    height: 100%;
+  }
+  .x-axis {
+    position: absolute;
+    bottom: 0;
+    right: 20px;
+  }
 }
+
 .tooltip-msg {
   white-space: normal;
   word-break: break-all;
