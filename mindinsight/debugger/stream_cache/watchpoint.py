@@ -31,7 +31,6 @@ WATCHPOINT_CONDITION_MAPPING = {
     ConditionIdEnum.GRADIENT_VANISHING.value: WatchCondition.Condition.tensor_too_small,
     ConditionIdEnum.OPERATOR_OVERFLOW.value: WatchCondition.Condition.overflow,
     ConditionIdEnum.TENSOR_ALL_ZERO.value: WatchCondition.Condition.tensor_all_zero,
-    ConditionIdEnum.TENSOR_INITIALIZATION.value: WatchCondition.Condition.tensor_initialization,
     ConditionIdEnum.TENSOR_OVERFLOW.value: WatchCondition.Condition.tensor_general_overflow,
     ConditionIdEnum.TENSOR_RANGE.value: WatchCondition.Condition.tensor_range,
     ConditionIdEnum.TENSOR_TOO_LARGE.value: WatchCondition.Condition.tensor_too_large,

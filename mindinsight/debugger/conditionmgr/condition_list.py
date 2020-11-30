@@ -225,34 +225,6 @@ CONDITION_LIST = [
         minimum_debugger_capability=(1, 1)
     ),
     Condition(
-        condition_id=ConditionIdEnum.TENSOR_INITIALIZATION,
-        abbr="TI",
-        # Send this condition to MindSpore will use WatchCondition.Condition.tensor_initialization
-        optimize_phase=OptimizePhaseEnum.TENSOR_CHECK,
-        parameters=[
-            ConditionParameter(
-                name="zero_percentage_ge",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_percentage_param_range,
-                default_value=100
-            ),
-            ConditionParameter(
-                name="max_gt",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            ),
-            ConditionParameter(
-                name="min_lt",
-                value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
-            )
-        ],
-        supported_target_type=TargetTypeEnum.TENSOR,
-        supported_platforms=(PlatformEnum.ASCEND, PlatformEnum.GPU),
-        minimum_debugger_capability=(1, 1),
-        availability_test_func=check_initialization_available
-    ),
-    Condition(
         condition_id=ConditionIdEnum.TENSOR_TOO_LARGE,
         abbr="TL",
         # Send this condition to MindSpore will use WatchCondition.Condition.tensor_too_large

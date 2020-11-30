@@ -61,16 +61,25 @@ class EventParser:
         parse_summary_logger.info("Loading %s.", self.summary_file)
         result = self._load(summary_file_handler)
 
-        warning = ''
-        if not self._scalar_check:
-            warning = warning + " the summary file contains no scalar value."
-        if not self._image_check:
-            warning = warning + " the summary file contains no image."
         if result:
-            parse_summary_logger.info("Writing parsed data into scalar.csv")
+            warning = ''
+            scalar_path = FileHandler.join(self._output, "scalar.csv")
+            image_path = FileHandler.join(self._output, IMAGE)
+
+            if not self._image_check:
+                warning = warning + " The summary file contains no image."
+            else:
+                parse_summary_logger.info("Images are written in %s.", image_path)
+
+            if not self._scalar_check:
+                warning = warning + " The summary file contains no scalar value."
+            else:
+                parse_summary_logger.info("Writing scalar data into %s.", scalar_path)
+
             self._scalar_writer.write()
             if warning:
                 parse_summary_logger.warning(warning)
+
             parse_summary_logger.info("Finished loading %s.", self.summary_file)
 
     def _load(self, file_handler):
