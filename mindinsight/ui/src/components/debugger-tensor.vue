@@ -375,14 +375,20 @@ export default {
           (res) => {
             if (res && res.data && res.data.watch_points && res.data.watch_points.length) {
               this.leftDataShow = true;
-              const tipsMapping = {1: 'NAN', 2: 'INF', 3: 'NAN, INF'};
               this.tensorList = res.data.watch_points.map((val) => {
                 return {
                   id: val.id,
                   condition: val.watch_condition.id,
                   params: val.watch_condition.params || [],
                   selected: false,
-                  tip: val.error_code ? this.$t('debugger.checkTips', {msg: tipsMapping[val.error_code]}) : '',
+                  tip:
+                  val.error_list && val.error_list.length
+                    ? val.error_list
+                        .map((i) => {
+                          return this.$t('debugger.checkTips')[i];
+                        })
+                        .join('') + this.$t('debugger.checkTips').cannotCheck
+                    : '',
                 };
               });
               this.tensorList.forEach((item) => {

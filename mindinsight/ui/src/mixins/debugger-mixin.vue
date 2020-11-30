@@ -51,9 +51,6 @@ export default {
      */
     collapseBtnClick() {
       this.leftShow = !this.leftShow;
-      setTimeout(() => {
-        this.resizeCallback();
-      }, 500);
     },
     /**
      * Step input validation
@@ -1461,7 +1458,6 @@ export default {
     },
     dealWatchpointHits(data) {
       this.watchPointHits = [];
-      const tipsMapping = {1: 'NAN', 2: 'INF', 3: 'NAN, INF'};
       if (data && data.length) {
         data.forEach((hit) => {
           const obj = {
@@ -1492,7 +1488,14 @@ export default {
                     name: item,
                     params,
                     id: `${key}${hit.node_name}`,
-                    tip: j.error_code ? this.$t('debugger.checkTips', {msg: tipsMapping[j.error_code]}) : '',
+                    tip:
+                      j.error_list && j.error_list.length
+                        ? j.error_list
+                            .map((i) => {
+                              return this.$t('debugger.checkTips')[i];
+                            })
+                            .join('') + this.$t('debugger.checkTips').cannotCheck
+                        : '',
                   });
                 });
               }

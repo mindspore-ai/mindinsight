@@ -2099,7 +2099,7 @@ export default {
           width: 50px;
           display: inline-block;
           vertical-align: middle;
-          text-align: center;
+          text-align: right;
         }
         .el-table--border {
           border-right: none;
