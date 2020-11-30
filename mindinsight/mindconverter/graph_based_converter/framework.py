@@ -119,10 +119,10 @@ def _extract_model_name(model_path):
     return model_name
 
 
+@torch_installation_validation
 @GraphInitFail.check_except_pytorch("Error occurred when init graph object.")
 @TreeCreateFail.check_except_pytorch("Error occurred when create hierarchical tree.")
 @SourceFilesSaveFail.check_except_pytorch("Error occurred when save source files.")
-@torch_installation_validation
 def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
                                         output_folder: str, report_folder: str = None):
     """
@@ -153,10 +153,10 @@ def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
                                         report_folder=report_folder)
 
 
+@tf_installation_validation
 @GraphInitFail.check_except_tf("Error occurred when init graph object.")
 @TreeCreateFail.check_except_tf("Error occurred when create hierarchical tree.")
 @SourceFilesSaveFail.check_except_tf("Error occurred when save source files.")
-@tf_installation_validation
 def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
                                    input_nodes: str, output_nodes: str,
                                    output_folder: str, report_folder: str = None):

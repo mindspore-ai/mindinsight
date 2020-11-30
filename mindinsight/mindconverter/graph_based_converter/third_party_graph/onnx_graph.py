@@ -19,7 +19,7 @@ from mindinsight.mindconverter.common.log import logger as log
 from .base import Graph
 from .input_node import InputNode
 from .onnx_graph_node import OnnxGraphNode
-from .graph_parser import TFGraphParser
+from .tf_graph_parser import TFGraphParser
 from .onnx_utils import OnnxDataLoader
 
 NONE_SCOPE_OP = {
