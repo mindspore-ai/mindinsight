@@ -104,6 +104,7 @@ export default {
         tooltip: {
           trigger: 'item',
           formatter: '{a} <br/> {b} : {c} ({d}%)',
+          confine: true,
         },
         legend: {
           data: this.pieLegendData,
