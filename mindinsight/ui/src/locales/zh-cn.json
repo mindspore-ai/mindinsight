@@ -188,6 +188,8 @@
   },
   "images": {
     "titleText": "图像",
+    "titleTip": "图像可视仅随机展示10张图片。",
+    "imageErrorTip": "当前图片被更新，请等待数据加载完后再查看。",
     "tagSelectTitle": "标签选择",
     "open": "展开",
     "close": "折叠",

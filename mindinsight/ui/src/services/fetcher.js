@@ -46,7 +46,7 @@ axios.interceptors.request.use(
 // Add a response interceptor
 axios.interceptors.response.use(
     function(response) {
-      if (typeof response.data === 'string') {
+      if (typeof response.data === 'string' && router.currentRoute.path !== '/train-manage/image') {
         const variant = new Date().getTime();
         response.data = JSON.parse(
             response.data

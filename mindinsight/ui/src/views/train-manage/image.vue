@@ -19,6 +19,18 @@ limitations under the License.
     <div class="image-bk">
       <div class="cl-title cl-image-title">
         <div class="cl-title-left">{{$t('images.titleText')}}
+          <el-tooltip placement="right-start"
+                      effect="light">
+            <div slot="content"
+                 class="tooltip-container">
+              <div class="cl-title-tip">
+                <div class="tip-part">
+                  {{$t('images.titleTip')}}
+                </div>
+              </div>
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
           <div class="path-message">
             <span>{{$t('symbols.leftbracket')}}</span>
             <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
@@ -392,16 +404,11 @@ export default {
             if (e.response && e.response.data && e.response.data.error_code) {
               sampleItem.curImgUrl = '';
               sampleItem.showErrMsg = true;
-              sampleItem.errMsg = this.$t('error')[e.response.data.error_code];
-            } else {
-              sampleItem.showErrMsg = false;
-              sampleItem.curImgUrl =
-              `${basePath}${this.imageBasePath}train_id=${encodeURIComponent(
-                  sampleItem.summaryId,
-              )}` +
-              `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${
-                params.step
-              }&wt=${params.wt}`;
+              if (e.response.data.error_code === '5054500D') {
+                sampleItem.errMsg = this.$t('images.imageErrorTip');
+              } else {
+                sampleItem.errMsg = this.$t('error')[e.response.data.error_code];
+              }
             }
           },
       );
@@ -653,6 +660,16 @@ export default {
         padding: 0px 4px 15px 4px;
         font-weight: bold;
         vertical-align: bottom;
+      }
+      .cl-title-tip {
+        padding: 10px;
+        .tip-part {
+          line-height: 20px;
+          word-break: normal;
+        }
+      }
+      .el-icon-info {
+        color: #6c7280;
       }
     }
   }
