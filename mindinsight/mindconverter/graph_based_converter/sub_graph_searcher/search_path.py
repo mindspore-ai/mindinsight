@@ -577,12 +577,7 @@ class SearchPath:
             self.graph.precursor_table[s_nd] = p_nodes
 
     def evaluate_score(self):
-        """
-        Evaluate path score.
-
-        Expression = 0.7 * (0.1 * bonus + 0.9 * repl_ratio) + 0.3 * H
-            = 0.07 * bonus + 0.63 * repl_ratio + 0.3 * H
-        """
+        """Evaluate path score."""
         return .7 * self.actual_v + .3 * self.heuristic_v
 
     def _cal_merged_module_length(self, ptn):
