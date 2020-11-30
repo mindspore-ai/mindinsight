@@ -13,6 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Searcher of scope name."""
-from .searcher import generate_scope_name
-
 __all__ = ["generate_scope_name"]
+
+from .searcher import generate_scope_name

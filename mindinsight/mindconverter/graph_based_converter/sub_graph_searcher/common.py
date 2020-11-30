@@ -13,6 +13,18 @@
 # limitations under the License.
 # ==============================================================================
 """Declare generic variable and functions."""
+
+__all__ = ["context",
+           "gen_hash_key",
+           "DagGraph",
+           "MAX_OUT_DEGREE",
+           "cal_matching_score",
+           "ACCEPTABLE_RESULT_COUNT",
+           "MINI_FREQUENCY",
+           "SATISFIED_SCORE",
+           "MAX_ITERATION_DEPTH"]
+
+import math
 import copy
 import functools
 from collections import OrderedDict
@@ -23,8 +35,21 @@ from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_util
 MAX_OUT_DEGREE = 1
 MINI_FREQUENCY = 4
 MAX_ITERATION_DEPTH = 4
-SATISFIED_SCORE = 0.55
+SATISFIED_SCORE = 0.6
 ACCEPTABLE_RESULT_COUNT = 16
+PTN_COVERAGE_THRESHOLD = 0.65
+# If pattern length is short than `IGNORE_PTN_LEN`, then do not calculate the coverage.
+IGNORE_PTN_LEN = 5
+
+
+def cal_matching_score(sequence_len: int):
+    """
+    Calculate matching score.
+
+    Args:
+        sequence_len (int): Pattern length.
+    """
+    return 2 / (1 + math.pow(math.e, -0.1 * sequence_len)) - 1
 
 
 class CmpRelation:
@@ -79,8 +104,8 @@ class AlgorithmContext:
     found_pattern = {}
     visited = set()
     beam_width = 5
-    total_len = 0
     MIN_FREQUENCY = 1
+    total_len = 0
     node_collection = None
     precursor_table = {}
     successor_table = {}
@@ -120,6 +145,10 @@ class AlgorithmContext:
                 return CmpRelation.GREATER
             if x[1].count < y[1].count:
                 return CmpRelation.LESS
+            if x[1].additional_score > y[1].additional_score:
+                return CmpRelation.GREATER
+            if x[1].additional_score < y[1].additional_score:
+                return CmpRelation.LESS
             if x[1].ptn_length > y[1].ptn_length:
                 return CmpRelation.GREATER
             if x[1].ptn_length < y[1].ptn_length:
@@ -136,11 +165,19 @@ class AlgorithmContext:
                 continue
             skip = False
             for j, (_, candidate) in enumerate(pattern_arr):
-                if i == j:
+                if i == j or (ptn.additional_score > 0 and ptn.ptn_length > IGNORE_PTN_LEN):
                     continue
-                if candidate.ptn_length >= ptn.ptn_length and ptn.ptn_items == candidate.ptn_items[:ptn.ptn_length]:
+                if candidate.ptn_length >= ptn.ptn_length and ptn.count == candidate.count \
+                        and ptn.pattern in candidate.pattern:
                     skip = True
                     break
+                if candidate.ptn_length < ptn.ptn_length and candidate.additional_score != 0 \
+                        and ptn.additional_score == 0 and candidate.pattern in ptn.pattern:
+                    ratio = candidate.ptn_length / ptn.ptn_length
+                    if ratio >= PTN_COVERAGE_THRESHOLD:
+                        skip = True
+                        break
+
             if skip:
                 continue
             res[key] = ptn
@@ -148,12 +185,3 @@ class AlgorithmContext:
 
 
 context = AlgorithmContext()
-
-__all__ = ["context",
-           "gen_hash_key",
-           "DagGraph",
-           "MAX_OUT_DEGREE",
-           "MAX_ITERATION_DEPTH",
-           "SATISFIED_SCORE",
-           "MINI_FREQUENCY",
-           "ACCEPTABLE_RESULT_COUNT"]
