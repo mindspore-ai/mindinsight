@@ -71,7 +71,7 @@ class DebuggerServer:
     def get_condition_collections(self, train_id):
         """Get default condition_collections"""
         metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
-        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step, (1, 1))
+        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step)
         log.debug("Train_id: %s, backend: %s", train_id, condition_context.backend)
         return self.condition_mgr.get_all_collections(condition_context)
 
@@ -81,7 +81,7 @@ class DebuggerServer:
             log.error("Bool param should be given for set_recommended")
             raise DebuggerParamValueError("Bool param should be given.")
         metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
-        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step, (1, 1))
+        condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step)
         log.debug("Train_id: %s, backend: %s", train_id, condition_context.backend)
         res = metadata_stream.get(['state', 'enable_recheck'])
         if set_recommended and not metadata_stream.recommendation_confirmed:

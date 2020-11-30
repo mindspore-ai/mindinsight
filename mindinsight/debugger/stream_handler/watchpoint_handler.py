@@ -436,23 +436,18 @@ class WatchpointHitHandler(StreamHandlerBase):
         """
         res = {}
         watch_points = []
-        error_codes = set()
+
         for tensor_hit in tensor_hits:
             error_code = tensor_hit.error_code
+            error_list = _get_error_list(error_code)
             watchpoint = tensor_hit.watchpoint
             watchpoint['error_code'] = error_code
+            watchpoint['error_list'] = error_list
             watch_points.append(watchpoint)
-            error_codes.add(error_code)
-
-        summarized_error_code = error_codes.pop()
-        while error_codes:
-            temp = error_codes.pop()
-            summarized_error_code = summarized_error_code | temp
 
         if watch_points:
             res = {
                 'slot': slot,
-                'summarized_error_code': summarized_error_code,
                 'watch_points': watch_points
             }
         return res
@@ -617,3 +612,22 @@ def set_default_param(condition_mgr, watch_condition):
             })
     watch_condition["abbr"] = condition.abbr
     return watch_condition
+
+
+def _get_error_list(error_code):
+    """
+    Get error list.
+    Args:
+        error_code (int): the code of errors.
+
+    Returns:
+        list, the error list.
+    """
+    all_error_list = ["nan", "inf", "no_prev_tensor"]
+    error_list = []
+    for i, error_str in enumerate(all_error_list):
+        error = (error_code >> i) & 1
+        if error == 1:
+            error_list.append(error_str)
+
+    return error_list

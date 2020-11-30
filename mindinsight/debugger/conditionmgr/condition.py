@@ -33,7 +33,6 @@ class ConditionIdEnum(Enum):
     GRADIENT_EXPLODING = "gradient_exploding"
     TENSOR_OVERFLOW = "tensor_overflow"
     OPERATOR_OVERFLOW = "operator_overflow"
-    TENSOR_INITIALIZATION = "tensor_initialization"
     TENSOR_TOO_LARGE = "tensor_too_large"
     TENSOR_TOO_SMALL = "tensor_too_small"
     TENSOR_ALL_ZERO = "tensor_all_zero"
@@ -95,7 +94,7 @@ class ConditionContext:
         step (int): the type of value.
         debugger_capability (tuple): whether the param support no assignment.
     """
-    def __init__(self, backend, step=0, debugger_capability=(1, 0)):
+    def __init__(self, backend, step=0, debugger_capability=(1, 1)):
         self._backend = backend
         self._step = step
         self._debugger_capability = debugger_capability

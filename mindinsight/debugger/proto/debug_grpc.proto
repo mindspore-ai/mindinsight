@@ -91,6 +91,8 @@ message ViewCMD {
 
 message WatchCondition {
   enum Condition {
+    // nan won't be not used anymore, but the first enum value must be zero in proto3, so we keep this Enum member.
+    nan = 0;
     overflow = 2;
     sd_gt = 11;
     sd_lt = 12;
