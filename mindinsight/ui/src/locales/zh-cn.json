@@ -541,11 +541,11 @@
     "tensorDiagram": "张量关系图",
     "selectDetail": "单击张量选中，双击张量查看详情",
     "operator": "算子",
-    "jumpFailInformation": "跳转失败，张量信息为空",
     "optimizationOrientation": "调优向导",
     "tuningAdvice": "调优建议",
     "setValue": "设置值",
     "actualValue": "实际值",
+    "noWatchPoint": "没有命中的监测点",
     "tensorTuningRule": {
       "operator_real_data_validation": "真实数据单算子验证",
       "loss_overflow": "检查loss值溢出（NAN，INF）",

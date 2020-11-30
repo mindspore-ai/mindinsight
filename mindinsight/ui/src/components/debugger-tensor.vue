@@ -50,7 +50,8 @@ limitations under the License.
                  v-if="item.tip">
               <i class="el-icon-warning"></i>{{item.tip}}
             </div>
-            <div class="tensor-advice">
+            <div class="tensor-advice"
+                 v-if="!item.tip">
               <span>{{ $t('debugger.tuningAdvice') }}</span>
               <div class="advice-list-title">
                 <div class="adviceTitle">{{ item.tuningAdviceTitle }}</div>
@@ -64,7 +65,7 @@ limitations under the License.
           </div>
         </div>
         <div v-show="!leftDataShow"
-             class="leftNoData">{{ $t('public.noData') }}</div>
+             class="leftNoData">{{ $t('debugger.noWatchPoint') }}</div>
       </div>
       <div class="collapse-btn"
            :class="{collapse:leftShow}"
@@ -94,15 +95,24 @@ limitations under the License.
           </label>
           <label v-if="key===1">{{$t('debugger.preStatisticsLabel')}}<span>{{ curRowObj.step-1 }}</span></label>
           <label v-if="key===2">{{$t('debugger.diffStatisticsLabel')}}</label>
-          <span>{{ $t('debugger.max') }} {{ statistics.overall_max }}</span>
-          <span>{{ $t('debugger.min') }} {{ statistics.overall_min }}</span>
-          <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg }}</span>
-          <span>{{ $t('debugger.nan') }} {{ statistics.overall_nan_count }}</span>
-          <span>{{ $t('debugger.negativeInf') }} {{ statistics.overall_neg_inf_count }}</span>
-          <span>{{ $t('debugger.inf') }} {{ statistics.overall_pos_inf_count }}</span>
-          <span>{{ $t('debugger.zero') }} {{ statistics.overall_zero_count }}</span>
-          <span>{{ $t('debugger.negativeNum') }} {{ statistics.overall_neg_zero_count }}</span>
-          <span>{{ $t('debugger.positiveNum') }} {{ statistics.overall_pos_zero_count }}</span>
+          <span>{{ $t('debugger.max') }} {{ statistics.overall_max===undefined?'--':statistics.overall_max }}</span>
+          <span>{{ $t('debugger.min') }} {{ statistics.overall_min===undefined?'--':statistics.overall_min }}</span>
+          <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg===undefined?'--':statistics.overall_avg }}</span>
+          <span>{{ $t('debugger.nan') }}
+            {{ statistics.overall_nan_count===undefined?'--':statistics.overall_nan_count }}
+          </span>
+          <span>{{ $t('debugger.negativeInf') }}
+            {{ statistics.overall_neg_inf_count===undefined?'--':statistics.overall_neg_inf_count }}
+          </span>
+          <span>{{ $t('debugger.inf') }}
+            {{ statistics.overall_pos_inf_count===undefined?'--': statistics.overall_pos_inf_count}}
+          </span>
+          <span>{{ $t('debugger.zero') }}
+            {{ statistics.overall_zero_count===undefined?'--': statistics.overall_zero_count}}</span>
+          <span>{{ $t('debugger.negativeNum') }}
+            {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
+          <span>{{ $t('debugger.positiveNum') }}
+            {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
         </div>
       </div>
       <div class="deb-con-slide">
@@ -110,16 +120,17 @@ limitations under the License.
           <el-button size="mini"
                      class="custom-btn"
                      :class="{green:gridType==='value'}"
+                     :disabled="state==='running'"
                      @click="tabChange('value')">{{ $t('debugger.curStep') }}</el-button>
           <el-button size="mini"
                      class="custom-btn"
                      :class="{green:gridType==='preStep'}"
-                     :disabled="!curRowObj.has_prev_step"
+                     :disabled="!curRowObj.has_prev_step || state==='running'"
                      @click="tabChange('preStep')">{{ $t('debugger.preStep') }}</el-button>
           <el-button size="mini"
                      class="custom-btn"
                      :class="{green:gridType==='compare'}"
-                     :disabled="!curRowObj.has_prev_step"
+                     :disabled="!curRowObj.has_prev_step || state==='running'"
                      @click="tabChange('compare')">{{ $t('debugger.compareResult') }}</el-button>
         </div>
         <div class="deb-con-slide-left"
@@ -201,6 +212,7 @@ limitations under the License.
           <div class="tensor">
             <div class="tensor-title">{{$t('debugger.tensorMsg')}}</div>
             <div class="tensor-detail">
+              <span>{{ $t('graph.name') + $t('symbols.colon') }} {{ statistics.name }}</span>
               <span>{{ $t('debugger.max') }} {{ statistics.overall_max }}</span>
               <span>{{ $t('debugger.min') }} {{ statistics.overall_min }}</span>
               <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg }}</span>
@@ -217,7 +229,8 @@ limitations under the License.
           </div>
           <div class="watch-point">
             <div class="watchPoint-title">{{ $t('debugger.watchList') }}</div>
-            <div class="point-list">
+            <div class="point-list"
+                 v-show="rightDataShow">
               <div v-for="(item,key) in watchPoints"
                    :key="key">
                 <div class="watch-judgment">
@@ -229,6 +242,8 @@ limitations under the License.
                 </div>
               </div>
             </div>
+            <div v-show="!rightDataShow"
+                 class="leftNoData">{{ $t('debugger.noWatchPoint') }}</div>
           </div>
         </div>
       </div>
@@ -276,11 +291,17 @@ export default {
       selectedNode: {},
       statistics: {},
       leftDataShow: true,
+      rightDataShow: true,
       tuningAdvice: [],
       tuningAdviceTitle: '',
       watchPoints: [],
       callbackFun: null,
     };
+  },
+  computed: {
+    state() {
+      return this.$parent.metadata.state;
+    },
   },
   mounted() {
     this.$nextTick(() => {
@@ -330,6 +351,10 @@ export default {
                 this.selectedNode.name = this.curRowObj.name;
                 const dot = this.packageData();
                 this.initGraph(dot);
+              } else {
+                if (this.selectedNode.name) {
+                  this.setNodeData();
+                }
               }
             }
           },
@@ -578,19 +603,16 @@ export default {
         const selectedNode = nodesList[index];
         if (selectedNode.id !== this.curRowObj.name) {
           const data = this.tensorGraphData[selectedNode.id];
-          if (data.statistics && JSON.stringify(data.statistics) !== '{}') {
-            this.curRowObj.name = data.name;
-            this.curRowObj.full_name = data.full_name;
-            this.curRowObj.graph_name = data.graph_name;
-            this.curRowObj.has_prev_step = data.has_prev_step;
-            this.curRowObj.shape = JSON.stringify(data.shape || []);
 
-            nodes.on('click', null);
-            nodes.on('dblclick', null);
-            this.resetTensor();
-          } else {
-            this.$message.error(this.$t('debugger.jumpFailInformation'));
-          }
+          this.curRowObj.name = data.name;
+          this.curRowObj.full_name = data.full_name;
+          this.curRowObj.graph_name = data.graph_name;
+          this.curRowObj.has_prev_step = data.has_prev_step;
+          this.curRowObj.shape = JSON.stringify(data.shape || []);
+
+          nodes.on('click', null);
+          nodes.on('dblclick', null);
+          this.resetTensor();
         }
       });
 
@@ -701,13 +723,14 @@ export default {
     },
     setNodeData() {
       window.getSelection().removeAllRanges();
-      const selectedNode = document.querySelector(`g[id="${this.selectedNode.name}"]`);
-      d3.selectAll('.node').classed('selected', false);
+      const selectedNode = document.querySelector(`#tensor-graph g[id="${this.selectedNode.name}"]`);
+      d3.selectAll('#tensor-graph .node').classed('selected', false);
       selectedNode.classList.add('selected');
-      d3.selectAll('.edge').classed('selected', false);
+      d3.selectAll('#tensor-graph .edge').classed('selected', false);
       this.selectedNode = JSON.parse(JSON.stringify(this.tensorGraphData[this.selectedNode.name]));
 
       const keys = [
+        'name',
         'overall_avg',
         'overall_count',
         'overall_max',
@@ -727,6 +750,8 @@ export default {
         } else {
           this.statistics = JSON.parse(JSON.stringify(this.selectedNode.statistics));
         }
+        this.statistics.name = JSON.parse(JSON.stringify(this.selectedNode.name));
+
         if (this.selectedNode.watch_points && this.selectedNode.watch_points.length) {
           this.watchPoints = this.selectedNode.watch_points.map((val) => {
             return {
@@ -736,16 +761,18 @@ export default {
               selected: false,
             };
           });
+          this.rightDataShow = true;
         } else {
-          this.watchPoints = [];
+          this.rightDataShow = false;
         }
       } else {
         keys.forEach((key) => {
           this.statistics[key] = '--';
         });
-        this.watchPoints = [];
+        this.rightDataShow = false;
         this.highLightEdges();
       }
+      this.$forceUpdate();
     },
     highLightEdges() {
       const edges = [];
@@ -985,7 +1012,7 @@ export default {
               this.showFilterInput = true;
             }
             if (res.data.tensor_value) {
-              const value = res.data.tensor_value.value;
+              let value = res.data.tensor_value.value;
               const statistics = res.data.tensor_value.statistics || {};
               this.statisticsArr = [statistics];
               if (value === 'Too large to show.') {
@@ -999,6 +1026,9 @@ export default {
                   );
                 });
                 return;
+              }
+              if (value === null) {
+                value = 'null';
               }
               this.tensorValue = value instanceof Array ? value : [value];
               this.$nextTick(() => {
@@ -1374,6 +1404,7 @@ export default {
               display: inline-block;
               padding: 5px 0px;
               min-width: 50%;
+              word-break: break-all;
             }
             ul {
               li {

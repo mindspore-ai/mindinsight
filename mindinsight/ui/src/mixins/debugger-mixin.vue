@@ -392,7 +392,10 @@ export default {
         this.isCurrentGraph = false;
       }
       this.metadata.pos = metadata.pos;
-      this.enableRecheck = metadata.enable_recheck;
+      if (metadata.enable_recheck !== undefined) {
+        this.enableRecheck = metadata.enable_recheck;
+      }
+
       if (metadata.state) {
         this.metadata.state = metadata.state;
       }
@@ -420,13 +423,6 @@ export default {
       }
       if (metadata.step && metadata.step > this.metadata.step) {
         this.metadata.step = metadata.step;
-      }
-
-      if (metadata.graph_name && metadata.tensor_name && this.tensorCompareFlag) {
-        const debTensor = this.$refs['deb-tensor'];
-        if (debTensor) {
-          debTensor.updateGraphData(metadata.graph_name, metadata.tensor_name);
-        }
       }
     },
     /**
@@ -471,6 +467,18 @@ export default {
               if (res.data.watch_point_hits && res.data.watch_point_hits.length > 0) {
                 this.radio1 = 'hit';
                 this.getWatchpointHits();
+              }
+
+              if (
+                res.data.receive_tensor &&
+              res.data.receive_tensor.graph_name &&
+              res.data.receive_tensor.tensor_name &&
+              this.tensorCompareFlag
+              ) {
+                const debTensor = this.$refs['deb-tensor'];
+                if (debTensor) {
+                  debTensor.updateGraphData(res.data.receive_tensor.graph_name, res.data.receive_tensor.tensor_name);
+                }
               }
               this.pollData();
             }
@@ -537,7 +545,7 @@ export default {
     recheckWatchpoint() {
       RequestService.recheckWatchPoints().then(
           (res) => {
-            if (res && res.data && res.data.metadata) {
+            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
               this.enableRecheck = res.data.metadata.enable_recheck;
             }
             this.$message.success(this.$t('debugger.recheckSuccess'));
@@ -598,7 +606,7 @@ export default {
                 this.loadOriginalTree();
                 this.queryWatchPoints();
                 this.$message.success(this.$t('debugger.successDeleteWP'));
-                if (res && res.data && res.data.metadata) {
+                if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
                   this.enableRecheck = res.data.metadata.enable_recheck;
                 }
                 this.curWatchPointId = null;
@@ -660,7 +668,7 @@ export default {
               this.createWatchPointArr = [];
               this.createWPDialogVisible = false;
               this.$message.success(this.$t('debugger.successCreateWP'));
-              if (res && res.data && res.data.metadata) {
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
                 this.enableRecheck = res.data.metadata.enable_recheck;
               }
 
@@ -806,7 +814,9 @@ export default {
         RequestService.updateWatchpoint(params).then(
             (res) => {
               this.defaultCheckedArr = checkedKeys;
-              this.enableRecheck = res.data.metadata.enable_recheck;
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+                this.enableRecheck = res.data.metadata.enable_recheck;
+              }
               this.$nextTick(() => {
                 if (node.indeterminate) {
                   node.checked = true;
@@ -869,7 +879,9 @@ export default {
       RequestService.updateWatchpoint(params).then(
           (res) => {
             this.searchCheckedArr = checkedKeys;
-            this.enableRecheck = res.data.metadata.enable_recheck;
+            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+              this.enableRecheck = res.data.metadata.enable_recheck;
+            }
             this.$nextTick(() => {
               if (node.indeterminate) {
                 node.checked = true;
@@ -1096,7 +1108,9 @@ export default {
                     this.debuggerVersion = res.data.metadata.debugger_version;
                   }
                   this.metadata = res.data.metadata;
-                  this.enableRecheck = res.data.metadata.enable_recheck;
+                  if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+                    this.enableRecheck = res.data.metadata.enable_recheck;
+                  }
                   if (this.metadata.backend) {
                     this.version = this.metadata.backend;
                   }
@@ -1462,24 +1476,21 @@ export default {
               const tensorName = `slot: ${i.slot}, `;
               if (i.watch_points && i.watch_points.length) {
                 i.watch_points.forEach((j, key) => {
-                  let item = `${tensorName} Watch Point Id: ${j.id}, `;
+                  let item = `${tensorName}${this.$t('debugger.watchPoint')} ${j.id}, `;
+                  let params = [];
                   if (j.watch_condition) {
                     item += ` ${this.transCondition(j.watch_condition.id)}`;
-                    const param = (j.watch_condition.params || [])
-                        .map((k) =>
-                        k.actual_value === undefined || k.actual_value === null
-                          ? `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}`
-                          : `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}, ${this.$t(
-                              'debugger.actualValue',
-                          )}:${k.actual_value}`,
-                        )
-                        .join(', ');
-                    if (param) {
-                      item += ` (${param})`;
-                    }
+                    params = (j.watch_condition.params || []).map((k) =>
+                      k.actual_value === undefined || k.actual_value === null
+                        ? `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}`
+                        : `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}, ${this.$t(
+                            'debugger.actualValue',
+                        )}:${k.actual_value}`,
+                    );
                   }
                   obj.lists.push({
                     name: item,
+                    params,
                     id: `${key}${hit.node_name}`,
                     tip: j.error_code ? this.$t('debugger.checkTips', {msg: tipsMapping[j.error_code]}) : '',
                   });
