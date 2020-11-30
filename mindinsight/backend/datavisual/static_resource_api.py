@@ -18,6 +18,7 @@ import sys
 
 from flask import current_app
 from flask import make_response
+from flask import redirect
 from flask import Blueprint
 
 from mindinsight.conf import settings
@@ -34,6 +35,18 @@ def index():
     with open(index_html_file, 'r') as file_pointer:
         html_content = file_pointer.read()
     return make_response(html_content)
+
+
+@BLUEPRINT.route("/graphvizlib.wasm", methods=["GET"])
+def return_wasm_file():
+    """
+    Interface to redirect graphvizlib.wasm
+
+    When accessing the graphvizlib.wasm file in front module via Firefox browser, the file path will change to
+    "/graphvizlib.wasm" which makes the computed diagram inaccessible. Redirecting the path to correct address can
+    ensure the computed graph accessible properly.
+    """
+    return redirect(location="static/js/graphvizlib.wasm")
 
 
 def init_module(app):
