@@ -25,8 +25,8 @@ export default {
       thresholdErrorMsg: '',
       thresholdRelational: '',
       thresholdValue: [
-        { filterCondition: this.$t('scalar.lessThan'), value: '' },
-        { filterCondition: this.$t('scalar.lessThan'), value: '' },
+        {filterCondition: this.$t('scalar.lessThan'), value: ''},
+        {filterCondition: this.$t('scalar.lessThan'), value: ''},
       ],
       filterOptions: [
         {
@@ -53,7 +53,7 @@ export default {
       if (localStorage.getItem('thresholdCache')) {
         try {
           this.thresholdLocal = JSON.parse(
-            localStorage.getItem('thresholdCache')
+              localStorage.getItem('thresholdCache'),
           );
           this.clearCache();
         } catch (e) {
@@ -80,8 +80,8 @@ export default {
         ) {
           delete this.thresholdLocal[this.decodeTrainingJobId];
           localStorage.setItem(
-            'thresholdCache',
-            JSON.stringify(this.thresholdLocal)
+              'thresholdCache',
+              JSON.stringify(this.thresholdLocal),
           );
         }
       }
@@ -94,7 +94,7 @@ export default {
 
     setOnePoint(sampleObject) {
       const that = this;
-      sampleObject.charObj.on('datazoom', function (params) {
+      sampleObject.charObj.on('datazoom', function(params) {
         const xAxisObject = params.batch[0];
         const yAxisObject = params.batch[1];
         const charData = sampleObject.charData.charOption.series[0].data;
@@ -153,7 +153,7 @@ export default {
 
     setRestore(sampleObject) {
       const that = this;
-      sampleObject.charObj.on('restore', function (params) {
+      sampleObject.charObj.on('restore', function(params) {
         const charData = sampleObject.charData.charOption.series[0].data;
         const tempCharOption = sampleObject.charData.charOption;
 
@@ -193,9 +193,9 @@ export default {
         this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
       ) {
         const tempStorgeArr = JSON.parse(
-          JSON.stringify(
-            this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
-          )
+            JSON.stringify(
+                this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName],
+            ),
         );
         let pieceStr = '';
         pieceStr = this.formatePieceStr(tempStorgeArr);
@@ -228,7 +228,7 @@ export default {
         this.thresholdLocal[this.decodeTrainingJobId][sampleItem.tagName]
       ) {
         delete this.thresholdLocal[this.decodeTrainingJobId][
-          sampleItem.tagName
+            sampleItem.tagName
         ];
       }
       this.currentTagName = sampleItem.tagName;
@@ -580,7 +580,7 @@ export default {
           this.originDataArr.forEach((sampleObject) => {
             if (this.multiSelectedTagNames[sampleObject.tagName]) {
               this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
+                  sampleObject.tagName
               ] = chartPieces;
               sampleObject.pieceStr = pieceStr;
 
@@ -591,14 +591,14 @@ export default {
           });
         } else {
           this.thresholdLocal[this.decodeTrainingJobId][
-            this.currentTagName
+              this.currentTagName
           ] = chartPieces;
           this.currentSample.pieceStr = pieceStr;
           this.setVisualMap(this.currentSample, chartPieces);
         }
         localStorage.setItem(
-          'thresholdCache',
-          JSON.stringify(this.thresholdLocal)
+            'thresholdCache',
+            JSON.stringify(this.thresholdLocal),
         );
 
         this.thresholdDialogVisible = false;
@@ -663,11 +663,11 @@ export default {
               this.thresholdLocal &&
               this.thresholdLocal[this.decodeTrainingJobId] &&
               this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
+                  sampleObject.tagName
               ]
             ) {
               delete this.thresholdLocal[this.decodeTrainingJobId][
-                sampleObject.tagName
+                  sampleObject.tagName
               ];
               sampleObject.pieceStr = '';
               const tempCharOption = sampleObject.charData.charOption;
@@ -694,7 +694,7 @@ export default {
           this.thresholdLocal[this.decodeTrainingJobId][this.currentTagName]
         ) {
           delete this.thresholdLocal[this.decodeTrainingJobId][
-            this.currentTagName
+              this.currentTagName
           ];
           this.currentSample.pieceStr = '';
           const tempCharOption = this.currentSample.charData.charOption;
@@ -706,7 +706,7 @@ export default {
             tempCharOption.visualMap = null;
             tempCharOption.series[0].markLine = null;
             tempCharOption.series[0].lineStyle[
-              'color'
+                'color'
             ] = this.currentSample.colors;
           }
           this.currentSample.charObj.setOption(tempCharOption, false);
@@ -714,8 +714,8 @@ export default {
       }
       this.clearCache();
       localStorage.setItem(
-        'thresholdCache',
-        JSON.stringify(this.thresholdLocal)
+          'thresholdCache',
+          JSON.stringify(this.thresholdLocal),
       );
       this.delThresholdVisible = false;
     },
