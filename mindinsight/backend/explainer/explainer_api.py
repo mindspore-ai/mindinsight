@@ -25,7 +25,6 @@ from flask import request
 from mindinsight.conf import settings
 from mindinsight.utils.exceptions import ParamMissError
 from mindinsight.utils.exceptions import ParamValueError
-from mindinsight.datavisual.common.exceptions import ImageNotExistError
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.datavisual.utils.tools import get_train_id
@@ -168,8 +167,6 @@ def query_image():
 
     encapsulator = DatafileEncap(EXPLAIN_MANAGER)
     image = encapsulator.query_image_binary(train_id, image_path, image_type)
-    if image is None:
-        raise ImageNotExistError(f"{image_path}")
 
     return image
 
