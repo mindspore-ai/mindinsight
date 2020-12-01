@@ -21,6 +21,7 @@ export default {
       RequestService.queryConditions(this.trainId).then((res) => {
         if (res && res.data) {
           this.conditionCollections = res.data;
+          this.addWatchPoint();
         }
       });
     },
@@ -1112,9 +1113,6 @@ export default {
                     this.version = this.metadata.backend;
                   }
                   this.trainId = encodeURIComponent(res.data.metadata.ip);
-                  if (this.trainId) {
-                    this.initCondition();
-                  }
                   if (!res.data.metadata.recommendation_confirmed && this.trainId) {
                     this.recommendWatchPointDialog = true;
                   }
