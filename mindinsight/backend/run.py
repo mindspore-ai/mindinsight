@@ -228,18 +228,8 @@ class GunicornLogger(Logger):
         """Get log format."""
         return time.strftime('[%Y-%m-%d-%H:%M:%S %z]')
 
-    def rewrite_stdout(self, message):
-        if message.strip():
-            self.error_log.info(message)
-
-    def rewrite_stderr(self, message):
-        if message.strip():
-            self.error_log.error(message)
-
     def setup(self, cfg):
         """Rewrite the setup method of Logger, and we don't need to do anything"""
-        sys.stdout.write = self.rewrite_stdout
-        sys.stderr.write = self.rewrite_stderr
 
 
 def _get_all_ip_addresses(host):
@@ -263,8 +253,6 @@ def _get_all_ip_addresses(host):
 
 def start():
     """Start web service."""
-    errorlog_abspath = _get_error_log_path()
-
     gunicorn_conf_file = os.path.join(WEB_CONFIG_DIR, "gunicorn_conf.py")
     cmd = "gunicorn " \
           "-b {host}:{port} {app_module} " \
@@ -279,9 +267,12 @@ def start():
                 log_format=settings.GUNICORN_ACCESS_FORMAT
                 )
 
-    log_size = _get_file_size(errorlog_abspath)
+    error_log_abspath = _get_error_log_path()
+    log_size = _get_file_size(error_log_abspath)
 
-    console = setup_logger('mindinsight', 'console', console=True, logfile=False, formatter='%(message)s')
+    # Init the logger file
+    setup_logger('gunicorn', 'error')
+    log_handler = open(error_log_abspath, 'a+')
 
     # start server
     process = subprocess.Popen(
@@ -289,7 +280,7 @@ def start():
         shell=False,
         # Change stdout to DEVNULL to prevent broken pipe error when creating new processes.
         stdin=subprocess.DEVNULL,
-        stdout=None,
+        stdout=log_handler,
         stderr=subprocess.STDOUT
     )
 
@@ -297,11 +288,12 @@ def start():
     time.sleep(1)
 
     # check if gunicorn application is running
+    console = setup_logger('mindinsight', 'console', console=True, logfile=False, formatter='%(message)s')
     if process.poll() is not None:
-        console.error("Start MindInsight failed. See log for details.")
+        console.error("Start MindInsight failed. See log for details, log path: %s.", error_log_abspath)
         sys.exit(1)
     else:
-        state_result = _check_server_start_stat(errorlog_abspath, log_size)
+        state_result = _check_server_start_stat(error_log_abspath, log_size)
         # print gunicorn start state to stdout
         label = 'Web address:'
         for ip in _get_all_ip_addresses(settings.HOST):
