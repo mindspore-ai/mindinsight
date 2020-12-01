@@ -121,10 +121,10 @@ class LineageParser:
             except (LineageSummaryAnalyzeException,
                     LineageEventNotExistException,
                     LineageEventFieldNotExistException) as error:
-                logger.debug("Parse file failed, file_path is %s. Detail: %s", file_path, str(error))
+                logger.error("Parse file failed, file_path is %s. Detail: %s", file_path, str(error))
             except MindInsightException as error:
                 logger.exception(error)
-                logger.debug("Parse file failed, file_path is %s.", file_path)
+                logger.error("Parse file failed, file_path is %s.", file_path)
 
     def _init_if_files_deleted(self, file_list):
         """Init variables if files deleted."""
@@ -226,7 +226,8 @@ class LineageOrganizer:
         for relative_dir, cache_train_job in cache_items.items():
             try:
                 super_lineage_obj = cache_train_job.get("lineage").super_lineage_obj
-                self._super_lineage_objs.update({relative_dir: super_lineage_obj})
+                if super_lineage_obj is not None:
+                    self._super_lineage_objs.update({relative_dir: super_lineage_obj})
             except ParamValueError:
                 logger.debug("This is no lineage info in train job %s.", relative_dir)
 

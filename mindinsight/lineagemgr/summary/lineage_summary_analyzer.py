@@ -206,10 +206,10 @@ class LineageSummaryAnalyzer(SummaryAnalyzer):
             lineage_info = analyzer.get_latest_info()
         except (MindInsightException, IOError, DecodeError) as err:
             log.debug(err_msg, file_path, str(err))
-            raise LineageSummaryAnalyzeException()
+            raise LineageSummaryAnalyzeException(str(err))
         except Exception as err:
             log.debug(err_msg, file_path, str(err))
-            raise LineageSummaryAnalyzeException()
+            raise LineageSummaryAnalyzeException(str(err))
 
         return lineage_info
 
