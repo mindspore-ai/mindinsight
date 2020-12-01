@@ -98,14 +98,15 @@ class ExplainParser(_SummaryParser):
                 field_list, tensor_value_list = self._event_decode(event_str)
                 for field, tensor_value in zip(field_list, tensor_value_list):
                     event_data[field] = tensor_value
-                logger.info("Parse summary file offset %d, file path: %s.", self._latest_file_size, file_path)
+                logger.info("Parse summary file offset %d, file path: %s.", self._summary_file_handler.offset,
+                            file_path)
                 return is_clean, is_end, event_data
 
-            except exceptions.CRCFailedError:
+            except (exceptions.CRCFailedError, exceptions.CRCLengthFailedError) as ex:
                 self._summary_file_handler.reset_offset(start_offset)
                 is_end = True
-                logger.warning("Check crc failed and ignore this file, file_path=%s, "
-                               "offset=%s.", self._summary_file_handler.file_path, self._summary_file_handler.offset)
+                logger.warning("Check crc failed and ignore this file, file_path=%s, offset=%s. Detail: %r.",
+                               self._summary_file_handler.file_path, self._summary_file_handler.offset, str(ex))
                 return is_clean, is_end, event_data
             except (OSError, DecodeError, exceptions.MindInsightException) as ex:
                 is_end = True
