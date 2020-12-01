@@ -118,14 +118,14 @@ def _get_error_log_path():
         str, the path of error log.
     """
 
-    path = os.path.join(settings.WORKSPACE, 'log/gunicorn/error.log')
+    path = os.path.join(settings.WORKSPACE, 'log/gunicorn/error.{}.log'.format(settings.PORT))
     errorlog_abspath = os.path.realpath(path)
     return errorlog_abspath
 
 
 def _get_access_log_path():
     """Get gunicorn access log path."""
-    access_log_path = os.path.join(settings.WORKSPACE, 'log/gunicorn/access.log')
+    access_log_path = os.path.join(settings.WORKSPACE, 'log/gunicorn/access.{}.log'.format(settings.PORT))
     access_log_path = os.path.realpath(access_log_path)
     return access_log_path
 

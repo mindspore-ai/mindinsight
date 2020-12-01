@@ -56,7 +56,7 @@ class Command(BaseCommand):
     description = 'stop mindinsight service'
 
     cmd_regex = 'mindinsight.backend.application:APP'
-    access_log_path = os.path.join('gunicorn', 'access.log')
+    access_log_path = os.path.join('gunicorn', 'access.{}.log'.format(settings.PORT))
 
     def add_arguments(self, parser):
         """
