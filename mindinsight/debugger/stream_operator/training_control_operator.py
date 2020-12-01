@@ -202,7 +202,6 @@ class TrainingControlOperator:
             event.set_cmd.CopyFrom(set_cmd)
             self._cache_store.put_command(event)
             log.debug("Send SetCMD to MindSpore. %s", event)
-        self._watchpoint_stream.sync_set_cmd(set_commands)
 
     def pause_training(self):
         """

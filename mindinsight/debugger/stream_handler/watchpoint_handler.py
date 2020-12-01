@@ -111,16 +111,16 @@ class WatchpointHandler(StreamHandlerBase):
         Returns:
             list[SetCMD], updated watchpoint to be sent to MindSpore.
         """
-        res = []
+        newly_set_cmds = []
         for _, watchpoint in self._updated_watchpoints.items():
             # construct set command with leaf nodes
             watch_nodes = watchpoint.get_watch_nodes()
             leaf_watch_nodes = self._expand_to_leaf_nodes(graph_stream, watch_nodes)
-            res.append(watchpoint.get_pending_cmd(leaf_watch_nodes))
-        res.extend(self._deleted_watchpoints)
-        for _, set_cmd in self._cache_set_cmd.items():
-            res.append(set_cmd)
-        return res
+            newly_set_cmds.append(watchpoint.get_pending_cmd(leaf_watch_nodes))
+        newly_set_cmds.extend(self._deleted_watchpoints)
+        self.sync_set_cmd(newly_set_cmds)
+
+        return list(self._cache_set_cmd.values())
 
     @staticmethod
     def _expand_to_leaf_nodes(graph_stream, watch_nodes):
