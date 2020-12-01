@@ -343,20 +343,22 @@ export default {
     )}-${this.$t('scalar.titleText')}-MindInsight`;
     // Adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
+    // Dom ready
+    this.$nextTick(() => {
+      // Initializing Data
+      this.getScalarsList();
 
-    // Initializing Data
-    this.getScalarsList();
+      this.firstNum = 1;
 
-    this.firstNum = 1;
+      this.decodeTrainingJobId = decodeURIComponent(this.trainingJobId);
 
-    this.decodeTrainingJobId = decodeURIComponent(this.trainingJobId);
+      this.getCache();
 
-    this.getCache();
-
-    // Auto refresh
-    if (this.isTimeReload) {
-      this.autoUpdateSamples();
-    }
+      // Auto refresh
+      if (this.isTimeReload) {
+        this.autoUpdateSamples();
+      }
+    });
   },
   methods: {
     /**
@@ -528,10 +530,15 @@ export default {
               if (resData.metadatas.length) {
                 relativeTimeBench = resData.metadatas[0].wall_time;
               }
+
+              const mathData = [];
               // Initializing chart data
               resData.metadatas.forEach((metaData) => {
                 if (metaData.value === null && !hasInvalidData) {
                   hasInvalidData = true;
+                }
+                if (!isNaN(metaData.value) && metaData.value !== null) {
+                  mathData.push(metaData.value);
                 }
                 tempObject.valueData.stepData.push([
                   metaData.step,
@@ -555,6 +562,16 @@ export default {
                   logValue,
                 ]);
               });
+
+              // Numerical range
+              const maxData = Math.max(...mathData);
+              const minData = Math.min(...mathData);
+              sampleObject.max = maxData;
+              if (maxData === minData) {
+                sampleObject.isEqual = true;
+              } else {
+                sampleObject.isEqual = false;
+              }
 
               sampleObject.charData.oriData[0] = tempObject;
 
@@ -715,7 +732,9 @@ export default {
         yAxis: {
           type: sampleObject.log ? 'log' : 'value',
           scale: true,
-          logBase: 10,
+          // Logbase for very small values,default 10
+          logBase: sampleObject.max < 1 && sampleObject.isEqual ? 0.1 : 10,
+          inverse: sampleObject.max < 1 && sampleObject.isEqual ? true : false,
           axisLine: {
             lineStyle: {
               color: '#E6EBF5',
@@ -921,7 +940,7 @@ export default {
             },
             myTool2: {
               show: true,
-              title: this.$t('scalar.toggleYaxisScale'),
+              title: sampleObject.max<=0 ? this.$t('scalar.noLog') : this.$t('scalar.toggleYaxisScale'),
               iconStyle: {
                 borderColor: sampleObject.log ? '#00A5A7' : '#6D7278',
               },
@@ -1525,6 +1544,10 @@ export default {
       }
       const sampleObject = this.originDataArr[sampleIndex];
       if (!sampleObject) {
+        return;
+      }
+      // There is no logarithm of 0 and negative numbers
+      if (sampleObject.max<=0) {
         return;
       }
       this.yAxisScaleTimer = setTimeout(() => {
