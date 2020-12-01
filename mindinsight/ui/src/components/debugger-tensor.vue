@@ -614,6 +614,7 @@ export default {
           this.curRowObj.full_name = data.full_name;
           this.curRowObj.graph_name = data.graph_name;
           this.curRowObj.has_prev_step = data.has_prev_step;
+          this.curRowObj.type = 'value';
           this.curRowObj.shape = JSON.stringify(data.shape || []);
 
           nodes.on('click', null);
@@ -648,11 +649,17 @@ export default {
           .zoom()
           .on('start', () => {
             const event = currentEvent.sourceEvent;
+            if (!event) {
+              return;
+            }
             pointer.start.x = event.x;
             pointer.start.y = event.y;
           })
           .on('zoom', () => {
             const event = currentEvent.sourceEvent;
+            if (!event) {
+              return;
+            }
             const transformData = this.$parent.getTransformData(graphDom);
             if (!Object.keys(graphTransform).length) {
               graphTransform = {
