@@ -446,6 +446,7 @@ class WatchpointHitHandler(StreamHandlerBase):
             watch_points.append(watchpoint)
 
         if watch_points:
+            watch_points.sort(key=_watchpoint_id)
             res = {
                 'slot': slot,
                 'watch_points': watch_points
@@ -612,6 +613,10 @@ def set_default_param(condition_mgr, watch_condition):
             })
     watch_condition["abbr"] = condition.abbr
     return watch_condition
+
+
+def _watchpoint_id(watchpoint):
+    return watchpoint.get('id')
 
 
 def _get_error_list(error_code):
