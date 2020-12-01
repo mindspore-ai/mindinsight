@@ -173,7 +173,7 @@ limitations under the License.
                 <i class="el-icon-circle-plus"
                    :title="$t('debugger.createWP')"
                    :class="{disable: metadata.state === 'running'}"
-                   @click="addWatchPoint"></i>
+                   @click="initCondition"></i>
               </div>
             </div>
             <div class="content-wrap">
@@ -415,7 +415,7 @@ limitations under the License.
                           {{ scope.row.value }}</el-button>
                         <el-button size="mini"
                                    type="text"
-                                   :disabled="metadata.state==='running' || !scope.row.has_pre_step"
+                                   :disabled="metadata.state==='running' || !scope.row.has_prev_step"
                                    @click="showTensor(scope.row,'compare')">
                           {{ $t('debugger.compareToPre') }}
                         </el-button>
@@ -921,6 +921,9 @@ export default {
         RequestService.updateWatchpoint(params).then(
             (res) => {
               this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+                this.enableRecheck = res.data.metadata.enable_recheck;
+              }
             },
             (err) => {
               this.showErrorMsg(err);
