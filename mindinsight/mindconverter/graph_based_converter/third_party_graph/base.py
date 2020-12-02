@@ -520,7 +520,7 @@ class GraphNode(abc.ABC):
             if input_type == InputType.TENSOR.value:
                 ipt_args_settings_in_construct = ipt_args_in_construct
             elif input_type == InputType.LIST.value:
-                ipt_args_settings_in_construct = f"({ipt_args_in_construct})"
+                ipt_args_settings_in_construct = f"({ipt_args_in_construct},)"
             else:
                 raise NodeInputTypeNotSupport(f"Input type[{input_type}] is not supported now.")
         else:

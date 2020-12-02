@@ -46,6 +46,8 @@ ARGUMENT_LENGTH_LIMIT = 512
 
 EXPECTED_NUMBER = 1
 
+MIN_SCOPE_LENGTH = 2
+
 
 @unique
 class CodeFormatConfig(Enum):
