@@ -168,3 +168,25 @@ class DebuggerTensorHitError(MindInsightException):
             message=DebuggerErrorMsg.TENSOR_HIT_ERROR.value,
             http_code=400
         )
+
+
+class DebuggerSetRecommendWatchpointsError(MindInsightException):
+    """The set recommend watchpoints error in debugger module."""
+
+    def __init__(self):
+        super(DebuggerSetRecommendWatchpointsError, self).__init__(
+            error=DebuggerErrors.SET_RECOMMEND_WATCHPOINT_ERROR,
+            message=DebuggerErrorMsg.SET_RECOMMEND_WATCHPOINT_ERROR.value,
+            http_code=400
+        )
+
+
+class DebuggerConditionUnavailableError(MindInsightException):
+    """The condition unavailable error in debugger module."""
+
+    def __init__(self, msg):
+        super(DebuggerConditionUnavailableError, self).__init__(
+            error=DebuggerErrors.DEBUGGER_CONDITION_UNAVAILABLE_ERROR,
+            message=DebuggerErrorMsg.DEBUGGER_CONDITION_UNAVAILABLE_ERROR.value.format(msg),
+            http_code=400
+        )

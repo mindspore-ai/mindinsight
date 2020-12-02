@@ -25,6 +25,10 @@ from mindinsight.debugger.stream_cache.watchpoint import Watchpoint, WatchpointH
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
 
 
+RANGE_START = 'range_start_inclusive'
+RANGE_END = 'range_end_inclusive'
+
+
 class WatchpointHandler(StreamHandlerBase):
     """Watchpoint Handler."""
 
@@ -446,7 +450,7 @@ class WatchpointHitHandler(StreamHandlerBase):
             watch_points.append(watchpoint)
 
         if watch_points:
-            watch_points.sort(key=_watchpoint_id)
+            watch_points.sort(key=lambda watch_point: watch_point.get('id'))
             res = {
                 'slot': slot,
                 'watch_points': watch_points
@@ -540,6 +544,7 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
     check_param_num = 0
     support_params = set()
     defined_support_params = set()
+    range_param = {RANGE_START: None, RANGE_END: None}
     for param in params:
         if len(param) > 2:
             log.error("Invalid param keys for condition: %s", condition_id)
@@ -573,11 +578,20 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
         else:
             support_params.add(condition_param.name)
 
+        if condition_param_name in range_param:
+            range_param[condition_param_name] = param.get("value")
+
         if check_param_num > 1:
             log.error("Multiple check params for condition: %s", condition_id)
             raise DebuggerParamValueError("Multiple check params.")
 
     if support_params != defined_support_params:
+        log.error("Invalid support params for condition: %s", condition_id)
+        raise DebuggerParamValueError("Invalid support params.")
+
+    if range_param.get(RANGE_START) is not None and \
+            range_param.get(RANGE_END) is not None and range_param.get(RANGE_START) > \
+            range_param.get(RANGE_END):
         log.error("Invalid support params for condition: %s", condition_id)
         raise DebuggerParamValueError("Invalid support params.")
 
@@ -613,10 +627,6 @@ def set_default_param(condition_mgr, watch_condition):
             })
     watch_condition["abbr"] = condition.abbr
     return watch_condition
-
-
-def _watchpoint_id(watchpoint):
-    return watchpoint.get('id')
 
 
 def _get_error_list(error_code):

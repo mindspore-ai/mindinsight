@@ -113,7 +113,7 @@ class Command(BaseCommand):
 
     def run(self, args):
         """
-        Execute for start command.
+        Execute for parse_summary command.
 
         Args:
             args (Namespace): Parsed arguments to hold customized parameters.
