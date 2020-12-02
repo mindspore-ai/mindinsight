@@ -60,7 +60,8 @@ class OnnxGraph(Graph):
 
         self.build(sample_shape)
 
-    def _extract_shape(self, shape):
+    @staticmethod
+    def _extract_shape(shape):
         """
         Extract shape from string-type shape.
 
@@ -121,8 +122,7 @@ class OnnxGraph(Graph):
         from ..sub_graph_searcher import generate_scope_name
         scope_name_list = generate_scope_name(model_data)
 
-        self._shape_dict = model_data.normalize_dict_key(
-            model_data.node_output_shape_dict)
+        self._shape_dict = model_data.node_output_shape_dict
         for ind, (node_name, node) in enumerate(model_data.nodes_dict.items()):
             node_weight = {}
             node.scope_name = scope_name_list[ind]
@@ -138,12 +138,11 @@ class OnnxGraph(Graph):
                 node, node_weight)
             self._nodes_record[node_name] = node_name
 
-            for node_input in node.input_name_list:
-                self._build_connection(node_input, node_name)
+            for nd_ipt_name in node.precursor_onnx_node_dict:
+                self._build_connection(nd_ipt_name, node_name)
 
         super(OnnxGraph, self).build(input_shape=input_shape)
-        self._collect_input_shape_of_each_node(
-            input_shape)  # diff than pyTorch
+        self._collect_input_shape_of_each_node(input_shape)  # diff than pyTorch
 
     def _collect_input_shape_of_each_node(self, input_shape):
         """
@@ -165,7 +164,7 @@ class OnnxGraph(Graph):
             ipt_shape = []
             for p_nd in node.precursor_nodes:
                 shp = self._shape_dict.get(p_nd)
-                ipt_shape.append(tuple(shp))
+                ipt_shape.append(tuple(shp) if isinstance(shp, list) else shp)
 
             self._input_shape[node_name] = ipt_shape[0] if len(
                 ipt_shape) == 1 else ipt_shape
