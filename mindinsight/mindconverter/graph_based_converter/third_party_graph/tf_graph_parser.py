@@ -14,55 +14,18 @@
 # ==============================================================================
 """Third party graph parser."""
 import os
+from importlib import import_module
+
 from mindinsight.mindconverter.common.log import logger as log
 from .base import GraphParser
 from ...common.exceptions import ModelNotSupport
-
-
-class PyTorchGraphParser(GraphParser):
-    """Define pytorch graph parser."""
-
-    @classmethod
-    @ModelNotSupport.check_except("Error occurs in loading model, make sure model.pth correct.")
-    def parse(cls, model_path: str, **kwargs):
-        """
-        Parser pytorch graph.
-
-        Args:
-            model_path (str): Model file path.
-
-        Returns:
-            object, torch model.
-        """
-        import torch
-
-        if not os.path.exists(model_path):
-            error = FileNotFoundError("`model_path` must be assigned with "
-                                      "an existed file path.")
-            log.error(str(error))
-            raise error
-
-        try:
-            if torch.cuda.is_available():
-                model = torch.load(f=model_path)
-            else:
-                model = torch.load(f=model_path, map_location="cpu")
-        except ModuleNotFoundError:
-            error_msg = \
-                "Cannot find model scripts in system path, " \
-                "set `--project_path` to the path of model scripts folder correctly."
-            error = ModuleNotFoundError(error_msg)
-            log.error(str(error))
-            raise error from None
-
-        return model
 
 
 class TFGraphParser(GraphParser):
     """Define TF graph parser."""
 
     @classmethod
-    @ModelNotSupport.check_except("Error occurs in loading model, make sure model.pb correct.")
+    @ModelNotSupport.check_except_tf("Error occurs in loading model, make sure model.pb correct.")
     def parse(cls, model_path: str, **kwargs):
         """
         Parse TF Computational Graph File (.pb)
@@ -74,8 +37,9 @@ class TFGraphParser(GraphParser):
             object, ONNX model.
         """
 
-        from .onnx_utils import convert_tf_graph_to_onnx
-
+        onnx_utils = import_module(
+            "mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils")
+        convert_tf_graph_to_onnx = getattr(onnx_utils, "convert_tf_graph_to_onnx")
         tf_input_nodes = kwargs.get('input_nodes')
         tf_output_nodes = kwargs.get('output_nodes')
         if not os.path.exists(model_path):

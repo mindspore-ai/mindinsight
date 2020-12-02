@@ -15,6 +15,7 @@
 """Define custom exception."""
 import sys
 from enum import unique
+from importlib import import_module
 
 from lib2to3.pgen2 import parse
 from treelib.exceptions import DuplicatedNodeIdError, MultipleRootError, NodeIDAbsentError
@@ -212,7 +213,8 @@ class GraphInitFail(MindConverterException):
                          ModuleNotFoundError,
                          ModelNotSupport,
                          TypeError,
-                         ZeroDivisionError)
+                         ZeroDivisionError,
+                         RuntimeError)
         return except_source
 
     @classmethod
@@ -294,7 +296,7 @@ class ModelNotSupport(MindConverterException):
         return except_source
 
     @classmethod
-    def check_except(cls, msg):
+    def check_except_pytorch(cls, msg):
         """Check except."""
 
         def decorator(func):
@@ -308,6 +310,29 @@ class ModelNotSupport(MindConverterException):
                     raise error from e
                 return output
             return _f
+        return decorator
+
+    @classmethod
+    def check_except_tf(cls, msg):
+        """Check except."""
+        tf_error_module = import_module('tensorflow.python.framework.errors_impl')
+        tf_error = getattr(tf_error_module, 'OpError')
+
+        cls._error = cls.raise_from() + (tf_error,)
+
+        def decorator(func):
+            def _f(arch, model_path, **kwargs):
+                try:
+                    output = func(arch, model_path=model_path, **kwargs)
+                except cls._error as e:
+                    error = cls(msg=msg)
+                    log.error(msg)
+                    log.exception(e)
+                    raise error from e
+                return output
+
+            return _f
+
         return decorator
 
 

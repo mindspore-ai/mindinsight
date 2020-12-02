@@ -14,13 +14,10 @@
 # ==============================================================================
 """Graph associated definition module."""
 
-__all__ = ["GraphFactory", "PyTorchGraphNode"]
+__all__ = ["GraphFactory"]
+from importlib import import_module
 
 from .base import Graph
-from .pytorch_graph import PyTorchGraph
-from .pytorch_graph_node import PyTorchGraphNode
-from .onnx_graph import OnnxGraph
-from .onnx_graph_node import OnnxGraphNode
 
 
 class GraphFactory:
@@ -43,7 +40,13 @@ class GraphFactory:
             Graph, graph instance.
         """
         if all([input_nodes, output_nodes]):
-            return OnnxGraph.load(model_path=graph_path, input_nodes=input_nodes,
-                                  output_nodes=output_nodes, sample_shape=sample_shape)
+            onnx_graph_module = import_module(
+                'mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph')
+            onnx_graph = getattr(onnx_graph_module, 'OnnxGraph')
+            return onnx_graph.load(model_path=graph_path, input_nodes=input_nodes,
+                                   output_nodes=output_nodes, sample_shape=sample_shape)
 
-        return PyTorchGraph.load(model_path=graph_path, sample_shape=sample_shape)
+        pytorch_graph_module = import_module(
+            'mindinsight.mindconverter.graph_based_converter.third_party_graph.pytorch_graph')
+        pytorch_graph = getattr(pytorch_graph_module, 'PyTorchGraph')
+        return pytorch_graph.load(model_path=graph_path, sample_shape=sample_shape)

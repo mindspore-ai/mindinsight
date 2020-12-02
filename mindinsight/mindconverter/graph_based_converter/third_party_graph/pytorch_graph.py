@@ -20,9 +20,9 @@ from mindinsight.mindconverter.common.log import logger as log
 from .base import Graph
 from .input_node import InputNode
 from .pytorch_graph_node import PyTorchGraphNode
-from .graph_parser import PyTorchGraphParser
+from .pytorch_graph_parser import PyTorchGraphParser
 
-from ..constant import SEPARATOR_IN_SCOPE, LINK_IN_SCOPE
+from ..constant import SEPARATOR_IN_SCOPE, LINK_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID
 from ..constant import LEFT_BUCKET, RIGHT_BUCKET
 
 NONE_SCOPE_OP = {
@@ -46,7 +46,7 @@ def normalize_scope_name(node):
     """
     global NONE_SCOPE_OP
 
-    name = node.scopeName().split(SEPARATOR_IN_SCOPE)
+    name = node.scopeName().replace(SEPARATOR_BTW_NAME_AND_ID, '').split(SEPARATOR_IN_SCOPE)
     scopes = []
     for segment in name:
         segment = segment.split(LINK_IN_SCOPE)[0]
