@@ -432,7 +432,7 @@ class ExplainLoader:
                     ...
                 }
         """
-        if not getattr(sample, 'sample_id', None):
+        if getattr(sample, 'sample_id', None) is None:
             raise ParamValueError('sample_event has no sample_id')
         sample_id = sample.sample_id
         samples_copy = self._samples.copy()
