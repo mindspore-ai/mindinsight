@@ -44,6 +44,7 @@ class InputNode(GraphNode):
     def op_name(self):
         return self._op_name
 
+    @property
     def hash_key(self):
         pass
 

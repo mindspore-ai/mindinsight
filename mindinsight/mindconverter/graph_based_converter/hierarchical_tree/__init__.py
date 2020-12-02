@@ -70,7 +70,7 @@ class HierarchicalTreeFactory:
             node_inst = graph.get_node(node_name)
             node_input = graph.get_input_shape(node_name)
             node_output = graph.get_output_shape(node_name)
-            if not node_input:
+            if node_input != 0 and not node_input:
                 err_msg = f"This model is not supported now. " \
                           f"Cannot find {node_name}'s input shape."
                 error = NodeInputMissing(err_msg)

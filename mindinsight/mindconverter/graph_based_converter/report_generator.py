@@ -134,7 +134,7 @@ class ReportGenerator(metaclass=abc.ABCMeta):
             if 'onnx.' in code_line:
                 num_unconverted_operator += 1
                 unconverted_operator = SEPARATOR_IN_ONNX_OP.join(
-                    ('onnx', re.findall(r".*onnx.(.*)[(]", code_line)[0]))
+                    ('onnx', re.findall(r".*onnx.([a-zA-Z]+).*", code_line)[0]))
                 info_unconverted_line = self._gen_unconverted_operator_content(
                     [f"{num_line + 1}", f"{code_line.index('onnx.') + 1}"],
                     unconverted_operator

@@ -14,6 +14,8 @@
 # ==============================================================================
 """Third party graph parser."""
 import os
+from importlib import import_module
+
 from mindinsight.mindconverter.common.log import logger as log
 from .base import GraphParser
 from ...common.exceptions import ModelNotSupport
@@ -34,7 +36,7 @@ class PyTorchGraphParser(GraphParser):
         Returns:
             object, torch model.
         """
-        import torch
+        torch = import_module("torch")
 
         if not os.path.exists(model_path):
             error = FileNotFoundError("`model_path` must be assigned with "
