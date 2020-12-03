@@ -104,11 +104,9 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             return None, dict(), None, dict()
 
         try:
-            converter_name = op_name_converter(
-                params=params, weights=weights, op_name=op_name)
+            converter_name = op_name_converter(params=params, weights=weights, op_name=op_name)
             converted_params = params_converter(params=params, weights=weights)
-            converted_weights = weights_converter(
-                weights=weights) if weights else dict()
+            converted_weights = weights_converter(weights=weights) if weights else dict()
             converted_params.update(converted_weights)
             converted_settings = settings_converter(params=params, weights=weights)
         except (AttributeError, KeyError, ValueError, TypeError, IndexError) as e:

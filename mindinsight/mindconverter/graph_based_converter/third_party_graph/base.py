@@ -95,6 +95,8 @@ class Graph(BaseGraph, abc.ABC):
     def __init__(self, model, **kwargs):
         super(Graph, self).__init__()
         self.model = model
+        self._raw_input_nodes = kwargs.get("input_nodes")
+        self._raw_output_nodes = kwargs.get("output_nodes")
         self.checkpoint = kwargs.get("checkpoint", None)
         self._nodes_collection = OrderedDict()
         self._nodes_record = dict()
@@ -112,7 +114,7 @@ class Graph(BaseGraph, abc.ABC):
             name (str): Node name.
 
         Returns:
-            list, shape.
+            Union[list, int], shape.
         """
         return self._input_shape.get(name)
 
@@ -124,7 +126,7 @@ class Graph(BaseGraph, abc.ABC):
             name (str): Node name.
 
         Returns:
-            list, shape.
+            Union[list, int],
         """
         return self._shape_dict.get(name)
 
@@ -254,8 +256,7 @@ class Graph(BaseGraph, abc.ABC):
             cls, graph instance.
         """
         src_graph = cls.load_graph(graph_path=model_path, **kwargs)
-        ckpt = cls.load_checkpoint(
-            ckpt_path=checkpoint) if checkpoint else None
+        ckpt = cls.load_checkpoint(ckpt_path=checkpoint) if checkpoint else None
 
         if ckpt is not None:
             # Create an instance of TensorflowGraph.
@@ -263,7 +264,7 @@ class Graph(BaseGraph, abc.ABC):
                        checkpoint=ckpt)
 
         # Create an instance of PyTorchGraph.
-        return cls(src_graph, sample_shape=sample_shape)
+        return cls(src_graph, sample_shape=sample_shape, **kwargs)
 
 
 class GraphNode(abc.ABC):

@@ -55,8 +55,8 @@ class OnnxGraph(Graph):
         sample_shape (tuple): Input shape of the model.
     """
 
-    def __init__(self, model, sample_shape: tuple = None):
-        super(OnnxGraph, self).__init__(model=model)
+    def __init__(self, model, sample_shape: tuple = None, **kwargs):
+        super(OnnxGraph, self).__init__(model=model, **kwargs)
 
         self.build(sample_shape)
 
@@ -118,7 +118,9 @@ class OnnxGraph(Graph):
         Args:
             input_shape (tuple): Input shape of model. Default: None
         """
-        model_data = OnnxDataLoader(self.model, graph_input_shape=input_shape)
+        model_data = OnnxDataLoader(self.model, graph_input_shape=input_shape,
+                                    input_nodes=self._raw_input_nodes,
+                                    output_nodes=self._raw_output_nodes)
         from ..sub_graph_searcher import generate_scope_name
         scope_name_list = generate_scope_name(model_data)
 
@@ -129,7 +131,7 @@ class OnnxGraph(Graph):
             inputs = node.input_name_list
             # check each input from node or tensors
             for i in inputs:
-                if i in model_data.tensor_name_set:
+                if i in model_data.tensors_dict:
                     tensor = model_data.tensors_dict[i]
                     t_name = tensor.name
                     t_value = tensor.to_array()
@@ -142,7 +144,7 @@ class OnnxGraph(Graph):
                 self._build_connection(nd_ipt_name, node_name)
 
         super(OnnxGraph, self).build(input_shape=input_shape)
-        self._collect_input_shape_of_each_node(input_shape)  # diff than pyTorch
+        self._collect_input_shape_of_each_node(input_shape)
 
     def _collect_input_shape_of_each_node(self, input_shape):
         """

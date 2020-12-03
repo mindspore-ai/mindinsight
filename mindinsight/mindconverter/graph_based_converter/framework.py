@@ -92,7 +92,7 @@ def tf_installation_validation(func):
            output_folder: str, report_folder: str = None,
            input_nodes: str = None, output_nodes: str = None):
         # Check whether tensorflow is installed.
-        if not find_spec("tensorflow") or not find_spec("tf2onnx"):
+        if not find_spec("tensorflow") or not find_spec("tf2onnx") or not find_spec("onnxruntime"):
             error = ModuleNotFoundError("Tensorflow and tf2onnx are required when using "
                                         "graph based scripts converter.")
             log.error(str(error))
