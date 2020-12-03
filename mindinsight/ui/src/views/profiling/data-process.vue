@@ -31,18 +31,15 @@ limitations under the License.
           <div class="queue-container">
             <div class="img">
               <div class="edge">
-                <img src="@/assets/images/data-flow.png"
-                     alt="" />
+                <img src="@/assets/images/data-flow.png" />
               </div>
               <div class="icon">
                 <img src="@/assets/images/queue.svg"
-                     alt=""
                      @click="highlight('connector_queue')"
                      clickKey="connector_queue" />
               </div>
               <div class="edge">
-                <img src="@/assets/images/data-flow.png"
-                     alt="" />
+                <img src="@/assets/images/data-flow.png" />
               </div>
             </div>
             <div class="title">{{connectorQuene}}</div>
@@ -77,18 +74,15 @@ limitations under the License.
                v-show="processSummary.count === processSummary.maxCount">
             <div class="img">
               <div class="edge">
-                <img src="@/assets/images/data-flow.png"
-                     alt="" />
+                <img src="@/assets/images/data-flow.png" />
               </div>
               <div class="icon">
                 <img src="@/assets/images/queue.svg"
                      @click="highlight('data_queue')"
-                     clickKey="data_queue"
-                     alt="" />
+                     clickKey="data_queue" />
               </div>
               <div class="edge">
-                <img src="@/assets/images/data-flow.png"
-                     alt="" />
+                <img src="@/assets/images/data-flow.png" />
               </div>
             </div>
             <div class="title">{{$t('profiling.dataQueue')}}</div>
@@ -139,6 +133,13 @@ limitations under the License.
                   <div id="connect-queue"
                        class="chart"></div>
                 </template>
+                <div class="image-noData"
+                     v-else>
+                  <div>
+                    <img :src="require('@/assets/images/nodata.png')" />
+                  </div>
+                  <p>{{(connectQueueChart.initOver)?$t("public.noData"):$t("public.dataLoading")}}</p>
+                </div>
               </div>
               <div class="chart-wrap"
                    :class="{highlight:selected==='data_queue'}">
@@ -155,6 +156,13 @@ limitations under the License.
                   <div id="data-queue"
                        class="chart"></div>
                 </template>
+                <div class="image-noData"
+                     v-else>
+                  <div>
+                    <img :src="require('@/assets/images/nodata.png')" />
+                  </div>
+                  <p>{{(dataQueueChart.initOver)?$t("public.noData"):$t("public.dataLoading")}}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -177,6 +185,13 @@ limitations under the License.
                   <div id="device_queue_op"
                        class="chart"></div>
                 </template>
+                <div class="image-noData"
+                     v-else>
+                  <div>
+                    <img :src="require('@/assets/images/nodata.png')" />
+                  </div>
+                  <p>{{(deviceQueueOpChart.initOver)?$t("public.noData"):$t("public.dataLoading")}}</p>
+                </div>
               </div>
               <div class="chart-wrap analysis"
                    :class="{highlight:selected==='get_next'}">
@@ -193,6 +208,13 @@ limitations under the License.
                   <div id="get_next"
                        class="chart"></div>
                 </template>
+                <div class="image-noData"
+                     v-else>
+                  <div>
+                    <img :src="require('@/assets/images/nodata.png')" />
+                  </div>
+                  <p>{{(getNextChart.initOver)?$t("public.noData"):$t("public.dataLoading")}}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -222,8 +244,7 @@ limitations under the License.
         <div class="image-noData"
              v-if="processSummary.noData">
           <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
+            <img :src="require('@/assets/images/nodata.png')" />
           </div>
           <p>{{(initOver)?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
@@ -276,8 +297,7 @@ limitations under the License.
         <div class="image-noData"
              v-if="pipeData">
           <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
+            <img :src="require('@/assets/images/nodata.png')" />
           </div>
           <p>{{initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
@@ -310,6 +330,7 @@ export default {
         noData: true,
         size: null,
         deviceId: null,
+        initOver: false,
       },
       dataQueueChart: {
         // Data queue chart object
@@ -322,6 +343,7 @@ export default {
         params: 'get_next',
         noData: true,
         size: null,
+        initOver: false,
       },
       deviceQueueOpChart: {
         // Device queue chart object
@@ -332,6 +354,7 @@ export default {
         type: 1,
         params: 'device_queue',
         noData: true,
+        initOver: false,
       },
       getNextChart: {
         // Get next chart object
@@ -342,6 +365,7 @@ export default {
         type: 1,
         params: 'get_next',
         noData: true,
+        initOver: false,
       },
       processSummary: {
         // Process summary object
@@ -498,6 +522,7 @@ export default {
       RequestService.minddataOp(params).then(
           (res) => {
             if (res && res.data) {
+              chart.initOver = true;
               const result = res.data;
               chart.data = result.info;
               if (result.summary) {
@@ -526,6 +551,7 @@ export default {
             if (chart.chartDom) {
               chart.chartDom.clear();
             }
+            chart.initOver = true;
             chart.noData = true;
           },
       );
@@ -544,6 +570,7 @@ export default {
       RequestService.queueInfo(params).then(
           (res) => {
             if (res && res.data) {
+              chart.initOver = true;
               const result = res.data;
               chart.data = result.info;
               if (result.summary) {
@@ -565,6 +592,7 @@ export default {
             }
           },
           (err) => {
+            chart.initOver = true;
             chart.noData = true;
             if (chart.chartDom) {
               chart.chartDom.clear();
@@ -581,6 +609,7 @@ export default {
       const option = {
         tooltip: {
           trigger: 'axis',
+          confine: true,
         },
         toolbox: {
           show: true,
@@ -785,6 +814,7 @@ export default {
                     axisPointer: {
                       type: 'shadow',
                     },
+                    confine: true,
                     formatter(params) {
                       let value = {};
                       data.forEach((val) => {
@@ -897,6 +927,7 @@ export default {
             },
             tooltip: {
               trigger: 'axis',
+              confine: true,
             },
             xAxis: {
               name: `${this.$t('profiling.sampleInterval')}/${
@@ -1320,7 +1351,7 @@ export default {
     font-size: 0;
     display: flex;
     align-items: flex-start;
-    margin-top: 20px;
+    padding-top: 20px;
     .cell-container {
       width: 20%;
       cursor: pointer;
