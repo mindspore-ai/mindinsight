@@ -141,7 +141,7 @@ class ExplainParser(_SummaryParser):
         field_list = []
         tensor_value_list = []
         for field in fields:
-            if not getattr(tensor_event_value, field, False):
+            if getattr(tensor_event_value, field, None) is None:
                 continue
 
             if ExplainFieldsEnum.METADATA.value == field and not tensor_event_value.metadata.label:
