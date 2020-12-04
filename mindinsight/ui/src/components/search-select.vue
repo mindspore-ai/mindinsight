@@ -1,56 +1,59 @@
 <template>
-  <el-select v-model="selectedLabels"
-             :placeholder="$t('public.select')"
-             :multiple="typeof multiple !== 'undefined' ? multiple : false"
-             :collapse-tags="typeof collapseTags !== 'undefined' ? collapseTags : false"
-             class="cl-search-select">
-    <div class="cl-search-select-action">
-      <el-input v-model="filter"
-                :placeholder="$t('public.enter')"
-                id="search-select-valid"
-                class="action-gap"
-                clearable></el-input>
-      <span class="action-gap"
-            :class="{'able': functionAble, 'disable': !functionAble}"
-            @click="selectAll"
-            v-if="multiple">{{$t('public.selectAll')}}</span>
-      <span @click="clearAll"
-            :class="{'able': functionAble, 'disable': !functionAble}"
-            v-if="multiple">
-        {{$t('public.clear')}}</span>
+  <div class="cl-search-select"
+       ref="selector"
+       @click="mouseClick($event)"
+       tabindex="0"
+       @keyup.enter="enter">
+    <div class="cl-search-select-inner"
+         :class="{'is-focus': ifFocus}"
+         @click="click">
+      <!-- Multiple Choice -->
+      <template v-if="multiple">
+        <div class="mul-tag"
+             v-if="indexes.length > 0">
+          <div class="mul-tag-content"
+               :title="options[indexes[0]].label"
+               :style="{'text-overflow': overflow}">
+            {{options[indexes[0]].label}}
+          </div>
+          <div class="mul-tag-del"
+               @click="cancelLabel($event, indexes[0])"
+               v-if="cancel && !options[indexes[0]].disabled">
+            <i class="el-icon-close"></i>
+          </div>
+        </div>
+        <div v-else>
+          {{sPlaceholder}}
+        </div>
+        <div v-if="indexes.length > 1"
+             class="mul-tag">
+          <div class="mul-tag-content">
+            +{{indexes.length - 1}}
+          </div>
+        </div>
+      </template>
+      <!-- Single choice -->
+      <template v-else>
+        <div class="single-tag"
+             :style="{'text-overflow': overflow}">
+          {{indexes.length > 0 ? options[indexes[0]].label : sPlaceholder}}
+        </div>
+      </template>
     </div>
-    <slot v-if="!ifReady" name="oriData"></slot>
-    <!-- Option -->
-    <template v-if="type === 'option'">
-      <el-option v-for="option of options"
-                 :key="option.label"
-                 :label="option.label"
-                 :value="option.value"
-                 :disabled="typeof option.disabled !== 'undefined' ? option.disabled : false">
-      </el-option>
-    </template>
-    <!-- Group -->
-    <template v-else>
-      <el-option-group v-for="group in groups"
-                       :key="group.label"
-                       :label="group.label"
-                       :disabled="typeof group.disabled !== 'undefined' ? group.disabled : false">
-        <el-option v-for="option in group.options"
-                   :key="option.value"
-                   :label="option.label"
-                   :value="option.value"
-                   :disabled="typeof option.disabled !== 'undefined' ? option.disabled : false">
-        </el-option>
-      </el-option-group>
-    </template>
-    <div slot="empty">
-      <div class="cl-search-select-action cl-search-select-empty">
+    <div class="select-container"
+         :style="{
+           'top': containerTop,
+           'left': containerLeft,
+           'min-width': containerWidth,
+         }"
+         v-show="ifActive">
+      <!-- Filter Line -->
+      <div class="filter-container">
         <el-input v-model="filter"
-                  :placeholder="$t('public.enter')"
-                  id="search-select-empty"
-                  class="action-gap"
-                  clearable></el-input>
-        <span class="action-gap"
+                  clearable
+                  class="has-gap">
+        </el-input>
+        <span class="has-gap"
               :class="{'able': functionAble, 'disable': !functionAble}"
               @click="selectAll"
               v-if="multiple">{{$t('public.selectAll')}}</span>
@@ -59,261 +62,533 @@
               v-if="multiple">
           {{$t('public.clear')}}</span>
       </div>
-      <div class="cl-search-select-nodata">{{$t('public.emptyData')}}</div>
+      <div class="option-container"
+           ref="options">
+        <div v-for="(option, index) in options"
+             :key="option.label"
+             :value="option.value"
+             v-show="option.show"
+             class="select-option"
+             :class="{
+                'is-selected': option.selected,
+                'is-disabled': option.disabled,
+              }"
+             @click="optionClick(option, index)">
+          <div class="label-container"
+               :title="option.label">{{option.label}}</div>
+          <div class="icon-container">
+            <i class="el-icon-check"
+               :class="{'icon-no-selected': !option.selected}"></i>
+          </div>
+        </div>
+      </div>
+      <div class="option-empty"
+           v-show="ifEmpty">
+        {{$t('public.emptyData')}}
+      </div>
     </div>
-  </el-select>
+  </div>
 </template>
 
 <script>
+/**
+ * The PublicStore holds the key of focused selector
+ * When there is more than two component in same page, help selector to keep correct display
+ */
+const PublicStore = {activeKey: {key: ''}};
 export default {
   props: {
-    type: String, // 'option' | 'group'
-    collapseTags: Boolean, // If open the collapse tags
-    multiple: Boolean, // If open the multiple
-    slotReady: Boolean, // If the slot loading is asynchronous, should let the component know the state of slot
+    multiple: {
+      type: Boolean,
+      default: false,
+    }, // If open multiple choice
+    sPlaceholder: {
+      type: String,
+      default: '',
+    }, // The placeholder of selector
+    iPlaceholder: {
+      type: String,
+      default: '',
+    }, // The placeholder of filter input
+    overflow: {
+      type: String,
+      default: 'none',
+    }, // The display way of overflow selected label('none' or 'ellipsis')
+    cancel: {
+      type: Boolean,
+      default: true,
+    }, // If the tag can be cancel by icon, only effective when multiple is true
+    plain: {
+      type: Boolean,
+      default: false,
+    }, // Represents whether the type of the incoming array, 'true' stands for 'String', 'false' stands for 'Object'
+    source: {
+      type: Array,
+      default: () => {
+        return [];
+      },
+    }, // The total data source of component
+    labelName: {
+      type: String,
+      default: 'label',
+    }, // The name of the property representing label in the object
+    valueName: {
+      type: String,
+      default: 'value',
+    }, // The name of the property representing value in the object
+    disabledName: {
+      type: String,
+      default: 'disabled',
+    }, // The name of the property representing disabled in the object
+    selectedName: {
+      type: String,
+      default: 'selected',
+    }, // The name of the property representing selected in the object
   },
   data() {
     return {
-      includes: undefined, // If the String.prototype.includes() is useful
-      ifReady: false, // If the option is ready
-      selectedLabels: undefined, // The selected labels
+      ifFocus: false, // When the selector is focused, the options area may not display
+      ifActive: false, // When the selector is active, the options area must display
+      options: [], // The option list after processing original data
+      containerTop: 0, // The top to set container position
+      containerLeft: 0, // The left to set container position
+      containerWidth: 0, // The min-width of container
+      containerToSelector: 12, // The gap between options-container and selector
+      functionAble: true, // The effective of button after input
+      // The key of component to make sure it can be distinguished from PublicStore
+      key: new Date().getTime().toString(),
       filter: '', // The value to filter the option
-      functionAble: false, // If the selectAll and clearAll button accessible
-      optionsTemp: [], // The options template includes all options
-      groupsTemp: [], // The groups template includes all groups and options
-      options: [], // The source of el-option that actually displayed
-      groups: [], // The source of el-option-group that actually displayed
+      ifEmpty: true, // If no option match the filter
+      activeKey: undefined, // In order to add wacter to the PublicStore.activeKey.key
+      latestIndex: undefined, // The index of the last click option, only effective when multiple is false
+      indexes: [], // The list of index of selected options
+      filterDebounce: 150, // The filter watcher debounce time in ms
     };
-  },
-  watch: {
-    /**
-     * The logic to init the options when slot is ready
-     * @param {Boolean} val
-     */
-    slotReady(val) {
-      if (val) {
-        this.$nextTick(() => {
-          if (this.$slots.oriData) {
-            this.init(this.type, this.$slots.oriData);
-          } else {
-            throw new Error('Wrong time');
-          }
-        });
-      }
-    },
-    /**
-     * The logic to filter options
-     * @param {String} val The input word
-     */
-    filter(val) {
-      if (val !== '') {
-        this.functionAble = false;
-      } else {
-        this.functionAble = true;
-      }
-      if (this.type === 'option') {
-        this.options = this.optionsTemp.filter((option) => {
-          if (this.includes) {
-            return option.label.includes(val);
-          } else {
-            return option.label.indexOf(val) >= 0;
-          }
-        });
-      } else {
-        for (let i = 0; i < this.groupsTemp.length; i++) {
-          this.groups[i] = Object.assign({}, this.groupsTemp[i]);
-          this.groups[i].options = this.groupsTemp[i].options.filter(
-              (option) => {
-                if (this.includes) {
-                  return option.label.includes(val);
-                } else {
-                  return option.label.indexOf(val) >= 0;
-                }
-              },
-          );
-        }
-        this.groups = this.groups.filter((val) => {
-          return val.options.length !== 0;
-        });
-      }
-      this.$nextTick(() => {
-        if (this.type === 'option') {
-          this.refocus(this.options.length);
-        } else {
-          this.refocus(this.groups.length);
-        }
-      });
-    },
-    /**
-     * The logic executed when selected labels changed
-     * @param {String} val The input word
-     */
-    selectedLabels(val) {
-      this.$emit('selectedUpdate', val);
-    },
   },
   methods: {
     /**
-     * The logic of click selectAll
+     * The logic of calcualte values or value
+     * @return {Array | String | Number}
+     */
+    calValues() {
+      if (this.multiple) {
+        const values = [];
+        for (let i = 0; i < this.indexes.length; i++) {
+          values.push(this.options[this.indexes[i]].value);
+        }
+        return values;
+      } else {
+        return this.options[this.indexes[0]].value;
+      }
+    },
+    /**
+     * The logic of enter down
+     */
+    enter() {
+      this.ifFocus = false;
+      this.ifActive = false;
+      this.$emit('selectEnter');
+    },
+    /**
+     * The logic of click the display area of selector, excluding the options area
+     */
+    click() {
+      this.ifActive = !this.ifActive;
+      this.ifFocus = true;
+    },
+    /**
+     * The logic of click event that add to window, which can make response to defocus
+     */
+    clickHandler() {
+      this.ifFocus = false;
+      this.ifActive = false;
+    },
+    /**
+     * The logic of click the selector, including everywhere
+     * @param {Object} event
+     */
+    mouseClick(event) {
+      PublicStore.activeKey.key = this.key;
+      event.stopPropagation();
+      event.preventDefault();
+    },
+    /**
+     * The logic of click selectAll button
      */
     selectAll() {
       if (!this.functionAble) {
         return;
       }
-      this.selectedLabels = [];
-      if (this.type === 'option') {
-        this.optionsTemp.forEach((element) => {
-          this.selectedLabels.push(element.value);
-        });
-      } else {
-        for (let i = 0; i < this.groupsTemp.length; i++) {
-          this.groupsTemp[i].options.forEach((element) => {
-            this.selectedLabels.push(element.value);
-          });
+      this.indexes = [];
+      for (let i = 0; i < this.options.length; i++) {
+        if (this.options[i].disabled) {
+          if (this.options[i].selected) {
+            this.indexes.push(i);
+          }
+        } else {
+          this.mulSelectOption(this.options[i], i);
         }
       }
     },
     /**
-     * The logic of click clear
+     * The logic of click clearAll button
      */
     clearAll() {
       if (!this.functionAble) {
         return;
       }
-      this.selectedLabels = [];
-    },
-    /**
-     * The logic of init options by slot data when type is opitons
-     * @param {Array<Object>} vnodes
-     */
-    initOptions(vnodes) {
-      this.optionsTemp = [];
-      for (let i = 0; i < vnodes.length; i++) {
-        this.optionsTemp[i] = Object.assign(
-            {},
-            vnodes[i].componentOptions.propsData,
-        );
-      }
-      this.options = Array.from(this.optionsTemp);
-      this.functionAble = true;
-      this.ifReady = true;
-    },
-    /**
-     * The logic of init options by slot data when type is groups
-     * @param {Array<Object>} vnodes
-     */
-    initGroups(vnodes) {
-      this.groupsTemp = [];
-      for (let i = 0; i < vnodes.length; i++) {
-        this.groupsTemp[i] = Object.assign(
-            {},
-            vnodes[i].componentOptions.propsData,
-        );
-        this.groupsTemp[i].options = [];
-        for (let j = 0; j < vnodes[i].componentOptions.children.length; j++) {
-          this.groupsTemp[i].options[j] = Object.assign(
-              {},
-              vnodes[i].componentOptions.children[j].componentOptions.propsData,
-          );
+      const indexes = [];
+      for (let i = 0; i < this.indexes.length; i++) {
+        const option = this.options[this.indexes[i]];
+        if (option.disabled) {
+          indexes.push(i);
+        } else {
+          option.selected = false;
         }
       }
-      this.groups = Array.from(this.groupsTemp);
-      this.functionAble = true;
-      this.ifReady = true;
+      this.indexes = indexes;
     },
     /**
-     * The logic of init options by slot data when type is groups
-     * @param {number} length The filter word length
+     * The logic of process original data when group is false
+     * @param {Array} data
+     * @return {Array}
      */
-    refocus(length) {
-      if (length === 0) {
-        const dom = document.getElementById('search-select-empty');
-        if (dom) {
-          dom.focus();
+    processDefault(data) {
+      const options = [];
+      if (!this.plain) {
+        for (let i = 0; i < data.length; i++) {
+          options.push({
+            label: data[i][this.labelName],
+            value: data[i][this.valueName],
+            disabled: data[i][this.disabledName] === true ? true : false,
+            selected: data[i][this.selectedName] === true ? true : false,
+            show: true,
+          });
+          if (options[i].selected) {
+            this.indexes.push(i);
+          }
         }
       } else {
-        const dom = document.getElementById('search-select-valid');
-        if (dom) {
-          dom.focus();
+        for (let i = 0; i < data.length; i++) {
+          options.push({
+            label: data[i],
+            value: data[i],
+            disabled: false,
+            selected: false,
+            show: true,
+          });
+        }
+      }
+      return options;
+    },
+    /**
+     * The logic of process original data
+     * @param {Array} data
+     * @return {Array}
+     */
+    processData(data) {
+      return this.processDefault(data);
+    },
+    /**
+     * The logic of deselect option when multiple is true
+     * @param {Object} option
+     * @param {Number} index
+     */
+    mulDeselectOption(option, index) {
+      const indexTemp = this.indexes.indexOf(index);
+      this.indexes.splice(indexTemp, 1);
+      option.selected = false;
+    },
+    /**
+     * The logic of select option when multiple is true
+     * @param {Object} option
+     * @param {Number} index
+     */
+    mulSelectOption(option, index) {
+      this.indexes.push(index);
+      option.selected = true;
+    },
+    /**
+     * The logic of click option
+     * @param {Object} option
+     * @param {Number} index
+     */
+    optionClick(option, index) {
+      if (option.disabled) {
+        return;
+      }
+      if (option.selected) {
+        if (this.multiple) {
+          this.mulDeselectOption(option, index);
+        } else {
+          // Single choice not allowed to deselect directly, do this by selecting other options
+          return;
+        }
+      } else {
+        if (this.multiple) {
+          this.mulSelectOption(option, index);
+        } else {
+          this.indexes[0] = index;
+          // When multiple is false, there is at most one option can have 'selected' true
+          if (typeof this.latestIndex === 'number') {
+            this.options[this.latestIndex].selected = false;
+          }
+          this.latestIndex = index;
+          return;
         }
       }
     },
     /**
-     * The logic of init options by slot data
-     * @param {String} type The type
-     * @param {Array<Object>} slots
+     * The logic of click cancel icon
+     * @param {Object} event
+     * @param {Number} index
      */
-    init(type, slots) {
-      if (type === 'option') {
-        this.initOptions(slots);
-      } else if (type === 'group') {
-        this.initGroups(slots);
-      } else {
-        throw new Error(
-            `Wrong type. The value of type can only be one of 'option' or 'group'`,
-        );
-      }
+    cancelLabel(event, index) {
+      event.stopPropagation();
+      event.preventDefault();
+      this.mulDeselectOption(this.options[index], index);
     },
   },
   created() {
-    if (this.multiple) {
-      this.selectedLabels = '';
-    } else {
-      this.selectedLabels = [];
+    if (this.source.length > 0) {
+      this.options = this.processData(this.source);
+      this.ifEmpty = false;
     }
-    if (typeof String.prototype.includes !== 'function') {
-      this.includes = false;
-    } else {
-      this.includes = true;
-    }
+    this.activeKey = PublicStore.activeKey;
+    window.addEventListener('click', this.clickHandler);
   },
   mounted() {
-    if (typeof this.slotReady === 'undefined') {
-      if (this.$slots.oriData) {
-        this.init(this.type, this.$slots.oriData);
-      } else {
-        throw new Error('Slot is not ready.');
-      }
+    // Calculate position and width of options container
+    if (this.$refs.selector) {
+      const styleList = getComputedStyle(this.$refs.selector);
+      const height = styleList['height'].replace('px', '');
+      const minWidth = styleList['width'];
+      this.containerTop = `${parseInt(height) + this.containerToSelector}px`;
+      this.containerWidth = minWidth;
     }
+  },
+  watch: {
+    // The watcher of filter,to filter options and control ifEmpty after filtered
+    filter(newVal) {
+      if (newVal !== '') {
+        this.functionAble = false;
+      } else {
+        this.functionAble = true;
+      }
+      clearTimeout(this.filterTimer);
+      this.filterTimer = setTimeout(() => {
+        for (let i = 0; i < this.options.length; i++) {
+          if (this.options[i].label.indexOf(newVal) < 0) {
+            this.options[i].show = false;
+          } else {
+            this.options[i].show = true;
+          }
+        }
+        this.$nextTick(() => {
+          if (this.$refs.options) {
+            if (getComputedStyle(this.$refs.options)['height'] === '0px') {
+              this.ifEmpty = true;
+            } else {
+              this.ifEmpty = false;
+            }
+          }
+        });
+      }, this.filterDebounce);
+    },
+    // The watcher of source can process asynchronous data input, or make response when original data changed
+    'source': {
+      handler(newVal) {
+        this.indexes = [];
+        this.options = this.processData(newVal);
+        this.ifEmpty = false;
+      },
+    },
+    // The watcher of activeKey to keep the selector in right state
+    'activeKey.key': {
+      handler(newVal) {
+        if (newVal !== this.key) {
+          this.ifFocus = false;
+          this.ifActive = false;
+        }
+      },
+    },
+    'indexes': {
+      handler() {
+        this.$nextTick(() => {
+          this.$emit('selectedUpdate', this.calValues());
+        });
+      },
+    },
+  },
+  beforeDestroy() {
+    window.removeEventListener('click', this.clickHandler);
   },
 };
 </script>
-
 <style lang="scss">
 .cl-search-select {
-  width: 100%;
-}
-.cl-search-select-action {
-  padding-right: 10px;
-  padding-left: 10px;
-  display: flex;
-  align-items: center;
-  .el-input {
-    width: 0;
-    flex-grow: 1;
-    .el-input__inner {
-      padding: 0 9px;
+  .filter-container {
+    .el-input {
+      width: 0;
+      flex-grow: 1;
+      .el-input__inner {
+        padding: 0 9px;
+      }
     }
   }
-  .action-gap {
-    margin-right: 6px;
-  }
-  .able {
-    color: #00a5a7;
+}
+</style>
+<style lang="scss" scoped>
+.cl-search-select {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  .cl-search-select-inner {
+    height: 100%;
+    border: 1px solid #dcdfe6;
+    border-radius: 1px;
+    background-color: #fff;
+    color: #606266;
+    padding: 0 15px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
   }
-  .disable {
-    color: #c3c3c3;
-    cursor: not-allowed;
+  .is-focus {
+    border-color: #00a5a7;
   }
-}
-.cl-search-select-empty {
-  padding-top: 6px;
-}
-.cl-search-select-nodata {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 48px;
+  .mul-tag {
+    height: 24px;
+    padding: 0 4px 0 8px;
+    border: 1px solid #d9ecff;
+    border-radius: 4px;
+    background-color: #f4f4f5;
+    border-color: #e9e9eb;
+    margin-right: 6px;
+    max-width: 70%;
+    display: flex;
+    align-items: center;
+    .mul-tag-content {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      color: #909399;
+      margin-right: 4px;
+    }
+    .mul-tag-del {
+      font-size: 12px;
+      background-color: #c0c4cc;
+      min-height: 12.8px;
+      min-width: 12.8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      &:hover {
+        background-color: #909399;
+      }
+      .el-icon-close {
+        color: #909399;
+        &:hover {
+          color: #fff;
+        }
+      }
+    }
+  }
+  .single-tag {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  .select-container {
+    position: absolute;
+    border: 1px solid #e4e7ed;
+    border-radius: 4px;
+    background-color: #fff;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    margin: 5px 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 244px;
+    z-index: 9998;
+    .filter-container {
+      margin-top: 4px;
+      flex-shrink: 0;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      .has-gap {
+        margin-right: 6px;
+      }
+      .able {
+        color: #00a5a7;
+        cursor: pointer;
+      }
+      .disable {
+        color: #c3c3c3;
+        cursor: not-allowed;
+      }
+    }
+    .option-container {
+      overflow-x: hidden;
+      overflow-y: scroll;
+      .select-option {
+        padding: 0 20px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        &:hover {
+          background-color: #f5f7fa;
+        }
+        .label-container {
+          white-space: nowrap;
+          max-width: 320px;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+        .icon-container {
+          width: 14px;
+          .icon-no-selected {
+            display: none;
+          }
+        }
+      }
+      .is-selected {
+        color: #00a5a7;
+      }
+      .is-disabled {
+        color: #c0c4cc;
+        cursor: not-allowed !important;
+      }
+      &::-webkit-scrollbar {
+        cursor: pointer;
+        width: 6px;
+      }
+      &::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px #fff;
+        background-color: #fff;
+        border-radius: 3px;
+      }
+      &::-webkit-scrollbar-thumb {
+        border-radius: 7px;
+        -webkit-box-shadow: inset 0 0 6px rgba(144, 147, 153, 0.3);
+        background-color: #e8e8e8;
+      }
+      &::-webkit-scrollbar-thumb:hover {
+        -webkit-box-shadow: inset 0 0 6px rgba(144, 147, 153, 0.3);
+        background-color: #cacaca;
+        border-radius: 3px;
+      }
+    }
+    .option-empty {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
 }
 </style>
