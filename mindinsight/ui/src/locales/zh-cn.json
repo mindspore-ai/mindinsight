@@ -184,7 +184,8 @@
     "sameCompare": "不能有相同的比较运算符",
     "unreasonable": "逻辑不合理",
     "info": "提示",
-    "isDelete": "是否删除当前阈值"
+    "isDelete": "是否删除当前阈值？",
+    "noLog":"不存在0和负数的对数"
   },
   "images": {
     "titleText": "图像",
