@@ -432,12 +432,12 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
     def _record_parameter_names(self):
         """Record parameter full names in tensor handler."""
-        parameter_nodes = self._cache_store.get_stream_handler(Streams.GRAPH).get_searched_nodes(
+        parameter_nodes = self._cache_store.get_stream_handler(Streams.GRAPH).search_in_graph(
             pattern={'node_category': TargetTypeEnum.PARAMETER.value})
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR)
-        for nodes in parameter_nodes.values():
-            tensor_names = [node.full_name + ':0' for node in nodes]
-            tensor_stream.record_parameter_names(tensor_names)
+        for node in parameter_nodes:
+            tensor_name = [node.full_name + ':0']
+            tensor_stream.record_parameter_names(tensor_name)
 
     @debugger_wrap
     def SendTensors(self, request_iterator, context):

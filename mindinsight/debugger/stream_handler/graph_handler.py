@@ -257,58 +257,13 @@ class GraphHandler(StreamHandlerBase):
             dict, the searched node.
         """
         graph_name = pattern.pop('graph_name', None)
-        search_nodes = self.get_searched_nodes(pattern, graph_name)
+        search_nodes = self.search_in_graph(pattern, graph_name)
         # construct to search tree
-        if not self._has_graph_scope(graph_name):
-            for graph_name, searched_node_list in search_nodes.items():
-                graph = self._get_graph(graph_name=graph_name)
-                format_nodes = graph.get_nodes(searched_node_list)
-                return {'nodes': format_nodes}
-        # deal with graph_name is None
-        res = []
-        for graph_name, graph in self._graph.items():
-            format_nodes = graph.get_nodes(search_nodes.get(graph_name, []))
-            if not format_nodes:
-                continue
-            self._add_graph_scope_for_nodes(format_nodes, graph_name)
-            search_graph = {
-                'name': graph_name,
-                'type': 'name_scope',
-                'nodes': format_nodes
-            }
-            res.append(search_graph)
-        return {'nodes': res}
+        graph = self._get_graph(graph_name=graph_name)
+        format_nodes = graph.get_nodes(search_nodes)
+        return {'nodes': format_nodes}
 
-    def get_searched_node_list(self, pattern, graph_name):
-        """Get searched node list in single graph."""
-        searched_nodes = self.get_searched_nodes(pattern, graph_name)
-        return searched_nodes.get(graph_name, [])
-
-    def get_searched_nodes(self, pattern, graph_name=None):
-        """
-        Search nodes by given pattern.
-
-        Args:
-            pattern (dict): Filter condition.
-
-                - name (str): The name pattern.
-                - node_category (str): The node_category. Default: None
-                - condition (dict): The additional filter condition.
-            graph_name (str): The graph name. If not given, search in all sub graphs. Default: None.
-
-        Returns:
-            dict, the searched nodes. The format is dict of <graph_name, list[Node]>.
-        """
-        if not graph_name:
-            graph_names = self.graph_names
-        else:
-            graph_names = [graph_name]
-        search_nodes = {}
-        for sub_graph_name in graph_names:
-            search_nodes[sub_graph_name] = self._search_in_single_graph(pattern, sub_graph_name)
-        return search_nodes
-
-    def _search_in_single_graph(self, pattern, graph_name=None):
+    def search_in_graph(self, pattern, graph_name=None):
         """
         Search nodes by given pattern.
 

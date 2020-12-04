@@ -559,7 +559,8 @@ class TestMultiGraphDebugger:
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("filter_condition, expect_file", [
         ({'name': '', 'node_category': 'weight'}, 'search_weight_multi_graph.json'),
-        ({'node_category': 'activation'}, 'search_activation_multi_graph.json')
+        ({'node_category': 'activation'}, 'search_activation_multi_graph.json'),
+        ({'node_category': 'gradient'}, 'search_gradient_multi_graph.json')
     ])
     def test_search_by_category_with_multi_graph(self, app_client, filter_condition, expect_file):
         """Test search by category request."""

@@ -90,11 +90,11 @@ def is_weight_node(node):
         bool, if the node is weight type.
     """
     if node.type == NodeTypeEnum.PARAMETER.value:
-        node_name = node.name.lower()
+        full_name = node.full_name.lower()
         weight_flag = False
-        if node_name.endswith('.weight') or node_name.endswith('.bias'):
+        if full_name.endswith('.weight') or full_name.endswith('.bias'):
             weight_flag = True
-        if weight_flag and 'optimizer-' not in node_name and not node_name.startswith('gradients/'):
+        if weight_flag and 'optimizer-' not in full_name and not full_name.startswith('gradients/'):
             return True
     return False
 
@@ -136,8 +136,8 @@ def is_gradient_node(node):
     Returns:
         bool, if the node is gradient type.
     """
-    node_name = node.name.lower()
-    if node_name.startswith('gradients/') and \
+    full_name = node.full_name.lower()
+    if full_name.startswith('gradients/') and \
             node.type not in [NodeTypeEnum.PARAMETER.value, NodeTypeEnum.CONST.value]:
         return True
     return False
