@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-import re
 import numpy as np
 from ...base import ONNXToMindSporeMapper
 from ...gen_setting import Setting
@@ -77,16 +76,7 @@ class ConvMapper(ONNXToMindSporeMapper):
         weights = kwargs['weights']
         params = kwargs['params']
         # regex to find Conv weight
-        regex = r".+\/(Conv2D|depthwise)\/ReadVariableOp:0$"
-        regex2 = r"const_fold_opt__\d+"
-        weight = None
-        for w_name, w in weights.items():
-            if re.match(regex, w_name):
-                weight = w
-                break
-            if re.match(regex2, w_name):
-                weight = w
-                break
+        weight = list(weights.values())[0]
         if weight is None:
             raise ValueError("Conv. Mapper cannot get the weight.")
 

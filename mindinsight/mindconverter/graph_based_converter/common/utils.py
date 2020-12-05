@@ -13,6 +13,9 @@
 # limitations under the License.
 # ============================================================================
 """Define common utils."""
+from importlib import import_module
+from typing import List
+
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP
 
 
@@ -27,3 +30,36 @@ def is_converted(operation: str):
         bool, true or false.
     """
     return operation and SEPARATOR_IN_ONNX_OP not in operation
+
+
+def fetch_output_from_onnx_model(model, feed_dict: dict, output_nodes: List[str]):
+    """
+    Fetch specific nodes output from onnx model.
+
+    Notes:
+        Only support to get output without batch dimension.
+
+    Args:
+        model (ModelProto): ONNX model.
+        feed_dict (dict): Feed forward inputs.
+        output_nodes (list[str]): Output nodes list.
+
+    Returns:
+        dict, nodes' output value.
+    """
+    if not isinstance(feed_dict, dict) or not isinstance(output_nodes, list):
+        raise TypeError("`feed_dict` should be type of dict, and `output_nodes` "
+                        "should be type of List[str].")
+
+    ort = import_module("onnxruntime")
+
+    input_nodes = list(feed_dict.keys())
+
+    extractor = getattr(import_module("onnx.utils"), "Extractor")(model)
+    extracted_model = extractor.extract_model(input_nodes, output_nodes)
+    sess = ort.InferenceSession(path_or_bytes=bytes(extracted_model.SerializeToString()))
+    fetched_res = sess.run(output_names=output_nodes, input_feed=feed_dict)
+    run_result = dict()
+    for idx, opt in enumerate(output_nodes):
+        run_result[opt] = fetched_res[idx]
+    return run_result
