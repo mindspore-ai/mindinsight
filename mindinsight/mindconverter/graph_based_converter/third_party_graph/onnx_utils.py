@@ -23,6 +23,7 @@ import numpy as np
 
 from mindinsight.mindconverter.common.log import logger as log
 from ..common.utils import fetch_output_from_onnx_model
+from ..common.global_context import GlobalContext
 
 from ..constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
     ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL
@@ -110,6 +111,7 @@ class OnnxTensor:
         self.to_nodes = []
 
     def to_array(self):
+        """Convert the tensor value from binary to np array."""
         onnx = import_module("onnx")
         # Convert binary data to np.array
         if not isinstance(self.raw_tensor, (np.ndarray, list, tuple, int, float)):
@@ -264,7 +266,7 @@ class OnnxDataLoader:
         self.output_nodes = output_nodes if isinstance(output_nodes, list) else [output_nodes]
         # args for init
         self._is_infer_shape = infer_shape
-
+        self._global_context = GlobalContext()
         # params parsed in init
         self.inferred_model = None
 
@@ -375,12 +377,19 @@ class OnnxDataLoader:
 
     def _parse_nodes(self):
         """Parse each onnx nodes in the model."""
-        for node in self.nodes:
+        nodes_topo_idx = []
+        for idx, node in enumerate(self.nodes):
             n = OnnxNode(node)
             self._nodes_dict[n.name] = n
+            nodes_topo_idx.append((idx, n.name))
             if len(node.output) > 1:
                 raise ModelNotSupport(msg=f"{node.name} has multi-outputs which is not supported now.")
             self.output_name_to_node_name[node.output[0]] = node.name
+            self._global_context.onnx_node_name_to_topo_idx[n.name] = idx
+            node_inputs = [i.replace(":0", "") for i in node.input]
+            self._global_context.onnx_node_inputs[n.name] = node_inputs
+        self._global_context.onnx_nodes_collection = self._nodes_dict
+        self._global_context.onnx_nodes_topo_index = nodes_topo_idx
 
     def _parse_tensors(self):
         """Parse each onnx tensors in the model."""
@@ -388,6 +397,7 @@ class OnnxDataLoader:
         for tensor in tensors:
             t = OnnxTensor(tensor)
             self.tensors_dict[t.name] = t
+        self._global_context.onnx_tensors_collection = self.tensors_dict
 
     def _parse_node_output_shape(self):
         """
