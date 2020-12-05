@@ -278,8 +278,6 @@ class OnnxDataLoader:
         self.tensors_dict = {}  # {tensor_name: OnnxTensor}
         self.value_info_dict = {}  # Not contains input and output nodes
 
-        self.tensor_name_set = set()  # [str]
-        self.node_name_set = set()  # [str]
         self.node_output_shape_dict = OrderedDict()  # {node_name: [int]}
 
         # Key is edge of ONNX ir graph, value is the corresponding precursor node.
@@ -314,8 +312,7 @@ class OnnxDataLoader:
             w = int(match.group('w'))
             c = int(match.group('c'))
             if [h, w, c] != list(self.graph_input_shape)[1:4]:
-                raise ValueError(
-                    f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
+                raise ValueError(f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
             return True
         return False
 
@@ -387,7 +384,6 @@ class OnnxDataLoader:
         for node in self.nodes:
             n = OnnxNode(node)
             self._nodes_dict[n.name] = n
-            self.node_name_set.add(n.name)
             if len(node.output) > 1:
                 raise ModelNotSupport(msg=f"{node.name} has multi-outputs which is not supported now.")
             self.output_name_to_node_name[node.output[0]] = node.name
@@ -398,7 +394,6 @@ class OnnxDataLoader:
         for tensor in tensors:
             t = OnnxTensor(tensor)
             self.tensors_dict[t.name] = t
-            self.tensor_name_set.add(t.name)
 
     def _parse_node_output_shape(self):
         """

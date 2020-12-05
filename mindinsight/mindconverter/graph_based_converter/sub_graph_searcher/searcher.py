@@ -232,6 +232,23 @@ def flatten_graph(graph):
     return [f"Model/{node.op_type}" for _, node in graph.node_collection.items()]
 
 
+def validate_topo_order_succession():
+    """Validate whether topological order is successive."""
+    module_interval = dict()
+    for idx, node_name in enumerate(context.node_collection.keys()):
+        name_arr = node_name.split("/")
+        if len(name_arr) <= 2:
+            continue
+        node_name = "/".join(name_arr[:-2])
+        if node_name not in module_interval:
+            module_interval[node_name] = [idx]
+            continue
+        if module_interval[node_name][-1] != idx - 1:
+            return False
+        module_interval[node_name].append(idx)
+    return True
+
+
 def generate_scope_name(data_loader):
     """
     Generate scope name according to computation graph.
@@ -244,6 +261,9 @@ def generate_scope_name(data_loader):
     """
     init_dag = _build_connection(data_loader)
     try:
+        if not validate_topo_order_succession():
+            raise ValueError("Topological order is not successive.")
+
         result = _sub_graph_matching(init_dag, beam_width=5, sub_graph_size=6)
         topo_order_with_scope_name_list = _retrieve_scope_name(result) if result else flatten_graph(init_dag)
 

@@ -122,6 +122,10 @@ class OnnxGraphNode(GraphNode):
         if not self._op_name == op_name:
             return declare, args
         if not settings or not settings.op_extra_tensor:
+            # TensorAdd operation in onnx could add a tensor twice.
+            ipt_vars = args.split(", ")
+            if len(ipt_vars) == 1:
+                args = f"{ipt_vars[0]}, {ipt_vars[0]}"
             return declare, args
         declare_list = [declare]
         declare_t = f"self.{variable_name}_w = Tensor(" \

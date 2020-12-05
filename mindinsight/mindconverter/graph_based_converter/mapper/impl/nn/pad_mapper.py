@@ -45,15 +45,15 @@ class PadMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_params(**kwargs):
-        params = kwargs['params']
+        weights = kwargs.get("weights")
+        params = kwargs.get("params")
         mode = params.get('mode', 'constant')
+        pads_onnx = params.get("pads") if params.get("pads") else list(weights.values())[0].tolist()
         if mode == 'constant' and params.get('value') is None:
-            if params.get('pads'):
-                pads_onnx = params.get('pads')
+            if params.get('pads') or weights:
                 if isinstance(pads_onnx, list):
                     paddings = _padding_format_convert(pads_onnx)
-                    return {'paddings': paddings,
-                            'mode': '\"CONSTANT\"'}
+                    return {'paddings': paddings, 'mode': '\"CONSTANT\"'}
         if mode == 'constant':
             if params['value'] == 0:
                 mode = '\"CONSTANT\"'
@@ -65,12 +65,12 @@ class PadMapper(ONNXToMindSporeMapper):
         else:
             msg = f"{{UNSUPPORTED: \"{mode}\"}}\"UNKNOWN\""
             mode = msg
-        pads_onnx = params['pads']
         half_index = len(pads_onnx) // 2
         paddings = (
-            (num_begin, num_end) for num_begin, num_end in zip(pads_onnx[:half_index], pads_onnx[half_index:]))
-        return {'paddings': tuple(paddings),
-                'mode': mode}
+            (num_begin, num_end)
+            for num_begin, num_end in zip(pads_onnx[:half_index], pads_onnx[half_index:])
+        )
+        return {'paddings': tuple(paddings), 'mode': mode}
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
