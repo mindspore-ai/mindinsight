@@ -183,6 +183,10 @@ class OnnxGraphNode(GraphNode):
         declare, ipt_args_settings_in_construct = self._add_tensor_args_to_code(
             'onnx::Add', settings, declare, ipt_args_settings_in_construct, variable_name)
 
+        # Extra Tensor generator for onnx::Mul
+        declare, ipt_args_settings_in_construct = self._add_tensor_args_to_code(
+            'onnx::Mul', settings, declare, ipt_args_settings_in_construct, variable_name)
+
         call = f"{output_var} = self.{variable_name}({ipt_args_settings_in_construct})"
 
         return declare, call

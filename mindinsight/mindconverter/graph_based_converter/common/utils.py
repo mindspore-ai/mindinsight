@@ -13,9 +13,12 @@
 # limitations under the License.
 # ============================================================================
 """Define common utils."""
+import os
+import stat
 from importlib import import_module
-from typing import List
+from typing import List, Tuple, Mapping
 
+from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP
 
 
@@ -63,3 +66,46 @@ def fetch_output_from_onnx_model(model, feed_dict: dict, output_nodes: List[str]
     for idx, opt in enumerate(output_nodes):
         run_result[opt] = fetched_res[idx]
     return run_result
+
+
+def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
+                              out_folder: str, report_folder: str):
+    """
+    Save code file and report.
+
+    Args:
+        model_name (str): Model name.
+        code_lines (dict): Code lines.
+        out_folder (str): Output folder.
+        report_folder (str): Report output folder.
+
+    """
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    modes = stat.S_IRUSR | stat.S_IWUSR
+    modes_usr = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+
+    out_folder = os.path.realpath(out_folder)
+    if not report_folder:
+        report_folder = out_folder
+    else:
+        report_folder = os.path.realpath(report_folder)
+
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder, modes_usr)
+    if not os.path.exists(report_folder):
+        os.makedirs(report_folder, modes_usr)
+
+    for file_name in code_lines:
+        code, report = code_lines[file_name]
+        try:
+            with os.fdopen(os.open(os.path.realpath(os.path.join(out_folder, f"{model_name}.py")),
+                                   flags, modes), 'w') as file:
+                file.write(code)
+            with os.fdopen(os.open(os.path.realpath(os.path.join(report_folder,
+                                                                 f"report_of_{model_name}.txt")),
+                                   flags, stat.S_IRUSR), "w") as rpt_f:
+                rpt_f.write(report)
+        except IOError as error:
+            log.error(str(error))
+            log.exception(error)
+            raise error
