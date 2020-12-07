@@ -25,7 +25,7 @@ from treelib import Tree, Node
 from mindinsight.mindconverter.common.log import logger as log
 
 from .name_mgr import ModuleNameMgr, GlobalVarNameMgr
-from ..common.utils import is_converted
+from ..common.utils import is_converted, save_code_file_and_report
 from ..mapper.base import Mapper
 from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
@@ -193,37 +193,7 @@ class HierarchicalTree(Tree):
             log.error("Error occur when generating codes.")
             raise e
 
-        out_folder = os.path.realpath(out_folder)
-        if not report_folder:
-            report_folder = out_folder
-        else:
-            report_folder = os.path.realpath(report_folder)
-
-        if not os.path.exists(out_folder):
-            os.makedirs(out_folder, self.modes_usr)
-        if not os.path.exists(report_folder):
-            os.makedirs(report_folder, self.modes_usr)
-
-        for file_name in code_fragments:
-            code, report = code_fragments[file_name]
-            try:
-                with os.fdopen(os.open(os.path.realpath(os.path.join(out_folder, f"{model_name}.py")),
-                                       self.flags, self.modes), 'w') as file:
-                    file.write(code)
-            except IOError as error:
-                log.error(str(error))
-                log.exception(error)
-                raise error
-
-            try:
-                with os.fdopen(os.open(os.path.realpath(os.path.join(report_folder,
-                                                                     f"report_of_{model_name}.txt")),
-                                       self.flags, stat.S_IRUSR), "w") as rpt_f:
-                    rpt_f.write(report)
-            except IOError as error:
-                log.error(str(error))
-                log.exception(error)
-                raise error
+        save_code_file_and_report(model_name, code_fragments, out_folder, report_folder)
 
     def _preprocess_node_args(self, node, module_key):
         """

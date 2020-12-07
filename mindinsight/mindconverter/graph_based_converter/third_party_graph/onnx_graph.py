@@ -105,11 +105,9 @@ class OnnxGraph(Graph):
                     "Graph construct a self-loop node %s. Ignored.", src)
                 return
         if tgt not in self._nodes_collection[src.split(':')[0]].successor_nodes:
-            self._nodes_collection[src.split(
-                ':')[0]].successor_nodes.append(tgt)
+            self._nodes_collection[src.split(':')[0]].successor_nodes.append(tgt)
         if src not in self._nodes_collection[tgt].precursor_nodes:
-            self._nodes_collection[tgt.split(
-                ':')[0]].precursor_nodes.append(src)
+            self._nodes_collection[tgt.split(':')[0]].precursor_nodes.append(src)
 
     def build(self, input_shape=None):
         """
@@ -136,8 +134,7 @@ class OnnxGraph(Graph):
                     t_name = tensor.name
                     t_value = tensor.to_array()
                     node_weight[t_name] = t_value
-            self._nodes_collection[node_name] = OnnxGraphNode(
-                node, node_weight)
+            self._nodes_collection[node_name] = OnnxGraphNode(node, node_weight)
             self._nodes_record[node_name] = node_name
 
             for nd_ipt_name in node.precursor_onnx_node_dict:

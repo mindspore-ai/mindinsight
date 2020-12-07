@@ -56,11 +56,6 @@ def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=12):
 
     target = ",".join(constants.DEFAULT_TARGET)
     shape_override = None
-    if not 'input' in model_inputs:
-        error_msg = "The given input node is not an eligible input node."
-        error = ValueError(error_msg)
-        log.error(str(error))
-        raise error
 
     if 'input' in model_outputs:
         error_msg = "The given output node is an input node."
@@ -69,12 +64,12 @@ def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=12):
         raise error
 
     if model_inputs:
-        model_inputs, shape_override = utils.split_nodename_and_shape(
-            model_inputs)
+        model_inputs, shape_override = utils.split_nodename_and_shape(model_inputs)
     if model_outputs:
         model_outputs = model_outputs.split(',')
-    graph_def, inputs, outputs = tf_loader.from_graphdef(
-        model_path, model_inputs, model_outputs)
+    graph_def, inputs, outputs = tf_loader.from_graphdef(model_path,
+                                                         model_inputs,
+                                                         model_outputs)
 
     with tf.Graph().as_default() as tf_graph:
         tf.import_graph_def(graph_def, name='')
@@ -88,8 +83,7 @@ def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=12):
                              shape_override=shape_override,
                              input_names=inputs,
                              output_names=outputs,
-                             inputs_as_nchw=None
-                             )
+                             inputs_as_nchw=None)
     opt_map = getattr(optimizer.back_to_back_optimizer, '_func_map')
     if ('Conv', 'BatchNormalization') in opt_map:
         opt_map.pop(('Conv', 'BatchNormalization'))
