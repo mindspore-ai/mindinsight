@@ -1764,6 +1764,7 @@ export default {
       .step {
         height: 100%;
         background-repeat: round;
+        user-select: none;
         img {
           width: 100%;
         }

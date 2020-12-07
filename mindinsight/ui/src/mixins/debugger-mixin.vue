@@ -18,6 +18,9 @@ export default {
      * Initialize the condition
      */
     initCondition() {
+      if (this.metadata.state === 'running') {
+        return;
+      }
       RequestService.queryConditions(this.trainId).then((res) => {
         if (res && res.data) {
           this.conditionCollections = res.data;
@@ -544,6 +547,9 @@ export default {
       this.resetGraph();
     },
     recheckWatchpoint() {
+      if (!this.enableRecheck) {
+        return;
+      }
       RequestService.recheckWatchPoints().then(
           (res) => {
             if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
@@ -587,7 +593,7 @@ export default {
      * @param {Object} item watchpoint data
      */
     deleteWatchpoint(item) {
-      if (!this.watchPointArr.length) {
+      if (!this.watchPointArr.length || this.metadata.state === 'running') {
         return;
       }
       if ((item && item.id) || !item) {

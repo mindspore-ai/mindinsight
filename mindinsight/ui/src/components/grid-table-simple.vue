@@ -68,7 +68,10 @@ limitations under the License.
                      :label="item.label"
                      :value="item.value"></el-option>
         </el-select>
-        {{$t('components.gridAccuracy')}}<el-select v-model="accuracy"
+        {{$t('components.gridAccuracy')}}
+        <span :title="$t('components.accuracyTips')"
+              class="el-icon-warning"></span>
+        <el-select v-model="accuracy"
                    class="select-item"
                    @change="accuracyChange">
           <el-option v-for="item in accuracyArr"

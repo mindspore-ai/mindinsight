@@ -72,8 +72,11 @@ limitations under the License.
                      :label="item.label"
                      :value="item.value"></el-option>
         </el-select>
-        {{$t('components.gridAccuracy')}}<el-select v-model="accuracy"
-                   class="select-item"
+        {{$t('components.gridAccuracy')}}
+        <span :title="$t('components.accuracyTips')"
+              class="el-icon-warning"></span>
+        <el-select v-model="accuracy"
+                   class="select-item-debugger"
                    @change="accuracyChange">
           <el-option v-for="item in accuracyArr"
                      :key="item.label"
@@ -702,7 +705,7 @@ export default {
     }
     .accuracy-container {
       float: right;
-      .select-item {
+      .select-item-debugger {
         width: 65px;
         margin-left: 5px;
       }
