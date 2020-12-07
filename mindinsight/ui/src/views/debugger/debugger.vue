@@ -218,7 +218,7 @@ limitations under the License.
                            :key="ind"
                            class="param">
                         <div class="tensor-icon"></div>
-                        {{j}}
+                        {{j.content}}
                       </div>
                       <div class="hit-tip"
                            v-if="i.tip">
@@ -459,6 +459,7 @@ limitations under the License.
     <div class="deb-con"
          v-if="tensorCompareFlag">
       <debugger-tensor :row="curRowObj"
+                       :formateWatchpointParams="formateWatchpointParams"
                        ref="deb-tensor"
                        @close="closeTensor"></debugger-tensor>
     </div>
@@ -468,7 +469,7 @@ limitations under the License.
                :close-on-click-modal="false"
                :modal-append-to-body="false"
                class="creat-watch-point-dialog"
-               width="870px">
+               width="890px">
 
       <div class="conditions-container">
         <div class="condition-item"
@@ -525,6 +526,8 @@ limitations under the License.
                        :value="false">
             </el-option>
           </el-select>
+          <div class="percent-sign"
+               v-show="percentParams.includes(item.param.name)">%</div>
 
           <div class="inclusive-param"
                v-if="item.compositeParams.selections.length">
@@ -999,7 +1002,6 @@ export default {
           },
       );
     },
-    /** ************************ graph **********************/
 
     /**
      * Get watchpoint messages
@@ -1009,19 +1011,28 @@ export default {
     getWatchPointContent(item) {
       let param = '';
       if (item.params.length) {
-        item.params.forEach((i, ind) => {
-          const name = this.transCondition(i.name);
-          if (!ind) {
-            param += `${name}:${i.value}`;
-          } else {
-            param += `, ${name}:${i.value}`;
-          }
-        });
+        param = item.params
+            .map((i) => {
+              const name = this.transCondition(i.name);
+              const symbol = this.percentParams.includes(i.name) ? '%' : '';
+              return `${name} ${i.value + symbol}`;
+            })
+            .join(', ');
         param = `(${param})`;
       }
 
-      const str = `${this.$t('debugger.watchPoint')} ${item.id}: ${this.transCondition(item.condition)} ${param}`;
-      return str;
+      return `${this.$t('debugger.watchPoint')} ${item.id}: ${this.transCondition(item.condition)} ${param}`;
+    },
+    formateWatchpointParams(params = []) {
+      params.forEach((i) => {
+        const symbol = this.percentParams.includes(i.name) ? '%' : '';
+        let content = `${this.transCondition(i.name)}: ${this.$t('debugger.setValue')} ${i.value + symbol}`;
+        content +=
+          i.actual_value || i.actual_value === 0
+            ? `, ${this.$t('debugger.actualValue')} ${i.actual_value + symbol}`
+            : '';
+        i.content = content;
+      });
     },
     /** ************************ graph **********************/
 
@@ -1778,7 +1789,7 @@ export default {
                 .name {
                   .item-content {
                     display: inline-block;
-                    width: 310px;
+                    width: 300px;
                     text-overflow: ellipsis;
                     white-space: nowrap;
                     overflow: hidden;
@@ -2181,6 +2192,11 @@ export default {
     .param-value {
       margin-left: 10px;
       width: 200px;
+    }
+    .percent-sign {
+      display: inline-block;
+      text-align: right;
+      width: 20px;
     }
     .inclusive-param {
       text-align: right;

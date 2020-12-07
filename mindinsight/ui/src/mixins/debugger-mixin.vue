@@ -1483,13 +1483,8 @@ export default {
                   let params = [];
                   if (j.watch_condition) {
                     item += ` ${this.transCondition(j.watch_condition.id)}`;
-                    params = (j.watch_condition.params || []).map((k) =>
-                      k.actual_value === undefined || k.actual_value === null
-                        ? `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}`
-                        : `${this.transCondition(k.name)}: ${this.$t('debugger.setValue')}:${k.value}, ${this.$t(
-                            'debugger.actualValue',
-                        )}:${k.actual_value}`,
-                    );
+                    this.formateWatchpointParams(j.watch_condition.params || []);
+                    params = JSON.parse(JSON.stringify(j.watch_condition.params));
                   }
                   obj.lists.push({
                     name: item,
