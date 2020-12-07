@@ -141,7 +141,7 @@ class TestAscendDebugger:
             for idx, condition in enumerate(conditions):
                 create_watchpoint(app_client, condition, idx + 1)
             # delete 4-th watchpoint
-            url = 'delete_watchpoint'
+            url = 'delete-watchpoint'
             body_data = {'watch_point_id': 4}
             get_request_result(app_client, url, body_data)
             # test watchpoint list
@@ -166,7 +166,7 @@ class TestAscendDebugger:
             condition = {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]}
             create_watchpoint(app_client, condition, watch_point_id)
             # update watchpoint watchpoint list
-            url = 'update_watchpoint'
+            url = 'update-watchpoint'
             body_data = {'watch_point_id': watch_point_id,
                          'watch_nodes': [leaf_node_name],
                          'mode': 0}
@@ -218,13 +218,13 @@ class TestAscendDebugger:
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
             # prepare tensor value
-            url = 'retrieve_tensor_history'
+            url = 'tensor-history'
             body_data = {'name': node_name}
             expect_file = 'retrieve_empty_tensor_history.json'
             send_and_compare_result(app_client, url, body_data, expect_file)
             # check full tensor history from poll data
             res = get_request_result(
-                app_client=app_client, url='poll_data', body_data={'pos': 0}, method='get')
+                app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
             assert res.get('receive_tensor', {}).get('node_name') == node_name
             expect_file = 'retrieve_full_tensor_history.json'
             send_and_compare_result(app_client, url, body_data, expect_file)
@@ -257,9 +257,9 @@ class TestAscendDebugger:
             get_request_result(app_client, url, body_data)
             check_state(app_client)
             get_request_result(
-                app_client=app_client, url='retrieve_tensor_history', body_data={'name': node_name})
+                app_client=app_client, url='tensor-history', body_data={'name': node_name})
             res = get_request_result(
-                app_client=app_client, url='poll_data', body_data={'pos': 0}, method='get')
+                app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
             assert res.get('receive_tensor', {}).get('node_name') == node_name
             # get compare results
             url = 'tensor-comparisons'
@@ -322,16 +322,16 @@ class TestAscendDebugger:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("url, body_data, enable_recheck", [
-        ('create_watchpoint',
+        ('create-watchpoint',
          {'condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
           'watch_nodes': ['Default']}, True),
-        ('update_watchpoint',
+        ('update-watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum/Parameter[18]_7'],
           'mode': 0}, True),
-        ('update_watchpoint',
+        ('update-watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum'],
           'mode': 1}, True),
-        ('delete_watchpoint', {}, True)
+        ('delete-watchpoint', {}, True)
     ])
     def test_recheck(self, app_client, url, body_data, enable_recheck):
         """Test recheck."""
@@ -382,7 +382,7 @@ class TestAscendDebugger:
             get_request_result(app_client, url, body_data, method='GET')
             # check full tensor history from poll data
             res = get_request_result(
-                app_client=app_client, url='poll_data', body_data={'pos': 0}, method='get')
+                app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
             assert res.get('receive_tensor', {}).get('tensor_name') == body_data.get('tensor_name')
             send_and_compare_result(app_client, url, body_data, expect_file, method='GET')
             send_terminate_cmd(app_client)
@@ -429,31 +429,31 @@ class TestGPUDebugger:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     @pytest.mark.parametrize("url, body_data, enable_recheck", [
-        ('create_watchpoint',
+        ('create-watchpoint',
          {'condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
           'watch_nodes': ['Default']}, True),
-        ('create_watchpoint',
+        ('create-watchpoint',
          {'condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
           'watch_nodes': ['Default/TransData-op99']}, True),
-        ('update_watchpoint',
+        ('update-watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum/Parameter[18]_7'],
           'mode': 0}, True),
-        ('update_watchpoint',
+        ('update-watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum'],
           'mode': 1}, True),
-        ('update_watchpoint',
+        ('update-watchpoint',
          [{'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum'],
            'mode': 1},
           {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum'],
            'mode': 0}
           ], True),
-        ('update_watchpoint',
+        ('update-watchpoint',
          [{'watch_point_id': 1, 'watch_nodes': ['Default/TransData-op99'],
            'mode': 0},
           {'watch_point_id': 1, 'watch_nodes': ['Default/TransData-op99'],
            'mode': 1}
           ], True),
-        ('delete_watchpoint', {'watch_point_id': 1}, True)
+        ('delete-watchpoint', {'watch_point_id': 1}, True)
     ])
     def test_recheck_state(self, app_client, url, body_data, enable_recheck):
         """Test update watchpoint and check the value of enable_recheck."""
@@ -585,7 +585,7 @@ class TestMultiGraphDebugger:
     ])
     def test_create_watchpoint(self, app_client, filter_condition, expect_id):
         """Test create watchpoint with multiple graphs."""
-        url = 'create_watchpoint'
+        url = 'create-watchpoint'
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
             res = get_request_result(app_client, url, filter_condition)
@@ -649,7 +649,7 @@ class TestMultiGraphDebugger:
 
 def create_watchpoint(app_client, condition, expect_id):
     """Create watchpoint."""
-    url = 'create_watchpoint'
+    url = 'create-watchpoint'
     body_data = {'condition': condition,
                  'watch_nodes': ['Default/optimizer-Momentum/Parameter[18]_7',
                                  'Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias',
