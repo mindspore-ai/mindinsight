@@ -77,10 +77,9 @@ class TestGraphHandler:
     ])
     def test_search_nodes_by_type(self, node_type, condition, result_file):
         """Test search nodes by type."""
-        search_nodes = self.graph_handler.get_searched_node_list(
-            {'node_category': node_type, 'condition': condition}, 'kernel_graph_0')
+        result = self.graph_handler.search_nodes(
+            {'node_category': node_type, 'condition': condition, 'graph_name': 'kernel_graph_0'})
         file_path = os.path.join(self.graph_results_dir, result_file)
-        result = {'node_names': [node.name for node in search_nodes]}
         compare_result_with_file(result, file_path)
 
     @pytest.mark.parametrize("node_name, expect_type", [

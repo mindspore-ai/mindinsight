@@ -334,20 +334,8 @@ def _get_basic_node_info_by_node_category(node_category, graph_stream, activatio
     pattern = {'node_category': node_category}
     if activation_func:
         pattern['condition'] = {'activation_func': activation_func}
-    all_graph_nodes = graph_stream.get_searched_nodes(pattern)
-    basic_info_nodes = []
-    for graph_name, nodes in all_graph_nodes.items():
-        if len(all_graph_nodes) == 1:
-            logger.debug("This is a single graph")
-            graph_name = ""
-        for node in nodes:
-            if graph_name == "":
-                basic_node_info = NodeBasicInfo(name=node.name, full_name=node.full_name, type=node.type)
-            else:
-                basic_node_info = graph_stream.construct_node_basic_info(
-                    full_name=node.full_name, graph_name=graph_name, node_name=node.name, node_type=node.type)
-            basic_info_nodes.append(basic_node_info)
-    return basic_info_nodes
+    all_graph_nodes = graph_stream.search_in_graph(pattern)
+    return all_graph_nodes
 
 
 def _merge_nodes(leaf_nodes, graph):

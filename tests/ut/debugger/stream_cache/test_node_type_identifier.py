@@ -39,7 +39,7 @@ class TestNodeTypeIdentifier:
         """Test weight node."""
         identifier = NodeTypeIdentifier('weight')
         mock_node = MagicMock(type=node_type)
-        mock_node.name = name
+        mock_node.full_name = name
         res = identifier.is_match(mock_node)
         assert res is result
 
@@ -52,7 +52,7 @@ class TestNodeTypeIdentifier:
         """Test gradient node."""
         identifier = NodeTypeIdentifier('gradient')
         mock_node = MagicMock(type=node_type)
-        mock_node.name = name
+        mock_node.full_name = name
         res = identifier.is_match(mock_node)
         assert res is result
 
@@ -67,7 +67,7 @@ class TestNodeTypeIdentifier:
         """Test activate node."""
         identifier = NodeTypeIdentifier('activation')
         mock_node = MagicMock(type=node_type)
-        mock_node.name = name
+        mock_node.full_name = name
         res = identifier.is_match(mock_node, condition)
         assert res is result
 
