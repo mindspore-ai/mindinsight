@@ -307,12 +307,13 @@ class TestAscendDebugger:
             body_data = {'mode': 'continue',
                          'steps': -1}
             res = get_request_result(app_client, url, body_data)
-            assert res == {'metadata': {'state': 'running', 'enable_recheck': False}}
+            assert res == {'metadata': {'state': 'sending', 'enable_recheck': False}}
             # send pause command
+            check_state(app_client, 'running')
             url = 'control'
             body_data = {'mode': 'pause'}
             res = get_request_result(app_client, url, body_data)
-            assert res == {'metadata': {'state': 'waiting', 'enable_recheck': False}}
+            assert res == {'metadata': {'state': 'sending', 'enable_recheck': False}}
             send_terminate_cmd(app_client)
 
     @pytest.mark.level0
@@ -413,7 +414,7 @@ class TestGPUDebugger:
                          'level': 'node',
                          'name': 'Default/TransData-op99'}
             res = get_request_result(app_client, url, body_data)
-            assert res == {'metadata': {'state': 'running', 'enable_recheck': False}}
+            assert res == {'metadata': {'state': 'sending', 'enable_recheck': False}}
             # get metadata
             check_state(app_client)
             url = 'retrieve'
@@ -617,7 +618,7 @@ class TestMultiGraphDebugger:
                 body_data = {'mode': 'continue'}
                 body_data.update(params)
                 res = get_request_result(app_client, url, body_data)
-                assert res == {'metadata': {'state': 'running', 'enable_recheck': False}}
+                assert res == {'metadata': {'state': 'sending', 'enable_recheck': False}}
                 # get metadata
                 check_state(app_client)
                 url = 'retrieve'
@@ -669,7 +670,7 @@ def create_watchpoint_and_wait(app_client):
     body_data = {'mode': 'continue',
                  'steps': 2}
     res = get_request_result(app_client, url, body_data)
-    assert res == {'metadata': {'state': 'running', 'enable_recheck': False}}
+    assert res == {'metadata': {'state': 'sending', 'enable_recheck': False}}
     # wait for server has received watchpoint hit
     check_state(app_client)
 

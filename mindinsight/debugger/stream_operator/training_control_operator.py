@@ -95,7 +95,7 @@ class TrainingControlOperator:
             raise DebuggerContinueError(
                 "MindSpore is not ready to run or is running currently."
             )
-        metadata_stream.state = ServerStatus.RUNNING.value
+        metadata_stream.state = ServerStatus.SENDING.value
         try:
             self._validate_continue_params(params)
             event = self._construct_run_event(params)
@@ -214,9 +214,10 @@ class TrainingControlOperator:
         if metadata_stream.state != ServerStatus.RUNNING.value:
             log.error("The MindSpore is not running.")
             raise DebuggerPauseError("The MindSpore is not running.")
-        metadata_stream.state = 'waiting'
+        metadata_stream.state = ServerStatus.SENDING.value
         event = get_ack_reply()
         event.run_cmd.CopyFrom(RunCMD(run_level='step', run_steps=0))
+        self._cache_store.clean_command()
         self._cache_store.put_command(event)
         metadata_stream.enable_recheck = False
         log.debug("Send the Pause command")
@@ -230,7 +231,7 @@ class TrainingControlOperator:
             dict, metadata info.
         """
         metadata_stream = self._metadata_stream
-        metadata_stream.state = 'pending'
+        metadata_stream.state = ServerStatus.SENDING.value
         self._cache_store.clean_data()
         self._cache_store.clean_command()
         event = get_ack_reply()
@@ -252,7 +253,7 @@ class TrainingControlOperator:
         if not metadata_stream.enable_recheck:
             log.error("Recheck is not available.")
             raise DebuggerRecheckError("Recheck is not available.")
-        metadata_stream.state = ServerStatus.RUNNING.value
+        metadata_stream.state = ServerStatus.SENDING.value
         metadata_stream.enable_recheck = False
         # send updated watchpoint and recheck command
         try:

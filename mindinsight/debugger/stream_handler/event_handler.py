@@ -43,6 +43,8 @@ class EventHandler(StreamHandlerBase):
     def has_pos(self, pos):
         """Get the event according to pos."""
         cur_flag, cur_idx = self._parse_pos(pos)
+        if cur_flag not in [self._cur_flag, self._prev_flag]:
+            cur_flag, cur_idx = self._cur_flag, 0
         event = self._event_cache[cur_idx]
         if event is not None:
             if not cur_flag or (cur_flag == self._cur_flag and cur_idx < self._next_idx) or \
