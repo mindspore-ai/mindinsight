@@ -33,7 +33,7 @@
       <el-checkbox v-if="showCheckbox && node.data.showCheckbox"
                    v-model="node.checked"
                    :indeterminate="node.indeterminate"
-                   :disabled="!!node.disabled"
+                   :disabled="disabled || !!node.disabled"
                    @click.native.stop
                    @change="handleCheckChange">
       </el-checkbox>
@@ -52,6 +52,7 @@
                       v-for="child in node.childNodes"
                       :render-after-expand="renderAfterExpand"
                       :show-checkbox="showCheckbox"
+                      :disabled="disabled"
                       :key="getNodeKey(child)"
                       :node="child"
                       @node-expand="handleChildNodeExpand">
@@ -66,5 +67,11 @@ export default {
   extends: ElTreeNode,
   name: 'ElTreeNode',
   componentName: 'ElTreeNode',
+  props: {
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+  },
 };
 </script>

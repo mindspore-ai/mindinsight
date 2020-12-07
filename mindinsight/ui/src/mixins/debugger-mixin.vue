@@ -420,8 +420,11 @@ export default {
           if (metadata.graph_name) {
             graphName = metadata.graph_name;
           }
-          if (this.nodeName) {
+          if (this.selectedNode.name) {
             this.queryAllTreeData(this.nodeName, true, graphName);
+          }
+          if (nodeName) {
+            this.queryAllTreeData(nodeName, true, graphName);
           }
         }
       }
