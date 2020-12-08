@@ -51,9 +51,9 @@ class TestTrainingControlOperator:
             self._server._validate_continue_node_name(node_name='mock_node_name', graph_name='mock_graph_name')
 
     @pytest.mark.parametrize('mode, cur_state, state', [
-        ('continue', 'waiting', 'running'),
-        ('pause', 'running', 'waiting'),
-        ('terminate', 'waiting', 'pending')])
+        ('continue', 'waiting', 'sending'),
+        ('pause', 'running', 'sending'),
+        ('terminate', 'waiting', 'sending')])
     def test_control(self, mode, cur_state, state):
         """Test control request."""
         with mock.patch.object(MetadataHandler, 'state', cur_state):

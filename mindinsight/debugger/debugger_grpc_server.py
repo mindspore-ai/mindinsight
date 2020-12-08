@@ -104,7 +104,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
         # check if version is mismatch, if mismatch, send mismatch info to UI
         if self._status == ServerStatus.MISMATCH:
-            log.warning("Version of Mindspore and Mindinsight re unmatched,"
+            log.warning("Version of MindSpore and MindInsight are unmatched,"
                         "waiting for user to terminate the script.")
             metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
             # put metadata into data queue
@@ -140,7 +140,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._cache_store.clean_command()
         # receive graph in the beginning of the training
         self._status = ServerStatus.WAITING
-        metadata_stream.state = 'waiting'
+        metadata_stream.state = ServerStatus.WAITING.value
         metadata = metadata_stream.get()
         res = self._cache_store.get_stream_handler(Streams.GRAPH).get()
         res.update(metadata)
@@ -213,7 +213,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                 event = self._deal_with_left_continue_step(left_step_count)
             else:
                 event = self._deal_with_left_continue_node(node_name)
-            log.debug("Send old RunCMD. Clean watchpoint hit.")
+            log.debug("Send old RunCMD.")
         return event
 
     def _deal_with_left_continue_step(self, left_step_count):
@@ -270,7 +270,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             self._cache_store.get_stream_handler(Streams.METADATA).state = ServerStatus.WAITING.value
             self._cache_store.put_data({'metadata': {'state': 'waiting'}})
         event = None
-        while event is None and self._status in [ServerStatus.MISMATCH, ServerStatus.WAITING]:
+        while event is None and self._status not in [ServerStatus.RUNNING, ServerStatus.PENDING]:
             log.debug("Wait for %s-th command", self._pos)
             event = self._get_next_command()
         return event
@@ -280,12 +280,16 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._pos, event = self._cache_store.get_command(self._pos)
         if event is None:
             return event
+        # deal with command
+        metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
         if isinstance(event, dict):
             event = self._deal_with_view_cmd(event)
         elif event.HasField('run_cmd'):
             event = self._deal_with_run_cmd(event)
+            self._cache_store.put_data(metadata_stream.get())
         elif event.HasField('exit'):
             self._cache_store.clean()
+            self._cache_store.put_data(metadata_stream.get())
             log.debug("Clean cache for exit cmd.")
         else:
             self._cache_store.get_stream_handler(Streams.WATCHPOINT).clean_cache_set_cmd(event.set_cmd)
@@ -319,13 +323,16 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
     def _deal_with_run_cmd(self, event):
         """Deal with run cmd."""
+        metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
         run_cmd = event.run_cmd
         # receive step command
-        if run_cmd.run_level == 'step':
+        if run_cmd.run_level == RunLevel.STEP.value:
             # receive pause cmd
             if not run_cmd.run_steps:
                 log.debug("Pause training and wait for next command.")
                 self._old_run_cmd.clear()
+                # update metadata state from sending to waiting
+                metadata_stream.state = ServerStatus.WAITING.value
                 return None
             # receive step cmd
             left_steps = run_cmd.run_steps - 1
@@ -338,8 +345,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         # clean watchpoint hit cache
         if run_cmd.run_level == RunLevel.RECHECK.value:
             self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
-        log.debug("Receive RunCMD. Clean watchpoint hit cache.")
-
+            log.debug("Receive RunCMD. Clean watchpoint hit cache.")
+        # update metadata state from sending to running
+        metadata_stream.state = ServerStatus.RUNNING.value
         return event
 
     @debugger_wrap
@@ -364,7 +372,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                          ms_version, mindinsight.__version__)
                 self._status = ServerStatus.MISMATCH
                 reply.version_matched = False
-                metadata_stream.state = 'mismatch'
+                metadata_stream.state = ServerStatus.MISMATCH.value
             else:
                 log.info("version is matched.")
                 reply.version_matched = True

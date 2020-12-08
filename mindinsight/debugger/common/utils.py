@@ -56,7 +56,8 @@ class ServerStatus(enum.Enum):
     RECEIVE_GRAPH = 'receive graph'  # the client session has sent the graph
     WAITING = 'waiting'  # the client session is ready
     RUNNING = 'running'  # the client session is running a script
-    MISMATCH = 'mismatch' # the version of Mindspore and Mindinsight is not matched
+    MISMATCH = 'mismatch'  # the version of Mindspore and Mindinsight is not matched
+    SENDING = 'sending'  # the request is in cache but not be sent to client
 
 
 @enum.unique
