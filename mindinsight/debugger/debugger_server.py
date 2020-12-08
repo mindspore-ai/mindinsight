@@ -28,7 +28,7 @@ from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.datavisual.utils.tools import to_float
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerParamTypeError, DebuggerCompareTensorError, DebuggerTensorGraphError, \
-    DebuggerTensorHitError, MindInsightException
+    DebuggerTensorHitError, DebuggerSetRecommendWatchpointsError, MindInsightException
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import ServerStatus, \
     create_view_event_from_tensor_basic_info, Streams
@@ -81,10 +81,13 @@ class DebuggerServer:
             log.error("Bool param should be given for set_recommended")
             raise DebuggerParamValueError("Bool param should be given.")
         metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
+        if metadata_stream.recommendation_confirmed:
+            log.error("User has confirmed setting recommended watchpoints")
+            raise DebuggerSetRecommendWatchpointsError()
         condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step)
         log.debug("Train_id: %s, backend: %s", train_id, condition_context.backend)
         res = metadata_stream.get(['state', 'enable_recheck'])
-        if set_recommended and not metadata_stream.recommendation_confirmed:
+        if set_recommended:
             res['id'] = self._add_recommended_watchpoints(condition_context)
         metadata_stream.recommendation_confirmed = True
         return res

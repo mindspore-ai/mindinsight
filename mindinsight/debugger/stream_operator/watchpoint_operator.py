@@ -17,7 +17,7 @@ from queue import Queue
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerCreateWatchPointError, DebuggerUpdateWatchPointError, \
-    DebuggerDeleteWatchPointError
+    DebuggerDeleteWatchPointError, DebuggerConditionUnavailableError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import ServerStatus, \
     Streams, is_cst_type
@@ -81,7 +81,7 @@ class WatchpointOperator:
         condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step)
         if not condition.is_available(condition_context):
             log.error("Failed to create watchpoint as the condition is not available.")
-            raise DebuggerCreateWatchPointError(
+            raise DebuggerConditionUnavailableError(
                 "Failed to create watchpoint as the condition is not available.")
 
         if condition.supported_target_type in [TargetTypeEnum.ACTIVATION, TargetTypeEnum.GRADIENT,

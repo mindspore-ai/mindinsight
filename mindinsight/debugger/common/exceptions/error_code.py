@@ -28,6 +28,7 @@ class DebuggerErrors(DebuggerErrorCodes):
     PARAM_TYPE_ERROR = 0 | _PARAM_ERROR_MASK
     PARAM_VALUE_ERROR = 1 | _PARAM_ERROR_MASK
     STEP_NUM_ERROR = 2 | _PARAM_ERROR_MASK
+    DEBUGGER_CONDITION_UNAVAILABLE_ERROR = 3 | _PARAM_ERROR_MASK
 
     NODE_NOT_IN_GRAPH_ERROR = 0 | _DEBUGGER_GRAPH_ERROR
     GRAPH_NOT_EXIST_ERROR = 1 | _DEBUGGER_GRAPH_ERROR
@@ -41,6 +42,7 @@ class DebuggerErrors(DebuggerErrorCodes):
     RECHECK_ERROR = 6 | _DEBUGGER_RUNNING_ERROR
     TENSOR_GRAPH_ERROR = 7 | _DEBUGGER_RUNNING_ERROR
     TENSOR_HIT_ERROR = 8 | _DEBUGGER_RUNNING_ERROR
+    SET_RECOMMEND_WATCHPOINT_ERROR = 9 | _DEBUGGER_RUNNING_ERROR
 
 
 @unique
@@ -48,6 +50,7 @@ class DebuggerErrorMsg(Enum):
     """Debugger error messages."""
     PARAM_TYPE_ERROR = "TypeError. {}"
     PARAM_VALUE_ERROR = "ValueError. {}"
+    DEBUGGER_CONDITION_UNAVAILABLE_ERROR = "Condition is unavailable. {}"
 
     GRAPH_NOT_EXIST_ERROR = "The graph does not exist."
 
@@ -59,3 +62,4 @@ class DebuggerErrorMsg(Enum):
     RECHECK_ERROR = "Recheck failed. {}"
     TENSOR_GRAPH_ERROR = "Get tensor graphs failed."
     TENSOR_HIT_ERROR = "Get tensor hits failed."
+    SET_RECOMMEND_WATCHPOINT_ERROR = "Set Recommend Watchpoints failed."
