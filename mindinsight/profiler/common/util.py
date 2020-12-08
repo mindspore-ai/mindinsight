@@ -125,17 +125,29 @@ def get_summary_for_step_trace(average_info, header):
     total_time = get_field_value(average_info, 'total', header)
     iteration_interval = get_field_value(average_info, 'iteration_interval',
                                          header)
-    fp_and_bp = get_field_value(average_info, 'fp_and_bp', header)
-    tail = get_field_value(average_info, 'tail', header)
-    summary = {
+    summary_part = {
         'total_time': total_time,
         'iteration_interval': iteration_interval,
         'iteration_interval_percent': calculate_percent(iteration_interval, total_time),
-        'fp_and_bp': fp_and_bp,
-        'fp_and_bp_percent': calculate_percent(fp_and_bp, total_time),
-        'tail': tail,
-        'tail_percent': calculate_percent(tail, total_time)
     }
+    # training scene data for ui display
+    if 'fp_and_bp' in header:
+        fp_and_bp = get_field_value(average_info, 'fp_and_bp', header)
+        tail = get_field_value(average_info, 'tail', header)
+        summary = {
+            'fp_and_bp': fp_and_bp,
+            'fp_and_bp_percent': calculate_percent(fp_and_bp, total_time),
+            'tail': tail,
+            'tail_percent': calculate_percent(tail, total_time)
+        }
+    # inference scene data for ui display
+    else:
+        fp = get_field_value(average_info, 'fp', header)
+        summary = {
+            'fp': fp,
+            'fp_percent': calculate_percent(fp, total_time)
+        }
+    summary.update(summary_part)
     return summary
 
 

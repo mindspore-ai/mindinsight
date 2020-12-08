@@ -250,12 +250,12 @@ def validate_ui_proc(proc_name):
 
     Args:
         proc_name (str): The proc name to query. Acceptable value is in
-        [`iteration_interval`, `fp_and_bp`, `tail`].
+        [`iteration_interval`, `fp_and_bp`, `fp`, `tail`].
 
     Raises:
         ProfilerParamValueErrorException: If the proc_name is invalid.
     """
-    accept_names = ['iteration_interval', 'fp_and_bp', 'tail']
+    accept_names = ['iteration_interval', 'fp_and_bp', 'fp', 'tail']
     if proc_name not in accept_names:
         log.error("Invalid proc_name. The proc_name for restful api is in %s", accept_names)
         raise ProfilerParamValueErrorException(f'proc_name should be in {accept_names}.')
