@@ -20,7 +20,10 @@
     - [AST方案不支持场景](#ast方案不支持场景)
         - [场景1](#场景1)
         - [场景2](#场景2)
+    - [三方库依赖](#三方库依赖)
     - [常见问题](#常见问题)
+    - [附录](#附录)
+        - [TensorFlow Pb模型导出](#tensorflow-pb模型导出)
 
 <!-- /TOC -->
 
@@ -118,23 +121,41 @@ MindConverter提供两种技术方案，以应对不同脚本迁移场景：
 > 2. 基于图结构的脚本生成方案，由于要加载PyTorch、TensorFlow模型，会导致转换后网络中Dropout算子丢失，需要用户手动补齐；
 > 3. 基于图结构的脚本生成方案持续优化中。
 
-支持的模型列表（如下模型已基于x86 Ubuntu发行版，PyTorch 1.4.0以及TensorFlow 1.15.0测试通过）:
+支持的模型列表（如下模型已基于x86 Ubuntu发行版，PyTorch 1.4.0(TorchVision 0.5)以及TensorFlow 1.15.0测试通过）:
 
-|  模型  | PyTorch脚本 | TensorFlow脚本 |
-| :----: | :----: | :----: |
-| ResNet18 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |
-| ResNet34 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |
-| ResNet50 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |
-| ResNet101 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |
-| ResNet152 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |
-| VGG11/11BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |
-| VGG13/13BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |
-| VGG16/16BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |
-| VGG19/19BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |
-| AlexNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | 暂未测试 |
-| GoogLeNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | 暂未测试 |
-| MobileNetV2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |
-| InceptionV3 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |
+|  模型  | PyTorch脚本 | TensorFlow脚本 | 备注 |
+| :----: | :----: | :----: | :----: |
+| ResNet18 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |  |
+| ResNet34 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |  |
+| ResNet50 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
+| ResNet50V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
+| ResNet101 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
+| ResNet101V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
+| ResNet152 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
+| ResNet152V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
+| ResNeXt50 32x4d | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 | |
+| ResNeXt101 32x8d | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 | |
+| Wide ResNet50 2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 | |
+| Wide ResNet101 2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 | |
+| VGG11/11BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  |
+| VGG13/13BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  |
+| VGG16 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |  |
+| VGG16BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  |
+| VGG19 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |  |
+| VGG19BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  |
+| AlexNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | 暂未测试 |  |
+| GoogLeNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | 暂未测试 |  |
+| Xception | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/xception.py) |  |
+| InceptionV3 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/inception.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |  |
+| InceptionResNetV2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  |
+| MobileNetV1 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  |
+| MobileNetV2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  |
+| MNASNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | 暂未测试 | |
+| SqueezeNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | 暂未测试 | |
+| DenseNet121/169/201 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  |
+| DenseNet161 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | 暂未测试 | |
+| NASNetMobile/Large | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  |
+| EfficientNetB0~B7 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  |
 
 ## 使用示例
 
@@ -232,32 +253,7 @@ class Classifier(nn.Cell):
 
 #### TensorFlow模型脚本生成示例
 
-使用TensorFlow模型脚本迁移，需要先将TensorFlow模型导出为pb格式，并且获取模型输入节点、输出节点名称，可参考如下方法进行导出、获取节点名称：
-
-```python
-import tensorflow as tf
-from tensorflow.python.framework import graph_io
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-
-def freeze_graph(graph, session, output):
-    saved_path = "/home/user/xxx"
-    with graph.as_default():
-        graphdef_inf = tf.graph_util.remove_training_nodes(graph.as_graph_def())
-        graphdef_frozen = tf.graph_util.convert_variables_to_constants(session, graphdef_inf, output)
-        graph_io.write_graph(graphdef_frozen, saved_path, "frozen_model.pb", as_text=False)
-
-tf.keras.backend.set_learning_phase(0)
-
-base_model = InceptionV3()
-session = tf.keras.backend.get_session()
-
-INPUT_NODE = base_model.inputs[0].op.name  # Get input node name of TensorFlow.
-OUTPUT_NODE = base_model.outputs[0].op.name  # Get output node name of TensorFlow.
-freeze_graph(session.graph, session, [out.op.name for out in base_model.outputs])
-print(f"Input node name: {INPUT_NODE}, output node name: {OUTPUT_NODE}")
-```
-
-上述代码执行完毕，模型将会保存至`/home/user/xxx/frozen_model.pb`。其中，`INPUT_NODE`为输入节点名称，`OUTPUT_NODE`为输出节点名称。
+使用TensorFlow模型脚本迁移，需要先将TensorFlow模型导出为pb格式，并且获取模型输入节点、输出节点名称。TensorFlow pb模型导出可参考[TensorFlow Pb模型导出](#tensorflow-pb模型导出)。
 
 假设输入节点名称为`input_1:0`、输出节点名称为`predictions/Softmax:0`，模型输入样本尺寸为`1,224,224,3`，则可使用如下命令进行脚本生成：
 
@@ -312,6 +308,18 @@ class ConvBNReLU(nn.Sequential):
         )
 ```
 
+## 三方库依赖
+
+对于PyTorch模型脚本转MindSpore的用户，无需额外安装三方依赖库。
+
+用户在使用将TensorFlow模型脚本转为MindSpore时，下列三方库未在MindInsight依赖列表（requirements.txt）中声明。用户除安装可满足导出的Pb模型加载、训练、推理的TensorFlow版本外，还需要安装（pip install）如下依赖库：
+
+```text
+onnx>=1.8.0
+tf2onnx>=1.7.1
+onnxruntime>=1.5.2
+```
+
 ## 常见问题
 
 Q1. `terminate called after throwing an instance of 'std::system_error', what(): Resource temporarily unavailable, Aborted (core dumped)`:
@@ -319,4 +327,84 @@ Q1. `terminate called after throwing an instance of 'std::system_error', what():
 > 答: 该问题由TensorFlow导致。脚本转换时，需要通过TensorFlow库加载TensorFlow的模型文件，此时TensorFlow会申请相关资源进行初始化，若申请资源失败（可能由于系统进程数超过Linux最大进程数限制），TensorFlow C/C++层会出现Core Dumped问题。详细信息请参考TensorFlow官方ISSUE，如下ISSUE仅供参考：[TF ISSUE 14885](https://github.com/tensorflow/tensorflow/issues/14885), [TF ISSUE 37449](https://github.com/tensorflow/tensorflow/issues/37449)
 
 Q2. MindConverter是否可以在ARM平台运行？
+
 > 答：MindConverter已基于X86 Ubuntu发行版进行测试，ARM平台未进行测试。
+
+Q3. PyTorch模型转换时为什么提示`Error detail: [NodeInputMissing] ...`?
+
+> 答：对于PyTorch模型，若网络中存在`torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx`层算子，可能存在节点解析失败的情况，需要用户手动替换为torch.nn层算子。
+
+## 附录
+
+### TensorFlow Pb模型导出
+
+使用Keras构建模型的用户，可尝试如下方法进行导出。
+
+对于TensorFlow 1.15.x版本：
+
+```python
+import tensorflow as tf
+from tensorflow.python.framework import graph_io
+from tensorflow.python.keras.applications.inception_v3 import InceptionV3
+
+def freeze_graph(graph, session, output_nodes, output_folder: str):
+    """
+    Freeze graph for tf 1.x.x.
+
+    Args:
+        graph (tf.Graph): Graph instance.
+        session (tf.Session): Session instance.
+        output_nodes (list): Output nodes name.
+        output_folder (str): Output folder path for frozen model.
+
+    """
+    with graph.as_default():
+        graphdef_inf = tf.graph_util.remove_training_nodes(graph.as_graph_def())
+        graphdef_frozen = tf.graph_util.convert_variables_to_constants(session, graphdef_inf, output_nodes)
+        graph_io.write_graph(graphdef_frozen, output_folder, "frozen_model.pb", as_text=False)
+
+tf.keras.backend.set_learning_phase(0)
+
+keras_model = InceptionV3()
+session = tf.keras.backend.get_session()
+
+INPUT_NODES = [ipt.op.name for ipt in keras_model.inputs]
+OUTPUT_NODES = [opt.op.name for opt in keras_model.outputs]
+freeze_graph(session.graph, session, OUTPUT_NODES, "/home/user/xxx")
+print(f"Input nodes name: {INPUT_NODES}, output nodes name: {OUTPUT_NODES}")
+```
+
+对于TensorFlow 2.x.x版本：
+
+```python
+import tensorflow as tf
+from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
+
+
+def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name: str,
+                           output_folder: str):
+    """
+    Export keras model to frozen model.
+
+    Args:
+        keras_model (tensorflow.python.keras.models.Model):
+        model_name (str): Model name for the file name.
+        output_folder (str): Output folder for saving model.
+
+    """
+    full_model = tf.function(lambda x: keras_model(x))
+    full_model = full_model.get_concrete_function(
+        tf.TensorSpec(keras_model.inputs[0].shape, keras_model.inputs[0].dtype)
+    )
+
+    frozen_func = convert_variables_to_constants_v2(full_model)
+    frozen_func.graph.as_graph_def()
+
+    print(f"Model inputs: {frozen_func.inputs}")
+    print(f"Model outputs: {frozen_func.outputs}")
+
+    tf.io.write_graph(graph_or_graph_def=frozen_func.graph,
+                      logdir=output_folder,
+                      name=model_name,
+                      as_text=False)
+```
