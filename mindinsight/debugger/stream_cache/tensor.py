@@ -55,9 +55,33 @@ class BaseTensor(ABC):
         """If the tensor value is valid."""
         return self.value is None
 
-    @abstractmethod
     def get_tensor_serializable_value_by_shape(self, shape=None):
-        """Get tensor value by shape."""
+        """
+        Get tensor value info by shape.
+
+        Args:
+            shape (tuple): The specified range of tensor value.
+
+        Returns:
+            dict, the specified tensor value and value statistics.
+        """
+        tensor_value = self.get_tensor_value_by_shape(shape)
+        res = {}
+        # the type of tensor_value is one of None, np.ndarray or str
+        if isinstance(tensor_value, np.ndarray):
+            res['value'] = tensor_value.tolist()
+        else:
+            res['value'] = tensor_value
+        res['statistics'] = self.get_tensor_statistics()
+        return res
+
+    @abstractmethod
+    def get_tensor_value_by_shape(self, shape=None):
+        """Abstract method."""
+
+    @abstractmethod
+    def get_tensor_statistics(self):
+        """Abstract method."""
 
     def _to_dict(self):
         """Get tensor info in dict format."""
@@ -163,28 +187,6 @@ class OpTensor(BaseTensor):
             tensor_value = tensor_value.reshape(self.shape)
         return tensor_value
 
-    def get_tensor_serializable_value_by_shape(self, shape=None):
-        """
-        Get tensor value info by shape.
-
-        Args:
-            shape (tuple): The specified range of tensor value.
-
-        Returns:
-            dict, the specified tensor value and value statistics.
-        """
-        tensor_value = self.get_tensor_value_by_shape(shape)
-        res = {}
-        # the type of tensor_value is one of None, np.ndarray or str
-        if isinstance(tensor_value, np.ndarray):
-            res['value'] = tensor_value.tolist()
-        elif isinstance(tensor_value, str):
-            res['value'] = tensor_value
-        else:
-            res['value'] = None
-        res['statistics'] = self.get_tensor_statistics()
-        return res
-
     def get_tensor_statistics(self):
         """
         Get Tensor statistics.
@@ -245,6 +247,8 @@ class OpTensor(BaseTensor):
 
 class ConstTensor(BaseTensor):
     """Tensor data structure for Const Node."""
+    STRING_TYPE = 'DT_STRING'
+    BOOL_TYPE = 'DT_BOOL'
 
     def __init__(self, const_proto):
         # the type of const_proto is NamedValueProto
@@ -276,8 +280,7 @@ class ConstTensor(BaseTensor):
         """The property of tensor shape."""
         return self._value
 
-    @staticmethod
-    def generate_value_from_proto(tensor_proto):
+    def generate_value_from_proto(self, tensor_proto):
         """
         Generate tensor value from proto.
 
@@ -285,18 +288,43 @@ class ConstTensor(BaseTensor):
             tensor_proto (TensorProto): The tensor proto.
 
         Returns:
-            Union[None, np.ndarray], the value of the tensor.
+            Union[None, str, np.ndarray], the value of the tensor.
         """
         fields = tensor_proto.value.ListFields()
         if len(fields) != 2:
             log.warning("Unexpected const proto <%s>.\n Please check offline.", tensor_proto)
+        tensor_value = None
         for field_name, field_value in fields:
             if field_name != 'dtype':
-                return field_value
-        return None
+                tensor_value = field_value
+                break
+        if tensor_value and self.dtype != self.STRING_TYPE:
+            tensor_value = np.array(tensor_value, dtype=NUMPY_TYPE_MAP.get(self.dtype))
+        return tensor_value
 
-    def get_tensor_serializable_value_by_shape(self, shape=None):
-        """Get tensor info with value."""
-        if shape is not None:
+    def get_tensor_value_by_shape(self, shape=None):
+        """
+        Get tensor value by shape.
+
+        Args:
+            shape (tuple): The specified shape.
+
+        Returns:
+            Union[None, str, int, float], the value of parsed tensor.
+        """
+        if shape:
             log.warning("Invalid shape for const value.")
         return self._value
+
+    def get_tensor_statistics(self):
+        """
+        Get Tensor statistics.
+
+        Returns:
+            dict, overall statistics.
+        """
+        if self.empty or self.dtype == self.STRING_TYPE:
+            return {}
+        stats = TensorUtils.get_statistics_from_tensor(self.value)
+        statistics = TensorUtils.get_overall_statistic_dict(stats)
+        return statistics
