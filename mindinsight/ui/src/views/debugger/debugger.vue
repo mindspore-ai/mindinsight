@@ -101,7 +101,8 @@ limitations under the License.
                   :highlight-current="true"
                   ref="tree"
                   @check="check"
-                  :show-checkbox="!!curWatchPointId">
+                  :show-checkbox="!!curWatchPointId"
+                  :disabled="treeDisabled">
               <span class="custom-tree-node"
                     slot-scope="{ node ,data }">
                 <span :class="{const:data.type==='Const' && curWatchPointId}">
@@ -131,6 +132,7 @@ limitations under the License.
                   @node-click="handleNodeClick"
                   :show-checkbox="!!curWatchPointId"
                   @check="searchCheck"
+                  :disabled="treeDisabled"
                   ref="searchTree">
               <span class="custom-tree-node"
                     slot-scope="{ node ,data }">
@@ -777,6 +779,7 @@ export default {
         checked: 2,
         noCheckbox: -1,
       },
+      treeDisabled: false,
     };
   },
   components: {debuggerTensor, tree},
@@ -796,6 +799,11 @@ export default {
         }
         if (oldValue === 'running' && newValue === 'waiting') {
           this.getWatchpointHits();
+        }
+        if (newValue === 'running') {
+          this.treeDisabled = true;
+        } else {
+          this.treeDisabled = false;
         }
         if (newValue === 'pending') {
           this.dialogVisible = true;
