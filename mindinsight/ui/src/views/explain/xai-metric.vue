@@ -28,6 +28,10 @@ limitations under the License.
               <div class="tooltip-title">{{$t('metric.scoreSystemtooltipthree')}}</div>
               <div class="tooltip-content">{{$t('metric.scoreSystemtooltipfour')}}</div>
               <div class="tooltip-content">{{$t('metric.scoreSystemtooltipfive')}}</div>
+              <div class="tooltip-content">{{$t('metric.scoreSystemtooltipsix')}}</div>
+              <div class="tooltip-content">{{$t('metric.scoreSystemtooltipseven')}}</div><br />
+              <div class="tooltip-title">{{$t('metric.errorTipTitle')}}</div>
+              <div class="tooltip-content">{{$t('metric.errorTipText')}}</div>
             </div>
           </div>
           <i class="el-icon-info"></i>
@@ -395,12 +399,18 @@ export default {
         const tableData = [];
         const resData = res.explainer_scores[0].evaluations;
         let score = 0;
+        const fixNum = 6; // Number of digits to be added to the decimal place
 
         resData.forEach((item, index) => {
           const data = {};
           res.explainer_scores.forEach((v, i) => {
             data.metric = item.metric;
-            data[v.explainer] = v.evaluations[index].score;
+            const tempScore = v.evaluations[index].score;
+            if (!isNaN(tempScore) && tempScore.toString().indexOf('.') !== -1) {
+              data[v.explainer] = Number(tempScore).toFixed(fixNum);
+            } else {
+              data[v.explainer] = tempScore;
+            }
           });
 
           const resDataLength = resData.length;
@@ -468,8 +478,9 @@ export default {
         } else {
           if (this.resultShow) {
             sums[index] = 0;
+            const tableData = this.$refs.sortTable.tableData;
             values.forEach((value, i) => {
-              const tableData = this.$refs.sortTable.tableData;
+              value = isNaN(value) ? 0 : value;
               sums[index] += value * tableData[i].weight;
             });
             sums[index] = Math.floor(sums[index] * 100) / 100;
@@ -491,19 +502,19 @@ export default {
     floatAdd(arg1, arg2) {
       let r1;
       let r2;
-      let m=0;
+      let m = 0;
       try {
-        r1=arg1.toString().split('.')[1].length;
+        r1 = arg1.toString().split('.')[1].length;
       } catch (e) {
-        r1=0;
+        r1 = 0;
       }
       try {
-        r2=arg2.toString().split('.')[1].length;
+        r2 = arg2.toString().split('.')[1].length;
       } catch (e) {
-        r2=0;
+        r2 = 0;
       }
-      m=Math.pow(10, Math.max(r1, r2));
-      return (arg1*m+arg2*m)/m;
+      m = Math.pow(10, Math.max(r1, r2));
+      return (arg1 * m + arg2 * m) / m;
     },
 
     /**
@@ -564,7 +575,7 @@ export default {
           }
         }
       }
-      data.title=this.$t('metric.radarChart');
+      data.title = this.$t('metric.radarChart');
       this.propChartData = data;
     },
 
@@ -918,106 +929,104 @@ export default {
       }
     }
 
-      td.columnHover {
-        background: rgba(0, 165, 167, 0.05);
-      }
-
-      td.columnNoHover {
-        background: none;
-      }
+    td.columnHover {
+      background: rgba(0, 165, 167, 0.05);
     }
 
-    .image-noData {
-      // Set the width and white on the right.
-      width: 100%;
+    td.columnNoHover {
+      background: none;
+    }
+  }
+
+  .image-noData {
+    // Set the width and white on the right.
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    .noData-text {
+      margin-top: 33px;
+      font-size: 18px;
+    }
+  }
+
+  .classify-container {
+    height: 100%;
+
+    .left-item {
+      padding-right: 10px;
+    }
+    .right-itemm {
+      padding-left: 10px;
+    }
+    .half-item {
+      width: 50%;
+      float: left;
       height: 100%;
+      overflow: hidden;
       display: flex;
-      justify-content: center;
-      align-items: center;
       flex-direction: column;
-      .noData-text {
-        margin-top: 33px;
-        font-size: 18px;
-      }
-    }
-
-    .classify-container {
-      height: 100%;
-
-      .left-item {
-        padding-right: 10px;
-      }
-      .right-itemm {
-        padding-left: 10px;
-      }
-      .half-item {
-        width: 50%;
-        float: left;
-        height: 100%;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        .operate-container {
-          width: 100%;
-          .container-name {
-            font-size: 16px;
-            font-weight: 700;
-            padding: 15px 0px;
-          }
-          .select-see {
-            padding-bottom: 10px;
-          }
-          .see-methods {
-            font-size: 13px;
-            // font-weight: bold;
-          }
-          .select-name {
-            display: inline-block;
-            padding-right: 10px;
-          }
-        }
-        .chart-container {
-          flex: 1;
-          overflow: hidden;
-        }
-        .methods-show {
-          padding: 10px 0px;
-        }
-      }
-    }
-
-    .classify {
-      border-right: solid 1px #ddd;
-    }
-    .slectMethod {
-      color: darkmagenta;
-    }
-
-    .el-select {
-      height: 32px;
-      width: 217px;
-    }
-    .el-input__inner {
-      height: 32px;
-      line-height: 32px;
-      padding: 0px 15px;
-    }
-  }
-  .el-tooltip__popper {
-    .tooltip-container {
-      word-break: normal;
-      .tooltip-style {
-        .tooltip-title {
+      .operate-container {
+        width: 100%;
+        .container-name {
           font-size: 16px;
-          font-weight: bold;
-          color: #333333;
+          font-weight: 700;
+          padding: 15px 0px;
         }
-        .tooltip-content {
-          line-height: 20px;
-          word-break: normal;
+        .select-see {
+          padding-bottom: 10px;
         }
+        .see-methods {
+          font-size: 13px;
+        }
+        .select-name {
+          display: inline-block;
+          padding-right: 10px;
+        }
+      }
+      .chart-container {
+        flex: 1;
+        overflow: hidden;
+      }
+      .methods-show {
+        padding: 10px 0px;
       }
     }
   }
 
+  .classify {
+    border-right: solid 1px #ddd;
+  }
+  .slectMethod {
+    color: darkmagenta;
+  }
+
+  .el-select {
+    height: 32px;
+    width: 217px;
+  }
+  .el-input__inner {
+    height: 32px;
+    line-height: 32px;
+    padding: 0px 15px;
+  }
+}
+.el-tooltip__popper {
+  .tooltip-container {
+    word-break: normal;
+    .tooltip-style {
+      .tooltip-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #333333;
+      }
+      .tooltip-content {
+        line-height: 20px;
+        word-break: normal;
+      }
+    }
+  }
+}
 </style>

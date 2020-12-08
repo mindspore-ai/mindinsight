@@ -793,7 +793,11 @@
     "scoreSystemtooltiptwo": "评分体系提供多个维度对解释方法进行评分。",
     "scoreSystemtooltipthree": "评分维度：",
     "scoreSystemtooltipfour": "  -Faithfulness: 该维度评估解释结果对模型的忠实度，即显著图是否正确反映模型分类依据。给定显著图，按照一定规则（如从亮到暗）对原始图像中的相应位置进行修改，将修改后的图像传给模型依次进行推理，如果显著图越亮的区域对选定标签影响越大，则解释结果忠实度越高；反之，解释结果可能无法反映模型的推理依据。当前有三种主流方案度量解释的faithfulness：Naive Faithfulness，Insertion AUC，Deletion AUC。",
-    "scoreSystemtooltipfive": "  -Localization: 该维度借助数据集的bounding box对显著图高亮区域的定位准确性进行评估，选定一组目标和相关标签，如果解释方法准确高亮了图像中和选定标签相关的区域，高亮区域和选定目标的bounding box应当有较大重合度。Localization通过评估高亮区域和bounding box的重合度，对解释结果的定位能力进行评估。"
+    "scoreSystemtooltipfive": "  -Localization: 该维度借助数据集的bounding box对显著图高亮区域的定位准确性进行评估，选定一组目标和相关标签，如果解释方法准确高亮了图像中和选定标签相关的区域，高亮区域和选定目标的bounding box应当有较大重合度。Localization通过评估高亮区域和bounding box的重合度，对解释结果的定位能力进行评估。",
+    "scoreSystemtooltipsix": "-ClassSensitivity：该维度通过比较置信度最大和最小标签的显著图相关性，对显著图的标签敏感度进行评估，模型对不同标签的推理依据应该有区别，合理的解释方法应该为不同的标签输出不同的显著图。ClassSensitivity通过计算最大和最小置信度标签的显著图的相关系数，评估解释结果的标签敏感度。",
+    "scoreSystemtooltipseven":"-Robustness: 该维度对解释方法的鲁棒性进行评估，即在原始图像中加入少量噪声时，显著图的变化程度。当原始图像加入少量噪声但不影响推理结果的情况下，如果显著图几乎没有变化，则解释方法的鲁棒性越强，解释结果越稳定。",
+    "errorTipTitle": "异常场景：",
+    "errorTipText": "出现NaN时，请查看运行日志。"
   },
   "error": {
     "50540000": "系统错误",

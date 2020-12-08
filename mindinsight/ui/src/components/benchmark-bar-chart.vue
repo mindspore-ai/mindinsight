@@ -64,8 +64,15 @@ export default {
       const self = this;
       self.option.series = [];
       let totalCount = 0;
+      const highligntDic = {};
 
       for (let i = 0; i < self.barData.series.length; i++) {
+        const tempValues = self.barData.series[i].values;
+        for (let j = 0; j < tempValues.length; j++) {
+          if (isNaN(tempValues[j])) {
+            highligntDic[j] = true;
+          }
+        }
         self.option.series.push({
           name: self.barData.series[i].name,
           type: 'bar',
@@ -90,7 +97,19 @@ export default {
       }
 
       self.option.legend.data = self.barData.legend;
-      self.option.yAxis.data = self.barData.yAxis;
+      const tempYaxisData = self.barData.yAxis.concat([]);
+      const highligntArr = Object.keys(highligntDic);
+      highligntArr.forEach((index) => {
+        if (tempYaxisData[index]) {
+          tempYaxisData[index] = {
+            value: tempYaxisData[index],
+            textStyle: {
+              color: '#f00',
+            },
+          };
+        }
+      });
+      self.option.yAxis.data = tempYaxisData;
 
       // Charting
       if (self.echartInstance) {
@@ -115,6 +134,20 @@ export default {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow',
+          },
+          formatter(params) {
+            const colon = self.$t('symbols.colon');
+            let tipStr = '';
+            if (params.length) {
+              tipStr += `<div>${params[0].name}</div>`;
+              params.forEach((param) => {
+                tipStr += `<div><span style="border-radius:50%;width:10px;height:10px;vertical-align:middle;` +
+                `margin-right:5px;background-color:${param.color};display:inline-block;">` +
+                `</span>${param.seriesName}${colon}<span>` +
+                `</span>${param.value}<span></span></div>`;
+              });
+            }
+            return tipStr;
           },
         },
         legend: {
