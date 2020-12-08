@@ -9,8 +9,8 @@
     "i18n:report": "vue-cli-service i18n:report --src './src/**/*.?(js|vue)' --locales './src/locales/**/*.json'"
   },
   "dependencies": {
-    "axios": "0.18.1",
-    "core-js": "3.3.2",
+    "axios": "0.19.2",
+    "core-js": "3.6.5",
     "d3": "5.9.7",
     "d3-graphviz": "3.0.4",
     "element-ui": "2.11.1",
