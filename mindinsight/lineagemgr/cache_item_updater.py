@@ -29,7 +29,7 @@ def update_lineage_object(data_manager, train_id, added_info: dict):
     validate_added_info(added_info)
     cache_item = data_manager.get_brief_train_job(train_id)
     lineage_item = cache_item.get(key=LINEAGE, raise_exception=False)
-    if lineage_item is None:
+    if lineage_item is None or lineage_item.super_lineage_obj is None:
         logger.warning("Cannot update the lineage for tran job %s, because it does not exist.", train_id)
         raise ParamValueError("Cannot update the lineage for tran job %s, because it does not exist." % train_id)
 
@@ -61,11 +61,6 @@ class LineageCacheItemUpdater(BaseCacheItemUpdater):
             lineage_parser = self._lineage_parsing(cache_item)
         except LineageFileNotFoundError:
             self._delete_lineage_in_cache(cache_item, LINEAGE, relative_path)
-            return
-
-        super_lineage_obj = lineage_parser.super_lineage_obj
-        if super_lineage_obj is None:
-            logger.debug("There is no lineage to update in train job %s.", relative_path)
             return
 
         cache_item.set(key=LINEAGE, value=lineage_parser)
