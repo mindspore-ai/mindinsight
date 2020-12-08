@@ -109,3 +109,29 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
             log.error(str(error))
             log.exception(error)
             raise error
+
+
+def lib_version_satisfied(current_ver: str, mini_ver_limited: str,
+                          newest_ver_limited: str = ""):
+    """
+    Check python lib version whether is satisfied.
+
+    Notes:
+        Version number must be format of x.x.x, e.g. 1.1.0.
+
+    Args:
+        current_ver (str): Current lib version.
+        mini_ver_limited (str): Mini lib version.
+        newest_ver_limited (str): Newest lib version.
+
+    Returns:
+        bool, true or false.
+    """
+    required_version_number_len = 3
+    if len(list(current_ver.split("."))) != required_version_number_len or \
+            len(list(mini_ver_limited.split("."))) != required_version_number_len or \
+            (newest_ver_limited and len(newest_ver_limited.split(".")) != required_version_number_len):
+        raise ValueError("Version number must be format of x.x.x.")
+    if current_ver < mini_ver_limited or (newest_ver_limited and current_ver > newest_ver_limited):
+        return False
+    return True
