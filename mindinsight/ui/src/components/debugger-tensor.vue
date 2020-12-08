@@ -30,21 +30,13 @@ limitations under the License.
             <div class="detection-judgment">
               <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
               <span>{{ $t('symbols.colon') }}</span>
-              <span>{{ getFormateName(item.condition) }}</span>
+              <span>{{ $parent.transCondition(item.condition) }}</span>
             </div>
             <div class="reason"
                  v-for="(ele,key) in item.params"
                  :key="key">
               <div class="tensor-icon icon-secondary"></div>
-              <div class="tensor-content">
-                <span>{{ getFormateName(ele.name) }}</span>
-                <span>
-                  {{ $t('symbols.leftbracket') }}{{ $t('debugger.setValue') }}{{ $t('symbols.colon') }}{{ele.value}}
-                </span>
-                <span>
-                  {{ele.actual}}
-                </span>
-              </div>
+              <div class="tensor-content">{{ele.content}}</div>
             </div>
             <div class="hit-tip"
                  v-if="item.tip">
@@ -207,7 +199,12 @@ limitations under the License.
           </span>
         </div>
         <div id="tensor-graph"
-             class="deb-graph"></div>
+             class="deb-graph"
+             v-if="graphShow"></div>
+        <div class="nodata"
+             v-else-if="!graphShow">
+          {{ $t('public.noData') }}
+        </div>
         <div class="deb-tensor-info">
           <div class="tensor">
             <div class="tensor-title">{{$t('debugger.tensorMsg')}}</div>
@@ -236,9 +233,7 @@ limitations under the License.
                 <div class="watch-judgment">
                   <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
                   <span>{{ $t('symbols.colon') }}</span>
-                  <span>
-                    {{ getFormateWatchPoint(item) }}
-                  </span>
+                  <span>{{ getFormateWatchPoint(item) }}</span>
                 </div>
               </div>
             </div>
@@ -265,6 +260,7 @@ export default {
       type: Object,
       default: () => {},
     },
+    formateWatchpointParams: Function,
   },
   data() {
     return {
@@ -296,6 +292,20 @@ export default {
       tuningAdviceTitle: '',
       watchPoints: [],
       callbackFun: null,
+      graphShow: true,
+      statisticsKeys: [
+        'name',
+        'overall_avg',
+        'overall_count',
+        'overall_max',
+        'overall_min',
+        'overall_nan_count',
+        'overall_neg_inf_count',
+        'overall_neg_zero_count',
+        'overall_pos_inf_count',
+        'overall_pos_zero_count',
+        'overall_zero_count',
+      ],
     };
   },
   computed: {
@@ -329,7 +339,8 @@ export default {
       };
       RequestService.getTensorGraphData(params).then(
           (res) => {
-            if (res && res.data && res.data.graph && res.data.graph.nodes) {
+            if (res && res.data && res.data.graph && res.data.graph.nodes && res.data.graph.nodes.length) {
+              this.graphShow = true;
               const nodes = JSON.parse(JSON.stringify(res.data.graph.nodes));
               this.tensorGraphData = {};
               nodes.forEach((node) => {
@@ -356,9 +367,20 @@ export default {
                   this.setNodeData();
                 }
               }
+            } else {
+              this.graphShow = false;
+              this.rightDataShow = false;
+              this.statisticsKeys.forEach((key) => {
+                this.statistics[key] = '--';
+              });
             }
           },
-          (err) => {},
+          (err) => {
+            this.graphShow = false;
+            this.statisticsKeys.forEach((key) => {
+              this.statistics[key] = '--';
+            });
+          },
       );
     },
     updateGraphData(graphName, tensorName) {
@@ -391,24 +413,17 @@ export default {
                     : '',
                 };
               });
+
+              const tensorAdvice = this.$t(`debugger.tensorTuningAdvice`);
               this.tensorList.forEach((item) => {
-                const tuning = item.condition;
-                const adviceData = this.$t(`debugger.tensorTuningAdvice`)[tuning];
-                if (adviceData === undefined) {
+                const tuning = tensorAdvice[item.condition];
+                if (!tuning) {
                   item.tuningAdviceTitle = this.$t(`debugger.noAdvice`);
                 } else {
-                  item.tuningAdviceTitle = this.$t(`debugger.tensorTuningAdvice`)[tuning][1];
-                  item.tuningAdvice = this.$t(`debugger.tensorTuningAdvice`)[tuning][2];
+                  item.tuningAdviceTitle = tuning[1];
+                  item.tuningAdvice = tuning[2];
                 }
-                item.params.forEach((element) => {
-                  if (element.actual_value === undefined || element.actual_value === null) {
-                    element.actual = this.$t('symbols.rightbracket');
-                  } else {
-                    element.actual = `, ${this.$t('debugger.actualValue')}${this.$t('symbols.colon')}${
-                      element.actual_value
-                    }${this.$t('symbols.rightbracket')}`;
-                  }
-                });
+                this.formateWatchpointParams(item.params);
               });
             } else {
               this.leftDataShow = false;
@@ -420,33 +435,13 @@ export default {
           },
       );
     },
-    getFormateName(watchName) {
-      const name = this.$parent.transCondition(watchName);
-      return name;
-    },
     getFormateWatchPoint(item) {
       let param = '';
-      if (item.params.length) {
-        item.params.forEach((i, ind) => {
-          const name = this.$parent.transCondition(i.name);
-          const actual =
-            i.actual_value === undefined || i.actual_value === null
-              ? ''
-              : `, ${this.$t('debugger.actualValue')}:${i.actual_value}`;
-          if (!ind) {
-            param += `${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${
-              i.value
-            }${actual}${this.$t('symbols.rightbracket')}`;
-          } else {
-            param += `, ${name}${this.$t('symbols.leftbracket')}${this.$t('debugger.setValue')}:${
-              i.value
-            }${actual}${this.$t('symbols.rightbracket')}`;
-          }
-        });
-        param = `(${param})`;
+      if (item.params && item.params.length) {
+        this.formateWatchpointParams(item.params);
+        param = item.params.map((i) => i.content).join('; ');
       }
-      const str = `${this.$parent.transCondition(item.condition)} ${param}`;
-      return str;
+      return `${this.$parent.transCondition(item.condition)} (${param})`;
     },
     packageData() {
       let nodeStr = '';
@@ -742,22 +737,9 @@ export default {
       d3.selectAll('#tensor-graph .edge').classed('selected', false);
       this.selectedNode = JSON.parse(JSON.stringify(this.tensorGraphData[this.selectedNode.name]));
 
-      const keys = [
-        'name',
-        'overall_avg',
-        'overall_count',
-        'overall_max',
-        'overall_min',
-        'overall_nan_count',
-        'overall_neg_inf_count',
-        'overall_neg_zero_count',
-        'overall_pos_inf_count',
-        'overall_pos_zero_count',
-        'overall_zero_count',
-      ];
       if (this.selectedNode.type === 'slot') {
         if (!(this.selectedNode.statistics && Object.keys(this.selectedNode.statistics).length)) {
-          keys.forEach((key) => {
+          this.statisticsKeys.forEach((key) => {
             this.statistics[key] = '--';
           });
         } else {
@@ -779,7 +761,7 @@ export default {
           this.rightDataShow = false;
         }
       } else {
-        keys.forEach((key) => {
+        this.statisticsKeys.forEach((key) => {
           this.statistics[key] = '--';
         });
         this.rightDataShow = false;
@@ -1337,6 +1319,11 @@ export default {
           margin-left: 10px;
           cursor: pointer;
         }
+      }
+      .nodata {
+        width: calc(100% - 375px);
+        text-align: center;
+        margin-top: 120px;
       }
       .deb-graph {
         width: calc(100% - 375px);
