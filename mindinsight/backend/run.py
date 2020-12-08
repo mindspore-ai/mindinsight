@@ -232,25 +232,6 @@ class GunicornLogger(Logger):
         """Rewrite the setup method of Logger, and we don't need to do anything"""
 
 
-def _get_all_ip_addresses(host):
-    """Get all the accessible IP address."""
-
-    yield host
-    if host == '127.0.0.1':
-        return
-    # The format of the environment variable SSH_CONNECTION is:
-    #     '<client_ip> <client_port> <server_ip> <server_port>'
-    connection = os.getenv('SSH_CONNECTION', '')
-    if len(connection) > 128:
-        # The length should be less than 128 bytes, or the variable may be corruped.
-        # And 128 bytes should be enough to hold two IPs and two ports.
-        return
-    connection = connection.split()
-    if len(connection) == 4 and connection[2] != host:
-        # 'connection' should hold 4 components and '<server_ip>' should be in index 2.
-        yield connection[2]
-
-
 def start():
     """Start web service."""
     gunicorn_conf_file = os.path.join(WEB_CONFIG_DIR, "gunicorn_conf.py")
@@ -296,10 +277,8 @@ def start():
         state_result = _check_server_start_stat(error_log_abspath, log_size)
         # print gunicorn start state to stdout
         label = 'Web address:'
-        for ip in _get_all_ip_addresses(settings.HOST):
-            format_args = label, ip, str(settings.PORT), settings.URL_PATH_PREFIX
-            console.info('%s http://%s:%s%s', *format_args)
-            label = '.' * len(label)
+        format_args = label, settings.HOST, str(settings.PORT), settings.URL_PATH_PREFIX
+        console.info('%s http://%s:%s%s', *format_args)
         for line in state_result["prompt_message"]:
             console.info(line)
         if state_result["state"] == ServerStateEnum.FAILED.value:
