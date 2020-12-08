@@ -59,7 +59,7 @@ def _wrap_reply(func, *args, **kwargs):
     return jsonify(reply)
 
 
-@BLUEPRINT.route("/debugger/poll_data", methods=["GET"])
+@BLUEPRINT.route("/debugger/poll-data", methods=["GET"])
 def poll_data():
     """
     Wait for data to be updated on UI.
@@ -70,7 +70,7 @@ def poll_data():
         str, the updated data.
 
     Examples:
-        >>> Get http://xxxx/v1/mindinsight/debugger/poll_data?pos=xx
+        >>> Get http://xxxx/v1/mindinsight/debugger/poll-data?pos=xx
     """
     pos = request.args.get('pos')
 
@@ -160,7 +160,7 @@ def retrieve():
     return reply
 
 
-@BLUEPRINT.route("/debugger/retrieve_tensor_history", methods=["POST"])
+@BLUEPRINT.route("/debugger/tensor-history", methods=["POST"])
 def retrieve_tensor_history():
     """
     Retrieve data according to mode and params.
@@ -169,7 +169,7 @@ def retrieve_tensor_history():
         str, the required data.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/debugger/retrieve_tensor_history
+        >>> POST http://xxxx/v1/mindinsight/debugger/tensor-history
     """
     body = _read_post_request(request)
     name = body.get('name')
@@ -199,7 +199,7 @@ def retrieve_tensor_value():
     return reply
 
 
-@BLUEPRINT.route("/debugger/create_watchpoint", methods=["POST"])
+@BLUEPRINT.route("/debugger/create-watchpoint", methods=["POST"])
 def create_watchpoint():
     """
     Create watchpoint.
@@ -211,7 +211,7 @@ def create_watchpoint():
         MindInsightException: If method fails to be called.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/debugger/create_watchpoint
+        >>> POST http://xxxx/v1/mindinsight/debugger/create-watchpoint
     """
     params = _read_post_request(request)
     params['watch_condition'] = params.pop('condition', None)
@@ -219,7 +219,7 @@ def create_watchpoint():
     return reply
 
 
-@BLUEPRINT.route("/debugger/update_watchpoint", methods=["POST"])
+@BLUEPRINT.route("/debugger/update-watchpoint", methods=["POST"])
 def update_watchpoint():
     """
     Update watchpoint.
@@ -231,14 +231,14 @@ def update_watchpoint():
         MindInsightException: If method fails to be called.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/debugger/update_watchpoint
+        >>> POST http://xxxx/v1/mindinsight/debugger/update-watchpoint
     """
     params = _read_post_request(request)
     reply = _wrap_reply(BACKEND_SERVER.update_watchpoint, params)
     return reply
 
 
-@BLUEPRINT.route("/debugger/delete_watchpoint", methods=["POST"])
+@BLUEPRINT.route("/debugger/delete-watchpoint", methods=["POST"])
 def delete_watchpoint():
     """
     delete watchpoint.
@@ -250,7 +250,7 @@ def delete_watchpoint():
         MindInsightException: If method fails to be called.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/debugger/delete_watchpoint
+        >>> POST http://xxxx/v1/mindinsight/debugger/delete-watchpoint
     """
     body = _read_post_request(request)
 

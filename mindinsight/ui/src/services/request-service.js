@@ -312,7 +312,7 @@ export default {
   pollData(params) {
     return axios({
       method: 'get',
-      url: 'v1/mindinsight/debugger/poll_data',
+      url: 'v1/mindinsight/debugger/poll-data',
       params: params,
       headers: {
         ignoreError: true,
@@ -329,21 +329,21 @@ export default {
   createWatchpoint(params) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/create_watchpoint',
+      url: 'v1/mindinsight/debugger/create-watchpoint',
       data: params,
     });
   },
   updateWatchpoint(params) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/update_watchpoint',
+      url: 'v1/mindinsight/debugger/update-watchpoint',
       data: params,
     });
   },
   deleteWatchpoint(params) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/delete_watchpoint',
+      url: 'v1/mindinsight/debugger/delete-watchpoint',
       data: params,
     });
   },
@@ -385,7 +385,7 @@ export default {
   retrieveTensorHistory(params) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/retrieve_tensor_history',
+      url: 'v1/mindinsight/debugger/tensor-history',
       data: params,
     });
   },
