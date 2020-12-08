@@ -151,7 +151,7 @@ class OnnxGraph(Graph):
             input_shape (tuple): Input shape.
         """
         input_node = InputNode(input_shape)
-        input_node_name = "{}InputNode"
+        input_node_name = self._raw_input_nodes.replace(":0", "")
         for node_name, node in self._nodes_collection.items():
             if node_name in self._input_nodes:
                 ipt_nd_name = input_node_name.format(input_node.scope_name)

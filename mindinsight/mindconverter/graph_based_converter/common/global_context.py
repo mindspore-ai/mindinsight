@@ -40,8 +40,10 @@ class GlobalContext(metaclass=Singleton):
         # Define data stored from onnx_utils
         # Key as Onnx Name
         self._onnx_nodes_collection = OrderedDict()
-        # key is topo_idx, value is onnx_node_name.
+        # key is topo_idx, value is onnx_node_name
         self._onnx_nodes_topo_index = dict()
+        self.onnx_node_name_to_topo_idx = dict()
+        self.onnx_node_inputs = dict()
         self._onnx_tensors_collection = dict()
 
         # Define data stored from generator
@@ -50,7 +52,7 @@ class GlobalContext(metaclass=Singleton):
         self.node_struct_adder_counter = 0
         # Define onnx_utils <---> generator mapping
         self.node_struct_to_onnx_node_map = dict()
-        self.onnx_node_to_node_struct_map = dict()
+        self.onnx_node_name_to_node_struct_map = dict()
 
         # Define Module pattern to customize name mapping
         self.module_customized_name = dict()
@@ -59,6 +61,8 @@ class GlobalContext(metaclass=Singleton):
         self.node_fragments = OrderedDict()
         self.module_fragments = OrderedDict()
 
+        # Define Known module mapping
+        self.known_module_name = dict()
         # Define Structs
         # key is pattern_id, value is [ModuleStructs]
         self.module_structs = dict()
@@ -83,7 +87,7 @@ class GlobalContext(metaclass=Singleton):
 
     def get_identifier_from_onnx_node_name(self, node_name):
         """Return the node identifier by Onnx Node name."""
-        identifier = self.onnx_node_to_node_struct_map.get(node_name)
+        identifier = self.onnx_node_name_to_node_struct_map.get(node_name)
         return identifier
 
     @property
@@ -98,9 +102,7 @@ class GlobalContext(metaclass=Singleton):
 
     @onnx_nodes_collection.setter
     def onnx_nodes_collection(self, arg):
-        """
-        Set the onnx nodes collection.
-        """
+        """Set the onnx nodes collection."""
         if isinstance(arg, OrderedDict):
             self._onnx_nodes_collection = arg  # arg must be nodes_dict in OnnxDataLoader
         else:
@@ -108,11 +110,18 @@ class GlobalContext(metaclass=Singleton):
 
     @property
     def onnx_nodes_topo_index(self) -> dict:
-        "Return the onnx nodes and topological index."
+        """Return the onnx nodes and topological index."""
         return self._onnx_nodes_topo_index
 
     @onnx_nodes_topo_index.setter
     def onnx_nodes_topo_index(self, index_list):
+        """
+        Set the onnx nodes and topological index.
+
+        Args:
+            index_list (list[tuple[int, str]]): a list of tuple contains the topological index and onnx node name.
+
+        """
         if not isinstance(index_list, list):
             raise TypeError("The argument index_list must be a list of tuple (index, onnx_node_name).")
         if not isinstance(index_list[0], tuple):
@@ -122,10 +131,17 @@ class GlobalContext(metaclass=Singleton):
 
     @property
     def onnx_tensors_collection(self):
+        """Return the onnx tensors collection."""
         return self.onnx_tensors_collection
 
     @onnx_tensors_collection.setter
     def onnx_tensors_collection(self, arg):
+        """
+        Set the onnx tensors collection by OnnxDataLoader.
+
+        Args:
+            arg (dict): The OnnxDataLoader generated tensors_dict.
+        """
         if isinstance(arg, dict):
             self._onnx_tensors_collection = arg  # arg must be tensors_dict in OnnxDataLoader
         else:
@@ -133,6 +149,12 @@ class GlobalContext(metaclass=Singleton):
 
     @property
     def latest_node_struct_count(self):
+        """
+        Return the latest node struct count.
+
+        Note:
+            The counter will increase by 1 to tracking the number of nodes added.
+        """
         ret = self.node_struct_adder_counter
         self.node_struct_adder_counter += 1
         return ret
@@ -184,18 +206,29 @@ class GlobalContext(metaclass=Singleton):
         self.module_customized_name[pattern_id] = customized_name
 
     def get_node_fragment(self, identifier):
+        """Return the node fragment by identifier."""
         return self.node_fragments.get(identifier)
 
     def add_code_fragment(self, identifier, frag):
+        """Add the node fragment by identifier."""
         self.node_fragments[identifier] = frag
 
     def get_module_fragment(self, identifier):
+        """Return the module fragment by identifier."""
         return self.module_fragments.get(identifier)
 
     def add_module_fragment(self, identifier, frag):
+        """Add the module fragment by identifier."""
         self.module_fragments[identifier] = frag
 
     def add_module_struct(self, pattern_id, module_struct):
+        """
+        Add module struct by its pattern_id.
+
+        Args:
+            pattern_id (int): The pattern which represents the structure of the module.
+            module_struct (ModuleStruct): The ModuleStruct instance.
+        """
         if self.module_structs.get(pattern_id) is None:
             self.module_structs[pattern_id] = [module_struct]
         else:

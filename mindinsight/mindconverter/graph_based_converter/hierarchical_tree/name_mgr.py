@@ -106,3 +106,51 @@ class GlobalVarNameMgr:
 
         global_var_namespace.add(new_name)
         return new_name
+
+
+class LocalVarNameMgr:
+    """Local variable name mgr."""
+
+    def __init__(self):
+        self.local_op_namespace = dict()
+        self.local_var_namespace = set()
+
+    @staticmethod
+    def _get_name(name):
+        """Deal with op name."""
+        if "::" in name:
+            return name.split("::")[1]
+        return name
+
+    def get_name(self, op_type):
+        """
+        Get module/variable name.
+
+        If the module already existed, then add a suffix to it.
+
+        conv1 onnx::conv
+
+        Args:
+            op_type (str): Operator type in onnx.
+
+        Returns:
+            str, module name.
+        """
+
+        def _gen(t):
+            t = t.lower()
+            if t not in self.local_op_namespace:
+                self.local_op_namespace[t] = START_IDX
+                suffix = ""
+            else:
+                self.local_op_namespace[t] += 1
+                suffix = f"{self.local_op_namespace[t] - 1}"
+
+            return f"{self._get_name(t)}{suffix}"
+
+        new_name = _gen(op_type)
+        while new_name in self.local_var_namespace:
+            new_name = _gen(op_type)
+
+        self.local_var_namespace.add(new_name)
+        return new_name
