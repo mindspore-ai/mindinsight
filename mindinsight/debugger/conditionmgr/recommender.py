@@ -386,7 +386,8 @@ def _merge_nodes(leaf_nodes, graph):
     logger.debug("merged_watch_nodes: %s", merged_watch_nodes)
     out_nodes = []
     for node_info in merged_watch_nodes:
-        node_basic_info = NodeBasicInfo(name=node_info["name"], full_name=node_info["name"], type=node_info["type"])
+        full_name = graph.get_full_name_by_node_name(node_info["name"])
+        node_basic_info = NodeBasicInfo(name=node_info["name"], full_name=full_name, type=node_info["type"])
         out_nodes.append(node_basic_info)
     logger.debug("out_nodes: %s", out_nodes)
     return out_nodes
@@ -400,7 +401,7 @@ def _add_graph_name(nodes, graph_stream):
     output_nodes = []
     for node in nodes:
         node_basic_info = graph_stream.construct_node_basic_info(
-            full_name=node.name, graph_name=graph_name, node_name=node.name, node_type=node.type)
+            full_name=node.full_name, graph_name=graph_name, node_name=node.name, node_type=node.type)
         output_nodes.append(node_basic_info)
     return output_nodes
 
