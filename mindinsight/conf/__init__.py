@@ -110,16 +110,6 @@ class Settings:
             setattr(self, setting, value)
             self._explicit_settings.add(setting)
 
-    def config_workspace(self, workspace):
-        """
-        Config workspace value.
-
-        Args:
-            workspace (str): Path of workspace.
-        """
-        setattr(self, 'WORKSPACE', workspace)
-        self._explicit_settings.add('WORKSPACE')
-
     def is_overridden(self, setting_name):
         """
         Check if specified setting is overridden.

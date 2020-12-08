@@ -56,7 +56,6 @@ class Command(BaseCommand):
     description = 'stop mindinsight service'
 
     cmd_regex = 'mindinsight.backend.application:APP'
-    access_log_path = os.path.join('gunicorn', 'access.{}.log'.format(settings.PORT))
 
     def add_arguments(self, parser):
         """
@@ -84,8 +83,11 @@ class Command(BaseCommand):
             args.port = settings.PORT
 
         pid, workspace = self.get_process(args.port)
-        settings.config_workspace(workspace)
         setattr(args, 'pid', pid)
+
+        os.environ['MINDINSIGHT_PORT'] = str(args.port)
+        os.environ['MINDINSIGHT_WORKSPACE'] = workspace
+        settings.refresh()
 
     def run(self, args):
         """
@@ -164,9 +166,10 @@ class Command(BaseCommand):
 
             pid = gunicorn_master_process.pid
 
+            access_log_path = os.path.join('gunicorn', 'access.{}.log'.format(port))
             for open_file in process.open_files():
-                if open_file.path.endswith(self.access_log_path):
-                    log_base_dir = open_file.path[:-len(self.access_log_path)]
+                if open_file.path.endswith(access_log_path):
+                    log_base_dir = open_file.path[:-len(access_log_path)]
                     workspace = os.path.realpath(os.path.join(log_base_dir, os.pardir))
                     break
             break
