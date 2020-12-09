@@ -25,7 +25,9 @@ class TFGraphParser(GraphParser):
     """Define TF graph parser."""
 
     @classmethod
-    @ModelNotSupport.check_except_tf("Error occurs in loading model, make sure model.pb correct.")
+    @ModelNotSupport.check_except(
+        "Error occurs in loading model, please check your model or runtime environment integrity."
+    )
     def parse(cls, model_path: str, **kwargs):
         """
         Parse TF Computational Graph File (.pb)
@@ -36,7 +38,6 @@ class TFGraphParser(GraphParser):
         Returns:
             object, ONNX model.
         """
-
         onnx_utils = import_module(
             "mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils")
         convert_tf_graph_to_onnx = getattr(onnx_utils, "convert_tf_graph_to_onnx")
@@ -50,6 +51,5 @@ class TFGraphParser(GraphParser):
 
         model = convert_tf_graph_to_onnx(model_path,
                                          model_inputs=tf_input_nodes,
-                                         model_outputs=tf_output_nodes,
-                                         )
+                                         model_outputs=tf_output_nodes)
         return model

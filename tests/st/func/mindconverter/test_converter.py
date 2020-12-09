@@ -21,13 +21,10 @@ Usage:
 """
 import difflib
 import os
-import re
 import sys
-
 import pytest
 
 from mindinsight.mindconverter.converter import main
-from mindinsight.mindconverter.graph_based_converter.framework import main_graph_base_converter
 
 
 @pytest.mark.usefixtures('create_output_dir')
@@ -82,35 +79,3 @@ class TestConverter:
 
         converted_ratio = 100 - (diff_lines * 100) / (len(expect_source))
         assert converted_ratio >= 80
-
-    @pytest.mark.level0
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.env_single
-    def test_main_graph_based_converter(self, output):
-        """Test main graph based converter."""
-        pytorch_filename = "resnet50.pth"
-        expected_model_filename = "resnet50.py"
-        expected_report_filename = "report_of_resnet50.txt"
-        file_config = {
-            'model_file': os.path.join(self.pytorch_dir, pytorch_filename),
-            'shape': (1, 3, 224, 224),
-            'outfile_dir': output,
-            'report_dir': output
-        }
-        with pytest.raises(ValueError) as e:
-            main_graph_base_converter(file_config=file_config)
-
-            assert os.path.isfile(os.path.join(output, expected_model_filename))
-            assert os.path.isfile(os.path.join(output, expected_report_filename))
-
-            with open(os.path.join(output, expected_report_filename)) as converted_r:
-                converted_report = converted_r.readlines()
-                converted_rate = re.findall(r".*(?:Converted Rate: )(.*)[.]", converted_report[-1])
-
-            assert converted_rate[0] == '100.00%'
-
-        exec_msg = e.value.args[0]
-        assert exec_msg == "torch.__spec__ is None"

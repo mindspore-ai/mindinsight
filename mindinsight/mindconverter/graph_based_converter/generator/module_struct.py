@@ -541,7 +541,7 @@ class ModuleStruct:
             for output in output_list:
                 (provider_succ, provider_closet_opt_var) = output
                 if provider_closet_opt_var in struct.matched_inputs:
-                    continue # skip repeat
+                    continue  # skip repeat
                 if provider_succ == struct.onnx_name:
                     struct.matched_inputs.append(provider_closet_opt_var)
 
@@ -695,20 +695,5 @@ class ModuleStruct:
         """Register submodule outputs to this module's return."""
         submodule_returns = md_struct.get_returned_opt_var_name()
         submodule_opt_var_name = md_struct.ms_opt_var_name
-        for (submodule_ext_succ, opt_var_name_in_this_module, ith_output) in submodule_returns:
+        for (submodule_ext_succ, _, ith_output) in submodule_returns:
             self.external_successor_local_returns_map[submodule_ext_succ] = (submodule_opt_var_name, ith_output)
-            # edit external succ 's inputs in parent module
-            ext_node = self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_node_struct_map.get(submodule_ext_succ)
-            ext_node_parent = ext_node.parent_module_struct
-            while ext_node_parent != self.parent_module_struct:
-                ext_node_parent.inputs_in_parent_module[ext_node.onnx_name] = md_struct.ms_opt_var_name
-                ext_node_parent = ext_node_parent.parent_module_struct
-
-            # need find the prec_name?
-            for ext_node_prec, opt_var_name in ext_node.inputs_in_parent_module.copy().items():
-                if isinstance(opt_var_name, str):
-                    if opt_var_name == opt_var_name_in_this_module:
-                        ext_node.inputs_in_parent_module[ext_node_prec] = (self.ms_opt_var_name, ith_output)
-                if isinstance(opt_var_name, tuple):
-                    if opt_var_name[0] == opt_var_name_in_this_module:
-                        ext_node.inputs_in_parent_module[ext_node_prec] = (self.ms_opt_var_name, ith_output)

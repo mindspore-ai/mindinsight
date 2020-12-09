@@ -18,8 +18,10 @@ from typing import Dict, List
 
 from .common import context, DagGraph, gen_hash_key, ACCEPTABLE_RESULT_COUNT
 from .common import MINI_FREQUENCY, MAX_ITERATION_DEPTH, SATISFIED_SCORE
+from ..common.global_context import GlobalContext
 from ..third_party_graph.onnx_utils import BaseNode
 from .search_path import SearchPath, Pattern, generate_pattern, find_built_in_pattern
+from ...common.exceptions import SubGraphSearchingFail
 
 
 def _is_satisfied(path):
@@ -249,6 +251,23 @@ def validate_topo_order_succession():
     return True
 
 
+def _add_known_module_name(search_path):
+    """
+    Add known module name to GlobalContext.
+
+    Args:
+        search_path (SearchPath): Search path.
+
+    """
+    ctx = GlobalContext()
+    if search_path.pattern.known_module_name:
+        ctx.known_module_name[search_path.pattern.module_name] = search_path.pattern.known_module_name
+    for it in search_path.recursion_path:
+        if it.pattern.known_module_name:
+            ctx.known_module_name[it.pattern.module_name] = it.pattern.known_module_name
+
+
+@SubGraphSearchingFail.check_except("Sub-Graph searching fail.")
 def generate_scope_name(data_loader):
     """
     Generate scope name according to computation graph.
@@ -269,6 +288,9 @@ def generate_scope_name(data_loader):
 
         if len(topo_order_with_scope_name_list) != len(data_loader.nodes_dict):
             topo_order_with_scope_name_list = flatten_graph(init_dag)
+
+        if result:
+            _add_known_module_name(result)
 
     except (ValueError, IndexError, AttributeError, KeyError) as _:
         topo_order_with_scope_name_list = flatten_graph(init_dag)

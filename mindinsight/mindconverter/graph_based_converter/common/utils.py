@@ -135,9 +135,11 @@ def lib_version_satisfied(current_ver: str, mini_ver_limited: str,
     if current_ver < mini_ver_limited or (newest_ver_limited and current_ver > newest_ver_limited):
         return False
     return True
+
+
 def get_dict_key_by_value(val, dic):
     """
-    Return the first appeared key of a dictionay by given value.
+    Return the first appeared key of a dictionary by given value.
 
     Args:
         val (Any): Value of the key.

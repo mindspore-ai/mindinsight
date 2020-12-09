@@ -25,7 +25,9 @@ class PyTorchGraphParser(GraphParser):
     """Define pytorch graph parser."""
 
     @classmethod
-    @ModelNotSupport.check_except_pytorch("Error occurs in loading model, make sure model.pth correct.")
+    @ModelNotSupport.check_except(
+        "Error occurs in loading model, please check your model or runtime environment integrity."
+    )
     def parse(cls, model_path: str, **kwargs):
         """
         Parser pytorch graph.
@@ -50,11 +52,9 @@ class PyTorchGraphParser(GraphParser):
             else:
                 model = torch.load(f=model_path, map_location="cpu")
         except ModuleNotFoundError:
-            error_msg = \
-                "Cannot find model scripts in system path, " \
-                "set `--project_path` to the path of model scripts folder correctly."
+            error_msg = "Cannot find model scripts in system path, " \
+                        "set `--project_path` to the path of model scripts folder correctly."
             error = ModuleNotFoundError(error_msg)
-            log.error(str(error))
-            raise error from None
+            raise error
 
         return model

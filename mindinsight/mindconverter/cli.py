@@ -170,6 +170,9 @@ class InFileAction(argparse.Action):
         if not os.path.isfile(outfile_dir):
             parser_in.error(f'{option_string} {outfile_dir} is not a file')
 
+        if not os.path.basename(outfile_dir).endswith("py"):
+            parser_in.error(f'{option_string} {outfile_dir} is not a valid python file')
+
         setattr(namespace, self.dest, outfile_dir)
 
 
@@ -282,32 +285,32 @@ class NodeAction(argparse.Action):
 
 
 parser = argparse.ArgumentParser(
-        prog='mindconverter',
-        description='MindConverter CLI entry point (version: {})'.format(mindinsight.__version__),
-        allow_abbrev=False)
+    prog='mindconverter',
+    description='MindConverter CLI entry point (version: {})'.format(mindinsight.__version__),
+    allow_abbrev=False)
 
 parser.add_argument(
-        '--version',
-        action='version',
-        version='%(prog)s ({})'.format(mindinsight.__version__))
+    '--version',
+    action='version',
+    version='%(prog)s ({})'.format(mindinsight.__version__))
 
 parser.add_argument(
-        '--in_file',
-        type=str,
-        action=InFileAction,
-        required=False,
-        default=None,
-        help="""
+    '--in_file',
+    type=str,
+    action=InFileAction,
+    required=False,
+    default=None,
+    help="""
             Specify path for script file to use AST schema to 
             do script conversation.
         """)
 
 parser.add_argument(
-        '--model_file',
-        type=str,
-        action=ModelFileAction,
-        required=False,
-        help="""
+    '--model_file',
+    type=str,
+    action=ModelFileAction,
+    required=False,
+    help="""
             PyTorch .pth or Tensorflow .pb model file path to use graph 
             based schema to do script generation. When 
             `--in_file` and `--model_file` are both provided,
@@ -315,12 +318,12 @@ parser.add_argument(
         """)
 
 parser.add_argument(
-        '--shape',
-        type=str,
-        action=ShapeAction,
-        default=None,
-        required=False,
-        help="""
+    '--shape',
+    type=str,
+    action=ShapeAction,
+    default=None,
+    required=False,
+    help="""
             Optional, expected input tensor shape of
             `--model_file`. It's required when use graph based
             schema. 
@@ -328,55 +331,55 @@ parser.add_argument(
         """)
 
 parser.add_argument(
-        '--input_nodes',
-        type=str,
-        action=NodeAction,
-        default=None,
-        required=False,
-        help="""
+    '--input_nodes',
+    type=str,
+    action=NodeAction,
+    default=None,
+    required=False,
+    help="""
             Optional, input node(s) name of `--model_file`. It's required when use Tensorflow model.
             Usage: --input_nodes input_1:0,input_2:0
         """)
 
 parser.add_argument(
-        '--output_nodes',
-        type=str,
-        action=NodeAction,
-        default=None,
-        required=False,
-        help="""
+    '--output_nodes',
+    type=str,
+    action=NodeAction,
+    default=None,
+    required=False,
+    help="""
             Optional, output node(s) name of `--model_file`. It's required when use Tensorflow model.
             Usage: --output_nodes output_1:0,output_2:0
         """)
 
 parser.add_argument(
-        '--output',
-        type=str,
-        action=OutputDirAction,
-        default=os.path.join(os.getcwd(), 'output'),
-        help="""
+    '--output',
+    type=str,
+    action=OutputDirAction,
+    default=os.path.join(os.getcwd(), 'output'),
+    help="""
             Optional, specify path for converted script file 
             directory. Default output directory is `output` folder 
             in the current working directory.
         """)
 
 parser.add_argument(
-        '--report',
-        type=str,
-        action=LogFileAction,
-        default=None,
-        help="""
+    '--report',
+    type=str,
+    action=LogFileAction,
+    default=None,
+    help="""
             Optional, specify report directory. Default is 
             converted script directory.
         """)
 
 parser.add_argument(
-        '--project_path',
-        type=str,
-        action=ProjectPathAction,
-        required=False,
-        default=None,
-        help="""
+    '--project_path',
+    type=str,
+    action=ProjectPathAction,
+    required=False,
+    default=None,
+    help="""
             Optional, PyTorch scripts project path. If PyTorch
             project is not in PYTHONPATH, please assign
             `--project_path` when use graph based schema. 
