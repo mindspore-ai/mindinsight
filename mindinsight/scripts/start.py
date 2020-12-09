@@ -260,11 +260,15 @@ class Command(BaseCommand):
         if not settings.ENABLE_DEBUGGER:
             return
         ip = settings.HOST
-        port = settings.DEBUGGER_PORT
+        debugger_port = settings.DEBUGGER_PORT
+        port = settings.PORT
+        if debugger_port == port:
+            raise PortNotAvailableError("The ports for debugger and web page are both %s,"
+                                        "please use another port as debugger-port." % debugger_port)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            s.connect((ip, int(port)))
+            s.connect((ip, debugger_port))
             s.shutdown(2)
-            raise PortNotAvailableError(f'Debugger-port {ip}:{port} is not available for MindInsight')
+            raise PortNotAvailableError(f'Debugger-port {ip}:{debugger_port} is not available for MindInsight')
         except socket.error:
             return
