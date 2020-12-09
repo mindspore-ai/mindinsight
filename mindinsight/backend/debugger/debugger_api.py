@@ -27,11 +27,10 @@ BLUEPRINT = Blueprint("debugger", __name__,
 
 def _initialize_debugger_server():
     """Initialize a debugger server instance."""
-    port = settings.DEBUGGER_PORT if hasattr(settings, 'DEBUGGER_PORT') else None
     enable_debugger = settings.ENABLE_DEBUGGER if hasattr(settings, 'ENABLE_DEBUGGER') else False
     server = None
-    if port and enable_debugger:
-        server = DebuggerServer(port)
+    if enable_debugger:
+        server = DebuggerServer()
     return server
 
 

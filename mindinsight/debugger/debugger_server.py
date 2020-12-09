@@ -60,8 +60,7 @@ def try_except(func):
 class DebuggerServer:
     """The server manager of debugger."""
 
-    def __init__(self, grpc_port=None):
-        self.grpc_port = grpc_port
+    def __init__(self):
         self.condition_mgr = ConditionMgr()
         self.cache_store = DebuggerCache()
         self.grpc_server = DebuggerGrpcServer(self.cache_store, self.condition_mgr)
@@ -111,7 +110,7 @@ class DebuggerServer:
 
     def start(self):
         """Start server."""
-        grpc_port = self.grpc_port if self.grpc_port else "50051"
+        grpc_port = settings.DEBUGGER_PORT if hasattr(settings, 'DEBUGGER_PORT') else 50051
         host = settings.HOST if hasattr(settings, 'HOST') else '[::]'
         hostname = "{}:{}".format(host, grpc_port)
         # initialize a grpc server

@@ -29,7 +29,7 @@ URL_PATH_PREFIX = ''
 ####################################
 # Debugger default settings.
 ####################################
-DEBUGGER_PORT = '50051'
+DEBUGGER_PORT = 50051
 ENABLE_DEBUGGER = False
 
 ####################################
