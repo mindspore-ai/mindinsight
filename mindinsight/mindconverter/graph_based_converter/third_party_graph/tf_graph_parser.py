@@ -48,18 +48,8 @@ class TFGraphParser(GraphParser):
             log.error(str(error))
             raise error
 
-        try:
-            model = convert_tf_graph_to_onnx(model_path,
-                                             model_inputs=tf_input_nodes,
-                                             model_outputs=tf_output_nodes,
-                                             )  # need pass more args
-
-        except ModuleNotFoundError:
-            error_msg = \
-                "Cannot find model scripts in system path, " \
-                "set `--project_path` to the path of model scripts folder correctly."
-            error = ModuleNotFoundError(error_msg)
-            log.error(str(error))
-            raise error from None
-
+        model = convert_tf_graph_to_onnx(model_path,
+                                         model_inputs=tf_input_nodes,
+                                         model_outputs=tf_output_nodes,
+                                         )
         return model
