@@ -615,7 +615,11 @@ export default {
      * @param {Object} item watchpoint data
      */
     deleteWatchpoint(item) {
-      if (!this.watchPointArr.length || this.metadata.state === this.state.running || this.metadata.state === this.state.sending) {
+      if (
+        !this.watchPointArr.length ||
+        this.metadata.state === this.state.running ||
+        this.metadata.state === this.state.sending
+      ) {
         return;
       }
       if ((item && item.id) || !item) {

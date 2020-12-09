@@ -154,7 +154,7 @@ limitations under the License.
                 </div>
               </div>
             </div>
-            <div class="left-scatters-container">
+            <div class="left-scatters-container" v-show="!viewBigBtnDisabled">
               <Scatter ref="smallScatter"
                        :data="scatterChartData"
                        :yTitle="yTitle"

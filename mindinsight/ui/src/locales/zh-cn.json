@@ -185,7 +185,7 @@
     "unreasonable": "逻辑不合理",
     "info": "提示",
     "isDelete": "是否删除当前阈值？",
-    "noLog":"不存在0和负数的对数"
+    "noLog": "不存在0和负数的对数"
   },
   "images": {
     "titleText": "图像",
@@ -472,7 +472,7 @@
     "dimsFilterInputTip": "维度输入值可以是具体的索引（和Python的索引含义一致，支持负号）或者冒号\":\"，其中冒号\":\"表示当前维度的所有值",
     "category": "分类",
     "scientificCounting": "科学计数",
-    "accuracyTips":"如果数值展示不全，可以拖拽表头的分隔线查看"
+    "accuracyTips": "如果数值展示不全，可以拖拽表头的分隔线查看"
   },
   "debugger": {
     "debugger": "调试器",
@@ -527,6 +527,8 @@
     "zero": "零：",
     "positiveNum": "正数：",
     "negativeNum": "负数：",
+    "true": "TRUE：",
+    "false": "FALSE：",
     "all": "全部",
     "tensorTip": "张量",
     "recheck": "重新检查（只针对目前有张量值的监测点）",

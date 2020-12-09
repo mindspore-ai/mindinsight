@@ -186,7 +186,7 @@
     "unreasonable": "The logic is improper.",
     "info": "Information",
     "isDelete": "Are you sure you want to delete the current threshold?",
-    "noLog":"There is no logarithm of 0 and negative numbers"
+    "noLog": "There is no logarithm of 0 and negative numbers"
   },
   "images": {
     "titleText": "Image",
@@ -527,6 +527,8 @@
     "zero": "0:",
     "positiveNum": "Positive number:",
     "negativeNum": "Negative number:",
+    "true": "TRUE:",
+    "false": "FALSE:",
     "all": "All",
     "tensorTip": "tensor",
     "recheck": "Recheck (only for watchpoints with tensor values)",
