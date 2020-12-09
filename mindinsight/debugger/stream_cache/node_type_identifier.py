@@ -19,19 +19,20 @@ from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 
 _ACTIVATIONS = [
-    'Softmax',
+    'ELU',
+    'FastGelu',
+    'GELU',
+    'HSigmoid',
+    'HSwish',
+    'LeakyReLU',
+    'LogSigmoid',
     'LogSoftmax',
+    'PReLU',
     'ReLU',
     'ReLU6',
-    'Tanh',
-    'GELU',
-    'ELU',
     'Sigmoid',
-    'PReLU',
-    'LeakyReLU',
-    'HSwish',
-    'HSigmoid',
-    'LogSigmoid'
+    'Softmax',
+    'Tanh'
 ]
 
 

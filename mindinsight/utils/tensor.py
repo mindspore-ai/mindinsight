@@ -23,94 +23,104 @@ from mindinsight.utils.log import utils_logger as logger
 F32_MIN, F32_MAX = np.finfo(np.float32).min, np.finfo(np.float32).max
 MAX_DIMENSIONS_FOR_TENSOR = 2
 
+
 class Statistics:
     """Statistics data class.
 
     Args:
-        max_value (float): max value of tensor data.
-        min_value (float): min value of tensor data.
-        avg_value (float): avg value of tensor data.
-        count (int): total count of tensor data.
-        nan_count (int): count of NAN.
-        neg_zero_count (int): count of negative zero.
-        pos_zero_count (int): count of positive zero.
-        zero_count (int): count of zero.
-        neg_inf_count (int): count of negative INF.
-        pos_inf_count (int): count of positive INF.
+        stats (dict): Statistic info of tensor data.
+
+            - is_bool (bool): If the tensor is bool type.
+            - max_value (float): Max value of tensor data.
+            - min_value (float): Min value of tensor data.
+            - avg_value (float): Avg value of tensor data.
+            - count (int): Total count of tensor data.
+            - nan_count (int): Count of NAN.
+            - neg_zero_count (int): Count of negative zero.
+            - pos_zero_count (int): Count of positive zero.
+            - zero_count (int): Count of zero.
+            - neg_inf_count (int): Count of negative INF.
+            - pos_inf_count (int): Count of positive INF.
     """
 
-    def __init__(self, max_value=0, min_value=0, avg_value=0, count=0,
-                 neg_zero_count=0, pos_zero_count=0, zero_count=0,
-                 nan_count=0, neg_inf_count=0, pos_inf_count=0):
-        self._max = max_value
-        self._min = min_value
-        self._avg = avg_value
-        self._count = count
-        self._neg_zero_count = neg_zero_count
-        self._pos_zero_count = pos_zero_count
-        self._zero_count = zero_count
-        self._nan_count = nan_count
-        self._neg_inf_count = neg_inf_count
-        self._pos_inf_count = pos_inf_count
+    def __init__(self, stats):
+        self._stats = stats
 
     @property
     def max(self):
         """Get max value of tensor."""
-        return self._max
+        return float(self._stats.get('max_value', 0))
 
     @property
     def min(self):
         """Get min value of tensor."""
-        return self._min
+        return float(self._stats.get('min_value', 0))
 
     @property
     def avg(self):
         """Get avg value of tensor."""
-        return self._avg
+        return float(self._stats.get('avg_value', 0))
 
     @property
     def count(self):
         """Get total count of tensor."""
-        return self._count
+        return int(self._stats.get('count', 0))
 
     @property
     def nan_count(self):
         """Get count of NAN."""
-        return self._nan_count
+        return int(self._stats.get('nan_count', 0))
 
     @property
     def neg_inf_count(self):
         """Get count of negative INF."""
-        return self._neg_inf_count
+        return int(self._stats.get('neg_inf_count', 0))
 
     @property
     def pos_inf_count(self):
         """Get count of positive INF."""
-        return self._pos_inf_count
+        return int(self._stats.get('pos_inf_count', 0))
 
     @property
     def neg_zero_count(self):
         """Get count of negative zero."""
-        return self._neg_zero_count
+        return int(self._stats.get('neg_zero_count', 0))
 
     @property
     def pos_zero_count(self):
         """Get count of positive zero."""
-        return self._pos_zero_count
+        return int(self._stats.get('pos_zero_count', 0))
 
     @property
     def zero_count(self):
         """Get count of zero."""
-        return self._zero_count
+        return int(self._stats.get('zero_count', 0))
+
+    @property
+    def true_count(self):
+        """Get count of False."""
+        return self.pos_zero_count if self.is_bool else 0
+
+    @property
+    def false_count(self):
+        """Get count of True."""
+        return self.zero_count if self.is_bool else 0
+
+    @property
+    def is_bool(self):
+        """Whether the tensor is bool type."""
+        return self._stats.get('is_bool', False)
+
 
 class TensorComparison:
     """TensorComparison class.
 
     Args:
-        tolerance (float): tolerance for calculating tensor diff.
-        stats (float): statistics of tensor diff.
-        value (numpy.ndarray): tensor diff.
+        tolerance (float): Tolerance for calculating tensor diff.
+        stats (float): Statistics of tensor diff.
+        value (numpy.ndarray): Tensor diff.
     """
+
     def __init__(self, tolerance=0, stats=None, value=None):
         self._tolerance = tolerance
         self._stats = stats
@@ -135,6 +145,7 @@ class TensorComparison:
     def value(self):
         """Get value of tensor diff."""
         return self._value
+
 
 def str_to_slice_or_int(input_str):
     """
@@ -241,13 +252,13 @@ class TensorUtils:
         nan_count, pos_inf_count, neg_inf_count = invalids
         if not valid:
             logger.warning('There are no valid values in the tensors(size=%d, shape=%s)', total, tensors.shape)
-            statistics = Statistics(max_value=0,
-                                    min_value=0,
-                                    avg_value=0,
-                                    count=total,
-                                    nan_count=nan_count,
-                                    neg_inf_count=neg_inf_count,
-                                    pos_inf_count=pos_inf_count)
+            statistics = Statistics({'max_value': 0,
+                                     'min_value': 0,
+                                     'avg_value': 0,
+                                     'count': total,
+                                     'nan_count': nan_count,
+                                     'neg_inf_count': neg_inf_count,
+                                     'pos_inf_count': pos_inf_count})
             return statistics
 
         # BUG: max of a masked array with dtype np.float16 returns inf
@@ -268,16 +279,17 @@ class TensorUtils:
             pos_zero_count = np.sum(ma_value > 0)
         with np.errstate(invalid='ignore'):
             zero_count = np.sum(ma_value == 0)
-        statistics = Statistics(max_value=tensor_max,
-                                min_value=tensor_min,
-                                avg_value=tensor_sum / valid,
-                                count=total,
-                                neg_zero_count=neg_zero_count,
-                                pos_zero_count=pos_zero_count,
-                                zero_count=zero_count,
-                                nan_count=nan_count,
-                                neg_inf_count=neg_inf_count,
-                                pos_inf_count=pos_inf_count)
+        statistics = Statistics({'is_bool': tensors.dtype == np.bool,
+                                 'max_value': tensor_max,
+                                 'min_value': tensor_min,
+                                 'avg_value': tensor_sum / valid,
+                                 'count': total,
+                                 'neg_zero_count': neg_zero_count,
+                                 'pos_zero_count': pos_zero_count,
+                                 'zero_count': zero_count,
+                                 'nan_count': nan_count,
+                                 'neg_inf_count': neg_inf_count,
+                                 'pos_inf_count': pos_inf_count})
         return statistics
 
     @staticmethod
@@ -318,18 +330,25 @@ class TensorUtils:
         """
         if not overall_stats:
             return {}
-        res = {
-            "overall_max": float(overall_stats.max),
-            "overall_min": float(overall_stats.min),
-            "overall_avg": float(overall_stats.avg),
-            "overall_count": overall_stats.count,
-            "overall_nan_count": overall_stats.nan_count,
-            "overall_neg_inf_count": overall_stats.neg_inf_count,
-            "overall_pos_inf_count": overall_stats.pos_inf_count,
-            "overall_zero_count": float(overall_stats.zero_count),
-            "overall_neg_zero_count": float(overall_stats.neg_zero_count),
-            "overall_pos_zero_count": float(overall_stats.pos_zero_count)
-        }
+        if overall_stats.is_bool:
+            res = {
+                'overall_count': overall_stats.count,
+                'overall_true_count': overall_stats.true_count,
+                'overall_false_count': overall_stats.false_count
+            }
+        else:
+            res = {
+                "overall_max": float(overall_stats.max),
+                "overall_min": float(overall_stats.min),
+                "overall_avg": float(overall_stats.avg),
+                "overall_count": overall_stats.count,
+                "overall_nan_count": overall_stats.nan_count,
+                "overall_neg_inf_count": overall_stats.neg_inf_count,
+                "overall_pos_inf_count": overall_stats.pos_inf_count,
+                "overall_zero_count": float(overall_stats.zero_count),
+                "overall_neg_zero_count": float(overall_stats.neg_zero_count),
+                "overall_pos_zero_count": float(overall_stats.pos_zero_count)
+            }
         return res
 
     @staticmethod
