@@ -84,6 +84,11 @@ class WatchNodeTree:
         """The property of watch status about current node."""
         return self._watch_status
 
+    @watch_status.setter
+    def watch_status(self, value):
+        """Set the node watch_status."""
+        self._watch_status = value
+
     def update_metadata(self, node_type, full_name, watch_status):
         """Update the metadata for watched node."""
         self._full_name = full_name
@@ -106,6 +111,10 @@ class WatchNodeTree:
         """Get all children."""
         for name_scope, sub_watch_node in self._children.items():
             yield name_scope, sub_watch_node
+
+    def get_children_count(self):
+        """Get the count of children nodes."""
+        return len(self._children)
 
     def add_node(self, node_name, node_type, full_name=''):
         """
