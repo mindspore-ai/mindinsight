@@ -557,15 +557,7 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
             raise DebuggerParamValueError("Invalid name of parameter.")
 
         condition_param = condition.get_parameter_definition(condition_param_name)
-        if condition_param.type.name in (ValueTypeEnum.FLOAT64.name, ValueTypeEnum.INT64.name) \
-                and not isinstance(param.get("value"), (float, int)):
-            log.error("Number param should be given for condition: %s", condition_id)
-            raise DebuggerParamValueError("Number param should be given.")
-
-        if condition_param.type.name == ValueTypeEnum.BOOL.name \
-                and not isinstance(param.get("value"), bool):
-            log.error("Bool param should be given for condition: %s", condition_id)
-            raise DebuggerParamValueError("Bool param should be given.")
+        validate_param_type(condition_id, condition_param, param)
 
         if not condition_param.is_valid(param.get("value")):
             log.error("Param %s out of range for condition: %s", condition_param_name, condition_id)
@@ -594,6 +586,25 @@ def validate_watch_condition_params(condition_mgr, watch_condition):
             range_param.get(RANGE_END):
         log.error("Invalid support params for condition: %s", condition_id)
         raise DebuggerParamValueError("Invalid support params.")
+
+
+def validate_param_type(condition_id, condition_param, param):
+    """
+    Validate parameter type.
+
+    Args:
+        condition_id (str): Condition id. Should be in WATCHPOINT_CONDITION_MAPPING.
+        condition_param (ConditionParameter): Condition Parameter object.
+        param (dict): Condition parameter value.
+    """
+    if condition_param.type.name in (ValueTypeEnum.FLOAT64.name, ValueTypeEnum.INT64.name) \
+            and not isinstance(param.get("value"), (float, int)):
+        log.error("Number param should be given for condition: %s", condition_id)
+        raise DebuggerParamValueError("Number param should be given.")
+    if condition_param.type.name == ValueTypeEnum.BOOL.name \
+            and not isinstance(param.get("value"), bool):
+        log.error("Bool param should be given for condition: %s", condition_id)
+        raise DebuggerParamValueError("Bool param should be given.")
 
 
 def set_default_param(condition_mgr, watch_condition):
