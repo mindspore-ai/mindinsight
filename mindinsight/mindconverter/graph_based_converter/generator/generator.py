@@ -16,23 +16,17 @@
 import copy
 from collections import OrderedDict
 
+from yapf.yapflib.yapf_api import FormatCode
+
 from .scope_utils import Scope
 from .node_struct import NodeStruct
 from .module_struct import ModuleStruct
 from .args_translator import ArgsTranslationHelper
 from ..common.global_context import GlobalContext
+from ...common.exceptions import GeneratorFail
 from ..hierarchical_tree.name_mgr import GlobalVarNameMgr
-from ..constant import NEW_LINE, SECOND_LEVEL_INDENT, FIRST_LEVEL_INDENT
-
-
-class Singleton(type):
-    """Metaclass to make the generator to be single instance."""
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+from ..constant import NEW_LINE, SECOND_LEVEL_INDENT, FIRST_LEVEL_INDENT, CodeFormatConfig, get_imported_module
+from ..report_generator import ReportGenerator
 
 
 class CodeStruct:
@@ -88,14 +82,9 @@ class CodeStruct:
             repeated_submodules (dict): The dict contains all submodules which use repeatedly.
                 Can get this dict from generator.
         """
-        # Define tmp var for code generation.
-        opt_var_name_records = dict()  # now only support multiple outputs within same scope.
-        return_value_records = dict()  # save returned values for successor nodes/modules use.
+
         # Define Module header code line below
-        if md_struct.pattern_id != -1:
-            class_name = f"Module{md_struct.pattern_id}"
-        else:
-            class_name = "Model"
+        class_name = md_struct.class_name
         # define a class declaration
         self.new_line = f"class {class_name}(nn.Cell):"
 
@@ -108,36 +97,18 @@ class CodeStruct:
             for formal in md_struct.args_translator.formal_args.keys():
                 module_def_args.append(formal)
 
-        # Collect extra inputs and outputs
-
         # For code line in init  & construct blocks
         init_lines = list()
         cons_lines = list()
         for (_, struct) in md_struct.get_generate_order():
             if isinstance(struct, NodeStruct):  # Generate code line for Node.
                 code_line_init = struct.code_line_in_init()
-                code_line_construct = struct.code_line_in_construct(in_module_returns=return_value_records)
+                code_line_construct = struct.code_line_in_construct()
                 init_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_line_init)}")
                 cons_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_line_construct)}")
                 # add extra tensor
                 if struct.fragment.code_setting and struct.fragment.code_setting.op_extra_tensor:
-                    code_extra_tensor = struct.add_extra_tensor()
-                    init_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_extra_tensor)}")
-
-                # record opt_var_name for succ nodes input in same scope.
-                target_onnx_name = struct.graph_node_ref.successor_nodes
-                for name in target_onnx_name:
-                    if opt_var_name_records.get(name):
-                        opt_var_name_records.get(name).append(code_line_construct[0])
-                    else:
-                        opt_var_name_records[name] = [code_line_construct[0]]
-
-                if struct.successor_nodes_names_external:
-                    for ret_user in struct.successor_nodes_names_external:
-                        if return_value_records.get(ret_user) is not None:
-                            return_value_records[ret_user].append((struct.onnx_name, code_line_construct[0]))
-                        else:
-                            return_value_records[ret_user] = [(struct.onnx_name, code_line_construct[0])]
+                    init_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(struct.add_extra_tensor())}")
 
             elif isinstance(struct, ModuleStruct):
                 # check if this instance generated CodeStruct
@@ -149,22 +120,6 @@ class CodeStruct:
                 init_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_line_init)}")
                 cons_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_line_construct)}")
 
-                # record opt_var_name for succ nodes input in same scope.
-                target_onnx_name = struct.tail_nd_struct.graph_node_ref.successor_nodes
-                for name in target_onnx_name:
-                    if opt_var_name_records.get(name):
-                        opt_var_name_records.get(name).append(code_line_construct[0])
-                    else:
-                        opt_var_name_records[name] = [code_line_construct[0]]
-
-                # record submodule's local return map for following nodes / submodules use
-                if struct.external_successor_local_returns_map:
-                    for ret_user, _ in struct.external_successor_local_returns_map.items():
-                        if return_value_records.get(ret_user) is not None:
-                            # mulitple returns of a node may need modifiy the index.
-                            return_value_records[ret_user].append((struct.identifier, code_line_construct[0]))
-                        else:
-                            return_value_records[ret_user] = [(struct.identifier, code_line_construct[0])]
             else:
                 raise TypeError("Unable to generate code from args are not ModuleStruct or NodeStruct.")
 
@@ -183,8 +138,7 @@ class CodeStruct:
         # define returns
         returns = []
         if md_struct.external_successor_local_returns_map:
-            ret = list(md_struct.external_successor_local_returns_map.values())
-            for r in ret:
+            for r in list(md_struct.external_successor_local_returns_map.values()):
                 if isinstance(r, tuple):  # results return with index nth output
                     returns.append(r[0])
                 else:
@@ -197,7 +151,7 @@ class CodeStruct:
         self.GLOBAL_CONTEXT.code_structs[md_struct.pattern_id] = self
 
 
-class Generator(metaclass=Singleton):
+class Generator:
     """The generator controls all routines of code generation."""
 
     def __init__(self):
@@ -217,6 +171,7 @@ class Generator(metaclass=Singleton):
         self._global_context.node_struct_collections = self._node_struct_collections
         self._repeated_submodules = set()
 
+    @GeneratorFail.check_except("Generator occurs an error when forming base submodules.")
     def _form_bottom_submodule(self):
         """Form the basic submodules, which only contains nodes."""
         # Form module map
@@ -375,7 +330,7 @@ class Generator(metaclass=Singleton):
                 if scope_path_str == '[]':
                     continue  # is main module, skip
                 if md_struct.scope_depth != depth:
-                    continue # skip all submodules not at current depth
+                    continue  # skip all submodules not at current depth
                 md_struct_scope = copy.deepcopy(md_struct.identifier)
                 md_struct_scope.pop()
                 parent_scope = md_struct_scope
@@ -396,6 +351,7 @@ class Generator(metaclass=Singleton):
                 self._global_context.add_module_struct(sub.pattern_id, sub)
             depth -= 1
 
+    @GeneratorFail.check_except("Generator occurs an error when building modules.")
     def _recursive_form_module(self):
         """Main routine in generator to build modules from bottom to top."""
         # 1. List repeated submodules
@@ -518,6 +474,7 @@ class Generator(metaclass=Singleton):
         """Return all ModuleStructs in this model."""
         return self._module_struct_collections
 
+    @GeneratorFail.check_except("Generator occurs an error when generating code statements.")
     def generate(self):
         """
         Generate the final script file.
@@ -527,8 +484,22 @@ class Generator(metaclass=Singleton):
         """
         self._form_bottom_submodule()
         self._recursive_form_module()
-        code = CodeStruct(self.module_structs.get('[]'), self._repeated_submodules)
-        return code.code_line_list
+        CodeStruct(self.module_structs.get('[]'), self._repeated_submodules)
+
+        outputs = [get_imported_module()]
+
+        for code_struct in self._global_context.code_structs.values():
+            for line in code_struct.code_line_list:
+                outputs.append(line)
+
+        formatted_code, _ = FormatCode("\n".join(outputs),
+                                       style_config=CodeFormatConfig.PEP8.value)
+
+        report_generator = ReportGenerator()
+        report = report_generator.gen_report(formatted_code)
+        del self._global_context
+
+        return {"model": (formatted_code, report)}
 
     def get_node_struct(self, node_identifier):
         """
@@ -553,28 +524,6 @@ class Generator(metaclass=Singleton):
             ModuleStruct, the node's ModuleStruct.
         """
         return self._module_struct_collections.get(module_identifier, None)
-
-    def get_module_structs_by_pattern_under_same_parent_pattern(self, pattern_id, under_parent_pattern_id):
-        """
-        Return a list of ModuleStruct by conditions of pattern and their parent parent's pattern.
-
-        Args:
-            pattern_id (int): The pattern id the returned ModuleSturct is.
-            under_parent_pattern_id (int): The pattern id the returned ModuleStruct's parent is.
-
-        Returns:
-            list, a list of MoudleStructs has the same pattern_id and the same parents' pattern.
-        """
-        if not pattern_id:
-            raise ValueError("pattern_id is necessary to get the module struct.")
-        if not under_parent_pattern_id:
-            raise ValueError("under_parent_pattern_id is necessary to get the module struct.")
-        ret = []
-        md_list = self._global_context.module_structs.get(pattern_id)
-        for md in md_list:
-            if md.parent_id == under_parent_pattern_id:
-                ret.append(md)
-        return ret
 
     def get_args_translator_from_module_structs_list(self, md_list, exclude_root_son=False):
         """

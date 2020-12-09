@@ -29,7 +29,7 @@ from ..common.utils import is_converted, save_code_file_and_report
 from ..mapper.base import Mapper
 from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
-from ..constant import SEPARATOR_IN_SCOPE
+from ..constant import SEPARATOR_IN_SCOPE, get_imported_module
 from ..constant import CodeFormatConfig
 from ..constant import SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVEL_INDENT
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT
@@ -283,7 +283,7 @@ class HierarchicalTree(Tree):
         Returns:
             Dict, codes.
         """
-        code_blocks = [self._get_imported_module()]
+        code_blocks = [get_imported_module()]
         depths = sorted(list(self._hierarchical_order.keys()), reverse=True)
 
         for depth in depths:
@@ -741,17 +741,3 @@ class HierarchicalTree(Tree):
         """Adjust tree structure to generate source code."""
         self.sub_graph_merging()
         self.update_hierarchical_order()
-
-    @staticmethod
-    def _get_imported_module():
-        """
-        Generate imported module header.
-
-        Returns:
-            str, imported module.
-        """
-        return f"import numpy as np{NEW_LINE}" \
-               f"import mindspore{NEW_LINE}" \
-               f"from mindspore import nn{NEW_LINE}" \
-               f"from mindspore import Tensor{NEW_LINE}" \
-               f"from mindspore.ops import operations as P{NEW_LINE * 3}"
