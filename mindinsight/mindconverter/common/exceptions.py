@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Define custom exception."""
+import abc
 import sys
 from enum import unique
 from importlib import import_module
@@ -23,7 +24,7 @@ from treelib.exceptions import DuplicatedNodeIdError, MultipleRootError, NodeIDA
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 
 from mindinsight.utils.constant import ScriptConverterErrors
-from mindinsight.utils.exceptions import MindInsightException, ParamMissError
+from mindinsight.utils.exceptions import MindInsightException
 
 
 @unique
@@ -40,12 +41,16 @@ class ConverterErrors(ScriptConverterErrors):
     SCRIPT_GENERATE_FAIL = 9
     REPORT_GENERATE_FAIL = 10
     NODE_CONVERSION_ERROR = 11
+    INPUT_SHAPE_ERROR = 12
+    TF_RUNTIME_ERROR = 13
 
     BASE_CONVERTER_FAIL = 000
     GRAPH_INIT_FAIL = 100
     TREE_CREATE_FAIL = 200
     SOURCE_FILES_SAVE_FAIL = 300
     GENERATOR_FAIL = 400
+    SUB_GRAPH_SEARCHING_FAIL = 500
+    MODEL_LOADING_FAIL = 600
 
 
 class ScriptNotSupport(MindInsightException):
@@ -80,7 +85,6 @@ class MindConverterException(Exception):
 
     def __init__(self, **kwargs):
         """Initialization of MindInsightException."""
-
         error = kwargs.get('error', None)
         user_msg = kwargs.get('user_msg', '')
         debug_msg = kwargs.get('debug_msg', '')
@@ -97,6 +101,9 @@ class MindConverterException(Exception):
     def __str__(self):
         return '[{}] code: {}, msg: {}'.format(self.__class__.__name__, self.error_code(), self.user_msg)
 
+    def __repr__(self):
+        return self.__str__()
+
     def error_code(self):
         """"
         Calculate error code.
@@ -109,54 +116,59 @@ class MindConverterException(Exception):
         Returns:
             str, Hex string representing the composed MindConverter error code.
         """
-
         num = 0xFFFF & self.error.value
         error_code = ''.join((f'{self.cls_code}'.zfill(3), hex(num)[2:].zfill(4).upper()))
         return error_code
 
-    @staticmethod
-    def raise_from():
+    @classmethod
+    @abc.abstractmethod
+    def raise_from(cls):
         """Raise from below exceptions."""
-        return None
 
     @classmethod
-    def check_except_with_print_pytorch(cls, msg):
-        """Check except in pytorch."""
+    def uniform_catcher(cls, msg):
+        """Uniform exception catcher."""
 
         def decorator(func):
-            def _f(graph_path, sample_shape, output_folder, report_folder):
+            def _f(*args, **kwargs):
                 try:
-                    func(graph_path=graph_path, sample_shape=sample_shape,
-                         output_folder=output_folder, report_folder=report_folder)
+                    res = func(*args, **kwargs)
                 except cls.raise_from() as e:
                     error = cls(msg=msg)
                     detail_info = f"Error detail: {str(e)}"
                     log_console.error(str(error))
                     log_console.error(detail_info)
                     log.exception(e)
-                    sys.exit(-1)
+                    sys.exit(0)
+                except ModuleNotFoundError as e:
+                    detail_info = f"Error detail: Required package not found, please check the runtime environment."
+                    log_console.error(str(e))
+                    log_console.error(detail_info)
+                    log.exception(e)
+                    sys.exit(0)
+                return res
+
             return _f
+
         return decorator
 
     @classmethod
-    def check_except_with_print_tf(cls, msg):
-        """Check except in tf."""
+    def check_except(cls, msg):
+        """Check except."""
 
         def decorator(func):
-            def _f(graph_path, sample_shape,
-                   input_nodes, output_nodes,
-                   output_folder, report_folder):
+            def _f(*args, **kwargs):
                 try:
-                    func(graph_path=graph_path, sample_shape=sample_shape,
-                         input_nodes=input_nodes, output_nodes=output_nodes,
-                         output_folder=output_folder, report_folder=report_folder)
+                    output = func(*args, **kwargs)
                 except cls.raise_from() as e:
-                    error = cls(msg=msg)
-                    detail_info = f"Error detail: {str(e)}"
-                    log_console.error(str(error))
-                    log_console.error(detail_info)
+                    log.error(msg)
                     log.exception(e)
-                    sys.exit(-1)
+                    raise cls(msg=msg)
+                except Exception as e:
+                    log.error(msg)
+                    log.exception(e)
+                    raise e
+                return output
 
             return _f
 
@@ -170,30 +182,11 @@ class BaseConverterFail(MindConverterException):
         super(BaseConverterFail, self).__init__(error=ConverterErrors.BASE_CONVERTER_FAIL,
                                                 user_msg=msg)
 
-    @staticmethod
-    def raise_from():
-        """Raise from exceptions below."""
-        except_source = (UnknownModel,
-                         ParamMissError)
-        return except_source
-
     @classmethod
-    def check_except(cls, msg):
-        """Check except."""
-
-        def decorator(func):
-            def _f(file_config):
-                try:
-                    func(file_config=file_config)
-                except cls.raise_from() as e:
-                    error = cls(msg=msg)
-                    detail_info = f"Error detail: {str(e)}"
-                    log_console.error(str(error))
-                    log_console.error(detail_info)
-                    log.exception(e)
-                    sys.exit(-1)
-            return _f
-        return decorator
+    def raise_from(cls):
+        """Raise from exceptions below."""
+        except_source = Exception, cls
+        return except_source
 
 
 class UnknownModel(MindConverterException):
@@ -203,6 +196,10 @@ class UnknownModel(MindConverterException):
         super(UnknownModel, self).__init__(error=ConverterErrors.UNKNOWN_MODEL,
                                            user_msg=msg)
 
+    @classmethod
+    def raise_from(cls):
+        return cls
+
 
 class GraphInitFail(MindConverterException):
     """The graph init fail error."""
@@ -211,26 +208,18 @@ class GraphInitFail(MindConverterException):
         super(GraphInitFail, self).__init__(error=ConverterErrors.GRAPH_INIT_FAIL,
                                             user_msg=kwargs.get('msg', ''))
 
-    @staticmethod
-    def raise_from():
+    @classmethod
+    def raise_from(cls):
         """Raise from exceptions below."""
         except_source = (FileNotFoundError,
                          ModuleNotFoundError,
                          ModelNotSupport,
+                         SubGraphSearchingFail,
                          TypeError,
                          ZeroDivisionError,
-                         RuntimeError)
+                         RuntimeError,
+                         cls)
         return except_source
-
-    @classmethod
-    def check_except_pytorch(cls, msg):
-        """Check except for pytorch."""
-        return super().check_except_with_print_pytorch(msg)
-
-    @classmethod
-    def check_except_tf(cls, msg):
-        """Check except for tf."""
-        return super().check_except_with_print_tf(msg)
 
 
 class TreeCreateFail(MindConverterException):
@@ -240,22 +229,12 @@ class TreeCreateFail(MindConverterException):
         super(TreeCreateFail, self).__init__(error=ConverterErrors.TREE_CREATE_FAIL,
                                              user_msg=msg)
 
-    @staticmethod
-    def raise_from():
+    @classmethod
+    def raise_from(cls):
         """Raise from exceptions below."""
         except_source = (NodeInputMissing,
-                         TreeNodeInsertFail)
+                         TreeNodeInsertFail, cls)
         return except_source
-
-    @classmethod
-    def check_except_pytorch(cls, msg):
-        """Check except."""
-        return super().check_except_with_print_pytorch(msg)
-
-    @classmethod
-    def check_except_tf(cls, msg):
-        """Check except for tf."""
-        return super().check_except_with_print_tf(msg)
 
 
 class SourceFilesSaveFail(MindConverterException):
@@ -265,24 +244,14 @@ class SourceFilesSaveFail(MindConverterException):
         super(SourceFilesSaveFail, self).__init__(error=ConverterErrors.SOURCE_FILES_SAVE_FAIL,
                                                   user_msg=msg)
 
-    @staticmethod
-    def raise_from():
+    @classmethod
+    def raise_from(cls):
         """Raise from exceptions below."""
         except_source = (NodeInputTypeNotSupport,
                          ScriptGenerateFail,
                          ReportGenerateFail,
-                         IOError)
+                         IOError, cls)
         return except_source
-
-    @classmethod
-    def check_except_pytorch(cls, msg):
-        """Check except."""
-        return super().check_except_with_print_pytorch(msg)
-
-    @classmethod
-    def check_except_tf(cls, msg):
-        """Check except for tf."""
-        return super().check_except_with_print_tf(msg)
 
 
 class ModelNotSupport(MindConverterException):
@@ -293,55 +262,32 @@ class ModelNotSupport(MindConverterException):
                                               user_msg=msg,
                                               cls_code=ConverterErrors.GRAPH_INIT_FAIL.value)
 
-    @staticmethod
-    def raise_from():
+    @classmethod
+    def raise_from(cls):
         """Raise from exceptions below."""
         except_source = (RuntimeError,
+                         ModuleNotFoundError,
                          ValueError,
+                         AssertionError,
                          TypeError,
                          OSError,
-                         ZeroDivisionError)
+                         ZeroDivisionError, cls)
         return except_source
 
-    @classmethod
-    def check_except_pytorch(cls, msg):
-        """Check except."""
 
-        def decorator(func):
-            def _f(arch, model_path, **kwargs):
-                try:
-                    output = func(arch, model_path=model_path, **kwargs)
-                except cls.raise_from() as e:
-                    error = cls(msg=msg)
-                    log.error(msg)
-                    log.exception(e)
-                    raise error from e
-                return output
-            return _f
-        return decorator
+class TfRuntimeError(MindConverterException):
+    """Catch tf runtime error."""
+
+    def __init__(self, msg):
+        super(TfRuntimeError, self).__init__(error=ConverterErrors.TF_RUNTIME_ERROR,
+                                             user_msg=msg,
+                                             cls_code=ConverterErrors.GRAPH_INIT_FAIL.value)
 
     @classmethod
-    def check_except_tf(cls, msg):
-        """Check except."""
+    def raise_from(cls):
         tf_error_module = import_module('tensorflow.python.framework.errors_impl')
         tf_error = getattr(tf_error_module, 'OpError')
-
-        cls._error = cls.raise_from() + (tf_error,)
-
-        def decorator(func):
-            def _f(arch, model_path, **kwargs):
-                try:
-                    output = func(arch, model_path=model_path, **kwargs)
-                except cls._error as e:
-                    error = cls(msg=msg)
-                    log.error(msg)
-                    log.exception(e)
-                    raise error from e
-                return output
-
-            return _f
-
-        return decorator
+        return tf_error, ValueError, RuntimeError, cls
 
 
 class NodeInputMissing(MindConverterException):
@@ -352,6 +298,10 @@ class NodeInputMissing(MindConverterException):
                                                user_msg=msg,
                                                cls_code=ConverterErrors.TREE_CREATE_FAIL.value)
 
+    @classmethod
+    def raise_from(cls):
+        return ValueError, IndexError, KeyError, AttributeError, cls
+
 
 class TreeNodeInsertFail(MindConverterException):
     """The tree node create fail error."""
@@ -361,31 +311,14 @@ class TreeNodeInsertFail(MindConverterException):
                                                  user_msg=msg,
                                                  cls_code=ConverterErrors.TREE_CREATE_FAIL.value)
 
-    @staticmethod
-    def raise_from():
+    @classmethod
+    def raise_from(cls):
         """Raise from exceptions below."""
         except_source = (OSError,
                          DuplicatedNodeIdError,
                          MultipleRootError,
-                         NodeIDAbsentError)
+                         NodeIDAbsentError, cls)
         return except_source
-
-    @classmethod
-    def check_except(cls, msg):
-        """Check except."""
-
-        def decorator(func):
-            def _f(arch, graph):
-                try:
-                    output = func(arch, graph=graph)
-                except cls.raise_from() as e:
-                    error = cls(msg=msg)
-                    log.error(msg)
-                    log.exception(e)
-                    raise error from e
-                return output
-            return _f
-        return decorator
 
 
 class NodeInputTypeNotSupport(MindConverterException):
@@ -396,6 +329,10 @@ class NodeInputTypeNotSupport(MindConverterException):
                                                       user_msg=msg,
                                                       cls_code=ConverterErrors.SOURCE_FILES_SAVE_FAIL.value)
 
+    @classmethod
+    def raise_from(cls):
+        return ValueError, TypeError, IndexError, cls
+
 
 class ScriptGenerateFail(MindConverterException):
     """The script generate fail error."""
@@ -405,30 +342,13 @@ class ScriptGenerateFail(MindConverterException):
                                                  user_msg=msg,
                                                  cls_code=ConverterErrors.SOURCE_FILES_SAVE_FAIL.value)
 
-    @staticmethod
-    def raise_from():
+    @classmethod
+    def raise_from(cls):
         """Raise from exceptions below."""
         except_source = (RuntimeError,
                          parse.ParseError,
-                         AttributeError)
+                         AttributeError, cls)
         return except_source
-
-    @classmethod
-    def check_except(cls, msg):
-        """Check except."""
-
-        def decorator(func):
-            def _f(arch, mapper):
-                try:
-                    output = func(arch, mapper=mapper)
-                except cls.raise_from() as e:
-                    error = cls(msg=msg)
-                    log.error(msg)
-                    log.exception(e)
-                    raise error from e
-                return output
-            return _f
-        return decorator
 
 
 class ReportGenerateFail(MindConverterException):
@@ -439,28 +359,24 @@ class ReportGenerateFail(MindConverterException):
                                                  user_msg=msg,
                                                  cls_code=ConverterErrors.SOURCE_FILES_SAVE_FAIL.value)
 
-    @staticmethod
-    def raise_from():
+    @classmethod
+    def raise_from(cls):
         """Raise from exceptions below."""
-        except_source = ZeroDivisionError
-        return except_source
+        return ZeroDivisionError, cls
+
+
+class SubGraphSearchingFail(MindConverterException):
+    """Sub-graph searching exception."""
+
+    def __init__(self, msg):
+        super(SubGraphSearchingFail, self).__init__(error=ConverterErrors.MODEL_NOT_SUPPORT,
+                                                    cls_code=ConverterErrors.SUB_GRAPH_SEARCHING_FAIL.value,
+                                                    user_msg=msg)
 
     @classmethod
-    def check_except(cls, msg):
-        """Check except."""
-
-        def decorator(func):
-            def _f(arch, mapper):
-                try:
-                    output = func(arch, mapper=mapper)
-                except cls.raise_from() as e:
-                    error = cls(msg=msg)
-                    log.error(msg)
-                    log.exception(e)
-                    raise error from e
-                return output
-            return _f
-        return decorator
+    def raise_from(cls):
+        """Define exception in sub-graph searching module."""
+        return IndexError, KeyError, ValueError, AttributeError, ZeroDivisionError, cls
 
 
 class GeneratorFail(MindConverterException):
@@ -470,10 +386,23 @@ class GeneratorFail(MindConverterException):
         super(GeneratorFail, self).__init__(error=ConverterErrors.NODE_CONVERSION_ERROR,
                                             user_msg=msg,
                                             cls_code=ConverterErrors.GENERATOR_FAIL.value)
+
     @classmethod
     def raise_from(cls):
         """Raise from exceptions below."""
-        except_source = (ValueError,
-                         TypeError,
-                         cls)
+        except_source = (ValueError, TypeError, cls)
         return except_source
+
+
+class ModelLoadingFail(MindConverterException):
+    """Model loading fail."""
+
+    def __init__(self, msg):
+        super(ModelLoadingFail, self).__init__(error=ConverterErrors.INPUT_SHAPE_ERROR,
+                                               cls_code=ConverterErrors.MODEL_LOADING_FAIL.value,
+                                               user_msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        """Define exception when model loading fail."""
+        return ValueError, cls

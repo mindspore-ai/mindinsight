@@ -27,7 +27,7 @@ from ..common.global_context import GlobalContext
 
 from ..constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
     ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL
-from ...common.exceptions import GraphInitFail, ModelNotSupport
+from ...common.exceptions import GraphInitFail, ModelNotSupport, ModelLoadingFail
 
 
 def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=12):
@@ -308,7 +308,7 @@ class OnnxDataLoader:
             w = int(match.group('w'))
             c = int(match.group('c'))
             if [h, w, c] != list(self.graph_input_shape)[1:4]:
-                raise ValueError(f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
+                raise ModelLoadingFail(f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
             return True
         return False
 

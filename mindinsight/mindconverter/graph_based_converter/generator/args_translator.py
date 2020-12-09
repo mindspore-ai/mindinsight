@@ -201,6 +201,7 @@ class ArgsTranslation:
 
 class ArgsTranslationHelper:
     """Define operations related to ArgsTranslation instances."""
+
     @staticmethod
     def find_formal_args_in_modules(args_translators):
         """

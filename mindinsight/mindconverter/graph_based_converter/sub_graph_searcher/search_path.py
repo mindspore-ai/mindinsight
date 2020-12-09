@@ -18,7 +18,7 @@ import uuid
 from typing import Dict, List, Callable, Union
 from collections import OrderedDict
 from .common import context, gen_hash_key, DagGraph, MAX_OUT_DEGREE, cal_matching_score
-from .known_module_name import BUILT_IN_MODULE_NAME, is_built_in_module_name
+from .known_module_name import BUILT_IN_MODULE_NAME
 from .pattern import Pattern, scope_name_mapping
 from .built_in_pattern import BUILT_IN_PATTERN, is_built_in_pattern
 from .pattern_fuzzy_matching import pattern_fuzzy_matching
@@ -85,13 +85,15 @@ def _is_valid_pattern(pattern, dag):
     return True
 
 
-def generate_module_name(pattern):
+def match_known_module_name(pattern):
     """
-    Generate module name.
+    Matching with know module name.
 
     Args:
         pattern (Pattern): To be replaced pattern.
 
+    Returns:
+        str, matched module name, return None if not matched.
     """
     matched_result = []
     for ptn, module_name in BUILT_IN_MODULE_NAME.items():
@@ -109,7 +111,11 @@ def generate_module_name(pattern):
             module_name = f"{module_name}{used_module_name[pattern.pattern]}"
             used_module_name[pattern.pattern] += 1
         return module_name
+    return None
 
+
+def generate_module_name():
+    """Generate module name."""
     global global_idx
     name = f"Module{global_idx}"
     global_idx += 1
@@ -439,13 +445,16 @@ class SearchPath:
             to recover the sequence.
         """
         if self.pattern.pattern not in scope_name_mapping:
-            module_name = generate_module_name(self.pattern)
-            scope_name_mapping[self.pattern.pattern] = module_name
+            module_name = generate_module_name()
+            known_module_name = match_known_module_name(self.pattern)
+            scope_name_mapping[self.pattern] = module_name
             module_name_to_src[module_name] = self.pattern.pattern
         else:
             module_name = scope_name_mapping[self.pattern.pattern]
+            known_module_name = module_name_to_src[module_name].known_module_name
         self.pattern.module_name = module_name
-        if is_built_in_module_name(module_name):
+        self.pattern.known_module_name = known_module_name
+        if known_module_name:
             self.pattern.additional_score += cal_matching_score(self.pattern.ptn_length)
         topo_order, inverted_index = self.replace_sub_graph_completely(self.pattern, self.topo_order_bef_repl)
         return topo_order, inverted_index
