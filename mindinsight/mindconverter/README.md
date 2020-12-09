@@ -20,7 +20,10 @@
     - [Unsupported situation of AST mode](#unsupported-situation-of-ast-mode)
         - [Situation1](#situation1)
         - [Situation2](#situation2)
+    - [Requirements](#requirements)
     - [Frequently asked questions](#frequently-asked-questions)
+    - [Appendix](#appendix)
+        - [Tensorflow Pb Model Exporting](#tensorflow-pb-model-exporting)
 
 <!-- /TOC -->
 
@@ -120,23 +123,41 @@ Some typical image classification networks such as ResNet and VGG have been test
 > 2. The Dropout operator will be lost after conversion because the inference mode is used to load the PyTorch or TensorFlow model. Manually re-implement is necessary.
 > 3. The Graph-based mode will be continuously developed and optimized with further updates.
 
-Supported models list (Models in below table have been tested based on PyTorch 1.14.0 and TensorFlow 1.15.0, X86 Ubuntu released version):
+Supported models list (Models in below table have been tested based on PyTorch 1.4.0(TorchVision 0.5.0) and TensorFlow 1.15.0, X86 Ubuntu released version):
 
-|  Supported Model | PyTorch Script | TensorFlow Script |
-| :----: | :----: | :----: |
-| ResNet18 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |
-| ResNet34 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |
-| ResNet50 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |
-| ResNet101 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |
-| ResNet152 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |
-| VGG11/11BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |
-| VGG13/13BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |
-| VGG16/16BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |
-| VGG19/19BN | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |
-| AlexNet | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | / |
-| GoogLeNet | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | / |
-| MobileNetV2 | [link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |
-| InceptionV3 | / | [link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |
+|  Supported Model | PyTorch Script | TensorFlow Script | Comment |
+| :----: | :----: | :----: | :----: |
+| ResNet18 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  |
+| ResNet34 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  |
+| ResNet50 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
+| ResNet50V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
+| ResNet101 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
+| ResNet101V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
+| ResNet152 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
+| ResNet152V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
+| ResNeXt50 32x4d | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | |
+| ResNeXt101 32x8d | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | |
+| Wide ResNet50 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | |
+| Wide ResNet101 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | |
+| VGG11/11BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  |
+| VGG13/13BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  |
+| VGG16 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |  |
+| VGG16BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  |
+| VGG19 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |  |
+| VGG19BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  |
+| AlexNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | / |  |
+| GoogLeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | / |  |
+| Xception | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/xception.py) |  |
+| InceptionV3 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/inception.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |  |
+| InceptionResNetV2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  |
+| MobileNetV1 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  |
+| MobileNetV2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  |
+| MNASNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | / | |
+| SqueezeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | / | |
+| DenseNet121/169/201 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  |
+| DenseNet161 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | / | |
+| NASNetMobile/Large | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  |
+| EfficientNetB0~B7 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  |
 
 ## Example
 
@@ -234,36 +255,9 @@ class Classifier(nn.Cell):
 
 #### TensorFlow Model Scripts Conversion
 
-To use TensorFlow model script migration, you need to export TensorFlow model to Pb format first, and obtain the model input node and output node name. You can refer to the following methods to export and obtain the node name:
+To use TensorFlow model script migration, users need to export TensorFlow model to Pb format first, and obtain the model input node and output node name. For exporting pb model, please refer to [TensorFlow Pb model exporting](#tensorflow-pb-model-exporting).
 
-```python
-import tensorflow as tf
-from tensorflow.python.framework import graph_io
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-
-
-def freeze_graph(graph, session, output):
-    saved_path = "/home/user/xxx"
-    with graph.as_default():
-        graphdef_inf = tf.graph_util.remove_training_nodes(graph.as_graph_def())
-        graphdef_frozen = tf.graph_util.convert_variables_to_constants(session, graphdef_inf, output)
-        graph_io.write_graph(graphdef_frozen, saved_path, "frozen_model.pb", as_text=False)
-
-tf.keras.backend.set_learning_phase(0) # this line most important
-
-base_model = InceptionV3()
-session = tf.keras.backend.get_session()
-
-INPUT_NODE = base_model.inputs[0].op.name  # Get input node name of TensorFlow.
-OUTPUT_NODE = base_model.outputs[0].op.name  # Get output node name of TensorFlow.
-freeze_graph(session.graph, session, [out.op.name for out in base_model.outputs])
-print(f"Input node name: {INPUT_NODE}, output node name: {OUTPUT_NODE}")
-
-```
-
-After the above code is executed, the model will be saved to `/home/user/xxx/frozen_model.pb`. `INPUT_NODE` can be passed into `--input_nodes`, and `OUTPUT_NODE` is the corresponding `--output_nodes`.
-
-Suppose the input node name is `input_1:0`, output node name is `predictions/Softmax:0`, the input shape of model is `1,224,224,3`, the following command can be used to generate the script:
+Suppose the model is saved to `/home/user/xxx/frozen_model.pb`, corresponding input node name is `input_1:0`, output node name is `predictions/Softmax:0`, the input shape of model is `1,224,224,3`, the following command can be used to generate the script:
 
 ```bash
 mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
@@ -277,7 +271,7 @@ After executed MindSpore script, and report file can be found in corresponding d
 
 The format of conversion report generated by script generation scheme based on graph structure is the same as that of AST scheme. However, since the graph based scheme is a generative method, the original pytorch script is not referenced in the conversion process. Therefore, the code line and column numbers involved in the generated conversion report refer to the generated script.
 
-In addition, for operators that are not converted successfully, the input and output shape of tensor of the node will be identified in the code by `input_shape` and `output_shape`. For example, please refer to [PyTorch Model Scripts Conversion](#manual_modify).
+In addition, for operators that are not converted successfully, the input and output shape of tensor of the node will be identified in the code by `input_shape` and `output_shape`. For example, please refer to the example in **PyTorch Model Scripts Conversion** section.
 
 ## Caution
 
@@ -316,6 +310,18 @@ class ConvBNReLU(nn.Sequential):
         )
 ```
 
+## Requirements
+
+For users converting PyTorch model script to MindSpore, there is no need to install other third party package.
+
+For users converting TensorFlow model script to MindSpore, in addition to install the TensorFlow can satisfy the pb model loading, inference and training, users also need to pip install the following third party package:
+
+```text
+onnx>=1.8.0
+tf2onnx>=1.7.1
+onnxruntime>=1.5.2
+```
+
 ## Frequently asked questions
 
 Q1. `terminate called after throwing an instance of 'std::system_error', what(): Resource temporarily unavailable, Aborted (core dumped)`:
@@ -324,3 +330,81 @@ Q1. `terminate called after throwing an instance of 'std::system_error', what():
 
 Q2. Can MindConverter run on ARM platform?
 > Answer: MindConverter usability on X86 Ubuntu machine has been verified, yet, on ARM has not.
+
+Q3. Why did I get message of `Error detail: [NodeInputMissing] ...` when converting PyTorch model?
+> Answer: For PyTorch model, if operations in `torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx` were used, node parsing could be failed. It's better to replace those operations with `torch.nn.xxx`.
+
+## Appendix
+
+### TensorFlow Pb model exporting
+
+If build model with Keras API, user can try the following methods.
+
+For TensorFlow 1.15.x version:
+
+```python
+import tensorflow as tf
+from tensorflow.python.framework import graph_io
+from tensorflow.python.keras.applications.inception_v3 import InceptionV3
+
+def freeze_graph(graph, session, output_nodes, output_folder: str):
+    """
+    Freeze graph for tf 1.x.x.
+
+    Args:
+        graph (tf.Graph): Graph instance.
+        session (tf.Session): Session instance.
+        output_nodes (list): Output nodes name.
+        output_folder (str): Output folder path for frozen model.
+
+    """
+    with graph.as_default():
+        graphdef_inf = tf.graph_util.remove_training_nodes(graph.as_graph_def())
+        graphdef_frozen = tf.graph_util.convert_variables_to_constants(session, graphdef_inf, output_nodes)
+        graph_io.write_graph(graphdef_frozen, output_folder, "frozen_model.pb", as_text=False)
+
+tf.keras.backend.set_learning_phase(0)
+
+keras_model = InceptionV3()
+session = tf.keras.backend.get_session()
+
+INPUT_NODES = [ipt.op.name for ipt in keras_model.inputs]
+OUTPUT_NODES = [opt.op.name for opt in keras_model.outputs]
+freeze_graph(session.graph, session, OUTPUT_NODES, "/home/user/xxx")
+print(f"Input nodes name: {INPUT_NODES}, output nodes name: {OUTPUT_NODES}")
+```
+
+For TensorFlow 2.x.x version:
+
+```python
+import tensorflow as tf
+from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
+
+
+def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name: str,
+                           output_folder: str):
+    """
+    Export keras model to frozen model.
+
+    Args:
+        keras_model (tensorflow.python.keras.models.Model):
+        model_name (str): Model name for the file name.
+        output_folder (str): Output folder for saving model.
+
+    """
+    full_model = tf.function(lambda x: keras_model(x))
+    full_model = full_model.get_concrete_function(
+        tf.TensorSpec(keras_model.inputs[0].shape, keras_model.inputs[0].dtype)
+    )
+
+    frozen_func = convert_variables_to_constants_v2(full_model)
+    frozen_func.graph.as_graph_def()
+
+    print(f"Model inputs: {frozen_func.inputs}")
+    print(f"Model outputs: {frozen_func.outputs}")
+
+    tf.io.write_graph(graph_or_graph_def=frozen_func.graph,
+                      logdir=output_folder,
+                      name=model_name,
+                      as_text=False)
+```
