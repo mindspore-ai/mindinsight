@@ -75,3 +75,17 @@ class InputType(Enum):
 class FrameworkType(Enum):
     PYTORCH = 0
     TENSORFLOW = 1
+
+
+def get_imported_module():
+    """
+    Generate imported module header.
+
+    Returns:
+        str, imported module.
+    """
+    return f"import numpy as np{NEW_LINE}" \
+            f"import mindspore{NEW_LINE}" \
+            f"from mindspore import nn{NEW_LINE}" \
+            f"from mindspore import Tensor{NEW_LINE}" \
+            f"from mindspore.ops import operations as P{NEW_LINE * 3}"

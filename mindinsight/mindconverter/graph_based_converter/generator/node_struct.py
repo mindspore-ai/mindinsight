@@ -22,6 +22,7 @@ from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
 from ..common.global_context import GlobalContext
 from ..constant import InputType
+from ...common.exceptions import GeneratorFail
 
 
 class NodeStruct:
@@ -47,22 +48,32 @@ class NodeStruct:
         self.node_type = None
         self.onnx_name = None
         self.onnx_op = None
-        self.graph_node_ref = None  # Our defined GraphNode
+        self.graph_node_ref = None
         self.scope_name = None
         self.ms_var_name = None
-        self.ms_opt_var_name = None  # ms_opt_var_name = self.ms_var_name(...)
+        self.ms_opt_var_name = None
         self.ms_op = None
         self.ready_to_generate = False
 
-        self.ms_params = dict()  # converted params from mapper
+        # Define attributes converted from mapper
+        self.ms_params = dict()
         self.ms_settings = dict()
         self.ms_weights = dict()
         self.ms_inputs = OrderedDict()
 
-        self.scope = None  # Defined Scope class
-        self.inputs_in_construct_header = OrderedDict() # key is prec_node_name, value is x; For code line use
-        self.inputs_in_parent_module = OrderedDict() # key is prec_node_name, value is its closet opt_var_name
-        self.matched_inputs = list() # Matched inputs will can be directly used by code line generation
+        # Defined Scope class
+        self.scope = None
+
+        # Define attributes used for code generation
+
+        # key is prec_node_name, value is x; For code line use
+        self.inputs_in_construct_header = OrderedDict()
+
+        # key is prec_node_name, value is its closet opt_var_name
+        self.inputs_in_parent_module = OrderedDict()
+
+        # Matched inputs will can be directly used by code line generation
+        self.matched_inputs = list()
 
         # initialize funcs.
         for arg in args:
@@ -135,6 +146,7 @@ class NodeStruct:
         parsed_scope = Scope.parse_scope_from_node_identifier(self.identifier)
         self.scope = Scope(parsed_scope)
 
+    @GeneratorFail.check_except("Generator occurs an error when initializing node's args translator.")
     def init_args_translator(self, translated_args: list):
         """
         Initialize the ArgsTranslator for each Node.
@@ -158,6 +170,7 @@ class NodeStruct:
                 self.ms_op]):
             self.ready_to_generate = True
 
+    @GeneratorFail.check_except("Generator occurs an error when creating node struct.")
     def update(self, arg, force_ready=False):
         """
         Pass Node info. to generator NodeStruct.
@@ -314,23 +327,12 @@ class NodeStruct:
                     return input_name_to_use
         return None
 
-    def code_line_in_construct(self, inputs=None, in_module_returns=None):
+    def code_line_in_construct(self, inputs=None):
         """Construct line of code in module construct block. """
         left = self.ms_opt_var_name
-        if inputs is None:
-            inputs = []
-            for idx, prec_node in enumerate(self.precursor_nodes_names):
-                if self.inputs_in_construct_header.get(prec_node):
-                    inputs.append(self.inputs_in_construct_header.get(prec_node))
-                elif self._check_target_node_internal(prec_node):
-                    inputs.append(self.precursor_nodes_structs[idx].ms_opt_var_name)
-                elif self.inputs_in_parent_module.get(prec_node):
-                    inputs.append(self.inputs_in_parent_module.get(prec_node))
-                elif in_module_returns and in_module_returns.get(self.onnx_name) \
-                        and (not self._check_target_node_internal(prec_node)):
-                    inputs.append(self._get_correct_in_module_returns(prec_node, in_module_returns.get(self.onnx_name)))
-                else:
-                    inputs.append("unk_{}_{}".format(idx, prec_node))
+
+        if not self.matched_inputs and inputs is None:
+            raise ValueError("Unable to generate the code construct statement due to empty inputs.")
 
         if self.matched_inputs:
             inputs = self.matched_inputs
@@ -394,7 +396,7 @@ class NodeStruct:
         """
         target_nd_struct = self.GLOBAL_CONTEXT_MGR.node_struct_collections.get(name) \
             or self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_node_struct_map.get(name)
-        if target_nd_struct is None and self.topo_idx == 0: # First node always has external input
+        if target_nd_struct is None and self.topo_idx == 0:  # First node always has external input
             return False
 
         if target_nd_struct is None:
@@ -413,11 +415,11 @@ class NodeStruct:
     @property
     def precursor_nodes_names_external(self) -> list:
         """Return a list of external precursor nodes names."""
-        return [name for name in self.precursor_nodes_names \
-            if not self._check_target_node_internal(name)]
+        return [name for name in self.precursor_nodes_names
+                if not self._check_target_node_internal(name)]
 
     @property
     def successor_nodes_names_external(self) -> list:
         """Return a list of external successor nodes names."""
-        return [name for name in self.successor_nodes_names \
-            if not self._check_target_node_internal(name)]
+        return [name for name in self.successor_nodes_names
+                if not self._check_target_node_internal(name)]

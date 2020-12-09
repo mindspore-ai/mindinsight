@@ -20,7 +20,8 @@ from importlib import import_module
 from importlib.util import find_spec
 
 import mindinsight
-from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied
+from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, \
+    save_code_file_and_report
 from mindinsight.mindconverter.graph_based_converter.constant import BINARY_HEADER_PYTORCH_FILE, FrameworkType, \
     BINARY_HEADER_PYTORCH_BITS, ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
@@ -28,6 +29,7 @@ from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.common.exceptions import GraphInitFail, TreeCreateFail, SourceFilesSaveFail, \
     BaseConverterFail, UnknownModel
 from mindinsight.utils.exceptions import ParamMissError
+
 
 permissions = os.R_OK | os.W_OK | os.X_OK
 os.umask(permissions << 3 | permissions)
@@ -194,23 +196,18 @@ def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
     """
     third_party_graph_module = import_module(
         'mindinsight.mindconverter.graph_based_converter.third_party_graph')
-    hierarchical_tree_module = import_module(
-        'mindinsight.mindconverter.graph_based_converter.hierarchical_tree')
     cls_graph_factory = getattr(third_party_graph_module, 'GraphFactory')
-    cls_hierarchical_tree_factory = getattr(hierarchical_tree_module, 'HierarchicalTreeFactory')
+    batch_add_nodes = getattr(import_module('mindinsight.mindconverter.graph_based_converter.generator'),
+                              "batch_add_nodes")
     # Close unnecessary log.
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     graph_obj = cls_graph_factory.init(graph_path, sample_shape=sample_shape,
                                        input_nodes=input_nodes, output_nodes=output_nodes)
-
-    hierarchical_tree, scope_name_map = cls_hierarchical_tree_factory.create(graph_obj)
-
+    generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
-    hierarchical_tree.save_source_files(output_folder, mapper=ONNXToMindSporeMapper,
-                                        model_name=model_name,
-                                        report_folder=report_folder,
-                                        scope_name_map=scope_name_map)
+    code_fragments = generator_inst.generate()
+    save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
 
 
 @BaseConverterFail.check_except("Failed to start base converter.")

@@ -201,7 +201,7 @@ class ModuleStruct:
 
     def init_args_translator(self):
         """Initialize the Args Translator for the module."""
-        var_name = "Module{}_{}".format(self.pattern_id, self.pattern_uid)
+        var_name = self.ms_var_name
         self._args_translator = ArgsTranslation(None, var_name, None)
 
     def update_module_fragment(self):
@@ -455,14 +455,18 @@ class ModuleStruct:
         """Return the class name for generating code of this module."""
         if self.pattern_id == -1:
             return "Model"
-        return "Module{}".format(self.pattern_id)
+        if self.GLOBAL_CONTEXT_MGR.known_module_name.get("Module{}".format(self.pattern_id)) is not None:
+            class_name = self.GLOBAL_CONTEXT_MGR.known_module_name.get("Module{}".format(self.pattern_id))
+        else:
+            class_name = "Module{}".format(self.pattern_id)
+        return class_name
 
     @property
     def ms_var_name(self) -> str:
         """Return the variable name for generated code statement of this module."""
         if self.pattern_id == -1:
             return "Model"
-        return "Module{}_{}".format(self.pattern_id, self.pattern_uid).lower()
+        return f"{self.class_name}_{self.pattern_uid}".lower()
 
     @property
     def ms_opt_var_name(self) -> str:

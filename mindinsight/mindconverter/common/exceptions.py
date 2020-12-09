@@ -39,11 +39,13 @@ class ConverterErrors(ScriptConverterErrors):
     MODEL_NOT_SUPPORT = 8
     SCRIPT_GENERATE_FAIL = 9
     REPORT_GENERATE_FAIL = 10
+    NODE_CONVERSION_ERROR = 11
 
     BASE_CONVERTER_FAIL = 000
     GRAPH_INIT_FAIL = 100
     TREE_CREATE_FAIL = 200
     SOURCE_FILES_SAVE_FAIL = 300
+    GENERATOR_FAIL = 400
 
 
 class ScriptNotSupport(MindInsightException):
@@ -163,6 +165,7 @@ class MindConverterException(Exception):
 
 class BaseConverterFail(MindConverterException):
     """Base converter failed."""
+
     def __init__(self, msg):
         super(BaseConverterFail, self).__init__(error=ConverterErrors.BASE_CONVERTER_FAIL,
                                                 user_msg=msg)
@@ -195,6 +198,7 @@ class BaseConverterFail(MindConverterException):
 
 class UnknownModel(MindConverterException):
     """The unknown model error."""
+
     def __init__(self, msg):
         super(UnknownModel, self).__init__(error=ConverterErrors.UNKNOWN_MODEL,
                                            user_msg=msg)
@@ -202,6 +206,7 @@ class UnknownModel(MindConverterException):
 
 class GraphInitFail(MindConverterException):
     """The graph init fail error."""
+
     def __init__(self, **kwargs):
         super(GraphInitFail, self).__init__(error=ConverterErrors.GRAPH_INIT_FAIL,
                                             user_msg=kwargs.get('msg', ''))
@@ -230,6 +235,7 @@ class GraphInitFail(MindConverterException):
 
 class TreeCreateFail(MindConverterException):
     """The tree create fail."""
+
     def __init__(self, msg):
         super(TreeCreateFail, self).__init__(error=ConverterErrors.TREE_CREATE_FAIL,
                                              user_msg=msg)
@@ -254,6 +260,7 @@ class TreeCreateFail(MindConverterException):
 
 class SourceFilesSaveFail(MindConverterException):
     """The source files save fail error."""
+
     def __init__(self, msg):
         super(SourceFilesSaveFail, self).__init__(error=ConverterErrors.SOURCE_FILES_SAVE_FAIL,
                                                   user_msg=msg)
@@ -280,6 +287,7 @@ class SourceFilesSaveFail(MindConverterException):
 
 class ModelNotSupport(MindConverterException):
     """The model not support error."""
+
     def __init__(self, msg):
         super(ModelNotSupport, self).__init__(error=ConverterErrors.MODEL_NOT_SUPPORT,
                                               user_msg=msg,
@@ -338,6 +346,7 @@ class ModelNotSupport(MindConverterException):
 
 class NodeInputMissing(MindConverterException):
     """The node input missing error."""
+
     def __init__(self, msg):
         super(NodeInputMissing, self).__init__(error=ConverterErrors.NODE_INPUT_MISSING,
                                                user_msg=msg,
@@ -346,6 +355,7 @@ class NodeInputMissing(MindConverterException):
 
 class TreeNodeInsertFail(MindConverterException):
     """The tree node create fail error."""
+
     def __init__(self, msg):
         super(TreeNodeInsertFail, self).__init__(error=ConverterErrors.TREE_NODE_INSERT_FAIL,
                                                  user_msg=msg,
@@ -380,6 +390,7 @@ class TreeNodeInsertFail(MindConverterException):
 
 class NodeInputTypeNotSupport(MindConverterException):
     """The node input type NOT support error."""
+
     def __init__(self, msg):
         super(NodeInputTypeNotSupport, self).__init__(error=ConverterErrors.NODE_INPUT_TYPE_NOT_SUPPORT,
                                                       user_msg=msg,
@@ -388,6 +399,7 @@ class NodeInputTypeNotSupport(MindConverterException):
 
 class ScriptGenerateFail(MindConverterException):
     """The script generate fail error."""
+
     def __init__(self, msg):
         super(ScriptGenerateFail, self).__init__(error=ConverterErrors.SCRIPT_GENERATE_FAIL,
                                                  user_msg=msg,
@@ -421,6 +433,7 @@ class ScriptGenerateFail(MindConverterException):
 
 class ReportGenerateFail(MindConverterException):
     """The report generate fail error."""
+
     def __init__(self, msg):
         super(ReportGenerateFail, self).__init__(error=ConverterErrors.REPORT_GENERATE_FAIL,
                                                  user_msg=msg,
@@ -448,3 +461,19 @@ class ReportGenerateFail(MindConverterException):
                 return output
             return _f
         return decorator
+
+
+class GeneratorFail(MindConverterException):
+    """The Generator fail error."""
+
+    def __init__(self, msg):
+        super(GeneratorFail, self).__init__(error=ConverterErrors.NODE_CONVERSION_ERROR,
+                                            user_msg=msg,
+                                            cls_code=ConverterErrors.GENERATOR_FAIL.value)
+    @classmethod
+    def raise_from(cls):
+        """Raise from exceptions below."""
+        except_source = (ValueError,
+                         TypeError,
+                         cls)
+        return except_source
