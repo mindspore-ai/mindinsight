@@ -18,7 +18,7 @@ export default {
      * Initialize the condition
      */
     initCondition() {
-      if (this.metadata.state === 'running') {
+      if (this.metadata.state === this.state.running || this.metadata.state === this.state.sending) {
         return;
       }
       RequestService.queryConditions(this.trainId).then((res) => {
@@ -471,7 +471,7 @@ export default {
                     graphName,
                 );
               }
-              if (res.data.watch_point_hits && res.data.watch_point_hits.length > 0) {
+              if (res.data.watch_point_hits) {
                 this.radio1 = 'hit';
                 this.getWatchpointHits();
               }
@@ -525,12 +525,31 @@ export default {
           (res) => {
             if (res.data && res.data.metadata) {
               const h = this.$createElement;
-              this.$message({
-                message: h('p', null, [
-                  h('span', null, this.$t('debugger.backstageStatus')),
-                  h('i', {style: 'color: teal'}, res.data.metadata.state),
-                ]),
-              });
+
+              if (res.data.metadata.state === this.state.sending) {
+                setTimeout(() => {
+                  if (this.metadata.state === this.state.sending) {
+                    this.$message(this.$t('debugger.sendingTip'));
+                  } else {
+                    const msg = {
+                      message: h('p', null, [
+                        h('span', null, this.$t('debugger.backstageStatus')),
+                        h('i', {style: 'color: teal'}, this.metadata.state),
+                      ]),
+                    };
+                    this.$message(msg);
+                  }
+                }, 500);
+              } else {
+                const msg = {
+                  message: h('p', null, [
+                    h('span', null, this.$t('debugger.backstageStatus')),
+                    h('i', {style: 'color: teal'}, res.data.metadata.state),
+                  ]),
+                };
+                this.$message(msg);
+              }
+
               this.metadata.state = res.data.metadata.state;
             }
           },
@@ -596,7 +615,7 @@ export default {
      * @param {Object} item watchpoint data
      */
     deleteWatchpoint(item) {
-      if (!this.watchPointArr.length || this.metadata.state === 'running') {
+      if (!this.watchPointArr.length || this.metadata.state === this.state.running || this.metadata.state === this.state.sending) {
         return;
       }
       if ((item && item.id) || !item) {

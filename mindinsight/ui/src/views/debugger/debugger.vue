@@ -83,10 +83,12 @@ limitations under the License.
               <el-button type="primary"
                          size="mini"
                          class="custom-btn"
+                         :disabled="metadata.state === state.running || metadata.state === state.sending"
                          @click="selectAllFiles(true)">{{ $t('public.selectAll') }}</el-button>
               <el-button type="primary"
                          size="mini"
                          class="custom-btn"
+                         :disabled="metadata.state === state.running || metadata.state === state.sending"
                          @click="selectAllFiles(false)">{{ $t('public.deselectAll') }}</el-button>
             </div>
             <tree v-show="treeFlag"
@@ -168,13 +170,14 @@ limitations under the License.
               <div class="delete-wrap">
                 <i class="el-icon-delete"
                    :title="$t('debugger.clearWatchpoint')"
-                   :class="{disable: !(watchPointArr.length && metadata.state !== 'running')}"
+                   :class="{disable: !(watchPointArr.length && metadata.state !== state.running &&
+                   metadata.state !== state.sending)}"
                    @click="deleteWatchpoint()"></i>
               </div>
               <div class="add-wrap">
                 <i class="el-icon-circle-plus"
                    :title="$t('debugger.createWP')"
-                   :class="{disable: metadata.state === 'running'}"
+                   :class="{disable: metadata.state === state.running || metadata.state === state.sending}"
                    @click="initCondition"></i>
               </div>
             </div>
@@ -258,21 +261,21 @@ limitations under the License.
             <el-button type="primary"
                        size="mini"
                        class="custom-btn green"
-                       :disabled="!step || metadata.state==='running' || metadata.state==='pending'"
+                       :disabled="!(step && metadata.state === state.waiting)"
                        @click="control(0)">{{ $t('public.sure') }}</el-button>
           </div>
           <div class="btn-two">
             <el-button size="mini"
                        class="custom-btn white"
-                       :disabled="metadata.state==='running'|| metadata.state==='pending'"
+                       :disabled="metadata.state !== state.waiting"
                        @click="control(1)">{{$t('debugger.continue')}}</el-button>
             <el-button size="mini"
                        class="custom-btn white"
-                       :disabled="metadata.state!=='running'"
+                       :disabled="metadata.state !== state.running"
                        @click="control(3)">{{$t('debugger.pause')}}</el-button>
             <el-button size="mini"
                        class="custom-btn white"
-                       :disabled="metadata.state==='pending'"
+                       :disabled="metadata.state === state.pending || metadata.state === state.sending"
                        @click="terminate">{{$t('debugger.terminate')}}</el-button>
           </div>
         </div>
@@ -402,7 +405,7 @@ limitations under the License.
                       <div class="value-wrap">
                         <el-button size="mini"
                                    type="text"
-                                   :disabled="metadata.state==='running'"
+                                   :disabled="metadata.state === state.running || metadata.state === state.sending"
                                    v-if="scope.row.value === 'click to view'"
                                    @click="showTensor(scope.row,'value')">
                           {{ $t('debugger.view') }}
@@ -411,13 +414,14 @@ limitations under the License.
                                    class="value-tip"
                                    size="mini"
                                    type="text"
-                                   :disabled="metadata.state==='running'"
+                                   :disabled="metadata.state===state.running || metadata.state === state.sending"
                                    :title="isNaN(scope.row.value)?'':scope.row.value"
                                    @click="showTensor(scope.row,'value')">
                           {{ scope.row.value }}</el-button>
                         <el-button size="mini"
                                    type="text"
-                                   :disabled="metadata.state==='running' || !scope.row.has_prev_step"
+                                   :disabled="metadata.state===state.running || metadata.state === state.sending ||
+                                  !scope.row.has_prev_step"
                                    @click="showTensor(scope.row,'compare')">
                           {{ $t('debugger.compareToPre') }}
                         </el-button>
@@ -782,7 +786,16 @@ export default {
         checked: 2,
         noCheckbox: -1,
       },
+      percentParams: ['zero_percentage_ge', 'range_percentage_lt', 'range_percentage_gt'],
+      oldState: '',
       treeDisabled: false,
+      state: {
+        running: 'running',
+        pending: 'pending',
+        mismatch: 'mismatch',
+        sending: 'sending',
+        waiting: 'waiting',
+      },
     };
   },
   components: {debuggerTensor, tree},
@@ -794,29 +807,36 @@ export default {
   watch: {
     'metadata.state': {
       handler(newValue, oldValue) {
-        if (newValue === 'pending' && oldValue !== undefined) {
-          location.reload();
+        if (newValue === this.state.mismatch) {
+          this.conflictFlag = true;
+        } else {
+          this.conflictFlag = false;
         }
-        if (oldValue === 'pending' && newValue === 'waiting') {
-          this.loadNode(this.node, this.resolve);
+
+        if (newValue === this.state.pending) {
+          if (oldValue) {
+            location.reload();
+          } else {
+            this.dialogVisible = true;
+          }
+        } else {
+          this.dialogVisible = false;
         }
-        if (oldValue === 'running' && newValue === 'waiting') {
-          this.getWatchpointHits();
-        }
-        if (newValue === 'running') {
+        if (newValue === this.state.running || newValue === this.state.sending) {
           this.treeDisabled = true;
         } else {
           this.treeDisabled = false;
         }
-        if (newValue === 'pending') {
-          this.dialogVisible = true;
-        } else {
-          this.dialogVisible = false;
+        if (newValue === this.state.sending && oldValue) {
+          this.oldState = oldValue;
         }
-        if (newValue === 'mismatch') {
-          this.conflictFlag = true;
-        } else {
-          this.conflictFlag = false;
+
+        if (newValue === this.state.waiting) {
+          if (this.oldState === this.state.pending || oldValue === this.state.pending) {
+            this.loadNode(this.node, this.resolve);
+          } else if (this.oldState === this.state.running || oldValue === this.state.running) {
+            this.getWatchpointHits();
+          }
         }
       },
       deep: true,

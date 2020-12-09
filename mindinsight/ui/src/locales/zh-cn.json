@@ -733,7 +733,8 @@
       "inf": "张量中含有+/-INF，",
       "no_prev_tensor": "找不到上一个迭代的值，",
       "cannotCheck": "无法检查。"
-    }
+    },
+    "sendingTip": "等待训练响应，请稍候。"
   },
   "explain": {
     "explain": "模型解释",
