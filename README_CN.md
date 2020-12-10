@@ -55,7 +55,7 @@ MindInsight为MindSpore提供了简单易用的调优调试能力。在训练过
 #### pip安装
 
 ```bash
-pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://mirrors.huaweicloud.com/repository/pypi/simple
+pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 > - 在联网状态下，安装whl包时会自动下载MindInsight安装包的依赖项（依赖项详情参见[requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)），其余情况需自行安装。  
@@ -79,7 +79,7 @@ git clone https://gitee.com/mindspore/mindinsight.git
 
     ```bash
     cd mindinsight
-    pip install -r requirements.txt -i https://mirrors.huaweicloud.com/repository/pypi/simple
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
     python setup.py install
     ```
 
@@ -90,7 +90,7 @@ git clone https://gitee.com/mindspore/mindinsight.git
     ```bash
     cd mindinsight
     bash build/build.sh
-    pip install output/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl -i https://mirrors.huaweicloud.com/repository/pypi/simple
+    pip install output/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 ### 验证是否成功安装
