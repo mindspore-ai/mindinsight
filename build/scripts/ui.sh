@@ -24,8 +24,6 @@ build_ui() {
         command npm
     fi
 
-    rm -f package-lock.json
-    rm -rf node_modules
     rm -rf dist
     mkdir -p public/static/js
 
