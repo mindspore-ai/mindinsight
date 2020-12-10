@@ -55,7 +55,7 @@ You can install MindInsight either by pip or by source code.
 #### Installation by pip
 
 ```bash
-pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://mirrors.huaweicloud.com/repository/pypi/simple
+pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 > - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)). In other cases, you need to manually install dependency items.  
@@ -79,7 +79,7 @@ You can choose any of the following installation methods:
 
     ```bash
     cd mindinsight
-    pip install -r requirements.txt -i https://mirrors.huaweicloud.com/repository/pypi/simple
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
     python setup.py install
     ```
 
@@ -90,7 +90,7 @@ You can choose any of the following installation methods:
     ```bash
     cd mindinsight
     bash build/build.sh
-    pip install output/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl -i https://mirrors.huaweicloud.com/repository/pypi/simple
+    pip install output/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 ### Installation Verification
