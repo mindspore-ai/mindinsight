@@ -381,6 +381,7 @@ export default {
         }
       }
       this.scatterChartData = arrayTemp;
+      this.viewBigBtnDisabled = !this.scatterChartData.length;
     },
 
     /**
