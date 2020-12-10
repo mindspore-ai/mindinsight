@@ -22,6 +22,32 @@ from enum import Enum
 from mindinsight.debugger.conditionmgr.log import logger
 
 
+class ParamNameEnum(Enum):
+    """Param names."""
+    ABS_MEAN_GT = "abs_mean_gt"
+    ABS_MEAN_LT = "abs_mean_lt"
+    ABS_MEAN_UPDATE_RATIO_GT = "abs_mean_update_ratio_gt"
+    ABS_MEAN_UPDATE_RATIO_LT = "abs_mean_update_ratio_lt"
+    ATOL = "atol"
+    EQUAL_NAN = "equal_nan"
+    EPSILON = "epsilon"
+    MAX_GT = "max_gt"
+    MAX_LT = "max_lt"
+    MIN_GT = "min_gt"
+    MIN_LT = "min_lt"
+    MEAN_GT = "mean_gt"
+    MEAN_LT = "mean_lt"
+    MAX_MIN_GT = "max_min_gt"
+    MAX_MIN_LT = "max_min_lt"
+    PARAM = "param"
+    RANGE_START_INCLUSIVE = "range_start_inclusive"
+    RANGE_END_INCLUSIVE = "range_end_inclusive"
+    RANGE_PERCENTAGE_GT = "range_percentage_gt"
+    RANGE_PERCENTAGE_LT = "range_percentage_lt"
+    RTOL = "rtol"
+    ZERO_PERCENTAGE_GE = "zero_percentage_ge"
+
+
 class ConditionIdEnum(Enum):
     """Condition ids."""
     WEIGHT_INITIALIZATION = "weight_initialization"
@@ -121,7 +147,7 @@ class ConditionParameter:
     The class for parameters of conditions.
 
     Args:
-        name (str): parameter name.
+        name (ParamNameEnum): parameter name.
         value_type (ValueTypeEnum): the type of value.
         valid_test_func (func): the function used to test whether the param is valid.
         support_disable (bool): whether the param support no assignment.
@@ -133,7 +159,7 @@ class ConditionParameter:
 
     def __init__(self, name, value_type: ValueTypeEnum, valid_test_func=None, support_disable=True, default_value=None,
                  visible_on_ui=True, param_type=ParamTypeEnum.CHECK_PARAM, required_params=None):
-        self._name = name
+        self._name = name.value
         self._type = value_type
         self._valid_test_func = valid_test_func
         self._support_disable = support_disable

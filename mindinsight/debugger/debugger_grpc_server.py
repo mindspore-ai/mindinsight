@@ -21,7 +21,7 @@ import mindinsight
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
     Streams, RunLevel
-from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum
+from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum, ParamNameEnum
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.debugger.proto.ms_graph_pb2 import GraphProto
 
@@ -503,7 +503,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             }
             hit_params = {}
             for param in watchpoint_hit_proto.watch_condition.params:
-                if param.actual_value is not None:
+                if param.actual_value is not None and param.name not in \
+                        (ParamNameEnum.RTOL.value, ParamNameEnum.RANGE_START_INCLUSIVE.value,
+                         ParamNameEnum.RANGE_END_INCLUSIVE.value):
                     hit_params[param.name] = param.actual_value
             for i, param in enumerate(watchpoint_hit['watchpoint'].condition['params']):
                 name = param['name']
