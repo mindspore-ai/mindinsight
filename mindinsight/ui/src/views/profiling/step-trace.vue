@@ -54,7 +54,8 @@ limitations under the License.
         <span class="font-weight-style">{{$t('profiling.FPMessage')}}</span>
         <span>{{fp_start}}</span>
       </div>
-      <div class="step-padding-right">
+      <div class="step-padding-right"
+           v-if="bp_end">
         <span class="font-weight-style">{{$t('profiling.BPMessage')}}</span>
         <span>{{bp_end}}</span>
       </div>
@@ -102,35 +103,40 @@ limitations under the License.
           <p>{{svg.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </div>
-
-      <div v-for="(item,key) in tabsArr"
-           :key="key"
-           class="chart-wrap">
-        <div class="title">{{ item.name }}</div>
-        <div class="rate-wrap">
-          <div v-if="item.timeSummary[item.rate] !== undefined">
-            <span>{{item.timeLabel}}:</span>
-            {{item.timeSummary[item.rate]}}ms</div>
-          <div v-if="item.timeSummary[item.percent] !== undefined">
-            <span>{{item.rateLabel}}:</span>{{item.timeSummary[item.percent]}}</div>
-          <div v-if="item.timeSummary.total_steps !== undefined">
-            <span>{{$t('profiling.stepNum')}}:</span>{{item.timeSummary.total_steps}}</div>
-        </div>
-        <div class="chart"
-             :id="item.id"
-             v-show="!item.noData"></div>
-        <div class="image-noData"
-             v-if="item.noData">
-          <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
+      <template v-for="(item,key) in tabsArr">
+        <div :key="key"
+             class="chart-wrap"
+             :class="{'chart-show':key!==2 && !bp_end}"
+             v-if="!(key===2 && !bp_end)">
+          <div class="title">{{ item.name }}</div>
+          <div class="rate-wrap">
+            <div v-if="item.timeSummary[item.rate] !== undefined">
+              <span>{{item.timeLabel}}:</span>
+              {{item.timeSummary[item.rate]}}ms
+            </div>
+            <div v-if="item.timeSummary[item.percent] !== undefined">
+              <span>{{item.rateLabel}}:</span>{{item.timeSummary[item.percent]}}
+            </div>
+            <div v-if="item.timeSummary.total_steps !== undefined">
+              <span>{{$t('profiling.stepNum')}}:</span>{{item.timeSummary.total_steps}}
+            </div>
           </div>
-          <p>{{item.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
+          <div class="chart"
+               :id="item.id"
+               v-show="!item.noData"></div>
+          <div class="image-noData"
+               v-if="item.noData">
+            <div>
+              <img :src="require('@/assets/images/nodata.png')"
+                   alt="" />
+            </div>
+            <p>{{item.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
+          </div>
         </div>
-      </div>
+      </template>
     </div>
     <div class="image-noData"
-         v-if="!(!tabsArr[0].noData && !tabsArr[1].noData && !tabsArr[2].noData && !svg.noData)">
+         v-if="tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData">
       <div>
         <img :src="require('@/assets/images/nodata.png')"
              alt="" />
@@ -423,10 +429,18 @@ export default {
                   )}(ms)`;
                   this.tabsArr[0].noData = this.steps.max ? false : true;
                   this.tabsArr[0].initOver = true;
-                } else if (type === 'fp_and_bp') {
-                  option.yAxis.name = `${this.$t('profiling.fpBpTime')}(ms)`;
+                } else if (type === 'fp_and_bp' || type === 'fp') {
+                  option.yAxis.name =
+                  type === 'fp_and_bp'
+                    ? `${this.$t('profiling.fpBpTime')}(ms)`
+                    : `${this.$t('profiling.fpTime')}(ms)`;
                   this.tabsArr[1].noData = this.steps.max ? false : true;
                   this.tabsArr[1].initOver = true;
+                  if (type === 'fp_and_bp') {
+                    this.tabsArr[1].name = this.$t('profiling.deviceQueueOpTip');
+                  } else {
+                    this.tabsArr[1].name = this.$t('profiling.deviceQueueOpFpTip');
+                  }
                 } else if (type === 'tail') {
                   option.yAxis.name = `${this.$t('profiling.tailTime')}(ms)`;
                   this.tabsArr[2].noData = this.steps.max ? false : true;
@@ -439,10 +453,18 @@ export default {
           (error) => {
             if (type === 'iteration_interval') {
               this.tabsArr[0].noData = true;
-            } else if (type === 'fp_and_bp') {
+              this.tabsArr[0].initOver = true;
+            } else if (type === 'fp_and_bp' || type === 'fp') {
               this.tabsArr[1].noData = true;
+              this.tabsArr[1].initOver = true;
+              if (type === 'fp_and_bp') {
+                this.tabsArr[1].name = this.$t('profiling.deviceQueueOpTip');
+              } else {
+                this.tabsArr[1].name = this.$t('profiling.deviceQueueOpFpTip');
+              }
             } else if (type === 'tail') {
               this.tabsArr[2].noData = true;
+              this.tabsArr[2].initOver = true;
             }
           },
       );
@@ -496,7 +518,7 @@ export default {
                 : '--';
                 this.bp_end = res.data.point_info.bp_end
                 ? res.data.point_info.bp_end
-                : '--';
+                : '';
               } else {
                 this.fp_start = '--';
                 this.bp_end = '--';
@@ -509,9 +531,11 @@ export default {
                 );
               });
               if (init) {
-                this.getTimeInfo('fp-bp', 'fp_and_bp');
+                this.getTimeInfo('fp-bp', this.bp_end ? 'fp_and_bp' : 'fp');
                 this.getTimeInfo('iter-gap', 'iteration_interval');
-                this.getTimeInfo('tailing', 'tail');
+                if (this.bp_end) {
+                  this.getTimeInfo('tailing', 'tail');
+                }
               }
             } else {
               this.fp_start = '--';
@@ -714,6 +738,9 @@ export default {
           break;
         case 'fp_and_bp':
           name = this.$t('profiling.deviceQueueOpTip');
+          break;
+        case 'fp':
+          name = this.$t('profiling.deviceQueueOpFpTip');
           break;
         case 'tail':
           name = this.$t('profiling.lterationTail');
@@ -1029,6 +1056,9 @@ export default {
           }
         }
       }
+    }
+    .chart-wrap.chart-show {
+      width: calc(50% - 7.5px);
     }
   }
   .image-noData {
