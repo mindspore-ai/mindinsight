@@ -1,4 +1,5 @@
 # MindInsight
+
 <!-- TOC -->
 
 - [MindInsight介绍](#mindinsight介绍)
@@ -29,7 +30,7 @@ MindInsight为MindSpore提供了简单易用的调优调试能力。在训练过
 
 ![MindInsight Architecture](docs/arch.png)
 
-点击查看[设计文档](https://www.mindspore.cn/doc/note/zh-CN/master/design/overall.html)，了解更多设计详情。
+点击查看[MindInsight设计文档](https://www.mindspore.cn/doc/note/zh-CN/master/design/mindinsight.html)，了解更多设计详情。
 点击查看[教程文档](https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/visualization_tutorials.html)，了解更多MindInsight教程。
 
 ## 安装
@@ -57,7 +58,7 @@ MindInsight为MindSpore提供了简单易用的调优调试能力。在训练过
 pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://mirrors.huaweicloud.com/repository/pypi/simple
 ```
 
-> - 在联网状态下，安装whl包时会自动下载MindSpore安装包的依赖项（依赖项详情参见[requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)），其余情况需自行安装。  
+> - 在联网状态下，安装whl包时会自动下载MindInsight安装包的依赖项（依赖项详情参见[requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)），其余情况需自行安装。  
 > - `{version}`表示MindInsight版本号，例如下载1.0.1版本MindInsight时，`{version}`应写为1.0.1。  
 > - `{arch}`表示系统架构，例如使用的Linux系统是x86架构64位时，`{arch}`应写为`x86_64`。如果系统是ARM架构64位，则写为`aarch64`。  
 > - `{system}`表示系统版本，例如使用的欧拉系统ARM架构，`{system}`应写为`euleros_aarch64`，目前Ascend版本可支持以下系统`euleros_aarch64`/`centos_aarch64`/`centos_x86`/`ubuntu_aarch64`/`ubuntu_x86`；GPU版本可支持以下系统`ubuntu_x86`。
