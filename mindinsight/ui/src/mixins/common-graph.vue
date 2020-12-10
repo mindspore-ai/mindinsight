@@ -230,7 +230,7 @@ export default {
               let tempX = pointer.end.x - pointer.start.x;
               let tempY = pointer.end.y - pointer.start.y;
               const paddingTrans = Math.max(
-                  (padding / transRate) * scale,
+                  (padding / transRate) / scale,
                   minDistance,
               );
               if (

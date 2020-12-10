@@ -344,6 +344,10 @@ limitations under the License.
                      type="primary"
                      size="mini"
                      class="custom-btn white"
+                     :disabled="metadata.state === state.running ||
+                     metadata.state === state.sending"
+                     :class="{disabled: metadata.state === state.running ||
+                     metadata.state === state.sending}"
                      @click="getNextNodeInfo">
             {{ $t('debugger.nextNode')}}
           </el-button>
@@ -844,7 +848,7 @@ export default {
   },
   methods: {
     showTensor(row, type) {
-      this.curRowObj = row;
+      this.curRowObj = JSON.parse(JSON.stringify(row));
       this.curRowObj.type = type;
       this.curRowObj.curFileName = this.graphFiles.value;
       this.curRowObj.step = this.metadata.step;

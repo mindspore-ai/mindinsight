@@ -105,6 +105,10 @@ limitations under the License.
             {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
           <span>{{ $t('debugger.positiveNum') }}
             {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
+          <span>{{ $t('debugger.true') }}
+            {{ statistics.overall_true_count===undefined?'--':statistics.overall_true_count }}</span>
+          <span>{{ $t('debugger.false') }}
+            {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
         </div>
       </div>
       <div class="deb-con-slide">
@@ -210,18 +214,30 @@ limitations under the License.
             <div class="tensor-title">{{$t('debugger.tensorMsg')}}</div>
             <div class="tensor-detail">
               <span>{{ $t('graph.name') + $t('symbols.colon') }} {{ statistics.name }}</span>
-              <span>{{ $t('debugger.max') }} {{ statistics.overall_max }}</span>
-              <span>{{ $t('debugger.min') }} {{ statistics.overall_min }}</span>
-              <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg }}</span>
-              <span>{{ $t('debugger.nan') }} {{ statistics.overall_nan_count }}</span>
+              <span>{{ $t('debugger.max') }} {{ statistics.overall_max===undefined?'--':statistics.overall_max }}</span>
+              <span>{{ $t('debugger.min') }} {{ statistics.overall_min===undefined?'--':statistics.overall_min }}</span>
+              <span>{{ $t('debugger.mean') }}
+                {{ statistics.overall_avg===undefined?'--':statistics.overall_avg }}
+              </span>
+              <span>{{ $t('debugger.nan') }}
+                {{ statistics.overall_nan_count===undefined?'--':statistics.overall_nan_count }}
+              </span>
               <span>{{ $t('debugger.negativeInf') }}
-                {{ statistics.overall_neg_inf_count }}</span>
-              <span>{{ $t('debugger.inf') }} {{ statistics.overall_pos_inf_count }}</span>
-              <span>{{ $t('debugger.zero') }} {{ statistics.overall_zero_count }}</span>
+                {{ statistics.overall_neg_inf_count===undefined?'--':statistics.overall_neg_inf_count }}
+              </span>
+              <span>{{ $t('debugger.inf') }}
+                {{ statistics.overall_pos_inf_count===undefined?'--': statistics.overall_pos_inf_count}}
+              </span>
+              <span>{{ $t('debugger.zero') }}
+                {{ statistics.overall_zero_count===undefined?'--': statistics.overall_zero_count}}</span>
               <span>{{ $t('debugger.negativeNum') }}
-                {{ statistics.overall_neg_zero_count }}</span>
+                {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
               <span>{{ $t('debugger.positiveNum') }}
-                {{ statistics.overall_pos_zero_count }}</span>
+                {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
+              <span>{{ $t('debugger.true') }}
+                {{ statistics.overall_true_count===undefined?'--':statistics.overall_true_count }}</span>
+              <span>{{ $t('debugger.false') }}
+                {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
             </div>
           </div>
           <div class="watch-point">
@@ -305,7 +321,10 @@ export default {
         'overall_pos_inf_count',
         'overall_pos_zero_count',
         'overall_zero_count',
+        'overall_true_count',
+        'overall_false_count',
       ],
+      loadingInstance: {},
     };
   },
   computed: {
@@ -359,9 +378,13 @@ export default {
               });
 
               if (initPage) {
+                this.loadingInstance = this.$loading(this.loadingOption);
                 this.selectedNode.name = this.curRowObj.name;
                 const dot = this.packageData();
-                this.initGraph(dot);
+                // Delay is required, otherwise the loading icon cannot be loaded
+                setTimeout(() => {
+                  this.initGraph(dot);
+                }, 200);
               } else {
                 if (this.selectedNode.name) {
                   this.setNodeData();
@@ -584,6 +607,7 @@ export default {
       const graphDom = d3.select('#tensor-graph');
       graphDom.selectAll('title').remove();
       this.initZooming();
+      this.fitGraph();
 
       const nodes = graphDom.selectAll('.node');
       nodes.on('click', (target, index, nodesList) => {
@@ -618,8 +642,55 @@ export default {
         }
       });
 
+      this.loadingInstance.close();
       if (this.selectedNode.name) {
         this.setNodeData();
+      }
+    },
+    fitGraph() {
+      const graphContainer = document.getElementById('tensor-graph');
+      const graphDom = graphContainer.querySelector(`#graph0`);
+      const containerRect = graphContainer.getBoundingClientRect();
+      let graphRect = graphDom.getBoundingClientRect();
+      const transformData = this.$parent.getTransformData(graphDom);
+      const selectedNode = graphDom.querySelector(`g[id="${this.curRowObj.name}"]`);
+      let nodeRect = selectedNode.getBoundingClientRect();
+      const nodeBox = selectedNode.getBBox();
+      const transRate = nodeBox.width / nodeRect.width;
+      const paddingTop = 20;
+
+      if (graphRect.height < containerRect.height / 2) {
+        let scale = (containerRect.height - paddingTop * 2) / graphRect.height;
+        graphDom.setAttribute(
+            'transform',
+            `translate(${transformData.translate[0]},${transformData.translate[1]}) scale(${
+              scale * transformData.scale[0]
+            })`,
+        );
+
+        this.$nextTick(() => {
+          setTimeout(() => {
+            nodeRect = selectedNode.getBoundingClientRect();
+            graphRect = graphDom.getBoundingClientRect();
+            const nodeCenter = {
+              x: nodeRect.x + nodeRect.width / 2,
+            };
+            const containerCenter = {
+              x: containerRect.x + containerRect.width / 2,
+            };
+
+            let x = (containerCenter.x - nodeCenter.x) * transRate;
+            let y = (containerRect.top + paddingTop - graphRect.top) * transRate;
+            x = parseFloat(x.toFixed(2));
+            y = parseFloat(y.toFixed(2));
+            scale = parseFloat((scale * transformData.scale[0]).toFixed(2));
+
+            graphDom.setAttribute(
+                'transform',
+                `translate(${transformData.translate[0] + x},${transformData.translate[1] + y}) scale(${scale})`,
+            );
+          }, 100);
+        });
       }
     },
     /**
@@ -674,7 +745,7 @@ export default {
               pointer.end.y = event.y;
               let tempX = pointer.end.x - pointer.start.x;
               let tempY = pointer.end.y - pointer.start.y;
-              const paddingTrans = Math.max((padding / transRate) * scale, minDistance);
+              const paddingTrans = Math.max(padding / transRate / scale, minDistance);
               if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
                 tempX = Math.min(tempX, 0);
               }
@@ -733,7 +804,9 @@ export default {
       window.getSelection().removeAllRanges();
       const selectedNode = document.querySelector(`#tensor-graph g[id="${this.selectedNode.name}"]`);
       d3.selectAll('#tensor-graph .node').classed('selected', false);
-      selectedNode.classList.add('selected');
+      if (selectedNode) {
+        selectedNode.classList.add('selected');
+      }
       d3.selectAll('#tensor-graph .edge').classed('selected', false);
       this.selectedNode = JSON.parse(JSON.stringify(this.tensorGraphData[this.selectedNode.name]));
 
