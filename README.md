@@ -1,4 +1,5 @@
 # MindInsight
+
 <!-- TOC -->
 
 - [Introduction](#introduction)
@@ -29,7 +30,7 @@ MindInsight provides MindSpore with easy-to-use debugging and tuning capabilitie
 
 ![MindInsight Architecture](docs/arch.png)
 
-Click to view the [Design document](https://www.mindspore.cn/doc/note/en/master/design/overall.html), learn more about the design.
+Click to view the [MindInsight design document](https://www.mindspore.cn/doc/note/en/master/design/mindinsight.html), learn more about the design.
 Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html) learn more about the MindInsight tutorial.
 
 ## Installation
