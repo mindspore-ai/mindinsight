@@ -59,17 +59,12 @@ limitations under the License.
       <div class="condition-left">
         <div class="condition-item line-title">{{ $t('explain.tag') }}</div>
         <!-- Truth Labels -->
-        <div class="condition-item">
-          <search-select type="option"
-                         :multiple="true"
-                         :collapseTags="true"
+        <div class="condition-item search-select">
+          <search-select multiple
+                         plain
+                         :source="truthLabels"
                          @selectedUpdate="updateSelected"
-                         :slotReady="labelReady">
-            <el-option v-for="label in truthLabels"
-                       :key="label"
-                       :label="label"
-                       :value="label"
-                       slot="oriData"></el-option>
+                         @selectEnter="fetch">
           </search-select>
         </div>
         <!-- Button -->
@@ -99,7 +94,8 @@ limitations under the License.
         <div class="condition-item">
           <span class="item-children">{{$t('explain.imgSort')}}</span>
           <el-select v-model="sortedName"
-                     @change="sortedNameChange">
+                     @change="sortedNameChange"
+                     popper-class="saliency-map-selector">
             <el-option v-for="name of sortedNames"
                        :key="name.label"
                        :label="name.label"
@@ -215,7 +211,8 @@ limitations under the License.
                       }"
                        @click="changeActiveLabel(scope.row, index)">
                     <div></div>
-                    <div>{{tag.label}}</div>
+                    <div class="content-label"
+                         :title="tag.label">{{tag.label}}</div>
                     <div>{{tag.confidence.toFixed(3)}}</div>
                   </div>
                 </div>
@@ -334,6 +331,7 @@ export default {
       tableHeight: 0, // The height of table to fix the table header
       queryParameters: null, // The complete parameters of query table information, have pagination information
       labelReady: false, // If the truth labels are ready
+      pageChangeDelay: 200, // The time interval used to prevent the violent clicks of changing current page
     };
   },
   computed: {
@@ -396,8 +394,12 @@ export default {
      * @param {number} val The current page number
      */
     currentPageChange(val) {
-      this.queryParameters.offset = val - 1;
-      this.queryPageInfo(this.queryParameters);
+      clearTimeout(this.pageChangeTimer);
+      this.pageChangeTimer = setTimeout(() => {
+        this.queryParameters.offset = val - 1;
+        this.queryPageInfo(this.queryParameters);
+        this.pageChangeTimer = null;
+      }, this.pageChangeDelay);
     },
     /**
      * The logic that is executed when the sorted name changed
@@ -448,11 +450,6 @@ export default {
                         truthLabels.push(res.data.classes[i].label);
                       }
                       this.truthLabels = truthLabels;
-                      this.$nextTick(() => {
-                        if (this.truthLabels.length !== 0) {
-                          this.labelReady = true;
-                        }
-                      });
                     }
                   }
                   resolve(true);
@@ -501,24 +498,27 @@ export default {
           .queryPageInfo(params)
           .then(
               (res) => {
-                if (res && res.data && res.data.samples) {
-                  if (this.minConfidence === '--') {
-                    this.tableData = this.processTableData(res.data.samples, false);
-                    this.pageInfo.total =
+                // Make sure the offset of response is equal to offset of request
+                if (params.offset === this.queryParameters.offset) {
+                  if (res && res.data && res.data.samples) {
+                    if (this.minConfidence === '--') {
+                      this.tableData = this.processTableData(res.data.samples, false);
+                      this.pageInfo.total =
                   res.data.count !== undefined ? res.data.count : 0;
+                    } else {
+                      this.tableData = this.processTableData(
+                          res.data.samples,
+                          this.minConfidence,
+                      );
+                      this.pageInfo.total =
+                  res.data.count !== undefined ? res.data.count : 0;
+                    }
                   } else {
-                    this.tableData = this.processTableData(
-                        res.data.samples,
-                        this.minConfidence,
-                    );
-                    this.pageInfo.total =
-                  res.data.count !== undefined ? res.data.count : 0;
+                    this.pageInfo.total = 0;
                   }
-                } else {
-                  this.pageInfo.total = 0;
+                  this.ifError = false;
+                  this.ifTableLoading = false;
                 }
-                this.ifError = false;
-                this.ifTableLoading = false;
               },
               (error) => {
                 this.ifError = true;
@@ -681,13 +681,15 @@ export default {
       document.title = `${this.$t('explain.title')}-MindInsight`;
     }
   },
-  beforeDestroy() {
-    window.onresize = null;
-  },
 };
 </script>
 
 <style lang="scss">
+.saliency-map-selector {
+  .selected {
+    font-weight: normal;
+  }
+}
 .cl-saliency-map {
   .el-icon-info {
     color: #6c7280;
@@ -812,7 +814,7 @@ export default {
     .condition-left {
       height: 100%;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       .condition-item {
         margin-right: 16px;
         height: 100%;
@@ -827,6 +829,10 @@ export default {
           margin-right: 4px;
           margin-left: 2px;
         }
+      }
+      .search-select {
+        width: 200px;
+        height: 32px;
       }
     }
     .condition-right {
@@ -908,6 +914,11 @@ export default {
             .more-action {
               cursor: pointer;
               text-decoration: underline;
+            }
+            .content-label {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
           }
           .tag-content-item-true {
