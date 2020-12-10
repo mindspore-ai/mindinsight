@@ -99,6 +99,7 @@ def mock_tensor_history():
         "tensor_history": [
             {"name": "Default/TransData-op99:0",
              "full_name": "Default/TransData-op99:0",
+             "graph_name": "kernel_graph_0",
              "node_type": "TransData",
              "type": "output",
              "step": 0,
@@ -108,6 +109,7 @@ def mock_tensor_history():
              "value": "click to view"},
             {"name": "Default/args0:0",
              "full_name": "Default/args0:0",
+             "graph_name": "kernel_graph_0",
              "node_type": "Parameter",
              "type": "input",
              "step": 0,

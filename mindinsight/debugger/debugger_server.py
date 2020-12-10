@@ -504,6 +504,34 @@ class DebuggerServer:
 
         return reply
 
+    def search_watchpoint_hits(self, group_condition):
+        """
+        Retrieve watchpoint hit.
+
+        Args:
+            group_condition (dict): Filter condition.
+
+                - limit (int): The limit of each page.
+                - offset (int): The offset of current page.
+                - node_name (str): The retrieved node name.
+                - graph_name (str): The retrieved graph name.
+
+        Returns:
+            dict, watch point list or relative graph.
+        """
+        if not isinstance(group_condition, dict):
+            log.error("Group condition for watchpoint-hits request should be a dict")
+            raise DebuggerParamTypeError("Group condition for watchpoint-hits request should be a dict")
+
+        metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
+        if metadata_stream.state == ServerStatus.PENDING.value:
+            log.info("The backend is in pending status.")
+            return metadata_stream.get()
+
+        reply = self.cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).group_by(group_condition)
+        reply['outdated'] = self.cache_store.get_stream_handler(Streams.WATCHPOINT).is_recheckable()
+        return reply
+
     def create_watchpoint(self, params):
         """
         Create watchpoint.

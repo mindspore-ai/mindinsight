@@ -77,22 +77,23 @@ class TensorDetailInfo:
         for node in nodes:
             node['graph_name'] = graph_name
             for slot_info in node.get('slots', []):
-                self._add_watchpoint_hit_info(slot_info, node)
+                self._add_watchpoint_hit_info(slot_info, node, graph_name)
                 self._add_tensor_info(slot_info, node, missing_tensors)
         # query missing tensor values from client
         self._ask_for_missing_tensor_value(missing_tensors, tensor_name, graph_name)
         return graph
 
-    def _add_watchpoint_hit_info(self, slot_info, node):
+    def _add_watchpoint_hit_info(self, slot_info, node, graph_name):
         """
         Add watchpoint hit info for the tensor.
 
         Args:
             slot_info (dict): Slot object.
             node (dict): Node object.
+            graph_name (str): Graph name.
         """
         tensor_name = ':'.join([node.get('name'), slot_info.get('slot')])
-        slot_info.update(self._hit_stream.get_tensor_hit_infos(tensor_name))
+        slot_info.update(self._hit_stream.get_tensor_hit_infos(tensor_name, graph_name))
 
     def _add_tensor_info(self, slot_info, node, missing_tensors):
         """
@@ -141,6 +142,6 @@ class TensorDetailInfo:
         # validate tensor_name
         self.validate_tensor_name(tensor_name=tensor_name, graph_name=graph_name)
         # get watchpoint info that the tensor hit
-        tensor_hit_info = self._hit_stream.get_tensor_hit_infos(tensor_name)
+        tensor_hit_info = self._hit_stream.get_tensor_hit_infos(tensor_name, graph_name)
         watch_points = tensor_hit_info.get('watch_points', [])
         return watch_points
