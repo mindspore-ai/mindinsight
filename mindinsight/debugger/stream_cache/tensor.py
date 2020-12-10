@@ -247,8 +247,7 @@ class OpTensor(BaseTensor):
 
 class ConstTensor(BaseTensor):
     """Tensor data structure for Const Node."""
-    STRING_TYPE = 'DT_STRING'
-    BOOL_TYPE = 'DT_BOOL'
+    _STRING_TYPE = 'DT_STRING'
 
     def __init__(self, const_proto):
         # the type of const_proto is NamedValueProto
@@ -298,7 +297,7 @@ class ConstTensor(BaseTensor):
             if field_name != 'dtype':
                 tensor_value = field_value
                 break
-        if tensor_value and self.dtype != self.STRING_TYPE:
+        if tensor_value and self.dtype != self._STRING_TYPE:
             tensor_value = np.array(tensor_value, dtype=NUMPY_TYPE_MAP.get(self.dtype))
         return tensor_value
 
@@ -323,7 +322,7 @@ class ConstTensor(BaseTensor):
         Returns:
             dict, overall statistics.
         """
-        if self.empty or self.dtype == self.STRING_TYPE:
+        if self.empty or self.dtype == self._STRING_TYPE:
             return {}
         stats = TensorUtils.get_statistics_from_tensor(self.value)
         statistics = TensorUtils.get_overall_statistic_dict(stats)

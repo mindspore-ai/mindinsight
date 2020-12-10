@@ -14,6 +14,7 @@
 # ============================================================================
 """Mocked MindSpore debugger client."""
 from threading import Thread
+from time import sleep
 
 import grpc
 import numpy as np
@@ -77,6 +78,7 @@ class MockDebuggerClient:
         wait_flag = True
         while self.flag and wait_flag:
             if self._step > total_steps:
+                sleep(0.5)
                 self.send_metadata_cmd(training_done=True)
                 return
             wait_flag = self._wait_cmd()

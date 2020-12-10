@@ -109,7 +109,7 @@ class MetadataHandler(StreamHandlerBase):
     @property
     def enable_recheck(self):
         """The property of enable_recheck."""
-        return self._enable_recheck and self._state == ServerStatus.WAITING and self._step > 0
+        return self._enable_recheck and self._state == ServerStatus.WAITING
 
     @enable_recheck.setter
     def enable_recheck(self, value):

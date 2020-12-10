@@ -99,7 +99,12 @@ class TrainingControlOperator:
         try:
             self._validate_continue_params(params)
             event = self._construct_run_event(params)
+            # whether need to send recheck before continue, especially for initialization watchpoint
+            recheck_flag = bool(self._metadata_stream.step == 0 and self._watchpoint_stream.is_recheckable())
             self._send_watchpoints()
+            if recheck_flag:
+                self._cache_store.put_command(self._construct_run_event({'level': 'recheck'}))
+                log.info("Send recheck command for initialization watchpoints before continue command.")
             self._cache_store.put_command(event)
         except MindInsightException as err:
             log.error("Failed to send run event.")
