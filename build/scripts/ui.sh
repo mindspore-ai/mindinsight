@@ -25,7 +25,9 @@ build_ui() {
     fi
 
     rm -rf dist
-    mkdir -p public/static/js
+    mkdir -p patches
+    PATCH_PATH=$(realpath "$SCRIPT_BASEDIR/../../third_party/patch/axios+0.19.2.patch")
+    cp $PATCH_PATH patches/
 
     npm config set strict-ssl false
     npm config set unsafe-perm true
