@@ -44,6 +44,7 @@ class Fragment(abc.ABC):
         operation (str): Operation name in MindSpore.
         actual_args (dict): Actual arg values.
         settings (namedTuple): Code generation setting.
+
     """
 
     def __init__(self, operation, actual_args, input_shape, output_shape, settings=None):
@@ -89,9 +90,9 @@ class Fragment(abc.ABC):
         self._declared_variable_name = var
 
     @property
-    def output_var_name(self) -> str:
+    def output_var_name(self) -> list:
         """Getter of output variable name."""
-        return ", ".join(self._output_var_name)
+        return self._output_var_name
 
     @output_var_name.setter
     def output_var_name(self, opt_vars):
@@ -100,6 +101,7 @@ class Fragment(abc.ABC):
 
         Args:
             opt_vars (list[str]): Output variable name.
+
         """
         self._output_var_name = opt_vars
 
@@ -119,8 +121,9 @@ class Fragment(abc.ABC):
 
         Args:
             ipt (Fragment): Where input comes from.
+
         """
-        self._operation_inputs.append(ipt)
+        self._operation_inputs += ipt
 
     @property
     def operation(self):
@@ -139,6 +142,7 @@ class Fragment(abc.ABC):
 
         Args:
             op (str): Operation name.
+
         """
         self._operation = op
 
@@ -158,6 +162,7 @@ class Fragment(abc.ABC):
 
         Args:
             formal_args (dict): To be updated args.
+
         """
         return self._formal_args_list.update(formal_args)
 
@@ -194,6 +199,7 @@ class CodeFragment(Fragment):
         operation (str): Operation name in MindSpore.
         actual_args (dict): Actual arg values.
         settings (namedTuple): Code generation setting.
+
     """
 
     def __init__(self, operation, actual_args, settings, input_shape, output_shape,

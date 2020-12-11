@@ -29,7 +29,7 @@ from ..common.utils import is_converted, save_code_file_and_report
 from ..mapper.base import Mapper
 from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
-from ..constant import SEPARATOR_IN_SCOPE, get_imported_module
+from ..constant import SEPARATOR_IN_SCOPE, get_imported_module, NO_CONVERTED_OPERATORS
 from ..constant import CodeFormatConfig
 from ..constant import SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVEL_INDENT
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT
@@ -472,6 +472,8 @@ class HierarchicalTree(Tree):
 
         for idx, node_name in enumerate(node.successors(self.tree_identifier)):
             nd_inst = self.get_node(node_name)
+            if nd_inst.data.op_name in NO_CONVERTED_OPERATORS:
+                continue
 
             # Generate code statement.
             init, construct = self._generate_stat(nd_inst, node, idx)
@@ -518,14 +520,25 @@ class HierarchicalTree(Tree):
         """
 
         ipt_args_in_construct = "x"
-        opt_arg_in_construct = "output"
+        opt_arg_in_construct = ["output"]
 
         if idx != 0:
-            # Get previous node output variable name.
-            ipt_args_in_construct = self._get_previous_opt_var(cur_nd_inst, pre_nd_inst)
+            if cur_nd_inst.data.is_in_multi_opt_graph:
+                ipt_args_in_construct = self._get_current_ipt_var(cur_nd_inst)
+            else:
+                # Get previous node output variable name.
+                ipt_args_in_construct = self._get_previous_opt_var(cur_nd_inst, pre_nd_inst)
         if idx != len(pre_nd_inst.successors(self.tree_identifier)) - 1:
             # Set opt variable name.
-            opt_arg_in_construct = f"{self.code_fragment_recorder[cur_nd_inst.identifier].declared_var_name}_opt"
+            if cur_nd_inst.data.node_type == NodeType.MODULE.value or not cur_nd_inst.data.is_in_multi_opt_graph:
+                opt_arg_in_construct = [
+                    f"{self.code_fragment_recorder[cur_nd_inst.identifier].declared_var_name}_opt"
+                ]
+            else:
+                opt_arg_in_construct = [
+                    f"opt_{var_name}"
+                    for var_name in self.code_fragment_recorder[cur_nd_inst.identifier].output_var_name
+                ]
 
         declare, call = cur_nd_inst.data.to_code(ipt_args_in_construct=ipt_args_in_construct,
                                                  variable_name=self.code_fragment_recorder[
@@ -548,6 +561,39 @@ class HierarchicalTree(Tree):
         """
         return s.split(SEPARATOR_IN_SCOPE)[-1].lower().split(SEPARATOR_BTW_NAME_AND_ID)[0]
 
+    def _get_current_ipt_var(self, cur_nd):
+        """"
+        Get current input variable name from node_id.
+
+        Args:
+            cur_nd (Node): Current node.
+
+        Returns:
+            str, needed var names.
+        """
+        if cur_nd.data.node_type != NodeType.OPERATION.value:
+            while True:
+                p_nd = cur_nd.successors(self.tree_identifier)
+                if not p_nd:
+                    break
+                cur_nd = self.get_node(p_nd[0])
+
+        ipt_lst_raw = []
+        for operation_input in self.code_fragment_recorder[cur_nd.identifier].operation_inputs:
+            ipt_lst_raw.append(f"{operation_input}")
+
+        opt_var_names_p_nds = set()
+        for e in cur_nd.data.precursor_nodes:
+            p_nd = self.get_node(e)
+            if p_nd.data.op_name in NO_CONVERTED_OPERATORS:
+                continue
+
+            opt_var_names_p_nd = set(p_nd.data.opt_var_names)
+            opt_var_names_p_nds = set.union(opt_var_names_p_nds, opt_var_names_p_nd)
+
+        ipt_lst = [f"opt_{ipt}" for ipt in set(ipt_lst_raw).intersection(opt_var_names_p_nds)]
+        return ", ".join(ipt_lst)
+
     def _find_all_previous_opt_var_(self, cur_nd, pre_nd):
         """
         Find all input variable names.
@@ -557,9 +603,12 @@ class HierarchicalTree(Tree):
             pre_nd (Node): Precursor node.
 
         Returns:
-            str, needed var names.
+            list, needed var names list.
         """
         ipt_lst = []
+        if cur_nd.tag in NO_CONVERTED_OPERATORS:
+            return ipt_lst
+
         for e in cur_nd.data.precursor_nodes:
             p_nd = self.get_node(e)
             if e not in pre_nd.successors(self.tree_identifier):
@@ -575,7 +624,6 @@ class HierarchicalTree(Tree):
                         break
                     p_nd = self.get_node(pre_nd_name)
                 continue
-
             ipt_lst.append(
                 f"{self.code_fragment_recorder[p_nd.identifier].declared_var_name}_opt"
             )
@@ -671,6 +719,9 @@ class HierarchicalTree(Tree):
         # Sub-modules in the module could have arg name conflicts.
         for idx, successor_name in enumerate(node.successors(self.tree_identifier)):
             nd_inst = self.get_node(successor_name)
+            if nd_inst.data.op_name in NO_CONVERTED_OPERATORS:
+                continue
+
             # Generation of params must behind variable assigment.
             if created:
                 variable_name = self._module_vars[module_key][idx]
@@ -680,6 +731,8 @@ class HierarchicalTree(Tree):
 
             code_fragment = nd_inst.data.param_transform(mapper, variable_name)
             code_fragment.declared_var_name = variable_name
+            code_fragment.output_var_name = nd_inst.data.opt_var_names
+            code_fragment.update_operation_inputs(nd_inst.data.ipt_var_names)
             self.code_fragment_recorder[nd_inst.identifier] = code_fragment
 
             module_args.update(nd_inst.data.args_in_code)
