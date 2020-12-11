@@ -293,8 +293,8 @@ class ConstTensor(BaseTensor):
         if len(fields) != 2:
             log.warning("Unexpected const proto <%s>.\n Please check offline.", tensor_proto)
         tensor_value = None
-        for field_name, field_value in fields:
-            if field_name != 'dtype':
+        for field_obj, field_value in fields:
+            if field_obj.name != 'dtype':
                 tensor_value = field_value
                 break
         if tensor_value and self.dtype != self._STRING_TYPE:
