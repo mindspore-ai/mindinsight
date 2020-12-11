@@ -755,6 +755,7 @@
     "originalPicture": "原始图片",
     "forecastTag": "预测标签",
     "tag": "标签",
+    "tagTip": "查询包含任一筛选标签的图片数据",
     "confidence": "概率",
     "forecastTagTip": "当推理图片带有正确标签时，标签行会显示下列四种旗标",
     "TP": "TP，代表Ture Positive，标签为正样本，分类为正样本；",

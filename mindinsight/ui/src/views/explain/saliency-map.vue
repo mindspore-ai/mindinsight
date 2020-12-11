@@ -57,7 +57,17 @@ limitations under the License.
     <!-- Parameters Fetch -->
     <div class="cl-saliency-map-condition">
       <div class="condition-left">
-        <div class="condition-item line-title">{{ $t('explain.tag') }}</div>
+        <div class="condition-item line-title">
+          {{ $t('explain.tag') }}
+          <el-tooltip placement="bottom-start"
+                      effect="light">
+            <div slot="content"
+                 class="tooltip-container">
+                {{$t('explain.tagTip')}}
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
+        </div>
         <!-- Truth Labels -->
         <div class="condition-item search-select">
           <search-select multiple
