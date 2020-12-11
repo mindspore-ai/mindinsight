@@ -574,8 +574,13 @@ export default {
       }
       RequestService.recheckWatchPoints().then(
           (res) => {
-            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-              this.enableRecheck = res.data.metadata.enable_recheck;
+            if (res && res.data && res.data.metadata) {
+              if (res.data.metadata.enable_recheck !== undefined) {
+                this.enableRecheck = res.data.metadata.enable_recheck;
+              }
+              if (res.data.metadata.state) {
+                this.metadata.state = res.data.metadata.state;
+              }
             }
             this.$message.success(this.$t('debugger.recheckSuccess'));
           },

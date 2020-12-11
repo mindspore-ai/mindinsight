@@ -325,6 +325,7 @@ export default {
         'overall_false_count',
       ],
       loadingInstance: {},
+      initOver: false,
     };
   },
   computed: {
@@ -341,6 +342,8 @@ export default {
   },
   methods: {
     init() {
+      this.loadingInstance = this.$loading(this.loadingOption);
+      this.initOver = false;
       if (this.curRowObj.type === 'value') {
         this.gridType = 'value';
         this.viewValueDetail(this.curRowObj);
@@ -378,13 +381,9 @@ export default {
               });
 
               if (initPage) {
-                this.loadingInstance = this.$loading(this.loadingOption);
                 this.selectedNode.name = this.curRowObj.name;
                 const dot = this.packageData();
-                // Delay is required, otherwise the loading icon cannot be loaded
-                setTimeout(() => {
-                  this.initGraph(dot);
-                }, 200);
+                this.initGraph(dot);
               } else {
                 if (this.selectedNode.name) {
                   this.setNodeData();
@@ -403,6 +402,7 @@ export default {
             this.statisticsKeys.forEach((key) => {
               this.statistics[key] = '--';
             });
+            this.dealLoading();
           },
       );
     },
@@ -642,10 +642,12 @@ export default {
         }
       });
 
-      this.loadingInstance.close();
       if (this.selectedNode.name) {
         this.setNodeData();
       }
+      this.$nextTick(() => {
+        this.dealLoading();
+      });
     },
     fitGraph() {
       const graphContainer = document.getElementById('tensor-graph');
@@ -669,27 +671,25 @@ export default {
         );
 
         this.$nextTick(() => {
-          setTimeout(() => {
-            nodeRect = selectedNode.getBoundingClientRect();
-            graphRect = graphDom.getBoundingClientRect();
-            const nodeCenter = {
-              x: nodeRect.x + nodeRect.width / 2,
-            };
-            const containerCenter = {
-              x: containerRect.x + containerRect.width / 2,
-            };
+          nodeRect = selectedNode.getBoundingClientRect();
+          graphRect = graphDom.getBoundingClientRect();
+          const nodeCenter = {
+            x: nodeRect.x + nodeRect.width / 2,
+          };
+          const containerCenter = {
+            x: containerRect.x + containerRect.width / 2,
+          };
 
-            let x = (containerCenter.x - nodeCenter.x) * transRate;
-            let y = (containerRect.top + paddingTop - graphRect.top) * transRate;
-            x = parseFloat(x.toFixed(2));
-            y = parseFloat(y.toFixed(2));
-            scale = parseFloat((scale * transformData.scale[0]).toFixed(2));
+          let x = (containerCenter.x - nodeCenter.x) * transRate;
+          let y = (containerRect.top + paddingTop - graphRect.top) * transRate;
+          x = parseFloat(x.toFixed(2));
+          y = parseFloat(y.toFixed(2));
+          scale = parseFloat((scale * transformData.scale[0]).toFixed(2));
 
-            graphDom.setAttribute(
-                'transform',
-                `translate(${transformData.translate[0] + x},${transformData.translate[1] + y}) scale(${scale})`,
-            );
-          }, 100);
+          graphDom.setAttribute(
+              'transform',
+              `translate(${transformData.translate[0] + x},${transformData.translate[1] + y}) scale(${scale})`,
+          );
         });
       }
     },
@@ -987,10 +987,8 @@ export default {
         tolerance: this.tolerance / 100,
         graph_name: row.graph_name,
       };
-      const loadingInstance = this.$loading(this.loadingOption);
       RequestService.tensorComparisons(params).then(
           (res) => {
-            loadingInstance.close();
             if (res && res.data && res.data.tensor_value) {
               if (row.shape === '[]') {
                 this.showFilterInput = false;
@@ -1014,6 +1012,7 @@ export default {
                       true,
                   );
                 });
+                this.dealLoading();
                 return;
               }
               this.tensorValue = tensorValue.diff;
@@ -1025,9 +1024,12 @@ export default {
                 this.$refs.tensorValue.updateGridData(this.tensorValue, JSON.parse(row.shape), statistics, shape);
               });
             }
+            this.$nextTick(() => {
+              this.dealLoading();
+            });
           },
           (err) => {
-            loadingInstance.close();
+            this.dealLoading();
           },
       );
     },
@@ -1070,10 +1072,8 @@ export default {
         graph_name: row.graph_name,
         prev: this.gridType === 'preStep' ? true : false,
       };
-      const loadingInstance = this.$loading(this.loadingOption);
       RequestService.tensors(params).then(
           (res) => {
-            loadingInstance.close();
             if (row.shape === '[]') {
               this.showFilterInput = false;
             } else {
@@ -1093,6 +1093,7 @@ export default {
                       true,
                   );
                 });
+                this.dealLoading();
                 return;
               }
               if (value === null) {
@@ -1103,12 +1104,22 @@ export default {
                 this.$refs.tensorValue.updateGridData(this.tensorValue, JSON.parse(row.shape), statistics, shape);
               });
             }
+            this.$nextTick(() => {
+              this.dealLoading();
+            });
           },
           (err) => {
-            loadingInstance.close();
             this.$parent.showErrorMsg(err);
+            this.dealLoading();
           },
       );
+    },
+    dealLoading() {
+      if (!this.initOver) {
+        this.initOver = true;
+      } else {
+        this.loadingInstance.close();
+      }
     },
   },
   destroyed() {
