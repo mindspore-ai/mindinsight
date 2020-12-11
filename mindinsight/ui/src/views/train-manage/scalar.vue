@@ -564,8 +564,12 @@ export default {
               });
 
               // Numerical range
-              const maxData = Math.max(...mathData);
-              const minData = Math.min(...mathData);
+              const filtersData = mathData.filter((item) => {
+              // Values less than 0 have no logarithm
+                return item > 0;
+              });
+              const maxData = Math.max(...filtersData);
+              const minData = Math.min(...filtersData);
               sampleObject.max = maxData;
               if (maxData === minData) {
                 sampleObject.isEqual = true;
@@ -734,7 +738,10 @@ export default {
           scale: true,
           // Logbase for very small values,default 10
           logBase: sampleObject.max < 1 && sampleObject.isEqual ? 0.1 : 10,
-          inverse: sampleObject.max < 1 && sampleObject.isEqual ? true : false,
+          inverse:
+            sampleObject.log && sampleObject.max < 1 && sampleObject.isEqual
+              ? true
+              : false,
           axisLine: {
             lineStyle: {
               color: '#E6EBF5',
@@ -940,7 +947,10 @@ export default {
             },
             myTool2: {
               show: true,
-              title: sampleObject.max<=0 ? this.$t('scalar.noLog') : this.$t('scalar.toggleYaxisScale'),
+              title:
+                sampleObject.max <= 0
+                  ? this.$t('scalar.noLog')
+                  : this.$t('scalar.toggleYaxisScale'),
               iconStyle: {
                 borderColor: sampleObject.log ? '#00A5A7' : '#6D7278',
               },
@@ -1547,7 +1557,7 @@ export default {
         return;
       }
       // There is no logarithm of 0 and negative numbers
-      if (sampleObject.max<=0) {
+      if (sampleObject.max <= 0) {
         return;
       }
       this.yAxisScaleTimer = setTimeout(() => {
@@ -1557,9 +1567,14 @@ export default {
         if (log) {
           tempOption.toolbox.feature.myTool2.iconStyle.borderColor = '#00A5A7';
           tempOption.yAxis.type = 'log';
+          // Logarithmic axis scale ascending, maximum scale 1
+          if (sampleObject.max < 1 && sampleObject.isEqual) {
+            tempOption.yAxis.inverse = true;
+          }
         } else {
           tempOption.yAxis.type = 'value';
           tempOption.toolbox.feature.myTool2.iconStyle.borderColor = '#666';
+          tempOption.yAxis.inverse = false;
         }
         tempOriData.forEach((originData, index) => {
           if (log) {
