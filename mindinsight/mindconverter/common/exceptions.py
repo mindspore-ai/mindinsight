@@ -15,7 +15,7 @@
 """Define custom exception."""
 import abc
 import sys
-from enum import unique
+from enum import unique, Enum
 from importlib import import_module
 
 from lib2to3.pgen2 import parse
@@ -33,16 +33,6 @@ class ConverterErrors(ScriptConverterErrors):
     SCRIPT_NOT_SUPPORT = 1
     NODE_TYPE_NOT_SUPPORT = 2
     CODE_SYNTAX_ERROR = 3
-    NODE_INPUT_TYPE_NOT_SUPPORT = 4
-    NODE_INPUT_MISSING = 5
-    TREE_NODE_INSERT_FAIL = 6
-    UNKNOWN_MODEL = 7
-    MODEL_NOT_SUPPORT = 8
-    SCRIPT_GENERATE_FAIL = 9
-    REPORT_GENERATE_FAIL = 10
-    NODE_CONVERSION_ERROR = 11
-    INPUT_SHAPE_ERROR = 12
-    TF_RUNTIME_ERROR = 13
 
     BASE_CONVERTER_FAIL = 000
     GRAPH_INIT_FAIL = 100
@@ -50,7 +40,6 @@ class ConverterErrors(ScriptConverterErrors):
     SOURCE_FILES_SAVE_FAIL = 300
     GENERATOR_FAIL = 400
     SUB_GRAPH_SEARCHING_FAIL = 500
-    MODEL_LOADING_FAIL = 600
 
 
 class ScriptNotSupport(MindInsightException):
@@ -82,21 +71,20 @@ class CodeSyntaxError(MindInsightException):
 
 class MindConverterException(Exception):
     """MindConverter exception."""
+    BASE_ERROR_CODE = None  # ConverterErrors.BASE_CONVERTER_FAIL.value
+    # ERROR_CODE should be declared in child exception.
+    ERROR_CODE = None
 
     def __init__(self, **kwargs):
         """Initialization of MindInsightException."""
-        error = kwargs.get('error', None)
         user_msg = kwargs.get('user_msg', '')
-        debug_msg = kwargs.get('debug_msg', '')
-        cls_code = kwargs.get('cls_code', 0)
 
         if isinstance(user_msg, str):
             user_msg = ' '.join(user_msg.split())
+
         super(MindConverterException, self).__init__()
-        self.error = error
         self.user_msg = user_msg
-        self.debug_msg = debug_msg
-        self.cls_code = cls_code
+        self.root_exception_error_code = None
 
     def __str__(self):
         return '[{}] code: {}, msg: {}'.format(self.__class__.__name__, self.error_code(), self.user_msg)
@@ -116,8 +104,12 @@ class MindConverterException(Exception):
         Returns:
             str, Hex string representing the composed MindConverter error code.
         """
-        num = 0xFFFF & self.error.value
-        error_code = ''.join((f'{self.cls_code}'.zfill(3), hex(num)[2:].zfill(4).upper()))
+        if self.root_exception_error_code:
+            return self.root_exception_error_code
+        if self.BASE_ERROR_CODE is None or self.ERROR_CODE is None:
+            raise ValueError("MindConverterException has not been initialized.")
+        num = 0xFFFF & self.ERROR_CODE  # 0xFFFF & self.error.value
+        error_code = f"{str(self.BASE_ERROR_CODE).zfill(3)}{hex(num)[2:].zfill(4).upper()}"
         return error_code
 
     @classmethod
@@ -126,7 +118,7 @@ class MindConverterException(Exception):
         """Raise from below exceptions."""
 
     @classmethod
-    def uniform_catcher(cls, msg):
+    def uniform_catcher(cls, msg: str = ""):
         """Uniform exception catcher."""
 
         def decorator(func):
@@ -134,16 +126,20 @@ class MindConverterException(Exception):
                 try:
                     res = func(*args, **kwargs)
                 except cls.raise_from() as e:
-                    error = cls(msg=msg)
-                    detail_info = f"Error detail: {str(e)}"
-                    log_console.error(str(error))
+                    error = cls() if not msg else cls(msg=msg)
+                    detail_info = str(e)
+                    log.error(error)
+                    log_console.error("\n")
                     log_console.error(detail_info)
+                    log_console.error("\n")
                     log.exception(e)
                     sys.exit(0)
                 except ModuleNotFoundError as e:
-                    detail_info = f"Error detail: Required package not found, please check the runtime environment."
+                    detail_info = "Error detail: Required package not found, please check the runtime environment."
+                    log_console.error("\n")
                     log_console.error(str(e))
                     log_console.error(detail_info)
+                    log_console.error("\n")
                     log.exception(e)
                     sys.exit(0)
                 return res
@@ -161,9 +157,12 @@ class MindConverterException(Exception):
                 try:
                     output = func(*args, **kwargs)
                 except cls.raise_from() as e:
+                    error = cls(msg=msg)
+                    error_code = e.error_code() if isinstance(e, MindConverterException) else None
+                    error.root_exception_error_code = error_code
                     log.error(msg)
                     log.exception(e)
-                    raise cls(msg=msg)
+                    raise error
                 except Exception as e:
                     log.error(msg)
                     log.exception(e)
@@ -175,12 +174,21 @@ class MindConverterException(Exception):
         return decorator
 
 
-class BaseConverterFail(MindConverterException):
+class BaseConverterError(MindConverterException):
     """Base converter failed."""
 
-    def __init__(self, msg):
-        super(BaseConverterFail, self).__init__(error=ConverterErrors.BASE_CONVERTER_FAIL,
-                                                user_msg=msg)
+    @unique
+    class ErrCode(Enum):
+        """Define error code of BaseConverterError."""
+        UNKNOWN_ERROR = 0
+        UNKNOWN_MODEL = 1
+
+    BASE_ERROR_CODE = ConverterErrors.BASE_CONVERTER_FAIL.value
+    ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
+    DEFAULT_MSG = "Failed to start base converter."
+
+    def __init__(self, msg=DEFAULT_MSG):
+        super(BaseConverterError, self).__init__(user_msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -189,32 +197,45 @@ class BaseConverterFail(MindConverterException):
         return except_source
 
 
-class UnknownModel(MindConverterException):
+class UnknownModelError(BaseConverterError):
     """The unknown model error."""
+    ERROR_CODE = BaseConverterError.ErrCode.UNKNOWN_MODEL.value
 
     def __init__(self, msg):
-        super(UnknownModel, self).__init__(error=ConverterErrors.UNKNOWN_MODEL,
-                                           user_msg=msg)
+        super(UnknownModelError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
         return cls
 
 
-class GraphInitFail(MindConverterException):
+class GraphInitError(MindConverterException):
     """The graph init fail error."""
 
-    def __init__(self, **kwargs):
-        super(GraphInitFail, self).__init__(error=ConverterErrors.GRAPH_INIT_FAIL,
-                                            user_msg=kwargs.get('msg', ''))
+    @unique
+    class ErrCode(Enum):
+        """Define error code of GraphInitError."""
+        UNKNOWN_ERROR = 0
+        MODEL_NOT_SUPPORT = 1
+        TF_RUNTIME_ERROR = 2
+        INPUT_SHAPE_ERROR = 3
+        MI_RUNTIME_ERROR = 4
+
+    BASE_ERROR_CODE = ConverterErrors.GRAPH_INIT_FAIL.value
+    ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
+    DEFAULT_MSG = "Error occurred when init graph object."
+
+    def __init__(self, msg=DEFAULT_MSG):
+        super(GraphInitError, self).__init__(user_msg=msg)
 
     @classmethod
     def raise_from(cls):
         """Raise from exceptions below."""
         except_source = (FileNotFoundError,
                          ModuleNotFoundError,
-                         ModelNotSupport,
-                         SubGraphSearchingFail,
+                         ModelNotSupportError,
+                         ModelLoadingError,
+                         RuntimeIntegrityError,
                          TypeError,
                          ZeroDivisionError,
                          RuntimeError,
@@ -222,45 +243,65 @@ class GraphInitFail(MindConverterException):
         return except_source
 
 
-class TreeCreateFail(MindConverterException):
+class TreeCreationError(MindConverterException):
     """The tree create fail."""
 
-    def __init__(self, msg):
-        super(TreeCreateFail, self).__init__(error=ConverterErrors.TREE_CREATE_FAIL,
-                                             user_msg=msg)
+    @unique
+    class ErrCode(Enum):
+        """Define error code of TreeCreationError."""
+        UNKNOWN_ERROR = 0
+        NODE_INPUT_MISSING = 1
+        TREE_NODE_INSERT_FAIL = 2
+
+    BASE_ERROR_CODE = ConverterErrors.TREE_CREATE_FAIL.value
+    ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
+    DEFAULT_MSG = "Error occurred when create hierarchical tree."
+
+    def __init__(self, msg=DEFAULT_MSG):
+        super(TreeCreationError, self).__init__(user_msg=msg)
 
     @classmethod
     def raise_from(cls):
         """Raise from exceptions below."""
-        except_source = (NodeInputMissing,
-                         TreeNodeInsertFail, cls)
+        except_source = NodeInputMissingError, TreeNodeInsertError, cls
         return except_source
 
 
-class SourceFilesSaveFail(MindConverterException):
+class SourceFilesSaveError(MindConverterException):
     """The source files save fail error."""
 
-    def __init__(self, msg):
-        super(SourceFilesSaveFail, self).__init__(error=ConverterErrors.SOURCE_FILES_SAVE_FAIL,
-                                                  user_msg=msg)
+    @unique
+    class ErrCode(Enum):
+        """Define error code of SourceFilesSaveError."""
+        UNKNOWN_ERROR = 0
+        NODE_INPUT_TYPE_NOT_SUPPORT = 1
+        SCRIPT_GENERATE_FAIL = 2
+        REPORT_GENERATE_FAIL = 3
+
+    BASE_ERROR_CODE = ConverterErrors.SOURCE_FILES_SAVE_FAIL.value
+    ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
+    DEFAULT_MSG = "Error occurred when save source files."
+
+    def __init__(self, msg=DEFAULT_MSG):
+        super(SourceFilesSaveError, self).__init__(user_msg=msg)
 
     @classmethod
     def raise_from(cls):
         """Raise from exceptions below."""
-        except_source = (NodeInputTypeNotSupport,
-                         ScriptGenerateFail,
-                         ReportGenerateFail,
+        except_source = (NodeInputTypeNotSupportError,
+                         ScriptGenerationError,
+                         ReportGenerationError,
                          IOError, cls)
         return except_source
 
 
-class ModelNotSupport(MindConverterException):
+class ModelNotSupportError(GraphInitError):
     """The model not support error."""
 
+    ERROR_CODE = GraphInitError.ErrCode.MODEL_NOT_SUPPORT.value
+
     def __init__(self, msg):
-        super(ModelNotSupport, self).__init__(error=ConverterErrors.MODEL_NOT_SUPPORT,
-                                              user_msg=msg,
-                                              cls_code=ConverterErrors.GRAPH_INIT_FAIL.value)
+        super(ModelNotSupportError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -275,13 +316,13 @@ class ModelNotSupport(MindConverterException):
         return except_source
 
 
-class TfRuntimeError(MindConverterException):
+class TfRuntimeError(GraphInitError):
     """Catch tf runtime error."""
+    ERROR_CODE = GraphInitError.ErrCode.TF_RUNTIME_ERROR.value
+    DEFAULT_MSG = "Error occurred when init graph, TensorFlow runtime error."
 
-    def __init__(self, msg):
-        super(TfRuntimeError, self).__init__(error=ConverterErrors.TF_RUNTIME_ERROR,
-                                             user_msg=msg,
-                                             cls_code=ConverterErrors.GRAPH_INIT_FAIL.value)
+    def __init__(self, msg=DEFAULT_MSG):
+        super(TfRuntimeError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -290,26 +331,36 @@ class TfRuntimeError(MindConverterException):
         return tf_error, ValueError, RuntimeError, cls
 
 
-class NodeInputMissing(MindConverterException):
-    """The node input missing error."""
+class RuntimeIntegrityError(GraphInitError):
+    """Catch runtime error."""
+    ERROR_CODE = GraphInitError.ErrCode.MI_RUNTIME_ERROR.value
 
     def __init__(self, msg):
-        super(NodeInputMissing, self).__init__(error=ConverterErrors.NODE_INPUT_MISSING,
-                                               user_msg=msg,
-                                               cls_code=ConverterErrors.TREE_CREATE_FAIL.value)
+        super(RuntimeIntegrityError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        return RuntimeError, AttributeError, ImportError, ModuleNotFoundError, cls
+
+
+class NodeInputMissingError(TreeCreationError):
+    """The node input missing error."""
+    ERROR_CODE = TreeCreationError.ErrCode.NODE_INPUT_MISSING.value
+
+    def __init__(self, msg):
+        super(NodeInputMissingError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
         return ValueError, IndexError, KeyError, AttributeError, cls
 
 
-class TreeNodeInsertFail(MindConverterException):
+class TreeNodeInsertError(TreeCreationError):
     """The tree node create fail error."""
+    ERROR_CODE = TreeCreationError.ErrCode.TREE_NODE_INSERT_FAIL.value
 
     def __init__(self, msg):
-        super(TreeNodeInsertFail, self).__init__(error=ConverterErrors.TREE_NODE_INSERT_FAIL,
-                                                 user_msg=msg,
-                                                 cls_code=ConverterErrors.TREE_CREATE_FAIL.value)
+        super(TreeNodeInsertError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -321,26 +372,24 @@ class TreeNodeInsertFail(MindConverterException):
         return except_source
 
 
-class NodeInputTypeNotSupport(MindConverterException):
+class NodeInputTypeNotSupportError(SourceFilesSaveError):
     """The node input type NOT support error."""
+    ERROR_CODE = SourceFilesSaveError.ErrCode.NODE_INPUT_TYPE_NOT_SUPPORT.value
 
     def __init__(self, msg):
-        super(NodeInputTypeNotSupport, self).__init__(error=ConverterErrors.NODE_INPUT_TYPE_NOT_SUPPORT,
-                                                      user_msg=msg,
-                                                      cls_code=ConverterErrors.SOURCE_FILES_SAVE_FAIL.value)
+        super(NodeInputTypeNotSupportError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
         return ValueError, TypeError, IndexError, cls
 
 
-class ScriptGenerateFail(MindConverterException):
+class ScriptGenerationError(SourceFilesSaveError):
     """The script generate fail error."""
+    ERROR_CODE = SourceFilesSaveError.ErrCode.SCRIPT_GENERATE_FAIL.value
 
     def __init__(self, msg):
-        super(ScriptGenerateFail, self).__init__(error=ConverterErrors.SCRIPT_GENERATE_FAIL,
-                                                 user_msg=msg,
-                                                 cls_code=ConverterErrors.SOURCE_FILES_SAVE_FAIL.value)
+        super(ScriptGenerationError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -351,13 +400,12 @@ class ScriptGenerateFail(MindConverterException):
         return except_source
 
 
-class ReportGenerateFail(MindConverterException):
+class ReportGenerationError(SourceFilesSaveError):
     """The report generate fail error."""
+    ERROR_CODE = SourceFilesSaveError.ErrCode.REPORT_GENERATE_FAIL.value
 
     def __init__(self, msg):
-        super(ReportGenerateFail, self).__init__(error=ConverterErrors.REPORT_GENERATE_FAIL,
-                                                 user_msg=msg,
-                                                 cls_code=ConverterErrors.SOURCE_FILES_SAVE_FAIL.value)
+        super(ReportGenerationError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -365,13 +413,22 @@ class ReportGenerateFail(MindConverterException):
         return ZeroDivisionError, cls
 
 
-class SubGraphSearchingFail(MindConverterException):
+class SubGraphSearchingError(MindConverterException):
     """Sub-graph searching exception."""
 
-    def __init__(self, msg):
-        super(SubGraphSearchingFail, self).__init__(error=ConverterErrors.MODEL_NOT_SUPPORT,
-                                                    cls_code=ConverterErrors.SUB_GRAPH_SEARCHING_FAIL.value,
-                                                    user_msg=msg)
+    @unique
+    class ErrCode(Enum):
+        """Define error code of SourceFilesSaveError."""
+        BASE_ERROR = 0
+        CANNOT_FIND_VALID_PATTERN = 1
+        MODEL_NOT_SUPPORT = 2
+
+    BASE_ERROR_CODE = ConverterErrors.SUB_GRAPH_SEARCHING_FAIL.value
+    ERROR_CODE = ErrCode.BASE_ERROR.value
+    DEFAULT_MSG = "Sub-Graph pattern searching fail."
+
+    def __init__(self, msg=DEFAULT_MSG):
+        super(SubGraphSearchingError, self).__init__(user_msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -379,13 +436,22 @@ class SubGraphSearchingFail(MindConverterException):
         return IndexError, KeyError, ValueError, AttributeError, ZeroDivisionError, cls
 
 
-class GeneratorFail(MindConverterException):
+class GeneratorError(MindConverterException):
     """The Generator fail error."""
 
-    def __init__(self, msg):
-        super(GeneratorFail, self).__init__(error=ConverterErrors.NODE_CONVERSION_ERROR,
-                                            user_msg=msg,
-                                            cls_code=ConverterErrors.GENERATOR_FAIL.value)
+    @unique
+    class ErrCode(Enum):
+        """Define error code of SourceFilesSaveError."""
+        BASE_ERROR = 0
+        STATEMENT_GENERATION_ERROR = 1
+        CONVERTED_OPERATOR_LOADING_ERROR = 2
+
+    BASE_ERROR_CODE = ConverterErrors.GENERATOR_FAIL.value
+    ERROR_CODE = ErrCode.BASE_ERROR.value
+    DEFAULT_MSG = "Error occurred when generate code."
+
+    def __init__(self, msg=DEFAULT_MSG):
+        super(GeneratorError, self).__init__(user_msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -394,13 +460,12 @@ class GeneratorFail(MindConverterException):
         return except_source
 
 
-class ModelLoadingFail(MindConverterException):
+class ModelLoadingError(GraphInitError):
     """Model loading fail."""
+    ERROR_CODE = GraphInitError.ErrCode.INPUT_SHAPE_ERROR.value
 
     def __init__(self, msg):
-        super(ModelLoadingFail, self).__init__(error=ConverterErrors.INPUT_SHAPE_ERROR,
-                                               cls_code=ConverterErrors.MODEL_LOADING_FAIL.value,
-                                               user_msg=msg)
+        super(ModelLoadingError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):

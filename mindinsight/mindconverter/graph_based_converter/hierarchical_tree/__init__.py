@@ -21,7 +21,7 @@ from mindinsight.mindconverter.common.log import logger as log
 from .hierarchical_tree import HierarchicalTree
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
 
-from ...common.exceptions import NodeInputMissing, TreeNodeInsertFail
+from ...common.exceptions import NodeInputMissingError, TreeNodeInsertError
 
 
 def _tf_model_node_name_reformat(node: OnnxGraphNode, node_name):
@@ -53,7 +53,7 @@ class HierarchicalTreeFactory:
     """Hierarchical tree factory."""
 
     @classmethod
-    @TreeNodeInsertFail.check_except("Tree node inserts failed.")
+    @TreeNodeInsertError.check_except("Tree node inserts failed.")
     def create(cls, graph):
         """
         Factory method of hierarchical tree.
@@ -73,7 +73,7 @@ class HierarchicalTreeFactory:
             if node_input != 0 and not node_input:
                 err_msg = f"This model is not supported now. " \
                           f"Cannot find {node_name}'s input shape."
-                error = NodeInputMissing(err_msg)
+                error = NodeInputMissingError(err_msg)
                 log.error(str(error))
                 raise error
             if isinstance(node_inst, OnnxGraphNode):

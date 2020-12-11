@@ -27,8 +27,8 @@ from mindinsight.mindconverter.graph_based_converter.constant import BINARY_HEAD
     BINARY_HEADER_PYTORCH_BITS, ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
-from mindinsight.mindconverter.common.exceptions import GraphInitFail, TreeCreateFail, SourceFilesSaveFail, \
-    BaseConverterFail, UnknownModel, GeneratorFail, TfRuntimeError
+from mindinsight.mindconverter.common.exceptions import GraphInitError, TreeCreationError, SourceFilesSaveError, \
+    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError
 from mindinsight.utils.exceptions import ParamMissError
 
 permissions = os.R_OK | os.W_OK | os.X_OK
@@ -67,13 +67,13 @@ def torch_installation_validation(func):
            output_folder: str, report_folder: str = None):
         # Check whether pytorch is installed.
         if not find_spec("torch"):
-            error = ModuleNotFoundError("PyTorch is required when using graph based "
-                                        "scripts converter, and PyTorch vision must "
-                                        "be consisted with model generation runtime.")
-            log.error(str(error))
-            detail_info = f"Error detail: {str(error)}"
+            error = RuntimeIntegrityError("PyTorch is required when using graph based "
+                                          "scripts converter, and PyTorch vision must "
+                                          "be consisted with model generation runtime.")
+            log.error(error)
+            log_console.error("\n")
             log_console.error(str(error))
-            log_console.error(detail_info)
+            log_console.error("\n")
             sys.exit(0)
 
         func(graph_path=graph_path, sample_shape=sample_shape,
@@ -97,17 +97,17 @@ def tf_installation_validation(func):
            output_folder: str, report_folder: str = None,
            input_nodes: str = None, output_nodes: str = None):
         # Check whether tensorflow is installed.
-        if not find_spec("tensorflow") or not find_spec("tf2onnx") or not find_spec("onnx") \
-                or not find_spec("onnxruntime"):
-            error = ModuleNotFoundError(
+        if not find_spec("tensorflow") or not find_spec("tensorflow-gpu") or not find_spec("tf2onnx") \
+                or not find_spec("onnx") or not find_spec("onnxruntime"):
+            error = RuntimeIntegrityError(
                 f"TensorFlow, tf2onnx(>={TF2ONNX_MIN_VER}), onnx(>={ONNX_MIN_VER}) and "
                 f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) are required when using graph "
                 f"based scripts converter for TensorFlow conversion."
             )
-            log.error(str(error))
-            detail_info = f"Error detail: {str(error)}"
+            log.error(error)
+            log_console.error("\n")
             log_console.error(str(error))
-            log_console.error(detail_info)
+            log_console.error("\n")
             sys.exit(0)
 
         onnx, tf2onnx = import_module("onnx"), import_module("tf2onnx")
@@ -116,15 +116,15 @@ def tf_installation_validation(func):
         if not lib_version_satisfied(getattr(onnx, "__version__"), ONNX_MIN_VER) \
                 or not lib_version_satisfied(getattr(ort, "__version__"), ONNXRUNTIME_MIN_VER) \
                 or not lib_version_satisfied(getattr(tf2onnx, "__version__"), TF2ONNX_MIN_VER):
-            error = ModuleNotFoundError(
+            error = RuntimeIntegrityError(
                 f"TensorFlow, tf2onnx(>={TF2ONNX_MIN_VER}), onnx(>={ONNX_MIN_VER}) and "
                 f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) are required when using graph "
                 f"based scripts converter for TensorFlow conversion."
             )
-            log.error(str(error))
-            detail_info = f"Error detail: {str(error)}"
+            log.error(error)
+            log_console.error("\n")
             log_console.error(str(error))
-            log_console.error(detail_info)
+            log_console.error("\n")
             sys.exit(0)
 
         func(graph_path=graph_path, sample_shape=sample_shape,
@@ -150,14 +150,14 @@ def _extract_model_name(model_path):
 
 
 @torch_installation_validation
-@GraphInitFail.uniform_catcher("Error occurred when init graph object.")
-@TreeCreateFail.uniform_catcher("Error occurred when create hierarchical tree.")
-@SourceFilesSaveFail.uniform_catcher("Error occurred when save source files.")
-@GeneratorFail.uniform_catcher("Error occurred when generate code.")
+@GraphInitError.uniform_catcher()
+@TreeCreationError.uniform_catcher()
+@SourceFilesSaveError.uniform_catcher()
+@GeneratorError.uniform_catcher()
 def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
                                         output_folder: str, report_folder: str = None):
     """
-    Pytoch to MindSpore based on Graph.
+    PyTorch to MindSpore based on Graph.
 
     Args:
         graph_path (str): Graph file path.
@@ -185,11 +185,11 @@ def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
 
 
 @tf_installation_validation
-@GraphInitFail.uniform_catcher("Error occurred when init graph object.")
-@TfRuntimeError.uniform_catcher("Error occurred when init graph, TensorFlow runtime error.")
-@TreeCreateFail.uniform_catcher("Error occurred when create hierarchical tree.")
-@SourceFilesSaveFail.uniform_catcher("Error occurred when save source files.")
-@GeneratorFail.uniform_catcher("Error occurred when generate code.")
+@GraphInitError.uniform_catcher()
+@TfRuntimeError.uniform_catcher()
+@TreeCreationError.uniform_catcher()
+@SourceFilesSaveError.uniform_catcher()
+@GeneratorError.uniform_catcher()
 def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
                                    input_nodes: str, output_nodes: str,
                                    output_folder: str, report_folder: str = None):
@@ -221,7 +221,7 @@ def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
 
 
-@BaseConverterFail.uniform_catcher("Failed to start base converter.")
+@BaseConverterError.uniform_catcher()
 def main_graph_base_converter(file_config):
     """
     The entrance for converter, script files will be converted.
@@ -248,7 +248,7 @@ def main_graph_base_converter(file_config):
                                        report_folder=file_config['report_dir'])
     else:
         error_msg = "Get UNSUPPORTED model."
-        error = UnknownModel(error_msg)
+        error = UnknownModelError(error_msg)
         log.error(str(error))
         raise error
 
@@ -263,7 +263,7 @@ def get_framework_type(model_path):
                 framework_type = FrameworkType.TENSORFLOW.value
     except IOError:
         error_msg = "Get UNSUPPORTED model."
-        error = UnknownModel(error_msg)
+        error = UnknownModelError(error_msg)
         log.error(str(error))
         raise error
 

@@ -87,7 +87,7 @@ def get_imported_module():
         str, imported module.
     """
     return f"import numpy as np{NEW_LINE}" \
-            f"import mindspore{NEW_LINE}" \
-            f"from mindspore import nn{NEW_LINE}" \
-            f"from mindspore import Tensor{NEW_LINE}" \
-            f"from mindspore.ops import operations as P{NEW_LINE * 3}"
+           f"import mindspore{NEW_LINE}" \
+           f"from mindspore import nn{NEW_LINE}" \
+           f"from mindspore import Tensor{NEW_LINE}" \
+           f"from mindspore.ops import operations as P{NEW_LINE * 3}"

@@ -35,7 +35,7 @@ from ..constant import SEPARATOR_BTW_NAME_AND_ID, FIRST_LEVEL_INDENT
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT
 from ..constant import NodeType
 from ..report_generator import ReportGenerator
-from ...common.exceptions import ReportGenerateFail, ScriptGenerateFail, NodeInputTypeNotSupport
+from ...common.exceptions import ReportGenerationError, ScriptGenerationError, NodeInputTypeNotSupportError
 
 
 class HierarchicalTree(Tree):
@@ -189,7 +189,7 @@ class HierarchicalTree(Tree):
         try:
             self._adjust_structure()
             code_fragments = self._generate_codes(mapper)
-        except (NodeInputTypeNotSupport, ScriptGenerateFail, ReportGenerateFail) as e:
+        except (NodeInputTypeNotSupportError, ScriptGenerationError, ReportGenerationError) as e:
             log.error("Error occur when generating codes.")
             raise e
 
@@ -264,8 +264,8 @@ class HierarchicalTree(Tree):
                 node.data.args_in_code.pop(arg)
         return node
 
-    @ScriptGenerateFail.check_except("FormatCode run error. Check detailed information in log.")
-    @ReportGenerateFail.check_except("Not find valid operators in converted script.")
+    @ScriptGenerationError.check_except("FormatCode run error. Check detailed information in log.")
+    @ReportGenerationError.check_except("Not find valid operators in converted script.")
     def _generate_codes(self, mapper):
         """
         Generate code files.

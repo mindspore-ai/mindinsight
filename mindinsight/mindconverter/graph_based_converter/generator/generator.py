@@ -23,7 +23,7 @@ from .node_struct import NodeStruct
 from .module_struct import ModuleStruct
 from .args_translator import ArgsTranslationHelper
 from ..common.global_context import GlobalContext
-from ...common.exceptions import GeneratorFail
+from ...common.exceptions import GeneratorError
 from ..hierarchical_tree.name_mgr import GlobalVarNameMgr
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT, FIRST_LEVEL_INDENT, CodeFormatConfig, get_imported_module
 from ..report_generator import ReportGenerator
@@ -171,7 +171,7 @@ class Generator:
         self._global_context.node_struct_collections = self._node_struct_collections
         self._repeated_submodules = set()
 
-    @GeneratorFail.check_except("Generator occurs an error when forming base submodules.")
+    @GeneratorError.check_except("Generator occurs an error when forming base submodules.")
     def _form_bottom_submodule(self):
         """Form the basic submodules, which only contains nodes."""
         # Form module map
@@ -351,7 +351,7 @@ class Generator:
                 self._global_context.add_module_struct(sub.pattern_id, sub)
             depth -= 1
 
-    @GeneratorFail.check_except("Generator occurs an error when building modules.")
+    @GeneratorError.check_except("Generator occurs an error when building modules.")
     def _recursive_form_module(self):
         """Main routine in generator to build modules from bottom to top."""
         # 1. List repeated submodules
@@ -474,7 +474,7 @@ class Generator:
         """Return all ModuleStructs in this model."""
         return self._module_struct_collections
 
-    @GeneratorFail.check_except("Generator occurs an error when generating code statements.")
+    @GeneratorError.check_except("Generator occurs an error when generating code statements.")
     def generate(self):
         """
         Generate the final script file.

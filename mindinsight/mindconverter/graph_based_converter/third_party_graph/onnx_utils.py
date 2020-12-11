@@ -27,7 +27,7 @@ from ..common.global_context import GlobalContext
 
 from ..constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
     ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL
-from ...common.exceptions import GraphInitFail, ModelNotSupport, ModelLoadingFail
+from ...common.exceptions import GraphInitError, ModelNotSupportError, ModelLoadingError
 
 
 def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=12):
@@ -308,7 +308,7 @@ class OnnxDataLoader:
             w = int(match.group('w'))
             c = int(match.group('c'))
             if [h, w, c] != list(self.graph_input_shape)[1:4]:
-                raise ModelLoadingFail(f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
+                raise ModelLoadingError(f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
             return True
         return False
 
@@ -383,7 +383,7 @@ class OnnxDataLoader:
             self._nodes_dict[n.name] = n
             nodes_topo_idx.append((idx, n.name))
             if len(node.output) > 1:
-                raise ModelNotSupport(msg=f"{node.name} has multi-outputs which is not supported now.")
+                raise ModelNotSupportError(msg=f"{node.name} has multi-outputs which is not supported now.")
             self.output_name_to_node_name[node.output[0]] = node.name
             self._global_context.onnx_node_name_to_topo_idx[n.name] = idx
             node_inputs = [i.replace(":0", "") for i in node.input]
@@ -423,7 +423,7 @@ class OnnxDataLoader:
                 shape[i] = int(shape[i])
             node_name = self.output_name_to_node_name[node_opt_name]
             if not node_name:
-                raise GraphInitFail(user_msg=f"Cannot find where edge {node_opt_name} comes from.")
+                raise GraphInitError(msg=f"Cannot find where edge {node_opt_name} comes from.")
             self.node_output_shape_dict[node_name] = shape
 
     def get_node(self, node_name):

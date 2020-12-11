@@ -18,14 +18,14 @@ from importlib import import_module
 
 from mindinsight.mindconverter.common.log import logger as log
 from .base import GraphParser
-from ...common.exceptions import ModelNotSupport
+from ...common.exceptions import ModelNotSupportError
 
 
 class TFGraphParser(GraphParser):
     """Define TF graph parser."""
 
     @classmethod
-    @ModelNotSupport.check_except(
+    @ModelNotSupportError.check_except(
         "Error occurs in loading model, please check your model or runtime environment integrity."
     )
     def parse(cls, model_path: str, **kwargs):

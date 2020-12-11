@@ -21,7 +21,7 @@ from mindinsight.mindconverter.common.log import logger as log
 from ..common.code_fragment import CodeFragment
 from ..constant import NodeType, InputType
 from ..mapper.base import Mapper
-from ...common.exceptions import NodeInputTypeNotSupport
+from ...common.exceptions import NodeInputTypeNotSupportError
 
 
 class GraphParser(metaclass=abc.ABCMeta):
@@ -522,7 +522,7 @@ class GraphNode(abc.ABC):
             elif input_type == InputType.LIST.value:
                 ipt_args_settings_in_construct = f"({ipt_args_in_construct},)"
             else:
-                raise NodeInputTypeNotSupport(f"Input type[{input_type}] is not supported now.")
+                raise NodeInputTypeNotSupportError(f"Input type[{input_type}] is not supported now.")
         else:
             ipt_args_settings_in_construct = ipt_args_in_construct
 

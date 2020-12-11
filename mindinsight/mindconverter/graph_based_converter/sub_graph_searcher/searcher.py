@@ -21,7 +21,7 @@ from .common import MINI_FREQUENCY, MAX_ITERATION_DEPTH, SATISFIED_SCORE
 from ..common.global_context import GlobalContext
 from ..third_party_graph.onnx_utils import BaseNode
 from .search_path import SearchPath, Pattern, generate_pattern, find_built_in_pattern
-from ...common.exceptions import SubGraphSearchingFail
+from ...common.exceptions import SubGraphSearchingError
 
 
 def _is_satisfied(path):
@@ -267,7 +267,7 @@ def _add_known_module_name(search_path):
             ctx.known_module_name[it.pattern.module_name] = it.pattern.known_module_name
 
 
-@SubGraphSearchingFail.check_except("Sub-Graph searching fail.")
+@SubGraphSearchingError.check_except("Sub-Graph pattern searching fail.")
 def generate_scope_name(data_loader):
     """
     Generate scope name according to computation graph.
