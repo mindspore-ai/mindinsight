@@ -42,7 +42,7 @@ MindConverter提供命令行（Command-line interface, CLI）的使用方式，�
 ```bash
 usage: mindconverter [-h] [--version] [--in_file IN_FILE]
                      [--model_file MODEL_FILE] [--shape SHAPE]
-                     [--input_node INPUT_NODE] [--output_node OUTPUT_NODE]
+                     [--input_nodes INPUT_NODES] [--output_nodes OUTPUT_NODES]
                      [--output OUTPUT] [--report REPORT]
                      [--project_path PROJECT_PATH]
 
@@ -59,14 +59,14 @@ optional arguments:
   --shape SHAPE         Optional, expected input tensor shape of
                         `--model_file`. It is required when use graph based
                         schema. Usage: --shape 1,3,244,244
-  --input_nodes INPUT_NODE
+  --input_nodes INPUT_NODES
                         Optional, input node(s) name of `--model_file`. It is
-                        required when use Tensorflow model. Usage:
-                        --input_node input_1:0,input_2:0
-  --output_nodes OUTPUT_NODE
+                        required when use TensorFlow model. Usage:
+                        --input_nodes input_1:0,input_2:0
+  --output_nodes OUTPUT_NODES
                         Optional, output node(s) name of `--model_file`. It is
-                        required when use Tensorflow model. Usage:
-                        --output_node output_1:0,output_2:0
+                        required when use TensorFlow model. Usage:
+                        --output_nodes output_1:0,output_2:0
   --output OUTPUT       Optional, specify path for converted script file
                         directory. Default output directory is `output` folder
                         in the current working directory.
@@ -77,7 +77,6 @@ optional arguments:
                         project is not in PYTHONPATH, please assign
                         `--project_path` when use graph based schema. Usage:
                         --project_path ~/script_file/
-
 ```
 
 ### PyTorch模型脚本迁移
