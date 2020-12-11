@@ -482,10 +482,9 @@ class _SummaryParser(_Parser):
 
         elif plugin == PluginNameEnum.TENSOR.value:
             tensor_event_value = TensorContainer(tensor_event_value)
-            if tensor_event_value.size > MAX_TENSOR_COUNT:
+            if tensor_event_value.error_code is not None:
                 logger.warning('tag: %s/tensor, dims: %s, tensor count: %d exceeds %d and drop it.',
                                value.tag, tensor_event_value.dims, tensor_event_value.size, MAX_TENSOR_COUNT)
-                return None
 
         elif plugin == PluginNameEnum.IMAGE.value:
             tensor_event_value = ImageContainer(tensor_event_value)

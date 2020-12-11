@@ -204,3 +204,12 @@ class TrainJobDetailNotInCacheError(MindInsightException):
         super().__init__(DataVisualErrors.TRAIN_JOB_DETAIL_NOT_IN_CACHE,
                          error_msg,
                          http_code=400)
+
+
+class TensorTooLargeError(MindInsightException):
+    """The given tensor is too large to shown on UI."""
+    def __init__(self, error_detail):
+        error_msg = f'Tensor is too large to show on UI. Detail: {error_detail}'
+        super(TensorTooLargeError, self).__init__(DataVisualErrors.TENSOR_TOO_LARGE,
+                                                  error_msg,
+                                                  http_code=400)

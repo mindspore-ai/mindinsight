@@ -23,7 +23,7 @@ from mindinsight.utils.tensor import TensorUtils, MAX_DIMENSIONS_FOR_TENSOR
 from mindinsight.conf.constants import MAX_TENSOR_RESPONSE_DATA_SIZE
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.common.exceptions import StepTensorDataNotInCacheError, TensorNotExistError
-from mindinsight.datavisual.common.exceptions import ResponseDataExceedMaxValueError
+from mindinsight.datavisual.common.exceptions import ResponseDataExceedMaxValueError, TensorTooLargeError
 from mindinsight.datavisual.data_transform.tensor_container import TensorContainer
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
@@ -153,7 +153,9 @@ class TensorProcessor(BaseProcessor):
                 "data_type": anf_ir_pb2.DataType.Name(value.data_type)
             }
             if detail and detail == 'stats':
-                stats = TensorUtils.get_statistics_dict(stats=value.stats, overall_stats=value.stats)
+                stats = None
+                if value.error_code is None:
+                    stats = TensorUtils.get_statistics_dict(stats=value.stats, overall_stats=value.stats)
                 value_dict.update({"statistics": stats})
 
             values.append({
@@ -206,6 +208,8 @@ class TensorProcessor(BaseProcessor):
             if step != tensor.step:
                 continue
             step_in_cache = True
+            if value.error_code is not None:
+                raise TensorTooLargeError("Step: {}".format(tensor.step))
             res_data = TensorUtils.get_specific_dims_data(value.ndarray, dims)
             flatten_data = res_data.flatten().tolist()
             if len(flatten_data) > MAX_TENSOR_RESPONSE_DATA_SIZE:
@@ -285,6 +289,8 @@ class TensorProcessor(BaseProcessor):
         for tensor in tensors:
             # This value is an instance of TensorContainer
             value = tensor.value
+            if value.error_code is not None:
+                raise TensorTooLargeError("Step: {}".format(tensor.step))
             buckets = value.buckets()
             values.append({
                 "wall_time": tensor.wall_time,
