@@ -593,8 +593,6 @@
       "range_percentage_lt": "在范围中的值所占百分比<",
       "range_percentage_gt": "在范围中的值所占百分比>",
       "rtol": "相对容忍度",
-      "abs_update_ratio_mean_gt": "变化比例绝对值的平均值>",
-      "abs_update_ratio_mean_lt": "变化比例绝对值的平均值<",
       "abs_mean_update_ratio_gt": "平均变化比例值>",
       "abs_mean_update_ratio_lt": "平均变化比例值<",
       "param": "阈值",
@@ -741,7 +739,20 @@
       "no_prev_tensor": "找不到上一个迭代的值，",
       "cannotCheck": "无法检查。"
     },
-    "sendingTip": "等待训练响应，请稍候。"
+    "stateTips": {
+      "running": "运行中",
+      "sending": "等待执行"
+    },
+    "stateMsg": {
+      "running": "训练运行中",
+      "sending": "等待命令执行，请稍候"
+    },
+    "paramErrorMsg": {
+      "errorType": "请输入数值",
+      "percentError": "百分数值不能小于0或大于100",
+      "rangeError": "范围下界值不能大于上界值",
+      "nonnegative": "此参数值不能小于0"
+    }
   },
   "explain": {
     "explain": "模型解释",
