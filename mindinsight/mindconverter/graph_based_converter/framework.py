@@ -82,6 +82,16 @@ def torch_installation_validation(func):
     return _f
 
 
+def _check_tf_installation():
+    """
+    Check whether TensorFlow was installed.
+
+    Returns:
+        bool, true or false.
+    """
+    return find_spec("tensorflow") or find_spec("tensorflow-gpu")
+
+
 def tf_installation_validation(func):
     """
     Validate args of func.
@@ -97,7 +107,7 @@ def tf_installation_validation(func):
            output_folder: str, report_folder: str = None,
            input_nodes: str = None, output_nodes: str = None):
         # Check whether tensorflow is installed.
-        if not find_spec("tensorflow") or not find_spec("tensorflow-gpu") or not find_spec("tf2onnx") \
+        if not _check_tf_installation() or not find_spec("tf2onnx") \
                 or not find_spec("onnx") or not find_spec("onnxruntime"):
             error = RuntimeIntegrityError(
                 f"TensorFlow, tf2onnx(>={TF2ONNX_MIN_VER}), onnx(>={ONNX_MIN_VER}) and "
