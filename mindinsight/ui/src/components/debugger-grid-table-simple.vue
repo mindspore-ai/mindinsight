@@ -39,7 +39,7 @@ limitations under the License.
            @keyup.enter="filterChange">
         <div class="filter-input-title">{{$t('components.dimsFilterInputTitle')}}
           <span :title="$t('components.dimsFilterInputTip')"
-                class="el-icon-warning"></span>
+                class="el-icon-info"></span>
         </div>
         <div v-for="(item, itemIndex) in filterArr"
              :key="itemIndex">
@@ -74,7 +74,7 @@ limitations under the License.
         </el-select>
         {{$t('components.gridAccuracy')}}
         <span :title="$t('components.accuracyTips')"
-              class="el-icon-warning"></span>
+              class="el-icon-info"></span>
         <el-select v-model="accuracy"
                    class="select-item-debugger"
                    @change="accuracyChange">

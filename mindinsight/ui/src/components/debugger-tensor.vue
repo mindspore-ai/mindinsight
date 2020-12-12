@@ -183,7 +183,7 @@ limitations under the License.
             <el-tooltip placement="bottom"
                         effect="light"
                         popper-class="legend-tip">
-              <i class="el-icon-warning"></i>
+              <i class="el-icon-info"></i>
               <div slot="content">
                 <div>{{$t('debugger.selectDetail')}}</div>
                 <div class="legend">
