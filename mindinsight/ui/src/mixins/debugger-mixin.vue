@@ -524,31 +524,17 @@ export default {
       RequestService.control(params).then(
           (res) => {
             if (res.data && res.data.metadata) {
-              const h = this.$createElement;
-
-              if (res.data.metadata.state === this.state.sending) {
-                setTimeout(() => {
-                  if (this.metadata.state === this.state.sending) {
-                    this.$message(this.$t('debugger.sendingTip'));
-                  } else {
-                    const msg = {
-                      message: h('p', null, [
-                        h('span', null, this.$t('debugger.backstageStatus')),
-                        h('i', {style: 'color: teal'}, this.metadata.state),
-                      ]),
-                    };
-                    this.$message(msg);
-                  }
-                }, 500);
-              } else {
-                const msg = {
-                  message: h('p', null, [
-                    h('span', null, this.$t('debugger.backstageStatus')),
-                    h('i', {style: 'color: teal'}, res.data.metadata.state),
-                  ]),
-                };
+              setTimeout(() => {
+                let msg = '';
+                if (this.metadata.state === this.state.sending) {
+                  msg = this.$t('debugger.stateMsg.sending');
+                } else if (this.metadata.state === this.state.running) {
+                  msg = this.$t('debugger.stateMsg.running');
+                } else {
+                  msg = `${this.$t('debugger.backstageStatus')}${this.metadata.state}`;
+                }
                 this.$message(msg);
-              }
+              }, 500);
 
               this.metadata.state = res.data.metadata.state;
             }

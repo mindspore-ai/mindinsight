@@ -305,6 +305,20 @@ limitations under the License.
           </span>
         </span>
         {{ $t('debugger.stepTip')}}
+        <el-tooltip class="tooltip"
+                    effect="light"
+                    :content="$t('debugger.stateTips.running')"
+                    placement="top"
+                    v-show="metadata.state === state.running">
+          <i class="el-icon-loading"></i>
+        </el-tooltip>
+        <el-tooltip class="tooltip"
+                    effect="light"
+                    :content="$t('debugger.stateTips.sending')"
+                    placement="top"
+                    v-show="metadata.state === state.sending">
+          <i class="el-icon-time"></i>
+        </el-tooltip>
       </div>
       <div class="svg-wrap"
            :class="{collapse: collapseTable}">
@@ -364,7 +378,8 @@ limitations under the License.
              @click="rightCollapse()"
              alt="" />
 
-        <el-tabs v-model="tabs.activeName">
+        <el-tabs v-model="tabs.activeName"
+                 @tab-click="tabsChange">
           <el-tab-pane :label="$t('debugger.tensorMsg')"
                        name="tensor">
             <div class="table-content">
@@ -1445,7 +1460,10 @@ export default {
           }
         }
       }
-      this.setSelectedNodeData(node.data);
+      if (this.tabs.activeName === 'detail') {
+        this.setSelectedNodeData(node.data);
+      }
+
       if (this.watchPointHits.length && this.radio1 === 'hit' && this.isHitIntoView) {
         this.focusWatchpointHit();
       }
@@ -1456,7 +1474,7 @@ export default {
      * @param {Object} selectedNode Node data
      */
     setSelectedNodeData(selectedNode = {}) {
-      this.selectedNode.IOInfo = [];
+      const IOInfo = [];
       this.selectedNode.inputNum = 0;
       this.selectedNode.outputNum = 0;
       if (selectedNode.output) {
@@ -1467,7 +1485,7 @@ export default {
             key = key.replace(`${graphName}/`, '');
           }
           const obj = {name: key, IOType: 'output', graph_name: graphName};
-          this.selectedNode.IOInfo.push(obj);
+          IOInfo.push(obj);
           this.selectedNode.outputNum++;
         });
       }
@@ -1479,10 +1497,11 @@ export default {
             key = key.replace(`${graphName}/`, '');
           }
           const obj = {name: key, IOType: 'input', graph_name: graphName};
-          this.selectedNode.IOInfo.push(obj);
+          IOInfo.push(obj);
           this.selectedNode.inputNum++;
         });
       }
+      this.selectedNode.IOInfo = IOInfo;
     },
     /**
      * The position is offset to the current node in the center of the screen.
@@ -1647,6 +1666,12 @@ export default {
           }
           this.$message.error(error.response.data.error_msg);
         }
+      }
+    },
+    tabsChange() {
+      if (this.tabs.activeName === 'detail') {
+        const node = this.allGraphData[this.selectedNode.name];
+        this.setSelectedNodeData(node);
       }
     },
     /**
@@ -1976,10 +2001,16 @@ export default {
         margin-left: 25px;
       }
       span.item {
-        margin-right: 15px;
         .content {
           color: #00a5a7;
         }
+      }
+      .item + .item {
+        margin-left: 15px;
+      }
+      .tooltip {
+        margin-left: 5px;
+        cursor: pointer;
       }
     }
     .svg-wrap {
