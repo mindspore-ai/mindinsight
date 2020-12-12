@@ -22,7 +22,7 @@ from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
 from ..common.global_context import GlobalContext
 from ..constant import InputType
-from ...common.exceptions import GeneratorFail
+from ...common.exceptions import GeneratorError
 
 
 class NodeStruct:
@@ -146,7 +146,7 @@ class NodeStruct:
         parsed_scope = Scope.parse_scope_from_node_identifier(self.identifier)
         self.scope = Scope(parsed_scope)
 
-    @GeneratorFail.check_except("Generator occurs an error when initializing node's args translator.")
+    @GeneratorError.check_except("Generator occurs an error when initializing node's args translator.")
     def init_args_translator(self, translated_args: list):
         """
         Initialize the ArgsTranslator for each Node.
@@ -170,7 +170,7 @@ class NodeStruct:
                 self.ms_op]):
             self.ready_to_generate = True
 
-    @GeneratorFail.check_except("Generator occurs an error when creating node struct.")
+    @GeneratorError.check_except("Generator occurs an error when creating node struct.")
     def update(self, arg, force_ready=False):
         """
         Pass Node info. to generator NodeStruct.
