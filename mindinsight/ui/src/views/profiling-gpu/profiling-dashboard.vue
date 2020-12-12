@@ -53,8 +53,12 @@ limitations under the License.
                 </div>
                 <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
                 <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationIntervalPercent}}</span></div>
-                <div>{{$t('profiling.fpbpTimeRatio')}}<span>{{fpBpPercent}}</span></div>
-                <div>{{$t('profiling.iterativeTailingTimeRatio')}}<span>{{tailPercent}}</span></div>
+                  <div v-if="fpBpPercent">{{$t('profiling.fpbpTimeRatio')}}<span>{{fpBpPercent}}</span></div>
+                  <div v-else>{{$t('profiling.fpTimeRatio')}}<span>{{fpPercent}}</span></div>
+                  <div v-if="tailPercent">
+                    {{$t('profiling.iterativeTailingTimeRatio')}}
+                    <span>{{tailPercent}}</span>
+                  </div>
               </div>
               <i class="el-icon-info"></i>
             </el-tooltip>
@@ -391,6 +395,7 @@ export default {
       queueInfoShow: false, // Whether to show queue information
       deviceInfoShow: false, // Whether to show device information
       fpBpPercent: '--', // Ratio of time consumed by forward and backward propagation
+      fpPercent: '--', // Ratio of time consumed by forward propagation
       iterationIntervalPercent: '--', // Ratio of time consumed by step interval
       totalSteps: '--',
       totalTime: '--',
@@ -825,6 +830,7 @@ export default {
               // Set the display information in tip
               if (res.data.summary) {
                 this.fpBpPercent = res.data.summary.fp_and_bp_percent;
+                this.fpPercent = res.data.summary.fp_percent;
                 this.iterationIntervalPercent = res.data.summary.iteration_interval_percent;
                 this.totalSteps = res.data.summary.total_steps;
                 this.totalTime = res.data.summary.total_time;
@@ -850,6 +856,11 @@ export default {
             this.svg.data = [];
             this.svg.initOver = true;
             this.removeTrace();
+            this.fpBpPercent = '--';
+            this.iterationIntervalPercent = '--';
+            this.totalSteps = '--';
+            this.totalTime = '--';
+            this.tailPercent = '--';
           },
       );
     },
@@ -1024,6 +1035,9 @@ export default {
           break;
         case 'fp_and_bp':
           name = this.$t('profiling.deviceQueueOpTip');
+          break;
+        case 'fp':
+          name = this.$t('profiling.deviceQueueOpFpTip');
           break;
         case 'tail':
           name = this.$t('profiling.lterationTail');
