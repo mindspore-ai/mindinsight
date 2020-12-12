@@ -24,7 +24,7 @@ from .pytorch_graph_node import PyTorchGraphNode
 from .pytorch_graph_parser import PyTorchGraphParser
 
 from ..constant import SEPARATOR_IN_SCOPE, LINK_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, SCALAR_WITHOUT_SHAPE, \
-    MIN_SCOPE_LENGTH
+    MIN_SCOPE_LENGTH, SEPARATOR_TITLE_AND_CONTENT_IN_CONSTRUCT
 from ..constant import LEFT_BUCKET, RIGHT_BUCKET
 
 NONE_SCOPE_OP = {
@@ -33,22 +33,32 @@ NONE_SCOPE_OP = {
     "onnx::Concat": "Concat",
     "onnx::Squeeze": "Squeeze",
     "onnx::Unsqueeze": "Unsqueeze",
+    "onnx::Split": "Split",
+    "onnx::Reshape": "Reshape",
+    "onnx::Transpose": "Transpose",
+    "onnx::Constant": "Constant",
+    "onnx::ReduceMean": "ReduceMean"
 }
 
 
-def normalize_scope_name(node):
+def normalize_scope_name(node, scope_name_dict):
     """
     Rename scope name into uniform.
 
     Args:
         node (Node): PyTorch node.
+        scope_name_dict (dict): Dictionary of scope names with the key node_id.
 
     Returns:
         str, normalized scope name.
     """
     global NONE_SCOPE_OP
 
-    name = node.scopeName().replace(SEPARATOR_BTW_NAME_AND_ID, '').split(SEPARATOR_IN_SCOPE)
+    scope_name = node.scopeName()
+    if not scope_name:
+        name = [retrieve_scope_name(node, scope_name_dict)]
+    else:
+        name = scope_name.replace(SEPARATOR_BTW_NAME_AND_ID, '').split(SEPARATOR_IN_SCOPE)
     scopes = []
     for segment in name:
         segment = segment.split(LINK_IN_SCOPE)[0]
@@ -64,7 +74,43 @@ def normalize_scope_name(node):
     if node.kind() in NONE_SCOPE_OP.keys():
         scopes.append(NONE_SCOPE_OP[node.kind()])
     scopes = [s for s in scopes if s]
-    return f"{SEPARATOR_IN_SCOPE.join(scopes)}_{PyTorchGraph.get_node_id(node)}"
+    node_id = PyTorchGraph.get_node_id(node)
+    return f"{SEPARATOR_IN_SCOPE.join(scopes)}_{'&'.join(node_id)}"
+
+
+def retrieve_scope_name(node, scope_name_dict):
+    """
+    Retrieve scope name from input nodes.
+
+    Args:
+        node (Node): PyTorch node.
+        scope_name_dict (dict): Dictionary of scope names with the key node_id.
+
+    Return:
+        str: Scope name.
+    """
+    node_content = \
+        SEPARATOR_TITLE_AND_CONTENT_IN_CONSTRUCT.join(str(node).split(SEPARATOR_TITLE_AND_CONTENT_IN_CONSTRUCT)[1:])
+    node_inputs = re.findall(r"[(](.*?)[)]", node_content)[0]
+    node_inputs = re.sub(r"[\s%]", '', node_inputs).split(",")
+
+    scope_name_ipt_nodes = list()
+    for node_input in node_inputs:
+        if not scope_name_dict.get(node_input, None):
+            continue
+        scope_name_ipt_nodes.append(scope_name_dict[node_input])
+
+    scope_name_split = list()
+    for idx, _ in enumerate(scope_name_ipt_nodes):
+        if not scope_name_split:
+            scope_name_split = scope_name_ipt_nodes[idx]
+        else:
+            scope_name_split = [
+                sub_scope_name
+                for sub_scope_name in scope_name_split if sub_scope_name in scope_name_ipt_nodes[idx]
+            ]
+    scope_name = SEPARATOR_IN_SCOPE.join(scope_name_split)
+    return scope_name
 
 
 class PyTorchGraph(Graph):
@@ -179,8 +225,12 @@ class PyTorchGraph(Graph):
         graph = self._trace_torch_graph(feed_forward_ipt_shape)
         nodes = list(graph.nodes())
 
+        scope_name_dict = dict()
+
         for node in nodes:
-            node_name = normalize_scope_name(node)
+            node_name = normalize_scope_name(node, scope_name_dict)
+            scope_name_dict[node_name.split(SEPARATOR_BTW_NAME_AND_ID)[-1]] \
+                = list(node_name.split(SEPARATOR_BTW_NAME_AND_ID)[0].split(SEPARATOR_IN_SCOPE))
             output_shape_str_list = re.findall(r'[^()!]+', str(node))
             output_shape_str = output_shape_str_list[1]
             output_shape = self._extract_shape(output_shape_str)
@@ -204,7 +254,7 @@ class PyTorchGraph(Graph):
 
                 if nd_id and nd_scope_name:
                     node_input_name = normalize_scope_name(
-                        node_input.node()
+                        node_input.node(), scope_name_dict
                     )
                     self.build_connection(node_input_name, node_name)
 
@@ -259,12 +309,16 @@ class PyTorchGraph(Graph):
 
         return module_dict
 
-    def _check_multi_ipt(self):
+    def _check_multi_ipt_opt(self):
         """Check whether multi-input exists."""
         module_dict = self._generate_module()
         for _, nodes_per_module in module_dict.items():
             prcs_nodes_out_from_module = set()
             for node_name in nodes_per_module:
+                if re.search(r"[\d]+[&][\d]+", node_name):
+                    self._is_multi_opt_graph = True
+                    return True
+
                 node = self._nodes_collection.get(node_name, None)
                 if node:
                     prcs_nodes = node.precursor_nodes
@@ -284,10 +338,12 @@ class PyTorchGraph(Graph):
 
     def _unmerge_multi_ipt_opt_script(self):
         """Unmerge all submodule."""
-        if self._check_multi_ipt():
+        if self._check_multi_ipt_opt():
             for node_key, node_inst in deepcopy(self._nodes_collection).items():
                 prsc_nodes = node_inst.precursor_nodes
                 scsr_nodes = node_inst.successor_nodes
+
+                node_inst.is_in_multi_opt_graph = self._is_multi_opt_graph
 
                 node_inst.precursor_nodes = [SEPARATOR_IN_SCOPE.join((prsc_node.split(SEPARATOR_IN_SCOPE)[0],
                                                                       prsc_node.split(SEPARATOR_IN_SCOPE)[-1]))
@@ -382,5 +438,6 @@ class PyTorchGraph(Graph):
         Returns:
             str, node id.
         """
-        node_id = re.search(r"[\d]+", str(node))
-        return node_id.group()
+        node_title = str(node).split(SEPARATOR_TITLE_AND_CONTENT_IN_CONSTRUCT)[0]
+        node_id = re.findall(r"[%](.*?) [:]", node_title)
+        return node_id

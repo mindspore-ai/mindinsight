@@ -105,6 +105,7 @@ class Graph(BaseGraph, abc.ABC):
         self._output_nodes = []
         self._topological_order = []
         self._input_shape = dict()
+        self._is_multi_opt_graph = False
 
     def get_input_shape(self, name):
         """
@@ -303,10 +304,32 @@ class GraphNode(abc.ABC):
         self._opt_shape = None
         # Weight of current op.
         self._weight = None
+        # Input variable names.
+        self._ipt_var_names = list()
+        # Output variable names.
+        self._opt_var_names = list()
+        # Is in multi output graph.
+        self._is_in_multi_opt_graph = False
 
     @property
     def weight(self):
         return self._weight
+
+    @property
+    def ipt_var_names(self):
+        return self._ipt_var_names
+
+    @ipt_var_names.setter
+    def ipt_var_names(self, var_names):
+        self._ipt_var_names = var_names
+
+    @property
+    def opt_var_names(self):
+        return self._opt_var_names
+
+    @opt_var_names.setter
+    def opt_var_names(self, var_names):
+        self._opt_var_names = var_names
 
     @staticmethod
     def get_opt_var_name(variable_name):
