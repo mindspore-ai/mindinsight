@@ -759,6 +759,7 @@
     "originalPicture": "Original Image",
     "forecastTag": "Prediction Tag",
     "tag": "Tag",
+    "tagTip": "Query the image data that contains any filter label",
     "confidence": "Probability",
     "forecastTagTip": "When the inference image has the correct tag, the following four flags are displayed in the tag row",
     "TP": "TP, indicates true positive. The tag is a positive sample, and the classification is a positive sample;",
