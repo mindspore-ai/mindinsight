@@ -297,7 +297,7 @@ class ConstTensor(BaseTensor):
             if field_obj.name != 'dtype':
                 tensor_value = field_value
                 break
-        if tensor_value and self.dtype != self._STRING_TYPE:
+        if tensor_value is not None and self.dtype != self._STRING_TYPE:
             tensor_value = np.array(tensor_value, dtype=NUMPY_TYPE_MAP.get(self.dtype))
         return tensor_value
 
