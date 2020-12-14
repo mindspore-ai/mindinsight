@@ -900,9 +900,6 @@ export default {
       margin-left: 20px;
       overflow-y: auto;
       overflow-x: hidden;
-      &::-webkit-scrollbar {
-        width: 0;
-      }
     }
   }
 
