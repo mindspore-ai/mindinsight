@@ -307,7 +307,7 @@ class OnnxDataLoader:
             h = int(match.group('h'))
             w = int(match.group('w'))
             c = int(match.group('c'))
-            if [h, w, c] != list(self.graph_input_shape)[1:4]:
+            if [h, w, c] != list(self.graph_input_shape)[1:]:
                 raise ModelLoadingError(f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
             return True
         return False
