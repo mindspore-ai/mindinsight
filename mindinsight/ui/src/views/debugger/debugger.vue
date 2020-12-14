@@ -584,6 +584,11 @@ limitations under the License.
       </div>
       <span slot="footer"
             class="dialog-footer">
+        <div class="error-msg"
+             v-show="!validPram">
+          <i class="el-icon-warning"></i>
+          {{$t('public.notice') + $t('symbols.colon') + paramErrorMsg}}
+        </div>
         <el-button type="primary"
                    size="mini"
                    class="custom-btn green"
@@ -815,6 +820,7 @@ export default {
         sending: 'sending',
         waiting: 'waiting',
       },
+      paramErrorMsg: '',
     };
   },
   components: {debuggerTensor, tree},
@@ -2246,32 +2252,43 @@ export default {
   .notShow {
     display: none;
   }
-  .conditions-container {
-    .collection {
-      width: 200px;
-    }
-    .condition,
-    .param,
-    .param-value {
-      margin-left: 10px;
-      width: 200px;
-    }
-    .percent-sign {
-      display: inline-block;
-      text-align: right;
-      width: 20px;
-    }
-    .inclusive-param {
-      text-align: right;
-      .item {
-        margin-top: 10px;
-        display: inline-block;
+  .creat-watch-point-dialog {
+    .conditions-container {
+      .collection {
+        width: 200px;
       }
-      .item + .item {
+      .condition,
+      .param,
+      .param-value {
         margin-left: 10px;
+        width: 200px;
+      }
+      .percent-sign {
+        display: inline-block;
+        text-align: right;
+        width: 20px;
+      }
+      .inclusive-param {
+        text-align: right;
+        .item {
+          margin-top: 10px;
+          display: inline-block;
+        }
+        .item + .item {
+          margin-left: 10px;
+        }
+      }
+    }
+    .error-msg {
+      float: left;
+      .el-icon-warning {
+        color: #e6a23c;
+        font-size: 16px;
+        cursor: pointer;
       }
     }
   }
+
   .el-dialog__wrapper.pendingTips {
     position: absolute;
     .dialog-icon {

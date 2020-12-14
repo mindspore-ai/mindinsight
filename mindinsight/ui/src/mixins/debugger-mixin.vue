@@ -577,6 +577,7 @@ export default {
      * Add watchpoint
      */
     addWatchPoint() {
+      this.paramErrorMsg = this.$t('debugger.paramErrorMsg.errorType');
       this.createWatchPointArr = [];
       this.createWatchPointArr.push({
         collection: {
@@ -645,12 +646,56 @@ export default {
       }
     },
     validateParam(item) {
-      this.$forceUpdate();
       const reg = /^(\-|\+)?\d+(\.\d+)?$/;
       this.validPram = reg.test(item.param.value);
       item.compositeParams.selections.forEach((i) => {
         this.validPram = this.validPram && reg.test(i.value);
       });
+      if (!this.validPram) {
+        this.paramErrorMsg = this.$t('debugger.paramErrorMsg.errorType');
+      } else {
+        this.paramErrorMsg = '';
+        item.param.value = parseFloat(item.param.value);
+
+        const absParams = [
+          'abs_mean_gt',
+          'abs_mean_lt',
+          'rtol',
+          'abs_mean_update_ratio_gt',
+          'abs_mean_update_ratio_lt',
+        ];
+
+        if (absParams.includes(item.param.name) && item.param.value < 0) {
+          this.validPram = false;
+          this.paramErrorMsg = this.$t('debugger.paramErrorMsg.nonnegative');
+        }
+
+        if (this.percentParams.includes(item.param.name)) {
+          const percentRange = {min: 0, max: 100};
+          if (item.param.value < percentRange.min || item.param.value > percentRange.max) {
+            this.validPram = false;
+            this.paramErrorMsg = this.$t('debugger.paramErrorMsg.percentError');
+          }
+        }
+        if (this.validPram && item.compositeParams.selections.length) {
+          const rangeKey = ['range_start_inclusive', 'range_end_inclusive'];
+          const rangeStart = item.compositeParams.selections.filter((i) => {
+            return i.name === rangeKey[0];
+          });
+          const rangeEnd = item.compositeParams.selections.filter((i) => {
+            return i.name === rangeKey[1];
+          });
+          if (rangeStart.length && rangeEnd.length) {
+            rangeStart[0].value = parseFloat(rangeStart[0].value);
+            rangeEnd[0].value = parseFloat(rangeEnd[0].value);
+            if (rangeStart[0].value > rangeEnd[0].value) {
+              this.validPram = false;
+              this.paramErrorMsg = this.$t('debugger.paramErrorMsg.rangeError');
+            }
+          }
+        }
+      }
+      this.$forceUpdate();
     },
     /**
      * Create new watchpoint
@@ -731,6 +776,7 @@ export default {
         item.param.type = '';
         item.param.value = '';
         this.validPram = false;
+        this.paramErrorMsg = this.$t('debugger.paramErrorMsg.errorType');
       }
     },
     /**
@@ -787,6 +833,7 @@ export default {
       item.param.type = param.type;
       item.param.value = '';
       this.validPram = false;
+      this.paramErrorMsg = this.$t('debugger.paramErrorMsg.errorType');
       if (item.param.type === 'BOOL') {
         item.param.value = true;
         this.validPram = true;
