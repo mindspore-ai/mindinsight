@@ -44,7 +44,7 @@ ONNXRUNTIME_MIN_VER = "1.5.2"
 
 BINARY_HEADER_PYTORCH_FILE = \
     b'\x80\x02\x8a\nl\xfc\x9cF\xf9 j\xa8P\x19.\x80\x02M\xe9\x03.\x80\x02}q\x00(X\x10\x00\x00\x00'
-
+TENSORFLOW_MODEL_SUFFIX = "pb"
 BINARY_HEADER_PYTORCH_BITS = 32
 
 ARGUMENT_LENGTH_LIMIT = 512
@@ -82,6 +82,7 @@ class InputType(Enum):
 class FrameworkType(Enum):
     PYTORCH = 0
     TENSORFLOW = 1
+    UNKNOWN = 2
 
 
 def get_imported_module():

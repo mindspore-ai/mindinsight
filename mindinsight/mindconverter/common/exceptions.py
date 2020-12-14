@@ -182,6 +182,7 @@ class BaseConverterError(MindConverterException):
         """Define error code of BaseConverterError."""
         UNKNOWN_ERROR = 0
         UNKNOWN_MODEL = 1
+        PARAM_MISSING = 2
 
     BASE_ERROR_CODE = ConverterErrors.BASE_CONVERTER_FAIL.value
     ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
@@ -193,7 +194,7 @@ class BaseConverterError(MindConverterException):
     @classmethod
     def raise_from(cls):
         """Raise from exceptions below."""
-        except_source = Exception, cls
+        except_source = Exception, UnknownModelError, ParamMissingError, cls
         return except_source
 
 
@@ -203,6 +204,18 @@ class UnknownModelError(BaseConverterError):
 
     def __init__(self, msg):
         super(UnknownModelError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        return cls
+
+
+class ParamMissingError(BaseConverterError):
+    """Define cli params missing error."""
+    ERROR_CODE = BaseConverterError.ErrCode.PARAM_MISSING.value
+
+    def __init__(self, msg):
+        super(ParamMissingError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):

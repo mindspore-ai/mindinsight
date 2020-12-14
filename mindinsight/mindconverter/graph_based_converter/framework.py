@@ -24,12 +24,11 @@ import mindinsight
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, \
     save_code_file_and_report
 from mindinsight.mindconverter.graph_based_converter.constant import BINARY_HEADER_PYTORCH_FILE, FrameworkType, \
-    BINARY_HEADER_PYTORCH_BITS, ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER
+    BINARY_HEADER_PYTORCH_BITS, ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, TENSORFLOW_MODEL_SUFFIX
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import GraphInitError, TreeCreationError, SourceFilesSaveError, \
-    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError
-from mindinsight.utils.exceptions import ParamMissError
+    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError
 
 permissions = os.R_OK | os.W_OK | os.X_OK
 os.umask(permissions << 3 | permissions)
@@ -68,7 +67,7 @@ def torch_installation_validation(func):
         # Check whether pytorch is installed.
         if not find_spec("torch"):
             error = RuntimeIntegrityError("PyTorch is required when using graph based "
-                                          "scripts converter, and PyTorch vision must "
+                                          "scripts converter, and PyTorch version must "
                                           "be consisted with model generation runtime.")
             log.error(error)
             log_console.error("\n")
@@ -242,6 +241,9 @@ def main_graph_base_converter(file_config):
     """
     graph_path = file_config['model_file']
     frame_type = get_framework_type(graph_path)
+    if not file_config.get("shape"):
+        raise ParamMissingError("Param missing, `--shape` is required when using graph mode.")
+
     if frame_type == FrameworkType.PYTORCH.value:
         graph_based_converter_pytorch_to_ms(graph_path=graph_path,
                                             sample_shape=file_config['shape'],
@@ -259,7 +261,6 @@ def main_graph_base_converter(file_config):
     else:
         error_msg = "Get UNSUPPORTED model."
         error = UnknownModelError(error_msg)
-        log.error(str(error))
         raise error
 
 
@@ -269,8 +270,10 @@ def get_framework_type(model_path):
         with open(model_path, 'rb') as f:
             if f.read(BINARY_HEADER_PYTORCH_BITS) == BINARY_HEADER_PYTORCH_FILE:
                 framework_type = FrameworkType.PYTORCH.value
-            else:
+            elif os.path.basename(model_path).split(".")[-1].lower() == TENSORFLOW_MODEL_SUFFIX:
                 framework_type = FrameworkType.TENSORFLOW.value
+            else:
+                framework_type = FrameworkType.UNKNOWN.value
     except IOError:
         error_msg = "Get UNSUPPORTED model."
         error = UnknownModelError(error_msg)
@@ -288,6 +291,4 @@ def check_params_exist(params: list, config):
             miss_param_list = ', '.join((miss_param_list, param)) if miss_param_list else param
 
     if miss_param_list:
-        error = ParamMissError(miss_param_list)
-        log.error(str(error))
-        raise error
+        raise ParamMissingError(f"Param(s) missing, {miss_param_list} is(are) required when using graph mode.")
