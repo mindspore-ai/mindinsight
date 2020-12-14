@@ -784,7 +784,8 @@
     "mainTipPartThree": "主流生成显著图的解释方法可以参考论文3.2节Local Methods:",
     "mainTipPartFour": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9050829",
     "noExplainer": "请选择解释方法",
-    "minConfidenceTip": "预测标签的概率阈值，当一个标签的输出概率大于阈值时就会被记为预测标签。"
+    "minConfidenceTip": "预测标签的概率阈值，当一个标签的输出概率大于阈值时就会被记为预测标签。",
+    "noData": "数据正在加载，请稍后刷新页面"
   },
   "metric": {
     "scoreSystem": "评分体系",

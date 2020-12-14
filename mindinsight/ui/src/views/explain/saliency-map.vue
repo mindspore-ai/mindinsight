@@ -143,7 +143,8 @@ limitations under the License.
         <el-table :data="tableData"
                   border
                   height="100%"
-                  :span-method="mergeTable">
+                  :span-method="mergeTable"
+                  :empty-text="$t('explain.noData')">
           <!-- Original Picture Column-->
           <el-table-column :label="$t('explain.originalPicture')"
                            width="270"
