@@ -183,6 +183,8 @@ class TensorUtils:
             ParamValueError, If the length of param dims is not equal to the length of tensor dims.
             IndexError, If the param dims and tensor shape is unmatched.
         """
+        if ndarray.size == 0:
+            return ndarray
         if len(ndarray.shape) != len(dims):
             raise ParamValueError("Invalid dims. The length of param dims and tensor shape should be the same.")
         try:

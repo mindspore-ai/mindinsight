@@ -82,6 +82,7 @@ class DataVisualErrors(Enum):
     TENSOR_NOT_EXIST = 18
     MAX_RESPONSE_DATA_EXCEEDED_ERROR = 19
     STEP_TENSOR_DATA_NOT_IN_CACHE = 20
+    TENSOR_TOO_LARGE = 22
 
 
 class ScriptConverterErrors(Enum):
