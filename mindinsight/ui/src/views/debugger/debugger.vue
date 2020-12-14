@@ -397,7 +397,7 @@ limitations under the License.
                                      show-overflow-tooltip>
                       <template slot-scope="scope">
                         <span class="value"
-                              @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name)">
+                              @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name, true)">
                           {{ scope.row.name }}
                         </span>
                       </template>
@@ -468,7 +468,7 @@ limitations under the License.
                                      show-overflow-tooltip>
                       <template slot-scope="scope">
                         <span class="value"
-                              @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name)">
+                              @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name, true)">
                           {{ scope.row.name }}
                         </span>
                       </template>
@@ -588,6 +588,11 @@ limitations under the License.
              v-show="!validPram">
           <i class="el-icon-warning"></i>
           {{$t('public.notice') + $t('symbols.colon') + paramErrorMsg}}
+        </div>
+        <div class="error-msg"
+             v-if="createWPDialogVisible && createWatchPointArr[0].condition.selectedId === 'operator_overflow'">
+          <i class="el-icon-warning"></i>
+          {{$t('public.notice') + $t('symbols.colon') + $t('debugger.paramErrorMsg.watchOverflow')}}
         </div>
         <el-button type="primary"
                    size="mini"
@@ -820,6 +825,7 @@ export default {
         sending: 'sending',
         waiting: 'waiting',
       },
+      loadingInstance: null,
       paramErrorMsg: '',
     };
   },
@@ -878,7 +884,7 @@ export default {
     closeTensor(tensor, graphName) {
       this.tensorCompareFlag = false;
       if (tensor && graphName) {
-        this.queryAllTreeData(tensor, true, graphName);
+        this.queryAllTreeData(tensor, true, graphName, true);
       }
     },
     queryGraphByFile() {
@@ -1176,6 +1182,9 @@ export default {
       if (this.selectedNode.name) {
         this.selectNode(true, true);
       }
+      this.$nextTick(() => {
+        this.loadingInstance.close();
+      });
     },
     /**
      * Initialize the right-click menu
@@ -1267,12 +1276,18 @@ export default {
      */
     dealDoubleClick(name) {
       name = name.replace('_unfold', '');
-      if (this.allGraphData[name].isUnfold) {
-        this.selectedNode.name = name;
-        this.deleteNamespace(name);
-      } else {
-        this.queryGraphData(name);
-      }
+      this.loadingInstance = this.$loading(this.loadingOption);
+      this.$nextTick(() => {
+        // Delay is required, otherwise loading cannot be displayed
+        setTimeout(() => {
+          if (this.allGraphData[name].isUnfold) {
+            this.selectedNode.name = name;
+            this.deleteNamespace(name);
+          } else {
+            this.queryGraphData(name);
+          }
+        }, 200);
+      });
     },
     /**
      * Close the expanded namespace.
@@ -1582,6 +1597,7 @@ export default {
         if (d3.select(`g[id="${name}"], g[id="${name}_unfold"]`).size()) {
           // If the namespace or aggregation node is expanded, you need to close it and select
           this.selectNode(true, isQueryTensor);
+          this.loadingInstance.close();
         } else {
           const parentId = name.substring(0, name.lastIndexOf('/'));
           if (this.allGraphData[parentId] && this.allGraphData[parentId].isUnfold) {
@@ -1623,6 +1639,7 @@ export default {
             this.selectedNode.name = data.scope_name;
             this.querySingleNode(data, data.scope_name, true);
             this.selectNode(true, true);
+            this.loadingInstance.close();
             this.$message.error(this.$t('graph.tooManyNodes'));
           } else {
             // Normal expansion
@@ -1643,6 +1660,7 @@ export default {
                 this.selectedNode.name = data.scope_name;
                 this.allGraphData[data.scope_name].isUnfold = false;
                 this.deleteNamespace(data.scope_name);
+                this.loadingInstance.close();
                 this.$message.error(this.$t('graph.tooManyChain'));
                 return;
               }
@@ -1672,6 +1690,9 @@ export default {
           }
           this.$message.error(error.response.data.error_msg);
         }
+      }
+      if (this.loadingInstance) {
+        this.loadingInstance.close();
       }
     },
     tabsChange() {
