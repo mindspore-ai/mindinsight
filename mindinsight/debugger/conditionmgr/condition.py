@@ -107,9 +107,9 @@ class ParamTypeEnum(Enum):
 
 class ActivationFuncEnum(Enum):
     """Activation functions."""
-    TANH = 'Tanh'
-    SIGMOID = 'Sigmoid'
-    RELU = 'ReLU'
+    TANH = 'tanh'
+    SIGMOID = 'sigmoid'
+    RELU = 'relu'
 
 
 class ConditionContext:

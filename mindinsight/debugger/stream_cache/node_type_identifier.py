@@ -19,20 +19,21 @@ from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 
 _ACTIVATIONS = [
-    'ELU',
-    'FastGelu',
-    'GELU',
-    'HSigmoid',
-    'HSwish',
-    'LeakyReLU',
-    'LogSigmoid',
-    'LogSoftmax',
-    'PReLU',
-    'ReLU',
-    'ReLU6',
-    'Sigmoid',
-    'Softmax',
-    'Tanh'
+    'elu',
+    'fastgelu',
+    'gelu',
+    'hsigmoid',
+    'hswish',
+    'leakyrelu',
+    'logsigmoid',
+    'logsoftmax',
+    'prelu',
+    'relu',
+    'relu6',
+    'reluv2',
+    'sigmoid',
+    'softmax',
+    'tanh'
 ]
 
 
@@ -122,7 +123,7 @@ def is_activation_node(node, condition=None):
     if not is_gradient_node(node):
         node_type = node.type
         for activation_name in activation_funcs:
-            if node_type == activation_name:
+            if node_type.lower() == activation_name:
                 return True
     return False
 

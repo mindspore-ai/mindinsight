@@ -60,8 +60,8 @@ class TestNodeTypeIdentifier:
         ('Default/mock/relu_ReLU-op11', "ReLU", None, True),
         ('Gradients/mock/relu_ReLU-op11', "ReLU", None, False),
         ('Default/mock/relu_ReLU-op11', "Parameter", None, False),
-        ('Default/mock/relu_ReLU-op11', "ReLU", {'activation_func': 'Softmax'}, False),
-        ('Default/mock/relu_ReLU-op11', "Softmax", {'activation_func': ['ReLU', 'Softmax']}, True)
+        ('Default/mock/relu_ReLU-op11', "ReLU", {'activation_func': 'softmax'}, False),
+        ('Default/mock/relu_ReLU-op11', "Softmax", {'activation_func': ['relu', 'softmax']}, True)
     ])
     def test_activate_node(self, name, node_type, condition, result):
         """Test activate node."""
