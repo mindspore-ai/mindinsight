@@ -73,7 +73,7 @@ class TestGraphHandler:
 
     @pytest.mark.parametrize("node_type, condition, result_file", [
         ("weight", None, "search_nodes_by_type_0.json"),
-        ("activation", {'activation_func': ['ReLU', 'Softmax']}, "search_nodes_by_type_1.json")
+        ("activation", {'activation_func': ['relu', 'softmax']}, "search_nodes_by_type_1.json")
     ])
     def test_search_nodes_by_type(self, node_type, condition, result_file):
         """Test search nodes by type."""
