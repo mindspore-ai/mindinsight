@@ -1108,13 +1108,14 @@ export default {
             e.response.data &&
             e.response.data.error_code &&
             (e.response.data.error_code.toString() === '50545013' ||
-              e.response.data.error_code.toString() === '50545014')
+              e.response.data.error_code.toString() === '50545014' ||
+              e.response.data.error_code.toString() === '50545016')
             ) {
               showLimitError = true;
-              if (e.response.data.error_code.toString() === '50545014') {
-                errorMsg = this.$t('error')[e.response.data.error_code];
-              } else {
+              if (e.response.data.error_code.toString() === '50545013') {
                 errorMsg = this.$t('tensors.tensorDashboardLimitErrorMsg');
+              } else {
+                errorMsg = this.$t('error')[e.response.data.error_code];
               }
             }
             this.$nextTick(() => {
