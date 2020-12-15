@@ -118,6 +118,7 @@ limitations under the License.
                                    :fullScreen="sampleItem.fullScreen"
                                    @martixFilterChange="filterChange($event, sampleItem)"
                                    @toggleFullScreen="toggleFullScreen(sampleItem)"
+                                   :columnLimitNum="columnLimitNum"
                                    :fullData="sampleItem.curData"></gridTableComponents>
               <histogramUntil v-else
                               :ref="sampleItem.ref"
@@ -209,6 +210,7 @@ export default {
       curViewName: 1, // Current histogram view type
       curAxisName: 0, // Current histogran axis type
       chartTipFlag: false, // Wheather to display tips of the histogram
+      columnLimitNum: 1000, // Maximum number of columns is 1000
     };
   },
   computed: {},
@@ -455,6 +457,13 @@ export default {
       const tempArr = [];
       for (let i = 0; i < array.length; i++) {
         tempArr.push(i >= countLinit ? ':' : '0');
+      }
+      if (tempArr.length) {
+        const lastIndex = tempArr.length - 1;
+        const lastFilter = tempArr[lastIndex];
+        if (lastFilter && array[lastIndex] > this.columnLimitNum) {
+          tempArr[lastIndex] = `0:${this.columnLimitNum}`;
+        }
       }
       return `[${tempArr.toString()}]`;
     },

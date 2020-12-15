@@ -474,7 +474,7 @@
     "gridTableNoData": "表格无数据",
     "value": "数值",
     "dimsFilterInputTitle": "维度选择",
-    "dimsFilterInputTip": "维度输入值可以是具体的索引（和Python的索引含义一致，支持负号）或者冒号\":\"，其中冒号\":\"表示当前维度的所有值",
+    "dimsFilterInputTip": "维度输入值可以是具体的索引（和Python的索引含义一致，支持负号）或者冒号\":\"，其中冒号\":\"表示当前维度的所有值。Tensor列数不超过1000列，且总个数不超过10万。",
     "category": "分类",
     "scientificCounting": "科学计数",
     "accuracyTips": "如果数值展示不全，可以拖拽表头的分隔线查看"

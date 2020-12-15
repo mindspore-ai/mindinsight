@@ -135,13 +135,13 @@ limitations under the License.
           <div class="deb-slide-width">
             <el-slider v-model="tolerance"
                        :format-tooltip="formatTolenrance"
-                       @change="tensorComparisons(curRowObj,dims)"
+                       @change="tensorComparisons(curRowObj,dims,true)"
                        @input="toleranceInputChange()"></el-slider>
           </div>
           <div class="deb-slide-input">
             <el-input v-model="toleranceInput"
                       @input="toleranceValueChange"
-                      @keyup.native.enter="tensorComparisons(curRowObj,dims)"></el-input>
+                      @keyup.native.enter="tensorComparisons(curRowObj,dims,true)"></el-input>
           </div>
         </div>
         <div class="deb-con-slide-middle">
@@ -156,6 +156,7 @@ limitations under the License.
           <debuggerGridTable v-if="gridType==='value'"
                              :fullData="tensorValue"
                              :showFilterInput="showFilterInput"
+                             :columnLimitNum="columnLimitNum"
                              ref="tensorValue"
                              gridType="value"
                              @martixFilterChange="tensorFilterChange($event)">
@@ -163,6 +164,7 @@ limitations under the License.
           <debuggerGridTable v-else-if="gridType==='preStep'"
                              :fullData="tensorValue"
                              :showFilterInput="showFilterInput"
+                             :columnLimitNum="columnLimitNum"
                              ref="tensorValue"
                              gridType="value"
                              @martixFilterChange="tensorFilterChange($event)">
@@ -170,6 +172,7 @@ limitations under the License.
           <debuggerGridTable v-else
                              :fullData="tensorValue"
                              :showFilterInput="showFilterInput"
+                             :columnLimitNum="columnLimitNum"
                              ref="tensorValue"
                              gridType="compare"
                              @martixFilterChange="tensorFilterChange($event)">
@@ -326,6 +329,7 @@ export default {
       ],
       loadingInstance: {},
       initOver: false,
+      columnLimitNum: 1000, // Maximum number of columns is 1000
     };
   },
   computed: {
@@ -955,17 +959,18 @@ export default {
     tabChange(gridType) {
       this.gridType = gridType;
       if (this.gridType === 'compare') {
-        this.tensorComparisons(this.curRowObj, this.dims);
+        this.tensorComparisons(this.curRowObj, this.dims, true);
       } else {
-        this.viewValueDetail(this.curRowObj, this.dims);
+        this.viewValueDetail(this.curRowObj, this.dims, true);
       }
     },
     /**
      * Query tensor Comparison data
      * @param { Object } row current clickd tensor value data
      * @param { Object } dims dims
+     * @param { Boolean } loadingFlag Whether to show loading
      */
-    tensorComparisons(row, dims) {
+    tensorComparisons(row, dims, loadingFlag = false) {
       const shape = dims
         ? dims
         : JSON.stringify(
@@ -973,6 +978,9 @@ export default {
                 .map((val, index) => {
                 // The default parameter format of shape is that the last two digits are:. The front is all 0
                   if (index < 2) {
+                    if (index === 0 && val > this.columnLimitNum) {
+                      return `0:${this.columnLimitNum}`;
+                    }
                     return ':';
                   } else {
                     return 0;
@@ -987,6 +995,9 @@ export default {
         tolerance: this.tolerance / 100,
         graph_name: row.graph_name,
       };
+      if (loadingFlag) {
+        this.loadingInstance = this.$loading(this.loadingOption);
+      }
       RequestService.tensorComparisons(params).then(
           (res) => {
             if (res && res.data && res.data.tensor_value) {
@@ -1040,17 +1051,18 @@ export default {
     tensorFilterChange(data) {
       this.dims = `[${data.toString()}]`;
       if (this.gridType === 'compare') {
-        this.tensorComparisons(this.curRowObj, this.dims);
+        this.tensorComparisons(this.curRowObj, this.dims, true);
       } else {
-        this.viewValueDetail(this.curRowObj, this.dims);
+        this.viewValueDetail(this.curRowObj, this.dims, true);
       }
     },
     /**
      * Query tensor value data
      * @param {Object} row current row data
      * @param { String } dims
+     * @param { Boolean } loadingFlag Whether to show loading
      */
-    viewValueDetail(row, dims) {
+    viewValueDetail(row, dims, loadingFlag = false) {
       const shape = dims
         ? dims
         : JSON.stringify(
@@ -1058,6 +1070,9 @@ export default {
                 .map((val, index) => {
                 // The default parameter format of shape is that the last two digits are:. The front is all 0
                   if (index < 2) {
+                    if (index === 0 && val > this.columnLimitNum) {
+                      return `0:${this.columnLimitNum}`;
+                    }
                     return ':';
                   } else {
                     return 0;
@@ -1072,6 +1087,9 @@ export default {
         graph_name: row.graph_name,
         prev: this.gridType === 'preStep' ? true : false,
       };
+      if (loadingFlag) {
+        this.loadingInstance = this.$loading(this.loadingOption);
+      }
       RequestService.tensors(params).then(
           (res) => {
             if (row.shape === '[]') {
