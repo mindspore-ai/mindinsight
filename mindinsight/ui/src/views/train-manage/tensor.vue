@@ -488,8 +488,8 @@ export default {
               }
             });
           },
-          () => {
-            sampleItem.showLoading = false;
+          (e) => {
+            this.freshDataErrorCallback(e, sampleItem, false);
           },
       );
     },
@@ -623,22 +623,41 @@ export default {
             });
           },
           (e) => {
-            let showLimitError = false;
-            let errorMsg = '';
-            if (
-              e.response &&
-            e.response.data &&
-            e.response.data.error_code &&
-            (e.response.data.error_code.toString() === '50545013' ||
-              e.response.data.error_code.toString() === '50545014')
-            ) {
-              showLimitError = true;
-              errorMsg = this.$t('error')[e.response.data.error_code];
-            }
-            this.clearMartixData(sampleItem, showLimitError, errorMsg);
-            sampleItem.showLoading = false;
+            this.freshDataErrorCallback(e, sampleItem, true);
           },
       );
+    },
+    /**
+     * callback of fresh data
+     * @param {Object} errorData The error object
+     * @param {Object} sampleItem The object that is being operated
+     * @param {Boolean} isMartix Martix data
+     */
+    freshDataErrorCallback(errorData, sampleItem, isMartix) {
+      let showLimitError = false;
+      let errorMsg = '';
+      if (
+        errorData.response &&
+            errorData.response.data &&
+            errorData.response.data.error_code &&
+            (errorData.response.data.error_code.toString() === '50545013' ||
+              errorData.response.data.error_code.toString() === '50545014' ||
+              errorData.response.data.error_code.toString() === '50545016')
+      ) {
+        showLimitError = true;
+        errorMsg = this.$t('error')[errorData.response.data.error_code];
+      }
+      if (isMartix) {
+        this.clearMartixData(sampleItem, showLimitError, errorMsg);
+      } else {
+        this.$nextTick(() => {
+          const elementItem = this.$refs[sampleItem.ref];
+          if (elementItem) {
+            elementItem[0].showRequestErrorMessage(errorMsg);
+          }
+        });
+      }
+      sampleItem.showLoading = false;
     },
     /**
      * Clear table display

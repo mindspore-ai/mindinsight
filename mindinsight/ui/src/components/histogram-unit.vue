@@ -16,8 +16,12 @@ limitations under the License.
 <template>
   <div class="cl-histogram-container">
     <div class="data-show-container">
+      <div v-show="requestError"
+           class="error-msg-container">
+        {{errorMsg}}
+      </div>
       <div :id="itemId"
-           v-show="!!fullData.length"
+           v-show="!!fullData.length && !requestError"
            class="data-item"></div>
     </div>
   </div>
@@ -63,6 +67,9 @@ export default {
       zrDrawElement: {hoverDots: []},
       zr: null,
       chartTipFlag: false, // Wheather to display tips of the histogram
+      requestError: false, // Exceeded the specification
+      errorMsg: '', // Error message
+      viewResizeFlag: false, // Size reset flag
     };
   },
   computed: {},
@@ -84,7 +91,11 @@ export default {
      */
     resizeView() {
       if (this.charObj) {
-        this.charObj.resize();
+        if (this.requestError) {
+          this.viewResizeFlag = true;
+        } else {
+          this.charObj.resize();
+        }
       }
     },
     /**
@@ -139,6 +150,10 @@ export default {
       }
       this.removeTooltip();
       this.charObj.setOption(this.charOption, true);
+      if (this.viewResizeFlag) {
+        this.charObj.resize();
+        this.viewResizeFlag = false;
+      }
     },
     /**
      * Binding interaction event
@@ -826,10 +841,22 @@ export default {
      */
     updateHistogramData() {
       this.$nextTick(() => {
+        if (this.requestError) {
+          this.requestError = false;
+          this.viewResizeFlag = true;
+        }
         this.formatDataToChar();
         this.updateSampleData();
         this.sampleEventBind();
       });
+    },
+    /**
+     * Show error message
+     * @param {String} errorMsg Error message
+     */
+    showRequestErrorMessage(errorMsg) {
+      this.errorMsg = errorMsg;
+      this.requestError = true;
     },
   },
   destroyed() {
@@ -849,6 +876,13 @@ export default {
     .data-item {
       width: 100%;
       height: 100%;
+    }
+    .error-msg-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 }

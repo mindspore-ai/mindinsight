@@ -836,6 +836,7 @@
     "50545012": "The tensor data does not exist. Please refresh.",
     "50545013": "The requested data exceeds the upper limit 100,000. Shard or query other dimensions.",
     "50545014": "The queried tensor data has been replaced by new data. Please refresh.",
+    "50545016": "The requested tensor is too large. The total number of values exceeds 10 million and cannot be displayed.",
     "50546083": "The profiler directory does not exist.",
     "50548001": "Ascend AI Processor information query timed out.",
     "5054B080": "Incorrect parameter type. Please check the input parameter type.",
