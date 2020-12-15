@@ -78,19 +78,23 @@ def _is_match_one(sub_string_list, src_string):
     return False
 
 
-def _check_stat_from_log(log_info):
+def _check_stat_from_log(pid, log_info):
     """
     Determine the service startup status based on the log information.
 
     Args:
+        pid (int): The gunicorn process ID.
         log_info (str): The output log of service startup.
 
     Returns:
         str, the state value that is one of the follows: "unknown", "failed" and "success".
     """
     server_state = ServerStateEnum.UNKNOWN.value
-    match_success_info = "Listening at: http://%s:%d" % \
-                         (settings.HOST, int(settings.PORT))
+
+    # should be synchronized to startup log in gunicorn post_worker_init hook
+    # refer to mindinsight/backend/config/gunicorn_conf.py
+    match_success_info = "Server pid: %d, start to listening." % pid
+
     common_failed_info_list = [
         "[ERROR] Retrying in 1 second",
         "[INFO] Reason: App failed to load",
@@ -130,11 +134,12 @@ def _get_access_log_path():
     return access_log_path
 
 
-def _check_state_from_log(log_abspath, start_pos=0):
+def _check_state_from_log(pid, log_abspath, start_pos=0):
     """
     Check the service startup status based on the log file.
 
     Args:
+        pid (int): The gunicorn process ID.
         log_abspath (str): Absolute path of the log file.
         start_pos (int): Offset position of the log file.
 
@@ -157,7 +162,7 @@ def _check_state_from_log(log_abspath, start_pos=0):
                 server_is_start = True
                 continue
             if server_is_start:
-                log_result = _check_stat_from_log(line)
+                log_result = _check_stat_from_log(pid, line)
                 # ignore "unknown" result
                 if log_result != ServerStateEnum.UNKNOWN.value:
                     state_result["state"] = log_result
@@ -175,11 +180,12 @@ def _check_state_from_log(log_abspath, start_pos=0):
     return state_result
 
 
-def _check_server_start_stat(log_abspath, start_pos=None):
+def _check_server_start_stat(pid, log_abspath, start_pos=None):
     """
     Checking the Server Startup Status.
 
     Args:
+        pid (int): The gunicorn process ID.
         log_abspath (str): The log file path.
         start_pos (int): The log file start position.
 
@@ -193,15 +199,19 @@ def _check_server_start_stat(log_abspath, start_pos=None):
     if not log_abspath:
         return state_result
 
+    # sleep 1 second for gunicorn master to be ready
+    time.sleep(1)
+
     log_pos = _get_file_size(log_abspath) if start_pos is None else start_pos
     try_cnt = 0
     try_cnt_max = 2
 
     while try_cnt < try_cnt_max:
-        try_cnt += 1
         time.sleep(1)
-        if _get_file_size(log_abspath) > log_pos:
-            state_result.update(_check_state_from_log(log_abspath, log_pos))
+        try_cnt += 1
+        file_size = _get_file_size(log_abspath)
+        if file_size > log_pos:
+            state_result.update(_check_state_from_log(pid, log_abspath, log_pos))
             break
 
     if not state_result['prompt_message']:
@@ -274,7 +284,7 @@ def start():
         console.error("Start MindInsight failed. See log for details, log path: %s.", error_log_abspath)
         sys.exit(1)
     else:
-        state_result = _check_server_start_stat(error_log_abspath, log_size)
+        state_result = _check_server_start_stat(process.pid, error_log_abspath, log_size)
         # print gunicorn start state to stdout
         label = 'Web address:'
         format_args = label, settings.HOST, str(settings.PORT), settings.URL_PATH_PREFIX

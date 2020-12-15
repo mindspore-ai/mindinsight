@@ -49,15 +49,14 @@ def on_starting(server):
         threading.Thread(target=hook.on_startup, args=(server.log,)).start()
 
 
-def post_fork(server, worker):
+def post_worker_init(worker):
     """
-    Launch a process to listen worker after gunicorn fork worker.
+    Launch a process to listen worker after gunicorn worker is initialized.
 
     Children processes of gunicorn worker should be killed when worker has been killed
     because gunicorn master murders this worker for some reasons such as worker timeout.
 
     Args:
-        server (Arbiter): gunicorn server instance.
         worker (ThreadWorker): worker instance.
     """
     def murder_worker_children_processes():
@@ -72,19 +71,19 @@ def post_fork(server, worker):
             if os.getppid() != worker.pid:
                 current_worker_pid = os.getppid()
                 for proc in processes_to_kill:
-                    server.log.info("Original worker pid: %d, current worker pid: %d, stop process %d",
+                    worker.log.info("Original worker pid: %d, current worker pid: %d, stop process %d",
                                     worker.pid, current_worker_pid, proc.pid)
                     try:
                         proc.send_signal(signal.SIGKILL)
                     except psutil.NoSuchProcess:
                         continue
                     except psutil.Error as ex:
-                        server.log.error("Stop process %d failed. Detail: %s.", proc.pid, str(ex))
-                server.log.info("%d processes have been killed.", len(processes_to_kill))
+                        worker.log.error("Stop process %d failed. Detail: %s.", proc.pid, str(ex))
+                worker.log.info("%d processes have been killed.", len(processes_to_kill))
                 break
             time.sleep(1)
 
     listen_process = multiprocessing.Process(target=murder_worker_children_processes,
                                              name="murder_worker_children_processes")
     listen_process.start()
-    server.log.info("Server pid: %d, start to listening.", server.pid)
+    worker.log.info("Server pid: %d, start to listening.", worker.ppid)
