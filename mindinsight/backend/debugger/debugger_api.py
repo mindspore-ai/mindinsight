@@ -333,6 +333,23 @@ def retrieve_tensor_hits():
     return reply
 
 
+@BLUEPRINT.route("/debugger/search-watchpoint-hits", methods=["POST"])
+def search_watchpoint_hits():
+    """
+    Search watchpoint hits by group condition.
+
+    Returns:
+        str, the required data.
+
+    Examples:
+        >>> POST http://xxxx/v1/mindinsight/debugger/search-watchpoint-hits
+    """
+    body = _read_post_request(request)
+    group_condition = body.get('group_condition')
+    reply = _wrap_reply(BACKEND_SERVER.search_watchpoint_hits, group_condition)
+    return reply
+
+
 BACKEND_SERVER = _initialize_debugger_server()
 
 

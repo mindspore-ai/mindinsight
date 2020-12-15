@@ -191,6 +191,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         for watchpoint_hit in watchpoint_hits:
             watchpoint_hit_stream.put(watchpoint_hit)
         watchpoint_hits_info = watchpoint_hit_stream.get()
+        watchpoint_hits_info.update({'receive_watchpoint_hits': True})
         self._cache_store.put_data(watchpoint_hits_info)
         log.debug("Send the watchpoint hits to DataQueue.\nSend the reply.")
 
