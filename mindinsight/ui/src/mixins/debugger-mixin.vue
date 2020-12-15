@@ -83,6 +83,7 @@ export default {
      * Query current node info
      */
     getCurrentNodeInfo() {
+      this.loadingInstance = this.$loading(this.loadingOption);
       let name = this.currentNodeName;
       const params = {
         mode: 'node',
@@ -157,6 +158,7 @@ export default {
      * Query next node info
      */
     getNextNodeInfo() {
+      this.loadingInstance = this.$loading(this.loadingOption);
       this.watchPointHits = [];
       const params = {
         mode: 'continue',
@@ -306,12 +308,12 @@ export default {
         if (this.graphFiles.value === this.$t('debugger.all')) {
           if (data.name.includes('/')) {
             const graphName = data.name.split('/')[0];
-            this.queryAllTreeData(data.name.replace(`${graphName}/`, ''), true, graphName);
+            this.queryAllTreeData(data.name.replace(`${graphName}/`, ''), true, graphName, true);
           } else {
-            this.queryAllTreeData(data.name, true, data.name);
+            this.queryAllTreeData(data.name, true, data.name, true);
           }
         } else {
-          this.queryAllTreeData(data.name, true, this.graphFiles.value);
+          this.queryAllTreeData(data.name, true, this.graphFiles.value, true);
         }
       }
     },
@@ -409,22 +411,39 @@ export default {
       if (metadata.node_name !== undefined && metadata.step !== undefined) {
         const nodeName = metadata.node_name;
         if ((nodeName !== this.currentNodeName && nodeName !== '') || this.metadata.step !== metadata.step) {
-          this.nodeName = nodeName ? nodeName : this.nodeName;
-          this.currentNodeName = nodeName ? nodeName : this.currentNodeName;
+          if (nodeName) {
+            this.nodeName = nodeName;
+            this.currentNodeName = nodeName;
+          }
           this.metadata.step = metadata.step;
-          this.metadata.graph_name = metadata.graph_name ? metadata.graph_name : this.metadata.graph_name;
+
           let graphName = this.graphFiles.value === this.$t('debugger.all') ? '' : this.graphFiles.value;
           if (this.graphFiles.value === this.$t('debugger.all') && this.selectedNode.name) {
             graphName = this.selectedNode.name.split('/')[0];
           }
           if (metadata.graph_name) {
+            this.metadata.graph_name = metadata.graph_name;
             graphName = metadata.graph_name;
           }
-          if (this.selectedNode.name) {
-            this.queryAllTreeData(this.nodeName, true, graphName);
-          }
+
           if (nodeName) {
-            this.queryAllTreeData(nodeName, true, graphName);
+            if (this.selectedNode.name) {
+              if (nodeName === this.selectedNode.name) {
+                this.selectNode(true, true);
+              } else {
+                this.queryAllTreeData(nodeName, true, graphName);
+              }
+            } else {
+              this.queryAllTreeData(nodeName, true, graphName);
+            }
+          } else {
+            if (this.selectedNode.name) {
+              if (this.nodeName === this.selectedNode.name) {
+                this.selectNode(true, true);
+              } else {
+                this.queryAllTreeData(this.nodeName, true, graphName);
+              }
+            }
           }
         }
       }
@@ -1031,8 +1050,10 @@ export default {
         if (this.nodeTypes.value !== 'all') {
           params.node_category = this.nodeTypes.value;
         }
+        const loadingInstance = this.$loading(this.loadingOption);
         RequestService.search(params).then(
             (res) => {
+              loadingInstance.close();
               if (res.data && res.data.nodes) {
                 this.searchTreeData = res.data.nodes;
                 this.searchHalfCheckedArr = [];
@@ -1077,6 +1098,7 @@ export default {
               }
             },
             (err) => {
+              loadingInstance.close();
               this.showErrorMsg(err);
             },
         );
@@ -1132,8 +1154,8 @@ export default {
      * @param {Function} resolve callback function ,return next node data
      */
     loadNode(node, resolve) {
+      this.loadingInstance = this.$loading(this.loadingOption);
       if (node.level === 0) {
-        const loadingInstance = this.$loading(this.loadingOption);
         node.childNodes = [];
         if (!this.node && !this.resolve) {
           this.node = node;
@@ -1144,7 +1166,6 @@ export default {
         };
         RequestService.retrieve(params).then(
             (res) => {
-              loadingInstance.close();
               this.initFail = false;
               this.dialogVisible = false;
               if (res.data) {
@@ -1192,6 +1213,9 @@ export default {
 
                   this.nodeName = this.metadata.node_name;
                   this.currentNodeName = this.nodeName;
+                  if (this.metadata.state === this.state.pending || this.metadata.state === this.state.mismatch) {
+                    this.loadingInstance.close();
+                  }
                   if (this.pollInit) {
                     this.pollData();
                     this.pollInit = false;
@@ -1202,7 +1226,7 @@ export default {
             (err) => {
               this.initFail = true;
               this.dialogVisible = true;
-              loadingInstance.close();
+              this.loadingInstance.close();
             },
         );
       } else if (node.level >= 1) {
@@ -1382,9 +1406,8 @@ export default {
           if (val.id) {
             val.selected = true;
             this.curWatchPointId = val.id;
-            if (this.searchWord === '' && this.nodeTypes.value === 'all') {
-              this.queryGraphByWatchpoint(val.id);
-            } else {
+            this.queryGraphByWatchpoint(val.id);
+            if (this.searchWord !== '' || this.nodeTypes.value !== 'all') {
               this.filter();
             }
           } else {
@@ -1602,6 +1625,7 @@ export default {
      * @param {number} key The index of the node of the watchPointHits currently clicked
      */
     updateTensorValue(key) {
+      this.loadingInstance = this.$loading(this.loadingOption);
       const currentHit = this.watchPointHits[key];
       const name = currentHit.name;
       const temName = this.nodeName;
@@ -1663,8 +1687,12 @@ export default {
      * @param {String} nodeName The name of the node that needs to be query
      * @param {Boolean} isQueryTensor The name of the node that needs to be query
      * @param {String} graphName Graph file name
+     * @param {Boolean} needLoading Whether to display loading
      */
-    queryAllTreeData(nodeName, isQueryTensor, graphName) {
+    queryAllTreeData(nodeName, isQueryTensor, graphName, needLoading) {
+      if (needLoading) {
+        this.loadingInstance = this.$loading(this.loadingOption);
+      }
       let name = nodeName ? nodeName.split(':')[0] : '';
       const params = {
         mode: 'node',
