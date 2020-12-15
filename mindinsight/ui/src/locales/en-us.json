@@ -475,7 +475,7 @@
     "gridTableNoData": "No data in the table.",
     "value": "Value",
     "dimsFilterInputTitle": "Dimension Selection",
-    "dimsFilterInputTip": "The dimension value can be a specific index (consistent with the Python index meaning and supporting negative signs) or a colon (:) that indicates all values of the current dimension.",
+    "dimsFilterInputTip": "The dimension value can be a specific index (consistent with the Python index meaning and supporting negative signs) or a colon (:) that indicates all values of the current dimension.The number of Tensor columns does not exceed 1,000, and the total number does not exceed 100,000.",
     "category": "Type",
     "scientificCounting": "Scientific notation",
     "accuracyTips": "If a value is not completely displayed, drag a border of the table header to resize."

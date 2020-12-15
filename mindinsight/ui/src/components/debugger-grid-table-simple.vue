@@ -124,6 +124,12 @@ export default {
       type: String,
       default: 'value',
     },
+    // Maximum number of columns
+    // If the value is less then 0, there is no maximun value.
+    columnLimitNum: {
+      type: Number,
+      default: -1,
+    },
   },
   data() {
     return {
@@ -446,8 +452,9 @@ export default {
       let filterCorrect = true;
       let incorrectData = false;
       let limitCount = 2;
+      const indexArr = [];
       const tempArr = [];
-      this.filterArr.forEach((filter) => {
+      this.filterArr.forEach((filter, index) => {
         let value = filter.model.trim();
         if (!isNaN(value)) {
           if (value < -(filter.max + 1) || value > filter.max || value === '' || value % 1) {
@@ -458,6 +465,7 @@ export default {
             value = Number(value);
           }
         } else if (value.indexOf(':') !== -1) {
+          indexArr.push(index);
           const tempResult = this.checkCombinatorialInput(filter);
           if (tempResult) {
             filter.showError = false;
@@ -476,6 +484,22 @@ export default {
         }
         tempArr.push(value);
       });
+      if (indexArr.length) {
+        const lastIndex = indexArr.pop();
+        const filterItem = this.filterArr[lastIndex];
+        if (
+          this.columnLimitNum > 0 &&
+          filterItem &&
+          !filterItem.showError &&
+          filterItem.max >= this.columnLimitNum
+        ) {
+          const result = this.checkFilterLimitOver(filterItem);
+          if (result) {
+            filterItem.showError = true;
+            filterCorrect = false;
+          }
+        }
+      }
       this.filterCorrect = filterCorrect;
       if (incorrectData && filterCorrect) {
         this.incorrectData = true;
@@ -487,6 +511,24 @@ export default {
         this.viewResizeFlag = true;
         this.$emit('martixFilterChange', tempArr);
       }
+    },
+    /**
+     * Check filter input limit
+     * @param {Object} filter Filter item
+     * @return {Boolean} Filter over limit
+     */
+    checkFilterLimitOver(filter) {
+      let result = false;
+      const value = filter.model.trim();
+      const tempArr = value.split(':');
+      let startValue = tempArr[0] ? tempArr[0] : 0;
+      let endValue = tempArr[1] ? tempArr[1] : filter.max + 1;
+      startValue = startValue < 0 ? filter.max + Number(startValue) + 1 : Number(startValue);
+      endValue = endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
+      if ((endValue - startValue) > this.columnLimitNum) {
+        result = true;
+      }
+      return result;
     },
     /**
      * Check combinatorial input
