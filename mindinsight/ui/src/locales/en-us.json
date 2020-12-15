@@ -775,7 +775,8 @@
     "mainTipPartThree": "For details about how to generate saliency maps, see section 3.2 'Local Methods' in",
     "mainTipPartFour": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9050829",
     "noExplainer": "Select Explanation Method",
-    "minConfidenceTip": "Probability threshold of a prediction tag. A tag is recorded as a prediction tag if its output probability is greater than the threshold. "
+    "minConfidenceTip": "Probability threshold of a prediction tag. A tag is recorded as a prediction tag if its output probability is greater than the threshold.",
+    "noData": "Loading data, please refresh the page later"
   },
   "metric": {
     "scoreSystem": "Scoring System",
