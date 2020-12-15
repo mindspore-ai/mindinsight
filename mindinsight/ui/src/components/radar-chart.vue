@@ -15,7 +15,10 @@ limitations under the License.
 -->
 <template>
   <div class="radar"
-       ref="radar">
+       ref="radar"
+       :style="{
+         'min-height': minHeight + 'px',
+       }">
   </div>
 </template>
 <script>
@@ -30,7 +33,6 @@ export default {
       instance: null, // The chart instance created by echarts init
       indicators: [], // The list of indicator in string
       defaultRadius: '73%', // The dafault radius of radar
-      defaultSplit: 4, // The dafault split length of indicator
       defaultEWidth: 5, // The default width of emphasis width
       defaultLegendSetting: {
         padding: [0, 16],
@@ -40,26 +42,27 @@ export default {
           padding: [0, 0, 0, 4],
         },
       }, // The default setting of legend
+      minHeight: 500, // The default min-height
+      titleHeight: 50, // The default height of title
+      legendHeight: 20, // The default height of every legend line
+      resizeDelay: 100, // The delay of resize's event
     };
   },
   props: [
     'data', // The processed radar data
     'nowHoverName', // The hover item name
     'radius', // The radius of radar
-    'split', // The split length of indicator
     'eWidth', // The width of emphasis width
     'legendSetting', // The setting of legend
     'ifTwo', // If show two legend item per line, default is 'true'
     'ifResetTooltip', // If fix the tooltip in the upper left and right corner, default is 'true'
-    'resize', // If table need resize
   ],
   mounted() {
     this.initRadarChart(this.data);
-    if (typeof this.resize !== 'undefined' && this.resize) {
-      window.onresize = () => {
-        this.initRadarChart(this.data);
-      };
-    }
+    window.addEventListener('resize', this.resizeRadarChart);
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.resizeRadarChart);
   },
   watch: {
     /**
@@ -71,6 +74,52 @@ export default {
   },
   methods: {
     /**
+     * The logic of resize radar chart
+     */
+    resizeRadarChart() {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+        if (this.instance) {
+          this.instance.resize();
+        }
+        this.timer = null;
+      }, this.resizeDelay);
+    },
+    /**
+     * The logic of cal min-height of radar chart
+     * @param {Number} length the number of legends
+     */
+    calMinHeight(length) {
+      // Show two legends per line
+      const count = Math.ceil(length / 2);
+      if (this.$refs.radar) {
+        const width = parseFloat(
+            getComputedStyle(this.$refs.radar)['width'].replace('px', ''),
+        );
+        const minHeight = width + count * this.legendHeight + this.titleHeight;
+        this.minHeight = minHeight;
+      }
+    },
+    /**
+     * The logic of cal center of radar chart
+     * @param {Number} length the number of legends
+     * @return {Array}
+     */
+    calCenter(length) {
+      const count = Math.ceil(length / 2);
+      const pos = '50%';
+      if (this.$refs.radar) {
+        const height = parseFloat(
+            getComputedStyle(this.$refs.radar)['height'].replace('px', ''),
+        );
+        // 100 : transform to percentage
+        const headerPer = (count * this.legendHeight + this.titleHeight) / height * 100;
+        const yPos = (100 - headerPer) / 2 + headerPer + '%';
+        return [pos, yPos];
+      }
+      return [pos, pos];
+    },
+    /**
      * The logic of init radar chart with default setting
      * @param {Object} data Original data
      */
@@ -80,25 +129,13 @@ export default {
       }
       const dom = this.$refs.radar;
       if (dom) {
+        this.calMinHeight(data.legend.length);
         this.instance = echarts.init(dom);
       } else {
         return;
       }
       this.instance.setOption({
         tooltip: {
-          position: (pos, params, dom, rect, size) => {
-            if (
-              typeof this.ifResetTooltip !== 'undefined'
-                ? this.ifResetTooltip
-                : true
-            ) {
-              return pos[0] > size.viewSize[0] / 2
-                ? {left: 0, top: 0}
-                : {right: 0, top: 0};
-            } else {
-              return null;
-            }
-          },
           formatter: (params) => {
             let temp = `${params.data.name}<br>`;
             for (let i = 0; i < this.indicators.length; i++) {
@@ -117,7 +154,6 @@ export default {
           padding: [15, 16],
         },
         color: common.pieColorArr,
-        center: ['50%', '50%'],
         radar: {
           shape: 'circle',
           name: {
@@ -128,10 +164,10 @@ export default {
               return this.formatIndicator(
                   text,
                   this.indicators,
-                this.split ? this.split : this.defaultSplit,
               );
             },
           },
+          center: this.calCenter(data.legend.length),
           radius: this.radius ? this.radius : this.defaultRadius,
         },
         series: [
@@ -173,6 +209,9 @@ export default {
             data: data.series ? data.series : [],
           },
         ],
+      });
+      this.$nextTick(() => {
+        this.instance.resize();
       });
     },
     /**
