@@ -679,12 +679,12 @@ class ModuleStruct:
             if submodule_precursor in self.onnx_names:  # if internal, match with local nodes/submodules return
                 # but do nothing here
                 continue
-            else:  # if external, match with current module construct header x
-                if submodule_precursor in self.construct_header_x.values():
-                    local_x = get_dict_key_by_value(submodule_precursor, self.construct_header_x)
-                    md_struct.set_inputs_in_construct_header(local_x, submodule_precursor)
-                else:  # Extra precursor nodes, raise error
-                    raise ValueError("Found external inputs of the submodule but the module does not have it.")
+            # if external, match with current module construct header x
+            if submodule_precursor in self.construct_header_x.values():
+                local_x = get_dict_key_by_value(submodule_precursor, self.construct_header_x)
+                md_struct.set_inputs_in_construct_header(local_x, submodule_precursor)
+            else:  # Extra precursor nodes, raise error
+                raise ValueError("Found external inputs of the submodule but the module does not have it.")
 
     def register_node_output_to_module(self, nd_struct):
         """Register nodes outputs to this module's return."""

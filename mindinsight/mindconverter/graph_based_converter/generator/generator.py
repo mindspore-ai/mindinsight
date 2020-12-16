@@ -220,9 +220,9 @@ class Generator:
                 path = Scope.path_str_to_list(scope_path)
                 if len(path) < depth_control:
                     continue
-                else:  # depth control within path length
-                    module_num = path[depth_control - 1][0]
-                    repeated_submodules_at_this_depth.add(module_num)
+                # depth control within path length.
+                module_num = path[depth_control - 1][0]
+                repeated_submodules_at_this_depth.add(module_num)
             ret[depth_control] = repeated_submodules_at_this_depth
 
         self._repeated_submodules = ret
@@ -249,9 +249,8 @@ class Generator:
                 compared_value = nd_struct.fragment.actual_args.get(base_parameter)
                 if compared_value == base_value:
                     continue
-                else:
-                    formal_args.add(base_parameter)
-                    break
+                formal_args.add(base_parameter)
+                break
 
         return formal_args
 
@@ -310,8 +309,7 @@ class Generator:
             for module_num in module_nums:
                 if module_num in checked_module:  # module already checked
                     continue
-                else:
-                    checked_module.add(module_num)
+                checked_module.add(module_num)
                 map_filtered = self.module_map_filter(module_num=module_num)
                 formal_args_in_this_module = self._list_formal_parameters_in_a_module(map_filtered)
                 formal_args_in_each_submodule[module_num] = formal_args_in_this_module

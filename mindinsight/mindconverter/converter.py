@@ -77,8 +77,7 @@ class Converter:
             raise error
         finally:
             if self._report:
-                dest_report_file = os.path.join(report_dir,
-                                                '_'.join(os.path.basename(infile).split('.')[:-1]) + '_report.txt')
+                dest_report_file = os.path.join(report_dir, f"report_of_{os.path.basename(infile).split('.')[0]}.txt")
                 with os.fdopen(os.open(dest_report_file, self.flags, self.modes), 'a') as file:
                     file.write('\n'.join(self._report))
                 logger.info("Convert report is saved in %s", dest_report_file)
@@ -180,7 +179,7 @@ def _path_split(file):
     """
     file_dir, name = os.path.split(file)
     if file_dir:
-        sep = file[len(file_dir)-1]
+        sep = file[len(file_dir) - 1]
         if file_dir.startswith(sep):
             return file.split(sep)[1:]
 
