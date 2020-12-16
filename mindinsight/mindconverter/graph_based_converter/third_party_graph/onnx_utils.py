@@ -278,6 +278,9 @@ class OnnxDataLoader:
 
         # Key is edge of ONNX ir graph, value is the corresponding precursor node.
         self.output_name_to_node_name = dict()
+
+        # Define dynamic nodes to be evaluated with onnxruntime
+        self.dynamic_resize_node = list()
         self.dynamic_reshape_node = list()
         self.eliminated_nodes = list()
 
@@ -499,12 +502,28 @@ class OnnxDataLoader:
             for opt_tensor_name, value in fetch_dict.items():
                 self.tensors_dict[opt_tensor_name] = OnnxTensor(value, opt_tensor_name)
 
+        def _for_resize():
+            """Do resize nodes."""
+            nonlocal self
+            output_tensors = []
+            if not self.dynamic_resize_node:
+                return
+            for node in self.dynamic_resize_node:
+                shape_ref = self._nodes_dict[node].input_name_list[3]
+                output_tensors.append(shape_ref)
+            feed_dict = {self.input_nodes[0]: np.random.rand(*self.graph_input_shape).astype(np.float32)}
+            fetch_dict = fetch_output_from_onnx_model(self.model, feed_dict=feed_dict, output_nodes=output_tensors)
+            for opt_tensor_name, value in fetch_dict.items():
+                self.tensors_dict[opt_tensor_name] = OnnxTensor(value, opt_tensor_name)
+
         _for_reshape()
+        _for_resize()
 
     def _find_nodes_to_be_eliminated(self):
         """Call all PASS to optimize graph."""
         for nd_name, nd_inst in self._nodes_dict.items():
             self._pass_of_shape(nd_name, nd_inst)
+            self._pass_of_resize(nd_name, nd_inst)
 
     def _pass_of_shape(self, nd_name, nd_inst):
         """Create a PASS to optimize shape and reshape operations in ONNX ir graph."""
@@ -532,4 +551,30 @@ class OnnxDataLoader:
 
             eliminated_nodes = _traceback_precursor_nodes_until_shape_op(to_shape)
             self.dynamic_reshape_node.append(nd_name)
+            self.eliminated_nodes += eliminated_nodes
+
+    def _pass_of_resize(self, nd_name, nd_inst):
+        """Create a PASS to optimize resize operations in ONNX ir graph."""
+        to_be_eliminated_op = {"Concat", "Cast", "Mul", "Slice", "Cast", "Gather", "Shape"}
+
+        def _traceback_precursor_nodes_until_shape_op(node_ref):
+            nonlocal self
+            e_nodes = []
+            node = self._nodes_dict[self.output_name_to_node_name[node_ref]]
+            if node.op_type not in to_be_eliminated_op:
+                return e_nodes
+            e_nodes.append(node.name)
+            for ipt in node.input_name_list:
+                if ipt not in self.tensors_dict:
+                    e_nodes += _traceback_precursor_nodes_until_shape_op(ipt)
+            return e_nodes
+
+        if nd_inst.op_type == "Resize":
+            # Find the size params
+            to_shape = nd_inst.input_name_list[3]
+            if to_shape in self.tensors_dict:
+                return
+
+            eliminated_nodes = _traceback_precursor_nodes_until_shape_op(to_shape)
+            self.dynamic_resize_node.append(nd_name)
             self.eliminated_nodes += eliminated_nodes

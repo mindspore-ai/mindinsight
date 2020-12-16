@@ -131,6 +131,12 @@ class ReportGenerator(metaclass=abc.ABCMeta):
         for num_line in range(0, num_all_lines):
             code_line = code_lines[num_line]
 
+            if 'P.ResizeNearestNeighbor' in code_line:
+                warning_msg = f"[WARNING] {num_line + 1}:{code_line.index('P.ResizeNearestNeighbor') + 1} " \
+                    f"The operator ResizeNearestNeighbor may not be converted accurately. " \
+                    f"Please check its parameters with your original model and MindSpore official documents."
+                self._content = f"{NEW_LINE}".join((self._content, warning_msg))
+
             if 'onnx.' in code_line:
                 num_unconverted_operator += 1
                 unconverted_operator = SEPARATOR_IN_ONNX_OP.join(
