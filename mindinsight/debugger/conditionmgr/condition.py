@@ -300,3 +300,9 @@ def check_abs_param_range(value):
     if 0 <= value < float("inf"):
         return True
     return False
+
+
+def check_positive_param_range(value):
+    if 0 < value < float("inf"):
+        return True
+    return False
