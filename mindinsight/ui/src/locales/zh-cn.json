@@ -752,6 +752,7 @@
       "percentError": "百分数值不能小于0或大于100",
       "rangeError": "范围下界值不能大于上界值",
       "nonnegative": "此参数值不能小于0",
+      "allPositive": "此参数值必须大于0",
       "watchOverflow": "训练开始前需开启异步全量溢出监测功能"
     }
   },
