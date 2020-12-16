@@ -19,7 +19,9 @@ import argparse
 
 import mindinsight
 from mindinsight.mindconverter.converter import main
-from mindinsight.mindconverter.graph_based_converter.constant import ARGUMENT_LENGTH_LIMIT, EXPECTED_NUMBER
+from mindinsight.mindconverter.graph_based_converter.common.utils import get_framework_type
+from mindinsight.mindconverter.graph_based_converter.constant import ARGUMENT_LENGTH_LIMIT, EXPECTED_NUMBER, \
+    FrameworkType
 from mindinsight.mindconverter.graph_based_converter.framework import main_graph_base_converter
 
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
@@ -197,6 +199,11 @@ class ModelFileAction(argparse.Action):
 
         if not os.path.isfile(outfile_dir):
             parser_in.error(f'{option_string} {outfile_dir} is not a file')
+
+        frame_type = get_framework_type(outfile_dir)
+        if frame_type == FrameworkType.UNKNOWN.value:
+            parser_in.error(f'{option_string} {outfile_dir} should be an valid '
+                            f'TensorFlow pb or PyTorch pth model file')
 
         setattr(namespace, self.dest, outfile_dir)
 
