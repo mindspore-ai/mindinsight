@@ -35,7 +35,7 @@ class SummaryWatcher:
 
     SUMMARY_FILENAME_REGEX = r'summary\.(?P<timestamp>\d+)'
     PB_FILENAME_REGEX = r'\.pb$'
-    PROFILER_DIRECTORY_REGEX = r'^profiler$'
+    PROFILER_DIRECTORY_REGEX = r'^profiler'
     MAX_SUMMARY_DIR_COUNT = 999
 
     # scan at most 20000 files/directories (approximately 1 seconds)
