@@ -1055,8 +1055,17 @@ export default {
       }
       const countLinit = array.length - 2;
       const tempArr = [];
+      // Maximum number of columns
+      const columnLimitNum = 1000;
       for (let i = 0; i < array.length; i++) {
         tempArr.push(i >= countLinit ? ':' : '0');
+      }
+      if (tempArr.length) {
+        const lastIndex = tempArr.length - 1;
+        const lastFilter = tempArr[lastIndex];
+        if (lastFilter && array[lastIndex] > columnLimitNum) {
+          tempArr[lastIndex] = `0:${columnLimitNum}`;
+        }
       }
       return `[${tempArr.toString()}]`;
     },

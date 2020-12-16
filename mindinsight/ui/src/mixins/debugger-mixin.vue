@@ -10,6 +10,10 @@ export default {
     };
   },
   methods: {
+    handleCurrentChange(page) {
+      this.pagination.currentPage = page;
+      this.searchWatchpointHits(false);
+    },
     showOrigin() {
       this.loadOriginalTree();
       this.queryWatchPoints();
@@ -490,9 +494,9 @@ export default {
                     graphName,
                 );
               }
-              if (res.data.watch_point_hits) {
+              if (res.data.receive_watchpoint_hits) {
                 this.radio1 = 'hit';
-                this.getWatchpointHits();
+                this.searchWatchpointHits(true);
               }
 
               if (
@@ -1514,25 +1518,52 @@ export default {
       });
     },
     /**
-     * Query WatchpointHits
+     * @param {Boolean} type  true: search watchpointhits false:query watchpointhits
      */
-    getWatchpointHits() {
+    searchWatchpointHits(type) {
       if (this.radio1 === 'hit') {
-        const params = {
-          mode: 'watchpoint_hit',
-          graph_name: this.graphFiles.value,
-        };
-        if (this.graphFiles.value === this.$t('debugger.all')) {
-          delete params.graph_name;
+        const params = {};
+        const condition = {};
+        if (type) {
+          if (this.selectedNode.name) {
+            if (this.graphFiles.value === this.$t('debugger.all')) {
+              const arr = this.selectedNode.name.split('/');
+              condition.node_name = arr[1] ? this.selectedNode.name.replace(`${arr[0]}/`, '') : arr[0];
+              condition.graph_name = arr[0];
+            } else {
+              condition.node_name = this.selectedNode.name;
+              condition.graph_name = this.graphFiles.value;
+            }
+          } else {
+            condition.offset = this.pagination.currentPage - 1;
+          }
+        } else {
+          condition.offset = this.pagination.currentPage - 1;
         }
-        RequestService.retrieve(params).then(
+        condition.limit = this.pagination.pageSize;
+        params.group_condition = condition;
+        RequestService.searchWatchpointHits(params).then(
             (res) => {
               if (res.data.metadata) {
                 this.dealMetadata(res.data.metadata);
               }
               if (res.data && res.data.watch_point_hits) {
                 this.hitsOutdated = res.data.outdated;
+                this.pagination.total = res.data.total;
+                this.pagination.currentPage = res.data.offset + 1;
                 this.dealWatchpointHits(res.data.watch_point_hits);
+              } else {
+                if (condition.node_name) {
+                  if (this.watchPointHits.length > 0) {
+                    this.watchPointHits.forEach((val) => {
+                      val.selected = false;
+                    });
+                  } else {
+                    this.searchWatchpointHits(false);
+                  }
+                } else {
+                  this.pagination.total = 0;
+                }
               }
             },
             (err) => {
@@ -1602,9 +1633,11 @@ export default {
           selectedNodeName = selectedNodeName.replace(`${selectedNodeName.split('/')[0]}/`, '');
         }
         this.expandKeys = [];
+        let focused = false;
         this.watchPointHits.forEach((val) => {
           if (val.name === selectedNodeName) {
             val.selected = true;
+            focused = true;
             this.expandKeys.push(val.id);
           } else {
             val.selected = false;
@@ -1618,6 +1651,7 @@ export default {
             }
           }, 200);
         });
+        return focused;
       }
     },
     /**
@@ -1632,7 +1666,7 @@ export default {
       this.nodeName = name;
       this.isHitIntoView = false;
       const params = {
-        mode: 'watchpoint_hit',
+        mode: 'node',
         params: {
           name,
           single_node: true,

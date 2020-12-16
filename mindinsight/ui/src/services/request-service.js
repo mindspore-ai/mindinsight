@@ -401,6 +401,13 @@ export default {
       url: `v1/mindinsight/debugger/recheck`,
     });
   },
+  searchWatchpointHits(params) {
+    return axios({
+      method: 'post',
+      url: `v1/mindinsight/debugger/search-watchpoint-hits`,
+      data: params,
+    });
+  },
   // explain list
   getExplainList(params) {
     return axios({

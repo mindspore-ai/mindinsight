@@ -505,7 +505,7 @@
     "nextNodeTip": "This is the last node.",
     "previousNodeTip": "This is the first node.",
     "serviceError": "Failed to connect to the backend service. Check and refresh the page.",
-    "debuggerError": "Failed to connect to the backend service. Check whether the service is properly started.",
+    "debuggerError": "Failed to connect to the backend service. Check whether the debugger service is properly started.",
     "tolerance": "Tolerance",
     "curValue": "Current Value",
     "compareToPre": "Compare with Previous Step",
