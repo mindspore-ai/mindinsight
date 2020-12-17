@@ -18,7 +18,7 @@ import stat
 from importlib import import_module
 from typing import List, Tuple, Mapping
 
-from mindinsight.mindconverter.common.log import logger as log
+from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP
 
 
@@ -113,18 +113,23 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
 
     for file_name in code_lines:
         code, report = code_lines[file_name]
+        code_file_path = os.path.realpath(os.path.join(out_folder, f"{model_name}.py"))
+        report_file_path = os.path.realpath(os.path.join(report_folder, f"report_of_{model_name}.txt"))
         try:
-            with os.fdopen(os.open(os.path.realpath(os.path.join(out_folder, f"{model_name}.py")),
-                                   flags, modes), 'w') as file:
+            if os.path.exists(code_file_path):
+                raise ScriptGenerationError("Code file with the same name already exists.")
+            with os.fdopen(os.open(code_file_path, flags, modes), 'w') as file:
                 file.write(code)
-            with os.fdopen(os.open(os.path.realpath(os.path.join(report_folder,
-                                                                 f"report_of_{model_name}.txt")),
-                                   flags, stat.S_IRUSR), "w") as rpt_f:
+        except (IOError, FileExistsError) as error:
+            raise ScriptGenerationError(str(error))
+
+        try:
+            if os.path.exists(report_file_path):
+                raise ReportGenerationError("Report file with the same name already exists.")
+            with os.fdopen(os.open(report_file_path, flags, stat.S_IRUSR), "w") as rpt_f:
                 rpt_f.write(report)
-        except IOError as error:
-            log.error(str(error))
-            log.exception(error)
-            raise error
+        except (IOError, FileExistsError) as error:
+            raise ReportGenerationError(str(error))
 
 
 def lib_version_satisfied(current_ver: str, mini_ver_limited: str,
