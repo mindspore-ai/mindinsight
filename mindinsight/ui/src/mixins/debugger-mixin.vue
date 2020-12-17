@@ -678,7 +678,7 @@ export default {
         this.paramErrorMsg = this.$t('debugger.paramErrorMsg.errorType');
       } else {
         this.paramErrorMsg = '';
-        item.param.value = parseFloat(item.param.value);
+        const inputValue = parseFloat(item.param.value);
 
         const absParams = [
           'abs_mean_gt',
@@ -687,19 +687,25 @@ export default {
           'abs_mean_update_ratio_gt',
           'abs_mean_update_ratio_lt',
         ];
-
-        if (absParams.includes(item.param.name) && item.param.value < 0) {
+        if (absParams.includes(item.param.name) && inputValue < 0) {
           this.validPram = false;
           this.paramErrorMsg = this.$t('debugger.paramErrorMsg.nonnegative');
         }
 
+        const positiveParams = ['max_min_lt', 'max_min_gt'];
+        if (positiveParams.includes(item.param.name) && inputValue <= 0) {
+          this.validPram = false;
+          this.paramErrorMsg = this.$t('debugger.paramErrorMsg.allPositive');
+        }
+
         if (this.percentParams.includes(item.param.name)) {
           const percentRange = {min: 0, max: 100};
-          if (item.param.value < percentRange.min || item.param.value > percentRange.max) {
+          if (inputValue < percentRange.min || inputValue > percentRange.max) {
             this.validPram = false;
             this.paramErrorMsg = this.$t('debugger.paramErrorMsg.percentError');
           }
         }
+
         if (this.validPram && item.compositeParams.selections.length) {
           const rangeKey = ['range_start_inclusive', 'range_end_inclusive'];
           const rangeStart = item.compositeParams.selections.filter((i) => {
@@ -709,9 +715,9 @@ export default {
             return i.name === rangeKey[1];
           });
           if (rangeStart.length && rangeEnd.length) {
-            rangeStart[0].value = parseFloat(rangeStart[0].value);
-            rangeEnd[0].value = parseFloat(rangeEnd[0].value);
-            if (rangeStart[0].value > rangeEnd[0].value) {
+            const start = parseFloat(rangeStart[0].value);
+            const end = parseFloat(rangeEnd[0].value);
+            if (start > end) {
               this.validPram = false;
               this.paramErrorMsg = this.$t('debugger.paramErrorMsg.rangeError');
             }
