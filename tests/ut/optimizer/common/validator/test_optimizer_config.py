@@ -183,6 +183,18 @@ class TestOptimizerConfig:
         err = OptimizerConfig().validate(config_dict)
         assert expected_err == err
 
+        config_dict['parameters']['learning_rate'].pop('bounds')
+        config_dict['parameters']['learning_rate']['choice'] = [0.1, 1.1]
+        expected_err = {
+            'parameters': {
+                'learning_rate': {
+                    'choice': 'The value(s) should be float number less than 1.'
+                }
+            }
+        }
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
     def test_learning_rate_type(self):
         """Test learning rate with wrong type."""
         config_dict = deepcopy(self._config_dict)
@@ -202,7 +214,7 @@ class TestOptimizerConfig:
         """Test parameters combination."""
         config_dict = deepcopy(self._config_dict)
         config_dict['parameters'] = {
-            param_name: {'choice': [-0.1, 1]}
+            param_name: {'choice': [-1, 1]}
         }
         expected_err = {
             'parameters': {
@@ -214,14 +226,12 @@ class TestOptimizerConfig:
         err = OptimizerConfig().validate(config_dict)
         assert expected_err == err
 
+        expected_err['parameters'][param_name]['choice'] = 'The value(s) should be integer.'
+        config_dict['parameters'][param_name]['choice'] = [1, 'hello']
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
         config_dict['parameters'][param_name] = {'choice': [0.1, 0.2]}
-        expected_err = {
-            'parameters': {
-                param_name: {
-                    'choice': 'The value(s) should be integer.'
-                }
-            }
-        }
         err = OptimizerConfig().validate(config_dict)
         assert expected_err == err
 
