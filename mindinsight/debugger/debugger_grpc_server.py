@@ -504,9 +504,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             }
             hit_params = {}
             for param in watchpoint_hit_proto.watch_condition.params:
-                if param.actual_value is not None and param.name not in \
-                        (ParamNameEnum.RTOL.value, ParamNameEnum.RANGE_START_INCLUSIVE.value,
-                         ParamNameEnum.RANGE_END_INCLUSIVE.value):
+                if param.name not in (ParamNameEnum.RTOL.value, ParamNameEnum.RANGE_START_INCLUSIVE.value,
+                                      ParamNameEnum.RANGE_END_INCLUSIVE.value) \
+                        and watchpoint_hit_proto.error_code == 0:
                     hit_params[param.name] = param.actual_value
             for i, param in enumerate(watchpoint_hit['watchpoint'].condition['params']):
                 name = param['name']
@@ -514,8 +514,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                     watchpoint_hit['watchpoint'].condition['params'][i]['actual_value'] = hit_params[name]
                 else:
                     watchpoint_hit['watchpoint'].condition['params'][i]['actual_value'] = None
-            if watchpoint_hit_proto.error_code is not None:
-                watchpoint_hit['error_code'] = watchpoint_hit_proto.error_code
+            watchpoint_hit['error_code'] = watchpoint_hit_proto.error_code
             watchpoint_hits.append(watchpoint_hit)
         self._received_hit = watchpoint_hits
         reply = get_ack_reply()

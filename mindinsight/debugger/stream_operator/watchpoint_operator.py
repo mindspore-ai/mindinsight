@@ -21,7 +21,7 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import ServerStatus, \
     Streams, is_cst_type
-from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum, TargetTypeEnum, ConditionContext
+from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum, ConditionContext
 from mindinsight.debugger.conditionmgr.recommender import get_basic_node_info
 from mindinsight.debugger.stream_handler.watchpoint_handler import validate_watch_condition
 
@@ -84,10 +84,7 @@ class WatchpointOperator:
             raise DebuggerConditionUnavailableError(
                 "Failed to create watchpoint as the condition is not available.")
 
-        if condition.supported_target_type in [TargetTypeEnum.ACTIVATION, TargetTypeEnum.GRADIENT,
-                                               TargetTypeEnum.WEIGHT]:
-            watch_nodes = get_basic_node_info(condition.supported_target_type.value, self._graph_stream).copy()
-
+        watch_nodes = get_basic_node_info(condition.supported_target_type.value, self._graph_stream).copy()
         watchpoint_stream = self._watchpoint_stream
         watch_point_id = watchpoint_stream.create_watchpoint(
             self._condition_mgr, watch_condition, watch_nodes, params.get('watch_point_id'))
