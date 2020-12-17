@@ -14,6 +14,7 @@
 # ==============================================================================
 """Third party graph parser."""
 import os
+import re
 from importlib import import_module
 
 from mindinsight.mindconverter.common.log import logger as log
@@ -49,7 +50,35 @@ class TFGraphParser(GraphParser):
             log.error(str(error))
             raise error
 
+        invalid_inputs = TFGraphParser.invalid_nodes_name(tf_input_nodes)
+        invalid_outputs = TFGraphParser.invalid_nodes_name(tf_output_nodes)
+        if invalid_inputs:
+            raise ModelNotSupportError(f"Invalid Input Node Name Found: {', '.join(invalid_inputs)}")
+        if invalid_outputs:
+            raise ModelNotSupportError(f"Invalid Output Node Name Found: {', '.join(invalid_outputs)}")
+
+
         model = convert_tf_graph_to_onnx(model_path,
                                          model_inputs=tf_input_nodes,
                                          model_outputs=tf_output_nodes)
         return model
+
+    @staticmethod
+    def invalid_nodes_name(input_str):
+        """
+        Check model_inputs and model_outputs are correctly formatted.
+
+        Args:
+            input_str (str): The string of model inputs and model outputs the CLI passed in.
+
+        Returns:
+            list, a list of invalid node name the user inputs.
+        """
+        splited = input_str.replace(' ', '').split(',')
+        name_format_re = r"(?P<name>[\w\/]+):(?P<postfix>\d+)"
+        invalid_node_name_list = list()
+        for name in splited:
+            if re.match(name_format_re, name):
+                continue
+            invalid_node_name_list.append(name)
+        return invalid_node_name_list
