@@ -118,6 +118,15 @@ class MindConverterException(Exception):
         """Raise from below exceptions."""
 
     @classmethod
+    def normalize_error_msg(cls, error_msg):
+        """Normalize error msg for common python exception."""
+        if cls.BASE_ERROR_CODE is None or cls.ERROR_CODE is None:
+            raise ValueError("MindConverterException has not been initialized.")
+        num = 0xFFFF & cls.ERROR_CODE  # 0xFFFF & self.error.value
+        error_code = f"{str(cls.BASE_ERROR_CODE).zfill(3)}{hex(num)[2:].zfill(4).upper()}"
+        return f"[{cls.__name__}] code: {error_code}, msg: {error_msg}"
+
+    @classmethod
     def uniform_catcher(cls, msg: str = ""):
         """Uniform exception catcher."""
 
@@ -128,6 +137,8 @@ class MindConverterException(Exception):
                 except cls.raise_from() as e:
                     error = cls() if not msg else cls(msg=msg)
                     detail_info = str(e)
+                    if not isinstance(e, MindConverterException):
+                        detail_info = cls.normalize_error_msg(str(e))
                     log.error(error)
                     log_console.error("\n")
                     log_console.error(detail_info)
