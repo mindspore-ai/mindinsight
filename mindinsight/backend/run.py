@@ -149,29 +149,21 @@ def _check_state_from_log(pid, log_abspath, start_pos=0):
         The value of the "prompt_message" key is a list of prompt messages.
 
     """
-    server_is_start = False
     state_result = {"state": ServerStateEnum.UNKNOWN.value, "prompt_message": []}
     prompt_messages = []
-    match_start_log = "Starting gunicorn"
     with open(log_abspath) as f_log:
         f_log.seek(start_pos)
         for line in f_log.readlines():
-            if match_start_log in line:
-                if server_is_start:
-                    break
-                server_is_start = True
-                continue
-            if server_is_start:
-                log_result = _check_stat_from_log(pid, line)
-                # ignore "unknown" result
-                if log_result != ServerStateEnum.UNKNOWN.value:
-                    state_result["state"] = log_result
+            log_result = _check_stat_from_log(pid, line)
+            # ignore "unknown" result
+            if log_result != ServerStateEnum.UNKNOWN.value:
+                state_result["state"] = log_result
 
-                if log_result == ServerStateEnum.FAILED.value:
-                    prompt_messages.append(line.strip())
-                    prompt_messages.append(
-                        "more failed details in log: %s" % log_abspath)
-                    break
+            if log_result == ServerStateEnum.FAILED.value:
+                prompt_messages.append(line.strip())
+                prompt_messages.append(
+                    "more failed details in log: %s" % log_abspath)
+                break
     state_result["prompt_message"].append(
         "service start state: %s" % state_result["state"])
     for prompt_message in prompt_messages:
@@ -180,14 +172,13 @@ def _check_state_from_log(pid, log_abspath, start_pos=0):
     return state_result
 
 
-def _check_server_start_stat(pid, log_abspath, start_pos=None):
+def _check_server_start_stat(pid, log_abspath):
     """
     Checking the Server Startup Status.
 
     Args:
         pid (int): The gunicorn process ID.
         log_abspath (str): The log file path.
-        start_pos (int): The log file start position.
 
     Returns:
         dict, an dict object that contains the state and prompt_message fields.
@@ -202,7 +193,7 @@ def _check_server_start_stat(pid, log_abspath, start_pos=None):
     # sleep 1 second for gunicorn master to be ready
     time.sleep(1)
 
-    log_pos = _get_file_size(log_abspath) if start_pos is None else start_pos
+    log_pos = _get_file_size(log_abspath)
     try_cnt = 0
     try_cnt_max = 2
 
@@ -259,7 +250,6 @@ def start():
                 )
 
     error_log_abspath = _get_error_log_path()
-    log_size = _get_file_size(error_log_abspath)
 
     # Init the logger file
     setup_logger('gunicorn', 'error')
@@ -284,7 +274,7 @@ def start():
         console.error("Start MindInsight failed. See log for details, log path: %s.", error_log_abspath)
         sys.exit(1)
     else:
-        state_result = _check_server_start_stat(process.pid, error_log_abspath, log_size)
+        state_result = _check_server_start_stat(process.pid, error_log_abspath)
         # print gunicorn start state to stdout
         label = 'Web address:'
         format_args = label, settings.HOST, str(settings.PORT), settings.URL_PATH_PREFIX
