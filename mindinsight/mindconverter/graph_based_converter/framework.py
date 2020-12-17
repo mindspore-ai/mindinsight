@@ -14,7 +14,6 @@
 # ==============================================================================
 """Graph based scripts converter workflow."""
 import os
-import re
 import argparse
 import sys
 from importlib import import_module
@@ -65,10 +64,28 @@ def torch_installation_validation(func):
     def _f(graph_path: str, sample_shape: tuple,
            output_folder: str, report_folder: str = None):
         # Check whether pytorch is installed.
-        if not find_spec("torch"):
-            error = RuntimeIntegrityError("PyTorch is required when using graph based "
-                                          "scripts converter, and PyTorch version must "
-                                          "be consisted with model generation runtime.")
+        if not find_spec("torch") or not find_spec("onnx") or not find_spec("onnxruntime"):
+            error = RuntimeIntegrityError(f"PyTorch, onnx(>={ONNX_MIN_VER}) and "
+                                          f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) "
+                                          f"are required when using graph based "
+                                          f"scripts converter, and PyTorch version must "
+                                          f"be consisted with model generation runtime.")
+            log.error(error)
+            log_console.error("\n")
+            log_console.error(str(error))
+            log_console.error("\n")
+            sys.exit(0)
+
+        onnx = import_module("onnx")
+        ort = import_module("onnxruntime")
+
+        if not lib_version_satisfied(getattr(onnx, "__version__"), ONNX_MIN_VER) \
+                or not lib_version_satisfied(getattr(ort, "__version__"), ONNXRUNTIME_MIN_VER):
+            error = RuntimeIntegrityError(
+                f"onnx(>={ONNX_MIN_VER}) and "
+                f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) are required when using graph "
+                f"based scripts converter for Pytorch conversion."
+            )
             log.error(error)
             log_console.error("\n")
             log_console.error(str(error))
@@ -154,7 +171,8 @@ def _extract_model_name(model_path):
         str: Name of Converted model.
     """
 
-    model_name = re.findall(r".*[/](.*)(?:\.pth|\.pb)", model_path)[-1]
+    base_path = os.path.basename(model_path)
+    model_name = '.'.join(base_path.split('.')[:-1])
     return model_name
 
 

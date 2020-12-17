@@ -18,11 +18,14 @@ import importlib
 from torch.nn import Module
 from torch.onnx.utils import _trace
 from torch.onnx.utils import _node_getitem
+from torch.onnx.symbolic_helper import _set_opset_version
+
 
 SCRIPT_METHOD = getattr(importlib.import_module("torch._C"),
                         "ScriptMethod")
 onnx_tracer = _trace
 getitem_of_node = _node_getitem
+set_opset_version = _set_opset_version
 
 
 def unique_state_dict(model):
