@@ -504,7 +504,7 @@
     "nextNodeTip": "当前已经是最后一个节点",
     "previousNodeTip": "当前已经是第一个节点",
     "serviceError": "连接后端服务失败，请检查后刷新页面",
-    "debuggerError": "连接后端服务失败，请检查服务是否正确启动",
+    "debuggerError": "连接后端服务失败，请检查调试器服务是否正确启动",
     "tolerance": "容忍度",
     "curValue": "当前值",
     "compareToPre": "上一步对比",

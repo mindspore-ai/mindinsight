@@ -34,7 +34,7 @@ limitations under the License.
           <div class="radio-tabs">
             <el-radio-group v-model="radio1"
                             size='mini'
-                            @change="getWatchpointHits">
+                            @change="searchWatchpointHits(true)">
               <el-radio-button label="tree">
                 <i class="el-icon-s-grid"></i>
               </el-radio-button>
@@ -210,7 +210,8 @@ limitations under the License.
         <div class="content"
              v-show="radio1==='hit'">
           <div class="hit-list-wrap">
-            <el-table :data="watchPointHits"
+            <el-table class="watchpoint-table"
+                      :data="watchPointHits"
                       row-key="id"
                       :expand-row-keys="expandKeys">
               <el-table-column type="expand"
@@ -244,6 +245,16 @@ limitations under the License.
                 </template>
               </el-table-column>
             </el-table>
+            <el-pagination class="watchpoint-page"
+                           small
+                           @current-change="handleCurrentChange"
+                           :current-page="pagination.currentPage"
+                           :page-size="pagination.pageSize"
+                           :pager-count="pagination.pageCount"
+                           layout="prev, pager, next, jumper"
+                           :total="pagination.total"
+                           v-show="pagination.total">
+            </el-pagination>
           </div>
         </div>
         <div class="btn-wrap">
@@ -818,6 +829,12 @@ export default {
       percentParams: ['zero_percentage_ge', 'range_percentage_lt', 'range_percentage_gt'],
       oldState: '',
       treeDisabled: false,
+      pagination: {
+        currentPage: 1,
+        pageSize: 10,
+        pageCount: 5,
+        total: 0,
+      },
       state: {
         running: 'running',
         pending: 'pending',
@@ -866,7 +883,7 @@ export default {
           if (this.oldState === this.state.pending || oldValue === this.state.pending) {
             this.loadNode(this.node, this.resolve);
           } else if (this.oldState === this.state.running || oldValue === this.state.running) {
-            this.getWatchpointHits();
+            this.searchWatchpointHits(true);
           }
         }
       },
@@ -1486,7 +1503,9 @@ export default {
       }
 
       if (this.watchPointHits.length && this.radio1 === 'hit' && this.isHitIntoView) {
-        this.focusWatchpointHit();
+        if (!this.focusWatchpointHit()) {
+          this.searchWatchpointHits(true);
+        }
       }
       this.isHitIntoView = true;
     },
@@ -1912,8 +1931,17 @@ export default {
         }
         .hit-list-wrap {
           height: 100%;
-          overflow-y: auto;
           padding: 10px;
+          .watchpoint-table {
+            max-height: calc(100% - 45px);
+            overflow: auto;
+          }
+          .el-table::before {
+            height: 0;
+          }
+          .watchpoint-page {
+            padding-top: 20px;
+          }
           .hit-item {
             word-break: break-all;
             line-height: 18px;

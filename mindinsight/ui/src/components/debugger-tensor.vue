@@ -974,19 +974,20 @@ export default {
       const shape = dims
         ? dims
         : JSON.stringify(
-            JSON.parse(row.shape)
-                .map((val, index) => {
-                // The default parameter format of shape is that the last two digits are:. The front is all 0
-                  if (index < 2) {
-                    if (index === 0 && val > this.columnLimitNum) {
-                      return `0:${this.columnLimitNum}`;
-                    }
-                    return ':';
-                  } else {
-                    return 0;
-                  }
-                })
-                .reverse(),
+            JSON.parse(row.shape).map((val, index) => {
+              // The default parameter format of shape is that the last two digits are:. The front is all 0
+              if (index === JSON.parse(row.shape).length - 1) {
+                if (val > this.columnLimitNum) {
+                  return `0:${this.columnLimitNum}`;
+                } else {
+                  return ':';
+                }
+              } else if (index === JSON.parse(row.shape).length - 2) {
+                return ':';
+              } else {
+                return 0;
+              }
+            }),
         ).replace(/"/g, '');
       const params = {
         name: row.name,
@@ -1066,19 +1067,20 @@ export default {
       const shape = dims
         ? dims
         : JSON.stringify(
-            JSON.parse(row.shape)
-                .map((val, index) => {
-                // The default parameter format of shape is that the last two digits are:. The front is all 0
-                  if (index < 2) {
-                    if (index === 0 && val > this.columnLimitNum) {
-                      return `0:${this.columnLimitNum}`;
-                    }
-                    return ':';
-                  } else {
-                    return 0;
-                  }
-                })
-                .reverse(),
+            JSON.parse(row.shape).map((val, index) => {
+              // The default parameter format of shape is that the last two digits are:. The front is all 0
+              if (index === JSON.parse(row.shape).length - 1) {
+                if (val > this.columnLimitNum) {
+                  return `0:${this.columnLimitNum}`;
+                } else {
+                  return ':';
+                }
+              } else if (index === JSON.parse(row.shape).length - 2) {
+                return ':';
+              } else {
+                return 0;
+              }
+            }),
         ).replace(/"/g, '');
       const params = {
         name: row.name,
