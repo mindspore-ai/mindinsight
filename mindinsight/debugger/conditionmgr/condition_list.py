@@ -29,7 +29,7 @@ from mindinsight.debugger.conditionmgr.condition import ParamNameEnum
 from mindinsight.debugger.conditionmgr.condition import check_initialization_available
 from mindinsight.debugger.conditionmgr.condition import check_normal_param_range
 from mindinsight.debugger.conditionmgr.condition import check_percentage_param_range
-from mindinsight.debugger.conditionmgr.condition import check_abs_param_range
+from mindinsight.debugger.conditionmgr.condition import check_abs_param_range, check_positive_param_range
 
 
 CONDITION_LIST = [
@@ -416,12 +416,12 @@ CONDITION_LIST = [
             ConditionParameter(
                 name=ParamNameEnum.MAX_MIN_LT,
                 value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
+                valid_test_func=check_positive_param_range
             ),
             ConditionParameter(
                 name=ParamNameEnum.MAX_MIN_GT,
                 value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
+                valid_test_func=check_abs_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.ACTIVATION,
@@ -461,12 +461,12 @@ CONDITION_LIST = [
             ConditionParameter(
                 name=ParamNameEnum.MAX_MIN_LT,
                 value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
+                valid_test_func=check_positive_param_range
             ),
             ConditionParameter(
                 name=ParamNameEnum.MAX_MIN_GT,
                 value_type=ValueTypeEnum.FLOAT64,
-                valid_test_func=check_normal_param_range
+                valid_test_func=check_abs_param_range
             )
         ],
         supported_target_type=TargetTypeEnum.TENSOR,
