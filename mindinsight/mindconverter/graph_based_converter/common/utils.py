@@ -168,3 +168,17 @@ def get_dict_key_by_value(val, dic):
         if d_val == val:
             return d_key
     return None
+
+def convert_bytes_string_to_string(bytes_str):
+    """
+    Convert a byte string to string by utf-8.
+
+    Args:
+        bytes_str (bytes): A bytes string.
+
+    Returns:
+        str, a str with utf-8 encoding.
+    """
+    if isinstance(bytes_str, bytes):
+        return bytes_str.decode('utf-8')
+    return  bytes_str

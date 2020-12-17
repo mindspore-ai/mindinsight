@@ -16,6 +16,7 @@
 import numpy as np
 from ...base import ONNXToMindSporeMapper
 from ...gen_setting import Setting
+from ....common import utils
 
 
 def _convert_padding(**kwargs):
@@ -80,6 +81,10 @@ class ConvMapper(ONNXToMindSporeMapper):
         if weight is None:
             raise ValueError("Conv. Mapper cannot get the weight.")
 
+        auto_pad = None
+        if params.get("auto_pad") is not None:
+            auto_pad = utils.convert_bytes_string_to_string(params.get("auto_pad"))
+
         # tmp tf translated ver. mapping
         if isinstance(params.get('dilations'), list):
             dilation = tuple(params.get('dilations'))
@@ -101,6 +106,10 @@ class ConvMapper(ONNXToMindSporeMapper):
             kernel_size = tuple(kernel_size)
 
         pad_mode, padding = _convert_padding(params=params)
+
+        if auto_pad == "SAME_UPPER":
+            pad_mode = "\'same\'"
+            padding = 0
 
         return {
             'in_channels': in_channels,
