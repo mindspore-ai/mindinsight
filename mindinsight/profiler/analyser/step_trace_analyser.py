@@ -217,13 +217,24 @@ class StepTraceAnalyser(BaseAnalyser):
         start_point = row_info_dict.get('start_point', 0)
         fp_point = row_info_dict.get('fp_point', 0)
         bp_point = row_info_dict.get('bp_point', 0)
-        points = [
+        points_part = [
             self._construct_time_point(
                 'iteration_interval', 0, row_info_dict.get('iteration_interval', 0)),
-            self._construct_time_point(
-                'fp_and_bp', fp_point - start_point, row_info_dict.get('fp_and_bp', 0)),
-            self._construct_time_point('tail', bp_point - start_point, row_info_dict.get('tail', 0))
         ]
+        # if fp key exist, inference scene
+        if 'fp' in row_info_dict.keys():
+            points = [
+                self._construct_time_point(
+                    'fp', fp_point - start_point, row_info_dict.get('fp', 0)),
+            ]
+        # training scene
+        else:
+            points = [
+                self._construct_time_point(
+                    'fp_and_bp', fp_point - start_point, row_info_dict.get('fp_and_bp', 0)),
+                self._construct_time_point('tail', bp_point - start_point, row_info_dict.get('tail', 0))
+            ]
+        points = points_part + points
         return points
 
     def _get_reduce_time_in_order(self, row_info_dict):
