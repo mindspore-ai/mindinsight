@@ -21,7 +21,7 @@ limitations under the License.
            v-show="!leftShow">
         <div class="header">
           {{radio1==='tree' ? $t('debugger.nodeList') :
-          ($t('debugger.curHitNode') + '(' + watchPointHits.length + ')')}}
+          ($t('debugger.curHitNode') + '(' + pagination.total + ')')}}
           <div class="outdate-tip"
                v-if="hitsOutdated && radio1==='hit'">
             <el-tooltip class="item"
