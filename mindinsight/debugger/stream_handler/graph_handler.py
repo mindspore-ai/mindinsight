@@ -319,23 +319,6 @@ class GraphHandler(StreamHandlerBase):
             raise DebuggerParamValueError("Invalid node_category.")
         return res
 
-    def get_nodes_by_scope(self, scope_name, graph_name):
-        """
-        Get node by a given scope name.
-
-        Args:
-            scope_name (str): The name of scope.
-            graph_name (str): The relative graph_name of the watched node. Default: None.
-
-        Returns:
-            list[Node], a list of node.
-        """
-        if graph_name:
-            graph = self._get_graph(graph_name)
-        else:
-            graph = self._whole_graph
-        return graph.search_leaf_nodes_by_pattern(scope_name)
-
     def get_graph_id_by_name(self, node_name):
         """
         Get graph id by full name.
@@ -446,6 +429,8 @@ class GraphHandler(StreamHandlerBase):
         """
         graph_name, node_name = self._parse_node_name(scope_name, graph_name)
         graph = self._get_graph(graph_name)
+        # to make sure fully match the scope name
+        node_name = node_name + '/' if not node_name.endswith('/') else node_name
         nodes = graph.search_leaf_nodes_by_pattern(node_name)
         res = [self.construct_node_basic_info(full_name=node.full_name,
                                               graph_name=graph_name,
@@ -632,7 +617,8 @@ class GraphHandler(StreamHandlerBase):
             log.error("graph %s doesn't find node: %s.", graph_name, node_name)
             raise DebuggerNodeNotInGraphError(node_name)
 
-    def _sort_graph(self, graphs):
+    @staticmethod
+    def _sort_graph(graphs):
         """
         Sort graph by graph_name.
 

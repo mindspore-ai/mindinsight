@@ -141,7 +141,7 @@ class WatchpointHandler(StreamHandlerBase):
         leaf_watch_nodes = []
         for node in watch_nodes:
             if is_scope_type(node.type):
-                pure_node_name = None
+                pure_node_name = ''
                 if len(node.name.split('/')) > 1:
                     graph_name, pure_node_name = node.name.split('/', 1)
                 else:
