@@ -59,45 +59,23 @@ class TensorHandler(StreamHandlerBase):
             value (dict): The Tensor proto message.
 
                 - step (int): The current step of tensor.
-                - tensor_protos (list[TensorProto]): The tensor proto.
+                - tensor_proto (TensorProto): The tensor proto.
+                - tensor_contents (list[byte]): The list of tensor content values.
 
         Returns:
             bool, the tensor has updated successfully.
         """
-        tensor_protos = value.get('tensor_protos')
-        merged_tensor = self._get_merged_tensor(tensor_protos)
+        tensor_proto = value.get('tensor_proto')
+        tensor_proto.ClearField('tensor_content')
         step = value.get('step', 0)
-        if merged_tensor.iter and step > 0:
+        if tensor_proto.iter and step > 0:
             log.debug("Received previous tensor.")
             step -= 1
-        tensor = OpTensor(merged_tensor, step)
+        tensor_content = b''.join(value.get('tensor_contents'))
+        tensor = OpTensor(tensor_proto, tensor_content, step)
         flag = self._put_tensor_into_cache(tensor, step)
         log.info("Put tensor %s of step: %d, into cache. Flag: %s", tensor.name, step, flag)
         return flag
-
-    @staticmethod
-    def _get_merged_tensor(tensor_protos):
-        """
-        Merged list of parsed tensor value into one.
-
-        Args:
-            tensor_protos (list[TensorProto]): List of tensor proto.
-
-        Returns:
-            TensorProto, merged tensor proto.
-        """
-        merged_tensor = tensor_protos[-1]
-        if len(tensor_protos) > 1:
-            tensor_value = bytes()
-            for tensor_proto in tensor_protos:
-                if not tensor_proto.tensor_content:
-                    log.warning("Doesn't find tensor value for %s:%s",
-                                tensor_proto.node_name, tensor_proto.slot)
-                    break
-                tensor_value += tensor_proto.tensor_content
-            merged_tensor.tensor_content = tensor_value
-            log.debug("Merge multi tensor values into one.")
-        return merged_tensor
 
     def _put_tensor_into_cache(self, tensor, step):
         """
@@ -146,9 +124,11 @@ class TensorHandler(StreamHandlerBase):
                 continue
             if DataType.Name(const_val.value.dtype) == "DT_TENSOR":
                 tensor_proto = const_val.value.tensor_val
+                tensor_value = tensor_proto.tensor_content
+                tensor_proto.ClearField('tensor_content')
                 tensor_proto.node_name = const_val.key
                 tensor_proto.slot = '0'
-                const_tensor = OpTensor(tensor_proto)
+                const_tensor = OpTensor(tensor_proto, tensor_value)
             else:
                 const_tensor = ConstTensor(const_val)
             self._const_vals[const_tensor.name] = const_tensor
