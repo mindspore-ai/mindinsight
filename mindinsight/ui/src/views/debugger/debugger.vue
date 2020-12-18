@@ -121,7 +121,8 @@ limitations under the License.
                        :src="require('@/assets/images/operator-node.svg')"
                        class="image-type" />
                 </span>
-                <span class="custom-tree-node">{{ node.label }}</span>
+                <span class="custom-tree-node"
+                      :title="node.label">{{ node.label }}</span>
               </span>
             </tree>
             <tree v-show="!treeFlag"
@@ -152,7 +153,8 @@ limitations under the License.
                        :src="require('@/assets/images/operator-node.svg')"
                        class="image-type" />
                 </span>
-                <span class="custom-tree-node">{{ node.label }}</span>
+                <span class="custom-tree-node"
+                      :title="node.label">{{ node.label }}</span>
               </span>
             </tree>
           </div>
@@ -195,10 +197,10 @@ limitations under the License.
                     <div class="item-content">
                       {{getWatchPointContent(item)}}
                     </div>
-                    <i class="el-icon-check"
+                    <i class="el-icon-check icon"
                        v-if="item.selected"
                        @click.stop="showOrigin()"></i>
-                    <i class="el-icon-close"
+                    <i class="el-icon-close icon"
                        v-if="item.selected"
                        @click.stop="deleteWatchpoint(item)"></i>
                   </div>
@@ -1151,6 +1153,7 @@ export default {
       if (title) {
         title.remove();
       }
+      d3.selectAll('g.edge>title').remove();
 
       this.graph.dom = document.querySelector(`#graph #graph0`);
       const graphRect = this.graph.dom.getBoundingClientRect();
@@ -1906,14 +1909,18 @@ export default {
                   color: #00a5a7;
                   position: relative;
                   .el-icon-close {
-                    position: absolute;
                     right: 10px;
-                    top: 3px;
                   }
                   .el-icon-check {
-                    position: absolute;
                     right: 30px;
+                  }
+                  .icon {
+                    position: absolute;
                     top: 3px;
+                    border: solid 1px;
+                    padding: 1px;
+                    border-radius: 2px;
+                    font-size: 12px;
                   }
                 }
               }

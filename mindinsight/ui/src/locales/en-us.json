@@ -733,8 +733,6 @@
     "curStep": "Current Step",
     "preStep": "Previous Step",
     "compareResult": "Comparison Result",
-    "recommendTip": "Use the recommended watchpoints?",
-    "recommendDetail": "The recommended watchpoints check zero tensors, gradient disappearances, and update weight above threshold, helping you quickly detect faults in training. ",
     "use": "Yes",
     "notUse": "No",
     "versionConflictTip": "MindSpore and MindInsight versions do not match. MindSpore version: {msv}; MindInsight version: {miv}",
