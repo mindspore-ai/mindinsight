@@ -18,8 +18,10 @@ import stat
 from importlib import import_module
 from typing import List, Tuple, Mapping
 
-from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError
-from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP
+from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, UnknownModelError
+from mindinsight.mindconverter.common.log import logger as log
+from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, BINARY_HEADER_PYTORCH_BITS, \
+    FrameworkType, BINARY_HEADER_PYTORCH_FILE, TENSORFLOW_MODEL_SUFFIX
 
 
 def is_converted(operation: str):
@@ -174,6 +176,7 @@ def get_dict_key_by_value(val, dic):
             return d_key
     return None
 
+
 def convert_bytes_string_to_string(bytes_str):
     """
     Convert a byte string to string by utf-8.
@@ -186,4 +189,23 @@ def convert_bytes_string_to_string(bytes_str):
     """
     if isinstance(bytes_str, bytes):
         return bytes_str.decode('utf-8')
-    return  bytes_str
+    return bytes_str
+
+
+def get_framework_type(model_path):
+    """Get framework type."""
+    try:
+        with open(model_path, 'rb') as f:
+            if f.read(BINARY_HEADER_PYTORCH_BITS) == BINARY_HEADER_PYTORCH_FILE:
+                framework_type = FrameworkType.PYTORCH.value
+            elif os.path.basename(model_path).split(".")[-1].lower() == TENSORFLOW_MODEL_SUFFIX:
+                framework_type = FrameworkType.TENSORFLOW.value
+            else:
+                framework_type = FrameworkType.UNKNOWN.value
+    except IOError:
+        error_msg = "Get UNSUPPORTED model."
+        error = UnknownModelError(error_msg)
+        log.error(str(error))
+        raise error
+
+    return framework_type

@@ -22,9 +22,9 @@ from importlib.util import find_spec
 
 import mindinsight
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, \
-    save_code_file_and_report
-from mindinsight.mindconverter.graph_based_converter.constant import BINARY_HEADER_PYTORCH_FILE, FrameworkType, \
-    BINARY_HEADER_PYTORCH_BITS, ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, TENSORFLOW_MODEL_SUFFIX
+    save_code_file_and_report, get_framework_type
+from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
+    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import GraphInitError, TreeCreationError, SourceFilesSaveError, \
@@ -262,25 +262,6 @@ def main_graph_base_converter(file_config):
         error_msg = "Get UNSUPPORTED model."
         error = UnknownModelError(error_msg)
         raise error
-
-
-def get_framework_type(model_path):
-    """Get framework type."""
-    try:
-        with open(model_path, 'rb') as f:
-            if f.read(BINARY_HEADER_PYTORCH_BITS) == BINARY_HEADER_PYTORCH_FILE:
-                framework_type = FrameworkType.PYTORCH.value
-            elif os.path.basename(model_path).split(".")[-1].lower() == TENSORFLOW_MODEL_SUFFIX:
-                framework_type = FrameworkType.TENSORFLOW.value
-            else:
-                framework_type = FrameworkType.UNKNOWN.value
-    except IOError:
-        error_msg = "Get UNSUPPORTED model."
-        error = UnknownModelError(error_msg)
-        log.error(str(error))
-        raise error
-
-    return framework_type
 
 
 def check_params_exist(params: list, config):
