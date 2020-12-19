@@ -20,11 +20,11 @@ from mindinsight.conf import settings
 from mindinsight.utils.hook import BaseHook
 
 
-def str2bool(string):
+def enable_debugger_string(string):
     """Convert str to bool"""
-    if string.lower() == 'false':
+    if string.lower() in ('false', '0'):
         return False
-    if string.lower() == 'true':
+    if string.lower() in ('true', '1'):
         return True
     raise ValueError
 
@@ -83,11 +83,11 @@ class Hook(BaseHook):
         """
         parser.add_argument(
             '--enable-debugger',
-            type=str2bool,
+            type=enable_debugger_string,
             action=EnableDebuggerAction,
             default=False,
             help="""
-                Enable debugger or not. 
+                Enable debugger or not. The value can be True/False/1/0 (case insensitive).
                 Default is False.""")
 
         parser.add_argument(

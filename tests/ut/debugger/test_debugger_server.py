@@ -32,6 +32,7 @@ from mindinsight.debugger.common.utils import Streams
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_server import DebuggerServer
 from mindinsight.debugger.debugger_server import grpc_server_base
+from mindinsight.debugger.stream_operator import watchpoint_operator
 from mindinsight.debugger.stream_handler import GraphHandler, WatchpointHandler, MetadataHandler, \
     TensorHandler
 from tests.ut.debugger.configurations import compare_debugger_result_with_file, mock_tensor_history
@@ -196,6 +197,7 @@ class TestDebuggerServer:
     @mock.patch.object(MetadataHandler, 'backend', 'GPU')
     @mock.patch.object(GraphHandler, 'get_node_basic_info', return_value=MagicMock())
     @mock.patch.object(GraphHandler, 'get_node_type', return_value='aggregation_scope')
+    @mock.patch.object(watchpoint_operator, 'get_basic_node_info', return_value=MagicMock())
     @mock.patch.object(WatchpointHandler, 'create_watchpoint')
     def test_create_watchpoint(self, *args):
         """Test create watchpoint."""

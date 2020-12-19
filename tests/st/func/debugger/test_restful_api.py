@@ -169,7 +169,7 @@ class TestAscendDebugger:
             url = 'update-watchpoint'
             body_data = {'watch_point_id': watch_point_id,
                          'watch_nodes': [leaf_node_name],
-                         'mode': 0}
+                         'mode': 1}
             get_request_result(app_client, url, body_data)
             # get updated nodes
             url = 'search'
@@ -328,7 +328,7 @@ class TestAscendDebugger:
           'watch_nodes': ['Default']}, True),
         ('update-watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum/Parameter[18]_7'],
-          'mode': 0}, True),
+          'mode': 1}, True),
         ('update-watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum'],
           'mode': 1}, True),
@@ -438,7 +438,7 @@ class TestGPUDebugger:
           'watch_nodes': ['Default/TransData-op99']}, True),
         ('update-watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum/Parameter[18]_7'],
-          'mode': 0}, True),
+          'mode': 1}, True),
         ('update-watchpoint',
          {'watch_point_id': 1, 'watch_nodes': ['Default/optimizer-Momentum'],
           'mode': 1}, True),
@@ -450,9 +450,9 @@ class TestGPUDebugger:
           ], True),
         ('update-watchpoint',
          [{'watch_point_id': 1, 'watch_nodes': ['Default/TransData-op99'],
-           'mode': 0},
+           'mode': 1},
           {'watch_point_id': 1, 'watch_nodes': ['Default/TransData-op99'],
-           'mode': 1}
+           'mode': 0}
           ], True),
         ('delete-watchpoint', {'watch_point_id': 1}, True)
     ])
