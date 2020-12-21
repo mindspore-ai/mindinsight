@@ -52,21 +52,25 @@ class ExplainParser(_SummaryParser):
 
     def __init__(self, summary_dir):
         super(ExplainParser, self).__init__(summary_dir)
-        self._latest_filename = ''
+        self._latest_offset = 0
 
-    def parse_explain(self, filenames):
+    def list_events(self, filenames):
         """
         Load summary file and parse file content.
 
         Args:
             filenames (list[str]): File name list.
         Returns:
-            bool, True if all the summary files are finished loading.
+            tuple, will return (file_changed, is_end, event_data),
+
+                file_changed (bool): True if the 9latest file is changed.
+                is_end (bool): True if all the summary files are finished loading.
+                event_data (dict): return an event data, key is field.
         """
         summary_files = self.sort_files(filenames)
 
         is_end = False
-        is_clean = False
+        file_changed = False
         event_data = {}
         filename = summary_files[-1]
 
@@ -74,13 +78,13 @@ class ExplainParser(_SummaryParser):
         if filename != self._latest_filename:
             self._summary_file_handler = FileHandler(file_path, 'rb')
             self._latest_filename = filename
-            self._latest_file_size = 0
-            is_clean = True
+            self._latest_offset = 0
+            file_changed = True
 
         new_size = FileHandler.file_stat(file_path).size
-        if new_size == self._latest_file_size:
+        if new_size == self._latest_offset:
             is_end = True
-            return is_clean, is_end, event_data
+            return file_changed, is_end, event_data
 
         while True:
             start_offset = self._summary_file_handler.offset
@@ -89,7 +93,7 @@ class ExplainParser(_SummaryParser):
                 if event_str is None:
                     self._summary_file_handler.reset_offset(start_offset)
                     is_end = True
-                    return is_clean, is_end, event_data
+                    return file_changed, is_end, event_data
                 if len(event_str) > MAX_EVENT_STRING:
                     logger.warning("file_path: %s, event string: %d exceeds %d and drop it.",
                                    self._summary_file_handler.file_path, len(event_str), MAX_EVENT_STRING)
@@ -98,24 +102,26 @@ class ExplainParser(_SummaryParser):
                 field_list, tensor_value_list = self._event_decode(event_str)
                 for field, tensor_value in zip(field_list, tensor_value_list):
                     event_data[field] = tensor_value
+
                 logger.debug("Parse summary file offset %d, file path: %s.",
                              self._summary_file_handler.offset, file_path)
-                return is_clean, is_end, event_data
-
+                return file_changed, is_end, event_data
             except (exceptions.CRCFailedError, exceptions.CRCLengthFailedError) as ex:
                 self._summary_file_handler.reset_offset(start_offset)
                 is_end = True
                 logger.warning("Check crc failed and ignore this file, file_path=%s, offset=%s. Detail: %r.",
                                self._summary_file_handler.file_path, self._summary_file_handler.offset, str(ex))
-                return is_clean, is_end, event_data
+                return file_changed, is_end, event_data
             except (OSError, DecodeError, exceptions.MindInsightException) as ex:
                 is_end = True
                 logger.warning("Parse log file fail, and ignore this file, detail: %r,"
                                "file path: %s.", str(ex), self._summary_file_handler.file_path)
-                return is_clean, is_end, event_data
+                return file_changed, is_end, event_data
             except Exception as ex:
                 logger.exception(ex)
                 raise UnknownError(str(ex))
+            finally:
+                self._latest_offset = self._summary_file_handler.offset
 
     @staticmethod
     def _event_decode(event_str):

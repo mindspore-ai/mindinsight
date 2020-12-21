@@ -72,7 +72,6 @@ class ExplainManager:
                                   name='explainer.start_load_thread',
                                   args=(reload_interval,),
                                   daemon=True)
-        time.sleep(1)
         thread.start()
 
     def get_job(self, loader_id: str) -> Optional[ExplainLoader]:
@@ -127,6 +126,8 @@ class ExplainManager:
 
     def _repeat_loading(self, repeat_interval):
         """Periodically loading summary."""
+        # Allocate CPU resources to enable gunicorn to start the web service.
+        time.sleep(1)
         while True:
             try:
                 if self.status == _ExplainManagerStatus.STOPPING.value:
@@ -178,7 +179,7 @@ class ExplainManager:
 
     def _cache_loaders(self):
         """Cache explain loader in cache pool."""
-        dir_map_mtime_dict = []
+        dir_map_mtimes = []
         _, summaries_info = self._summary_watcher.list_explain_directories(self._summary_base_dir)
 
         for summary_info in summaries_info:
@@ -188,9 +189,9 @@ class ExplainManager:
             if summary_path in self._loader_pool:
                 summary_update_time = max(summary_update_time, self._loader_pool[summary_path].query_time)
 
-            dir_map_mtime_dict.append((summary_info, summary_update_time))
+            dir_map_mtimes.append((summary_info, summary_update_time))
 
-        sorted_summaries_info = sorted(dir_map_mtime_dict, key=lambda x: x[1])[-_MAX_LOADERS_NUM:]
+        sorted_summaries_info = sorted(dir_map_mtimes, key=lambda x: x[1])[-_MAX_LOADERS_NUM:]
 
         with self._loader_pool_mutex:
             for summary_info, query_time in sorted_summaries_info:
