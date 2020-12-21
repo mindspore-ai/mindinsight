@@ -17,11 +17,11 @@ from abc import abstractmethod, ABC
 
 import numpy as np
 
-from mindinsight.utils.tensor import TensorUtils
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import NUMPY_TYPE_MAP
 from mindinsight.debugger.proto.ms_graph_pb2 import DataType
+from mindinsight.utils.tensor import TensorUtils
 
 
 class BaseTensor(ABC):
@@ -114,14 +114,21 @@ class BaseTensor(ABC):
 
 
 class OpTensor(BaseTensor):
-    """Tensor data structure for operator Node."""
+    """
+    Tensor data structure for operator Node.
+
+    Args:
+        tensor_proto (TensorProto): Tensor proto contains tensor basic info.
+        tensor_content (byte): Tensor content value in byte format.
+        step (int): The step of the tensor.
+    """
     max_number_data_show_on_ui = 100000
 
-    def __init__(self, tensor_proto, step=0):
+    def __init__(self, tensor_proto, tensor_content, step=0):
         # the type of tensor_proto is TensorProto
         super(OpTensor, self).__init__(step)
         self._tensor_proto = tensor_proto
-        self._value = self.generate_value_from_proto(tensor_proto)
+        self._value = self.to_numpy(tensor_content)
         self._stats = None
         self._tensor_comparison = None
 
@@ -169,21 +176,20 @@ class OpTensor(BaseTensor):
         """The property of tensor_comparison."""
         return self._tensor_comparison
 
-    def generate_value_from_proto(self, tensor_proto):
+    def to_numpy(self, tensor_content):
         """
-        Generate tensor value from proto.
+        Construct tensor content from byte to numpy.
 
         Args:
-            tensor_proto (TensorProto): The tensor proto.
+            tensor_content (byte): The tensor content.
 
         Returns:
             Union[None, np.ndarray], the value of the tensor.
         """
         tensor_value = None
-        if tensor_proto.tensor_content:
-            tensor_value = tensor_proto.tensor_content
+        if tensor_content:
             np_type = NUMPY_TYPE_MAP.get(self.dtype)
-            tensor_value = np.frombuffer(tensor_value, dtype=np_type)
+            tensor_value = np.frombuffer(tensor_content, dtype=np_type)
             tensor_value = tensor_value.reshape(self.shape)
         return tensor_value
 

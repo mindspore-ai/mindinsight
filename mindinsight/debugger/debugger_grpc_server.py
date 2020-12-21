@@ -14,7 +14,6 @@
 # ============================================================================
 """Implement the debugger grpc server."""
 import copy
-
 from functools import wraps
 
 import mindinsight
@@ -452,21 +451,20 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def SendTensors(self, request_iterator, context):
         """Send tensors into DebuggerCache."""
         log.info("Received tensor.")
-        tensor_construct = []
+        tensor_contents = []
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR)
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
-        tensor_names = []
         step = metadata_stream.step
         for tensor in request_iterator:
-            tensor_construct.append(tensor)
+            tensor_contents.append(tensor.tensor_content)
             if tensor.finished:
-                update_flag = tensor_stream.put({'step': step, 'tensor_protos': tensor_construct})
+                update_flag = tensor_stream.put(
+                    {'step': step, 'tensor_proto': tensor, 'tensor_contents': tensor_contents})
                 if self._received_view_cmd.get('wait_for_tensor') and update_flag:
                     # update_flag is used to avoid querying empty tensors again
                     self._received_view_cmd['wait_for_tensor'] = False
                     log.debug("Set wait for tensor flag to False.")
-                tensor_construct = []
-                tensor_names.append(':'.join([tensor.node_name, tensor.slot]))
+                tensor_contents = []
                 continue
         reply = get_ack_reply()
         return reply
