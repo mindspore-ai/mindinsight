@@ -231,6 +231,12 @@ class TestOptimizerConfig:
         err = OptimizerConfig().validate(config_dict)
         assert expected_err == err
 
+        # test bool
+        expected_err['parameters'][param_name]['choice'] = 'The value(s) should be integer.'
+        config_dict['parameters'][param_name]['choice'] = [1, True]
+        err = OptimizerConfig().validate(config_dict)
+        assert expected_err == err
+
         config_dict['parameters'][param_name] = {'choice': [0.1, 0.2]}
         err = OptimizerConfig().validate(config_dict)
         assert expected_err == err

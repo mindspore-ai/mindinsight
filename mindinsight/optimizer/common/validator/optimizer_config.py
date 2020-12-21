@@ -219,7 +219,8 @@ class OptimizerConfig(Schema):
             if list(filter(lambda x: not isinstance(x, float), choice)):
                 err_msg = "The value(s) should be float number."
                 raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.CHOICE.value))
-        elif list(filter(lambda x: not isinstance(x, int), choice)):
+        elif list(filter(lambda x: isinstance(x, bool) or not isinstance(x, int), choice)):
+            # isinstance(x, int) will return True if x is bool. use 'type(x)' will not pass lint.
             err_msg = "The value(s) should be integer."
             raise ValidationError(_generate_err_msg_for_nested_keys(err_msg, name, HyperParamKey.CHOICE.value))
 
