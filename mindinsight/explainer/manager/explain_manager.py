@@ -90,7 +90,7 @@ class ExplainManager:
         with self._loader_pool_mutex:
             if loader_id in self._loader_pool:
                 self._loader_pool[loader_id].query_time = datetime.now().timestamp()
-                self._loader_pool.move_to_end(loader_id, last=False)
+                self._loader_pool.move_to_end(loader_id, last=True)
                 return self._loader_pool[loader_id]
 
             try:
@@ -191,10 +191,11 @@ class ExplainManager:
                 summary_path = summary_info['relative_path']
                 if summary_path not in self._loader_pool:
                     loader = self._generate_loader_from_relative_path(summary_path)
+                    # The added loader by automatically refresh, using file creation time as the query time
                     self._add_loader(loader)
                 else:
                     self._loader_pool[summary_path].query_time = query_time
-                    self._loader_pool.move_to_end(summary_path, last=False)
+                    self._loader_pool.move_to_end(summary_path, last=True)
 
     def _generate_loader_from_relative_path(self, relative_path: str) -> ExplainLoader:
         """Generate explain loader from the given relative path."""
@@ -209,7 +210,7 @@ class ExplainManager:
         if loader.train_id not in self._loader_pool:
             self._loader_pool[loader.train_id] = loader
         else:
-            self._loader_pool.move_to_end(loader.train_id)
+            self._loader_pool.move_to_end(loader.train_id, last=True)
 
         while len(self._loader_pool) > self._max_loaders_num:
             self._loader_pool.popitem(last=False)
