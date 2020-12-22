@@ -14,20 +14,21 @@
 # ============================================================================
 """ExplainManager."""
 
+from collections import OrderedDict
+
 import os
 import threading
 import time
-from collections import OrderedDict
 from datetime import datetime
 from typing import Optional
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import BaseEnum
-from mindinsight.explainer.common.log import logger
-from mindinsight.explainer.manager.explain_loader import ExplainLoader
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
+from mindinsight.explainer.common.log import logger
+from mindinsight.explainer.manager.explain_loader import ExplainLoader
 from mindinsight.utils.exceptions import MindInsightException, ParamValueError, UnknownError
 
 _MAX_LOADERS_NUM = 3
@@ -37,8 +38,8 @@ class _ExplainManagerStatus(BaseEnum):
     """Manager status."""
     INIT = 'INIT'
     LOADING = 'LOADING'
+    STOPPING = 'STOPPING'
     DONE = 'DONE'
-    INVALID = 'INVALID'
 
 
 class ExplainManager:
@@ -49,6 +50,7 @@ class ExplainManager:
         self._loader_pool = OrderedDict()
         self._loading_status = _ExplainManagerStatus.INIT.value
         self._status_mutex = threading.Lock()
+        self._load_data_mutex = threading.Lock()
         self._loader_pool_mutex = threading.Lock()
         self._max_loaders_num = _MAX_LOADERS_NUM
         self._summary_watcher = SummaryWatcher()
@@ -67,7 +69,7 @@ class ExplainManager:
             once. Default: 0.
         """
         thread = threading.Thread(target=self._repeat_loading,
-                                  name='start_load_thread',
+                                  name='explainer.start_load_thread',
                                   args=(reload_interval,),
                                   daemon=True)
         time.sleep(1)
@@ -127,48 +129,52 @@ class ExplainManager:
         """Periodically loading summary."""
         while True:
             try:
-                logger.info('Start to load data, repeat interval: %r.', repeat_interval)
-                self._load_data()
-                if not repeat_interval:
-                    return
+                if self.status == _ExplainManagerStatus.STOPPING.value:
+                    logger.debug('Current loading status is %s, we will not trigger repeat loading.',
+                                 _ExplainManagerStatus.STOPPING.value)
+                else:
+                    logger.info('Starts triggering repeat loading, repeat interval: %r.', repeat_interval)
+                    self._load_data()
+                    if not repeat_interval:
+                        return
                 time.sleep(repeat_interval)
             except UnknownError as ex:
                 logger.error('Unexpected error happens when loading data. Loading status: %s, loading pool size: %d'
-                             'Detail: %s', self._loading_status, len(self._loader_pool), str(ex))
+                             'Detail: %s', self.status, len(self._loader_pool), str(ex))
 
     def _load_data(self):
         """
         Prepare loaders in cache and start loading the data from summaries.
 
         Only a limited number of loaders will be cached in terms of updated_time or query_time. The size of cache
-        pool is determined by _MAX_LOADERS_NUM. When the manager start loading data, only the lastest _MAX_LOADER_NUM
+        pool is determined by _MAX_LOADERS_NUM. When the manager start loading data, only the latest _MAX_LOADER_NUM
         summaries will be loaded in cache. If a cached loader if queries by 'get_job', the query_time of the loader
         will be updated as well as the the loader moved to the end of cache. If an uncached summary is queried,
         a new loader instance will be generated and put to the end cache.
         """
         try:
-            with self._status_mutex:
-                if self._loading_status == _ExplainManagerStatus.LOADING.value:
-                    logger.info('Current status is %s, will ignore to load data.', self._loading_status)
+            with self._load_data_mutex:
+                if self.status == _ExplainManagerStatus.LOADING.value:
+                    logger.info('Current status is %s, will ignore to load data.', self.status)
                     return
 
-                self._loading_status = _ExplainManagerStatus.LOADING.value
-
+                logger.info('Start to load data, and status change to %s.', _ExplainManagerStatus.LOADING.value)
+                self.status = _ExplainManagerStatus.LOADING.value
                 self._cache_loaders()
+
+                if self.status == _ExplainManagerStatus.STOPPING.value:
+                    logger.info('The manager status has been %s, will not execute loading.', self.status)
+                    return
                 self._execute_loading()
 
-                if not self._loader_pool:
-                    self._loading_status = _ExplainManagerStatus.INVALID.value
-                else:
-                    self._loading_status = _ExplainManagerStatus.DONE.value
-
-                logger.info('Load event data end, status: %s, and loader pool size: %d',
-                            self._loading_status, len(self._loader_pool))
+                logger.info('Load event data end, current status: %s, next status: %s, loader pool size: %d.',
+                            self.status, _ExplainManagerStatus.DONE.value, len(self._loader_pool))
 
         except Exception as ex:
-            self._loading_status = _ExplainManagerStatus.INVALID.value
             logger.exception(ex)
             raise UnknownError(str(ex))
+        finally:
+            self.status = _ExplainManagerStatus.DONE.value
 
     def _cache_loaders(self):
         """Cache explain loader in cache pool."""
@@ -217,30 +223,36 @@ class ExplainManager:
 
     def _execute_loading(self):
         """Execute the data loading."""
-        for loader_id in list(self._loader_pool.keys()):
+        # We will load the newest loader first.
+        for loader_id in list(self._loader_pool.keys())[::-1]:
             try:
                 with self._loader_pool_mutex:
                     loader = self._loader_pool.get(loader_id, None)
                     if loader is None:
-                        logger.debug('Loader %r has been deleted, will not load data', loader_id)
-                        return
+                        logger.debug('Loader %r has been deleted, will not load data.', loader_id)
+                        continue
+
+                if self.status == _ExplainManagerStatus.STOPPING.value:
+                    logger.info('Loader %s status is %s, will return.', loader_id, loader.status)
+                    return
+
                 loader.load()
 
             except MindInsightException as ex:
-                logger.warning('Data loader %r load data failed. Delete data_loader. Detail: %s', loader_id, ex)
+                logger.warning('Data loader %r load data failed. Delete data_loader. Detail: %s.', loader_id, ex)
                 with self._loader_pool_mutex:
                     self._delete_loader(loader_id)
 
     def _delete_loader(self, loader_id):
-        """delete loader given loader_id"""
+        """Delete loader given loader_id."""
         if loader_id in self._loader_pool:
             self._loader_pool.pop(loader_id)
-            logger.debug('delete loader %s', loader_id)
+            logger.debug('delete loader %s, and stop this loader loading data.', loader_id)
 
     def _check_status_valid(self):
         """Check manager status."""
-        if self._loading_status == _ExplainManagerStatus.INIT.value:
-            raise exceptions.SummaryLogIsLoading('Data is loading, current status is %s' % self._loading_status)
+        if self.status == _ExplainManagerStatus.INIT.value:
+            raise exceptions.SummaryLogIsLoading('Data is loading, current status is %s' % self.status)
 
     def _check_summary_exist(self, loader_id):
         """Verify thee train_job is existed given loader_id."""
@@ -250,9 +262,43 @@ class ExplainManager:
     def _reload_data_again(self):
         """Reload the data one more time."""
         logger.debug('Start to reload data again.')
-        thread = threading.Thread(target=self._load_data, name='reload_data_thread')
+
+        def _wrapper():
+            if self.status == _ExplainManagerStatus.STOPPING.value:
+                return
+            self._stop_load_data()
+            self._load_data()
+
+        thread = threading.Thread(target=_wrapper, name='explainer.reload_data_thread')
         thread.daemon = False
         thread.start()
+
+    def _stop_load_data(self):
+        """Stop loading data, status changes to Stopping."""
+        if self.status != _ExplainManagerStatus.LOADING.value:
+            return
+
+        logger.info('Start to stop loading data, set status to %s.', _ExplainManagerStatus.STOPPING.value)
+        self.status = _ExplainManagerStatus.STOPPING.value
+
+        for loader in self._loader_pool.values():
+            loader.stop()
+
+        while self.status != _ExplainManagerStatus.DONE.value:
+            continue
+        logger.info('Stop loading data end.')
+
+    @property
+    def status(self):
+        """Get the status of this manager with lock."""
+        with self._status_mutex:
+            return self._loading_status
+
+    @status.setter
+    def status(self, status):
+        """Set the status of this manager with lock."""
+        with self._status_mutex:
+            self._loading_status = status
 
     @staticmethod
     def _generate_loader_id(relative_path):
