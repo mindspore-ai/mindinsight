@@ -707,7 +707,11 @@ export default {
         }
       } else if (node.level >= 1) {
         this.isIntoView = false;
-        this.queryGraphData(node.data.name, resolve);
+        this.loading.info = this.$t('graph.queryLoading');
+        this.loading.show = true;
+        setTimeout(() => {
+          this.queryGraphData(node.data.name, resolve);
+        }, 200);
       }
     },
     /**
@@ -1829,6 +1833,7 @@ export default {
         overflow: auto;
         border: 1px solid #dcdfe6;
         border-top: none;
+        background: #fff;
         .image-type {
           width: 20px;
           height: 10px;
