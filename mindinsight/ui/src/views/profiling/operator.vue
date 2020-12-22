@@ -67,13 +67,15 @@ limitations under the License.
               <div class="cl-search-box">
                 <el-input v-model="searchByTypeInput"
                           v-if="!coreStatisticType"
-                          :placeholder="$t('operator.searchByType')"
+                          :placeholder="$t('operator.searchByType') +
+                            $t('symbols.leftbracket') + $t('public.caseMode') + $t('symbols.rightbracket')"
                           clearable
                           @clear="searchOpCoreList()"
                           @keyup.enter.native="searchOpCoreList()"></el-input>
                 <el-input v-model="searchByNameInput"
                           v-if="coreStatisticType"
-                          :placeholder="$t('operator.searchByName')"
+                          :placeholder="$t('operator.searchByName') +
+                            $t('symbols.leftbracket') + $t('public.caseMode') + $t('symbols.rightbracket')"
                           clearable
                           @clear="searchOpCoreList()"
                           @keyup.enter.native="searchOpCoreList()"></el-input>
@@ -228,13 +230,15 @@ limitations under the License.
               <div class="cl-search-box">
                 <el-input v-model="searchByCpuTypeInput"
                           v-if="!cpuStatisticType"
-                          :placeholder="$t('operator.searchByType')"
+                          :placeholder="$t('operator.searchByType') +
+                            $t('symbols.leftbracket') + $t('public.caseMode') + $t('symbols.rightbracket')"
                           clearable
                           @clear="searchOpCpuList()"
                           @keyup.enter.native="searchOpCpuList()"></el-input>
                 <el-input v-model="searchAllByCpuTypeInput"
                           v-if="cpuStatisticType"
-                          :placeholder="$t('operator.searchByType')"
+                          :placeholder="$t('operator.searchByType') +
+                            $t('symbols.leftbracket') + $t('public.caseMode') + $t('symbols.rightbracket')"
                           clearable
                           @clear="searchOpCpuList()"
                           @keyup.enter.native="searchOpCpuList()"></el-input>
@@ -1547,6 +1551,9 @@ export default {
       float: right;
       margin-bottom: 10px;
       margin-right: 20px;
+      .el-input {
+        width: 300px;
+      }
     }
     .cl-profiler-top {
       height: 47%;

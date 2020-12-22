@@ -67,13 +67,15 @@ limitations under the License.
               <div class="cl-search-box">
                 <el-input v-model="searchByTypeInput"
                           v-if="!statisticType"
-                          :placeholder="$t('operator.searchByType')"
+                          :placeholder="$t('operator.searchByType') +
+                            $t('symbols.leftbracket') + $t('public.caseMode') + $t('symbols.rightbracket')"
                           clearable
                           @clear="searchOperatorList()"
                           @keyup.enter.native="searchOperatorList()"></el-input>
                 <el-input v-model="searchByNameInput"
                           v-if="statisticType"
-                          :placeholder="$t('operator.searchByName')"
+                          :placeholder="$t('operator.searchByName') +
+                            $t('symbols.leftbracket') + $t('public.caseMode') + $t('symbols.rightbracket')"
                           clearable
                           @clear="searchOperatorList()"
                           @keyup.enter.native="searchOperatorList()"></el-input>
@@ -204,8 +206,10 @@ limitations under the License.
             <div>
               <div class="cl-search-box">
                 <el-input v-model="searchByCoreInput"
-                          :placeholder="coreSearchType ? $t('operator.searchByCoreFullName')
-                          : $t('operator.searchByCoreName')"
+                          :placeholder="(coreSearchType ?
+                            $t('operator.searchByCoreFullName') :
+                            $t('operator.searchByCoreName')) +
+                            $t('symbols.leftbracket') + $t('public.caseMode') + $t('symbols.rightbracket')"
                           clearable
                           @clear="searchCoreList()"
                           @keyup.enter.native="searchCoreList()"></el-input>
@@ -1223,6 +1227,9 @@ export default {
       float: right;
       margin-bottom: 10px;
       margin-right: 20px;
+      .el-input {
+        width: 300px;
+      }
     }
     .cl-profiler-top {
       height: 47%;
