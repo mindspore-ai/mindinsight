@@ -305,11 +305,12 @@ class OnnxDataLoader:
             # check input shape eligible
             input_node = getattr(self.graph, 'input')[0]
             type_str = onnx.helper.printable_type(input_node.type)
-            regex = r".*(unk.+)x(?P<h>\d+)x(?P<w>\d+)x(?P<c>\d+)"
+            regex = r"(.+\ )?(?P<full>(unk.+x|\d+x)*\d+)"
             match = re.match(regex, type_str)
-            h = int(match.group('h'))
-            w = int(match.group('w'))
-            c = int(match.group('c'))
+            dims = match.group('full').split('x')
+            h = int(dims[1])
+            w = int(dims[2])
+            c = int(dims[3])
             if [h, w, c] != list(self.graph_input_shape)[1:]:
                 raise ModelLoadingError(f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
             return True
