@@ -340,7 +340,7 @@ Q1. `terminate called after throwing an instance of 'std::system_error', what():
 
 Q2. MindConverter是否可以在ARM平台运行？
 
-> 答：MindConverter已基于X86 Ubuntu发行版进行测试，ARM平台未进行测试。
+> 答：MindConverter同时支持X86、ARM平台，若在ARM平台运行需要用户自行安装模型所需的依赖包和运行环境。
 
 Q3. PyTorch模型转换时为什么提示`Error detail: [NodeInputMissing] ...`?
 
