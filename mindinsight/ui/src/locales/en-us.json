@@ -22,7 +22,8 @@
     "selectAll": "All",
     "deselectAll": "Clear",
     "dataLoading": "Loading data...",
-    "notice": "Information"
+    "notice": "Information",
+    "caseMode": "Not case sensitive"
   },
   "symbols": {
     "leftbracket": "(",

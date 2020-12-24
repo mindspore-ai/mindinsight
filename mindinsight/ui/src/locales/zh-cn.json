@@ -22,11 +22,12 @@
     "selectAll": "全选",
     "deselectAll": "取消全选",
     "dataLoading": "数据加载中",
-    "notice": "提示"
+    "notice": "提示",
+    "caseMode": "不区分大小写"
   },
   "symbols": {
-    "leftbracket": "(",
-    "rightbracket": ")",
+    "leftbracket": "（",
+    "rightbracket": "）",
     "point": "·",
     "slashes": "/",
     "colon": "：",
