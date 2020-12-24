@@ -14,13 +14,14 @@
 # ============================================================================
 """Validate the input path."""
 import os
+import re
 from typing import Union, List
 from urllib.parse import unquote
 
 from marshmallow import ValidationError
 
 from mindinsight.profiler.common.exceptions.exceptions import \
-    ProfilerParamValueErrorException
+    ProfilerParamValueErrorException, ProfilerDirNotFoundException
 from mindinsight.profiler.common.log import logger as log
 
 
@@ -136,13 +137,26 @@ def validate_and_normalize_profiler_path(summary_dir, summary_base_dir):
     Returns:
         str, normalized path of profiler directory.
     """
+    profiler_directory_pattern = r'^profiler.*'
     if not summary_dir:
         raise ProfilerParamValueErrorException('The file dir does not exist.')
     try:
         unquote_path = unquote(summary_dir, errors='strict')
     except UnicodeDecodeError:
         raise ProfilerParamValueErrorException('Unquote error with strict mode')
-    profiler_dir = os.path.join(summary_base_dir, unquote_path, 'profiler')
+    profiler_base_dir = os.path.join(summary_base_dir, unquote_path)
+    try:
+        profiler_name_list = []
+        for dir_name in os.listdir(profiler_base_dir):
+            search_res = re.search(profiler_directory_pattern, dir_name)
+            if search_res:
+                profiler_name_list.append(search_res[0])
+        profiler_name_list.sort()
+        profiler_name_newest = profiler_name_list[-1]
+        profiler_dir = os.path.join(summary_base_dir, unquote_path, profiler_name_newest)
+    except ValidationError:
+        log.error('no valid profiler dir under <%s>', profiler_base_dir)
+        raise ProfilerDirNotFoundException('Profiler dir not found.')
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
     except ValidationError:
