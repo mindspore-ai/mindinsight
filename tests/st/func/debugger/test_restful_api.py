@@ -71,8 +71,7 @@ class TestAscendDebugger:
          'retrieve_aggregation_scope_node.json'),
         ({'mode': 'node', 'params': {
             'name': 'Default/TransData-op99',
-            'single_node': True}}, 'retrieve_single_node.json'),
-        ({'mode': 'watchpoint_hit'}, 'retrieve_empty_watchpoint_hit_list')
+            'single_node': True}}, 'retrieve_single_node.json')
     ])
     def test_retrieve_when_train_begin(self, app_client, body_data, expect_file):
         """Test retrieve when train_begin."""
@@ -176,34 +175,6 @@ class TestAscendDebugger:
             body_data = {'name': leaf_node_name, 'watch_point_id': watch_point_id}
             expect_file = 'search_unwatched_leaf_node.json'
             send_and_compare_result(app_client, url, body_data, expect_file, method='get')
-            send_terminate_cmd(app_client)
-
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    def test_watchpoint_hit(self, app_client):
-        """Test retrieve watchpoint hit."""
-        with self._debugger_client.get_thread_instance():
-            create_watchpoint_and_wait(app_client)
-            # check watchpoint hit list
-            url = 'retrieve'
-            body_data = {'mode': 'watchpoint_hit'}
-            expect_file = 'retrieve_watchpoint_hit.json'
-            send_and_compare_result(app_client, url, body_data, expect_file)
-            # check single watchpoint hit
-            body_data = {
-                'mode': 'watchpoint_hit',
-                'params': {
-                    'name': 'Default/TransData-op99',
-                    'single_node': True,
-                    'watch_point_id': 1
-                }
-            }
-            expect_file = 'retrieve_single_watchpoint_hit.json'
-            send_and_compare_result(app_client, url, body_data, expect_file)
             send_terminate_cmd(app_client)
 
     @pytest.mark.level0

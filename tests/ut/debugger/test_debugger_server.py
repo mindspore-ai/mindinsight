@@ -180,14 +180,6 @@ class TestDebuggerServer:
         res = self._server._retrieve_watchpoint({'watch_point_id': 1})
         assert res == mock_watchpoint
 
-    @mock.patch.object(DebuggerServer, '_get_tensor_history')
-    @mock.patch.object(DebuggerServer, '_get_nodes_info', return_value={'graph': {}})
-    def test_retrieve_watchpoint_hit(self, *args):
-        """Test retrieve single watchpoint."""
-        args[1].return_value = {'tensor_history': {}}
-        res = self._server._retrieve_watchpoint_hit({'name': 'hit_node_name', 'single_node': True})
-        assert res == {'tensor_history': {}, 'graph': {}}
-
     def test_create_watchpoint_with_wrong_state(self):
         """Test create watchpoint with wrong state."""
         with pytest.raises(DebuggerCreateWatchPointError, match='Failed to create watchpoint'):
