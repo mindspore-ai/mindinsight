@@ -96,7 +96,7 @@ optional arguments:
 另外，当使用基于图结构的脚本生成方案时，请确保原PyTorch项目已在Python包搜索路径中，可通过CLI进入Python交互式命令行，通过import的方式判断是否已满足；若未加入，可通过`--project_path`
 命令手动将项目路径传入，以确保MindConverter可引用到原PyTorch脚本。
 
-> 假设用户项目目录为`/home/user/project/model_training`，用户可通过如下命令手动项目添加至包搜索路径中：`export PYTHONPATH=/home/user/project/model_training:$PYTHONPATH`；
+> 假设用户项目目录为`/home/user/project/model_training`，用户可通过如下命令手动将项目添加至包搜索路径中：`export PYTHONPATH=/home/user/project/model_training:$PYTHONPATH`；
 > 此处MindConverter需要引用原PyTorch脚本，是因为PyTorch模型反向序列化过程中会引用原脚本。
 
 ### TensorFlow模型脚本迁移
@@ -281,9 +281,7 @@ mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
 
 ## 注意事项
 
-1. PyTorch、TensorFlow、TF2ONNX(1.7.1)
-   不作为MindInsight明确声明的依赖库。若想使用基于图结构的脚本生成工具，需要用户手动安装与生成PyTorch模型版本一致的PyTorch库（MindConverter推荐使用PyTorch 1.4.0或PyTorch
-   1.6.0进行脚本生成），或TensorFlow；
+1. PyTorch、TensorFlow不作为MindInsight明确声明的依赖库。若想使用基于图结构的脚本生成工具，需要用户手动安装与生成PyTorch模型版本一致的PyTorch库（MindConverter推荐使用PyTorch 1.4.0进行脚本生成），或TensorFlow；
 2. 脚本转换工具本质上为算子驱动，对于MindConverter未维护的PyTorch或ONNX算子与MindSpore算子映射，将会出现相应的算子无法转换的问题，对于该类算子，用户可手动修改，或基于MindConverter实现映射关系，向MindInsight仓库贡献。
 3. MindConverter仅保证转换后模型脚本在输入数据尺寸与`--shape`一致的情况下，可达到无需人工修改或少量修改（`--shape`中batch size维度不受限）。
 
@@ -321,10 +319,8 @@ class ConvBNReLU(nn.Sequential):
 
 ## 三方库依赖
 
-对于PyTorch模型脚本转MindSpore的用户，无需额外安装三方依赖库。
-
-用户在使用将TensorFlow模型脚本转为MindSpore时，下列三方库未在MindInsight依赖列表（requirements.txt）中声明。用户除安装可满足导出的Pb模型加载、训练、推理的TensorFlow版本外，还需要安装（pip
-install）如下依赖库：
+用户在使用MindConverter时，下列三方库未在MindInsight依赖列表（requirements.txt）中声明。用户除安装可满足导出的Pb模型加载、训练、推理的TensorFlow版本外，还需要安装（pip
+install）如下依赖库（PyTorch模型脚本转MindSpore的用户无需安装tf2onnx）：
 
 ```text
 onnx>=1.8.0

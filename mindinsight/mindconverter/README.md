@@ -273,7 +273,7 @@ In addition, for operators that are not converted successfully, the input and ou
 
 ## Caution
 
-1. PyTorch, TensorFlow, TF2ONNX(1.7.1) are not an explicitly stated dependency libraries in MindInsight. The Graph conversion requires the consistent PyTorch or TensorFlow version as the model is trained. (MindConverter recommends PyTorch 1.4.0 or 1.6.0)
+1. PyTorch, TensorFlow are not an explicitly stated dependency libraries in MindInsight. The Graph conversion requires the consistent PyTorch or TensorFlow version as the model is trained. (MindConverter recommends PyTorch 1.4.0)
 2. This script conversion tool relies on operators which supported by MindConverter and MindSpore. Unsupported operators may not be successfully mapped to MindSpore operators. You can manually edit, or implement the mapping based on MindConverter, and contribute to our MindInsight repository. We appreciate your support for the MindSpore community.
 3. MindConverter can only guarantee that the converted model scripts require a minor revision or no revision when the inputs' shape fed to the generated model script are equal to the value of `--shape` (The batch size dimension is not limited).
 
@@ -310,9 +310,7 @@ class ConvBNReLU(nn.Sequential):
 
 ## Requirements
 
-For users converting PyTorch model script to MindSpore, there is no need to install other third party package.
-
-For users converting TensorFlow model script to MindSpore, in addition to install the TensorFlow can satisfy the pb model loading, inference and training, users also need to pip install the following third party package:
+For users using MindConverter, in addition to install the TensorFlow can satisfy the pb model loading, inference and training, users also need to pip install the following third party package (tf2onnx is not required for users that convert PyTorch model definition script to MindSpore):
 
 ```text
 onnx>=1.8.0
