@@ -496,6 +496,8 @@ export default {
               }
               if (res.data.receive_watchpoint_hits) {
                 this.radio1 = 'hit';
+                this.pagination.currentPage = 1;
+                this.watchPointHits = [];
                 this.searchWatchpointHits(true);
               }
 
@@ -527,6 +529,7 @@ export default {
      */
     control(type) {
       if (type !== 3) {
+        this.pagination.currentPage = 1;
         this.watchPointHits = [];
       }
       const params = {};
@@ -586,6 +589,8 @@ export default {
             if (res && res.data && res.data.metadata) {
               if (res.data.metadata.enable_recheck !== undefined) {
                 this.enableRecheck = res.data.metadata.enable_recheck;
+                this.pagination.currentPage = 1;
+                this.watchPointHits = [];
               }
               if (res.data.metadata.state) {
                 this.metadata.state = res.data.metadata.state;
@@ -1568,6 +1573,7 @@ export default {
                     this.searchWatchpointHits(false);
                   }
                 } else {
+                  this.watchPointHits = [];
                   this.pagination.total = 0;
                 }
               }

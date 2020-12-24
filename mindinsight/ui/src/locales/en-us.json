@@ -191,7 +191,7 @@
   "images": {
     "titleText": "Image",
     "titleTip": "Only 10 images are displayed randomly.",
-    "imageErrorTip": "An image has been updated, View the image after data loading is complete.",
+    "imageErrorTip": "The current image has been updated. View the image after data loading is complete.",
     "tagSelectTitle": "Tag Selection",
     "selectAll": "All",
     "open": "More",
@@ -733,6 +733,8 @@
     "curStep": "Current Step",
     "preStep": "Previous Step",
     "compareResult": "Comparison Result",
+    "recommendTip": "Use the recommended watchpoints?",
+    "recommendDetail": "The recommended watchpoints check zero tensors, gradient disappearances, and update weight above threshold.",
     "use": "Yes",
     "notUse": "No",
     "versionConflictTip": "MindSpore and MindInsight versions do not match. MindSpore version: {msv}; MindInsight version: {miv}",
@@ -741,6 +743,22 @@
       "inf": "A tensor contains +/-INF, ",
       "no_prev_tensor": "The previous step value cannot be found, ",
       "cannotCheck": "check fails."
+    },
+    "stateTips": {
+      "running": "Running",
+      "sending": "To be executed"
+    },
+    "stateMsg": {
+      "running": "The training is running.",
+      "sending": "Wait for the command to be executed."
+    },
+    "paramErrorMsg": {
+      "errorType": "Enter a number",
+      "percentError": "The percentage value cannot be less than 0 or greater than 100.",
+      "rangeError": "The lower limit cannot be greater than the upper limit.",
+      "nonnegative": "The parameter value cannot be less than 0.",
+      "allPositive": "he parameter value must be greater than 0.",
+      "watchOverflow": "The asynchronous full overflow watching function must be enabled before the training starts."
     }
   },
   "explain": {
@@ -834,7 +852,7 @@
     "50545012": "The tensor data does not exist. Please refresh.",
     "50545013": "The requested data exceeds the upper limit 100,000. Shard or query other dimensions.",
     "50545014": "The queried tensor data has been replaced by new data. Please refresh.",
-    "50545016": "The requested tensor is too large. The total number of values exceeds 10 million and cannot be displayed.",
+    "50545016": "The number of requested tensors exceeds 10 million and cannot be displayed.",
     "50546083": "The profiler directory does not exist.",
     "50548001": "Ascend AI Processor information query timed out.",
     "5054B080": "Incorrect parameter type. Please check the input parameter type.",
@@ -843,6 +861,8 @@
     "5054B181": "Failed to update the watchpoint. Please stop training and try again.",
     "5054B182": "Failed to delete the watchpoint. Please stop training and try again.",
     "5054B183": "Backend training is in progress or has ended. Please try again later",
-    "5054B184": "The operation is too fast, the backend service has been suspended."
+    "5054B184": "The operation is too fast, the backend service has been suspended.",
+    "5054B189": "Do not set the value repeatedly.",
+    "5054B083": "Failed to create the watchpoint. Do not use invalid rules."
   }
 }

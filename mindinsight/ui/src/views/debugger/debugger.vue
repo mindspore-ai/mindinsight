@@ -885,6 +885,8 @@ export default {
           if (this.oldState === this.state.pending || oldValue === this.state.pending) {
             this.loadNode(this.node, this.resolve);
           } else if (this.oldState === this.state.running || oldValue === this.state.running) {
+            this.pagination.currentPage = 1;
+            this.watchPointHits = [];
             this.searchWatchpointHits(true);
           }
         }
@@ -1270,6 +1272,7 @@ export default {
      * Continue to
      */
     continueTo() {
+      this.pagination.currentPage = 1;
       this.watchPointHits = [];
       const params = {
         mode: 'continue',
@@ -1405,6 +1408,7 @@ export default {
       if (!independentLayout && nodes.length > nodesCountLimit) {
         this.$message.error(this.$t('graph.tooManyNodes'));
         this.packageDataToObject(name, false);
+        this.loadingInstance.close();
       } else {
         if (nodes && nodes.length) {
           this.packageDataToObject(name, true, nodes);
@@ -1420,6 +1424,7 @@ export default {
                 this.allGraphData[name].isUnfold = true;
                 this.selectedNode.name = name;
                 this.deleteNamespace(name);
+                this.loadingInstance.close();
                 return;
               }
             }
