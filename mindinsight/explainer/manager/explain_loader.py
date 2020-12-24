@@ -20,6 +20,8 @@ import re
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, Iterable, List, Optional, Union
+from enum import Enum
+import threading
 
 from mindinsight.explainer.common.enums import ExplainFieldsEnum
 from mindinsight.explainer.common.log import logger
@@ -42,6 +44,11 @@ _SAMPLE_FIELD_NAMES = [
     ExplainFieldsEnum.INFERENCE,
     ExplainFieldsEnum.EXPLANATION,
 ]
+
+
+class _LoaderStatus(Enum):
+    STOP = 'STOP'
+    LOADING = 'LOADING'
 
 
 def _round(score):
@@ -72,6 +79,9 @@ class ExplainLoader:
         self._samples = defaultdict(dict)
         self._metadata = {'explainers': [], 'metrics': [], 'labels': []}
         self._benchmark = {'explainer_score': defaultdict(dict), 'label_score': defaultdict(dict)}
+
+        self._status = _LoaderStatus.STOP.value
+        self._status_mutex = threading.Lock()
 
     @property
     def all_classes(self) -> List[Dict]:
@@ -263,6 +273,7 @@ class ExplainLoader:
 
     def load(self):
         """Start loading data from the latest summary file to the loader."""
+        self.status = _LoaderStatus.LOADING.value
         filenames = []
         for filename in FileHandler.list_dir(self._loader_info['summary_dir']):
             if FileHandler.is_file(FileHandler.join(self._loader_info['summary_dir'], filename)):
@@ -274,15 +285,31 @@ class ExplainLoader:
                                         % self._loader_info['summary_dir'])
 
         is_end = False
-        while not is_end:
-            is_clean, is_end, event_dict = self._parser.parse_explain(filenames)
+        while not is_end and self.status != _LoaderStatus.STOP.value:
+            file_changed, is_end, event_dict = self._parser.parse_explain(filenames)
 
-            if is_clean:
+            if file_changed:
                 logger.info('Summary file in %s update, reload the data in the summary.',
                             self._loader_info['summary_dir'])
                 self._clear_job()
             if event_dict:
                 self._import_data_from_event(event_dict)
+
+    @property
+    def status(self):
+        """Get the status of this class with lock."""
+        with self._status_mutex:
+            return self._status
+
+    @status.setter
+    def status(self, status):
+        """Set the status of this class with lock."""
+        with self._status_mutex:
+            self._status = status
+
+    def stop(self):
+        """Stop load data."""
+        self.status = _LoaderStatus.STOP.value
 
     def get_all_samples(self) -> List[Dict]:
         """
