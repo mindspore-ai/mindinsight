@@ -14,21 +14,22 @@
 # ============================================================================
 """ExplainLoader."""
 
+from collections import defaultdict
+from enum import Enum
+
 import math
 import os
 import re
-from collections import defaultdict
+import threading
 from datetime import datetime
 from typing import Dict, Iterable, List, Optional, Union
-from enum import Enum
-import threading
 
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
+from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.explainer.common.enums import ExplainFieldsEnum
 from mindinsight.explainer.common.log import logger
 from mindinsight.explainer.manager.explain_parser import ExplainParser
-from mindinsight.datavisual.data_access.file_handler import FileHandler
-from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
-from mindinsight.utils.exceptions import ParamValueError, UnknownError
+from mindinsight.utils.exceptions import ParamValueError
 
 _NAN_CONSTANT = 'NaN'
 _NUM_DIGITS = 6
@@ -166,7 +167,7 @@ class ExplainLoader:
         Returns:
             list[dict], A list of evaluation results of each explainer. Each item contains:
                 - explainer (str): Name of evaluated explainer.
-                - evaluations (list[dict]): A list of evlauation results by different metrics.
+                - evaluations (list[dict]): A list of evaluation results by different metrics.
                 - class_scores (list[dict]): A list of evaluation results on different labels.
 
                 Each item in the evaluations contains:
@@ -175,7 +176,7 @@ class ExplainLoader:
 
                 Each item in the class_scores contains:
                     - label (str): Name of label
-                    - evaluations (list[dict]): A list of evalution results on different labels by different metrics.
+                    - evaluations (list[dict]): A list of evaluation results on different labels by different metrics.
 
                     Each item in evaluations contains:
                         - metric (str): Name of metric method
@@ -247,7 +248,7 @@ class ExplainLoader:
 
     @property
     def uncertainty_enabled(self):
-        """Whethter uncertainty is enabled."""
+        """Whether uncertainty is enabled."""
         return self._loader_info['uncertainty_enabled']
 
     @property
@@ -286,7 +287,7 @@ class ExplainLoader:
 
         is_end = False
         while not is_end and self.status != _LoaderStatus.STOP.value:
-            file_changed, is_end, event_dict = self._parser.parse_explain(filenames)
+            file_changed, is_end, event_dict = self._parser.list_events(filenames)
 
             if file_changed:
                 logger.info('Summary file in %s update, reload the data in the summary.',
@@ -371,7 +372,7 @@ class ExplainLoader:
     def _import_data_from_event(self, event_dict: Dict):
         """Parse and import data from the event data."""
         if 'metadata' not in event_dict and self._is_metadata_empty():
-            raise ParamValueError('metadata is imcomplete, should write metadata first in the summary.')
+            raise ParamValueError('metadata is incomplete, should write metadata first in the summary.')
 
         for tag, event in event_dict.items():
             if tag == ExplainFieldsEnum.METADATA.value:
@@ -407,8 +408,8 @@ class ExplainLoader:
         """
         Parse the benchmark event.
 
-        Benchmark data are separeted into 'explainer_score' and 'label_score'. 'explainer_score' contains overall
-        evaluation results of each explainer by different metrics, while 'label_score' additionally devides the results
+        Benchmark data are separated into 'explainer_score' and 'label_score'. 'explainer_score' contains overall
+        evaluation results of each explainer by different metrics, while 'label_score' additionally divides the results
         w.r.t different labels.
 
             The structure of self._benchmark['explainer_score'] demonstrates below:
@@ -487,15 +488,12 @@ class ExplainLoader:
             self._samples[sample_id]['image'] = sample.image_path
 
         for tag in _SAMPLE_FIELD_NAMES:
-            try:
-                if tag == ExplainFieldsEnum.GROUND_TRUTH_LABEL:
-                    self._samples[sample_id]['ground_truth_label'].extend(list(sample.ground_truth_label))
-                elif tag == ExplainFieldsEnum.INFERENCE:
-                    self._import_inference_from_event(sample, sample_id)
-                else:
-                    self._import_explanation_from_event(sample, sample_id)
-            except UnknownError as ex:
-                logger.warning("Parse %s data failed within image related data, detail: %r", tag, str(ex))
+            if tag == ExplainFieldsEnum.GROUND_TRUTH_LABEL:
+                self._samples[sample_id]['ground_truth_label'].extend(list(sample.ground_truth_label))
+            elif tag == ExplainFieldsEnum.INFERENCE:
+                self._import_inference_from_event(sample, sample_id)
+            else:
+                self._import_explanation_from_event(sample, sample_id)
 
     def _import_inference_from_event(self, event, sample_id):
         """Parse the inference event."""

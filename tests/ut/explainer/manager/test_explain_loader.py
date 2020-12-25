@@ -28,17 +28,18 @@ def abc():
     FileHandler.is_file('aaa')
     print('after')
 
+
 class TestExplainLoader:
     """Test explain loader class."""
-    @patch.object(ExplainParser, 'parse_explain')
+    @patch.object(ExplainParser, 'list_events')
     @patch.object(FileHandler, 'list_dir')
     @patch.object(FileHandler, 'is_file')
     @patch.object(os, 'stat')
-    def test_stop(self, mock_stat, mock_is_file, mock_list_dir, mock_parse_explain):
+    def test_stop(self, mock_stat, mock_is_file, mock_list_dir, mock_list_events):
         """Test stop function."""
         mock_is_file.return_value = True
         mock_list_dir.return_value = ['events.summary.123.host_explain']
-        mock_parse_explain.return_value = (True, False, None)
+        mock_list_events.return_value = (True, False, None)
 
         class _MockStat:
             def __init__(self, _):
