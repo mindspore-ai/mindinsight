@@ -19,14 +19,12 @@ This module is used to parse the MindExplain log file.
 """
 from collections import namedtuple
 
-from google.protobuf.message import DecodeError
-
 from mindinsight.datavisual.common import exceptions
-from mindinsight.explainer.common.enums import ExplainFieldsEnum
-from mindinsight.explainer.common.log import logger
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.ms_data_loader import _SummaryParser
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
+from mindinsight.explainer.common.enums import ExplainFieldsEnum
+from mindinsight.explainer.common.log import logger
 from mindinsight.utils.exceptions import UnknownError
 
 HEADER_SIZE = 8
@@ -109,15 +107,20 @@ class ExplainParser(_SummaryParser):
             except (exceptions.CRCFailedError, exceptions.CRCLengthFailedError) as ex:
                 self._summary_file_handler.reset_offset(start_offset)
                 is_end = True
-                logger.warning("Check crc failed and ignore this file, file_path=%s, offset=%s. Detail: %r.",
+                logger.warning("Check crc failed and reset offset, file_path=%s, offset=%s. Detail: %r.",
                                self._summary_file_handler.file_path, self._summary_file_handler.offset, str(ex))
                 return file_changed, is_end, event_data
-            except (OSError, DecodeError, exceptions.MindInsightException) as ex:
-                is_end = True
-                logger.warning("Parse log file fail, and ignore this file, detail: %r,"
-                               "file path: %s.", str(ex), self._summary_file_handler.file_path)
-                return file_changed, is_end, event_data
             except Exception as ex:
+                # Note: If an unknown error occurs, we will set the offset to the end of this file,
+                # which is equivalent to stopping parsing this file. We do not delete the current job
+                # and retain the data that has been successfully parsed.
+                self._summary_file_handler.reset_offset(new_size)
+
+                # Notice: If the current job is the latest one in the loader pool and the job is deleted,
+                # the job goes into an infinite cycle of load-fail-delete-reload-load-fail-delete.
+                # We need to prevent this infinite loop.
+                logger.error("Parse summary file failed, will set offset to the file end. file_path: %s, "
+                             "offset: %d, detail: %s.", file_path, self._summary_file_handler.offset, str(ex))
                 logger.exception(ex)
                 raise UnknownError(str(ex))
             finally:
