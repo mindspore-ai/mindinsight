@@ -242,7 +242,6 @@ class DebuggerServer:
             'all': self._retrieve_all,
             'node': self._retrieve_node,
             'watchpoint': self._retrieve_watchpoint,
-            'watchpoint_hit': self._retrieve_watchpoint_hit
         }
         # validate param <mode>
         if mode not in mode_mapping.keys():
@@ -467,40 +466,6 @@ class DebuggerServer:
         else:
             reply = self._retrieve_node(filter_condition)
             log.debug("Get graph of %d-th watchpoint.", watchpoint_id)
-
-        return reply
-
-    def _retrieve_watchpoint_hit(self, filter_condition):
-        """
-        Retrieve watchpoint hit.
-
-        Args:
-            filter_condition (dict): Filter condition.
-
-                - name (str): The name of single node.
-                - single_node (bool): If False, return the sub-layer of single node. If True, return
-                    the node list from root node to single node.
-
-        Returns:
-            dict, watch point list or relative graph.
-        """
-        node_name = filter_condition.get('name')
-        # get all watchpoint hit list
-        if node_name is None:
-            reply = self.cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).get()
-            reply['outdated'] = self.cache_store.get_stream_handler(Streams.WATCHPOINT).is_recheckable()
-            return reply
-        graph_name = self.cache_store.get_stream_handler(Streams.GRAPH).validate_graph_name(
-            filter_condition.get('graph_name'))
-        # get tensor history
-        reply = self._get_tensor_history(node_name, graph_name)
-        log.debug("Get tensor history for watchpoint hit node.")
-        # get single graph
-        if filter_condition.get('single_node'):
-            filter_condition['graph_name'] = graph_name
-            graph = self._get_nodes_info(filter_condition)
-            reply.update(graph)
-        log.debug("Get tensor history for watchpoint hit node.")
 
         return reply
 
