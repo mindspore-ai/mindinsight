@@ -325,7 +325,7 @@ Q1. `terminate called after throwing an instance of 'std::system_error', what():
 [TF ISSUE 14885](https://github.com/tensorflow/tensorflow/issues/14885), [TF ISSUE 37449](https://github.com/tensorflow/tensorflow/issues/37449)
 
 Q2. Can MindConverter run on ARM platform?
-> Answer: MindConverter usability on X86 Ubuntu machine has been verified, yet, on ARM has not.
+> Answer: MindConverter supports both x86 and ARM platform. Please ensure all required dependencies and environments installed in the ARM platform.
 
 Q3. Why did I get message of `Error detail: [NodeInputMissing] ...` when converting PyTorch model?
 > Answer: For PyTorch model, if operations in `torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx` were used, node parsing could be failed. It's better to replace those operations with `torch.nn.xxx`.

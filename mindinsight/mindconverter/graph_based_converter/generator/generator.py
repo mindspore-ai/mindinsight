@@ -488,7 +488,7 @@ class Generator:
 
         for code_struct in self._global_context.code_structs.values():
             for line in code_struct.code_line_list:
-                outputs.append(line)
+                outputs.append(line.replace("onnx::", ""))
 
         formatted_code, _ = FormatCode("\n".join(outputs),
                                        style_config=CodeFormatConfig.PEP8.value)

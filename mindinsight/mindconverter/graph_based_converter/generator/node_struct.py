@@ -51,7 +51,6 @@ class NodeStruct:
         self.graph_node_ref = None
         self.scope_name = None
         self.ms_var_name = None
-        self.ms_opt_var_name = None
         self.ms_op = None
         self.ready_to_generate = False
 
@@ -105,7 +104,6 @@ class NodeStruct:
             self.ms_var_name = self.ms_op.replace('nn.', '').replace('P.', '').lower() + '_' + str(self.topo_idx)
         else:
             raise ValueError("Unable to update var name when topo_idx is None.")
-        self.ms_opt_var_name = self.ms_var_name + '_opt'
 
     def _update_basics_from_gn(self, gn):
         """Update basic info from GraphNode."""
@@ -244,6 +242,12 @@ class NodeStruct:
         return self.GLOBAL_CONTEXT_MGR.onnx_nodes_collection.get(self.onnx_name)
 
     @property
+    def ms_opt_var_name(self):
+        """Return the output variable name of current node."""
+        return "{}_opt".format(self.ms_var_name).lower()
+
+
+    @property
     def args_translator(self):
         """Return the args translator of this Node."""
         return self._args_translator
@@ -290,7 +294,12 @@ class NodeStruct:
 
     def code_line_in_init(self):
         """Initialization line of code in module init block."""
+        unconverted = False
+        if "onnx::" in self.ms_var_name:
+            unconverted = True
+            self.ms_var_name = self.ms_var_name.replace("onnx::", "")
         left = "self.{}".format(self.ms_var_name)
+
         args_list = list()
         if self._args_translator is not None:
             args_list += self._args_translator.actual_args_to_str_list
@@ -298,7 +307,13 @@ class NodeStruct:
         else:
             actual_args_str = ArgsTranslation.dict_data_to_args_str_list(self._fragment.actual_args)
             args_list += actual_args_str
-        right = f"{self.ms_op}({', '.join(args_list)})"
+
+        if unconverted:
+            args_list.append('='.join(["input_shape", str(self._fragment.input_shape)]))
+            args_list.append('='.join(["output_shape", str(self._fragment.output_shape)]))
+            right = f"{self.ms_op.replace('::', '.')}({', '.join(args_list)})"
+        else:
+            right = f"{self.ms_op}({', '.join(args_list)})"
         return left, right
 
     def _get_correct_in_module_returns(self, prec_node, in_module_return):
