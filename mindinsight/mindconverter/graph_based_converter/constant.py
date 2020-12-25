@@ -53,8 +53,13 @@ EXPECTED_NUMBER = 1
 
 MIN_SCOPE_LENGTH = 2
 
+ONNX_OPSET_VERSION = 11
+
+MODEL_INPUT_NAME = 'input.1'
+
 NO_CONVERTED_OPERATORS = [
-    "onnx::Constant"
+    "onnx::Constant",
+    "Constant"
 ]
 
 
