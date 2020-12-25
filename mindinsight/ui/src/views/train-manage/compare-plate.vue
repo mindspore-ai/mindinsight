@@ -174,6 +174,7 @@ export default {
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
+      summaryInOnePoint: {}, // The summary chart which in 'one-point' state
     };
   },
 
@@ -198,6 +199,13 @@ export default {
       clearTimeout(this.charResizeTimer);
       this.charResizeTimer = null;
     }
+
+    this.originDataArr.forEach((sampleObject) => {
+      if (sampleObject.charObj) {
+        sampleObject.charObj.off('dataZoom');
+        sampleObject.charObj.off('restore');
+      }
+    });
   },
   mounted() {
     document.title = `${this.$t('summaryManage.comparePlate')}-MindInsight`;
@@ -510,9 +518,7 @@ export default {
           data: [],
           type: 'line',
           showSymbol: false,
-          lineStyle: {
-            color: sampleObject.colors[summaryIndex],
-          },
+          color: sampleObject.colors[summaryIndex],
         };
         const dataObjBackend = {
           name: curBackName,
@@ -550,7 +556,9 @@ export default {
           legendSelectData[summaryName] = false;
           legendSelectData[curBackName] = false;
         }
-
+        if (dataObj.data.length === 1 || this.summaryInOnePoint[dataObj.name]) {
+          dataObj.showSymbol = true;
+        }
         seriesData.push(dataObj, dataObjBackend);
       });
       if (returnFlag) {
@@ -662,7 +670,6 @@ export default {
           left: 80,
           right: sampleObject.fullScreen ? 80 : 10,
         },
-        animation: true,
         dataZoom: [
           {
             show: false,
@@ -857,10 +864,9 @@ export default {
     /**
      * Updating or creating a specified chart
      * @param {Number} sampleIndex Chart subscript
-     * @param {Boolen} resetAnimate Restart the animation
      */
 
-    updateOrCreateChar(sampleIndex, resetAnimate) {
+    updateOrCreateChar(sampleIndex) {
       const sampleObject = this.originDataArr[sampleIndex];
 
       if (!sampleObject) {
@@ -883,12 +889,123 @@ export default {
             null,
         );
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
+        this.$nextTick(() => {
+          sampleObject.charObj.on('dataZoom', (params) => {
+            this.dataZoomWatcher(params, sampleObject);
+          });
+          sampleObject.charObj.on('restore', () => {
+            this.restoreWatcher(sampleObject);
+          });
+        });
       }
+    },
 
-      // If summary's display reopen the animation
-      if (resetAnimate) {
-        sampleObject.charData.charOption.animation = true;
+    /**
+     * The logic of reset chart option to keep showSymbol right
+     * @param {Object} sampleObject Chart object
+     */
+    resetOption(sampleObject) {
+      const onePoint = 1;
+      const series = sampleObject.charData.charOption.series;
+      series.forEach((data) => {
+        if (data.data.length > onePoint) {
+          data.showSymbol = false;
+          this.summaryInOnePoint[data.name] = false;
+        } else {
+          data.showSymbol = true;
+          this.summaryInOnePoint[data.name] = true;
+        }
+      });
+      this.$nextTick(() => {
+        sampleObject.charObj.setOption({
+          series: series,
+        });
+      });
+    },
+
+    /**
+     * The watcher of restore to keep showSymbol right
+     * @param {Object} sampleObject Chart object
+     */
+    restoreWatcher(sampleObject) {
+      const selected = Object.keys(this.multiSelectedSummaryNames);
+      if (!selected.length) {
+        return;
       }
+      this.resetOption(sampleObject);
+    },
+
+    /**
+     * The watcher of dataZoom to keep showSymbol right
+     * @param {Object} params params
+     * @param {Object} sampleObject Chart object
+     */
+    dataZoomWatcher(params, sampleObject) {
+      const onePoint = 1;
+      const selected = Object.keys(this.multiSelectedSummaryNames);
+      if (!selected.length) {
+        return;
+      }
+      const [xStart, xEnd] = [params.batch[0].startValue, params.batch[0].endValue];
+      const [yStart, yEnd] = [params.batch[1].startValue, params.batch[1].endValue];
+      if (typeof xStart === 'undefined') {
+        // DataZoom back to the original state
+        this.resetOption(sampleObject);
+      } else {
+        const series = sampleObject.charData.charOption.series;
+        series.forEach((data) => {
+          if (selected.includes(data.name)) {
+            let count = 0;
+            for (let i = 0; i < data.data.length; i++) {
+              const [xValue, yValue] = data.data[i];
+              if (this.calIfExist(xStart, xEnd, yStart, yEnd, xValue, yValue)) {
+                count++;
+              }
+              if (count > onePoint) {
+                break;
+              }
+            }
+            // Keep showSymbol right
+            if (count === onePoint) {
+              if (!data.showSymbol) {
+                data.showSymbol = true;
+                this.summaryInOnePoint[data.name] = true;
+                this.$nextTick(() => {
+                  sampleObject.charObj.setOption({
+                    series: series,
+                  });
+                });
+              }
+            } else {
+              if (data.showSymbol) {
+                data.showSymbol = false;
+                this.summaryInOnePoint[data.name] = false;
+                this.$nextTick(() => {
+                  sampleObject.charObj.setOption({
+                    series: series,
+                  });
+                });
+              }
+            }
+          }
+        });
+      }
+    },
+
+    /**
+     * The logic of cal if point in zoom area
+     * @param {Number} xStart
+     * @param {Number} xEnd
+     * @param {Number} yStart
+     * @param {Number} yEnd
+     * @param {Number} xValue
+     * @param {Number} yValue
+     * @return {Boolean}
+     */
+    calIfExist(xStart, xEnd, yStart, yEnd, xValue, yValue) {
+      const xExist = xStart <= xValue && xValue <= xEnd;
+      const yEyist = yStart <= yValue && yValue <= yEnd;
+      return xExist && yEyist;
     },
 
     /**
@@ -974,24 +1091,33 @@ export default {
       }
       this.axisBenchChangeTimer = setTimeout(() => {
         // Update the horizontal benchmark of the default data
+        this.summaryInOnePoint = {};
+        const onePoint = 1;
         this.curPageArr.forEach((sampleObject) => {
           if (sampleObject.charObj) {
             sampleObject.charData.oriData.forEach((originData, index) => {
+              const series = sampleObject.charData.charOption.series;
               if (sampleObject.log) {
-                sampleObject.charData.charOption.series[
-                    index * 2
-                ].data = this.formateSmoothData(
+                series[index * 2].data = this.formateSmoothData(
                     sampleObject.charData.oriData[index].logData[this.curBenchX],
                 );
-                sampleObject.charData.charOption.series[index * 2 + 1].data =
+                if (series[index * 2].data.length === onePoint) {
+                  series[index * 2].showSymbol = true;
+                } else {
+                  series[index * 2].showSymbol = false;
+                }
+                series[index * 2 + 1].data =
                   sampleObject.charData.oriData[index].logData[this.curBenchX];
               } else {
-                sampleObject.charData.charOption.series[
-                    index * 2
-                ].data = this.formateSmoothData(
+                series[index * 2].data = this.formateSmoothData(
                     sampleObject.charData.oriData[index].valueData[this.curBenchX],
                 );
-                sampleObject.charData.charOption.series[index * 2 + 1].data =
+                if (series[index * 2].data.length === onePoint) {
+                  series[index * 2].showSymbol = true;
+                } else {
+                  series[index * 2].showSymbol = false;
+                }
+                series[index * 2 + 1].data =
                   sampleObject.charData.oriData[index].valueData[
                       this.curBenchX
                   ];
@@ -1084,8 +1210,7 @@ export default {
       setTimeout(() => {
         // Refresh the current page chart
         this.curPageArr.forEach((sampleObject) => {
-          sampleObject.charData.charOption.animation = false;
-          this.updateOrCreateChar(sampleObject.sampleIndex, true);
+          this.updateOrCreateChar(sampleObject.sampleIndex);
         });
       }, 0);
     },
@@ -1139,6 +1264,7 @@ export default {
       this.originDataArr = [];
       this.oriDataDictionaries = {};
       this.curPageArr = [];
+      this.summaryInOnePoint = {};
     },
 
     /**
@@ -1587,22 +1713,30 @@ export default {
         sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
           '#666';
       }
+      const onePoint = 1;
       sampleObject.charData.oriData.forEach((originData, index) => {
+        const series = sampleObject.charData.charOption.series;
         if (log) {
-          sampleObject.charData.charOption.series[
-              index * 2
-          ].data = this.formateSmoothData(
+          series[index * 2].data = this.formateSmoothData(
               sampleObject.charData.oriData[index].logData[this.curBenchX],
           );
-          sampleObject.charData.charOption.series[index * 2 + 1].data =
+          if (series[index * 2].data.length === onePoint) {
+            series[index * 2].showSymbol = true;
+          } else {
+            series[index * 2].showSymbol = false;
+          }
+          series[index * 2 + 1].data =
             sampleObject.charData.oriData[index].logData[this.curBenchX];
         } else {
-          sampleObject.charData.charOption.series[
-              index * 2
-          ].data = this.formateSmoothData(
+          series[index * 2].data = this.formateSmoothData(
               sampleObject.charData.oriData[index].valueData[this.curBenchX],
           );
-          sampleObject.charData.charOption.series[index * 2 + 1].data =
+          if (series[index * 2].data.length === onePoint) {
+            series[index * 2].showSymbol = true;
+          } else {
+            series[index * 2].showSymbol = false;
+          }
+          series[index * 2 + 1].data =
             sampleObject.charData.oriData[index].valueData[this.curBenchX];
         }
       });
