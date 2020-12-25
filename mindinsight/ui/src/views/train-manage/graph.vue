@@ -865,6 +865,8 @@ export default {
       this.loading.info = this.$t('graph.queryLoading');
       this.loading.show = true;
       this.$nextTick(() => {
+        // DOM tree needs time to respond, otherwise the loading icon will not be displayed
+        const timeOut = 500;
         setTimeout(() => {
           name = name.replace('_unfold', '');
           if (this.allGraphData[name].isUnfold) {
@@ -873,7 +875,7 @@ export default {
           } else {
             this.queryGraphData(name);
           }
-        }, 200);
+        }, timeOut);
       });
     },
     /**
