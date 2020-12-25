@@ -164,6 +164,9 @@ def _check_state_from_log(pid, log_abspath, start_pos=0):
                 prompt_messages.append(
                     "more failed details in log: %s" % log_abspath)
                 break
+    if log_result == ServerStateEnum.UNKNOWN.value:
+        prompt_messages.append(
+            "more details in log: %s" % log_abspath)
     state_result["prompt_message"].append(
         "service start state: %s" % state_result["state"])
     for prompt_message in prompt_messages:
@@ -172,7 +175,7 @@ def _check_state_from_log(pid, log_abspath, start_pos=0):
     return state_result
 
 
-def _check_server_start_stat(pid, log_abspath):
+def _check_server_start_stat(pid, log_abspath, log_pos):
     """
     Checking the Server Startup Status.
 
@@ -193,7 +196,6 @@ def _check_server_start_stat(pid, log_abspath):
     # sleep 1 second for gunicorn master to be ready
     time.sleep(1)
 
-    log_pos = _get_file_size(log_abspath)
     try_cnt = 0
     try_cnt_max = 2
 
@@ -254,7 +256,7 @@ def start():
     # Init the logger file
     setup_logger('gunicorn', 'error')
     log_handler = open(error_log_abspath, 'a+')
-
+    pre_log_pos = _get_file_size(error_log_abspath)
     # start server
     process = subprocess.Popen(
         shlex.split(cmd),
@@ -274,7 +276,7 @@ def start():
         console.error("Start MindInsight failed. See log for details, log path: %s.", error_log_abspath)
         sys.exit(1)
     else:
-        state_result = _check_server_start_stat(process.pid, error_log_abspath)
+        state_result = _check_server_start_stat(process.pid, error_log_abspath, pre_log_pos)
         # print gunicorn start state to stdout
         label = 'Web address:'
         format_args = label, settings.HOST, str(settings.PORT), settings.URL_PATH_PREFIX
