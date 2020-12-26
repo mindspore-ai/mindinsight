@@ -110,6 +110,7 @@ class ActivationFuncEnum(Enum):
     TANH = 'tanh'
     SIGMOID = 'sigmoid'
     RELU = 'relu'
+    RELUV2 = 'reluv2'
 
 
 class ConditionContext:
