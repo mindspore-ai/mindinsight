@@ -32,33 +32,35 @@ limitations under the License.
                         effect="light">
               <div slot="content"
                    class="tooltip-container">
-                <div class="font-size-style">{{$t("profiling.features")}}</div>
-                <div>{{$t('profiling.iterationInfo')}}</div>
-                <div>
-                  <span class="font-style">{{$t('profiling.queueInfo')}}&nbsp;</span>
-                  <span>{{$t('profiling.iterationGapInfo')}}</span>
-                </div>
-                <div>
-                  <span class="font-style">{{$t('profiling.fpbpTitle')}}&nbsp;</span>
-                  <span>{{$t('profiling.fpbpInfo')}}</span>
-                </div>
-                <div>
-                  <span class="font-style">{{$t('profiling.iterativeTailingTitle')}}&nbsp;</span>
-                  <span>{{$t('profiling.iterativeTailingInfo')}}</span>
-                </div>
-                <br />
-                <div class="font-size-style">{{$t('profiling.statistics')}}</div>
-                <div>{{$t('profiling.totalTime')}}
-                  <span>{{totalTime}}{{$t('profiling.millisecond')}}</span>
-                </div>
-                <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
-                <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationIntervalPercent}}</span></div>
+                <div class="pro-dash-tooltip">
+                  <div class="font-size-style">{{$t("profiling.features")}}</div>
+                  <div>{{$t('profiling.iterationInfo')}}</div>
+                  <div>
+                    <span class="font-style">{{$t('profiling.queueInfo')}}&nbsp;</span>
+                    <span>{{$t('profiling.iterationGapInfo')}}</span>
+                  </div>
+                  <div>
+                    <span class="font-style">{{$t('profiling.fpbpTitle')}}&nbsp;</span>
+                    <span>{{$t('profiling.fpbpInfo')}}</span>
+                  </div>
+                  <div>
+                    <span class="font-style">{{$t('profiling.iterativeTailingTitle')}}&nbsp;</span>
+                    <span>{{$t('profiling.iterativeTailingInfo')}}</span>
+                  </div>
+                  <br />
+                  <div class="font-size-style">{{$t('profiling.statistics')}}</div>
+                  <div>{{$t('profiling.totalTime')}}
+                    <span>{{totalTime}}{{$t('profiling.millisecond')}}</span>
+                  </div>
+                  <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
+                  <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationIntervalPercent}}</span></div>
                   <div v-if="fpBpPercent">{{$t('profiling.fpbpTimeRatio')}}<span>{{fpBpPercent}}</span></div>
                   <div v-else>{{$t('profiling.fpTimeRatio')}}<span>{{fpPercent}}</span></div>
                   <div v-if="tailPercent">
                     {{$t('profiling.iterativeTailingTimeRatio')}}
                     <span>{{tailPercent}}</span>
                   </div>
+                </div>
               </div>
               <i class="el-icon-info"></i>
             </el-tooltip>
@@ -124,24 +126,26 @@ limitations under the License.
                         effect="light">
               <div slot="content"
                    class="tooltip-container">
-                <div class="font-size-style">{{$t("profiling.features")}}</div>
-                <div>{{$t('profiling.dataProcess')}}</div>
-                <div>{{$t('profiling.dataProcessInfo')}}</div>
-                <div>{{$t('profiling.analysisOne')}}</div>
-                <div>{{$t('profiling.analysisTwo')}}</div>
-                <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
-                <br />
-                <div v-show="deviceInfoShow || queueInfoShow"
-                     class="font-size-style">{{$t('profiling.statistics')}}</div>
-                <div v-show="queueInfoShow">{{$t('profiling.chipInfo')}}
-                  <span>{{processSummary.get_next.empty}} / {{processSummary.get_next.total}}</span>
-                </div>
-                <div v-show="deviceInfoShow">
-                  <div>{{$t('profiling.hostIsEmpty')}}
-                    <span>{{processSummary.device.empty}} / {{processSummary.device.total}}</span>
+                <div class="pro-dash-tooltip">
+                  <div class="font-size-style">{{$t("profiling.features")}}</div>
+                  <div>{{$t('profiling.dataProcess')}}</div>
+                  <div>{{$t('profiling.dataProcessInfo')}}</div>
+                  <div>{{$t('profiling.analysisOne')}}</div>
+                  <div>{{$t('profiling.analysisTwo')}}</div>
+                  <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
+                  <br />
+                  <div v-show="deviceInfoShow || queueInfoShow"
+                       class="font-size-style">{{$t('profiling.statistics')}}</div>
+                  <div v-show="queueInfoShow">{{$t('profiling.chipInfo')}}
+                    <span>{{processSummary.get_next.empty}} / {{processSummary.get_next.total}}</span>
                   </div>
-                  <div>{{$t('profiling.hostIsFull')}}
-                    <span>{{processSummary.device.full}} / {{processSummary.device.total}}</span>
+                  <div v-show="deviceInfoShow">
+                    <div>{{$t('profiling.hostIsEmpty')}}
+                      <span>{{processSummary.device.empty}} / {{processSummary.device.total}}</span>
+                    </div>
+                    <div>{{$t('profiling.hostIsFull')}}
+                      <span>{{processSummary.device.full}} / {{processSummary.device.total}}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -321,32 +325,34 @@ limitations under the License.
                         effect="light">
               <div slot="content"
                    class="tooltip-container">
-                <div class="font-size-style">{{$t("profiling.features")}}</div>
-                <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
-                <div>{{$t("profiling.timelineTips.content11")}}</div>
-                <div>{{$t("profiling.timelineTips.content12")}}</div>
-                <div>{{$t("profiling.timelineTips.content13")}}</div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
-                <div>
-                  {{$t("profiling.timelineTips.content21.part1")}}
-                  <b>{{$t("profiling.timelineTips.content21.part2")}}</b>
-                  {{$t("profiling.timelineTips.content21.part3")}}
+                <div class="pro-dash-tooltip">
+                  <div class="font-size-style">{{$t("profiling.features")}}</div>
+                  <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
+                  <div>{{$t("profiling.timelineTips.content11")}}</div>
+                  <div>{{$t("profiling.timelineTips.content12")}}</div>
+                  <div>{{$t("profiling.timelineTips.content13")}}</div>
+                  <br>
+                  <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
+                  <div>
+                    {{$t("profiling.timelineTips.content21.part1")}}
+                    <b>{{$t("profiling.timelineTips.content21.part2")}}</b>
+                    {{$t("profiling.timelineTips.content21.part3")}}
+                  </div>
+                  <div>{{$t("profiling.timelineTips.content22")}}</div>
+                  <div>
+                    {{$t("profiling.timelineTips.content23.part1")}}
+                    <b>{{$t("profiling.timelineTips.content23.part2")}}</b>
+                    {{$t("profiling.timelineTips.content23.part3")}}
+                    <b>{{$t("profiling.timelineTips.content23.part4")}}</b>
+                    {{$t("profiling.timelineTips.content23.part5")}}
+                    <b>{{$t("profiling.timelineTips.content23.part6")}}</b>
+                    {{$t("profiling.timelineTips.content23.part7")}}
+                  </div>
+                  <br>
+                  <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
+                  <div>{{$t("profiling.timelineTips.content31")}}</div>
+                  <div>{{$t("profiling.timelineTips.content32")}}</div>
                 </div>
-                <div>{{$t("profiling.timelineTips.content22")}}</div>
-                <div>
-                  {{$t("profiling.timelineTips.content23.part1")}}
-                  <b>{{$t("profiling.timelineTips.content23.part2")}}</b>
-                  {{$t("profiling.timelineTips.content23.part3")}}
-                  <b>{{$t("profiling.timelineTips.content23.part4")}}</b>
-                  {{$t("profiling.timelineTips.content23.part5")}}
-                  <b>{{$t("profiling.timelineTips.content23.part6")}}</b>
-                  {{$t("profiling.timelineTips.content23.part7")}}
-                </div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
-                <div>{{$t("profiling.timelineTips.content31")}}</div>
-                <div>{{$t("profiling.timelineTips.content32")}}</div>
               </div>
               <i class="el-icon-info"></i>
             </el-tooltip>
@@ -1231,14 +1237,16 @@ export default {
   max-width: 500px;
 }
 .tooltip-container {
-  line-height: 20px;
-  padding: 10px;
-  .font-style {
-    font-weight: bold;
-  }
-  .font-size-style {
-    font-weight: bold;
-    font-size: 16px;
+  .pro-dash-tooltip {
+    line-height: 20px;
+    padding: 10px;
+    .font-style {
+      font-weight: bold;
+    }
+    .font-size-style {
+      font-weight: bold;
+      font-size: 16px;
+    }
   }
 }
 .pro-router-wrap {
