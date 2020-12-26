@@ -14,7 +14,7 @@
 # ==============================================================================
 """Define GlobalContext class to save required resources during whole conversion procedure."""
 from collections import OrderedDict
-from .outputs import OutputStorage
+from mindinsight.mindconverter.graph_based_converter.common.outputs import OutputStorage
 
 
 class Singleton(type):

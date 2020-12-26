@@ -22,13 +22,13 @@ from typing import Union
 import numpy as np
 
 from mindinsight.mindconverter.common.log import logger as log
-from ..common.utils import fetch_output_from_onnx_model
-from ..common.global_context import GlobalContext
-from .optimizer import OnnxSimplify
+from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model
+from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.optimizer import OnnxSimplify
 
-from ..constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
+from mindinsight.mindconverter.graph_based_converter.constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
     ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL
-from ...common.exceptions import GraphInitError, ModelLoadingError
+from mindinsight.mindconverter.common.exceptions import GraphInitError, ModelLoadingError
 
 
 def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=12):
@@ -128,7 +128,6 @@ class ParamsAttribute:
         raw_attribute (onnx.AttributeProto): onnx.AttributeProto instance.
         node (onnx.NodeProto): Must pass the onnx.NodeProto instance
                                 containing the same AttributeProto.
-
     """
 
     def __init__(self, raw_attribute, node):
@@ -148,7 +147,6 @@ class ParamsAttribute:
 
         Args:
             attrs (onnx.AttributeProto): onnx.AttributeProto instance.
-
         """
         if not attrs:
             return
@@ -604,3 +602,18 @@ class OnnxDataLoader:
             eliminated_nodes = _traceback_precursor_nodes_until_shape_op(to_shape)
             self.dynamic_resize_node.append(nd_name)
             self.eliminated_nodes += eliminated_nodes
+
+
+class NodeWeight:
+    """Node weight struct."""
+    def __init__(self, weight_name, weight_value):
+        self._weight_name = weight_name
+        self._weight_value = weight_value
+
+    @property
+    def name(self):
+        return self._weight_name
+
+    @property
+    def value(self):
+        return self._weight_value

@@ -56,8 +56,7 @@ class AddMapper(ONNXToMindSporeMapper):
         if not weights:
             return template, exchange_msg, outputs_list, outputs_mapping
 
-        bias = list(weights.items())[0]
-        _, tensor = bias
+        tensor = AddMapper._find_val_by_index(0, weights)
 
         variable_slot = "var_0"
         init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"

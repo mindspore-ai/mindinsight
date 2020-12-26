@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 """Define PyTorch graph node."""
 import os
 
-from .base import GraphNode
-from ..constant import SEPARATOR_IN_SCOPE, NodeType
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import GraphNode
+from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_SCOPE, NodeType
 
 
 class InputNode(GraphNode):
@@ -25,7 +25,6 @@ class InputNode(GraphNode):
 
     Args:
         input_shape: Input shape of module.
-
     """
 
     def _get_arg_name(self, arg, variable_name):

@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,15 @@
 from queue import PriorityQueue
 from typing import Dict, List
 
-from .common import context, DagGraph, gen_hash_key, ACCEPTABLE_RESULT_COUNT
-from .common import MINI_FREQUENCY, MAX_ITERATION_DEPTH, SATISFIED_SCORE
-from ..common.global_context import GlobalContext
-from ..third_party_graph.onnx_utils import BaseNode
-from .search_path import SearchPath, Pattern, generate_pattern, find_built_in_pattern
-from ...common.exceptions import SubGraphSearchingError
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import context, DagGraph, gen_hash_key, \
+    ACCEPTABLE_RESULT_COUNT
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import MINI_FREQUENCY, \
+    MAX_ITERATION_DEPTH, SATISFIED_SCORE
+from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import BaseNode
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.search_path import SearchPath, Pattern, \
+    generate_pattern, find_built_in_pattern
+from mindinsight.mindconverter.common.exceptions import SubGraphSearchingError
 
 
 def _is_satisfied(path):

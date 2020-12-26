@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,12 +17,15 @@ import copy
 import uuid
 from typing import Dict, List, Callable, Union
 from collections import OrderedDict
-from .common import context, gen_hash_key, DagGraph, MAX_OUT_DEGREE, cal_matching_score
-from .known_module_name import BUILT_IN_MODULE_NAME
-from .pattern import Pattern, scope_name_mapping
-from .built_in_pattern import BUILT_IN_PATTERN, is_built_in_pattern
-from .pattern_fuzzy_matching import pattern_fuzzy_matching
-from ..third_party_graph.onnx_utils import OnnxNode, BaseNode
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import context, gen_hash_key, DagGraph, \
+    MAX_OUT_DEGREE, cal_matching_score
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.known_module_name import BUILT_IN_MODULE_NAME
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.pattern import Pattern, scope_name_mapping
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.built_in_pattern import BUILT_IN_PATTERN, \
+    is_built_in_pattern
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.pattern_fuzzy_matching import \
+    pattern_fuzzy_matching
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import OnnxNode, BaseNode
 
 module_name_to_src = {}
 used_module_name = dict()

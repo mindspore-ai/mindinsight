@@ -191,17 +191,22 @@ class CodeFragment(Fragment):
     """
 
     def __init__(self, operation, actual_args, settings, input_shape, output_shape,
-                 trainable_params=None):
+                 trainable_params=None, trainable_weights=None):
         super(CodeFragment, self).__init__(operation=operation, actual_args=actual_args,
                                            input_shape=input_shape, output_shape=output_shape,
                                            settings=settings)
         self._trainable_params = dict()  # External weights, like Matmul.
         self._init_trainable_params = trainable_params  # Can put into operation init method, like Conv2d.
+        self._trainable_weights = trainable_weights
 
     @property
     def trainable_params(self):
         """Return the trainable parameters."""
         return self._trainable_params
+
+    @property
+    def trainable_weights(self):
+        return self._trainable_weights
 
 
 class ModuleFragment(Fragment):

@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -301,6 +301,8 @@ class SourceFilesSaveError(MindConverterException):
         NODE_INPUT_TYPE_NOT_SUPPORT = 1
         SCRIPT_GENERATE_FAIL = 2
         REPORT_GENERATE_FAIL = 3
+        CKPT_GENERATE_FAIL = 4
+        MAP_GENERATE_FAIL = 5
 
     BASE_ERROR_CODE = ConverterErrors.SOURCE_FILES_SAVE_FAIL.value
     ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
@@ -315,6 +317,8 @@ class SourceFilesSaveError(MindConverterException):
         except_source = (NodeInputTypeNotSupportError,
                          ScriptGenerationError,
                          ReportGenerationError,
+                         CheckPointGenerationError,
+                         WeightMapGenerationError,
                          IOError, cls)
         return except_source
 
@@ -435,6 +439,32 @@ class ReportGenerationError(SourceFilesSaveError):
     def raise_from(cls):
         """Raise from exceptions below."""
         return ZeroDivisionError, cls
+
+
+class CheckPointGenerationError(SourceFilesSaveError):
+    """The checkpoint generate fail error."""
+    ERROR_CODE = SourceFilesSaveError.ErrCode.CKPT_GENERATE_FAIL.value
+
+    def __init__(self, msg):
+        super(CheckPointGenerationError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        """Raise from exceptions below."""
+        return cls
+
+
+class WeightMapGenerationError(SourceFilesSaveError):
+    """The weight names map generate fail error."""
+    ERROR_CODE = SourceFilesSaveError.ErrCode.MAP_GENERATE_FAIL.value
+
+    def __init__(self, msg):
+        super(WeightMapGenerationError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        """Raise from exception below."""
+        return cls
 
 
 class SubGraphSearchingError(MindConverterException):

@@ -60,7 +60,7 @@ class ResizeMapper(ONNXToMindSporeMapper):
             align_corners = True
 
         # Get requested size for resize
-        size = list(weights.values())[-1][-2:].tolist()
+        size = ResizeMapper._find_val_by_index(-1, weights)[-2:].tolist()
 
         return {"size": tuple(size),
                 "align_corners": align_corners}

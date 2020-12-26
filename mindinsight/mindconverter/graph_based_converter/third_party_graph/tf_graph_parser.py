@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ import re
 from importlib import import_module
 
 from mindinsight.mindconverter.common.log import logger as log
-from .base import GraphParser
-from ...common.exceptions import ModelNotSupportError
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import GraphParser
+from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
 
 
 class TFGraphParser(GraphParser):

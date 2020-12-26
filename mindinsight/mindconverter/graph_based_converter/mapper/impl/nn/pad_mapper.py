@@ -15,7 +15,6 @@
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.common.utils import convert_bytes_string_to_string
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 def _padding_format_convert(padding: list):
@@ -49,7 +48,7 @@ class PadMapper(ONNXToMindSporeMapper):
         weights = kwargs.get("weights")
         params = kwargs.get("params")
         mode = convert_bytes_string_to_string(params.get('mode', 'constant'))
-        pads_onnx = params.get("pads") if params.get("pads") else list(weights.values())[0].tolist()
+        pads_onnx = params.get("pads") if params.get("pads") else PadMapper._find_val_by_index(0, weights).tolist()
         if mode == 'constant' and params.get('value') is None:
             if params.get('pads') or weights:
                 if isinstance(pads_onnx, list):
@@ -76,7 +75,3 @@ class PadMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        return Setting()
