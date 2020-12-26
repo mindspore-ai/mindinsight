@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ from collections import OrderedDict
 from .scope_utils import Scope
 from .args_translator import ArgsTranslation
 from ..common.code_fragment import CodeFragment
-from ..third_party_graph.pytorch_graph_node import PyTorchGraphNode
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
 from ..common.global_context import GlobalContext
 from ..constant import InputType
@@ -110,11 +109,6 @@ class NodeStruct:
         self.graph_node_ref = gn
         self.scope_name = gn.scope_name
 
-    def _update_from_pytorch_gn(self, gn: PyTorchGraphNode):
-        """Update basic info from PyTorchGraphNode."""
-        self.node_type = "PyTorchGraphNode"
-        self._update_basics_from_gn(gn)
-
     def _update_from_onnx_gn(self, gn: OnnxGraphNode):
         """Update basic info from OnnxGraphNode."""
         self.node_type = "OnnxGraphNode"
@@ -177,9 +171,8 @@ class NodeStruct:
             arg (Union[PyTorchGraphNode, OnnxGraphNode, dict]): Node related obj.
             force_ready (bool): Force this NodeStruct is ready to generate.
         """
-        if isinstance(arg, PyTorchGraphNode):
-            self._update_from_pytorch_gn(arg)
-        elif isinstance(arg, OnnxGraphNode):
+
+        if isinstance(arg, OnnxGraphNode):
             self._update_from_onnx_gn(arg)
         elif isinstance(arg, (dict, OrderedDict)):
             self._update_from_mapper(arg)
@@ -245,7 +238,6 @@ class NodeStruct:
     def ms_opt_var_name(self):
         """Return the output variable name of current node."""
         return "{}_opt".format(self.ms_var_name).lower()
-
 
     @property
     def args_translator(self):

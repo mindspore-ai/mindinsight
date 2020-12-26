@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
+import numpy as np
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
@@ -27,8 +28,11 @@ class DenseMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_params(**kwargs):
         weights = kwargs['weights']
-        has_bias = bool('bias' in weights)
-        weight = weights['weight'].numpy().transpose()
+        weight_index = 0
+        bias_index = 1
+        bias = DenseMapper._find_val_by_index(bias_index, weights)
+        has_bias = isinstance(bias, np.ndarray)
+        weight = DenseMapper._find_val_by_index(weight_index, weights).transpose()
         in_channels, out_channels = weight.shape
         return {
             'in_channels': in_channels,

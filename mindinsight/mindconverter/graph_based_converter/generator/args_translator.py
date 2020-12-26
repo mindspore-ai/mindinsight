@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -213,10 +213,11 @@ class ArgsTranslationHelper:
         Returns:
             list, name of args to be formal.
         """
+        ret = list()
         if len(args_translators) < 2:
             # only one args_translator provided, no formal args.
-            return None
-        ret = []
+            return ret
+
         base_args_t = args_translators[0]
         for arg_name, arg_val in base_args_t.actual_args.items():
             for args_t in args_translators[1:]:

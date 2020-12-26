@@ -194,6 +194,9 @@ def convert_bytes_string_to_string(bytes_str):
 
 def get_framework_type(model_path):
     """Get framework type."""
+    if model_path.endswith('.onnx'):
+        return FrameworkType.PYTORCH.value
+
     try:
         with open(model_path, 'rb') as f:
             if f.read(BINARY_HEADER_PYTORCH_BITS) == BINARY_HEADER_PYTORCH_FILE:

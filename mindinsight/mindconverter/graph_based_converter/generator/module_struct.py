@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ from ..common.utils import get_dict_key_by_value
 from .args_translator import ArgsTranslation
 from ..common.code_fragment import ModuleFragment
 from ..common.global_context import GlobalContext
-from ..hierarchical_tree.name_mgr import LocalVarNameMgr
+from ..common.name_mgr import LocalVarNameMgr
 
 
 class ModuleStruct:

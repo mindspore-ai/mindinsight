@@ -171,3 +171,13 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping
+
+    @staticmethod
+    def _find_val_by_index(loc_index, values_dict):
+        """Find value by location index of values_dict."""
+        result = None
+        for idx, dict_val in enumerate(values_dict.values()):
+            if idx == loc_index:
+                result = dict_val
+                break
+        return result

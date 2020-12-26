@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
+from mindinsight.mindconverter.graph_based_converter.common.utils import convert_bytes_string_to_string
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
@@ -47,7 +48,7 @@ class PadMapper(ONNXToMindSporeMapper):
     def _convert_params(**kwargs):
         weights = kwargs.get("weights")
         params = kwargs.get("params")
-        mode = params.get('mode', 'constant')
+        mode = convert_bytes_string_to_string(params.get('mode', 'constant'))
         pads_onnx = params.get("pads") if params.get("pads") else list(weights.values())[0].tolist()
         if mode == 'constant' and params.get('value') is None:
             if params.get('pads') or weights:

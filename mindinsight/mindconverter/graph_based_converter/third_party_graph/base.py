@@ -264,7 +264,7 @@ class Graph(BaseGraph, abc.ABC):
         Returns:
             cls, graph instance.
         """
-        src_graph = cls.load_graph(graph_path=model_path, **kwargs)
+        src_graph = cls.load_graph(graph_path=model_path, sample_shape=sample_shape, **kwargs)
         ckpt = cls.load_checkpoint(ckpt_path=checkpoint) if checkpoint else None
 
         if ckpt is not None:
