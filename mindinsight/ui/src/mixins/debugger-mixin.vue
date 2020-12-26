@@ -152,9 +152,11 @@ export default {
                 }
               }
             }
+            this.loadingInstance.close();
           },
           (err) => {
             this.showErrorMsg(err);
+            this.loadingInstance.close();
           },
       );
     },
@@ -163,7 +165,9 @@ export default {
      */
     getNextNodeInfo() {
       this.loadingInstance = this.$loading(this.loadingOption);
+      this.pagination.currentPage = 1;
       this.watchPointHits = [];
+      this.pagination.total = 0;
       const params = {
         mode: 'continue',
         level: 'node',
@@ -449,6 +453,8 @@ export default {
               }
             }
           }
+        } else {
+          this.loadingInstance.close();
         }
       }
       if (metadata.step && metadata.step > this.metadata.step) {
@@ -498,6 +504,7 @@ export default {
                 this.radio1 = 'hit';
                 this.pagination.currentPage = 1;
                 this.watchPointHits = [];
+                this.pagination.total = 0;
                 this.searchWatchpointHits(true);
               }
 
@@ -531,6 +538,7 @@ export default {
       if (type !== 3) {
         this.pagination.currentPage = 1;
         this.watchPointHits = [];
+        this.pagination.total = 0;
       }
       const params = {};
       if (type === 0) {
@@ -591,6 +599,7 @@ export default {
                 this.enableRecheck = res.data.metadata.enable_recheck;
                 this.pagination.currentPage = 1;
                 this.watchPointHits = [];
+                this.pagination.total = 0;
               }
               if (res.data.metadata.state) {
                 this.metadata.state = res.data.metadata.state;
@@ -1560,6 +1569,7 @@ export default {
               }
               if (res.data && res.data.watch_point_hits) {
                 this.hitsOutdated = res.data.outdated;
+                this.watchPointHits = [];
                 this.pagination.total = res.data.total;
                 this.pagination.currentPage = res.data.offset + 1;
                 this.dealWatchpointHits(res.data.watch_point_hits);
@@ -1573,6 +1583,7 @@ export default {
                     this.searchWatchpointHits(false);
                   }
                 } else {
+                  this.pagination.currentPage = 1;
                   this.watchPointHits = [];
                   this.pagination.total = 0;
                 }
@@ -1594,7 +1605,6 @@ export default {
       }
     },
     dealWatchpointHits(data) {
-      this.watchPointHits = [];
       if (data && data.length) {
         data.forEach((hit) => {
           const obj = {
@@ -1636,6 +1646,10 @@ export default {
           this.watchPointHits.push(obj);
         });
         this.focusWatchpointHit();
+      } else {
+        this.pagination.currentPage = 1;
+        this.watchPointHits = [];
+        this.pagination.total = 0;
       }
     },
     focusWatchpointHit() {

@@ -887,6 +887,7 @@ export default {
           } else if (this.oldState === this.state.running || oldValue === this.state.running) {
             this.pagination.currentPage = 1;
             this.watchPointHits = [];
+            this.pagination.total = 0;
             this.searchWatchpointHits(true);
           }
         }
@@ -1040,7 +1041,7 @@ export default {
           (res) => {
             if (res.data && res.data.graph) {
               const graph = res.data.graph;
-              this.curNodeData = graph.nodes.map((val) => {
+              this.origialTree = graph.nodes.map((val) => {
                 return {
                   label: val.name.split('/').pop(),
                   ...val,
@@ -1049,17 +1050,17 @@ export default {
               });
               this.node.childNodes = [];
               this.curWatchPointId = id;
-              this.resolve(this.curNodeData);
+              this.resolve(this.origialTree);
               this.$refs.tree.getCheckedKeys().forEach((val) => {
                 this.$refs.tree.setChecked(val, false);
               });
               // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
-              this.defaultCheckedArr = this.curNodeData
+              this.defaultCheckedArr = this.origialTree
                   .filter((val) => {
                     return val.watched === this.checkboxStatus.checked;
                   })
                   .map((val) => val.name);
-              const halfSelectArr = this.curNodeData
+              const halfSelectArr = this.origialTree
                   .filter((val) => {
                     return val.watched === this.checkboxStatus.indeterminate;
                   })
@@ -1274,6 +1275,7 @@ export default {
     continueTo() {
       this.pagination.currentPage = 1;
       this.watchPointHits = [];
+      this.pagination.total = 0;
       const params = {
         mode: 'continue',
         level: 'node',
@@ -1516,6 +1518,7 @@ export default {
         }
       }
       this.isHitIntoView = true;
+      this.loadingInstance.close();
     },
     /**
      * The node information of the selected node.
