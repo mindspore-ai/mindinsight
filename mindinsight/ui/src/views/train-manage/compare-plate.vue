@@ -174,7 +174,6 @@ export default {
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
-      summaryInOnePoint: {}, // The summary chart which in 'one-point' state
     };
   },
 
@@ -201,9 +200,11 @@ export default {
     }
 
     this.originDataArr.forEach((sampleObject) => {
-      if (sampleObject.charObj) {
-        sampleObject.charObj.off('dataZoom');
-        sampleObject.charObj.off('restore');
+      if (sampleObject.dataZoomYTimer) {
+        clearTimeout(sampleObject.dataZoomYTimer);
+      }
+      if (sampleObject.dataZoomXTimer) {
+        clearTimeout(sampleObject.dataZoomXTimer);
       }
     });
   },
@@ -316,7 +317,9 @@ export default {
                       charOption: {},
                     },
                     zoomData: [null, null],
-                    zoomDataTimer: null,
+                    zoomDataX: [null, null],
+                    zoomDataYTimer: null,
+                    zoomDataXTimer: null,
                     charObj: null,
                   });
 
@@ -556,7 +559,8 @@ export default {
           legendSelectData[summaryName] = false;
           legendSelectData[curBackName] = false;
         }
-        if (dataObj.data.length === 1 || this.summaryInOnePoint[dataObj.name]) {
+        const onePoint = 1;
+        if (dataObj.data.length === onePoint) {
           dataObj.showSymbol = true;
         }
         seriesData.push(dataObj, dataObjBackend);
@@ -590,7 +594,24 @@ export default {
             color: '#9EA4B3',
             interval: 0,
             rotate: that.isActive === 2 ? 0 : 90,
-            formatter(value) {
+            formatter: (value) => {
+              if (sampleObject.zoomDataXTimer) {
+                clearTimeout(sampleObject.zoomDataXTimer);
+                sampleObject.zoomDataXTimer = setTimeout(() => {
+                  sampleObject.zoomDataXTimer = null;
+                  this.calIfOnePoint(sampleObject);
+                }, 50);
+                if (value < sampleObject.zoomDataX[0]) {
+                  sampleObject.zoomDataX[0] = value;
+                } else if (sampleObject.zoomDataX[1] < value) {
+                  sampleObject.zoomDataX[1] = value;
+                }
+              } else {
+                sampleObject.zoomDataX = [value, value];
+                sampleObject.zoomDataXTimer = setTimeout(() => {
+                  sampleObject.zoomDataXTimer = null;
+                }, 50);
+              }
               if (that.isActive === 2) {
                 if (sampleObject.fullScreen) {
                   const date = new Date(value * 1000);
@@ -636,11 +657,12 @@ export default {
 
           axisLabel: {
             color: '#9EA4B3',
-            formatter(value) {
-              if (sampleObject.zoomDataTimer) {
-                clearTimeout(sampleObject.zoomDataTimer);
-                sampleObject.zoomDataTimer = setTimeout(() => {
-                  sampleObject.zoomDataTimer = null;
+            formatter: (value) => {
+              if (sampleObject.zoomDataYTimer) {
+                clearTimeout(sampleObject.zoomDataYTimer);
+                sampleObject.zoomDataYTimer = setTimeout(() => {
+                  sampleObject.zoomDataYTimer = null;
+                  this.calIfOnePoint(sampleObject);
                 }, 50);
                 if (value < sampleObject.zoomData[0]) {
                   sampleObject.zoomData[0] = value;
@@ -649,8 +671,8 @@ export default {
                 }
               } else {
                 sampleObject.zoomData = [value, value];
-                sampleObject.zoomDataTimer = setTimeout(() => {
-                  sampleObject.zoomDataTimer = null;
+                sampleObject.zoomDataYTimer = setTimeout(() => {
+                  sampleObject.zoomDataYTimer = null;
                 }, 50);
               }
               const symbol = Math.abs(value);
@@ -889,70 +911,21 @@ export default {
             null,
         );
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
-        this.$nextTick(() => {
-          sampleObject.charObj.on('dataZoom', (params) => {
-            this.dataZoomWatcher(params, sampleObject);
-          });
-          sampleObject.charObj.on('restore', () => {
-            this.restoreWatcher(sampleObject);
-          });
-        });
       }
     },
 
     /**
-     * The logic of reset chart option to keep showSymbol right
+     * The logic of keep showSymbol right
      * @param {Object} sampleObject Chart object
      */
-    resetOption(sampleObject) {
-      const onePoint = 1;
-      const series = sampleObject.charData.charOption.series;
-      series.forEach((data) => {
-        if (data.data.length > onePoint) {
-          data.showSymbol = false;
-          this.summaryInOnePoint[data.name] = false;
-        } else {
-          data.showSymbol = true;
-          this.summaryInOnePoint[data.name] = true;
-        }
-      });
-      this.$nextTick(() => {
-        sampleObject.charObj.setOption({
-          series: series,
-        });
-      });
-    },
-
-    /**
-     * The watcher of restore to keep showSymbol right
-     * @param {Object} sampleObject Chart object
-     */
-    restoreWatcher(sampleObject) {
-      const selected = Object.keys(this.multiSelectedSummaryNames);
-      if (!selected.length) {
-        return;
-      }
-      this.resetOption(sampleObject);
-    },
-
-    /**
-     * The watcher of dataZoom to keep showSymbol right
-     * @param {Object} params params
-     * @param {Object} sampleObject Chart object
-     */
-    dataZoomWatcher(params, sampleObject) {
-      const onePoint = 1;
-      const selected = Object.keys(this.multiSelectedSummaryNames);
-      if (!selected.length) {
-        return;
-      }
-      const [xStart, xEnd] = [params.batch[0].startValue, params.batch[0].endValue];
-      const [yStart, yEnd] = [params.batch[1].startValue, params.batch[1].endValue];
-      if (typeof xStart === 'undefined') {
-        // DataZoom back to the original state
-        this.resetOption(sampleObject);
-      } else {
+    calIfOnePoint(sampleObject) {
+      if (!sampleObject.dataZoomYTimer && !sampleObject.dataZoomXTimer) {
+        // Format is finished
+        const selected = Object.keys(this.multiSelectedSummaryNames);
+        const [xStart, xEnd] = sampleObject.zoomDataX;
+        const [yStart, yEnd] = sampleObject.zoomData;
         const series = sampleObject.charData.charOption.series;
+        const onePoint = 1;
         series.forEach((data) => {
           if (selected.includes(data.name)) {
             let count = 0;
@@ -969,7 +942,6 @@ export default {
             if (count === onePoint) {
               if (!data.showSymbol) {
                 data.showSymbol = true;
-                this.summaryInOnePoint[data.name] = true;
                 this.$nextTick(() => {
                   sampleObject.charObj.setOption({
                     series: series,
@@ -979,7 +951,6 @@ export default {
             } else {
               if (data.showSymbol) {
                 data.showSymbol = false;
-                this.summaryInOnePoint[data.name] = false;
                 this.$nextTick(() => {
                   sampleObject.charObj.setOption({
                     series: series,
@@ -1003,9 +974,37 @@ export default {
      * @return {Boolean}
      */
     calIfExist(xStart, xEnd, yStart, yEnd, xValue, yValue) {
+      const newYStart = this.losePrecision(yStart, false);
+      const newYEnd = this.losePrecision(yEnd, true);
       const xExist = xStart <= xValue && xValue <= xEnd;
-      const yEyist = yStart <= yValue && yValue <= yEnd;
+      const yEyist = newYStart <= yValue && yValue <= newYEnd;
       return xExist && yEyist;
+    },
+
+    /**
+     * The logic of lose precision
+     * @param {Number} number
+     * @param {Boolean} ifCeil
+     * @return {Number}
+     */
+    losePrecision(number, ifCeil) {
+      try {
+        const [, decimal] = number.toString().split('.');
+        if (!decimal) {
+          return number;
+        }
+        const decimalLength = decimal.length;
+        // 10: use to move decimal point
+        const param = Math.pow(10, decimalLength - 1);
+        if (ifCeil) {
+          number = Math.ceil(number * param);
+        } else {
+          number = Math.floor(number * param);
+        }
+        return number / param;
+      } catch {
+        return number;
+      }
     },
 
     /**
@@ -1091,8 +1090,6 @@ export default {
       }
       this.axisBenchChangeTimer = setTimeout(() => {
         // Update the horizontal benchmark of the default data
-        this.summaryInOnePoint = {};
-        const onePoint = 1;
         this.curPageArr.forEach((sampleObject) => {
           if (sampleObject.charObj) {
             sampleObject.charData.oriData.forEach((originData, index) => {
@@ -1101,22 +1098,12 @@ export default {
                 series[index * 2].data = this.formateSmoothData(
                     sampleObject.charData.oriData[index].logData[this.curBenchX],
                 );
-                if (series[index * 2].data.length === onePoint) {
-                  series[index * 2].showSymbol = true;
-                } else {
-                  series[index * 2].showSymbol = false;
-                }
                 series[index * 2 + 1].data =
                   sampleObject.charData.oriData[index].logData[this.curBenchX];
               } else {
                 series[index * 2].data = this.formateSmoothData(
                     sampleObject.charData.oriData[index].valueData[this.curBenchX],
                 );
-                if (series[index * 2].data.length === onePoint) {
-                  series[index * 2].showSymbol = true;
-                } else {
-                  series[index * 2].showSymbol = false;
-                }
                 series[index * 2 + 1].data =
                   sampleObject.charData.oriData[index].valueData[
                       this.curBenchX
@@ -1264,7 +1251,6 @@ export default {
       this.originDataArr = [];
       this.oriDataDictionaries = {};
       this.curPageArr = [];
-      this.summaryInOnePoint = {};
     },
 
     /**
@@ -1439,7 +1425,9 @@ export default {
                 charOption: {},
               },
               zoomData: [null, null],
-              zoomDataTimer: null,
+              zoomDataX: [null, null],
+              zoomDataYTimer: null,
+              zoomDataXTimer: null,
               charObj: null,
             });
             this.DomIdIndex++;
@@ -1713,29 +1701,18 @@ export default {
         sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
           '#666';
       }
-      const onePoint = 1;
       sampleObject.charData.oriData.forEach((originData, index) => {
         const series = sampleObject.charData.charOption.series;
         if (log) {
           series[index * 2].data = this.formateSmoothData(
               sampleObject.charData.oriData[index].logData[this.curBenchX],
           );
-          if (series[index * 2].data.length === onePoint) {
-            series[index * 2].showSymbol = true;
-          } else {
-            series[index * 2].showSymbol = false;
-          }
           series[index * 2 + 1].data =
             sampleObject.charData.oriData[index].logData[this.curBenchX];
         } else {
           series[index * 2].data = this.formateSmoothData(
               sampleObject.charData.oriData[index].valueData[this.curBenchX],
           );
-          if (series[index * 2].data.length === onePoint) {
-            series[index * 2].showSymbol = true;
-          } else {
-            series[index * 2].showSymbol = false;
-          }
           series[index * 2 + 1].data =
             sampleObject.charData.oriData[index].valueData[this.curBenchX];
         }
