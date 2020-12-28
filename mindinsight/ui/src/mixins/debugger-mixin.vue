@@ -879,6 +879,11 @@ export default {
     check(obj) {
       const node = this.$refs.tree.getNode(obj.name);
       const check = node.checked;
+      if (check) {
+        node.data.watched = this.checkboxStatus.checked;
+      } else {
+        node.data.watched = this.checkboxStatus.unchecked;
+      }
       if (this.treeFlag && node.childNodes) {
         this.dealCheckPro(node.childNodes, node.indeterminate || check);
       }
@@ -952,6 +957,11 @@ export default {
     searchCheck(obj) {
       const node = this.$refs.searchTree.getNode(obj.name);
       const check = node.checked;
+      if (check) {
+        node.data.watched = this.checkboxStatus.checked;
+      } else {
+        node.data.watched = this.checkboxStatus.unchecked;
+      }
       if (node.childNodes) {
         this.dealCheckPro(node.childNodes, node.indeterminate || check);
       }
@@ -1011,6 +1021,11 @@ export default {
         val.indeterminate = false;
         if (val.data.watched !== -1) {
           val.checked = check;
+          if (check) {
+            val.data.watched = this.checkboxStatus.checked;
+          } else {
+            val.data.watched = this.checkboxStatus.unchecked;
+          }
         } else {
           val.checked = false;
         }
