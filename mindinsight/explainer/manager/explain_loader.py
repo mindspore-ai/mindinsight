@@ -29,7 +29,7 @@ from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.explainer.common.enums import ExplainFieldsEnum
 from mindinsight.explainer.common.log import logger
 from mindinsight.explainer.manager.explain_parser import ExplainParser
-from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.utils.exceptions import ParamValueError, UnknownError
 
 _NAN_CONSTANT = 'NaN'
 _NUM_DIGITS = 6
@@ -287,7 +287,10 @@ class ExplainLoader:
 
         is_end = False
         while not is_end and self.status != _LoaderStatus.STOP.value:
-            file_changed, is_end, event_dict = self._parser.list_events(filenames)
+            try:
+                file_changed, is_end, event_dict = self._parser.list_events(filenames)
+            except UnknownError:
+                break
 
             if file_changed:
                 logger.info('Summary file in %s update, reload the data in the summary.',

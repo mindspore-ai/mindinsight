@@ -14,11 +14,10 @@
 # ============================================================================
 """ExplainManager."""
 
-from collections import OrderedDict
-
 import os
 import threading
 import time
+from collections import OrderedDict
 from datetime import datetime
 from typing import Optional
 
@@ -29,7 +28,7 @@ from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.explainer.common.log import logger
 from mindinsight.explainer.manager.explain_loader import ExplainLoader
-from mindinsight.utils.exceptions import MindInsightException, ParamValueError, UnknownError
+from mindinsight.utils.exceptions import ParamValueError, UnknownError
 
 _MAX_LOADERS_NUM = 3
 
@@ -226,23 +225,17 @@ class ExplainManager:
         """Execute the data loading."""
         # We will load the newest loader first.
         for loader_id in list(self._loader_pool.keys())[::-1]:
-            try:
-                with self._loader_pool_mutex:
-                    loader = self._loader_pool.get(loader_id, None)
-                    if loader is None:
-                        logger.debug('Loader %r has been deleted, will not load data.', loader_id)
-                        continue
+            with self._loader_pool_mutex:
+                loader = self._loader_pool.get(loader_id, None)
+                if loader is None:
+                    logger.debug('Loader %r has been deleted, will not load data.', loader_id)
+                    continue
 
-                if self.status == _ExplainManagerStatus.STOPPING.value:
-                    logger.info('Loader %s status is %s, will return.', loader_id, loader.status)
-                    return
+            if self.status == _ExplainManagerStatus.STOPPING.value:
+                logger.info('Loader %s status is %s, will return.', loader_id, loader.status)
+                return
 
-                loader.load()
-
-            except MindInsightException as ex:
-                logger.warning('Data loader %r load data failed. Delete data_loader. Detail: %s.', loader_id, ex)
-                with self._loader_pool_mutex:
-                    self._delete_loader(loader_id)
+            loader.load()
 
     def _delete_loader(self, loader_id):
         """Delete loader given loader_id."""
