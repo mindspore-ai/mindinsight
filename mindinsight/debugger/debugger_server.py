@@ -79,16 +79,19 @@ class DebuggerServer:
         if not isinstance(set_recommended, bool):
             log.error("Bool param should be given for set_recommended")
             raise DebuggerParamValueError("Bool param should be given.")
+
         metadata_stream = self.cache_store.get_stream_handler(Streams.METADATA)
         if metadata_stream.recommendation_confirmed:
             log.error("User has confirmed setting recommended watchpoints")
             raise DebuggerSetRecommendWatchpointsError()
+
+        metadata_stream.recommendation_confirmed = True
         condition_context = ConditionContext(metadata_stream.backend, metadata_stream.step)
         log.debug("Train_id: %s, backend: %s", train_id, condition_context.backend)
         res = metadata_stream.get(['state', 'enable_recheck'])
         if set_recommended:
             res['id'] = self._add_recommended_watchpoints(condition_context)
-        metadata_stream.recommendation_confirmed = True
+
         return res
 
     def _add_recommended_watchpoints(self, condition_context):

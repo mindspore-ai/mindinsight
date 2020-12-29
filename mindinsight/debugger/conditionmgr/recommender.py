@@ -115,7 +115,8 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_c
     _recommend_activation_range(merged_info, condition_mgr, watch_points, condition_context,
                                 ActivationFuncEnum.SIGMOID.value)
 
-    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, graph_stream, ActivationFuncEnum.RELU.value)
+    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, graph_stream,
+                                      [ActivationFuncEnum.RELU.value, ActivationFuncEnum.RELUV2.value])
     _recommend_activation_range(merged_info, condition_mgr, watch_points, condition_context,
                                 ActivationFuncEnum.RELU.value)
     return watch_points
@@ -415,7 +416,7 @@ def _add_graph_name(nodes, graph_stream):
 
 def _sigmoid(value):
     """Calculate the sigmoid of value."""
-    return 1.0 / (1.0 + math.exp(value))
+    return 1.0 / (1.0 + math.exp(-value))
 
 
 def _get_recommend_activation_params(condition, activation_func):
