@@ -97,7 +97,6 @@ limitations under the License.
                   @node-collapse="nodeCollapse"
                   @node-click="handleNodeClick"
                   node-key="name"
-                  :default-checked-keys="defaultCheckedArr"
                   :expand-on-click-node="false"
                   :lazy="lazy"
                   :highlight-current="true"
@@ -130,7 +129,6 @@ limitations under the License.
                   :load="loadSearchNode"
                   :lazy="true"
                   node-key="name"
-                  :default-checked-keys="searchCheckedArr"
                   :expand-on-click-node="false"
                   @node-click="handleNodeClick"
                   :show-checkbox="!!curWatchPointId"
@@ -1072,6 +1070,11 @@ export default {
               this.node.childNodes.forEach((val) => {
                 if (halfSelectArr.indexOf(val.data.name) !== -1) {
                   val.indeterminate = true;
+                }
+                if (val.data.watched === this.checkboxStatus.checked) {
+                  val.checked = true;
+                } else if (val.data.watched === this.checkboxStatus.unchecked) {
+                  val.checked = false;
                 }
               });
 
