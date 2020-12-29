@@ -156,7 +156,7 @@ Supported models list (Models in below table have been tested based on PyTorch 1
 | DenseNet161 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | / | |
 | NASNetMobile/Large | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  |
 | EfficientNetB0~B7 | [Link](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.5Link](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  |
-| Unet | [Link](https://github.com/milesial/Pytorch-UNet) | [Link](https://github.com/zhixuhao/unet) | Due to Operator `ResizeBilinear` not achieved on GPU device, Operator `ResizeBilinear` should be replaced by operator `ResizeNearest`, while running in GPU device |
+| Unet | [Link](https://github.com/milesial/Pytorch-UNet) | [Link](https://github.com/zhixuhao/unet) | Due to Operator `mindspore.ops.ResizeBilinear` is not implemented on GPU device for now, operator `mindspore.ops.ResizeBilinear` should be replaced by operator `mindspore.ops.ResizeNearestNeighbor`, while running in GPU device |
 
 ## Example
 
@@ -311,7 +311,7 @@ class ConvBNReLU(nn.Sequential):
 
 ## Requirements
 
-For users using MindConverter, in addition to install the TensorFlow can satisfy the pb model loading, inference and training, users also need to pip install the following third party package (tf2onnx is not required for users that convert PyTorch model definition script to MindSpore):
+For users using MindConverter, in addition to install the TensorFlow that can satisfy the model loading, inference and training requirements, users also need to pip install the following third party package (tf2onnx is not required for users that convert PyTorch model definition script to MindSpore):
 
 ```text
 onnx>=1.8.0
@@ -417,7 +417,7 @@ def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name
 |      GraphInitFailError      |         Fail to trace the computational graph          | 1000000  | Exception caused by 1000001~1000003                          |
 |     ModelNotSupportError     |              Fail to parse .pth/.pb file               | 1000001  | Given `--input_nodes`, `--output_nodes don't  match the input model; Meanwhile, the model file can not be loaded also can cause this error. |
 |        TfRuntimeError        |           Fail to initialize the TF runtime            | 1000002  | Resources required by TensorFlow are not available           |
-|    ModelLoadingFailError     |                 Fail to load the model                 | 1000003  | Maybe cause by the wrong `--input_shape` value               |
+|    ModelLoadingError     |                 Fail to load the model                 | 1000003  | Maybe cause by the wrong `--input_shape` value               |
 |    RuntimeIntegrityError     |     Fail to locate required third party dependency     | 1000004  | Caused by required third party packages are not installed    |
 |     TreeCreateFailError      |         Fail to create code hierarchical tree          | 2000000  | Mainly caused by usage of `torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx` in PyTorch |
 |    NodeInputMissingError     |            Fail to get the input node info             | 2000001  | Fail to get input node info                                  |
