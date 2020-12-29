@@ -984,7 +984,11 @@ export default {
         }
         val.indeterminate = false;
         val.checked = type;
-
+        if (type) {
+          val.data.watched = this.checkboxStatus.checked;
+        } else {
+          val.data.watched = this.checkboxStatus.unchecked;
+        }
         if (val.childNodes) {
           this.dealCheckPro(val.childNodes, type);
         }
