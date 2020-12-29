@@ -155,7 +155,7 @@ MindConverter提供两种技术方案，以应对不同脚本迁移场景：
 | DenseNet161 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | 暂未测试 | |
 | NASNetMobile/Large | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  |
 | EfficientNetB0~B7 | [脚本链接](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.5脚本链接](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  |
-| Unet | [脚本链接](https://github.com/milesial/Pytorch-UNet) | [脚本链接](https://github.com/zhixuhao/unet) | 由于算子`ResizeBilinear`在GPU上未实现，所以当运行在GPU设备上时，算子`ResizeBilinear`需要被替换为算子`ResizeNearest` |
+| Unet | [脚本链接](https://github.com/milesial/Pytorch-UNet) | [脚本链接](https://github.com/zhixuhao/unet) | 由于算子`mindspore.ops.ResizeBilinear`在GPU上暂未实现，所以当运行在GPU设备上时，算子`mindspore.ops.ResizeBilinear`需要被替换为算子`mindspore.ops.ResizeNearestNeighbor` |
 
 ## 使用示例
 
@@ -320,7 +320,7 @@ class ConvBNReLU(nn.Sequential):
 
 ## 三方库依赖
 
-用户在使用MindConverter时，下列三方库未在MindInsight依赖列表（requirements.txt）中声明。用户除安装可满足导出的Pb模型加载、训练、推理的TensorFlow版本外，还需要安装（pip
+用户在使用MindConverter时，下列三方库未在MindInsight依赖列表（requirements.txt）中声明。用户除安装可满足模型加载、训练、推理的TensorFlow或PyTorch外，还需要安装（pip
 install）如下依赖库（PyTorch模型脚本转MindSpore的用户无需安装tf2onnx）：
 
 ```text
@@ -431,7 +431,7 @@ def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name
 |      GraphInitFailError      | 依据网络模型构建计算图失败     | 1000000  | 由1000001，1000002，1000003导致的计算图无法解析。                                                           |
 |     ModelNotSupportError     | 解析.pth/.pb文件失败           | 1000001  | 给定的`--input_nodes`, `--output_nodes`与实际模型不符；或模型文件存在问题导致模型无法加载。 |
 |     TfRuntimeError     | TensorFlow库执行出错           | 1000002  | TensorFlow启动申请所需资源失败导致无法正常启动，请检查系统资源（进程数、内存、显存占用、CPU占用）是否充足。 |
-| ModelLoadingFailError | 模型加载失败                   | 1000003  | 可能由于用户给定网络输入尺寸错误导致模型无法加载。           |
+| ModelLoadingError | 模型加载失败                   | 1000003  | 可能由于用户给定网络输入尺寸错误导致模型无法加载。           |
 | RuntimeIntegrityError | 三方依赖库不完整 | 1000004 | MindConverter运行时所需的三方依赖库未安装。 |
 | TreeCreateFailError | 依据计算图构建模型树失败       | 2000000  | Tree用于生成最终代码结构，通常由于PyTorch网络中存在`torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx`算子导致。 |
 | NodeInputMissingError | 网络节点输入信息丢失           | 2000001  | 节点的输入信息丢失。                                                            |
