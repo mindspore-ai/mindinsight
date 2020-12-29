@@ -146,7 +146,40 @@ class UrlPathPrefixAction(argparse.Action):
 
         setattr(namespace, self.dest, prefix)
 
+class HostAction(argparse.Action):
+    """Host action class definition."""
 
+    LOCALHOST = '127.0.0.1'
+    BIND_ALL = '0.0.0.0'
+    
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from argparse.Action.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        def isIPv4(s):
+            try:
+                return str(int(s)) == s and 0 <= int(s) <= 255
+            except: 
+                return False
+        def isIPv6(s):
+            if len(s) > 4:
+                return False
+            try : 
+                return int(s, 16) >= 0 and s[0] != '-'
+            except:
+                return False
+        host = values
+        validIPv4 = host.count(".") == 3 and all(isIPv4(i) for i in host.split("."))
+        validIPv6 = host.count(":") == 7 and all(isIPv6(i) for i in host.split(":"))
+        if (host != self.LOCALHOST or host != self.BIND_ALL) and not validIPv6 and not validIPv4:
+            parser.error(f'{option_string} should be chosen between {self.LOCALHOST}, {self.BIND_ALL} and any other valid specific IPv6 or IPv4 address.')
+        setattr(namespace, self.dest, host)
 class Command(BaseCommand):
     """
     Start mindinsight service.
@@ -186,7 +219,15 @@ class Command(BaseCommand):
             help="""
                 Custom port ranging from %s to %s. Default value is %s.
             """ % (PortAction.MIN_PORT, PortAction.MAX_PORT, settings.PORT))
-
+        
+        parser.add_argument(
+            '--host',
+            type=str,
+            action=HostAction,
+            help="""
+                Custom host to bind process to e.g. %s - %s or specific IP. Default value is %s.
+            """ % (HostAction.LOCALHOST,HostAction.BIND_ALL, settings.HOST))
+        
         parser.add_argument(
             '--url-path-prefix',
             type=str,
