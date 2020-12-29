@@ -50,6 +50,11 @@ class TensorProcessor(BaseProcessor):
         """
         Validation.check_param_empty(train_id=train_ids, tag=tags)
 
+        try:
+            dims = unquote(dims, errors='strict') if dims else None
+        except UnicodeDecodeError:
+            raise UrlDecodeError('Unquote dims error with strict mode')
+
         for index, train_id in enumerate(train_ids):
             try:
                 train_id = unquote(train_id, errors='strict')
