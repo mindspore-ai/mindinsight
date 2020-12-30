@@ -22,6 +22,7 @@ from marshmallow import ValidationError
 
 from mindinsight.profiler.common.exceptions.exceptions import \
     ProfilerParamValueErrorException, ProfilerDirNotFoundException
+from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.profiler.common.log import logger as log
 
 
@@ -144,10 +145,18 @@ def validate_and_normalize_profiler_path(summary_dir, summary_base_dir):
         unquote_path = unquote(summary_dir, errors='strict')
     except UnicodeDecodeError:
         raise ProfilerParamValueErrorException('Unquote error with strict mode')
-    profiler_base_dir = os.path.join(summary_base_dir, unquote_path)
+    train_job_dir = os.path.join(summary_base_dir, unquote_path)
+    try:
+        train_job_dir_abs = validate_and_normalize_path(train_job_dir, 'train_job_dir')
+    except ValidationError:
+        log.error('train_job dir <%s> is invalid', train_job_dir)
+        raise ProfilerParamValueErrorException('train_job dir is invalid.')
+    if not os.path.exists(train_job_dir_abs):
+        raise TrainJobNotExistError(error_detail=train_job_dir_abs)
+
     try:
         profiler_name_list = []
-        for dir_name in os.listdir(profiler_base_dir):
+        for dir_name in os.listdir(train_job_dir_abs):
             search_res = re.search(profiler_directory_pattern, dir_name)
             if search_res:
                 profiler_name_list.append(search_res[0])
@@ -155,7 +164,7 @@ def validate_and_normalize_profiler_path(summary_dir, summary_base_dir):
         profiler_name_newest = profiler_name_list[-1]
         profiler_dir = os.path.join(summary_base_dir, unquote_path, profiler_name_newest)
     except ValidationError:
-        log.error('no valid profiler dir under <%s>', profiler_base_dir)
+        log.error('no valid profiler dir under <%s>', train_job_dir_abs)
         raise ProfilerDirNotFoundException('Profiler dir not found.')
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
