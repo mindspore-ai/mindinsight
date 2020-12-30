@@ -10,13 +10,9 @@
     * check activation range
     * check gradient vanishing
     * check tensor overflow
-
 * Support rechecking with new watch points on the same data.
-
 * Newly designed tensor view with fix suggestions and tensor context to quickly locate root cause of problems.
-
 * Support recommending watch points to find common precision problems.
-
 * Support debugger on multigraph network.
 
 ### Profiler
@@ -36,6 +32,16 @@ Provide explanations and their benchmarks for image classification deep CNN mode
 * Support 6 explanation methods: Gradient, Deconvolution, GuidedBackprop, GradCAM, RISE, Occlusion
 * Support 4 benchmark methods: Localization, Faithfulness, Class Sensitivity, Robustness
 * Provide a high-level API (ImageClassificationRunner) for users to execute explanation methods and benchmark methods and store the results easily.
+
+## API Change
+
+### Improvements
+
+#### Command Line Interface
+
+* `--enable_debugger`: Support both 1 and True ([!1051](https://gitee.com/mindspore/mindinsight/pulls/1051))
+* `ENABLE_MS_DEBUGGER`: Support both 1 and True ([!10199](https://gitee.com/mindspore/mindspore/pulls/10199))
+* `parse_summary`: Add parse_summary function to convert summary file to image file and csv file ([!774](https://gitee.com/mindspore/mindinsight/pulls/774))
 
 ## Bugfixes
 
