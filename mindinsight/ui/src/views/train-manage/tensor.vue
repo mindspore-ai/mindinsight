@@ -593,7 +593,7 @@ export default {
         tag: sampleItem.tagName,
         detail: 'data',
         step: sampleItem.curStep,
-        dims: sampleItem.filterStr,
+        dims: encodeURIComponent(sampleItem.filterStr),
       };
       sampleItem.curMartixShowSliderValue = sampleItem.sliderValue;
       RequestService.getTensorsSample(params).then(
