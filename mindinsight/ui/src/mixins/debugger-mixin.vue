@@ -1317,6 +1317,11 @@ export default {
                     val.indeterminate = true;
                     node.indeterminate = true;
                   }
+                  if (val.data.watched === this.checkboxStatus.checked) {
+                    val.checked = true;
+                  } else if (val.data.watched === this.checkboxStatus.unchecked) {
+                    val.checked = false;
+                  }
                 });
                 [...new Set(curHalfCheckedKeys.concat(this.$refs.tree.getHalfCheckedKeys()))].forEach((val) => {
                   this.$refs.tree.getNode(val).indeterminate = true;
