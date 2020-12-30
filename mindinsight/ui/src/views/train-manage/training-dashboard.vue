@@ -1075,7 +1075,7 @@ export default {
         tag: this.tensorTag,
         detail: 'data',
         step: step,
-        dims: filterStr,
+        dims: encodeURIComponent(filterStr),
       };
       RequestService.getTensorsSample(params).then(
           (res) => {
