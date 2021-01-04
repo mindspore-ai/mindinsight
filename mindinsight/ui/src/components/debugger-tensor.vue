@@ -992,7 +992,7 @@ export default {
       const params = {
         name: row.name,
         detail: 'data',
-        shape,
+        shape: encodeURIComponent(shape),
         tolerance: this.tolerance / 100,
         graph_name: row.graph_name,
       };
@@ -1085,7 +1085,7 @@ export default {
       const params = {
         name: row.name,
         detail: 'data',
-        shape,
+        shape: encodeURIComponent(shape),
         graph_name: row.graph_name,
         prev: this.gridType === 'preStep' ? true : false,
       };
