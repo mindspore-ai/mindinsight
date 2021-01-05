@@ -1,5 +1,5 @@
 <!--
-Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -543,12 +543,19 @@ limitations under the License.
             </el-option>
           </el-select>
 
-          <el-input v-model="item.param.value"
-                    :placeholder="$t('scalar.placeHolderNumber')"
-                    v-if="item.param.options.length &&
+          <el-tooltip class="item"
+                      effect="light"
+                      :content="$t('debugger.paramValueTip', {value: (/^(\-|\+)?\d+(\.\d+)?$/).test(item.param.value) ?
+                      Number(item.param.value) : ''})"
+                      placement="top">
+            <el-input v-model="item.param.value"
+                      :placeholder="$t('scalar.placeHolderNumber')"
+                      v-show="item.param.options.length &&
                                 item.param.type !== 'BOOL'"
-                    @input="validateParam(item)"
-                    class="param-value"></el-input>
+                      @input="validateParam(item)"
+                      class="param-value"></el-input>
+          </el-tooltip>
+
           <el-select v-model="item.param.value"
                      v-if="item.param.options.length &&
                                 item.param.type === 'BOOL'"
@@ -572,11 +579,19 @@ limitations under the License.
                  :key="index">
               {{transCondition(i.name)}}
 
-              <el-input v-model="item.compositeParams.selections[index].value"
-                        :placeholder="$t('scalar.placeHolderNumber')"
-                        v-if="i.type !== 'BOOL'"
-                        @input="validateParam(item)"
-                        class="param-value"></el-input>
+              <el-tooltip class="item"
+                          effect="light"
+                          :content="$t('debugger.paramValueTip', {value:
+                          (/^(\-|\+)?\d+(\.\d+)?$/).test(item.compositeParams.selections[index].value) ?
+                          Number(item.compositeParams.selections[index].value) : ''})"
+                          placement="top">
+                <el-input v-model="item.compositeParams.selections[index].value"
+                          :placeholder="$t('scalar.placeHolderNumber')"
+                          v-show="i.type !== 'BOOL'"
+                          @input="validateParam(item)"
+                          class="param-value"></el-input>
+              </el-tooltip>
+
               <el-select v-model="i.value"
                          v-if="i.type === 'BOOL'"
                          class="param-value">
@@ -1077,7 +1092,7 @@ export default {
                   val.checked = false;
                 }
               });
-
+              this.tableData = [];
               this.firstFloorNodes = [];
               this.allGraphData = {};
               d3.select('#graph svg').remove();
