@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ from mindinsight.datavisual.common import error_handler
 from mindinsight.datavisual.utils.tools import find_app_package
 from mindinsight.datavisual.utils.tools import get_img_mimetype
 from mindinsight.utils.exceptions import MindInsightException
+from mindinsight.utils.log import setup_logger
 
 
 def get_security_headers():
@@ -92,10 +93,13 @@ def _init_app_module(app):
         app (Flask): An instance of Flask.
     """
     packages = find_app_package()
+    gunicorn_logger = setup_logger("gunicorn", "error")
     for package in packages:
         try:
             app_module = import_module(package)
+            gunicorn_logger.info("[%s].init_module starts.", package)
             app_module.init_module(app)
+            gunicorn_logger.info("[%s].init_module ends.", package)
         except AttributeError:
             logger.debug('[%s].init_module not exists.', package)
 
@@ -108,6 +112,8 @@ def before_request():
 
 def create_app():
     """Set flask APP config, and start the data manager."""
+    gunicorn_logger = setup_logger("gunicorn", "error")
+    gunicorn_logger.info("create_app starts.")
     static_url_path = settings.URL_PATH_PREFIX + "/static"
     static_folder_path = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir, 'ui', 'dist', 'static'))
 
@@ -126,6 +132,7 @@ def create_app():
     app.response_class = CustomResponse
 
     _init_app_module(app)
+    gunicorn_logger.info("create_app ends.")
 
     return app
 
