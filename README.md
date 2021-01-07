@@ -30,8 +30,8 @@ MindInsight provides MindSpore with easy-to-use debugging and tuning capabilitie
 
 ![MindInsight Architecture](docs/arch.png)
 
-Click to view the [MindInsight design document](https://www.mindspore.cn/doc/note/en/master/design/mindinsight.html), learn more about the design.
-Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html) learn more about the MindInsight tutorial.
+Click to view the [MindInsight design document](https://www.mindspore.cn/doc/note/en/r1.1/design/mindinsight.html), learn more about the design.
+Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/training/en/r1.1/advanced_use/visualization_tutorials.html) learn more about the MindInsight tutorial.
 
 ## Installation
 
@@ -46,7 +46,7 @@ Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/tra
     - Confirm that [node.js](https://nodejs.org/en/download/) 10.19.0 or later is installed.
     - Confirm that [wheel](https://pypi.org/project/wheel/) 0.32.0 or later is installed.
     - Confirm that [pybind11](https://pypi.org/project/pybind11/) 2.4.3 or later is installed.
-- All other dependencies are included in [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt).
+- All other dependencies are included in [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/r1.1/requirements.txt).
 
 ### Installation Methods
 
@@ -58,7 +58,7 @@ You can install MindInsight either by pip or by source code.
 pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)). In other cases, you need to manually install dependency items.  
+> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/r1.1/requirements.txt)). In other cases, you need to manually install dependency items.  
 > - `{version}` denotes the version of MindInsight. For example, when you are downloading MindSpore 1.0.1, `{version}` should be 1.0.1.  
 > - `{arch}` denotes the system architecture. For example, the Linux system you are using is x86 architecture 64-bit, `{arch}` should be `x86_64`. If the system is ARM architecture 64-bit, then it should be `aarch64`.  
 > - `{system}` denotes the system version. For example, if you are using EulerOS ARM architecture, `{system}` should be `euleros_aarch64`. Currently, the following systems are supported by Ascend: `euleros_aarch64`/`centos_aarch64`/`centos_x86`/`ubuntu_aarch64`/`ubuntu_x86`. `ubuntu_x86` is supported by GPU.
@@ -112,7 +112,7 @@ service start state: success
 
 Before using MindInsight, the data in the training process should be recorded. When starting MindInsight, the directory of the saved data should be specified. After successful startup, the data can be viewed through the web page. Here is a brief introduction to recording training data, as well as starting and stopping MindInsight.
 
-[SummaryCollector](https://www.mindspore.cn/doc/api_python/en/master/mindspore/mindspore.train.html#mindspore.train.callback.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
+[SummaryCollector](https://www.mindspore.cn/doc/api_python/en/r1.1/mindspore/mindspore.train.html#mindspore.train.callback.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
 
 ```python
 ...
@@ -122,7 +122,7 @@ summary_collector = SummaryCollector(summary_dir='./summary_dir')
 model.train(epoch=1, ds_train, callbacks=[summary_collector])
 ```
 
-For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html).
+For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/tutorial/training/en/r1.1/advanced_use/visualization_tutorials.html).
 
 After you've collected the data, when you launch MindInsight, specify the directory in which the data has been stored.
 
