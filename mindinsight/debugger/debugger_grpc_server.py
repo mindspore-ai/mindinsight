@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -266,8 +266,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """
         log.info("Start to wait for command.")
         if self._status != ServerStatus.MISMATCH:
-            self._cache_store.get_stream_handler(Streams.METADATA).state = ServerStatus.WAITING.value
-            self._cache_store.put_data({'metadata': {'state': 'waiting'}})
+            metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
+            metadata_stream.state = ServerStatus.WAITING.value
+            self._cache_store.put_data(metadata_stream.get())
         event = None
         while event is None and self._status not in [ServerStatus.RUNNING, ServerStatus.PENDING]:
             log.debug("Wait for %s-th command", self._pos)
