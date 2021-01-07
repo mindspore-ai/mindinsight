@@ -1,3 +1,18 @@
+<!--
+Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
 <script>
 import RequestService from '@/services/request-service';
 import {select, selectAll, zoom, dispatch} from 'd3';
@@ -409,7 +424,7 @@ export default {
       if (metadata.enable_recheck !== undefined) {
         this.enableRecheck = metadata.enable_recheck;
       }
-
+      const temState = this.metadata.state;
       if (metadata.state) {
         this.metadata.state = metadata.state;
       }
@@ -418,9 +433,16 @@ export default {
       }
       if (metadata.node_name !== undefined && metadata.step !== undefined) {
         const nodeName = metadata.node_name;
-        if ((nodeName !== this.currentNodeName && nodeName !== '') || this.metadata.step !== metadata.step) {
+        if (
+          (nodeName !== this.currentNodeName && nodeName !== '') ||
+          this.metadata.step !== metadata.step ||
+          (this.metadata.state === this.state.waiting &&
+            (temState === this.state.sending || temState === this.state.running))
+        ) {
           if (nodeName) {
-            this.nodeName = nodeName;
+            if (this.metadata.state !== this.state.running) {
+              this.nodeName = nodeName;
+            }
             this.currentNodeName = nodeName;
           }
           this.metadata.step = metadata.step;
@@ -434,10 +456,10 @@ export default {
             graphName = metadata.graph_name;
           }
 
-          if (nodeName) {
+          if (nodeName && this.metadata.state !== this.state.running) {
             if (this.selectedNode.name) {
               if (nodeName === this.selectedNode.name) {
-                this.selectNode(true, true);
+                this.queryTensorHistory();
               } else {
                 this.queryAllTreeData(nodeName, true, graphName);
               }
@@ -446,11 +468,7 @@ export default {
             }
           } else {
             if (this.selectedNode.name) {
-              if (this.nodeName === this.selectedNode.name) {
-                this.selectNode(true, true);
-              } else {
-                this.queryAllTreeData(this.nodeName, true, graphName);
-              }
+              this.queryTensorHistory();
             }
           }
         } else {
@@ -459,6 +477,27 @@ export default {
       }
       if (metadata.step && metadata.step > this.metadata.step) {
         this.metadata.step = metadata.step;
+      }
+    },
+    /**
+     * Update tensor history by current selected node
+     */
+    queryTensorHistory() {
+      const path = this.selectedNode.name.split('^');
+      const type = this.allGraphData[path[0].replace('_unfold', '')].type;
+      const ignoreType = ['name_scope', 'aggregation_scope'];
+      if (!this.selectedNode.name.includes('more...') && !ignoreType.includes(type)) {
+        const name = path[0].replace('_unfold', '');
+        if (this.graphFiles.value === this.$t('debugger.all')) {
+          this.retrieveTensorHistory({name: name.replace(`${name.split('/')[0]}/`, '')}, name.split('/')[0]);
+        } else {
+          this.retrieveTensorHistory(
+              {
+                name,
+              },
+              this.graphFiles.value,
+          );
+        }
       }
     },
     /**
@@ -587,6 +626,7 @@ export default {
       this.defaultCheckedArr = [];
       this.resolve(JSON.parse(JSON.stringify(this.origialTree)));
       this.resetGraph();
+      this.tabledata = [];
     },
     recheckWatchpoint() {
       if (!this.enableRecheck) {
@@ -903,53 +943,48 @@ export default {
             node.checked = false;
           }
         });
-        const checkedKeys = this.$refs.tree.getCheckedKeys();
-        const watchNodes = [];
-        if (this.defaultCheckedArr.length === checkedKeys.length) {
-          return;
-        } else if (this.defaultCheckedArr.length > checkedKeys.length) {
-          watchNodes.push(obj.name);
-        } else {
-          checkedKeys.forEach((val) => {
-            if (this.defaultCheckedArr.indexOf(val) === -1) {
-              watchNodes.push(val);
-            }
-          });
-        }
-        const params = {
-          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
-          watch_nodes: watchNodes,
-          mode: node.indeterminate || check ? 1 : 0,
-          graph_name: this.graphFiles.value,
-        };
-        if (this.graphFiles.value === this.$t('debugger.all')) {
-          delete params.graph_name;
-        }
-        if (this.searchWord !== '') {
-          params.name = this.searchWord;
-          params.watch_nodes = [obj.name];
-          params.mode = check ? 1 : 0;
-        }
-        RequestService.updateWatchpoint(params).then(
-            (res) => {
-              this.defaultCheckedArr = checkedKeys;
-              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-                this.enableRecheck = res.data.metadata.enable_recheck;
+        this.$nextTick(() => {
+          if (node.indeterminate) {
+            node.checked = true;
+            node.indeterminate = false;
+          }
+          if (check) {
+            this.dealParentNode(node);
+          }
+          const checkedKeys = this.$refs.tree.getCheckedKeys();
+          const watchNodes = [];
+          if (this.defaultCheckedArr.length === checkedKeys.length) {
+            return;
+          } else if (this.defaultCheckedArr.length > checkedKeys.length) {
+            watchNodes.push(obj.name);
+          } else {
+            checkedKeys.forEach((val) => {
+              if (this.defaultCheckedArr.indexOf(val) === -1) {
+                watchNodes.push(val);
               }
-              this.$nextTick(() => {
-                if (node.indeterminate) {
-                  node.checked = true;
-                  node.indeterminate = false;
+            });
+          }
+          const params = {
+            watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
+            watch_nodes: watchNodes,
+            mode: node.indeterminate || check ? 1 : 0,
+            graph_name: this.graphFiles.value,
+          };
+          if (this.graphFiles.value === this.$t('debugger.all')) {
+            delete params.graph_name;
+          }
+          RequestService.updateWatchpoint(params).then(
+              (res) => {
+                this.defaultCheckedArr = checkedKeys;
+                if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+                  this.enableRecheck = res.data.metadata.enable_recheck;
                 }
-                if (check) {
-                  this.dealParentNode(node);
-                }
-              });
-            },
-            (err) => {
-              this.showErrorMsg(err);
-            },
-        );
+              },
+              (err) => {
+                this.showErrorMsg(err);
+              },
+          );
+        });
       }
     },
     dealParentNode(node) {
@@ -974,52 +1009,52 @@ export default {
       if (node.childNodes) {
         this.dealCheckPro(node.childNodes, node.indeterminate || check);
       }
-      const checkedKeys = this.$refs.searchTree.getCheckedKeys();
-      const watchNodes = [];
-      if (this.searchCheckedArr.length === checkedKeys.length) {
-        return;
-      } else if (this.searchCheckedArr.length > checkedKeys.length) {
-        watchNodes.push(obj.name);
-      } else {
-        checkedKeys.forEach((val) => {
-          if (this.searchCheckedArr.indexOf(val) === -1) {
-            watchNodes.push(val);
-          }
-        });
-      }
-      const params = {
-        watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
-        watch_nodes: watchNodes,
-        mode: check ? 1 : 0,
-        graph_name: this.graphFiles.value,
-        search_pattern: {name: this.searchedWord},
-      };
-      if (this.graphFiles.value === this.$t('debugger.all')) {
-        delete params.graph_name;
-      }
-      if (this.nodeTypes.value !== 'all') {
-        params.search_pattern.node_category = this.nodeTypes.value;
-      }
-      RequestService.updateWatchpoint(params).then(
-          (res) => {
-            this.searchCheckedArr = checkedKeys;
-            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-              this.enableRecheck = res.data.metadata.enable_recheck;
+      this.$nextTick(() => {
+        if (node.indeterminate) {
+          node.checked = true;
+          node.indeterminate = false;
+        }
+        if (check) {
+          this.dealParentNode(node);
+        }
+        const checkedKeys = this.$refs.searchTree.getCheckedKeys();
+        const watchNodes = [];
+        if (this.searchCheckedArr.length === checkedKeys.length) {
+          return;
+        } else if (this.searchCheckedArr.length > checkedKeys.length) {
+          watchNodes.push(obj.name);
+        } else {
+          checkedKeys.forEach((val) => {
+            if (this.searchCheckedArr.indexOf(val) === -1) {
+              watchNodes.push(val);
             }
-            this.$nextTick(() => {
-              if (node.indeterminate) {
-                node.checked = true;
-                node.indeterminate = false;
+          });
+        }
+        const params = {
+          watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
+          watch_nodes: watchNodes,
+          mode: check ? 1 : 0,
+          graph_name: this.graphFiles.value,
+          search_pattern: {name: this.searchedWord},
+        };
+        if (this.graphFiles.value === this.$t('debugger.all')) {
+          delete params.graph_name;
+        }
+        if (this.nodeTypes.value !== 'all') {
+          params.search_pattern.node_category = this.nodeTypes.value;
+        }
+        RequestService.updateWatchpoint(params).then(
+            (res) => {
+              this.searchCheckedArr = checkedKeys;
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+                this.enableRecheck = res.data.metadata.enable_recheck;
               }
-              if (check) {
-                this.dealParentNode(node);
-              }
-            });
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
-      );
+            },
+            (err) => {
+              this.showErrorMsg(err);
+            },
+        );
+      });
     },
     /** Deal tree data
      * @param {Object} childNodes tree node

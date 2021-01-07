@@ -1,5 +1,5 @@
 <!--
-Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -1231,6 +1231,9 @@ export default {
             this.contextmenu.point = {x: event.x, y: event.y};
           })
           .on('contextmenu', (target) => {
+            if (this.metadata.state !== this.state.waiting) {
+              return;
+            }
             const svgRect = svgDom.getBoundingClientRect();
             this.contextmenu.dom.style.left = `${this.contextmenu.point.x - svgRect.x}px`;
             this.contextmenu.dom.style.top = `${this.contextmenu.point.y - svgRect.y}px`;
