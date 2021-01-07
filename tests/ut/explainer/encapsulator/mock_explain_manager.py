@@ -105,7 +105,9 @@ class MockExplainManager:
             {
                 "relative_path": "./mock_job_1",
                 "create_time": datetime.strptime("2020-10-01 20:21:23", ExplainJobEncap.DATETIME_FORMAT),
-                "update_time": datetime.strptime("2020-10-01 20:21:23", ExplainJobEncap.DATETIME_FORMAT)
+                "update_time": datetime.strptime("2020-10-01 20:21:23", ExplainJobEncap.DATETIME_FORMAT),
+                "saliency_map": True,
+                "hierarchical_occlusion": True
             }
         ]
         return 1, job_list

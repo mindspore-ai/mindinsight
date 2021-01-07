@@ -30,6 +30,7 @@ from mindinsight.utils.exceptions import UnknownError
 HEADER_SIZE = 8
 CRC_STR_SIZE = 4
 MAX_EVENT_STRING = 500000000
+
 BenchmarkContainer = namedtuple('BenchmarkContainer', ['benchmark', 'status'])
 MetadataContainer = namedtuple('MetadataContainer', ['metadata', 'status'])
 InferfenceContainer = namedtuple('InferenceContainer', ['ground_truth_prob',
@@ -42,7 +43,7 @@ InferfenceContainer = namedtuple('InferenceContainer', ['ground_truth_prob',
                                                         'predicted_prob_itl95_low',
                                                         'predicted_prob_itl95_hi'])
 SampleContainer = namedtuple('SampleContainer', ['sample_id', 'image_path', 'ground_truth_label', 'inference',
-                                                 'explanation', 'status'])
+                                                 'explanation', 'hierarchical_occlusion', 'status'])
 
 
 class ExplainParser(_SummaryParser):
@@ -193,6 +194,7 @@ class ExplainParser(_SummaryParser):
             ground_truth_label=tensor_event_value.ground_truth_label,
             inference=inference,
             explanation=tensor_event_value.explanation,
+            hierarchical_occlusion=tensor_event_value.hoc,
             status=tensor_event_value.status
         )
         return sample_data

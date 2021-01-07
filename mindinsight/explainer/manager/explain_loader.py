@@ -14,14 +14,13 @@
 # ============================================================================
 """ExplainLoader."""
 
-from collections import defaultdict
-from enum import Enum
-
 import math
 import os
 import re
 import threading
+from collections import defaultdict
 from datetime import datetime
+from enum import Enum
 from typing import Dict, Iterable, List, Optional, Union
 
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
@@ -44,6 +43,7 @@ _SAMPLE_FIELD_NAMES = [
     ExplainFieldsEnum.GROUND_TRUTH_LABEL,
     ExplainFieldsEnum.INFERENCE,
     ExplainFieldsEnum.EXPLANATION,
+    ExplainFieldsEnum.HIERARCHICAL_OCCLUSION
 ]
 
 
@@ -75,10 +75,10 @@ class ExplainLoader:
             'create_time': os.stat(summary_dir).st_ctime,
             'update_time': os.stat(summary_dir).st_mtime,
             'query_time': os.stat(summary_dir).st_ctime,
-            'uncertainty_enabled': False,
+            'uncertainty_enabled': False
         }
         self._samples = defaultdict(dict)
-        self._metadata = {'explainers': [], 'metrics': [], 'labels': []}
+        self._metadata = {'explainers': [], 'metrics': [], 'labels': [], 'min_confidence': 0.5}
         self._benchmark = {'explainer_score': defaultdict(dict), 'label_score': defaultdict(dict)}
 
         self._status = _LoaderStatus.STOP.value
@@ -91,25 +91,19 @@ class ExplainLoader:
 
         Returns:
             list[dict], a list of dict, each dict contains:
-                - id (int): label id
-                - label (str): label name
-                - sample_count (int): number of samples for each label
+
+                - id (int): Label id.
+                - label (str): Label name.
+                - sample_count (int): Number of samples for each label.
         """
         sample_count_per_label = defaultdict(int)
-        samples_copy = self._samples.copy()
-        for sample in samples_copy.values():
-            if sample.get('image', False) and sample.get('ground_truth_label', False):
-                for label in sample['ground_truth_label']:
+        for sample in self._samples.values():
+            if sample.get('image') and (sample.get('ground_truth_label') or sample.get('predicted_label')):
+                for label in set(sample['ground_truth_label'] + sample['predicted_label']):
                     sample_count_per_label[label] += 1
 
-        all_classes_return = []
-        for label_id, label_name in enumerate(self._metadata['labels']):
-            single_info = {
-                'id': label_id,
-                'label': label_name,
-                'sample_count': sample_count_per_label[label_id]
-            }
-            all_classes_return.append(single_info)
+        all_classes_return = [{'id': label_id, 'label': label_name, 'sample_count': sample_count_per_label[label_id]}
+                              for label_id, label_name in enumerate(self._metadata['labels'])]
         return all_classes_return
 
     @property
@@ -166,19 +160,23 @@ class ExplainLoader:
 
         Returns:
             list[dict], A list of evaluation results of each explainer. Each item contains:
+
                 - explainer (str): Name of evaluated explainer.
                 - evaluations (list[dict]): A list of evaluation results by different metrics.
                 - class_scores (list[dict]): A list of evaluation results on different labels.
 
                 Each item in the evaluations contains:
+
                     - metric (str): name of metric method
                     - score (float): evaluation result
 
                 Each item in the class_scores contains:
+
                     - label (str): Name of label
                     - evaluations (list[dict]): A list of evaluation results on different labels by different metrics.
 
                     Each item in evaluations contains:
+
                         - metric (str): Name of metric method
                         - score (float): Evaluation scores of explainer on specific label by the metric.
         """
@@ -215,7 +213,7 @@ class ExplainLoader:
     @property
     def min_confidence(self) -> Optional[float]:
         """Return minimum confidence used to filter the predicted labels."""
-        return None
+        return self._metadata['min_confidence']
 
     @property
     def sample_count(self) -> int:
@@ -227,19 +225,17 @@ class ExplainLoader:
 
         Return:
             int, total number of available samples in the loading job.
-
         """
         sample_count = 0
-        samples_copy = self._samples.copy()
-        for sample in samples_copy.values():
-            if sample.get('image', False) and sample.get('ground_truth_label', False):
+        for sample in self._samples.values():
+            if sample.get('image', False):
                 sample_count += 1
         return sample_count
 
     @property
     def samples(self) -> List[Dict]:
         """Return the information of all samples in the job."""
-        return self.get_all_samples()
+        return self._samples
 
     @property
     def train_id(self) -> str:
@@ -298,6 +294,7 @@ class ExplainLoader:
                 self._clear_job()
             if event_dict:
                 self._import_data_from_event(event_dict)
+        self._reform_sample_info()
 
     @property
     def status(self):
@@ -317,59 +314,19 @@ class ExplainLoader:
 
     def get_all_samples(self) -> List[Dict]:
         """
-        Return a list of sample information cachced in the explain job
+        Return a list of sample information cached in the explain job
 
         Returns:
             sample_list (List[SampleObj]): a list of sample objects, each object
                 consists of:
 
-                - id (int): sample id
-                - name (str): basename of image
-                - labels (list[str]): list of labels
-                - inferences list[dict])
+                - id (int): Sample id.
+                - name (str): Basename of image.
+                - inferences (list[dict]): List of inferences for all labels.
         """
-        returned_samples = []
-        samples_copy = self._samples.copy()
-        for sample_id, sample_info in samples_copy.items():
-            if not sample_info.get('image', False) and not sample_info.get('ground_truth_label', False):
-                continue
-            returned_sample = {
-                'id': sample_id,
-                'name': str(sample_id),
-                'image': sample_info['image'],
-                'labels': [self._metadata['labels'][i] for i in sample_info['ground_truth_label']],
-            }
-
-            # Check whether the sample has valid label-prob pairs.
-            if not ExplainLoader._is_inference_valid(sample_info):
-                continue
-
-            inferences = {}
-            for label, prob in zip(sample_info['ground_truth_label'] + sample_info['predicted_label'],
-                                   sample_info['ground_truth_prob'] + sample_info['predicted_prob']):
-                inferences[label] = {
-                    'label': self._metadata['labels'][label],
-                    'confidence': _round(prob),
-                    'saliency_maps': []
-                }
-
-            if sample_info['ground_truth_prob_sd'] or sample_info['predicted_prob_sd']:
-                for label, std, low, high in zip(
-                        sample_info['ground_truth_label'] + sample_info['predicted_label'],
-                        sample_info['ground_truth_prob_sd'] + sample_info['predicted_prob_sd'],
-                        sample_info['ground_truth_prob_itl95_low'] + sample_info['predicted_prob_itl95_low'],
-                        sample_info['ground_truth_prob_itl95_hi'] + sample_info['predicted_prob_itl95_hi']
-                ):
-                    inferences[label]['confidence_sd'] = _round(std)
-                    inferences[label]['confidence_itl95'] = [_round(low), _round(high)]
-
-            for explainer, label_heatmap_path_dict in sample_info['explanation'].items():
-                for label, heatmap_path in label_heatmap_path_dict.items():
-                    if label in inferences:
-                        inferences[label]['saliency_maps'].append({'explainer': explainer, 'overlay': heatmap_path})
-
-            returned_sample['inferences'] = list(inferences.values())
-            returned_samples.append(returned_sample)
+        returned_samples = [{'id': sample_id, 'name': info['name'], 'image': info['image'],
+                             'inferences': list(info['inferences'].values())} for sample_id, info in
+                            self._samples.items() if info.get('image', False)]
         return returned_samples
 
     def _import_data_from_event(self, event_dict: Dict):
@@ -461,30 +418,29 @@ class ExplainLoader:
             - predicted_probs (list[int]): A list of confidences w.r.t the predicted labels.
             - explanations (dict): Explanations is a dictionary where the each explainer name mapping to a dictionary
                 of saliency maps. The structure of explanations demonstrates below:
-
                 {
                     explainer_name_1: {label_1: saliency_id_1, label_2: saliency_id_2, ...},
                     explainer_name_2: {label_1: saliency_id_1, label_2: saliency_id_2, ...},
                     ...
                 }
+            - hierarchical_occlusion (dict):  A dictionary where each label is matched to a dictionary:
+                {label_1: [{prob: layer1_prob, bbox: []}, {prob: layer2_prob, bbox: []}],
+                 label_2:
+                }
         """
         if getattr(sample, 'sample_id', None) is None:
             raise ParamValueError('sample_event has no sample_id')
         sample_id = sample.sample_id
-        samples_copy = self._samples.copy()
-        if sample_id not in samples_copy:
+        if sample_id not in self._samples:
             self._samples[sample_id] = {
+                'id': sample_id,
+                'name': str(sample_id),
+                'image': sample.image_path,
                 'ground_truth_label': [],
-                'ground_truth_prob': [],
-                'ground_truth_prob_sd': [],
-                'ground_truth_prob_itl95_low': [],
-                'ground_truth_prob_itl95_hi': [],
                 'predicted_label': [],
-                'predicted_prob': [],
-                'predicted_prob_sd': [],
-                'predicted_prob_itl95_low': [],
-                'predicted_prob_itl95_hi': [],
-                'explanation': defaultdict(dict)
+                'inferences': defaultdict(dict),
+                'explanation': defaultdict(dict),
+                'hierarchical_occlusion': defaultdict(dict)
             }
 
         if sample.image_path:
@@ -492,27 +448,66 @@ class ExplainLoader:
 
         for tag in _SAMPLE_FIELD_NAMES:
             if tag == ExplainFieldsEnum.GROUND_TRUTH_LABEL:
-                self._samples[sample_id]['ground_truth_label'].extend(list(sample.ground_truth_label))
+                if not self._samples[sample_id]['ground_truth_label']:
+                    self._samples[sample_id]['ground_truth_label'].extend(list(sample.ground_truth_label))
             elif tag == ExplainFieldsEnum.INFERENCE:
                 self._import_inference_from_event(sample, sample_id)
-            else:
+            elif tag == ExplainFieldsEnum.EXPLANATION:
                 self._import_explanation_from_event(sample, sample_id)
+            elif tag == ExplainFieldsEnum.HIERARCHICAL_OCCLUSION:
+                self._import_hoc_from_event(sample, sample_id)
+
+    def _reform_sample_info(self):
+        """Reform the sample info."""
+        for _, sample_info in self._samples.items():
+            inferences = sample_info['inferences']
+            res_dict = defaultdict(list)
+            for explainer, label_heatmap_path_dict in sample_info['explanation'].items():
+                for label, heatmap_path in label_heatmap_path_dict.items():
+                    res_dict[label].append({'explainer': explainer, 'overlay': heatmap_path})
+
+            for label, item in inferences.items():
+                item['saliency_maps'] = res_dict[label]
+
+            for label, item in sample_info['hierarchical_occlusion'].items():
+                inferences[label]['hoc_layers'] = item['hoc_layers']
 
     def _import_inference_from_event(self, event, sample_id):
         """Parse the inference event."""
         inference = event.inference
-        self._samples[sample_id]['ground_truth_prob'].extend(list(inference.ground_truth_prob))
-        self._samples[sample_id]['ground_truth_prob_sd'].extend(list(inference.ground_truth_prob_sd))
-        self._samples[sample_id]['ground_truth_prob_itl95_low'].extend(list(inference.ground_truth_prob_itl95_low))
-        self._samples[sample_id]['ground_truth_prob_itl95_hi'].extend(list(inference.ground_truth_prob_itl95_hi))
-        self._samples[sample_id]['predicted_label'].extend(list(inference.predicted_label))
-        self._samples[sample_id]['predicted_prob'].extend(list(inference.predicted_prob))
-        self._samples[sample_id]['predicted_prob_sd'].extend(list(inference.predicted_prob_sd))
-        self._samples[sample_id]['predicted_prob_itl95_low'].extend(list(inference.predicted_prob_itl95_low))
-        self._samples[sample_id]['predicted_prob_itl95_hi'].extend(list(inference.predicted_prob_itl95_hi))
-
-        if self._samples[sample_id]['ground_truth_prob_sd'] or self._samples[sample_id]['predicted_prob_sd']:
+        if inference.ground_truth_prob_sd or inference.predicted_prob_sd:
             self._loader_info['uncertainty_enabled'] = True
+        if not self._samples[sample_id]['predicted_label']:
+            self._samples[sample_id]['predicted_label'].extend(list(inference.predicted_label))
+        if not self._samples[sample_id]['inferences']:
+            inferences = {}
+            for label, prob in zip(list(event.ground_truth_label) + list(inference.predicted_label),
+                                   list(inference.ground_truth_prob) + list(inference.predicted_prob)):
+                inferences[label] = {
+                    'label': self._metadata['labels'][label],
+                    'confidence': _round(prob),
+                    'saliency_maps': [],
+                    'hoc_layers': {},
+                }
+                if not event.ground_truth_label:
+                    inferences[label]['prediction_type'] = None
+                else:
+                    if prob < self.min_confidence:
+                        inferences[label]['prediction_type'] = 'FN'
+                    elif label in event.ground_truth_label:
+                        inferences[label]['prediction_type'] = 'TP'
+                    else:
+                        inferences[label]['prediction_type'] = 'FP'
+            if self._loader_info['uncertainty_enabled']:
+                for label, std, low, high in zip(
+                        list(event.ground_truth_label) + list(inference.predicted_label),
+                        list(inference.ground_truth_prob_sd) + list(inference.predicted_prob_sd),
+                        list(inference.ground_truth_prob_itl95_low) + list(inference.predicted_prob_itl95_low),
+                        list(inference.ground_truth_prob_itl95_hi) + list(inference.predicted_prob_itl95_hi)):
+                    inferences[label]['confidence_sd'] = _round(std)
+                    inferences[label]['confidence_itl95'] = [_round(low), _round(high)]
+
+            self._samples[sample_id]['inferences'] = inferences
 
     def _import_explanation_from_event(self, event, sample_id):
         """Parse the explanation event."""
@@ -524,6 +519,24 @@ class ExplainLoader:
             explainer = explanation_item.explain_method
             label = explanation_item.label
             sample_explanation[explainer][label] = explanation_item.heatmap_path
+
+    def _import_hoc_from_event(self, event, sample_id):
+        """Parse the mango event."""
+        sample_hoc = self._samples[sample_id]['hierarchical_occlusion']
+        if event.hierarchical_occlusion:
+            for hoc_item in event.hierarchical_occlusion:
+                label = hoc_item.label
+                sample_hoc[label] = {}
+                sample_hoc[label]['label'] = label
+                sample_hoc[label]['mask'] = hoc_item.mask
+                sample_hoc[label]['confidence'] = self._samples[sample_id]['inferences'][label]['confidence']
+                sample_hoc[label]['hoc_layers'] = []
+                for hoc_layer in hoc_item.layer:
+                    sample_hoc_dict = {'confidence': hoc_layer.prob}
+                    box_lst = list(hoc_layer.box)
+                    box = [box_lst[i: i + 4] for i in range(0, len(hoc_layer.box), 4)]
+                    sample_hoc_dict['boxes'] = box
+                    sample_hoc[label]['hoc_layers'].append(sample_hoc_dict)
 
     def _clear_job(self):
         """Clear the cached data and update the time info of the loader."""

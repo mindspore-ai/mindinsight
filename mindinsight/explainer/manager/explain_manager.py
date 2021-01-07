@@ -114,6 +114,7 @@ class ExplainManager:
         Returns:
             tuple[total, directories], total indicates the overall number of explain directories and directories
                     indicate list of summary directory info including the following attributes.
+
                 - relative_path (str): Relative path of summary directory, referring to settings.SUMMARY_BASE_DIR,
                                         starting with "./".
                 - create_time (datetime): Creation time of summary file.

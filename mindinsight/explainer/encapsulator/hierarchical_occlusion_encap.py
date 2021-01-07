@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,46 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Saliency map encapsulator."""
+"""Hierarchical Occlusion encapsulator."""
 
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap
 
 
-class SaliencyEncap(ExplanationEncap):
-    """Saliency map encapsulator."""
+class HierarchicalOcclusionEncap(ExplanationEncap):
+    """Hierarchical occlusion encapsulator."""
 
-    def query_saliency_maps(self,
-                            train_id,
-                            labels,
-                            explainers,
-                            limit,
-                            offset,
-                            sorted_name,
-                            sorted_type,
-                            prediction_types=None):
+    def query_hierarchical_occlusion(self,
+                                     train_id,
+                                     labels,
+                                     limit,
+                                     offset,
+                                     sorted_name,
+                                     sorted_type,
+                                     prediction_types=None
+                                     ):
         """
-        Query saliency maps.
+        Query hierarchical occlusion results.
+
         Args:
             train_id (str): Job ID.
             labels (list[str]): Label filter.
-            explainers (list[str]): Explainers of saliency maps to be shown.
             limit (int): Maximum number of items to be returned.
             offset (int): Page offset.
             sorted_name (str): Field to be sorted.
             sorted_type (str): Sorting order, 'ascending' or 'descending'.
-            prediction_types (list[str]): Prediction types filter. Default: None.
+            prediction_types (list[str]): Prediction types filter.
 
         Returns:
-            tuple[int, list[dict]], total number of samples after filtering and list of sample result.
+            tuple[int, list[dict]], total number of samples after filtering and list of sample results.
         """
         job = self.job_manager.get_job(train_id)
         if job is None:
             raise TrainJobNotExistError(train_id)
 
         samples = self._query_samples(job, labels, sorted_name, sorted_type, prediction_types,
-                                      query_type="saliency_maps")
-
+                                      query_type="hoc_layers")
         sample_infos = []
         obj_offset = offset * limit
         count = len(samples)
@@ -60,29 +59,29 @@ class SaliencyEncap(ExplanationEncap):
             end = obj_offset + limit
         for i in range(obj_offset, end):
             sample = samples[i]
-            sample_infos.append(self._touch_sample(sample, job, explainers))
+            sample_infos.append(self._touch_sample(sample, job))
 
         return count, sample_infos
 
-    def _touch_sample(self, sample, job, explainers):
+    def _touch_sample(self, sample, job):
         """
-        Final editing the sample info.
+        Final edit on single sample info.
+
         Args:
-            sample (dict): Sample info.
-            job (ExplainJob): Explain job.
-            explainers (list[str]): Explainer names.
+             sample (dict): Sample info.
+             job (ExplainManager): Explain job.
 
         Returns:
             dict, the edited sample info.
         """
         sample_cp = sample.copy()
-        sample_cp["image"] = self._get_image_url(job.train_id, sample['image'], "original")
-        for inference in sample_cp["inferences"]:
+        sample_cp["image"] = self._get_image_url(job.train_id, sample["image"], "original")
+        for inference_item in sample_cp["inferences"]:
             new_list = []
-            for saliency_map in inference["saliency_maps"]:
-                if explainers and saliency_map["explainer"] not in explainers:
-                    continue
-                saliency_map["overlay"] = self._get_image_url(job.train_id, saliency_map['overlay'], "overlay")
-                new_list.append(saliency_map)
-            inference["saliency_maps"] = new_list
+            for idx, hoc_layer in enumerate(inference_item["hoc_layers"]):
+                hoc_layer["outcome"] = self._get_image_url(job.train_id,
+                                                           f"{sample['id']}_{inference_item['label']}_{idx}.jpg",
+                                                           "outcome")
+                new_list.append(hoc_layer)
+            inference_item["hoc_layers"] = new_list
         return sample_cp

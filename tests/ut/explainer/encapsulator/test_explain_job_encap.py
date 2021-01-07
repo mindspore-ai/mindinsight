@@ -31,7 +31,9 @@ class TestExplainJobEncap:
             {
                 "train_id": "./mock_job_1",
                 "create_time": "2020-10-01 20:21:23",
-                "update_time": "2020-10-01 20:21:23"
+                "update_time": "2020-10-01 20:21:23",
+                "saliency_map": True,
+                "hierarchical_occlusion": True
             }
         ])
         assert job_list == expected_result

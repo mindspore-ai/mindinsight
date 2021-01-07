@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 # ============================================================================
 """Explain job list encapsulator."""
 
-import copy
 from datetime import datetime
 
 from mindinsight.explainer.encapsulator.explain_data_encap import ExplainDataEncap
@@ -61,6 +60,9 @@ class ExplainJobEncap(ExplainDataEncap):
         info["train_id"] = dir_info["relative_path"]
         info["create_time"] = dir_info["create_time"].strftime(cls.DATETIME_FORMAT)
         info["update_time"] = dir_info["update_time"].strftime(cls.DATETIME_FORMAT)
+        info["saliency_map"] = dir_info["saliency_map"]
+        info["hierarchical_occlusion"] = dir_info["hierarchical_occlusion"]
+
         return info
 
     @classmethod
@@ -79,7 +81,7 @@ class ExplainJobEncap(ExplainDataEncap):
         """Convert ExplainJob's meta-data to jsonable info object."""
         info = cls._job_2_info(job)
         info["sample_count"] = job.sample_count
-        info["classes"] = copy.deepcopy(job.all_classes)
+        info["classes"] = [item for item in job.all_classes if item['sample_count'] > 0]
         saliency_info = dict()
         if job.min_confidence is None:
             saliency_info["min_confidence"] = cls.DEFAULT_MIN_CONFIDENCE

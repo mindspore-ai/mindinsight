@@ -24,10 +24,6 @@ from mindinsight.explainer.manager.explain_loader import _LoaderStatus
 from mindinsight.explainer.manager.explain_parser import ExplainParser
 
 
-def abc():
-    FileHandler.is_file('aaa')
-    print('after')
-
 
 class TestExplainLoader:
     """Test explain loader class."""
