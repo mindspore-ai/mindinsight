@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
 # ==============================================================================
 """Mapper module."""
 import numpy as np
-from ...base import ONNXToMindSporeMapper
-from ...gen_setting import Setting
-from ....common import utils
+from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
+from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
+from mindinsight.mindconverter.graph_based_converter.common.utils import convert_bytes_string_to_string
 
 
 def _convert_padding(**kwargs):
@@ -83,7 +83,7 @@ class ConvMapper(ONNXToMindSporeMapper):
 
         auto_pad = None
         if params.get("auto_pad") is not None:
-            auto_pad = utils.convert_bytes_string_to_string(params.get("auto_pad"))
+            auto_pad = convert_bytes_string_to_string(params.get("auto_pad"))
 
         # tmp tf translated ver. mapping
         if isinstance(params.get('dilations'), list):

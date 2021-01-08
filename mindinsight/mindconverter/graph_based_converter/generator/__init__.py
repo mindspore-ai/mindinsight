@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,8 +18,9 @@ __all__ = ["batch_add_nodes"]
 import re
 import copy
 
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import CodeFragment
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords
 from .generator import Generator, CodeStruct
-from ..common.code_fragment import CodeFragment
 
 
 def _tf_model_node_name_reformat(node, node_name):
@@ -34,7 +35,6 @@ def _tf_model_node_name_reformat(node, node_name):
         str, re-formatted node name.
     """
     scope_name = node.scope_name
-    new_name = None
     regex = r"(?P<parent>.+/)(?P<op>\w+)"
     match = re.match(regex, scope_name)
     parent = match.group("parent")
@@ -79,6 +79,32 @@ def batch_add_nodes(graph_obj, mapper) -> Generator:
     return generator_inst
 
 
+def _supply_graph_info(node, external_inputs):
+    """
+    Supply IR graph node info into metadata.
+
+    Args:
+        node (GraphNode): Graph node instance.
+        external_inputs (list[str]): External inputs in ONNX ir.
+
+    Returns:
+        dict, metadata.
+    """
+    precursors = _combine_external_inputs_with_precursor_nodes(node, external_inputs)
+    return {
+        ExchangeMessageKeywords.MetadataScope.value.SOURCE.value: node.ir_node_name,
+        ExchangeMessageKeywords.MetadataScope.value.OPERATION.value: node.ir_node_operation,
+        ExchangeMessageKeywords.MetadataScope.value.SCOPE.value: node.scope_name,
+        ExchangeMessageKeywords.MetadataScope.value.INPUTS.value: node.ir_node_inputs,
+        ExchangeMessageKeywords.MetadataScope.value.INPUTS_SHAPE.value: node.input_shape,
+        ExchangeMessageKeywords.MetadataScope.value.OUTPUTS.value: node.ir_node_outputs,
+        ExchangeMessageKeywords.MetadataScope.value.OUTPUTS_SHAPE.value: node.output_shape,
+        ExchangeMessageKeywords.MetadataScope.value.PRECURSOR.value: precursors,
+        ExchangeMessageKeywords.MetadataScope.value.SUCCESSOR.value: node.ir_node_successor,
+        ExchangeMessageKeywords.MetadataScope.value.ATTRS.value: node.node_params,
+    }
+
+
 def _convert_params(node, mapper):
     """
     Call mapper to convert node's params from ONNX to MindSpore.
@@ -88,10 +114,8 @@ def _convert_params(node, mapper):
         mapper (Mapper): The mapper instance which indicating conversion method.
 
     Returns:
-        str, op name in MindSpore
-        dict, MindSpore parameters
-        dict, MindSpore settings
-        dict, weights of the node
+        tuple[str, dict, dict, dict], op name in MindSpore, MindSpore parameters,
+        MindSpore settings and weights of the node.
     """
     params = copy.deepcopy(node.node_params)
     params.update({"input_shape": node.input_shape,
@@ -109,3 +133,24 @@ def _convert_params(node, mapper):
         return op_in_ms, ms_params, ms_settings, weights
 
     return node.op_name, node.node_params, dict(), dict()
+
+
+def _combine_external_inputs_with_precursor_nodes(node, external_inputs):
+    """
+    User_provided_input_nodes.
+
+    Args:
+        node (OnnxGraphNode): Node instance.
+        external_inputs (list[str]): Inputs in onnx ir.
+
+    Returns:
+        list[str], precursor nodes list.
+    """
+    inputs = set(node.ir_node_inputs)
+    to_be_added = list(inputs & set(external_inputs))
+    precursor = node.ir_node_precursor
+    # Add external inputs to precursor as the order of its inputs.
+    for item in to_be_added:
+        node_idx = node.ir_node_inputs.index(item)
+        precursor.insert(node_idx, item)
+    return precursor

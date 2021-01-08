@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
 # ==============================================================================
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.constant import InputType
-from ...base import ONNXToMindSporeMapper
-from ...gen_setting import Setting
+from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
+from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
+from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class ConcatMapper(ONNXToMindSporeMapper):
@@ -38,3 +40,14 @@ class ConcatMapper(ONNXToMindSporeMapper):
     def _convert_settings(**kwargs):
         input_type = InputType.LIST.value
         return Setting(op_ipt_type=input_type)
+
+    @staticmethod
+    def _generate_snippet_template(**kwargs):
+        template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
+            **kwargs)
+        variable_slot = "var_0"
+        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
+                             f"(({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}},))"
+        template = reset_init_or_construct(template, variable_slot, [construct_template],
+                                           TemplateKeywords.CONSTRUCT.value)
+        return template, exchange_msg, outputs_list, outputs_mapping

@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import json
 import os
 from typing import Dict
 from mindinsight.mindconverter.common.log import logger as log
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
 
 CONFIG_JSON = "onnx_to_ms.json"
 OPERATION_TABLE = os.path.join(
@@ -36,6 +37,7 @@ GET_OP_NAME = "_operation_name_in_ms"
 GET_OP_PARAMS = "_convert_params"
 GET_OP_WEIGHTS = "_convert_trained_weights"
 GET_OP_SETTINGS = "_convert_settings"
+GET_OP_TEMPLATE = "_generate_snippet_template"
 
 
 class Mapper(metaclass=abc.ABCMeta):
@@ -44,7 +46,7 @@ class Mapper(metaclass=abc.ABCMeta):
     @staticmethod
     @abc.abstractmethod
     def _operation_name_in_ms(*args, **kwargs):
-        """Corresponding operation name in mindspore."""
+        """Corresponding operation name in MindSpore."""
 
     @staticmethod
     @abc.abstractmethod
@@ -65,6 +67,11 @@ class Mapper(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def convert(cls, op_name: str, params: Dict, weights: Dict = None):
         """Convert third party operation's param into MindSpore operation."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def _generate_snippet_template(**kwargs):
+        """Generate code template according to node info."""
 
 
 class ONNXToMindSporeMapper(Mapper, abc.ABC):
@@ -131,3 +138,36 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
     @staticmethod
     def _convert_settings(**kwargs):
         raise NotImplementedError
+
+    @staticmethod
+    def _generate_snippet_template(**kwargs):
+        op = kwargs.get("operation")
+        args = kwargs.get("converted_params")
+        weights = kwargs.get("weights")
+        if not op:
+            raise ValueError("Can not get MindSpore operation name.")
+        variable_slot = "var_0"
+        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
+        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
+                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}})"
+        template = {
+            variable_slot: {
+                TemplateKeywords.INIT.value: [init_template],
+                TemplateKeywords.CONSTRUCT.value: [construct_template]
+            }
+        }
+        exchange_msg = {
+            variable_slot: {
+                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
+                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
+                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
+                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
+                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
+                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
+                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: {}
+            }
+        }
+        outputs_list = [f"opt_{{{variable_slot}}}"]
+        outputs_mapping = ((0, 0),)
+        return template, exchange_msg, outputs_list, outputs_mapping

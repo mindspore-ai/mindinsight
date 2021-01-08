@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -209,3 +209,10 @@ def get_framework_type(model_path):
         raise error
 
     return framework_type
+
+
+def reset_init_or_construct(template, variable_slot, new_data, scope):
+    """Reset init statement."""
+    template[variable_slot][scope].clear()
+    template[variable_slot][scope] += new_data
+    return template

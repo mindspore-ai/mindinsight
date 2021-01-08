@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,11 +17,13 @@ import abc
 from collections import OrderedDict
 from copy import deepcopy
 
+from typing import List
+
 from mindinsight.mindconverter.common.log import logger as log
-from ..common.code_fragment import CodeFragment
-from ..constant import NodeType, InputType
-from ..mapper.base import Mapper
-from ...common.exceptions import NodeInputTypeNotSupportError
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import CodeFragment
+from mindinsight.mindconverter.graph_based_converter.constant import NodeType, InputType
+from mindinsight.mindconverter.graph_based_converter.mapper.base import Mapper
+from mindinsight.mindconverter.common.exceptions import NodeInputTypeNotSupportError
 
 
 class GraphParser(metaclass=abc.ABCMeta):
@@ -97,7 +99,6 @@ class Graph(BaseGraph, abc.ABC):
         self.model = model
         self._raw_input_nodes = kwargs.get("input_nodes")
         self._raw_output_nodes = kwargs.get("output_nodes")
-        self.checkpoint = kwargs.get("checkpoint", None)
         self._nodes_collection = OrderedDict()
         self._nodes_record = dict()
         self._shape_dict = dict()
@@ -106,6 +107,13 @@ class Graph(BaseGraph, abc.ABC):
         self._topological_order = []
         self._input_shape = dict()
         self._is_multi_opt_graph = False
+
+    @property
+    def user_provided_input_nodes(self) -> List[str]:
+        """User provided input_nodes in CLI."""
+        if not isinstance(self._raw_input_nodes, list):
+            return [self._raw_input_nodes]
+        return self._raw_input_nodes
 
     def get_input_shape(self, name):
         """
@@ -285,9 +293,9 @@ class GraphNode(abc.ABC):
         self.successor_nodes = []
         # Control dependency.
         self._deleted_in_edge = 0
-        # Source node in pytorch.
-        self._src_node = str(node) if node else None
-        # Original operation name in pytorch.
+        # Source node in ONNX.
+        self._src_node = node if node else None
+        # Original operation name in ONNX.
         self._op_name = None
         self._op_params = dict()
         self._scope_name = None
@@ -310,6 +318,40 @@ class GraphNode(abc.ABC):
         self._opt_var_names = list()
         # Is in multi output graph.
         self._is_in_multi_opt_graph = False
+
+    @property
+    def ir_node_name(self):
+        """Getter of ir node's name."""
+        return self._src_node.name
+
+    @property
+    def ir_node_operation(self):
+        """Getter of ir node's operation."""
+        return self._src_node.op_type
+
+    @property
+    def ir_node_inputs(self):
+        """Getter of ir node's inputs."""
+        return list(self._src_node.input_name_list)
+
+    @property
+    def ir_node_outputs(self):
+        """Getter of ir node's outputs."""
+        return list(self._src_node.output_name_list)
+
+    @property
+    def ir_node_precursor(self):
+        """Getter of ir node's precursor."""
+        return [
+            v.name for _, v in self._src_node.precursor_onnx_node_dict.items()
+        ]
+
+    @property
+    def ir_node_successor(self):
+        """Getter of ir node's successor."""
+        return [
+            v.name for _, v in self._src_node.successor_onnx_node_dict.items()
+        ]
 
     @property
     def weight(self):
