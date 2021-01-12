@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-from ...base import ONNXToMindSporeMapper
-from ...gen_setting import Setting
+from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
+from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
+from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class ReduceMeanMapper(ONNXToMindSporeMapper):
@@ -42,3 +44,20 @@ class ReduceMeanMapper(ONNXToMindSporeMapper):
         else:
             axis = tuple()
         return Setting(op_extra_input={'axis': axis})
+
+    @staticmethod
+    def _generate_snippet_template(**kwargs):
+        template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
+            **kwargs)
+        raw_params = kwargs.get("raw_params")
+        if raw_params.get('axes'):
+            axis = raw_params['axes'][0] if len(raw_params['axes']) == 1 else tuple(raw_params['axes'])
+        else:
+            axis = tuple()
+        variable_slot = "var_0"
+        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
+                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, {axis})"
+        template = reset_init_or_construct(template, variable_slot, [construct_template],
+                                           TemplateKeywords.CONSTRUCT.value)
+
+        return template, exchange_msg, outputs_list, outputs_mapping

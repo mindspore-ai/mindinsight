@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-from ...base import ONNXToMindSporeMapper
-from ...gen_setting import Setting
-from ....common import utils
+from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
+from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
+from mindinsight.mindconverter.graph_based_converter.common.utils import convert_bytes_string_to_string
 
 
 class ResizeMapper(ONNXToMindSporeMapper):
@@ -26,11 +26,11 @@ class ResizeMapper(ONNXToMindSporeMapper):
         params = kwargs.get("params")
         onnx_coordinate_transform = params.get("coordinate_transformation_mode")
         if onnx_coordinate_transform is not None:
-            onnx_coordinate_transform = utils.convert_bytes_string_to_string(onnx_coordinate_transform)
+            onnx_coordinate_transform = convert_bytes_string_to_string(onnx_coordinate_transform)
 
         interpolation_mode = params.get("mode")
         if interpolation_mode is not None:
-            interpolation_mode = utils.convert_bytes_string_to_string(interpolation_mode)
+            interpolation_mode = convert_bytes_string_to_string(interpolation_mode)
 
         # Define which MindSpore Resize operator to be used
         if interpolation_mode == "linear":
@@ -54,7 +54,7 @@ class ResizeMapper(ONNXToMindSporeMapper):
 
         onnx_coordinate_transform = params.get("coordinate_transformation_mode")
         if onnx_coordinate_transform is not None:
-            onnx_coordinate_transform = utils.convert_bytes_string_to_string(onnx_coordinate_transform)
+            onnx_coordinate_transform = convert_bytes_string_to_string(onnx_coordinate_transform)
 
         if onnx_coordinate_transform == "align_corners" or "half_pixel" in onnx_coordinate_transform:
             align_corners = True

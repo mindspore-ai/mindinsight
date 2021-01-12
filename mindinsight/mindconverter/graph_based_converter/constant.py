@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,6 +41,47 @@ UNKNOWN_DIM_VAL = "unk__001"
 ONNX_MIN_VER = "1.8.0"
 TF2ONNX_MIN_VER = "1.7.1"
 ONNXRUNTIME_MIN_VER = "1.5.2"
+
+
+@unique
+class TemplateKeywords(Enum):
+    """Define keywords in template message."""
+    INIT = "init"
+    CONSTRUCT = "construct"
+
+
+@unique
+class ExchangeMessageKeywords(Enum):
+    """Define keywords in exchange message."""
+    METADATA = "metadata"
+
+    @unique
+    class MetadataScope(Enum):
+        """Define metadata scope keywords in exchange message."""
+        SOURCE = "source"
+        OPERATION = "operation"
+        INPUTS = "inputs"
+        INPUTS_SHAPE = "inputs_shape"
+        OUTPUTS = "outputs"
+        OUTPUTS_SHAPE = "outputs_shape"
+        PRECURSOR = "precursor_nodes"
+        SUCCESSOR = "successor_nodes"
+        ATTRS = "attributes"
+        SCOPE = "scope"
+
+    @unique
+    class VariableScope(Enum):
+        """Define variable scope keywords in exchange message."""
+        OPERATION = "operation"
+        VARIABLE_NAME = "variable_name"
+        OUTPUT_TYPE = "output_type"
+        TSR_TYPE = "tensor"
+        ARR_TYPE = "array"
+        INPUTS = "inputs"
+        ARGS = "args"
+        WEIGHTS = "weights"
+        TRAINABLE_PARAMS = "trainable_params"
+
 
 BINARY_HEADER_PYTORCH_FILE = \
     b'\x80\x02\x8a\nl\xfc\x9cF\xf9 j\xa8P\x19.\x80\x02M\xe9\x03.\x80\x02}q\x00(X\x10\x00\x00\x00'
