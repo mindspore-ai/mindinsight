@@ -64,7 +64,7 @@ build_crc32() {
     rm -f "$CRC32_SOURCE_DIR/$CRC32_SO_FILE"
     rm -f "$CRC32_OUTPUT_DIR/$CRC32_SO_FILE"
 
-    read -ra PYBIND11_INCLUDES <<<"$($PYTHON -m pybind11 --includes)"
+    read -ra PYBIND11_INCLUDES <<< "$($PYTHON -m pybind11 --includes)"
     if [ ! -n "${PYBIND11_INCLUDES[0]}" ]; then
         echo "pybind11 is required"
         exit 1
