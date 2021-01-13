@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,10 +33,10 @@ from typing import List
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import BaseNode
 
 MAX_OUT_DEGREE = 1
-MINI_FREQUENCY = 4
-MAX_ITERATION_DEPTH = 4
-SATISFIED_SCORE = 0.6
-ACCEPTABLE_RESULT_COUNT = 16
+MINI_FREQUENCY = 0.07
+MAX_ITERATION_DEPTH = 16
+SATISFIED_SCORE = 1.5
+ACCEPTABLE_RESULT_COUNT = 32
 PTN_COVERAGE_THRESHOLD = 0.65
 # If pattern length is short than `IGNORE_PTN_LEN`, then do not calculate the coverage.
 IGNORE_PTN_LEN = 5
@@ -50,6 +50,23 @@ def cal_matching_score(sequence_len: int):
         sequence_len (int): Pattern length.
     """
     return 2 / (1 + math.pow(math.e, -0.1 * sequence_len)) - 1
+
+
+def _cmp(x, y):
+    """Cmp function to sort pattern."""
+    if x[1].count > y[1].count:
+        return CmpRelation.GREATER
+    if x[1].count < y[1].count:
+        return CmpRelation.LESS
+    if x[1].additional_score > y[1].additional_score:
+        return CmpRelation.GREATER
+    if x[1].additional_score < y[1].additional_score:
+        return CmpRelation.LESS
+    if x[1].ptn_length > y[1].ptn_length:
+        return CmpRelation.GREATER
+    if x[1].ptn_length < y[1].ptn_length:
+        return CmpRelation.LESS
+    return CmpRelation.EQUAL
 
 
 class CmpRelation:
@@ -138,39 +155,29 @@ class AlgorithmContext:
         Returns:
             OrderedDict, sorted pattern.
         """
-
-        def _cmp(x, y):
-            """Cmp function to sort pattern."""
-            if x[1].count > y[1].count:
-                return CmpRelation.GREATER
-            if x[1].count < y[1].count:
-                return CmpRelation.LESS
-            if x[1].additional_score > y[1].additional_score:
-                return CmpRelation.GREATER
-            if x[1].additional_score < y[1].additional_score:
-                return CmpRelation.LESS
-            if x[1].ptn_length > y[1].ptn_length:
-                return CmpRelation.GREATER
-            if x[1].ptn_length < y[1].ptn_length:
-                return CmpRelation.LESS
-            return CmpRelation.EQUAL
-
         pattern_arr = sorted(pattern_arr.items(), key=functools.cmp_to_key(_cmp),
                              reverse=True)
-        if len(pattern_arr) > self.beam_width:
+        if len(pattern_arr) > AlgorithmContext.beam_width:
             pattern_arr = pattern_arr[:self.beam_width]
         res = OrderedDict()
         for i, (key, ptn) in enumerate(pattern_arr):
-            if ptn.count <= self.MIN_FREQUENCY:
+            if ptn.count <= AlgorithmContext.MIN_FREQUENCY:
+                continue
+            if ptn.additional_score > 0 and ptn.ptn_length > IGNORE_PTN_LEN:
+                res[key] = ptn
                 continue
             skip = False
             for j, (_, candidate) in enumerate(pattern_arr):
-                if i == j or (ptn.additional_score > 0 and ptn.ptn_length > IGNORE_PTN_LEN):
+                if i == j:
                     continue
+                # If `ptn` is a sub-pattern of `candidate`, and `ptn` count equals to `candidate`,
+                # then reject the `ptn`.
                 if candidate.ptn_length >= ptn.ptn_length and ptn.count == candidate.count \
                         and ptn.pattern in candidate.pattern:
                     skip = True
                     break
+                # If `candidate` is sub-pattern of `ptn`, `candidate` has additional score,
+                # and `ptn` has no additional score, then calculate its replacement ratio.
                 if candidate.ptn_length < ptn.ptn_length and candidate.additional_score != 0 \
                         and ptn.additional_score == 0 and candidate.pattern in ptn.pattern:
                     ratio = candidate.ptn_length / ptn.ptn_length
@@ -178,9 +185,9 @@ class AlgorithmContext:
                         skip = True
                         break
 
-            if skip:
-                continue
-            res[key] = ptn
+            if not skip:
+                res[key] = ptn
+
         return res
 
 

@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ class Pattern:
         # If pattern in BUILD_IN_MODULE_NAME or BUILD_IN_PATTERN,
         # the pattern will get additional score.
         self.additional_score = 0
-        self.know_module_name = None
+        self.known_module_name = None
 
     def insert(self, idx, seq_len):
         """
