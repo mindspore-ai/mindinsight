@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -112,10 +112,10 @@ class OnnxTensor:
 
     def to_array(self):
         """Convert the tensor value from binary to np array."""
-        onnx = import_module("onnx")
+        numpy_helper = import_module("onnx.numpy_helper")
         # Convert binary data to np.array
         if not isinstance(self.raw_tensor, (np.ndarray, list, tuple, int, float)):
-            return onnx.numpy_helper.to_array(self.raw_tensor)
+            return numpy_helper.to_array(self.raw_tensor)
         return self.raw_tensor
 
 
@@ -383,15 +383,24 @@ class OnnxDataLoader:
         """Parse each onnx nodes in the model."""
         nodes_topo_idx = []
         for idx, node in enumerate(self.nodes):
+            if not node.name:
+                node.name = "_".join(node.output)
             n = OnnxNode(node)
             self._nodes_dict[n.name] = n
             nodes_topo_idx.append((idx, n.name))
             if len(node.output) > 1:
                 raise ModelNotSupportError(msg=f"{node.name} has multi-outputs which is not supported now.")
             self.output_name_to_node_name[node.output[0]] = node.name
+
+            for ipt_nd in node.input:
+                if ipt_nd not in self.output_name_to_node_name:
+                    if self._global_context.onnx_node_inputs.get(n.name):
+                        self._global_context.onnx_node_inputs[n.name].append(ipt_nd)
+                    else:
+                        self._global_context.onnx_node_inputs[n.name] = [ipt_nd]
+
             self._global_context.onnx_node_name_to_topo_idx[n.name] = idx
-            node_inputs = [i.replace(":0", "") for i in node.input]
-            self._global_context.onnx_node_inputs[n.name] = node_inputs
+
         self._global_context.onnx_nodes_collection = self._nodes_dict
         self._global_context.onnx_nodes_topo_index = nodes_topo_idx
 
@@ -449,7 +458,11 @@ class OnnxDataLoader:
                     input_node = self.get_node(input_node_name)
                     node.precursor_onnx_node_dict[input_node_name] = input_node
                     input_node.successor_onnx_node_dict[node_name] = node
-                    continue
+
+                    if self._global_context.onnx_node_inputs.get(node.name):
+                        self._global_context.onnx_node_inputs[node.name].append(input_node_name)
+                    else:
+                        self._global_context.onnx_node_inputs[node.name] = [input_node_name]
 
     def initialize(self):
         """Initialize the OnnxDataLoader."""

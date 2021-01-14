@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 """Define ONNX graph."""
+from importlib import import_module
 from typing import Dict, NoReturn
 
 from mindinsight.mindconverter.common.log import logger as log
 from .base import Graph
 from .input_node import InputNode
 from .onnx_graph_node import OnnxGraphNode
+from .pytorch_graph_parser import PyTorchGraphParser
 from .tf_graph_parser import TFGraphParser
 from .onnx_utils import OnnxDataLoader
 
@@ -151,7 +153,7 @@ class OnnxGraph(Graph):
             input_shape (tuple): Input shape.
         """
         input_node = InputNode(input_shape)
-        input_node_name = self._raw_input_nodes.replace(":0", "")
+        input_node_name = self._raw_input_nodes
         for node_name, node in self._nodes_collection.items():
             if node_name in self._input_nodes:
                 ipt_nd_name = input_node_name.format(input_node.scope_name)
@@ -196,7 +198,18 @@ class OnnxGraph(Graph):
         """
         tf_input_nodes = kwargs.get('input_nodes')
         tf_output_nodes = kwargs.get('output_nodes')
-        onnx_model = TFGraphParser.parse(graph_path,
-                                         input_nodes=tf_input_nodes,
-                                         output_nodes=tf_output_nodes)
+        if graph_path.endswith('.pb'):
+            onnx_model = TFGraphParser.parse(graph_path,
+                                             input_nodes=tf_input_nodes,
+                                             output_nodes=tf_output_nodes)
+        elif graph_path.endswith('.onnx'):
+            onnx = import_module('onnx')
+            onnx_model = onnx.load(graph_path)
+            optimizer = import_module(
+                'mindinsight.mindconverter.graph_based_converter.third_party_graph.optimizer')
+            onnx_simplify = getattr(optimizer, 'OnnxSimplify')()
+            onnx_model = onnx_simplify.run_onnx_simplify(onnx_model, kwargs['sample_shape'])
+
+        else:
+            onnx_model = PyTorchGraphParser.parse(graph_path, **kwargs)
         return onnx_model

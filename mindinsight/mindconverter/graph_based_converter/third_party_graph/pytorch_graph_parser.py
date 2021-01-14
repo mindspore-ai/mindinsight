@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ from importlib import import_module
 
 from mindinsight.mindconverter.common.log import logger as log
 from .base import GraphParser
+from .optimizer import OnnxSimplify
 from ...common.exceptions import ModelNotSupportError
 
 
@@ -38,7 +39,6 @@ class PyTorchGraphParser(GraphParser):
         Returns:
             object, torch model.
         """
-        torch = import_module("torch")
 
         if not os.path.exists(model_path):
             error = FileNotFoundError("`model_path` must be assigned with "
@@ -47,14 +47,66 @@ class PyTorchGraphParser(GraphParser):
             raise error
 
         try:
-            if torch.cuda.is_available():
-                model = torch.load(f=model_path)
-            else:
-                model = torch.load(f=model_path, map_location="cpu")
+            onnx_model_sim = cls._convert_pytorch_graph_to_onnx(
+                model_path, kwargs['sample_shape'], opset_version=11)
+            return onnx_model_sim
+
         except ModuleNotFoundError:
             error_msg = "Cannot find model scripts in system path, " \
                         "set `--project_path` to the path of model scripts folder correctly."
             error = ModuleNotFoundError(error_msg)
             raise error
 
-        return model
+    @staticmethod
+    def _convert_pytorch_graph_to_onnx(model_path, sample_shape, opset_version=None):
+        """
+        Convert Pytorch model to ONNX model.
+
+        Args:
+            model_path (str): Path to the Pytorch model.
+            sample_shape (tuple): Input shape to generate onnx model.
+            opset_version (int): Op set version of onnx.
+        """
+
+        torch = import_module('torch')
+        has_cuda = torch.cuda.is_available()
+        if has_cuda:
+            model = torch.load(f=model_path).cuda()
+            dump_input = torch.randn(*sample_shape, device='cuda')
+        else:
+            model = torch.load(f=model_path, map_location="cpu")
+            dump_input = torch.randn(*sample_shape, device='cpu')
+
+        if isinstance(model, torch.nn.DataParallel):
+            raise ValueError('torch.nn.DataParallel is not supported by ONNX exporter.')
+
+        torch_onnx = import_module('torch.onnx')
+        operator_export_types = getattr(torch_onnx, 'OperatorExportTypes')
+        utils = import_module('torch.onnx.utils')
+        model_to_graph = getattr(utils, '_model_to_graph')
+
+        symbolic_helper = import_module('torch.onnx.symbolic_helper')
+        default_onnx_opset_version = getattr(symbolic_helper, '_default_onnx_opset_version')
+        set_opset_version = getattr(symbolic_helper, '_set_opset_version')
+        set_operator_export_type = getattr(symbolic_helper, '_set_operator_export_type')
+        if not opset_version:
+            opset_version = default_onnx_opset_version
+
+        operator_export_type = operator_export_types.ONNX
+        set_opset_version(opset_version)
+        set_operator_export_type(operator_export_type)
+
+        graph, params_dict, _ = model_to_graph(model, dump_input, _retain_param_name=True)
+        export_onnx = getattr(graph, '_export_onnx')
+        proto, _ = export_onnx(
+            params_dict, opset_version, dict(), False,
+            operator_export_type, True, False, dict(),
+            True, False)
+
+        onnx = import_module('onnx')
+        onnx_model = onnx.load_model_from_string(proto)
+
+        onnx_simplify = OnnxSimplify()
+        onnx_model_sim = onnx_simplify.run_onnx_simplify(onnx_model, sample_shape)
+
+        return onnx_model_sim

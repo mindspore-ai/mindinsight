@@ -42,7 +42,7 @@ class ConvMapper(ONNXToMindSporeMapper):
         """Convert params from PyTorch to MindSpore"""
         weights = kwargs['weights']
         params = kwargs['params']
-        weight = weights['weight'].numpy()
+        weight = weights['weight']
         weight = np.transpose(weight, list(range(2, weight.ndim)) + [1, 0])
         if isinstance(params['dilations'], list):
             dilation = tuple(params['dilations'])
@@ -130,7 +130,6 @@ class ConvMapper(ONNXToMindSporeMapper):
             dim = len(kernel_size)
             return f"nn.Conv{dim}d"
 
-        weight = weight.numpy()
         dim = weight.ndim - 2
         return f"nn.Conv{dim}d"
 

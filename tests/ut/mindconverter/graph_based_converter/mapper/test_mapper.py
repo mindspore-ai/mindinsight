@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import pytest
 
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
-from tests.utils import mindspore
 
 
 class TestMappers:
@@ -30,7 +29,7 @@ class TestMappers:
                              'group': 1,
                              'pads': [1, 2, 3, 4],
                              'strides': [1, 1]},
-                  'weights': {'weight': mindspore.Tensor(np.zeros([64, 3, 1, 1], dtype=np.int32))}},
+                  'weights': {'weight': np.zeros((64, 3, 1, 1), dtype=np.int32)}},
         'expected_output': {'converter_name': 'nn.Conv2d',
                             'converted_params': {'in_channels': 3,
                                                  'out_channels': 64,
@@ -47,7 +46,7 @@ class TestMappers:
                              'group': 1,
                              'pads': [0, 0, 0, 0],
                              'strides': [1, 1]},
-                  'weights': {'weight': mindspore.Tensor(np.zeros([64, 3, 2, 2], dtype=np.int32))}},
+                  'weights': {'weight': np.zeros((64, 3, 2, 2), dtype=np.int32)}},
         'expected_output': {'converter_name': 'nn.Conv2d',
                             'converted_params': {'in_channels': 3,
                                                  'out_channels': 64,
@@ -61,8 +60,8 @@ class TestMappers:
     }, {
         'input': {'op_name': 'onnx::Gemm',
                   'params': dict(),
-                  'weights': {'weight': mindspore.Tensor(np.zeros([10, 3], dtype=np.int32)),
-                              'bias': mindspore.Tensor(np.zeros([10, 1], dtype=np.int32))}},
+                  'weights': {'weight': np.zeros((10, 3), dtype=np.int32),
+                              'bias': np.zeros((10, 1), dtype=np.int32)}},
         'expected_output': {'converter_name': 'nn.Dense',
                             'converted_params': {'in_channels': 3,
                                                  'out_channels': 10,

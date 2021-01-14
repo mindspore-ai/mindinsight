@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ from .module_struct import ModuleStruct
 from .args_translator import ArgsTranslationHelper
 from ..common.global_context import GlobalContext
 from ...common.exceptions import GeneratorError
-from ..hierarchical_tree.name_mgr import GlobalVarNameMgr
+from ..common.name_mgr import GlobalVarNameMgr
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT, FIRST_LEVEL_INDENT, CodeFormatConfig, get_imported_module
 from ..report_generator import ReportGenerator
 

@@ -36,7 +36,7 @@ class PoolMapper(ONNXToMindSporeMapper):
         transformed_params["kernel_size"] = tuple(params['kernel_shape'])
         transformed_params["stride"] = tuple(params['strides'])
         if "pads" in params:
-            if sum(params['pads']) == 0:
+            if sum(params['pads']) == 0 and not params.get('ceil_mode', None):
                 pad_mode = '\"valid\"'
             else:
                 pad_mode = '\"same\"'

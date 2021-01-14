@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,10 +24,12 @@ from mindinsight.mindconverter.graph_based_converter.common.utils import lib_ver
     save_code_file_and_report, get_framework_type
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
     ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER
+from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import GraphInitError, TreeCreationError, SourceFilesSaveError, \
     BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError
+from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
 
 permissions = os.R_OK | os.W_OK | os.X_OK
 os.umask(permissions << 3 | permissions)
@@ -62,6 +64,7 @@ def torch_installation_validation(func):
     """
 
     def _f(graph_path: str, sample_shape: tuple,
+           input_nodes: str, output_nodes: str,
            output_folder: str, report_folder: str = None):
         # Check whether pytorch is installed.
         if not find_spec("torch") or not find_spec("onnx") or not find_spec("onnxruntime"):
@@ -93,6 +96,7 @@ def torch_installation_validation(func):
             sys.exit(0)
 
         func(graph_path=graph_path, sample_shape=sample_shape,
+             input_nodes=input_nodes, output_nodes=output_nodes,
              output_folder=output_folder, report_folder=report_folder)
 
     return _f
@@ -182,6 +186,7 @@ def _extract_model_name(model_path):
 @SourceFilesSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
 def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
+                                        input_nodes: str, output_nodes: str,
                                         output_folder: str, report_folder: str = None):
     """
     PyTorch to MindSpore based on Graph.
@@ -189,26 +194,18 @@ def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
     Args:
         graph_path (str): Graph file path.
         sample_shape (tuple): Input shape of the model.
+        input_nodes (str): Input node(s) of the model.
+        output_nodes (str): Output node(s) of the model.
         output_folder (str): Output folder.
         report_folder (str): Report output folder path.
-
     """
-    third_party_graph_module = import_module(
-        'mindinsight.mindconverter.graph_based_converter.third_party_graph')
-    hierarchical_tree_module = import_module(
-        'mindinsight.mindconverter.graph_based_converter.hierarchical_tree')
-    cls_graph_factory = getattr(third_party_graph_module, 'GraphFactory')
-    cls_hierarchical_tree_factory = getattr(hierarchical_tree_module, 'HierarchicalTreeFactory')
 
-    graph_obj = cls_graph_factory.init(graph_path, sample_shape=sample_shape)
-
-    hierarchical_tree = cls_hierarchical_tree_factory.create(graph_obj)
-
+    graph_obj = GraphFactory.init(graph_path, sample_shape=sample_shape,
+                                  input_nodes=input_nodes, output_nodes=output_nodes)
+    generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
-
-    hierarchical_tree.save_source_files(output_folder, mapper=ONNXToMindSporeMapper,
-                                        model_name=model_name,
-                                        report_folder=report_folder)
+    code_fragments = generator_inst.generate()
+    save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
 
 
 @tf_installation_validation
@@ -230,18 +227,13 @@ def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
         output_nodes(str): Output node(s) of the model.
         output_folder(str): Output folder.
         report_folder(str): Report output folder path.
-
     """
-    third_party_graph_module = import_module(
-        'mindinsight.mindconverter.graph_based_converter.third_party_graph')
-    cls_graph_factory = getattr(third_party_graph_module, 'GraphFactory')
-    batch_add_nodes = getattr(import_module('mindinsight.mindconverter.graph_based_converter.generator'),
-                              "batch_add_nodes")
+
     # Close unnecessary log.
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-    graph_obj = cls_graph_factory.init(graph_path, sample_shape=sample_shape,
-                                       input_nodes=input_nodes, output_nodes=output_nodes)
+    graph_obj = GraphFactory.init(graph_path, sample_shape=sample_shape,
+                                  input_nodes=input_nodes, output_nodes=output_nodes)
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
     code_fragments = generator_inst.generate()
@@ -255,7 +247,6 @@ def main_graph_base_converter(file_config):
 
     Args:
         file_config (dict): The config of file which to convert.
-
     """
     graph_path = file_config['model_file']
     frame_type = get_framework_type(graph_path)
@@ -263,8 +254,12 @@ def main_graph_base_converter(file_config):
         raise ParamMissingError("Param missing, `--shape` is required when using graph mode.")
 
     if frame_type == FrameworkType.PYTORCH.value:
+        check_params = ['input_nodes', 'output_nodes']
+        check_params_exist(check_params, file_config)
         graph_based_converter_pytorch_to_ms(graph_path=graph_path,
                                             sample_shape=file_config['shape'],
+                                            input_nodes=file_config['input_nodes'],
+                                            output_nodes=file_config['output_nodes'],
                                             output_folder=file_config['outfile_dir'],
                                             report_folder=file_config['report_dir'])
     elif frame_type == FrameworkType.TENSORFLOW.value:
