@@ -27,8 +27,9 @@ class Fragment(abc.ABC):
     Args:
         operation (str): Operation name in MindSpore.
         actual_args (dict): Actual arg values.
+        input_shape (tuple): The input shape of the node.
+        output_shape (tuple): The output shape of the node.
         settings (namedTuple): Code generation setting.
-
     """
 
     def __init__(self, operation, actual_args, input_shape, output_shape, settings=None):
@@ -46,6 +47,7 @@ class Fragment(abc.ABC):
 
     @property
     def code_setting(self):
+        """Code Setting getter."""
         return self._code_setting
 
     @property
@@ -152,10 +154,12 @@ class Fragment(abc.ABC):
 
     @property
     def input_shape(self):
+        """Return the input shape."""
         return self._input_shape
 
     @property
     def output_shape(self):
+        """Return the output shape."""
         return self._output_shape
 
 
@@ -196,6 +200,7 @@ class CodeFragment(Fragment):
 
     @property
     def trainable_params(self):
+        """Return the trainable parameters."""
         return self._trainable_params
 
 

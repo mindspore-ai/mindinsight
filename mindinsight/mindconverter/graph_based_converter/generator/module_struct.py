@@ -14,6 +14,7 @@
 # ==============================================================================
 """Define a struct for module converted and save all required information here."""
 
+import copy
 from collections import OrderedDict
 
 from .node_struct import NodeStruct
@@ -31,10 +32,12 @@ class ModuleStruct:
 
     Args:
         args (list): A list of node structs.
+        init_as_parent (bool): Control init method if the ModuleStruct be init as a parent module struct.
+        parent_base (ModuleStruct): The base ModuleStruct the current ModuleStruct to be init as.
     """
     GLOBAL_CONTEXT_MGR = GlobalContext()
 
-    def __init__(self, nd_struct_list):
+    def __init__(self, nd_struct_list, init_as_parent=False, parent_base=None):
         """Init. a module by NodeStructs."""
         self.pattern_id = -1  # pattern num, -1 as Main module
         self.pattern_uid = -1  # unique module id for this pattern
@@ -53,19 +56,15 @@ class ModuleStruct:
 
         self._fragment = None
         self._args_translator = None
-        self._setting = None
         self._parent_module_struct = None
         # only store original formal args name, not global
         self._nodes_structs_formal_args_list = list()
-        # only store translated (globalized) formal args
-        self._nodes_structs_formal_args_translated_list = list()
 
         # define other settings here
         self._node_args_translation_list = list()
         self._var_name_mgr = LocalVarNameMgr()
         self.construct_header_x = OrderedDict()  # key is header x, value is precursors onnx name
         self.inputs_in_construct_header = OrderedDict()  # key is precursors onnx name, value is x in parent construct
-        self.inputs_in_parent_module = OrderedDict()  # key is prec_node_name, value is its closet opt_var_name
 
         # key is node's onnx name(output provider), value is (provider_succ_name, opt_var_name)
         self.outputs_collection = dict()
@@ -74,40 +73,49 @@ class ModuleStruct:
         # key is ext. succ node onnx name, value is local opt_var
         self.external_successor_local_returns_map = OrderedDict()
 
-        # key is node's onnx_name, value is (successor_name, opt_var_name) <- node's level
-        self.outputs_collection = dict()
+        # Define outputs manager, note this will be assigned later by Generator.
+        self.outputs_manager = None
 
-        # start initialization
-        if not self.initialized:
-            self._init_module(nd_struct_list)
+        if init_as_parent and (parent_base is not None):
+            self.reset_as_parent_passed_in(parent_base)
         else:
-            self._update_module(nd_struct_list)
+            # start initialization
+            if not self.initialized:
+                self._init_module(nd_struct_list)
+            else:
+                self._update_module(nd_struct_list)
 
-        # assign this module reference to node
-        for (_, nd_struct) in nd_struct_list:
-            nd_struct.parent_module_struct = self
+            # assign this module reference to node
+            for (_, nd_struct) in nd_struct_list:
+                nd_struct.parent_module_struct = self
 
-    def reset_as_parent(self):
+    def reset_as_parent_passed_in(self, parent_base):
         """
-        Reset all attributes and filled as a parent module of this module.
+        Reset all attributes and filled as a parent module of the module passed in.
+
+        Args:
+            parent_base(ModuleStruct): The base ModuleStruct to be passed in for ModuleStruct init.
 
         Note:
-            This function must be called only after a deepcopy of this instance!
+            This function must be called only if the new ModuleStruct is a parent of parent_base.
         """
-        self.identifier.pop()
-        self.scope_depth = self.scope_depth - 1
-        self._set_pattern_id()
-        self._find_parent_module()
+        self.identifier = copy.deepcopy(parent_base.identifier)[:-1]
+        self.scope_depth = copy.deepcopy(parent_base.scope_depth) - 1
         self.module_name = Scope.scope_to_module_name(self.identifier)
+        self.head_nd_struct = parent_base.head_nd_struct
+        self.head_nd_struct_index = parent_base.head_nd_struct_index
+        self.tail_nd_struct = parent_base.tail_nd_struct
+        self.tail_nd_struct_index = parent_base.tail_nd_struct_index
         self._node_structs = list()
         self._module_structs = list()
         self._fragment = None
         self._args_translator = None
+        self.initialized = True
+        self._set_pattern_id()
+        self._find_parent_module()
         self.init_args_translator()
-        self._setting = None
         self._parent_module_struct = None
         self._nodes_structs_formal_args_list = list()
-
         self._node_args_translation_list = list()
 
     def _set_pattern_id(self):
@@ -435,7 +443,7 @@ class ModuleStruct:
 
     @property
     def external_successor_nodes_names(self) -> list:
-        """Return all precursors nodes names not in this module."""
+        """Return all successor nodes names not in this module."""
         ret = []
         for _, struct in self.get_generate_order():
             if isinstance(struct, NodeStruct):

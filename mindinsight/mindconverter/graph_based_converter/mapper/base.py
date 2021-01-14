@@ -103,25 +103,38 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             op_name_converter = getattr(converter, GET_OP_NAME)
             params_converter = getattr(converter, GET_OP_PARAMS)
             weights_converter = getattr(converter, GET_OP_WEIGHTS)
-            settings_converter = getattr(converter, GET_OP_SETTINGS)
+            template_generator = getattr(converter, GET_OP_TEMPLATE)
         except (ModuleNotFoundError,) as e:
             # If mapper can not be found, then skip it.
             err_msg = f"Converting {op_name} failed, see {str(e)}"
             log.error(err_msg)
-            return None, dict(), None, dict()
+            return None, None, None, None
 
         try:
             converter_name = op_name_converter(params=params, weights=weights, op_name=op_name)
             converted_params = params_converter(params=params, weights=weights)
-            converted_weights = weights_converter(weights=weights) if weights else dict()
-            converted_params.update(converted_weights)
-            converted_settings = settings_converter(params=params, weights=weights)
+            if "input_shape" in converted_params:
+                converted_params.pop("input_shape")
+            if "output_shape" in converted_params:
+                converted_params.pop("output_shape")
+            # set to converted_weights to enable weight migration
+            _ = weights_converter(weights=weights) if weights else dict()
+            code_template, exchange_msg, outputs_list, outputs_mapping = template_generator(
+                operation=converter_name,
+                converted_params=converted_params,
+                raw_params=params,
+                weights=weights
+            )
         except (AttributeError, KeyError, ValueError, TypeError, IndexError) as e:
             err_msg = f"Converting {op_name} failed, see {str(e)}"
             log.error(err_msg)
-            return None, dict(), None, dict()
+            code_template, exchange_msg, outputs_list, outputs_mapping = template_generator(
+                operation=op_name,
+                params=params,
+                weights=weights
+            )
 
-        return converter_name, converted_params, converted_settings, converted_weights
+        return code_template, exchange_msg, outputs_list, outputs_mapping
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
@@ -142,7 +155,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
     @staticmethod
     def _generate_snippet_template(**kwargs):
         op = kwargs.get("operation")
-        args = kwargs.get("converted_params")
+        args = kwargs.get("converted_params", dict())
         weights = kwargs.get("weights")
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
