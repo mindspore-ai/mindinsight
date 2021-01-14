@@ -14,6 +14,7 @@
 # ============================================================================
 """Debugger restful api."""
 import json
+from urllib.parse import unquote
 
 from flask import Blueprint, jsonify, request
 
@@ -32,6 +33,24 @@ def _initialize_debugger_server():
     if enable_debugger:
         server = DebuggerServer()
     return server
+
+
+def _unquote_param(param):
+    """
+    Decode parameter value.
+
+    Args:
+        param (str): Encoded param value.
+
+    Returns:
+        str, decoded param value.
+    """
+    if isinstance(param, str):
+        try:
+            param = unquote(param, errors='strict')
+        except UnicodeDecodeError:
+            raise ParamValueError('Unquote error with strict mode.')
+    return param
 
 
 def _read_post_request(post_request):
@@ -134,7 +153,7 @@ def tensor_comparisons():
     """
     name = request.args.get('name')
     detail = request.args.get('detail', 'data')
-    shape = request.args.get('shape')
+    shape = _unquote_param(request.args.get('shape'))
     tolerance = request.args.get('tolerance', '0')
     reply = _wrap_reply(BACKEND_SERVER.tensor_comparisons, name, shape, detail, tolerance)
 
@@ -190,7 +209,7 @@ def retrieve_tensor_value():
     """
     name = request.args.get('name')
     detail = request.args.get('detail')
-    shape = request.args.get('shape')
+    shape = _unquote_param(request.args.get('shape'))
     graph_name = request.args.get('graph_name')
     prev = bool(request.args.get('prev') == 'true')
 

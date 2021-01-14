@@ -19,6 +19,7 @@ Usage:
     pytest tests/st/func/debugger/test_restful_api.py
 """
 import os
+from urllib.parse import quote
 
 import pytest
 
@@ -204,7 +205,7 @@ class TestAscendDebugger:
             body_data = {
                 'name': node_name + ':0',
                 'detail': 'data',
-                'shape': '[1, 1:3]'
+                'shape': quote('[1, 1:3]')
             }
             expect_file = 'retrieve_tensor_value.json'
             send_and_compare_result(app_client, url, body_data, expect_file, method='get')
@@ -237,7 +238,7 @@ class TestAscendDebugger:
             body_data = {
                 'name': node_name + ':0',
                 'detail': 'data',
-                'shape': '[:, :]',
+                'shape': quote('[:, :]'),
                 'tolerance': 1
             }
             expect_file = 'compare_tensors.json'
