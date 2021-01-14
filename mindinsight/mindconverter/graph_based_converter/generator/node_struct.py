@@ -15,14 +15,13 @@
 """Define the NodeStruct which stores all info. of a node."""
 from collections import OrderedDict
 
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
+from mindinsight.mindconverter.graph_based_converter.generator.fragment_utils import FragmentHandler
 from .scope_utils import Scope
 from .args_translator import ArgsTranslation
-from ..common.code_fragment import CodeFragment
 from ..third_party_graph.onnx_graph_node import OnnxGraphNode
 from ..common.global_context import GlobalContext
-from ..constant import InputType
 from ...common.exceptions import GeneratorError
-
 
 class NodeStruct:
     """
@@ -44,20 +43,10 @@ class NodeStruct:
         self._args_translator = None
         self._parent_module_struct = None
         self.topo_idx = None
-        self.node_type = None
         self.onnx_name = None
-        self.onnx_op = None
         self.graph_node_ref = None
         self.scope_name = None
-        self.ms_var_name = None
-        self.ms_op = None
         self.ready_to_generate = False
-
-        # Define attributes converted from mapper
-        self.ms_params = dict()
-        self.ms_settings = dict()
-        self.ms_weights = dict()
-        self.ms_inputs = OrderedDict()
 
         # Defined Scope class
         self.scope = None
@@ -66,9 +55,6 @@ class NodeStruct:
 
         # key is prec_node_name, value is x; For code line use
         self.inputs_in_construct_header = OrderedDict()
-
-        # key is prec_node_name, value is its closet opt_var_name
-        self.inputs_in_parent_module = OrderedDict()
 
         # Matched inputs will can be directly used by code line generation
         self.matched_inputs = list()
@@ -86,7 +72,7 @@ class NodeStruct:
 
     def ori_topo_idx(self):
         """Get the original topological index in the onnx graph."""
-        ori_name = self.identifier.replace('$', '').split('/')[-1].replace("::", '/')
+        ori_name = self._fragment.metadata.get('source')
         self.onnx_name = ori_name
         return self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_topo_idx.get(ori_name)
 
@@ -97,12 +83,20 @@ class NodeStruct:
         Args:
             idx (int): The index of the node in this module.
         """
+        def _remove_op_header(op_name):
+            """Remove op header which indicating their sources of op set."""
+            op_name = op_name.replace('nn.', '')
+            op_name = op_name.replace('P.', '')
+            op_name = op_name.replace('onnx.', '')
+            return op_name
+
         if idx is not None:
-            self.ms_var_name = self.ms_op.replace('nn.', '').replace('P.', '').lower() + '_' + str(idx)
+            self.ms_var_name = "{}_{}".format(_remove_op_header(self.ms_op), str(idx)).lower()
         elif self.topo_idx is not None:
-            self.ms_var_name = self.ms_op.replace('nn.', '').replace('P.', '').lower() + '_' + str(self.topo_idx)
+            self.ms_var_name = "{}_{}".format(_remove_op_header(self.ms_op), str(self.topo_idx)).lower()
         else:
             raise ValueError("Unable to update var name when topo_idx is None.")
+        self.fragment.default_var['variable_name'] = self.ms_var_name
 
     def _update_basics_from_gn(self, gn):
         """Update basic info from GraphNode."""
@@ -111,25 +105,13 @@ class NodeStruct:
 
     def _update_from_onnx_gn(self, gn: OnnxGraphNode):
         """Update basic info from OnnxGraphNode."""
-        self.node_type = "OnnxGraphNode"
         self._update_basics_from_gn(gn)
 
-    def _update_from_mapper(self, d):
-        """Update info from mapper."""
-        if d.get('op_name'):
-            self.ms_op = d.get('op_name')
-        if d.get('params'):
-            self.ms_params = d.get('params')
-        if d.get('settings'):
-            self.ms_settings = d.get('settings')
-        if d.get('weights'):
-            self.ms_weights = d.get('weights')
-
-    def _update_from_fragment(self, frag: CodeFragment):
+    def _update_from_fragment(self, frag: NewFragment):
         """Update info from CodeFragment."""
-        self._fragment = frag
-        if frag.operation:
-            self.ms_op = frag.operation
+        self._fragment = FragmentHandler(frag)
+
+        if self.ms_op:
             idx = self.GLOBAL_CONTEXT_MGR.latest_node_struct_count
             self.update_var_name(idx=idx)
 
@@ -148,22 +130,13 @@ class NodeStruct:
         """
         if not self._fragment:
             raise ValueError("Initialize argument translator failed.")
-        if self._fragment.actual_args and translated_args:
-            self._args_translator = ArgsTranslation(self._fragment.actual_args, self.ms_var_name, translated_args)
-
-    def check_if_generate_ready(self):
-        """Check if the NodeStruct is able to generate code."""
-        # check essential params exists
-        if all([self.identifier,
-                self.node_type,
-                self.scope_name,
-                self.ms_var_name,
-                self.ms_opt_var_name,
-                self.ms_op]):
-            self.ready_to_generate = True
+        if self._fragment.converted and self._fragment.default_var["args"] and translated_args:
+            self._args_translator = ArgsTranslation(self._fragment.default_var["args"],
+                                                    self.ms_var_name,
+                                                    translated_args)
 
     @GeneratorError.check_except("Generator occurs an error when creating node struct.")
-    def update(self, arg, force_ready=False):
+    def update(self, arg):
         """
         Pass Node info. to generator NodeStruct.
 
@@ -174,17 +147,10 @@ class NodeStruct:
 
         if isinstance(arg, OnnxGraphNode):
             self._update_from_onnx_gn(arg)
-        elif isinstance(arg, (dict, OrderedDict)):
-            self._update_from_mapper(arg)
-        elif isinstance(arg, CodeFragment):
+        elif isinstance(arg, NewFragment):
             self._update_from_fragment(arg)
         else:
             raise TypeError("NodeStruct received an unsupported initializing argument.")
-
-        if force_ready:
-            self.ready_to_generate = True
-        else:
-            self.check_if_generate_ready()
 
     @property
     def identifier(self):
@@ -235,9 +201,29 @@ class NodeStruct:
         return self.GLOBAL_CONTEXT_MGR.onnx_nodes_collection.get(self.onnx_name)
 
     @property
+    def ms_op(self):
+        """Return the operation name in MindSpore."""
+        return self._fragment.default_var.get('operation')
+
+    @ms_op.setter
+    def ms_op(self, ms_op_name: str):
+        """Set the operation name in MindSpore."""
+        self._fragment.default_var['operation'] = ms_op_name
+
+    @property
+    def ms_var_name(self):
+        """Return the variable name of this Node in the MindSpore script."""
+        return self._fragment.default_var.get('variable_name')
+
+    @ms_var_name.setter
+    def ms_var_name(self, ms_var_name: str):
+        """Set the variable name of this Node in the MindSpore script."""
+        self._fragment.default_var['variable_name'] = ms_var_name
+
+    @property
     def ms_opt_var_name(self):
         """Return the output variable name of current node."""
-        return "{}_opt".format(self.ms_var_name).lower()
+        return self.fragment.fragment.get_outputs_by_idx(0)
 
     @property
     def args_translator(self):
@@ -282,57 +268,38 @@ class NodeStruct:
     def parent_module_struct(self, ref):
         self._parent_module_struct = ref
 
+    @property
+    def outputs_manager(self):
+        """Return the outputs manager instance."""
+        return self.fragment.outputs_manager
+
+    @property
+    def outputs_in_construct(self):
+        """Return the outputs var(s) in construct statement."""
+        return self.fragment.fragment.outputs()
+
     # Code Generation funcs below
 
     def code_line_in_init(self):
         """Initialization line of code in module init block."""
-        unconverted = False
-        if "onnx::" in self.ms_var_name:
-            unconverted = True
-            self.ms_var_name = self.ms_var_name.replace("onnx::", "")
         left = "self.{}".format(self.ms_var_name)
-
         args_list = list()
         if self._args_translator is not None:
+            self.fragment.default_var['args'] = {**self._args_translator.actual_args,
+                                                 **self._args_translator.formal_args}
             args_list += self._args_translator.actual_args_to_str_list
             args_list += self._args_translator.formal_args_to_str_list
         else:
-            actual_args_str = ArgsTranslation.dict_data_to_args_str_list(self._fragment.actual_args)
+            actual_args_str = ArgsTranslation.dict_data_to_args_str_list(self._fragment.default_var['args'])
             args_list += actual_args_str
 
-        if unconverted:
+        if not self._fragment.converted:
             args_list.append('='.join(["input_shape", str(self._fragment.input_shape)]))
             args_list.append('='.join(["output_shape", str(self._fragment.output_shape)]))
             right = f"{self.ms_op.replace('::', '.')}({', '.join(args_list)})"
         else:
             right = f"{self.ms_op}({', '.join(args_list)})"
         return left, right
-
-    def _get_correct_in_module_returns(self, prec_node, in_module_return):
-        """
-        Find the correct precursor node name in return statement of its parent module.
-
-        Args:
-            prec_node (str): The onnx name of the precursor node given.
-            in_module_return (list[tuple]): The list of outputs which contains parent module identifier
-                and module opt_var_name.
-
-        Return:
-            str, correct opt_var_name to be passed in current node.
-        """
-        found_return = False
-        for ret in in_module_return:
-            (md_identifier, input_name_to_use) = ret
-            p_node_struct = self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_node_struct_map.get(prec_node)
-            # recursive check the p node parent
-            parent = p_node_struct
-            while not found_return:
-                parent = parent.parent_module_struct
-                if parent is None:
-                    break
-                if parent.identifier == md_identifier:
-                    return input_name_to_use
-        return None
 
     def code_line_in_construct(self, inputs=None):
         """Construct line of code in module construct block. """
@@ -356,15 +323,7 @@ class NodeStruct:
         if isinstance(inputs, str):
             inputs = [inputs]
 
-        if self._fragment.code_setting and self._fragment.code_setting.op_ipt_type == InputType.LIST.value:
-            inputs = [str(tuple(inputs)).replace("\'", "")]
-
-        if self._fragment.code_setting and self._fragment.code_setting.op_extra_input:
-            for _, val in self._fragment.code_setting.op_extra_input.items():
-                inputs.append(str(val))
-
-        if self._fragment.code_setting and self._fragment.code_setting.op_extra_tensor:
-            inputs.append(f"self.{self.ms_var_name}_w")
+        self.fragment.default_var['inputs'] = inputs
         right = f"self.{self.ms_var_name}({', '.join(inputs)})"
         return left, right
 
@@ -394,7 +353,7 @@ class NodeStruct:
                 {} has duplicate inputs or not.".format(onnx_precursor_node_name, self.identifier))
         self.inputs_in_construct_header[onnx_precursor_node_name] = header_x
 
-    def _check_target_node_internal(self, name: str) -> bool:
+    def check_target_node_internal(self, name: str) -> bool:
         """
         Check given node under the same scope.
 
@@ -406,6 +365,9 @@ class NodeStruct:
         if target_nd_struct is None and self.topo_idx == 0:  # First node always has external input
             return False
 
+        if target_nd_struct is None and (name in self.GLOBAL_CONTEXT_MGR.onnx_graph_info.get('graph_inputs')):
+            return False
+
         if target_nd_struct is None:
             raise ValueError("Unable to find the NodeStruct of given target node {}.".format(name))
         return target_nd_struct.scope.path == self.scope.path
@@ -414,7 +376,7 @@ class NodeStruct:
     def has_successor_node_external(self) -> bool:
         """Check if any successor_node is in external module."""
         for name in self.successor_nodes_names:
-            if not self._check_target_node_internal(name):
+            if not self.check_target_node_internal(name):
                 return False
 
         return True
@@ -423,10 +385,10 @@ class NodeStruct:
     def precursor_nodes_names_external(self) -> list:
         """Return a list of external precursor nodes names."""
         return [name for name in self.precursor_nodes_names
-                if not self._check_target_node_internal(name)]
+                if not self.check_target_node_internal(name)]
 
     @property
     def successor_nodes_names_external(self) -> list:
         """Return a list of external successor nodes names."""
         return [name for name in self.successor_nodes_names
-                if not self._check_target_node_internal(name)]
+                if not self.check_target_node_internal(name)]

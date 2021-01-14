@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 # ==============================================================================
 """Define GlobalContext class to save required resources during whole conversion procedure."""
 from collections import OrderedDict
+from .outputs import OutputStorage
 
 
 class Singleton(type):
@@ -45,6 +46,7 @@ class GlobalContext(metaclass=Singleton):
         self.onnx_node_name_to_topo_idx = dict()
         self.onnx_node_inputs = dict()
         self._onnx_tensors_collection = dict()
+        self.onnx_graph_info = dict()
 
         # Define data stored from generator
         # Key as Node Identifier
@@ -71,6 +73,8 @@ class GlobalContext(metaclass=Singleton):
         # Define extra inputs
         # key is target node (which use this opt), value is opt_var_name
         self.extra_input_dict = dict()
+
+        self.outputs_storage = OutputStorage()
 
     def get_onnx_node_from_identifier(self, identifier):
         """Return an OnnxUtils defined node by its identifier."""

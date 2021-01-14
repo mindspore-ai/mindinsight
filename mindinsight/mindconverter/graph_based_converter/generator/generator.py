@@ -23,6 +23,7 @@ from .node_struct import NodeStruct
 from .module_struct import ModuleStruct
 from .args_translator import ArgsTranslationHelper
 from ..common.global_context import GlobalContext
+from ..common.outputs import BaseOutput, ModuleOutputManager
 from ...common.exceptions import GeneratorError
 from ..common.name_mgr import GlobalVarNameMgr
 from ..constant import NEW_LINE, SECOND_LEVEL_INDENT, FIRST_LEVEL_INDENT, CodeFormatConfig, get_imported_module
@@ -39,21 +40,10 @@ class CodeStruct:
 
     def __init__(self, struct, repeated_submodules=None):
         """Initialize the CodeStruct."""
-        self.output_order = None  # output order
-        self.input = None  # opt_var_name for prev. node
-        self.extra_input = list()  # extra_input(s) at construct method args
-        self.output = None  # opt_var_name for next node
-        self.extra_output = list()  # extra_output(s)
-        self.extra_comment = None  # comments for this code line / block.
         self.code_line_list = list()  # list of code line, a item is a line.
         self._global_var_mgr = GlobalVarNameMgr()  # var name procs within same module
 
-        self.formal_args_collections = None
-
-        if isinstance(struct, NodeStruct):
-            self.output_order = struct.topo_idx
         if isinstance(struct, ModuleStruct):
-            self.output_order = struct.head_nd_struct_index
             self._generate_from_module_struct(struct, repeated_submodules)
 
     def _add_line(self, s):
@@ -102,13 +92,15 @@ class CodeStruct:
         cons_lines = list()
         for (_, struct) in md_struct.get_generate_order():
             if isinstance(struct, NodeStruct):  # Generate code line for Node.
-                code_line_init = struct.code_line_in_init()
-                code_line_construct = struct.code_line_in_construct()
-                init_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_line_init)}")
-                cons_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_line_construct)}")
-                # add extra tensor
-                if struct.fragment.code_setting and struct.fragment.code_setting.op_extra_tensor:
-                    init_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(struct.add_extra_tensor())}")
+                _ = struct.code_line_in_init()
+                _ = struct.code_line_in_construct()
+
+                init_str, cons_str = struct.fragment.fragment()
+                init_str = [f"{SECOND_LEVEL_INDENT}{x}" for x in init_str]
+                cons_str = [f"{SECOND_LEVEL_INDENT}{x}" for x in cons_str]
+                code_line_construct = cons_str
+                init_lines += init_str
+                cons_lines += cons_str
 
             elif isinstance(struct, ModuleStruct):
                 # check if this instance generated CodeStruct
@@ -145,7 +137,8 @@ class CodeStruct:
                     returns.append(r)
             returns = list(set(returns))
         else:
-            returns = [code_line_construct[0]]
+            returns = [code_line_construct[0]] if isinstance(code_line_construct, tuple) \
+                                                else [code_line_construct[-1].replace(' ', '').split('=')[0]]
         self.new_line = f"{SECOND_LEVEL_INDENT}return {', '.join(returns)}"
         self.new_line = f"{NEW_LINE * 2}"
         self.GLOBAL_CONTEXT.code_structs[md_struct.pattern_id] = self
@@ -156,9 +149,6 @@ class Generator:
 
     def __init__(self):
         """Init the generator."""
-        # define basic attributes
-        self.framework = None
-
         # define MUST have params
         self._node_struct_collections = OrderedDict()
         self._module_struct_collections = OrderedDict()
@@ -244,9 +234,9 @@ class Generator:
         if len(nd_struct_list) < 2:
             return formal_args
         (_, base_nd_struct) = nd_struct_list[0]
-        for (base_parameter, base_value) in base_nd_struct.fragment.actual_args.items():  # for each param
+        for (base_parameter, base_value) in base_nd_struct.fragment.default_var["args"].items():  # for each param
             for (_, nd_struct) in nd_struct_list[1:]:
-                compared_value = nd_struct.fragment.actual_args.get(base_parameter)
+                compared_value = nd_struct.fragment.default_var["args"].get(base_parameter)
                 if compared_value == base_value:
                     continue
                 formal_args.add(base_parameter)
@@ -340,9 +330,9 @@ class Generator:
                     self.module_structs[str(parent_scope)] = parent_md_struct
                 else:
                     # 1B. not has parent, generate a new ModuleStruct
-                    parent_md_struct = copy.deepcopy(md_struct)  # use this submodule to create a parent module
+                    # use this submodule to create a parent module
+                    parent_md_struct = ModuleStruct(None, init_as_parent=True, parent_base=md_struct)
                     # rewrite parent md struct
-                    parent_md_struct.reset_as_parent()
                     parent_md_struct.add_submodule(md_struct)
                     self.module_structs[str(parent_scope)] = parent_md_struct
                 sub = self.module_structs.pop(scope_path_str)  # remove this submodule from collections
@@ -378,6 +368,7 @@ class Generator:
         self._update_all_modules_args_translator()
 
         # 6. Update all nodes and moudles input/output
+        # Enable build_output_connections later.
         self.module_structs.get('[]').allocate_construct_header_x()
         self.module_structs.get('[]').collect_returns()
 
@@ -488,7 +479,7 @@ class Generator:
 
         for code_struct in self._global_context.code_structs.values():
             for line in code_struct.code_line_list:
-                outputs.append(line.replace("onnx::", ""))
+                outputs.append(line)
 
         formatted_code, _ = FormatCode("\n".join(outputs),
                                        style_config=CodeFormatConfig.PEP8.value)
@@ -575,3 +566,69 @@ class Generator:
                 if m_num == module_num:
                     ret.append(nd_struct_list)
         return ret
+
+    def build_outputs_connection(self):
+        """Build all nodes and modules outputs connections."""
+        for nd_struct in self.node_structs.values():
+            # for each output in curr node output manager
+            for out in nd_struct.outputs_manager.outputs:
+                # Set the onnx output edge name to this output
+                out.onnx_edge_name = nd_struct.fragment.metadata.get('outputs')[out.idx_in_onnx_provider]
+                self._global_context.outputs_storage.add_output(out)
+                self._global_context.outputs_storage.add_onnx_node_name(out.onnx_edge_name,
+                                                                        nd_struct.fragment.metadata.get('source'))
+                self._global_context.outputs_storage.add_ms_identifier(out.onnx_edge_name, nd_struct.identifier)
+
+            # Set input with existing output mapping
+            for idx, inp in enumerate(nd_struct.fragment.metadata.get('inputs')):
+                if inp in self._global_context.outputs_storage.outputs_collections:
+                    output_obj = self._global_context.outputs_storage.outputs_collections[inp]
+                    output_obj.idx_in_onnx_user[nd_struct.onnx_name] = idx
+
+                    # set ms_user idx, need to modify if not follow onnx order
+                    output_obj.idx_in_ms_user[nd_struct.identifier] = idx
+
+                    # set this output to be returned to external
+                    output_obj.to_external = not(nd_struct.check_target_node_internal(
+                        self._global_context.outputs_storage.onnx_name(inp)
+                    ))
+
+        # collect submodule's and nodes' outputs mgr
+        self._collect_output_mgr()
+
+    def _collect_output_mgr(self, module=None):
+        """
+        Collect the outputs manager from nodes and submodules the current module has.
+
+        Args:
+            module (ModuleStruct): The module struct collecting its nodes and submodules.
+        """
+        root_module = module or self.get_module_struct('[]')
+        output_mgr_list = list()
+        for struct in root_module.get_generate_order():
+            if isinstance(struct, tuple):
+                # index 1 is the NodeStruct while 0 is topological index.
+                struct = struct[1]
+            if isinstance(struct, ModuleStruct) and struct.outputs_manager is None:
+                self._collect_output_mgr(module=struct)
+            for out in struct.outputs_manager.outputs:
+                if Generator.check_output_need_to_external(root_module, out):
+                    output_mgr_list.append(out)
+        root_module.outputs_manager = ModuleOutputManager(root_module.identifier, base_out=output_mgr_list)
+
+    @staticmethod
+    def check_output_need_to_external(root_module: ModuleStruct, checked_output: BaseOutput):
+        """
+        Check the output still need to be returned to module external.
+
+        Args:
+            root_module (ModuleStruct): The Module that the output to be determined.
+            checked_output (BaseOutput): The output to be checked whether returned by the Module.
+
+        Returns:
+            bool, True if the output need to be returned to the module external.
+        """
+        for user in checked_output.onnx_user:
+            if user in root_module.external_successor_nodes_names:
+                return True
+        return False

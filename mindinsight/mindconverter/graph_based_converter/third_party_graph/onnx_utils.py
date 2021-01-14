@@ -464,6 +464,13 @@ class OnnxDataLoader:
                     else:
                         self._global_context.onnx_node_inputs[node.name] = [input_node_name]
 
+    def _parse_graph(self):
+        """Parse ONNX Graph Info For usage in generator."""
+        graph_inputs = [inp.name for inp in self.graph.input]
+        graph_outputs = [out.name for out in self.graph.output]
+        self._global_context.onnx_graph_info['graph_inputs'] = graph_inputs
+        self._global_context.onnx_graph_info['graph_outputs'] = graph_outputs
+
     def initialize(self):
         """Initialize the OnnxDataLoader."""
 
@@ -472,6 +479,9 @@ class OnnxDataLoader:
             err = ModuleNotFoundError("Unable to Find ONNX Model")
             log.error(str(err))
             log.exception(err)
+
+        # Parse ONNX Graph level info
+        self._parse_graph()
 
         # 1. parse all nodes
         self._parse_nodes()

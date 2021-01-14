@@ -18,9 +18,10 @@ __all__ = ["batch_add_nodes"]
 import re
 import copy
 
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import CodeFragment
-from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords
 from .generator import Generator, CodeStruct
+from ..common.code_fragment import CodeFragment, NewFragment
+from ..common.outputs import NodeOutputManager
+from ..constant import ExchangeMessageKeywords
 
 
 def _tf_model_node_name_reformat(node, node_name):
@@ -56,6 +57,7 @@ def batch_add_nodes(graph_obj, mapper) -> Generator:
 
     """
     generator_inst = Generator()
+    external_inputs = graph_obj.user_provided_input_nodes
     for node_name in graph_obj.nodes_in_topological_order:
         node_inst = graph_obj.get_node(node_name)
         node_input = graph_obj.get_input_shape(node_name)
@@ -66,16 +68,11 @@ def batch_add_nodes(graph_obj, mapper) -> Generator:
         node_name = node_name_with_scope
 
         node_inst.add_input_and_output_shape(node_input, node_output)
-        op_name, params, settings, weights = _convert_params(node_inst, mapper)
-        generator_inst.add_node(
-            node_name,
-            node_instance=node_inst,
-            node_fragment=CodeFragment(op_name, params,
-                                       settings,
-                                       node_inst.input_shape,
-                                       node_inst.output_shape,
-                                       weights)
-        )
+        code_template, exchange_msg, outputs_lst, outputs_mapping = _convert_params(node_inst, mapper, external_inputs)
+        outputs_mapping = NodeOutputManager(node_name, output_mappings=outputs_mapping)
+        fragment = NewFragment(data_entity=exchange_msg, code_template=code_template,
+                               outputs=outputs_lst, outputs_mapping=outputs_mapping)
+        generator_inst.add_node(node_name, node_instance=node_inst, node_fragment=fragment)
     return generator_inst
 
 
@@ -105,13 +102,14 @@ def _supply_graph_info(node, external_inputs):
     }
 
 
-def _convert_params(node, mapper):
+def _convert_params(node, mapper, external_inputs):
     """
     Call mapper to convert node's params from ONNX to MindSpore.
 
     Args:
         node (GraphNode): Our defined GraphNode instance.
         mapper (Mapper): The mapper instance which indicating conversion method.
+        external_inputs (list[str]): External inputs provided by users.
 
     Returns:
         tuple[str, dict, dict, dict], op name in MindSpore, MindSpore parameters,
@@ -121,18 +119,11 @@ def _convert_params(node, mapper):
     params.update({"input_shape": node.input_shape,
                    "output_shape": node.output_shape})
 
-    op_in_ms, ms_params, ms_settings, weights = mapper.convert(op_name=node.op_name,
-                                                               params=params,
-                                                               weights=node.weight)
-    if "input_shape" in ms_params:
-        ms_params.pop("input_shape")
-    if "output_shape" in ms_params:
-        ms_params.pop("output_shape")
-
-    if op_in_ms:
-        return op_in_ms, ms_params, ms_settings, weights
-
-    return node.op_name, node.node_params, dict(), dict()
+    code_template, exchange_msg, outputs_lst, outputs_order_mapping = mapper.convert(op_name=node.op_name,
+                                                                                     params=params,
+                                                                                     weights=node.weight)
+    exchange_msg[ExchangeMessageKeywords.METADATA.value] = _supply_graph_info(node, external_inputs)
+    return code_template, exchange_msg, outputs_lst, outputs_order_mapping
 
 
 def _combine_external_inputs_with_precursor_nodes(node, external_inputs):
