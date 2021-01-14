@@ -119,7 +119,7 @@ Contributions of any kind are welcome!
 ## Bugfixes
 
 * UI fix for the error message display mode of the tensor during real-time training. ([!465](https://gitee.com/mindspore/mindinsight/pulls/465))
-* The summary file size is larger than max_file_size. ([!3481](https://gitee.com/mindspore/dashboard/projects/mindspore/mindspore/pulls/3481))
+* The summary file size is larger than max_file_size. ([!3481](https://gitee.com/mindspore/mindspore/pulls/3481))
 * Fix real-time training error when disk is full. ([!3058](https://gitee.com/mindspore/mindspore/pulls/3058))
 
 ## Thanks to our Contributors
