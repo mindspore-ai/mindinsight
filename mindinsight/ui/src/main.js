@@ -25,6 +25,7 @@ import i18n from './i18n';
 import $ from 'jquery';
 import locale from 'element-ui/lib/locale/lang/en';
 import localezh from 'element-ui/lib/locale/lang/zh-CN';
+import {basePath} from '@/services/fetcher';
 
 let language = window.localStorage.getItem('milang');
 const languageList = ['zh-cn', 'en-us'];
@@ -83,12 +84,10 @@ function isBrowserSupport() {
     return false;
   }
 }
-
-window.onload = function(e) {
-  if (isBrowserSupport()) {
-    Vue.prototype.$warmBrowser = true;
-  }
-  // Instantiation
+/**
+ * Instantiate App
+ */
+function appInstantiation() {
   setTimeout(() => {
     new Vue({
       router,
@@ -97,4 +96,25 @@ window.onload = function(e) {
       render: (h) => h(App),
     }).$mount('#app');
   }, 100);
+}
+
+window.enableDebugger = true;
+window.onload = function(e) {
+  if (isBrowserSupport()) {
+    Vue.prototype.$warmBrowser = true;
+  }
+  $.ajax({
+    url: `${basePath}v1/mindinsight/ui-config`,
+    type: 'GET',
+    dataType: 'json',
+    success: (data) => {
+      if (data) {
+        window.enableDebugger = data.enable_debugger;
+      }
+      appInstantiation();
+    },
+    error: ()=> {
+      appInstantiation();
+    },
+  });
 };
