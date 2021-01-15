@@ -911,6 +911,7 @@ export default {
                     this.$message.error(this.$t('graph.tooManyNodes'));
                     this.packageDataToObject(name, false);
                     this.loading.show = false;
+                    this.$refs.tree.getNode(name).loading = false;
                   } else {
                     const nodes = JSON.parse(JSON.stringify(response.data.nodes));
                     if (nodes && nodes.length) {
@@ -930,6 +931,7 @@ export default {
                             this.selectedNode.name = name;
                             this.loading.show = false;
                             this.deleteNamespace(name);
+                            this.$refs.tree.getNode(name).loading = false;
                             return;
                           }
                         }
@@ -1442,7 +1444,7 @@ export default {
                     if (data) {
                       this.dealAutoUnfoldNamescopesData(data);
                     }
-                    if (!this.treeFlag && response.data.children) {
+                    if (response.data.children) {
                       this.dealTreeData(response.data.children, option.value);
                     }
                   }
@@ -1464,6 +1466,13 @@ export default {
      */
     dealTreeData(children, name) {
       if (children.nodes) {
+        if (
+          (children.nodes.length > this.nodesCountLimit &&
+            this.$refs.tree.getNode(children.scope_name).data.type === 'name_scope') ||
+          this.allGraphData[children.scope_name].maxChainNum > this.maxChainNum
+        ) {
+          return;
+        }
         const data = children.nodes.map((val) => {
           return {
             label: val.name.split('/').pop(),
@@ -1506,7 +1515,7 @@ export default {
           }, 800);
         });
       }
-      if (children.children) {
+      if (children.children && Object.keys(children.children).length) {
         this.dealTreeData(children.children, name);
       }
     },

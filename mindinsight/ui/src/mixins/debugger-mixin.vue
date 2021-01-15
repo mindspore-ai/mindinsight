@@ -677,7 +677,6 @@ export default {
       });
       this.collectionChange(this.createWatchPointArr[0]);
       this.createWPDialogVisible = true;
-      this.curWatchPointId = null;
     },
     /**
      * Delete new watchpoint
@@ -1333,6 +1332,12 @@ export default {
                     showCheckbox: val.watched !== -1,
                   };
                 });
+                if (this.curNodeData.length > this.nodesCountLimit) {
+                  this.$message.error(this.$t('graph.tooManyNodes'));
+                  this.loadingInstance.close();
+                  node.loading = false;
+                  return;
+                }
                 resolve(this.curNodeData);
                 // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
                 this.defaultCheckedArr = this.defaultCheckedArr.concat(
@@ -1545,6 +1550,9 @@ export default {
      * @param {Obejct} name  The name of the current node
      */
     nodeExpandLinkage(nodes, name) {
+      if (nodes.length > this.nodesCountLimit) {
+        return;
+      }
       const curNodeData = nodes.map((val) => {
         return {
           label: val.name.split('/').pop(),
@@ -1856,6 +1864,13 @@ export default {
      */
     dealTreeData(children, name) {
       if (children.nodes) {
+        if (
+          (children.nodes.length > this.nodesCountLimit &&
+            this.$refs.tree.getNode(children.scope_name).data.type === 'name_scope') ||
+          this.allGraphData[children.scope_name].maxChainNum > this.maxChainNum
+        ) {
+          return;
+        }
         const data = children.nodes.map((val) => {
           return {
             label: val.name.split('/').pop(),
@@ -1899,7 +1914,7 @@ export default {
           }, 800);
         });
       }
-      if (children.children) {
+      if (children.children && Object.keys(children.children).length) {
         this.dealTreeData(children.children, name);
       }
     },
