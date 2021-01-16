@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2019-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -223,6 +223,7 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3 :: Only',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Artificial Intelligence',
             'Topic :: Software Development',
