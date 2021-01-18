@@ -448,7 +448,37 @@
     "countUnit": "times",
     "unit": "ms/time",
     "gpuunit": "us/time",
-    "chartTitle": "Average Time Consumption Ranking"
+    "chartTitle": "Average Time Consumption Ranking",
+    "memory": {
+      "memoryDetailLink": "Memory Usage Information",
+      "overView": "Memory Allocation OverView",
+      "currentCard": "Number of Cards",
+      "memoryAssign": "Number of Memory Allocations",
+      "memoryRelease": "Number of Memory Releases",
+      "totalMemory": "Total Available Memory",
+      "staticMenory": "Static Memory",
+      "memoryPeak": "Peak Memory Usage",
+      "memoryGiBUnit": "GiB",
+      "memoryMiBUnit": "MiB",
+      "memoryKiBUnit": "KiB",
+      "usedMemory": "Memory Usage",
+      "operatorMemoryAssign": "Operator Memory Allocation",
+      "operatorName": "Operator Name",
+      "totalMemoryAssign": "Total Allocated Memory",
+      "assignNum": "Number of Allocations",
+      "memoryType": "Memory Type",
+      "dataType": "Data Type",
+      "shapes": "Shape",
+      "chartXaxisUnit": "Execution ID",
+      "chartYaxisUnit": "Size(GiB)",
+      "curOperaterId": "Current Operator Execution ID",
+      "curOperator": "Current Operator",
+      "curMemorySize": "Current Memory",
+      "memoryChanged": "Memory Change",
+      "lifeCycle": "lifecycle",
+      "fpStart": "Forward",
+      "bpEnd": "Backward"
+    }
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
@@ -823,7 +853,7 @@
     "scoreSystemtooltipthree": "Scoring dimensions:",
     "scoreSystemtooltipfour": " - Faithfulness: evaluates the faithfulness of the explanation result to the model, that is, whether the saliency map correctly reflects the model classification basis. Modify the corresponding positions in the original image according to a certain rule (for example, from bright to dark) and transfer the modified image to the model for inference in sequence. If the brighter the area of the saliency map is, the greater the impact on the selected tag is, the higher the faithfulness of the interpretation result is. Conversely, the explanation result may not reflect the inference basis of the model. Currently, there are three mainstream solutions: naive faithfulness, insertion AUC, and deletion AUC.",
     "scoreSystemtooltipfive": "  - Localization: uses the bounding box of the dataset to assess the positioning accuracy of the highlighted area in the saliency map. Select an objective and related tag. If the explanation method accurately highlights the area related to the selected tag in the image, the highlighted area should overlap the bounding box of the selected objective. Localization assesses the location capability of the explanation result by assessing the overlapped area of the highlighted area and bounding box.",
-    "scoreSystemtooltipsix": "- ClassSensitivity: evaluates the explantion through comparing saliency maps of max-confidence and min-confidence labels. Since models are expected to rely on different features for inference, an reason explainer should generate different saliecny map for different labels. The class sensitivity is evaluated through calculating the correlation between saliency maps of max-confidence and min-confidence labels.",
+    "scoreSystemtooltipsix": "- ClassSensitivity: evaluates the explanation through comparing saliency maps of max-confidence and min-confidence labels. Since models are expected to rely on different features for inference, an reason explainer should generate different saliecny map for different labels. The class sensitivity is evaluated through calculating the correlation between saliency maps of max-confidence and min-confidence labels.",
     "scoreSystemtooltipseven": "- Robustness: evaluate the stability of explainer, i.e., how much will the saliency map change if some noise is added to the original image. Disturb the original image by add little noise, which have     no effect on the inference. The less the saliency map changes, the more robust the explainer is.",
     "errorTipTitle": "Exception scenario：",
     "errorTipText": "if NaN is displayed, please check the runtime log."

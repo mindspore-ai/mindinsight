@@ -99,6 +99,10 @@ export default new Router({
           path: 'data-process',
           component: () => import('./views/profiling/data-process.vue'),
         },
+        {
+          path: 'memory-detail',
+          component: () => import('./views/profiling/memory-detail.vue'),
+        },
       ],
     },
     {
