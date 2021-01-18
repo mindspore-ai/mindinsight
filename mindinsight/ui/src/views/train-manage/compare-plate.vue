@@ -55,9 +55,15 @@ limitations under the License.
                         text-color="#FFFFFF"
                         size="small "
                         @change="timeTypeChange">
-          <el-radio-button :label="$t('scalar.step')"></el-radio-button>
-          <el-radio-button :label="$t('scalar.relativeTime')"></el-radio-button>
-          <el-radio-button :label="$t('scalar.absoluteTime')"></el-radio-button>
+          <el-radio-button :label="$t('scalar.step')">
+            {{$t('scalar.step')}}
+          </el-radio-button>
+          <el-radio-button :label="$t('scalar.relativeTime')">
+            {{$t('scalar.relativeTime') + $t('symbols.leftbracket') + 's' + $t('symbols.rightbracket')}}
+          </el-radio-button>
+          <el-radio-button :label="$t('scalar.absoluteTime')">
+            {{$t('scalar.absoluteTime')}}
+          </el-radio-button>
         </el-radio-group>
         <div class="xaxis-title">{{$t('scalar.smoothness')}}</div>
         <el-slider v-model="smoothValue"
@@ -593,7 +599,6 @@ export default {
           axisLabel: {
             color: '#9EA4B3',
             interval: 0,
-            rotate: that.isActive === 2 ? 0 : 90,
             formatter: (value) => {
               if (sampleObject.zoomDataXTimer) {
                 clearTimeout(sampleObject.zoomDataXTimer);
@@ -1113,8 +1118,6 @@ export default {
 
             sampleObject.charData.charOption.xAxis.minInterval =
               this.isActive === 0 ? 1 : 0;
-            sampleObject.charData.charOption.xAxis.axisLabel.rotate =
-              this.isActive === 2 ? 0 : 90;
             sampleObject.updateFlag = true;
             sampleObject.charObj.clear();
             this.updateOrCreateChar(sampleObject.sampleIndex);

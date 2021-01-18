@@ -912,7 +912,6 @@ export default {
             axisLabel: {
               color: '#9EA4B3',
               interval: 0,
-              rotate: 90,
               formatter(value) {
                 const symbol = Math.abs(value);
                 if (symbol.toString().length > 6) {
