@@ -1050,17 +1050,19 @@ export default {
   components: {},
 };
 </script>
-<style lang="scss">
+<style>
 .compareFlex {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
+
 .data-contentCompare {
   width: 100%;
   background: #fff;
 }
+
 .data-contentCompare-title {
   padding-top: 32px;
   padding-left: 32px;
@@ -1071,29 +1073,28 @@ export default {
 
 .data-contentCompare-content {
   padding: 0 32px;
-
-  .data-contentCompare-tagName {
-    height: 22px;
-    font-size: 14px;
-    color: #333;
-    z-index: 999;
-    line-height: 22px;
-    display: flex;
-    margin-top: 36px;
-    font-weight: 600;
-    .tagNameLeft {
-      text-align: left;
-      width: 49%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .tagNameRight {
-      text-align: right;
-    }
-  }
-  .data-contentCompare-chart {
-    height: 570px;
-    margin-top: -36px;
-  }
+}
+.data-contentCompare-content .data-contentCompare-tagName {
+  height: 22px;
+  font-size: 14px;
+  color: #333;
+  z-index: 999;
+  line-height: 22px;
+  display: flex;
+  margin-top: 36px;
+  font-weight: 600;
+}
+.data-contentCompare-content .data-contentCompare-tagName .tagNameLeft {
+  text-align: left;
+  width: 49%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.data-contentCompare-content .data-contentCompare-tagName .tagNameRight {
+  text-align: right;
+}
+.data-contentCompare-content .data-contentCompare-chart {
+  height: 570px;
+  margin-top: -36px;
 }
 </style>

@@ -193,23 +193,23 @@ export default {
   components: {},
 };
 </script>
-<style lang="scss">
+<style>
 .chart-dialog {
   height: 100%;
   position: relative;
-  .y-axis {
-    position: absolute;
-    left: 50px;
-    top: 20px;
-  }
-  .scatter {
-    height: 100%;
-  }
-  .x-axis {
-    position: absolute;
-    bottom: 0;
-    right: 20px;
-  }
+}
+.chart-dialog .y-axis {
+  position: absolute;
+  left: 50px;
+  top: 20px;
+}
+.chart-dialog .scatter {
+  height: 100%;
+}
+.chart-dialog .x-axis {
+  position: absolute;
+  bottom: 0;
+  right: 20px;
 }
 
 .tooltip-msg {

@@ -487,12 +487,7 @@ export default {
       if (indexArr.length) {
         const lastIndex = indexArr.pop();
         const filterItem = this.filterArr[lastIndex];
-        if (
-          this.columnLimitNum > 0 &&
-          filterItem &&
-          !filterItem.showError &&
-          filterItem.max >= this.columnLimitNum
-        ) {
+        if (this.columnLimitNum > 0 && filterItem && !filterItem.showError && filterItem.max >= this.columnLimitNum) {
           const result = this.checkFilterLimitOver(filterItem);
           if (result) {
             filterItem.showError = true;
@@ -525,7 +520,7 @@ export default {
       let endValue = tempArr[1] ? tempArr[1] : filter.max + 1;
       startValue = startValue < 0 ? filter.max + Number(startValue) + 1 : Number(startValue);
       endValue = endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
-      if ((endValue - startValue) > this.columnLimitNum) {
+      if (endValue - startValue > this.columnLimitNum) {
         result = true;
       }
       return result;
@@ -638,126 +633,125 @@ export default {
   destroyed() {},
 };
 </script>
-<style lang="scss">
+<style>
 .cl-slickgrid-container {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  .data-show-container {
-    width: 100%;
-    flex: 1;
-    .grid-item {
-      width: 100%;
-      height: 100%;
-      ::-webkit-scrollbar-button {
-        z-index: 200;
-        width: 10px;
-        height: 10px;
-        background: #fff;
-        cursor: pointer;
-      }
-      ::-webkit-scrollbar-button:horizontal:single-button:start {
-        background-image: url('../assets/images/scroll-btn-left.png');
-        background-position: center;
-      }
-      ::-webkit-scrollbar-button:horizontal:single-button:end {
-        background-image: url('../assets/images/scroll-btn-right.png');
-        background-position: center;
-      }
-      ::-webkit-scrollbar-button:vertical:single-button:start {
-        background-image: url('../assets/images/scroll-btn-up.png');
-        background-position: center;
-      }
-      ::-webkit-scrollbar-button:vertical:single-button:end {
-        background-image: url('../assets/images/scroll-btn-down.png');
-        background-position: center;
-      }
-      ::-webkit-scrollbar-thumb {
-        background-color: #bac5cc;
-      }
-      ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-      }
-    }
-    .error-msg-container {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
-  .info-show-container {
-    width: 100%;
-  }
-  .operate-container {
-    width: 100%;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    z-index: 9;
-    flex-wrap: wrap;
-    .full-screen-icon {
-      float: right;
-      margin-left: 15px;
-      height: 100%;
-      line-height: 34px;
-      cursor: pointer;
-      :hover {
-        color: #00a5a7;
-      }
-    }
-    .active-color {
-      color: #00a5a7;
-    }
-    .filter-container {
-      float: left;
-      flex-wrap: wrap;
-      display: flex;
-      .filter-input-title {
-        line-height: 34px;
-        margin-right: 10px;
-      }
-      .error-border {
-        input {
-          border-color: red;
-        }
-      }
-      .filter-input {
-        text-align: center;
-      }
-      .long-input {
-        width: 120px;
-      }
-      .input-behind {
-        padding: 0 5px;
-      }
-      .filter-incorrect-text {
-        margin-left: 10px;
-        line-height: 32px;
-        color: red;
-      }
-    }
-    .shape-wrap {
-      float: left;
-      line-height: 34px;
-      margin-left: 10px;
-    }
-    .accuracy-container {
-      float: right;
-      .select-item-debugger {
-        width: 65px;
-        margin-left: 5px;
-      }
-      .select-category {
-        width: 105px;
-        margin-left: 5px;
-      }
-    }
-  }
 }
+.cl-slickgrid-container .data-show-container {
+  width: 100%;
+  flex: 1;
+}
+.cl-slickgrid-container .data-show-container .grid-item {
+  width: 100%;
+  height: 100%;
+}
+.cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button {
+  z-index: 200;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+.cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:horizontal:single-button:start {
+  background-image: url('../assets/images/scroll-btn-left.png');
+  background-position: center;
+}
+.cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:horizontal:single-button:end {
+  background-image: url('../assets/images/scroll-btn-right.png');
+  background-position: center;
+}
+.cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:vertical:single-button:start {
+  background-image: url('../assets/images/scroll-btn-up.png');
+  background-position: center;
+}
+.cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:vertical:single-button:end {
+  background-image: url('../assets/images/scroll-btn-down.png');
+  background-position: center;
+}
+.cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-thumb {
+  background-color: #bac5cc;
+}
+.cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.cl-slickgrid-container .data-show-container .error-msg-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cl-slickgrid-container .info-show-container {
+  width: 100%;
+}
+.cl-slickgrid-container .operate-container {
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  z-index: 9;
+  flex-wrap: wrap;
+}
+.cl-slickgrid-container .operate-container .full-screen-icon {
+  float: right;
+  margin-left: 15px;
+  height: 100%;
+  line-height: 34px;
+  cursor: pointer;
+}
+.cl-slickgrid-container .operate-container .full-screen-icon :hover {
+  color: #00a5a7;
+}
+.cl-slickgrid-container .operate-container .active-color {
+  color: #00a5a7;
+}
+.cl-slickgrid-container .operate-container .filter-container {
+  float: left;
+  flex-wrap: wrap;
+  display: flex;
+}
+.cl-slickgrid-container .operate-container .filter-container .filter-input-title {
+  line-height: 34px;
+  margin-right: 10px;
+}
+.cl-slickgrid-container .operate-container .filter-container .error-border input {
+  border-color: red;
+}
+.cl-slickgrid-container .operate-container .filter-container .filter-input {
+  text-align: center;
+}
+.cl-slickgrid-container .operate-container .filter-container .long-input {
+  width: 120px;
+}
+.cl-slickgrid-container .operate-container .filter-container .input-behind {
+  padding: 0 5px;
+}
+.cl-slickgrid-container .operate-container .filter-container .filter-incorrect-text {
+  margin-left: 10px;
+  line-height: 32px;
+  color: red;
+}
+.cl-slickgrid-container .operate-container .shape-wrap {
+  float: left;
+  line-height: 34px;
+  margin-left: 10px;
+}
+.cl-slickgrid-container .operate-container .accuracy-container {
+  float: right;
+}
+.cl-slickgrid-container .operate-container .accuracy-container .select-item-debugger {
+  width: 65px;
+  margin-left: 5px;
+}
+.cl-slickgrid-container .operate-container .accuracy-container .select-category {
+  width: 105px;
+  margin-left: 5px;
+}
+
 .slick-cell,
 .slick-headerrow-column,
 .slick-footerrow-column {
@@ -770,15 +764,18 @@ export default {
 .ui-widget-content {
   background: none;
 }
+
 .headerStyle {
   vertical-align: middle;
   text-align: center;
 }
+
 .filter-check {
   font-size: 18px;
   color: #00a5a7;
   cursor: pointer;
 }
+
 .table-item-span {
   display: block;
   width: 100%;

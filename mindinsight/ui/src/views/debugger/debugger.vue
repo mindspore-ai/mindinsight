@@ -1775,645 +1775,640 @@ export default {
   destroyed() {},
 };
 </script>
-<style lang="scss">
+<style>
 .deb-wrap {
   height: 100%;
   background-color: white;
   position: relative;
   overflow: hidden;
-  & > div {
-    float: left;
-    height: 100%;
-  }
-  .left-wrap {
-    width: 400px;
-    padding-right: 25px;
-    height: 100%;
-    background-color: white;
-    position: relative;
-    transition: width 0.2s;
-    -moz-transition: width 0.2s; /* Firefox 4 */
-    -webkit-transition: width 0.2s; /* Safari and Chrome */
-    -o-transition: width 0.2s; /* Opera */
-    .left {
-      height: 100%;
-      background: #fff;
-      box-shadow: 0 2px 2px rgba(0, 0, 0, 0.22);
-      .header {
-        padding: 15px;
-        border-bottom: 1px solid #ebeef5;
-        position: relative;
-        font-weight: bold;
-        .radio-tabs {
-          position: absolute;
-          right: 10px;
-          top: 10px;
-        }
-        .outdate-tip {
-          display: inline-block;
-          margin-left: 7px;
-          .el-icon-warning {
-            color: #e6a23c;
-            font-size: 16px;
-            cursor: pointer;
-          }
-        }
-      }
-      .content {
-        height: calc(100% - 145px);
-        .node-type {
-          height: 50px;
-          padding: 15px 15px 0 15px;
-          .label {
-            display: inline-block;
-            width: 80px;
-          }
-          .el-select {
-            width: calc(100% - 80px);
-          }
-        }
-        .select-wrap {
-          padding: 10px 15px;
-          font-size: 14px;
-          .el-select .el-input {
-            width: 100%;
-          }
-          .input-with-select .el-input-group__prepend {
-            background-color: #fff;
-          }
-          .el-input--suffix .el-input__inner {
-            padding-left: 5px;
-            padding-right: 30px;
-            font-size: 12px;
-          }
-        }
-        .tree-wrap {
-          height: calc(70% - 155px);
-          overflow-y: auto;
-          padding: 0 15px 15px;
-          position: relative;
-          z-index: 2;
-          .image-type {
-            width: 20px;
-            height: 10px;
-            margin-right: 10px;
-          }
-          .el-tree {
-            & > .el-tree-node {
-              min-width: 100%;
-              display: inline-block;
-            }
-          }
-        }
-        .watch-point-wrap {
-          height: 30%;
-          border-top: 1px solid #ebeef5;
-          .title-wrap {
-            height: 30px;
-            line-height: 30px;
-            padding: 0 20px;
-            position: relative;
-            border-bottom: 1px solid #ebeef5;
-            font-weight: bold;
-          }
-          .check-wrap {
-            position: absolute;
-            right: 60px;
-            top: 0px;
-            .el-icon-circle-check {
-              color: #00a5a7;
-              cursor: pointer;
-            }
-            .disable:before {
-              cursor: not-allowed;
-              color: #adb0b8;
-            }
-          }
-          .delete-wrap {
-            position: absolute;
-            right: 35px;
-            top: 0px;
-            .el-icon-delete:before {
-              color: #00a5a7;
-              cursor: pointer;
-            }
-            .disable:before {
-              cursor: not-allowed;
-              color: #adb0b8;
-            }
-          }
-          .add-wrap {
-            position: absolute;
-            right: 10px;
-            top: 0px;
-            .el-icon-circle-plus:before {
-              color: #00a5a7;
-              cursor: pointer;
-            }
-            .disable:before {
-              cursor: not-allowed;
-              color: #adb0b8;
-            }
-          }
-          .content-wrap {
-            padding-left: 20px;
-            position: relative;
-            height: calc(100% - 30px);
-            .list-wrap {
-              max-height: 100%;
-              overflow: auto;
-              padding: 10px 0;
-              .list {
-                margin-bottom: 10px;
-                .name {
-                  .item-content {
-                    display: inline-block;
-                    width: 300px;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    overflow: hidden;
-                  }
-                }
-                .name:hover {
-                  cursor: pointer;
-                  color: #00a5a7;
-                }
-                .name.selected {
-                  color: #00a5a7;
-                  position: relative;
-                  .el-icon-close {
-                    right: 10px;
-                  }
-                  .el-icon-check {
-                    right: 30px;
-                  }
-                  .icon {
-                    position: absolute;
-                    top: 3px;
-                    border: solid 1px;
-                    padding: 1px;
-                    border-radius: 2px;
-                    font-size: 12px;
-                  }
-                }
-              }
-            }
-          }
-        }
-        .custom-tree-node {
-          padding-right: 8px;
-          .const {
-            margin-left: 22px;
-          }
-        }
-        .custom-tree-node.highlight {
-          color: red;
-        }
-        .hit-list-wrap {
-          height: 100%;
-          padding: 10px;
-          .watchpoint-table {
-            max-height: calc(100% - 45px);
-            overflow: auto;
-          }
-          .el-table::before {
-            height: 0;
-          }
-          .watchpoint-page {
-            padding-top: 20px;
-          }
-          .hit-item {
-            word-break: break-all;
-            line-height: 18px;
-            padding: 10px;
-            &:hover {
-              cursor: pointer;
-            }
-          }
-          .selected {
-            color: #00a5a7;
-          }
-          .el-table__expanded-cell[class*='cell'] {
-            padding: 0px 10px 0 50px;
-            ul {
-              background-color: #f5f7fa;
-              li {
-                line-height: 18px;
-                padding: 10px;
-                word-break: break-all;
-                border-top: 1px solid white;
-                border-bottom: 1px solid white;
-                &:hover {
-                  background-color: #ebeef5;
-                }
-                .param {
-                  .tensor-icon {
-                    display: inline-block;
-                    width: 6px;
-                    height: 6px;
-                    border-radius: 3px;
-                    background-color: #00a5a7;
-                    margin-top: 8px;
-                  }
-                }
-                .hit-tip {
-                  margin-top: 10px;
-                  font-size: 12px;
-                  .el-icon-warning {
-                    font-size: 14px;
-                    color: #e6a23c;
-                    padding-right: 4px;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      .btn-wrap {
-        padding: 10px 20px;
-        border-top: 1px solid #ebeef5;
-        .step {
-          width: 100%;
-          display: flex;
-          justify-content: space-between;
-          .custom-btn {
-            margin-left: 10px;
-          }
-        }
-        .btn-two {
-          width: 100%;
-          .custom-btn {
-            height: 30px;
-            margin-top: 10px;
-          }
-        }
-        .el-button + .el-button {
-          margin-left: 0px;
-        }
-        .el-button:not(:last-child) {
-          margin-right: 10px;
-        }
-      }
-    }
-    .collapse-btn {
-      position: absolute;
-      right: 2px;
-      width: 31px;
-      height: 100px;
-      top: 50%;
-      margin-top: -50px;
-      cursor: pointer;
-      line-height: 86px;
-      z-index: 1;
-      text-align: center;
-      background-image: url('../../assets/images/collapse-left.svg');
-    }
-    .collapse-btn.collapse {
-      background-image: url('../../assets/images/collapse-right.svg');
-    }
-  }
-  .left-wrap.collapse {
-    width: 0px;
-  }
-  .right {
-    width: calc(100% - 400px);
-    height: 100%;
-    padding-right: 20px;
-    transition: width 0.2s;
-    -moz-transition: width 0.2s; /* Firefox 4 */
-    -webkit-transition: width 0.2s; /* Safari and Chrome */
-    -o-transition: width 0.2s; /* Opera */
-    .header {
-      padding: 15px;
-      border-bottom: 1px solid #ebeef5;
-      position: relative;
-      background: #fff;
-      .link {
-        color: #00a5a7;
-      }
-      .host {
-        margin-left: 25px;
-      }
-      span.item {
-        .content {
-          color: #00a5a7;
-        }
-      }
-      .item + .item {
-        margin-left: 15px;
-      }
-      .tooltip {
-        margin-left: 5px;
-        cursor: pointer;
-      }
-    }
-    .svg-wrap {
-      height: 50%;
-      border-bottom: 1px solid #ebeef5;
-      position: relative;
-      .btn-wrap {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-      }
-      .graph-container {
-        height: 100%;
-        width: 100%;
-        position: relative;
-        #graph {
-          height: 100%;
-          background-color: #f7faff;
-          .node:hover > path,
-          .node:hover > ellipse,
-          .node:hover > polygon,
-          .node:hover > rect {
-            stroke-width: 2px;
-          }
-          .node.cluster > rect:hover {
-            stroke: #8df1f2;
-          }
-          .selected {
-            stroke: red !important;
-            stroke-width: 2px;
-          }
-          #graph0 > polygon {
-            fill: transparent;
-          }
-          .node {
-            cursor: pointer;
-          }
-          .edge {
-            path {
-              stroke: rgb(120, 120, 120);
-            }
-            polygon {
-              fill: rgb(120, 120, 120);
-            }
-          }
-          .edge.highlighted {
-            path {
-              stroke: red;
-            }
-            polygon {
-              stroke: red;
-              fill: red;
-            }
-            marker {
-              path {
-                fill: red;
-              }
-            }
-          }
-          .node.aggregation > polygon {
-            stroke: #e3aa00;
-            fill: #ffe794;
-          }
-          .node.cluster.aggregation > rect {
-            stroke: #e3aa00;
-            fill: #ffe794;
-            stroke-dasharray: 3, 3;
-          }
-          .node > polygon {
-            stroke: #00a5a7;
-            fill: rgb(141, 241, 242);
-          }
-          .node > ellipse {
-            stroke: #4ea6e6;
-            fill: #b8e0ff;
-          }
-          .plain > path,
-          .plain ellipse {
-            stroke: #e6a23c;
-            fill: #ffd0a6;
-            stroke-dasharray: 1.5, 1.5;
-          }
-          .edge-point ellipse {
-            stroke: #a7a7a7;
-            fill: #a7a7a7;
-          }
-          text {
-            fill: black;
-          }
-        }
-        #contextMenu {
-          display: none;
-          position: absolute;
-          min-width: 150px;
-          border: 1px solid #d4d4d4;
-          ul {
-            background-color: #e2e2e2;
-            border-radius: 2px;
-            li {
-              padding: 5px 18px;
-              cursor: pointer;
-              &:hover {
-                background-color: rgb(120, 120, 120);
-                color: white;
-              }
-            }
-          }
-        }
-      }
-    }
-    .table-container {
-      background: #fff;
-      height: calc(50% - 60px);
-      position: relative;
-      img {
-        position: absolute;
-        right: 10px;
-        top: 12px;
-        cursor: pointer;
-        z-index: 99;
-      }
-      .el-tabs.el-tabs--top {
-        height: 100%;
-        .el-tabs__content {
-          height: calc(100% - 60px);
-          .el-tab-pane {
-            height: 100%;
-          }
-        }
-      }
-      .table-content {
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-        .table-wrap {
-          height: 100%;
-          overflow-y: auto;
-          .el-table .success-row {
-            background: #f0f9eb;
-          }
-        }
-        .value-wrap {
-          text-align: right;
-        }
-        .center {
-          display: inline-block;
-          text-align: center;
-          width: 100%;
-        }
-        .value {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          cursor: pointer;
-          color: #00a5a7;
-          display: inline-block;
-          width: 100%;
-        }
-        .value-tip {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          width: 50px;
-          display: inline-block;
-          vertical-align: middle;
-          text-align: right;
-        }
-        .el-table--border {
-          border-right: none;
-          border-left: none;
-        }
-        .el-table--border td {
-          border-right: none;
-          border-left: none;
-        }
-        .el-table--border th {
-          border-right: none;
-          border-left: none;
-        }
-
-        .el-table th > .cell {
-          border-left: 1px solid #d9d8dd;
-          word-break: keep-all;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .el-table-column--selection .cell {
-          border-left: none !important;
-        }
-      }
-    }
-    .svg-wrap.collapse {
-      height: calc(100% - 100px);
-    }
-    .table-container.collapse {
-      height: 35px;
-      .el-tabs__header {
-        margin: 0;
-      }
-      .table-content {
-        display: none;
-      }
-    }
-  }
-  .right.collapse {
-    width: calc(100% - 25px);
-  }
-  .custom-btn {
-    border: 1px solid #00a5a7;
-    border-radius: 2px;
-    background-color: white;
-    color: #00a5a7;
-  }
-  .custom-btn:hover {
-    background-color: #e9f7f7;
-  }
-  .custom-btn.green {
-    background-color: #00a5a7;
-    color: white;
-  }
-  .custom-btn.green:hover {
-    background-color: #33b7b9;
-  }
-  .is-disabled.custom-btn {
-    background-color: #f5f5f6;
-    border: 1px solid #dfe1e6 !important;
-    color: #adb0b8;
-    &:hover {
-      background-color: #f5f5f6;
-    }
-  }
-  .notShow {
-    display: none;
-  }
-  .creat-watch-point-dialog {
-    .conditions-container {
-      .collection {
-        width: 200px;
-      }
-      .condition,
-      .param,
-      .param-value {
-        margin-left: 10px;
-        width: 200px;
-      }
-      .percent-sign {
-        display: inline-block;
-        text-align: right;
-        width: 20px;
-      }
-      .inclusive-param {
-        text-align: right;
-        .item {
-          margin-top: 10px;
-          display: inline-block;
-        }
-        .item + .item {
-          margin-left: 10px;
-        }
-      }
-    }
-    .error-msg {
-      float: left;
-      .el-icon-warning {
-        color: #e6a23c;
-        font-size: 16px;
-        cursor: pointer;
-      }
-    }
-  }
-
-  .el-dialog__wrapper.pendingTips {
-    position: absolute;
-    .dialog-icon {
-      .el-icon-warning {
-        font-size: 24px;
-        color: #e6a23c;
-        vertical-align: bottom;
-      }
-    }
-    .el-dialog__body {
-      padding: 2px 20px 32px 20px;
-      .dialog-content {
-        line-height: 24px;
-        margin-left: 10px;
-      }
-    }
-    .el-dialog__footer {
-      text-align: center;
-      padding: 10px 20px 32px;
-    }
-  }
-  .el-dialog__wrapper.pendingTips + .v-modal {
-    position: absolute;
-  }
-  .deb-con {
-    position: absolute;
-    top: 0px;
-    width: 100%;
-    height: 100%;
-    background-color: #fff;
-    z-index: 999;
-  }
 }
+.deb-wrap > div {
+  float: left;
+  height: 100%;
+}
+.deb-wrap .left-wrap {
+  width: 400px;
+  padding-right: 25px;
+  height: 100%;
+  background-color: white;
+  position: relative;
+  transition: width 0.2s;
+  -moz-transition: width 0.2s;
+  /* Firefox 4 */
+  -webkit-transition: width 0.2s;
+  /* Safari and Chrome */
+  -o-transition: width 0.2s;
+  /* Opera */
+}
+.deb-wrap .left-wrap .left {
+  height: 100%;
+  background: #fff;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.22);
+}
+.deb-wrap .left-wrap .left .header {
+  padding: 15px;
+  border-bottom: 1px solid #ebeef5;
+  position: relative;
+  font-weight: bold;
+}
+.deb-wrap .left-wrap .left .header .radio-tabs {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+.deb-wrap .left-wrap .left .header .outdate-tip {
+  display: inline-block;
+  margin-left: 7px;
+}
+.deb-wrap .left-wrap .left .header .outdate-tip .el-icon-warning {
+  color: #e6a23c;
+  font-size: 16px;
+  cursor: pointer;
+}
+.deb-wrap .left-wrap .left .content {
+  height: calc(100% - 145px);
+}
+.deb-wrap .left-wrap .left .content .node-type {
+  height: 50px;
+  padding: 15px 15px 0 15px;
+}
+.deb-wrap .left-wrap .left .content .node-type .label {
+  display: inline-block;
+  width: 80px;
+}
+.deb-wrap .left-wrap .left .content .node-type .el-select {
+  width: calc(100% - 80px);
+}
+.deb-wrap .left-wrap .left .content .select-wrap {
+  padding: 10px 15px;
+  font-size: 14px;
+}
+.deb-wrap .left-wrap .left .content .select-wrap .el-select .el-input {
+  width: 100%;
+}
+.deb-wrap .left-wrap .left .content .select-wrap .input-with-select .el-input-group__prepend {
+  background-color: #fff;
+}
+.deb-wrap .left-wrap .left .content .select-wrap .el-input--suffix .el-input__inner {
+  padding-left: 5px;
+  padding-right: 30px;
+  font-size: 12px;
+}
+.deb-wrap .left-wrap .left .content .tree-wrap {
+  height: calc(70% - 155px);
+  overflow-y: auto;
+  padding: 0 15px 15px;
+  position: relative;
+  z-index: 2;
+}
+.deb-wrap .left-wrap .left .content .tree-wrap .image-type {
+  width: 20px;
+  height: 10px;
+  margin-right: 10px;
+}
+.deb-wrap .left-wrap .left .content .tree-wrap .el-tree > .el-tree-node {
+  min-width: 100%;
+  display: inline-block;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap {
+  height: 30%;
+  border-top: 1px solid #ebeef5;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .title-wrap {
+  height: 30px;
+  line-height: 30px;
+  padding: 0 20px;
+  position: relative;
+  border-bottom: 1px solid #ebeef5;
+  font-weight: bold;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .check-wrap {
+  position: absolute;
+  right: 60px;
+  top: 0px;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .check-wrap .el-icon-circle-check {
+  color: #00a5a7;
+  cursor: pointer;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .check-wrap .disable:before {
+  cursor: not-allowed;
+  color: #adb0b8;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .delete-wrap {
+  position: absolute;
+  right: 35px;
+  top: 0px;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .delete-wrap .el-icon-delete:before {
+  color: #00a5a7;
+  cursor: pointer;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .delete-wrap .disable:before {
+  cursor: not-allowed;
+  color: #adb0b8;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .add-wrap {
+  position: absolute;
+  right: 10px;
+  top: 0px;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .add-wrap .el-icon-circle-plus:before {
+  color: #00a5a7;
+  cursor: pointer;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .add-wrap .disable:before {
+  cursor: not-allowed;
+  color: #adb0b8;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap {
+  padding-left: 20px;
+  position: relative;
+  height: calc(100% - 30px);
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap {
+  max-height: 100%;
+  overflow: auto;
+  padding: 10px 0;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list {
+  margin-bottom: 10px;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name .item-content {
+  display: inline-block;
+  width: 300px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name:hover {
+  cursor: pointer;
+  color: #00a5a7;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name.selected {
+  color: #00a5a7;
+  position: relative;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name.selected .el-icon-close {
+  right: 10px;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name.selected .el-icon-check {
+  right: 30px;
+}
+.deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name.selected .icon {
+  position: absolute;
+  top: 3px;
+  border: solid 1px;
+  padding: 1px;
+  border-radius: 2px;
+  font-size: 12px;
+}
+.deb-wrap .left-wrap .left .content .custom-tree-node {
+  padding-right: 8px;
+}
+.deb-wrap .left-wrap .left .content .custom-tree-node .const {
+  margin-left: 22px;
+}
+.deb-wrap .left-wrap .left .content .custom-tree-node.highlight {
+  color: red;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap {
+  height: 100%;
+  padding: 10px;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .watchpoint-table {
+  max-height: calc(100% - 45px);
+  overflow: auto;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .el-table::before {
+  height: 0;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .watchpoint-page {
+  padding-top: 20px;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .hit-item {
+  word-break: break-all;
+  line-height: 18px;
+  padding: 10px;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .hit-item:hover {
+  cursor: pointer;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .selected {
+  color: #00a5a7;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] {
+  padding: 0px 10px 0 50px;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul {
+  background-color: #f5f7fa;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul li {
+  line-height: 18px;
+  padding: 10px;
+  word-break: break-all;
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul li:hover {
+  background-color: #ebeef5;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul li .param .tensor-icon {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #00a5a7;
+  margin-top: 8px;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul li .hit-tip {
+  margin-top: 10px;
+  font-size: 12px;
+}
+.deb-wrap
+  .left-wrap
+  .left
+  .content
+  .hit-list-wrap
+  .el-table__expanded-cell[class*='cell']
+  ul
+  li
+  .hit-tip
+  .el-icon-warning {
+  font-size: 14px;
+  color: #e6a23c;
+  padding-right: 4px;
+}
+.deb-wrap .left-wrap .left .btn-wrap {
+  padding: 10px 20px;
+  border-top: 1px solid #ebeef5;
+}
+.deb-wrap .left-wrap .left .btn-wrap .step {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.deb-wrap .left-wrap .left .btn-wrap .step .custom-btn {
+  margin-left: 10px;
+}
+.deb-wrap .left-wrap .left .btn-wrap .btn-two {
+  width: 100%;
+}
+.deb-wrap .left-wrap .left .btn-wrap .btn-two .custom-btn {
+  height: 30px;
+  margin-top: 10px;
+}
+.deb-wrap .left-wrap .left .btn-wrap .el-button + .el-button {
+  margin-left: 0px;
+}
+.deb-wrap .left-wrap .left .btn-wrap .el-button:not(:last-child) {
+  margin-right: 10px;
+}
+.deb-wrap .left-wrap .collapse-btn {
+  position: absolute;
+  right: 2px;
+  width: 31px;
+  height: 100px;
+  top: 50%;
+  margin-top: -50px;
+  cursor: pointer;
+  line-height: 86px;
+  z-index: 1;
+  text-align: center;
+  background-image: url('../../assets/images/collapse-left.svg');
+}
+.deb-wrap .left-wrap .collapse-btn.collapse {
+  background-image: url('../../assets/images/collapse-right.svg');
+}
+.deb-wrap .left-wrap.collapse {
+  width: 0px;
+}
+.deb-wrap .right {
+  width: calc(100% - 400px);
+  height: 100%;
+  padding-right: 20px;
+  transition: width 0.2s;
+  -moz-transition: width 0.2s;
+  /* Firefox 4 */
+  -webkit-transition: width 0.2s;
+  /* Safari and Chrome */
+  -o-transition: width 0.2s;
+  /* Opera */
+}
+.deb-wrap .right .header {
+  padding: 15px;
+  border-bottom: 1px solid #ebeef5;
+  position: relative;
+  background: #fff;
+}
+.deb-wrap .right .header .link {
+  color: #00a5a7;
+}
+.deb-wrap .right .header .host {
+  margin-left: 25px;
+}
+.deb-wrap .right .header span.item .content {
+  color: #00a5a7;
+}
+.deb-wrap .right .header .item + .item {
+  margin-left: 15px;
+}
+.deb-wrap .right .header .tooltip {
+  margin-left: 5px;
+  cursor: pointer;
+}
+.deb-wrap .right .svg-wrap {
+  height: 50%;
+  border-bottom: 1px solid #ebeef5;
+  position: relative;
+}
+.deb-wrap .right .svg-wrap .btn-wrap {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.deb-wrap .right .svg-wrap .graph-container {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph {
+  height: 100%;
+  background-color: #f7faff;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .node:hover > path,
+.deb-wrap .right .svg-wrap .graph-container #graph .node:hover > ellipse,
+.deb-wrap .right .svg-wrap .graph-container #graph .node:hover > polygon,
+.deb-wrap .right .svg-wrap .graph-container #graph .node:hover > rect {
+  stroke-width: 2px;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .node.cluster > rect:hover {
+  stroke: #8df1f2;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .selected {
+  stroke: red !important;
+  stroke-width: 2px;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph #graph0 > polygon {
+  fill: transparent;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .node {
+  cursor: pointer;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .edge path {
+  stroke: #787878;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .edge polygon {
+  fill: #787878;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .edge.highlighted path {
+  stroke: red;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .edge.highlighted polygon {
+  stroke: red;
+  fill: red;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .edge.highlighted marker path {
+  fill: red;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .node.aggregation > polygon {
+  stroke: #e3aa00;
+  fill: #ffe794;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .node.cluster.aggregation > rect {
+  stroke: #e3aa00;
+  fill: #ffe794;
+  stroke-dasharray: 3, 3;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .node > polygon {
+  stroke: #00a5a7;
+  fill: #8df1f2;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .node > ellipse {
+  stroke: #4ea6e6;
+  fill: #b8e0ff;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .plain > path,
+.deb-wrap .right .svg-wrap .graph-container #graph .plain ellipse {
+  stroke: #e6a23c;
+  fill: #ffd0a6;
+  stroke-dasharray: 1.5, 1.5;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph .edge-point ellipse {
+  stroke: #a7a7a7;
+  fill: #a7a7a7;
+}
+.deb-wrap .right .svg-wrap .graph-container #graph text {
+  fill: black;
+}
+.deb-wrap .right .svg-wrap .graph-container #contextMenu {
+  display: none;
+  position: absolute;
+  min-width: 150px;
+  border: 1px solid #d4d4d4;
+}
+.deb-wrap .right .svg-wrap .graph-container #contextMenu ul {
+  background-color: #e2e2e2;
+  border-radius: 2px;
+}
+.deb-wrap .right .svg-wrap .graph-container #contextMenu ul li {
+  padding: 5px 18px;
+  cursor: pointer;
+}
+.deb-wrap .right .svg-wrap .graph-container #contextMenu ul li:hover {
+  background-color: #787878;
+  color: white;
+}
+.deb-wrap .right .table-container {
+  background: #fff;
+  height: calc(50% - 60px);
+  position: relative;
+}
+.deb-wrap .right .table-container img {
+  position: absolute;
+  right: 10px;
+  top: 12px;
+  cursor: pointer;
+  z-index: 99;
+}
+.deb-wrap .right .table-container .el-tabs.el-tabs--top {
+  height: 100%;
+}
+.deb-wrap .right .table-container .el-tabs.el-tabs--top .el-tabs__content {
+  height: calc(100% - 60px);
+}
+.deb-wrap .right .table-container .el-tabs.el-tabs--top .el-tabs__content .el-tab-pane {
+  height: 100%;
+}
+.deb-wrap .right .table-container .table-content {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+.deb-wrap .right .table-container .table-content .table-wrap {
+  height: 100%;
+  overflow-y: auto;
+}
+.deb-wrap .right .table-container .table-content .table-wrap .el-table .success-row {
+  background: #f0f9eb;
+}
+.deb-wrap .right .table-container .table-content .value-wrap {
+  text-align: right;
+}
+.deb-wrap .right .table-container .table-content .center {
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+.deb-wrap .right .table-container .table-content .value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  color: #00a5a7;
+  display: inline-block;
+  width: 100%;
+}
+.deb-wrap .right .table-container .table-content .value-tip {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 50px;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: right;
+}
+.deb-wrap .right .table-container .table-content .el-table--border {
+  border-right: none;
+  border-left: none;
+}
+.deb-wrap .right .table-container .table-content .el-table--border td {
+  border-right: none;
+  border-left: none;
+}
+.deb-wrap .right .table-container .table-content .el-table--border th {
+  border-right: none;
+  border-left: none;
+}
+.deb-wrap .right .table-container .table-content .el-table th > .cell {
+  border-left: 1px solid #d9d8dd;
+  word-break: keep-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.deb-wrap .right .table-container .table-content .el-table-column--selection .cell {
+  border-left: none !important;
+}
+.deb-wrap .right .svg-wrap.collapse {
+  height: calc(100% - 100px);
+}
+.deb-wrap .right .table-container.collapse {
+  height: 35px;
+}
+.deb-wrap .right .table-container.collapse .el-tabs__header {
+  margin: 0;
+}
+.deb-wrap .right .table-container.collapse .table-content {
+  display: none;
+}
+.deb-wrap .right.collapse {
+  width: calc(100% - 25px);
+}
+.deb-wrap .custom-btn {
+  border: 1px solid #00a5a7;
+  border-radius: 2px;
+  background-color: white;
+  color: #00a5a7;
+}
+.deb-wrap .custom-btn:hover {
+  background-color: #e9f7f7;
+}
+.deb-wrap .custom-btn.green {
+  background-color: #00a5a7;
+  color: white;
+}
+.deb-wrap .custom-btn.green:hover {
+  background-color: #33b7b9;
+}
+.deb-wrap .is-disabled.custom-btn {
+  background-color: #f5f5f6;
+  border: 1px solid #dfe1e6 !important;
+  color: #adb0b8;
+}
+.deb-wrap .is-disabled.custom-btn:hover {
+  background-color: #f5f5f6;
+}
+.deb-wrap .notShow {
+  display: none;
+}
+.deb-wrap .creat-watch-point-dialog .conditions-container .collection {
+  width: 200px;
+}
+.deb-wrap .creat-watch-point-dialog .conditions-container .condition,
+.deb-wrap .creat-watch-point-dialog .conditions-container .param,
+.deb-wrap .creat-watch-point-dialog .conditions-container .param-value {
+  margin-left: 10px;
+  width: 200px;
+}
+.deb-wrap .creat-watch-point-dialog .conditions-container .percent-sign {
+  display: inline-block;
+  text-align: right;
+  width: 20px;
+}
+.deb-wrap .creat-watch-point-dialog .conditions-container .inclusive-param {
+  text-align: right;
+}
+.deb-wrap .creat-watch-point-dialog .conditions-container .inclusive-param .item {
+  margin-top: 10px;
+  display: inline-block;
+}
+.deb-wrap .creat-watch-point-dialog .conditions-container .inclusive-param .item + .item {
+  margin-left: 10px;
+}
+.deb-wrap .creat-watch-point-dialog .error-msg {
+  float: left;
+}
+.deb-wrap .creat-watch-point-dialog .error-msg .el-icon-warning {
+  color: #e6a23c;
+  font-size: 16px;
+  cursor: pointer;
+}
+.deb-wrap .el-dialog__wrapper.pendingTips {
+  position: absolute;
+}
+.deb-wrap .el-dialog__wrapper.pendingTips .dialog-icon .el-icon-warning {
+  font-size: 24px;
+  color: #e6a23c;
+  vertical-align: bottom;
+}
+.deb-wrap .el-dialog__wrapper.pendingTips .el-dialog__body {
+  padding: 2px 20px 32px 20px;
+}
+.deb-wrap .el-dialog__wrapper.pendingTips .el-dialog__body .dialog-content {
+  line-height: 24px;
+  margin-left: 10px;
+}
+.deb-wrap .el-dialog__wrapper.pendingTips .el-dialog__footer {
+  text-align: center;
+  padding: 10px 20px 32px;
+}
+.deb-wrap .el-dialog__wrapper.pendingTips + .v-modal {
+  position: absolute;
+}
+.deb-wrap .deb-con {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  z-index: 999;
+}
+
 .deb-indent {
   padding-left: 40px;
 }
+
 #graphTemp,
 #subgraphTemp {
   position: absolute;

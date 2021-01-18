@@ -224,7 +224,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style>
 .cl-bar-chart {
   width: 100%;
   height: 100%;

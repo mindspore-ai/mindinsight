@@ -61,13 +61,4 @@ module.exports = {
       enableInSFC: true,
     },
   },
-  css: {
-    loaderOptions: {
-      sass: {
-        prependData: `
-          @import "@/assets/css/variable.scss";
-        `,
-      },
-    },
-  },
 };

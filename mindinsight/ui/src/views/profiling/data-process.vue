@@ -1323,299 +1323,288 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .data-process-wrap {
   height: 100%;
   background: #fff;
   padding: 0 16px;
-  .title {
-    font-size: 16px;
-    font-weight: bold;
-    text-align: left;
-  }
-  .el-tabs.el-tabs--top {
-    height: calc(100% - 22px);
-  }
-  .el-tabs__content {
-    height: calc(100% - 54px);
-    & > .el-tab-pane {
-      height: 100%;
-    }
-  }
-  .el-tabs__item.is-active {
-    color: #00a5a7;
-    font-weight: bold;
-  }
-  .data-process-top {
-    height: 156px;
-    font-size: 0;
-    display: flex;
-    align-items: flex-start;
-    padding-top: 20px;
-    .cell-container {
-      width: 20%;
-      cursor: pointer;
-      padding: 20px 0;
-      border: 2px solid transparent;
-      .title {
-        font-size: 14px;
-        line-height: 20px;
-        padding: 0 0 0 20px;
-        font-weight: bold;
-      }
-    }
-    .data-process {
-      background-color: #e3f8eb;
-      cursor: default;
-      .title {
-        border-left: 2px solid #00a5a7;
-      }
-    }
-    .device_queue_op {
-      background-color: #e1f2ff;
-      .title {
-        border-left: 2px solid #6cbfff;
-      }
-    }
-    .get-next {
-      background-color: #fef4dd;
-      .title {
-        border-left: 2px solid #fdca5a;
-      }
-    }
-    .queue-container {
-      width: 20%;
-      position: relative;
-      .img {
-        width: 100%;
-        height: 37px;
-        margin-top: 13px;
-        .edge {
-          width: calc(50% - 40px);
-          display: inline-block;
-          padding-top: 11px;
-          img {
-            width: 100%;
-          }
-        }
-        .icon {
-          width: 80px;
-          padding: 0 20px;
-          display: inline-block;
-          vertical-align: middle;
-          img {
-            padding: 3px;
-            border: 2px solid transparent;
-            cursor: pointer;
-          }
-        }
-      }
-
-      .title {
-        text-align: center;
-        font-size: 14px;
-        margin-top: 10px;
-        font-weight: bold;
-      }
-      .description {
-        position: absolute;
-        font-size: 12px;
-        line-height: 12px;
-        white-space: nowrap;
-        overflow: hidden;
-        width: 100%;
-        text-align: center;
-        .item {
-          font-size: 12px;
-          line-height: 16px;
-          white-space: normal;
-          .num {
-            color: #07a695;
-          }
-        }
-      }
-    }
-    .selected {
-      border: 2px solid #3399ff !important;
-    }
-  }
-  .data-process-bottom {
-    height: calc(100% - 156px);
-    .queue-step-wrap {
-      &:first-child {
-        height: 50%;
-      }
-      &:last-child {
-        height: 50%;
-      }
-      & > .title {
-        margin-bottom: 15px;
-        font-weight: bold;
-        font-size: 15px;
-      }
-      .chart-content {
-        height: calc(100% - 30px);
-        .chart-wrap {
-          float: left;
-          width: calc(50% - 12px);
-          height: calc(100% - 10px);
-          border-radius: 4px;
-          overflow-y: auto;
-          border: 1px solid #eee;
-          &:first-child {
-            margin-right: 20px;
-          }
-          .title {
-            font-size: 13px;
-            padding: 10px;
-            font-weight: bold;
-          }
-          .data-tips {
-            color: #999;
-            padding: 0 0 0 10px;
-            & > div {
-              display: inline-block;
-              margin-right: 10px;
-            }
-          }
-          .chart {
-            height: calc(100% - 70px);
-            min-height: 150px;
-            overflow: hidden;
-          }
-        }
-        .chart-wrap.highlight {
-          border-color: #3399ff;
-        }
-      }
-      .chart-content.second {
-        height: calc(100% - 25px);
-      }
-    }
-    .queue-step-wrap.single {
-      height: 100%;
-      .chart-content {
-        .chart-wrap {
-          width: 100%;
-        }
-      }
-    }
-  }
-  .pipeline-wrap {
-    height: 100%;
-    .pipeline-top {
-      height: 35%;
-      .pipeline-top-title {
-        font-size: 15px;
-        font-weight: bold;
-      }
-      .average-rate-wrap {
-        overflow-y: auto;
-        height: calc(100% - 20px);
-        #average-rate {
-          height: 100%;
-          min-height: 180px;
-          overflow: hidden;
-        }
-      }
-    }
-    .pipeline-middle {
-      height: 30%;
-      .pipeline-middle-title {
-        font-size: 15px;
-        font-weight: bold;
-      }
-      .operator-graph {
-        height: calc(100% - 20px);
-        #graph {
-          width: 100%;
-          height: 100%;
-          background-color: #f7faff;
-          #graph0 > polygon {
-            fill: transparent;
-          }
-          .node.queue {
-            cursor: pointer;
-          }
-          .operator {
-            path {
-              stroke: #e6ebf5;
-              fill: #e6ebf5;
-            }
-          }
-          .selected {
-            path,
-            polygon {
-              stroke: red;
-            }
-          }
-          .edge {
-            path,
-            polygon {
-              stroke: #e6ebf5;
-              fill: #e6ebf5;
-            }
-          }
-        }
-      }
-    }
-    .pipeline-bottom {
-      height: 35%;
-      .queue-deep-wrap {
-        height: 100%;
-        background: #fafbfc;
-        & > div {
-          float: left;
-          height: 100%;
-        }
-        .left {
-          width: calc(60% - 20px);
-          overflow-y: auto;
-          height: 100%;
-          border-right: 1px dashed #ccc;
-          padding-right: 20px;
-          margin-right: 20px;
-          #queue-deep {
-            height: 100%;
-            width: 100%;
-            min-height: 220px;
-            overflow: hidden;
-          }
-        }
-        .right {
-          width: 40%;
-          .title {
-            font-size: 13px;
-            margin-top: 7px;
-          }
-          .item-wrap {
-            padding-top: 10px;
-            height: calc(100% - 26px);
-            overflow-y: auto;
-            .item {
-              margin-top: 10px;
-              & > span {
-                color: #757b88;
-                display: inline-block;
-                width: 50%;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  .image-noData {
-    width: 100%;
-    height: calc(100% - 37px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    p {
-      font-size: 16px;
-      padding-top: 10px;
-    }
-  }
+}
+.data-process-wrap .title {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+}
+.data-process-wrap .el-tabs.el-tabs--top {
+  height: calc(100% - 22px);
+}
+.data-process-wrap .el-tabs__content {
+  height: calc(100% - 54px);
+}
+.data-process-wrap .el-tabs__content > .el-tab-pane {
+  height: 100%;
+}
+.data-process-wrap .el-tabs__item.is-active {
+  color: #00a5a7;
+  font-weight: bold;
+}
+.data-process-wrap .data-process-top {
+  height: 156px;
+  font-size: 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 20px;
+}
+.data-process-wrap .data-process-top .cell-container {
+  width: 20%;
+  cursor: pointer;
+  padding: 20px 0;
+  border: 2px solid transparent;
+}
+.data-process-wrap .data-process-top .cell-container .title {
+  font-size: 14px;
+  line-height: 20px;
+  padding: 0 0 0 20px;
+  font-weight: bold;
+}
+.data-process-wrap .data-process-top .data-process {
+  background-color: #e3f8eb;
+  cursor: default;
+}
+.data-process-wrap .data-process-top .data-process .title {
+  border-left: 2px solid #00a5a7;
+}
+.data-process-wrap .data-process-top .device_queue_op {
+  background-color: #e1f2ff;
+}
+.data-process-wrap .data-process-top .device_queue_op .title {
+  border-left: 2px solid #6cbfff;
+}
+.data-process-wrap .data-process-top .get-next {
+  background-color: #fef4dd;
+}
+.data-process-wrap .data-process-top .get-next .title {
+  border-left: 2px solid #fdca5a;
+}
+.data-process-wrap .data-process-top .queue-container {
+  width: 20%;
+  position: relative;
+}
+.data-process-wrap .data-process-top .queue-container .img {
+  width: 100%;
+  height: 37px;
+  margin-top: 13px;
+}
+.data-process-wrap .data-process-top .queue-container .img .edge {
+  width: calc(50% - 40px);
+  display: inline-block;
+  padding-top: 11px;
+}
+.data-process-wrap .data-process-top .queue-container .img .edge img {
+  width: 100%;
+}
+.data-process-wrap .data-process-top .queue-container .img .icon {
+  width: 80px;
+  padding: 0 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.data-process-wrap .data-process-top .queue-container .img .icon img {
+  padding: 3px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.data-process-wrap .data-process-top .queue-container .title {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+.data-process-wrap .data-process-top .queue-container .description {
+  position: absolute;
+  font-size: 12px;
+  line-height: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
+  text-align: center;
+}
+.data-process-wrap .data-process-top .queue-container .description .item {
+  font-size: 12px;
+  line-height: 16px;
+  white-space: normal;
+}
+.data-process-wrap .data-process-top .queue-container .description .item .num {
+  color: #07a695;
+}
+.data-process-wrap .data-process-top .selected {
+  border: 2px solid #3399ff !important;
+}
+.data-process-wrap .data-process-bottom {
+  height: calc(100% - 156px);
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap:first-child {
+  height: 50%;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap:last-child {
+  height: 50%;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap > .title {
+  margin-bottom: 15px;
+  font-weight: bold;
+  font-size: 15px;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content {
+  height: calc(100% - 30px);
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap {
+  float: left;
+  width: calc(50% - 12px);
+  height: calc(100% - 10px);
+  border-radius: 4px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap:first-child {
+  margin-right: 20px;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap .title {
+  font-size: 13px;
+  padding: 10px;
+  font-weight: bold;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap .data-tips {
+  color: #999;
+  padding: 0 0 0 10px;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap .data-tips > div {
+  display: inline-block;
+  margin-right: 10px;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap .chart {
+  height: calc(100% - 70px);
+  min-height: 150px;
+  overflow: hidden;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap.highlight {
+  border-color: #3399ff;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap .chart-content.second {
+  height: calc(100% - 25px);
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap.single {
+  height: 100%;
+}
+.data-process-wrap .data-process-bottom .queue-step-wrap.single .chart-content .chart-wrap {
+  width: 100%;
+}
+.data-process-wrap .pipeline-wrap {
+  height: 100%;
+}
+.data-process-wrap .pipeline-wrap .pipeline-top {
+  height: 35%;
+}
+.data-process-wrap .pipeline-wrap .pipeline-top .pipeline-top-title {
+  font-size: 15px;
+  font-weight: bold;
+}
+.data-process-wrap .pipeline-wrap .pipeline-top .average-rate-wrap {
+  overflow-y: auto;
+  height: calc(100% - 20px);
+}
+.data-process-wrap .pipeline-wrap .pipeline-top .average-rate-wrap #average-rate {
+  height: 100%;
+  min-height: 180px;
+  overflow: hidden;
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle {
+  height: 30%;
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .pipeline-middle-title {
+  font-size: 15px;
+  font-weight: bold;
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph {
+  height: calc(100% - 20px);
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph {
+  width: 100%;
+  height: 100%;
+  background-color: #f7faff;
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph #graph0 > polygon {
+  fill: transparent;
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .node.queue {
+  cursor: pointer;
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .operator path {
+  stroke: #e6ebf5;
+  fill: #e6ebf5;
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .selected path,
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .selected polygon {
+  stroke: red;
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .edge path,
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .edge polygon {
+  stroke: #e6ebf5;
+  fill: #e6ebf5;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom {
+  height: 35%;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap {
+  height: 100%;
+  background: #fafbfc;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap > div {
+  float: left;
+  height: 100%;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .left {
+  width: calc(60% - 20px);
+  overflow-y: auto;
+  height: 100%;
+  border-right: 1px dashed #ccc;
+  padding-right: 20px;
+  margin-right: 20px;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .left #queue-deep {
+  height: 100%;
+  width: 100%;
+  min-height: 220px;
+  overflow: hidden;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right {
+  width: 40%;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right .title {
+  font-size: 13px;
+  margin-top: 7px;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right .item-wrap {
+  padding-top: 10px;
+  height: calc(100% - 26px);
+  overflow-y: auto;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right .item-wrap .item {
+  margin-top: 10px;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right .item-wrap .item > span {
+  color: #757b88;
+  display: inline-block;
+  width: 50%;
+}
+.data-process-wrap .image-noData {
+  width: 100%;
+  height: calc(100% - 37px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.data-process-wrap .image-noData p {
+  font-size: 16px;
+  padding-top: 10px;
 }
 </style>

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-@import './variable.scss';
-
 html,
 body,
 div,
@@ -80,11 +78,12 @@ td {
   outline: 0;
   font-weight: inherit;
   font-style: inherit;
-  font-family: $bodyFontFamily;
-  font-size: $bodyFontSize;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  font-size: 14px;
   vertical-align: baseline;
   box-sizing: border-box;
 }
+
 :focus {
   outline: 0;
 }
@@ -98,29 +97,35 @@ a:active {
 }
 
 a {
-  color: $linkColor;
+  color: #3399ff;
 }
+
 a:hover {
-  color: $linkActiveColor;
+  color: #3399ff;
 }
+
 table {
   border-collapse: separate;
   border-spacing: 0;
 }
+
 th,
 td {
   text-align: left;
   font-weight: normal;
 }
+
 img,
 iframe {
   border: none;
   text-decoration: none;
 }
+
 ol,
 ul {
   list-style: none;
 }
+
 input,
 textarea,
 select,
@@ -128,27 +133,29 @@ button {
   font-size: 100%;
   font-family: inherit;
 }
+
 select {
   margin: inherit;
 }
+
 hr {
   margin: 0;
   padding: 0;
   border: 0;
-  color: $bodyColor;
-  background-color: $bodyColor;
+  color: #333;
+  background-color: #333;
   height: 1px;
 }
 
 html,
 body {
   height: 100%;
-  background-color: $bodyBg;
-  font-family: $bodyFontFamily;
-  font-size: $bodyFontSize;
+  background-color: #fff;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: $bodyColor;
+  color: #333;
   box-sizing: border-box;
 }
 
@@ -173,10 +180,15 @@ body {
 ::-webkit-scrollbar-thumb {
   background-color: #dfe7f5;
 }
+
 .select-disable {
-  -moz-user-select: none; /* Firefox */
-  -webkit-user-select: none; /* webkitbrowser */
-  -ms-user-select: none; /* IE10 */
-  -khtml-user-select: none; /* Early browser */
+  -moz-user-select: none;
+  /* Firefox */
+  -webkit-user-select: none;
+  /* webkitbrowser */
+  -ms-user-select: none;
+  /* IE10 */
+  -khtml-user-select: none;
+  /* Early browser */
   user-select: none;
 }

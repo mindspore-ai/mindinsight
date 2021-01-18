@@ -1232,316 +1232,315 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .el-tooltip-popper {
   max-width: 500px;
 }
-.tooltip-container {
-  .pro-dash-tooltip {
-    line-height: 20px;
-    padding: 10px;
-    .font-style {
-      font-weight: bold;
-    }
-    .font-size-style {
-      font-weight: bold;
-      font-size: 16px;
-    }
-  }
+
+.tooltip-container .pro-dash-tooltip {
+  line-height: 20px;
+  padding: 10px;
 }
+.tooltip-container .pro-dash-tooltip .font-style {
+  font-weight: bold;
+}
+.tooltip-container .pro-dash-tooltip .font-size-style {
+  font-weight: bold;
+  font-size: 16px;
+}
+
 .pro-router-wrap {
   height: 100%;
-  & > div {
-    float: left;
-    height: 100%;
-    & > div {
-      border: 1px solid #eee;
-      border-radius: 4px;
-    }
-    .title-wrap {
-      padding: 15px;
-      .title {
-        float: left;
-        font-weight: bold;
-        font-size: 16px;
-      }
-      .tip-icon {
-        float: right;
-        margin-right: 10px;
-        font-size: 20px;
-        color: #6c7280;
-        .el-icon-warning {
-          cursor: pointer;
-          &:hover::before {
-            color: #00a5a7;
-          }
-        }
-      }
-      .view-detail {
-        float: right;
-        cursor: pointer;
-        font-size: 12px;
-        height: 24px;
-        line-height: 24px;
-        a {
-          color: #00a5a7 !important;
-          padding-right: 6px;
-        }
-        button {
-          color: #00a5a7;
-          border: none;
-          background-color: #fff;
-          cursor: pointer;
-        }
-        button.disabled {
-          cursor: not-allowed;
-          color: #c0c4cc;
-        }
-      }
-      &::after {
-        content: '';
-        clear: both;
-        display: block;
-      }
-    }
-    .loading-icon {
-      margin-left: 5px;
-    }
-    .coming-soon-content {
-      height: calc(100% - 50px);
-      position: relative;
-      .coming-soon-container {
-        text-align: center;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        border-radius: 5px;
-        -webkit-transform: translate(-50%, -50%);
-        -moz-transform: translate(-50%, -50%);
-        transform: translate(-50%, -50%);
-      }
-      .coming-soon-text {
-        font-size: 16px;
-      }
-    }
-  }
-  .pro-router-left {
-    width: calc(100% - 400px);
-    padding-right: 15px;
-    .step-trace {
-      height: 45%;
-      margin-bottom: 15px;
-      .trace-container {
-        width: 100%;
-        height: calc(100% - 54px);
-        overflow: auto;
-        .training-trace {
-          position: relative;
-          height: 0;
-          .content {
-            overflow: hidden;
-            text-align: center;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 12px;
-            line-height: 40px;
-          }
-          .content-mini {
-            overflow: visible;
-          }
-        }
-      }
-    }
-    .minddata {
-      height: calc(55% - 15px);
-      .pipeline-container {
-        width: 100%;
-        padding: 20px 20px;
-        height: calc(100% - 52px);
-        display: flex;
-        font-size: 0;
-        align-items: baseline;
-        .cell-container {
-          width: 20%;
-          min-width: 110px;
-          padding: 20px 0;
-          border: 2px solid transparent;
-          .title {
-            font-size: 14px;
-            line-height: 20px;
-            padding: 0 0 0 10px;
-            font-weight: bold;
-          }
-        }
-        .data-process {
-          background-color: #e3f8eb;
-          .title {
-            border-left: 2px solid #00a5a7;
-          }
-        }
-        .device_queue_op {
-          background-color: #e1f2ff;
-          .title {
-            border-left: 2px solid #6cbfff;
-          }
-        }
-        .get-next {
-          background-color: #fef4dd;
-          .title {
-            border-left: 2px solid #fdca5a;
-          }
-        }
-        .queue-container {
-          width: 20%;
-          position: relative;
-          .img {
-            width: 100%;
-            height: 24px;
-            margin-top: 30px;
-            .edge {
-              width: calc(50% - 40px);
-              display: inline-block;
-              vertical-align: middle;
-              img {
-                width: 100%;
-              }
-            }
-            .icon {
-              padding: 0 20px;
-              display: inline-block;
-              vertical-align: middle;
-              img {
-                padding: 3px;
-                border: 2px solid transparent;
-              }
-            }
-          }
-
-          .title {
-            text-align: center;
-            font-size: 14px;
-            margin-top: 10px;
-            font-weight: bold;
-          }
-          .description {
-            position: absolute;
-            font-size: 12px;
-            line-height: 12px;
-            white-space: nowrap;
-            overflow: visible;
-            width: 100%;
-            text-align: center;
-            .line {
-              width: 1px;
-              height: 40px;
-              margin: 20px 0;
-              border-left: 1px solid #979797;
-              display: inline-block;
-            }
-            .item {
-              font-size: 12px;
-              line-height: 16px;
-              white-space: normal;
-              overflow: visible;
-              .num {
-                white-space: nowrap;
-                color: #07a695;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  .pro-router-right {
-    width: 400px;
-    .op-time-consume {
-      height: calc(60% - 15px);
-      margin-bottom: 15px;
-      .time-list {
-        height: calc(40% - 52px);
-        .item {
-          height: 25px;
-          line-height: 25px;
-          padding: 0 20px;
-          & > span {
-            display: inline-block;
-            height: 100%;
-            vertical-align: middle;
-          }
-          .index {
-            color: white;
-            background-color: rgb(108, 146, 250);
-            width: 20px;
-            height: 20px;
-            border-radius: 20px;
-            text-align: center;
-            vertical-align: middle;
-            line-height: 20px;
-          }
-          .name {
-            margin-left: 10px;
-            width: calc(50% - 30px);
-            text-overflow: ellipsis;
-            overflow: hidden;
-          }
-          .num {
-            width: 20%;
-          }
-          .time {
-            width: 30%;
-            position: relative;
-            span {
-              display: inline-block;
-              position: absolute;
-              left: 0;
-              height: 20px;
-            }
-            .bar {
-              background-color: #cceded;
-              top: 2px;
-            }
-            .value {
-              line-height: 25px;
-              height: 25px;
-            }
-          }
-        }
-      }
-    }
-    .time-line {
-      height: 40%;
-      overflow: hidden;
-      .timeline-info {
-        width: 100%;
-        height: calc(100% - 54px);
-        padding-left: 36px;
-      }
-      .info-line {
-        line-height: 30px;
-      }
-    }
-  }
-  .op-time-content {
-    height: calc(100% - 54px);
-    overflow: auto;
-  }
-  .pie-chart {
-    width: 100%;
-    height: 260px;
-    overflow: hidden;
-  }
-  .image-noData {
-    width: 100%;
-    height: calc(100% - 52px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    p {
-      font-size: 16px;
-      padding-top: 10px;
-    }
-  }
+}
+.pro-router-wrap > div {
+  float: left;
+  height: 100%;
+}
+.pro-router-wrap > div > div {
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+.pro-router-wrap > div .title-wrap {
+  padding: 15px;
+}
+.pro-router-wrap > div .title-wrap .title {
+  float: left;
+  font-weight: bold;
+  font-size: 16px;
+}
+.pro-router-wrap > div .title-wrap .tip-icon {
+  float: right;
+  margin-right: 10px;
+  font-size: 20px;
+  color: #6c7280;
+}
+.pro-router-wrap > div .title-wrap .tip-icon .el-icon-warning {
+  cursor: pointer;
+}
+.pro-router-wrap > div .title-wrap .tip-icon .el-icon-warning:hover::before {
+  color: #00a5a7;
+}
+.pro-router-wrap > div .title-wrap .view-detail {
+  float: right;
+  cursor: pointer;
+  font-size: 12px;
+  height: 24px;
+  line-height: 24px;
+}
+.pro-router-wrap > div .title-wrap .view-detail a {
+  color: #00a5a7 !important;
+  padding-right: 6px;
+}
+.pro-router-wrap > div .title-wrap .view-detail button {
+  color: #00a5a7;
+  border: none;
+  background-color: #fff;
+  cursor: pointer;
+}
+.pro-router-wrap > div .title-wrap .view-detail button.disabled {
+  cursor: not-allowed;
+  color: #c0c4cc;
+}
+.pro-router-wrap > div .title-wrap::after {
+  content: '';
+  clear: both;
+  display: block;
+}
+.pro-router-wrap > div .loading-icon {
+  margin-left: 5px;
+}
+.pro-router-wrap > div .coming-soon-content {
+  height: calc(100% - 50px);
+  position: relative;
+}
+.pro-router-wrap > div .coming-soon-content .coming-soon-container {
+  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 5px;
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+.pro-router-wrap > div .coming-soon-content .coming-soon-text {
+  font-size: 16px;
+}
+.pro-router-wrap .pro-router-left {
+  width: calc(100% - 400px);
+  padding-right: 15px;
+}
+.pro-router-wrap .pro-router-left .step-trace {
+  height: 45%;
+  margin-bottom: 15px;
+}
+.pro-router-wrap .pro-router-left .step-trace .trace-container {
+  width: 100%;
+  height: calc(100% - 54px);
+  overflow: auto;
+}
+.pro-router-wrap .pro-router-left .step-trace .trace-container .training-trace {
+  position: relative;
+  height: 0;
+}
+.pro-router-wrap .pro-router-left .step-trace .trace-container .training-trace .content {
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 40px;
+}
+.pro-router-wrap .pro-router-left .step-trace .trace-container .training-trace .content-mini {
+  overflow: visible;
+}
+.pro-router-wrap .pro-router-left .minddata {
+  height: calc(55% - 15px);
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container {
+  width: 100%;
+  padding: 20px 20px;
+  height: calc(100% - 52px);
+  display: flex;
+  font-size: 0;
+  align-items: baseline;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .cell-container {
+  width: 20%;
+  min-width: 110px;
+  padding: 20px 0;
+  border: 2px solid transparent;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .cell-container .title {
+  font-size: 14px;
+  line-height: 20px;
+  padding: 0 0 0 10px;
+  font-weight: bold;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .data-process {
+  background-color: #e3f8eb;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .data-process .title {
+  border-left: 2px solid #00a5a7;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .device_queue_op {
+  background-color: #e1f2ff;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .device_queue_op .title {
+  border-left: 2px solid #6cbfff;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .get-next {
+  background-color: #fef4dd;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .get-next .title {
+  border-left: 2px solid #fdca5a;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container {
+  width: 20%;
+  position: relative;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .img {
+  width: 100%;
+  height: 24px;
+  margin-top: 30px;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .img .edge {
+  width: calc(50% - 40px);
+  display: inline-block;
+  vertical-align: middle;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .img .edge img {
+  width: 100%;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .img .icon {
+  padding: 0 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .img .icon img {
+  padding: 3px;
+  border: 2px solid transparent;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .title {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .description {
+  position: absolute;
+  font-size: 12px;
+  line-height: 12px;
+  white-space: nowrap;
+  overflow: visible;
+  width: 100%;
+  text-align: center;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .description .line {
+  width: 1px;
+  height: 40px;
+  margin: 20px 0;
+  border-left: 1px solid #979797;
+  display: inline-block;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .description .item {
+  font-size: 12px;
+  line-height: 16px;
+  white-space: normal;
+  overflow: visible;
+}
+.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .description .item .num {
+  white-space: nowrap;
+  color: #07a695;
+}
+.pro-router-wrap .pro-router-right {
+  width: 400px;
+}
+.pro-router-wrap .pro-router-right .op-time-consume {
+  height: calc(60% - 15px);
+  margin-bottom: 15px;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list {
+  height: calc(40% - 52px);
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item {
+  height: 25px;
+  line-height: 25px;
+  padding: 0 20px;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item > span {
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item .index {
+  color: white;
+  background-color: #6c92fa;
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 20px;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item .name {
+  margin-left: 10px;
+  width: calc(50% - 30px);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item .num {
+  width: 20%;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item .time {
+  width: 30%;
+  position: relative;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item .time span {
+  display: inline-block;
+  position: absolute;
+  left: 0;
+  height: 20px;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item .time .bar {
+  background-color: #cceded;
+  top: 2px;
+}
+.pro-router-wrap .pro-router-right .op-time-consume .time-list .item .time .value {
+  line-height: 25px;
+  height: 25px;
+}
+.pro-router-wrap .pro-router-right .time-line {
+  height: 40%;
+  overflow: hidden;
+}
+.pro-router-wrap .pro-router-right .time-line .timeline-info {
+  width: 100%;
+  height: calc(100% - 54px);
+  padding-left: 36px;
+}
+.pro-router-wrap .pro-router-right .time-line .info-line {
+  line-height: 30px;
+}
+.pro-router-wrap .op-time-content {
+  height: calc(100% - 54px);
+  overflow: auto;
+}
+.pro-router-wrap .pie-chart {
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+}
+.pro-router-wrap .image-noData {
+  width: 100%;
+  height: calc(100% - 52px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.pro-router-wrap .image-noData p {
+  font-size: 16px;
+  padding-top: 10px;
 }
 </style>

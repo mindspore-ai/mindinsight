@@ -210,115 +210,101 @@ export default {
   },
 };
 </script>
-<style lang="scss">
-@import '@/assets/css/variable';
-
-// header style
+<style>
 .cl-header {
-  height: $headerHeight;
-  background-image: $headerBackground;
+  height: 64px;
+  background-image: linear-gradient(180deg, #263d5f 0%, #16233b 100%);
   display: flex;
-  color: $headerColor;
+  color: #fff;
   flex-shrink: 0;
-  .md-header-language {
-    width: 100px;
-    line-height: 64px;
-    .spanLine {
-      margin: 0 5px;
-    }
-    .spanLanguage {
-      cursor: pointer;
-    }
-    .active {
-      color: #00a5a7;
-    }
+}
+.cl-header .md-header-language {
+  width: 100px;
+  line-height: 64px;
+}
+.cl-header .md-header-language .spanLine {
+  margin: 0 5px;
+}
+.cl-header .md-header-language .spanLanguage {
+  cursor: pointer;
+}
+.cl-header .md-header-language .active {
+  color: #00a5a7;
+}
+.cl-header .cl-header-logo {
+  width: 161px;
+  margin-left: 36px;
+  margin-top: 17px;
+}
+.cl-header .cl-header-logo img {
+  cursor: pointer;
+}
+.cl-header .cl-header-right {
+  flex: 1;
+  padding-right: 36px;
+  color: #9ea4b3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.cl-header .cl-header-right .cl-header-img {
+  margin-left: 20px;
+  cursor: pointer;
+}
+.cl-header .cl-header-right .el-icon-edit {
+  margin-left: 5px;
+}
+.cl-header .cl-header-right i {
+  font-size: 18px;
+  margin: 0 2px;
+  color: #00a5a7;
+  cursor: pointer;
+}
+.cl-header .cl-header-right .el-icon-close {
+  color: #f56c6c;
+}
+.cl-header .cl-header-right .el-input {
+  width: 45px;
+}
+.cl-header .cl-header-right .el-input input {
+  padding: 0;
+  text-align: center;
+}
+.cl-header .cl-reload {
+  animation: rotate 1s infinite linear;
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
   }
-  // logo style
-  .cl-header-logo {
-    width: 161px;
-    margin-left: 36px;
-    margin-top: 17px;
-    img {
-      cursor: pointer;
-    }
+  100% {
+    transform: rotate(1turn);
   }
-
-  // header right style
-  .cl-header-right {
-    flex: 1;
-    padding-right: 36px;
-    color: #9ea4b3;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    .cl-header-img {
-      margin-left: 20px;
-      cursor: pointer;
-    }
-    .el-icon-edit {
-      margin-left: 5px;
-    }
-
-    i {
-      font-size: 18px;
-      margin: 0 2px;
-      color: #00a5a7;
-      cursor: pointer;
-    }
-
-    .el-icon-close {
-      color: #f56c6c;
-    }
-    .el-input {
-      width: 45px;
-      input {
-        padding: 0;
-        text-align: center;
-      }
-    }
-  }
-
-  // reload style
-  .cl-reload {
-    animation: rotate 1s infinite linear;
-  }
-  @keyframes rotate {
-    0% {
-      transform: rotate(0deg);
-    }
-
-    100% {
-      transform: rotate(1turn);
-    }
-  }
-
-  .cl-header-nav {
-    margin-left: 50px;
-    flex: 2.2;
-
-    .el-menu {
-      border-bottom: none;
-    }
-    .el-menu--horizontal > .el-menu-item {
-      font-size: 16px;
-      color: #fff;
-      padding-top: 4px;
-      max-width: 20%;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .el-menu--horizontal > .el-menu-item.is-active {
-      color: #00a5a7 !important;
-      background: none;
-    }
-
-    .el-menu--horizontal > .el-menu-item:not(.is-disabled):focus,
-    .el-menu--horizontal > .el-menu-item:not(.is-disabled):hover,
-    .el-menu--horizontal > .el-submenu .el-submenu__title:hover {
-      background: none;
-      color: #fff;
-    }
-  }
+}
+.cl-header .cl-header-nav {
+  margin-left: 50px;
+  flex: 2.2;
+}
+.cl-header .cl-header-nav .el-menu {
+  border-bottom: none;
+}
+.cl-header .cl-header-nav .el-menu--horizontal > .el-menu-item {
+  font-size: 16px;
+  color: #fff;
+  padding-top: 4px;
+  max-width: 20%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cl-header .cl-header-nav .el-menu--horizontal > .el-menu-item.is-active {
+  color: #00a5a7 !important;
+  background: none;
+}
+.cl-header .cl-header-nav .el-menu--horizontal > .el-menu-item:not(.is-disabled):focus,
+.cl-header .cl-header-nav .el-menu--horizontal > .el-menu-item:not(.is-disabled):hover,
+.cl-header .cl-header-nav .el-menu--horizontal > .el-submenu .el-submenu__title:hover {
+  background: none;
+  color: #fff;
 }
 </style>

@@ -63,21 +63,21 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 #app {
   height: 100%;
   background-color: #e7ecf2;
   min-width: 1260px;
   min-height: 664px;
-  .el-slider__runway {
-    height: 3px;
-  }
-  .el-slider__bar {
-    height: 3px;
-  }
-  .el-slider__button-wrapper {
-    top: -16px;
-  }
+}
+#app .el-slider__runway {
+  height: 3px;
+}
+#app .el-slider__bar {
+  height: 3px;
+}
+#app .el-slider__button-wrapper {
+  top: -16px;
 }
 
 .warm-content {
@@ -87,15 +87,14 @@ export default {
   font-size: 12px;
   padding: 0 14px;
   line-height: 40px;
-  .cancel-icon {
-    width: 12px;
-    height: 40px;
-    background: url('./assets/images/cancel-warm-text.png') no-repeat
-      center/12px 12px;
-    cursor: pointer;
-    float: right;
-    display: block;
-  }
+}
+.warm-content .cancel-icon {
+  width: 12px;
+  height: 40px;
+  background: url('./assets/images/cancel-warm-text.png') no-repeat center/12px 12px;
+  cursor: pointer;
+  float: right;
+  display: block;
 }
 
 .cl-center {
@@ -107,18 +106,21 @@ export default {
 .cl-center-height {
   height: calc(100% - 104px);
 }
+
 .cl-title {
   height: 50px;
   line-height: 50px;
   display: flex;
   background-color: #fff;
 }
+
 .cl-title-left {
   font-size: 20px;
   font-weight: bold;
   padding-left: 32px;
   flex: 1;
 }
+
 .cl-title-right {
   padding-right: 32px;
   flex: 1;

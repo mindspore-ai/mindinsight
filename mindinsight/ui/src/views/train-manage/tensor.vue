@@ -1030,209 +1030,204 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .cl-tensor-manage {
   height: 100%;
-  .tensor-bk {
-    height: 100%;
-    background-color: #fff;
-    display: flex;
-    flex-direction: column;
-    .cl-tensor-title {
-      height: 56px;
-      line-height: 56px;
-      .path-message {
-        display: inline-block;
-        line-height: 20px;
-        padding: 0px 4px 15px 4px;
-        font-weight: bold;
-        vertical-align: bottom;
-      }
-      .cl-close-btn {
-        width: 20px;
-        height: 20px;
-        vertical-align: -3px;
-        cursor: pointer;
-        display: inline-block;
-      }
-    }
-    .cl-tensor-operate-content {
-      width: 100%;
-      padding: 8px 32px 22px 32px;
-      background: #ffffff;
-    }
-    .cl-tensor-view-type-select-content {
-      background: #ffffff;
-      padding: 0 32px 21px 32px;
-      height: 58px;
-      display: flex;
-      align-items: center;
-      border-bottom: 2px solid #e6ebf5;
-      .view-title {
-        font-size: 14px;
-        line-height: 14px;
-        vertical-align: middle;
-        margin-right: 16px;
-        flex-shrink: 0;
-      }
-      .el-radio-group {
-        margin-right: 64px;
-        flex-shrink: 0;
-      }
-    }
-    .cl-show-data-content {
-      background: #ffffff;
-      padding: 0 23px;
-      flex: 1;
-      overflow: auto;
-      .data-content {
-        display: flex;
-        height: 100%;
-        width: 100%;
-        flex-wrap: wrap;
-        min-height: 400px;
-        position: relative;
-        .sample-content {
-          width: 33.3%;
-          height: 600px;
-          display: flex;
-          flex-direction: column;
-          flex-shrink: 0;
-          background-color: #fff;
-          position: relative;
-          padding: 32px 9px 0 9px;
-        }
-        .char-full-screen {
-          width: 100%;
-          height: 600px;
-        }
-        .chars-container {
-          flex: 1;
-          padding: 10px 15px 0 15px;
-          position: relative;
-          background: #f0f3fa;
-          overflow-x: hidden;
-          .loading-cover {
-            width: 100%;
-            height: 100%;
-            z-index: 9;
-            position: absolute;
-            top: 0;
-            left: 0;
-            display: flex;
-            background: white;
-            opacity: 0.5;
-            align-items: center;
-            justify-content: center;
-          }
-        }
-        .sample-data-show {
-          padding: 32px 16px;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          overflow: hidden;
-          background-color: #f0f3fa;
-          margin-top: 1px;
-          .tensor-demension,
-          .tensor-type {
-            font-size: 14px;
-            line-height: 20px;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            span {
-              color: #00a5a7;
-            }
-          }
-          .sample-operate-info {
-            width: 100%;
-            min-height: 24px;
-            vertical-align: middle;
-            line-height: 20px;
-            margin-top: 24px;
-            color: #000000;
-            position: relative;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            span {
-              max-width: 100%;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-              overflow: hidden;
-            }
-            .step-info {
-              left: 0;
-              font-size: 14px;
-            }
-            .time-info {
-              right: 0;
-              float: right;
-              font-size: 14px;
-            }
-          }
-          .step-slider {
-            margin-top: 10px;
-          }
-        }
-        .tag-title {
-          margin-top: 10px;
-          width: 100%;
-          font-size: 16px;
-          font-weight: 600;
-          text-align: center;
-        }
-      }
-    }
-    .pagination-content {
-      padding: 24px 32px;
-      text-align: right;
-    }
-    // No data available.
-    .image-noData {
-      // Set the width and white on the right.
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-  }
-  .content {
-    position: relative;
-  }
-
-  #echart {
-    width: 500px;
-    height: 500px;
-    border: 1px solid black;
-    position: relative;
-  }
-
-  #echartTip {
-    position: absolute;
-    padding: 5px;
-    z-index: 9999;
-    font-size: 14px;
-    font-family: 'Microsoft YaHei';
-    background-color: rgba(50, 50, 50, 0.7);
-    border: 0;
-    border-radius: 4px;
-    color: #fff;
-  }
-
-  .char-tip-table td {
-    padding-left: 5px;
-    padding-right: 5px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 150px;
-    overflow: hidden;
-  }
-
-  .borderspacing3 {
-    border-spacing: 3px;
-  }
+}
+.cl-tensor-manage .tensor-bk {
+  height: 100%;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.cl-tensor-manage .tensor-bk .cl-tensor-title {
+  height: 56px;
+  line-height: 56px;
+}
+.cl-tensor-manage .tensor-bk .cl-tensor-title .path-message {
+  display: inline-block;
+  line-height: 20px;
+  padding: 0px 4px 15px 4px;
+  font-weight: bold;
+  vertical-align: bottom;
+}
+.cl-tensor-manage .tensor-bk .cl-tensor-title .cl-close-btn {
+  width: 20px;
+  height: 20px;
+  vertical-align: -3px;
+  cursor: pointer;
+  display: inline-block;
+}
+.cl-tensor-manage .tensor-bk .cl-tensor-operate-content {
+  width: 100%;
+  padding: 8px 32px 22px 32px;
+  background: #ffffff;
+}
+.cl-tensor-manage .tensor-bk .cl-tensor-view-type-select-content {
+  background: #ffffff;
+  padding: 0 32px 21px 32px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #e6ebf5;
+}
+.cl-tensor-manage .tensor-bk .cl-tensor-view-type-select-content .view-title {
+  font-size: 14px;
+  line-height: 14px;
+  vertical-align: middle;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+.cl-tensor-manage .tensor-bk .cl-tensor-view-type-select-content .el-radio-group {
+  margin-right: 64px;
+  flex-shrink: 0;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content {
+  background: #ffffff;
+  padding: 0 23px;
+  flex: 1;
+  overflow: auto;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-wrap: wrap;
+  min-height: 400px;
+  position: relative;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-content {
+  width: 33.3%;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background-color: #fff;
+  position: relative;
+  padding: 32px 9px 0 9px;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .char-full-screen {
+  width: 100%;
+  height: 600px;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .chars-container {
+  flex: 1;
+  padding: 10px 15px 0 15px;
+  position: relative;
+  background: #f0f3fa;
+  overflow-x: hidden;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .chars-container .loading-cover {
+  width: 100%;
+  height: 100%;
+  z-index: 9;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  background: white;
+  opacity: 0.5;
+  align-items: center;
+  justify-content: center;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show {
+  padding: 32px 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  background-color: #f0f3fa;
+  margin-top: 1px;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .tensor-demension,
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .tensor-type {
+  font-size: 14px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .tensor-demension span,
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .tensor-type span {
+  color: #00a5a7;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .sample-operate-info {
+  width: 100%;
+  min-height: 24px;
+  vertical-align: middle;
+  line-height: 20px;
+  margin-top: 24px;
+  color: #000000;
+  position: relative;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .sample-operate-info span {
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .sample-operate-info .step-info {
+  left: 0;
+  font-size: 14px;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .sample-operate-info .time-info {
+  right: 0;
+  float: right;
+  font-size: 14px;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .step-slider {
+  margin-top: 10px;
+}
+.cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .tag-title {
+  margin-top: 10px;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+.cl-tensor-manage .tensor-bk .pagination-content {
+  padding: 24px 32px;
+  text-align: right;
+}
+.cl-tensor-manage .tensor-bk .image-noData {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.cl-tensor-manage .content {
+  position: relative;
+}
+.cl-tensor-manage #echart {
+  width: 500px;
+  height: 500px;
+  border: 1px solid black;
+  position: relative;
+}
+.cl-tensor-manage #echartTip {
+  position: absolute;
+  padding: 5px;
+  z-index: 9999;
+  font-size: 14px;
+  font-family: "Microsoft YaHei";
+  background-color: rgba(50, 50, 50, 0.7);
+  border: 0;
+  border-radius: 4px;
+  color: #fff;
+}
+.cl-tensor-manage .char-tip-table td {
+  padding-left: 5px;
+  padding-right: 5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+}
+.cl-tensor-manage .borderspacing3 {
+  border-spacing: 3px;
 }
 </style>

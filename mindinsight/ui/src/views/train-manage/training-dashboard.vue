@@ -2139,254 +2139,239 @@ export default {
   },
 };
 </script>
-<style lang="scss" >
+<style>
 .cl-dashboard {
   height: 100%;
   overflow-y: auto;
   width: 100%;
   overflow: hidden;
-  .cl-dashboard-top {
-    width: 100%;
-    padding-left: 32px;
-    padding-right: 20px;
-    height: 56px;
-    vertical-align: middle;
-    .path-message {
-      display: inline-block;
-      line-height: 20px;
-      padding: 21px 4px 0 4px;
-      font-weight: bold;
-      vertical-align: bottom;
-    }
-    .loading-icon {
-      margin-left: 5px;
-    }
-    .cl-dashboard-top-title {
-      float: left;
-      color: #000000;
-      font-weight: bold;
-      font-size: 20px;
-      line-height: 56px;
-      padding: 0;
-    }
-  }
-  .cl-dashboard-center {
-    width: 100%;
-    margin: 0;
-    height: calc(100% - 58px);
-    padding: 0px 10px 10px 10px;
-  }
-  .title-height {
-    height: 30px;
-    line-height: 30px;
-  }
-  .cl-dashboard-title {
-    font-size: 20px;
-    color: #000000;
-    line-height: 20px;
-    font-weight: bold;
-    margin-bottom: 1vw;
-    height: 20px;
-    display: flex;
-
-    .cl-dashboard-title-left {
-      font-size: 20px;
-      color: #000000;
-      line-height: 20px;
-      font-weight: bold;
-      flex: 1;
-    }
-
-    .cl-dashboard-title-right {
-      height: 30px;
-      flex: 1;
-      overflow: hidden;
-      text-align: right;
-      .el-button {
-        padding: 0px;
-      }
-    }
-  }
-
-  .cl-dashboard-con-up {
-    background-color: #fff;
-    padding: 1.6vw;
-    cursor: pointer;
-    overflow: hidden;
-    height: calc(50% - 10px);
-    width: calc(33.3% - 10px);
-    margin: 5px;
-    float: left;
-    border-radius: 3px;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    .link-text {
-      cursor: pointer;
-      font-size: 16px;
-      color: #00a5a7;
-    }
-  }
-
-  .cl-module {
-    height: calc(100% - 35px);
-    overflow: hidden;
-
-    .select-disable {
-      -moz-user-select: none; /*Firefox*/
-      -webkit-user-select: none; /*webkitbrowser*/
-      -ms-user-select: none; /*IE10*/
-      -khtml-user-select: none; /*Early browser*/
-      user-select: none;
-    }
-
-    .cl-scalar-tagName {
-      height: 22px;
-      font-size: 14px;
-      color: #333;
-      z-index: 999;
-      line-height: 22px;
-      display: flex;
-      font-weight: 600;
-      .tagNameLeft {
-        text-align: left;
-        width: 49%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .tagNameRight {
-        text-align: right;
-      }
-    }
-
-    .graph {
-      height: 100%;
-      background-color: #fff;
-      #graph0 > polygon {
-        fill: transparent;
-      }
-      .edge {
-        path {
-          stroke: rgb(120, 120, 120);
-        }
-        polygon {
-          fill: rgb(120, 120, 120);
-        }
-      }
-
-      .node.polymeric > polygon {
-        stroke: #fdca5a;
-        fill: #ffe8b5;
-      }
-      .node.cluster.polymeric > rect {
-        stroke: #fdca5a;
-        fill: #fff2d4;
-        stroke-dasharray: 3, 3;
-      }
-
-      .node > polygon {
-        stroke: #00a5a7;
-        fill: #8df1f2;
-      }
-      .node > ellipse {
-        stroke: #58a4e0;
-        fill: #d1ebff;
-      }
-      .plain > path,
-      .plain ellipse {
-        stroke: #56b077;
-        fill: #c1f5d5;
-        stroke-dasharray: 1.5, 1.5;
-      }
-    }
-
-    .image-container {
-      width: 100%;
-      height: 100%;
-      .sample-img {
-        object-fit: contain;
-        width: 100%;
-        height: 100%;
-      }
-    }
-  }
-
-  .no-data-hover {
-    cursor: not-allowed;
-  }
-
-  .no-data-img {
-    background: #fff;
-    text-align: center;
-    height: 100%;
-    padding-top: 26px;
-    img {
-      max-width: 100%;
-    }
-    p {
-      font-size: 16px;
-      padding-top: 31px;
-    }
-  }
-  // Public Style End
-
-  #module-chart {
-    height: calc(100% - 22px);
-    canvas {
-      cursor: pointer;
-    }
-  }
-  #distribution-chart,
-  #tensor-chart-container {
-    height: calc(100% - 19px);
-    canvas {
-      cursor: pointer;
-    }
-  }
-  .histogram-char-container,
-  .tensor-char-container {
-    height: 100%;
-    width: 100%;
-    cursor: pointer;
-    .tag-text {
-      font-size: 12px;
-      font-weight: 400;
-      text-align: center;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
-    }
-  }
-
-  #dataMapGraph {
-    .CreatDataset > polygon,
-    .Operator > ellipse {
-      stroke: #4ea6e6;
-      fill: #b8e0ff;
-    }
-    .cluster > polygon {
-      fill: #8df1f2;
-      stroke: #00a5a7;
-    }
-    .RepeatDataset > polygon {
-      stroke: #fdca5a;
-      fill: #fff2d4;
-    }
-    .ShuffleDataset > polygon {
-      stroke: #e37d29;
-      fill: #ffd0a6;
-    }
-    .BatchDataset > polygon {
-      stroke: #de504e;
-      fill: #ffbcba;
-    }
-    .edge {
-      path {
-        stroke: rgb(167, 167, 167);
-      }
-      polygon {
-        fill: rgb(167, 167, 167);
-        stroke: rgb(167, 167, 167);
-      }
-    }
-  }
+}
+.cl-dashboard .cl-dashboard-top {
+  width: 100%;
+  padding-left: 32px;
+  padding-right: 20px;
+  height: 56px;
+  vertical-align: middle;
+}
+.cl-dashboard .cl-dashboard-top .path-message {
+  display: inline-block;
+  line-height: 20px;
+  padding: 21px 4px 0 4px;
+  font-weight: bold;
+  vertical-align: bottom;
+}
+.cl-dashboard .cl-dashboard-top .loading-icon {
+  margin-left: 5px;
+}
+.cl-dashboard .cl-dashboard-top .cl-dashboard-top-title {
+  float: left;
+  color: #000000;
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 56px;
+  padding: 0;
+}
+.cl-dashboard .cl-dashboard-center {
+  width: 100%;
+  margin: 0;
+  height: calc(100% - 58px);
+  padding: 0px 10px 10px 10px;
+}
+.cl-dashboard .title-height {
+  height: 30px;
+  line-height: 30px;
+}
+.cl-dashboard .cl-dashboard-title {
+  font-size: 20px;
+  color: #000000;
+  line-height: 20px;
+  font-weight: bold;
+  margin-bottom: 1vw;
+  height: 20px;
+  display: flex;
+}
+.cl-dashboard .cl-dashboard-title .cl-dashboard-title-left {
+  font-size: 20px;
+  color: #000000;
+  line-height: 20px;
+  font-weight: bold;
+  flex: 1;
+}
+.cl-dashboard .cl-dashboard-title .cl-dashboard-title-right {
+  height: 30px;
+  flex: 1;
+  overflow: hidden;
+  text-align: right;
+}
+.cl-dashboard .cl-dashboard-title .cl-dashboard-title-right .el-button {
+  padding: 0px;
+}
+.cl-dashboard .cl-dashboard-con-up {
+  background-color: #fff;
+  padding: 1.6vw;
+  cursor: pointer;
+  overflow: hidden;
+  height: calc(50% - 10px);
+  width: calc(33.3% - 10px);
+  margin: 5px;
+  float: left;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+.cl-dashboard .cl-dashboard-con-up .link-text {
+  cursor: pointer;
+  font-size: 16px;
+  color: #00a5a7;
+}
+.cl-dashboard .cl-module {
+  height: calc(100% - 35px);
+  overflow: hidden;
+}
+.cl-dashboard .cl-module .select-disable {
+  -moz-user-select: none;
+  /*Firefox*/
+  -webkit-user-select: none;
+  /*webkitbrowser*/
+  -ms-user-select: none;
+  /*IE10*/
+  -khtml-user-select: none;
+  /*Early browser*/
+  user-select: none;
+}
+.cl-dashboard .cl-module .cl-scalar-tagName {
+  height: 22px;
+  font-size: 14px;
+  color: #333;
+  z-index: 999;
+  line-height: 22px;
+  display: flex;
+  font-weight: 600;
+}
+.cl-dashboard .cl-module .cl-scalar-tagName .tagNameLeft {
+  text-align: left;
+  width: 49%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-dashboard .cl-module .cl-scalar-tagName .tagNameRight {
+  text-align: right;
+}
+.cl-dashboard .cl-module .graph {
+  height: 100%;
+  background-color: #fff;
+}
+.cl-dashboard .cl-module .graph #graph0 > polygon {
+  fill: transparent;
+}
+.cl-dashboard .cl-module .graph .edge path {
+  stroke: #787878;
+}
+.cl-dashboard .cl-module .graph .edge polygon {
+  fill: #787878;
+}
+.cl-dashboard .cl-module .graph .node.polymeric > polygon {
+  stroke: #fdca5a;
+  fill: #ffe8b5;
+}
+.cl-dashboard .cl-module .graph .node.cluster.polymeric > rect {
+  stroke: #fdca5a;
+  fill: #fff2d4;
+  stroke-dasharray: 3, 3;
+}
+.cl-dashboard .cl-module .graph .node > polygon {
+  stroke: #00a5a7;
+  fill: #8df1f2;
+}
+.cl-dashboard .cl-module .graph .node > ellipse {
+  stroke: #58a4e0;
+  fill: #d1ebff;
+}
+.cl-dashboard .cl-module .graph .plain > path,
+.cl-dashboard .cl-module .graph .plain ellipse {
+  stroke: #56b077;
+  fill: #c1f5d5;
+  stroke-dasharray: 1.5, 1.5;
+}
+.cl-dashboard .cl-module .image-container {
+  width: 100%;
+  height: 100%;
+}
+.cl-dashboard .cl-module .image-container .sample-img {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+.cl-dashboard .no-data-hover {
+  cursor: not-allowed;
+}
+.cl-dashboard .no-data-img {
+  background: #fff;
+  text-align: center;
+  height: 100%;
+  padding-top: 26px;
+}
+.cl-dashboard .no-data-img img {
+  max-width: 100%;
+}
+.cl-dashboard .no-data-img p {
+  font-size: 16px;
+  padding-top: 31px;
+}
+.cl-dashboard #module-chart {
+  height: calc(100% - 22px);
+}
+.cl-dashboard #module-chart canvas {
+  cursor: pointer;
+}
+.cl-dashboard #distribution-chart,
+.cl-dashboard #tensor-chart-container {
+  height: calc(100% - 19px);
+}
+.cl-dashboard #distribution-chart canvas,
+.cl-dashboard #tensor-chart-container canvas {
+  cursor: pointer;
+}
+.cl-dashboard .histogram-char-container,
+.cl-dashboard .tensor-char-container {
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+}
+.cl-dashboard .histogram-char-container .tag-text,
+.cl-dashboard .tensor-char-container .tag-text {
+  font-size: 12px;
+  font-weight: 400;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.cl-dashboard #dataMapGraph .CreatDataset > polygon,
+.cl-dashboard #dataMapGraph .Operator > ellipse {
+  stroke: #4ea6e6;
+  fill: #b8e0ff;
+}
+.cl-dashboard #dataMapGraph .cluster > polygon {
+  fill: #8df1f2;
+  stroke: #00a5a7;
+}
+.cl-dashboard #dataMapGraph .RepeatDataset > polygon {
+  stroke: #fdca5a;
+  fill: #fff2d4;
+}
+.cl-dashboard #dataMapGraph .ShuffleDataset > polygon {
+  stroke: #e37d29;
+  fill: #ffd0a6;
+}
+.cl-dashboard #dataMapGraph .BatchDataset > polygon {
+  stroke: #de504e;
+  fill: #ffbcba;
+}
+.cl-dashboard #dataMapGraph .edge path {
+  stroke: #a7a7a7;
+}
+.cl-dashboard #dataMapGraph .edge polygon {
+  fill: #a7a7a7;
+  stroke: #a7a7a7;
 }
 </style>

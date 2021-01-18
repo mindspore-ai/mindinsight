@@ -632,300 +632,288 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .cl-data-map-manage {
   height: 100%;
-  .cl-data-map-title {
-    height: 56px;
-    line-height: 56px;
-    .path-message {
-      display: inline-block;
-      line-height: 20px;
-      padding: 0px 4px 15px 4px;
-      font-weight: bold;
-      vertical-align: bottom;
-    }
-  }
-  .data-map-p32 {
-    height: 100%;
-  }
-  .cl-content {
-    height: calc(100% - 50px);
-    overflow: auto;
-  }
-  #data-maps {
-    width: 100%;
-    height: 100%;
-    font-size: 0;
-    background: #f0f2f5;
-    .cl-data-map {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background-color: #fff;
-      padding: 0 32px 24px;
-      min-height: 700px;
-      overflow: hidden;
-      .data-map-container {
-        height: 100%;
-        width: calc(100% - 442px);
-        position: relative;
-        #graph {
-          height: 100%;
-          width: 100%;
-          padding: 16px;
-          background-color: #f7faff;
-          #graph0 > polygon {
-            fill: transparent;
-          }
-          .node,
-          .cluster {
-            cursor: pointer;
-          }
-          .selected {
-            polygon,
-            ellipse {
-              stroke: red !important;
-              stroke-width: 2px;
-            }
-          }
-          .CreatDataset > polygon,
-          .Operator > ellipse {
-            stroke: #4ea6e6;
-            fill: #b8e0ff;
-          }
-          .cluster > polygon {
-            fill: #8df1f2;
-            stroke: #00a5a7;
-          }
-          .RepeatDataset > polygon {
-            stroke: #fdca5a;
-            fill: #fff2d4;
-          }
-          .ShuffleDataset > polygon {
-            stroke: #e37d29;
-            fill: #ffd0a6;
-          }
-          .BatchDataset > polygon {
-            stroke: #de504e;
-            fill: #ffbcba;
-          }
-          .edge {
-            path {
-              stroke: rgb(167, 167, 167);
-            }
-            polygon {
-              fill: rgb(167, 167, 167);
-              stroke: rgb(167, 167, 167);
-            }
-          }
-        }
-        .full-screen-button {
-          position: absolute;
-          right: 10px;
-          top: 10px;
-          cursor: pointer;
-          width: 12px;
-          height: 12px;
-          z-index: 999;
-          display: inline-block;
-          background-image: url('../../assets/images/full-screen.png');
-        }
-        .fit-screen {
-          position: absolute;
-          width: 16px;
-          height: 14px;
-          right: 32px;
-          top: 10px;
-          z-index: 999;
-          cursor: pointer;
-          display: inline-block;
-          background-image: url('../../assets/images/fit.png');
-        }
-        .download-button {
-          position: absolute;
-          width: 16px;
-          height: 14px;
-          right: 54px;
-          top: 10px;
-          z-index: 999;
-          cursor: pointer;
-          display: inline-block;
-          background-image: url('../../assets/images/download.png');
-          background-size: 14px 14px;
-          background-repeat: no-repeat;
-        }
-      }
-    }
-    .cl-data-map.full-screen {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      width: auto;
-      height: auto;
-      padding: 0;
-      .data-map-container {
-        width: 100%;
-      }
-      #sidebar {
-        .node-info-con {
-          height: calc(100% - 280px);
-        }
-      }
-    }
-    #sidebar.right-hide {
-      right: -442px;
-    }
-    #sidebar {
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 442px;
-      height: 100%;
-      border-radius: 6px;
-      text-align: left;
-      background-color: #ffffff;
-      display: inline-block;
-      box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.1);
-      color: #333333;
-      font-size: 14px;
-      line-height: 14px;
-      padding: 24px 32px;
-      div,
-      span,
-      pre {
-        font-size: 14px;
-      }
-      .title {
-        padding: 24px 0;
-        font-size: 14px;
-        color: #333333;
-        img {
-          float: right;
-          margin-right: 10px;
-          cursor: pointer;
-        }
-      }
-      .node-info-container {
-        height: calc(100% - 156px);
-      }
-      .node-info-container-long {
-        height: calc(100% - 62px);
-      }
-      .node-info {
-        .title {
-          padding: 0 0 24px;
-          font-size: 14px;
-          color: #333;
-        }
-        .node-info-list {
-          height: calc(100% - 62px);
-          overflow-y: auto;
-        }
-        .item {
-          line-height: 20px;
-          padding: 5px 0 5px 20px;
-          background-color: #f2f2f2;
-          .label {
-            vertical-align: top;
-            width: 30%;
-            word-break: break-all;
-            display: inline-block;
-          }
-          .value {
-            padding: 0 10px;
-            vertical-align: top;
-            display: inline-block;
-            width: 70%;
-            word-break: break-all;
-          }
-        }
-      }
-      .legend {
-        .legend-content {
-          background-color: #f7faff;
-          padding: 0 32px;
-          height: 94px;
-          overflow-y: auto;
-        }
-        .legend-item {
-          padding: 5px 0;
-          display: inline-block;
-          width: 50%;
-          font-size: 14px;
-          line-height: 20px;
-          .pic {
-            width: 45px;
-            text-align: center;
-            img {
-              width: 45px;
-              height: 15px;
-              margin-left: -20px;
-              vertical-align: middle;
-            }
-          }
-          div {
-            display: inline-block;
-            padding-left: 20px;
-            vertical-align: middle;
-          }
-        }
-      }
-      .toggle-right {
-        position: absolute;
-        top: calc(50% - 43px);
-        left: -16px;
-        width: 18px;
-        height: 86px;
-        cursor: pointer;
-        background-image: url('../../assets/images/toggle-right-bg.png');
-      }
-      .icon-toggle {
-        width: 6px;
-        height: 9px;
-        background-image: url('../../assets/images/toggle-right-icon.png');
-        position: absolute;
-        top: calc(50% - 4.5px);
-        left: calc(50% - 3px);
-      }
-      .icon-toggle.icon-left {
-        transform: rotateY(180deg);
-      }
-    }
-    .data-map-container.all {
-      width: 100%;
-    }
-    // No data available.
-    .image-noData {
-      // Set the width and white on the right.
-      width: 100%;
-      height: 100%;
-      background: #fff;
-      position: absolute;
-      top: 0;
-      left: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 200;
-    }
-    .noData-text {
-      margin-top: 33px;
-      font-size: 18px;
-    }
-  }
-  .cl-close-btn {
-    width: 20px;
-    height: 20px;
-    vertical-align: -3px;
-    cursor: pointer;
-    display: inline-block;
-  }
-  .cl-title-right {
-    padding-right: 32px;
-  }
+}
+.cl-data-map-manage .cl-data-map-title {
+  height: 56px;
+  line-height: 56px;
+}
+.cl-data-map-manage .cl-data-map-title .path-message {
+  display: inline-block;
+  line-height: 20px;
+  padding: 0px 4px 15px 4px;
+  font-weight: bold;
+  vertical-align: bottom;
+}
+.cl-data-map-manage .data-map-p32 {
+  height: 100%;
+}
+.cl-data-map-manage .cl-content {
+  height: calc(100% - 50px);
+  overflow: auto;
+}
+.cl-data-map-manage #data-maps {
+  width: 100%;
+  height: 100%;
+  font-size: 0;
+  background: #f0f2f5;
+}
+.cl-data-map-manage #data-maps .cl-data-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  padding: 0 32px 24px;
+  min-height: 700px;
+  overflow: hidden;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container {
+  height: 100%;
+  width: calc(100% - 442px);
+  position: relative;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph {
+  height: 100%;
+  width: 100%;
+  padding: 16px;
+  background-color: #f7faff;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph #graph0 > polygon {
+  fill: transparent;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .node,
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .cluster {
+  cursor: pointer;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .selected polygon,
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .selected ellipse {
+  stroke: red !important;
+  stroke-width: 2px;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .CreatDataset > polygon,
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Operator > ellipse {
+  stroke: #4ea6e6;
+  fill: #b8e0ff;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .cluster > polygon {
+  fill: #8df1f2;
+  stroke: #00a5a7;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .RepeatDataset > polygon {
+  stroke: #fdca5a;
+  fill: #fff2d4;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .ShuffleDataset > polygon {
+  stroke: #e37d29;
+  fill: #ffd0a6;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .BatchDataset > polygon {
+  stroke: #de504e;
+  fill: #ffbcba;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .edge path {
+  stroke: #a7a7a7;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .edge polygon {
+  fill: #a7a7a7;
+  stroke: #a7a7a7;
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container .full-screen-button {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+  width: 12px;
+  height: 12px;
+  z-index: 999;
+  display: inline-block;
+  background-image: url("../../assets/images/full-screen.png");
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container .fit-screen {
+  position: absolute;
+  width: 16px;
+  height: 14px;
+  right: 32px;
+  top: 10px;
+  z-index: 999;
+  cursor: pointer;
+  display: inline-block;
+  background-image: url("../../assets/images/fit.png");
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container .download-button {
+  position: absolute;
+  width: 16px;
+  height: 14px;
+  right: 54px;
+  top: 10px;
+  z-index: 999;
+  cursor: pointer;
+  display: inline-block;
+  background-image: url("../../assets/images/download.png");
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+}
+.cl-data-map-manage #data-maps .cl-data-map.full-screen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+}
+.cl-data-map-manage #data-maps .cl-data-map.full-screen .data-map-container {
+  width: 100%;
+}
+.cl-data-map-manage #data-maps .cl-data-map.full-screen #sidebar .node-info-con {
+  height: calc(100% - 280px);
+}
+.cl-data-map-manage #data-maps #sidebar.right-hide {
+  right: -442px;
+}
+.cl-data-map-manage #data-maps #sidebar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 442px;
+  height: 100%;
+  border-radius: 6px;
+  text-align: left;
+  background-color: #ffffff;
+  display: inline-block;
+  box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.1);
+  color: #333333;
+  font-size: 14px;
+  line-height: 14px;
+  padding: 24px 32px;
+}
+.cl-data-map-manage #data-maps #sidebar div,
+.cl-data-map-manage #data-maps #sidebar span,
+.cl-data-map-manage #data-maps #sidebar pre {
+  font-size: 14px;
+}
+.cl-data-map-manage #data-maps #sidebar .title {
+  padding: 24px 0;
+  font-size: 14px;
+  color: #333333;
+}
+.cl-data-map-manage #data-maps #sidebar .title img {
+  float: right;
+  margin-right: 10px;
+  cursor: pointer;
+}
+.cl-data-map-manage #data-maps #sidebar .node-info-container {
+  height: calc(100% - 156px);
+}
+.cl-data-map-manage #data-maps #sidebar .node-info-container-long {
+  height: calc(100% - 62px);
+}
+.cl-data-map-manage #data-maps #sidebar .node-info .title {
+  padding: 0 0 24px;
+  font-size: 14px;
+  color: #333;
+}
+.cl-data-map-manage #data-maps #sidebar .node-info .node-info-list {
+  height: calc(100% - 62px);
+  overflow-y: auto;
+}
+.cl-data-map-manage #data-maps #sidebar .node-info .item {
+  line-height: 20px;
+  padding: 5px 0 5px 20px;
+  background-color: #f2f2f2;
+}
+.cl-data-map-manage #data-maps #sidebar .node-info .item .label {
+  vertical-align: top;
+  width: 30%;
+  word-break: break-all;
+  display: inline-block;
+}
+.cl-data-map-manage #data-maps #sidebar .node-info .item .value {
+  padding: 0 10px;
+  vertical-align: top;
+  display: inline-block;
+  width: 70%;
+  word-break: break-all;
+}
+.cl-data-map-manage #data-maps #sidebar .legend .legend-content {
+  background-color: #f7faff;
+  padding: 0 32px;
+  height: 94px;
+  overflow-y: auto;
+}
+.cl-data-map-manage #data-maps #sidebar .legend .legend-item {
+  padding: 5px 0;
+  display: inline-block;
+  width: 50%;
+  font-size: 14px;
+  line-height: 20px;
+}
+.cl-data-map-manage #data-maps #sidebar .legend .legend-item .pic {
+  width: 45px;
+  text-align: center;
+}
+.cl-data-map-manage #data-maps #sidebar .legend .legend-item .pic img {
+  width: 45px;
+  height: 15px;
+  margin-left: -20px;
+  vertical-align: middle;
+}
+.cl-data-map-manage #data-maps #sidebar .legend .legend-item div {
+  display: inline-block;
+  padding-left: 20px;
+  vertical-align: middle;
+}
+.cl-data-map-manage #data-maps #sidebar .toggle-right {
+  position: absolute;
+  top: calc(50% - 43px);
+  left: -16px;
+  width: 18px;
+  height: 86px;
+  cursor: pointer;
+  background-image: url("../../assets/images/toggle-right-bg.png");
+}
+.cl-data-map-manage #data-maps #sidebar .icon-toggle {
+  width: 6px;
+  height: 9px;
+  background-image: url("../../assets/images/toggle-right-icon.png");
+  position: absolute;
+  top: calc(50% - 4.5px);
+  left: calc(50% - 3px);
+}
+.cl-data-map-manage #data-maps #sidebar .icon-toggle.icon-left {
+  transform: rotateY(180deg);
+}
+.cl-data-map-manage #data-maps .data-map-container.all {
+  width: 100%;
+}
+.cl-data-map-manage #data-maps .image-noData {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 200;
+}
+.cl-data-map-manage #data-maps .noData-text {
+  margin-top: 33px;
+  font-size: 18px;
+}
+.cl-data-map-manage .cl-close-btn {
+  width: 20px;
+  height: 20px;
+  vertical-align: -3px;
+  cursor: pointer;
+  display: inline-block;
+}
+.cl-data-map-manage .cl-title-right {
+  padding-right: 32px;
 }
 </style>
