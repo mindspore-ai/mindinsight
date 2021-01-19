@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -491,6 +491,64 @@ def get_timeline_detail():
     timeline = analyser.get_display_timeline(device_type)
 
     return jsonify(timeline)
+
+
+@BLUEPRINT.route("/profile/memory-summary", methods=["GET"])
+def get_memory_usage_summary():
+    """
+    Get memory usage summary info.
+
+    Returns:
+        Response, the memory usage summary info.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/memory-summary
+    """
+    summary_dir = request.args.get("dir")
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    device_id = request.args.get("device_id", default='0')
+    _ = to_int(device_id, 'device_id')
+    device_type = request.args.get("device_type", default='ascend')
+    if device_type not in ['ascend']:
+        logger.info("Invalid device_type, Memory Usage only supports Ascend for now.")
+        raise ParamValueError("Invalid device_type.")
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'memory_usage', profiler_dir_abs, device_id)
+    summary = analyser.get_memory_usage_summary(device_type)
+
+    return summary
+
+
+@BLUEPRINT.route("/profile/memory-graphics", methods=["GET"])
+def get_memory_usage_graphics():
+    """
+    Get graphic representation of memory usage.
+
+    Returns:
+        Response, the graphic representation of memory usage.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/memory-graphics
+    """
+    summary_dir = request.args.get("dir")
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    device_id = request.args.get("device_id", default='0')
+    _ = to_int(device_id, 'device_id')
+    device_type = request.args.get("device_type", default='ascend')
+    if device_type not in ['ascend']:
+        logger.info("Invalid device_type, Memory Usage only supports Ascend for now.")
+        raise ParamValueError("Invalid device_type.")
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'memory_usage', profiler_dir_abs, device_id)
+    graphics = analyser.get_memory_usage_graphics(device_type)
+
+    return graphics
 
 
 def init_module(app):
