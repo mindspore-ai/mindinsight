@@ -45,6 +45,10 @@ Vue.prototype.$bus = new Vue();
 
 // Route interception
 router.beforeEach((to, from, next) => {
+  if (!window.enableDebugger && to.path === '/debugger') {
+    next('/');
+    return;
+  }
   // cancel request
   if (from.path !== '/') {
     store.commit('clearToken');
