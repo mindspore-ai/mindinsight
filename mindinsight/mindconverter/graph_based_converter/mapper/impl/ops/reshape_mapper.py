@@ -13,10 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
 from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class ReshapeMapper(ONNXToMindSporeMapper):
@@ -35,39 +33,36 @@ class ReshapeMapper(ONNXToMindSporeMapper):
         return dict()
 
     @staticmethod
-    def _convert_settings(**kwargs):
-        if kwargs.get("weights", None):
-            return ReshapeMapper._convert_settings_tf(**kwargs)
-        return ReshapeMapper._convert_settings_pytorch(**kwargs)
-
-    @staticmethod
-    def _convert_settings_pytorch(**kwargs):
-        params = kwargs.get("params")
-        shape = params.get("output_shape")
-        return Setting(op_extra_input={"input_shape": tuple(shape)})
-
-    @staticmethod
-    def _convert_settings_tf(**kwargs):
-        weights = kwargs.get("weights")
-        if len(weights) > 1:
-            raise ValueError("For reshape, `weights` length should equal to 1.")
-        shape = [-1]
-        shape += list(weights.values())[0][1:].tolist()
-        return Setting(op_extra_input={"shape": tuple(shape)})
-
-    @staticmethod
     def _generate_snippet_template(**kwargs):
-        template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
-            **kwargs)
         weights = kwargs.get("weights")
-        if len(weights) > 1:
-            raise ValueError("For reshape, `weights` length should equal to 1.")
-        shape = [-1]
-        shape += list(weights.values())[0][1:].tolist()
+        output_shape = kwargs.get("raw_params").get("output_shape")
         variable_slot = "var_0"
-        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
-                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, {tuple(shape)})"
-        template = reset_init_or_construct(template, variable_slot, [construct_template],
-                                           TemplateKeywords.CONSTRUCT.value)
+        op = kwargs.get("operation")
+        init_template = f"self.{{{variable_slot}}} = {op}()"
+        target_shape = f"self.{{{variable_slot}}}_shape = tuple({{shape}})"
+        args = {"shape": output_shape}
 
+        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
+                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, " \
+                             f"self.{{{variable_slot}}}_shape)"
+        template = {
+            variable_slot: {
+                TemplateKeywords.INIT.value: [init_template, target_shape],
+                TemplateKeywords.CONSTRUCT.value: [construct_template]
+            }
+        }
+        exchange_msg = {
+            variable_slot: {
+                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
+                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
+                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
+                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
+                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
+                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
+                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: {}
+            }
+        }
+        outputs_list = [f"opt_{{{variable_slot}}}"]
+        outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping

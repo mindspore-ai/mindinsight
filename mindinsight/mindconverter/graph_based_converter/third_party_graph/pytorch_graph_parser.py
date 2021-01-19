@@ -17,10 +17,8 @@ import os
 from importlib import import_module
 
 from mindinsight.mindconverter.common.log import logger as log
-from .base import GraphParser
-from .optimizer import OnnxSimplify
-from ...common.exceptions import ModelNotSupportError
-
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import GraphParser
+from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
 
 class PyTorchGraphParser(GraphParser):
     """Define pytorch graph parser."""
@@ -106,7 +104,4 @@ class PyTorchGraphParser(GraphParser):
         onnx = import_module('onnx')
         onnx_model = onnx.load_model_from_string(proto)
 
-        onnx_simplify = OnnxSimplify()
-        onnx_model_sim = onnx_simplify.run_onnx_simplify(onnx_model, sample_shape)
-
-        return onnx_model_sim
+        return onnx_model

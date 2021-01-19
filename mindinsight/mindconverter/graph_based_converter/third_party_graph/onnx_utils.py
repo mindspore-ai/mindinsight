@@ -24,10 +24,11 @@ import numpy as np
 from mindinsight.mindconverter.common.log import logger as log
 from ..common.utils import fetch_output_from_onnx_model
 from ..common.global_context import GlobalContext
+from .optimizer import OnnxSimplify
 
 from ..constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
     ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL
-from ...common.exceptions import GraphInitError, ModelNotSupportError, ModelLoadingError
+from ...common.exceptions import GraphInitError, ModelLoadingError
 
 
 def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=12):
@@ -258,9 +259,11 @@ class OnnxDataLoader:
 
     def __init__(self, onnx_model, graph_input_shape: Union[tuple, list],
                  input_nodes: list, output_nodes: list, infer_shape=True):
-        self.model = onnx_model
-        self.graph = onnx_model.graph
-        self.nodes = onnx_model.graph.node
+        onnx_sim = OnnxSimplify()
+        onnx_model_sim = onnx_sim.run_onnx_simplify(onnx_model, graph_input_shape)
+        self.model = onnx_model_sim
+        self.graph = onnx_model_sim.graph
+        self.nodes = onnx_model_sim.graph.node
         self.graph_input_shape = graph_input_shape
         self.input_nodes = input_nodes if isinstance(input_nodes, list) else [input_nodes]
         self.output_nodes = output_nodes if isinstance(output_nodes, list) else [output_nodes]
@@ -388,9 +391,8 @@ class OnnxDataLoader:
             n = OnnxNode(node)
             self._nodes_dict[n.name] = n
             nodes_topo_idx.append((idx, n.name))
-            if len(node.output) > 1:
-                raise ModelNotSupportError(msg=f"{node.name} has multi-outputs which is not supported now.")
-            self.output_name_to_node_name[node.output[0]] = node.name
+            for out in node.output:
+                self.output_name_to_node_name[out] = node.name
 
             for ipt_nd in node.input:
                 if ipt_nd not in self.output_name_to_node_name:
