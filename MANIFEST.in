@@ -3,5 +3,6 @@ recursive-exclude * .git
 recursive-exclude * .gitignore
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co] *.swp
+recursive-exclude mindinsight/datavisual/utils/crc32 *
 recursive-exclude mindinsight/ui *
 recursive-include mindinsight/ui/dist *

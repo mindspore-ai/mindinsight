@@ -20,7 +20,7 @@ SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
 build_ui() {
     cd "$(realpath "$SCRIPT_BASEDIR/../../mindinsight/ui")" || exit
 
-    if ! command -v npm; then
+    if ! command -v npm > /dev/null; then
         command npm
     fi
 

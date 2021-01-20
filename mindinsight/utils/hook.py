@@ -87,7 +87,7 @@ class HookUtils:
         """Discover hook instances."""
         self.__hooks = []
         mindinsight_path = os.path.join(__file__, os.pardir, os.pardir)
-        hook_path = os.path.realpath(os.path.join(mindinsight_path, 'common/hook'))
+        hook_path = os.path.realpath(os.path.join(mindinsight_path, 'common', 'hook'))
         files = os.listdir(hook_path)
         files.sort()
         for file in files:
