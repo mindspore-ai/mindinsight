@@ -42,6 +42,10 @@ limitations under the License.
           </div>
           <div class="suggested-title">{{$t("profiling.suggestions")}}</div>
           <div id="helper-tips"></div>
+          <a class="suggested-title link-title"
+             @click="jumpToMemoryDetail">
+            {{$t("profiling.memory.memoryDetailLink")}}
+          </a>
         </div>
         <div class="collapse-btn"
              :class="{collapse:collapse}"
@@ -111,7 +115,7 @@ export default {
       }
     },
     /**
-     * When card mumber changed,request data again.
+     * When card number changed,request data again.
      */
     selectValueChange() {
       const helperDiv = document.getElementById('helper-tips');
@@ -306,6 +310,22 @@ export default {
           path: this.curDashboardInfo.query.path,
         },
       });
+    },
+    /**
+     * Router to memory-detail
+     */
+    jumpToMemoryDetail() {
+      if (this.$route.path !== '/profiling/memory-detail') {
+        this.$router.push({
+          path: '/profiling/memory-detail',
+          query: {
+            dir: this.curDashboardInfo.query.dir,
+            id: this.curDashboardInfo.query.id,
+            cardNum: this.curDashboardInfo.curCardNum,
+            path: this.curDashboardInfo.query.path,
+          },
+        });
+      }
     },
     collapseLeft() {
       this.collapse = !this.collapse;

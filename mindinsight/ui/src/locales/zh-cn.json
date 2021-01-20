@@ -447,7 +447,37 @@
     "countUnit": "次",
     "unit": "ms/次",
     "gpuunit": "us/次",
-    "chartTitle": "平均耗时排名"
+    "chartTitle": "平均耗时排名",
+    "memory": {
+      "memoryDetailLink": "内存使用情况",
+      "overView": "内存分配概览",
+      "currentCard": "当前卡片",
+      "memoryAssign": "内存分配次数",
+      "memoryRelease": "内存释放次数",
+      "totalMemory": "总可用内存",
+      "staticMenory": "静态内存",
+      "memoryPeak": "内存使用峰值",
+      "memoryGiBUnit": "GiB",
+      "memoryMiBUnit": "MiB",
+      "memoryKiBUnit": "KiB",
+      "usedMemory": "内存使用",
+      "operatorMemoryAssign": "算子内存分配",
+      "operatorName": "算子名称",
+      "totalMemoryAssign": "总分配内存",
+      "assignNum": "分配次数",
+      "memoryType": "内存类型",
+      "dataType": "数据类型",
+      "shapes": "形状",
+      "chartXaxisUnit": "执行序号",
+      "chartYaxisUnit": "大小（GiB）",
+      "curOperaterId": "当前算子执行序",
+      "curOperator": "当前算子",
+      "curMemorySize": "当前内存",
+      "memoryChanged": "内存变化",
+      "lifeCycle": "生命周期",
+      "fpStart": "前向",
+      "bpEnd": "后向"
+    }
   },
   "profilingGPU": {
     "minddata_get_next_queue": {

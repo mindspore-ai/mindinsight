@@ -461,4 +461,19 @@ export default {
       data: params.body,
     });
   },
+  // memory-datail apis
+  queryMemorySummary(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/memory-summary',
+      params: params,
+    });
+  },
+  queryMemoryGraphics(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/memory-graphics',
+      params: params,
+    });
+  },
 };
