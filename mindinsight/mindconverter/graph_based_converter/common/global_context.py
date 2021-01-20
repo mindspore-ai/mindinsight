@@ -26,6 +26,11 @@ class Singleton(type):
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
+    @classmethod
+    def release(mcs):
+        """Clear singleton object."""
+        mcs._instances.clear()
+
 
 class GlobalContext(metaclass=Singleton):
     """
@@ -110,7 +115,7 @@ class GlobalContext(metaclass=Singleton):
         if isinstance(arg, OrderedDict):
             self._onnx_nodes_collection = arg  # arg must be nodes_dict in OnnxDataLoader
         else:
-            raise TypeError("GlobalContext received an unsupport variable to assign to onnx_nodes_collection.")
+            raise TypeError("GlobalContext received an unsupported variable to assign to onnx_nodes_collection.")
 
     @property
     def onnx_nodes_topo_index(self) -> dict:
@@ -149,7 +154,7 @@ class GlobalContext(metaclass=Singleton):
         if isinstance(arg, dict):
             self._onnx_tensors_collection = arg  # arg must be tensors_dict in OnnxDataLoader
         else:
-            raise TypeError("GlobalContext received an unsupport variable to assign to onnx_tensors_collection.")
+            raise TypeError("GlobalContext received an unsupported variable to assign to onnx_tensors_collection.")
 
     @property
     def latest_node_struct_count(self):
@@ -237,3 +242,8 @@ class GlobalContext(metaclass=Singleton):
             self.module_structs[pattern_id] = [module_struct]
         else:
             self.module_structs[pattern_id].append(module_struct)
+
+    @classmethod
+    def release(cls):
+        """Clear singleton object."""
+        Singleton.release()

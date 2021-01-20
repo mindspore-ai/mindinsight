@@ -105,11 +105,6 @@ NO_CONVERTED_OPERATORS = [
 
 
 @unique
-class CodeFormatConfig(Enum):
-    PEP8 = "pep8"
-
-
-@unique
 class NodeType(Enum):
     MODULE = "module"
     OPERATION = "operation"

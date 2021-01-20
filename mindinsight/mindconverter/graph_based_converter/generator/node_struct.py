@@ -23,6 +23,7 @@ from ..third_party_graph.onnx_graph_node import OnnxGraphNode
 from ..common.global_context import GlobalContext
 from ...common.exceptions import GeneratorError
 
+
 class NodeStruct:
     """
     Define a node struct which stores all info. to generate statement.
@@ -34,10 +35,10 @@ class NodeStruct:
         You can pass as many args as possible and the Node Struct will update
         by arguments order.
     """
-    GLOBAL_CONTEXT_MGR = GlobalContext()
 
     def __init__(self, args):
         # define attributes here
+        self.global_context_mgr = GlobalContext()
         self._identifier = None
         self._fragment = None
         self._args_translator = None
@@ -74,7 +75,7 @@ class NodeStruct:
         """Get the original topological index in the onnx graph."""
         ori_name = self._fragment.metadata.get('source')
         self.onnx_name = ori_name
-        return self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_topo_idx.get(ori_name)
+        return GlobalContext().onnx_node_name_to_topo_idx.get(ori_name)
 
     def update_var_name(self, idx=None):
         """
@@ -83,6 +84,7 @@ class NodeStruct:
         Args:
             idx (int): The index of the node in this module.
         """
+
         def _remove_op_header(op_name):
             """Remove op header which indicating their sources of op set."""
             op_name = op_name.replace('nn.', '')
@@ -112,7 +114,7 @@ class NodeStruct:
         self._fragment = FragmentHandler(frag)
 
         if self.ms_op:
-            idx = self.GLOBAL_CONTEXT_MGR.latest_node_struct_count
+            idx = GlobalContext().latest_node_struct_count
             self.update_var_name(idx=idx)
 
     def _set_scope_from_identifier(self):
@@ -142,9 +144,7 @@ class NodeStruct:
 
         Args:
             arg (Union[PyTorchGraphNode, OnnxGraphNode, dict]): Node related obj.
-            force_ready (bool): Force this NodeStruct is ready to generate.
         """
-
         if isinstance(arg, OnnxGraphNode):
             self._update_from_onnx_gn(arg)
         elif isinstance(arg, NewFragment):
@@ -168,7 +168,7 @@ class NodeStruct:
         self._identifier = s
         self._set_scope_from_identifier()
         self.topo_idx = self.ori_topo_idx()
-        self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_node_struct_map[self.onnx_name] = self
+        GlobalContext().onnx_node_name_to_node_struct_map[self.onnx_name] = self
 
     @property
     def fragment(self):
@@ -181,7 +181,7 @@ class NodeStruct:
         Set the Node fragment.
 
         Args:
-            s (NodeFragment): The node identifier string.
+            frag (NodeFragment): The node identifier string.
         """
         self._fragment = frag
 
@@ -198,7 +198,7 @@ class NodeStruct:
     @property
     def onnx_node(self):
         """Return the original onnx node reference."""
-        return self.GLOBAL_CONTEXT_MGR.onnx_nodes_collection.get(self.onnx_name)
+        return GlobalContext().onnx_nodes_collection.get(self.onnx_name)
 
     @property
     def ms_op(self):
@@ -241,7 +241,7 @@ class NodeStruct:
         ret = []
         precursor_nodes_names = self.precursor_nodes_names
         for pre_node_name in precursor_nodes_names:
-            nd_struct = self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_node_struct_map.get(pre_node_name)
+            nd_struct = GlobalContext().onnx_node_name_to_node_struct_map.get(pre_node_name)
             ret.append(nd_struct)
         return ret
 
@@ -255,7 +255,7 @@ class NodeStruct:
         """Return the node struct instances of successor nodes."""
         ret = []
         for pre_node_name in self.successor_nodes_names:
-            nd_struct = self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_node_struct_map.get(pre_node_name)
+            nd_struct = GlobalContext().onnx_node_name_to_node_struct_map.get(pre_node_name)
             ret.append(nd_struct)
         return ret
 
@@ -312,11 +312,11 @@ class NodeStruct:
             inputs = self.matched_inputs
 
         # Check original onnx node's input to ensure double inputs are not ignored
-        original_inputs = self.GLOBAL_CONTEXT_MGR.onnx_node_inputs.get(self.onnx_name)
+        original_inputs = GlobalContext().onnx_node_inputs.get(self.onnx_name)
         new_inputs = []
         for idx, prec_node in enumerate(self.precursor_nodes_names):
-            occurence = original_inputs.count(prec_node)
-            for _ in range(occurence):
+            occurrence = original_inputs.count(prec_node)
+            for _ in range(occurrence):
                 new_inputs.append(inputs[idx])
         inputs = new_inputs
 
@@ -360,12 +360,12 @@ class NodeStruct:
         Args:
             name (str): Can accept both node identifier or original onnx node name.
         """
-        target_nd_struct = self.GLOBAL_CONTEXT_MGR.node_struct_collections.get(name) \
-            or self.GLOBAL_CONTEXT_MGR.onnx_node_name_to_node_struct_map.get(name)
+        target_nd_struct = GlobalContext().node_struct_collections.get(name) \
+                           or GlobalContext().onnx_node_name_to_node_struct_map.get(name)
         if target_nd_struct is None and self.topo_idx == 0:  # First node always has external input
             return False
 
-        if target_nd_struct is None and (name in self.GLOBAL_CONTEXT_MGR.onnx_graph_info.get('graph_inputs')):
+        if target_nd_struct is None and (name in GlobalContext().onnx_graph_info.get('graph_inputs')):
             return False
 
         if target_nd_struct is None:
