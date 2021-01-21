@@ -58,11 +58,6 @@ class Mapper(metaclass=abc.ABCMeta):
     def _convert_trained_weights(**kwargs):
         """Convert third party operation's weights into MindSpore operation."""
 
-    @staticmethod
-    @abc.abstractmethod
-    def _convert_settings(**kwargs):
-        """Convert third party operation's params into MindSpore OP operator."""
-
     @classmethod
     @abc.abstractmethod
     def convert(cls, op_name: str, params: Dict, weights: Dict = None):
@@ -146,10 +141,6 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
-        raise NotImplementedError
-
-    @staticmethod
-    def _convert_settings(**kwargs):
         raise NotImplementedError
 
     @staticmethod

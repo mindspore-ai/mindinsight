@@ -27,9 +27,10 @@ from mindinsight.mindconverter.graph_based_converter.common.global_context impor
 from mindinsight.mindconverter.graph_based_converter.common.outputs import BaseOutput, ModuleOutputManager
 from mindinsight.mindconverter.graph_based_converter.common.yapf_config import mindspore_yapf_config
 from mindinsight.mindconverter.graph_based_converter.common.name_mgr import GlobalVarNameMgr
-from mindinsight.mindconverter.graph_based_converter.constant import NEW_LINE, SECOND_LEVEL_INDENT, FIRST_LEVEL_INDENT, \
-    get_imported_module
+from mindinsight.mindconverter.graph_based_converter.constant import NEW_LINE, SECOND_LEVEL_INDENT, \
+    FIRST_LEVEL_INDENT, get_imported_module
 from mindinsight.mindconverter.graph_based_converter.report_generator import ReportGenerator
+from mindinsight.mindconverter.graph_based_converter.common.utils import replace_string_in_list
 
 
 class CodeStruct:
@@ -373,6 +374,10 @@ class Generator:
         self.module_structs.get('[]').allocate_construct_header_x()
         self.module_structs.get('[]').collect_returns()
 
+        for nd_struct in self.node_structs.values():
+            if nd_struct.fragment.metadata.get("operation") == "Split":
+                self._split_op_procs(nd_struct)
+
     def _update_all_modules_args_translator(self):
         """Update all modules' args translators."""
         done_submodule = set()
@@ -633,3 +638,73 @@ class Generator:
             if user in root_module.external_successor_nodes_names:
                 return True
         return False
+
+    def _split_op_procs(self, split_struct: NodeStruct):
+        """
+        Support for Split operation multiple outputs.
+
+        Args:
+            split_struct (NodeStruct): The NodeStruct of the Split op.
+        """
+        for successor in split_struct.successor_nodes_structs:
+            # 1. target user is internal
+            if split_struct.check_target_node_internal(successor.identifier):
+                idx = self._get_correct_input_idx_from_split(split_struct, successor)
+                if idx is None:
+                    raise ValueError("The Split OP should not has empty output.")
+                correct_input = split_struct.fragment.fragment.get_outputs_by_idx(0, idx)
+                to_be_replaced = None
+                for inp in successor.matched_inputs:
+                    if "split" in inp:
+                        to_be_replaced = inp
+                        break
+                if to_be_replaced is not None:
+                    successor.matched_inputs = replace_string_in_list(successor.matched_inputs,
+                                                                      to_be_replaced,
+                                                                      correct_input)
+            # 2. target user is external
+            else:
+                public_parent = self._get_public_parent_module(split_struct, successor)
+                to_be_modified_md = self._get_submodule_has_out_user_under_public_parent(public_parent, successor)
+                idx = self._get_correct_input_idx_from_split(split_struct, successor)
+                if idx is None:
+                    raise ValueError("The Split OP should not has empty output.")
+                if to_be_modified_md is None:
+                    raise ValueError("Unable to locate the submodule to be modified for Split output matching.")
+                correct_input = split_struct.fragment.fragment.get_outputs_by_idx(0, idx)
+                to_be_replaced = None
+                for inp in to_be_modified_md.matched_inputs:
+                    if "split" in inp:
+                        to_be_replaced = inp
+                        break
+                if to_be_replaced is not None:
+                    to_be_modified_md.matched_inputs = replace_string_in_list(to_be_modified_md.matched_inputs,
+                                                                              to_be_replaced,
+                                                                              correct_input)
+
+    def _get_correct_input_idx_from_split(self, split_struct: NodeStruct, split_out_user: NodeStruct):
+        """Return the index of the split output the user used."""
+        split_struct_out_edges = split_struct.fragment.metadata.get("outputs")
+        for idx, out in enumerate(split_struct_out_edges):
+            if out in split_out_user.fragment.metadata.get("inputs"):
+                return idx
+        return None
+
+    def _get_public_parent_module(self, node_a: NodeStruct, node_b: NodeStruct):
+        """Return the public parent module of both Node A and Node B."""
+        find = False
+        b_onnx_name = node_b.onnx_name
+        tmp = node_a
+        while not find:
+            parent_struct = tmp.parent_module_struct
+            if b_onnx_name in parent_struct.onnx_names:
+                find = True
+            tmp = parent_struct
+        return tmp
+
+    def _get_submodule_has_out_user_under_public_parent(self, public_module: ModuleStruct, node_out_user: NodeStruct):
+        """Return the ModuleStruct which under the public module and contains the NodeStruct which provided."""
+        for module_struct in public_module.module_structs:
+            if node_out_user.onnx_name in module_struct.onnx_names:
+                return module_struct
+        return None

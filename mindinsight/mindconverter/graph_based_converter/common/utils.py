@@ -219,3 +219,17 @@ def reset_init_or_construct(template, variable_slot, new_data, scope):
     template[variable_slot][scope].clear()
     template[variable_slot][scope] += new_data
     return template
+
+def replace_string_in_list(str_list: list, original_str: str, target_str: str):
+    """
+    Replace a string in a list by provided string.
+
+    Args:
+        str_list (list): A list contains the string to be replaced.
+        original_str (str): The string to be replaced.
+        target_str (str): The replacement of string.
+
+    Returns,
+        list, the original list with replaced string.
+    """
+    return [s.replace(original_str, target_str) for s in str_list]
