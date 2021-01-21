@@ -31,11 +31,10 @@ class ModuleStruct:
     Define a module struct which stores all info. to generate statement.
 
     Args:
-        args (list): A list of node structs.
+        nd_struct_list (list): A list of node structs.
         init_as_parent (bool): Control init method if the ModuleStruct be init as a parent module struct.
         parent_base (ModuleStruct): The base ModuleStruct the current ModuleStruct to be init as.
     """
-    GLOBAL_CONTEXT_MGR = GlobalContext()
 
     def __init__(self, nd_struct_list, init_as_parent=False, parent_base=None):
         """Init. a module by NodeStructs."""
@@ -247,7 +246,7 @@ class ModuleStruct:
             self._module_structs += md_structs
             tail_md = md_structs[-1]
         else:
-            raise TypeError("ModuleStruct cannot add an unsupport Type {} to module_structs list.".format(
+            raise TypeError("ModuleStruct cannot add an unsupported Type {} to module_structs list.".format(
                 type(md_structs)))
         # update tail node and index
         if self.tail_nd_struct_index < tail_md.tail_nd_struct_index:
@@ -318,12 +317,7 @@ class ModuleStruct:
         return ret
 
     def code_line_in_init(self):
-        """
-        Initialization line of code in module init block.
-
-        Args:
-            override_formal_val (dict): Indicate which args should be renamed for passing value from upper level.
-        """
+        """Initialization line of code in module init block."""
         left = "self.{}".format(self.ms_var_name)
         args_list = list()
         # Load args in init statement.
@@ -338,7 +332,7 @@ class ModuleStruct:
         else:
             args_list += self._fragment.actual_args
         right = f"{self.class_name}({', '.join(args_list)})"
-        return (left, right)
+        return left, right
 
     def code_line_in_construct(self, inputs=None):
         """Construct line of code in module construct block."""
@@ -356,7 +350,7 @@ class ModuleStruct:
         if isinstance(inputs, str):
             inputs = [inputs]
         right = f"self.{self.ms_var_name}({', '.join(inputs)})"
-        return (left, right)
+        return left, right
 
     @property
     def node_structs(self):
@@ -463,8 +457,8 @@ class ModuleStruct:
         """Return the class name for generating code of this module."""
         if self.pattern_id == -1:
             return "Model"
-        if self.GLOBAL_CONTEXT_MGR.known_module_name.get("Module{}".format(self.pattern_id)) is not None:
-            class_name = self.GLOBAL_CONTEXT_MGR.known_module_name.get("Module{}".format(self.pattern_id))
+        if GlobalContext().known_module_name.get("Module{}".format(self.pattern_id)) is not None:
+            class_name = GlobalContext().known_module_name.get("Module{}".format(self.pattern_id))
         else:
             class_name = "Module{}".format(self.pattern_id)
         return class_name

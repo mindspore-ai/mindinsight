@@ -20,6 +20,7 @@ from importlib import import_module
 from importlib.util import find_spec
 
 import mindinsight
+from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, \
     save_code_file_and_report, get_framework_type
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
@@ -199,13 +200,14 @@ def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
         output_folder (str): Output folder.
         report_folder (str): Report output folder path.
     """
-
     graph_obj = GraphFactory.init(graph_path, sample_shape=sample_shape,
                                   input_nodes=input_nodes, output_nodes=output_nodes)
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
     code_fragments = generator_inst.generate()
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
+    # Release global context.
+    GlobalContext.release()
 
 
 @tf_installation_validation
@@ -238,6 +240,8 @@ def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
     model_name = _extract_model_name(graph_path)
     code_fragments = generator_inst.generate()
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
+    # Release global context.
+    GlobalContext.release()
 
 
 @BaseConverterError.uniform_catcher()

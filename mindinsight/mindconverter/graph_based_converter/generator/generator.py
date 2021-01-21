@@ -18,16 +18,18 @@ from collections import OrderedDict
 
 from yapf.yapflib.yapf_api import FormatCode
 
-from .scope_utils import Scope
-from .node_struct import NodeStruct
-from .module_struct import ModuleStruct
-from .args_translator import ArgsTranslationHelper
-from ..common.global_context import GlobalContext
-from ..common.outputs import BaseOutput, ModuleOutputManager
-from ...common.exceptions import GeneratorError
-from ..common.name_mgr import GlobalVarNameMgr
-from ..constant import NEW_LINE, SECOND_LEVEL_INDENT, FIRST_LEVEL_INDENT, CodeFormatConfig, get_imported_module
-from ..report_generator import ReportGenerator
+from mindinsight.mindconverter.common.exceptions import GeneratorError
+from mindinsight.mindconverter.graph_based_converter.generator.scope_utils import Scope
+from mindinsight.mindconverter.graph_based_converter.generator.node_struct import NodeStruct
+from mindinsight.mindconverter.graph_based_converter.generator.module_struct import ModuleStruct
+from mindinsight.mindconverter.graph_based_converter.generator.args_translator import ArgsTranslationHelper
+from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
+from mindinsight.mindconverter.graph_based_converter.common.outputs import BaseOutput, ModuleOutputManager
+from mindinsight.mindconverter.graph_based_converter.common.yapf_config import mindspore_yapf_config
+from mindinsight.mindconverter.graph_based_converter.common.name_mgr import GlobalVarNameMgr
+from mindinsight.mindconverter.graph_based_converter.constant import NEW_LINE, SECOND_LEVEL_INDENT, FIRST_LEVEL_INDENT, \
+    get_imported_module
+from mindinsight.mindconverter.graph_based_converter.report_generator import ReportGenerator
 
 
 class CodeStruct:
@@ -35,7 +37,6 @@ class CodeStruct:
     Define the Code template for each module generated in the final output.
     Each module has only one CodeStruct to its pattern.
     """
-    GLOBAL_CONTEXT = GlobalContext()
     NOT_IN_SCOPE_OPT = dict()
 
     def __init__(self, struct, repeated_submodules=None):
@@ -104,7 +105,7 @@ class CodeStruct:
 
             elif isinstance(struct, ModuleStruct):
                 # check if this instance generated CodeStruct
-                if self.GLOBAL_CONTEXT.code_structs.get(struct.pattern_id) is None:
+                if GlobalContext().code_structs.get(struct.pattern_id) is None:
                     CodeStruct(struct, repeated_submodules)
 
                 code_line_init = struct.code_line_in_init()
@@ -138,10 +139,10 @@ class CodeStruct:
             returns = list(set(returns))
         else:
             returns = [code_line_construct[0]] if isinstance(code_line_construct, tuple) \
-                                                else [code_line_construct[-1].replace(' ', '').split('=')[0]]
+                else [code_line_construct[-1].replace(' ', '').split('=')[0]]
         self.new_line = f"{SECOND_LEVEL_INDENT}return {', '.join(returns)}"
         self.new_line = f"{NEW_LINE * 2}"
-        self.GLOBAL_CONTEXT.code_structs[md_struct.pattern_id] = self
+        GlobalContext().code_structs[md_struct.pattern_id] = self
 
 
 class Generator:
@@ -482,7 +483,7 @@ class Generator:
                 outputs.append(line)
 
         formatted_code, _ = FormatCode("\n".join(outputs),
-                                       style_config=CodeFormatConfig.PEP8.value)
+                                       style_config=mindspore_yapf_config())
 
         report_generator = ReportGenerator()
         report = report_generator.gen_report(formatted_code)
@@ -589,7 +590,7 @@ class Generator:
                     output_obj.idx_in_ms_user[nd_struct.identifier] = idx
 
                     # set this output to be returned to external
-                    output_obj.to_external = not(nd_struct.check_target_node_internal(
+                    output_obj.to_external = not (nd_struct.check_target_node_internal(
                         self._global_context.outputs_storage.onnx_name(inp)
                     ))
 
