@@ -88,7 +88,7 @@ export default {
   },
 };
 </script>
-<style lang="scss" scoped>
+<style scoped>
 .rtl-item {
   text-align: right;
   direction: rtl;

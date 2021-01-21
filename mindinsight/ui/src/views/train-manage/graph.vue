@@ -1723,624 +1723,612 @@ export default {
   components: {},
 };
 </script>
-<style lang="scss">
-.tooltip-container {
-  .cl-graph-sidebar-tip {
-    word-break: normal;
-  }
+<style>
+.tooltip-container .cl-graph-sidebar-tip {
+  word-break: normal;
 }
+
 .cl-graph-manage {
   height: 100%;
-  .cl-graph-title {
-    height: 50px;
-    line-height: 50px;
-    .path-message {
-      display: inline-block;
-      line-height: 20px;
-      padding: 0px 4px 15px 4px;
-      font-weight: bold;
-      vertical-align: bottom;
-    }
-    .guide {
-      cursor: pointer;
-      margin-left: 10px;
-      display: inline-block;
-      line-height: 18px;
-      font-size: 12px;
-      .guide-icon {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        vertical-align: -2.5px;
-        margin-right: 4px;
-        background: url('../../assets/images/guideIcon.svg');
-      }
-    }
-    .guide:hover {
-      color: #00a5a7;
-      .guide-icon {
-        background: url('../../assets/images/guideIconHover.svg');
-      }
-    }
-  }
-  .graph-p32 {
-    height: 100%;
-    position: relative;
-    .guide-content {
-      height: 100%;
-      width: 100%;
-      position: absolute;
-      background-color: #c6c8cc;
-      z-index: 9999;
-      .step-pic {
-        text-align: center;
-        margin-top: 8px;
-      }
-      .step {
-        height: 100%;
-        background-repeat: round;
-        user-select: none;
-        img {
-          width: 100%;
-        }
-      }
-      .guide-span {
-        font-size: 12px;
-        color: #575d6c;
-        line-height: 18px;
-        text-align: left;
-        display: inline-block;
-      }
-      .el-popover {
-        .el-icon-close {
-          cursor: pointer;
-          position: absolute;
-          right: 10px;
-          top: 13px;
-          font-size: 20px;
-        }
-        .el-icon-close:hover {
-          color: #00a5a7;
-        }
-      }
-      .el-popover__title {
-        font-size: 16px;
-        color: #252b3a;
-        line-height: 24px;
-        font-weight: bold;
-      }
-      .el-button {
-        display: block;
-        float: right;
-        height: 28px;
-        line-height: 27px;
-        border-radius: 0;
-        padding: 0 20px;
-      }
-    }
-  }
-  .cl-content {
-    height: calc(100% - 50px);
-    overflow: auto;
-  }
-  #graphs {
-    width: 100%;
-    height: 100%;
-    font-size: 0;
-    background: #f0f2f5;
-    .search {
-      margin-bottom: 15px;
-      width: 100%;
-    }
-    .search-wrap {
-      position: relative;
-      .tree-wrap {
-        position: absolute;
-        left: 0;
-        top: 32px;
-        z-index: 101;
-        width: 100%;
-        max-height: 224px;
-        overflow: auto;
-        border: 1px solid #dcdfe6;
-        border-top: none;
-        background: #fff;
-        .image-type {
-          width: 20px;
-          height: 10px;
-          margin-right: 10px;
-        }
-        .el-tree {
-          & > .el-tree-node {
-            min-width: 100%;
-            display: inline-block;
-          }
-          .custom-tree-node {
-            padding-right: 8px;
-          }
-        }
-      }
-      .collapse_i {
-        cursor: pointer;
-      }
-    }
-    .cl-graph {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background-color: #fff;
-      padding: 0 32px 10px;
-      min-height: 700px;
-      overflow: hidden;
-    }
-    .cl-graph.full-screen {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: -280px;
-      right: 0;
-      width: auto;
-      height: auto;
-      padding: 0;
-      #sidebar {
-        .node-info-con {
-          height: calc(100% - 300px);
-        }
-      }
-      .graph-container {
-        width: 100%;
-      }
-    }
-    #sidebar.right-hide {
-      right: -442px;
-    }
-    #sidebar {
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 442px;
-      height: 100%;
-      border-radius: 6px;
-      text-align: left;
-      background-color: #ffffff;
-      display: inline-block;
-      box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.1);
-      color: #333333;
-      font-size: 14px;
-      line-height: 14px;
-      padding: 18px 32px 10px;
-      .sidebar-tooltip {
-        position: absolute;
-        height: 32px;
-        top: 18px;
-        left: 10px;
-        display: flex;
-        align-items: center;
-        font-size: 16px;
-        color: #6c7280;
-      }
-      div,
-      span,
-      pre {
-        font-size: 14px;
-      }
-      #small-container {
-        height: 209px;
-        width: 100%;
-        z-index: 100;
-        border: 1px solid #e6ebf5;
-        overflow: hidden;
-        background-color: white;
-        position: relative;
-        #small-resize {
-          width: 100%;
-          height: 100%;
-          position: absolute;
-          left: 0;
-          top: 0;
-        }
-        #small-map {
-          height: 100%;
-          width: 100%;
-          position: relative;
-          padding: 0;
-        }
-        #inside-box {
-          background-color: #5b88f1;
-          position: absolute;
-          /* Transparency */
-          opacity: 0.3;
-          width: 100%;
-          height: 100%;
-          left: 0px;
-          top: 0px;
-          z-index: 200;
-          cursor: move;
-        }
-      }
-      .title {
-        padding: 20px 0;
-        font-size: 14px;
-        color: #333333;
-        img {
-          float: right;
-          margin-right: 10px;
-          cursor: pointer;
-        }
-      }
-      .graph-controls {
-        padding: 10px 20px 0 20px;
-        div {
-          cursor: pointer;
-          display: inline-block;
-          margin-left: 20px;
-        }
-        img {
-          cursor: pointer;
-          vertical-align: middle;
-        }
-      }
-      .node-info-con {
-        ::-webkit-scrollbar-button {
-          z-index: 200;
-          width: 10px;
-          height: 10px;
-          background: #fff;
-          cursor: pointer;
-        }
-        ::-webkit-scrollbar-button:horizontal:single-button:start {
-          background-image: url('../../assets/images/scroll-btn-left.png');
-          background-position: center;
-        }
-        ::-webkit-scrollbar-button:horizontal:single-button:end {
-          background-image: url('../../assets/images/scroll-btn-right.png');
-          background-position: center;
-        }
-        ::-webkit-scrollbar-button:vertical:single-button:start {
-          background-image: url('../../assets/images/scroll-btn-up.png');
-          background-position: center;
-        }
-        ::-webkit-scrollbar-button:vertical:single-button:end {
-          background-image: url('../../assets/images/scroll-btn-down.png');
-          background-position: center;
-        }
-        ::-webkit-scrollbar-thumb {
-          background-color: #bac5cc;
-        }
-        ::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-        }
-      }
-      .node-info-container {
-        height: calc(100% - 451px);
-      }
-      .node-info-container-long {
-        height: calc(100% - 357px);
-      }
-      .node-info {
-        font-size: 14px;
-        padding: 0 20px;
-        height: calc(100% - 54px);
-        overflow: auto;
-        color: #333;
-        background-color: #f7faff;
-        .clear {
-          clear: both;
-        }
-        .hover {
-          li:hover {
-            background: #fce8b2;
-          }
-          .control-list {
-            .dependence-title {
-              line-height: 30px;
-              cursor: pointer;
-              font-weight: bold;
-              img {
-                vertical-align: middle;
-                margin-right: 3px;
-              }
-            }
-            .dependence-title.hide {
-              img {
-                margin-top: -3px;
-                transform: rotate(-90deg);
-              }
-            }
-            li:hover {
-              background: #fce8b2;
-            }
-          }
-          .control-list:hover {
-            background: none;
-          }
-        }
-        .pointer {
-          cursor: pointer;
-        }
-        .item-content {
-          max-height: calc(50% - 95px);
-          overflow: auto;
-          li {
-            min-width: 100%;
-            width: max-content;
-          }
-        }
-        .item-min {
-          min-height: 50px;
-        }
-        .item-min2 {
-          min-height: 87px;
-        }
-        .items {
-          line-height: 20px;
-          padding: 9px 0;
-          .items-over {
-            max-height: 60px;
-            overflow: auto;
-          }
-          .item {
-            color: #999;
-          }
-        }
-        .shape {
-          vertical-align: top;
-          width: 50px;
-          word-break: break-all;
-          display: inline-table;
-          position: absolute;
-          left: 0;
-        }
-        .key {
-          vertical-align: top;
-          width: 60px;
-          word-break: break-all;
-          display: inline-table;
-        }
-        .label {
-          vertical-align: top;
-          width: 70px;
-          word-break: break-all;
-          display: inline-block;
-        }
-        .value {
-          vertical-align: top;
-          display: inline-block;
-          width: calc(100% - 70px);
-          white-space: nowrap;
-          overflow: auto;
-        }
-        .size {
-          width: 310px;
-          font-size: 12px;
-          text-align: right;
-        }
-        .input {
-          width: 100%;
-          position: relative;
-          display: inline-block;
-          white-space: nowrap;
-        }
-        ul {
-          li {
-            line-height: 20px;
-          }
-        }
-      }
-      .legend {
-        .legend-content {
-          background-color: #f7faff;
-          padding: 0 32px;
-          height: 94px;
-          overflow-y: auto;
-        }
-        .legend-item {
-          padding: 5px 0;
-          display: inline-block;
-          width: 50%;
-          font-size: 14px;
-          line-height: 20px;
-          .pic {
-            width: 45px;
-            text-align: center;
-            display: inline-block;
-            padding-left: 20px;
-            vertical-align: middle;
-            img {
-              max-width: 45px;
-              max-height: 15px;
-              margin-left: -20px;
-              vertical-align: middle;
-            }
-          }
-          .legend-text {
-            display: inline-block;
-            padding-left: 20px;
-            width: calc(100% - 45px);
-            vertical-align: middle;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .legend-text:hover {
-            cursor: default;
-          }
-        }
-      }
-      .toggle-right {
-        position: absolute;
-        top: calc(50% - 43px);
-        left: -16px;
-        width: 18px;
-        height: 86px;
-        cursor: pointer;
-        background-image: url('../../assets/images/toggle-right-bg.png');
-      }
-      .icon-toggle {
-        width: 6px;
-        height: 9px;
-        background-image: url('../../assets/images/toggle-right-icon.png');
-        position: absolute;
-        top: calc(50% - 4.5px);
-        left: calc(50% - 3px);
-      }
-      .icon-toggle.icon-left {
-        transform: rotateY(180deg);
-      }
-    }
-    .operate-button-list {
-      position: absolute;
-      right: 0;
-      top: 0;
-      z-index: 100;
-      div {
-        cursor: pointer;
-        width: 12px;
-        height: 12px;
-        display: inline-block;
-        margin: 5px;
-      }
-      .download-button {
-        background-image: url('../../assets/images/download.png');
-      }
-      .full-screen-button {
-        background-image: url('../../assets/images/full-screen.png');
-      }
-    }
-    .graph-container.all {
-      width: 100%;
-    }
-    .graph-container {
-      .node:hover > path,
-      .node:hover > ellipse,
-      .node:hover > polygon,
-      .node:hover > rect {
-        stroke-width: 2px;
-      }
-      .node.cluster > rect:hover {
-        stroke: #8df1f2;
-      }
-      .selected {
-        stroke: red !important;
-        stroke-width: 2px;
-      }
-    }
-    .graph-container,
-    #small-map {
-      font-size: 16px;
-      position: relative;
-      display: inline-block;
-      width: calc(100% - 442px);
-      height: calc(100% - 5px);
-      text-align: left;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      -khtml-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-      .graph {
-        height: 100%;
-        background-color: #f7faff;
-      }
-      #graph0 > polygon {
-        fill: transparent;
-      }
-      .node {
-        cursor: pointer;
-      }
-      .edge {
-        path {
-          stroke: rgb(120, 120, 120);
-        }
-        polygon {
-          fill: rgb(120, 120, 120);
-        }
-      }
-      .edge.highlighted {
-        path {
-          stroke: red;
-        }
-        polygon {
-          stroke: red;
-          fill: red;
-        }
-        marker {
-          path {
-            fill: red;
-          }
-        }
-      }
-      .node.aggregation > polygon {
-        stroke: #e3aa00;
-        fill: #ffe794;
-      }
-      .node.cluster.aggregation > rect {
-        stroke: #e3aa00;
-        fill: #ffe794;
-        stroke-dasharray: 3, 3;
-      }
-      .node > polygon {
-        stroke: #00a5a7;
-        fill: rgb(141, 241, 242);
-      }
-      .node > ellipse {
-        stroke: #4ea6e6;
-        fill: #b8e0ff;
-      }
-      .plain > path,
-      .plain ellipse {
-        stroke: #e37d29;
-        fill: #ffd0a6;
-        stroke-dasharray: 1.5, 1.5;
-      }
-      .edge-point ellipse {
-        stroke: #a7a7a7;
-        fill: #a7a7a7;
-      }
-      text {
-        fill: black;
-      }
-    }
-    // No data available.
-    .image-noData {
-      // Set the width and white on the right.
-      width: 100%;
-      height: 100%;
-      background: #fff;
-      position: absolute;
-      top: 0;
-      left: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 200;
-    }
-    .noData-text {
-      margin-top: 33px;
-      font-size: 18px;
-    }
-  }
-  .cl-display-block {
-    display: block;
-  }
-  .cl-input-value {
-    width: calc(100% - 70px) !important;
-    margin-left: 10px !important;
-  }
-  .cl-close-btn {
-    width: 20px;
-    height: 20px;
-    vertical-align: -3px;
-    cursor: pointer;
-    display: inline-block;
-  }
-  .cl-title-right {
-    padding-right: 32px;
-  }
 }
+.cl-graph-manage .cl-graph-title {
+  height: 50px;
+  line-height: 50px;
+}
+.cl-graph-manage .cl-graph-title .path-message {
+  display: inline-block;
+  line-height: 20px;
+  padding: 0px 4px 15px 4px;
+  font-weight: bold;
+  vertical-align: bottom;
+}
+.cl-graph-manage .cl-graph-title .guide {
+  cursor: pointer;
+  margin-left: 10px;
+  display: inline-block;
+  line-height: 18px;
+  font-size: 12px;
+}
+.cl-graph-manage .cl-graph-title .guide .guide-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: -2.5px;
+  margin-right: 4px;
+  background: url("../../assets/images/guideIcon.svg");
+}
+.cl-graph-manage .cl-graph-title .guide:hover {
+  color: #00a5a7;
+}
+.cl-graph-manage .cl-graph-title .guide:hover .guide-icon {
+  background: url("../../assets/images/guideIconHover.svg");
+}
+.cl-graph-manage .graph-p32 {
+  height: 100%;
+  position: relative;
+}
+.cl-graph-manage .graph-p32 .guide-content {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  background-color: #c6c8cc;
+  z-index: 9999;
+}
+.cl-graph-manage .graph-p32 .guide-content .step-pic {
+  text-align: center;
+  margin-top: 8px;
+}
+.cl-graph-manage .graph-p32 .guide-content .step {
+  height: 100%;
+  background-repeat: round;
+  user-select: none;
+}
+.cl-graph-manage .graph-p32 .guide-content .step img {
+  width: 100%;
+}
+.cl-graph-manage .graph-p32 .guide-content .guide-span {
+  font-size: 12px;
+  color: #575d6c;
+  line-height: 18px;
+  text-align: left;
+  display: inline-block;
+}
+.cl-graph-manage .graph-p32 .guide-content .el-popover .el-icon-close {
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  top: 13px;
+  font-size: 20px;
+}
+.cl-graph-manage .graph-p32 .guide-content .el-popover .el-icon-close:hover {
+  color: #00a5a7;
+}
+.cl-graph-manage .graph-p32 .guide-content .el-popover__title {
+  font-size: 16px;
+  color: #252b3a;
+  line-height: 24px;
+  font-weight: bold;
+}
+.cl-graph-manage .graph-p32 .guide-content .el-button {
+  display: block;
+  float: right;
+  height: 28px;
+  line-height: 27px;
+  border-radius: 0;
+  padding: 0 20px;
+}
+.cl-graph-manage .cl-content {
+  height: calc(100% - 50px);
+  overflow: auto;
+}
+.cl-graph-manage #graphs {
+  width: 100%;
+  height: 100%;
+  font-size: 0;
+  background: #f0f2f5;
+}
+.cl-graph-manage #graphs .search {
+  margin-bottom: 15px;
+  width: 100%;
+}
+.cl-graph-manage #graphs .search-wrap {
+  position: relative;
+}
+.cl-graph-manage #graphs .search-wrap .tree-wrap {
+  position: absolute;
+  left: 0;
+  top: 32px;
+  z-index: 101;
+  width: 100%;
+  max-height: 224px;
+  overflow: auto;
+  border: 1px solid #dcdfe6;
+  border-top: none;
+  background: #fff;
+}
+.cl-graph-manage #graphs .search-wrap .tree-wrap .image-type {
+  width: 20px;
+  height: 10px;
+  margin-right: 10px;
+}
+.cl-graph-manage #graphs .search-wrap .tree-wrap .el-tree > .el-tree-node {
+  min-width: 100%;
+  display: inline-block;
+}
+.cl-graph-manage #graphs .search-wrap .tree-wrap .el-tree .custom-tree-node {
+  padding-right: 8px;
+}
+.cl-graph-manage #graphs .search-wrap .collapse_i {
+  cursor: pointer;
+}
+.cl-graph-manage #graphs .cl-graph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  padding: 0 32px 10px;
+  min-height: 700px;
+  overflow: hidden;
+}
+.cl-graph-manage #graphs .cl-graph.full-screen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -280px;
+  right: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+}
+.cl-graph-manage #graphs .cl-graph.full-screen #sidebar .node-info-con {
+  height: calc(100% - 300px);
+}
+.cl-graph-manage #graphs .cl-graph.full-screen .graph-container {
+  width: 100%;
+}
+.cl-graph-manage #graphs #sidebar.right-hide {
+  right: -442px;
+}
+.cl-graph-manage #graphs #sidebar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 442px;
+  height: 100%;
+  border-radius: 6px;
+  text-align: left;
+  background-color: #ffffff;
+  display: inline-block;
+  box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.1);
+  color: #333333;
+  font-size: 14px;
+  line-height: 14px;
+  padding: 18px 32px 10px;
+}
+.cl-graph-manage #graphs #sidebar .sidebar-tooltip {
+  position: absolute;
+  height: 32px;
+  top: 18px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  color: #6c7280;
+}
+.cl-graph-manage #graphs #sidebar div,
+.cl-graph-manage #graphs #sidebar span,
+.cl-graph-manage #graphs #sidebar pre {
+  font-size: 14px;
+}
+.cl-graph-manage #graphs #sidebar #small-container {
+  height: 209px;
+  width: 100%;
+  z-index: 100;
+  border: 1px solid #e6ebf5;
+  overflow: hidden;
+  background-color: white;
+  position: relative;
+}
+.cl-graph-manage #graphs #sidebar #small-container #small-resize {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.cl-graph-manage #graphs #sidebar #small-container #small-map {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  padding: 0;
+}
+.cl-graph-manage #graphs #sidebar #small-container #inside-box {
+  background-color: #5b88f1;
+  position: absolute;
+  /* Transparency */
+  opacity: 0.3;
+  width: 100%;
+  height: 100%;
+  left: 0px;
+  top: 0px;
+  z-index: 200;
+  cursor: move;
+}
+.cl-graph-manage #graphs #sidebar .title {
+  padding: 20px 0;
+  font-size: 14px;
+  color: #333333;
+}
+.cl-graph-manage #graphs #sidebar .title img {
+  float: right;
+  margin-right: 10px;
+  cursor: pointer;
+}
+.cl-graph-manage #graphs #sidebar .graph-controls {
+  padding: 10px 20px 0 20px;
+}
+.cl-graph-manage #graphs #sidebar .graph-controls div {
+  cursor: pointer;
+  display: inline-block;
+  margin-left: 20px;
+}
+.cl-graph-manage #graphs #sidebar .graph-controls img {
+  cursor: pointer;
+  vertical-align: middle;
+}
+.cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button {
+  z-index: 200;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+.cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button:horizontal:single-button:start {
+  background-image: url("../../assets/images/scroll-btn-left.png");
+  background-position: center;
+}
+.cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button:horizontal:single-button:end {
+  background-image: url("../../assets/images/scroll-btn-right.png");
+  background-position: center;
+}
+.cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button:vertical:single-button:start {
+  background-image: url("../../assets/images/scroll-btn-up.png");
+  background-position: center;
+}
+.cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button:vertical:single-button:end {
+  background-image: url("../../assets/images/scroll-btn-down.png");
+  background-position: center;
+}
+.cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-thumb {
+  background-color: #bac5cc;
+}
+.cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.cl-graph-manage #graphs #sidebar .node-info-container {
+  height: calc(100% - 451px);
+}
+.cl-graph-manage #graphs #sidebar .node-info-container-long {
+  height: calc(100% - 357px);
+}
+.cl-graph-manage #graphs #sidebar .node-info {
+  font-size: 14px;
+  padding: 0 20px;
+  height: calc(100% - 54px);
+  overflow: auto;
+  color: #333;
+  background-color: #f7faff;
+}
+.cl-graph-manage #graphs #sidebar .node-info .clear {
+  clear: both;
+}
+.cl-graph-manage #graphs #sidebar .node-info .hover li:hover {
+  background: #fce8b2;
+}
+.cl-graph-manage #graphs #sidebar .node-info .hover .control-list .dependence-title {
+  line-height: 30px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.cl-graph-manage #graphs #sidebar .node-info .hover .control-list .dependence-title img {
+  vertical-align: middle;
+  margin-right: 3px;
+}
+.cl-graph-manage #graphs #sidebar .node-info .hover .control-list .dependence-title.hide img {
+  margin-top: -3px;
+  transform: rotate(-90deg);
+}
+.cl-graph-manage #graphs #sidebar .node-info .hover .control-list li:hover {
+  background: #fce8b2;
+}
+.cl-graph-manage #graphs #sidebar .node-info .hover .control-list:hover {
+  background: none;
+}
+.cl-graph-manage #graphs #sidebar .node-info .pointer {
+  cursor: pointer;
+}
+.cl-graph-manage #graphs #sidebar .node-info .item-content {
+  max-height: calc(50% - 95px);
+  overflow: auto;
+}
+.cl-graph-manage #graphs #sidebar .node-info .item-content li {
+  min-width: 100%;
+  width: max-content;
+}
+.cl-graph-manage #graphs #sidebar .node-info .item-min {
+  min-height: 50px;
+}
+.cl-graph-manage #graphs #sidebar .node-info .item-min2 {
+  min-height: 87px;
+}
+.cl-graph-manage #graphs #sidebar .node-info .items {
+  line-height: 20px;
+  padding: 9px 0;
+}
+.cl-graph-manage #graphs #sidebar .node-info .items .items-over {
+  max-height: 60px;
+  overflow: auto;
+}
+.cl-graph-manage #graphs #sidebar .node-info .items .item {
+  color: #999;
+}
+.cl-graph-manage #graphs #sidebar .node-info .shape {
+  vertical-align: top;
+  width: 50px;
+  word-break: break-all;
+  display: inline-table;
+  position: absolute;
+  left: 0;
+}
+.cl-graph-manage #graphs #sidebar .node-info .key {
+  vertical-align: top;
+  width: 60px;
+  word-break: break-all;
+  display: inline-table;
+}
+.cl-graph-manage #graphs #sidebar .node-info .label {
+  vertical-align: top;
+  width: 70px;
+  word-break: break-all;
+  display: inline-block;
+}
+.cl-graph-manage #graphs #sidebar .node-info .value {
+  vertical-align: top;
+  display: inline-block;
+  width: calc(100% - 70px);
+  white-space: nowrap;
+  overflow: auto;
+}
+.cl-graph-manage #graphs #sidebar .node-info .size {
+  width: 310px;
+  font-size: 12px;
+  text-align: right;
+}
+.cl-graph-manage #graphs #sidebar .node-info .input {
+  width: 100%;
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+.cl-graph-manage #graphs #sidebar .node-info ul li {
+  line-height: 20px;
+}
+.cl-graph-manage #graphs #sidebar .legend .legend-content {
+  background-color: #f7faff;
+  padding: 0 32px;
+  height: 94px;
+  overflow-y: auto;
+}
+.cl-graph-manage #graphs #sidebar .legend .legend-item {
+  padding: 5px 0;
+  display: inline-block;
+  width: 50%;
+  font-size: 14px;
+  line-height: 20px;
+}
+.cl-graph-manage #graphs #sidebar .legend .legend-item .pic {
+  width: 45px;
+  text-align: center;
+  display: inline-block;
+  padding-left: 20px;
+  vertical-align: middle;
+}
+.cl-graph-manage #graphs #sidebar .legend .legend-item .pic img {
+  max-width: 45px;
+  max-height: 15px;
+  margin-left: -20px;
+  vertical-align: middle;
+}
+.cl-graph-manage #graphs #sidebar .legend .legend-item .legend-text {
+  display: inline-block;
+  padding-left: 20px;
+  width: calc(100% - 45px);
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cl-graph-manage #graphs #sidebar .legend .legend-item .legend-text:hover {
+  cursor: default;
+}
+.cl-graph-manage #graphs #sidebar .toggle-right {
+  position: absolute;
+  top: calc(50% - 43px);
+  left: -16px;
+  width: 18px;
+  height: 86px;
+  cursor: pointer;
+  background-image: url("../../assets/images/toggle-right-bg.png");
+}
+.cl-graph-manage #graphs #sidebar .icon-toggle {
+  width: 6px;
+  height: 9px;
+  background-image: url("../../assets/images/toggle-right-icon.png");
+  position: absolute;
+  top: calc(50% - 4.5px);
+  left: calc(50% - 3px);
+}
+.cl-graph-manage #graphs #sidebar .icon-toggle.icon-left {
+  transform: rotateY(180deg);
+}
+.cl-graph-manage #graphs .operate-button-list {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 100;
+}
+.cl-graph-manage #graphs .operate-button-list div {
+  cursor: pointer;
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  margin: 5px;
+}
+.cl-graph-manage #graphs .operate-button-list .download-button {
+  background-image: url("../../assets/images/download.png");
+}
+.cl-graph-manage #graphs .operate-button-list .full-screen-button {
+  background-image: url("../../assets/images/full-screen.png");
+}
+.cl-graph-manage #graphs .graph-container.all {
+  width: 100%;
+}
+.cl-graph-manage #graphs .graph-container .node:hover > path,
+.cl-graph-manage #graphs .graph-container .node:hover > ellipse,
+.cl-graph-manage #graphs .graph-container .node:hover > polygon,
+.cl-graph-manage #graphs .graph-container .node:hover > rect {
+  stroke-width: 2px;
+}
+.cl-graph-manage #graphs .graph-container .node.cluster > rect:hover {
+  stroke: #8df1f2;
+}
+.cl-graph-manage #graphs .graph-container .selected {
+  stroke: red !important;
+  stroke-width: 2px;
+}
+.cl-graph-manage #graphs .graph-container,
+.cl-graph-manage #graphs #small-map {
+  font-size: 16px;
+  position: relative;
+  display: inline-block;
+  width: calc(100% - 442px);
+  height: calc(100% - 5px);
+  text-align: left;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.cl-graph-manage #graphs .graph-container .graph,
+.cl-graph-manage #graphs #small-map .graph {
+  height: 100%;
+  background-color: #f7faff;
+}
+.cl-graph-manage #graphs .graph-container #graph0 > polygon,
+.cl-graph-manage #graphs #small-map #graph0 > polygon {
+  fill: transparent;
+}
+.cl-graph-manage #graphs .graph-container .node,
+.cl-graph-manage #graphs #small-map .node {
+  cursor: pointer;
+}
+.cl-graph-manage #graphs .graph-container .edge path,
+.cl-graph-manage #graphs #small-map .edge path {
+  stroke: #787878;
+}
+.cl-graph-manage #graphs .graph-container .edge polygon,
+.cl-graph-manage #graphs #small-map .edge polygon {
+  fill: #787878;
+}
+.cl-graph-manage #graphs .graph-container .edge.highlighted path,
+.cl-graph-manage #graphs #small-map .edge.highlighted path {
+  stroke: red;
+}
+.cl-graph-manage #graphs .graph-container .edge.highlighted polygon,
+.cl-graph-manage #graphs #small-map .edge.highlighted polygon {
+  stroke: red;
+  fill: red;
+}
+.cl-graph-manage #graphs .graph-container .edge.highlighted marker path,
+.cl-graph-manage #graphs #small-map .edge.highlighted marker path {
+  fill: red;
+}
+.cl-graph-manage #graphs .graph-container .node.aggregation > polygon,
+.cl-graph-manage #graphs #small-map .node.aggregation > polygon {
+  stroke: #e3aa00;
+  fill: #ffe794;
+}
+.cl-graph-manage #graphs .graph-container .node.cluster.aggregation > rect,
+.cl-graph-manage #graphs #small-map .node.cluster.aggregation > rect {
+  stroke: #e3aa00;
+  fill: #ffe794;
+  stroke-dasharray: 3, 3;
+}
+.cl-graph-manage #graphs .graph-container .node > polygon,
+.cl-graph-manage #graphs #small-map .node > polygon {
+  stroke: #00a5a7;
+  fill: #8df1f2;
+}
+.cl-graph-manage #graphs .graph-container .node > ellipse,
+.cl-graph-manage #graphs #small-map .node > ellipse {
+  stroke: #4ea6e6;
+  fill: #b8e0ff;
+}
+.cl-graph-manage #graphs .graph-container .plain > path,
+.cl-graph-manage #graphs .graph-container .plain ellipse,
+.cl-graph-manage #graphs #small-map .plain > path,
+.cl-graph-manage #graphs #small-map .plain ellipse {
+  stroke: #e37d29;
+  fill: #ffd0a6;
+  stroke-dasharray: 1.5, 1.5;
+}
+.cl-graph-manage #graphs .graph-container .edge-point ellipse,
+.cl-graph-manage #graphs #small-map .edge-point ellipse {
+  stroke: #a7a7a7;
+  fill: #a7a7a7;
+}
+.cl-graph-manage #graphs .graph-container text,
+.cl-graph-manage #graphs #small-map text {
+  fill: black;
+}
+.cl-graph-manage #graphs .image-noData {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 200;
+}
+.cl-graph-manage #graphs .noData-text {
+  margin-top: 33px;
+  font-size: 18px;
+}
+.cl-graph-manage .cl-display-block {
+  display: block;
+}
+.cl-graph-manage .cl-input-value {
+  width: calc(100% - 70px) !important;
+  margin-left: 10px !important;
+}
+.cl-graph-manage .cl-close-btn {
+  width: 20px;
+  height: 20px;
+  vertical-align: -3px;
+  cursor: pointer;
+  display: inline-block;
+}
+.cl-graph-manage .cl-title-right {
+  padding-right: 32px;
+}
+
 #graphTemp,
 #subgraphTemp {
   position: absolute;

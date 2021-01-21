@@ -1285,150 +1285,144 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .cl-histogram-manage {
   height: 100%;
-  .histogram-bk {
-    height: 100%;
-    background-color: #fff;
-    display: flex;
-    flex-direction: column;
-    .cl-histogram-title {
-      height: 56px;
-      line-height: 56px;
-      .path-message {
-        display: inline-block;
-        line-height: 20px;
-        padding: 0px 4px 15px 4px;
-        font-weight: bold;
-        vertical-align: bottom;
-      }
-      .cl-close-btn {
-        width: 20px;
-        height: 20px;
-        vertical-align: -3px;
-        cursor: pointer;
-        display: inline-block;
-      }
-    }
-    .cl-histogram-operate-content {
-      width: 100%;
-      padding: 8px 32px 22px 32px;
-      background: #ffffff;
-    }
-    .cl-histogram-view-type-select-content {
-      background: #ffffff;
-      padding: 0 32px 21px 32px;
-      height: 58px;
-      display: flex;
-      align-items: center;
-      border-bottom: 2px solid #e6ebf5;
-      .view-title {
-        font-size: 14px;
-        line-height: 14px;
-        vertical-align: middle;
-        margin-right: 16px;
-        flex-shrink: 0;
-      }
-      .el-radio-group {
-        margin-right: 64px;
-        flex-shrink: 0;
-      }
-    }
-    .cl-histogram-show-data-content {
-      background: #ffffff;
-      padding: 0 23px;
-      flex: 1;
-      overflow: auto;
-      .data-content {
-        display: flex;
-        height: 100%;
-        width: 100%;
-        flex-wrap: wrap;
-        min-height: 400px;
-        position: relative;
-        .sample-content {
-          width: 33.3%;
-          height: 400px;
-          display: flex;
-          flex-direction: column;
-          flex-shrink: 0;
-          background-color: #fff;
-          position: relative;
-        }
-        .char-full-screen {
-          width: 100%;
-          height: 400px;
-        }
-        .chars-container {
-          flex: 1;
-          padding: 0 15px 0 15px;
-          position: relative;
-          .char-item-content {
-            width: 100%;
-            height: calc(100% - 26px);
-          }
-          .tag-title {
-            width: 100%;
-            font-size: 16px;
-            font-weight: 600;
-            text-align: center;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-          }
-        }
-      }
-    }
-    .pagination-content {
-      padding: 24px 32px;
-      text-align: right;
-    }
-    // No data available.
-    .image-noData {
-      // Set the width and white on the right.
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-  }
-  .content {
-    position: relative;
-  }
-
-  #echart {
-    width: 500px;
-    height: 500px;
-    border: 1px solid black;
-    position: relative;
-  }
-
-  #echartTip {
-    position: absolute;
-    padding: 5px;
-    z-index: 9999;
-    font-size: 14px;
-    font-family: 'Microsoft YaHei';
-    background-color: rgba(50, 50, 50, 0.7);
-    border: 0;
-    border-radius: 4px;
-    color: #fff;
-  }
-
-  .char-tip-table td {
-    padding-left: 5px;
-    padding-right: 5px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 150px;
-    overflow: hidden;
-  }
-
-  .borderspacing3 {
-    border-spacing: 3px;
-  }
+}
+.cl-histogram-manage .histogram-bk {
+  height: 100%;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-title {
+  height: 56px;
+  line-height: 56px;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-title .path-message {
+  display: inline-block;
+  line-height: 20px;
+  padding: 0px 4px 15px 4px;
+  font-weight: bold;
+  vertical-align: bottom;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-title .cl-close-btn {
+  width: 20px;
+  height: 20px;
+  vertical-align: -3px;
+  cursor: pointer;
+  display: inline-block;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-operate-content {
+  width: 100%;
+  padding: 8px 32px 22px 32px;
+  background: #ffffff;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-view-type-select-content {
+  background: #ffffff;
+  padding: 0 32px 21px 32px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #e6ebf5;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-view-type-select-content .view-title {
+  font-size: 14px;
+  line-height: 14px;
+  vertical-align: middle;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-view-type-select-content .el-radio-group {
+  margin-right: 64px;
+  flex-shrink: 0;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-show-data-content {
+  background: #ffffff;
+  padding: 0 23px;
+  flex: 1;
+  overflow: auto;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-show-data-content .data-content {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-wrap: wrap;
+  min-height: 400px;
+  position: relative;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-show-data-content .data-content .sample-content {
+  width: 33.3%;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background-color: #fff;
+  position: relative;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-show-data-content .data-content .char-full-screen {
+  width: 100%;
+  height: 400px;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-show-data-content .data-content .chars-container {
+  flex: 1;
+  padding: 0 15px 0 15px;
+  position: relative;
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-show-data-content .data-content .chars-container .char-item-content {
+  width: 100%;
+  height: calc(100% - 26px);
+}
+.cl-histogram-manage .histogram-bk .cl-histogram-show-data-content .data-content .chars-container .tag-title {
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.cl-histogram-manage .histogram-bk .pagination-content {
+  padding: 24px 32px;
+  text-align: right;
+}
+.cl-histogram-manage .histogram-bk .image-noData {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.cl-histogram-manage .content {
+  position: relative;
+}
+.cl-histogram-manage #echart {
+  width: 500px;
+  height: 500px;
+  border: 1px solid black;
+  position: relative;
+}
+.cl-histogram-manage #echartTip {
+  position: absolute;
+  padding: 5px;
+  z-index: 9999;
+  font-size: 14px;
+  font-family: "Microsoft YaHei";
+  background-color: rgba(50, 50, 50, 0.7);
+  border: 0;
+  border-radius: 4px;
+  color: #fff;
+}
+.cl-histogram-manage .char-tip-table td {
+  padding-left: 5px;
+  padding-right: 5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+}
+.cl-histogram-manage .borderspacing3 {
+  border-spacing: 3px;
 }
 </style>

@@ -1147,431 +1147,412 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .deb-tensor-wrap {
   height: 100%;
   background-color: white;
   position: relative;
   overflow: hidden;
-  & > div {
-    float: left;
-    height: 100%;
-  }
-  .deb-tensor-left {
-    width: 400px;
-    padding-right: 25px;
-    height: 100%;
-    background-color: white;
-    position: relative;
-    transition: width 0.2s;
-    -moz-transition: width 0.2s; /* Firefox 4 */
-    -webkit-transition: width 0.2s; /* Safari and Chrome */
-    -o-transition: width 0.2s; /* Opera */
-    .left-content-title {
-      padding-left: 15px;
-      height: 50px;
-      line-height: 50px;
-      font-weight: bold;
-    }
-    .left-advice {
-      overflow-y: auto;
-      text-overflow: ellipsis;
-      height: calc(100% - 50px);
-    }
-    .left-content-list {
-      border-top: 1px solid #f2f2f2;
-      padding-bottom: 10px;
-      > div {
-        padding-left: 15px;
-      }
-      .detection-judgment {
-        height: 40px;
-        line-height: 40px;
-        font-weight: bold;
-      }
-      .hit-tip {
-        padding: 10px 15px 0 15px;
-        .el-icon-warning {
-          font-size: 14px;
-          color: #e6a23c;
-          padding-right: 4px;
-        }
-      }
-      .reason {
-        display: flex;
-        padding: 1px 15px;
-        width: 100%;
-      }
-      .tensor-icon {
-        width: 6px;
-        height: 6px;
-        border-radius: 3px;
-      }
-      .icon-secondary {
-        background-color: #00a5a7;
-        margin-top: 8px;
-      }
-      .tensor-content {
-        padding-left: 6px;
-        width: calc(100% - 12px);
-      }
-      .tensor-value {
-        padding: 5px 2px;
-        span {
-          padding-right: 5px;
-        }
-      }
-      .tensor-advice {
-        width: 344px;
-        background-color: #f5f7fa;
-        margin-left: 15px;
-        margin-top: 10px;
-        padding: 10px;
-        span {
-          font-weight: bold;
-        }
-      }
-      .advice-list-title {
-        padding: 0px;
-        padding-top: 10px;
-        padding-left: 10px;
-        .advice-list {
-          padding-top: 5px;
-        }
-        .advice-icon {
-          width: 6px;
-          height: 6px;
-          border-radius: 3px;
-          background-color: #00a5a7;
-          display: inline-block;
-        }
-        .advice-content {
-          display: inline-block;
-          padding: 0px 12px;
-          height: 25px;
-          line-height: 25px;
-        }
-      }
-    }
-    .leftNoData {
-      text-align: center;
-      border-top: 1px solid #f2f2f2;
-      padding-top: 15px;
-    }
-    .collapse-btn {
-      position: absolute;
-      right: 2px;
-      width: 31px;
-      height: 100px;
-      top: 50%;
-      margin-top: -50px;
-      cursor: pointer;
-      line-height: 86px;
-      z-index: 1;
-      text-align: center;
-      background-image: url('../assets/images/collapse-left.svg');
-    }
-    .collapse-btn.collapse {
-      background-image: url('../assets/images/collapse-right.svg');
-    }
-    .deb-tensor-left-content {
-      height: 100%;
-      border-right: 1px solid #ebeef5;
-      overflow: auto;
-    }
-  }
-  .deb-tensor-left.collapse {
-    width: 0px;
-  }
-  .deb-tensor-right {
-    width: calc(100% - 400px);
-    height: 100%;
-    transition: width 0.2s;
-    -moz-transition: width 0.2s; /* Firefox 4 */
-    -webkit-transition: width 0.2s; /* Safari and Chrome */
-    -o-transition: width 0.2s; /* Opera */
-    display: flex;
-    flex-direction: column;
-    .deb-con-title {
-      height: 40px;
-      line-height: 40px;
-      flex-shrink: 0;
-      position: relative;
-
-      .deb-con-title-left {
-        position: absolute;
-        left: 0;
-        font-weight: bold;
-        font-size: 16px;
-        width: calc(100% - 100px);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .deb-con-title-right {
-        position: absolute;
-        right: 32px;
-
-        .close-btn {
-          width: 20px;
-          height: 20px;
-          vertical-align: -3px;
-          cursor: pointer;
-          display: inline-block;
-          line-height: 20px;
-          margin-left: 32px;
-        }
-      }
-    }
-    .deb-compare-detail {
-      flex-shrink: 0;
-      padding-right: 32px;
-      span {
-        margin-right: 10px;
-        padding-left: 10px;
-        border-left: 1px solid #e4e7ec;
-      }
-      label {
-        display: inline-block;
-        min-width: 123px;
-        span {
-          border-left: none;
-        }
-      }
-    }
-    .deb-con-slide {
-      height: 40px;
-      line-height: 40px;
-      flex-shrink: 0;
-      position: relative;
-      margin: 5px 0;
-
-      .deb-con-slide-left {
-        float: left;
-        display: flex;
-        margin-left: 10px;
-
-        .deb-slide-title {
-          margin-right: 20px;
-        }
-
-        .deb-slide-width {
-          width: 160px;
-        }
-        .deb-slide-input {
-          width: 60px;
-          margin-left: 10px;
-        }
-      }
-      .deb-con-slide-right {
-        float: left;
-
-        .custom-btn {
-          border: 1px solid #00a5a7;
-          border-radius: 2px;
-        }
-        .green {
-          background-color: #00a5a7;
-          color: white;
-        }
-        .white {
-          background-color: white;
-          color: #00a5a7;
-        }
-      }
-      .deb-con-slide-middle {
-        position: absolute;
-        right: 32px;
-        width: 150px;
-        padding: 10px 0;
-        line-height: 15px;
-        .grident {
-          display: inline-block;
-          width: calc(100% - 70px);
-          background-image: linear-gradient(to right, rgba(227, 125, 41), #fff, rgba(0, 165, 167));
-          text-align: center;
-          color: transparent;
-          border-radius: 10px;
-        }
-      }
-    }
-
-    .deb-con-table {
-      flex: 1;
-      flex-grow: 1;
-      flex-shrink: 1;
-      padding-right: 32px;
-      flex-shrink: 0;
-      .deb-compare-wrap {
-        height: 100%;
-      }
-    }
-    .deb-graph-container {
-      flex: 1;
-      flex-grow: 1;
-      flex-shrink: 1;
-      padding: 10px 32px 10px 0px;
-      position: relative;
-      display: flex;
-      overflow: hidden;
-      .graph-title {
-        position: absolute;
-        font-weight: bold;
-        font-size: 14px;
-        .tip {
-          font-size: 16px;
-          margin-left: 10px;
-          cursor: pointer;
-        }
-      }
-      .nodata {
-        width: calc(100% - 375px);
-        text-align: center;
-        margin-top: 120px;
-      }
-      .deb-graph {
-        width: calc(100% - 375px);
-        .edge {
-          path {
-            stroke: rgb(120, 120, 120);
-          }
-          polygon {
-            stroke: rgb(120, 120, 120);
-            fill: rgb(120, 120, 120);
-          }
-        }
-        .node.operator > ellipse {
-          stroke: #e3aa00;
-          fill: #ffe794;
-        }
-        .node.slot {
-          & > polygon {
-            stroke: #4ea6e6;
-            fill: #c7f5f4;
-          }
-          &.current {
-            & > polygon {
-              stroke: #4ea6e6;
-              fill: #00a5a7;
-            }
-            text {
-              fill: white;
-            }
-          }
-        }
-        .node {
-          &:hover {
-            cursor: pointer;
-            & > polygon,
-            & > ellipse {
-              stroke-width: 2px;
-            }
-          }
-        }
-
-        .cluster > polygon {
-          stroke: #e4e7ed;
-          fill: #e9fcf9;
-        }
-        .node.selected {
-          polygon,
-          ellipse {
-            stroke: red !important;
-            stroke-width: 2px;
-          }
-        }
-        .edge.selected {
-          path {
-            stroke: red;
-          }
-          polygon {
-            stroke: red;
-            fill: red;
-          }
-        }
-      }
-      .deb-tensor-info {
-        width: 375px;
-        height: 100%;
-        border-left: solid 2px #e4e7ed;
-        padding-left: 20px;
-        .tensor {
-          .tensor-title {
-            font-size: 14px;
-            font-weight: bold;
-            padding-bottom: 8px;
-          }
-          .tensor-detail {
-            overflow: auto;
-            height: calc(100% - 30px);
-            span {
-              display: inline-block;
-              padding: 5px 0px;
-              min-width: 50%;
-              word-break: break-all;
-            }
-            ul {
-              li {
-                padding: 5px 10px;
-                & > div {
-                  display: inline-block;
-                  vertical-align: top;
-                  word-break: break-all;
-                  line-height: 16px;
-                }
-                .attr-key {
-                  width: 30%;
-                }
-                .attr-value {
-                  width: 70%;
-                  padding-left: 10px;
-                }
-                &:hover {
-                  background-color: #e9fcf9;
-                }
-              }
-            }
-          }
-        }
-        .tensor {
-          height: 50%;
-          overflow: auto;
-        }
-        .watch-point {
-          height: 50%;
-          .point-list {
-            height: calc(100% - 35px);
-            overflow: auto;
-            text-overflow: ellipsis;
-          }
-          .watchPoint-title {
-            padding: 8px 0;
-            font-size: 14px;
-            font-weight: bold;
-          }
-          .watch-judgment {
-            padding: 5px 0;
-          }
-        }
-      }
-    }
-  }
-  .deb-tensor-right.collapse {
-    width: calc(100% - 25px);
-  }
 }
-.legend-tip {
-  .legend {
-    margin-top: 10px;
-    .item {
-      display: inline-block;
-      width: 50%;
-      img {
-        vertical-align: sub;
-        height: 20px;
-        margin-left: 10px;
-      }
-    }
-  }
+.deb-tensor-wrap > div {
+  float: left;
+  height: 100%;
+}
+.deb-tensor-wrap .deb-tensor-left {
+  width: 400px;
+  padding-right: 25px;
+  height: 100%;
+  background-color: white;
+  position: relative;
+  transition: width 0.2s;
+  -moz-transition: width 0.2s;
+  /* Firefox 4 */
+  -webkit-transition: width 0.2s;
+  /* Safari and Chrome */
+  -o-transition: width 0.2s;
+  /* Opera */
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-title {
+  padding-left: 15px;
+  height: 50px;
+  line-height: 50px;
+  font-weight: bold;
+}
+.deb-tensor-wrap .deb-tensor-left .left-advice {
+  overflow-y: auto;
+  text-overflow: ellipsis;
+  height: calc(100% - 50px);
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list {
+  border-top: 1px solid #f2f2f2;
+  padding-bottom: 10px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list > div {
+  padding-left: 15px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .detection-judgment {
+  height: 40px;
+  line-height: 40px;
+  font-weight: bold;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .hit-tip {
+  padding: 10px 15px 0 15px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .hit-tip .el-icon-warning {
+  font-size: 14px;
+  color: #e6a23c;
+  padding-right: 4px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .reason {
+  display: flex;
+  padding: 1px 15px;
+  width: 100%;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .tensor-icon {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .icon-secondary {
+  background-color: #00a5a7;
+  margin-top: 8px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .tensor-content {
+  padding-left: 6px;
+  width: calc(100% - 12px);
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .tensor-value {
+  padding: 5px 2px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .tensor-value span {
+  padding-right: 5px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .tensor-advice {
+  width: 344px;
+  background-color: #f5f7fa;
+  margin-left: 15px;
+  margin-top: 10px;
+  padding: 10px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .tensor-advice span {
+  font-weight: bold;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .advice-list-title {
+  padding: 0px;
+  padding-top: 10px;
+  padding-left: 10px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .advice-list-title .advice-list {
+  padding-top: 5px;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .advice-list-title .advice-icon {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #00a5a7;
+  display: inline-block;
+}
+.deb-tensor-wrap .deb-tensor-left .left-content-list .advice-list-title .advice-content {
+  display: inline-block;
+  padding: 0px 12px;
+  height: 25px;
+  line-height: 25px;
+}
+.deb-tensor-wrap .deb-tensor-left .leftNoData {
+  text-align: center;
+  border-top: 1px solid #f2f2f2;
+  padding-top: 15px;
+}
+.deb-tensor-wrap .deb-tensor-left .collapse-btn {
+  position: absolute;
+  right: 2px;
+  width: 31px;
+  height: 100px;
+  top: 50%;
+  margin-top: -50px;
+  cursor: pointer;
+  line-height: 86px;
+  z-index: 1;
+  text-align: center;
+  background-image: url('../assets/images/collapse-left.svg');
+}
+.deb-tensor-wrap .deb-tensor-left .collapse-btn.collapse {
+  background-image: url('../assets/images/collapse-right.svg');
+}
+.deb-tensor-wrap .deb-tensor-left .deb-tensor-left-content {
+  height: 100%;
+  border-right: 1px solid #ebeef5;
+  overflow: auto;
+}
+.deb-tensor-wrap .deb-tensor-left.collapse {
+  width: 0px;
+}
+.deb-tensor-wrap .deb-tensor-right {
+  width: calc(100% - 400px);
+  height: 100%;
+  transition: width 0.2s;
+  -moz-transition: width 0.2s;
+  /* Firefox 4 */
+  -webkit-transition: width 0.2s;
+  /* Safari and Chrome */
+  -o-transition: width 0.2s;
+  /* Opera */
+  display: flex;
+  flex-direction: column;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-title {
+  height: 40px;
+  line-height: 40px;
+  flex-shrink: 0;
+  position: relative;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-title .deb-con-title-left {
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+  font-size: 16px;
+  width: calc(100% - 100px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-title .deb-con-title-right {
+  position: absolute;
+  right: 32px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-title .deb-con-title-right .close-btn {
+  width: 20px;
+  height: 20px;
+  vertical-align: -3px;
+  cursor: pointer;
+  display: inline-block;
+  line-height: 20px;
+  margin-left: 32px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-compare-detail {
+  flex-shrink: 0;
+  padding-right: 32px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-compare-detail span {
+  margin-right: 10px;
+  padding-left: 10px;
+  border-left: 1px solid #e4e7ec;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-compare-detail label {
+  display: inline-block;
+  min-width: 123px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-compare-detail label span {
+  border-left: none;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide {
+  height: 40px;
+  line-height: 40px;
+  flex-shrink: 0;
+  position: relative;
+  margin: 5px 0;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left {
+  float: left;
+  display: flex;
+  margin-left: 10px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left .deb-slide-title {
+  margin-right: 20px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left .deb-slide-width {
+  width: 160px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left .deb-slide-input {
+  width: 60px;
+  margin-left: 10px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right {
+  float: left;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .custom-btn {
+  border: 1px solid #00a5a7;
+  border-radius: 2px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .green {
+  background-color: #00a5a7;
+  color: white;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .white {
+  background-color: white;
+  color: #00a5a7;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-middle {
+  position: absolute;
+  right: 32px;
+  width: 150px;
+  padding: 10px 0;
+  line-height: 15px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-middle .grident {
+  display: inline-block;
+  width: calc(100% - 70px);
+  background-image: linear-gradient(to right, #e37d29, #fff, #00a5a7);
+  text-align: center;
+  color: transparent;
+  border-radius: 10px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-table {
+  flex: 1;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding-right: 32px;
+  flex-shrink: 0;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-table .deb-compare-wrap {
+  height: 100%;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container {
+  flex: 1;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 10px 32px 10px 0px;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .graph-title {
+  position: absolute;
+  font-weight: bold;
+  font-size: 14px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .graph-title .tip {
+  font-size: 16px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .nodata {
+  width: calc(100% - 375px);
+  text-align: center;
+  margin-top: 120px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph {
+  width: calc(100% - 375px);
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge path {
+  stroke: #787878;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge polygon {
+  stroke: #787878;
+  fill: #787878;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.operator > ellipse {
+  stroke: #e3aa00;
+  fill: #ffe794;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot > polygon {
+  stroke: #4ea6e6;
+  fill: #c7f5f4;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot.current > polygon {
+  stroke: #4ea6e6;
+  fill: #00a5a7;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot.current text {
+  fill: white;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node:hover {
+  cursor: pointer;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node:hover > polygon,
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node:hover > ellipse {
+  stroke-width: 2px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .cluster > polygon {
+  stroke: #e4e7ed;
+  fill: #e9fcf9;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.selected polygon,
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.selected ellipse {
+  stroke: red !important;
+  stroke-width: 2px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge.selected path {
+  stroke: red;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge.selected polygon {
+  stroke: red;
+  fill: red;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info {
+  width: 375px;
+  height: 100%;
+  border-left: solid 2px #e4e7ed;
+  padding-left: 20px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-title {
+  font-size: 14px;
+  font-weight: bold;
+  padding-bottom: 8px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail {
+  overflow: auto;
+  height: calc(100% - 30px);
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail span {
+  display: inline-block;
+  padding: 5px 0px;
+  min-width: 50%;
+  word-break: break-all;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li {
+  padding: 5px 10px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li > div {
+  display: inline-block;
+  vertical-align: top;
+  word-break: break-all;
+  line-height: 16px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li .attr-key {
+  width: 30%;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li .attr-value {
+  width: 70%;
+  padding-left: 10px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li:hover {
+  background-color: #e9fcf9;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor {
+  height: 50%;
+  overflow: auto;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point {
+  height: 50%;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point .point-list {
+  height: calc(100% - 35px);
+  overflow: auto;
+  text-overflow: ellipsis;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point .watchPoint-title {
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: bold;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point .watch-judgment {
+  padding: 5px 0;
+}
+.deb-tensor-wrap .deb-tensor-right.collapse {
+  width: calc(100% - 25px);
+}
+
+.legend-tip .legend {
+  margin-top: 10px;
+}
+.legend-tip .legend .item {
+  display: inline-block;
+  width: 50%;
+}
+.legend-tip .legend .item img {
+  vertical-align: sub;
+  height: 20px;
+  margin-left: 10px;
 }
 </style>

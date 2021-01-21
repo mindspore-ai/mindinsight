@@ -390,129 +390,134 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .cl-checklist-container {
   width: 100%;
   height: 100%;
-  .select-content {
-    display: flex;
-    align-items: center;
-    .title {
-      font-size: 14px;
-      vertical-align: middle;
-      flex-shrink: 0;
-    }
-    .select-all {
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .select-item-content {
-      display: flex;
-      height: 16px;
-      flex-wrap: wrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .select-content-open {
-      flex: 1;
-      text-align: right;
-      font-size: 14px;
-      color: #00a5a7;
-      cursor: pointer;
-      min-width: 60px;
-    }
-  }
-  .select-content-all {
-    max-height: 150px;
-    padding-left: 72px;
-    overflow-x: hidden;
-    display: flex;
-    flex-wrap: wrap;
-    .label-item {
-      line-height: 14px;
-    }
-    .select-item {
-      height: 25px;
-      margin-top: 25px;
-    }
-  }
-  .select-item {
-    margin-right: 20px;
-    flex-shrink: 0;
-    margin-bottom: 1px;
-    .label-item {
-      width: 100px;
-      display: block;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
-      text-align: left;
-      position: relative;
-      .loading-icon {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        background: rgba(255, 255, 255, 0.5);
-        i {
-          font-weight: bold;
-        }
-      }
-    }
-  }
-  .item-disable {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-  .item-able {
-    cursor: pointer;
-  }
-  .multiCheckBox-border {
-    width: 16px;
-    height: 16px;
-    display: block;
-    margin-right: 20px;
-    float: left;
-  }
-  .checkbox-checked {
-    background-image: url('../assets/images/mult-select.png');
-  }
-  .checkbox-unchecked {
-    background-image: url('../assets/images/mult-unselect.png');
-  }
-  .label-item {
-    font-size: 14px;
-    line-height: 14px;
-    vertical-align: middle;
-    .el-tooltip {
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
-      text-align: left;
-      height: 16px;
-    }
-    span {
-      font-size: 14px;
-      line-height: 14px;
-      display: block;
-    }
-  }
-  .mr24 {
-    margin-right: 24px;
-  }
-  .select-disable {
-    -moz-user-select: none; /*Firefox*/
-    -webkit-user-select: none; /*webkitbrowser*/
-    -ms-user-select: none; /*IE10*/
-    -khtml-user-select: none; /*Early browser*/
-    user-select: none;
-  }
-  .search-input-item {
-    width: 290px;
-  }
 }
+.cl-checklist-container .select-content {
+  display: flex;
+  align-items: center;
+}
+.cl-checklist-container .select-content .title {
+  font-size: 14px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.cl-checklist-container .select-content .select-all {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cl-checklist-container .select-content .select-item-content {
+  display: flex;
+  height: 16px;
+  flex-wrap: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-checklist-container .select-content .select-content-open {
+  flex: 1;
+  text-align: right;
+  font-size: 14px;
+  color: #00a5a7;
+  cursor: pointer;
+  min-width: 60px;
+}
+.cl-checklist-container .select-content-all {
+  max-height: 150px;
+  padding-left: 72px;
+  overflow-x: hidden;
+  display: flex;
+  flex-wrap: wrap;
+}
+.cl-checklist-container .select-content-all .label-item {
+  line-height: 14px;
+}
+.cl-checklist-container .select-content-all .select-item {
+  height: 25px;
+  margin-top: 25px;
+}
+.cl-checklist-container .select-item {
+  margin-right: 20px;
+  flex-shrink: 0;
+  margin-bottom: 1px;
+}
+.cl-checklist-container .select-item .label-item {
+  width: 100px;
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: left;
+  position: relative;
+}
+.cl-checklist-container .select-item .label-item .loading-icon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.5);
+}
+.cl-checklist-container .select-item .label-item .loading-icon i {
+  font-weight: bold;
+}
+.cl-checklist-container .item-disable {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.cl-checklist-container .item-able {
+  cursor: pointer;
+}
+.cl-checklist-container .multiCheckBox-border {
+  width: 16px;
+  height: 16px;
+  display: block;
+  margin-right: 20px;
+  float: left;
+}
+.cl-checklist-container .checkbox-checked {
+  background-image: url("../assets/images/mult-select.png");
+}
+.cl-checklist-container .checkbox-unchecked {
+  background-image: url("../assets/images/mult-unselect.png");
+}
+.cl-checklist-container .label-item {
+  font-size: 14px;
+  line-height: 14px;
+  vertical-align: middle;
+}
+.cl-checklist-container .label-item .el-tooltip {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: left;
+  height: 16px;
+}
+.cl-checklist-container .label-item span {
+  font-size: 14px;
+  line-height: 14px;
+  display: block;
+}
+.cl-checklist-container .mr24 {
+  margin-right: 24px;
+}
+.cl-checklist-container .select-disable {
+  -moz-user-select: none;
+  /*Firefox*/
+  -webkit-user-select: none;
+  /*webkitbrowser*/
+  -ms-user-select: none;
+  /*IE10*/
+  -khtml-user-select: none;
+  /*Early browser*/
+  user-select: none;
+}
+.cl-checklist-container .search-input-item {
+  width: 290px;
+}
+
 .tooltip-show-content {
   max-width: 50%;
 }

@@ -1665,397 +1665,357 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .cl-scalar-manage {
   height: 100%;
-
-  .el-dialog {
-    border-radius: 4px;
-  }
-
-  .el-dialog__header {
-    padding: 15px 15px 10px;
-    font-size: 14px;
-
-    .el-dialog__title {
-      font-size: 14px;
-    }
-  }
-
-  .el-dialog__body {
-    padding: 10px 15px;
-  }
-
-  .el-dialog__footer {
-    padding: 5px 15px 10px;
-  }
-
-  .w60 {
-    width: 60px;
-    margin-left: 20px;
-  }
-
-  .w261 {
-    width: 261px;
-  }
-
-  .smallSelect {
-    width: 80px;
-  }
-
-  .smallSelectTwo {
-    width: 100px;
-  }
-
-  .smallInput {
-    width: 120px;
-  }
-
-  .scalar-btn {
-    height: 32px;
-    line-height: 32px;
-    padding: 0 20px;
-    color: #00a5a7;
-    border: 1px solid #00a5a7;
-    border-radius: 2px;
-  }
-
-  .borderspacing3 {
-    border-spacing: 3px;
-  }
-  .scalar-bk {
-    height: 100%;
-    background-color: #fff;
-    display: flex;
-    flex-direction: column;
-    .path-message {
-      display: inline-block;
-      line-height: 20px;
-      padding: 0px 4px 15px 4px;
-      font-weight: bold;
-      vertical-align: bottom;
-    }
-    .cl-scalar-title {
-      height: 56px;
-      line-height: 56px;
-    }
-  }
-
-  .select-all {
-    flex-shrink: 0;
-    cursor: pointer;
-  }
-  .cl-eval-operate-content {
-    width: 100%;
-    padding: 8px 32px 22px 32px;
-    background: #ffffff;
-    .tag-select-content {
-      display: flex;
-      align-items: center;
-
-      .title {
-        flex-shrink: 0;
-      }
-
-      .select-item-content {
-        display: flex;
-        height: 16px;
-        flex-wrap: wrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .run-select-content-open {
-        flex: 1;
-        text-align: right;
-        font-size: 14px;
-        color: #00a5a7;
-        cursor: pointer;
-        min-width: 60px;
-      }
-    }
-    .run-select-content-all {
-      max-height: 150px;
-      padding-left: 72px;
-      overflow-x: hidden;
-      display: flex;
-      flex-wrap: wrap;
-
-      .label-item {
-        line-height: 14px;
-      }
-
-      .select-item {
-        height: 25px;
-        margin-top: 25px;
-      }
-    }
-
-    .select-item {
-      margin-right: 20px;
-      flex-shrink: 0;
-      margin-bottom: 1px;
-      cursor: pointer;
-      .label-item {
-        width: 100px;
-        display: block;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-        text-align: left;
-      }
-    }
-    .multiCheckBox-border {
-      width: 16px;
-      height: 16px;
-      display: block;
-      margin-right: 20px;
-      cursor: pointer;
-      float: left;
-    }
-    .checkbox-checked {
-      background-image: url('../../assets/images/mult-select.png');
-    }
-    .checkbox-unchecked {
-      background-image: url('../../assets/images/mult-unselect.png');
-    }
-
-    .checkbox-disabled {
-      opacity: 0.2;
-    }
-    .label-item {
-      font-size: 14px;
-      line-height: 14px;
-      vertical-align: middle;
-      .el-tooltip {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-        text-align: left;
-        height: 16px;
-      }
-      span {
-        font-size: 14px;
-        line-height: 14px;
-        display: block;
-      }
-    }
-  }
-  .cl-eval-slider-operate-content {
-    background: #ffffff;
-    padding: 0 32px 21px 32px;
-    display: flex;
-    align-items: center;
-    border-bottom: 2px solid #e6ebf5;
-
-    .xaxis-title {
-      font-size: 14px;
-      line-height: 14px;
-      vertical-align: middle;
-      margin-right: 16px;
-      flex-shrink: 0;
-    }
-
-    .el-radio-group {
-      margin-right: 64px;
-      flex-shrink: 0;
-    }
-
-    .el-select {
-      width: 163px;
-      margin-right: 16px;
-      flex-shrink: 0;
-    }
-    .el-slider {
-      width: 400px;
-      flex-shrink: 0;
-
-      .el-input.el-input--small {
-        width: 60px;
-      }
-
-      .el-input-number .el-input__inner {
-        padding-left: 0px;
-        padding-right: 0px;
-      }
-
-      .el-input-number--small .el-input-number__increase {
-        display: none;
-      }
-      .el-input-number--small .el-input-number__decrease {
-        display: none;
-      }
-    }
-  }
-  .cl-eval-show-data-content {
-    background: #fff;
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-wrap: wrap;
-    padding-right: 10px;
-
-    .data-content {
-      display: flex;
-      height: 100%;
-      width: 100%;
-      flex-wrap: wrap;
-      min-height: 400px;
-      padding-left: 20px;
-
-      .sample-content {
-        width: 33.3%;
-        height: 400px;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-        padding-right: 20px;
-        margin-top: 20px;
-      }
-
-      .char-full-screen {
-        width: 100%;
-        height: 400px;
-      }
-    }
-
-    .chars-container {
-      flex: 1;
-      position: relative;
-      background-color: #edf0f5;
-      padding: 5px;
-    }
-
-    .chartThreshold {
-      height: 40px;
-      background-color: #edf0f5;
-      border-top: 1px solid #fff;
-      display: flex;
-      line-height: 40px;
-
-      .chartThresholdLeft {
-        flex: 1;
-        text-align: left;
-        padding-left: 5px;
-        font-size: 14px;
-        color: #6c7280;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .chartThresholdRight {
-        width: 120px;
-        text-align: right;
-        padding-right: 10px;
-        font-size: 12px;
-        color: #00a5a7;
-        flex-shrink: 0;
-
-        span {
-          cursor: pointer;
-          width: auto;
-          height: 39px;
-          display: inline-block;
-        }
-      }
-    }
-    .tag-name {
-      color: #333;
-      font-size: 16px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-weight: 600;
-      text-align: center;
-      margin-top: 10px;
-
-      i {
-        color: #e6a23c;
-      }
-    }
-    .char-item-content {
-      width: 100%;
-      height: 100%;
-      background-color: #fff;
-    }
-
-    .char-tip-table {
-      td {
-        padding-left: 5px;
-        padding-right: 5px;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 150px;
-        overflow: hidden;
-      }
-    }
-    .image-noData {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-    .noData-text {
-      margin-top: 33px;
-      font-size: 18px;
-    }
-  }
-
-  .pagination-content {
-    text-align: right;
-    padding: 24px 32px;
-  }
-
-  .mr24 {
-    margin-right: 24px;
-  }
-  .select-disable {
-    -moz-user-select: none; /*Firefox*/
-    -webkit-user-select: none; /*Webkit*/
-    -ms-user-select: none; /*IE10*/
-    -khtml-user-select: none;
-    user-select: none;
-  }
-  .cl-close-btn {
-    width: 20px;
-    height: 20px;
-    vertical-align: -3px;
-    cursor: pointer;
-    display: inline-block;
-    line-height: 20px;
-    margin-left: 32px;
-  }
-
-  .thresholdAll {
-    display: flex;
-    line-height: 32px;
-    margin-bottom: 10px;
-
-    .thresholdItem {
-      margin-right: 10px;
-    }
-
-    .thresholdItemWidth {
-      width: 500px;
-      height: 32px;
-      margin-right: 10px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
-
-  .thresholdError {
-    color: #f56c6c;
-    text-align: center;
-  }
-
-  .fs16 {
-    font-size: 14px;
-    color: #6c7280;
-    width: 180px;
-  }
 }
+.cl-scalar-manage .el-dialog {
+  border-radius: 4px;
+}
+.cl-scalar-manage .el-dialog__header {
+  padding: 15px 15px 10px;
+  font-size: 14px;
+}
+.cl-scalar-manage .el-dialog__header .el-dialog__title {
+  font-size: 14px;
+}
+.cl-scalar-manage .el-dialog__body {
+  padding: 10px 15px;
+}
+.cl-scalar-manage .el-dialog__footer {
+  padding: 5px 15px 10px;
+}
+.cl-scalar-manage .w60 {
+  width: 60px;
+  margin-left: 20px;
+}
+.cl-scalar-manage .w261 {
+  width: 261px;
+}
+.cl-scalar-manage .smallSelect {
+  width: 80px;
+}
+.cl-scalar-manage .smallSelectTwo {
+  width: 100px;
+}
+.cl-scalar-manage .smallInput {
+  width: 120px;
+}
+.cl-scalar-manage .scalar-btn {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 20px;
+  color: #00a5a7;
+  border: 1px solid #00a5a7;
+  border-radius: 2px;
+}
+.cl-scalar-manage .borderspacing3 {
+  border-spacing: 3px;
+}
+.cl-scalar-manage .scalar-bk {
+  height: 100%;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.cl-scalar-manage .scalar-bk .path-message {
+  display: inline-block;
+  line-height: 20px;
+  padding: 0px 4px 15px 4px;
+  font-weight: bold;
+  vertical-align: bottom;
+}
+.cl-scalar-manage .scalar-bk .cl-scalar-title {
+  height: 56px;
+  line-height: 56px;
+}
+.cl-scalar-manage .select-all {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.cl-scalar-manage .cl-eval-operate-content {
+  width: 100%;
+  padding: 8px 32px 22px 32px;
+  background: #ffffff;
+}
+.cl-scalar-manage .cl-eval-operate-content .tag-select-content {
+  display: flex;
+  align-items: center;
+}
+.cl-scalar-manage .cl-eval-operate-content .tag-select-content .title {
+  flex-shrink: 0;
+}
+.cl-scalar-manage .cl-eval-operate-content .tag-select-content .select-item-content {
+  display: flex;
+  height: 16px;
+  flex-wrap: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-scalar-manage .cl-eval-operate-content .tag-select-content .run-select-content-open {
+  flex: 1;
+  text-align: right;
+  font-size: 14px;
+  color: #00a5a7;
+  cursor: pointer;
+  min-width: 60px;
+}
+.cl-scalar-manage .cl-eval-operate-content .run-select-content-all {
+  max-height: 150px;
+  padding-left: 72px;
+  overflow-x: hidden;
+  display: flex;
+  flex-wrap: wrap;
+}
+.cl-scalar-manage .cl-eval-operate-content .run-select-content-all .label-item {
+  line-height: 14px;
+}
+.cl-scalar-manage .cl-eval-operate-content .run-select-content-all .select-item {
+  height: 25px;
+  margin-top: 25px;
+}
+.cl-scalar-manage .cl-eval-operate-content .select-item {
+  margin-right: 20px;
+  flex-shrink: 0;
+  margin-bottom: 1px;
+  cursor: pointer;
+}
+.cl-scalar-manage .cl-eval-operate-content .select-item .label-item {
+  width: 100px;
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: left;
+}
+.cl-scalar-manage .cl-eval-operate-content .multiCheckBox-border {
+  width: 16px;
+  height: 16px;
+  display: block;
+  margin-right: 20px;
+  cursor: pointer;
+  float: left;
+}
+.cl-scalar-manage .cl-eval-operate-content .checkbox-checked {
+  background-image: url("../../assets/images/mult-select.png");
+}
+.cl-scalar-manage .cl-eval-operate-content .checkbox-unchecked {
+  background-image: url("../../assets/images/mult-unselect.png");
+}
+.cl-scalar-manage .cl-eval-operate-content .checkbox-disabled {
+  opacity: 0.2;
+}
+.cl-scalar-manage .cl-eval-operate-content .label-item {
+  font-size: 14px;
+  line-height: 14px;
+  vertical-align: middle;
+}
+.cl-scalar-manage .cl-eval-operate-content .label-item .el-tooltip {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: left;
+  height: 16px;
+}
+.cl-scalar-manage .cl-eval-operate-content .label-item span {
+  font-size: 14px;
+  line-height: 14px;
+  display: block;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content {
+  background: #ffffff;
+  padding: 0 32px 21px 32px;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #e6ebf5;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content .xaxis-title {
+  font-size: 14px;
+  line-height: 14px;
+  vertical-align: middle;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content .el-radio-group {
+  margin-right: 64px;
+  flex-shrink: 0;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content .el-select {
+  width: 163px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content .el-slider {
+  width: 400px;
+  flex-shrink: 0;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content .el-slider .el-input.el-input--small {
+  width: 60px;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content .el-slider .el-input-number .el-input__inner {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content .el-slider .el-input-number--small .el-input-number__increase {
+  display: none;
+}
+.cl-scalar-manage .cl-eval-slider-operate-content .el-slider .el-input-number--small .el-input-number__decrease {
+  display: none;
+}
+.cl-scalar-manage .cl-eval-show-data-content {
+  background: #fff;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  padding-right: 10px;
+}
+.cl-scalar-manage .cl-eval-show-data-content .data-content {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-wrap: wrap;
+  min-height: 400px;
+  padding-left: 20px;
+}
+.cl-scalar-manage .cl-eval-show-data-content .data-content .sample-content {
+  width: 33.3%;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding-right: 20px;
+  margin-top: 20px;
+}
+.cl-scalar-manage .cl-eval-show-data-content .data-content .char-full-screen {
+  width: 100%;
+  height: 400px;
+}
+.cl-scalar-manage .cl-eval-show-data-content .chars-container {
+  flex: 1;
+  position: relative;
+  background-color: #edf0f5;
+  padding: 5px;
+}
+.cl-scalar-manage .cl-eval-show-data-content .chartThreshold {
+  height: 40px;
+  background-color: #edf0f5;
+  border-top: 1px solid #fff;
+  display: flex;
+  line-height: 40px;
+}
+.cl-scalar-manage .cl-eval-show-data-content .chartThreshold .chartThresholdLeft {
+  flex: 1;
+  text-align: left;
+  padding-left: 5px;
+  font-size: 14px;
+  color: #6c7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-scalar-manage .cl-eval-show-data-content .chartThreshold .chartThresholdRight {
+  width: 120px;
+  text-align: right;
+  padding-right: 10px;
+  font-size: 12px;
+  color: #00a5a7;
+  flex-shrink: 0;
+}
+.cl-scalar-manage .cl-eval-show-data-content .chartThreshold .chartThresholdRight span {
+  cursor: pointer;
+  width: auto;
+  height: 39px;
+  display: inline-block;
+}
+.cl-scalar-manage .cl-eval-show-data-content .tag-name {
+  color: #333;
+  font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 10px;
+}
+.cl-scalar-manage .cl-eval-show-data-content .tag-name i {
+  color: #e6a23c;
+}
+.cl-scalar-manage .cl-eval-show-data-content .char-item-content {
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+}
+.cl-scalar-manage .cl-eval-show-data-content .char-tip-table td {
+  padding-left: 5px;
+  padding-right: 5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+}
+.cl-scalar-manage .cl-eval-show-data-content .image-noData {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.cl-scalar-manage .cl-eval-show-data-content .noData-text {
+  margin-top: 33px;
+  font-size: 18px;
+}
+.cl-scalar-manage .pagination-content {
+  text-align: right;
+  padding: 24px 32px;
+}
+.cl-scalar-manage .mr24 {
+  margin-right: 24px;
+}
+.cl-scalar-manage .select-disable {
+  -moz-user-select: none;
+  /*Firefox*/
+  -webkit-user-select: none;
+  /*Webkit*/
+  -ms-user-select: none;
+  /*IE10*/
+  -khtml-user-select: none;
+  user-select: none;
+}
+.cl-scalar-manage .cl-close-btn {
+  width: 20px;
+  height: 20px;
+  vertical-align: -3px;
+  cursor: pointer;
+  display: inline-block;
+  line-height: 20px;
+  margin-left: 32px;
+}
+.cl-scalar-manage .thresholdAll {
+  display: flex;
+  line-height: 32px;
+  margin-bottom: 10px;
+}
+.cl-scalar-manage .thresholdAll .thresholdItem {
+  margin-right: 10px;
+}
+.cl-scalar-manage .thresholdAll .thresholdItemWidth {
+  width: 500px;
+  height: 32px;
+  margin-right: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-scalar-manage .thresholdError {
+  color: #f56c6c;
+  text-align: center;
+}
+.cl-scalar-manage .fs16 {
+  font-size: 14px;
+  color: #6c7280;
+  width: 180px;
+}
+
 .tooltip-show-content {
   max-width: 50%;
 }

@@ -1179,236 +1179,221 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .operator {
   height: 100%;
-  .clear {
-    clear: both;
-  }
-  .el-tabs__item {
-    color: #6c7280;
-    line-height: 36px;
-    height: 36px;
-  }
-  .el-tabs__item.is-active {
-    color: #00a5a7;
-    font-weight: bold;
-  }
-  .operator-title {
-    padding: 0 15px;
-    font-size: 16px;
-    font-weight: bold;
-  }
-  .cl-profiler {
-    height: calc(100% - 21px);
-    overflow-y: auto;
-    width: 100%;
-    background: #fff;
-    padding: 0 16px;
-    overflow: hidden;
-    .custom-label {
-      max-width: calc(100% - 25px);
-      padding: 0;
-      vertical-align: middle;
-    }
-    .el-tabs {
-      height: 100%;
-      .el-tabs__header {
-        margin-bottom: 10px;
-      }
-    }
-    .el-tabs__content {
-      height: calc(100% - 46px);
-    }
-    .el-tab-pane {
-      height: 100%;
-    }
-    .cl-search-box {
-      float: right;
-      margin-bottom: 10px;
-      margin-right: 20px;
-      .el-input {
-        width: 300px;
-      }
-    }
-    .cl-profiler-top {
-      height: 47%;
-      .chart-title {
-        float: left;
-        font-weight: bold;
-        height: 32px;
-      }
-    }
-    .cl-profiler-top.fullScreen {
-      display: none;
-    }
-    .cl-profiler-bottom {
-      height: 53%;
-      padding-top: 10px;
-      .fullScreen {
-        float: right;
-        margin-top: 5px;
-        cursor: pointer;
-      }
-    }
-    .cl-profiler-bottom.fullScreen {
-      height: 100%;
-    }
-    .core-search-type {
-      float: right;
-      width: 130px;
-      margin-right: 10px;
-    }
-    .cl-profiler-echarts {
-      width: 100%;
-      height: calc(100% - 32px);
-      display: inline-block;
-      position: relative;
-      overflow: auto;
-      #core-echarts,
-      #operator-echarts {
-        width: 100%;
-        height: 100%;
-        min-width: 1300px;
-        min-height: 321px;
-        overflow: hidden;
-      }
-    }
-    .core-tab {
-      .cl-profiler-top {
-        height: 47%;
-      }
-      .cl-profiler-bottom {
-        height: 53%;
-      }
-      .cl-profiler-echarts {
-        height: calc(100% - 32px);
-      }
-      .cl-profiler-bottom.fullScreen {
-        height: 100%;
-      }
-    }
-    .chart-radio-group {
-      float: right;
-    }
-    .el-radio-group {
-      .el-radio-button--small .el-radio-button__inner {
-        height: 30px;
-        width: 70px;
-        font-size: 14px;
-        line-height: 10px;
-      }
-    }
-    .cl-profiler-bar {
-      display: inline-block;
-      width: calc(100% - 400px);
-      vertical-align: top;
-      height: 100%;
-      padding: 20px;
-    }
-    .cl-profiler-table-type {
-      display: inline-block;
-      width: calc(100% - 400px);
-      vertical-align: top;
-      height: 100%;
-    }
-    .el-pagination {
-      margin: 7px 0;
-      float: right;
-    }
-    .details-data-list {
-      .el-table {
-        th {
-          padding: 10px 0;
-          border-top: 1px solid #ebeef5;
-          .cell {
-            border-left: 1px solid #d9d8dd;
-            height: 14px;
-            line-height: 14px;
-          }
-        }
-        th:first-child {
-          .cell {
-            border-left: none;
-          }
-        }
-        th:nth-child(2),
-        td:nth-child(2) {
-          max-width: 30%;
-        }
-        td {
-          padding: 8px 0;
-        }
-      }
-      .el-table__row--level-0 td:first-child:after {
-        width: 20px;
-        height: 1px;
-        background: #ebeef5;
-        z-index: 11;
-        position: absolute;
-        left: 0;
-        bottom: -1px;
-        content: '';
-        display: block;
-      }
-      .el-table__row--level-1 {
-        td {
-          padding: 4px 0;
-          position: relative;
-        }
-        td:first-child::before {
-          width: 42px;
-          background: #f0fdfd;
-          border-right: 2px #00a5a7 solid;
-          z-index: 10;
-          position: absolute;
-          left: 0;
-          top: -1px;
-          bottom: 0px;
-          content: '';
-          display: block;
-        }
-      }
-
-      .el-table__row--level-1:first-child {
-        td:first-child::before {
-          bottom: 0;
-        }
-      }
-    }
-    .el-table__expanded-cell[class*='cell'] {
-      padding: 0;
-    }
-    .expand-table {
-      position: relative;
-      padding-left: 44px;
-    }
-    .expand-table::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      background: #f0fdfd;
-      width: 42px;
-      border-right: 2px #00a5a7 solid;
-    }
-    .el-radio-button:last-child .el-radio-button__inner,
-    .el-radio-button:first-child .el-radio-button__inner {
-      border-radius: 0;
-    }
-    .image-noData {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      p {
-        font-size: 16px;
-        padding-top: 10px;
-      }
-    }
-  }
+}
+.operator .clear {
+  clear: both;
+}
+.operator .el-tabs__item {
+  color: #6c7280;
+  line-height: 36px;
+  height: 36px;
+}
+.operator .el-tabs__item.is-active {
+  color: #00a5a7;
+  font-weight: bold;
+}
+.operator .operator-title {
+  padding: 0 15px;
+  font-size: 16px;
+  font-weight: bold;
+}
+.operator .cl-profiler {
+  height: calc(100% - 21px);
+  overflow-y: auto;
+  width: 100%;
+  background: #fff;
+  padding: 0 16px;
+  overflow: hidden;
+}
+.operator .cl-profiler .custom-label {
+  max-width: calc(100% - 25px);
+  padding: 0;
+  vertical-align: middle;
+}
+.operator .cl-profiler .el-tabs {
+  height: 100%;
+}
+.operator .cl-profiler .el-tabs .el-tabs__header {
+  margin-bottom: 10px;
+}
+.operator .cl-profiler .el-tabs__content {
+  height: calc(100% - 46px);
+}
+.operator .cl-profiler .el-tab-pane {
+  height: 100%;
+}
+.operator .cl-profiler .cl-search-box {
+  float: right;
+  margin-bottom: 10px;
+  margin-right: 20px;
+}
+.operator .cl-profiler .cl-search-box .el-input {
+  width: 300px;
+}
+.operator .cl-profiler .cl-profiler-top {
+  height: 47%;
+}
+.operator .cl-profiler .cl-profiler-top .chart-title {
+  float: left;
+  font-weight: bold;
+  height: 32px;
+}
+.operator .cl-profiler .cl-profiler-top.fullScreen {
+  display: none;
+}
+.operator .cl-profiler .cl-profiler-bottom {
+  height: 53%;
+  padding-top: 10px;
+}
+.operator .cl-profiler .cl-profiler-bottom .fullScreen {
+  float: right;
+  margin-top: 5px;
+  cursor: pointer;
+}
+.operator .cl-profiler .cl-profiler-bottom.fullScreen {
+  height: 100%;
+}
+.operator .cl-profiler .core-search-type {
+  float: right;
+  width: 130px;
+  margin-right: 10px;
+}
+.operator .cl-profiler .cl-profiler-echarts {
+  width: 100%;
+  height: calc(100% - 32px);
+  display: inline-block;
+  position: relative;
+  overflow: auto;
+}
+.operator .cl-profiler .cl-profiler-echarts #core-echarts,
+.operator .cl-profiler .cl-profiler-echarts #operator-echarts {
+  width: 100%;
+  height: 100%;
+  min-width: 1300px;
+  min-height: 321px;
+  overflow: hidden;
+}
+.operator .cl-profiler .core-tab .cl-profiler-top {
+  height: 47%;
+}
+.operator .cl-profiler .core-tab .cl-profiler-bottom {
+  height: 53%;
+}
+.operator .cl-profiler .core-tab .cl-profiler-echarts {
+  height: calc(100% - 32px);
+}
+.operator .cl-profiler .core-tab .cl-profiler-bottom.fullScreen {
+  height: 100%;
+}
+.operator .cl-profiler .chart-radio-group {
+  float: right;
+}
+.operator .cl-profiler .el-radio-group .el-radio-button--small .el-radio-button__inner {
+  height: 30px;
+  width: 70px;
+  font-size: 14px;
+  line-height: 10px;
+}
+.operator .cl-profiler .cl-profiler-bar {
+  display: inline-block;
+  width: calc(100% - 400px);
+  vertical-align: top;
+  height: 100%;
+  padding: 20px;
+}
+.operator .cl-profiler .cl-profiler-table-type {
+  display: inline-block;
+  width: calc(100% - 400px);
+  vertical-align: top;
+  height: 100%;
+}
+.operator .cl-profiler .el-pagination {
+  margin: 7px 0;
+  float: right;
+}
+.operator .cl-profiler .details-data-list .el-table th {
+  padding: 10px 0;
+  border-top: 1px solid #ebeef5;
+}
+.operator .cl-profiler .details-data-list .el-table th .cell {
+  border-left: 1px solid #d9d8dd;
+  height: 14px;
+  line-height: 14px;
+}
+.operator .cl-profiler .details-data-list .el-table th:first-child .cell {
+  border-left: none;
+}
+.operator .cl-profiler .details-data-list .el-table th:nth-child(2),
+.operator .cl-profiler .details-data-list .el-table td:nth-child(2) {
+  max-width: 30%;
+}
+.operator .cl-profiler .details-data-list .el-table td {
+  padding: 8px 0;
+}
+.operator .cl-profiler .details-data-list .el-table__row--level-0 td:first-child:after {
+  width: 20px;
+  height: 1px;
+  background: #ebeef5;
+  z-index: 11;
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  content: "";
+  display: block;
+}
+.operator .cl-profiler .details-data-list .el-table__row--level-1 td {
+  padding: 4px 0;
+  position: relative;
+}
+.operator .cl-profiler .details-data-list .el-table__row--level-1 td:first-child::before {
+  width: 42px;
+  background: #f0fdfd;
+  border-right: 2px #00a5a7 solid;
+  z-index: 10;
+  position: absolute;
+  left: 0;
+  top: -1px;
+  bottom: 0px;
+  content: "";
+  display: block;
+}
+.operator .cl-profiler .details-data-list .el-table__row--level-1:first-child td:first-child::before {
+  bottom: 0;
+}
+.operator .cl-profiler .el-table__expanded-cell[class*=cell] {
+  padding: 0;
+}
+.operator .cl-profiler .expand-table {
+  position: relative;
+  padding-left: 44px;
+}
+.operator .cl-profiler .expand-table::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #f0fdfd;
+  width: 42px;
+  border-right: 2px #00a5a7 solid;
+}
+.operator .cl-profiler .el-radio-button:last-child .el-radio-button__inner,
+.operator .cl-profiler .el-radio-button:first-child .el-radio-button__inner {
+  border-radius: 0;
+}
+.operator .cl-profiler .image-noData {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.operator .cl-profiler .image-noData p {
+  font-size: 16px;
+  padding-top: 10px;
 }
 </style>

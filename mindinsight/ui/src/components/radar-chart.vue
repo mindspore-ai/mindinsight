@@ -356,7 +356,7 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .radar {
   width: 100%;
   height: 100%;

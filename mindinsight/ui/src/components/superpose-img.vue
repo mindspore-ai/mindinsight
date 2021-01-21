@@ -96,12 +96,12 @@ export default {
   },
 };
 </script>
-<style lang="scss" scoped>
+<style scoped>
 .cl-superpose-image {
   position: relative;
   overflow: hidden;
-  .overlay-background {
-    background: #371956;
-  }
+}
+.cl-superpose-image .overlay-background {
+  background: #371956;
 }
 </style>

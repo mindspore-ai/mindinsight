@@ -938,147 +938,147 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .step-trace {
   width: 100%;
   height: 100%;
-  .step-trace-title {
-    padding: 0 15px;
-    font-size: 16px;
-    font-weight: bold;
-    .el-icon-question {
-      cursor: pointer;
-    }
-    .pf-content-right {
-      display: inline-block;
-      margin-left: 35px;
-      .input-wrap {
-        font-weight: normal;
-        label {
-          margin-right: 20px;
-        }
-        .el-input {
-          width: 150px;
-          margin-right: 16px;
-        }
-      }
-    }
-    .el-button {
-      border: 1px solid #00a5a7;
-      border-radius: 2px;
-      background-color: white;
-      color: #00a5a7;
-      padding: 7px 15px;
-      &:hover {
-        background: rgb(230, 246, 246);
-      }
-    }
-    .show-average {
-      float: right;
-      margin-right: 20px;
-    }
-  }
-  .step-message {
-    height: 32px;
-    line-height: 16px;
-    margin-top: 6px;
-    margin-left: 14px;
-    overflow-y: auto;
-  }
-  .step-padding-right {
-    padding-right: 20px;
-    display: inline-block;
-  }
-  .step-left-padding-right {
-    padding-right: 30px;
-    display: inline-block;
-  }
-  .font-weight-style {
-    font-weight: bold;
-  }
-  .pf-content-middle {
-    padding: 10px 15px 0;
-    height: calc(100% - 62px);
-    #trace-container {
-      width: 100%;
-      height: 50%;
-      border: 1px solid #ccc;
-      overflow: auto;
-      .training-trace {
-        position: relative;
-        height: 0;
-        .content {
-          overflow: hidden;
-          text-align: center;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          font-size: 12px;
-          line-height: 40px;
-        }
-        .content-mini {
-          overflow: visible;
-        }
-      }
-    }
-    .chart-wrap {
-      float: left;
-      height: calc(50% - 20px);
-      margin-top: 20px;
-      margin-right: 15px;
-      width: calc(33.3% - 10px);
-      border: 1px solid #ccc;
-      padding: 30px 30px 0;
-      border-radius: 4px;
-      overflow: auto;
-      &:last-child {
-        margin-right: 0;
-      }
-      .chart {
-        height: calc(100% - 85px);
-        min-height: 180px;
-        min-width: 250px;
-        overflow: hidden;
-      }
-      .title {
-        margin: 0 0 15px 20px;
-        font-weight: bold;
-      }
-      .rate-wrap {
-        font-size: 12px;
-        padding-left: 20px;
-        & > div {
-          display: inline-block;
-          margin: 0 15px 5px 0;
-          color: #464950;
-          span {
-            margin-right: 10px;
-            color: #6c7280;
-          }
-        }
-      }
-    }
-    .chart-wrap.chart-show {
-      width: calc(50% - 7.5px);
-    }
-  }
-  .image-noData {
-    width: 100%;
-    height: calc(100% - 52px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    p {
-      font-size: 16px;
-      padding-top: 10px;
-    }
-  }
-  .image-noData.svg {
-    height: 100%;
-  }
-  .el-icon-info {
-    font-size: 18px;
-    color: #6c7280;
-  }
+}
+.step-trace .step-trace-title {
+  padding: 0 15px;
+  font-size: 16px;
+  font-weight: bold;
+}
+.step-trace .step-trace-title .el-icon-question {
+  cursor: pointer;
+}
+.step-trace .step-trace-title .pf-content-right {
+  display: inline-block;
+  margin-left: 35px;
+}
+.step-trace .step-trace-title .pf-content-right .input-wrap {
+  font-weight: normal;
+}
+.step-trace .step-trace-title .pf-content-right .input-wrap label {
+  margin-right: 20px;
+}
+.step-trace .step-trace-title .pf-content-right .input-wrap .el-input {
+  width: 150px;
+  margin-right: 16px;
+}
+.step-trace .step-trace-title .el-button {
+  border: 1px solid #00a5a7;
+  border-radius: 2px;
+  background-color: white;
+  color: #00a5a7;
+  padding: 7px 15px;
+}
+.step-trace .step-trace-title .el-button:hover {
+  background: #e6f6f6;
+}
+.step-trace .step-trace-title .show-average {
+  float: right;
+  margin-right: 20px;
+}
+.step-trace .step-message {
+  height: 32px;
+  line-height: 16px;
+  margin-top: 6px;
+  margin-left: 14px;
+  overflow-y: auto;
+}
+.step-trace .step-padding-right {
+  padding-right: 20px;
+  display: inline-block;
+}
+.step-trace .step-left-padding-right {
+  padding-right: 30px;
+  display: inline-block;
+}
+.step-trace .font-weight-style {
+  font-weight: bold;
+}
+.step-trace .pf-content-middle {
+  padding: 10px 15px 0;
+  height: calc(100% - 62px);
+}
+.step-trace .pf-content-middle #trace-container {
+  width: 100%;
+  height: 50%;
+  border: 1px solid #ccc;
+  overflow: auto;
+}
+.step-trace .pf-content-middle #trace-container .training-trace {
+  position: relative;
+  height: 0;
+}
+.step-trace .pf-content-middle #trace-container .training-trace .content {
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 40px;
+}
+.step-trace .pf-content-middle #trace-container .training-trace .content-mini {
+  overflow: visible;
+}
+.step-trace .pf-content-middle .chart-wrap {
+  float: left;
+  height: calc(50% - 20px);
+  margin-top: 20px;
+  margin-right: 15px;
+  width: calc(33.3% - 10px);
+  border: 1px solid #ccc;
+  padding: 30px 30px 0;
+  border-radius: 4px;
+  overflow: auto;
+}
+.step-trace .pf-content-middle .chart-wrap:last-child {
+  margin-right: 0;
+}
+.step-trace .pf-content-middle .chart-wrap .chart {
+  height: calc(100% - 85px);
+  min-height: 180px;
+  min-width: 250px;
+  overflow: hidden;
+}
+.step-trace .pf-content-middle .chart-wrap .title {
+  margin: 0 0 15px 20px;
+  font-weight: bold;
+}
+.step-trace .pf-content-middle .chart-wrap .rate-wrap {
+  font-size: 12px;
+  padding-left: 20px;
+}
+.step-trace .pf-content-middle .chart-wrap .rate-wrap > div {
+  display: inline-block;
+  margin: 0 15px 5px 0;
+  color: #464950;
+}
+.step-trace .pf-content-middle .chart-wrap .rate-wrap > div span {
+  margin-right: 10px;
+  color: #6c7280;
+}
+.step-trace .pf-content-middle .chart-wrap.chart-show {
+  width: calc(50% - 7.5px);
+}
+.step-trace .image-noData {
+  width: 100%;
+  height: calc(100% - 52px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.step-trace .image-noData p {
+  font-size: 16px;
+  padding-top: 10px;
+}
+.step-trace .image-noData.svg {
+  height: 100%;
+}
+.step-trace .el-icon-info {
+  font-size: 18px;
+  color: #6c7280;
 }
 </style>

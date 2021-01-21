@@ -864,26 +864,26 @@ export default {
   },
 };
 </script>
-<style lang="scss">
+<style>
 .cl-histogram-container {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  .data-show-container {
-    width: 100%;
-    flex: 1;
-    .data-item {
-      width: 100%;
-      height: 100%;
-    }
-    .error-msg-container {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
+}
+.cl-histogram-container .data-show-container {
+  width: 100%;
+  flex: 1;
+}
+.cl-histogram-container .data-show-container .data-item {
+  width: 100%;
+  height: 100%;
+}
+.cl-histogram-container .data-show-container .error-msg-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

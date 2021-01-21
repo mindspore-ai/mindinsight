@@ -122,69 +122,69 @@ export default {
   },
 };
 </script>
-<style lang="scss" scoped>
+<style scoped>
 .cl-checkboxes-container {
   display: flex;
-  .left {
-    width: 100px;
-    min-width: 100px;
-    .checkboxes-title {
-      line-height: 22px;
-      font-size: 14px;
-      color: #333333;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-  }
-  .right {
-    flex-shrink: 1;
-    display: flex;
-    flex-wrap: wrap;
-    .checkboxes-item {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      .checkbox {
-        height: 16px;
-        width: 16px;
-        margin-right: 16px;
-      }
-      .label {
-        width: 100px;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        font-size: 14px;
-        color: #333333;
-      }
-      .label-disabled {
-        color: #c0c4cc;
-      }
-      .is-checked {
-        background-image: url('../assets/images/mult-select.png');
-      }
-      .is-unchecked {
-        background-image: url('../assets/images/mult-unselect.png');
-      }
-      .is-disabled {
-        border: 1px solid #dbdbdb;
-        background-color: #e7e7e7;
-      }
-    }
-  }
-  .item {
-    padding-bottom: 10px;
-    margin-right: 20px;
-    height: 32px;
-  }
-  .item-disabled {
-    cursor: not-allowed !important;
-  }
-  .checkboxes-last {
-    display: flex;
-    align-items: center;
-  }
+}
+.cl-checkboxes-container .left {
+  width: 100px;
+  min-width: 100px;
+}
+.cl-checkboxes-container .left .checkboxes-title {
+  line-height: 22px;
+  font-size: 14px;
+  color: #333333;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.cl-checkboxes-container .right {
+  flex-shrink: 1;
+  display: flex;
+  flex-wrap: wrap;
+}
+.cl-checkboxes-container .right .checkboxes-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.cl-checkboxes-container .right .checkboxes-item .checkbox {
+  height: 16px;
+  width: 16px;
+  margin-right: 16px;
+}
+.cl-checkboxes-container .right .checkboxes-item .label {
+  width: 100px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 14px;
+  color: #333333;
+}
+.cl-checkboxes-container .right .checkboxes-item .label-disabled {
+  color: #c0c4cc;
+}
+.cl-checkboxes-container .right .checkboxes-item .is-checked {
+  background-image: url("../assets/images/mult-select.png");
+}
+.cl-checkboxes-container .right .checkboxes-item .is-unchecked {
+  background-image: url("../assets/images/mult-unselect.png");
+}
+.cl-checkboxes-container .right .checkboxes-item .is-disabled {
+  border: 1px solid #dbdbdb;
+  background-color: #e7e7e7;
+}
+.cl-checkboxes-container .item {
+  padding-bottom: 10px;
+  margin-right: 20px;
+  height: 32px;
+}
+.cl-checkboxes-container .item-disabled {
+  cursor: not-allowed !important;
+}
+.cl-checkboxes-container .checkboxes-last {
+  display: flex;
+  align-items: center;
 }
 </style>
