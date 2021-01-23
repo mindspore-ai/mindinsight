@@ -24,7 +24,7 @@ export default {
   computed: {
     /**
      * Global refresh
-     * @return {Boolen}
+     * @return {Boolean}
      */
 
     isReload() {
@@ -32,7 +32,7 @@ export default {
     },
     /**
      * Auto refresh
-     * @return {Boolen}
+     * @return {Boolean}
      */
 
     isTimeReload() {
@@ -46,8 +46,8 @@ export default {
   watch: {
     /**
      * Listener global refresh
-     * @param {Boolen} newVal New value
-     * @param {Boolen} oldVal Old value
+     * @param {Boolean} newVal New value
+     * @param {Boolean} oldVal Old value
      */
 
     isReload(newVal, oldVal) {
@@ -62,8 +62,8 @@ export default {
     },
     /**
      * Listener auto refresh
-     * @param {Boolen} newVal New value
-     * @param {Boolen} oldVal Old value
+     * @param {Boolean} newVal New value
+     * @param {Boolean} oldVal Old value
      */
 
     isTimeReload(newVal, oldVal) {

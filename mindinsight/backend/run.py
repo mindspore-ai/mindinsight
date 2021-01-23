@@ -267,7 +267,7 @@ def start():
         stderr=subprocess.STDOUT
     )
 
-    # sleep 1 second for gunicorn appplication to load modules
+    # sleep 1 second for gunicorn application to load modules
     time.sleep(1)
 
     # check if gunicorn application is running

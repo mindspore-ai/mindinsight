@@ -648,8 +648,8 @@ export default {
   methods: {
     /**
      * Tree linkage with graph  Expand of current node
-     * @param {Obejct} nodes Data of children of current node
-     * @param {Obejct} name  The name of the current node
+     * @param {Obeject} nodes Data of children of current node
+     * @param {Obeject} name  The name of the current node
      */
     nodeExpandLinkage(nodes, name) {
       const curNodeData = nodes.map((val) => {

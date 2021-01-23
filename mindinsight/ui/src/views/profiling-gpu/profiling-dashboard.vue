@@ -538,7 +538,7 @@ export default {
       window.addEventListener('resize', this.resizeTrace, false);
     },
     /**
-     * Get the data of proccess summary
+     * Get the data of process summary
      */
     getProccessSummary() {
       const params = {

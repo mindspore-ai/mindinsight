@@ -182,7 +182,7 @@ export default {
   },
   methods: {
     /**
-     * The logic of calcualte values or value
+     * The logic of calculate values or value
      * @return {Array | String | Number}
      */
     calValues() {

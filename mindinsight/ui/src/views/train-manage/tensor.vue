@@ -209,7 +209,7 @@ export default {
       curDataType: 0, // Current data type
       curViewName: 1, // Current histogram view type
       curAxisName: 0, // Current histogran axis type
-      chartTipFlag: false, // Wheather to display tips of the histogram
+      chartTipFlag: false, // Whether to display tips of the histogram
       columnLimitNum: 1000, // Maximum number of columns is 1000
     };
   },
@@ -742,7 +742,7 @@ export default {
       }, 200);
     },
     /**
-     * Formate absolute time
+     * Format absolute time
      * @param {String} time Time string
      * @return {String} String Formatted time
      */
@@ -978,7 +978,7 @@ export default {
       }, 500);
     },
     /**
-     * Converts the original data formate to a histogram-recognizable formate
+     * Converts the original data format to a histogram-recognizable format
      * @param {Object} resData Original data
      * @return {Object} Formatted data
      */

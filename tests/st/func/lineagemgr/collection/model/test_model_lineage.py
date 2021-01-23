@@ -14,7 +14,7 @@
 # ============================================================================
 
 """
-Fuction:
+Function:
     Test the lineage information collection module.
 Usage:
     pytest lineagemgr/collection/model/test_model_lineage.py

@@ -95,7 +95,7 @@ class StepTraceAnalyser(BaseAnalyser):
             log.error("Failed to find parsed trace time file.")
             raise ProfilerFileNotFoundException('parsed step trace time file')
         file_path = validate_and_normalize_path(
-            file_path, raise_key="Invaild latest_trace_trace_time file path.")
+            file_path, raise_key="Invalid latest_trace_trace_time file path.")
         with open(file_path, 'r') as handle:
             csv_reader = csv.reader(handle)
             self.__column__ = next(csv_reader)
@@ -108,7 +108,7 @@ class StepTraceAnalyser(BaseAnalyser):
         """Load point info."""
         file_path = os.path.join(self._profiling_dir, 'step_trace_point_info.json')
         file_path = validate_and_normalize_path(
-            file_path, raise_key="Invaild step_trace_point_info file path.")
+            file_path, raise_key="Invalid step_trace_point_info file path.")
         if os.path.isfile(file_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 try:
@@ -306,7 +306,7 @@ class StepTraceAnalyser(BaseAnalyser):
 
     def _construct_reduce_lines(self, row_info_dict):
         """
-        Contruct first line in detailed graph.
+        Construct first line in detailed graph.
 
         Args:
             row_info_dict (dict): Step trace information.

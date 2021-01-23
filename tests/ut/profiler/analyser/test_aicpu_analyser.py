@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """
-Fuction:
+Function:
     Test profiler to watch the performance of training.
 Usage:
     pytest tests/ut/func/profiler
@@ -40,7 +40,7 @@ class TestAicpuAnalyser:
             'aicpu_detail', self.profiler, '1')
 
     def test_query_aicpu_type(self):
-        """Test the function of querying AICPU operator type infomation."""
+        """Test the function of querying AICPU operator type information."""
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
@@ -59,7 +59,7 @@ class TestAicpuAnalyser:
         assert expect_result == result
 
     def test_query_aicpu_detail(self):
-        """Test the function of querying AICPU operator detail infomation."""
+        """Test the function of querying AICPU operator detail information."""
         expect_result = {
             'col_name': ['serial_number', 'op_type', 'total_time',
                          'dispatch_time', 'run_start', 'run_end'],

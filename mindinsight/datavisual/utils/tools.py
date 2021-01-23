@@ -142,7 +142,7 @@ def get_img_mimetype(img_data):
 
 def get_train_id(request):
     """
-    Get train ID from requst query string and unquote content.
+    Get train ID from request query string and unquote content.
 
     Args:
         request (FlaskRequest): Http request instance.
@@ -161,7 +161,7 @@ def get_train_id(request):
 
 def get_profiler_dir(request):
     """
-    Get train ID from requst query string and unquote content.
+    Get train ID from request query string and unquote content.
 
     Args:
         request (FlaskRequest): Http request instance.
@@ -180,7 +180,7 @@ def get_profiler_dir(request):
 
 def unquote_args(request, arg_name):
     """
-    Get args from requst query string and unquote content.
+    Get args from request query string and unquote content.
 
     Args:
         request (FlaskRequest): Http request instance.
@@ -200,7 +200,7 @@ def unquote_args(request, arg_name):
 
 def get_device_id(request):
     """
-    Get device ID from requst query string and unquote content.
+    Get device ID from request query string and unquote content.
 
     Args:
         request (FlaskRequest): Http request instance.

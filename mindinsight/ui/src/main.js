@@ -67,7 +67,7 @@ Vue.config.productionTip = false;
 
 /**
  * Check the browser version
- * @return {Boolen}
+ * @return {Boolean}
  */
 function isBrowserSupport() {
   const isChrome = navigator.userAgent.toLowerCase().match(/chrome/);

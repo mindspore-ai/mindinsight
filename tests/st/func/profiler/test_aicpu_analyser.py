@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """
-Fuction:
+Function:
     Test profiler to watch the performance of training.
 Usage:
     pytest tests/st/func/profiler
@@ -47,7 +47,7 @@ class TestAicpuAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_query_aicpu_type(self):
-        """Test the function of querying AICPU operator type infomation."""
+        """Test the function of querying AICPU operator type information."""
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
@@ -67,7 +67,7 @@ class TestAicpuAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_query_aicpu_detail(self):
-        """Test the function of querying AICPU operator type infomation."""
+        """Test the function of querying AICPU operator type information."""
         expect_result = {
             'col_name': ['serial_number', 'op_type', 'total_time',
                          'dispatch_time', 'run_start', 'run_end'],

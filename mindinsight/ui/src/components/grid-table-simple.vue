@@ -119,7 +119,7 @@ export default {
       default: false,
     },
     // Maximum number of columns
-    // If the value is less then 0, there is no maximun value.
+    // If the value is less then 0, there is no maximum value.
     columnLimitNum: {
       type: Number,
       default: -1,
@@ -134,16 +134,16 @@ export default {
       filterArr: [], // Dimension selection array
       formateData: [], // Formatted data
       formateArr: [], // Formatted array
-      statistics: {}, // Object contain maximun and minimun
+      statistics: {}, // Object contain maximum and minimum
       accuracy: 5, // Accuracy value
-      incorrectData: false, // Wheather the dimension is correctly selected
+      incorrectData: false, // Whether the dimension is correctly selected
       updated: false, // Updated
-      scrollTop: false, // Wheather scroll to the top
-      filterCorrect: true, // Wheather the dimension input is correct
+      scrollTop: false, // Whether scroll to the top
+      filterCorrect: true, // Whether the dimension input is correct
       requestError: false, // Exceeded the specification
       errorMsg: '', // Error message
       viewResizeFlag: false, // Size reset flag
-      // Accuray options
+      // Accuracy options
       accuracyArr: [
         {label: 0, value: 0},
         {label: 1, value: 1},
@@ -512,9 +512,9 @@ export default {
     },
     /**
      * Updating Table Data
-     * @param {Boolean} newDataFlag Wheather data is updated
+     * @param {Boolean} newDataFlag Whether data is updated
      * @param {Array} dimension Array of dimension
-     * @param {Object} statistics Object contains maximun and minimun
+     * @param {Object} statistics Object contains maximum and minimum
      * @param {String} filterStr String of dimension selection
      */
     updateGridData(newDataFlag, dimension, statistics, filterStr) {
