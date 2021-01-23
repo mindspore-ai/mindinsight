@@ -20,10 +20,12 @@ else()
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
-   set(CMAKE_BUILD_TYPE "Release")
+  set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-set(CMAKE_C_FLAGS_DEBUG "$ENV{CFLAGS} -fPIC -O0 -Wall -fvisibility=hidden -Wno-deprecated-declarations -g2 -ggdb -fno-inline-functions -fno-omit-frame-pointer -D_LIBCPP_INLINE_VISIBILITY='' -D'_LIBCPP_EXTERN_TEMPLATE(...)='")
+set(CMAKE_C_FLAGS_DEBUG "$ENV{CFLAGS} -fPIC -O0 -Wall -fvisibility=hidden \
+    -Wno-deprecated-declarations -g2 -ggdb -fno-inline-functions -fno-omit-frame-pointer \
+    -D_LIBCPP_INLINE_VISIBILITY='' -D'_LIBCPP_EXTERN_TEMPLATE(...)='")
 set(CMAKE_C_FLAGS_RELEASE "$ENV{CFLAGS} -fPIC -O3 -Wall -fvisibility=hidden -Wno-deprecated-declarations")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
