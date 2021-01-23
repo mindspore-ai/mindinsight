@@ -117,7 +117,7 @@ class MinddataPipelineAnalyser(BaseAnalyser):
             self._file_name_pipeline.format(self._device_id)
         )
         pipeline_file_path = validate_and_normalize_path(
-            pipeline_file_path, raise_key="Invaild pipeline file path.")
+            pipeline_file_path, raise_key="Invalid pipeline file path.")
         if not os.path.isfile(pipeline_file_path):
             logger.warning('The file <%s> does not exist.', pipeline_file_path)
             return

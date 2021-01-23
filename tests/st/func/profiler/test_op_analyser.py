@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """
-Fuction:
+Function:
     Test profiler to watch the performance of training.
 Usage:
     pytest tests/st/func/profiler
@@ -103,7 +103,7 @@ class TestOpAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_query_aicore_type_1(self):
-        """Test the function of querying AICORE operator type infomation."""
+        """Test the function of querying AICORE operator type information."""
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
@@ -155,7 +155,7 @@ class TestOpAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_query_aicore_type_2(self):
-        """Test the function of querying AICORE operator type infomation."""
+        """Test the function of querying AICORE operator type information."""
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
@@ -185,7 +185,7 @@ class TestOpAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_query_aicore_detail_1(self):
-        """Test the function of querying AICORE operator detail infomation."""
+        """Test the function of querying AICORE operator detail information."""
         expect_result = OP_GATHER_V2_INFO
         condition = {
             'filter_condition': {

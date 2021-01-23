@@ -451,7 +451,7 @@ class _SummaryParser(_Parser):
             event_crc_str = ''
 
         if len(event_str) != event_len or len(event_crc_str) != CRC_STR_SIZE:
-            raise exceptions.CRCLengthFailedError("The event sting length or crc length is incorrect.")
+            raise exceptions.CRCLengthFailedError("The event string length or crc length is incorrect.")
         if not crc32.CheckValueAgainstData(event_crc_str, event_str, event_len):
             raise exceptions.CRCFailedError("The event string crc is incorrect.")
 

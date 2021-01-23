@@ -149,7 +149,7 @@ class LineageSummary:
 
     def record_evaluation_lineage(self, run_context_args):
         """
-        Record evaluation_lineage to sumamry log.
+        Record evaluation_lineage to summary log.
 
         Args:
             run_context_args (dict): The evaluation lineage info to log.

@@ -450,7 +450,7 @@ export default {
 
     /**
      * Obtains data on a specified page
-     * @param {Boolen} noPageIndexChange // The page number does not change
+     * @param {Boolean} noPageIndexChange // The page number does not change
      */
 
     getCurPageDataArr(noPageIndexChange) {

@@ -472,7 +472,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     @debugger_wrap
     def SendWatchpointHits(self, request_iterator, context):
         """Send watchpoint hits info DebuggerCache."""
-        log.info("Received WatchpointHits. Left run cmd %s change to emtpy.", self._old_run_cmd)
+        log.info("Received WatchpointHits. Left run cmd %s change to empty.", self._old_run_cmd)
         self._old_run_cmd.clear()
         if self._cache_store.get_stream_handler(Streams.METADATA).state == ServerStatus.RUNNING.value:
             # if the client session is running a script, all the cached command should be cleared

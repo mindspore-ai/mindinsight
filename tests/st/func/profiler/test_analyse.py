@@ -14,7 +14,7 @@
 # ============================================================================
 
 """
-Fuction:
+Function:
     Test profiler to watch the performance of training.
 Usage:
     pytest tests/st/func/profiler

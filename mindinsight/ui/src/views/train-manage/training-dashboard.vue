@@ -334,7 +334,7 @@ export default {
   computed: {
     /**
      * Global Refresh
-     * @return {Boolen}
+     * @return {Boolean}
      */
     isReload() {
       return this.$store.state.isReload;
@@ -365,7 +365,7 @@ export default {
     },
     /**
      * Listener auto refresh
-     * @param {Boolen} newVal new Value
+     * @param {Boolean} newVal new Value
      */
     isTimeReload(newVal) {
       if (newVal) {
@@ -779,7 +779,7 @@ export default {
       });
     },
     /**
-     * formate smooth data
+     * format smooth data
      * @param {Object} oriData Original data
      * @return {Object}
      */
@@ -812,7 +812,7 @@ export default {
     },
     /**
      * Updating or Creating a Specified chart
-     * @param {Boolen} resetAnimate restart the animation
+     * @param {Boolean} resetAnimate restart the animation
      */
     updateOrCreateChar(resetAnimate) {
       if (this.charObj) {

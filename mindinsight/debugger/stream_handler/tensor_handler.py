@@ -349,7 +349,7 @@ class TensorHandler(StreamHandlerBase):
         tensor_info = curr_tensor.get_basic_info()
         tensor_info.pop('has_prev_step')
         tensor_info.pop('value')
-        # calculate tensor comparision object
+        # calculate tensor comparison object
         tensor_comparison = curr_tensor.tensor_comparison
         if not tensor_comparison or tensor_comparison.tolerance != tolerance:
             if curr_tensor.value.shape != prev_tensor.value.shape:
@@ -369,7 +369,7 @@ class TensorHandler(StreamHandlerBase):
             tensor_info['diff'] = result.tolist()
         elif isinstance(curr_tensor_slice, str):
             tensor_info['diff'] = curr_tensor_slice
-        # add comparision statistics
+        # add comparison statistics
         tensor_info.update(self._get_comparison_statistics(curr_tensor, prev_tensor))
         reply = {'tensor_value': tensor_info}
         return reply

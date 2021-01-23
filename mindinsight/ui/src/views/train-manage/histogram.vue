@@ -1187,7 +1187,7 @@ export default {
       return data;
     },
     /**
-     * Formate time display
+     * Format time display
      * @param {Number} value
      * @return {Number} Formatted number
      */

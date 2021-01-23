@@ -110,7 +110,7 @@ export default {
       }
     },
     /**
-     * When card mumber changed,request data again.
+     * When card number changed,request data again.
      */
     selectValueChange() {
       const helperDiv = document.getElementById('helper-tips');

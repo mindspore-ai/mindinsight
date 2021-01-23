@@ -47,7 +47,7 @@ Provide explanations and their benchmarks for image classification deep CNN mode
 
 ### Profiler
 
-* Fix paser framework file error if the profiling data of one op is saved separately to two files.([!7824](https://gitee.com/mindspore/mindspore/pulls/7824))
+* Fix parser framework file error if the profiling data of one op is saved separately to two files.([!7824](https://gitee.com/mindspore/mindspore/pulls/7824))
 
 ### Model Explanation
 

@@ -63,7 +63,7 @@ class DataLoader:
         Get events data from log file.
 
         Returns:
-            EventsData, indiciates events data.
+            EventsData, indicates events data.
         """
         return self._loader.get_events_data()
 

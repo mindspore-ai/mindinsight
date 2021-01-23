@@ -975,7 +975,7 @@ export default {
 
     /**
      * Updating or creating a specified chart
-     * @param {Boolen} resetAnimate Restart the animation
+     * @param {Boolean} resetAnimate Restart the animation
      */
 
     updateOrCreateChar(resetAnimate) {

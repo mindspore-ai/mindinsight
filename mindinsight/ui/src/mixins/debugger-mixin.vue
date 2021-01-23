@@ -409,7 +409,7 @@ export default {
     /**
      * Deal metadata
      * @param {Object} metadata metadata
-     * @param {Boolean} isQuery wheather to query tree data
+     * @param {Boolean} isQuery whether to query tree data
      */
     dealMetadata(metadata) {
       if (
@@ -618,7 +618,7 @@ export default {
       );
     },
     /**
-     * Show orginal tree
+     * Show original tree
      */
     loadOriginalTree() {
       this.node.childNodes = [];
@@ -1546,8 +1546,8 @@ export default {
     },
     /**
      * Tree linkage with graph  Expand of current node
-     * @param {Obejct} nodes Data of children of current node
-     * @param {Obejct} name  The name of the current node
+     * @param {Obeject} nodes Data of children of current node
+     * @param {Obeject} name  The name of the current node
      */
     nodeExpandLinkage(nodes, name) {
       if (nodes.length > this.nodesCountLimit) {

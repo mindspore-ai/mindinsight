@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """
-Fuction:
+Function:
     Test profiler to watch the performance of training.
 Usage:
     pytest tests/st/func/profiler
@@ -49,7 +49,7 @@ class TestMinddataPipelineAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_query(self):
-        """Test the function of querying minddata pipeline infomation."""
+        """Test the function of querying minddata pipeline information."""
         expect_result = {
             'col_name': [
                 'op_id', 'op_type', 'output_queue_average_size', 'output_queue_length',
@@ -79,7 +79,7 @@ class TestMinddataPipelineAnalyser:
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
     def test_get_op_and_parent_op_info(self):
-        """Test the function of the target operator and queue infomation."""
+        """Test the function of the target operator and queue information."""
         expect_result = {
             'current_op': {
                 'op_id': 1,

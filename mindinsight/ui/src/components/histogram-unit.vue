@@ -66,7 +66,7 @@ export default {
       updated: false, // Updated
       zrDrawElement: {hoverDots: []},
       zr: null,
-      chartTipFlag: false, // Wheather to display tips of the histogram
+      chartTipFlag: false, // Whether to display tips of the histogram
       requestError: false, // Exceeded the specification
       errorMsg: '', // Error message
       viewResizeFlag: false, // Size reset flag
@@ -174,7 +174,7 @@ export default {
       }
     },
     /**
-     * Formate chart option
+     * Format chart option
      * @return {Object} chatr option
      */
     formatCharOption() {
@@ -387,7 +387,7 @@ export default {
       return this.charObj.convertToPixel('grid', pt);
     },
     /**
-     * Formate Y coordinate display
+     * Format Y coordinate display
      * @param {Number} value
      * @return {Object}
      */
@@ -412,7 +412,7 @@ export default {
       return data;
     },
     /**
-     * Formate time display
+     * Format time display
      * @param {Number} value
      * @return {Number} Formatted number
      */
@@ -425,7 +425,7 @@ export default {
       }
     },
     /**
-     * Formate time display
+     * Format time display
      * @param {Object} time
      * @return {String} Formatted time
      */

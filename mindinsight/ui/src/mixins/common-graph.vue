@@ -125,7 +125,7 @@ export default {
     /**
      * Tree linkage with graph
      * Collapse of current node
-     * @param {Obejct} name  The name of the current node
+     * @param {Object} name  The name of the current node
      */
     nodeCollapseLinkage(name) {
       const node = this.$refs.tree.getNode(name.replace('_unfold', ''));

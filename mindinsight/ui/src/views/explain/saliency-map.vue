@@ -436,8 +436,8 @@ export default {
       this.imageDetails.imgShow = true;
     },
     /**
-     * Request basic inforamtion of train
-     * @param {Object} params Parameters of the request basic inforamtion of train interface
+     * Request basic information of train
+     * @param {Object} params Parameters of the request basic information of train interface
      * @return {Object}
      */
     queryTrainInfo(params) {
@@ -475,7 +475,7 @@ export default {
       });
     },
     /**
-     * The complete logic of table update when any condiiton changed
+     * The complete logic of table update when any condition changed
      * @param {Object} params The main parameters
      * @param {Object} supParams The supplymentary parameters
      */

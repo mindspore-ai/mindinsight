@@ -726,7 +726,7 @@ export default {
       };
     },
     /**
-     * Clear commmon data
+     * Clear common data
      */
     clearCllassifyCommonData() {
       this.fullDataDict = {};

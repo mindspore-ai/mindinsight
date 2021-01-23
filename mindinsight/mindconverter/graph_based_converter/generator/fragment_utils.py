@@ -19,7 +19,7 @@ from mindinsight.mindconverter.graph_based_converter.common.code_fragment import
 
 class FragmentHandler:
     """
-    Define a handler to process the infomation contained by Fragment.
+    Define a handler to process the information contained by Fragment.
 
     Args:
         fragment (NewFragment): The refactored fragment class.

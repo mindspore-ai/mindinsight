@@ -32,7 +32,7 @@ export default {
       option: {}, // The chart option
       instance: null, // The chart instance created by echarts init
       indicators: [], // The list of indicator in string
-      defaultRadius: '73%', // The dafault radius of radar
+      defaultRadius: '73%', // The default radius of radar
       defaultEWidth: 5, // The default width of emphasis width
       defaultLegendSetting: {
         padding: [0, 16],

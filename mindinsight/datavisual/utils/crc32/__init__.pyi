@@ -19,7 +19,7 @@ ByteStr = Union[bytes, str]
 
 
 def CheckValueAgainstData(crc_value: ByteStr, data: ByteStr, size: int) -> bool:
-    """Check crc_value against new crc value from data to see if data is currupted."""
+    """Check crc_value against new crc value from data to see if data is corrupted."""
 
 
 def GetMaskCrc32cValue(data: ByteStr, n: int) -> int:

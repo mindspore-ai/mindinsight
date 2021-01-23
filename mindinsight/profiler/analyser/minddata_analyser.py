@@ -55,7 +55,7 @@ class MinddataAnalyser(BaseAnalyser):
 
         if file_path:
             file_path = validate_and_normalize_path(
-                file_path, raise_key="Invaild minddata_getnext file path.")
+                file_path, raise_key="Invalid minddata_getnext file path.")
             with open(file_path) as data_file:
                 for line in data_file.readlines():
                     node_info = line.split()
@@ -119,7 +119,7 @@ class MinddataAnalyser(BaseAnalyser):
 
         if file_path:
             file_path = validate_and_normalize_path(
-                file_path, raise_key="Invaild device_queue file path.")
+                file_path, raise_key="Invalid device_queue file path.")
             with open(file_path) as data_file:
                 for line in data_file.readlines():
                     op_info = line.split()

@@ -1016,7 +1016,7 @@ class DataManager:
 
     @status.setter
     def status(self, status):
-        """Set data manger status."""
+        """Set data manager status."""
         self._status = status
 
     def cache_train_job(self, train_id):
