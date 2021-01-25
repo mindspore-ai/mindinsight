@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -90,16 +90,16 @@ class TestResNet50:
         cross_entorpy_smooth_is_right = False
         generator_lr_is_right = False
         for source_file in self.source_files:
-            if source_file.file_relative_path == 'src/dataset.py':
+            if source_file.file_relative_path == os.path.normpath('src/dataset.py'):
                 if dataset_name in source_file.content:
                     dataset_is_right = True
             if source_file.file_relative_path == os.path.join('src', NETWORK_NAME.lower() + '.py'):
                 network_is_right = True
-            if source_file.file_relative_path == 'src/CrossEntropySmooth.py':
+            if source_file.file_relative_path == os.path.normpath('src/CrossEntropySmooth.py'):
                 cross_entorpy_smooth_is_right = True
-            if source_file.file_relative_path == 'src/lr_generator.py':
+            if source_file.file_relative_path == os.path.normpath('src/lr_generator.py'):
                 generator_lr_is_right = True
-            if source_file.file_relative_path == 'src/config.py':
+            if source_file.file_relative_path == os.path.normpath('src/config.py'):
                 content = source_file.content
 
                 config_dataset_is_right = self._check_config_dataset(config, content)
@@ -188,17 +188,17 @@ class TestResNet50:
         exist_run_standalone_train_gpu = False
 
         for source_file in self.source_files:
-            if source_file.file_relative_path == 'scripts/run_distribute_train.sh':
+            if source_file.file_relative_path == os.path.normpath('scripts/run_distribute_train.sh'):
                 exist_run_distribute_train = True
-            if source_file.file_relative_path == 'scripts/run_distribute_train_gpu.sh':
+            if source_file.file_relative_path == os.path.normpath('scripts/run_distribute_train_gpu.sh'):
                 exist_run_distribute_train_gpu = True
-            if source_file.file_relative_path == 'scripts/run_eval.sh':
+            if source_file.file_relative_path == os.path.normpath('scripts/run_eval.sh'):
                 exist_run_eval = True
-            if source_file.file_relative_path == 'scripts/run_eval_gpu.sh':
+            if source_file.file_relative_path == os.path.normpath('scripts/run_eval_gpu.sh'):
                 exist_run_eval_gpu = True
-            if source_file.file_relative_path == 'scripts/run_standalone_train.sh':
+            if source_file.file_relative_path == os.path.normpath('scripts/run_standalone_train.sh'):
                 exist_run_standalone_train = True
-            if source_file.file_relative_path == 'scripts/run_standalone_train_gpu.sh':
+            if source_file.file_relative_path == os.path.normpath('scripts/run_standalone_train_gpu.sh'):
                 exist_run_standalone_train_gpu = True
 
         assert exist_run_distribute_train
