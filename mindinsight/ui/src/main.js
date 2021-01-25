@@ -29,10 +29,23 @@ import {basePath} from '@/services/fetcher';
 
 let language = window.localStorage.getItem('milang');
 const languageList = ['zh-cn', 'en-us'];
-if (!language || !languageList.includes(language)) {
-  language = languageList[1];
+if (!language) {
+  let tempLang = navigator.language || navigator.userLanguage;
+  tempLang = tempLang.substr(0, 2);
+  if (tempLang === 'zh') {
+    language = languageList[0];
+  } else {
+    language = languageList[1];
+  }
   window.localStorage.setItem('milang', language);
+} else {
+  if (!languageList.includes(language)) {
+    // set English if no default language
+    language = languageList[1];
+    window.localStorage.setItem('milang', language);
+  }
 }
+store.commit('setLanguage', language);
 
 if (language !== languageList[0]) {
   Vue.use(ElementUI, {locale});

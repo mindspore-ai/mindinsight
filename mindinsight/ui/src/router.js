@@ -139,8 +139,12 @@ export default new Router({
     },
     {
       path: '/explain/saliency-map',
+      component: () => import('./views/explain/saliency-map.vue'),
+    },
+    {
+      path: '/explain/conterfactual-interpretation',
       component: () =>
-        import('./views/explain/saliency-map.vue'),
+        import('./views/explain/conterfactual-interpretation.vue'),
     },
     {
       path: '/explain/xai-metric',

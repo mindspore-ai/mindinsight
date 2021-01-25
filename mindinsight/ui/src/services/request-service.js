@@ -440,6 +440,13 @@ export default {
       params: params,
     });
   },
+  queryHOCData(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/explainer/hoc',
+      data: params,
+    });
+  },
   tensorHitsData(params) {
     return axios({
       method: 'get',
