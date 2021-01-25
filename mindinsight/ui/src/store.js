@@ -40,6 +40,8 @@ export default new Vuex.Store({
     // Echart column selected by model traceability box
     selectedBarList: [],
     customizedColumnOptions: [],
+    // Current language
+    language: 'en-us',
   },
   mutations: {
     // set cancelTokenArr
@@ -86,6 +88,9 @@ export default new Vuex.Store({
     },
     componentsNum(state) {
       state.componentsCount++;
+    },
+    setLanguage(state, val) {
+      state.language = val;
     },
   },
   actions: {},

@@ -68,8 +68,24 @@ limitations under the License.
               <template slot-scope="scope">
                 <span class="menu-item operate-btn first-btn"
                       @contextmenu.prevent="rightClick(scope.row, $event, 0)"
-                      @click.stop="goToSaliencyMap(scope.row)">
+                      @click.stop="goToSaliencyMap(scope.row)"
+                      v-if="scope.row.saliency_map">
                   {{$t('explain.title')}} </span>
+                <span class="menu-item operate-btn button-disable"
+                      v-else
+                      :title="$t('explain.disableSaliencyMapTip')">
+                  {{$t('explain.title')}}
+                </span>
+                <span class="menu-item operate-btn"
+                      @contextmenu.prevent="rightClick(scope.row, $event, 1)"
+                      @click.stop="goToConterfactualinterpretation(scope.row)"
+                      v-if="scope.row.hierarchical_occlusion">
+                  {{$t('explain.conterfactualInterpretation')}} </span>
+                <span class="menu-item operate-btn button-disable"
+                      v-else
+                      :title="$t('explain.disableHOCTip')">
+                  {{$t('explain.conterfactualInterpretation')}}
+                </span>
               </template>
             </el-table-column>
           </el-table>
@@ -124,7 +140,7 @@ export default {
         type: 0,
       },
       tableDom: null,
-      operateWidth: localStorage.getItem('milang') === 'en-us' ? 230 : 145,
+      operateWidth: this.$store.state.language === 'en-us' ? 430 : 290,
     };
   },
   computed: {},
@@ -224,11 +240,32 @@ export default {
      */
     goToSaliencyMap(row) {
       this.contextMenu.show = false;
-      const trainId = encodeURIComponent(row.train_id);
+      const trainId = row.train_id;
 
       this.$router.push({
         path: '/explain/saliency-map',
         query: {id: trainId},
+      });
+    },
+
+    /**
+     * go to Profiler
+     * @param {Object} row select row
+     */
+    goToConterfactualinterpretation(row) {
+      this.contextMenu.show = false;
+      const profilerDir = row.profiler_dir;
+      const trainId = row.train_id;
+      const path = row.relative_path;
+      const router = '/explain/conterfactual-interpretation';
+
+      this.$router.push({
+        path: router,
+        query: {
+          dir: profilerDir,
+          id: trainId,
+          path: path,
+        },
       });
     },
 
@@ -243,31 +280,24 @@ export default {
       this.contextMenu.show = true;
     },
 
-    doRightClick(key) {
+    doRightClick() {
       const row = this.contextMenu.data;
       if (!row) {
         return;
       }
+      this.contextMenu.show = false;
+      const trainId = row.train_id;
       if (this.contextMenu.type) {
-        this.contextMenu.show = false;
-        const profilerDir = encodeURIComponent(row.profiler_dir);
-        const trainId = encodeURIComponent(row.train_id);
-        const path = encodeURIComponent(row.relative_path);
         const router = '/explain/conterfactual-interpretation';
 
         const routeUrl = this.$router.resolve({
           path: router,
           query: {
-            dir: profilerDir,
             id: trainId,
-            path: path,
           },
         });
         window.open(routeUrl.href, '_blank');
       } else {
-        this.contextMenu.show = false;
-        const trainId = encodeURIComponent(row.train_id);
-
         const routeUrl = this.$router.resolve({
           path: '/explain/saliency-map',
           query: {id: trainId},

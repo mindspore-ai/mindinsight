@@ -110,7 +110,7 @@ limitations under the License.
  * The PublicStore holds the key of focused selector
  * When there is more than two component in same page, help selector to keep correct display
  */
-const PublicStore = {activeKey: {key: ''}};
+const PublicStore = { activeKey: { key: '' } };
 export default {
   props: {
     multiple: {
@@ -215,8 +215,11 @@ export default {
      * The logic of click event that add to window, which can make response to defocus
      */
     clickHandler() {
-      this.ifFocus = false;
-      this.ifActive = false;
+      if (this.ifFocus) {
+        this.ifFocus = false;
+        this.ifActive = false;
+        this.$emit('selectBlur');
+      }
     },
     /**
      * The logic of click the selector, including everywhere
@@ -310,9 +313,14 @@ export default {
      * @param {Number} index
      */
     mulDeselectOption(option, index) {
-      const indexTemp = this.indexes.indexOf(index);
-      this.indexes.splice(indexTemp, 1);
-      option.selected = false;
+      return new Promise((resolve) => {
+        const indexTemp = this.indexes.indexOf(index);
+        this.indexes.splice(indexTemp, 1);
+        option.selected = false;
+        this.$nextTick(() => {
+          resolve(true);
+        });
+      });
     },
     /**
      * The logic of select option when multiple is true
@@ -361,7 +369,11 @@ export default {
     cancelLabel(event, index) {
       event.stopPropagation();
       event.preventDefault();
-      this.mulDeselectOption(this.options[index], index);
+      this.mulDeselectOption(this.options[index], index).then(() => {
+        if (!this.ifActive) {
+          this.$emit('cancelLabel');
+        }
+      });
     },
   },
   created() {
@@ -411,7 +423,7 @@ export default {
       }, this.filterDebounce);
     },
     // The watcher of source can process asynchronous data input, or make response when original data changed
-    'source': {
+    source: {
       handler(newVal) {
         this.indexes = [];
         this.options = this.processData(newVal);
@@ -427,7 +439,7 @@ export default {
         }
       },
     },
-    'indexes': {
+    indexes: {
       handler() {
         this.$nextTick(() => {
           this.$emit('selectedUpdate', this.calValues());
@@ -558,16 +570,29 @@ export default {
 .cl-search-select .select-container .option-container .select-option:hover {
   background-color: #f5f7fa;
 }
-.cl-search-select .select-container .option-container .select-option .label-container {
+.cl-search-select
+  .select-container
+  .option-container
+  .select-option
+  .label-container {
   white-space: nowrap;
   max-width: 320px;
   text-overflow: ellipsis;
   overflow: hidden;
 }
-.cl-search-select .select-container .option-container .select-option .icon-container {
+.cl-search-select
+  .select-container
+  .option-container
+  .select-option
+  .icon-container {
   width: 14px;
 }
-.cl-search-select .select-container .option-container .select-option .icon-container .icon-no-selected {
+.cl-search-select
+  .select-container
+  .option-container
+  .select-option
+  .icon-container
+  .icon-no-selected {
   display: none;
 }
 .cl-search-select .select-container .option-container .is-selected {
@@ -591,7 +616,9 @@ export default {
   -webkit-box-shadow: inset 0 0 6px rgba(144, 147, 153, 0.3);
   background-color: #e8e8e8;
 }
-.cl-search-select .select-container .option-container::-webkit-scrollbar-thumb:hover {
+.cl-search-select
+  .select-container
+  .option-container::-webkit-scrollbar-thumb:hover {
   -webkit-box-shadow: inset 0 0 6px rgba(144, 147, 153, 0.3);
   background-color: #cacaca;
   border-radius: 3px;

@@ -17,27 +17,27 @@ limitations under the License.
   <div class="cl-saliency-map">
     <!-- Page Title -->
     <div class="cl-saliency-map-title">
-      {{$t('explain.title')}}
+      {{ $t('explain.title') }}
       <el-tooltip placement="right-start"
                   effect="light">
         <div slot="content"
-             class="tooltip-container">
+             class="saliency-tooltip-container">
           <div class="cl-saliency-map-tip">
             <div class="tip-title">
-              {{$t('explain.mainTipTitle')}}
+              {{ $t('explain.mainTipTitle') }}
             </div>
             <div class="tip-part">
-              {{$t('explain.mainTipPartOne')}}
+              {{ $t('explain.mainTipPartOne') }}
             </div>
             <div class="tip-part">
-              {{$t('explain.mainTipPartTwo')}}
+              {{ $t('explain.mainTipPartTwo') }}
             </div>
             <div class="tip-part">
-              {{$t('explain.mainTipPartThree')}}
+              {{ $t('explain.mainTipPartThree') }}
             </div>
             <a :href="$t('explain.mainTipPartFour')"
                target="_blank">
-              {{$t('explain.mainTipPartFour')}}
+              {{ $t('explain.mainTipPartFour') }}
             </a>
           </div>
         </div>
@@ -50,87 +50,104 @@ limitations under the License.
       <select-group :checkboxes="allExplainers"
                     @updateCheckedList="updateSelectedExplainers"
                     :title="$t('explain.explainMethod')">
-        <span class="methods-action"
-              @click="goMetric">{{$t('explain.viewScore')}}</span>
+        <span v-if="hasMetric"
+              class="methods-action"
+              @click="goMetric">{{
+          $t('explain.viewScore')
+        }}</span>
       </select-group>
     </div>
     <!-- Parameters Fetch -->
     <div class="cl-saliency-map-condition">
-      <div class="condition-left">
-        <div class="condition-item line-title">
-          {{ $t('explain.tag') }}
-          <el-tooltip placement="bottom-start"
-                      effect="light">
-            <div slot="content"
-                 class="tooltip-container">
-                {{$t('explain.tagTip')}}
-            </div>
-            <i class="el-icon-info"></i>
-          </el-tooltip>
-        </div>
-        <!-- Truth Labels -->
-        <div class="condition-item search-select">
+      <div class="condition-item line-title">
+        {{ $t('explain.filterImg') }}
+      </div>
+      <!-- Truth Labels -->
+      <div class="condition-item">
+        {{ $t('explain.tag') }}
+        <el-tooltip placement="bottom-start"
+                    effect="light">
+          <div slot="content"
+               class="saliency-tooltip-container">
+            {{ $t('explain.tagTip') }}
+          </div>
+          <i class="el-icon-info"></i>
+        </el-tooltip>
+        <div class="search-select">
           <search-select multiple
                          plain
                          :source="truthLabels"
                          @selectedUpdate="updateSelected"
-                         @selectEnter="fetch">
+                         @selectEnter="fetch"
+                         @selectBlur="fetch"
+                         @cancelLabel="fetch">
           </search-select>
         </div>
-        <!-- Button -->
-        <div class="condition-item">
-          <el-button type="primary"
-                     class="condition-button"
-                     @click="fetch">{{ $t('explain.fetch') }}</el-button>
-        </div>
-        <!-- Min Confidence -->
-        <div class="condition-item">
-          {{ $t('explain.minConfidence')}}
-          <el-tooltip placement="bottom-start"
-                      effect="light"
-                      popper-class="confidence-tooltip">
-            <div slot="content"
-                 class="tooltip-container">
-              {{$t('explain.minConfidenceTip')}}
-            </div>
-            <i class="el-icon-info"></i>
-          </el-tooltip>
-          {{$t('symbols.colon')}}
-          {{minConfidence}}
-        </div>
       </div>
-      <div class="condition-right">
-        <!-- Sorted Name -->
-        <div class="condition-item">
-          <span class="item-children">{{$t('explain.imgSort')}}</span>
-          <el-select v-model="sortedName"
-                     @change="sortedNameChange"
-                     popper-class="saliency-map-selector">
-            <el-option v-for="name of sortedNames"
-                       :key="name.label"
-                       :label="name.label"
-                       :value="name.value">
-            </el-option>
-          </el-select>
-        </div>
-        <!-- Open Superpose -->
-        <div class="condition-item">
-          <span class="item-children">{{
-            $t('explain.superposeImg')
-          }}</span>
-          <el-switch v-model="ifSuperpose"
-                     active-color="#00a5a7"></el-switch>
-        </div>
+      <!-- Label Type Filter -->
+      <div class="condition-item margin-left">
+        {{ $t('explain.predictionType') }}
+        <el-tooltip placement="bottom-start"
+                    effect="light">
+          <div slot="content"
+               class="saliency-tooltip-container">
+            {{ $t('explain.typeTip') }}
+          </div>
+          <i class="el-icon-info"></i>
+        </el-tooltip>
+        <el-checkbox-group v-model="predictionTypes"
+                           class="selector"
+                           @change="fetch"
+                           :disabled="!hasPrediction || ifNoData">
+          <el-checkbox :label="TP">{{TP}}</el-checkbox>
+          <el-checkbox :label="FN">{{FN}}</el-checkbox>
+          <el-checkbox :label="FP">{{FP}}</el-checkbox>
+        </el-checkbox-group>
+      </div>
+      <!-- Min Confidence -->
+      <div class="condition-item">
+        {{ $t('explain.minConfidence') }}
+        <el-tooltip placement="bottom-start"
+                    effect="light">
+          <div slot="content"
+               class="saliency-tooltip-container">
+            {{ $t('explain.minConfidenceTip') }}
+          </div>
+          <i class="el-icon-info"></i>
+        </el-tooltip>
+        <span>{{ $t('symbols.colon') }}</span>
+        <span>{{ minConfidence }}</span>
+      </div>
+      <!-- Gap -->
+      <div class="item-gap"></div>
+      <!-- Sorted Name -->
+      <div class="condition-item">
+        <span class="item-children">{{ $t('explain.imgSort') }}</span>
+        <el-select v-model="sortedName"
+                   @change="sortedNameChange"
+                   popper-class="saliency-map-selector">
+          <el-option v-for="name of sortedNames"
+                     :key="name.label"
+                     :label="name.label"
+                     :value="name.value">
+          </el-option>
+        </el-select>
+      </div>
+      <!-- Open Superpose -->
+      <div class="condition-item">
+        <span class="item-children">{{ $t('explain.superposeImg') }}</span>
+        <el-switch v-model="ifSuperpose"
+                   active-color="#00a5a7"></el-switch>
       </div>
     </div>
     <!-- Data Table -->
     <div class="cl-saliency-map-table">
       <div class="table-nodata"
-           v-if="ifTableLoading">
+           v-if="ifNoData">
         <img :src="require('@/assets/images/nodata.png')"
-             alt="">
+             alt="" />
         <span class="nodata-text"
-              v-if="!ifError">
+              v-if="ifLoading">
           {{ $t('public.dataLoading') }}
         </span>
         <span class="nodata-text"
@@ -144,7 +161,7 @@ limitations under the License.
                   border
                   height="100%"
                   :span-method="mergeTable"
-                  :empty-text="$t('explain.noData')">
+                  :empty-text="emptyText">
           <!-- Original Picture Column-->
           <el-table-column :label="$t('explain.originalPicture')"
                            width="270"
@@ -166,34 +183,28 @@ limitations under the License.
                             effect="light"
                             popper-class="table-tooltip">
                   <div slot="content"
-                       class="tooltip-container">
+                       class="saliency-tooltip-container">
                     <div class="cl-saliency-map-tip tag-tip">
                       <div class="tip-item tip-title">
-                        {{$t('explain.forecastTagTip')}}
+                        {{ $t('explain.forecastTagTip') }}
                       </div>
                       <div class="tip-item">
                         <img :src="require('@/assets/images/explain-tp.svg')"
-                             class="tip-icon">
-                        {{$t('symbols.colon')}}
-                        {{$t('explain.TP')}}
+                             class="tip-icon" />
+                        {{ $t('symbols.colon') }}
+                        {{ $t('explain.TP') }}
                       </div>
                       <div class="tip-item">
                         <img :src="require('@/assets/images/explain-fn.svg')"
-                             class="tip-icon">
-                        {{$t('symbols.colon')}}
-                        {{$t('explain.FN')}}
+                             class="tip-icon" />
+                        {{ $t('symbols.colon') }}
+                        {{ $t('explain.FN') }}
                       </div>
                       <div class="tip-item">
                         <img :src="require('@/assets/images/explain-fp.svg')"
-                             class="tip-icon">
-                        {{$t('symbols.colon')}}
-                        {{$t('explain.FP')}}
-                      </div>
-                      <div class="tip-item">
-                        <img :src="require('@/assets/images/explain-tn.svg')"
-                             class="tip-icon">
-                        {{$t('symbols.colon')}}
-                        {{$t('explain.TN')}}
+                             class="tip-icon" />
+                        {{ $t('symbols.colon') }}
+                        {{ $t('explain.FP') }}
                       </div>
                     </div>
                   </div>
@@ -202,12 +213,49 @@ limitations under the License.
               </span>
             </template>
             <template slot-scope="scope">
-              <div class="table-forecast-tag">
+              <div class="table-forecast-tag"
+                   v-if="uncertaintyEnabled">
+                <!-- Tag Title -->
+                <div class="tag-title-true">
+                  <div class="first">{{ $t('explain.tag') }}</div>
+                  <div>{{ $t('explain.confidenceRange') }}</div>
+                  <div class="center">{{ $t('explain.uncertainty') }}</div>
+                </div>
+                <!-- Tag content -->
+                <div class="tag-content">
+                  <div v-for="(tag, index) in scope.row.inferences"
+                       :key="tag.label"
+                       class="tag-content-item tag-content-item-true"
+                       :class="{
+                      'tag-active': index === scope.row.activeLabelIndex,
+                      'tag-tp': tag.prediction_type.toUpperCase() === TP,
+                      'tag-fn': tag.prediction_type.toUpperCase() === FN,
+                      'tag-fp': tag.prediction_type.toUpperCase() === FP,
+                    }"
+                       @click="changeActiveLabel(scope.row, index)">
+                    <div class="first content-label">{{ tag.label }}</div>
+                    <div>
+                      <div>{{ tag.confidence.toFixed(3) }}</div>
+                      <div>
+                        {{
+                          `[${Math.floor(tag.confidence_itl95[0] * 100) / 100},`+
+                          ` ${Math.ceil(tag.confidence_itl95[1] * 100) / 100}]`
+                        }}
+                      </div>
+                    </div>
+                    <div class="center">
+                      {{ tag.confidence_sd === 0 ? 0 : tag.confidence_sd.toFixed(6) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="table-forecast-tag"
+                   v-else>
                 <!--Tag Title-->
                 <div class="tag-title-false">
                   <div></div>
-                  <div>{{$t('explain.tag')}}</div>
-                  <div>{{$t('explain.confidence')}}</div>
+                  <div>{{ $t('explain.tag') }}</div>
+                  <div>{{ $t('explain.confidence') }}</div>
                 </div>
                 <!--Tag content-->
                 <div class="tag-content">
@@ -215,16 +263,18 @@ limitations under the License.
                        :key="tag.label"
                        class="tag-content-item tag-content-item-false"
                        :class="{
-                        'tag-active': index === scope.row.activeLabelIndex,
-                        'tag-tp': tag.type === 'tp',
-                        'tag-fn': tag.type === 'fn',
-                        'tag-fp': tag.type === 'fp'
-                      }"
+                      'tag-active': index === scope.row.activeLabelIndex,
+                      'tag-tp': tag.prediction_type.toUpperCase() === TP,
+                      'tag-fn': tag.prediction_type.toUpperCase() === FN,
+                      'tag-fp': tag.prediction_type.toUpperCase() === FP,
+                    }"
                        @click="changeActiveLabel(scope.row, index)">
                     <div></div>
                     <div class="content-label"
-                         :title="tag.label">{{tag.label}}</div>
-                    <div>{{tag.confidence.toFixed(3)}}</div>
+                         :title="tag.label">
+                      {{ tag.label }}
+                    </div>
+                    <div>{{ tag.confidence.toFixed(3) }}</div>
                   </div>
                 </div>
               </div>
@@ -237,13 +287,19 @@ limitations under the License.
                            class-name="canvas-cell"
                            :resizable="false">
             <template slot="header">
-              <span :title="explainer">{{explainer}}</span>
+              <span :title="explainer">{{ explainer }}</span>
             </template>
             <template slot-scope="scope">
-              <superpose-img v-if="scope.row.inferences[scope.row.activeLabelIndex][explainer]"
+              <superpose-img v-if="
+                  scope.row.inferences[scope.row.activeLabelIndex][explainer]
+                "
                              containerSize="250"
                              :backgroundImg="getImgURL(scope.row.image)"
-                             :targetImg="getImgURL(scope.row.inferences[scope.row.activeLabelIndex][explainer])"
+                             :targetImg="
+                  getImgURL(
+                    scope.row.inferences[scope.row.activeLabelIndex][explainer]
+                  )
+                "
                              :ifSuperpose="ifSuperpose"
                              @click.native="showImgDiglog(scope.row, explainer)">
               </superpose-img>
@@ -256,9 +312,9 @@ limitations under the License.
             <template>
               <div class="table-nodata">
                 <img :src="require('@/assets/images/nodata.png')"
-                     alt="">
+                     alt="" />
                 <span class="nodata-text">
-                  {{$t('explain.noExplainer')}}
+                  {{ $t('explain.noExplainer') }}
                 </span>
               </div>
             </template>
@@ -301,6 +357,13 @@ import searchSelect from '../../components/search-select';
 import requestService from '../../services/request-service.js';
 import {basePath} from '@/services/fetcher';
 
+// The effective prediction types
+const [TP, FN, FP] = ['TP', 'FN', 'FP'];
+// The sorted name of image
+const [CONFIDENCE, UNCERTAINTY] = ['confidence', 'uncertainty'];
+// The sorted type of image
+const DESCENDING = 'descending';
+
 export default {
   components: {
     selectGroup,
@@ -309,6 +372,9 @@ export default {
   },
   data() {
     return {
+      ifNoData: true,
+      ifLoading: true,
+      ifError: false,
       trainID: '', // The id of the train
       selectedExplainers: [], // The selected explainer methods
       allExplainers: [], // The list of all explainer method
@@ -319,21 +385,18 @@ export default {
         imgShow: false,
       }, // The object of show img dialog
       ifSuperpose: false, // If open the superpose function
-      ifTableLoading: true, // If the table waiting for the data
-      ifError: false, // If request error
       minConfidence: 0, // The min confidence
       tableData: null, // The table data
       selectedTruthLabels: [], // The selected truth labels
       truthLabels: [], // The list of all truth labels
-      // truthLabelsTemp: [], // The list of all truth labels
-      sortedName: 'confidence', // The sorted Name of sort
+      sortedName: CONFIDENCE, // The sorted Name of sort
       sortedNames: [
         {
           label: this.$t('explain.byProbability'),
-          value: 'confidence',
+          value: CONFIDENCE,
         },
       ], // The list of all sorted Name
-      sortedType: 'descending', // The default sorted type
+      sortedType: DESCENDING, // The default sorted type
       pageInfo: {
         currentPage: 1,
         pageSize: 2,
@@ -341,8 +404,18 @@ export default {
       }, // The object of pagination information
       tableHeight: 0, // The height of table to fix the table header
       queryParameters: null, // The complete parameters of query table information, have pagination information
-      labelReady: false, // If the truth labels are ready
       pageChangeDelay: 200, // The time interval used to prevent the violent clicks of changing current page
+      emptyText: '', // The empty text of table
+      TP: TP, // Means true positive
+      FN: FN, // Means false negative
+      FP: FP, // Means false positive
+      predictionTypes: [TP, FN, FP], // The effective filter prediction types
+      hasPrediction: true, // If prediction type filter is effective
+      hasMetric: false, // If has metric information
+      requestTime: 0, // The count of request
+      requestDelay: 1500, // The delay of request in ms
+      requestLimit: 3, // The limit of request
+      requestTimer: null, // The interval timer of request
     };
   },
   computed: {
@@ -353,6 +426,7 @@ export default {
         labels: this.selectedTruthLabels,
         explainer: this.selectedExplainers,
         sorted_name: this.sortedName,
+        prediction_types: this.predictionTypes,
       };
     },
   },
@@ -398,7 +472,7 @@ export default {
       this.pageInfo.currentPage = 1;
       this.queryParameters.offset = this.pageInfo.currentPage - 1;
       this.queryParameters.limit = val;
-      this.queryPageInfo(this.queryParameters);
+      this.queryPageInfo(this.queryParameters).then();
     },
     /**
      * The logic that is executed when the current page number changed
@@ -408,7 +482,7 @@ export default {
       clearTimeout(this.pageChangeTimer);
       this.pageChangeTimer = setTimeout(() => {
         this.queryParameters.offset = val - 1;
-        this.queryPageInfo(this.queryParameters);
+        this.queryPageInfo(this.queryParameters).then();
         this.pageChangeTimer = null;
       }, this.pageChangeDelay);
     },
@@ -420,7 +494,7 @@ export default {
       this.queryParameters.sorted_name = val;
       this.pageInfo.currentPage = 1;
       this.queryParameters.offset = this.pageInfo.currentPage - 1;
-      this.queryPageInfo(this.queryParameters);
+      this.queryPageInfo(this.queryParameters).then();
     },
     /**
      * The logic of click the explainer method canvas
@@ -438,46 +512,64 @@ export default {
     /**
      * Request basic information of train
      * @param {Object} params Parameters of the request basic information of train interface
-     * @return {Object}
      */
     queryTrainInfo(params) {
-      return new Promise((resolve, reject) => {
-        requestService
-            .queryTrainInfo(params)
-            .then(
-                (res) => {
-                  if (res && res.data) {
-                    if (res.data.saliency) {
-                      this.minConfidence = res.data.saliency.min_confidence
+      requestService
+          .queryTrainInfo(params)
+          .then(
+              (res) => {
+                if (res && res.data) {
+                  if (res.data.saliency) {
+                    this.minConfidence = res.data.saliency.min_confidence
                     ? res.data.saliency.min_confidence
                     : '--';
-                      this.allExplainers = this.arrayToCheckBox(
-                          res.data.saliency.explainers,
-                      );
+                    this.hasMetric = res.data.saliency.metrics.length
+                    ? true
+                    : false;
+                    this.allExplainers = this.arrayToCheckBox(
+                        res.data.saliency.explainers,
+                    );
+                  }
+                  if (res.data.classes) {
+                    const truthLabels = [];
+                    for (let i = 0; i < res.data.classes.length; i++) {
+                      truthLabels.push(res.data.classes[i].label);
                     }
-                    if (res.data.classes) {
-                      const truthLabels = [];
-                      for (let i = 0; i < res.data.classes.length; i++) {
-                        truthLabels.push(res.data.classes[i].label);
-                      }
-                      this.truthLabels = truthLabels;
+                    this.truthLabels = truthLabels;
+                  }
+                  if (res.data.uncertainty) {
+                    this.uncertaintyEnabled = res.data.uncertainty.enabled
+                    ? true
+                    : false;
+                    // The sort by uncertainty only valid when uncertaintyEnabled is true
+                    if (this.uncertaintyEnabled) {
+                      this.sortedNames.push({
+                        label: this.$t('explain.byUncertainty'),
+                        value: UNCERTAINTY,
+                      });
                     }
                   }
-                  resolve(true);
-                },
-                (error) => {
-                  reject(error);
-                },
-            )
-            .catch((error) => {
-              reject(error);
-            });
-      });
+                }
+                this.ifNoData = false;
+                this.ifLoading = false;
+              },
+              () => {
+                this.ifNoData = false;
+                this.ifLoading = false;
+                this.ifError = true;
+              },
+          )
+          .catch(() => {
+            this.ifNoData = false;
+            this.ifLoading = false;
+            this.ifError = true;
+          });
     },
     /**
      * The complete logic of table update when any condition changed
      * @param {Object} params The main parameters
      * @param {Object} supParams The supplymentary parameters
+     * @return {Promise}
      */
     updateTable(params, supParams) {
       const paramsTemp = JSON.parse(JSON.stringify(params));
@@ -496,50 +588,64 @@ export default {
         }
       }
       Object.assign(paramsTemp, supParams);
-      this.queryPageInfo(paramsTemp);
+      return this.queryPageInfo(paramsTemp);
     },
     /**
      * Request page table information
      * @param {Object} params Parameters of the request page information interface
+     * @return {Promise}
      */
     queryPageInfo(params) {
       params.train_id = decodeURIComponent(params.train_id);
       this.queryParameters = params;
-      requestService
-          .queryPageInfo(params)
-          .then(
-              (res) => {
-                // Make sure the offset of response is equal to offset of request
-                if (params.offset === this.queryParameters.offset) {
-                  if (res && res.data && res.data.samples) {
-                    if (this.minConfidence === '--') {
-                      this.tableData = this.processTableData(res.data.samples, false);
-                      this.pageInfo.total =
-                  res.data.count !== undefined ? res.data.count : 0;
+      return new Promise((resolve) => {
+        requestService
+            .queryPageInfo(params)
+            .then(
+                (res) => {
+                  // Make sure the offset of response is equal to offset of request
+                  if (params.offset === this.queryParameters.offset) {
+                    if (res && res.data && res.data.samples) {
+                      this.tableData = this.processTableData(res.data.samples);
+                      this.pageInfo.total = res.data.count ? res.data.count : 0;
+                      if (!res.data.count) {
+                        // 3: Prediction type has three valid values
+                        // When length === 3 || length === 0, means search without type limit
+                        const typeLimit =
+                          params.prediction_types.length !== 3 &&
+                          params.prediction_types.length !== 0;
+                        if (params.labels || typeLimit) {
+                        // With label or type limit
+                          this.emptyText = this.$t('public.noData');
+                        } else {
+                          // Without limit
+                          if (this.requestTime === this.requestLimit) {
+                            this.emptyText = this.$t('public.noData');
+                          } else {
+                            this.emptyText = this.$t('explain.noData');
+                          }
+                        }
+                        resolve(false);
+                      } else {
+                        resolve(true);
+                      }
                     } else {
-                      this.tableData = this.processTableData(
-                          res.data.samples,
-                          this.minConfidence,
-                      );
-                      this.pageInfo.total =
-                  res.data.count !== undefined ? res.data.count : 0;
+                      this.pageInfo.total = 0;
                     }
-                  } else {
-                    this.pageInfo.total = 0;
                   }
-                  this.ifError = false;
-                  this.ifTableLoading = false;
-                }
-              },
-              (error) => {
-                this.ifError = true;
-                this.ifTableLoading = true;
-              },
-          )
-          .catch((e) => {
-            this.ifError = true;
-            this.ifTableLoading = true;
-          });
+                },
+                () => {
+                  this.ifNoData = false;
+                  this.ifLoading = false;
+                  this.ifError = true;
+                },
+            )
+            .catch(() => {
+              this.ifNoData = false;
+              this.ifLoading = false;
+              this.ifError = true;
+            });
+      });
     },
     /**
      * Process the original table data
@@ -548,43 +654,17 @@ export default {
      * If min confidence is lost, replace with type except number, such as 'false', 'null'
      * @return {Object} The processed table data
      */
-    processTableData(samples, minConfidence) {
+    processTableData(samples) {
       for (let i = 0; i < samples.length; i++) {
         samples[i].activeLabelIndex = 0;
         if (samples[i].inferences) {
           for (let j = 0; j < samples[i].inferences.length; j++) {
-            if (
-              typeof minConfidence === 'number' &&
-              typeof samples[i].inferences[j].confidence === 'number'
-            ) {
-              // Model Inference Result
-              const MIR =
-                samples[i].inferences[j].confidence * 100 >=
-                minConfidence * 100;
-              let labelValid;
-              // The label if valid, judged by whether it exists in the truth labels
-              if (samples[i].labels && samples[i].inferences[j].label) {
-                labelValid =
-                  samples[i].labels.indexOf(samples[i].inferences[j].label) >=
-                  0;
-              } else {
-                labelValid = false;
+            if (!samples[i].inferences[j].prediction_type) {
+              // When prediction type is null, prediction type filter is useless
+              if (this.hasPrediction) {
+                this.hasPrediction = false;
               }
-              if (MIR) {
-                if (labelValid) {
-                  samples[i].inferences[j].type = 'tp';
-                } else {
-                  samples[i].inferences[j].type = 'fp';
-                }
-              } else {
-                if (labelValid) {
-                  samples[i].inferences[j].type = 'fn';
-                } else {
-                  samples[i].inferences[j].type = 'tn';
-                }
-              }
-            } else {
-              samples[i].inferences[j].type = 'none';
+              samples[i].inferences[j].prediction_type = 'none';
             }
             // Defined the attr{key: explainer, value: overlay} out the saliencies
             // Can provide some convenience for some table operation
@@ -655,6 +735,25 @@ export default {
         query: {id: this.trainID},
       });
     },
+    initPage() {
+      return new Promise((resolve) => {
+        this.updateTable(this.baseQueryParameters, {
+          limit: this.pageInfo.pageSize,
+          offset: this.pageInfo.currentPage - 1,
+        }).then((hasData) => {
+          // If has data now
+          if (hasData) {
+            const params = {
+              train_id: this.trainID,
+            };
+            this.queryTrainInfo(params);
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        });
+      });
+    },
   },
   created() {
     if (!this.$route.query.id) {
@@ -663,24 +762,28 @@ export default {
       return;
     }
     this.trainID = this.$route.query.id;
-    const params = {
-      train_id: this.trainID,
-    };
-    this.queryTrainInfo(params)
-        .then(
-            (res) => {
-              this.updateTable(this.baseQueryParameters, {
-                limit: this.pageInfo.pageSize,
-                offset: this.pageInfo.currentPage - 1,
-              });
-            },
-            (error) => {
-              this.ifError = true;
-            },
-        )
-        .catch((e) => {
-          this.ifError = true;
-        });
+    this.initPage().then((hasData) => {
+      this.requestTime = 1;
+      if (!hasData) {
+        this.requestTimer = setInterval(() => {
+          this.initPage().then((hasDataNow) => {
+            this.requestTime++;
+            if (hasDataNow) {
+              clearInterval(this.requestTimer);
+            } else {
+              if (this.requestTime === this.requestLimit) {
+                // Still has no data
+                this.ifLoading = false;
+                clearInterval(this.requestTimer);
+              }
+            }
+          });
+        }, this.requestDelay);
+      }
+    });
+  },
+  destroyed() {
+    clearInterval(this.requestTimer);
   },
   mounted() {
     // Change the page title
@@ -700,6 +803,12 @@ export default {
   font-weight: normal;
 }
 
+.cl-saliency-map .el-checkbox {
+  margin-right: 16px;
+}
+.cl-saliency-map .el-checkbox__label {
+  padding-left: 8px;
+}
 .cl-saliency-map .el-icon-info {
   color: #6c7280;
 }
@@ -714,15 +823,31 @@ export default {
 .cl-saliency-map .el-checkbox__label {
   color: #333333 !important;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .el-table__body .pic-cell .cell {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .el-table__body
+  .pic-cell
+  .cell {
   text-overflow: clip;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .el-table__body .pic-cell .cell img {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .el-table__body
+  .pic-cell
+  .cell
+  img {
   height: 250px;
   width: 250px;
   object-fit: contain;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .el-table__body .canvas-cell img {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .el-table__body
+  .canvas-cell
+  img {
   cursor: pointer;
 }
 .cl-saliency-map .cl-saliency-map-table .table-data .el-table__body .cell {
@@ -734,18 +859,21 @@ export default {
   max-width: 650px;
 }
 
-.el-tooltip__popper .tooltip-container .cl-saliency-map-tip {
+.el-tooltip__popper .saliency-tooltip-container .cl-saliency-map-tip {
   padding: 10px;
 }
-.el-tooltip__popper .tooltip-container .cl-saliency-map-tip .tip-title {
+.el-tooltip__popper
+  .saliency-tooltip-container
+  .cl-saliency-map-tip
+  .tip-title {
   font-size: 16px;
   font-weight: bold;
 }
-.el-tooltip__popper .tooltip-container .cl-saliency-map-tip .tip-part {
+.el-tooltip__popper .saliency-tooltip-container .cl-saliency-map-tip .tip-part {
   line-height: 20px;
   word-break: normal;
 }
-.el-tooltip__popper .tooltip-container .tag-tip .tip-item {
+.el-tooltip__popper .saliency-tooltip-container .tag-tip .tip-item {
   margin-bottom: 10px;
   font-size: 12px;
   color: #575d6c;
@@ -753,13 +881,16 @@ export default {
   display: flex;
   align-items: center;
 }
-.el-tooltip__popper .tooltip-container .tag-tip .tip-item .tip-icon {
+.el-tooltip__popper .saliency-tooltip-container .tag-tip .tip-item .tip-icon {
   margin-right: 4px;
 }
-.el-tooltip__popper .tooltip-container .tag-tip .tip-item:last-of-type {
+.el-tooltip__popper
+  .saliency-tooltip-container
+  .tag-tip
+  .tip-item:last-of-type {
   margin-bottom: 0px;
 }
-.el-tooltip__popper .tooltip-container .tag-tip .tip-title {
+.el-tooltip__popper .saliency-tooltip-container .tag-tip .tip-title {
   color: #333333;
 }
 </style>
@@ -800,50 +931,46 @@ export default {
   text-decoration: underline;
 }
 .cl-saliency-map .cl-saliency-map-condition {
-  padding: 0px 32px 21px 32px;
-  height: 58px;
+  padding: 0px 32px 21px;
+  line-height: 37px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   border-bottom: 1px solid #e6ebf5;
+  flex-wrap: wrap;
 }
-.cl-saliency-map .cl-saliency-map-condition .condition-left {
-  height: 100%;
-  display: flex;
-  align-items: center;
+.cl-saliency-map .cl-saliency-map-condition .item-gap {
+  flex-grow: 1;
 }
-.cl-saliency-map .cl-saliency-map-condition .condition-left .condition-item {
+.cl-saliency-map .cl-saliency-map-condition .margin-left {
+  margin-left: 24px;
+}
+.cl-saliency-map .cl-saliency-map-condition .condition-item {
   margin-right: 16px;
-  height: 100%;
   display: flex;
   align-items: center;
 }
-.cl-saliency-map .cl-saliency-map-condition .condition-left .condition-item .condition-button {
+.cl-saliency-map .cl-saliency-map-condition .condition-item .item-children {
+  margin-right: 8px;
+}
+.cl-saliency-map .cl-saliency-map-condition .condition-item .selector {
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+}
+.cl-saliency-map .cl-saliency-map-condition .condition-item .condition-button {
   padding: 7px 15px;
   border-radius: 2px;
   border: 1px solid #00a5a7;
 }
-.cl-saliency-map .cl-saliency-map-condition .condition-left .condition-item .el-icon-info {
+.cl-saliency-map .cl-saliency-map-condition .condition-item .el-icon-info {
   margin-right: 4px;
   margin-left: 2px;
 }
-.cl-saliency-map .cl-saliency-map-condition .condition-left .search-select {
+.cl-saliency-map .cl-saliency-map-condition .search-select {
   width: 200px;
   height: 32px;
 }
-.cl-saliency-map .cl-saliency-map-condition .condition-right {
-  display: flex;
-  align-items: center;
-}
-.cl-saliency-map .cl-saliency-map-condition .condition-right .condition-item {
-  margin-right: 24px;
-  display: flex;
-  align-items: center;
-}
-.cl-saliency-map .cl-saliency-map-condition .condition-right .condition-item .item-children {
-  margin-right: 12px;
-}
-.cl-saliency-map .cl-saliency-map-condition .condition-right .condition-item:last-of-type {
+.cl-saliency-map .cl-saliency-map-condition .condition-item:last-of-type {
   margin-right: 0px;
 }
 .cl-saliency-map .cl-saliency-map-table {
@@ -870,33 +997,63 @@ export default {
   display: flex;
   flex-direction: column;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .center {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .center {
   text-align: center;
 }
 .cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag div,
 .cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag span {
   font-size: 12px;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-title-true {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-title-true {
   display: grid;
   grid-template-columns: 35% 35% 30%;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-title-true .first {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-title-true
+  .first {
   padding-left: 12px;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-title-false {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-title-false {
   display: grid;
   grid-template-columns: 20% 40% 40%;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content {
   flex-grow: 1;
   overflow-y: scroll;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content::-webkit-scrollbar {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content::-webkit-scrollbar {
   width: 0px;
   height: 0px;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-content-item {
   background-repeat: no-repeat;
   background-position: 2px 0px;
   box-sizing: border-box;
@@ -907,48 +1064,106 @@ export default {
   border-radius: 3px;
   margin-bottom: 6px;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item .first {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-content-item
+  .first {
   padding-left: 10px;
   background-color: rgba(0, 0, 0, 0) !important;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item .more-action {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-content-item
+  .more-action {
   cursor: pointer;
   text-decoration: underline;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item .content-label {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-content-item
+  .content-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item-true {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-content-item-true {
   display: grid;
   grid-template-columns: 35% 35% 30%;
   align-items: center;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item-false {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-content-item-false {
   display: grid;
   grid-template-columns: 20% 40% 40%;
   align-items: center;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-active {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-active {
   background-color: #00a5a7;
   color: #ffffff;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content :hover {
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  :hover {
   background-color: #00a5a7;
   color: #ffffff;
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-tp {
-  background-image: url("../../assets/images/explain-tp.svg");
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-tp {
+  background-image: url('../../assets/images/explain-tp.svg');
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-fn {
-  background-image: url("../../assets/images/explain-fn.svg");
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-fn {
+  background-image: url('../../assets/images/explain-fn.svg');
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-fp {
-  background-image: url("../../assets/images/explain-fp.svg");
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-fp {
+  background-image: url('../../assets/images/explain-fp.svg');
 }
-.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-tn {
-  background-image: url("../../assets/images/explain-tn.svg");
+.cl-saliency-map
+  .cl-saliency-map-table
+  .table-data
+  .table-forecast-tag
+  .tag-content
+  .tag-tn {
+  background-image: url('../../assets/images/explain-tn.svg');
 }
 .cl-saliency-map .cl-saliency-map-pagination {
   padding: 0 32px;
