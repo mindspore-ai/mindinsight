@@ -42,10 +42,13 @@ limitations under the License.
           </div>
           <div class="suggested-title">{{$t("profiling.suggestions")}}</div>
           <div id="helper-tips"></div>
-          <a class="suggested-title link-title"
-             @click="jumpToMemoryDetail">
-            {{$t("profiling.memory.memoryDetailLink")}}
-          </a>
+          <div class="memory-title-container">
+            <div class="memory-title">
+              {{$t("profiling.memory.memoryDetailLink")}}</div>
+            <div class="memory-link"
+                 @click="jumpToMemoryDetail">
+              {{$t('profiling.viewDetail')}}</div>
+          </div>
         </div>
         <div class="collapse-btn"
              :class="{collapse:collapse}"
@@ -418,6 +421,28 @@ export default {
   font-weight: bold;
   margin-bottom: 20px;
   font-size: 16px;
+}
+.prof-wrap .prof-content .prof-content-left .helper .memory-title-container {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #d9d9d9;
+}
+
+.prof-wrap .prof-content .prof-content-left .helper .memory-title-container .memory-title {
+  float: left;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.prof-wrap .prof-content .prof-content-left .helper .memory-title-container .memory-link {
+  float: right;
+  line-height: 21px;
+  cursor: pointer;
+  color: #3399ff;
+}
+
+.prof-wrap .prof-content .prof-content-left .helper .link-title {
+  cursor: pointer;
 }
 .prof-wrap .prof-content .prof-content-left .helper .container-bottom {
   margin-bottom: 16px;

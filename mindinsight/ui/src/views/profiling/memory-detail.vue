@@ -16,50 +16,70 @@ limitations under the License.
 <template>
   <div class="cl-memory-detail">
     <div class="memory-bk">
-      <div class="left-content">
+      <div class="title-content">
+        <div class="title-text">
+          {{$t("profiling.memory.memoryDetailLink")}}
+        </div>
+      </div>
+      <div class="top-content">
         <div class="title-item">
           {{$t('profiling.memory.overView')}}
         </div>
         <div class="content-item">
-          <div class="detail-row">
-            <span class="label-item">{{$t('profiling.memory.currentCard')}}</span>
-            <span class="value-item">{{overViewData.currentCard}}</span>
+          <div class="detail-item">
+            <div class="value-item">{{overViewData.currentCard}}</div>
+            <div class="label-item">{{$t('profiling.memory.currentCard')}}</div>
           </div>
-          <div class="detail-row">
-            <span class="label-item">{{$t('profiling.memory.memoryAssign')}}</span>
-            <span class="value-item">{{overViewData.memoryAssign}}</span>
+          <div class="detail-item">
+            <div class="value-item">{{overViewData.memoryAssign}}</div>
+            <div class="label-item">{{$t('profiling.memory.memoryAssign')}}</div>
           </div>
-          <div class="detail-row">
-            <span class="label-item">{{$t('profiling.memory.memoryRelease')}}</span>
-            <span class="value-item">{{overViewData.memoryRelease}}</span>
+          <div class="detail-item">
+            <div class="value-item">{{overViewData.memoryRelease}}</div>
+            <div class="label-item">{{$t('profiling.memory.memoryRelease')}}</div>
           </div>
-          <div class="detail-row">
-            <span class="label-item">{{$t('profiling.memory.totalMemory')}}</span>
-            <span class="value-item">
-              {{formmateUnit(overViewData.totalMemory)}}
-            </span>
+          <div class="detail-item">
+            <div>
+              <span class="value-item">
+                {{formmateUnit(overViewData.totalMemory, 1)}}
+              </span>
+              <span class="unit-item">
+                {{formmateUnit(overViewData.totalMemory, 2)}}
+              </span>
+            </div>
+            <div class="label-item">{{$t('profiling.memory.totalMemory')}}</div>
           </div>
-          <div class="detail-row">
-            <span class="label-item">{{$t('profiling.memory.staticMenory')}}</span>
-            <span class="value-item">
-              {{formmateUnit(overViewData.staticMemory)}}
-            </span>
+          <div class="detail-item">
+            <div>
+              <span class="value-item">
+                {{formmateUnit(overViewData.staticMemory, 1)}}
+              </span>
+              <span class="unit-item">
+                {{formmateUnit(overViewData.staticMemory, 2)}}
+              </span>
+            </div>
+            <div class="label-item">{{$t('profiling.memory.staticMenory')}}</div>
           </div>
-          <div class="detail-row">
-            <span class="label-item">{{$t('profiling.memory.memoryPeak')}}</span>
-            <span class="value-item">
-              {{formmateUnit(overViewData.memoryPeak)}}
-            </span>
+          <div class="detail-item">
+            <div>
+              <span class="value-item">
+                {{formmateUnit(overViewData.memoryPeak, 1)}}
+              </span>
+              <span class="unit-item">
+                {{formmateUnit(overViewData.memoryPeak, 2)}}
+              </span>
+            </div>
+            <div class="label-item">{{$t('profiling.memory.memoryPeak')}}</div>
           </div>
         </div>
       </div>
-      <div class="right-content">
+      <div class="bottom-content">
         <div class="chart-container">
           <div class="title-item">
             {{$t('profiling.memory.usedMemory')}}
           </div>
           <div class="chart-content"
-               v-show="!graphicsInitOver">
+               v-show="!graphicsInitOver || noGraphicsDataFlag">
             <div class="noData-content">
               <div>
                 <img :src="require('@/assets/images/nodata.png')"
@@ -83,55 +103,39 @@ limitations under the License.
             <el-table :data="currentBreakdownsData"
                       stripe
                       height="100%"
-                      :span-method="columnSpanMethod"
                       tooltip-effect="light"
-                      :empty-text="overViewInitOver ? $t('public.noData') : $t('public.dataLoading')">
-              <el-table-column prop="name"
-                               :label="$t('profiling.memory.operatorName')">
+                      :empty-text="breakdownsInitOver ? $t('public.noData') : $t('public.dataLoading')">
+              <el-table-column prop="name">
                 <template slot="header">
-                  <span :title="$t('profiling.memory.operatorName')">
-                    {{$t('profiling.memory.operatorName')}}
+                  <span :title="$t('profiling.memory.tensorName')">
+                    {{$t('profiling.memory.tensorName')}}
                   </span>
                 </template>
                 <template slot-scope="scope">
                   <div class="cell">{{scope.row.name}}</div>
                 </template>
               </el-table-column>
-              <el-table-column prop="allocations"
-                               :label="$t('profiling.memory.assignNum')">
+              <el-table-column prop="size">
                 <template slot="header">
-                  <span :title="$t('profiling.memory.assignNum')">
-                    {{$t('profiling.memory.assignNum')}}
-                  </span>
-                </template>
-                <template slot-scope="scope">
-                  <div class="cell">{{scope.row.allocations}}</div>
-                </template>
-              </el-table-column>
-              <el-table-column prop="size"
-                               :label="$t('profiling.memory.totalMemoryAssign')">
-                <template slot="header">
-                  <span :title="$t('profiling.memory.totalMemoryAssign')">
-                    {{$t('profiling.memory.totalMemoryAssign')}}
+                  <span :title="$t('profiling.memory.totalTensorMemoryAssign')">
+                    {{$t('profiling.memory.totalTensorMemoryAssign')}}
                   </span>
                 </template>
                 <template slot-scope="scope">
                   <div class="cell">{{formmateUnit(scope.row.size)}}</div>
                 </template>
               </el-table-column>
-              <el-table-column prop="type"
-                               :label="$t('profiling.memory.memoryType')">
+              <el-table-column prop="type">
                 <template slot="header">
-                  <span :title="$t('profiling.memory.memoryType')">
-                    {{$t('profiling.memory.memoryType')}}
+                  <span :title="$t('profiling.memory.tensorType')">
+                    {{$t('profiling.memory.tensorType')}}
                   </span>
                 </template>
                 <template slot-scope="scope">
                   <div class="cell">{{scope.row.type}}</div>
                 </template>
               </el-table-column>
-              <el-table-column prop="dataType"
-                               :label="$t('profiling.memory.dataType')">
+              <el-table-column prop="dataType">
                 <template slot="header">
                   <span :title="$t('profiling.memory.dataType')">
                     {{$t('profiling.memory.dataType')}}
@@ -141,8 +145,7 @@ limitations under the License.
                   <div class="cell">{{scope.row.dataType}}</div>
                 </template>
               </el-table-column>
-              <el-table-column prop="shape"
-                               :label="$t('profiling.memory.shapes')">
+              <el-table-column prop="shape">
                 <template slot="header">
                   <span :title="$t('profiling.memory.shapes')">
                     {{$t('profiling.memory.shapes')}}
@@ -150,6 +153,26 @@ limitations under the License.
                 </template>
                 <template slot-scope="scope">
                   <div class="cell">{{scope.row.shape}}</div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="format">
+                <template slot="header">
+                  <span :title="$t('profiling.memory.format')">
+                    {{$t('profiling.memory.format')}}
+                  </span>
+                </template>
+                <template slot-scope="scope">
+                  <div class="cell">{{scope.row.format}}</div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="lifeCycle">
+                <template slot="header">
+                  <span :title="$t('profiling.memory.lifeCycle')">
+                    {{$t('profiling.memory.lifeCycle')}}
+                  </span>
+                </template>
+                <template slot-scope="scope">
+                  <div class="cell">{{scope.row.lifeCycle}}</div>
                 </template>
               </el-table-column>
             </el-table>
@@ -182,12 +205,8 @@ export default {
       pageResizeTimer: null, // Timer for changing the window size
       currentGraphicsDic: [], // Dictionary of current graphics data
       currentBreakdownsData: [], // current breakdowns data
-      // Dictionary of breakdowns data
-      breakdownMarks: {
-        markIndex: {},
-        markLength: [],
-      },
       graphicsChart: null, // Chart object
+      graphicsOption: null,
       graphicsId: 'allocationLine', // ID of the memory data in the chart
       numberLimit: 10, // Maximum length of a number displayed
       unitBase: 1024, // Memory size unit
@@ -196,6 +215,10 @@ export default {
         this.$t('profiling.memory.memoryMiBUnit'),
         this.$t('profiling.memory.memoryKiBUnit'),
       ],
+      chartClickListenerOn: false, // Listening on discount click events
+      curSelectedPointIndex: 0, // Subscript of the current selection point
+      curGraphId: '', // ID of the current graphics
+      breakdownsInitOver: false, // BreakDown data request complete
     };
   },
   watch: {
@@ -209,6 +232,7 @@ export default {
         this.overViewInitOver = false;
         this.noGraphicsDataFlag = false;
         this.graphicsInitOver = false;
+        this.breakdownsInitOver = false;
         this.overViewData = {
           currentCard: '-',
           memoryAssign: '-',
@@ -217,6 +241,8 @@ export default {
           totalMemory: '-',
           memoryPeak: '-',
         };
+        this.curGraphId = '';
+        this.curSelectedPointIndex = 0;
         this.currentBreakdownsData = [];
         this.init();
       },
@@ -234,10 +260,15 @@ export default {
     }
     // Remove bus
     this.$bus.$off('collapse');
+    // Remove listener
+    if (this.chartClickListenerOn && this.graphicsChart) {
+      this.chartClickListenerOn = false;
+      this.graphicsChart.off('click');
+    }
   },
   methods: {
     init() {
-      this.getMemorySummary(this.getMemoryGraphics);
+      this.getMemorySummary();
     },
     /**
      * Window resize
@@ -255,9 +286,8 @@ export default {
     },
     /**
      * Obtains base memory information
-     * @param {Function} successCallback callback upon success
      */
-    getMemorySummary(successCallback) {
+    getMemorySummary() {
       if (!this.summaryPath || isNaN(this.curCardNum)) {
         return;
       }
@@ -265,47 +295,40 @@ export default {
         dir: this.summaryPath,
         device_id: this.curCardNum,
       };
-      RequestService.queryMemorySummary(params).then(
-          (res) => {
-            this.overViewInitOver = true;
-            if (res && res.data && res.data.summary) {
-              const resData = res.data.summary;
-              this.overViewData = {
-                currentCard: params.device_id,
-                memoryAssign: resData.allocations || '-',
-                memoryRelease: resData.deallocations || '-',
-                staticMemory: isNaN(resData.static_mem)
-                ? '-'
-                : resData.static_mem,
-                totalMemory: isNaN(resData.capacity) ? '-' : resData.capacity,
-                memoryPeak: isNaN(resData.peak_mem) ? '-' : resData.peak_mem,
-              };
-              this.$nextTick(() => {
-                this.formateBreakdowns(resData.breakdowns);
-              });
-              if (successCallback) {
-                successCallback();
-              }
-            } else {
-              this.graphicsInitOver = true;
-              this.noGraphicsDataFlag = true;
-              this.overViewData = {
-                currentCard: '-',
-                memoryAssign: '-',
-                memoryRelease: '-',
-                staticMemory: '-',
-                totalMemory: '-',
-                memoryPeak: '-',
-              };
-              this.currentBreakdownsData = [];
-            }
-          },
-          () => {
-            this.overViewInitOver = true;
-            this.graphicsInitOver = true;
-            this.noGraphicsDataFlag = true;
-          },
-      );
+      RequestService.queryMemorySummary(params)
+          .then(
+              (res) => {
+                this.overViewInitOver = true;
+                if (res && res.data && res.data.summary) {
+                  const resData = res.data.summary;
+                  this.overViewData = {
+                    currentCard: params.device_id,
+                    memoryAssign: resData.allocations || '-',
+                    memoryRelease: resData.deallocations || '-',
+                    staticMemory: isNaN(resData.static_mem)
+                  ? '-'
+                  : resData.static_mem,
+                    totalMemory: isNaN(resData.capacity) ? '-' : resData.capacity,
+                    memoryPeak: isNaN(resData.peak_mem) ? '-' : resData.peak_mem,
+                  };
+                } else {
+                  this.overViewData = {
+                    currentCard: '-',
+                    memoryAssign: '-',
+                    memoryRelease: '-',
+                    staticMemory: '-',
+                    totalMemory: '-',
+                    memoryPeak: '-',
+                  };
+                }
+              },
+              () => {
+                this.overViewInitOver = true;
+              },
+          )
+          .then(() => {
+            this.getMemoryGraphics();
+          });
     },
     /**
      * Obtains memory details
@@ -320,100 +343,77 @@ export default {
             this.graphicsInitOver = true;
             if (!res || !res.data || !Object.keys(res.data).length) {
               this.noGraphicsDataFlag = true;
+              this.breakdownsInitOver = true;
               return;
             }
             const resData = res.data[Object.keys(res.data)[0]];
+            this.curGraphId = resData.graph_id;
             this.currentGraphicsDic = resData;
-            this.drawGraphics(this.formateGraphicsOption());
+            this.graphicsOption = this.formateGraphicsOption();
+            this.drawGraphics();
+            this.$nextTick(() => {
+              this.formateBreakdowns();
+            });
           },
           () => {
             this.graphicsInitOver = true;
             this.noGraphicsDataFlag = true;
+            this.breakdownsInitOver = true;
           },
       );
     },
     /**
      * Sort out the memory allocation data in a table
-     * @param {Object} breakdowns breakdowns data
      */
-    formateBreakdowns(breakdowns) {
-      const markIndex = {};
-      const markLength = [];
-      const breakdownData = [];
-      let startIndex = 0;
-      if (breakdowns) {
-        breakdowns.forEach((nodeData, dataIndex) => {
-          let count = 0;
-          //  Processing output data
-          if (nodeData.outputs) {
-            count += nodeData.outputs.length;
-            nodeData.outputs.forEach((output) => {
-              breakdownData.push({
-                name: nodeData.name,
-                allocations: nodeData.allocations,
-                type: output.type,
-                size: output.size,
-                shape: output.shape,
-                dataType: output.data_type,
-              });
-            });
-          }
-          // Processing workspace data
-          if (nodeData.workspaces) {
-            count += nodeData.workspaces.length;
-            nodeData.workspaces.forEach((workspace) => {
-              breakdownData.push({
-                name: nodeData.name,
-                allocations: nodeData.allocations,
-                type: workspace.type,
-                size: workspace.size,
-                shape: workspace.shape,
-                dataType: workspace.data_type,
-              });
-            });
-          }
-          if (!count) {
-            count++;
-            breakdownData.push({
-              name: nodeData.name,
-              allocations: nodeData.allocations,
-              type: '-',
-              size: '-',
-              shape: '-',
-              dataType: '-',
-            });
-          }
-          markIndex[startIndex] = dataIndex;
-          markLength.push(count);
-          startIndex += count;
-        });
+    formateBreakdowns() {
+      this.breakdownsInitOver = false;
+      this.currentBreakdownsData = [];
+      if (!this.currentGraphicsDic.nodes) {
+        this.currentBreakdownsData = [];
+        this.breakdownsInitOver = true;
+        return;
       }
-      this.currentBreakdownsData = breakdownData;
-      this.breakdownMarks = {
-        markIndex: markIndex,
-        markLength: markLength,
+      const tempNodeData = this.currentGraphicsDic.nodes[
+          this.curSelectedPointIndex
+      ];
+      if (!tempNodeData) {
+        this.currentBreakdownsData = [];
+        this.breakdownsInitOver = true;
+        return;
+      }
+      const params = {
+        dir: this.summaryPath,
+        device_id: this.curCardNum,
+        graph_id: this.curGraphId,
+        node_id: tempNodeData.node_id,
       };
-    },
-    /**
-     * merge Cells
-     * @param {Object} data Data in the current cell
-     * @return {Object} Cells to be merged
-     */
-    columnSpanMethod(data) {
-      if (data.columnIndex <= 1) {
-        const index = this.breakdownMarks.markIndex[data.rowIndex];
-        if (isNaN(index)) {
-          return {
-            rowspan: 0,
-            colspan: 0,
-          };
-        } else {
-          return {
-            rowspan: this.breakdownMarks.markLength[index],
-            colspan: 1,
-          };
+      const tempSelectedPointIndex = this.curSelectedPointIndex;
+      RequestService.queryMemoryBreakdowns(params).then((res) => {
+        if (tempSelectedPointIndex !== this.curSelectedPointIndex) {
+          return;
         }
-      }
+        this.breakdownsInitOver = true;
+        if (!res || !res.data || !res.data.breakdowns) {
+          this.currentBreakdownsData = [];
+          return;
+        }
+        const tempBreakdowns = res.data.breakdowns;
+        const breakdownData = [];
+        tempBreakdowns.forEach((breakdown) => {
+          breakdownData.push({
+            name: breakdown.tensor_name,
+            size: breakdown.size,
+            type: breakdown.type,
+            dataType: breakdown.data_type,
+            shape: breakdown.shape,
+            format: breakdown.format,
+            lifeCycle: `[${breakdown.life_start}, ${breakdown.life_end}]`,
+          });
+        });
+        this.currentBreakdownsData = breakdownData;
+      }, () => {
+        this.breakdownsInitOver = true;
+      });
     },
     /**
      * Sorting chart data
@@ -480,6 +480,18 @@ export default {
           symbol: ['none', 'none'],
           data: [{xAxis: startIndex}, {xAxis: endIndex}],
         },
+        markPoint: {
+          symbol: 'emptyCircle',
+          symbolSize: 8,
+          itemStyle: {
+            color: '#f45c5e',
+          },
+          data: [
+            {
+              coord: allocationData[this.curSelectedPointIndex],
+            },
+          ],
+        },
       };
       const topLine = {
         data: topData,
@@ -503,25 +515,30 @@ export default {
         },
         color: '#3d58a6',
       };
-      const seriesData = [topLine, allocationLine, staticLine];
+      const seriesData = [allocationLine, staticLine];
       const selectedDic = {};
       selectedDic[this.$t('profiling.memory.curMemorySize')] = true;
-      selectedDic[this.$t('profiling.memory.totalMemory')] = false;
       selectedDic[this.$t('profiling.memory.staticMenory')] = true;
+      const legendData = [
+        this.$t('profiling.memory.curMemorySize'),
+        this.$t('profiling.memory.staticMenory'),
+      ];
+      if (!isNaN(this.overViewData.totalMemory)) {
+        seriesData.push(topLine);
+        legendData.unshift(this.$t('profiling.memory.totalMemory'));
+        selectedDic[this.$t('profiling.memory.totalMemory')] = false;
+      }
 
       const optionData = {
         legend: {
           show: true,
           icon: 'circle',
-          data: [
-            this.$t('profiling.memory.curMemorySize'),
-            this.$t('profiling.memory.totalMemory'),
-            this.$t('profiling.memory.staticMenory'),
-          ],
+          data: legendData,
           selected: selectedDic,
         },
         grid: {
-          top: 80,
+          top: 60,
+          bottom: 60,
         },
         xAxis: {
           name: this.$t('profiling.memory.chartXaxisUnit'),
@@ -530,6 +547,8 @@ export default {
         },
         yAxis: {
           name: this.$t('profiling.memory.chartYaxisUnit'),
+          scale: true,
+          nameGap: 24,
         },
         tooltip: {
           trigger: 'axis',
@@ -548,17 +567,19 @@ export default {
                     `${that.$t('symbols.colon')}${curData.node_id}</div>` +
                     `<div>${that.$t('profiling.memory.curOperator')}` +
                     `${that.$t('symbols.colon')}${curData.name}</div>` +
-                    `<div>${that.$t('profiling.memory.curMemorySize')}` +
+                    `<div>${that.$t(
+                        'profiling.memory.curOperatorMemorySize',
+                    )}` +
                     `${that.$t('symbols.colon')}${that.formmateNummber(
                         curData.size,
+                    )}</div>` +
+                    `<div>${that.$t('profiling.memory.curMemorySize')}` +
+                    `${that.$t('symbols.colon')}${that.formmateNummber(
+                        that.currentGraphicsDic.lines[dataIndex],
                     )}</div>` +
                     `<div>${that.$t('profiling.memory.memoryChanged')}` +
                     `${that.$t('symbols.colon')}${that.formmateNummber(
                         curData.allocated,
-                    )}</div>` +
-                    `<div>${that.$t('profiling.memory.lifeCycle')}` +
-                    `${that.$t('symbols.colon')}${JSON.stringify(
-                        lifeCycle[dataIndex],
                     )}</div>`;
                 }
               }
@@ -566,25 +587,74 @@ export default {
             return tipStr;
           },
         },
+        dataZoom: [
+          {
+            type: 'inside',
+            filterMode: 'empty',
+            orient: 'horizontal',
+            xAxisIndex: 0,
+          },
+          {
+            type: 'slider',
+            filterMode: 'empty',
+            orient: 'horizontal',
+            xAxisIndex: 0,
+            bottom: 10,
+          },
+        ],
         series: seriesData,
       };
       return optionData;
     },
     /**
      * Charting
-     * @param {Object} optionData Chart data
      */
-    drawGraphics(optionData) {
-      if (!optionData) {
+    drawGraphics() {
+      if (!this.graphicsOption) {
         return;
       }
       this.$nextTick(() => {
         if (!this.graphicsChart) {
           this.graphicsChart = echarts.init(this.$refs.memoryChart, null);
         }
-        this.graphicsChart.setOption(optionData, false);
+        this.graphicsChart.setOption(this.graphicsOption, false);
+        if (!this.chartClickListenerOn) {
+          this.chartClickListenerOn = true;
+          this.graphicsChart.on(
+              'click',
+              {seriesName: this.$t('profiling.memory.curMemorySize')},
+              (param) => {
+                this.pointChanged(param);
+              },
+          );
+        }
         this.graphicsChart.resize();
       });
+    },
+    /**
+     * Point change
+     * @param {Object} param Point object
+     *
+     */
+    pointChanged(param) {
+      if (!param) {
+        return;
+      }
+      let dataIndex = 0;
+      if (param.componentType === 'markLine') {
+        dataIndex = param.value;
+      } else if (param.componentType === 'series') {
+        dataIndex = param.dataIndex;
+      } else {
+        return;
+      }
+      const seriesData = this.graphicsOption.series[0];
+      if (seriesData) {
+        seriesData.markPoint.data[0].coord = seriesData.data[dataIndex];
+        this.drawGraphics();
+        this.curSelectedPointIndex = dataIndex;
+        this.formateBreakdowns();
+      }
     },
     /**
      * Convert Numeric display format
@@ -592,8 +662,14 @@ export default {
      * @return {String} Formatted number
      */
     formmateNummber(number) {
+      const digitMax = 10;
+      const digitMin = 1;
       if (!isNaN(number) && number.toString().length > this.numberLimit) {
-        return number.toExponential(6);
+        if (number > digitMin && number < digitMax) {
+          return number.toFixed(4);
+        } else {
+          return number.toExponential(4);
+        }
       } else {
         return number;
       }
@@ -601,26 +677,37 @@ export default {
     /**
      * Convert Numeric unit display format
      * @param {Number} number
+     * @param {Number} type default: number and unit; 1: number only; 2: unit only
      * @return {String} Formatted string
      */
-    formmateUnit(number) {
+    formmateUnit(number, type) {
       const baseStr = '-';
       if (number === baseStr) {
         return baseStr;
       }
       const loopCount = this.unitList.length;
       let baseNumber = number;
+      let utilIndex = -1;
       let resultStr = '';
       for (let i = 0; i < loopCount; i++) {
         if (baseNumber >= 1) {
-          resultStr = `${baseNumber} ${this.unitList[i]}`;
+          utilIndex = i;
           break;
         } else {
           baseNumber = baseNumber * this.unitBase;
         }
       }
-      if (!resultStr) {
-        resultStr = `${baseNumber} ${this.unitList[loopCount - 1]}`;
+      if (utilIndex < 0) {
+        utilIndex = loopCount - 1;
+      }
+      if (type === 1) {
+        resultStr = `${this.formmateNummber(baseNumber)}`;
+      } else if (type === 2) {
+        resultStr = `${this.unitList[utilIndex]}`;
+      } else {
+        resultStr = `${this.formmateNummber(baseNumber)} ${
+          this.unitList[utilIndex]
+        }`;
       }
       return resultStr;
     },
@@ -653,7 +740,7 @@ export default {
 .cl-memory-detail {
   width: 100%;
   height: 100%;
-  padding: 0 24px 0 16px;
+  padding-left: 24px;
   display: flex;
 }
 .cl-memory-detail .memory-bk {
@@ -661,7 +748,27 @@ export default {
   height: 100%;
   overflow: hidden;
   display: flex;
+  flex-direction: column;
 }
+
+.cl-memory-detail .title-content {
+  height: 44px;
+  padding-bottom: 20px;
+  color: #000;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.cl-memory-detail .title-content .title-text {
+  font-size: 20px;
+}
+
+.cl-memory-detail .top-content .content-item {
+  display: flex;
+  height: calc(100% - 24px);
+  width: 100%;
+}
+
 .cl-memory-detail .noData-content {
   width: 100%;
   height: 100%;
@@ -670,58 +777,61 @@ export default {
   align-items: center;
   flex-direction: column;
 }
-.cl-memory-detail .left-content {
-  width: 30%;
-  max-width: 350px;
-  min-width: 335px;
-  height: 100%;
-  padding: 0 10px;
-  border: solid 1px #ccc;
+.cl-memory-detail .top-content {
+  width: 100%;
+  height: 137px;
+  padding: 24px;
+  border: solid 1px #d9d9d9;
   border-radius: 4px;
 }
-.cl-memory-detail .left-content .detail-row {
-  width: 100%;
-  margin-bottom: 10px;
+.cl-memory-detail .top-content .detail-item {
+  width: 16.6%;
   display: flex;
+  flex-direction: column;
+  padding: 24px 5px 0 5px;
+  text-align: center;
 }
-.cl-memory-detail .left-content .label-item {
-  width: 50%;
-  padding-left: 20px;
+.cl-memory-detail .top-content .label-item,
+.cl-memory-detail .top-content .unit-item {
+  font-size: 12px;
+  line-height: 12px;
+  color: #6c7280;
 }
-.cl-memory-detail .left-content .value-item {
-  width: 50%;
+.cl-memory-detail .top-content .value-item {
+  font-size: 24px;
+  font-weight: bold;
 }
-.cl-memory-detail .right-content {
-  flex: 1;
-  height: 100%;
-  padding-left: 10px;
+
+.cl-memory-detail .bottom-content {
+  height: calc(100% - 201px);
+  margin-top: 20px;
+  padding-left: 4px;
   overflow: hidden;
 }
-.cl-memory-detail .right-content .chart-container,
-.cl-memory-detail .right-content .table-container {
+.cl-memory-detail .bottom-content .chart-container,
+.cl-memory-detail .bottom-content .table-container {
   width: 100%;
   display: flex;
   flex-direction: column;
   border: solid 1px #ccc;
   border-radius: 4px;
+  padding: 20px 24px;
 }
-.cl-memory-detail .right-content .chart-container .chart-content,
-.cl-memory-detail .right-content .table-container .table-content {
-  flex: 1;
+.cl-memory-detail .bottom-content .chart-container .chart-content,
+.cl-memory-detail .bottom-content .table-container .table-content {
+  margin-top: 16px;
+  height: calc(100% - 30px);
 }
-.cl-memory-detail .right-content .chart-container {
+.cl-memory-detail .bottom-content .chart-container {
   height: calc(60% - 20px);
 }
-.cl-memory-detail .right-content .table-container {
+.cl-memory-detail .bottom-content .table-container {
   margin-top: 20px;
   height: 40%;
 }
 .cl-memory-detail .title-item {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
-  margin-right: 15px;
-  margin: 15px 0 20px 0;
-  padding-left: 20px;
 }
 .cl-memory-detail .el-table td,
 .cl-memory-detail .el-table th {
