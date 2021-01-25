@@ -476,4 +476,11 @@ export default {
       params: params,
     });
   },
+  queryMemoryBreakdowns(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/memory-breakdowns',
+      params: params,
+    });
+  },
 };
