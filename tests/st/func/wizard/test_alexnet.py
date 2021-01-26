@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,20 +101,20 @@ class TestAlexNet:
         sub_output_dir_list = os.walk(self.output_dir)
         for sub_output_dir in sub_output_dir_list:
             for sub_output_file in sub_output_dir[-1]:
-                content_dir = os.path.relpath(
-                    os.path.join(sub_output_dir[0], sub_output_file),
-                    self.output_dir)
+                content_dir = os.path.relpath(os.path.join(sub_output_dir[0], sub_output_file),
+                                              self.output_dir)
 
                 try:
-                    with open(os.path.realpath(os.path.join(self.output_dir, content_dir))) as file:
+                    with open(os.path.realpath(os.path.join(self.output_dir, content_dir)), "r",
+                              encoding="utf-8") as file:
                         content = file.read()
-                        if content_dir == 'src/dataset.py' and dataset_name in content:
+                        if content_dir == os.path.normpath('src/dataset.py') and dataset_name in content:
                             dataset_is_right = True
                         elif content_dir == os.path.join('src', NETWORK_NAME.lower() + '.py'):
                             network_is_right = True
-                        elif content_dir == 'src/generator_lr.py':
+                        elif content_dir == os.path.normpath('src/generator_lr.py'):
                             generator_lr_is_right = True
-                        elif content_dir == 'src/config.py':
+                        elif content_dir == os.path.normpath('src/config.py'):
                             config_dataset_is_right = self._check_config_dataset(config, content)
                             config_optimizer_is_right = self._check_config_optimizer(config, content)
                 except IOError:
@@ -165,15 +165,14 @@ class TestAlexNet:
         sub_output_dir_list = os.walk(self.output_dir)
         for sub_output_dir in sub_output_dir_list:
             for sub_output_file in sub_output_dir[-1]:
-                content_dir = os.path.relpath(
-                    os.path.join(sub_output_dir[0], sub_output_file),
-                    self.output_dir)
+                content_dir = os.path.relpath(os.path.join(sub_output_dir[0], sub_output_file),
+                                              self.output_dir)
 
                 try:
-                    with open(os.path.realpath(os.path.join(self.output_dir, content_dir))) as file:
+                    with open(os.path.realpath(os.path.join(self.output_dir, content_dir)), "r",
+                              encoding="utf-8") as file:
                         content = file.read()
-                        if content_dir == 'train.py' \
-                                and 'alexnet' in content \
+                        if content_dir == 'train.py' and 'alexnet' in content \
                                 and loss_name in content and optimizer_name in content:
                             train_is_right = True
                         elif content_dir == 'eval.py' and 'alexnet' in content and loss_name in content:
@@ -205,17 +204,17 @@ class TestAlexNet:
                     os.path.join(sub_output_dir[0], sub_output_file),
                     self.output_dir)
 
-                if content_dir == 'scripts/run_distribute_train.sh':
+                if content_dir == os.path.normpath('scripts/run_distribute_train.sh'):
                     exist_run_distribute_train = True
-                elif content_dir == 'scripts/run_distribute_train_gpu.sh':
+                elif content_dir == os.path.normpath('scripts/run_distribute_train_gpu.sh'):
                     exist_run_distribute_train_gpu = True
-                elif content_dir == 'scripts/run_eval.sh':
+                elif content_dir == os.path.normpath('scripts/run_eval.sh'):
                     exist_run_eval = True
-                elif content_dir == 'scripts/run_eval_gpu.sh':
+                elif content_dir == os.path.normpath('scripts/run_eval_gpu.sh'):
                     exist_run_eval_gpu = True
-                elif content_dir == 'scripts/run_standalone_train.sh':
+                elif content_dir == os.path.normpath('scripts/run_standalone_train.sh'):
                     exist_run_standalone_train = True
-                elif content_dir == 'scripts/run_standalone_train_gpu.sh':
+                elif content_dir == os.path.normpath('scripts/run_standalone_train_gpu.sh'):
                     exist_run_standalone_train_gpu = True
 
         assert exist_run_distribute_train
