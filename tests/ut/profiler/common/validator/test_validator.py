@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -252,7 +252,7 @@ class TestValidateCondition:
         condition_list = [{'op_type': "xxx"}, {}]
         exception_message = "The op_type in search_condition error, The op_type must in " \
                             "['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "\
-                            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']"
+                            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info']"
         for condition in condition_list:
             with pytest.raises(ProfilerOpTypeException) as exc_info:
                 validate_condition(condition)
