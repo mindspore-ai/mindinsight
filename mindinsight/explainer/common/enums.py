@@ -40,6 +40,7 @@ class ExplainFieldsEnum(BaseEnum):
     GROUND_TRUTH_LABEL = 'ground_truth_label'
     INFERENCE = 'inference'
     EXPLANATION = 'explanation'
+    HIERARCHICAL_OCCLUSION = 'hierarchical_occlusion'
     STATUS = 'status'
 
 
