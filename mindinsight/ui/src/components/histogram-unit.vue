@@ -402,9 +402,7 @@ export default {
             )
             : [];
         } else if (this.axisName === 1) {
-          data = `${this.formateNUmber(
-              (filter[0].relative_time).toFixed(0),
-          )}s`;
+          data = this.formateNUmber(filter[0].relative_time.toFixed(0));
         } else {
           data = this.formateNUmber(filter[0].step);
         }

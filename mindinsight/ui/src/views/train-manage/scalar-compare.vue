@@ -83,9 +83,15 @@ limitations under the License.
                       text-color="#FFFFFF"
                       size="small "
                       @change="timeTypeChange">
-        <el-radio-button :label="$t('scalar.step')"></el-radio-button>
-        <el-radio-button :label="$t('scalar.relativeTime')"></el-radio-button>
-        <el-radio-button :label="$t('scalar.absoluteTime')"></el-radio-button>
+          <el-radio-button :label="$t('scalar.step')">
+            {{$t('scalar.step')}}
+          </el-radio-button>
+          <el-radio-button :label="$t('scalar.relativeTime')">
+            {{$t('scalar.relativeTime') + $t('symbols.leftbracket') + 's' + $t('symbols.rightbracket')}}
+          </el-radio-button>
+          <el-radio-button :label="$t('scalar.absoluteTime')">
+            {{$t('scalar.absoluteTime')}}
+          </el-radio-button>
       </el-radio-group>
       <div class="xaxis-title">{{$t('scalar.smoothness')}}</div>
       <el-slider v-model="smoothValue"
@@ -445,8 +451,6 @@ export default {
             ].valueData[this.curBenchX];
           });
           this.charOption.xAxis[0].minInterval = this.isActive === 0 ? 1 : 0;
-          this.charOption.xAxis[0].axisLabel.rotate =
-            this.isActive === 2 ? 0 : 90;
 
           this.updateOrCreateChar();
         }
@@ -781,7 +785,6 @@ export default {
             axisLabel: {
               color: '#9EA4B3',
               interval: 0,
-              rotate: _this.isActive === 2 ? 0 : 90,
               formatter(value) {
                 if (_this.isActive === 2) {
                   const date = new Date(value * 1000);

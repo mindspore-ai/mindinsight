@@ -59,9 +59,15 @@ limitations under the License.
                         v-if="!!curViewName"
                         :disabled="curViewName === 0"
                         @change="timeTypeChange">
-          <el-radio-button :label=0>{{$t('histogram.step')}}</el-radio-button>
-          <el-radio-button :label=1>{{$t('histogram.relativeTime')}}</el-radio-button>
-          <el-radio-button :label=2>{{$t('histogram.absoluteTime')}}</el-radio-button>
+          <el-radio-button :label=0>
+            {{$t('histogram.step')}}
+          </el-radio-button>
+          <el-radio-button :label=1>
+            {{$t('histogram.relativeTime') + $t('symbols.leftbracket') + 's' + $t('symbols.rightbracket')}}
+          </el-radio-button>
+          <el-radio-button :label=2>
+            {{$t('histogram.absoluteTime')}}
+          </el-radio-button>
         </el-radio-group>
       </div>
       <!-- Content display area -->
@@ -1179,7 +1185,7 @@ export default {
             )
             : [];
         } else if (this.curAxisName === 1) {
-          data = `${this.formateNUmber(filter[0].relative_time.toFixed(0))}s`;
+          data = this.formateNUmber(filter[0].relative_time.toFixed(0));
         } else {
           data = this.formateNUmber(filter[0].step);
         }

@@ -54,9 +54,15 @@ limitations under the License.
                         text-color="#FFFFFF"
                         size="small "
                         @change="timeTypeChange">
-          <el-radio-button :label="$t('scalar.step')"></el-radio-button>
-          <el-radio-button :label="$t('scalar.relativeTime')"></el-radio-button>
-          <el-radio-button :label="$t('scalar.absoluteTime')"></el-radio-button>
+          <el-radio-button :label="$t('scalar.step')">
+            {{$t('scalar.step')}}
+          </el-radio-button>
+          <el-radio-button :label="$t('scalar.relativeTime')">
+            {{$t('scalar.relativeTime') + $t('symbols.leftbracket') + 's' + $t('symbols.rightbracket')}}
+          </el-radio-button>
+          <el-radio-button :label="$t('scalar.absoluteTime')">
+            {{$t('scalar.absoluteTime')}}
+          </el-radio-button>
         </el-radio-group>
         <div class="xaxis-title">{{$t('scalar.smoothness')}}</div>
         <el-slider v-model="smoothValue"
@@ -271,6 +277,7 @@ import ScalarCompare from './scalar-compare';
 import multiselectGroupComponents from '../../components/multiselect-group.vue';
 import autoUpdate from '../../mixins/auto-update.vue';
 import threshold from '../../mixins/threshold.vue';
+
 
 export default {
   mixins: [threshold, autoUpdate],
@@ -699,7 +706,6 @@ export default {
           axisLabel: {
             color: '#9EA4B3',
             interval: 0,
-            rotate: that.isActive === 2 ? 0 : 90,
             formatter(value) {
               if (that.isActive === 2) {
                 if (sampleObject.fullScreen) {
@@ -1133,7 +1139,6 @@ export default {
             const optionxAxis = sampleObject.charData.charOption.xAxis;
             const seriesData = sampleObject.charData.charOption.series[0];
             optionxAxis.minInterval = this.isActive === 0 ? 1 : 0;
-            optionxAxis.axisLabel.rotate = this.isActive === 2 ? 0 : 90;
             sampleObject.updateFlag = true;
             sampleObject.charObj.clear();
 
