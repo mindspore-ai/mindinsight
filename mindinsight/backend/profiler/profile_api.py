@@ -509,7 +509,7 @@ def get_memory_usage_summary():
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
     device_id = request.args.get("device_id", default='0')
-    _ = to_int(device_id, 'device_id')
+    to_int(device_id, 'device_id')
     device_type = request.args.get("device_type", default='ascend')
     if device_type not in ['ascend']:
         logger.info("Invalid device_type, Memory Usage only supports Ascend for now.")
@@ -538,7 +538,7 @@ def get_memory_usage_graphics():
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
     device_id = request.args.get("device_id", default='0')
-    _ = to_int(device_id, 'device_id')
+    to_int(device_id, 'device_id')
     device_type = request.args.get("device_type", default='ascend')
     if device_type not in ['ascend']:
         logger.info("Invalid device_type, Memory Usage only supports Ascend for now.")
@@ -549,6 +549,38 @@ def get_memory_usage_graphics():
     graphics = analyser.get_memory_usage_graphics(device_type)
 
     return graphics
+
+
+@BLUEPRINT.route("/profile/memory-breakdowns", methods=["GET"])
+def get_memory_usage_breakdowns():
+    """
+    Get memory breakdowns of each node.
+
+    Returns:
+        Response, the memory breakdowns for each node.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/memory-breakdowns
+    """
+    summary_dir = request.args.get("dir")
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    device_id = request.args.get("device_id", default='0')
+    to_int(device_id, 'device_id')
+    device_type = request.args.get("device_type", default='ascend')
+    graph_id = request.args.get("graph_id", default='0')
+    node_id = request.args.get("node_id", default='0')
+    node_id = to_int(node_id, 'node_id')
+    if device_type not in ['ascend']:
+        logger.error("Invalid device_type, Memory Usage only supports Ascend for now.")
+        raise ParamValueError("Invalid device_type.")
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'memory_usage', profiler_dir_abs, device_id)
+    breakdowns = analyser.get_memory_usage_breakdowns(device_type, graph_id, node_id)
+
+    return breakdowns
 
 
 def init_module(app):
