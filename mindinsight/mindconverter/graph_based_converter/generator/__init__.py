@@ -18,10 +18,10 @@ __all__ = ["batch_add_nodes"]
 import re
 import copy
 
-from .generator import Generator, CodeStruct
-from ..common.code_fragment import CodeFragment, NewFragment
-from ..common.outputs import NodeOutputManager
-from ..constant import ExchangeMessageKeywords
+from mindinsight.mindconverter.graph_based_converter.generator.generator import Generator, CodeStruct
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
+from mindinsight.mindconverter.graph_based_converter.common.outputs import NodeOutputManager
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords
 
 
 def _tf_model_node_name_reformat(node, node_name):

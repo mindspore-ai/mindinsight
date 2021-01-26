@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 __all__ = ["BUILT_IN_PATTERN", "register_pattern", "is_built_in_pattern"]
 
-from .common import cal_matching_score
-from .pattern import Pattern
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import cal_matching_score
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.pattern import Pattern
 
 BUILT_IN_PATTERN = dict()
 

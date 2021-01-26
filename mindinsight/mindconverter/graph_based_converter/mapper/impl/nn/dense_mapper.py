@@ -15,7 +15,6 @@
 """Mapper module."""
 import numpy as np
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class DenseMapper(ONNXToMindSporeMapper):
@@ -42,8 +41,10 @@ class DenseMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
-        return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        return Setting()
+        weights = kwargs['weights']
+        weight = DenseMapper._find_val_by_index(0, weights)
+        bias = DenseMapper._find_val_by_index(1, weights)
+        return {
+            'weight': weight,
+            'bias': bias
+        }

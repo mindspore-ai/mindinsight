@@ -14,7 +14,6 @@
 # ==============================================================================
 """Mapper module."""
 import numpy as np
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 from mindinsight.mindconverter.graph_based_converter.common.utils import convert_bytes_string_to_string
 
@@ -42,7 +41,7 @@ class ConvMapper(ONNXToMindSporeMapper):
         """Convert params from PyTorch to MindSpore"""
         weights = kwargs['weights']
         params = kwargs['params']
-        weight = weights['weight']
+        weight = ConvMapper._find_val_by_index(0, weights)
         weight = np.transpose(weight, list(range(2, weight.ndim)) + [1, 0])
         if isinstance(params['dilations'], list):
             dilation = tuple(params['dilations'])
@@ -76,10 +75,12 @@ class ConvMapper(ONNXToMindSporeMapper):
         """Convert params from Tensorflow to MindSpore"""
         weights = kwargs['weights']
         params = kwargs['params']
-        # regex to find Conv weight
-        weight = list(weights.values())[0]
+        weight = ConvMapper._find_val_by_index(0, weights)
+        bias = ConvMapper._find_val_by_index(1, weights)
         if weight is None:
             raise ValueError("Conv. Mapper cannot get the weight.")
+
+        has_bias = isinstance(bias, np.ndarray)
 
         auto_pad = None
         if params.get("auto_pad") is not None:
@@ -119,18 +120,14 @@ class ConvMapper(ONNXToMindSporeMapper):
             'padding': padding,
             'pad_mode': pad_mode,
             'dilation': dilation,
-            'group': params.get('group', 1)}
+            'group': params.get('group', 1),
+            'has_bias': has_bias
+        }
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        weight = kwargs['weights'].get('weight', 'empty')
-
-        if weight == 'empty':  # is from tf
-            kernel_size = kwargs['params'].get('kernel_shape')
-            dim = len(kernel_size)
-            return f"nn.Conv{dim}d"
-
-        dim = weight.ndim - 2
+        kernel_size = kwargs['params'].get('kernel_shape')
+        dim = len(kernel_size)
         return f"nn.Conv{dim}d"
 
     @staticmethod
@@ -138,14 +135,16 @@ class ConvMapper(ONNXToMindSporeMapper):
         weights = kwargs['weights']
         params = kwargs['params']
 
-        if weights.get('weight', 'empty') == 'empty':  # is from tf
-            return ConvMapper.convert_params_tf(params=params, weights=weights)
-        return ConvMapper.convert_params_torch(params=params, weights=weights)
+        return ConvMapper.convert_params_tf(params=params, weights=weights)
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
-        return dict()
+        weights = kwargs['weights']
+        weight = ConvMapper._find_val_by_index(0, weights)
+        bias = ConvMapper._find_val_by_index(1, weights)
 
-    @staticmethod
-    def _convert_settings(**kwargs):
-        return Setting()
+        converted_weights = {'weight': weight}
+        if isinstance(bias, np.ndarray):
+            converted_weights['bias'] = bias
+
+        return converted_weights

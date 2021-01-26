@@ -108,18 +108,21 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         try:
             converter_name = op_name_converter(params=params, weights=weights, op_name=op_name)
             converted_params = params_converter(params=params, weights=weights)
+
             if "input_shape" in converted_params:
                 converted_params.pop("input_shape")
             if "output_shape" in converted_params:
                 converted_params.pop("output_shape")
             # set to converted_weights to enable weight migration
-            _ = weights_converter(weights=weights) if weights else dict()
+            converted_weights = weights_converter(weights=weights) if weights else dict()
             code_template, exchange_msg, outputs_list, outputs_mapping = template_generator(
                 operation=converter_name,
                 converted_params=converted_params,
                 raw_params=params,
-                weights=weights
+                weights=weights,
+                trainable_params=converted_weights
             )
+
         except (AttributeError, KeyError, ValueError, TypeError, IndexError) as e:
             err_msg = f"Converting {op_name} failed, see {str(e)}"
             log.error(err_msg)
@@ -148,6 +151,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         op = kwargs.get("operation")
         args = kwargs.get("converted_params", dict())
         weights = kwargs.get("weights")
+        trainable_params = kwargs.get("trainable_params", dict())
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
         variable_slot = "var_0"
@@ -169,7 +173,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
                 ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
                 ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
                 ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: {}
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
             }
         }
         outputs_list = [f"opt_{{{variable_slot}}}"]
@@ -177,11 +181,14 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         return template, exchange_msg, outputs_list, outputs_mapping
 
     @staticmethod
-    def _find_val_by_index(loc_index, values_dict):
-        """Find value by location index of values_dict."""
+    def _find_val_by_index(loc_index, weights_list):
+        """Find value by location index of weights_list."""
         result = None
-        for idx, dict_val in enumerate(values_dict.values()):
+        if loc_index < 0:
+            return weights_list[loc_index].value
+
+        for idx, weight in enumerate(weights_list):
             if idx == loc_index:
-                result = dict_val
+                result = weight.value
                 break
         return result

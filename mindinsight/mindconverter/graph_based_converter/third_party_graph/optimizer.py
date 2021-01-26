@@ -18,7 +18,7 @@ from importlib import import_module
 
 import numpy as np
 
-from ..common.utils import fetch_output_from_onnx_model
+from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model
 
 
 class OnnxSimplify:

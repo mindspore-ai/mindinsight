@@ -17,13 +17,13 @@
 import copy
 from collections import OrderedDict
 
-from .node_struct import NodeStruct
-from .scope_utils import Scope
-from ..common.utils import get_dict_key_by_value
-from .args_translator import ArgsTranslation
-from ..common.code_fragment import ModuleFragment
-from ..common.global_context import GlobalContext
-from ..common.name_mgr import LocalVarNameMgr
+from mindinsight.mindconverter.graph_based_converter.generator.node_struct import NodeStruct
+from mindinsight.mindconverter.graph_based_converter.generator.scope_utils import Scope
+from mindinsight.mindconverter.graph_based_converter.common.utils import get_dict_key_by_value
+from mindinsight.mindconverter.graph_based_converter.generator.args_translator import ArgsTranslation
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import ModuleFragment
+from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
+from mindinsight.mindconverter.graph_based_converter.common.name_mgr import LocalVarNameMgr
 
 
 class ModuleStruct:

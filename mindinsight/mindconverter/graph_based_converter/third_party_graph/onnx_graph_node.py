@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
 """Define ONNX graph node."""
 from importlib import import_module
 
-from .base import GraphNode
-from ..common.utils import is_converted
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import GraphNode
+from mindinsight.mindconverter.graph_based_converter.common.utils import is_converted
 
-from ..constant import NodeType, SEPARATOR_IN_SCOPE, SEPARATOR_BTW_NAME_AND_ID, LEFT_BUCKET, RIGHT_BUCKET, \
-    SEPARATOR_IN_ONNX_OP
+from mindinsight.mindconverter.graph_based_converter.constant import NodeType, SEPARATOR_IN_SCOPE, \
+    SEPARATOR_BTW_NAME_AND_ID, LEFT_BUCKET, RIGHT_BUCKET, SEPARATOR_IN_ONNX_OP
 
 
 class OnnxGraphNode(GraphNode):
@@ -28,7 +28,7 @@ class OnnxGraphNode(GraphNode):
 
     Args:
         node (OnnxNode): OnnxNode Object.
-        weight (dict): Dictionary records weight and bias.
+        weight (list): List of recording node weights.
     """
     _type_frozen = False
     _module_name_frozen = False
@@ -227,7 +227,6 @@ class OnnxGraphNode(GraphNode):
         Args:
             src_arg (str): Original arg name.
             tgt_arg (str): Target arg name.
-
         """
         self._args_in_code[src_arg] = tgt_arg
 

@@ -21,10 +21,10 @@ from importlib.util import find_spec
 
 import mindinsight
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
-from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, \
+from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, onnx_satisfied, \
     save_code_file_and_report, get_framework_type
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
-    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER
+    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
@@ -53,6 +53,18 @@ parser.add_argument("--report", type=str, required=False,
                     help="Generated reports output folder path.")
 
 
+def onnx_lib_version_satisfied():
+    """Check onnx libs version whether is satisfied."""
+    onnx = import_module("onnx")
+    ort = import_module("onnxruntime")
+    optimizer = import_module("onnxoptimizer.version")
+    if not lib_version_satisfied(getattr(onnx, "__version__"), ONNX_MIN_VER) \
+            or not lib_version_satisfied(getattr(ort, "__version__"), ONNXRUNTIME_MIN_VER) \
+            or not lib_version_satisfied(getattr(optimizer, "version"), ONNXOPTIMIZER_MIN_VER):
+        return False
+    return True
+
+
 def torch_installation_validation(func):
     """
     Validate args of func.
@@ -68,26 +80,33 @@ def torch_installation_validation(func):
            input_nodes: str, output_nodes: str,
            output_folder: str, report_folder: str = None):
         # Check whether pytorch is installed.
-        if not find_spec("torch") or not find_spec("onnx") or not find_spec("onnxruntime"):
-            error = RuntimeIntegrityError(f"PyTorch, onnx(>={ONNX_MIN_VER}) and "
-                                          f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) "
-                                          f"are required when using graph based "
-                                          f"scripts converter, and PyTorch version must "
-                                          f"be consisted with model generation runtime.")
+        error_info = None
+        if graph_path.endswith('.onnx'):
+            if not onnx_satisfied():
+                error_info = f"onnx(>={ONNX_MIN_VER}, onnxruntime(>={ONNXRUNTIME_MIN_VER}) and " \
+                             f"onnxoptimizer(>={ONNXOPTIMIZER_MIN_VER}) " \
+                             f"are required when using graph based scripts converter."
+        else:
+            if not find_spec("torch") or not onnx_satisfied():
+                error_info = f"PyTorch, onnx(>={ONNX_MIN_VER}), " \
+                             f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) and " \
+                             f"onnxoptimizer(>={ONNXOPTIMIZER_MIN_VER}) " \
+                             f"are required when using graph based " \
+                             f"scripts converter, and PyTorch version must " \
+                             f"be consisted with model generation runtime."
+        if error_info:
+            error = RuntimeIntegrityError(error_info)
             log.error(error)
             log_console.error("\n")
             log_console.error(str(error))
             log_console.error("\n")
             sys.exit(0)
 
-        onnx = import_module("onnx")
-        ort = import_module("onnxruntime")
-
-        if not lib_version_satisfied(getattr(onnx, "__version__"), ONNX_MIN_VER) \
-                or not lib_version_satisfied(getattr(ort, "__version__"), ONNXRUNTIME_MIN_VER):
+        if not onnx_lib_version_satisfied():
             error = RuntimeIntegrityError(
-                f"onnx(>={ONNX_MIN_VER}) and "
-                f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) are required when using graph "
+                f"onnx(>={ONNX_MIN_VER}), "
+                f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) and "
+                f"onnxoptimizer(>={ONNXOPTIMIZER_MIN_VER}) are required when using graph "
                 f"based scripts converter for Pytorch conversion."
             )
             log.error(error)
@@ -128,11 +147,11 @@ def tf_installation_validation(func):
            output_folder: str, report_folder: str = None,
            input_nodes: str = None, output_nodes: str = None):
         # Check whether tensorflow is installed.
-        if not _check_tf_installation() or not find_spec("tf2onnx") \
-                or not find_spec("onnx") or not find_spec("onnxruntime"):
+        if not _check_tf_installation() or not onnx_satisfied():
             error = RuntimeIntegrityError(
-                f"TensorFlow, tf2onnx(>={TF2ONNX_MIN_VER}), onnx(>={ONNX_MIN_VER}) and "
-                f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) are required when using graph "
+                f"TensorFlow, tf2onnx(>={TF2ONNX_MIN_VER}), onnx(>={ONNX_MIN_VER}), "
+                f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) and onnxoptimizer(>={ONNXOPTIMIZER_MIN_VER}) "
+                f"are required when using graph "
                 f"based scripts converter for TensorFlow conversion."
             )
             log.error(error)
@@ -141,15 +160,14 @@ def tf_installation_validation(func):
             log_console.error("\n")
             sys.exit(0)
 
-        onnx, tf2onnx = import_module("onnx"), import_module("tf2onnx")
-        ort = import_module("onnxruntime")
+        tf2onnx = import_module("tf2onnx")
 
-        if not lib_version_satisfied(getattr(onnx, "__version__"), ONNX_MIN_VER) \
-                or not lib_version_satisfied(getattr(ort, "__version__"), ONNXRUNTIME_MIN_VER) \
-                or not lib_version_satisfied(getattr(tf2onnx, "__version__"), TF2ONNX_MIN_VER):
+        if not lib_version_satisfied(getattr(tf2onnx, "__version__"), TF2ONNX_MIN_VER) \
+                or not onnx_lib_version_satisfied():
             error = RuntimeIntegrityError(
-                f"TensorFlow, tf2onnx(>={TF2ONNX_MIN_VER}), onnx(>={ONNX_MIN_VER}) and "
-                f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) are required when using graph "
+                f"TensorFlow, tf2onnx(>={TF2ONNX_MIN_VER}), onnx(>={ONNX_MIN_VER}), "
+                f"onnxruntime(>={ONNXRUNTIME_MIN_VER}) and onnxoptimizer(>={ONNXOPTIMIZER_MIN_VER}) "
+                f"are required when using graph "
                 f"based scripts converter for TensorFlow conversion."
             )
             log.error(error)
@@ -258,12 +276,12 @@ def main_graph_base_converter(file_config):
         raise ParamMissingError("Param missing, `--shape` is required when using graph mode.")
 
     if frame_type == FrameworkType.PYTORCH.value:
-        check_params = ['input_nodes', 'output_nodes']
-        check_params_exist(check_params, file_config)
         graph_based_converter_pytorch_to_ms(graph_path=graph_path,
                                             sample_shape=file_config['shape'],
-                                            input_nodes=file_config['input_nodes'],
-                                            output_nodes=file_config['output_nodes'],
+                                            input_nodes=file_config['input_nodes'] if file_config['input_nodes']
+                                            else 'input.1',
+                                            output_nodes=file_config['output_nodes'] if file_config['output_nodes']
+                                            else '',
                                             output_folder=file_config['outfile_dir'],
                                             report_folder=file_config['report_dir'])
     elif frame_type == FrameworkType.TENSORFLOW.value:

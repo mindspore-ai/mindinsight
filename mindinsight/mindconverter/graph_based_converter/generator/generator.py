@@ -16,6 +16,7 @@
 import copy
 from collections import OrderedDict
 
+from mindspore import Tensor
 from yapf.yapflib.yapf_api import FormatCode
 
 from mindinsight.mindconverter.common.exceptions import GeneratorError
@@ -28,7 +29,7 @@ from mindinsight.mindconverter.graph_based_converter.common.outputs import BaseO
 from mindinsight.mindconverter.graph_based_converter.common.yapf_config import mindspore_yapf_config
 from mindinsight.mindconverter.graph_based_converter.common.name_mgr import GlobalVarNameMgr
 from mindinsight.mindconverter.graph_based_converter.constant import NEW_LINE, SECOND_LEVEL_INDENT, \
-    FIRST_LEVEL_INDENT, get_imported_module
+    FIRST_LEVEL_INDENT, get_imported_module, SEPARATOR_BTW_NAME_AND_ID
 from mindinsight.mindconverter.graph_based_converter.report_generator import ReportGenerator
 from mindinsight.mindconverter.graph_based_converter.common.utils import replace_string_in_list
 
@@ -469,6 +470,74 @@ class Generator:
         """Return all ModuleStructs in this model."""
         return self._module_struct_collections
 
+    def generate_weight_scope_name(self, node):
+        """Generate weight scope name for checkpoint."""
+        replaced_module_dict = self.node_structs[node].global_context_mgr.known_module_name
+        scope_list = self.node_structs[node].scope.scope_list
+        ms_var_name = self.node_structs[node].ms_var_name
+
+        weight_scope_name = None
+        for scope in scope_list[1:]:
+            replaced_module = replaced_module_dict.get(scope.split(SEPARATOR_BTW_NAME_AND_ID)[0])
+            if replaced_module:
+                scope = scope.replace(scope.split(SEPARATOR_BTW_NAME_AND_ID)[0], replaced_module)
+            if not weight_scope_name:
+                weight_scope_name = scope
+            else:
+                weight_scope_name = '.'.join((weight_scope_name, scope))
+
+        if not weight_scope_name:
+            weight_scope_name = ms_var_name
+        else:
+            weight_scope_name = '.'.join((weight_scope_name, ms_var_name))
+
+        return weight_scope_name.lower()
+
+    def generate_checkpoint(self):
+        """Generate checkpoint."""
+
+        trainable_weights_dict = dict()
+        weight_map = list()
+        for node_name, node_inst in self.node_structs.items():
+            if node_inst.fragment.exchange_msg['var_0']['trainable_params']:
+                weights_scope_name = self.generate_weight_scope_name(node_name)
+                onnx_weight_inst = node_inst.fragment.exchange_msg['var_0']['weights']
+                for idx, (weight_key, weight_value) in \
+                        enumerate(node_inst.fragment.exchange_msg['var_0']['trainable_params'].items()):
+                    weight_name = '.'.join((weights_scope_name, weight_key))
+                    weight_shape = Tensor(weight_value).shape
+                    data_type = Tensor(weight_value).dtype
+                    trainable_weights_dict[weight_name] = weight_value
+
+                    onnx_weight_name = onnx_weight_inst[idx].name
+                    onnx_weight_shape = onnx_weight_inst[idx].value.shape
+                    onnx_data_type = onnx_weight_inst[idx].value.dtype
+
+                    weight_map.append(
+                        {
+                            'converted_weight': {
+                                'name': weight_name,
+                                'shape': weight_shape,
+                                'data_type': str(data_type)
+                            },
+                            'source_weight': {
+                                'name': onnx_weight_name,
+                                'shape': onnx_weight_shape,
+                                'data_type': str(onnx_data_type)
+                            }
+                        }
+                    )
+
+        save_obj = list()
+        for weight_name, weight_value in trainable_weights_dict.items():
+            obj = {
+                'name': weight_name,
+                'data': Tensor(weight_value)
+            }
+            save_obj.append(obj)
+
+        return save_obj, weight_map
+
     @GeneratorError.check_except("Generator occurs an error when generating code statements.")
     def generate(self):
         """
@@ -479,6 +548,9 @@ class Generator:
         """
         self._form_bottom_submodule()
         self._recursive_form_module()
+
+        ckpt_data_list, weight_map = self.generate_checkpoint()
+
         CodeStruct(self.module_structs.get('[]'), self._repeated_submodules)
 
         outputs = [get_imported_module()]
@@ -494,7 +566,7 @@ class Generator:
         report = report_generator.gen_report(formatted_code)
         del self._global_context
 
-        return {"model": (formatted_code, report)}
+        return {"model": (formatted_code, report, ckpt_data_list, weight_map)}
 
     def get_node_struct(self, node_identifier):
         """

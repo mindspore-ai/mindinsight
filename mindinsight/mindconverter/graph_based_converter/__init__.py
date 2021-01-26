@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,5 +15,5 @@
 """Graph based scripts converter definition."""
 __all__ = ["graph_based_converter_pytorch_to_ms", "graph_based_converter_tf_to_ms"]
 
-from .framework import graph_based_converter_pytorch_to_ms
-from .framework import graph_based_converter_tf_to_ms
+from mindinsight.mindconverter.graph_based_converter.framework import graph_based_converter_pytorch_to_ms
+from mindinsight.mindconverter.graph_based_converter.framework import graph_based_converter_tf_to_ms

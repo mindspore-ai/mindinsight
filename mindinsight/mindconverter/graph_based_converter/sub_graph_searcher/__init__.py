@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,4 +15,4 @@
 """Searcher of scope name."""
 __all__ = ["generate_scope_name"]
 
-from .searcher import generate_scope_name
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.searcher import generate_scope_name

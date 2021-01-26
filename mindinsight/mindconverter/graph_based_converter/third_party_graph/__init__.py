@@ -17,7 +17,7 @@
 __all__ = ["GraphFactory"]
 from importlib import import_module
 
-from .base import Graph
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
 
 
 class GraphFactory:

@@ -14,7 +14,6 @@
 # ==============================================================================
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class BatchNormMapper(ONNXToMindSporeMapper):
@@ -36,8 +35,14 @@ class BatchNormMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
-        return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        return Setting()
+        weights = kwargs['weights']
+        gamma = BatchNormMapper._find_val_by_index(0, weights)
+        beta = BatchNormMapper._find_val_by_index(1, weights)
+        moving_mean = BatchNormMapper._find_val_by_index(2, weights)
+        moving_variance = BatchNormMapper._find_val_by_index(3, weights)
+        return {
+            'gamma': gamma,
+            'beta': beta,
+            'moving_mean': moving_mean,
+            'moving_variance': moving_variance
+        }

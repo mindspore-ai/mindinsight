@@ -17,12 +17,12 @@ from importlib import import_module
 from typing import Dict, NoReturn
 
 from mindinsight.mindconverter.common.log import logger as log
-from .base import Graph
-from .input_node import InputNode
-from .onnx_graph_node import OnnxGraphNode
-from .pytorch_graph_parser import PyTorchGraphParser
-from .tf_graph_parser import TFGraphParser
-from .onnx_utils import OnnxDataLoader
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.input_node import InputNode
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph_node import OnnxGraphNode
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.pytorch_graph_parser import PyTorchGraphParser
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.tf_graph_parser import TFGraphParser
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import OnnxDataLoader, NodeWeight
 
 NONE_SCOPE_OP = {
     "onnx::Add": "Add",
@@ -126,7 +126,7 @@ class OnnxGraph(Graph):
 
         self._shape_dict = model_data.node_output_shape_dict
         for ind, (node_name, node) in enumerate(model_data.nodes_dict.items()):
-            node_weight = {}
+            node_weights = list()
             node.scope_name = scope_name_list[ind]
             inputs = node.input_name_list
             # check each input from node or tensors
@@ -135,8 +135,8 @@ class OnnxGraph(Graph):
                     tensor = model_data.tensors_dict[i]
                     t_name = tensor.name
                     t_value = tensor.to_array()
-                    node_weight[t_name] = t_value
-            self._nodes_collection[node_name] = OnnxGraphNode(node, node_weight)
+                    node_weights.append(NodeWeight(t_name, t_value))
+            self._nodes_collection[node_name] = OnnxGraphNode(node, node_weights)
             self._nodes_record[node_name] = node_name
 
             for nd_ipt_name in node.precursor_onnx_node_dict:

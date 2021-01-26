@@ -13,15 +13,20 @@
 # limitations under the License.
 # ============================================================================
 """Define common utils."""
+import json
 import os
 import stat
 from importlib import import_module
+from importlib.util import find_spec
 from typing import List, Tuple, Mapping
 
-from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, UnknownModelError
+from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
+    UnknownModelError, CheckPointGenerationError, WeightMapGenerationError
 from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, BINARY_HEADER_PYTORCH_BITS, \
     FrameworkType, BINARY_HEADER_PYTORCH_FILE, TENSORFLOW_MODEL_SUFFIX
+
+from mindspore.train.serialization import save_checkpoint
 
 
 def is_converted(operation: str):
@@ -96,7 +101,6 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         code_lines (dict): Code lines.
         out_folder (str): Output folder.
         report_folder (str): Report output folder.
-
     """
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     modes = stat.S_IRUSR | stat.S_IWUSR
@@ -114,7 +118,7 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         os.makedirs(report_folder, modes_usr)
 
     for file_name in code_lines:
-        code, report = code_lines[file_name]
+        code, report, trainable_weights, weight_map = code_lines[file_name]
         code_file_path = os.path.realpath(os.path.join(out_folder, f"{model_name}.py"))
         report_file_path = os.path.realpath(os.path.join(report_folder, f"report_of_{model_name}.txt"))
         try:
@@ -132,6 +136,31 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
                 rpt_f.write(report)
         except (IOError, FileExistsError) as error:
             raise ReportGenerationError(str(error))
+
+        ckpt_file_path = os.path.realpath(os.path.join(out_folder, f"{model_name}.ckpt"))
+        try:
+            if os.path.exists(ckpt_file_path):
+                raise CheckPointGenerationError("Checkpoint file with the same name already exists.")
+            save_checkpoint(trainable_weights, ckpt_file_path)
+        except TypeError as error:
+            raise CheckPointGenerationError(str(error))
+
+        weight_map_path = os.path.realpath(os.path.join(out_folder, f"weight_map_of_{model_name}.json"))
+        try:
+            if os.path.exists(weight_map_path):
+                raise WeightMapGenerationError("Weight map file with the same name already exists.")
+            with os.fdopen(os.open(weight_map_path, flags, stat.S_IRUSR), 'w') as map_f:
+                weight_map_json = {f"{model_name}": weight_map}
+                json.dump(weight_map_json, map_f)
+        except (IOError, FileExistsError) as error:
+            raise WeightMapGenerationError(str(error))
+
+
+def onnx_satisfied():
+    """Validate ONNX , ONNXRUNTIME, ONNXOPTIMIZER installation."""
+    if not find_spec("onnx") or not find_spec("onnxruntime") or not find_spec("onnxoptimizer"):
+        return False
+    return True
 
 
 def lib_version_satisfied(current_ver: str, mini_ver_limited: str,
@@ -219,6 +248,7 @@ def reset_init_or_construct(template, variable_slot, new_data, scope):
     template[variable_slot][scope].clear()
     template[variable_slot][scope] += new_data
     return template
+
 
 def replace_string_in_list(str_list: list, original_str: str, target_str: str):
     """

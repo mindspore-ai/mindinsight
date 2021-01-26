@@ -17,11 +17,11 @@ from collections import OrderedDict
 
 from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
 from mindinsight.mindconverter.graph_based_converter.generator.fragment_utils import FragmentHandler
-from .scope_utils import Scope
-from .args_translator import ArgsTranslation
-from ..third_party_graph.onnx_graph_node import OnnxGraphNode
-from ..common.global_context import GlobalContext
-from ...common.exceptions import GeneratorError
+from mindinsight.mindconverter.graph_based_converter.generator.scope_utils import Scope
+from mindinsight.mindconverter.graph_based_converter.generator.args_translator import ArgsTranslation
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph_node import OnnxGraphNode
+from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
+from mindinsight.mindconverter.common.exceptions import GeneratorError
 
 
 class NodeStruct:

@@ -20,6 +20,7 @@ from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import GraphParser
 from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
 
+
 class PyTorchGraphParser(GraphParser):
     """Define pytorch graph parser."""
 
