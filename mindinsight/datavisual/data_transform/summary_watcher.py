@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -205,6 +205,7 @@ class SummaryWatcher:
             if not self._is_valid_pattern_result(summary_pattern, pb_pattern, list_explain, entry):
                 return
 
+            timestamp = None
             if summary_pattern is not None:
                 timestamp = int(summary_pattern.groupdict().get('timestamp'))
                 try:
@@ -215,7 +216,6 @@ class SummaryWatcher:
 
             if relative_path not in summary_dict:
                 summary_dict[relative_path] = _new_entry(ctime, mtime)
-
                 job_dict = _get_explain_job_info(summary_base_dir, relative_path, timestamp)
                 summary_dict[relative_path].update(job_dict)
 
@@ -488,6 +488,10 @@ def _new_entry(ctime, mtime, profiler=None):
 
 def _get_explain_job_info(summary_base_dir, relative_path, timestamp):
     """Get explain job info."""
+    if timestamp is None:
+        job_dict = {"saliency_map": False, "hierarchical_occlusion": False}
+        return job_dict
+
     json_path = os.path.join(summary_base_dir, relative_path.lstrip("./"), f"_explain_{timestamp}",
                              "manifest.json")
     if os.path.exists(json_path):
