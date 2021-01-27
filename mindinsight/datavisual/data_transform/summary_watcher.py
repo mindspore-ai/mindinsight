@@ -14,6 +14,7 @@
 # ============================================================================
 """Summary watcher module."""
 
+import json
 import os
 import re
 import datetime
@@ -214,11 +215,18 @@ class SummaryWatcher:
 
             if relative_path not in summary_dict:
                 summary_dict[relative_path] = _new_entry(ctime, mtime)
+
+                job_dict = _get_explain_job_info(summary_base_dir, relative_path, timestamp)
+                summary_dict[relative_path].update(job_dict)
+
             if summary_dict[relative_path]['create_time'] < ctime:
                 summary_dict[relative_path].update({
                     'create_time': ctime,
                     'update_time': mtime,
                 })
+                job_dict = _get_explain_job_info(summary_base_dir, relative_path, timestamp)
+                summary_dict[relative_path].update(job_dict)
+
             if not summary_pattern:
                 summary_dict[relative_path]['graph_files'] += 1
             elif entry.name.endswith(LINEAGE_SUMMARY_SUFFIX):
@@ -476,3 +484,17 @@ def _new_entry(ctime, mtime, profiler=None):
         'graph_files': 0,
         'profiler': profiler
     }
+
+
+def _get_explain_job_info(summary_base_dir, relative_path, timestamp):
+    """Get explain job info."""
+    json_path = os.path.join(summary_base_dir, relative_path.lstrip("./"), f"_explain_{timestamp}",
+                             "manifest.json")
+    if os.path.exists(json_path):
+        with open(json_path, "r") as f:
+            job_dict = json.load(f)
+        return job_dict
+
+    # Set default value to make it compatible with previous version
+    job_dict = {"saliency_map": True, "hierarchical_occlusion": False}
+    return job_dict
