@@ -14,7 +14,6 @@
 # ==============================================================================
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class FlattenMapper(ONNXToMindSporeMapper):
@@ -31,7 +30,3 @@ class FlattenMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        return Setting()

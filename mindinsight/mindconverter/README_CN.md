@@ -10,12 +10,14 @@
     - [用法](#用法)
         - [PyTorch模型脚本迁移](#pytorch模型脚本迁移)
         - [TensorFlow模型脚本迁移](#tensorflow模型脚本迁移)
+        - [ONNX模型文件迁移](#onnx模型文件迁移)
     - [使用场景](#使用场景)
     - [使用示例](#使用示例)
         - [基于AST的脚本转换示例](#基于ast的脚本转换示例)
         - [基于图结构的脚本生成示例](#基于图结构的脚本生成示例)
             - [PyTorch模型脚本生成示例](#pytorch模型脚本生成示例)
             - [TensorFlow模型脚本生成示例](#tensorflow模型脚本生成示例)
+            - [ONNX模型文件生成示例](#onnx模型文件生成示例)
     - [注意事项](#注意事项)
     - [AST方案不支持场景](#ast方案不支持场景)
         - [场景1](#场景1)
@@ -30,7 +32,7 @@
 
 ## 概述
 
-MindConverter是一款用于将PyTorch、TensorFlow脚本转换到MindSpore脚本的工具。结合转换报告的信息，用户只需对转换后的脚本进行微小的改动，即可快速将PyTorch、TensorFlow框架的模型脚本迁移到MindSpore。
+MindConverter是一款用于将PyTorch、TensorFlow脚本或者ONNX文件转换到MindSpore脚本的工具。结合转换报告的信息，用户只需对转换后的脚本进行微小的改动，即可快速将PyTorch、TensorFlow框架的模型脚本或者ONNX文件迁移到MindSpore。
 
 ## 安装
 
@@ -53,10 +55,10 @@ optional arguments:
   --in_file IN_FILE     Specify path for script file to use AST schema to do
                         script conversation.
   --model_file MODEL_FILE
-                        PyTorch .pth or TensorFlow .pb model file path to use
-                        graph based schema to do script generation. When
-                        `--in_file` and `--model_file` are both provided, use
-                        AST schema as default.
+                        PyTorch(.pth), Tensorflow(.pb) or ONNX(.onnx) model
+                        file path is expected to do script generation based on
+                        graph schema. When `--in_file` and `--model_file` are
+                        both provided, use AST schema as default.
   --shape SHAPE         Optional, expected input tensor shape of
                         `--model_file`. It is required when use graph based
                         schema. Usage: --shape 1,3,244,244
@@ -91,7 +93,7 @@ optional arguments:
 
 当使用基于图结构的脚本生成方案时，要求必须指定`--shape`的值；当使用基于AST的脚本转换方案时，`--shape`会被忽略。
 
-其中，`--output`与`--report`参数可省略。若省略，MindConverter将在当前工作目录（Working directory）下自动创建`output`目录，将生成的脚本、转换报告输出至该目录。
+其中，`--output`与`--report`参数可省略。若省略，MindConverter将在当前工作目录（Working directory）下自动创建`output`目录，将生成的脚本、转换报告、权重文件、权重映射表输出至该目录。
 
 另外，当使用基于图结构的脚本生成方案时，请确保原PyTorch项目已在Python包搜索路径中，可通过CLI进入Python交互式命令行，通过import的方式判断是否已满足；若未加入，可通过`--project_path`
 命令手动将项目路径传入，以确保MindConverter可引用到原PyTorch脚本。
@@ -104,6 +106,12 @@ optional arguments:
 **MindConverter提供基于图结构的脚本生成方案**：指定`--model_file`、`--shape`、`--input_nodes`、`--output_nodes`进行脚本迁移。
 
 > AST方案不支持TensorFlow模型脚本迁移，TensorFlow脚本迁移仅支持基于图结构的方案。
+
+### ONNX模型文件迁移
+
+**MindConverter提供基于图结构的脚本生成方案**：指定`--model_file`、`--shape`、`--input_nodes`、`--output_nodes`进行脚本迁移。
+
+> AST方案不支持ONNX模型文件迁移，ONNX文件迁移仅支持基于图结构的方案。
 
 ## 使用场景
 
@@ -124,38 +132,38 @@ MindConverter提供两种技术方案，以应对不同脚本迁移场景：
 
 支持的模型列表（如下模型已基于x86 Ubuntu发行版，PyTorch 1.4.0(TorchVision 0.5)以及TensorFlow 1.15.0测试通过）:
 
-|  模型  | PyTorch脚本 | TensorFlow脚本 | 备注 |
-| :----: | :----: | :----: | :----: |
-| ResNet18 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |  |
-| ResNet34 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |  |
-| ResNet50 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
-| ResNet50V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
-| ResNet101 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
-| ResNet101V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
-| ResNet152 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
-| ResNet152V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
-| Wide ResNet50 2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 | |
-| Wide ResNet101 2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 | |
-| VGG11/11BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  |
-| VGG13/13BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  |
-| VGG16 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |  |
-| VGG16BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  |
-| VGG19 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |  |
-| VGG19BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  |
-| AlexNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | 暂未测试 |  |
-| GoogLeNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | 暂未测试 |  |
-| Xception | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/xception.py) |  |
-| InceptionV3 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/inception.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |  |
-| InceptionResNetV2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  |
-| MobileNetV1 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  |
-| MobileNetV2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  |
-| MNASNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | 暂未测试 | |
-| SqueezeNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | 暂未测试 | |
-| DenseNet121/169/201 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  |
-| DenseNet161 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | 暂未测试 | |
-| NASNetMobile/Large | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  |
-| EfficientNetB0~B7 | [脚本链接](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.5脚本链接](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  |
-| Unet | [脚本链接](https://github.com/milesial/Pytorch-UNet) | [脚本链接](https://github.com/zhixuhao/unet) | 由于算子`mindspore.ops.ResizeBilinear`在GPU上暂未实现，所以当运行在GPU设备上时，算子`mindspore.ops.ResizeBilinear`需要被替换为算子`mindspore.ops.ResizeNearestNeighbor` |
+|  模型  | PyTorch脚本 | TensorFlow脚本 | 备注 | PyTorch权重迁移 | TensorFlow权重迁移 |
+| :----: | :----: | :----: | :----: | :----: | :----: |
+| ResNet18 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |  | 已测试 | / |
+| ResNet34 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |  | 已测试 | / |
+| ResNet50 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | 已测试 | 已测试 |
+| ResNet50V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | 已测试 |
+| ResNet101 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | 已测试 | 已测试 |
+| ResNet101V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | 已测试 |
+| ResNet152 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | 已测试 | 已测试 |
+| ResNet152V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | 已测试 |
+| Wide ResNet50 2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 | | 已测试 | / |
+| Wide ResNet101 2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 | | 已测试 | / |
+| VGG11/11BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  | 已测试 | / |
+| VGG13/13BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  | 已测试 | / |
+| VGG16 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |  | 已测试 | 已测试 |
+| VGG16BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  | 已测试 | / |
+| VGG19 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |  | 已测试 | 已测试 |
+| VGG19BN | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | 暂未测试 |  | 已测试 | / |
+| AlexNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | 暂未测试 |  | 已测试 | / |
+| GoogLeNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | 暂未测试 |  | 已测试 | / |
+| Xception | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/xception.py) |  | / | 已测试 |
+| InceptionV3 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/inception.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |  | 已测试 | 已测试 |
+| InceptionResNetV2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  | / | 已测试 |
+| MobileNetV1 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  | / | 已测试 |
+| MobileNetV2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  | 已测试 | 已测试 |
+| MNASNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | 暂未测试 | | 已测试 | / |
+| SqueezeNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | 暂未测试 | | 已测试 | / |
+| DenseNet121/169/201 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  | 已测试 | 已测试 |
+| DenseNet161 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | 暂未测试 | | 已测试 | / |
+| NASNetMobile/Large | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  | / | 已测试 |
+| EfficientNetB0~B7 | [脚本链接](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.5脚本链接](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  | 已测试 | 未测试（TF1.5） 已测试（TF2.3）|
+| Unet | [脚本链接](https://github.com/milesial/Pytorch-UNet) | [脚本链接](https://github.com/zhixuhao/unet) | 由于算子`mindspore.ops.ResizeBilinear`在GPU上暂未实现，所以当运行在GPU设备上时，算子`mindspore.ops.ResizeBilinear`需要被替换为算子`mindspore.ops.ResizeNearestNeighbor` | 已测试 | 已测试 |
 
 ## 使用示例
 
@@ -193,12 +201,46 @@ line x:y: [UnConvert] 'operator' didn't convert. ...
 对于部分未成功转换的算子，报告中会提供修改建议，如`line 157:23`，MindConverter建议将`torch.nn.AdaptiveAvgPool2d`
 替换为`mindspore.ops.operations.ReduceMean`。
 
+权重映射表示例如下所示：
+
+```json
+{
+    "resnet50": [
+        {
+            "converted_weight": {
+                "name": "conv2d_0.weight",
+                "shape": [
+                    64,
+                    3,
+                    7,
+                    7
+                ],
+                "data_type": "Float32"
+            },
+            "source_weight": {
+                "name": "conv1.weight",
+                "shape": [
+                    64,
+                    3,
+                    7,
+                    7
+                ],
+                "data_type": "float32"
+            }
+        }
+    ]
+}
+```
+
+映射表中分别保存算子在MindSpore中的权重信息（`converted_weight`）和在原始框架中的权重信息（`source_weight`）。
+
 ### 基于图结构的脚本生成示例
 
 #### PyTorch模型脚本生成示例
 
-若用户已将PyTorch模型保存为.pth格式，假设模型绝对路径为`/home/user/model.pth`，该模型期望的输入shape为(1, 3, 224, 224)
-，原PyTorch脚本位于`/home/user/project/model_training`，希望将脚本输出至`/home/user/output`，转换报告输出至`/home/user/output/report`，则脚本生成命令为：
+若用户已将PyTorch模型保存为.pth格式，假设模型绝对路径为`/home/uer/model.pth`，该模型期望的输入shape为(1, 3, 224, 224)
+，原PyTorch脚本位于`/home/user/project/model_training`，希望将脚本、权重文件和权重映射表输出至`/home/user/output`，转换报告输出至`/home/user/output/report`，
+。则脚本生成命令为：
 
 ```bash
 mindconverter --model_file /home/user/model.pth --shape 1,3,224,224 \
@@ -207,7 +249,7 @@ mindconverter --model_file /home/user/model.pth --shape 1,3,224,224 \
               --project_path /home/user/project/model_training
 ```
 
-执行该命令，MindSpore代码文件、转换报告生成至相应目录。
+执行该命令，MindSpore代码文件、权重文件、权重映射表和转换报告生成至相应目录。
 
 基于图结构的脚本生成方案产生的转换报告格式与AST方案相同。然而，由于基于图结构方案属于生成式方法，转换过程中未参考原PyTorch脚本，因此生成的转换报告中涉及的代码行、列号均指生成后脚本。
 
@@ -274,9 +316,29 @@ mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
               --report /home/user/output/report
 ```
 
-执行该命令，MindSpore代码文件、转换报告生成至相应目录。
+执行该命令，MindSpore代码文件、权重文件、权重映射表和转换报告生成至相应目录。
 
 由于基于图结构方案属于生成式方法，转换过程中未参考原TensorFlow脚本，因此生成的转换报告中涉及的代码行、列号均指生成后脚本。
+
+另外，对于未成功转换的算子，在代码中会相应的标识该节点输入、输出Tensor的shape（以`input_shape`、`output_shape`标识），便于用户手动修改，示例见**PyTorch模型脚本生成示例**。
+
+#### ONNX模型文件生成示例
+
+使用ONNX模型文件迁移，需要先从.onnx文件中获取模型输入节点、输出节点名称。获取ONNX模输入、输出节点名称，可使用 [Netron](https://github.com/lutzroeder/netron) 工具查看。
+
+假设输入节点名称为`input_1:0`、输出节点名称为`predictions/Softmax:0`，模型输入样本尺寸为`1,3,224,224`，则可使用如下命令进行脚本生成：
+
+```bash
+mindconverter --model_file /home/user/xxx/model.onnx --shape 1,3,224,224 \
+              --input_nodes input_1:0 \
+              --output_nodes predictions/Softmax:0 \
+              --output /home/user/output \
+              --report /home/user/output/report
+```
+
+执行该命令，MindSpore代码文件、权重文件、权重映射表和转换报告生成至相应目录。
+
+由于基于图结构方案属于生成式方法，转换过程中未参考ONNX文件，因此生成的转换报告中涉及的代码行、列号均指生成后脚本。
 
 另外，对于未成功转换的算子，在代码中会相应的标识该节点输入、输出Tensor的shape（以`input_shape`、`output_shape`标识），便于用户手动修改，示例见**PyTorch模型脚本生成示例**。
 
@@ -285,6 +347,7 @@ mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
 1. PyTorch、TensorFlow不作为MindInsight明确声明的依赖库。若想使用基于图结构的脚本生成工具，需要用户手动安装与生成PyTorch模型版本一致的PyTorch库（MindConverter推荐使用PyTorch 1.4.0进行脚本生成），或TensorFlow；
 2. 脚本转换工具本质上为算子驱动，对于MindConverter未维护的PyTorch或ONNX算子与MindSpore算子映射，将会出现相应的算子无法转换的问题，对于该类算子，用户可手动修改，或基于MindConverter实现映射关系，向MindInsight仓库贡献。
 3. MindConverter仅保证转换后模型脚本在输入数据尺寸与`--shape`一致的情况下，可达到无需人工修改或少量修改（`--shape`中batch size维度不受限）。
+4. 脚本文件、权重文件和权重映射表输出于同一个目录下。
 
 ## AST方案不支持场景
 
@@ -327,6 +390,7 @@ install）如下依赖库（PyTorch模型脚本转MindSpore的用户无需安装
 onnx>=1.8.0
 tf2onnx>=1.7.1
 onnxruntime>=1.5.2
+onnxoptimizer==0.1.2
 ```
 
 ## 常见问题
@@ -440,6 +504,8 @@ def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name
 | NodeInputTypeNotSupportError | 网络节点输入类型未知           | 3000001  | 映射关系中设置节点输入类型错误。                                                             |
 | ScriptGenerationError | 转换脚本生成失败               | 3000002  | 空间不足；生成的脚本不符合PEP-8规范；`--output`目录下已有同名文件存在                                   |
 | ReportGenerationError | 转换报告生成失败               | 3000003  | 空间不足；脚本中没有需要转换的算子；`--report`目录下已有同名文件存在。              |
+| CheckPointGenerationError | 转换权重生成失败 | 3000004 | 空间不足；`--output`目录下已有同名文件存在 |
+| WeightMapGenerationError | 权重映射表生成失败 | 3000005 | 空间不足；`--output`目录下已有同名文件存在 |
 |      GeneratorError      | 代码生成失败                   | 4000000  |由4000001至4000004引发的代码生成模块错误                                                |
 | NodeLoadingError | 节点读取失败                   | 4000001  |转换后的节点缺少必要参数                                                                |
 | NodeArgsTranslationError | 节点参数转换失败          | 4000002  |转换后的节点参数信息不正确                                                              |

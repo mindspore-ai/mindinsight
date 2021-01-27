@@ -54,8 +54,7 @@ class PoolMapper(ONNXToMindSporeMapper):
         kernel_shape = params['kernel_shape']
         strides = params['strides']
         dilations = params.get('dilations', (1, 1))
-        # For mindspore,
-        # output_shape[i] = ceil((input_shape[i] - ((kernel_shape[i] - 1) * dilations[i] + 1) + 1) / strides[i])
+
         ms_opt_shape = np.true_divide(np.subtract(np.array(input_shape[-len(kernel_shape):], dtype=np.float32),
                                                   ((np.array(kernel_shape, dtype=np.float32) - 1) *
                                                    np.array(dilations, dtype=np.float32) + 1)) + 1,
@@ -124,8 +123,6 @@ class PoolMapper(ONNXToMindSporeMapper):
         if np.any(np.array(ms_opt_shape) > np.array(onnx_opt_shape)):
             raise ValueError(f"ms_opt_shape[{ms_opt_shape}] should be no larger than onnx_opt_shape[{onnx_opt_shape}].")
 
-        # shape_diff[i] = (onnx_opt_shape[i] - 1)*strides[i] -
-        #                 (onnx_ipt_shape[i] - ((kernel_shape[i] - 1)*dilations[i] + 1))
         shape_diff = np.subtract((np.array(onnx_opt_shape) - 1)*np.array(strides),
                                  np.subtract(np.array(onnx_ipt_shape),
                                              (np.array(kernel_shape) - 1)*np.array(dilations) + 1)).tolist()

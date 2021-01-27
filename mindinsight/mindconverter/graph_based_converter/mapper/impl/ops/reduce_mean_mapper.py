@@ -16,7 +16,6 @@
 from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
 from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class ReduceMeanMapper(ONNXToMindSporeMapper):
@@ -35,15 +34,6 @@ class ReduceMeanMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        params = kwargs['params']
-        if params.get('axes'):
-            axis = params['axes'][0] if len(params['axes']) == 1 else tuple(params['axes'])
-        else:
-            axis = tuple()
-        return Setting(op_extra_input={'axis': axis})
 
     @staticmethod
     def _generate_snippet_template(**kwargs):

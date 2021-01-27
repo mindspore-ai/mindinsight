@@ -43,6 +43,7 @@ ONNX_MIN_VER = "1.8.0"
 TF2ONNX_MIN_VER = "1.7.1"
 ONNXRUNTIME_MIN_VER = "1.5.2"
 ONNXOPTIMIZER_MIN_VER = "0.1.2"
+ONNXOPTIMIZER_MAX_VER = "0.1.2"
 
 
 @unique
@@ -104,6 +105,13 @@ NO_CONVERTED_OPERATORS = [
     "onnx::Constant",
     "Constant"
 ]
+
+THIRD_PART_VERSION = {
+    "onnx": (ONNX_MIN_VER,),
+    "onnxruntime": (ONNXRUNTIME_MIN_VER,),
+    "onnxoptimizer": (ONNXOPTIMIZER_MIN_VER, ONNXOPTIMIZER_MAX_VER),
+    "tf2onnx": (TF2ONNX_MIN_VER,)
+}
 
 
 @unique

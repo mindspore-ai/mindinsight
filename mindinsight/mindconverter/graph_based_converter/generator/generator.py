@@ -16,8 +16,8 @@
 import copy
 from collections import OrderedDict
 
-from mindspore import Tensor
 from yapf.yapflib.yapf_api import FormatCode
+from mindspore import Tensor
 
 from mindinsight.mindconverter.common.exceptions import GeneratorError
 from mindinsight.mindconverter.graph_based_converter.generator.scope_utils import Scope
