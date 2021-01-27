@@ -348,6 +348,7 @@ export default {
                   fullData: [],
                   filterStr: '',
                   curMartixShowSliderValue: 0,
+                  showErrorTip: false,
                 });
               }
             });
@@ -485,6 +486,7 @@ export default {
       };
       RequestService.getTensorsSample(params).then(
           (res) => {
+            sampleItem.showErrorTip = false;
             sampleItem.showLoading = false;
             if (!res || !res.data || !this.curDataType) {
               return;
@@ -604,6 +606,7 @@ export default {
       sampleItem.curMartixShowSliderValue = sampleItem.sliderValue;
       RequestService.getTensorsSample(params).then(
           (res) => {
+            sampleItem.showErrorTip = false;
             sampleItem.showLoading = false;
             if (!res || !res.data || this.curDataType) {
               return;
@@ -660,6 +663,7 @@ export default {
               errorData.response.data.error_code.toString() === '50545016')
       ) {
         showLimitError = true;
+        sampleItem.showErrorTip = true;
         errorMsg = this.$t('error')[errorData.response.data.error_code];
       }
       if (isMartix) {
@@ -722,9 +726,11 @@ export default {
       }
       this.axisNameChangeTimer = setTimeout(() => {
         this.curPageArr.forEach((sampleItem) => {
-          const elementItem = this.$refs[sampleItem.ref];
-          if (elementItem) {
-            elementItem[0].updateHistogramData();
+          if (!sampleItem.showErrorTip) {
+            const elementItem = this.$refs[sampleItem.ref];
+            if (elementItem) {
+              elementItem[0].updateHistogramData();
+            }
           }
         });
       }, 500);
@@ -740,9 +746,11 @@ export default {
       }
       this.viewNameChangeTimer = setTimeout(() => {
         this.curPageArr.forEach((sampleItem) => {
-          const elementItem = this.$refs[sampleItem.ref];
-          if (elementItem) {
-            elementItem[0].updateHistogramData();
+          if (!sampleItem.showErrorTip) {
+            const elementItem = this.$refs[sampleItem.ref];
+            if (elementItem) {
+              elementItem[0].updateHistogramData();
+            }
           }
         });
       }, 200);
@@ -930,6 +938,7 @@ export default {
             fullData: [],
             filterStr: '',
             curMartixShowSliderValue: 0,
+            showErrorTip: false,
           });
           this.curFullTagDic[tagName] = true;
           dataAddFlag = true;

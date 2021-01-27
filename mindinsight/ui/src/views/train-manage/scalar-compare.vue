@@ -507,9 +507,9 @@ export default {
       // Update the smoothness of initialized data
       if (this.charObj) {
         if (this.charOption.series && this.charOption.series.length > 0) {
-          this.charOption.series.forEach((serie, index) => {
+          this.charOption.series.forEach((singleItem, index) => {
             if (index % 2 === 0) {
-              serie.data = this.formateSmoothData(
+              singleItem.data = this.formateSmoothData(
                   this.charData[index / 2].valueData[this.curBenchX],
               );
             }
