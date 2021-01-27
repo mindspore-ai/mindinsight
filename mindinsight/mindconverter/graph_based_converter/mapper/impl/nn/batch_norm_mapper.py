@@ -41,8 +41,8 @@ class BatchNormMapper(ONNXToMindSporeMapper):
         moving_mean = BatchNormMapper._find_val_by_index(2, weights)
         moving_variance = BatchNormMapper._find_val_by_index(3, weights)
         return {
-            'gamma': gamma,
-            'beta': beta,
-            'moving_mean': moving_mean,
-            'moving_variance': moving_variance
+            'gamma': {'data': gamma},
+            'beta': {'data': beta},
+            'moving_mean': {'data': moving_mean},
+            'moving_variance': {'data': moving_variance}
         }

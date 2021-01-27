@@ -20,6 +20,7 @@ SEPARATOR_IN_SCOPE = "/"
 SEPARATOR_BTW_NAME_AND_ID = "_"
 SEPARATOR_TITLE_AND_CONTENT_IN_CONSTRUCT = "="
 LINK_IN_SCOPE = "-"
+LINK_IN_WEIGHT_NAME = "."
 LEFT_BUCKET = "["
 RIGHT_BUCKET = "]"
 
@@ -127,6 +128,12 @@ class FrameworkType(Enum):
     UNKNOWN = 2
 
 
+@unique
+class WeightType(Enum):
+    PARAMETER = 0
+    COMMON = 1
+
+
 def get_imported_module():
     """
     Generate imported module header.
@@ -137,5 +144,5 @@ def get_imported_module():
     return f"import numpy as np{NEW_LINE}" \
            f"import mindspore{NEW_LINE}" \
            f"from mindspore import nn{NEW_LINE}" \
-           f"from mindspore import Tensor{NEW_LINE}" \
+           f"from mindspore import Tensor, Parameter{NEW_LINE}" \
            f"from mindspore.ops import operations as P{NEW_LINE * 3}"

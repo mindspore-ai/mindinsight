@@ -45,6 +45,6 @@ class DenseMapper(ONNXToMindSporeMapper):
         weight = DenseMapper._find_val_by_index(0, weights)
         bias = DenseMapper._find_val_by_index(1, weights)
         return {
-            'weight': weight,
-            'bias': bias
+            'weight': {'data': weight},
+            'bias': {'data': bias}
         }

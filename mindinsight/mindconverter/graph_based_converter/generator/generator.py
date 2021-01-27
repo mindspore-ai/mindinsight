@@ -29,7 +29,7 @@ from mindinsight.mindconverter.graph_based_converter.common.outputs import BaseO
 from mindinsight.mindconverter.graph_based_converter.common.yapf_config import mindspore_yapf_config
 from mindinsight.mindconverter.graph_based_converter.common.name_mgr import GlobalVarNameMgr
 from mindinsight.mindconverter.graph_based_converter.constant import NEW_LINE, SECOND_LEVEL_INDENT, \
-    FIRST_LEVEL_INDENT, get_imported_module, SEPARATOR_BTW_NAME_AND_ID
+    FIRST_LEVEL_INDENT, get_imported_module, SEPARATOR_BTW_NAME_AND_ID, WeightType, LINK_IN_WEIGHT_NAME
 from mindinsight.mindconverter.graph_based_converter.report_generator import ReportGenerator
 from mindinsight.mindconverter.graph_based_converter.common.utils import replace_string_in_list
 
@@ -502,12 +502,17 @@ class Generator:
             if node_inst.fragment.exchange_msg['var_0']['trainable_params']:
                 weights_scope_name = self.generate_weight_scope_name(node_name)
                 onnx_weight_inst = node_inst.fragment.exchange_msg['var_0']['weights']
-                for idx, (weight_key, weight_value) in \
+                for idx, (weight_key, weight_value_object) in \
                         enumerate(node_inst.fragment.exchange_msg['var_0']['trainable_params'].items()):
-                    weight_name = '.'.join((weights_scope_name, weight_key))
-                    weight_shape = Tensor(weight_value).shape
-                    data_type = Tensor(weight_value).dtype
-                    trainable_weights_dict[weight_name] = weight_value
+                    value_type = weight_value_object.get('type', WeightType.COMMON.value)
+                    value_data = weight_value_object['data']
+                    if value_type == WeightType.PARAMETER.value:
+                        weight_name = SEPARATOR_BTW_NAME_AND_ID.join((weights_scope_name, weight_key))
+                    else:
+                        weight_name = LINK_IN_WEIGHT_NAME.join((weights_scope_name, weight_key))
+                    weight_shape = Tensor(value_data).shape
+                    data_type = Tensor(value_data).dtype
+                    trainable_weights_dict[weight_name] = value_data
 
                     onnx_weight_name = onnx_weight_inst[idx].name
                     onnx_weight_shape = onnx_weight_inst[idx].value.shape
