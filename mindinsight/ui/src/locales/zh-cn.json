@@ -325,6 +325,9 @@
     "minddata_pipeline-general": {
       "desc": "Pipeline中的算子{n1}可能存在性能瓶颈，请用户重点关注。"
     },
+    "minddata_cpu_utilization": {
+      "desc": "整机CPU利用率平均值为{n1}，可能影响数据处理性能，请用户关注。"
+    },
     "minddata_pipeline-dataset_op": {
       "desc": "对于算子{n1}，用户可以尝试调整num_parallel_workers参数。"
     },
@@ -817,10 +820,10 @@
     "typeTip": "查询包含任一预测类型的图片数据",
     "confidence": "概率",
     "forecastTagTip": "当推理图片带有正确标签时，标签行会显示下列三种旗标",
-    "TP": "TP，代表Ture Positive，标签为正样本，分类为正样本；",
+    "TP": "TP，代表True Positive，标签为正样本，分类为正样本；",
     "FN": "FN，代表False Negative，标签为正样本，分类为负样本；",
     "FP": "FP，代表False Positive，标签为负样本，分类为正样本；",
-    "TN": "TN，代表Ture Negative，标签为负样本，分类为负样本；",
+    "TN": "TN，代表True Negative，标签为负样本，分类为负样本；",
     "coverfactualInterpretation": "遮掩反事实解释",
     "viewExplanation": "查看解释",
     "maskingProcess": "逐层遮掩过程",

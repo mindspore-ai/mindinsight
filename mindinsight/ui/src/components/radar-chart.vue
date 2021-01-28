@@ -153,7 +153,7 @@ export default {
           },
           padding: [15, 16],
         },
-        color: common.pieColorArr,
+        color: common.radarColorArr,
         radar: {
           shape: 'circle',
           name: {

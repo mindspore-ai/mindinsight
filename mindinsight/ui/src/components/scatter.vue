@@ -64,7 +64,7 @@ export default {
   },
   methods: {
     /**
-     * format Chart option
+     * Format Chart option
      */
 
     formateCharOption() {
@@ -156,7 +156,7 @@ export default {
     },
 
     /**
-     * format Chart option
+     * Create chart
      */
 
     createChart() {

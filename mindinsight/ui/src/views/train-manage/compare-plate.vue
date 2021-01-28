@@ -1607,16 +1607,16 @@ export default {
       this.curPageArr.forEach((sampleObject) => {
         if (sampleObject.charObj) {
           const log = sampleObject.log;
-          sampleObject.charData.charOption.series.forEach((serie, index) => {
+          sampleObject.charData.charOption.series.forEach((singleItem, index) => {
             if (index % 2 === 0) {
               if (log) {
-                serie.data = this.formateSmoothData(
+                singleItem.data = this.formateSmoothData(
                     sampleObject.charData.oriData[index / 2].logData[
                         this.curBenchX
                     ],
                 );
               } else {
-                serie.data = this.formateSmoothData(
+                singleItem.data = this.formateSmoothData(
                     sampleObject.charData.oriData[index / 2].valueData[
                         this.curBenchX
                     ],

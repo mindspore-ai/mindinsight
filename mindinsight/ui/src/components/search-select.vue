@@ -107,10 +107,14 @@ limitations under the License.
 
 <script>
 /**
- * The PublicStore holds the key of focused selector
+ * The publicStore holds the key of focused selector
  * When there is more than two component in same page, help selector to keep correct display
  */
-const PublicStore = { activeKey: { key: '' } };
+const publicStore = {
+  activeKey: {
+    key: '',
+  },
+};
 export default {
   props: {
     multiple: {
@@ -170,11 +174,11 @@ export default {
       containerWidth: 0, // The min-width of container
       containerToSelector: 12, // The gap between options-container and selector
       functionAble: true, // The effective of button after input
-      // The key of component to make sure it can be distinguished from PublicStore
+      // The key of component to make sure it can be distinguished from publicStore
       key: new Date().getTime().toString(),
       filter: '', // The value to filter the option
       ifEmpty: true, // If no option match the filter
-      activeKey: undefined, // In order to add wacter to the PublicStore.activeKey.key
+      activeKey: undefined, // In order to add wacter to the publicStore.activeKey.key
       latestIndex: undefined, // The index of the last click option, only effective when multiple is false
       indexes: [], // The list of index of selected options
       filterDebounce: 150, // The filter watcher debounce time in ms
@@ -226,7 +230,7 @@ export default {
      * @param {Object} event
      */
     mouseClick(event) {
-      PublicStore.activeKey.key = this.key;
+      publicStore.activeKey.key = this.key;
       event.stopPropagation();
       event.preventDefault();
     },
@@ -381,7 +385,7 @@ export default {
       this.options = this.processData(this.source);
       this.ifEmpty = false;
     }
-    this.activeKey = PublicStore.activeKey;
+    this.activeKey = publicStore.activeKey;
     window.addEventListener('click', this.clickHandler);
   },
   mounted() {
@@ -423,7 +427,7 @@ export default {
       }, this.filterDebounce);
     },
     // The watcher of source can process asynchronous data input, or make response when original data changed
-    source: {
+    'source': {
       handler(newVal) {
         this.indexes = [];
         this.options = this.processData(newVal);
@@ -439,7 +443,7 @@ export default {
         }
       },
     },
-    indexes: {
+    'indexes': {
       handler() {
         this.$nextTick(() => {
           this.$emit('selectedUpdate', this.calValues());

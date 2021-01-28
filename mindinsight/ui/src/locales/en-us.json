@@ -326,6 +326,9 @@
     "minddata_pipeline-general": {
       "desc": "The {n1} operator in the pipeline may have performance bottlenecks."
     },
+    "minddata_cpu_utilization": {
+      "desc": "The average CPU usage of the entire system is {n1}, which may affect the data processing performance."
+    },
     "minddata_pipeline-dataset_op": {
       "desc": "For operator {n1}, you can adjust the num_parallel_workers parameter."
     },
@@ -464,18 +467,18 @@
       "memoryKiBUnit": "KiB",
       "usedMemory": "Memory Usage",
       "operatorMemoryAssign": "Operator Memory Allocation",
-      "tensorName": "Tensor name",
-      "totalTensorMemoryAssign": "Tensor size",
+      "tensorName": "Tensor Name",
+      "totalTensorMemoryAssign": "Tensor Size",
       "format": "Format",
-      "tensorType": "Tensor type",
+      "tensorType": "Tensor Type",
       "dataType": "Data Type",
       "shapes": "Shape",
       "chartXaxisUnit": "Execution ID",
       "chartYaxisUnit": "Size(GiB)",
       "curOperaterId": "Current Operator Execution ID",
       "curOperator": "Current Operator",
-      "curOperatorMemorySize": "Memory occupied by the current operator",
-      "curMemorySize": "Total memory occupied",
+      "curOperatorMemorySize": "Memory Occupied by Current Operator",
+      "curMemorySize": "Total Occupied Usage",
       "memoryChanged": "Memory Change",
       "lifeCycle": "Lifecycle",
       "fpStart": "Forward",
@@ -837,11 +840,11 @@
     "minConfidenceTip": "Probability threshold of a prediction tag. A tag is recorded as a prediction tag if its output probability is greater than the threshold.",
     "noData": "Loading data... Refresh the page later",
     "predictionType": "Prediction Type",
-    "disableSaliencyMapTip": "Failed to view saliency map visualization because no saliency map log is available.",
-    "disableHOCTip": "Failed to view counterfactual explanation because no counterfactual explanation log is available.",
-    "hocMinConfidenceTip": "Display and explain the labels whose prediction probability is greater than the prediction threshold",
-    "imageList": "Picture list",
-    "hocTitleTip": "Gradually shrink the display range to find the minimum display area where the prediction probability is greater than the threshold"
+    "disableSaliencyMapTip": "No saliency map visualization log is available.",
+    "disableHOCTip": "No counterfactual explanation log is available.",
+    "hocMinConfidenceTip": "Display and explanation for tags whose prediction probability is greater than the prediction threshold",
+    "imageList": "Image list",
+    "hocTitleTip": "Gradually shrink the display area to find the minimum display area where the prediction probability is greater than the threshold"
   },
   "metric": {
     "scoreSystem": "Scoring System",
