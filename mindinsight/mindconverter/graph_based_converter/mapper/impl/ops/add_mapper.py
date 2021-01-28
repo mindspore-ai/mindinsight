@@ -13,7 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords, \
+    WeightType
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
 
@@ -30,7 +31,9 @@ class AddMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
-        return dict()
+        weights = kwargs['weights']
+        bias = AddMapper._find_val_by_index(0, weights)
+        return {'bias': {'data': bias, 'type': WeightType.PARAMETER.value}}
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
@@ -39,6 +42,7 @@ class AddMapper(ONNXToMindSporeMapper):
         op = kwargs.get("operation")
         args = kwargs.get("converted_params")
         weights = kwargs.get("weights")
+        trainable_params = kwargs.get('trainable_params', dict())
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
         if not weights:
@@ -51,7 +55,8 @@ class AddMapper(ONNXToMindSporeMapper):
         args["bias_shape"] = tensor.shape
         args["bias_dtype"] = tensor.dtype
         init_tensor = f"self.{{{variable_slot}}}_bias = " \
-                      f"Tensor(np.random.uniform(0, 1, {{bias_shape}}).astype(np.{{bias_dtype}}))"
+                      f"Parameter(Tensor(np.random.uniform(0, 1, {{bias_shape}}).astype(np.{{bias_dtype}})), " \
+                      f"name=None)"
         construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
                              f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}," \
                              f"self.{{{variable_slot}}}_bias)"
@@ -70,7 +75,7 @@ class AddMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
                 ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
                 ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: {}
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
             }
         }
         outputs_list = [f"opt_{{{variable_slot}}}"]

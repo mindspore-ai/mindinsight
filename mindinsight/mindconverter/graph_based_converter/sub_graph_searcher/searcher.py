@@ -211,7 +211,7 @@ def _retrieve_operators(module_path, module_dict):
         """Lift nodes upper."""
         nonlocal added_module
         lifted_submodule = []
-        continuity_idx = -1
+        record = dict()
         lift_needed = _whether_to_lift(sub_module)
         for m in sub_module:
             scopes = m.split("/")
@@ -219,8 +219,8 @@ def _retrieve_operators(module_path, module_dict):
                 # If the scope depth is 3, like ModuleX/ModuleY/Gemm,
                 # then we lift ModuleY to top level.
                 md_name, md_idx = scopes[-2].split("_")
-                if continuity_idx != int(md_idx):
-                    continuity_idx = int(md_idx)
+                if record.get(md_name, -1) != md_idx:
+                    record[md_name] = md_idx
                     added_module[md_name] = added_module.setdefault(md_name, -1) + 1
                 lifted_submodule.append(f"{md_name}_{added_module.setdefault(md_name, 0)}/{scopes[-1]}")
                 continue

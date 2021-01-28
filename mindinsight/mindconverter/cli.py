@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -318,8 +318,8 @@ parser.add_argument(
     action=ModelFileAction,
     required=False,
     help="""
-            PyTorch .pth or Tensorflow .pb model file path to use graph 
-            based schema to do script generation. When 
+            PyTorch(.pth), Tensorflow(.pb) or ONNX(.onnx) model file path 
+            is expected to do script generation based on graph schema. When 
             `--in_file` and `--model_file` are both provided,
             use AST schema as default.
         """)

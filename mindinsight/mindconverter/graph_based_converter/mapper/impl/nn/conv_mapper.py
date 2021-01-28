@@ -143,8 +143,8 @@ class ConvMapper(ONNXToMindSporeMapper):
         weight = ConvMapper._find_val_by_index(0, weights)
         bias = ConvMapper._find_val_by_index(1, weights)
 
-        converted_weights = {'weight': weight}
+        converted_weights = {'weight': {'data': weight}}
         if isinstance(bias, np.ndarray):
-            converted_weights['bias'] = bias
+            converted_weights['bias'] = {'data': bias}
 
         return converted_weights
