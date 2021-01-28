@@ -1,5 +1,5 @@
 <!--
-Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -302,29 +302,146 @@ limitations under the License.
           <p>{{initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </el-tab-pane>
+      <!-- CPU -->
+      <el-tab-pane :label="$t('profiling.cpuUtilization')"
+                   name="cpuInfo">
+        <div class="cpu-info"
+             v-if="!cpuInfo.noData">
+          <div class="step-filter">
+            <label>{{cpuInfo.stepTip}}</label>
+            <label>{{$t('profiling.startStep')}}</label>
+            <el-input class="step-input"
+                      v-model.number="cpuInfo.startStep.showStep"></el-input>
+            <label>{{$t('profiling.endStep')}}</label>
+            <el-input class="step-input"
+                      v-model.number="cpuInfo.endStep.showStep"></el-input>
+            <el-button @click="viewStepFilter">{{$t('profiling.filterStep')}}</el-button>
+            <el-button @click="resetStepFilter">{{$t('profiling.resetStep')}}</el-button>
+          </div>
+          <div class="cpu-detail">
+            <div class="cpu-detail-item">
+              <div class="detail-item-title">{{$t('profiling.structuralCpuUtil')}}</div>
+              <div class="detail-item">
+                <div class="cpu-chart"
+                    id="deviceCpuChart"
+                    ref="deviceCpuChart"></div>
+                <div class="cpu-chart-info">
+                  <div class="info-line">
+                    <span>{{$t('profiling.logicCores')}}</span><span>{{deviceCpuChart.logicCores}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgUserUtilization')}}</span><span>{{deviceCpuChart.cpuAvgUser}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgSysUtilization')}}</span><span>{{deviceCpuChart.cpuAvgSystem}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgIOUtilization')}}</span><span>{{deviceCpuChart.cpuAvgIO}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgIdleUtilization')}}</span><span>{{deviceCpuChart.cpuAvgFree}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgWaitingProcess')}}</span><span>{{deviceCpuChart.cpuAvgProcess}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgSwitchCount')}}</span><span>{{deviceCpuChart.cpuAvgSwitch}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cpu-detail-item cpu-detail-item-top">
+              <div class="detail-item-title">{{$t('profiling.processCpuUtil')}}</div>
+              <div class="detail-item">
+                <div class="cpu-chart"
+                    id="processCpuChart"
+                    ref="processCpuChart">
+                </div>
+                <div class="cpu-chart-info">
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgUserUtilization')}}</span><span>{{processCpuChart.cpuAvgUser}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgSysUtilization')}}</span><span>{{processCpuChart.cpuAvgSystem}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cpu-detail-item cpu-detail-item-top">
+              <div class="detail-item-title">{{$t('profiling.operatorCpuUtil')}}</div>
+              <div class="detail-item-graph"
+                  id="operator-graph"></div>
+              <div class="detail-item">
+                <div class="cpu-chart"
+                    id="operatorCpuChart"
+                    ref="operatorCpuChart">
+                </div>
+                <div class="cpu-chart-info">
+                  <div class="info-title">
+                    {{$t('profiling.allOperators')}}
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgUserUtilization')}}</span>
+                    <span>{{operatorCpuChart.cpuAvgTotalUser}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgSysUtilization')}}</span>
+                    <span>{{operatorCpuChart.cpuAvgTotalSystem}}</span>
+                  </div>
+                  <div class="info-title">
+                    {{$t('profiling.currentOperator')}}
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgUserUtilization')}}</span>
+                    <span>{{operatorCpuChart.cpuAvgOpUser}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.avgSysUtilization')}}</span>
+                    <span>{{operatorCpuChart.cpuAvgOpSystem}}</span>
+                  </div>
+                  <div class="info-line">
+                    <span>{{$t('profiling.workersNum')}}{{$t('symbols.colon')}}</span>
+                    <span>{{operatorCpuChart.processNumber}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="image-noData"
+             v-else>
+          <div>
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+          </div>
+          <p>{{cpuInfo.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
+        </div>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 <script>
 import echarts from 'echarts';
 import RequestService from '../../services/request-service';
+import cpuUtilizaton from '../../mixins/cpu-utilization.vue';
 import {select, selectAll, zoom} from 'd3';
 import {event as currentEvent} from 'd3-selection';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom};
 export default {
+  mixins: [cpuUtilizaton],
   props: {},
   data() {
     return {
       dir: '', // Profiler path
       currentCard: '', // Purrent card number
       connectQueueChart: {
-        // Ponnect queue chart object
+        // Connect queue chart object
         id: 'connect-queue',
         chartDom: null,
         data: [],
         queueSummary: {},
-        advise: '',
         type: 0,
         params: 'device_queue',
         noData: true,
@@ -338,7 +455,6 @@ export default {
         chartDom: null,
         data: [],
         queueSummary: {},
-        advise: '',
         type: 0,
         params: 'get_next',
         noData: true,
@@ -424,10 +540,15 @@ export default {
             document.title = `${this.$t('profiling.mindData')}-MindInsight`;
           }
           if (this.activeName === 'queueInfo') {
-            this.initOver = false;
             this.init();
-          } else {
+          } else if (this.activeName === 'pipeLine') {
             this.queryAverageRate();
+          } else {
+            this.cpuInfo.startStep.showStep = '';
+            this.cpuInfo.startStep.step = '';
+            this.cpuInfo.endStep.showStep = '';
+            this.cpuInfo.endStep.step = '';
+            this.queryCpuInfo(false, true);
           }
         }
         if (this.activeName === 'queueInfo' && this.$parent.curDashboardInfo.initOver) {
@@ -469,16 +590,19 @@ export default {
      *  Tabs switch
      */
     handleClick() {
-      if (
-        this.activeName === 'pipeLine' &&
-        this.averageRateChart.deviceId !== this.currentCard
-      ) {
+      if (this.activeName === 'pipeLine' && this.averageRateChart.deviceId !== this.currentCard) {
         this.queryAverageRate();
-      } else if (
-        this.activeName === 'queueInfo' &&
-        this.connectQueueChart.deviceId !== this.currentCard
-      ) {
+      } else if (this.activeName === 'queueInfo' && this.connectQueueChart.deviceId !== this.currentCard) {
         this.init();
+      } else if (
+        this.activeName === 'cpuInfo' &&
+        this.cpuInfo.deviceId !== this.currentCard
+      ) {
+        this.cpuInfo.startStep.showStep = '';
+        this.cpuInfo.startStep.step = '';
+        this.cpuInfo.endStep.showStep = '';
+        this.cpuInfo.endStep.step = '';
+        this.queryCpuInfo(false, true);
       }
       this.$nextTick(() => {
         this.resizeCallback();
@@ -499,6 +623,9 @@ export default {
         'getNextChart',
         'averageRateChart',
         'queueDeepChart',
+        'deviceCpuChart',
+        'processCpuChart',
+        'operatorCpuChart',
       ];
       chartArr.forEach((val) => {
         if (this[val].chartDom) {
@@ -528,12 +655,9 @@ export default {
               if (result.summary) {
                 chart.timeSummary = result.summary.time_summary || {};
                 Object.keys(chart.timeSummary).forEach((val) => {
-                  chart.timeSummary[val] = parseFloat(
-                      chart.timeSummary[val],
-                  ).toFixed(3);
+                  chart.timeSummary[val] = parseFloat(chart.timeSummary[val]).toFixed(3);
                 });
               }
-              chart.advise = result.advise;
               if (result.size > 0) {
                 chart.noData = false;
                 this.$nextTick(() => {
@@ -576,7 +700,6 @@ export default {
               if (result.summary) {
                 chart.queueSummary = result.summary.queue_summary || {};
               }
-              chart.advise = result.advise;
               if (result.size > 0) {
                 chart.noData = false;
                 chart.size = result.size;
@@ -1459,10 +1582,10 @@ export default {
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap {
   float: left;
   width: calc(50% - 12px);
-  height: calc(100% - 10px);
+  height: calc(100% - 5px);
   border-radius: 4px;
   overflow-y: auto;
-  border: 1px solid #eee;
+  border: 1px solid #D9D9D9;
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap:first-child {
   margin-right: 20px;
@@ -1606,5 +1729,90 @@ export default {
 .data-process-wrap .image-noData p {
   font-size: 16px;
   padding-top: 10px;
+}
+.data-process-wrap .el-button {
+  border: 1px solid #00a5a7;
+  border-radius: 2px;
+  background-color: white;
+  color: #00a5a7;
+  padding: 7px 15px;
+}
+.data-process-wrap .el-button:hover {
+  background: rgb(230, 246, 246);
+}
+.cpu-info {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.cpu-info .step-filter {
+  min-height: 44px;
+}
+.cpu-info .step-filter .step-input {
+  width: 100px;
+  margin-right: 20px;
+}
+.cpu-info .step-filter:first-child label {
+  margin-right: 10px;
+}
+.cpu-info .cpu-detail {
+  flex-grow: 1;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+.cpu-info .cpu-detail .cpu-detail-item {
+  padding: 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+.cpu-info .cpu-detail .cpu-detail-item-top {
+  margin-top: 16px;
+}
+.cpu-info .cpu-detail .detail-item-title {
+  height: 20px;
+  font-size: 15px;
+  font-weight: bold;
+}
+.cpu-info .cpu-detail .detail-item-graph {
+  height: 120px;
+  background-color: #f7faff;
+  margin: 10px 0;
+}
+.cpu-info .cpu-detail .detail-item {
+  height: 400px;
+  display: flex;
+}
+.cpu-info .cpu-detail .detail-item:last-of-type {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.cpu-info .cpu-detail .detail-item .cpu-chart {
+  height: 100%;
+  flex-grow: 1;
+}
+.cpu-info .cpu-detail .detail-item .cpu-chart-info {
+  height: 100%;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 20px;
+  background-color: #f1f1f1;
+}
+.cpu-info .cpu-detail .detail-item .cpu-chart-info .info-title {
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 30px;
+}
+.cpu-info .cpu-detail .detail-item .cpu-chart-info .info-line {
+  line-height: 30px;
+}
+.cpu-chart-tip {
+  display: inline-block;
+  margin-right: 5px;
+  border-radius: 10px;
+  width: 10px;
+  height: 10px;
 }
 </style>
