@@ -105,7 +105,7 @@ class CodeStruct:
                 init_lines += init_str
                 cons_lines += cons_str
 
-            elif isinstance(struct, ModuleStruct):
+            else: # is ModuleStruct
                 # check if this instance generated CodeStruct
                 if GlobalContext().code_structs.get(struct.pattern_id) is None:
                     CodeStruct(struct, repeated_submodules)
@@ -114,9 +114,6 @@ class CodeStruct:
                 code_line_construct = struct.code_line_in_construct(inputs=struct.matched_inputs)
                 init_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_line_init)}")
                 cons_lines.append(f"{SECOND_LEVEL_INDENT}{' = '.join(code_line_construct)}")
-
-            else:
-                raise TypeError("Unable to generate code from args are not ModuleStruct or NodeStruct.")
 
         # define header of init block
         self.new_line = f"{FIRST_LEVEL_INDENT}def __init__({', '.join(module_def_args)}):"
