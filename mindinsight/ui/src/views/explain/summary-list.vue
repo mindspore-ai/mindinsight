@@ -71,7 +71,7 @@ limitations under the License.
                       @click.stop="goToSaliencyMap(scope.row)"
                       v-if="scope.row.saliency_map">
                   {{$t('explain.title')}} </span>
-                <span class="menu-item operate-btn button-disable"
+                <span class="menu-item operate-btn button-disable first-btn"
                       v-else
                       :title="$t('explain.disableSaliencyMapTip')">
                   {{$t('explain.title')}}

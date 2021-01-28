@@ -764,7 +764,6 @@ export default {
 .cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-con {
   height: calc(100% - 63px);
   position: relative;
-  overflow: hidden;
 }
 .cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-con .img-container {
   height: calc(100% - 28px);
@@ -778,6 +777,7 @@ export default {
   width: 100%;
   margin-top: 12px;
   text-align: center;
+  line-height: 16px;
 }
 .cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-footer {
   height: calc(40% - 20px);
