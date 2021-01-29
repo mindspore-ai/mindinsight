@@ -1,0 +1,25 @@
+{
+  "sampling_interval": 100,
+  "cpu_processor_num": 100,
+  "time_stamp": [10,20,30],
+  "device_info": {
+    "user_utilization": [10,20,30],
+    "sys_utilization": [10,20,30],
+    "io_utilization": [10,10,10],
+    "idle_utilization": [10,10,10],
+    "runable_processes": [10,20,30],
+    "context_switch_count":[10,20,30]
+},
+  "process_info": {
+    "user_utilization": [10,20,30],
+    "sys_utilization": [10,20,30]
+  },
+  "op_info": [{
+    "metrics":{
+      "user_utilization": [10,20,30],
+      "sys_utilization": [10,20,30]
+    },
+    "op_id": 1
+  }
+  ]
+}

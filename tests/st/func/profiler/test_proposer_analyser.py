@@ -47,7 +47,8 @@ class TestProposerAnalyser:
             "minddata_device_queue": [1, 1, 0, 1],
             "minddata_get_next_queue": [0, 3],
             "minddata_pipeline-dataset_op": ["ImageFolderOp_3"],
-            "minddata_pipeline-general": ["ImageFolderOp_3"]
+            "minddata_pipeline-general": ["ImageFolderOp_3"],
+            "minddata_cpu_utilization": [90]
         }
 
         step_trace_condition = {"filter_condition": {"mode": "proc",
@@ -61,3 +62,4 @@ class TestProposerAnalyser:
         assert expect_result["minddata_get_next_queue"] == proposal_info["minddata_get_next_queue"]
         assert expect_result["minddata_pipeline-dataset_op"] == proposal_info["minddata_pipeline-dataset_op"]
         assert expect_result["minddata_pipeline-general"] == proposal_info["minddata_pipeline-general"]
+        assert expect_result["minddata_cpu_utilization"] == proposal_info["minddata_cpu_utilization"]
