@@ -14,7 +14,6 @@
 # ==============================================================================
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class ReLUMapper(ONNXToMindSporeMapper):
@@ -22,12 +21,12 @@ class ReLUMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        if not kwargs.get('params'):
+        if not kwargs.get('weights'):
             name = "nn.ReLU"
         else:
-            params = kwargs['params']
-            max_clip = params['max'] if params.get('max') else 0
-            min_clip = params['min'] if params.get('min') else 0
+            weights = kwargs['weights']
+            min_clip = weights[0].value if weights[0] else 0
+            max_clip = weights[1].value if weights[1] else 0
             if max_clip == 6 and min_clip == 0:
                 name = "nn.ReLU6"
             elif max_clip == min_clip == 0:
@@ -43,7 +42,3 @@ class ReLUMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        return Setting()
