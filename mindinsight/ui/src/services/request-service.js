@@ -461,6 +461,14 @@ export default {
       params: params,
     });
   },
+  getCpuUtilization(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/profile/minddata-cpu-utilization-summary',
+      params: params.params,
+      data: params.body,
+    });
+  },
   setRecommendWatchPoints(params) {
     return axios({
       method: 'post',

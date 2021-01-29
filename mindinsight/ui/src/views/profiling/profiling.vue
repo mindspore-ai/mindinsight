@@ -1,5 +1,5 @@
 <!--
-Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -80,6 +80,7 @@ export default {
         'minddata_pipeline-generator_op',
         'minddata_pipeline-map_op',
         'minddata_pipeline-batch_op',
+        'minddata_cpu_utilization',
         'minddata_warning_op',
       ],
       moreParameter: ['minddata_device_queue', 'minddata_get_next_queue'],
