@@ -315,6 +315,7 @@ export default {
      * The logic of deselect option when multiple is true
      * @param {Object} option
      * @param {Number} index
+     * @return {Promise}
      */
     mulDeselectOption(option, index) {
       return new Promise((resolve) => {
