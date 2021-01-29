@@ -488,6 +488,7 @@
       "memoryGiBUnit": "GiB",
       "memoryMiBUnit": "MiB",
       "memoryKiBUnit": "KiB",
+      "memoryByteUnit": "B",
       "usedMemory": "内存使用",
       "operatorMemoryAssign": "算子内存分配",
       "tensorName": "张量名称",

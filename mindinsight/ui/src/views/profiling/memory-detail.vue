@@ -105,7 +105,7 @@ limitations under the License.
                       height="100%"
                       tooltip-effect="light"
                       :empty-text="breakdownsInitOver ? $t('public.noData') : $t('public.dataLoading')">
-              <el-table-column prop="name">
+              <el-table-column prop="name" sortable>
                 <template slot="header">
                   <span :title="$t('profiling.memory.tensorName')">
                     {{$t('profiling.memory.tensorName')}}
@@ -115,7 +115,7 @@ limitations under the License.
                   <div class="cell">{{scope.row.name}}</div>
                 </template>
               </el-table-column>
-              <el-table-column prop="size">
+              <el-table-column prop="size" sortable>
                 <template slot="header">
                   <span :title="$t('profiling.memory.totalTensorMemoryAssign')">
                     {{$t('profiling.memory.totalTensorMemoryAssign')}}
@@ -214,6 +214,7 @@ export default {
         this.$t('profiling.memory.memoryGiBUnit'),
         this.$t('profiling.memory.memoryMiBUnit'),
         this.$t('profiling.memory.memoryKiBUnit'),
+        this.$t('profiling.memory.memoryByteUnit'),
       ],
       chartClickListenerOn: false, // Listening on discount click events
       curSelectedPointIndex: 0, // Subscript of the current selection point
@@ -685,9 +686,10 @@ export default {
       if (number === baseStr) {
         return baseStr;
       }
-      const loopCount = this.unitList.length;
+      const loopCount = this.unitList.length - 1;
+      const fixedLimit = 2;
       let baseNumber = number;
-      let utilIndex = -1;
+      let utilIndex = loopCount;
       let resultStr = '';
       for (let i = 0; i < loopCount; i++) {
         if (baseNumber >= 1) {
@@ -697,17 +699,12 @@ export default {
           baseNumber = baseNumber * this.unitBase;
         }
       }
-      if (utilIndex < 0) {
-        utilIndex = loopCount - 1;
-      }
       if (type === 1) {
-        resultStr = `${this.formmateNummber(baseNumber)}`;
+        resultStr = `${Number(baseNumber.toFixed(fixedLimit))}`;
       } else if (type === 2) {
         resultStr = `${this.unitList[utilIndex]}`;
       } else {
-        resultStr = `${this.formmateNummber(baseNumber)} ${
-          this.unitList[utilIndex]
-        }`;
+        resultStr = `${Number(baseNumber.toFixed(fixedLimit))} ${this.unitList[utilIndex]}`;
       }
       return resultStr;
     },
