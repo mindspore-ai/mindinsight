@@ -484,7 +484,6 @@ export default {
           '#2f4554',
           '#61a0a8',
           '#d48265',
-          '#d48265',
         ];
         const index = data[0].dataIndex;
         str += `step: ${stepArray[index]}`;

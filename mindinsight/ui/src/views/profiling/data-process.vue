@@ -629,9 +629,7 @@ export default {
       ];
       chartArr.forEach((val) => {
         if (this[val].chartDom) {
-          setTimeout(() => {
-            this[val].chartDom.resize();
-          }, 300);
+          this[val].chartDom.resize();
         }
       });
     },
