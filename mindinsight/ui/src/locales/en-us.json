@@ -489,6 +489,7 @@
       "memoryGiBUnit": "GiB",
       "memoryMiBUnit": "MiB",
       "memoryKiBUnit": "KiB",
+      "memoryByteUnit": "B",
       "usedMemory": "Memory Usage",
       "operatorMemoryAssign": "Operator Memory Allocation",
       "tensorName": "Tensor Name",
