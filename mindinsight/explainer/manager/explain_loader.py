@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ _SAMPLE_FIELD_NAMES = [
 class _LoaderStatus(Enum):
     STOP = 'STOP'
     LOADING = 'LOADING'
+    PENDING = 'PENDING'
+    LOADED = 'LOADED'
 
 
 def _round(score):
@@ -75,13 +77,13 @@ class ExplainLoader:
             'create_time': os.stat(summary_dir).st_ctime,
             'update_time': os.stat(summary_dir).st_mtime,
             'query_time': os.stat(summary_dir).st_ctime,
-            'uncertainty_enabled': False
+            'uncertainty_enabled': False,
         }
         self._samples = defaultdict(dict)
         self._metadata = {'explainers': [], 'metrics': [], 'labels': [], 'min_confidence': 0.5}
         self._benchmark = {'explainer_score': defaultdict(dict), 'label_score': defaultdict(dict)}
 
-        self._status = _LoaderStatus.STOP.value
+        self._status = _LoaderStatus.PENDING.value
         self._status_mutex = threading.Lock()
 
     @property
@@ -270,7 +272,9 @@ class ExplainLoader:
 
     def load(self):
         """Start loading data from the latest summary file to the loader."""
-        self.status = _LoaderStatus.LOADING.value
+        if self.status != _LoaderStatus.LOADED.value:
+            self.status = _LoaderStatus.LOADING.value
+
         filenames = []
         for filename in FileHandler.list_dir(self._loader_info['summary_dir']):
             if FileHandler.is_file(FileHandler.join(self._loader_info['summary_dir'], filename)):
@@ -286,15 +290,20 @@ class ExplainLoader:
             try:
                 file_changed, is_end, event_dict = self._parser.list_events(filenames)
             except UnknownError:
+                is_end = True
                 break
 
             if file_changed:
                 logger.info('Summary file in %s update, reload the data in the summary.',
                             self._loader_info['summary_dir'])
                 self._clear_job()
+                if self.status != _LoaderStatus.STOP.value:
+                    self.status = _LoaderStatus.LOADING.value
             if event_dict:
                 self._import_data_from_event(event_dict)
         self._reform_sample_info()
+        if is_end:
+            self.status = _LoaderStatus.LOADED.value
 
     @property
     def status(self):

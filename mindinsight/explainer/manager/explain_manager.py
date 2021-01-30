@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ from mindinsight.datavisual.common.enums import BaseEnum
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
 from mindinsight.explainer.common.log import logger
-from mindinsight.explainer.manager.explain_loader import ExplainLoader
+from mindinsight.explainer.manager.explain_loader import ExplainLoader, _LoaderStatus
 from mindinsight.utils.exceptions import ParamValueError, UnknownError
 
 _MAX_LOADERS_NUM = 3
@@ -91,6 +91,9 @@ class ExplainManager:
             if loader_id in self._loader_pool:
                 self._loader_pool[loader_id].query_time = datetime.now().timestamp()
                 self._loader_pool.move_to_end(loader_id, last=True)
+                loader = self._loader_pool[loader_id]
+                if loader.status == _LoaderStatus.STOP.value:
+                    self._reload_data_again()
                 return self._loader_pool[loader_id]
 
             try:
