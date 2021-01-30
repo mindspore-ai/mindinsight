@@ -14,9 +14,9 @@
 # ==============================================================================
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
-from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords, \
+    WeightType
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting, Tensor, get_dtype
 
 
 class MulMapper(ONNXToMindSporeMapper):
@@ -32,16 +32,11 @@ class MulMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
+        weights = kwargs['weights']
+        if weights:
+            tensor = MulMapper._find_val_by_index(0, weights)
+            return {'w': {'data': tensor, 'type': WeightType.PARAMETER.value}}
         return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        weights = kwargs.get("weights")
-        if not weights:
-            return Setting()
-        ref, tensor = list(weights.items())[0]
-        return Setting(op_extra_tensor=Tensor(shape=tensor.shape,
-                                              dtype=get_dtype(tensor), reference=ref))
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
@@ -56,9 +51,12 @@ class MulMapper(ONNXToMindSporeMapper):
         tensor = MulMapper._find_val_by_index(0, weights)
 
         variable_slot = "var_0"
-        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
-        init_tensor = f"self.{{{variable_slot}}}_w = Tensor(np.random.uniform(0, 1, {tensor.shape})" \
-                      f".astype(np.{tensor.dtype}))"
+        init_template = f"self.{{{variable_slot}}} = {op}()"
+        args["w_shape"] = tensor.shape
+        args["w_dtype"] = tensor.dtype
+        init_tensor = f"self.{{{variable_slot}}}_w = " \
+                      f"Parameter(Tensor(np.random.uniform(0, 1, {{w_shape}}).astype(np.{{w_dtype}})), " \
+                      f"name=None)"
         construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
                              f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}," \
                              f"self.{{{variable_slot}}}_w)"
