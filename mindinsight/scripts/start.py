@@ -176,8 +176,9 @@ class Command(BaseCommand):
             type=str,
             action=WorkspaceAction,
             help="""
-                Specify path for user workspace. Default is %s.
-            """ % settings.WORKSPACE)
+                Specify path for user workspace. Default is
+                $HOME/mindinsight.
+            """)
 
         parser.add_argument(
             '--port',

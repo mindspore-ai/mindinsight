@@ -52,7 +52,7 @@ def get_platform():
     Returns:
         str, platform name in lowercase.
     """
-    return platform.system().lower()
+    return platform.system().strip().lower()
 
 
 def get_description():
@@ -63,7 +63,7 @@ def get_description():
         str, wheel package description.
     """
     os_info = get_platform()
-    cpu_info = platform.machine()
+    cpu_info = platform.machine().strip()
 
     cmd = "git log --format='[sha1]:%h, [branch]:%d' -1"
     process = subprocess.Popen(
@@ -75,7 +75,7 @@ def get_description():
     )
     stdout, _ = process.communicate()
     if not process.returncode:
-        git_version = stdout.decode()
+        git_version = stdout.decode().strip()
         return 'mindinsight platform: %s, cpu: %s, git version: %s' % (os_info, cpu_info, git_version)
 
     return 'mindinsight platform: %s, cpu: %s' % (os_info, cpu_info)
@@ -89,7 +89,7 @@ def get_install_requires():
         list, list of dependent packages.
     """
     with open('requirements.txt') as file:
-        return file.read().splitlines()
+        return file.read().strip().splitlines()
 
 
 def update_permissions(path):
