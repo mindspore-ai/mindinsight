@@ -1,5 +1,5 @@
 <!--
-Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ limitations under the License.
         <el-checkbox-group v-model="predictionTypes"
                            class="selector"
                            @change="fetch"
-                           :disabled="!hasPrediction || ifNoData">
+                           :disabled="!hasPrediction || !hasData">
           <el-checkbox :label="TP">{{TP}}</el-checkbox>
           <el-checkbox :label="FN">{{FN}}</el-checkbox>
           <el-checkbox :label="FP">{{FP}}</el-checkbox>
@@ -143,11 +143,11 @@ limitations under the License.
     <!-- Data Table -->
     <div class="cl-saliency-map-table">
       <div class="table-nodata"
-           v-if="ifNoData">
+           v-if="!hasData">
         <img :src="require('@/assets/images/nodata.png')"
              alt="" />
         <span class="nodata-text"
-              v-if="ifLoading">
+              v-if="isLoading">
           {{ $t('public.dataLoading') }}
         </span>
         <span class="nodata-text"
@@ -161,7 +161,7 @@ limitations under the License.
                   border
                   height="100%"
                   :span-method="mergeTable"
-                  :empty-text="emptyText">
+                  :empty-text="$t('public.noData')">
           <!-- Original Picture Column-->
           <el-table-column :label="$t('explain.originalPicture')"
                            width="270"
@@ -331,7 +331,7 @@ limitations under the License.
                      :page-size.sync="pageInfo.pageSize"
                      layout="total, sizes, prev, pager, next, jumper"
                      :total="pageInfo.total"
-                     v-show="!ifError"></el-pagination>
+                     v-show="hasData"></el-pagination>
     </div>
     <!-- Show Img Dialog -->
     <el-dialog :title="imageDetails.title"
@@ -363,6 +363,13 @@ const [TP, FN, FP] = ['TP', 'FN', 'FP'];
 const [CONFIDENCE, UNCERTAINTY] = ['confidence', 'uncertainty'];
 // The sorted type of image
 const DESCENDING = 'descending';
+// The status of request
+const STATUS = {
+  LOADING: 'LOADING',
+  LOADED: 'LOADED',
+  SOTP: 'STOP',
+  PENDING: 'PENDING',
+};
 
 export default {
   components: {
@@ -372,9 +379,6 @@ export default {
   },
   data() {
     return {
-      ifNoData: true,
-      ifLoading: true,
-      ifError: false,
       trainID: '', // The id of the train
       selectedExplainers: [], // The selected explainer methods
       allExplainers: [], // The list of all explainer method
@@ -385,7 +389,9 @@ export default {
         imgShow: false,
       }, // The object of show img dialog
       ifSuperpose: false, // If open the superpose function
-      minConfidence: 0, // The min confidence
+      hasData: false, // If the train has data
+      isLoading: true, // If loading data now
+      minConfidence: '--', // The min confidence
       tableData: null, // The table data
       selectedTruthLabels: [], // The selected truth labels
       truthLabels: [], // The list of all truth labels
@@ -405,17 +411,13 @@ export default {
       tableHeight: 0, // The height of table to fix the table header
       queryParameters: null, // The complete parameters of query table information, have pagination information
       pageChangeDelay: 200, // The time interval used to prevent the violent clicks of changing current page
-      emptyText: '', // The empty text of table
       TP: TP, // Means true positive
       FN: FN, // Means false negative
       FP: FP, // Means false positive
       predictionTypes: [TP, FN, FP], // The effective filter prediction types
       hasPrediction: true, // If prediction type filter is effective
       hasMetric: false, // If has metric information
-      requestTime: 0, // The count of request
-      requestDelay: 1500, // The delay of request in ms
-      requestLimit: 3, // The limit of request
-      requestTimer: null, // The interval timer of request
+      requestDelay: 500, // The delay of request in ms
     };
   },
   computed: {
@@ -472,7 +474,7 @@ export default {
       this.pageInfo.currentPage = 1;
       this.queryParameters.offset = this.pageInfo.currentPage - 1;
       this.queryParameters.limit = val;
-      this.queryPageInfo(this.queryParameters).then();
+      this.queryPageInfo(this.queryParameters);
     },
     /**
      * The logic that is executed when the current page number changed
@@ -482,7 +484,7 @@ export default {
       clearTimeout(this.pageChangeTimer);
       this.pageChangeTimer = setTimeout(() => {
         this.queryParameters.offset = val - 1;
-        this.queryPageInfo(this.queryParameters).then();
+        this.queryPageInfo(this.queryParameters);
         this.pageChangeTimer = null;
       }, this.pageChangeDelay);
     },
@@ -494,7 +496,7 @@ export default {
       this.queryParameters.sorted_name = val;
       this.pageInfo.currentPage = 1;
       this.queryParameters.offset = this.pageInfo.currentPage - 1;
-      this.queryPageInfo(this.queryParameters).then();
+      this.queryPageInfo(this.queryParameters);
     },
     /**
      * The logic of click the explainer method canvas
@@ -512,66 +514,78 @@ export default {
     /**
      * Request basic information of train
      * @param {Object} params Parameters of the request basic information of train interface
+     * @return {Promise}
      */
     queryTrainInfo(params) {
-      requestService
-          .queryTrainInfo(params)
-          .then(
-              (res) => {
-                if (res && res.data) {
-                  if (res.data.saliency) {
-                    this.minConfidence = res.data.saliency.min_confidence
-                    ? res.data.saliency.min_confidence
-                    : '--';
-                    this.hasMetric = res.data.saliency.metrics.length
-                    ? true
-                    : false;
-                    this.allExplainers = this.arrayToCheckBox(
-                        res.data.saliency.explainers,
-                    );
-                  }
-                  if (res.data.classes) {
-                    const truthLabels = [];
-                    for (let i = 0; i < res.data.classes.length; i++) {
-                      truthLabels.push(res.data.classes[i].label);
-                    }
-                    this.truthLabels = truthLabels;
-                  }
-                  if (res.data.uncertainty) {
-                    this.uncertaintyEnabled = res.data.uncertainty.enabled
-                    ? true
-                    : false;
-                    // The sort by uncertainty only valid when uncertaintyEnabled is true
-                    if (this.uncertaintyEnabled) {
-                      this.sortedNames.push({
-                        label: this.$t('explain.byUncertainty'),
-                        value: UNCERTAINTY,
+      return new Promise((resolve, reject) => {
+        requestService
+            .queryTrainInfo(params)
+            .then(
+                (res) => {
+                  if (res && res.data) {
+                    const status = res.data.status.toUpperCase();
+                    if (status !== STATUS.LOADED) {
+                      resolve({
+                        again: true,
+                        continue: false,
+                      });
+                    } else {
+                      // status === 'LOADED'
+                      this.processTrainInfo(res.data);
+                      resolve({
+                        again: false,
+                        continue: true,
                       });
                     }
+                  } else {
+                    resolve({
+                      again: false,
+                      continue: false,
+                    });
                   }
-                }
-                this.ifNoData = false;
-                this.ifLoading = false;
-              },
-              () => {
-                this.ifNoData = false;
-                this.ifLoading = false;
-                this.ifError = true;
-              },
-          )
-          .catch(() => {
-            this.ifNoData = false;
-            this.ifLoading = false;
-            this.ifError = true;
+                },
+            )
+            .catch((error) => {
+              reject(error);
+            });
+      });
+    },
+    /**
+     * The logic of process train info
+     * @param {Object} data
+     */
+    processTrainInfo(data) {
+      const truthLabels = [];
+      for (let i = 0; i < data.classes.length; i++) {
+        truthLabels.push(data.classes[i].label);
+      }
+      this.truthLabels = truthLabels;
+      if (data.saliency) {
+        this.minConfidence = data.saliency.min_confidence;
+        this.hasMetric = data.saliency.metrics.length ? true : false;
+        this.allExplainers = this.arrayToCheckBox(
+            data.saliency.explainers,
+        );
+      }
+      if (data.uncertainty) {
+        this.uncertaintyEnabled = data.uncertainty.enabled ? true : false;
+        // The sort by uncertainty only valid when uncertaintyEnabled is true
+        if (this.uncertaintyEnabled) {
+          this.sortedNames.push({
+            label: this.$t('explain.byUncertainty'),
+            value: UNCERTAINTY,
           });
+        }
+      }
     },
     /**
      * The complete logic of table update when any condition changed
      * @param {Object} params The main parameters
      * @param {Object} supParams The supplymentary parameters
+     * @param {Boolean} first If first query
      * @return {Promise}
      */
-    updateTable(params, supParams) {
+    updateTable(params, supParams, first = false) {
       const paramsTemp = JSON.parse(JSON.stringify(params));
       for (const attr in paramsTemp) {
         if ({}.hasOwnProperty.call(paramsTemp, attr)) {
@@ -588,70 +602,49 @@ export default {
         }
       }
       Object.assign(paramsTemp, supParams);
-      return this.queryPageInfo(paramsTemp);
+      return this.queryPageInfo(paramsTemp, first);
     },
     /**
      * Request page table information
      * @param {Object} params Parameters of the request page information interface
-     * @return {Promise}
+     * @param {Boolean} first If first query
      */
-    queryPageInfo(params) {
+    queryPageInfo(params, first = false) {
       params.train_id = decodeURIComponent(params.train_id);
       this.queryParameters = params;
-      return new Promise((resolve) => {
-        requestService
-            .queryPageInfo(params)
-            .then(
-                (res) => {
-                  // Make sure the offset of response is equal to offset of request
-                  if (params.offset === this.queryParameters.offset) {
-                    if (res && res.data && res.data.samples) {
-                      this.tableData = this.processTableData(res.data.samples);
-                      this.pageInfo.total = res.data.count ? res.data.count : 0;
-                      if (!res.data.count) {
-                        // 3: Prediction type has three valid values
-                        // When length === 3 || length === 0, means search without type limit
-                        const typeLimit =
-                          params.prediction_types.length !== 3 &&
-                          params.prediction_types.length !== 0;
-                        if (params.labels || typeLimit) {
-                        // With label or type limit
-                          this.emptyText = this.$t('public.noData');
-                        } else {
-                          // Without limit
-                          if (this.requestTime === this.requestLimit) {
-                            this.emptyText = this.$t('public.noData');
-                          } else {
-                            this.emptyText = this.$t('explain.noData');
-                          }
-                        }
-                        resolve(false);
+      requestService
+          .queryPageInfo(params)
+          .then(
+              (res) => {
+                // Make sure the offset of response is equal to offset of request
+                if (params.offset === this.queryParameters.offset) {
+                  if (res && res.data) {
+                    if (!res.data.count) {
+                      if (first) {
+                        this.isLoading = false;
                       } else {
-                        resolve(true);
+                        this.tableData = this.processTableData(res.data.samples);
+                        this.pageInfo.total = 0;
                       }
                     } else {
-                      this.pageInfo.total = 0;
+                      this.tableData = this.processTableData(res.data.samples);
+                      this.pageInfo.total = res.data.count;
+                      this.hasData = true;
                     }
                   }
-                },
-                () => {
-                  this.ifNoData = false;
-                  this.ifLoading = false;
-                  this.ifError = true;
-                },
-            )
-            .catch(() => {
-              this.ifNoData = false;
-              this.ifLoading = false;
-              this.ifError = true;
-            });
-      });
+                }
+              },
+              () => {
+                this.isLoading = false;
+              },
+          )
+          .catch(() => {
+            this.isLoading = false;
+          });
     },
     /**
      * Process the original table data
      * @param {Object} samples The original table data
-     * @param {number | boolean} minConfidence The min confindence
-     * If min confidence is lost, replace with type except number, such as 'false', 'null'
      * @return {Object} The processed table data
      */
     processTableData(samples) {
@@ -735,55 +728,50 @@ export default {
         query: {id: this.trainID},
       });
     },
+    /**
+     * The logic of init page
+     */
     initPage() {
-      return new Promise((resolve) => {
-        this.updateTable(this.baseQueryParameters, {
-          limit: this.pageInfo.pageSize,
-          offset: this.pageInfo.currentPage - 1,
-        }).then((hasData) => {
-          // If has data now
-          if (hasData) {
-            const params = {
-              train_id: this.trainID,
-            };
-            this.queryTrainInfo(params);
-            resolve(true);
-          } else {
-            resolve(false);
-          }
-        });
-      });
+      const params = {
+        train_id: this.trainID,
+      };
+      this.queryTrainInfo(params)
+          .then(
+              (res) => {
+                if (res.again) {
+                  // Request again
+                  setTimeout(() => {
+                    this.initPage();
+                  }, this.requestDelay);
+                } else {
+                  // No need to request again
+                  if (res.continue) {
+                    this.updateTable(this.baseQueryParameters, {
+                      limit: this.pageInfo.pageSize,
+                      offset: this.pageInfo.currentPage - 1,
+                    }, true);
+                  } else {
+                    this.isLoading = false;
+                  }
+                }
+              },
+              () => {
+                // Has error
+                this.isLoading = false;
+              })
+          .catch(() => {
+            this.isLoading = false;
+          });
     },
   },
   created() {
     if (!this.$route.query.id) {
       this.$message.error(this.$t('trainingDashboard.invalidId'));
-      this.ifError = true;
+      this.isLoading = false;
       return;
     }
     this.trainID = this.$route.query.id;
-    this.initPage().then((hasData) => {
-      this.requestTime = 1;
-      if (!hasData) {
-        this.requestTimer = setInterval(() => {
-          this.initPage().then((hasDataNow) => {
-            this.requestTime++;
-            if (hasDataNow) {
-              clearInterval(this.requestTimer);
-            } else {
-              if (this.requestTime === this.requestLimit) {
-                // Still has no data
-                this.ifLoading = false;
-                clearInterval(this.requestTimer);
-              }
-            }
-          });
-        }, this.requestDelay);
-      }
-    });
-  },
-  destroyed() {
-    clearInterval(this.requestTimer);
+    this.initPage();
   },
   mounted() {
     // Change the page title

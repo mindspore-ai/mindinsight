@@ -294,14 +294,20 @@ export default {
         imageIndex: 0,
         curSampleData: {},
       },
-      dataWaitCount: 2, // Number of waiting times when no data is available
       dataWaitTimer: null, // No data available timer
+      // Status of metaData request
+      status: {
+        pendding: 'PENDING',
+        loading: 'LOADING',
+        loaded: 'LOADED',
+        stop: 'STOP',
+      },
     };
   },
   computed: {},
   watch: {},
   created() {
-    this.getHOCData();
+    this.getMetaData();
   },
   mounted() {
     if (!this.trainId) {
@@ -343,13 +349,29 @@ export default {
               !res ||
             !res.data ||
             !res.data.classes ||
-            !res.data.classes.length ||
             !res.data.saliency
             ) {
+              this.initOver = true;
               return;
             }
-            this.labelLlist = [this.emptyLabelSelect].concat(res.data.classes);
-            this.minConfidence = res.data.saliency.min_confidence;
+            const status = res.data.status;
+            // IF status is not loaded, delay 500ms and request again
+            const delayTime = 500;
+            if (status !== this.status.loaded) {
+              if (this.dataWaitTimer) {
+                clearTimeout(this.dataWaitTimer);
+                this.dataWaitTimer = null;
+              }
+              this.dataWaitTimer = setTimeout(() => {
+                this.getMetaData();
+              }, delayTime);
+            } else {
+              this.labelLlist = [this.emptyLabelSelect].concat(res.data.classes);
+              this.minConfidence = res.data.saliency.min_confidence;
+              this.getHOCData();
+            }
+          }, () => {
+            this.initOver = true;
           },
       );
     },
@@ -370,29 +392,16 @@ export default {
       }
       RequestService.queryHOCData(params).then(
           (res) => {
+            this.initOver = true;
             if (!res || !res.data) {
-              this.initOver = true;
+              this.pageData.totalNum = 0;
+              this.resetIniitData();
               return;
             }
-            if (!res.data.count && !this.initOver && this.dataWaitCount) {
-              this.dataWaitCount--;
-              if (this.dataWaitTimer) {
-                clearTimeout(this.dataWaitTimer);
-                this.dataWaitTimer = null;
-              }
-              this.dataWaitTimer = setTimeout(() => {
-                this.getHOCData();
-              }, 1500);
-            } else {
-              if (!this.initOver) {
-                this.getMetaData();
-              }
-              this.initOver = true;
-              this.pageData.totalNum = res.data.count;
-              this.fullData = res.data.samples;
-              this.curSelectedDataIndex = 0;
-              this.formateCurrentHOCData();
-            }
+            this.pageData.totalNum = res.data.count;
+            this.fullData = res.data.samples;
+            this.curSelectedDataIndex = 0;
+            this.formateCurrentHOCData();
           },
           () => {
             this.pageData.totalNum = 0;
