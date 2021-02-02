@@ -18,6 +18,7 @@ from importlib import import_module
 
 import numpy as np
 
+from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
 from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model
 
 
@@ -92,6 +93,9 @@ class OnnxSimplify:
 
         self._constant_nodes = copy.deepcopy(const_nodes)
 
+    @ModelNotSupportError.check_except(
+        "Error occurs in loading model, please check your model or runtime environment integrity."
+    )
     def _onnx_infer(self, infer_inputs_shape):
         """
         Run onnx inference to get outputs of constant nodes.

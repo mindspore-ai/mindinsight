@@ -16,6 +16,7 @@
 from importlib import import_module
 from typing import Dict, NoReturn
 
+from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
 from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.input_node import InputNode
@@ -196,12 +197,12 @@ class OnnxGraph(Graph):
         Returns:
             object, ONNX model.
         """
-        tf_input_nodes = kwargs.get('input_nodes')
-        tf_output_nodes = kwargs.get('output_nodes')
+        input_nodes = kwargs.get('input_nodes')
+        output_nodes = kwargs.get('output_nodes')
         if graph_path.endswith('.pb'):
             onnx_model = TFGraphParser.parse(graph_path,
-                                             input_nodes=tf_input_nodes,
-                                             output_nodes=tf_output_nodes)
+                                             input_nodes=input_nodes,
+                                             output_nodes=output_nodes)
         elif graph_path.endswith('.onnx'):
             onnx = import_module('onnx')
             onnx_model = onnx.load(graph_path)
@@ -212,4 +213,7 @@ class OnnxGraph(Graph):
 
         else:
             onnx_model = PyTorchGraphParser.parse(graph_path, **kwargs)
+        onnx_inputs = [onnx_input.name for onnx_input in onnx_model.graph.input]
+        if input_nodes not in onnx_inputs:
+            raise ModelNotSupportError(f"input nodes({input_nodes}) is not in model inputs ({onnx_inputs}).")
         return onnx_model

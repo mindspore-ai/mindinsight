@@ -26,8 +26,6 @@ from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, BINARY_HEADER_PYTORCH_BITS, \
     FrameworkType, BINARY_HEADER_PYTORCH_FILE, TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION
 
-from mindspore.train.serialization import save_checkpoint
-
 
 def is_converted(operation: str):
     """
@@ -147,6 +145,7 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         except (IOError, FileExistsError) as error:
             raise ReportGenerationError(str(error))
 
+        save_checkpoint = getattr(import_module('mindspore.train.serialization'), 'save_checkpoint')
         ckpt_file_path = os.path.realpath(os.path.join(out_folder, f"{model_name}.ckpt"))
         try:
             if os.path.exists(ckpt_file_path):

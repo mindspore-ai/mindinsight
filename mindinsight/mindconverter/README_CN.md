@@ -130,15 +130,15 @@ MindConverter提供两种技术方案，以应对不同脚本迁移场景：
 > 2. 基于图结构的脚本生成方案，由于要加载PyTorch、TensorFlow模型，会导致转换后网络中Dropout算子丢失，需要用户手动补齐；
 > 3. 基于图结构的脚本生成方案持续优化中。
 
-支持的模型列表（如下模型已基于x86 Ubuntu发行版，PyTorch 1.4.0(TorchVision 0.5)以及TensorFlow 1.15.0测试通过）:
+支持的模型列表（如下模型已基于x86 Ubuntu发行版，PyTorch 1.5.0以及TensorFlow 1.15.0测试通过）:
 
-|  模型  | PyTorch脚本 | TensorFlow脚本 | 备注 | PyTorch权重迁移 | TensorFlow权重迁移 |
-| :----: | :----: | :----: | :----: | :----: | :----: |
+|  模型  | &nbsp;&nbsp;PyTorch脚本 | &nbsp;&nbsp;TensorFlow脚本 | 备注 | PyTorch权重迁移 | TensorFlow权重迁移 |
+| :----: | :-----: | :----: | :----: | :----: | :----: |
 | ResNet18 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |  | 已测试 | / |
 | ResNet34 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | 暂未测试 |  | 已测试 | / |
 | ResNet50 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | 已测试 | 已测试 |
 | ResNet50V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | 已测试 |
-| ResNet101 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | 已测试 | 已测试 |
+| ResNet101 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | 未测试 | 已测试 |
 | ResNet101V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | 已测试 |
 | ResNet152 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | 已测试 | 已测试 |
 | ResNet152V2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | 已测试 |
@@ -157,12 +157,12 @@ MindConverter提供两种技术方案，以应对不同脚本迁移场景：
 | InceptionResNetV2 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  | / | 已测试 |
 | MobileNetV1 | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  | / | 已测试 |
 | MobileNetV2 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  | 已测试 | 已测试 |
-| MNASNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | 暂未测试 | | 已测试 | / |
+| MNASNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | 暂未测试 | | mnasnet0_5：已测试 mnasnet0_75：未测试 mnasnet1_0：已测试 mnasnet1_3：未测试  | / |
 | SqueezeNet | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | 暂未测试 | | 已测试 | / |
 | DenseNet121/169/201 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  | 已测试 | 已测试 |
 | DenseNet161 | [脚本链接](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | 暂未测试 | | 已测试 | / |
 | NASNetMobile/Large | 暂未测试 | [脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  | / | 已测试 |
-| EfficientNetB0~B7 | [脚本链接](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.5脚本链接](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  | 已测试 | 未测试（TF1.5） 已测试（TF2.3）|
+| EfficientNetB0~B7 | [脚本链接](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.15<br />脚本链接](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) <br />[TF2.3<br />脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  | 已测试 | 已测试（TF1.15） 已测试（TF2.3）|
 | Unet | [脚本链接](https://github.com/milesial/Pytorch-UNet) | [脚本链接](https://github.com/zhixuhao/unet) | 由于算子`mindspore.ops.ResizeBilinear`在GPU上暂未实现，所以当运行在GPU设备上时，算子`mindspore.ops.ResizeBilinear`需要被替换为算子`mindspore.ops.ResizeNearestNeighbor` | 已测试 | 已测试 |
 
 ## 使用示例
@@ -239,8 +239,8 @@ line x:y: [UnConvert] 'operator' didn't convert. ...
 #### PyTorch模型脚本生成示例
 
 若用户已将PyTorch模型保存为.pth格式，假设模型绝对路径为`/home/uer/model.pth`，该模型期望的输入shape为(1, 3, 224, 224)
-，原PyTorch脚本位于`/home/user/project/model_training`，希望将脚本、权重文件和权重映射表输出至`/home/user/output`，转换报告输出至`/home/user/output/report`，
-。则脚本生成命令为：
+，原PyTorch脚本位于`/home/user/project/model_training`，希望将脚本、权重文件和权重映射表输出至`/home/user/output`，转换报告输出至`/home/user/output/report`
+。<br /> 则脚本生成命令为：
 
 ```bash
 mindconverter --model_file /home/user/model.pth --shape 1,3,224,224 \
@@ -299,7 +299,7 @@ class Classifier(nn.Cell):
 
 ```
 
-> 其中`--output`与`--report`参数可省略，若省略，该命令将在当前工作目录（Working directory）下自动创建`output`目录，将生成的脚本、转换报告输出至该目录。
+> 其中`--output`与`--report`参数可省略，若省略，该命令将在当前工作目录（Working directory）下自动创建`output`目录，将生成的脚本、权重文件、权重映射表、转换报告输出至该目录。
 
 #### TensorFlow模型脚本生成示例
 
@@ -344,7 +344,7 @@ mindconverter --model_file /home/user/xxx/model.onnx --shape 1,3,224,224 \
 
 ## 注意事项
 
-1. PyTorch、TensorFlow不作为MindInsight明确声明的依赖库。若想使用基于图结构的脚本生成工具，需要用户手动安装与生成PyTorch模型版本一致的PyTorch库（MindConverter推荐使用PyTorch 1.4.0进行脚本生成），或TensorFlow；
+1. PyTorch、TensorFlow不作为MindInsight明确声明的依赖库。若想使用基于图结构的脚本生成工具，需要用户手动安装与生成PyTorch模型版本一致的PyTorch库（MindConverter使用PyTorch 1.5.0进行测试，不支持PyTorch 1.4.x; PyTorch 1.6.x、PyTorch 1.7.x未进行测试。），或TensorFlow；
 2. 脚本转换工具本质上为算子驱动，对于MindConverter未维护的PyTorch或ONNX算子与MindSpore算子映射，将会出现相应的算子无法转换的问题，对于该类算子，用户可手动修改，或基于MindConverter实现映射关系，向MindInsight仓库贡献。
 3. MindConverter仅保证转换后模型脚本在输入数据尺寸与`--shape`一致的情况下，可达到无需人工修改或少量修改（`--shape`中batch size维度不受限）。
 4. 脚本文件、权重文件和权重映射表输出于同一个目录下。
@@ -486,21 +486,21 @@ def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name
 
 ### MindConverter错误码速查表
 
-|       异常声明       | 异常描述                       | 异常代码 | 常见原因                                                     |
-| :----------------------------: | :------: | :----------------------------------------------------------- | ----------------------- |
-| MindConverterException | MindConverter异常基类          |   NAN    | MindConverter异常基类。                                      |
-|    BaseConverterError    | 未知错误引起的转换失败         | 0000000  | 程序运行中出现未知错误，请打开MindInsight log文件（默认位于`~/mindinsight/log/mindconverter/`目录下）查看具体错误原因。 |
-|       UnKnownModelError       | 识别网络模型对应的框架失败     | 0000001  | 通常为用户给定模型文件不符合TensorFlow或PyTorch标准。        |
+|       异常声明       | 异常描述                       | 异常代码 | 常见原因                   |
+| :----------------------------: | :------: | :--------------- | ----------------------- |
+| MindConverterException | MindConverter异常基类          | NAN    | MindConverter异常基类。                                      |
+|    BaseConverterError    | 未知错误引起的转换失败         | 0000000&nbsp;    | 程序运行中出现未知错误，请打开MindInsight log文件（默认位于`~/mindinsight/log/mindconverter/`目录下）查看具体错误原因。 |
+|       UnKnownModelError       | 识别网络模型对应的框架失败     | 0000001   | 通常为用户给定模型文件不符合TensorFlow或PyTorch标准。        |
 | ParamMissingError | 缺少转换所需参数 | 0000002 | 通常为`--shape`, `--input_nodes` , `--output_nodes`缺失导致 |
 |      GraphInitFailError      | 依据网络模型构建计算图失败     | 1000000  | 由1000001，1000002，1000003导致的计算图无法解析。                                                           |
-|     ModelNotSupportError     | 解析.pth/.pb文件失败           | 1000001  | 给定的`--input_nodes`, `--output_nodes`与实际模型不符；或模型文件存在问题导致模型无法加载。 |
-|     TfRuntimeError     | TensorFlow库执行出错           | 1000002  | TensorFlow启动申请所需资源失败导致无法正常启动，请检查系统资源（进程数、内存、显存占用、CPU占用）是否充足。 |
+|     ModelNotSupportError     | 解析.pth/.pb文件失败           | 1000001  | 给定的`--input_nodes`, `--output_nodes`与实际模型不符；<br />或模型文件存在问题导致模型无法加载。 |
+|     TfRuntimeError     | TensorFlow库执行出错           | 1000002  | TensorFlow启动申请所需资源失败导致无法正常启动，<br />请检查系统资源（进程数、内存、显存占用、CPU占用）是否充足。 |
 | ModelLoadingError | 模型加载失败                   | 1000003  | 可能由于用户给定网络输入尺寸错误导致模型无法加载。           |
 | RuntimeIntegrityError | 三方依赖库不完整 | 1000004 | MindConverter运行时所需的三方依赖库未安装。 |
-| TreeCreateFailError | 依据计算图构建模型树失败       | 2000000  | Tree用于生成最终代码结构，通常由于PyTorch网络中存在`torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx`算子导致。 |
+| TreeCreateFailError | 依据计算图构建模型树失败       | 2000000  | Tree用于生成最终代码结构，<br />通常由于PyTorch网络中存在`torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx`算子导致。 |
 | NodeInputMissingError | 网络节点输入信息丢失           | 2000001  | 节点的输入信息丢失。                                                            |
 | TreeNodeInsertError | 树节点构建失败                 | 2000002  | 由于scope name错误，无法找到该节点的父节点。                                                             |
-|   SourceFilesSaveError   | 生成和保存转换后的脚本文件失败 | 3000000  | 由3000001，3000002，3000003导致的脚本生成保存失败。                                                             |
+|   SourceFilesSaveError   | 生成和保存转换后的脚本文件失败 | 3000000  | 由300000至3000005导致的脚本生成保存失败。            |
 | NodeInputTypeNotSupportError | 网络节点输入类型未知           | 3000001  | 映射关系中设置节点输入类型错误。                                                             |
 | ScriptGenerationError | 转换脚本生成失败               | 3000002  | 空间不足；生成的脚本不符合PEP-8规范；`--output`目录下已有同名文件存在                                   |
 | ReportGenerationError | 转换报告生成失败               | 3000003  | 空间不足；脚本中没有需要转换的算子；`--report`目录下已有同名文件存在。              |

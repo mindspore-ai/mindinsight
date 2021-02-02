@@ -15,9 +15,9 @@
 """Main Generator module."""
 import copy
 from collections import OrderedDict
+from importlib import import_module
 
 from yapf.yapflib.yapf_api import FormatCode
-from mindspore import Tensor
 
 from mindinsight.mindconverter.common.exceptions import GeneratorError
 from mindinsight.mindconverter.graph_based_converter.generator.scope_utils import Scope
@@ -493,6 +493,7 @@ class Generator:
     def generate_checkpoint(self):
         """Generate checkpoint."""
 
+        mindspore = import_module('mindspore')
         trainable_weights_dict = dict()
         weight_map = list()
         for node_name, node_inst in self.node_structs.items():
@@ -507,8 +508,8 @@ class Generator:
                         weight_name = SEPARATOR_BTW_NAME_AND_ID.join((weights_scope_name, weight_key))
                     else:
                         weight_name = LINK_IN_WEIGHT_NAME.join((weights_scope_name, weight_key))
-                    weight_shape = Tensor(value_data).shape
-                    data_type = Tensor(value_data).dtype
+                    weight_shape = mindspore.Tensor(value_data).shape
+                    data_type = mindspore.Tensor(value_data).dtype
                     trainable_weights_dict[weight_name] = value_data
 
                     onnx_weight_name = onnx_weight_inst[idx].name
@@ -534,7 +535,7 @@ class Generator:
         for weight_name, weight_value in trainable_weights_dict.items():
             obj = {
                 'name': weight_name,
-                'data': Tensor(weight_value)
+                'data': mindspore.Tensor(weight_value)
             }
             save_obj.append(obj)
 
