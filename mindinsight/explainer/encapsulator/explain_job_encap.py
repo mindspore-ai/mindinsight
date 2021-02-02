@@ -91,4 +91,5 @@ class ExplainJobEncap(ExplainDataEncap):
         saliency_info["metrics"] = list(job.metrics)
         info["saliency"] = saliency_info
         info["uncertainty"] = {"enabled": job.uncertainty_enabled}
+        info["status"] = job.status
         return info

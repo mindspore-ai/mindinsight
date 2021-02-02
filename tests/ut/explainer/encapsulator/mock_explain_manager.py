@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 from datetime import datetime
 
 from mindinsight.explainer.encapsulator.explain_job_encap import ExplainJobEncap
+from mindinsight.explainer.manager.explain_loader import _LoaderStatus
 
 
 class MockExplainJob:
@@ -60,6 +61,7 @@ class MockExplainJob:
                 ]
             }
         ]
+        self.status = _LoaderStatus.LOADED.value
 
     def retrieve_image(self, image_id):
         """Get original image binary."""
