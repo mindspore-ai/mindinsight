@@ -14,7 +14,6 @@
 # ==============================================================================
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 from mindinsight.mindconverter.graph_based_converter.common.utils import convert_bytes_string_to_string
 
 
@@ -68,9 +67,3 @@ class ResizeMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        if kwargs.get("weights", None):
-            return Setting()
-        return Setting()

@@ -24,7 +24,7 @@ from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, R
     UnknownModelError, CheckPointGenerationError, WeightMapGenerationError
 from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, BINARY_HEADER_PYTORCH_BITS, \
-    FrameworkType, BINARY_HEADER_PYTORCH_FILE, TENSORFLOW_MODEL_SUFFIX
+    FrameworkType, BINARY_HEADER_PYTORCH_FILE, TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION
 
 from mindspore.train.serialization import save_checkpoint
 
@@ -263,3 +263,29 @@ def replace_string_in_list(str_list: list, original_str: str, target_str: str):
         list, the original list with replaced string.
     """
     return [s.replace(original_str, target_str) for s in str_list]
+
+
+def get_third_part_lib_validation_error_info(lib_list):
+    """Get error info when not satisfying third part lib validation."""
+    error_info = None
+    link_str = ', '
+    for idx, lib in enumerate(lib_list):
+        if idx == len(lib_list) - 1:
+            link_str = ' and '
+
+        lib_version_required = THIRD_PART_VERSION[lib]
+        if len(lib_version_required) == 2:
+            lib_version_required_min = lib_version_required[0]
+            lib_version_required_max = lib_version_required[1]
+            if lib_version_required_min == lib_version_required_max:
+                info = f"{lib}(=={lib_version_required_min})"
+            else:
+                info = f"{lib}(>={lib_version_required_min} and <{lib_version_required_max})"
+        else:
+            info = f"{lib}(>={lib_version_required[0]})"
+
+        if not error_info:
+            error_info = info
+        else:
+            error_info = link_str.join((error_info, info))
+    return error_info

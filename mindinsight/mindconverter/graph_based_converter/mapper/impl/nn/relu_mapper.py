@@ -25,8 +25,8 @@ class ReLUMapper(ONNXToMindSporeMapper):
             name = "nn.ReLU"
         else:
             weights = kwargs['weights']
-            min_clip = weights[0].value if weights[0] else 0
-            max_clip = weights[1].value if weights[1] else 0
+            min_clip = ReLUMapper._find_val_by_index(0, weights, 0)
+            max_clip = ReLUMapper._find_val_by_index(1, weights, 0)
             if max_clip == 6 and min_clip == 0:
                 name = "nn.ReLU6"
             elif max_clip == min_clip == 0:

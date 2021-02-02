@@ -10,12 +10,14 @@
     - [Usage](#usage)
         - [PyTorch Model Scripts Migration](#pytorch-model-scripts-migration)
         - [TensorFlow Model Scripts Migration](#tensorflow-model-scripts-migration)
+        - [ONNX Model File Migration](#onnx-model-file-migration)
     - [Scenario](#scenario)
     - [Example](#example)
         - [AST-Based Conversion](#ast-based-conversion)
         - [Graph-Based Conversion](#graph-based-conversion)
             - [PyTorch Model Scripts Conversion](#pytorch-model-scripts-conversion)
             - [TensorFlow Model Scripts Conversion](#tensorflow-model-scripts-conversion)
+            - [ONNX Model File Conversion](#onnx-model-file-conversion)
     - [Caution](#caution)
     - [Unsupported situation of AST mode](#unsupported-situation-of-ast-mode)
         - [Situation1](#situation1)
@@ -30,7 +32,7 @@
 
 ## Overview
 
-MindConverter is a migration tool to transform the model scripts from PyTorch or TensorFlow to MindSpore. Users can migrate their PyTorch or TensorFlow models to MindSpore rapidly with minor changes according to the conversion report.
+MindConverter is a migration tool to transform the model scripts and weights from PyTorch, TensorFlow or ONNX to MindSpore. Users can migrate their PyTorch, TensorFlow or ONNX models to MindSpore rapidly with minor changes according to the conversion report.
 
 ## Installation
 
@@ -53,10 +55,10 @@ optional arguments:
   --in_file IN_FILE     Specify path for script file to use AST schema to do
                         script conversation.
   --model_file MODEL_FILE
-                        PyTorch .pth or TensorFlow .pb model file path to use
-                        graph based schema to do script generation. When
-                        `--in_file` and `--model_file` are both provided, use
-                        AST schema as default.
+                        PyTorch(.pth), Tensorflow(.pb) or ONNX(.onnx) model
+                        file path is expected to do script generation based on
+                        graph schema. When `--in_file` and `--model_file` are
+                        both provided, use AST schema as default.
   --shape SHAPE         Optional, expected input tensor shape of
                         `--model_file`. It is required when use graph based
                         schema. Usage: --shape 1,3,244,244
@@ -93,7 +95,7 @@ For the Graph mode, `--shape` is mandatory.
 
 For the AST mode, `--shape` is ignored.
 
-`--output` and `--report` is optional. MindConverter creates an `output` folder under the current working directory, and outputs generated scripts and conversion reports to it.  
+`--output` and `--report` is optional. MindConverter creates an `output` folder under the current working directory, and outputs generated scripts, converted checkpoint file, weight map file and conversion reports to it.  
 
 Please note that your original PyTorch project is included in the module search path (PYTHONPATH). Use the python interpreter and test your module can be successfully loaded by `import` command. Use `--project_path` instead if your project is not in the PYTHONPATH to ensure MindConverter can load it.
 
@@ -105,6 +107,12 @@ Please note that your original PyTorch project is included in the module search 
 **MindConverter provides computational graph based conversion for TensorFlow**: Transformation will be done given `--model_file`, `--shape`, `--input_nodes` and `--output_nodes`.
 
 > AST mode is not supported for TensorFlow, only computational graph based mode is available.
+
+### ONNX Model File Migration
+
+**MindConverter provides computational graph based conversion for ONNX**: Transformation will be done given `--model_file`, `--shape`, `--input_nodes` and `--output_nodes`.
+
+> AST mode is not supported for ONNX, only computational graph based mode is available.
 
 ## Scenario
 
@@ -125,38 +133,38 @@ Some typical image classification networks have been tested for the Graph mode. 
 
 Supported models list (Models in below table have been tested based on PyTorch 1.4.0(TorchVision 0.5.0) and TensorFlow 1.15.0, X86 Ubuntu released version):
 
-|  Supported Model | PyTorch Script | TensorFlow Script | Comment |
-| :----: | :----: | :----: | :----: |
-| ResNet18 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  |
-| ResNet34 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  |
-| ResNet50 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
-| ResNet50V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
-| ResNet101 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
-| ResNet101V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
-| ResNet152 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  |
-| ResNet152V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  |
-| Wide ResNet50 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | |
-| Wide ResNet101 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | |
-| VGG11/11BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  |
-| VGG13/13BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  |
-| VGG16 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |  |
-| VGG16BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  |
-| VGG19 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |  |
-| VGG19BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  |
-| AlexNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | / |  |
-| GoogLeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | / |  |
-| Xception | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/xception.py) |  |
-| InceptionV3 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/inception.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |  |
-| InceptionResNetV2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  |
-| MobileNetV1 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  |
-| MobileNetV2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  |
-| MNASNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | / | |
-| SqueezeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | / | |
-| DenseNet121/169/201 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  |
-| DenseNet161 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | / | |
-| NASNetMobile/Large | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  |
-| EfficientNetB0~B7 | [Link](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.5Link](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  |
-| Unet | [Link](https://github.com/milesial/Pytorch-UNet) | [Link](https://github.com/zhixuhao/unet) | Due to Operator `mindspore.ops.ResizeBilinear` is not implemented on GPU device for now, operator `mindspore.ops.ResizeBilinear` should be replaced by operator `mindspore.ops.ResizeNearestNeighbor`, while running in GPU device |
+|  Supported Model | PyTorch Script | TensorFlow Script | Comment | PyTorch Weights Converted | TensorFlow Weights Converted |
+| :----: | :----: | :----: | :----: | :----: | :----: |
+| ResNet18 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | TESTED | / |
+| ResNet34 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | TESTED | / |
+| ResNet50 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | TESTED | TESTED |
+| ResNet50V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
+| ResNet101 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | TESTED | TESTED |
+| ResNet101V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
+| ResNet152 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | TESTED | TESTED |
+| ResNet152V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
+| Wide ResNet50 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | | TESTED | / |
+| Wide ResNet101 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | | TESTED | / |
+| VGG11/11BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  | TESTED | / |
+| VGG13/13BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  | TESTED | / |
+| VGG16 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |  | TESTED | TESTED |
+| VGG16BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  | TESTED | / |
+| VGG19 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |  | TESTED | TESTED |
+| VGG19BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  | TESTED | / |
+| AlexNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | / |  | TESTED | / |
+| GoogLeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | / |  | TESTED | / |
+| Xception | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/xception.py) |  | / | TESTED |
+| InceptionV3 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/inception.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |  | TESTED | TESTED |
+| InceptionResNetV2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  | / | TESTED |
+| MobileNetV1 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  | / | TESTED |
+| MobileNetV2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  | TESTED | TESTED |
+| MNASNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | / | | TESTED | / |
+| SqueezeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | / | | TESTED | / |
+| DenseNet121/169/201 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  | TESTED | TESTED |
+| DenseNet161 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | / | | TESTED | / |
+| NASNetMobile/Large | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  | / | TESTED |
+| EfficientNetB0~B7 | [Link](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.5Link](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  | TESTED | UNTESTED(TF1.5) TESTED(TF2.3) |
+| Unet | [Link](https://github.com/milesial/Pytorch-UNet) | [Link](https://github.com/zhixuhao/unet) | Due to Operator `mindspore.ops.ResizeBilinear` is not implemented on GPU device for now, operator `mindspore.ops.ResizeBilinear` should be replaced by operator `mindspore.ops.ResizeNearestNeighbor`, while running in GPU device | TESTED | TESTED |
 
 ## Example
 
@@ -192,11 +200,44 @@ Here is an example of the conversion report:
 
 For non-transformed operators, suggestions are provided in the report. For instance, MindConverter suggests that replace `torch.nn.AdaptiveAvgPool2d` with `mindspore.ops.operations.ReduceMean`.
 
+Here is an example of the weight map:
+
+```json
+{
+    "resnet50": [
+        {
+            "converted_weight": {
+                "name": "conv2d_0.weight",
+                "shape": [
+                    64,
+                    3,
+                    7,
+                    7
+                ],
+                "data_type": "Float32"
+            },
+            "source_weight": {
+                "name": "conv1.weight",
+                "shape": [
+                    64,
+                    3,
+                    7,
+                    7
+                ],
+                "data_type": "float32"
+            }
+        }
+    ]
+}
+```
+
+Weight information in MindSpore (`converted_weight`) and that in source framework(`source_weight`) are saved in weight map separately.
+
 ### Graph-Based Conversion
 
 #### PyTorch Model Scripts Conversion
 
-Assume the PyTorch model (.pth file) is located at `/home/user/model.pth`, with input shape (1, 3, 224, 224) and the original PyTorch script is at `/home/user/project/model_training`. Output the transformed MindSpore script to `/home/user/output`, with the conversion report to `/home/user/output/report`. Use the following command:
+Assume the PyTorch model (.pth file) is located at `/home/user/model.pth`, with input shape (1, 3, 224, 224) and the original PyTorch script is at `/home/user/project/model_training`. Output the transformed MindSpore script, MindSpore checkpoint file and weight map file to `/home/user/output`, with the conversion report to `/home/user/output/report`. Use the following command:
 
 ```bash
 mindconverter --model_file /home/user/model.pth --shape 1,3,224,224 \
@@ -266,9 +307,29 @@ mindconverter --model_file /home/user/xxx/frozen_model.pb --shape 1,224,224,3 \
               --report /home/user/output/report
 ```
 
-After executed MindSpore script, and report file can be found in corresponding directory.
+After executed, MindSpore script, Mindspore checkpoint file, weight map file and report file can be found in corresponding directory.
 
 Since the graph based scheme is a generative method, the original TensorFlow script is not referenced in the conversion process. Therefore, the code line and column numbers involved in the generated conversion report refer to the generated script.
+
+In addition, for operators that are not converted successfully, the input and output shape of tensor of the node will be identified in the code by `input_shape` and `output_shape`. For example, please refer to the example in **PyTorch Model Scripts Conversion** section.
+
+#### ONNX Model File Conversion
+
+To use ONNX model file migration, user needs to obtain the model input node and output node name from ONNX model. To get input node and output node name, [Netron](https://github.com/lutzroeder/netron) is recommended.
+
+Suppose the model is saved to `/home/user/xxx/model.onnx`, corresponding input node name is `input_1:0`, output node name is `predictions/Softmax:0`, the input shape of model is `1,3,224,224`, the following command can be used to generate the script:
+
+```bash
+mindconverter --model_file /home/user/xxx/model.onnx --shape 1,3,224,224 \
+              --input_nodes input_1:0 \
+              --output_nodes predictions/Softmax:0 \
+              --output /home/user/output \
+              --report /home/user/output/report
+```
+
+After executed, MindSpore script, MindSpore checkpoint file, weight map file and report file can be found in corresponding directory.
+
+Since the graph based scheme is a generative method, the original ONNX model is not referenced in the conversion process. Therefore, the code line and column numbers involved in the generated conversion report refer to the generated script.
 
 In addition, for operators that are not converted successfully, the input and output shape of tensor of the node will be identified in the code by `input_shape` and `output_shape`. For example, please refer to the example in **PyTorch Model Scripts Conversion** section.
 
@@ -277,6 +338,7 @@ In addition, for operators that are not converted successfully, the input and ou
 1. PyTorch, TensorFlow are not an explicitly stated dependency libraries in MindInsight. The Graph conversion requires the consistent PyTorch or TensorFlow version as the model is trained. (MindConverter recommends PyTorch 1.4.0)
 2. This script conversion tool relies on operators which supported by MindConverter and MindSpore. Unsupported operators may not be successfully mapped to MindSpore operators. You can manually edit, or implement the mapping based on MindConverter, and contribute to our MindInsight repository. We appreciate your support for the MindSpore community.
 3. MindConverter can only guarantee that the converted model scripts require a minor revision or no revision when the inputs' shape fed to the generated model script are equal to the value of `--shape` (The batch size dimension is not limited).
+4. MindSpore script, MindSpore checkpoint file and weight map file are saved in the same file folder path.
 
 ## Unsupported situation of AST mode
 
@@ -317,6 +379,7 @@ For users using MindConverter, in addition to install the TensorFlow or PyTorch 
 onnx>=1.8.0
 tf2onnx>=1.7.1
 onnxruntime>=1.5.2
+onnxoptimizer==0.1.2
 ```
 
 ## Frequently asked questions
@@ -426,6 +489,8 @@ def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name
 | NodeInputTypeNotSupportError | Fail to recognize the input type of converted operator | 3000001  | Wrong input type set in mapper                               |
 |    ScriptGenerationError     |           Fail to generate converted script            | 3000002  | No left space on hard disk; Converted code is not legal; A file with the same name already exists in `--output` |
 |    ReportGenerationError     |           Fail to generate converted script            | 3000003  | No left space on hard disk; No available operator to be converted;A file with the same name already exists in  `--report` |
+|   CheckPointGenerationError  |         Fail to generate converted weight file         | 3000004  | No left space on hard dist; A file with the same name already exists in `--output` |
+|    WeightMapGenerationError  |            Fail to generate weight map file            | 3000005  | No left space on hard dist; A file with the same name already exists in `--output` |
 |        GeneratorError        |                 Fail to generate code                  | 4000000  | Exception caused by 4000001~4000004                          |
 |       NodeLoadingError       |             Fail to load node information              | 4000001  | Essential parameters are missing after conversion of a node  |
 |   NodeArgsTranslationError   |         Fail to translate the node's argument          | 4000002  | Converted nodes have incorrect and conflicted information    |

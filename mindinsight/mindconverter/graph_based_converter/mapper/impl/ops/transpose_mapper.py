@@ -16,7 +16,6 @@
 from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
 from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class TransposeMapper(ONNXToMindSporeMapper):
@@ -33,17 +32,6 @@ class TransposeMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        converted_params = {}
-        params = kwargs.get('params')
-        perm = params.get('perm')
-        if perm and isinstance(perm, list):
-            perm = tuple(perm)
-            converted_params['input_perm'] = perm
-
-        return Setting(op_extra_input=converted_params)
 
     @staticmethod
     def _generate_snippet_template(**kwargs):

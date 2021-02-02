@@ -13,11 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-from mindinsight.mindconverter.graph_based_converter.constant import InputType
 from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
 from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.gen_setting import Setting
 
 
 class ConcatMapper(ONNXToMindSporeMapper):
@@ -35,11 +33,6 @@ class ConcatMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         return dict()
-
-    @staticmethod
-    def _convert_settings(**kwargs):
-        input_type = InputType.LIST.value
-        return Setting(op_ipt_type=input_type)
 
     @staticmethod
     def _generate_snippet_template(**kwargs):

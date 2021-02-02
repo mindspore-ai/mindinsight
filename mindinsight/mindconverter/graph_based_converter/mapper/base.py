@@ -181,9 +181,9 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         return template, exchange_msg, outputs_list, outputs_mapping
 
     @staticmethod
-    def _find_val_by_index(loc_index, weights_list):
+    def _find_val_by_index(loc_index, weights_list, default_value=None):
         """Find value by location index of weights_list."""
-        result = None
+        result = default_value
         if loc_index < 0:
             return weights_list[loc_index].value
 
