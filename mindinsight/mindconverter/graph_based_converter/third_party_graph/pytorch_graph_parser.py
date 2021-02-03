@@ -47,9 +47,8 @@ class PyTorchGraphParser(GraphParser):
             raise error
 
         try:
-            sample_shape = list(kwargs.get("input_nodes").values())[0]
             onnx_model_sim = cls._convert_pytorch_graph_to_onnx(
-                model_path, sample_shape, opset_version=11)
+                model_path, kwargs['input_nodes'], opset_version=11)
             return onnx_model_sim
         except ModuleNotFoundError:
             error_msg = "Cannot find model scripts in system path, " \
@@ -58,19 +57,19 @@ class PyTorchGraphParser(GraphParser):
             raise error
 
     @staticmethod
-    def _convert_pytorch_graph_to_onnx(model_path, sample_shape, opset_version=None):
+    def _convert_pytorch_graph_to_onnx(model_path, input_nodes, opset_version=None):
         """
         Convert Pytorch model to ONNX model.
 
         Args:
             model_path (str): Path to the Pytorch model.
-            sample_shape (tuple): Input shape to generate onnx model.
+            input_nodes (dict): Input nodes to generate onnx model.
             opset_version (int): Op set version of onnx.
         """
 
         output_queue = mp.Queue()
         process = mp.Process(target=PyTorchGraphParser._pytorch_graph_to_proto,
-                             args=(output_queue, model_path, sample_shape, opset_version))
+                             args=(output_queue, model_path, input_nodes, opset_version))
         process.start()
         proto = output_queue.get()
         process.join()
@@ -81,26 +80,29 @@ class PyTorchGraphParser(GraphParser):
         return onnx_model
 
     @staticmethod
-    def _pytorch_graph_to_proto(output_queue, model_path, sample_shape, opset_version):
+    def _pytorch_graph_to_proto(output_queue, model_path, input_nodes, opset_version):
         """
         Convert pytorch graph to pytorch proto.
 
         Args:
             output_queue (Queue): Output queue from multi-processing.
             model_path (str): Path to the Pytorch model.
-            sample_shape (tuple): Input shape to generate onnx model.
+            input_nodes (dict): Input nodes to generate onnx model.
             opset_version (int): Op set version of onnx.
         """
 
         try:
             torch = import_module('torch')
             has_cuda = torch.cuda.is_available()
+            dump_inputs = dict()
             if has_cuda:
                 model = torch.load(f=model_path).cuda()
-                dump_input = torch.randn(*sample_shape, device='cuda')
+                for node_name, node_shape in input_nodes.items():
+                    dump_inputs[node_name] = torch.randn(*node_shape, device='cuda')
             else:
                 model = torch.load(f=model_path, map_location="cpu")
-                dump_input = torch.randn(*sample_shape, device='cpu')
+                for node_name, node_shape in input_nodes.items():
+                    dump_inputs[node_name] = torch.randn(*node_shape, device='cpu')
 
             if isinstance(model, torch.nn.DataParallel):
                 raise ValueError('torch.nn.DataParallel is not supported by ONNX exporter.')
@@ -121,7 +123,8 @@ class PyTorchGraphParser(GraphParser):
             set_opset_version(opset_version)
             set_operator_export_type(operator_export_type)
 
-            graph, params_dict, _ = model_to_graph(model, dump_input, _retain_param_name=True)
+            graph, params_dict, _ = model_to_graph(model, args=tuple(dump_inputs.values()),
+                                                   input_names=list(dump_inputs.keys()), _retain_param_name=True)
             export_onnx = getattr(graph, '_export_onnx')
             proto, _ = export_onnx(
                 params_dict, opset_version, dict(), False,

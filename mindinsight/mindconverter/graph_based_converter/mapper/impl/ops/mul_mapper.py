@@ -13,6 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
+import numpy as np
+
 from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
 from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords, \
     WeightType
@@ -32,9 +34,9 @@ class MulMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
-        weights = kwargs['weights']
-        if weights:
-            tensor = MulMapper._find_val_by_index(0, weights)
+        weights = kwargs.get('weights', list())
+        tensor = MulMapper._find_val_by_index(0, weights)
+        if isinstance(tensor, np.ndarray) and tensor.shape:
             return {'w': {'data': tensor, 'type': WeightType.PARAMETER.value}}
         return dict()
 
@@ -45,23 +47,49 @@ class MulMapper(ONNXToMindSporeMapper):
         op = kwargs.get("operation")
         args = kwargs.get("converted_params")
         weights = kwargs.get("weights")
+        trainable_params = kwargs.get("trainable_params", dict())
         if not weights:
             return template, exchange_msg, outputs_list, outputs_mapping
 
         tensor = MulMapper._find_val_by_index(0, weights)
+        w_shape = tensor.shape
+        w_dtype = tensor.dtype
+        w_location = MulMapper._find_location_by_index(0, weights)
 
         variable_slot = "var_0"
         init_template = f"self.{{{variable_slot}}} = {op}()"
-        args["w_shape"] = tensor.shape
-        args["w_dtype"] = tensor.dtype
-        init_tensor = f"self.{{{variable_slot}}}_w = " \
-                      f"Parameter(Tensor(np.random.uniform(0, 1, {{w_shape}}).astype(np.{{w_dtype}})), " \
-                      f"name=None)"
+        inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
+        if w_location != -1:
+            inputs_in_construct.insert(w_location, f"self.{{{variable_slot}}}_w")
+
+        if w_shape:
+            args["w_shape"] = w_shape
+            args["w_dtype"] = w_dtype
+            init_tensor = f"self.{{{variable_slot}}}_w = " \
+                          f"Parameter(Tensor(np.random.uniform(0, 1, {{w_shape}}).astype(np.{{w_dtype}})), " \
+                          f"name=None)"
+        else:
+            args["w_value"] = tensor.tolist()
+            init_tensor = f"self.{{{variable_slot}}}_w = {{w_value}}"
+
         construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
-                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}," \
-                             f"self.{{{variable_slot}}}_w)"
+                             f"({', '.join(inputs_in_construct)})"
         template = reset_init_or_construct(template, variable_slot, [init_template, init_tensor],
                                            TemplateKeywords.INIT.value)
         template = reset_init_or_construct(template, variable_slot, [construct_template],
                                            TemplateKeywords.CONSTRUCT.value)
+        exchange_msg = {
+            variable_slot: {
+                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
+                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
+                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
+                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
+                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
+                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
+                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
+            }
+        }
+        outputs_list = [f"opt_{{{variable_slot}}}"]
+        outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping

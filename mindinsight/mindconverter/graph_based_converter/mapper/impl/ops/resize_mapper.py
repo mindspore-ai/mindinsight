@@ -23,9 +23,6 @@ class ResizeMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
         params = kwargs.get("params")
-        onnx_coordinate_transform = params.get("coordinate_transformation_mode")
-        if onnx_coordinate_transform is not None:
-            onnx_coordinate_transform = convert_bytes_string_to_string(onnx_coordinate_transform)
 
         interpolation_mode = params.get("mode")
         if interpolation_mode is not None:
@@ -45,24 +42,14 @@ class ResizeMapper(ONNXToMindSporeMapper):
     def _convert_params(**kwargs):
         weights = kwargs.get("weights")
         params = kwargs.get("params")
-        # Set default params
-        align_corners = False
 
         if len(weights) > 3:
             raise ValueError("For resize, `weights` length less or equal to 3.")
 
-        onnx_coordinate_transform = params.get("coordinate_transformation_mode")
-        if onnx_coordinate_transform is not None:
-            onnx_coordinate_transform = convert_bytes_string_to_string(onnx_coordinate_transform)
-
-        if onnx_coordinate_transform == "align_corners" or "half_pixel" in onnx_coordinate_transform:
-            align_corners = True
-
         # Get requested size for resize
-        size = ResizeMapper._find_val_by_index(-1, weights)[-2:].tolist()
+        size = params["output_shape"][-2:]
 
-        return {"size": tuple(size),
-                "align_corners": align_corners}
+        return {"size": tuple(size)}
 
     @staticmethod
     def _convert_trained_weights(**kwargs):

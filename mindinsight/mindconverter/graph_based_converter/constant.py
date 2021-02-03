@@ -15,6 +15,8 @@
 """Constant definition."""
 from enum import Enum, unique
 
+import numpy as np
+
 SEPARATOR_IN_ONNX_OP = "::"
 SEPARATOR_IN_SCOPE = "/"
 SEPARATOR_BTW_NAME_AND_ID = "_"
@@ -46,6 +48,25 @@ ONNXOPTIMIZER_MIN_VER = "0.1.2"
 ONNXOPTIMIZER_MAX_VER = "0.1.2"
 
 TORCH_MIN_VER = "1.5.0"
+
+DTYPE_MAP = {
+    1: np.float32,
+    2: np.uint8,
+    3: np.int8,
+    4: np.uint16,
+    5: np.int16,
+    6: np.int32,
+    7: np.int64,
+    8: str,
+    9: bool,
+    10: np.float16,
+    11: np.double,
+    12: np.uint32,
+    13: np.uint64,
+    14: np.complex64,
+    15: np.complex128,
+    16: None
+}
 
 
 @unique

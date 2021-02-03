@@ -192,3 +192,17 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
                 result = weight.value
                 break
         return result
+
+    @staticmethod
+    def _find_location_by_index(loc_index, weights_list):
+        """Find weight location in inputs of Node."""
+
+        result = -1
+        if loc_index < 0:
+            return weights_list[loc_index].location
+
+        for idx, weight in enumerate(weights_list):
+            if idx == loc_index:
+                result = weight.location
+                break
+        return result

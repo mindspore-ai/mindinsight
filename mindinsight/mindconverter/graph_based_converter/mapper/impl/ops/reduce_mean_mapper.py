@@ -28,7 +28,7 @@ class ReduceMeanMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_params(**kwargs):
         params = kwargs['params']
-        keep_dims = not params['keepdims'] == 0
+        keep_dims = not params.get('keepdims', 1) == 0
         return {'keep_dims': keep_dims}
 
     @staticmethod

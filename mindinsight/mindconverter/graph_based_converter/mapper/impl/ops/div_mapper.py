@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,17 +15,18 @@
 """Mapper module."""
 import numpy as np
 
-from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords, \
-    WeightType
+from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
+from mindinsight.mindconverter.graph_based_converter.constant import WeightType, ExchangeMessageKeywords, \
+    TemplateKeywords
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
 
-class AddMapper(ONNXToMindSporeMapper):
-    """Add mapper."""
+class DivMapper(ONNXToMindSporeMapper):
+    """Div mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "P.Add"
+        return "P.Div"
 
     @staticmethod
     def _convert_params(**kwargs):
@@ -34,9 +35,9 @@ class AddMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         weights = kwargs.get('weights', list())
-        tensor = AddMapper._find_val_by_index(0, weights)
+        tensor = DivMapper._find_val_by_index(0, weights)
         if isinstance(tensor, np.ndarray) and tensor.shape:
-            return {'bias': {'data': tensor, 'type': WeightType.PARAMETER.value}}
+            return {'w': {'data': tensor, 'type': WeightType.PARAMETER.value}}
         return dict()
 
     @staticmethod
@@ -46,41 +47,37 @@ class AddMapper(ONNXToMindSporeMapper):
         op = kwargs.get("operation")
         args = kwargs.get("converted_params")
         weights = kwargs.get("weights")
-        trainable_params = kwargs.get('trainable_params', dict())
-        if not op:
-            raise ValueError("Can not get MindSpore operation name.")
+        trainable_params = kwargs.get("trainable_params", dict())
         if not weights:
             return template, exchange_msg, outputs_list, outputs_mapping
 
-        tensor = AddMapper._find_val_by_index(0, weights)
-        bias_shape = tensor.shape
-        bias_dtype = tensor.dtype
-        bias_location = AddMapper._find_location_by_index(0, weights)
+        tensor = DivMapper._find_val_by_index(0, weights)
+        w_shape = tensor.shape
+        w_dtype = tensor.dtype
+        w_location = DivMapper._find_location_by_index(0, weights)
 
         variable_slot = "var_0"
-        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
+        init_template = f"self.{{{variable_slot}}} = {op}()"
         inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
-        if bias_location != -1:
-            inputs_in_construct.insert(bias_location, f"self.{{{variable_slot}}}_bias")
+        if w_location != -1:
+            inputs_in_construct.insert(w_location, f"self.{{{variable_slot}}}_w")
 
-        if bias_shape:
-            args["bias_shape"] = bias_shape
-            args["bias_dtype"] = bias_dtype
-            init_tensor = f"self.{{{variable_slot}}}_bias = " \
-                          f"Parameter(Tensor(np.random.uniform(0, 1, {{bias_shape}}).astype(np.{{bias_dtype}})), " \
+        if w_shape:
+            args["w_shape"] = w_shape
+            args["w_dtype"] = w_dtype
+            init_tensor = f"self.{{{variable_slot}}}_w = " \
+                          f"Parameter(Tensor(np.random.uniform(0, 1, {{w_shape}}).astype(np.{{w_dtype}})), " \
                           f"name=None)"
         else:
-            args["bias_value"] = tensor.tolist()
-            init_tensor = f"self.{{{variable_slot}}}_bias = {{bias_value}}"
+            args["w_value"] = tensor.tolist()
+            init_tensor = f"self.{{{variable_slot}}}_w = {{w_value}}"
 
         construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
                              f"({', '.join(inputs_in_construct)})"
-        template = {
-            variable_slot: {
-                TemplateKeywords.INIT.value: [init_template, init_tensor],
-                TemplateKeywords.CONSTRUCT.value: [construct_template]
-            }
-        }
+        template = reset_init_or_construct(template, variable_slot, [init_template, init_tensor],
+                                           TemplateKeywords.INIT.value)
+        template = reset_init_or_construct(template, variable_slot, [construct_template],
+                                           TemplateKeywords.CONSTRUCT.value)
         exchange_msg = {
             variable_slot: {
                 ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,

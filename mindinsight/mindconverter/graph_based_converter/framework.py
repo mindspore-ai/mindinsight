@@ -99,11 +99,13 @@ def torch_installation_validation(func):
                     f"are required when using graph based scripts converter, and PyTorch version must " \
                     f"be consisted with model generation runtime."
 
-            output_queue = mp.Queue()
-            process = mp.Process(target=torch_version_satisfied, args=(output_queue,))
-            process.start()
-            torch_version_validation = output_queue.get()
-            process.join()
+            if not error_info:
+                output_queue = mp.Queue()
+                process = mp.Process(target=torch_version_satisfied, args=(output_queue,))
+                process.start()
+                torch_version_validation = output_queue.get()
+                process.join()
+
         if error_info:
             _print_error(RuntimeIntegrityError(error_info))
             sys.exit(0)
@@ -268,6 +270,9 @@ def main_graph_base_converter(file_config):
     if graph_path.endswith("pth") and not file_config.get("input_nodes", []) and \
             file_config.get("shape") and len(file_config.get("shape", ())) == 1:
         file_config['input_nodes'] = ["input.1"]
+    else:
+        check_params = ['input_nodes', 'output_nodes']
+        check_params_exist(check_params, file_config)
 
     if len(file_config['shape']) != len(file_config.get("input_nodes", [])) != len(
             set(file_config.get("input_nodes", []))):
@@ -280,8 +285,6 @@ def main_graph_base_converter(file_config):
 
     if frame_type == FrameworkType.PYTORCH.value:
         if graph_path.endswith('.onnx'):
-            check_params = ['input_nodes', 'output_nodes']
-            check_params_exist(check_params, file_config)
             graph_based_converter_pytorch_to_ms(graph_path=graph_path,
                                                 input_nodes=input_nodes,
                                                 output_nodes=file_config['output_nodes'],
@@ -294,8 +297,6 @@ def main_graph_base_converter(file_config):
                                                 output_folder=file_config['outfile_dir'],
                                                 report_folder=file_config['report_dir'])
     elif frame_type == FrameworkType.TENSORFLOW.value:
-        check_params = ['input_nodes', 'output_nodes']
-        check_params_exist(check_params, file_config)
         graph_based_converter_tf_to_ms(graph_path=graph_path,
                                        input_nodes=input_nodes,
                                        output_nodes=file_config['output_nodes'],
