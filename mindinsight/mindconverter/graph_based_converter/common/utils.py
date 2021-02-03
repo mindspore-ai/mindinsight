@@ -61,6 +61,16 @@ def _add_outputs_of_onnx_model(model, output_nodes: List[str]):
     return model
 
 
+def check_dependency_integrity(*packages):
+    """Check dependency package integrity."""
+    try:
+        for pkg in packages:
+            import_module(pkg)
+        return True
+    except ImportError:
+        return False
+
+
 def fetch_output_from_onnx_model(model, feed_dict: dict, output_nodes: List[str]):
     """
     Fetch specific nodes output from onnx model.
