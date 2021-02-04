@@ -47,7 +47,7 @@ class MultiCompatibleRotatingFileHandler(RotatingFileHandler):
             self.stream.close()
             self.stream = None
 
-        # Attain an exclusive lock with bloking mode by `fcntl` module.
+        # Attain an exclusive lock with blocking mode by `fcntl` module.
         with open(self.baseFilename, 'a') as file_pointer:
             fcntl.lockf(file_pointer.fileno(), fcntl.LOCK_EX)
 
