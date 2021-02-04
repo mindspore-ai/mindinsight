@@ -1,0 +1,3188 @@
+From 48520bd5e6344d792840aa37fe1ba5d564232788 Mon Sep 17 00:00:00 2001
+From: dpankratz <pankratz@ualberta.ca>
+Date: Wed, 27 Jan 2021 09:18:00 -0700
+Subject: [PATCH] spirv-opt: Add auto-inst passes
+
+---
+ Android.mk                                    |   8 +
+ include/spirv-tools/instrument.hpp            |  39 +
+ include/spirv-tools/optimizer.hpp             |  98 ++
+ source/opt/CMakeLists.txt                     |  18 +-
+ source/opt/auto_inst_debug_pass.cpp           |  68 ++
+ source/opt/auto_inst_debug_pass.h             | 106 ++
+ ..._inst_divergence_characterization_pass.cpp | 134 +++
+ ...to_inst_divergence_characterization_pass.h | 106 ++
+ .../opt/auto_inst_dyn_shader_trace_pass.cpp   |  52 +
+ source/opt/auto_inst_dyn_shader_trace_pass.h  | 103 ++
+ .../auto_inst_dyn_trace_ray_trace_pass.cpp    | 184 ++++
+ .../opt/auto_inst_dyn_trace_ray_trace_pass.h  | 135 +++
+ source/opt/auto_inst_execution_trace_pass.cpp |  68 ++
+ source/opt/auto_inst_execution_trace_pass.h   | 122 +++
+ source/opt/auto_inst_pass.cpp                 | 927 ++++++++++++++++++
+ source/opt/auto_inst_pass.h                   | 322 ++++++
+ source/opt/auto_inst_simt_efficiency_pass.cpp |  39 +
+ source/opt/auto_inst_simt_efficiency_pass.h   | 101 ++
+ .../auto_inst_warp_entry_and_exit_pass.cpp    |  43 +
+ .../opt/auto_inst_warp_entry_and_exit_pass.h  |  99 ++
+ source/opt/instrument_pass.cpp                |   5 +-
+ source/opt/instrument_pass.h                  |   1 +
+ source/opt/ir_builder.h                       |  26 +
+ source/opt/ir_context.cpp                     |  13 +
+ source/opt/optimizer.cpp                      |  60 ++
+ source/opt/passes.h                           |   7 +
+ 26 files changed, 2882 insertions(+), 2 deletions(-)
+ create mode 100644 source/opt/auto_inst_debug_pass.cpp
+ create mode 100644 source/opt/auto_inst_debug_pass.h
+ create mode 100644 source/opt/auto_inst_divergence_characterization_pass.cpp
+ create mode 100644 source/opt/auto_inst_divergence_characterization_pass.h
+ create mode 100644 source/opt/auto_inst_dyn_shader_trace_pass.cpp
+ create mode 100644 source/opt/auto_inst_dyn_shader_trace_pass.h
+ create mode 100644 source/opt/auto_inst_dyn_trace_ray_trace_pass.cpp
+ create mode 100644 source/opt/auto_inst_dyn_trace_ray_trace_pass.h
+ create mode 100644 source/opt/auto_inst_execution_trace_pass.cpp
+ create mode 100644 source/opt/auto_inst_execution_trace_pass.h
+ create mode 100644 source/opt/auto_inst_pass.cpp
+ create mode 100644 source/opt/auto_inst_pass.h
+ create mode 100644 source/opt/auto_inst_simt_efficiency_pass.cpp
+ create mode 100644 source/opt/auto_inst_simt_efficiency_pass.h
+ create mode 100644 source/opt/auto_inst_warp_entry_and_exit_pass.cpp
+ create mode 100644 source/opt/auto_inst_warp_entry_and_exit_pass.h
+
+diff --git a/Android.mk b/Android.mk
+index 0b64ea6d..46728c67 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -73,6 +73,14 @@ SPVTOOLS_SRC_FILES := \
+ 		source/val/validate_type.cpp
+ 
+ SPVTOOLS_OPT_SRC_FILES := \
++		source/opt/auto_inst_pass.cpp \
++		source/opt/auto_inst_debug_pass.cpp \
++		source/opt/auto_inst_divergence_characterization_pass.cpp \
++		source/opt/auto_inst_dyn_trace_ray_trace_pass.cpp \
++		source/opt/auto_inst_dyn_shader_trace_pass.cpp \
++		source/opt/auto_inst_execution_trace_pass.cpp \
++		source/opt/auto_inst_simt_efficiency_pass.cpp \
++		source/opt/auto_inst_warp_entry_and_exit_pass.cpp \
+ 		source/opt/aggressive_dead_code_elim_pass.cpp \
+ 		source/opt/amd_ext_to_khr.cpp \
+ 		source/opt/basic_block.cpp \
+diff --git a/include/spirv-tools/instrument.hpp b/include/spirv-tools/instrument.hpp
+index 2b47a564..5a2b00c9 100644
+--- a/include/spirv-tools/instrument.hpp
++++ b/include/spirv-tools/instrument.hpp
+@@ -250,6 +250,45 @@ static const int kDebugInputBuffAddrPtrOffset = 1;
+ // not a valid buffer, the length associated with the 0x0 address is zero.
+ static const int kDebugInputBuffAddrLengthOffset = 0;
+ 
++// Auto-Inst Bindings
++//
++// These bindings are used primarily to differentiate different instrumentation
++// primitives which have meaning to the instrumentation generating them
++// and the analysis parsing them.
++//
++// NOTE: do not set these values to 0 since, by default, the instrumentation
++// buffer is 0 initialized and would cause pernicious bugs.
++
++static const int kAutoInstUniqueSubgroupId = 1;
++
++// auto_inst_divergence_characterization
++// Primitive to track the beginning of a traceRay
++static const uint32_t kAutoInstDivCharPreTraceRay = 2;
++// Primitive to track the end of a traceRay
++static const uint32_t kAutoInstDivCharPostTraceRay = 3;
++// Primitive to get the active threads in a basic block
++static const uint32_t kAutoInstDivCharActiveThreads = 4;
++// Primtive to get the active threads at the
++// beginning of a ray tracing shader
++static const uint32_t kAutoInstDivCharShaderEntryPoint = 5;
++// Primitive to track when threads have finished executing
++// the pipeline.
++static const uint32_t kAutoInstDivCharQuitPipeline = 6;
++
++// auto_inst_dyn_shader_trace
++// Track when shader is executed
++static const uint32_t kAutoInstDynShaderTraceEntryPoint = 2;
++
++// auto_inst_dyn_trace_ray_trace
++// Track when traceRay call started
++static const uint32_t kAutoInstTraceRayTracePreTraceRay = 2;
++// Track when merge point after traceRay is executed
++static const uint32_t kAutoInstTraceRayTraceMergePoint = 3;
++
++// auto_inst_warp_entry_and_exit
++static const uint32_t kAutoInstWarpEntryAndExitBeginPipeline = 1;
++static const uint32_t kAutoInstWarpEntryAndExitEndPipeline = 2;
++
+ }  // namespace spvtools
+ 
+ #endif  // INCLUDE_SPIRV_TOOLS_INSTRUMENT_HPP_
+diff --git a/include/spirv-tools/optimizer.hpp b/include/spirv-tools/optimizer.hpp
+index 27352b25..a8cc6d34 100644
+--- a/include/spirv-tools/optimizer.hpp
++++ b/include/spirv-tools/optimizer.hpp
+@@ -15,8 +15,10 @@
+ #ifndef INCLUDE_SPIRV_TOOLS_OPTIMIZER_HPP_
+ #define INCLUDE_SPIRV_TOOLS_OPTIMIZER_HPP_
+ 
++#include <functional>
+ #include <memory>
+ #include <ostream>
++#include <set>
+ #include <string>
+ #include <unordered_map>
+ #include <vector>
+@@ -792,6 +794,102 @@ Optimizer::PassToken CreateInstBuffAddrCheckPass(uint32_t desc_set,
+ Optimizer::PassToken CreateInstDebugPrintfPass(uint32_t desc_set,
+                                                uint32_t shader_id);
+ 
++// Create a pass which will help debug problems with other autoinstrumentation
++// passes.
++//
++// If |test_atomic_ops| is true, then an atomicAdd will be added to the shader
++// and its result will be written to the buffer given by |desc_set|. If
++// |test_subgroup_ops| is true, then a subgroupElect will be added to the shader
++// and its result will be written to the buffer.
++// If both are false then a constant will be written to the buffer.
++Optimizer::PassToken CreateAutoInstDebugPass(uint32_t desc_set,
++                                             uint32_t shader_id,
++                                             bool test_atomic_ops,
++                                             bool test_subgroup_ops);
++
++// Create a pass which will automatically insert instrumentation to
++// capture the extent of different contributors to divergence.
++//
++// The instrumentation will write buffers in debug descriptor set |desc_set|.
++// It will write |shader_id| in each output record to identify the shader
++// module which generated the record if necessary.
++Optimizer::PassToken CreateAutoInstDivergenceCharacterizationPass(
++    uint32_t desc_set, uint32_t shader_id,
++    std::function<
++        void(std::unordered_map<uint32_t, uint32_t>&& inst_id2prim_id,
++             std::unordered_map<uint32_t, uint32_t>&& inst_id2inst_count)>
++        static_data_callback);
++
++// Create a pass which will automatically insert instrumentation to
++// determine the runtime execution counts of each shader.
++//
++// The instrumentation will write buffers in debug descriptor set |desc_set|.
++// It will write |shader_id| in each output record to identify the shader
++// module which generated the record.
++Optimizer::PassToken CreateAutoInstDynShaderTracePass(uint32_t desc_set,
++                                                      uint32_t shader_id);
++
++// Create a pass which will automatically insert instrumentation to
++// disambiguate runtime traceRay calls found within control-flow.
++//
++// The instrumentation will write buffers in debug descriptor set |desc_set|.
++// It will write |shader_id| in each output record to identify the shader
++// module which generated the record if necessary.
++//
++// The |static_data_callback| is called after the instrumentation pass has
++// finished. It is populated with a mapping from instrumentation callsite id
++// to instrumentation type. It is also populated with a mapping from merge point
++// to all the traceRay calls sites that could have executed within the
++// control-flow.
++Optimizer::PassToken CreateAutoInstDynTraceRayTracePass(
++    uint32_t desc_set, uint32_t shader_id,
++    std::function<void(std::unordered_map<uint32_t, uint32_t>&&,
++                       std::unordered_map<uint32_t, std::vector<uint32_t>>&&)>
++        static_data_callback);
++
++// Create a pass which will automatically insert instrumentation to
++// compute the simt efficiency of the shader module.
++//
++// The instrumentation will write buffers in debug descriptor set |desc_set|.
++// |reserved_words_count| is the number of lower words in the buffer that
++// have a fixed function and are reserved.
++//
++// It will write |shader_id| in each output record to identify the shader
++// module which generated the record if necessary.
++Optimizer::PassToken CreateAutoInstSimtEfficiencyPass(
++    uint32_t desc_set, uint32_t shader_id, uint32_t reserved_words_count);
++
++// Create a pass which will automatically insert instrumentation to
++// capture the number of times the ray tracing pipeline entrypoint is executed
++// vs how many times the exit is executed. On architectures with a SIMD
++// execution model #entries == #exits. On MIMD (or psuedo-MIMD) execution models
++// #entries != #exits.
++//
++// The instrumentation will write buffers in debug descriptor set |desc_set|.
++// It will write |shader_id| in each output record to identify the shader
++// module which generated the record if necessary.
++Optimizer::PassToken CreateAutoInstWarpEntryAndExitPass(uint32_t desc_set,
++                                                        uint32_t shader_id);
++
++
++// Create a pass which will automatically insert instrumentation to
++// capture the execution trace of the pipeline.
++//
++// The instrumentation will write buffers in debug descriptor set |desc_set|.
++// It will write |shader_id| in each output record to identify the shader
++// module which generated the record.
++//
++// The |static_data_callback| is called after the instrumentation pass has
++// finished. It is populated with a mapping from instrumentation callsite id
++// to the other opcodes in the basic block. This data allows the analysis
++// to develop complete dynamic instruction counts of the shader module without
++// needing to transfer the data at runtime.
++Optimizer::PassToken CreateAutoInstExecutionTracePass(
++    uint32_t desc_set, uint32_t shader_id,
++    std::function<void(std::unordered_map<uint32_t, std::set<uint32_t>>&&,
++                       std::unordered_map<uint32_t, uint32_t>&&)>
++        static_data_callback);
++
+ // Create a pass to upgrade to the VulkanKHR memory model.
+ // This pass upgrades the Logical GLSL450 memory model to Logical VulkanKHR.
+ // Additionally, it modifies memory, image, atomic and barrier operations to
+diff --git a/source/opt/CMakeLists.txt b/source/opt/CMakeLists.txt
+index f3ac5906..a59b18c8 100644
+--- a/source/opt/CMakeLists.txt
++++ b/source/opt/CMakeLists.txt
+@@ -14,6 +14,14 @@
+ set(SPIRV_TOOLS_OPT_SOURCES
+   aggressive_dead_code_elim_pass.h
+   amd_ext_to_khr.h
++  auto_inst_pass.h
++  auto_inst_debug_pass.h
++  auto_inst_divergence_characterization_pass.h
++  auto_inst_dyn_shader_trace_pass.h
++  auto_inst_dyn_trace_ray_trace_pass.h
++  auto_inst_execution_trace_pass.h            
++  auto_inst_simt_efficiency_pass.h    
++  auto_inst_warp_entry_and_exit_pass.h  
+   basic_block.h
+   block_merge_pass.h
+   block_merge_util.h
+@@ -122,6 +130,14 @@ set(SPIRV_TOOLS_OPT_SOURCES
+ 
+   aggressive_dead_code_elim_pass.cpp
+   amd_ext_to_khr.cpp
++  auto_inst_pass.cpp
++  auto_inst_debug_pass.cpp
++  auto_inst_divergence_characterization_pass.cpp
++  auto_inst_dyn_shader_trace_pass.cpp
++  auto_inst_dyn_trace_ray_trace_pass.cpp
++  auto_inst_execution_trace_pass.cpp        
++  auto_inst_simt_efficiency_pass.cpp  
++  auto_inst_warp_entry_and_exit_pass.cpp  
+   basic_block.cpp
+   block_merge_pass.cpp
+   block_merge_util.cpp
+@@ -167,7 +183,7 @@ set(SPIRV_TOOLS_OPT_SOURCES
+   inline_pass.cpp
+   inst_bindless_check_pass.cpp
+   inst_buff_addr_check_pass.cpp
+-  inst_debug_printf_pass.cpp
++  inst_debug_printf_pass.cpp  
+   instruction.cpp
+   instruction_list.cpp
+   instrument_pass.cpp
+diff --git a/source/opt/auto_inst_debug_pass.cpp b/source/opt/auto_inst_debug_pass.cpp
+new file mode 100644
+index 00000000..d4321e92
+--- /dev/null
++++ b/source/opt/auto_inst_debug_pass.cpp
+@@ -0,0 +1,68 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#include "auto_inst_debug_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++bool AutoInstDebugPass::PreEntryPointInstrument(InstructionBuilder* builder,
++                                                uint32_t stage_idx) {
++  (void)stage_idx;
++
++  uint32_t buf_id = GetOutputBufferId();
++  uint32_t buf_uint_ptr_id = GetOutputBufferPtrId();
++
++  if (test_atomic_ops_) {
++    Instruction* offset_ptr = builder->AddTernaryOp(
++        buf_uint_ptr_id, SpvOpAccessChain, buf_id,
++        builder->GetUintConstantId(kDebugOutputDataOffset),
++        builder->GetUintConstantId(0));
++    uint32_t mask_none_id = builder->GetUintConstantId(SpvMemoryAccessMaskNone);
++    uint32_t scope_invok_id = builder->GetUintConstantId(SpvScopeInvocation);
++    (void)builder->AddQuadOp(GetUintId(), SpvOpAtomicIAdd,
++                             offset_ptr->result_id(), scope_invok_id,
++                             mask_none_id, builder->GetUintConstantId(1));
++  } else if (test_subgroup_ops_) {
++    Instruction* subgroup_leader_cond =
++        builder->AddUnaryOp(GetBoolId(), SpvOpGroupNonUniformElect,
++                            builder->GetUintConstantId(SpvScopeSubgroup));
++
++    auto active_thread_mask =
++        GenSubgroupBallotId(builder, subgroup_leader_cond->result_id());
++
++    Instruction* offset_ptr = builder->AddTernaryOp(
++        buf_uint_ptr_id, SpvOpAccessChain, buf_id,
++        builder->GetUintConstantId(kDebugOutputDataOffset),
++        builder->GetUintConstantId(0));
++    builder->AddStore(offset_ptr->result_id(), active_thread_mask);
++
++  } else if (!test_atomic_ops_ && !test_subgroup_ops_) {
++    Instruction* buffer_capacity =
++        builder->AddIdLiteralOp(GetUintId(), SpvOpArrayLength,
++                                GetOutputBufferId(), kDebugOutputDataOffset);
++
++    Instruction* offset_ptr = builder->AddTernaryOp(
++        buf_uint_ptr_id, SpvOpAccessChain, buf_id,
++        builder->GetUintConstantId(kDebugOutputDataOffset),
++        builder->GetUintConstantId(0));
++
++    builder->AddStore(offset_ptr->result_id(), buffer_capacity->result_id());
++  }
++
++  return true;
++}
++
++}  // namespace opt
++}  // namespace spvtools
+diff --git a/source/opt/auto_inst_debug_pass.h b/source/opt/auto_inst_debug_pass.h
+new file mode 100644
+index 00000000..7fb59430
+--- /dev/null
++++ b/source/opt/auto_inst_debug_pass.h
+@@ -0,0 +1,106 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef LIBSPIRV_OPT_AUTO_INST_DEBUG_PASS_H_
++#define LIBSPIRV_OPT_AUTO_INST_DEBUG_PASS_H_
++
++#include "auto_inst_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++class AutoInstDebugPass : public AutoInstPass {
++ public:
++  AutoInstDebugPass(uint32_t desc_set, uint32_t shader_id, bool test_atomic_ops,
++                    bool test_subgroup_ops)
++      : AutoInstPass(desc_set, shader_id, kDefaultReservedWordsCnt),
++        test_atomic_ops_(test_atomic_ops),
++        test_subgroup_ops_(test_subgroup_ops) {}
++
++  const char* name() const override { return "auto-inst-debug-pass"; }
++
++ protected:
++  const bool test_atomic_ops_;
++  const bool test_subgroup_ops_;
++
++ private:
++  // Allows inheriting classes to initialize their knowledge
++  // of module before beginning instrumentation
++  void InitializeInstrumentation() override{};
++
++  // Allows inheriting classes to finalize before
++  // the pass finishes executing.
++  void FinalizeInstrumentation() override{};
++
++  // Any instructions added via |builder| will appear before |inst|
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear after |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                 uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear before the content of
++  // |bb|. |stage_idx| contains the SpvExecutionModel that builder is operating
++  // in. This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool BasicBlockInstrument(BasicBlock* bb, InstructionBuilder* builder,
++                            uint32_t stage_idx) override {
++    (void)bb;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreEntryPointInstrument(InstructionBuilder* builder,
++                               uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostEntryPointInstrument(InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  }
++};
++
++}  // namespace opt
++}  // namespace spvtools
++
++#endif  // LIBSPIRV_OPT_AUTO_INST_DEBUG_PASS_H_
+diff --git a/source/opt/auto_inst_divergence_characterization_pass.cpp b/source/opt/auto_inst_divergence_characterization_pass.cpp
+new file mode 100644
+index 00000000..a462c05e
+--- /dev/null
++++ b/source/opt/auto_inst_divergence_characterization_pass.cpp
+@@ -0,0 +1,134 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#include "auto_inst_divergence_characterization_pass.h"
++
++namespace {
++std::unordered_set<uint32_t> pseudo_ops = {
++    SpvOpPhi,         SpvOpFunction, SpvOpFunctionParameter,
++    SpvOpFunctionEnd, SpvOpVariable, SpvOpLoopMerge};
++
++static const std::set<uint32_t> kAllRayTracingStages = {
++    SpvExecutionModelRayGenerationNV, SpvExecutionModelAnyHitNV,
++    SpvExecutionModelClosestHitNV,    SpvExecutionModelMissNV,
++    SpvExecutionModelIntersectionNV,  SpvExecutionModelCallableNV};
++
++}  // namespace
++
++namespace spvtools {
++namespace opt {
++
++void AutoInstDivergenceCharacterizationPass::GenInst(
++    InstructionBuilder* builder, Instruction* instruction, uint32_t prim_id,
++    uint32_t stage_idx) {
++  uint32_t inst_id = GenInstCallsiteId(instruction);
++
++  auto flat_thread_id = GenFlatRtThreadId(builder, stage_idx);
++  auto active_thread_mask_id =
++      GenSubgroupBallotId(builder, builder->GetBoolConstant(true)->result_id());
++
++  GenSubgroupUpdateCall(builder, {builder->GetUintConstantId(inst_id),
++                              flat_thread_id, active_thread_mask_id});
++
++  inst_id2prim_id_[inst_id] = prim_id;
++}
++
++void AutoInstDivergenceCharacterizationPass::InitializeInstrumentation() {
++  inst_id2inst_count_.clear();
++  inst_id2prim_id_.clear();
++}
++
++bool AutoInstDivergenceCharacterizationPass::PreInstructionInstrument(
++    Instruction* inst, InstructionBuilder* builder, uint32_t stage_idx) {
++  if (inst->opcode() == SpvOpTraceNV || inst->opcode() == SpvOpTraceRayKHR) {
++    // Record when threads begin a traceRay
++    GenInst(builder, &*builder->GetInsertPoint(), kAutoInstDivCharPreTraceRay,
++            stage_idx);
++    return true;
++  }
++
++  return false;
++};
++
++bool AutoInstDivergenceCharacterizationPass::PostInstructionInstrument(
++    Instruction* inst, InstructionBuilder* builder, uint32_t stage_idx) {
++  if (inst->opcode() == SpvOpTraceNV || inst->opcode() == SpvOpTraceRayKHR) {
++    // Record when threads end a traceRay
++    GenInst(builder, &*builder->GetInsertPoint(), kAutoInstDivCharPostTraceRay,
++            stage_idx);
++    return true;
++  }
++
++  return false;
++}
++
++bool AutoInstDivergenceCharacterizationPass::PreEntryPointInstrument(
++    InstructionBuilder* builder, uint32_t stage_idx) {
++  if (stage_idx == SpvExecutionModelRayGenerationKHR) {
++    inst_id2prim_id_[kAutoInstUniqueSubgroupId] = kAutoInstUniqueSubgroupId;
++    // Create an instrumentation id which will be used by the analysis
++    // to determine how the subsequent words should be understood.
++    auto unique_warp_id_inst_id =
++        builder->GetUintConstantId(kAutoInstUniqueSubgroupId);
++
++    GenUniqueSubgroupIdFuncCall(builder, unique_warp_id_inst_id, stage_idx);
++
++    return true;
++  } else if (kAllRayTracingStages.count(stage_idx) != 0) {
++    // Record when threads run a shader during a traceRay
++    GenInst(builder,
++            builder->GetIntConstant(kAutoInstDivCharShaderEntryPoint, false),
++            kAutoInstDivCharShaderEntryPoint, stage_idx);
++    return true;
++  }
++  return false;
++}
++
++bool AutoInstDivergenceCharacterizationPass::PostEntryPointInstrument(
++    InstructionBuilder* builder, uint32_t stage_idx) {
++  if (stage_idx != SpvExecutionModelRayGenerationKHR) return false;
++
++  // Record the threads that quit the pipeline
++  GenInst(builder, builder->GetIntConstant(kAutoInstDivCharQuitPipeline, false),
++          kAutoInstDivCharQuitPipeline, stage_idx);
++
++  return true;
++}
++
++bool AutoInstDivergenceCharacterizationPass::BasicBlockInstrument(
++    BasicBlock* bb, InstructionBuilder* builder, uint32_t stage_idx) {
++  if (kAllRayTracingStages.count(stage_idx) == 0) return false;
++
++  auto inst = builder->GetInsertPoint();
++
++  // Record active threads in each basic block execution
++  GenInst(builder, &*inst, kAutoInstDivCharActiveThreads, stage_idx);
++
++  uint32_t count = 0;
++  for (auto& ii : *bb) {
++    if (pseudo_ops.count(ii.opcode()) != 0) count++;
++  }
++
++  inst_id2inst_count_[GenInstCallsiteId(&*inst)] = count;
++
++  return true;
++}
++
++void AutoInstDivergenceCharacterizationPass::FinalizeInstrumentation() {
++  static_data_callback_(std::move(inst_id2prim_id_),
++                        std::move(inst_id2inst_count_));
++}
++
++}  // namespace opt
++}  // namespace spvtools
+diff --git a/source/opt/auto_inst_divergence_characterization_pass.h b/source/opt/auto_inst_divergence_characterization_pass.h
+new file mode 100644
+index 00000000..54c967a9
+--- /dev/null
++++ b/source/opt/auto_inst_divergence_characterization_pass.h
+@@ -0,0 +1,106 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef LIBSPIRV_OPT_AUTO_INST_DIVERGENCE_CHARACTERIZATION_PASS_H_
++#define LIBSPIRV_OPT_AUTO_INST_DIVERGENCE_CHARACTERIZATION_PASS_H_
++
++#include <functional>
++
++#include "auto_inst_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++class AutoInstDivergenceCharacterizationPass : public AutoInstPass {
++ public:
++  AutoInstDivergenceCharacterizationPass(
++      uint32_t desc_set, uint32_t shader_id,
++      std::function<
++          void(std::unordered_map<uint32_t, uint32_t>&& inst_id2prim_id,
++               std::unordered_map<uint32_t, uint32_t>&& inst_id2inst_count)>
++          static_data_callback)
++      : AutoInstPass(desc_set, shader_id, kDefaultReservedWordsCnt),
++        static_data_callback_(static_data_callback) {}
++
++  const char* name() const override {
++    return "auto-inst-divergence-characterization-pass";
++  }
++
++ private:
++  // Mapping from inst callsite id to primitive id
++  std::unordered_map<AutoInstId, AutoInstId> inst_id2prim_id_;
++
++  // Mapping from inst callsite id to the number of insts in the bb
++  std::unordered_map<AutoInstId, AutoInstId> inst_id2inst_count_;
++
++  // Callback for sending static data
++  std::function<void(
++      std::unordered_map<AutoInstId, AutoInstId>&& inst_id2prim_id,
++      std::unordered_map<AutoInstId, AutoInstId>&& inst_id2inst_count)>
++      static_data_callback_;
++
++  // Generate instrumentation for this pass
++  void GenInst(InstructionBuilder* builder, Instruction* inst,
++               AutoInstId prim_id, AutoInstId stage_idx);
++
++  // Allows inheriting classes to initialize their knowledge
++  // of module before beginning instrumentation
++  void InitializeInstrumentation() override;
++
++  // Allows inheriting classes to finalize before
++  // the pass finishes executing.
++  void FinalizeInstrumentation() override;
++
++  // Any instructions added via |builder| will appear before |inst|
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will appear after |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                 uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will appear before the content of
++  // |bb|. |stage_idx| contains the SpvExecutionModel that builder is operating
++  // in. This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool BasicBlockInstrument(BasicBlock* bb, InstructionBuilder* builder,
++                            uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreEntryPointInstrument(InstructionBuilder* builder,
++                               uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostEntryPointInstrument(InstructionBuilder* builder,
++                                uint32_t stage_idx) override;
++};
++
++}  // namespace opt
++}  // namespace spvtools
++
++#endif  // LIBSPIRV_OPT_AUTO_INST_DIVERGENCE_CHARACTERIZATION_PASS_H_
+diff --git a/source/opt/auto_inst_dyn_shader_trace_pass.cpp b/source/opt/auto_inst_dyn_shader_trace_pass.cpp
+new file mode 100644
+index 00000000..74416f43
+--- /dev/null
++++ b/source/opt/auto_inst_dyn_shader_trace_pass.cpp
+@@ -0,0 +1,52 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++
++#include "auto_inst_dyn_shader_trace_pass.h"
++
++namespace {
++
++static const std::set<uint32_t> kAllRayTracingStages = {
++    SpvExecutionModelRayGenerationNV, SpvExecutionModelAnyHitNV,
++    SpvExecutionModelClosestHitNV,    SpvExecutionModelMissNV,
++    SpvExecutionModelIntersectionNV,  SpvExecutionModelCallableNV};
++}
++
++namespace spvtools {
++namespace opt {
++
++bool AutoInstDynShaderTracePass::PreEntryPointInstrument(
++    InstructionBuilder* builder, uint32_t stage_idx) {
++  // Ray Generation begins and ends the ray tracing pipeline
++  if (stage_idx == SpvExecutionModelRayGenerationNV) {
++    // Create an instrumentation id which will be used by the analysis
++    // to determine how the subsequent words should be understood.
++    auto unique_warp_id_inst_id =
++        builder->GetUintConstantId(kAutoInstUniqueSubgroupId);
++    GenUniqueSubgroupIdFuncCall(builder, unique_warp_id_inst_id, stage_idx);
++  }
++
++  auto prim_id = builder->GetUintConstantId(kAutoInstDynShaderTraceEntryPoint);
++  auto flat_thread_id = GenFlatRtThreadId(builder, stage_idx);
++  auto shader_id = builder->GetUintConstantId(shader_id_);
++  auto active_thread_mask_id =
++      GenSubgroupBallotId(builder, builder->GetBoolConstant(true)->result_id());
++  GenSubgroupUpdateCall(
++      builder, {prim_id, flat_thread_id, shader_id, active_thread_mask_id});
++
++  return true;
++}
++
++}  // namespace opt
++}  // namespace spvtools
+diff --git a/source/opt/auto_inst_dyn_shader_trace_pass.h b/source/opt/auto_inst_dyn_shader_trace_pass.h
+new file mode 100644
+index 00000000..840f8942
+--- /dev/null
++++ b/source/opt/auto_inst_dyn_shader_trace_pass.h
+@@ -0,0 +1,103 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef LIBSPIRV_OPT_AUTO_INST_DYN_SHADER_TRACE_PASS_H_
++#define LIBSPIRV_OPT_AUTO_INST_DYN_SHADER_TRACE_PASS_H_
++
++#include <functional>
++
++#include "auto_inst_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++class AutoInstDynShaderTracePass : public AutoInstPass {
++ public:
++  AutoInstDynShaderTracePass(uint32_t desc_set, uint32_t shader_id)
++      : AutoInstPass(desc_set, shader_id, kDefaultReservedWordsCnt) {}
++
++  const char* name() const override {
++    return "auto-inst-dyn-shader-trace-pass";
++  }
++
++ private:
++  // Allows inheriting classes to initialize their knowledge
++  // of module before beginning instrumentation
++  void InitializeInstrumentation() override{};
++
++  // Allows inheriting classes to finalize before
++  // the pass finishes executing.
++  void FinalizeInstrumentation() override{};
++
++  // Any instructions added via |builder| will appear before |inst|
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear after |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                 uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear before the content of
++  // |bb|. |stage_idx| contains the SpvExecutionModel that builder is operating
++  // in. This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool BasicBlockInstrument(BasicBlock* bb, InstructionBuilder* builder,
++                            uint32_t stage_idx) override {
++    (void)bb;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  }
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreEntryPointInstrument(InstructionBuilder* builder,
++                               uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostEntryPointInstrument(InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  }
++};
++
++}  // namespace opt
++}  // namespace spvtools
++
++#endif  // LIBSPIRV_OPT_AUTO_INST_DYN_SHADER_TRACE_PASS_H_
+diff --git a/source/opt/auto_inst_dyn_trace_ray_trace_pass.cpp b/source/opt/auto_inst_dyn_trace_ray_trace_pass.cpp
+new file mode 100644
+index 00000000..edd63b34
+--- /dev/null
++++ b/source/opt/auto_inst_dyn_trace_ray_trace_pass.cpp
+@@ -0,0 +1,184 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++
++#include "auto_inst_dyn_trace_ray_trace_pass.h"
++
++namespace {
++
++static const std::set<uint32_t> kAllRayTracingStages = {
++    SpvExecutionModelRayGenerationNV, SpvExecutionModelAnyHitNV,
++    SpvExecutionModelClosestHitNV,    SpvExecutionModelMissNV,
++    SpvExecutionModelIntersectionNV,  SpvExecutionModelCallableNV};
++
++static const int kEntryPointFunctionIdInIdx = 1;
++}  // namespace
++
++namespace spvtools {
++namespace opt {
++
++void AutoInstDynTraceRayTracePass::GenInst(InstructionBuilder* builder,
++                                           uint32_t inst_id, uint32_t prim_type,
++                                           uint32_t stage_idx) {
++  if (inst_id2prim_type_.count(inst_id) != 0) {
++    consumer()(SPV_MSG_ERROR, 0, {0, 0, 0},
++               "Multiple instrumentation sites with the same id detected!\n");
++    return;
++  }
++
++  auto flat_thread_id = GenFlatRtThreadId(builder, stage_idx);
++  auto active_thread_mask_id =
++      GenSubgroupBallotId(builder, builder->GetBoolConstant(true)->result_id());
++
++  GenSubgroupUpdateCall(builder, {builder->GetUintConstantId(inst_id),
++                              flat_thread_id, active_thread_mask_id});
++
++  inst_id2prim_type_[inst_id] = prim_type;
++}
++
++void AutoInstDynTraceRayTracePass::InitializeInstrumentation() {
++  inst_id2prim_type_.clear();
++  fn_id_2_divergent_ids_.clear();
++  merge_id_2_divergent_ids_.clear();
++  loop_begin_bb_ids_.clear();
++
++  Function* entry_point_func = nullptr;
++
++  for (auto e : get_module()->entry_points()) {
++    auto func_id = e.GetSingleWordInOperand(kEntryPointFunctionIdInIdx);
++    entry_point_func = id2function_[func_id];
++  }
++
++  auto active_merge_ids = std::stack<uint32_t>();
++  PopulateDivergentLabelsInfo(entry_point_func, active_merge_ids);
++}
++
++bool AutoInstDynTraceRayTracePass::PreEntryPointInstrument(
++    InstructionBuilder* builder, uint32_t stage_idx) {
++  if (stage_idx != SpvExecutionModelRayGenerationKHR) return false;
++
++  // Create an instrumentation id which will be used by the analysis
++  // to determine how the subsequent words should be understood.
++  auto unique_warp_id_inst_id =
++      builder->GetUintConstantId(kAutoInstUniqueSubgroupId);
++
++  // This instrumentation is unique across the pipeline so it is sufficient
++  // to choose an inst_id that can never alias with the other types of
++  // instrumentation.
++  inst_id2prim_type_[kAutoInstUniqueSubgroupId] = kAutoInstUniqueSubgroupId;
++
++  GenUniqueSubgroupIdFuncCall(builder, unique_warp_id_inst_id, stage_idx);
++
++  return true;
++}
++
++bool AutoInstDynTraceRayTracePass::BasicBlockInstrument(
++    BasicBlock* bb, InstructionBuilder* builder, uint32_t stage_idx) {
++  if (kAllRayTracingStages.count(stage_idx) == 0) return false;
++
++  if (merge_id_2_divergent_ids_.count(bb->id()) != 0) {
++    GenInst(builder, bb->id(), kAutoInstTraceRayTraceMergePoint, stage_idx);
++    return true;
++  }
++
++  for (auto& ii : *bb) {
++    if (ii.opcode() == SpvOpTraceRayKHR || ii.opcode() == SpvOpTraceNV) {
++      builder->SetInsertPoint(&ii);
++      GenInst(builder, bb->id(), kAutoInstTraceRayTracePreTraceRay, stage_idx);
++      return true;
++    }
++  }
++
++  return false;
++}
++
++void AutoInstDynTraceRayTracePass::FinalizeInstrumentation() {
++  static_data_callback_(std::move(inst_id2prim_type_),
++                        std::move(merge_id_2_divergent_ids_));
++}
++
++void AutoInstDynTraceRayTracePass::PopulateDivergentLabelsInfo(
++    Function* func, std::stack<uint32_t>& active_merge_ids) {
++  if (fn_id_2_divergent_ids_.count(func->result_id()) > 0) return;
++
++  bool is_divergent_control_flow = active_merge_ids.size() > 0;
++  std::vector<uint32_t> divergent_labels;
++  std::stack<uint32_t> active_loop_ids;
++
++  for (auto& blk : *func) {
++    if (active_merge_ids.size() > 0 && blk.id() == active_merge_ids.top()) {
++      // Need to move the merge label to the beginning of the loop
++      // iteration in order to determine how many times the label was visited at
++      // runtime
++      if (active_loop_ids.size() > 0) {
++        if (merge_id_2_divergent_ids_.count(active_merge_ids.top()) > 0) {
++          loop_begin_bb_ids_.insert(active_loop_ids.top());
++        }
++        merge_id_2_divergent_ids_[active_loop_ids.top()] =
++            merge_id_2_divergent_ids_[active_merge_ids.top()];
++        merge_id_2_divergent_ids_.erase(active_merge_ids.top());
++        active_loop_ids.pop();
++      }
++      active_merge_ids.pop();
++    }
++
++    for (auto& inst : blk) {
++      // Determine divergent labels to track
++      if (inst.opcode() == SpvOpTraceRayKHR || inst.opcode() == SpvOpTraceNV) {
++        divergent_labels.push_back(blk.id());
++      } else if (inst.opcode() == SpvOpFunctionCall) {
++        // Add divergent labels according to func being called
++        auto func_to_call_id = inst.GetSingleWordOperand(2);
++        if (fn_id_2_divergent_ids_.count(func_to_call_id) == 0) {
++          // recurse if fn not discovered yet
++          PopulateDivergentLabelsInfo(id2function_[func_to_call_id],
++                                      active_merge_ids);
++        }
++        divergent_labels = fn_id_2_divergent_ids_[func_to_call_id];
++
++      } else if (inst.opcode() == SpvOpSelectionMerge ||
++                 inst.opcode() == SpvOpLoopMerge) {
++        auto merge_id = inst.GetSingleWordOperand(0);
++
++        if (active_merge_ids.size() == 0) {
++          active_merge_ids.push(merge_id);
++        } else if (inst.opcode() == SpvOpLoopMerge) {
++          active_merge_ids.push(merge_id);
++          active_loop_ids.push(inst.GetSingleWordOperand(1));
++        }
++      }
++
++      // Update datastructures with divergent labels
++      if (divergent_labels.size() > 0) {
++        fn_id_2_divergent_ids_[func->result_id()].insert(
++            fn_id_2_divergent_ids_[func->result_id()].end(),
++            divergent_labels.begin(), divergent_labels.end());
++
++        // Update all active to-be-merged labels
++        if (active_merge_ids.size() > 0 && !is_divergent_control_flow) {
++          auto id = active_merge_ids.top();
++
++          merge_id_2_divergent_ids_[id].insert(
++              merge_id_2_divergent_ids_[id].end(), divergent_labels.begin(),
++              divergent_labels.end());
++        }
++
++        divergent_labels.clear();
++      }
++    }
++  }
++}
++
++}  // namespace opt
++}  // namespace spvtools
+diff --git a/source/opt/auto_inst_dyn_trace_ray_trace_pass.h b/source/opt/auto_inst_dyn_trace_ray_trace_pass.h
+new file mode 100644
+index 00000000..d095398d
+--- /dev/null
++++ b/source/opt/auto_inst_dyn_trace_ray_trace_pass.h
+@@ -0,0 +1,135 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef LIBSPIRV_OPT_AUTO_INST_DYN_TRACE_RAY_TRACE_PASS_H_
++#define LIBSPIRV_OPT_AUTO_INST_DYN_TRACE_RAY_TRACE_PASS_H_
++
++#include <functional>
++
++#include "auto_inst_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++class AutoInstDynTraceRayTracePass : public AutoInstPass {
++ public:
++  AutoInstDynTraceRayTracePass(
++      uint32_t desc_set, uint32_t shader_id,
++      std::function<void(std::unordered_map<uint32_t, uint32_t>&&,
++                         std::unordered_map<uint32_t, std::vector<uint32_t>>&&)>
++          static_data_callback)
++      : AutoInstPass(desc_set, shader_id, kDefaultReservedWordsCnt),
++        static_data_callback_(static_data_callback) {}
++
++  const char* name() const override {
++    return "auto-inst-dyn-trace-ray-trace-pass";
++  }
++
++ private:
++  // Callback to transfer static data to creator of the pass.
++  std::function<void(std::unordered_map<uint32_t, uint32_t>&&,
++                     std::unordered_map<uint32_t, std::vector<uint32_t>>&&)>
++      static_data_callback_;
++
++  // Static data which forms a mapping from instrumentation callsite id
++  // to the instructions in the basic block.
++  std::unordered_map<uint32_t, uint32_t> inst_id2prim_type_;
++
++  // Static data which contains the mapping of MergePoint instrumentation
++  // to all the traceRay callsites that must have executed.
++  std::unordered_map<uint32_t, std::vector<uint32_t>> merge_id_2_divergent_ids_;
++
++  // Memoization table for each function
++  std::unordered_map<uint32_t, std::vector<uint32_t>> fn_id_2_divergent_ids_;
++
++  // Which bbs to add instrumentation before to track loop iterations.
++  std::set<uint32_t> loop_begin_bb_ids_;
++
++  // Generate instrumentation for this pass
++  void GenInst(InstructionBuilder* builder, uint32_t inst_id,
++               uint32_t prim_type, uint32_t stage_idx);
++
++  // Allows inheriting classes to initialize their knowledge
++  // of module before beginning instrumentation
++  void InitializeInstrumentation() override;
++
++  // Allows inheriting classes to finalize before
++  // the pass finishes executing.
++  void FinalizeInstrumentation() override;
++
++  // Any instructions added via |builder| will appear before |inst|
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear after |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                 uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  }
++
++  // Any instructions added via |builder| will appear before the content of
++  // |bb|. |stage_idx| contains the SpvExecutionModel that builder is operating
++  // in. This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool BasicBlockInstrument(BasicBlock* bb, InstructionBuilder* builder,
++                            uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreEntryPointInstrument(InstructionBuilder* builder,
++                               uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostEntryPointInstrument(InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // This function generates an analysis of |func| to determine
++  // 1) the SpvOpTraceRays that exist within control-flow.
++  // 2) where to add instrumentation to detect loop iterations and
++  //    opportunities to execute traceRays.
++  //
++  // This allows runtime traceRay calls to be disambiguated.
++  void PopulateDivergentLabelsInfo(Function* func,
++                                   std::stack<uint32_t>& active_merge_ids);
++};
++
++}  // namespace opt
++}  // namespace spvtools
++
++#endif  // LIBSPIRV_OPT_AUTO_INST_DYN_TRACE_RAY_TRACE_PASS_H_
+diff --git a/source/opt/auto_inst_execution_trace_pass.cpp b/source/opt/auto_inst_execution_trace_pass.cpp
+new file mode 100644
+index 00000000..3eeff48e
+--- /dev/null
++++ b/source/opt/auto_inst_execution_trace_pass.cpp
+@@ -0,0 +1,68 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#include "auto_inst_execution_trace_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++void AutoInstExecutionTracePass::InitializeInstrumentation() {
++  inst_id2bb_inst_ids_.clear();
++  inst_id2opcode_.clear();
++}
++
++bool AutoInstExecutionTracePass::BasicBlockInstrument(
++    BasicBlock* bb, InstructionBuilder* builder, uint32_t stage_idx) {
++  (void)stage_idx;
++  auto module_offset = uid2offset_[bb->begin()->unique_id()];
++  if (shader_id_ >= (1 << 12) || module_offset >= (1 << 20)) {
++    std::string message =
++        "Shader id count or shader module size are too large!\n";
++    consumer()(SPV_MSG_ERROR, 0, {0, 0, 0}, message.c_str());
++    return false;
++  }
++
++  // Create an instrumentation callsite id that is unique across
++  // the whole pipeline by including the shader id in the upper bits.
++  auto inst = &*builder->GetInsertPoint();
++
++  uint32_t inst_id = GenInstCallsiteId(inst);
++
++  for (auto inst_itr : *bb) {
++    auto other_inst_id = GenInstCallsiteId(&inst_itr);
++
++    // Create group of instructions which must execute
++    // if the instrumentation executed.
++    inst_id2bb_inst_ids_[inst_id].insert(other_inst_id);
++    // Add opcode to the static metadata map so it can be added
++    // to a dynamic opcode total.
++    inst_id2opcode_[other_inst_id] = inst_itr.opcode();
++  }
++  // Write the same inst_id as in the static data so that when a
++  // buffer entry is parsed, the inst_id can be used to look up
++  // the other instructions that must have also been executed.
++  auto active_thread_mask_id =
++      GenSubgroupBallotId(builder, builder->GetBoolConstant(true)->result_id());
++  GenSubgroupUpdateCall(
++      builder, {builder->GetUintConstantId(inst_id), active_thread_mask_id});
++  return true;
++}
++
++void AutoInstExecutionTracePass::FinalizeInstrumentation() {
++  static_data_callback_(std::move(inst_id2bb_inst_ids_),
++                        std::move(inst_id2opcode_));
++}
++
++}  // namespace opt
++}  // namespace spvtools
+diff --git a/source/opt/auto_inst_execution_trace_pass.h b/source/opt/auto_inst_execution_trace_pass.h
+new file mode 100644
+index 00000000..124f3ecd
+--- /dev/null
++++ b/source/opt/auto_inst_execution_trace_pass.h
+@@ -0,0 +1,122 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef LIBSPIRV_OPT_AUTO_INST_EXECUTION_TRACE_PASS_H_
++#define LIBSPIRV_OPT_AUTO_INST_EXECUTION_TRACE_PASS_H_
++
++#include <functional>
++
++#include "auto_inst_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++class AutoInstExecutionTracePass : public AutoInstPass {
++ public:
++  AutoInstExecutionTracePass(
++      uint32_t desc_set, uint32_t shader_id,
++      std::function<
++          void(std::unordered_map<uint32_t, std::set<uint32_t>>&&
++                   inst_id2bb_inst_ids,
++               std::unordered_map<uint32_t, uint32_t>&& inst_id2opcode)>
++          static_data_callback)
++      : AutoInstPass(desc_set, shader_id, kDefaultReservedWordsCnt),
++        static_data_callback_(static_data_callback) {}
++
++  const char* name() const override { return "auto-inst-execution-trace-pass"; }
++
++ private:
++  // Callback to transfer static data to creator of the pass.
++  const std::function<void(
++      std::unordered_map<uint32_t, std::set<uint32_t>>&& inst_id2bb_inst_ids,
++      std::unordered_map<uint32_t, uint32_t>&& inst_id2opcode)>
++      static_data_callback_;
++
++  // Static data which forms a mapping from instrumentation callsite id
++  // to the ids of other instructions in the basic block.
++  std::unordered_map<uint32_t, std::set<uint32_t>> inst_id2bb_inst_ids_;
++
++  // Static data which forms a mappign from inst_id to opcode.
++  // This together with |inst_id2bb_inst_ids_| gives the runtime
++  // instruction mix.
++  std::unordered_map<uint32_t, uint32_t> inst_id2opcode_;
++
++  // Allows inheriting classes to initialize their knowledge
++  // of module before beginning instrumentation
++  void InitializeInstrumentation() override;
++
++  // Allows inheriting classes to finalize before
++  // the pass finishes executing.
++  void FinalizeInstrumentation() override;
++
++  // Any instructions added via |builder| will appear before |inst|
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear after |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                 uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear before the content of
++  // |bb|. |stage_idx| contains the SpvExecutionModel that builder is operating
++  // in. This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool BasicBlockInstrument(BasicBlock* bb, InstructionBuilder* builder,
++                            uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreEntryPointInstrument(InstructionBuilder* builder,
++                               uint32_t stage_idx) override {
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  }
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostEntryPointInstrument(InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++};
++
++}  // namespace opt
++}  // namespace spvtools
++
++#endif  // LIBSPIRV_OPT_AUTO_INST_EXECUTION_TRACE_PASS_H_
+diff --git a/source/opt/auto_inst_pass.cpp b/source/opt/auto_inst_pass.cpp
+new file mode 100644
+index 00000000..6a5f7f60
+--- /dev/null
++++ b/source/opt/auto_inst_pass.cpp
+@@ -0,0 +1,927 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++
++#include "auto_inst_pass.h"
++
++namespace {
++
++// Operand indices of SpvOpEntryPoint
++static const int kEntryPointFunctionIdInIdx = 1;
++static const int kEntryPointExecutionModelInIdx = 0;
++
++// Type of function from OpFunction
++static const int kFunctionTypeIdx = 3;
++
++// UniqueSubgroupId function constants
++static const int kUniqueSubgroupIdParamCnt = 1;
++static const int kUniqueSubgroupIdParamInstIdIdx = 0;
++}  // namespace
++
++namespace spvtools {
++namespace opt {
++
++bool AutoInstPass::HandleInstrumentHooks(
++    BasicBlock::iterator ref_inst_itr,
++    UptrVectorIterator<BasicBlock> ref_block_itr, uint32_t stage_idx,
++    InstructionBuilder* builder) {
++  bool is_instrumented = false;
++
++  // Initialize instrumentation validity based on inst opcode.
++  bool skip_pre_instrumentation =
++      uninstrumentable_pre_ops.count(ref_inst_itr->opcode()) > 0;
++  bool skip_post_instrumentation =
++      uninstrumentable_post_ops.count(ref_inst_itr->opcode()) > 0;
++
++  if (ref_block_itr->GetParent()->begin() == ref_block_itr) {
++    // Despite the SPIR-V specification stating:
++    // "All OpVariable instructions in a function must be in the first block in
++    // the function. " The real restriction is as follows: "All OpVariable
++    // instructions in a function must be the first instructions in the first
++    // block." Therefore this check prevents instrumenting OpVariables in the
++    // first block of a function.
++    if (ref_inst_itr->opcode() == SpvOpVariable) {
++      skip_pre_instrumentation = true;
++    }
++    if (std::next(ref_inst_itr) != ref_block_itr->end() &&
++        std::next(ref_inst_itr)->opcode() == SpvOpVariable) {
++      skip_post_instrumentation = true;
++    }
++  }
++
++  if (skip_pre_instrumentation && skip_post_instrumentation) return false;
++
++  if (!skip_pre_instrumentation) {
++    // set insert point to immediately before current inst
++    builder->SetInsertPoint(&*ref_inst_itr);
++
++    if (instrumented_bb_ids.count(ref_block_itr->id()) == 0) {
++      is_instrumented |=
++          BasicBlockInstrument(&*ref_block_itr, builder, stage_idx);
++    }
++
++    if (instrumented_inst_ids.count(ref_inst_itr->unique_id()) == 0) {
++      is_instrumented |=
++          PreInstructionInstrument(&*ref_inst_itr, builder, stage_idx);
++    }
++  }
++  if (!skip_post_instrumentation) {
++    if (instrumented_inst_ids.count(ref_inst_itr->unique_id()) == 0) {
++      // Before next inst is after this inst
++      builder->SetInsertPoint(&*std::next(ref_inst_itr));
++      is_instrumented |=
++          PostInstructionInstrument(&*ref_inst_itr, builder, stage_idx);
++    }
++  }
++
++  if (is_instrumented) {
++    // Record the bb and inst that were just visited
++    instrumented_bb_ids.insert(ref_block_itr->id());
++    instrumented_inst_ids.insert(ref_inst_itr->unique_id());
++  }
++
++  return is_instrumented;
++}
++
++void AutoInstPass::GenInstProgrammableCode(
++    BasicBlock::iterator ref_inst_itr,
++    UptrVectorIterator<BasicBlock> ref_block_itr, uint32_t stage_idx) {
++  // Initialize DefUse manager before dismantling module
++  (void)get_def_use_mgr();
++
++  InstructionBuilder builder(context(), &*ref_block_itr);
++
++  bool is_instrumented =
++      HandleInstrumentHooks(ref_inst_itr, ref_block_itr, stage_idx, &builder);
++  if (!is_instrumented) return;
++  has_added_instrumentation_ = true;
++}
++
++uint32_t AutoInstPass::GenSubgroupBallotId(InstructionBuilder* builder,
++                                           uint32_t pred_id) {
++  if (!get_feature_mgr()->HasExtension(kSPV_KHR_subgroup_vote)) {
++    context()->AddExtension("SPV_KHR_subgroup_vote");
++  }
++
++  if (!get_feature_mgr()->HasCapability(SpvCapabilityGroupNonUniformBallot)) {
++    context()->AddCapability(SpvCapabilityGroupNonUniformBallot);
++  }
++
++  uint32_t scope_ballot_idx = builder->GetUintConstantId(SpvScopeSubgroup);
++  Instruction* ballot_inst = builder->AddBinaryOp(
++      GetVec4UintId(), SpvOpGroupNonUniformBallot, scope_ballot_idx, pred_id);
++
++  return builder
++      ->AddIdLiteralOp(GetUintId(), SpvOpCompositeExtract,
++                       ballot_inst->result_id(), 0)
++      ->result_id();
++}
++
++std::pair<uint32_t, uint32_t> AutoInstPass::GenReadClockIds(
++    InstructionBuilder* builder) {
++  if (!get_feature_mgr()->HasExtension(kSPV_KHR_shader_clock)) {
++    context()->AddExtension("SPV_KHR_shader_clock");
++  }
++
++  if (!get_feature_mgr()->HasCapability(SpvCapabilityShaderClockKHR)) {
++    context()->AddCapability(SpvCapabilityShaderClockKHR);
++  }
++
++  auto time_inst =
++      builder->AddUnaryOp(GetVecUintId(2u), SpvOpReadClockKHR,
++                          builder->GetUintConstantId(SpvScopeDevice));
++  Instruction* time_lower = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, time_inst->result_id(), 0);
++  Instruction* time_upper = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, time_inst->result_id(), 1);
++  return std::make_pair(time_lower->result_id(), time_upper->result_id());
++}
++
++uint32_t AutoInstPass::GenFlatRtThreadId(InstructionBuilder* builder,
++                                         uint32_t stage_idx) {
++  switch (stage_idx) {
++    case SpvExecutionModelRayGenerationNV:
++    case SpvExecutionModelIntersectionNV:
++    case SpvExecutionModelAnyHitNV:
++    case SpvExecutionModelClosestHitNV:
++    case SpvExecutionModelMissNV:
++    case SpvExecutionModelCallableNV: {
++      auto launch_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInLaunchIdKHR), builder);
++      Instruction* launch_x = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_id, 0);
++      Instruction* launch_y = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_id, 1);
++      Instruction* launch_z = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_id, 2);
++
++      auto launch_size_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInLaunchSizeKHR), builder);
++      Instruction* launch_size_x = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_size_id, 0);
++      Instruction* launch_size_y = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_size_id, 1);
++
++      auto xy_size = builder->AddBinaryOp(GetUintId(), SpvOpIMul,
++                                          launch_size_x->result_id(),
++                                          launch_size_y->result_id());
++      auto z_term = builder->AddBinaryOp(
++          GetUintId(), SpvOpIMul, launch_z->result_id(), xy_size->result_id());
++
++      auto y_term =
++          builder->AddBinaryOp(GetUintId(), SpvOpIMul, launch_y->result_id(),
++                               launch_size_x->result_id());
++
++      auto flat_thread_id = builder->AddBinaryOp(
++          GetUintId(), SpvOpIAdd, z_term->result_id(), y_term->result_id());
++      flat_thread_id = builder->AddBinaryOp(GetUintId(), SpvOpIAdd,
++                                            flat_thread_id->result_id(),
++                                            launch_x->result_id());
++      return flat_thread_id->result_id();
++    }
++
++    default:
++      consumer()(
++          SPV_MSG_ERROR, 0, {0, 0, 0},
++          "Cannot create a flattened rt thread id for requested shader stage! "
++          "Defaulting to 0.\n");
++      return builder->GetUintConstantId(0);
++  }
++}
++
++uint32_t AutoInstPass::GenFlatComputeThreadId(InstructionBuilder* builder,
++                                              uint32_t stage_idx) {
++  if (stage_idx != SpvExecutionModelGLCompute) {
++    consumer()(SPV_MSG_ERROR, 0, {0, 0, 0},
++               "Cannot create a flattened compute thread id for requested "
++               "shader stage! "
++               "Defaulting to 0.\n");
++    return builder->GetUintConstantId(0);
++  }
++  auto invocation_id = GenVarLoad(
++      context()->GetBuiltinInputVarId(SpvBuiltInGlobalInvocationId), builder);
++  Instruction* invocation_x = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, invocation_id, 0);
++  Instruction* invocation_y = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, invocation_id, 1);
++  Instruction* invocation_z = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, invocation_id, 2);
++
++  auto num_workgroups_id = GenVarLoad(
++      context()->GetBuiltinInputVarId(SpvBuiltInNumWorkgroups), builder);
++  Instruction* num_workgroups_x = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, num_workgroups_id, 0);
++  Instruction* num_workgroups_y = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, num_workgroups_id, 1);
++
++  auto workgroup_size_id = GenVarLoad(
++      context()->GetBuiltinInputVarId(SpvBuiltInWorkgroupSize), builder);
++
++  Instruction* workgroup_size_x = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, workgroup_size_id, 0);
++  Instruction* workgroup_size_y = builder->AddIdLiteralOp(
++      GetUintId(), SpvOpCompositeExtract, workgroup_size_id, 1);
++
++  Instruction* global_size_x = builder->AddBinaryOp(
++      GetUintId(), SpvOpIMul, num_workgroups_x->result_id(),
++      workgroup_size_x->result_id());
++
++  Instruction* global_size_y = builder->AddBinaryOp(
++      GetUintId(), SpvOpIMul, num_workgroups_y->result_id(),
++      workgroup_size_y->result_id());
++
++  auto xy_size =
++      builder->AddBinaryOp(GetUintId(), SpvOpIMul, global_size_x->result_id(),
++                           global_size_y->result_id());
++  auto z_term = builder->AddBinaryOp(
++      GetUintId(), SpvOpIMul, invocation_z->result_id(), xy_size->result_id());
++
++  auto y_term =
++      builder->AddBinaryOp(GetUintId(), SpvOpIMul, invocation_y->result_id(),
++                           global_size_x->result_id());
++
++  auto flat_thread_id = builder->AddBinaryOp(
++      GetUintId(), SpvOpIAdd, z_term->result_id(), y_term->result_id());
++  flat_thread_id =
++      builder->AddBinaryOp(GetUintId(), SpvOpIAdd, flat_thread_id->result_id(),
++                           invocation_x->result_id());
++  return flat_thread_id->result_id();
++}
++
++std::vector<uint32_t> AutoInstPass::GenThreadId(InstructionBuilder* builder,
++                                                uint32_t stage_idx) {
++  switch (stage_idx) {
++    case SpvExecutionModelVertex: {
++      // Load and store VertexId and InstanceId
++      auto vertex_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInVertexIndex), builder);
++      auto instance_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInInstanceIndex), builder);
++      return {vertex_id, instance_id};
++    }
++    case SpvExecutionModelGLCompute: {
++      // Load and store GlobalInvocationId.
++
++      uint32_t load_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInGlobalInvocationId),
++          builder);
++      Instruction* x_inst = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, load_id, 0);
++      Instruction* y_inst = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, load_id, 1);
++      Instruction* z_inst = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, load_id, 2);
++      return {x_inst->result_id(), y_inst->result_id(), z_inst->result_id()};
++    }
++    case SpvExecutionModelTessellationControl:
++    case SpvExecutionModelGeometry: {
++      // Load and store PrimitiveId and InvocationId.
++      auto primitive_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInPrimitiveId), builder);
++      auto instance_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInInvocationId), builder);
++      return {primitive_id, instance_id};
++    }
++
++    case SpvExecutionModelTessellationEvaluation: {
++      // Load and store PrimitiveId and TessCoord.uv
++      auto primitive_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInPrimitiveId), builder);
++      uint32_t load_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInTessCoord), builder);
++      Instruction* uvec3_cast_inst =
++          builder->AddUnaryOp(GetVec3UintId(), SpvOpBitcast, load_id);
++      uint32_t uvec3_cast_id = uvec3_cast_inst->result_id();
++      Instruction* u_inst = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, uvec3_cast_id, 0);
++      Instruction* v_inst = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, uvec3_cast_id, 1);
++      return {primitive_id, u_inst->result_id(), v_inst->result_id()};
++    }
++    case SpvExecutionModelFragment: {
++      // Load FragCoord and convert to Uint
++      Instruction* frag_coord_inst = builder->AddUnaryOp(
++          GetVec4FloatId(), SpvOpLoad,
++          context()->GetBuiltinInputVarId(SpvBuiltInFragCoord));
++      Instruction* uint_frag_coord_inst = builder->AddUnaryOp(
++          GetVec4UintId(), SpvOpBitcast, frag_coord_inst->result_id());
++      Instruction* x_inst =
++          builder->AddIdLiteralOp(GetUintId(), SpvOpCompositeExtract,
++                                  uint_frag_coord_inst->result_id(), 0);
++      Instruction* y_inst =
++          builder->AddIdLiteralOp(GetUintId(), SpvOpCompositeExtract,
++                                  uint_frag_coord_inst->result_id(), 1);
++      Instruction* z_inst =
++          builder->AddIdLiteralOp(GetUintId(), SpvOpCompositeExtract,
++                                  uint_frag_coord_inst->result_id(), 2);
++      return {x_inst->result_id(), y_inst->result_id(), z_inst->result_id()};
++    }
++    case SpvExecutionModelRayGenerationNV:
++    case SpvExecutionModelIntersectionNV:
++    case SpvExecutionModelAnyHitNV:
++    case SpvExecutionModelClosestHitNV:
++    case SpvExecutionModelMissNV:
++    case SpvExecutionModelCallableNV: {
++      // Load and store LaunchIdNV.
++      auto launch_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInLaunchIdKHR), builder);
++      Instruction* launch_x = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_id, 0);
++      Instruction* launch_y = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_id, 1);
++      Instruction* launch_z = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_id, 2);
++
++      auto launch_size_id = GenVarLoad(
++          context()->GetBuiltinInputVarId(SpvBuiltInLaunchSizeKHR), builder);
++      Instruction* launch_size_x = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_size_id, 0);
++      Instruction* launch_size_y = builder->AddIdLiteralOp(
++          GetUintId(), SpvOpCompositeExtract, launch_size_id, 1);
++
++      auto xy_size = builder->AddBinaryOp(GetUintId(), SpvOpIMul,
++                                          launch_size_x->result_id(),
++                                          launch_size_y->result_id());
++      auto z_term = builder->AddBinaryOp(
++          GetUintId(), SpvOpIMul, launch_z->result_id(), xy_size->result_id());
++
++      auto y_term =
++          builder->AddBinaryOp(GetUintId(), SpvOpIMul, launch_y->result_id(),
++                               launch_size_x->result_id());
++
++      auto flat_thread_id = builder->AddBinaryOp(
++          GetUintId(), SpvOpIAdd, z_term->result_id(), y_term->result_id());
++      flat_thread_id = builder->AddBinaryOp(GetUintId(), SpvOpIAdd,
++                                            flat_thread_id->result_id(),
++                                            launch_x->result_id());
++      return {flat_thread_id->result_id()};
++    }
++    default: {
++      consumer()(SPV_MSG_ERROR, 0, {0, 0, 0},
++                 "Cannot create a thread id for requested shader stage!\n");
++      return {};
++    }
++  }
++}
++
++uint32_t AutoInstPass::GenInstCallsiteId(Instruction* inst) {
++  auto module_offset = uid2offset_[inst->unique_id()];
++  if (shader_id_ >= (1 << 12) || module_offset >= (1 << 20)) {
++    std::string message =
++        "Shader id count or shader module size are too large!\n";
++    consumer()(SPV_MSG_ERROR, 0, {0, 0, 0}, message.c_str());
++    return 0;
++  }
++
++  // Create an instrumentation callsite id that is unique across
++  // the whole pipeline by including the shader id in the upper bits.
++  return (shader_id_ << 20) | module_offset;
++}
++
++uint32_t AutoInstPass::GenSubgroupLocalInvocationId(
++    InstructionBuilder* builder) {
++  if (!get_feature_mgr()->HasCapability(SpvCapabilityGroupNonUniform)) {
++    context()->AddCapability(SpvCapabilityGroupNonUniform);
++  }
++  return GenVarLoad(
++      context()->GetBuiltinInputVarId(SpvBuiltInSubgroupLocalInvocationId),
++      builder);
++}
++
++std::unique_ptr<BasicBlock> AutoInstPass::GenIfStatement(
++    uint32_t condition_id, std::unique_ptr<BasicBlock> curr_block,
++    std::function<std::unique_ptr<BasicBlock>(InstructionBuilder* builder,
++                                              std::unique_ptr<BasicBlock>)>
++        inside_if_callback) {
++  auto output_func = curr_block->GetParent();
++  InstructionBuilder builder(
++      context(), &*curr_block,
++      IRContext::kAnalysisDefUse | IRContext::kAnalysisInstrToBlockMapping);
++  uint32_t merge_blk_id = TakeNextId();
++  uint32_t inside_if_blk_id = TakeNextId();
++  std::unique_ptr<Instruction> merge_label(NewLabel(merge_blk_id));
++  std::unique_ptr<Instruction> inside_if_label(NewLabel(inside_if_blk_id));
++  (void)builder.AddConditionalBranch(condition_id, inside_if_blk_id,
++                                     merge_blk_id, merge_blk_id,
++                                     SpvSelectionControlMaskNone);
++
++  output_func->AddBasicBlock(std::move(curr_block));
++  curr_block = MakeUnique<BasicBlock>(std::move(inside_if_label));
++  curr_block->SetParent(&*output_func);
++
++  builder.SetInsertPoint(&*curr_block);
++
++  curr_block = inside_if_callback(&builder, std::move(curr_block));
++
++  builder.SetInsertPoint(&*curr_block);
++  if (!curr_block->IsReturn()) (void)builder.AddBranch(merge_blk_id);
++
++  output_func->AddBasicBlock(std::move(curr_block));
++  curr_block = MakeUnique<BasicBlock>(std::move(merge_label));
++  curr_block->SetParent(&*output_func);
++  return curr_block;
++}
++
++std::unique_ptr<BasicBlock> AutoInstPass::GenThreadUpdate(
++    InstructionBuilder* builder, std::unique_ptr<BasicBlock> curr_block,
++    std::vector<uint32_t> element_ids) {
++  uint32_t buf_id = GetOutputBufferId();
++  uint32_t buf_uint_ptr_id = GetOutputBufferPtrId();
++  if (element_ids.size() > 65535) {
++    std::string message =
++        "ThreadUpdate does not support more than 65535 elements in a single "
++        "entry!";
++    consumer()(SPV_MSG_ERROR, 0, {0, 0, 0}, message.c_str());
++  }
++  // Compute size of entry that will be written to the buffer.
++  uint32_t entry_size =
++      builder->GetUintConstantId((uint32_t)element_ids.size());
++
++  // Update number of words written
++  uint32_t mask_none_id = builder->GetUintConstantId(SpvMemoryAccessMaskNone);
++  uint32_t scope_invok_id = builder->GetUintConstantId(SpvScopeInvocation);
++  Instruction* buffer_consumed_ptr =
++      builder->AddBinaryOp(buf_uint_ptr_id, SpvOpAccessChain, buf_id,
++                           builder->GetUintConstantId(kDebugOutputSizeOffset));
++  Instruction* write_offset = builder->AddQuadOp(
++      GetUintId(), SpvOpAtomicIAdd, buffer_consumed_ptr->result_id(),
++      scope_invok_id, mask_none_id, entry_size);
++
++  Instruction* updated_consumed_value = builder->AddBinaryOp(
++      GetUintId(), SpvOpIAdd, write_offset->result_id(), entry_size);
++  updated_consumed_value = builder->AddBinaryOp(
++      GetUintId(), SpvOpIAdd, updated_consumed_value->result_id(),
++      builder->GetUintConstantId(reserved_words_count_));
++  Instruction* buffer_capacity =
++      builder->AddIdLiteralOp(GetUintId(), SpvOpArrayLength,
++                              GetOutputBufferId(), kDebugOutputDataOffset);
++
++  Instruction* out_of_bounds_cond = builder->AddBinaryOp(
++      GetBoolId(), SpvOpUGreaterThanEqual, updated_consumed_value->result_id(),
++      buffer_capacity->result_id());
++
++  curr_block =
++      GenIfStatement(out_of_bounds_cond->result_id(), std::move(curr_block),
++                     [this](InstructionBuilder* ir_builder,
++                            std::unique_ptr<BasicBlock> block) {
++                       ir_builder->AddNullaryOp(0, SpvOpReturn);
++                       return block;
++                     });
++  builder->SetInsertPoint(&*curr_block);
++
++  uint32_t i = reserved_words_count_;
++  for (auto it : element_ids) {
++    Instruction* element_offset =
++        builder->AddBinaryOp(GetUintId(), SpvOpIAdd, write_offset->result_id(),
++                             builder->GetUintConstantId(i));
++    Instruction* offset_ptr = builder->AddTernaryOp(
++        buf_uint_ptr_id, SpvOpAccessChain, buf_id,
++        builder->GetUintConstantId(kDebugOutputDataOffset),
++        element_offset->result_id());
++    (void)builder->AddStore(offset_ptr->result_id(), it);
++    i++;
++  }
++
++  return curr_block;
++}
++
++uint32_t AutoInstPass::GetThreadUpdateFuncId(uint32_t num_parameters) {
++  if (param_cnt2thread_update_func_id_[num_parameters] == 0) {
++    // Create function
++    param_cnt2thread_update_func_id_[num_parameters] = TakeNextId();
++    analysis::TypeManager* type_mgr = context()->get_type_mgr();
++    std::vector<const analysis::Type*> param_types;
++    for (uint32_t c = 0; c < num_parameters; ++c)
++      param_types.push_back(type_mgr->GetType(GetUintId()));
++    analysis::Function func_ty(type_mgr->GetType(GetVoidId()), param_types);
++    analysis::Type* reg_func_ty = type_mgr->GetRegisteredType(&func_ty);
++    std::unique_ptr<Instruction> func_inst(
++        new Instruction(get_module()->context(), SpvOpFunction, GetVoidId(),
++                        param_cnt2thread_update_func_id_[num_parameters],
++                        {{spv_operand_type_t::SPV_OPERAND_TYPE_LITERAL_INTEGER,
++                          {SpvFunctionControlMaskNone}},
++                         {spv_operand_type_t::SPV_OPERAND_TYPE_ID,
++                          {type_mgr->GetTypeInstruction(reg_func_ty)}}}));
++    get_def_use_mgr()->AnalyzeInstDefUse(&*func_inst);
++    std::unique_ptr<Function> output_func =
++        MakeUnique<Function>(std::move(func_inst));
++    // Add parameters
++    std::vector<uint32_t> param_vec;
++    for (uint32_t c = 0; c < num_parameters; ++c) {
++      uint32_t pid = TakeNextId();
++      param_vec.push_back(pid);
++      std::unique_ptr<Instruction> param_inst(
++          new Instruction(get_module()->context(), SpvOpFunctionParameter,
++                          GetUintId(), pid, {}));
++      get_def_use_mgr()->AnalyzeInstDefUse(&*param_inst);
++      output_func->AddParameter(std::move(param_inst));
++    }
++
++    // Create first block
++    uint32_t test_blk_id = TakeNextId();
++    std::unique_ptr<Instruction> test_label(NewLabel(test_blk_id));
++    std::unique_ptr<BasicBlock> new_blk_ptr =
++        MakeUnique<BasicBlock>(std::move(test_label));
++    new_blk_ptr->SetParent(&*output_func);
++    InstructionBuilder builder(
++        context(), &*new_blk_ptr,
++        IRContext::kAnalysisDefUse | IRContext::kAnalysisInstrToBlockMapping);
++
++    builder.SetInsertPoint(&*new_blk_ptr);
++
++    new_blk_ptr = GenThreadUpdate(&builder, std::move(new_blk_ptr), param_vec);
++
++    builder.SetInsertPoint(&*new_blk_ptr);
++
++    // Close merge block and function and add function to module
++    (void)builder.AddNullaryOp(0, SpvOpReturn);
++    new_blk_ptr->SetParent(&*output_func);
++    output_func->AddBasicBlock(std::move(new_blk_ptr));
++    std::unique_ptr<Instruction> func_end_inst(
++        new Instruction(get_module()->context(), SpvOpFunctionEnd, 0, 0, {}));
++    get_def_use_mgr()->AnalyzeInstDefUse(&*func_end_inst);
++    output_func->SetFunctionEnd(std::move(func_end_inst));
++    context()->AddFunction(std::move(output_func));
++  }
++  return param_cnt2thread_update_func_id_[num_parameters];
++}
++
++void AutoInstPass::GenThreadUpdateCall(InstructionBuilder* builder,
++                                       std::vector<uint32_t> param_ids) {
++  uint32_t func_id = GetThreadUpdateFuncId((uint32_t)param_ids.size());
++
++  std::vector<uint32_t> operands = {func_id};
++  operands.insert(operands.end(), param_ids.begin(), param_ids.end());
++
++  (void)builder->AddNaryOp(GetVoidId(), SpvOpFunctionCall, operands);
++}
++
++std::unique_ptr<BasicBlock> AutoInstPass::GenSubgroupUpdate(
++    InstructionBuilder* builder, std::unique_ptr<BasicBlock> curr_block,
++    std::vector<uint32_t> element_ids) {
++  Instruction* subgroup_leader_cond =
++      builder->AddUnaryOp(GetBoolId(), SpvOpGroupNonUniformElect,
++                          builder->GetUintConstantId(SpvScopeSubgroup));
++  curr_block = GenIfStatement(
++      subgroup_leader_cond->result_id(), std::move(curr_block),
++      [this, element_ids](InstructionBuilder* ir_builder,
++                          std::unique_ptr<BasicBlock> block) {
++        block = GenThreadUpdate(ir_builder, std::move(block), element_ids);
++        ir_builder->SetInsertPoint(&*block);
++        return block;
++      });
++  builder->SetInsertPoint(&*curr_block);
++
++  return curr_block;
++}
++
++uint32_t AutoInstPass::GetSubgroupUpdateFuncId(uint32_t num_parameters) {
++  if (param_cnt2subgroup_update_func_id_[num_parameters] == 0) {
++    // Create function
++    param_cnt2subgroup_update_func_id_[num_parameters] = TakeNextId();
++    analysis::TypeManager* type_mgr = context()->get_type_mgr();
++    std::vector<const analysis::Type*> param_types;
++    for (uint32_t c = 0; c < num_parameters; ++c)
++      param_types.push_back(type_mgr->GetType(GetUintId()));
++    analysis::Function func_ty(type_mgr->GetType(GetVoidId()), param_types);
++    analysis::Type* reg_func_ty = type_mgr->GetRegisteredType(&func_ty);
++    std::unique_ptr<Instruction> func_inst(
++        new Instruction(get_module()->context(), SpvOpFunction, GetVoidId(),
++                        param_cnt2subgroup_update_func_id_[num_parameters],
++                        {{spv_operand_type_t::SPV_OPERAND_TYPE_LITERAL_INTEGER,
++                          {SpvFunctionControlMaskNone}},
++                         {spv_operand_type_t::SPV_OPERAND_TYPE_ID,
++                          {type_mgr->GetTypeInstruction(reg_func_ty)}}}));
++    get_def_use_mgr()->AnalyzeInstDefUse(&*func_inst);
++    std::unique_ptr<Function> output_func =
++        MakeUnique<Function>(std::move(func_inst));
++    // Add parameters
++    std::vector<uint32_t> param_vec;
++    for (uint32_t c = 0; c < num_parameters; ++c) {
++      uint32_t pid = TakeNextId();
++      param_vec.push_back(pid);
++      std::unique_ptr<Instruction> param_inst(
++          new Instruction(get_module()->context(), SpvOpFunctionParameter,
++                          GetUintId(), pid, {}));
++      get_def_use_mgr()->AnalyzeInstDefUse(&*param_inst);
++      output_func->AddParameter(std::move(param_inst));
++    }
++
++    // Create first block
++    uint32_t test_blk_id = TakeNextId();
++    std::unique_ptr<Instruction> test_label(NewLabel(test_blk_id));
++    std::unique_ptr<BasicBlock> new_blk_ptr =
++        MakeUnique<BasicBlock>(std::move(test_label));
++    new_blk_ptr->SetParent(&*output_func);
++    InstructionBuilder builder(
++        context(), &*new_blk_ptr,
++        IRContext::kAnalysisDefUse | IRContext::kAnalysisInstrToBlockMapping);
++
++    builder.SetInsertPoint(&*new_blk_ptr);
++
++    new_blk_ptr = GenSubgroupUpdate(&builder, std::move(new_blk_ptr), param_vec);
++
++    builder.SetInsertPoint(&*new_blk_ptr);
++
++    // Close merge block and function and add function to module
++    (void)builder.AddNullaryOp(0, SpvOpReturn);
++    new_blk_ptr->SetParent(&*output_func);
++    output_func->AddBasicBlock(std::move(new_blk_ptr));
++    std::unique_ptr<Instruction> func_end_inst(
++        new Instruction(get_module()->context(), SpvOpFunctionEnd, 0, 0, {}));
++    get_def_use_mgr()->AnalyzeInstDefUse(&*func_end_inst);
++    output_func->SetFunctionEnd(std::move(func_end_inst));
++    context()->AddFunction(std::move(output_func));
++  }
++  return param_cnt2subgroup_update_func_id_[num_parameters];
++}
++
++void AutoInstPass::GenSubgroupUpdateCall(InstructionBuilder* builder,
++                                     std::vector<uint32_t> param_ids) {
++  uint32_t func_id = GetSubgroupUpdateFuncId((uint32_t)param_ids.size());
++
++  std::vector<uint32_t> operands = {func_id};
++  operands.insert(operands.end(), param_ids.begin(), param_ids.end());
++
++  (void)builder->AddNaryOp(GetVoidId(), SpvOpFunctionCall, operands);
++}
++
++void AutoInstPass::GenUniqueSubgroupIdFuncCall(InstructionBuilder* builder,
++                                           uint32_t inst_id,
++                                           uint32_t stage_idx) {
++  if (stage_idx != SpvExecutionModelRayGenerationNV &&
++      stage_idx != SpvExecutionModelGLCompute) {
++    std::string message =
++        "Unique function id call cannot be generated unless the shader stage "
++        "is compute or RayGeneration\n";
++    consumer()(SPV_MSG_ERROR, 0, {0, 0, 0}, message.c_str());
++    return;
++  }
++
++  uint32_t output_func_id = GetUniqueSubgroupIdFunctionId(stage_idx);
++  (void)builder->AddNaryOp(GetVoidId(), SpvOpFunctionCall,
++                           {output_func_id, inst_id});
++}
++
++uint32_t AutoInstPass::GetUniqueSubgroupIdFunctionId(uint32_t stage_idx) {
++  if (unique_subgroup_id_function_id_ == 0) {
++    // Create function
++    unique_subgroup_id_function_id_ = TakeNextId();
++    analysis::TypeManager* type_mgr = context()->get_type_mgr();
++    std::vector<const analysis::Type*> param_types;
++
++    for (uint32_t c = 0; c < kUniqueSubgroupIdParamCnt; ++c)
++      param_types.push_back(type_mgr->GetType(GetUintId()));
++
++    analysis::Function func_ty(type_mgr->GetType(GetVoidId()), param_types);
++    analysis::Type* reg_func_ty = type_mgr->GetRegisteredType(&func_ty);
++    std::unique_ptr<Instruction> func_inst(
++        new Instruction(get_module()->context(), SpvOpFunction, GetVoidId(),
++                        unique_subgroup_id_function_id_,
++                        {{spv_operand_type_t::SPV_OPERAND_TYPE_LITERAL_INTEGER,
++                          {SpvFunctionControlMaskNone}},
++                         {spv_operand_type_t::SPV_OPERAND_TYPE_ID,
++                          {type_mgr->GetTypeInstruction(reg_func_ty)}}}));
++    get_def_use_mgr()->AnalyzeInstDefUse(&*func_inst);
++    std::unique_ptr<Function> output_func =
++        MakeUnique<Function>(std::move(func_inst));
++
++    // Add parameters
++    std::vector<uint32_t> param_vec;
++    for (uint32_t c = 0; c < kUniqueSubgroupIdParamCnt; ++c) {
++      uint32_t pid = TakeNextId();
++      param_vec.push_back(pid);
++      std::unique_ptr<Instruction> param_inst(
++          new Instruction(get_module()->context(), SpvOpFunctionParameter,
++                          GetUintId(), pid, {}));
++      get_def_use_mgr()->AnalyzeInstDefUse(&*param_inst);
++      output_func->AddParameter(std::move(param_inst));
++    }
++
++    // Create first block
++    uint32_t test_blk_id = TakeNextId();
++    std::unique_ptr<Instruction> test_label(NewLabel(test_blk_id));
++    std::unique_ptr<BasicBlock> new_blk_ptr =
++        MakeUnique<BasicBlock>(std::move(test_label));
++    new_blk_ptr->SetParent(&*output_func);
++    InstructionBuilder builder(
++        context(), &*new_blk_ptr,
++        IRContext::kAnalysisDefUse | IRContext::kAnalysisInstrToBlockMapping);
++
++    // Create variable to hold subgroup id computed by leader
++
++    uint32_t varTyPtrId = context()->get_type_mgr()->FindPointerToType(
++        GetUintId(), SpvStorageClassFunction);
++    assert(varTyPtrId && "Cannot create uint ptr type.");
++    auto zero = builder.GetUintConstantId(0);
++
++    auto new_var_op =
++        builder.AddUnaryOp(varTyPtrId, SpvOpVariable, SpvStorageClassFunction);
++    auto unique_subgroup_ptr_id = new_var_op->result_id();
++    builder.AddStore(new_var_op->result_id(), zero);
++
++    Instruction* subgroup_leader_cond =
++        builder.AddUnaryOp(GetBoolId(), SpvOpGroupNonUniformElect,
++                           builder.GetUintConstantId(SpvScopeSubgroup));
++
++    new_blk_ptr = GenIfStatement(
++        subgroup_leader_cond->result_id(), std::move(new_blk_ptr),
++        [this, unique_subgroup_ptr_id](InstructionBuilder* ir_builder,
++                                   std::unique_ptr<BasicBlock> block) {
++          uint32_t mask_none_id =
++              ir_builder->GetUintConstantId(SpvMemoryAccessMaskNone);
++          uint32_t scope_invok_id =
++              ir_builder->GetUintConstantId(SpvScopeInvocation);
++          Instruction* unique_id_ptr = ir_builder->AddTernaryOp(
++              GetOutputBufferPtrId(), SpvOpAccessChain, GetOutputBufferId(),
++              ir_builder->GetUintConstantId(kDebugOutputDataOffset),
++              ir_builder->GetUintConstantId(0));
++          Instruction* unique_id = ir_builder->AddQuadOp(
++              GetUintId(), SpvOpAtomicIAdd, unique_id_ptr->result_id(),
++              scope_invok_id, mask_none_id, ir_builder->GetUintConstantId(1));
++
++          ir_builder->AddStore(unique_subgroup_ptr_id, unique_id->result_id());
++          return block;
++        });
++    builder.SetInsertPoint(&*new_blk_ptr);
++    Instruction* broadcasted_id =
++        builder.AddBinaryOp(GetUintId(), SpvOpGroupNonUniformBroadcastFirst,
++                            builder.GetUintConstantId(SpvScopeSubgroup),
++                            GenVarLoad(unique_subgroup_ptr_id, &builder));
++
++    uint32_t intra_subgroup_id = GenSubgroupLocalInvocationId(&builder);
++    // Shift the thread id in the subgroup in to the top log2(SUBGROUP_SIZE)=5 bits
++    Instruction* shifted_subgroup_id = builder.AddBinaryOp(
++        GetUintId(), SpvOpShiftLeftLogical, intra_subgroup_id,
++        builder.GetUintConstantId(27 /*= 32 - log2(32) */));
++    // Combine the unique subgroup id and intra subgroup id
++    Instruction* joined_subgroup_ids = builder.AddBinaryOp(
++        GetUintId(), SpvOpBitwiseOr, shifted_subgroup_id->result_id(),
++        broadcasted_id->result_id());
++
++    // Generate thread id which will be used to created thread_id -> subgroup_id
++    // mapping
++    auto flat_thread_id = (stage_idx == SpvExecutionModelRayGenerationNV)
++                              ? GenFlatRtThreadId(&builder, stage_idx)
++                              : GenFlatComputeThreadId(&builder, stage_idx);
++
++    auto inst_id = param_vec[kUniqueSubgroupIdParamInstIdIdx];
++
++    new_blk_ptr = GenThreadUpdate(
++        &builder, std::move(new_blk_ptr),
++        {inst_id, flat_thread_id, joined_subgroup_ids->result_id()});
++
++    // Close merge block and function and add function to module
++    (void)builder.AddNullaryOp(0, SpvOpReturn);
++    new_blk_ptr->SetParent(&*output_func);
++    output_func->AddBasicBlock(std::move(new_blk_ptr));
++    std::unique_ptr<Instruction> func_end_inst(
++        new Instruction(get_module()->context(), SpvOpFunctionEnd, 0, 0, {}));
++    get_def_use_mgr()->AnalyzeInstDefUse(&*func_end_inst);
++    output_func->SetFunctionEnd(std::move(func_end_inst));
++    context()->AddFunction(std::move(output_func));
++  }
++  return unique_subgroup_id_function_id_;
++}
++
++void AutoInstPass::GenInstrumentedEntryPoints() {
++  for (auto entry_point_inst : get_module()->entry_points()) {
++    auto stage_idx =
++        entry_point_inst.GetSingleWordInOperand(kEntryPointExecutionModelInIdx);
++    auto entry_point_func_id =
++        entry_point_inst.GetSingleWordInOperand(kEntryPointFunctionIdInIdx);
++    Instruction* entry_point_func =
++        get_def_use_mgr()->GetDef(entry_point_func_id);
++
++    auto dummy_func_id = TakeNextId();
++    analysis::TypeManager* type_mgr = context()->get_type_mgr();
++    analysis::Function func_ty(type_mgr->GetType(GetVoidId()), {});
++    analysis::Type* reg_func_ty = type_mgr->GetRegisteredType(&func_ty);
++    auto expected_ty_id = type_mgr->GetId(reg_func_ty);
++
++    auto entry_point_func_ty_id =
++        entry_point_func->GetSingleWordOperand(kFunctionTypeIdx);
++
++    if (expected_ty_id != entry_point_func_ty_id) {
++      std::string message =
++          "Could not generate dummy entrypoint due to an unexpected EntryPoint "
++          "function signature.";
++      consumer()(SPV_MSG_ERROR, 0, {0, 0, 0}, message.c_str());
++      return;
++    }
++
++    // Create dummy function to original entry point
++    std::unique_ptr<Instruction> func_inst(new Instruction(
++        get_module()->context(), SpvOpFunction, GetVoidId(), dummy_func_id,
++        {{spv_operand_type_t::SPV_OPERAND_TYPE_LITERAL_INTEGER,
++          {SpvFunctionControlMaskNone}},
++         {spv_operand_type_t::SPV_OPERAND_TYPE_ID,
++          {type_mgr->GetTypeInstruction(reg_func_ty)}}}));
++    get_def_use_mgr()->AnalyzeInstDefUse(&*func_inst);
++
++    std::unique_ptr<Function> output_func =
++        MakeUnique<Function>(std::move(func_inst));
++
++    // Create first block
++    uint32_t test_blk_id = TakeNextId();
++    std::unique_ptr<Instruction> test_label(NewLabel(test_blk_id));
++    std::unique_ptr<BasicBlock> new_blk_ptr =
++        MakeUnique<BasicBlock>(std::move(test_label));
++    new_blk_ptr->SetParent(&*output_func);
++    InstructionBuilder builder(
++        context(), &*new_blk_ptr,
++        IRContext::kAnalysisDefUse | IRContext::kAnalysisInstrToBlockMapping);
++
++    builder.SetInsertPoint(&*new_blk_ptr);
++
++    // Invoke instrumentation hook
++    auto is_instrumented = PreEntryPointInstrument(&builder, stage_idx);
++
++    // Call original entrypoint
++    (void)builder.AddNaryOp(GetVoidId(), SpvOpFunctionCall,
++                            {entry_point_func_id});
++
++    // Invoke instrumentation hook
++    is_instrumented |= PostEntryPointInstrument(&builder, stage_idx);
++
++    // Close merge block and function and add function to module
++    (void)builder.AddNullaryOp(0, SpvOpReturn);
++    new_blk_ptr->SetParent(&*output_func);
++    output_func->AddBasicBlock(std::move(new_blk_ptr));
++    std::unique_ptr<Instruction> func_end_inst(
++        new Instruction(get_module()->context(), SpvOpFunctionEnd, 0, 0, {}));
++    get_def_use_mgr()->AnalyzeInstDefUse(&*func_end_inst);
++    output_func->SetFunctionEnd(std::move(func_end_inst));
++
++    if (is_instrumented) {
++      // If the instrumentation hooks insert code then
++      // add dummy entrypoint and replace the original
++      // EntryPoint with dummy entrypoint.
++      context()->AddFunction(std::move(output_func));
++      context()->ReplaceAllUsesWithPredicate(
++          entry_point_func_id, dummy_func_id, [](Instruction* inst) {
++            return inst->opcode() != SpvOpFunctionCall;
++          });
++    }
++  }
++}
++
++Pass::Status AutoInstPass::ProcessImpl() {
++  for (auto fii = get_module()->begin(); fii != get_module()->end(); ++fii) {
++    auto bb = fii->begin();
++    bb->IsLoopHeader();
++  }
++
++  InstProcessFunction pfn =
++      [this](BasicBlock::iterator ref_inst_itr,
++             UptrVectorIterator<BasicBlock> ref_block_itr, uint32_t stage_idx,
++             std::vector<std::unique_ptr<BasicBlock>>* new_blocks) {
++        (void)new_blocks;
++        GenInstProgrammableCode(ref_inst_itr, ref_block_itr, stage_idx);
++      };
++  InstProcessEntryPointCallTree(pfn);
++
++  // Add new entrypoint after other instrumentation to avoid it also being
++  // instrumented.
++  GenInstrumentedEntryPoints();
++
++  context()->BuildInvalidAnalyses(IRContext::kAnalysisDefUse |
++                                  IRContext::kAnalysisInstrToBlockMapping);
++  return has_added_instrumentation_ ? Status::SuccessWithChange
++                                    : Status::SuccessWithoutChange;
++}
++
++Pass::Status AutoInstPass::Process() {
++  // Initialize base class
++  InitializeInstrument();
++
++  // init auto instrumentation metadata
++  instrumented_bb_ids.clear();
++  instrumented_inst_ids.clear();
++  has_added_instrumentation_ = false;
++
++  // initialize inheriting class
++  InitializeInstrumentation();
++
++  auto res = ProcessImpl();
++
++  // finalize inheriting class
++  FinalizeInstrumentation();
++
++  // insert instrumentation
++  return res;
++}
++
++}  // namespace opt
++}  // namespace spvtools
+diff --git a/source/opt/auto_inst_pass.h b/source/opt/auto_inst_pass.h
+new file mode 100644
+index 00000000..ed91a44d
+--- /dev/null
++++ b/source/opt/auto_inst_pass.h
+@@ -0,0 +1,322 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef LIBSPIRV_OPT_AUTO_INST_PASS_H_
++#define LIBSPIRV_OPT_AUTO_INST_PASS_H_
++
++#include <functional>
++
++#include "instrument_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++class AutoInstPass : public InstrumentPass {
++ public:
++  AutoInstPass(uint32_t desc_set, uint32_t shader_id,
++               uint32_t reserved_words_count)
++      : InstrumentPass(desc_set, shader_id, kInstValidationIdAuto),
++        reserved_words_count_(reserved_words_count) {}
++
++  ~AutoInstPass() override = default;
++
++  // See optimizer.hpp for pass user documentation.
++  Status Process() override;
++
++  const char* name() const override { return "auto-inst-pass"; }
++
++ private:
++  // Track whether any instrumentation occurred
++  bool has_added_instrumentation_ = false;
++
++  // Track the function ids created to support thread/subgroup update
++  // accepting different numbers of parameters
++  std::unordered_map<uint32_t, uint32_t> param_cnt2thread_update_func_id_;
++  std::unordered_map<uint32_t, uint32_t> param_cnt2subgroup_update_func_id_;
++
++  // Track the function id for creating unique subgroup ids.
++  uint32_t unique_subgroup_id_function_id_ = 0;
++
++  // Instructions whose semantics are destroyed by having instrumentation
++  // inserted directly before them.
++  const std::set<uint32_t> uninstrumentable_pre_ops = {SpvOpPhi,
++                                                       SpvOpUnreachable};
++
++  // Instructions whose semantics are destroyed by having instrumentation
++  // inserted directly after them.
++  const std::set<uint32_t> uninstrumentable_post_ops = {
++      SpvOpSelectionMerge,  // Both merge instructions must precede a branch
++      SpvOpLoopMerge,
++      SpvOpBranch,  // Branch instructions end a basic block which would put the
++                    // instrumentation in limbo
++      SpvOpBranchConditional,
++      SpvOpSwitch,
++      SpvOpReturn,  // Instrumenting after returns/unreachable would never
++                    // execute
++      SpvOpReturnValue,
++      SpvOpUnreachable,
++  };
++
++  // Add a function to the module that appends
++  // an entry to the buffer containing |num_params| words
++  // for every active thread invoking the function.
++  uint32_t GetThreadUpdateFuncId(uint32_t num_params);
++
++  // Generate a sequence of instructions in |builder| in function |function|
++  // that write the value corresponding to the ids in |element_ids|. The
++  // output buffer will be written to once by each thread.
++  // The sequence of instructions will be inserted starting with |curr_block|.
++  // |curr_block| will be consumed by this function call due to control flow.
++  //
++  // |element_ids| is a vector of uint32_t which contains the
++  // id's of values that will be written to the output buffer.
++  std::unique_ptr<BasicBlock> GenThreadUpdate(
++      InstructionBuilder* builder, std::unique_ptr<BasicBlock> curr_block,
++      std::vector<uint32_t> param_ids);
++
++  // Add a function to the module that appends
++  // an entry to the buffer containing |num_params| words
++  // for every subgroup invoking the function.
++  uint32_t GetSubgroupUpdateFuncId(uint32_t num_params);
++
++  // Create function containing functionality for generating a
++  // unique subgroup (or subgroup) id. This function should only
++  // be called at the beginning of a shader in uniform control flow.
++  //
++  // The buffer entry created will be of the following form:
++  // word 0: <inst id>
++  // word 1: <flat thread id>
++  // word 2: <unique subgroup id | (intra subgroup id << 27)>
++  //
++  // This information can be used by the analysis to create a mapping
++  // from flattened thread id (available anywhere in the rt pipeline)
++  // to subgroup id which allows for inter-shader subgroup tracking.
++  // Furthermore, the intra-subgroup-id allows for attribution of subgroup-level
++  // instrumentation to individual threads (i.e. for heatmap visualizations).
++  uint32_t GetUniqueSubgroupIdFunctionId(uint32_t stage_idx);
++
++  // Generate a sequence of instructions in |builder| in function |function|
++  // that write the value corresponding to the ids in |element_ids|. The
++  // output buffer will only be written to by the subgroup leader.
++  // The sequence of instructions will be inserted starting with |curr_block|.
++  // |curr_block| will be consumed by this function call due to control flow.
++  //
++  // |element_ids| is a vector of uint32_t which contains the
++  // id's of values that will be written to the output buffer.
++  std::unique_ptr<BasicBlock> GenSubgroupUpdate(
++      InstructionBuilder* builder, std::unique_ptr<BasicBlock> curr_block,
++      std::vector<uint32_t> param_ids);
++
++ protected:
++  // In this class it can be very confusing differentiating
++  // between instruction SSA ids and ids for instrumentation.
++  // This type is designed to make it explicit which type of id
++  // it is when mixing and matching.
++  using AutoInstId = uint32_t;
++
++  // For some analyses keeping track of which threads belong
++  // to which subgroups and also how many subgroups executed the shader stage
++  // is interesting. Since saving 1 word is not important,
++  // the default for this value is set to 1 so CreateUniquesubgroupIdCall
++  // works out of the box.
++  static const int kDefaultReservedWordsCnt = 1;
++
++  // The number of lowers words in the instrumentation buffer that are reserved
++  // for fixed functions (i.e. not dynamically appended runtime entries)
++  // NOTE: this does not include the buffer size which is always tracked
++  const uint32_t reserved_words_count_;
++
++  // Track which basic blocks and instructions the pass has
++  // given an opportunity to instrument to prevent reinstrumenting.
++  std::set<uint32_t> instrumented_bb_ids;
++  std::set<uint32_t> instrumented_inst_ids;
++
++  // Apply GenDebugPrintfCode to every instruction in module.
++  Pass::Status ProcessImpl();
++
++  // Allows inheriting classes to initialize their knowledge
++  // of module before beginning instrumentation
++  virtual void InitializeInstrumentation() = 0;
++
++  // Allows inheriting classes to finalize before
++  // the pass finishes executing.
++  virtual void FinalizeInstrumentation() = 0;
++
++  // Any instructions added via |builder| will appear before |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  virtual bool PreInstructionInstrument(Instruction* inst,
++                                        InstructionBuilder* builder,
++                                        uint32_t stage_idx) = 0;
++
++  // Any instructions added via |builder| will appear after |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  virtual bool PostInstructionInstrument(Instruction* inst,
++                                         InstructionBuilder* builder,
++                                         uint32_t stage_idx) = 0;
++
++  // Any instructions added via |builder| will appear before the content of
++  // |bb|. |stage_idx| contains the SpvExecutionModel that builder is operating
++  // in. This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  virtual bool BasicBlockInstrument(BasicBlock* bb, InstructionBuilder* builder,
++                                    uint32_t stage_idx) = 0;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  virtual bool PreEntryPointInstrument(InstructionBuilder* builder,
++                                       uint32_t stage_idx) = 0;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  virtual bool PostEntryPointInstrument(InstructionBuilder* builder,
++                                        uint32_t stage_idx) = 0;
++
++  // If |ref_inst_itr| is selected as an instrumentation location,
++  // return in |new_blocks| the result of adding instrumentation.
++  // The instructions write a record to the output buffer stream
++  // The block at |ref_block_itr| can just be replaced with the
++  // block in |new_blocks|. Besides the buffer writes, this
++  // block will comprise all instructions preceding and following
++  // |ref_inst_itr|.
++  //
++  // This function is designed to be passed to
++  // InstrumentPass::InstProcessEntryPointCallTree(), which applies the
++  // function to each instruction in a module and replaces the instruction
++  // if warranted.
++  //
++  void GenInstProgrammableCode(BasicBlock::iterator ref_inst_itr,
++                               UptrVectorIterator<BasicBlock> ref_block_itr,
++                               uint32_t stage_idx);
++
++  // Generate a sequence of instructions in |builder| which
++  // materialize the lower and upper 32 bits of from
++  // OpReadClock.
++  //
++  // Returns std::pair<lower 32 bits,upper 32 bits>
++  std::pair<uint32_t, uint32_t> GenReadClockIds(InstructionBuilder* builder);
++
++  // Generate a sequence of instructions in |builder| which
++  // materialize a 32-bit thread mask where each bit
++  // is true if the thread is active and false otherwise.
++  // The uint32_t value returned corresponds to the thread_mask.
++  uint32_t GenSubgroupBallotId(InstructionBuilder* builder, uint32_t pred_id);
++
++  // Generate a sequence of instructions in |builder| which
++  // materialize the value of SpvBuiltinSubgroupLocalInvocationId.
++  uint32_t GenSubgroupLocalInvocationId(InstructionBuilder* builder);
++
++  // Returns an id corresponding to a uint created in |builder|
++  // which contains a flattened thread id calculated from the
++  // unique work id of the shader stage.
++  //
++  // This is primarily useful for tracking threads' execution between
++  // shaders in the ray tracing pipeline.
++  uint32_t GenFlatRtThreadId(InstructionBuilder* builder, uint32_t stage_idx);
++
++  // Returns an id corresponding to a uint created in |builder|
++  // which contains a flattened thread id calculated from the
++  // GlobalSize and GlobalLaunchID
++  //
++  // This is primarily useful for tracking threads' execution between
++  // different compute pipelines.
++  uint32_t GenFlatComputeThreadId(InstructionBuilder* builder,
++                                  uint32_t stage_idx);
++
++  // Returns a vector of ids corresponding to a uint created in |builder|
++  // which contains a unique work id of the shader stage.
++  //
++  // This is primarily useful for tracking threads' execution behaviour over
++  // time.
++  std::vector<uint32_t> GenThreadId(InstructionBuilder* builder,
++                                    uint32_t stage_idx);
++
++  // Returns an identifier
++  // for an instrumentation callsite which is unique across the
++  // whole ray-tracing pipeline.
++  uint32_t GenInstCallsiteId(Instruction* inst);
++
++  // Generate a sequence of instructions in function |function| that
++  // create an if statement where the body is executed iff the value
++  // corresponding to |condition_id| evaluates to true at runtime.
++  // |old_block| will be closed by an OpBranchConditional
++  //
++  // The callback |inside_if_callback| will be invoked in the body
++  // of the if statement. The |inside_if_callback| accepts an
++  // InstructionBuilder |builder| at the beginning of the if body.
++  // As well as a unique_ptr |curr_block| to the BasicBlock of the
++  // if body. The |inside_if_callback| may add more basic blocks
++  // but must return a unique_ptr to the basic block that ends the if
++  // body.
++  std::unique_ptr<BasicBlock> GenIfStatement(
++      uint32_t condition_id, std::unique_ptr<BasicBlock> old_block,
++      std::function<std::unique_ptr<BasicBlock>(
++          InstructionBuilder* builder, std::unique_ptr<BasicBlock> curr_block)>
++          inside_if_callback);
++
++  // Generates a seuqence of instructions in |builder| which invoke the
++  // ThreadUpdate function which writes the values that are identifier in
++  // |param_ids| to the StorageBuffer for each thread that invokes the call.
++  void GenThreadUpdateCall(InstructionBuilder* builder,
++                           std::vector<uint32_t> param_ids);
++
++  // Generates a seuqence of instructions in |builder| which invoke the
++  // subgroupUpdate function which writes the values that are identifier in
++  // |param_ids| to the StorageBuffer for each subgroup that invokes the call.
++  void GenSubgroupUpdateCall(InstructionBuilder* builder,
++                         std::vector<uint32_t> param_ids);
++
++  // Generate a function call in a block which will be appended to |new_blocks|
++  // This function should only bGe called at the beginning of a shader in
++  // uniform control flow. This ensures that every thread in the subgroup
++  // receives the value computed by the leader.
++  //
++  // |inst_offset_id| is used to report instrumentation metadata to validation
++  // layer. |stage_idx| is the current SpvExecutionMode.
++  void GenUniqueSubgroupIdFuncCall(InstructionBuilder* builder,
++                               uint32_t inst_offset_id, uint32_t stage_idx);
++
++  // Pass the current context in terms of:
++  // 1) instruction in |ref_inst_itr|
++  // 2) BB in |ref_block_itr|
++  // 3) shader stage in |stage_idx|
++  //
++  // This allows the instrumentation hooks to decide what
++  // instrumentation to add to |builder|.
++  // If instrumentation is added then this function returns true
++  // otherwise false.
++  //
++  bool HandleInstrumentHooks(BasicBlock::iterator ref_inst_itr,
++                             UptrVectorIterator<BasicBlock> ref_block_itr,
++                             uint32_t stage_idx, InstructionBuilder* builder);
++
++  // Generate dummy EntryPoints which invoke the PreEntryPointInstrument
++  // and PostEntryPointInstrument hooks around a call to the original entrypoint
++  // function.
++  void GenInstrumentedEntryPoints();
++};
++
++}  // namespace opt
++}  // namespace spvtools
++
++#endif  // LIBSPIRV_OPT_INST_PROGRAMMABLE_PASS_H_
+diff --git a/source/opt/auto_inst_simt_efficiency_pass.cpp b/source/opt/auto_inst_simt_efficiency_pass.cpp
+new file mode 100644
+index 00000000..cfb7e38a
+--- /dev/null
++++ b/source/opt/auto_inst_simt_efficiency_pass.cpp
+@@ -0,0 +1,39 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++
++#include "auto_inst_simt_efficiency_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++bool AutoInstSimtEfficiencyPass::BasicBlockInstrument(
++    BasicBlock* bb, InstructionBuilder* builder, uint32_t stage_idx) {
++  // Suppress unused parameter warnings
++  (void)bb;
++  (void)stage_idx;
++
++  Instruction* true_constant_op = builder->GetBoolConstant(true);
++  uint32_t true_constant_id = true_constant_op->result_id();
++  // Create active thread mask by having all threads vote true
++  uint32_t active_thread_mask_id =
++      GenSubgroupBallotId(builder, true_constant_id);
++  // Write active thread mask
++  GenSubgroupUpdateCall(builder, {active_thread_mask_id});
++
++  return true;
++}
++
++}  // namespace opt
++}  // namespace spvtools
+diff --git a/source/opt/auto_inst_simt_efficiency_pass.h b/source/opt/auto_inst_simt_efficiency_pass.h
+new file mode 100644
+index 00000000..3d2b58cf
+--- /dev/null
++++ b/source/opt/auto_inst_simt_efficiency_pass.h
+@@ -0,0 +1,101 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef LIBSPIRV_OPT_AUTO_INST_SIMT_EFFICIENCY_PASS_H_
++#define LIBSPIRV_OPT_AUTO_INST_SIMT_EFFICIENCY_PASS_H_
++
++#include <functional>
++
++#include "auto_inst_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++class AutoInstSimtEfficiencyPass : public AutoInstPass {
++ public:
++  AutoInstSimtEfficiencyPass(uint32_t desc_set, uint32_t shader_id,
++                             uint32_t reserved_words_count)
++      : AutoInstPass(desc_set, shader_id, reserved_words_count) {}
++
++  const char* name() const override { return "auto-inst-simt-efficiency-pass"; }
++
++ private:
++  // Allows inheriting classes to initialize their knowledge
++  // of module before beginning instrumentation
++  void InitializeInstrumentation() override{};
++
++  // Allows inheriting classes to finalize before
++  // the pass finishes executing.
++  void FinalizeInstrumentation() override{};
++
++  // Any instructions added via |builder| will appear before |inst|
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear after |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                 uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear before the content of
++  // |bb|. |stage_idx| contains the SpvExecutionModel that builder is operating
++  // in. This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool BasicBlockInstrument(BasicBlock* bb, InstructionBuilder* builder,
++                            uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreEntryPointInstrument(InstructionBuilder* builder,
++                               uint32_t stage_idx) override {
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  }
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostEntryPointInstrument(InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++};
++
++}  // namespace opt
++}  // namespace spvtools
++
++#endif  // LIBSPIRV_OPT_AUTO_INST_SIMT_EFFICIENCY_PASS_H_
+diff --git a/source/opt/auto_inst_warp_entry_and_exit_pass.cpp b/source/opt/auto_inst_warp_entry_and_exit_pass.cpp
+new file mode 100644
+index 00000000..d985a70d
+--- /dev/null
++++ b/source/opt/auto_inst_warp_entry_and_exit_pass.cpp
+@@ -0,0 +1,43 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#include "auto_inst_warp_entry_and_exit_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++bool AutoInstWarpEntryAndExitPass::PreEntryPointInstrument(
++    InstructionBuilder* builder, uint32_t stage_idx) {
++  if (stage_idx != SpvExecutionModelRayGenerationKHR) return false;
++
++  // Record every warp that began the pipeline
++  auto prim_id =
++      builder->GetUintConstantId(kAutoInstWarpEntryAndExitBeginPipeline);
++  GenSubgroupUpdateCall(builder, {prim_id});
++  return true;
++}
++
++bool AutoInstWarpEntryAndExitPass::PostEntryPointInstrument(
++    InstructionBuilder* builder, uint32_t stage_idx) {
++  if (stage_idx != SpvExecutionModelRayGenerationKHR) return false;
++
++  // Record every warp that completed the the pipeline
++  auto prim_id =
++      builder->GetUintConstantId(kAutoInstWarpEntryAndExitEndPipeline);
++  GenSubgroupUpdateCall(builder, {prim_id});
++  return true;
++}
++
++}  // namespace opt
++}  // namespace spvtools
+diff --git a/source/opt/auto_inst_warp_entry_and_exit_pass.h b/source/opt/auto_inst_warp_entry_and_exit_pass.h
+new file mode 100644
+index 00000000..44a5d175
+--- /dev/null
++++ b/source/opt/auto_inst_warp_entry_and_exit_pass.h
+@@ -0,0 +1,99 @@
++// Copyright (c) 2021 The Khronos Group Inc.
++
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef LIBSPIRV_OPT_AUTO_INST_WARP_ENTRY_AND_EXIT_PASS_H_
++#define LIBSPIRV_OPT_AUTO_INST_WARP_ENTRY_AND_EXIT_PASS_H_
++
++#include <functional>
++
++#include "auto_inst_pass.h"
++
++namespace spvtools {
++namespace opt {
++
++class AutoInstWarpEntryAndExitPass : public AutoInstPass {
++ public:
++  AutoInstWarpEntryAndExitPass(uint32_t desc_set, uint32_t shader_id)
++      : AutoInstPass(desc_set, shader_id, kDefaultReservedWordsCnt) {}
++
++  const char* name() const override {
++    return "auto-inst-warp-entry-and-exit-pass";
++  }
++
++ private:
++  // Allows inheriting classes to initialize their knowledge
++  // of module before beginning instrumentation
++  void InitializeInstrumentation() override{};
++
++  // Allows inheriting classes to finalize before
++  // the pass finishes executing.
++  void FinalizeInstrumentation() override{};
++
++  // Any instructions added via |builder| will appear before |inst|
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear after |inst|.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostInstructionInstrument(Instruction* inst, InstructionBuilder* builder,
++                                 uint32_t stage_idx) override {
++    (void)inst;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will appear before the content of
++  // |bb|. |stage_idx| contains the SpvExecutionModel that builder is operating
++  // in. This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool BasicBlockInstrument(BasicBlock* bb, InstructionBuilder* builder,
++                            uint32_t stage_idx) override {
++    (void)bb;
++    (void)builder;
++    (void)stage_idx;
++    return false;
++  };
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PreEntryPointInstrument(InstructionBuilder* builder,
++                               uint32_t stage_idx) override;
++
++  // Any instructions added via |builder| will execute before the
++  // entrypoint function of the shader.
++  // |stage_idx| contains the SpvExecutionModel that builder is operating in.
++  // This function is expected to return true if it added instructions to
++  // builder, otherwise false.
++  bool PostEntryPointInstrument(InstructionBuilder* builder,
++                                uint32_t stage_idx) override;
++};
++
++}  // namespace opt
++}  // namespace spvtools
++
++#endif  // LIBSPIRV_OPT_AUTO_INST_WARP_ENTRY_AND_EXIT_PASS_H_
+diff --git a/source/opt/instrument_pass.cpp b/source/opt/instrument_pass.cpp
+index ed34fb02..1a84a002 100644
+--- a/source/opt/instrument_pass.cpp
++++ b/source/opt/instrument_pass.cpp
+@@ -288,7 +288,9 @@ void InstrumentPass::GenStageStreamWriteCode(uint32_t stage_idx,
+       GenDebugOutputFieldCode(base_offset_id, kInstRayTracingOutLaunchIdZ,
+                               z_launch_inst->result_id(), builder);
+     } break;
+-    default: { assert(false && "unsupported stage"); } break;
++    default: {
++      assert(false && "unsupported stage");
++    } break;
+   }
+ }
+ 
+@@ -435,6 +437,7 @@ uint32_t InstrumentPass::GetOutputBufferBinding() {
+     case kInstValidationIdBuffAddr:
+       return kDebugOutputBindingStream;
+     case kInstValidationIdDebugPrintf:
++    case kInstValidationIdAuto:
+       return kDebugOutputPrintfStream;
+     default:
+       assert(false && "unexpected validation id");
+diff --git a/source/opt/instrument_pass.h b/source/opt/instrument_pass.h
+index 12b939d4..5fb49f8b 100644
+--- a/source/opt/instrument_pass.h
++++ b/source/opt/instrument_pass.h
+@@ -62,6 +62,7 @@ namespace opt {
+ static const uint32_t kInstValidationIdBindless = 0;
+ static const uint32_t kInstValidationIdBuffAddr = 1;
+ static const uint32_t kInstValidationIdDebugPrintf = 2;
++static const uint32_t kInstValidationIdAuto = 3;
+ 
+ class InstrumentPass : public Pass {
+   using cbb_ptr = const BasicBlock*;
+diff --git a/source/opt/ir_builder.h b/source/opt/ir_builder.h
+index fe5feff5..b7c8e0c5 100644
+--- a/source/opt/ir_builder.h
++++ b/source/opt/ir_builder.h
+@@ -392,6 +392,10 @@ class InstructionBuilder {
+     return uint_inst->result_id();
+   }
+ 
++  uint32_t GetIntConstantId(int value) {
++    return GetIntConstant(value, true)->result_id();
++  }
++
+   // Adds either a signed or unsigned 32 bit integer constant to the binary
+   // depedning on the |sign|. If |sign| is true then the value is added as a
+   // signed constant otherwise as an unsigned constant. If |sign| is false the
+@@ -428,6 +432,28 @@ class InstructionBuilder {
+     return GetContext()->get_constant_mgr()->GetDefiningInstruction(constant);
+   }
+ 
++  Instruction* GetBoolConstant(bool value) {
++    analysis::Bool bool_type{};
++
++    // Get or create the integer type. This rebuilds the type and manages the
++    // memory for the rebuilt type.
++    uint32_t type_id =
++        GetContext()->get_type_mgr()->GetTypeInstruction(&bool_type);
++
++    // Get the memory managed type so that it is safe to be stored by
++    // GetConstant.
++    analysis::Type* rebuilt_type =
++        GetContext()->get_type_mgr()->GetType(type_id);
++
++    // Create the constant value.
++    const analysis::Constant* constant =
++        GetContext()->get_constant_mgr()->GetConstant(rebuilt_type,
++                                                      {(uint32_t)value});
++
++    // Create the OpConstant instruction using the type and the value.
++    return GetContext()->get_constant_mgr()->GetDefiningInstruction(constant);
++  }
++
+   Instruction* AddCompositeExtract(uint32_t type, uint32_t id_of_composite,
+                                    const std::vector<uint32_t>& index_list) {
+     std::vector<Operand> operands;
+diff --git a/source/opt/ir_context.cpp b/source/opt/ir_context.cpp
+index 82107b5c..094513c3 100644
+--- a/source/opt/ir_context.cpp
++++ b/source/opt/ir_context.cpp
+@@ -805,6 +805,15 @@ uint32_t IRContext::GetBuiltinInputVarId(uint32_t builtin) {
+         reg_type = type_mgr->GetRegisteredType(&v4float_ty);
+         break;
+       }
++      case SpvBuiltInNumSubgroups:
++      case SpvBuiltInWorkgroupId:
++      case SpvBuiltInWarpIDNV:
++      case SpvBuiltInWarpsPerSMNV:
++      case SpvBuiltInSMIDNV:
++      case SpvBuiltInSMCountNV:
++      case SpvBuiltInSubgroupId:
++      case SpvBuiltInLocalInvocationIndex:
++      case SpvBuiltInSubgroupSize:
+       case SpvBuiltInVertexIndex:
+       case SpvBuiltInInstanceIndex:
+       case SpvBuiltInPrimitiveId:
+@@ -814,7 +823,11 @@ uint32_t IRContext::GetBuiltinInputVarId(uint32_t builtin) {
+         reg_type = type_mgr->GetRegisteredType(&uint_ty);
+         break;
+       }
++      case SpvBuiltInLocalInvocationId:
++      case SpvBuiltInLaunchSizeNV:
+       case SpvBuiltInGlobalInvocationId:
++      case SpvBuiltInNumWorkgroups:
++      case SpvBuiltInWorkgroupSize:
+       case SpvBuiltInLaunchIdNV: {
+         analysis::Integer uint_ty(32, false);
+         analysis::Type* reg_uint_ty = type_mgr->GetRegisteredType(&uint_ty);
+diff --git a/source/opt/optimizer.cpp b/source/opt/optimizer.cpp
+index 8726ff93..5497fab7 100644
+--- a/source/opt/optimizer.cpp
++++ b/source/opt/optimizer.cpp
+@@ -908,6 +908,66 @@ Optimizer::PassToken CreateInstDebugPrintfPass(uint32_t desc_set,
+       MakeUnique<opt::InstDebugPrintfPass>(desc_set, shader_id));
+ }
+ 
++Optimizer::PassToken CreateAutoInstDebugPass(uint32_t desc_set,
++                                             uint32_t shader_id,
++                                             bool test_atomic_ops,
++                                             bool test_subgroup_ops) {
++  return MakeUnique<Optimizer::PassToken::Impl>(
++      MakeUnique<opt::AutoInstDebugPass>(desc_set, shader_id, test_atomic_ops,
++                                         test_subgroup_ops));
++}
++
++Optimizer::PassToken CreateAutoInstDivergenceCharacterizationPass(
++    uint32_t desc_set, uint32_t shader_id,
++    std::function<
++        void(std::unordered_map<uint32_t, uint32_t>&& inst_id2prim_id,
++             std::unordered_map<uint32_t, uint32_t>&& inst_id2inst_count)>
++        static_data_callback) {
++  return MakeUnique<Optimizer::PassToken::Impl>(
++      MakeUnique<opt::AutoInstDivergenceCharacterizationPass>(
++          desc_set, shader_id, static_data_callback));
++}
++
++Optimizer::PassToken CreateAutoInstDynShaderTracePass(uint32_t desc_set,
++                                                      uint32_t shader_id) {
++  return MakeUnique<Optimizer::PassToken::Impl>(
++      MakeUnique<opt::AutoInstDynShaderTracePass>(desc_set, shader_id));
++}
++
++Optimizer::PassToken CreateAutoInstDynTraceRayTracePass(
++    uint32_t desc_set, uint32_t shader_id,
++    std::function<void(std::unordered_map<uint32_t, uint32_t>&&,
++                       std::unordered_map<uint32_t, std::vector<uint32_t>>&&)>
++        static_data_callback) {
++  return MakeUnique<Optimizer::PassToken::Impl>(
++      MakeUnique<opt::AutoInstDynTraceRayTracePass>(desc_set, shader_id,
++                                                    static_data_callback));
++}
++
++Optimizer::PassToken CreateAutoInstExecutionTracePass(
++    uint32_t desc_set, uint32_t shader_id,
++    std::function<
++        void(std::unordered_map<uint32_t, std::set<uint32_t>>&&,
++             std::unordered_map<uint32_t, uint32_t>&& inst_id2bb_opcodes)>
++        static_data_callback) {
++  return MakeUnique<Optimizer::PassToken::Impl>(
++      MakeUnique<opt::AutoInstExecutionTracePass>(desc_set, shader_id,
++                                                  static_data_callback));
++}
++
++Optimizer::PassToken CreateAutoInstSimtEfficiencyPass(
++    uint32_t desc_set, uint32_t shader_id, uint32_t reserved_words_count) {
++  return MakeUnique<Optimizer::PassToken::Impl>(
++      MakeUnique<opt::AutoInstSimtEfficiencyPass>(desc_set, shader_id,
++                                                  reserved_words_count));
++}
++
++Optimizer::PassToken CreateAutoInstWarpEntryAndExitPass(uint32_t desc_set,
++                                                        uint32_t shader_id) {
++  return MakeUnique<Optimizer::PassToken::Impl>(
++      MakeUnique<opt::AutoInstWarpEntryAndExitPass>(desc_set, shader_id));
++}
++
+ Optimizer::PassToken CreateInstBuffAddrCheckPass(uint32_t desc_set,
+                                                  uint32_t shader_id) {
+   return MakeUnique<Optimizer::PassToken::Impl>(
+diff --git a/source/opt/passes.h b/source/opt/passes.h
+index d47cc1ce..9a7c9c22 100644
+--- a/source/opt/passes.h
++++ b/source/opt/passes.h
+@@ -19,6 +19,13 @@
+ 
+ #include "source/opt/aggressive_dead_code_elim_pass.h"
+ #include "source/opt/amd_ext_to_khr.h"
++#include "source/opt/auto_inst_debug_pass.h"
++#include "source/opt/auto_inst_divergence_characterization_pass.h"
++#include "source/opt/auto_inst_dyn_trace_ray_trace_pass.h"
++#include "source/opt/auto_inst_dyn_shader_trace_pass.h"
++#include "source/opt/auto_inst_execution_trace_pass.h"
++#include "source/opt/auto_inst_simt_efficiency_pass.h"
++#include "source/opt/auto_inst_warp_entry_and_exit_pass.h"
+ #include "source/opt/block_merge_pass.h"
+ #include "source/opt/ccp_pass.h"
+ #include "source/opt/cfg_cleanup_pass.h"
+-- 
+2.29.2.windows.2
+
