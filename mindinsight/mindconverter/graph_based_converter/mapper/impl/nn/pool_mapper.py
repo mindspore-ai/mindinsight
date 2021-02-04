@@ -54,7 +54,6 @@ class PoolMapper(ONNXToMindSporeMapper):
         kernel_shape = params['kernel_shape']
         strides = params['strides']
         dilations = params.get('dilations', (1, 1))
-
         ms_opt_shape = np.true_divide(np.subtract(np.array(input_shape[-len(kernel_shape):], dtype=np.float32),
                                                   ((np.array(kernel_shape, dtype=np.float32) - 1) *
                                                    np.array(dilations, dtype=np.float32) + 1)) + 1,
@@ -123,9 +122,9 @@ class PoolMapper(ONNXToMindSporeMapper):
         if np.any(np.array(ms_opt_shape) > np.array(onnx_opt_shape)):
             raise ValueError(f"ms_opt_shape[{ms_opt_shape}] should be no larger than onnx_opt_shape[{onnx_opt_shape}].")
 
-        shape_diff = np.subtract((np.array(onnx_opt_shape) - 1)*np.array(strides),
+        shape_diff = np.subtract((np.array(onnx_opt_shape) - 1) * np.array(strides),
                                  np.subtract(np.array(onnx_ipt_shape),
-                                             (np.array(kernel_shape) - 1)*np.array(dilations) + 1)).tolist()
+                                             (np.array(kernel_shape) - 1) * np.array(dilations) + 1)).tolist()
 
         zero_pad_single = (0, 0)
         paddings = [zero_pad_single]
@@ -134,7 +133,7 @@ class PoolMapper(ONNXToMindSporeMapper):
             paddings.append(zero_pad_single)
 
         for axis_diff in shape_diff:
-            paddings.append((int(axis_diff//2), int(axis_diff//2 + axis_diff % 2)))
+            paddings.append((int(axis_diff // 2), int(axis_diff // 2 + axis_diff % 2)))
 
         init_template_pad = f"self.pad_{{{variable_slot}}} = nn.Pad(paddings={{paddings}})"
         construct_template_pad = f"opt_{{{variable_slot}}} = self.pad_{{{variable_slot}}}" \

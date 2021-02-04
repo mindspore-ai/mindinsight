@@ -105,7 +105,7 @@ class CodeStruct:
                 init_lines += init_str
                 cons_lines += cons_str
 
-            else: # is ModuleStruct
+            else:  # is ModuleStruct
                 # check if this instance generated CodeStruct
                 if GlobalContext().code_structs.get(struct.pattern_id) is None:
                     CodeStruct(struct, repeated_submodules)

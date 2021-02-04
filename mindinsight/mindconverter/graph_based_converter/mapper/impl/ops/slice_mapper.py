@@ -37,7 +37,7 @@ class SliceMapper(ONNXToMindSporeMapper):
     def _generate_snippet_template(**kwargs):
         template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
             **kwargs)
-        weights = [weight.value for weight in kwargs.get('weights')] # start, end, axis
+        weights = [weight.value for weight in kwargs.get('weights')]  # start, end, axis
         opt_shape = kwargs["raw_params"]["output_shape"]
         if not weights:
             raise ValueError("Cannot get required params from slice.")
