@@ -17,6 +17,7 @@ import multiprocessing as mp
 import os
 import re
 import sys
+from typing import List
 from importlib import import_module
 from importlib.util import find_spec
 from functools import partial
@@ -30,7 +31,8 @@ from mindinsight.mindconverter.graph_based_converter.generator import batch_add_
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import GraphInitError, TreeCreationError, SourceFilesSaveError, \
-    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError
+    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError, \
+    BadParamError
 from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
 
 check_common_dependency_integrity = partial(check_dependency_integrity,
@@ -136,7 +138,7 @@ def tf_installation_validation(func):
     Validate args of func.
 
     Args:
-        func(type): Function.
+        func (type): Function.
 
     Returns:
         type, inner function.
@@ -194,22 +196,20 @@ def _extract_model_name(model_path):
 @TreeCreationError.uniform_catcher()
 @SourceFilesSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
-def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
-                                        input_nodes: str, output_nodes: str,
+def graph_based_converter_pytorch_to_ms(graph_path: str,
+                                        input_nodes: dict, output_nodes: List[str],
                                         output_folder: str, report_folder: str = None):
     """
     PyTorch to MindSpore based on Graph.
 
     Args:
         graph_path (str): Graph file path.
-        sample_shape (tuple): Input shape of the model.
-        input_nodes (str): Input node(s) of the model.
-        output_nodes (str): Output node(s) of the model.
+        input_nodes (dict): Input node(s) of the model.
+        output_nodes (list[str]): Output node(s) of the model.
         output_folder (str): Output folder.
         report_folder (str): Report output folder path.
     """
-    graph_obj = GraphFactory.init(graph_path, sample_shape=sample_shape,
-                                  input_nodes=input_nodes, output_nodes=output_nodes)
+    graph_obj = GraphFactory.init(graph_path, input_nodes=input_nodes, output_nodes=output_nodes)
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
     code_fragments = generator_inst.generate()
@@ -224,26 +224,23 @@ def graph_based_converter_pytorch_to_ms(graph_path: str, sample_shape: tuple,
 @TreeCreationError.uniform_catcher()
 @SourceFilesSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
-def graph_based_converter_tf_to_ms(graph_path: str, sample_shape: tuple,
-                                   input_nodes: str, output_nodes: str,
+def graph_based_converter_tf_to_ms(graph_path: str,
+                                   input_nodes: dict, output_nodes: List[str],
                                    output_folder: str, report_folder: str = None):
     """
     Tensorflow to MindSpore based on Graph.
 
     Args:
-        graph_path(str): Graph file path.
-        sample_shape(tuple): Input shape of the model.
-        input_nodes(str): Input node(s) of the model.
-        output_nodes(str): Output node(s) of the model.
-        output_folder(str): Output folder.
-        report_folder(str): Report output folder path.
+        graph_path (str): Graph file path.
+        input_nodes (dict): Input node(s) of the model.
+        output_nodes (list[str]): Output node(s) of the model.
+        output_folder (str): Output folder.
+        report_folder (str): Report output folder path.
     """
-
     # Close unnecessary log.
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-    graph_obj = GraphFactory.init(graph_path, sample_shape=sample_shape,
-                                  input_nodes=input_nodes, output_nodes=output_nodes)
+    graph_obj = GraphFactory.init(graph_path, input_nodes=input_nodes, output_nodes=output_nodes)
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
     code_fragments = generator_inst.generate()
@@ -265,29 +262,38 @@ def main_graph_base_converter(file_config):
     if not file_config.get("shape"):
         raise ParamMissingError("Param missing, `--shape` is required when using graph mode.")
 
+    if graph_path.endswith("pth") and not file_config['input_nodes'] and \
+            file_config.get("shape") and len(file_config.get("shape")) == 1:
+        file_config['input_nodes'] = ["input.1"]
+
+    if len(file_config['shape']) != len(file_config['input_nodes']) != len(set(file_config['input_nodes'])):
+        raise BadParamError("`--shape` and `--input_nodes` must have the same length, "
+                            "and no redundant node in `--input_nodes`.")
+
+    input_nodes = dict()
+    for shape, node in zip(file_config['shape'], file_config['input_nodes']):
+        input_nodes[node] = shape
+
     if frame_type == FrameworkType.PYTORCH.value:
         if graph_path.endswith('.onnx'):
             check_params = ['input_nodes', 'output_nodes']
             check_params_exist(check_params, file_config)
             graph_based_converter_pytorch_to_ms(graph_path=graph_path,
-                                                sample_shape=file_config['shape'],
-                                                input_nodes=file_config['input_nodes'],
+                                                input_nodes=input_nodes,
                                                 output_nodes=file_config['output_nodes'],
                                                 output_folder=file_config['outfile_dir'],
                                                 report_folder=file_config['report_dir'])
         else:
             graph_based_converter_pytorch_to_ms(graph_path=graph_path,
-                                                sample_shape=file_config['shape'],
-                                                input_nodes='input.1',
-                                                output_nodes='',
+                                                input_nodes=input_nodes,
+                                                output_nodes=[],
                                                 output_folder=file_config['outfile_dir'],
                                                 report_folder=file_config['report_dir'])
     elif frame_type == FrameworkType.TENSORFLOW.value:
         check_params = ['input_nodes', 'output_nodes']
         check_params_exist(check_params, file_config)
         graph_based_converter_tf_to_ms(graph_path=graph_path,
-                                       sample_shape=file_config['shape'],
-                                       input_nodes=file_config['input_nodes'],
+                                       input_nodes=input_nodes,
                                        output_nodes=file_config['output_nodes'],
                                        output_folder=file_config['outfile_dir'],
                                        report_folder=file_config['report_dir'])

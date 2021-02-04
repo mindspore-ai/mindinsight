@@ -17,18 +17,17 @@ import re
 import abc
 from importlib import import_module
 from collections import OrderedDict
-from typing import Union
 
 import numpy as np
 
 from mindinsight.mindconverter.common.log import logger as log
-from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model
+from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model, build_feed_dict
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.optimizer import OnnxSimplify
 
 from mindinsight.mindconverter.graph_based_converter.constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
     ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL
-from mindinsight.mindconverter.common.exceptions import GraphInitError, ModelLoadingError
+from mindinsight.mindconverter.common.exceptions import GraphInitError
 
 
 def convert_tf_graph_to_onnx(model_path, model_inputs, model_outputs, opset=12):
@@ -255,16 +254,16 @@ class OnnxDataLoader:
             Default: True
     """
 
-    def __init__(self, onnx_model, graph_input_shape: Union[tuple, list],
-                 input_nodes: list, output_nodes: list, infer_shape=True):
+    def __init__(self, onnx_model, input_nodes: dict,
+                 output_nodes: list, infer_shape=True):
         onnx_sim = OnnxSimplify()
-        onnx_model_sim = onnx_sim.run_onnx_simplify(onnx_model, graph_input_shape)
+        onnx_model_sim = onnx_sim.run_onnx_simplify(onnx_model, input_nodes)
         self.model = onnx_model_sim
         self.graph = onnx_model_sim.graph
         self.nodes = onnx_model_sim.graph.node
-        self.graph_input_shape = graph_input_shape
-        self.input_nodes = input_nodes if isinstance(input_nodes, list) else [input_nodes]
-        self.output_nodes = output_nodes if isinstance(output_nodes, list) else [output_nodes]
+        self.batch_size = list(input_nodes.values())[0][0]
+        self.input_nodes = input_nodes
+        self.output_nodes = output_nodes
         # args for init
         self._is_infer_shape = infer_shape
         self._global_context = GlobalContext()
@@ -296,26 +295,6 @@ class OnnxDataLoader:
                 continue
             filtered_dict[k] = v
         return filtered_dict
-
-    def _check_initialization(self):
-        """Define conditions checked before init."""
-        if all([self.model, self.graph, self.nodes]):
-            if self.graph_input_shape is None:  # do not check
-                return True
-            onnx = import_module("onnx")
-            # check input shape eligible
-            input_node = getattr(self.graph, 'input')[0]
-            type_str = onnx.helper.printable_type(input_node.type)
-            regex = r"(.+\ )?(?P<full>(unk.+x|\d+x)*\d+)"
-            match = re.match(regex, type_str)
-            dims = match.group('full').split('x')
-            h = int(dims[1])
-            w = int(dims[2])
-            c = int(dims[3])
-            if [h, w, c] != list(self.graph_input_shape)[1:]:
-                raise ModelLoadingError(f"Shape given should be (N, {h}, {w}, {c}) but got {self.graph_input_shape}")
-            return True
-        return False
 
     def _infer_model(self):
         """
@@ -425,7 +404,8 @@ class OnnxDataLoader:
             # replace unknown shape by '-1'
             for i, s in enumerate(shape):
                 if 'unk' in s:
-                    shape[i] = int(self.graph_input_shape[0]) if self.graph_input_shape is not None else 1
+                    # Have to adapt user-define axis name, e.g. 'sequence', 'batch'.
+                    shape[i] = self.batch_size if self.batch_size is not None else 1
                     continue
                 if s == "scalar":
                     shape = SCALAR_WITHOUT_SHAPE
@@ -474,12 +454,6 @@ class OnnxDataLoader:
     def initialize(self):
         """Initialize the OnnxDataLoader."""
 
-        # check init conditions met
-        if not self._check_initialization():
-            err = ModuleNotFoundError("Unable to Find ONNX Model")
-            log.error(str(err))
-            log.exception(err)
-
         # Parse ONNX Graph level info
         self._parse_graph()
 
@@ -521,7 +495,7 @@ class OnnxDataLoader:
             for node in self.dynamic_reshape_node:
                 shape_ref = self._nodes_dict[node].input_name_list[1]
                 output_tensors.append(shape_ref)
-            feed_dict = {self.input_nodes[0]: np.random.rand(*self.graph_input_shape).astype(np.float32)}
+            feed_dict = build_feed_dict(self.model, self.input_nodes)
             fetch_dict = fetch_output_from_onnx_model(self.model, feed_dict=feed_dict, output_nodes=output_tensors)
             for opt_tensor_name, value in fetch_dict.items():
                 self.tensors_dict[opt_tensor_name] = OnnxTensor(value, opt_tensor_name)
@@ -535,7 +509,7 @@ class OnnxDataLoader:
             for node in self.dynamic_resize_node:
                 shape_ref = self._nodes_dict[node].input_name_list[3]
                 output_tensors.append(shape_ref)
-            feed_dict = {self.input_nodes[0]: np.random.rand(*self.graph_input_shape).astype(np.float32)}
+            feed_dict = build_feed_dict(self.model, self.input_nodes)
             fetch_dict = fetch_output_from_onnx_model(self.model, feed_dict=feed_dict, output_nodes=output_tensors)
             for opt_tensor_name, value in fetch_dict.items():
                 self.tensors_dict[opt_tensor_name] = OnnxTensor(value, opt_tensor_name)
@@ -606,6 +580,7 @@ class OnnxDataLoader:
 
 class NodeWeight:
     """Node weight struct."""
+
     def __init__(self, weight_name, weight_value):
         self._weight_name = weight_name
         self._weight_value = weight_value

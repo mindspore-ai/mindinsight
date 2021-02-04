@@ -50,17 +50,18 @@ class TFGraphParser(GraphParser):
             log.error(str(error))
             raise error
 
-        invalid_inputs = TFGraphParser.invalid_nodes_name(tf_input_nodes)
-        invalid_outputs = TFGraphParser.invalid_nodes_name(tf_output_nodes)
+        input_nodes = ",".join(tf_input_nodes.keys())
+        output_nodes = ",".join(tf_output_nodes)
+        invalid_inputs = TFGraphParser.invalid_nodes_name(input_nodes)
+        invalid_outputs = TFGraphParser.invalid_nodes_name(output_nodes)
         if invalid_inputs:
             raise ModelNotSupportError(f"Invalid Input Node Name Found: {', '.join(invalid_inputs)}")
         if invalid_outputs:
             raise ModelNotSupportError(f"Invalid Output Node Name Found: {', '.join(invalid_outputs)}")
 
-
         model = convert_tf_graph_to_onnx(model_path,
-                                         model_inputs=tf_input_nodes,
-                                         model_outputs=tf_output_nodes)
+                                         model_inputs=input_nodes,
+                                         model_outputs=output_nodes)
         return model
 
     @staticmethod

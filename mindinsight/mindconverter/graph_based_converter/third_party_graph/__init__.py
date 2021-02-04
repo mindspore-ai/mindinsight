@@ -15,9 +15,11 @@
 """Graph associated definition module."""
 
 __all__ = ["GraphFactory"]
-from importlib import import_module
+
+from typing import List
 
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph import OnnxGraph
 
 
 class GraphFactory:
@@ -25,23 +27,21 @@ class GraphFactory:
 
     @classmethod
     def init(cls, graph_path: str,
-             sample_shape: tuple,
-             input_nodes: str = None, output_nodes: str = None):
+             input_nodes: dict = None, output_nodes: List[str] = None):
         """
         Init an instance of graph.
 
         Args:
             graph_path (str): Graph or model file path.
-            sample_shape (tuple): Input shape of the model.
-            input_nodes(str): Input nodes.
-            output_nodes(str): Output nodes.
+            input_nodes (dict): Input nodes.
+            output_nodes (list[str]): Output nodes.
 
         Returns:
             Graph, graph instance.
         """
-
-        onnx_graph_module = import_module(
-            'mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph')
-        onnx_graph = getattr(onnx_graph_module, 'OnnxGraph')
-        return onnx_graph.load(model_path=graph_path, input_nodes=input_nodes,
-                               output_nodes=output_nodes, sample_shape=sample_shape)
+        if not isinstance(input_nodes, dict):
+            raise TypeError("`input_nodes` must be type of dict.")
+        if not isinstance(output_nodes, list):
+            raise TypeError("`output_nodes` must be type of list.")
+        return OnnxGraph.load(model_path=graph_path, input_nodes=input_nodes,
+                              output_nodes=output_nodes)

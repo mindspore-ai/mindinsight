@@ -24,6 +24,7 @@ from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_grap
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.pytorch_graph_parser import PyTorchGraphParser
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.tf_graph_parser import TFGraphParser
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import OnnxDataLoader, NodeWeight
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher import generate_scope_name
 
 NONE_SCOPE_OP = {
     "onnx::Add": "Add",
@@ -55,13 +56,12 @@ class OnnxGraph(Graph):
 
     Args:
         model (onnx.ModelProto): Onnx defined model proto.
-        sample_shape (tuple): Input shape of the model.
     """
 
-    def __init__(self, model, sample_shape: tuple = None, **kwargs):
+    def __init__(self, model, **kwargs):
         super(OnnxGraph, self).__init__(model=model, **kwargs)
 
-        self.build(sample_shape)
+        self.build()
 
     @staticmethod
     def _extract_shape(shape):
@@ -112,17 +112,11 @@ class OnnxGraph(Graph):
         if src not in self._nodes_collection[tgt].precursor_nodes:
             self._nodes_collection[tgt.split(':')[0]].precursor_nodes.append(src)
 
-    def build(self, input_shape=None):
-        """
-        Build graph tree.
-
-        Args:
-            input_shape (tuple): Input shape of model. Default: None
-        """
-        model_data = OnnxDataLoader(self.model, graph_input_shape=input_shape,
+    def build(self):
+        """Build graph tree."""
+        model_data = OnnxDataLoader(self.model,
                                     input_nodes=self._raw_input_nodes,
                                     output_nodes=self._raw_output_nodes)
-        from ..sub_graph_searcher import generate_scope_name
         scope_name_list = generate_scope_name(model_data)
 
         self._shape_dict = model_data.node_output_shape_dict
@@ -143,33 +137,32 @@ class OnnxGraph(Graph):
             for nd_ipt_name in node.precursor_onnx_node_dict:
                 self._build_connection(nd_ipt_name, node_name)
 
-        super(OnnxGraph, self).build(input_shape=input_shape)
-        self._collect_input_shape_of_each_node(input_shape)
+        super(OnnxGraph, self).build()
+        self._collect_input_shape_of_each_node()
 
-    def _collect_input_shape_of_each_node(self, input_shape):
+    def _collect_input_shape_of_each_node(self):
         """
         Collect input tensor shape of each node.
-
-        Args:
-            input_shape (tuple): Input shape.
         """
-        input_node = InputNode(input_shape)
-        input_node_name = self._raw_input_nodes
+        input_nodes = dict()
+        for ipt_nd_name, shape in self._raw_input_nodes.items():
+            input_nodes[ipt_nd_name] = InputNode(ipt_nd_name, shape)
+
         for node_name, node in self._nodes_collection.items():
             if node_name in self._input_nodes:
-                ipt_nd_name = input_node_name.format(input_node.scope_name)
-                input_node.set_scope_name(node.scope_name)
-                node.precursor_nodes.insert(0, ipt_nd_name)
-                input_node.set_successor_nodes(node_name)
-                self._shape_dict[ipt_nd_name] = input_node.output_shape
-
+                for ipt in node.ir_node_inputs:
+                    if ipt not in input_nodes:
+                        continue
+                    input_nodes[ipt].set_scope_name(node.scope_name)
+                    node.precursor_nodes.insert(0, ipt)
+                    input_nodes[ipt].set_successor_nodes(node_name)
+                    self._shape_dict[ipt] = input_nodes[ipt].output_shape
             ipt_shape = []
             for p_nd in node.precursor_nodes:
                 shp = self._shape_dict.get(p_nd)
                 ipt_shape.append(tuple(shp) if isinstance(shp, list) else shp)
 
-            self._input_shape[node_name] = ipt_shape[0] if len(
-                ipt_shape) == 1 else ipt_shape
+            self._input_shape[node_name] = ipt_shape[0] if len(ipt_shape) == 1 else ipt_shape
 
     def sub_graph_merging(self):
         raise NotImplementedError()
@@ -206,11 +199,6 @@ class OnnxGraph(Graph):
         elif graph_path.endswith('.onnx'):
             onnx = import_module('onnx')
             onnx_model = onnx.load(graph_path)
-            optimizer = import_module(
-                'mindinsight.mindconverter.graph_based_converter.third_party_graph.optimizer')
-            onnx_simplify = getattr(optimizer, 'OnnxSimplify')()
-            onnx_model = onnx_simplify.run_onnx_simplify(onnx_model, kwargs['sample_shape'])
-
         else:
             onnx_model = PyTorchGraphParser.parse(graph_path, **kwargs)
         onnx_inputs = [onnx_input.name for onnx_input in onnx_model.graph.input]

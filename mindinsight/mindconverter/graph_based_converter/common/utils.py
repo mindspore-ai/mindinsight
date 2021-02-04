@@ -20,6 +20,10 @@ from importlib import import_module
 from importlib.util import find_spec
 from typing import List, Tuple, Mapping
 
+import numpy as np
+
+from mindspore.train.serialization import save_checkpoint
+
 from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
     UnknownModelError, CheckPointGenerationError, WeightMapGenerationError
 from mindinsight.mindconverter.common.log import logger as log
@@ -67,6 +71,20 @@ def check_dependency_integrity(*packages):
         return True
     except ImportError:
         return False
+
+
+def build_feed_dict(onnx_model, input_nodes: dict):
+    """Build feed dict for onnxruntime."""
+    dtype_mapping = getattr(import_module("tf2onnx.utils"), "ONNX_TO_NUMPY_DTYPE")
+    input_nodes_types = {
+        node.name: dtype_mapping[node.type.tensor_type.elem_type]
+        for node in onnx_model.graph.input
+    }
+    feed_dict = {
+        name: np.random.rand(*shape).astype(input_nodes_types[name.split(":")[0]])
+        for name, shape in input_nodes.items()
+    }
+    return feed_dict
 
 
 def fetch_output_from_onnx_model(model, feed_dict: dict, output_nodes: List[str]):
@@ -145,7 +163,6 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         except (IOError, FileExistsError) as error:
             raise ReportGenerationError(str(error))
 
-        save_checkpoint = getattr(import_module('mindspore.train.serialization'), 'save_checkpoint')
         ckpt_file_path = os.path.realpath(os.path.join(out_folder, f"{model_name}.ckpt"))
         try:
             if os.path.exists(ckpt_file_path):

@@ -40,7 +40,7 @@ class BaseGraph(metaclass=abc.ABCMeta):
     _REQUIRED_PARAM_OF_MODEL = "model"
 
     @abc.abstractmethod
-    def build(self, input_shape: tuple):
+    def build(self):
         """Build graph."""
 
     @abc.abstractmethod
@@ -64,8 +64,7 @@ class BaseGraph(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def load(cls, model_path: str, sample_shape: tuple = None,
-             checkpoint: str = None, **kwargs):
+    def load(cls, model_path: str, **kwargs):
         """Factory method to initialize an graph object."""
 
     def __new__(cls, *args, **kwargs):
@@ -111,9 +110,7 @@ class Graph(BaseGraph, abc.ABC):
     @property
     def user_provided_input_nodes(self) -> List[str]:
         """User provided input_nodes in CLI."""
-        if not isinstance(self._raw_input_nodes, list):
-            return [self._raw_input_nodes]
-        return self._raw_input_nodes
+        return list(self._raw_input_nodes.keys())
 
     def get_input_shape(self, name):
         """
@@ -182,14 +179,8 @@ class Graph(BaseGraph, abc.ABC):
             return None
         return self._nodes_collection[prefix]
 
-    def build(self, input_shape: tuple):
-        """
-        Build graph.
-
-        Args:
-            input_shape (tuple): Input shape of model.
-
-        """
+    def build(self):
+        """Build graph."""
         # Collect input nodes and output nodes.
         self._collect_ipt_and_opt_nodes()
         # Use topological sort to solve nodes order.
@@ -248,32 +239,18 @@ class Graph(BaseGraph, abc.ABC):
         raise NotImplementedError
 
     @classmethod
-    def load(cls, model_path: str, sample_shape: tuple = None,
-             checkpoint: str = None, **kwargs) -> BaseGraph:
+    def load(cls, model_path: str, **kwargs) -> BaseGraph:
         """
-        Load third party graph, metadata and checkpoint.
-
-        Notes:
-            `checkpoint` is optional, and it can not be supported currently.
+        Load third party graph.
 
         Args:
             model_path (str): Graph or model file path.
-            sample_shape (tuple): Input shape of the model.
-            checkpoint (str): Checkpoint file path.
 
         Returns:
             cls, graph instance.
         """
-        src_graph = cls.load_graph(graph_path=model_path, sample_shape=sample_shape, **kwargs)
-        ckpt = cls.load_checkpoint(ckpt_path=checkpoint) if checkpoint else None
-
-        if ckpt is not None:
-            # Create an instance of TensorflowGraph.
-            return cls(model=src_graph, sample_shape=sample_shape,
-                       checkpoint=ckpt)
-
-        # Create an instance of PyTorchGraph.
-        return cls(src_graph, sample_shape=sample_shape, **kwargs)
+        src_graph = cls.load_graph(graph_path=model_path, **kwargs)
+        return cls(src_graph, **kwargs)
 
 
 class GraphNode(abc.ABC):
