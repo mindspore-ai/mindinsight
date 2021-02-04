@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """The minddata proposer."""
+import os
+
 from collections import OrderedDict
 
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
@@ -86,6 +88,11 @@ class MinddataProposer(Proposer):
 
     def minddata_cpu_utilization_proposal(self):
         """Get the proposals of minddata cpu utilization"""
+        filename = "minddata_cpu_utilization_{}.json".format(self.device_id)
+        file_path = os.path.join(self.profiling_path, filename)
+        # Forward compatibility, it is reasonable that the file does not exist.
+        if not os.path.exists(file_path):
+            return
         minddata_cpu_utilization = OrderedDict()
         minddata_cpu_utilization_analyser = AnalyserFactory.instance().get_analyser(
             'minddata_cpu_utilization', self.profiling_path, self.device_id)

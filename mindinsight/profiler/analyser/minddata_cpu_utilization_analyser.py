@@ -57,14 +57,14 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
         result["device_info"] = dict()
         for key in self._data.get("device_info").keys():
             arr = self._data.get("device_info")[key]
-            avg_value = round(sum(arr) / len(arr))
+            avg_value = round(sum(arr) / len(arr)) if arr else 0
             result["device_info"][key] = {"metrics": arr, "avg_value": avg_value}
 
         # process average CPU utilization
         result["process_info"] = dict()
         for key in self._data.get("process_info").keys():
             arr = self._data.get("process_info")[key]
-            avg_value = round(sum(arr) / len(arr))
+            avg_value = round(sum(arr) / len(arr)) if arr else 0
             result["process_info"][key] = {"metrics": arr, "avg_value": avg_value}
 
         # op average CPU utilization
@@ -83,7 +83,7 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
             op_info_dict["metrics"] = dict()
             for key in item.get("metrics").keys():
                 arr = item.get("metrics")[key]
-                avg_value = round(sum(arr) / len(arr))
+                avg_value = round(sum(arr) / len(arr)) if arr else 0
                 op_info_dict["metrics"][key] = {"metrics": arr, "avg_value": avg_value}
                 result["op_info"]["total_op_avg_value"][key] += avg_value
             op_info_dict["op_id"] = item.get("op_id")
@@ -161,11 +161,10 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
                 # queue_step_time_info[][0]:step_num
                 # queue_step_time_info[][1]:sample time
                 if float(item) <= float(queue_step_time_info[right_index][1]):
-                    if float(item) < (float(queue_step_time_info[left_index][1])) \
-                            + float(queue_step_time_info[right_index][1]) / 2:
-                        steps_info.append(queue_step_time_info[right_index][0])
-                    else:
+                    if float(item) < float(queue_step_time_info[right_index][1]):
                         steps_info.append(queue_step_time_info[left_index][0])
+                    else:
+                        steps_info.append(queue_step_time_info[right_index][0])
                     break
                 left_index = right_index
                 right_index += 1
