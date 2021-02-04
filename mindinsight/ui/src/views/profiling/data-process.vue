@@ -330,16 +330,20 @@ limitations under the License.
                     <span>{{$t('profiling.logicCores')}}</span><span>{{deviceCpuChart.logicCores}}</span>
                   </div>
                   <div class="info-line">
-                    <span>{{$t('profiling.avgUserUtilization')}}</span><span>{{deviceCpuChart.cpuAvgUser}}</span>
+                    <span>{{$t('profiling.avgUserUtilization')}}</span>
+                    <span>{{addPercentSign(deviceCpuChart.cpuAvgUser)}}</span>
                   </div>
                   <div class="info-line">
-                    <span>{{$t('profiling.avgSysUtilization')}}</span><span>{{deviceCpuChart.cpuAvgSystem}}</span>
+                    <span>{{$t('profiling.avgSysUtilization')}}</span>
+                    <span>{{addPercentSign(deviceCpuChart.cpuAvgSystem)}}</span>
                   </div>
                   <div class="info-line">
-                    <span>{{$t('profiling.avgIOUtilization')}}</span><span>{{deviceCpuChart.cpuAvgIO}}</span>
+                    <span>{{$t('profiling.avgIOUtilization')}}</span>
+                    <span>{{addPercentSign(deviceCpuChart.cpuAvgIO)}}</span>
                   </div>
                   <div class="info-line">
-                    <span>{{$t('profiling.avgIdleUtilization')}}</span><span>{{deviceCpuChart.cpuAvgFree}}</span>
+                    <span>{{$t('profiling.avgIdleUtilization')}}</span>
+                    <span>{{addPercentSign(deviceCpuChart.cpuAvgFree)}}</span>
                   </div>
                   <div class="info-line">
                     <span>{{$t('profiling.avgWaitingProcess')}}</span><span>{{deviceCpuChart.cpuAvgProcess}}</span>
@@ -359,10 +363,12 @@ limitations under the License.
                 </div>
                 <div class="cpu-chart-info">
                   <div class="info-line">
-                    <span>{{$t('profiling.avgUserUtilization')}}</span><span>{{processCpuChart.cpuAvgUser}}</span>
+                    <span>{{$t('profiling.avgUserUtilization')}}</span>
+                    <span>{{addPercentSign(processCpuChart.cpuAvgUser)}}</span>
                   </div>
                   <div class="info-line">
-                    <span>{{$t('profiling.avgSysUtilization')}}</span><span>{{processCpuChart.cpuAvgSystem}}</span>
+                    <span>{{$t('profiling.avgSysUtilization')}}</span>
+                    <span>{{addPercentSign(processCpuChart.cpuAvgSystem)}}</span>
                   </div>
                 </div>
               </div>
@@ -382,22 +388,22 @@ limitations under the License.
                   </div>
                   <div class="info-line">
                     <span>{{$t('profiling.avgUserUtilization')}}</span>
-                    <span>{{operatorCpuChart.cpuAvgTotalUser}}</span>
+                    <span>{{addPercentSign(operatorCpuChart.cpuAvgTotalUser)}}</span>
                   </div>
                   <div class="info-line">
                     <span>{{$t('profiling.avgSysUtilization')}}</span>
-                    <span>{{operatorCpuChart.cpuAvgTotalSystem}}</span>
+                    <span>{{addPercentSign(operatorCpuChart.cpuAvgTotalSystem)}}</span>
                   </div>
                   <div class="info-title">
                     {{$t('profiling.currentOperator')}}
                   </div>
                   <div class="info-line">
                     <span>{{$t('profiling.avgUserUtilization')}}</span>
-                    <span>{{operatorCpuChart.cpuAvgOpUser}}</span>
+                    <span>{{addPercentSign(operatorCpuChart.cpuAvgOpUser)}}</span>
                   </div>
                   <div class="info-line">
                     <span>{{$t('profiling.avgSysUtilization')}}</span>
-                    <span>{{operatorCpuChart.cpuAvgOpSystem}}</span>
+                    <span>{{addPercentSign(operatorCpuChart.cpuAvgOpSystem)}}</span>
                   </div>
                   <div class="info-line">
                     <span>{{$t('profiling.workersNum')}}{{$t('symbols.colon')}}</span>
@@ -571,6 +577,18 @@ export default {
     }, 500);
   },
   methods: {
+    /**
+     * The logic of add percent sign
+     * @param {number | string} number
+     * @return {string}
+     */
+    addPercentSign(number) {
+      if (number === 0 || number === '0') {
+        return '0';
+      } else {
+        return `${number}%`;
+      }
+    },
     /**
      * Anti-shake
      * @param { Function } fn callback function
