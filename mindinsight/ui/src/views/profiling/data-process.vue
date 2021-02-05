@@ -1598,7 +1598,7 @@ export default {
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap {
   float: left;
   width: calc(50% - 12px);
-  height: calc(100% - 5px);
+  height: calc(100% - 10px);
   border-radius: 4px;
   overflow-y: auto;
   border: 1px solid #D9D9D9;
