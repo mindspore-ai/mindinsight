@@ -70,6 +70,9 @@ limitations under the License.
           <div slot="content"
                class="saliency-tooltip-container">
             {{ $t('explain.tagTip') }}
+            {{ $t('symbols.leftbracket') }}
+            {{ $t('explain.labelTip') }}
+            {{ $t('symbols.rightbracket') }}
           </div>
           <i class="el-icon-info"></i>
         </el-tooltip>

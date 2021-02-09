@@ -467,7 +467,7 @@ export default {
     },
 
     /**
-     * Formate pieceStr
+     * Format pieceStr
      * @param {Array} piecesArr PiecesArr
      * @return {String}
      */
