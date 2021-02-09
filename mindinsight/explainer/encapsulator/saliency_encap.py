@@ -15,7 +15,7 @@
 """Saliency map encapsulator."""
 
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
-from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap
+from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap, ExplanationKeys
 
 
 class SaliencyEncap(ExplanationEncap):
@@ -49,8 +49,7 @@ class SaliencyEncap(ExplanationEncap):
         if job is None:
             raise TrainJobNotExistError(train_id)
 
-        samples = self._query_samples(job, labels, sorted_name, sorted_type, prediction_types,
-                                      query_type="saliency_maps")
+        samples = self._query_samples(job, labels, sorted_name, sorted_type, prediction_types)
 
         sample_infos = []
         obj_offset = offset * limit
@@ -79,10 +78,10 @@ class SaliencyEncap(ExplanationEncap):
         sample_cp["image"] = self._get_image_url(job.train_id, sample['image'], "original")
         for inference in sample_cp["inferences"]:
             new_list = []
-            for saliency_map in inference["saliency_maps"]:
+            for saliency_map in inference[ExplanationKeys.SALIENCY.value]:
                 if explainers and saliency_map["explainer"] not in explainers:
                     continue
                 saliency_map["overlay"] = self._get_image_url(job.train_id, saliency_map['overlay'], "overlay")
                 new_list.append(saliency_map)
-            inference["saliency_maps"] = new_list
+            inference[ExplanationKeys.SALIENCY.value] = new_list
         return sample_cp

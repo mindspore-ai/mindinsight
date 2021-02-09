@@ -15,7 +15,7 @@
 """Hierarchical Occlusion encapsulator."""
 
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
-from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap
+from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap, ExplanationKeys
 
 
 class HierarchicalOcclusionEncap(ExplanationEncap):
@@ -28,7 +28,8 @@ class HierarchicalOcclusionEncap(ExplanationEncap):
                                      offset,
                                      sorted_name,
                                      sorted_type,
-                                     prediction_types=None
+                                     prediction_types=None,
+                                     drop_empty=True,
                                      ):
         """
         Query hierarchical occlusion results.
@@ -41,6 +42,7 @@ class HierarchicalOcclusionEncap(ExplanationEncap):
             sorted_name (str): Field to be sorted.
             sorted_type (str): Sorting order, 'ascending' or 'descending'.
             prediction_types (list[str]): Prediction types filter.
+            drop_empty (bool): Whether to drop out the data without hoc data. Default: True.
 
         Returns:
             tuple[int, list[dict]], total number of samples after filtering and list of sample results.
@@ -49,8 +51,12 @@ class HierarchicalOcclusionEncap(ExplanationEncap):
         if job is None:
             raise TrainJobNotExistError(train_id)
 
-        samples = self._query_samples(job, labels, sorted_name, sorted_type, prediction_types,
-                                      query_type="hoc_layers")
+        if drop_empty:
+            samples = self._query_samples(job, labels, sorted_name, sorted_type, prediction_types,
+                                          drop_type=ExplanationKeys.HOC.value)
+        else:
+            samples = self._query_samples(job, labels, sorted_name, sorted_type, prediction_types)
+
         sample_infos = []
         obj_offset = offset * limit
         count = len(samples)
@@ -59,29 +65,36 @@ class HierarchicalOcclusionEncap(ExplanationEncap):
             end = obj_offset + limit
         for i in range(obj_offset, end):
             sample = samples[i]
-            sample_infos.append(self._touch_sample(sample, job))
+            sample_infos.append(self._touch_sample(sample, job, drop_empty))
 
         return count, sample_infos
 
-    def _touch_sample(self, sample, job):
+    def _touch_sample(self, sample, job, drop_empty):
         """
         Final edit on single sample info.
 
         Args:
              sample (dict): Sample info.
              job (ExplainManager): Explain job.
+             drop_empty (bool): Whether to drop out inferences without HOC explanations.
 
         Returns:
             dict, the edited sample info.
         """
-        sample_cp = sample.copy()
-        sample_cp["image"] = self._get_image_url(job.train_id, sample["image"], "original")
-        for inference_item in sample_cp["inferences"]:
+        sample["image"] = self._get_image_url(job.train_id, sample["image"], "original")
+        inferences = sample["inferences"]
+        i = 0  # init index for while loop
+        while i < len(inferences):
+            inference_item = inferences[i]
+            if drop_empty and not inference_item[ExplanationKeys.HOC.value]:
+                inferences.pop(i)
+                continue
             new_list = []
-            for idx, hoc_layer in enumerate(inference_item["hoc_layers"]):
+            for idx, hoc_layer in enumerate(inference_item[ExplanationKeys.HOC.value]):
                 hoc_layer["outcome"] = self._get_image_url(job.train_id,
                                                            f"{sample['id']}_{inference_item['label']}_{idx}.jpg",
                                                            "outcome")
                 new_list.append(hoc_layer)
-            inference_item["hoc_layers"] = new_list
-        return sample_cp
+            inference_item[ExplanationKeys.HOC.value] = new_list
+            i += 1
+        return sample

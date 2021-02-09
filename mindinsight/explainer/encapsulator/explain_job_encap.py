@@ -43,8 +43,10 @@ class ExplainJobEncap(ExplainDataEncap):
     def query_meta(self, train_id):
         """
         Query explain job meta-data.
+
         Args:
             train_id (str): Job ID.
+
         Returns:
             dict, the metadata.
         """
@@ -81,7 +83,7 @@ class ExplainJobEncap(ExplainDataEncap):
         """Convert ExplainJob's meta-data to jsonable info object."""
         info = cls._job_2_info(job)
         info["sample_count"] = job.sample_count
-        info["classes"] = [item for item in job.all_classes if item['sample_count'] > 0]
+        info["classes"] = job.all_classes
         saliency_info = dict()
         if job.min_confidence is None:
             saliency_info["min_confidence"] = cls.DEFAULT_MIN_CONFIDENCE
