@@ -13,7 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Graph based scripts converter workflow."""
+import multiprocessing as mp
 import os
+import re
 import sys
 from importlib import import_module
 from importlib.util import find_spec
@@ -23,7 +25,7 @@ from mindinsight.mindconverter.graph_based_converter.common.global_context impor
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, onnx_satisfied, \
     save_code_file_and_report, get_framework_type, check_dependency_integrity, get_third_part_lib_validation_error_info
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
-    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER, ONNXOPTIMIZER_MAX_VER
+    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER, ONNXOPTIMIZER_MAX_VER, TORCH_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
@@ -55,6 +57,16 @@ def _print_error(err):
     log_console.error("\n")
 
 
+def torch_version_satisfied(output_queue):
+    """Check Torch version whether is satisfied."""
+    satisfied = False
+    pattern = r"\d+\.\d+\.\d+"
+    torch_version = re.findall(pattern, getattr(import_module('torch'), "__version__"))
+    if torch_version:
+        satisfied = lib_version_satisfied(torch_version[0], TORCH_MIN_VER)
+    output_queue.put(satisfied)
+
+
 def torch_installation_validation(func):
     """
     Validate args of func.
@@ -70,24 +82,33 @@ def torch_installation_validation(func):
            output_folder: str, report_folder: str = None):
         # Check whether pytorch is installed.
         error_info = None
+        torch_version_validation = False
         if graph_path.endswith('.onnx'):
             if not onnx_satisfied() or not check_common_dependency_integrity():
                 error_info = f"{get_third_part_lib_validation_error_info(['onnx', 'onnxruntime', 'onnxoptimizer'])} " \
                              f"are required when using graph based scripts converter."
         else:
-            if not find_spec("torch") or not onnx_satisfied() or not check_common_dependency_integrity("torch"):
-                error_info = f"PyTorch, " \
-                             f"{get_third_part_lib_validation_error_info(['onnx', 'onnxruntime', 'onnxoptimizer'])} " \
-                             f"are required when using graph based scripts converter, and PyTorch version must " \
-                             f"be consisted with model generation runtime."
+            if not find_spec("torch") or not onnx_satisfied() or not check_common_dependency_integrity():
+                error_info = \
+                    f"{get_third_part_lib_validation_error_info(['torch', 'onnx', 'onnxruntime', 'onnxoptimizer'])} " \
+                    f"are required when using graph based scripts converter, and PyTorch version must " \
+                    f"be consisted with model generation runtime."
 
+            output_queue = mp.Queue()
+            process = mp.Process(target=torch_version_satisfied, args=(output_queue,))
+            process.start()
+            torch_version_validation = output_queue.get()
+            process.join()
         if error_info:
             _print_error(RuntimeIntegrityError(error_info))
             sys.exit(0)
 
-        if not onnx_lib_version_satisfied():
+        if (not torch_version_validation and not graph_path.endswith('.onnx')) or not onnx_lib_version_satisfied():
+            lib_check_list = ['onnx', 'onnxruntime', 'onnxoptimizer']
+            if not graph_path.endswith('.onnx'):
+                lib_check_list.insert(0, 'torch')
             error = RuntimeIntegrityError(
-                f"{get_third_part_lib_validation_error_info(['onnx', 'onnxruntime', 'onnxoptimizer'])} "
+                f"{get_third_part_lib_validation_error_info(lib_check_list)} "
                 f"are required when using graph based scripts converter."
             )
             _print_error(error)
@@ -157,10 +178,10 @@ def _extract_model_name(model_path):
     Extract model name from model path.
 
     Args:
-        model_path(str): Path of Converted model.
+        model_path (str): Path of Converted model.
 
     Returns:
-        str: Name of Converted model.
+        str, name of Converted model.
     """
 
     base_path = os.path.basename(model_path)
@@ -245,14 +266,22 @@ def main_graph_base_converter(file_config):
         raise ParamMissingError("Param missing, `--shape` is required when using graph mode.")
 
     if frame_type == FrameworkType.PYTORCH.value:
-        graph_based_converter_pytorch_to_ms(graph_path=graph_path,
-                                            sample_shape=file_config['shape'],
-                                            input_nodes=file_config['input_nodes'] if file_config['input_nodes']
-                                            else 'input.1',
-                                            output_nodes=file_config['output_nodes'] if file_config['output_nodes']
-                                            else '',
-                                            output_folder=file_config['outfile_dir'],
-                                            report_folder=file_config['report_dir'])
+        if graph_path.endswith('.onnx'):
+            check_params = ['input_nodes', 'output_nodes']
+            check_params_exist(check_params, file_config)
+            graph_based_converter_pytorch_to_ms(graph_path=graph_path,
+                                                sample_shape=file_config['shape'],
+                                                input_nodes=file_config['input_nodes'],
+                                                output_nodes=file_config['output_nodes'],
+                                                output_folder=file_config['outfile_dir'],
+                                                report_folder=file_config['report_dir'])
+        else:
+            graph_based_converter_pytorch_to_ms(graph_path=graph_path,
+                                                sample_shape=file_config['shape'],
+                                                input_nodes='input.1',
+                                                output_nodes='',
+                                                output_folder=file_config['outfile_dir'],
+                                                report_folder=file_config['report_dir'])
     elif frame_type == FrameworkType.TENSORFLOW.value:
         check_params = ['input_nodes', 'output_nodes']
         check_params_exist(check_params, file_config)

@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Third party graph parser."""
+import multiprocessing as mp
 import os
 from importlib import import_module
 
@@ -67,6 +68,30 @@ class PyTorchGraphParser(GraphParser):
             opset_version (int): Op set version of onnx.
         """
 
+        output_queue = mp.Queue()
+        process = mp.Process(target=PyTorchGraphParser._pytorch_graph_to_proto,
+                             args=(output_queue, model_path, sample_shape, opset_version))
+        process.start()
+        proto = output_queue.get()
+        process.join()
+
+        onnx = import_module('onnx')
+        onnx_model = onnx.load_model_from_string(proto)
+
+        return onnx_model
+
+    @staticmethod
+    def _pytorch_graph_to_proto(output_queue, model_path, sample_shape, opset_version):
+        """
+        Convert pytorch graph to pytorch proto.
+
+        Args:
+            output_queue (Queue): Output queue from multi-processing.
+            model_path (str): Path to the Pytorch model.
+            sample_shape (tuple): Input shape to generate onnx model.
+            opset_version (int): Op set version of onnx.
+        """
+
         torch = import_module('torch')
         has_cuda = torch.cuda.is_available()
         if has_cuda:
@@ -102,7 +127,4 @@ class PyTorchGraphParser(GraphParser):
             operator_export_type, True, False, dict(),
             True, False)
 
-        onnx = import_module('onnx')
-        onnx_model = onnx.load_model_from_string(proto)
-
-        return onnx_model
+        output_queue.put(proto)

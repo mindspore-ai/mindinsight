@@ -334,13 +334,26 @@ class ModelNotSupportError(GraphInitError):
     @classmethod
     def raise_from(cls):
         """Raise from exceptions below."""
+        onnxruntime_error = getattr(import_module('onnxruntime.capi'), 'onnxruntime_pybind11_state')
         except_source = (RuntimeError,
                          ModuleNotFoundError,
                          ValueError,
                          AssertionError,
                          TypeError,
                          OSError,
-                         ZeroDivisionError, cls)
+                         ZeroDivisionError,
+                         onnxruntime_error.Fail,
+                         onnxruntime_error.InvalidArgument,
+                         onnxruntime_error.NoSuchFile,
+                         onnxruntime_error.NoModel,
+                         onnxruntime_error.EngineError,
+                         onnxruntime_error.RuntimeException,
+                         onnxruntime_error.InvalidProtobuf,
+                         onnxruntime_error.ModelLoaded,
+                         onnxruntime_error.NotImplemented,
+                         onnxruntime_error.InvalidGraph,
+                         onnxruntime_error.EPFail,
+                         cls)
         return except_source
 
 
@@ -510,7 +523,7 @@ class GeneratorError(MindConverterException):
     @classmethod
     def raise_from(cls):
         """Raise from exceptions below."""
-        except_source = (ValueError, TypeError, cls)
+        except_source = (ValueError, TypeError, SyntaxError, cls)
         return except_source
 
 
