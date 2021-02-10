@@ -560,7 +560,9 @@ export default {
     processTrainInfo(data) {
       const truthLabels = [];
       for (let i = 0; i < data.classes.length; i++) {
-        truthLabels.push(data.classes[i].label);
+        if (data.classes[i].saliency_sample_count) {
+          truthLabels.push(data.classes[i].label);
+        }
       }
       this.truthLabels = truthLabels;
       if (data.saliency) {

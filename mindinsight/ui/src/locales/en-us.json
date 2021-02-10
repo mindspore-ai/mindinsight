@@ -869,6 +869,8 @@
     "disableHOCTip": "No counterfactual explanation log is available.",
     "hocMinConfidenceTip": "Display and explanation for tags whose prediction probability is greater than the prediction threshold",
     "imageList": "Image list",
+    "dropEmptySwitch": "Hide",
+    "dropEmptySwitchTip": "Hide data without interpretation results",
     "hocTitleTip": "Gradually shrink the display area to find the minimum display area where the prediction probability is greater than the threshold"
   },
   "metric": {

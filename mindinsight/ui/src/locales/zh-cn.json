@@ -865,6 +865,8 @@
     "disableHOCTip": "无反事实解释日志，无法查看",
     "hocMinConfidenceTip": "对预测概率大于预测阈值的标签进行显示解释",
     "imageList": "图片列表",
+    "dropEmptySwitch": "隐藏",
+    "dropEmptySwitchTip": "隐藏没有解释结果的数据",
     "hocTitleTip": "逐步收缩显示范围，以寻找出预测概率大于阈值的最小显示区域"
   },
   "metric": {
