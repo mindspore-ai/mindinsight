@@ -37,8 +37,18 @@ limitations under the License.
               {{$t('explain.imageList')}}
             </div>
             <!-- Selecting a hoc image -->
-            <div class="hoc-filter-container">
-              <div class="title-text">{{$t('explain.tag')}}</div>
+            <div class="hoc-filter-container cl-hoc-tip-container">
+              <div class="title-text">
+                {{$t('explain.tag')}}
+                <el-tooltip placement="bottom-start"
+                    effect="light">
+                  <div slot="content"
+                      class="tooltip-container">
+                    {{ $t('explain.labelTip') }}
+                  </div>
+                  <i class="el-icon-info"></i>
+                </el-tooltip>
+              </div>
               <div class="select-options">
                 <el-select v-model="curFilterLabel"
                            :placeholder="$t('public.select')"

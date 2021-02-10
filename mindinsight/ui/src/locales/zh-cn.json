@@ -843,6 +843,7 @@
     "filterImg": "图片筛选",
     "tagTip": "查询包含任一筛选标签的图片数据",
     "typeTip": "查询包含任一预测类型的图片数据",
+    "labelTip": "仅显示有数据的标签",
     "confidence": "概率",
     "forecastTagTip": "当推理图片带有正确标签时，标签行会显示下列三种旗标",
     "TP": "TP，代表True Positive，被判定为正样本，事实上也是正样本；",

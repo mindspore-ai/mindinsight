@@ -847,6 +847,7 @@
     "filterImg": "Filter Image",
     "tagTip": "Query image data that contains any filter tag",
     "typeTip": "Query image data that contains any prediction type",
+    "labelTip": "Only tags with data are displayed",
     "confidence": "Probability",
     "forecastTagTip": "When the inference image has the correct tag, the following three flags are displayed in the tag row",
     "TP": "TP, indicates true positive. For this tag (label), the sample is predicted to be positive, and is indeed positive;",
