@@ -37,6 +37,7 @@ class SummaryWatcher:
     SUMMARY_FILENAME_REGEX = r'summary\.(?P<timestamp>\d+)'
     PB_FILENAME_REGEX = r'\.pb$'
     PROFILER_DIRECTORY_REGEX = r'^profiler'
+    CLUSTER_PROFILER_DIRECTORY_REGEX = r'^cluster_profiler$'
     MAX_SUMMARY_DIR_COUNT = 999
 
     # scan at most 20000 files/directories (approximately 1 seconds)
@@ -98,6 +99,7 @@ class SummaryWatcher:
             elif entry.is_file():
                 self._update_summary_dict(summary_dict, summary_base_dir, relative_path, entry, list_explain)
             elif entry.is_dir():
+                self._update_summary_dict(summary_dict, summary_base_dir, relative_path, entry, list_explain)
                 entry_path = os.path.realpath(os.path.join(summary_base_dir, entry.name))
                 self._scan_subdir_entries(summary_dict, summary_base_dir, entry_path, entry.name, counter, list_explain)
 
@@ -236,19 +238,24 @@ class SummaryWatcher:
             if list_explain:
                 return
 
-            profiler_type, is_find = self._find_profiler_dir(entry, summary_base_dir, relative_path)
-            if not is_find:
-                return
+            cluster_profiler_type, is_cluster_profiler = \
+                self._find_cluster_profiler_dir(entry, summary_base_dir, relative_path)
+            profiler_type, is_profiler = self._find_profiler_dir(entry, summary_base_dir, relative_path)
+            if is_cluster_profiler or is_profiler:
+                if is_cluster_profiler:
+                    profiler_type = cluster_profiler_type
 
-            profiler = {'directory': os.path.join('.', entry.name),
-                        'create_time': ctime,
-                        'update_time': mtime,
-                        "profiler_type": profiler_type}
+                profiler = {
+                    'directory': os.path.join('.', entry.name),
+                    'create_time': ctime,
+                    'update_time': mtime,
+                    "profiler_type": profiler_type
+                }
 
-            if relative_path in summary_dict:
-                summary_dict[relative_path]['profiler'] = profiler
-            else:
-                summary_dict[relative_path] = _new_entry(ctime, mtime, profiler)
+                if relative_path in summary_dict:
+                    summary_dict[relative_path]['profiler'] = profiler
+                else:
+                    summary_dict[relative_path] = _new_entry(ctime, mtime, profiler)
 
     def _find_profiler_dir(self, entry, summary_base_dir, relative_path):
         """Find profiler dir by the given relative path."""
@@ -256,6 +263,16 @@ class SummaryWatcher:
         full_dir_path = os.path.join(summary_base_dir, relative_path, entry.name)
         is_valid_profiler_dir, profiler_type = self._is_valid_profiler_directory(full_dir_path)
         if profiler_pattern is None or not is_valid_profiler_dir:
+            return profiler_type, False
+
+        return profiler_type, True
+
+    def _find_cluster_profiler_dir(self, entry, summary_base_dir, relative_path):
+        """Find profiler cluster dir by the given relative path."""
+        cluster_profiler_pattern = re.search(self.CLUSTER_PROFILER_DIRECTORY_REGEX, entry.name)
+        full_dir_path = os.path.join(summary_base_dir, relative_path, entry.name)
+        is_valid_cluster_profiler_dir, profiler_type = self._is_valid_cluster_profiler_directory(full_dir_path)
+        if cluster_profiler_pattern is None or not is_valid_cluster_profiler_dir:
             return profiler_type, False
 
         return profiler_type, True
@@ -313,12 +330,14 @@ class SummaryWatcher:
             if pb_pattern is not None and entry.is_file():
                 return True
 
-            profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
-            if profiler_pattern is not None and entry.is_dir():
-                full_path = os.path.realpath(os.path.join(summary_directory, entry.name))
-                if self._is_valid_profiler_directory(full_path)[0]:
-                    return True
-
+            if entry.is_dir():
+                profiler_pattern = re.search(self.PROFILER_DIRECTORY_REGEX, entry.name)
+                cluster_profiler_pattern = re.search(self.CLUSTER_PROFILER_DIRECTORY_REGEX, entry.name)
+                if profiler_pattern is not None or cluster_profiler_pattern is not None:
+                    full_path = os.path.realpath(os.path.join(summary_directory, entry.name))
+                    if self._is_valid_profiler_directory(full_path)[0] or \
+                            self._is_valid_cluster_profiler_directory(full_path)[0]:
+                        return True
         return False
 
     def _is_valid_profiler_directory(self, directory):
@@ -330,6 +349,21 @@ class SummaryWatcher:
             device_list = []
 
         return bool(device_list), profiler_type
+
+    def _is_valid_cluster_profiler_directory(self, directory):
+        """Determine whether it is a valid cluster profiler."""
+        cluster_profiler_type = 'cluster'
+        entries = os.scandir(directory)
+        for entry in entries:
+            if entry.is_symlink():
+                continue
+            if entry.is_dir():
+                full_path = os.path.join(directory, entry.name, 'profiler')
+                is_profile, profiler_type = self._is_valid_profiler_directory(full_path)
+                if is_profile:
+                    return is_profile, cluster_profiler_type + '_' + profiler_type
+
+        return False, cluster_profiler_type
 
     def list_summary_directories_by_pagination(self, summary_base_dir, offset=0, limit=10):
         """
