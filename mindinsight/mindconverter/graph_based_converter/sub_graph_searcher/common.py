@@ -35,7 +35,7 @@ from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_util
 MAX_OUT_DEGREE = 1
 MINI_FREQUENCY = 0.07
 MAX_ITERATION_DEPTH = 16
-SATISFIED_SCORE = 1.5
+SATISFIED_SCORE = 0.74
 ACCEPTABLE_RESULT_COUNT = 32
 PTN_COVERAGE_THRESHOLD = 0.65
 # If pattern length is short than `IGNORE_PTN_LEN`, then do not calculate the coverage.
@@ -126,6 +126,7 @@ class AlgorithmContext:
     node_collection = None
     precursor_table = {}
     successor_table = {}
+    outputs_table = {}
 
     def set_init_node_collection(self, nd_col):
         """Init node_collection."""
@@ -158,7 +159,12 @@ class AlgorithmContext:
         pattern_arr = sorted(pattern_arr.items(), key=functools.cmp_to_key(_cmp),
                              reverse=True)
         if len(pattern_arr) > AlgorithmContext.beam_width:
-            pattern_arr = pattern_arr[:self.beam_width]
+            new_pattern_arr = pattern_arr[:self.beam_width]
+            # Avoid dropping built-in pattern, because built-in patterns are much
+            # more potential.
+            for i in range(self.beam_width):
+                if pattern_arr[i][1].additional_score != 0:
+                    new_pattern_arr.append(pattern_arr[i])
         res = OrderedDict()
         for i, (key, ptn) in enumerate(pattern_arr):
             if ptn.count <= AlgorithmContext.MIN_FREQUENCY:

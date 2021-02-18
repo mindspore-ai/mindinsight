@@ -16,6 +16,8 @@
 
 __all__ = ["BUILT_IN_PATTERN", "register_pattern", "is_built_in_pattern"]
 
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.known_module_name import register_module_name
+
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import cal_matching_score
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.pattern import Pattern
 
@@ -59,11 +61,16 @@ def register_pattern(ptn_name, in_degree, out_degree):
     def _reg(pattern):
         result = pattern()
         if not result:
-            return
+            return pattern
+        if ptn_name in BUILT_IN_PATTERN:
+            raise KeyError(f"{ptn_name} exists, `ptn_name` must be unique.")
+
         BUILT_IN_PATTERN[ptn_name] = Pattern("->".join(result), len(result),
                                              in_degree, out_degree,
                                              ptn_items=result)
         BUILT_IN_PATTERN[ptn_name].additional_score = cal_matching_score(BUILT_IN_PATTERN[ptn_name].ptn_length)
+        BUILT_IN_PATTERN[ptn_name].ptn_name = ptn_name
+        return pattern
 
     return _reg
 
@@ -111,4 +118,46 @@ def _up_sampling_in_op12():
 def _up_sampling_in_op10():
     return [
         "Shape", "Gather", "Cast", "Slice", "Mul", "Slice", "Cast", "Cast", "Div", "Concat", "Resize"
+    ]
+
+
+@register_pattern("Multi-Head-Attention", 2, 1)
+@register_module_name("MultiHeadAttn", 2, 1)
+def _multi_head_attention():
+    return [
+        "MatMul", "Add", "MatMul", "Add", "Reshape", "MatMul", "Add", "Reshape",
+        "Transpose", "Reshape", "Transpose", "Transpose", "MatMul", "Div", "Add", "Softmax",
+        "MatMul", "Transpose", "Reshape", "MatMul", "Add"
+    ]
+
+
+@register_pattern("Layer-Normalization", 1, 1)
+@register_module_name("LayerNorm", 1, 1)
+def _layer_norm():
+    return [
+        "ReduceMean", "Sub", "Pow", "ReduceMean", "Add", "Sqrt", "Div", "Mul", "Add"
+    ]
+
+
+@register_pattern("Layer-Normalization-with-cast", 1, 1)
+@register_module_name("LayerNorm", 1, 1)
+def _layer_norm_with_cast():
+    return [
+        "ReduceMean", "Sub", "Cast", "Pow", "ReduceMean", "Add", "Sqrt", "Div", "Mul", "Add"
+    ]
+
+
+@register_pattern("GeLU", 1, 1)
+@register_module_name("GeLU", 1, 1)
+def _gelu():
+    return [
+        "Div", "Erf", "Add", "Mul", "Mul"
+    ]
+
+
+@register_pattern("Linear", 1, 1)
+@register_module_name("Linear", 1, 1)
+def _linear():
+    return [
+        "MatMul", "Add"
     ]
