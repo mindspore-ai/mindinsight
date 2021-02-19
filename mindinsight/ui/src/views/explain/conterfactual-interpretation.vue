@@ -34,16 +34,30 @@ limitations under the License.
           <!-- Top Bar -->
           <div class="cl-left-top-container">
             <div class="hoc-title-container left-title">
-              {{$t('explain.imageList')}}
+              <div class="title-text">{{$t('explain.imageList')}}</div>
+              <div class="switch-container cl-hoc-tip-container">
+                {{$t('explain.dropEmptySwitch')}}
+                <el-tooltip placement="bottom-start"
+                            effect="light">
+                  <div slot="content"
+                       class="tooltip-container">
+                    {{$t('explain.dropEmptySwitchTip')}}
+                  </div>
+                  <i class="el-icon-info"></i>
+                </el-tooltip>
+                <el-switch v-model="tagFilterEmpty"
+                           @change="dropEmptyChange"
+                           :disabled="!initOver"></el-switch>
+              </div>
             </div>
             <!-- Selecting a hoc image -->
             <div class="hoc-filter-container cl-hoc-tip-container">
               <div class="title-text">
                 {{$t('explain.tag')}}
                 <el-tooltip placement="bottom-start"
-                    effect="light">
+                            effect="light">
                   <div slot="content"
-                      class="tooltip-container">
+                       class="tooltip-container">
                     {{ $t('explain.labelTip') }}
                   </div>
                   <i class="el-icon-info"></i>
@@ -312,6 +326,8 @@ export default {
         loaded: 'LOADED',
         stop: 'STOP',
       },
+      tagFilterEmpty: true, // Filter data without explanation
+      fullTagList: [], // All metadata classes
     };
   },
   computed: {},
@@ -327,7 +343,7 @@ export default {
       )}-MindInsight`;
       return;
     }
-    document.title = `${this.$t(
+    document.title = `${decodeURIComponent(this.trainId)}-${this.$t(
         'explain.conterfactualInterpretation',
     )}-MindInsight`;
 
@@ -365,7 +381,8 @@ export default {
               return;
             }
             const status = res.data.status;
-            // IF status is not loaded, delay 500ms and request again
+            // If status is not loaded, delay 500ms and request again
+            // 500ms: Buffer time for data loading(Asynchronous loading)
             const delayTime = 500;
             if (status !== this.status.loaded) {
               if (this.dataWaitTimer) {
@@ -376,7 +393,9 @@ export default {
                 this.getMetaData();
               }, delayTime);
             } else {
-              this.labelLlist = [this.emptyLabelSelect].concat(res.data.classes);
+              this.fullTagList = res.data.classes;
+              const tempList = this.getFilterTagList();
+              this.labelLlist = [this.emptyLabelSelect].concat(tempList);
               this.minConfidence = res.data.saliency.min_confidence;
               this.getHOCData();
             }
@@ -385,7 +404,27 @@ export default {
           },
       );
     },
-
+    /**
+     * Filter tag without data
+     * @return {Array}
+     */
+    getFilterTagList() {
+      const tempList = [];
+      if (this.tagFilterEmpty) {
+        this.fullTagList.forEach((tagItem) => {
+          if (tagItem.hoc_sample_count) {
+            tempList.push(tagItem);
+          }
+        });
+      } else {
+        this.fullTagList.forEach((tagItem) => {
+          if (tagItem.sample_count) {
+            tempList.push(tagItem);
+          }
+        });
+      }
+      return tempList;
+    },
     /**
      * Obtains HOC data
      */
@@ -396,6 +435,7 @@ export default {
         offset: this.pageData.curPage - 1,
         sorted_name: this.pageData.sortName,
         sorted_type: this.pageData.sortType,
+        drop_empty: this.tagFilterEmpty,
       };
       if (this.curFilterLabel !== this.$t('public.all')) {
         params.labels = [this.curFilterLabel];
@@ -556,6 +596,16 @@ export default {
         curSampleData: {},
       };
     },
+    /**
+     * Drop empty switch status change
+     */
+    dropEmptyChange() {
+      const tempList = this.getFilterTagList();
+      this.labelLlist = [this.emptyLabelSelect].concat(tempList);
+      this.curFilterLabel = this.$t('public.all');
+      this.pageData.curPage = 1;
+      this.getHOCData();
+    },
   },
 };
 </script>
@@ -627,6 +677,20 @@ export default {
 }
 .cl-hoc .cl-hoc-con .cl-hoc-left .cl-left-top-container .left-title {
   margin-bottom: 20px;
+  display: flex;
+}
+.left-title .switch-container {
+  font-size: 14px;
+  font-weight: 400;
+}
+.left-title .switch-container .el-switch {
+  margin-left: 8px;
+}
+.left-title .title-text {
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 700;
+  flex: 1;
 }
 .cl-hoc .cl-hoc-con .cl-hoc-left .cl-left-top-container .hoc-filter-container {
   display: flex;
