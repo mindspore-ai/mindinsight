@@ -159,7 +159,7 @@ Check out how MindSpore Open Governance [works](https://gitee.com/mindspore/comm
 
 ## Vulkan Vision
 
-Vulkan Vision(V-Vision) provides an unprecedented level of detail into the execution of Vulkan applications through dynamic instrumentation. V-Vision supports analyzing AI workloads implemented using the a compute pipeline as well as traditional raster and ray-tracing Vulkan applications. To use V-Vision please refer to the [build instructions](https://gitee.com/mindspore/mindinsight/blob/master/ecosystem_tools/VulkanVision/README.md).
+Vulkan Vision(V-Vision) provides an unprecedented level of detail into the execution of Vulkan applications through dynamic instrumentation. V-Vision supports analyzing AI workloads implemented using the a compute pipeline as well as traditional raster and ray-tracing Vulkan applications. To use V-Vision please refer to the [build instructions](https://gitee.com/mindspore/mindinsight/blob/master/ecosystem_tools/VulkanVision/README.md). For more information, please refer to [the paper](https://webdocs.cs.ualberta.ca/~amaral/papers/PankratzCGO21) published at CGO 2021.
 
 ## Contributing
 

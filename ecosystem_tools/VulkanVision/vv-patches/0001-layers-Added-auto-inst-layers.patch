@@ -1,14 +1,13 @@
-From 94f9a7c9ea98fa400d47b0a71efbea8792113b08 Mon Sep 17 00:00:00 2001
+From 1bb2f039b0ba3f815c8a8fd6ac966a89f6ffe5a2 Mon Sep 17 00:00:00 2001
 From: dpankratz <pankratz@ualberta.ca>
-Date: Wed, 27 Jan 2021 09:17:26 -0700
+Date: Thu, 18 Feb 2021 14:45:45 -0700
 Subject: [PATCH] layers: Added auto-inst layers
 
 ---
- CMakeLists.txt                                |   27 +-
+ CMakeLists.txt                                |   24 +-
  build-android/jni/Android.mk                  |    7 +
- build-android/known_good.json                 |    2 +-
  docs/auto_instrument.md                       |  213 +++
- layers/CMakeLists.txt                         |   25 +-
+ layers/CMakeLists.txt                         |   19 +
  layers/auto_inst.cpp                          | 1205 +++++++++++++++++
  layers/auto_inst.h                            |  465 +++++++
  .../auto_inst_divergence_characterization.cpp |  157 +++
@@ -25,15 +24,14 @@ Subject: [PATCH] layers: Added auto-inst layers
  layers/auto_inst_warp_entry_and_exit.h        |   52 +
  layers/debug_printf.cpp                       |    2 +-
  layers/debug_printf.h                         |    1 +
- layers/generated/chassis.cpp                  |   78 +-
- layers/generated/chassis.h                    |   15 +-
- layers/gpu_utils.h                            |    7 +
- layers/gpu_validation.h                       |    4 +-
+ layers/generated/chassis.cpp                  |   53 +-
+ layers/generated/chassis.h                    |   13 +
+ layers/gpu_utils.h                            |    6 +
+ layers/gpu_validation.h                       |    1 +
  layers/layer_options.cpp                      |   13 +
- layers/layer_options.h                        |   19 +-
+ layers/layer_options.h                        |   14 +-
  scripts/known_good.json                       |   17 +-
- scripts/layer_chassis_generator.py            |   72 +-
- 29 files changed, 3305 insertions(+), 37 deletions(-)
+ 27 files changed, 3215 insertions(+), 8 deletions(-)
  create mode 100644 docs/auto_instrument.md
  create mode 100644 layers/auto_inst.cpp
  create mode 100644 layers/auto_inst.h
@@ -51,7 +49,7 @@ Subject: [PATCH] layers: Added auto-inst layers
  create mode 100644 layers/auto_inst_warp_entry_and_exit.h
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 994a9ef0..da32e3b0 100644
+index 994a9ef0..e72924fe 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -227,6 +227,8 @@ if(BUILD_TESTS OR BUILD_LAYERS)
@@ -63,13 +61,8 @@ index 994a9ef0..da32e3b0 100644
          endif()
  
          set(SPIRV_TOOLS_BINARY_ROOT "${SPIRV_TOOLS_INSTALL_DIR}/lib"
-@@ -240,9 +242,12 @@ if(BUILD_TESTS OR BUILD_LAYERS)
-         set(SPIRV_TOOLS_OPT_DEBUG_SEARCH_PATH "${SPIRV_TOOLS_INSTALL_DIR}/lib")
- 
+@@ -242,7 +244,7 @@ if(BUILD_TESTS OR BUILD_LAYERS)
          find_library(SPIRV_TOOLS_LIB NAMES SPIRV-Tools HINTS ${SPIRV_TOOLS_SEARCH_PATH})
-+        if (NOT SPIRV_TOOLS_LIB)
-+            message(FATAL_ERROR "Could not find SPIRV-Tools")
-+        endif()
          find_library(SPIRV_TOOLS_OPT_LIB NAMES SPIRV-Tools-opt HINTS ${SPIRV_TOOLS_OPT_SEARCH_PATH})
  
 -        if(WIN32)
@@ -77,7 +70,7 @@ index 994a9ef0..da32e3b0 100644
              add_library(SPIRV-Tools-opt STATIC IMPORTED)
              add_library(SPIRV-Tools STATIC IMPORTED)
  
-@@ -269,6 +274,26 @@ if(BUILD_TESTS OR BUILD_LAYERS)
+@@ -269,6 +271,26 @@ if(BUILD_TESTS OR BUILD_LAYERS)
          set(SPIRV_TOOLS_INCLUDE_DIR "${spirv-tools_SOURCE_DIR}/include" CACHE PATH "Path to spirv tools headers")
      endif()
  
@@ -105,10 +98,10 @@ index 994a9ef0..da32e3b0 100644
  endif()
  
 diff --git a/build-android/jni/Android.mk b/build-android/jni/Android.mk
-index f0955dd5..75c49def 100644
+index 871bdf30..e92895b9 100644
 --- a/build-android/jni/Android.mk
 +++ b/build-android/jni/Android.mk
-@@ -45,6 +45,13 @@ LOCAL_SRC_FILES += $(SRC_DIR)/layers/generated/spirv_validation_helper.cpp
+@@ -44,6 +44,13 @@ LOCAL_SRC_FILES += $(SRC_DIR)/layers/shader_validation.cpp
  LOCAL_SRC_FILES += $(SRC_DIR)/layers/gpu_validation.cpp
  LOCAL_SRC_FILES += $(SRC_DIR)/layers/gpu_utils.cpp
  LOCAL_SRC_FILES += $(SRC_DIR)/layers/debug_printf.cpp
@@ -122,17 +115,6 @@ index f0955dd5..75c49def 100644
  LOCAL_SRC_FILES += $(SRC_DIR)/layers/best_practices_utils.cpp
  LOCAL_SRC_FILES += $(SRC_DIR)/layers/generated/best_practices.cpp
  LOCAL_SRC_FILES += $(SRC_DIR)/layers/synchronization_validation.cpp
-diff --git a/build-android/known_good.json b/build-android/known_good.json
-index 1a77e5ae..d8635c37 100755
---- a/build-android/known_good.json
-+++ b/build-android/known_good.json
-@@ -1,5 +1,5 @@
- {
--  "repos" : [
-+  "repos": [
-     {
-       "name" : "shaderc",
-       "url" : "https://github.com/google/shaderc.git",
 diff --git a/docs/auto_instrument.md b/docs/auto_instrument.md
 new file mode 100644
 index 00000000..30d376ce
@@ -353,10 +335,10 @@ index 00000000..30d376ce
 +
 +* **warp_exits_vs_entires.csv** is generated per frame with the respective exits count/entry count for each pipeline invocation.
 diff --git a/layers/CMakeLists.txt b/layers/CMakeLists.txt
-index 851b98d5..93758bab 100644
+index 7b1ba729..76b4b520 100644
 --- a/layers/CMakeLists.txt
 +++ b/layers/CMakeLists.txt
-@@ -234,9 +234,27 @@ set(GPU_UTILITY_LIBRARY_FILES
+@@ -232,6 +232,22 @@ set(GPU_UTILITY_LIBRARY_FILES
      gpu_utils.cpp
      gpu_utils.h)
  
@@ -364,61 +346,38 @@ index 851b98d5..93758bab 100644
 +    auto_inst.cpp
 +    auto_inst_divergence_characterization.cpp
 +    auto_inst_dyn_shader_trace.cpp
-+    auto_inst_dyn_trace_ray_trace.cpp    
-+    auto_inst_execution_trace.cpp        
-+    auto_inst_simt_efficiency.cpp    
-+    auto_inst_warp_entry_and_exit.cpp    
++    auto_inst_dyn_trace_ray_trace.cpp
++    auto_inst_execution_trace.cpp
++    auto_inst_simt_efficiency.cpp
++    auto_inst_warp_entry_and_exit.cpp
 +    auto_inst.h
 +    auto_inst_divergence_characterization.h
 +    auto_inst_dyn_shader_trace.h
-+    auto_inst_dyn_trace_ray_trace.h    
-+    auto_inst_execution_trace.h         
-+    auto_inst_simt_efficiency.h    
-+    auto_inst_warp_entry_and_exit.h    
-+    )
++    auto_inst_dyn_trace_ray_trace.h
++    auto_inst_execution_trace.h
++    auto_inst_simt_efficiency.h
++    auto_inst_warp_entry_and_exit.h)
 +
  set(SYNC_VALIDATION_LIBRARY_FILES
      synchronization_validation.cpp
--    synchronization_validation.h)
-+    synchronization_validation.h
-+    )
- 
- # Validation Layer performance instrumentation support using Optick.
- # https://optick.dev/ https://github.com/bombomby/optick
-@@ -268,6 +286,7 @@ if(INSTRUMENT_OPTICK)
-     endif()
- endif()
- 
-+
- if(BUILD_LAYERS)
-     AddVkLayer(khronos_validation "${KHRONOS_LAYER_COMPILE_DEFINITIONS}"
-         ${CHASSIS_LIBRARY_FILES}
-@@ -279,6 +298,7 @@ if(BUILD_LAYERS)
+     synchronization_validation.h)
+@@ -247,13 +263,16 @@ if(BUILD_LAYERS)
          ${GPU_UTILITY_LIBRARY_FILES}
          ${GPU_ASSISTED_LIBRARY_FILES}
          ${DEBUG_PRINTF_LIBRARY_FILES}
 +        ${AUTO_INST_LIBRARY_FILES}
-         ${SYNC_VALIDATION_LIBRARY_FILES}
-         ${OPTICK_SOURCE_FILES})
+         ${SYNC_VALIDATION_LIBRARY_FILES})
  
-@@ -290,14 +310,17 @@ if(BUILD_LAYERS)
-         target_link_libraries(VkLayer_khronos_validation PRIVATE "$<$<CONFIG:Release>:-DEBUG:FULL>")
-     endif()
- 
-+
      # Khronos validation additional dependencies
      target_include_directories(VkLayer_khronos_validation PRIVATE ${GLSLANG_SPIRV_INCLUDE_DIR})
      target_include_directories(VkLayer_khronos_validation PRIVATE ${SPIRV_TOOLS_INCLUDE_DIR})
-+    target_include_directories(VkLayer_khronos_validation PRIVATE ${SPIRV_CROSS_INCLUDE_DIR})
      target_include_directories(VkLayer_khronos_validation PRIVATE ${SPIRV_HEADERS_INCLUDE_DIR})
-     if(INSTRUMENT_OPTICK)
-         target_include_directories(VkLayer_khronos_validation PRIVATE ${OPTICK_SOURCE_DIR})
-     endif()
++    target_include_directories(VkLayer_khronos_validation PRIVATE ${SPIRV_CROSS_INCLUDE_DIR})
      target_link_libraries(VkLayer_khronos_validation PRIVATE ${SPIRV_TOOLS_LIBRARIES})
 +    target_link_libraries(VkLayer_khronos_validation PRIVATE ${SPIRV_CROSS_LIBRARIES})
  
-     # The output file needs Unix "/" separators or Windows "\" separators On top of that, Windows separators actually need to be doubled
-     # because the json format uses backslash escapes
+     # Force generation of the PDB file for Release builds.
+     # Note that CMake reduces optimization levels for RelWithDebInfo builds.
 diff --git a/layers/auto_inst.cpp b/layers/auto_inst.cpp
 new file mode 100644
 index 00000000..8f3669d3
@@ -2846,7 +2805,7 @@ index 00000000..769b0cc4
 +};
 diff --git a/layers/auto_inst_execution_trace.cpp b/layers/auto_inst_execution_trace.cpp
 new file mode 100644
-index 00000000..ec4c876b
+index 00000000..6f27d804
 --- /dev/null
 +++ b/layers/auto_inst_execution_trace.cpp
 @@ -0,0 +1,174 @@
@@ -2993,7 +2952,7 @@ index 00000000..ec4c876b
 +        // Output annotated shaders
 +        std::unordered_map<uint32_t, std::string> annotations;
 +        for (const auto& entry : inst_id2bb_inst_ids_) {
-+            auto instrumentation_id = *entry.second.begin();
++            auto instrumentation_id = entry.first;
 +            auto visits = inst_id2dyn_execution_count[instrumentation_id];
 +            if (visits > 0) {
 +                auto simt_efficiency = inst_id2active_and_total_thread_counts[entry.first].SimtEfficiency();
@@ -3350,7 +3309,7 @@ index 00000000..17adfdfb
 +    };
 +};
 diff --git a/layers/debug_printf.cpp b/layers/debug_printf.cpp
-index f04f4852..417341b5 100644
+index e9181812..a8ba17df 100644
 --- a/layers/debug_printf.cpp
 +++ b/layers/debug_printf.cpp
 @@ -80,7 +80,7 @@ void DebugPrintf::PostCallRecordCreateDevice(VkPhysicalDevice physicalDevice, co
@@ -3375,10 +3334,10 @@ index 915d5a6d..deb85031 100644
  
  enum vartype { varsigned, varunsigned, varfloat };
 diff --git a/layers/generated/chassis.cpp b/layers/generated/chassis.cpp
-index 75a4ebfa..6548ddc9 100644
+index 9a4799dd..6ecc487a 100644
 --- a/layers/generated/chassis.cpp
 +++ b/layers/generated/chassis.cpp
-@@ -50,6 +50,12 @@ bool wrap_handles = true;
+@@ -49,6 +49,12 @@ bool wrap_handles = true;
  #include "gpu_validation.h"
  #include "object_lifetime_validation.h"
  #include "debug_printf.h"
@@ -3391,7 +3350,7 @@ index 75a4ebfa..6548ddc9 100644
  #include "stateless_validation.h"
  #include "synchronization_validation.h"
  #include "thread_safety.h"
-@@ -306,6 +312,24 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
+@@ -299,6 +305,24 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
      auto sync_validation_obj = new SyncValidator;
      sync_validation_obj->RegisterValidationObject(local_enables[sync_validation], api_version, report_data, local_object_dispatch);
  
@@ -3409,31 +3368,18 @@ index 75a4ebfa..6548ddc9 100644
 +
 +    auto auto_inst_warp_entry_and_exit_obj = new AutoInstWarpEntryAndExit;
 +    auto_inst_warp_entry_and_exit_obj->RegisterValidationObject(local_enables[auto_inst_warp_entry_and_exit], api_version, report_data, local_object_dispatch);
-+    
++
 +    auto auto_inst_dyn_shader_trace_obj = new AutoInstDynShaderTrace;
 +    auto_inst_dyn_shader_trace_obj->RegisterValidationObject(local_enables[auto_inst_dyn_shader_trace], api_version, report_data, local_object_dispatch);
 +
      // If handle wrapping is disabled via the ValidationFeatures extension, override build flag
      if (local_disables[handle_wrapping]) {
          wrap_handles = false;
-@@ -338,7 +362,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
-     framework->report_data = report_data;
-     framework->api_version = api_version;
-     framework->instance_extensions.InitFromInstanceCreateInfo(specified_version, pCreateInfo);
--
-+    
-     OutputLayerStatusInfo(framework);
- 
-     thread_checker_obj->FinalizeInstanceValidationObject(framework);
-@@ -348,9 +372,15 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
-     core_checks_obj->instance = *pInstance;
-     core_checks_obj->instance_state = core_checks_obj;
-     best_practices_obj->FinalizeInstanceValidationObject(framework);
--    gpu_assisted_obj->FinalizeInstanceValidationObject(framework);
-+    gpu_assisted_obj->FinalizeInstanceValidationObject(framework);  
+@@ -344,6 +368,12 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
+     gpu_assisted_obj->FinalizeInstanceValidationObject(framework);
      debug_printf_obj->FinalizeInstanceValidationObject(framework);
      sync_validation_obj->FinalizeInstanceValidationObject(framework);
-+    auto_inst_simt_efficiency_obj->FinalizeInstanceValidationObject(framework);    
++    auto_inst_simt_efficiency_obj->FinalizeInstanceValidationObject(framework);
 +    auto_inst_execution_trace_obj->FinalizeInstanceValidationObject(framework);
 +    auto_inst_dyn_trace_ray_trace_obj->FinalizeInstanceValidationObject(framework);
 +    auto_inst_divergence_characterization_obj->FinalizeInstanceValidationObject(framework);
@@ -3442,90 +3388,59 @@ index 75a4ebfa..6548ddc9 100644
  
      for (auto intercept : framework->object_dispatch) {
          auto lock = intercept->write_lock();
-@@ -360,8 +390,9 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
-     // Delete unused validation objects to avoid memory leak.
+@@ -354,7 +384,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
      std::vector<ValidationObject*> local_objs = {
          thread_checker_obj, object_tracker_obj, parameter_validation_obj,
--        core_checks_obj, best_practices_obj, gpu_assisted_obj, debug_printf_obj,
+         core_checks_obj, best_practices_obj, gpu_assisted_obj, debug_printf_obj,
 -        sync_validation_obj,
-+        core_checks_obj, best_practices_obj, gpu_assisted_obj, debug_printf_obj, sync_validation_obj, 
-+        auto_inst_simt_efficiency_obj, auto_inst_execution_trace_obj, auto_inst_dyn_trace_ray_trace_obj,
++        sync_validation_obj, auto_inst_simt_efficiency_obj, auto_inst_execution_trace_obj, auto_inst_dyn_trace_ray_trace_obj,
 +         auto_inst_divergence_characterization_obj, auto_inst_warp_entry_and_exit_obj, auto_inst_dyn_shader_trace_obj
      };
      for (auto obj : local_objs) {
          if (std::find(local_object_dispatch.begin(), local_object_dispatch.end(), obj) == local_object_dispatch.end()) {
-@@ -493,22 +524,27 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDevice(VkPhysicalDevice gpu, const VkDevice
- 
-     auto debug_printf_obj = new DebugPrintf;
-     debug_printf_obj->InitDeviceValidationObject(enables[debug_printf], instance_interceptor, device_interceptor);
--
-+    
+@@ -490,6 +521,24 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDevice(VkPhysicalDevice gpu, const VkDevice
      auto sync_validation_obj = new SyncValidator;
      sync_validation_obj->InitDeviceValidationObject(enables[sync_validation], instance_interceptor, device_interceptor);
  
--    // Delete unused validation objects to avoid memory leak.
--    std::vector<ValidationObject *> local_objs = {
--        thread_safety_obj, stateless_validation_obj, object_tracker_obj,
--        core_checks_obj, best_practices_obj, gpu_assisted_obj, debug_printf_obj,
--        sync_validation_obj,
--    };
--    for (auto obj : local_objs) {
--        if (std::find(device_interceptor->object_dispatch.begin(), device_interceptor->object_dispatch.end(), obj) ==
--            device_interceptor->object_dispatch.end()) {
--            delete obj;
--        }
--    }
 +    auto auto_inst_simt_efficiency_obj = new AutoInstSimtEfficiency;
 +    auto_inst_simt_efficiency_obj->InitDeviceValidationObject(enables[auto_inst_simt_efficiency], instance_interceptor, device_interceptor);
 +
 +    auto auto_inst_execution_trace_obj = new AutoInstExecutionTrace;
 +    auto_inst_execution_trace_obj->InitDeviceValidationObject(enables[auto_inst_execution_trace], instance_interceptor, device_interceptor);
-+    
++
 +    auto auto_inst_dyn_trace_ray_trace_obj = new AutoInstDynTraceRayTrace;
 +    auto_inst_dyn_trace_ray_trace_obj->InitDeviceValidationObject(enables[auto_inst_dyn_trace_ray_trace], instance_interceptor, device_interceptor);
-+    
++
 +    auto auto_inst_divergence_characterization_obj = new AutoInstDivergenceCharacterization;
 +    auto_inst_divergence_characterization_obj->InitDeviceValidationObject(enables[auto_inst_divergence_characterization], instance_interceptor, device_interceptor);
-+    
++
 +    auto auto_inst_warp_entry_and_exit_obj = new AutoInstWarpEntryAndExit;
 +    auto_inst_warp_entry_and_exit_obj->InitDeviceValidationObject(enables[auto_inst_warp_entry_and_exit], instance_interceptor, device_interceptor);
-+        
++
 +    auto auto_inst_dyn_shader_trace_obj = new AutoInstDynShaderTrace;
 +    auto_inst_dyn_shader_trace_obj->InitDeviceValidationObject(enables[auto_inst_dyn_shader_trace], instance_interceptor, device_interceptor);
- 
-     for (auto intercept : instance_interceptor->object_dispatch) {
-         auto lock = intercept->write_lock();
-@@ -574,7 +610,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(
-     }
++
+     // Delete unused validation objects to avoid memory leak.
+     std::vector<ValidationObject *> local_objs = {
+         thread_safety_obj, stateless_validation_obj, object_tracker_obj,
+@@ -568,6 +617,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(
  
      auto usepCreateInfos = (!cgpl_state[LayerObjectTypeGpuAssisted].pCreateInfos) ? pCreateInfos : cgpl_state[LayerObjectTypeGpuAssisted].pCreateInfos;
--    if (cgpl_state[LayerObjectTypeDebugPrintf].pCreateInfos) usepCreateInfos = cgpl_state[LayerObjectTypeDebugPrintf].pCreateInfos;
-+    if (cgpl_state[LayerObjectTypeDebugPrintf].pCreateInfos) usepCreateInfos = cgpl_state[LayerObjectTypeDebugPrintf].pCreateInfos;    
+     if (cgpl_state[LayerObjectTypeDebugPrintf].pCreateInfos) usepCreateInfos = cgpl_state[LayerObjectTypeDebugPrintf].pCreateInfos;
 +    else if (cgpl_state[LayerObjectTypeAutoInst].pCreateInfos) usepCreateInfos = cgpl_state[LayerObjectTypeAutoInst].pCreateInfos;
  
      VkResult result = DispatchCreateGraphicsPipelines(device, pipelineCache, createInfoCount, usepCreateInfos, pAllocator, pPipelines);
  
-@@ -610,7 +647,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateComputePipelines(
-     }
+@@ -604,6 +654,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateComputePipelines(
  
      auto usepCreateInfos = (!ccpl_state[LayerObjectTypeGpuAssisted].pCreateInfos) ? pCreateInfos : ccpl_state[LayerObjectTypeGpuAssisted].pCreateInfos;
--    if (ccpl_state[LayerObjectTypeDebugPrintf].pCreateInfos) usepCreateInfos = ccpl_state[LayerObjectTypeDebugPrintf].pCreateInfos;
-+    if (ccpl_state[LayerObjectTypeDebugPrintf].pCreateInfos) usepCreateInfos = ccpl_state[LayerObjectTypeDebugPrintf].pCreateInfos;    
+     if (ccpl_state[LayerObjectTypeDebugPrintf].pCreateInfos) usepCreateInfos = ccpl_state[LayerObjectTypeDebugPrintf].pCreateInfos;
 +    else if (ccpl_state[LayerObjectTypeAutoInst].pCreateInfos) usepCreateInfos = ccpl_state[LayerObjectTypeAutoInst].pCreateInfos;
  
      VkResult result = DispatchCreateComputePipelines(device, pipelineCache, createInfoCount, usepCreateInfos, pAllocator, pPipelines);
  
-@@ -654,6 +692,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRayTracingPipelinesNV(
-                                                              pPipelines, result, &(crtpl_state[intercept->container_type]));
-     }
-     return result;
-+
-+
- }
- 
- VKAPI_ATTR VkResult VKAPI_CALL CreateRayTracingPipelinesKHR(
 diff --git a/layers/generated/chassis.h b/layers/generated/chassis.h
-index 7f67fbe3..269aa727 100644
+index 23649ec6..5b432a9e 100644
 --- a/layers/generated/chassis.h
 +++ b/layers/generated/chassis.h
 @@ -52,6 +52,12 @@
@@ -3549,27 +3464,24 @@ index 7f67fbe3..269aa727 100644
      LayerObjectTypeCommandCounter,              // Command Counter validation object, child of corechecks
      LayerObjectTypeSyncValidation,              // Instance or device synchronization validation layer object
      LayerObjectTypeMaxEnum,                     // Max enum count
-@@ -2897,8 +2904,14 @@ typedef enum EnableFlags {
-     gpu_validation_reserve_binding_slot,
-     best_practices,
+@@ -2899,6 +2906,12 @@ typedef enum EnableFlags {
      vendor_specific_arm,
--    debug_printf,
-+    debug_printf,    
+     debug_printf,
      sync_validation,
-+    auto_inst_simt_efficiency,    
++    auto_inst_simt_efficiency,
 +    auto_inst_execution_trace,
 +    auto_inst_dyn_trace_ray_trace,
 +    auto_inst_divergence_characterization,
 +    auto_inst_warp_entry_and_exit,
-+    auto_inst_dyn_shader_trace,                    
++    auto_inst_dyn_shader_trace,
      // Insert new enables above this line
      kMaxEnableFlags,
  } EnableFlags;
 diff --git a/layers/gpu_utils.h b/layers/gpu_utils.h
-index 01197b94..e04ee285 100644
+index 01197b94..0e31f00e 100644
 --- a/layers/gpu_utils.h
 +++ b/layers/gpu_utils.h
-@@ -314,14 +314,21 @@ void UtilPostCallRecordPipelineCreations(const uint32_t count, const CreateInfo
+@@ -314,11 +314,17 @@ void UtilPostCallRecordPipelineCreations(const uint32_t count, const CreateInfo
              VkShaderModule shader_module = VK_NULL_HANDLE;
              if (bind_point == VK_PIPELINE_BIND_POINT_GRAPHICS) {
                  shader_module = pipeline_state->graphicsPipelineCI.pStages[stage].module;
@@ -3587,12 +3499,8 @@ index 01197b94..e04ee285 100644
              } else {
                  assert(false);
              }
-+
-             object_ptr->shader_map[shader_state->gpu_validation_shader_id].shader_module = shader_module;
-             object_ptr->shader_map[shader_state->gpu_validation_shader_id].pgm = std::move(code);
-         }
 diff --git a/layers/gpu_validation.h b/layers/gpu_validation.h
-index 706d3fb7..b48b84ab 100644
+index 291cfb85..2ff6e0fc 100644
 --- a/layers/gpu_validation.h
 +++ b/layers/gpu_validation.h
 @@ -54,6 +54,7 @@ struct GpuAssistedShaderTracker {
@@ -3603,18 +3511,8 @@ index 706d3fb7..b48b84ab 100644
  };
  
  struct GpuAssistedAccelerationStructureBuildValidationBufferInfo {
-@@ -149,7 +150,8 @@ class GpuAssisted : public ValidationStateTracker {
-                                       VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
-                                       uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers,
-                                       uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers,
--                                      uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) const override;
-+                                      uint32_t imageMemoryBarrierCount,
-+                                      const VkImageMemoryBarrier* pImageMemoryBarriers) const override;
-     void PreCallRecordCreateBuffer(VkDevice device, const VkBufferCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator,
-                                    VkBuffer* pBuffer, void* cb_state_data) override;
-     void CreateAccelerationStructureBuildValidationState(GpuAssisted* device_GpuAssisted);
 diff --git a/layers/layer_options.cpp b/layers/layer_options.cpp
-index 3c6f5dfe..0b6ec389 100644
+index 7a791087..022a9466 100644
 --- a/layers/layer_options.cpp
 +++ b/layers/layer_options.cpp
 @@ -92,6 +92,19 @@ void SetValidationEnable(CHECK_ENABLED &enable_data, const ValidationCheckEnable
@@ -3638,71 +3536,44 @@ index 3c6f5dfe..0b6ec389 100644
          case VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT:
              enable_data[gpu_validation] = true;
 diff --git a/layers/layer_options.h b/layers/layer_options.h
-index 861b9abe..d73768cd 100644
+index 861b9abe..d1b5ea68 100644
 --- a/layers/layer_options.h
 +++ b/layers/layer_options.h
-@@ -45,11 +45,16 @@ static const std::unordered_map<std::string, VkValidationFeatureDisableEXT> VkVa
- 
- static const std::unordered_map<std::string, VkValidationFeatureEnableEXT> VkValFeatureEnableLookup = {
-     {"VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT", VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT},
--    {"VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT",
--     VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT},
-+    {"VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT", VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT},
+@@ -50,6 +50,12 @@ static const std::unordered_map<std::string, VkValidationFeatureEnableEXT> VkVal
      {"VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT", VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT},
      {"VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT", VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT},
      {"VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT", VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT},
-+    {"VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_SIMT_EFFICIENCY_EXT", VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_SIMT_EFFICIENCY_EXT},    
++    {"VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_SIMT_EFFICIENCY_EXT", VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_SIMT_EFFICIENCY_EXT},
 +    {"VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_EXECUTION_TRACE_EXT", VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_EXECUTION_TRACE_EXT},
 +    {"VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_TRACE_RAY_TRACE_EXT", VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_TRACE_RAY_TRACE_EXT},
 +    {"VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DIVERGENCE_CHARACTERIZATION_EXT", VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DIVERGENCE_CHARACTERIZATION_EXT},
 +    {"VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_WARP_ENTRY_AND_EXIT_EXT", VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_WARP_ENTRY_AND_EXIT_EXT},
-+    {"VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_SHADER_TRACE_EXT", VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_SHADER_TRACE_EXT},    
++    {"VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_SHADER_TRACE_EXT", VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_SHADER_TRACE_EXT},
  };
  
  static const std::unordered_map<std::string, VkValidationFeatureEnable> VkValFeatureEnableLookup2 = {
-@@ -93,7 +98,13 @@ static const std::vector<std::string> EnableFlagNameHelper = {
+@@ -93,7 +99,13 @@ static const std::vector<std::string> EnableFlagNameHelper = {
      "VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT",                     // best_practices,
      "VALIDATION_CHECK_ENABLE_VENDOR_SPECIFIC_ARM",                         // vendor_specific_arm,
      "VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT",                       // debug_printf,
 -    "VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION"              // sync_validation,
 +    "VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION",              // sync_validation,
-+    "VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_SIMT_EFFICIENCY_EXT",              // auto_inst_simt_efficiency    
++    "VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_SIMT_EFFICIENCY_EXT",              // auto_inst_simt_efficiency
 +    "VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_EXECUTION_TRACE_EXT",              // auto_inst_execution_trace
 +    "VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_TRACE_RAY_TRACE_EXT",          // auto_inst_dyn_trace_ray_trace
 +    "VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DIVERGENCE_CHARACTERIZATION_EXT",  // auto_inst_divergence_characterization
 +    "VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_WARP_ENTRY_AND_EXIT_EXT",          // auto_inst_warp_entry_and_exit
 +    "VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_SHADER_TRACE_EXT",             // auto_inst_dyn_shader_trace
  };
--
-+  
+ 
  void ProcessConfigAndEnvSettings(ConfigAndEnvSettings *settings_data);
 diff --git a/scripts/known_good.json b/scripts/known_good.json
-index 9a53e452..b4fef368 100755
+index 9a53e452..3a27076e 100755
 --- a/scripts/known_good.json
 +++ b/scripts/known_good.json
-@@ -1,6 +1,7 @@
- {
--  "repos" : [
-+  "repos": [
-     {
-+
-       "name" : "glslang",
-       "url" : "https://github.com/KhronosGroup/glslang.git",
-       "sub_dir" : "glslang",
-@@ -10,7 +11,7 @@
-       "prebuild" : [
-         "python update_glslang_sources.py"
-       ],
--      "cmake_options" : [
-+      "cmake_options": [
-         "-DUSE_CCACHE=ON"
-       ]
-     },
-@@ -28,12 +29,22 @@
-       "sub_dir": "SPIRV-Headers",
+@@ -29,11 +29,20 @@
        "build_dir": "SPIRV-Headers/build",
        "install_dir": "SPIRV-Headers/build/install",
-+
        "commit": "f027d53ded7e230e008d37c8b47ede7cd308e19d"
 +    },
 +    {
@@ -3710,137 +3581,21 @@ index 9a53e452..b4fef368 100755
 +      "url": "https://github.com/KhronosGroup/SPIRV-Cross.git",
 +      "sub_dir": "spirv-cross",
 +      "build_dir": "spirv-cross/build",
-+      "install_dir": "spirv-cross/build/install",  
++      "install_dir": "spirv-cross/build/install",
 +      "commit": "e50f7d1ce8e162d0c826e84168cfa234e4de4ec9"
      }
    ],
-   "install_names" : {
-       "glslang" : "GLSLANG_INSTALL_DIR",
-       "Vulkan-Headers" : "VULKAN_HEADERS_INSTALL_DIR",
+-  "install_names" : {
+-      "glslang" : "GLSLANG_INSTALL_DIR",
+-      "Vulkan-Headers" : "VULKAN_HEADERS_INSTALL_DIR",
 -      "SPIRV-Headers" : "SPIRV_HEADERS_INSTALL_DIR"
++  "install_names": {
++      "glslang": "GLSLANG_INSTALL_DIR",
++      "Vulkan-Headers": "VULKAN_HEADERS_INSTALL_DIR",
 +      "SPIRV-Headers": "SPIRV_HEADERS_INSTALL_DIR",
-+      "SPIRV-Cross" :  "SPIRV_CROSS_INSTALL_DIR"
++      "SPIRV-Cross": "SPIRV_CROSS_INSTALL_DIR"
    }
  }
-diff --git a/scripts/layer_chassis_generator.py b/scripts/layer_chassis_generator.py
-index 8c4a4c4d..f53055c7 100644
---- a/scripts/layer_chassis_generator.py
-+++ b/scripts/layer_chassis_generator.py
-@@ -241,6 +241,13 @@ class LayerChassisOutputGenerator(OutputGenerator):
- #include "vk_safe_struct.h"
- #include "vk_typemap_helper.h"
- 
-+// Define here as a placeholder during development. 
-+#define VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_SIMT_EFFICIENCY_EXT (VkValidationFeatureEnableEXT)5
-+#define VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_EXECUTION_TRACE_EXT (VkValidationFeatureEnableEXT)7
-+#define VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_TRACE_RAY_TRACE_EXT (VkValidationFeatureEnableEXT)8
-+#define VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DIVERGENCE_CHARACTERIZATION_EXT (VkValidationFeatureEnableEXT)9
-+#define VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_WARP_ENTRY_AND_EXIT_EXT (VkValidationFeatureEnableEXT)10
-+#define VK_VALIDATION_FEATURE_ENABLE_AUTO_INST_DYN_SHADER_TRACE_EXT (VkValidationFeatureEnableEXT)11
- 
- extern std::atomic<uint64_t> global_unique_id;
- 
-@@ -343,6 +350,12 @@ typedef enum EnableFlags {
-     vendor_specific_arm,
-     debug_printf,
-     sync_validation,
-+    auto_inst_simt_efficiency,    
-+    auto_inst_execution_trace,
-+    auto_inst_dyn_trace_ray_trace,
-+    auto_inst_divergence_characterization,
-+    auto_inst_warp_entry_and_exit,
-+    auto_inst_dyn_shader_trace,    
-     // Insert new enables above this line
-     kMaxEnableFlags,
- } EnableFlags;
-@@ -685,6 +698,12 @@ bool wrap_handles = true;
- #include "gpu_validation.h"
- #include "object_lifetime_validation.h"
- #include "debug_printf.h"
-+#include "auto_inst_dyn_shader_trace.h"
-+#include "auto_inst_dyn_trace_ray_trace.h"
-+#include "auto_inst_execution_trace.h"
-+#include "auto_inst_simt_efficiency.h"
-+#include "auto_inst_divergence_characterization.h"
-+#include "auto_inst_warp_entry_and_exit.h"
- #include "stateless_validation.h"
- #include "synchronization_validation.h"
- #include "thread_safety.h"
-@@ -941,6 +960,24 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
-     auto sync_validation_obj = new SyncValidator;
-     sync_validation_obj->RegisterValidationObject(local_enables[sync_validation], api_version, report_data, local_object_dispatch);
- 
-+    auto auto_inst_simt_efficiency_obj = new AutoInstSimtEfficiency;
-+    auto_inst_simt_efficiency_obj->RegisterValidationObject(local_enables[auto_inst_simt_efficiency], api_version, report_data, local_object_dispatch);
-+
-+    auto auto_inst_execution_trace_obj = new AutoInstExecutionTrace;
-+    auto_inst_execution_trace_obj->RegisterValidationObject(local_enables[auto_inst_execution_trace], api_version, report_data, local_object_dispatch);
-+
-+    auto auto_inst_dyn_trace_ray_trace_obj = new AutoInstDynTraceRayTrace;
-+    auto_inst_dyn_trace_ray_trace_obj->RegisterValidationObject(local_enables[auto_inst_dyn_trace_ray_trace], api_version, report_data, local_object_dispatch);
-+
-+    auto auto_inst_divergence_characterization_obj = new AutoInstDivergenceCharacterization;
-+    auto_inst_divergence_characterization_obj->RegisterValidationObject(local_enables[auto_inst_divergence_characterization], api_version, report_data, local_object_dispatch);
-+
-+    auto auto_inst_warp_entry_and_exit_obj = new AutoInstWarpEntryAndExit;
-+    auto_inst_warp_entry_and_exit_obj->RegisterValidationObject(local_enables[auto_inst_warp_entry_and_exit], api_version, report_data, local_object_dispatch);
-+    
-+    auto auto_inst_dyn_shader_trace_obj = new AutoInstDynShaderTrace;
-+    auto_inst_dyn_shader_trace_obj->RegisterValidationObject(local_enables[auto_inst_dyn_shader_trace], api_version, report_data, local_object_dispatch);
-+
-     // If handle wrapping is disabled via the ValidationFeatures extension, override build flag
-     if (local_disables[handle_wrapping]) {
-         wrap_handles = false;
-@@ -986,7 +1023,13 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(const VkInstanceCreateInfo *pCreat
-     gpu_assisted_obj->FinalizeInstanceValidationObject(framework);
-     debug_printf_obj->FinalizeInstanceValidationObject(framework);
-     sync_validation_obj->FinalizeInstanceValidationObject(framework);
--
-+    auto_inst_simt_efficiency_obj->FinalizeInstanceValidationObject(framework);    
-+    auto_inst_execution_trace_obj->FinalizeInstanceValidationObject(framework);
-+    auto_inst_dyn_trace_ray_trace_obj->FinalizeInstanceValidationObject(framework);
-+    auto_inst_divergence_characterization_obj->FinalizeInstanceValidationObject(framework);
-+    auto_inst_warp_entry_and_exit_obj->FinalizeInstanceValidationObject(framework);
-+    auto_inst_dyn_shader_trace_obj->FinalizeInstanceValidationObject(framework);
-+    
-     for (auto intercept : framework->object_dispatch) {
-         auto lock = intercept->write_lock();
-         intercept->PostCallRecordCreateInstance(pCreateInfo, pAllocator, pInstance, result);
-@@ -1132,11 +1175,30 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDevice(VkPhysicalDevice gpu, const VkDevice
-     auto sync_validation_obj = new SyncValidator;
-     sync_validation_obj->InitDeviceValidationObject(enables[sync_validation], instance_interceptor, device_interceptor);
- 
-+    auto auto_inst_simt_efficiency_obj = new AutoInstSimtEfficiency;
-+    auto_inst_simt_efficiency_obj->InitDeviceValidationObject(enables[auto_inst_simt_efficiency], instance_interceptor, device_interceptor);
-+
-+    auto auto_inst_execution_trace_obj = new AutoInstExecutionTrace;
-+    auto_inst_execution_trace_obj->InitDeviceValidationObject(enables[auto_inst_execution_trace], instance_interceptor, device_interceptor);
-+    
-+    auto auto_inst_dyn_trace_ray_trace_obj = new AutoInstDynTraceRayTrace;
-+    auto_inst_dyn_trace_ray_trace_obj->InitDeviceValidationObject(enables[auto_inst_dyn_trace_ray_trace], instance_interceptor, device_interceptor);
-+    
-+    auto auto_inst_divergence_characterization_obj = new AutoInstDivergenceCharacterization;
-+    auto_inst_divergence_characterization_obj->InitDeviceValidationObject(enables[auto_inst_divergence_characterization], instance_interceptor, device_interceptor);
-+    
-+    auto auto_inst_warp_entry_and_exit_obj = new AutoInstWarpEntryAndExit;
-+    auto_inst_warp_entry_and_exit_obj->InitDeviceValidationObject(enables[auto_inst_warp_entry_and_exit], instance_interceptor, device_interceptor);
-+        
-+    auto auto_inst_dyn_shader_trace_obj = new AutoInstDynShaderTrace;
-+    auto_inst_dyn_shader_trace_obj->InitDeviceValidationObject(enables[auto_inst_dyn_shader_trace], instance_interceptor, device_interceptor);
-+
-     // Delete unused validation objects to avoid memory leak.
--    std::vector<ValidationObject *> local_objs = {
--        thread_safety_obj, stateless_validation_obj, object_tracker_obj,
--        core_checks_obj, best_practices_obj, gpu_assisted_obj, debug_printf_obj,
--        sync_validation_obj,
-+    std::vector<ValidationObject*> local_objs = {
-+        thread_checker_obj, object_tracker_obj, parameter_validation_obj,
-+        core_checks_obj, best_practices_obj, gpu_assisted_obj, debug_printf_obj, sync_validation_obj, 
-+        auto_inst_simt_efficiency_obj, auto_inst_execution_trace_obj, auto_inst_dyn_trace_ray_trace_obj,
-+         auto_inst_divergence_characterization_obj, auto_inst_warp_entry_and_exit_obj, auto_inst_dyn_shader_trace_obj
-     };
-     for (auto obj : local_objs) {
-         if (std::find(device_interceptor->object_dispatch.begin(), device_interceptor->object_dispatch.end(), obj) ==
 -- 
 2.29.2.windows.2
 
