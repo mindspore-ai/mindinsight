@@ -103,6 +103,14 @@ export default new Router({
           path: 'memory-detail',
           component: () => import('./views/profiling/memory-detail.vue'),
         },
+        {
+          path: 'cpu-detail',
+          component: () => import('./views/profiling/cpu-detail.vue'),
+        },
+        {
+          path: 'resource-utilization',
+          component: () => import('./views/profiling/resource-utilization.vue'),
+        },
       ],
     },
     {
@@ -124,8 +132,16 @@ export default new Router({
           component: () => import('./views/profiling-gpu/operator.vue'),
         },
         {
+          path: 'resource-utilization',
+          component: () => import('./views/profiling-gpu/resource-utilization.vue'),
+        },
+        {
           path: 'step-trace',
           component: () => import('./views/profiling/step-trace.vue'),
+        },
+        {
+          path: 'cpu-detail',
+          component: () => import('./views/profiling/cpu-detail.vue'),
         },
       ],
     },

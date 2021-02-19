@@ -476,6 +476,8 @@
     "processCpuUtil": "进程CPU利用率",
     "operatorCpuUtil": "算子CPU利用率",
     "utilizationTitle": "利用率（%）",
+    "trainingPerformance": "训练性能",
+    "resourceUtilization": "资源利用",
     "memory": {
       "memoryDetailLink": "内存使用情况",
       "overView": "内存分配概览",

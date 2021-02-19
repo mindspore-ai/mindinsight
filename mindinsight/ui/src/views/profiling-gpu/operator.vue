@@ -1197,11 +1197,11 @@ export default {
 }
 .operator .operator-title {
   padding: 0 15px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
 }
 .operator .cl-profiler {
-  height: calc(100% - 21px);
+  height: calc(100% - 24px);
   overflow-y: auto;
   width: 100%;
   background: #fff;

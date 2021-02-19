@@ -220,13 +220,14 @@ export default {
       curSelectedPointIndex: 0, // Subscript of the current selection point
       curGraphId: '', // ID of the current graphics
       breakdownsInitOver: false, // BreakDown data request complete
+      firstInit: true, // First init of page
     };
   },
   watch: {
     // Listening card number
     '$parent.curDashboardInfo.curCardNum': {
-      handler(newValue, oldValue) {
-        if (isNaN(newValue) || newValue === this.curCardNum) {
+      handler(newValue) {
+        if (isNaN(newValue) || newValue === this.curCardNum || this.firstInit) {
           return;
         }
         this.curCardNum = newValue;
@@ -290,6 +291,10 @@ export default {
      */
     getMemorySummary() {
       if (!this.summaryPath || isNaN(this.curCardNum)) {
+        this.overViewInitOver = true;
+        this.noGraphicsDataFlag = true;
+        this.graphicsInitOver = true;
+        this.breakdownsInitOver = true;
         return;
       }
       const params = {
@@ -347,13 +352,14 @@ export default {
               this.breakdownsInitOver = true;
               return;
             }
+            this.noGraphicsDataFlag = false;
             const resData = res.data[Object.keys(res.data)[0]];
             this.curGraphId = resData.graph_id;
             this.currentGraphicsDic = resData;
-            this.graphicsOption = this.formateGraphicsOption();
+            this.graphicsOption = this.formatGraphicsOption();
             this.drawGraphics();
             this.$nextTick(() => {
-              this.formateBreakdowns();
+              this.formatBreakdowns();
             });
           },
           () => {
@@ -366,7 +372,7 @@ export default {
     /**
      * Sort out the memory allocation data in a table
      */
-    formateBreakdowns() {
+    formatBreakdowns() {
       this.breakdownsInitOver = false;
       this.currentBreakdownsData = [];
       if (!this.currentGraphicsDic.nodes) {
@@ -420,7 +426,7 @@ export default {
      * Sorting chart data
      * @return {Object} Chart data
      */
-    formateGraphicsOption() {
+    formatGraphicsOption() {
       if (!this.currentGraphicsDic) {
         return {};
       }
@@ -618,7 +624,7 @@ export default {
         if (!this.graphicsChart) {
           this.graphicsChart = echarts.init(this.$refs.memoryChart, null);
         }
-        this.graphicsChart.setOption(this.graphicsOption, false);
+        this.graphicsChart.setOption(this.graphicsOption);
         if (!this.chartClickListenerOn) {
           this.chartClickListenerOn = true;
           this.graphicsChart.on(
@@ -654,7 +660,7 @@ export default {
         seriesData.markPoint.data[0].coord = seriesData.data[dataIndex];
         this.drawGraphics();
         this.curSelectedPointIndex = dataIndex;
-        this.formateBreakdowns();
+        this.formatBreakdowns();
       }
     },
     /**
@@ -720,6 +726,7 @@ export default {
       )}-MindInsight`;
     }
     window.addEventListener('resize', this.resizeCallback, false);
+    this.$bus.$on('collapse', this.resizeCallback);
     if (
       this.$route.query &&
       this.$route.query.path &&
@@ -729,7 +736,7 @@ export default {
       this.curCardNum = this.$route.query.cardNum;
       this.init();
     }
-    this.$bus.$on('collapse', this.resizeCallback);
+    this.firstInit = false;
   },
 };
 </script>
@@ -757,12 +764,12 @@ export default {
 }
 
 .cl-memory-detail .title-content .title-text {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .cl-memory-detail .top-content .content-item {
   display: flex;
-  height: calc(100% - 24px);
+  height: calc(100% - 21px);
   width: 100%;
 }
 
@@ -817,7 +824,7 @@ export default {
 .cl-memory-detail .bottom-content .chart-container .chart-content,
 .cl-memory-detail .bottom-content .table-container .table-content {
   margin-top: 16px;
-  height: calc(100% - 30px);
+  height: calc(100% - 37px);
 }
 .cl-memory-detail .bottom-content .chart-container {
   height: calc(60% - 20px);
@@ -827,7 +834,7 @@ export default {
   height: 40%;
 }
 .cl-memory-detail .title-item {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
 }
 .cl-memory-detail .el-table td,

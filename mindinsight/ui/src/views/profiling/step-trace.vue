@@ -1,5 +1,5 @@
 <!--
-Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -945,7 +945,7 @@ export default {
 }
 .step-trace .step-trace-title {
   padding: 0 15px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
 }
 .step-trace .step-trace-title .el-icon-question {
@@ -999,12 +999,12 @@ export default {
 }
 .step-trace .pf-content-middle {
   padding: 10px 15px 0;
-  height: calc(100% - 62px);
+  height: calc(100% - 64px);
 }
 .step-trace .pf-content-middle #trace-container {
   width: 100%;
   height: 50%;
-  border: 1px solid #ccc;
+  border: 1px solid #D9D9D9;
   overflow: auto;
 }
 .step-trace .pf-content-middle #trace-container .training-trace {
@@ -1024,13 +1024,13 @@ export default {
 }
 .step-trace .pf-content-middle .chart-wrap {
   float: left;
-  height: calc(50% - 20px);
+  height: calc(50% - 25px);
   margin-top: 20px;
   margin-right: 15px;
   width: calc(33.3% - 10px);
-  border: 1px solid #ccc;
+  border: 1px solid #D9D9D9;
   padding: 30px 30px 0;
-  border-radius: 4px;
+  border-radius: 1px;
   overflow: auto;
 }
 .step-trace .pf-content-middle .chart-wrap:last-child {
@@ -1045,6 +1045,7 @@ export default {
 .step-trace .pf-content-middle .chart-wrap .title {
   margin: 0 0 15px 20px;
   font-weight: bold;
+  font-size: 16px;
 }
 .step-trace .pf-content-middle .chart-wrap .rate-wrap {
   font-size: 12px;
