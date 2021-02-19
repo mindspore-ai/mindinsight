@@ -99,12 +99,22 @@ class ExplainLoader:
                 - sample_count (int): Number of samples for each label.
         """
         sample_count_per_label = defaultdict(int)
+        saliency_count_per_label = defaultdict(int)
+        hoc_count_per_label = defaultdict(int)
         for sample in self._samples.values():
             if sample.get('image') and (sample.get('ground_truth_label') or sample.get('predicted_label')):
                 for label in set(sample['ground_truth_label'] + sample['predicted_label']):
                     sample_count_per_label[label] += 1
+                    if sample['inferences'][label]['saliency_maps']:
+                        saliency_count_per_label[label] += 1
+                    if sample['inferences'][label]['hoc_layers']:
+                        hoc_count_per_label[label] += 1
 
-        all_classes_return = [{'id': label_id, 'label': label_name, 'sample_count': sample_count_per_label[label_id]}
+        all_classes_return = [{'id': label_id,
+                               'label': label_name,
+                               'sample_count': sample_count_per_label[label_id],
+                               'saliency_sample_count': saliency_count_per_label[label_id],
+                               'hoc_sample_count': hoc_count_per_label[label_id]}
                               for label_id, label_name in enumerate(self._metadata['labels'])]
         return all_classes_return
 

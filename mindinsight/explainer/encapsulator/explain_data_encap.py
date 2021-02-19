@@ -15,6 +15,7 @@
 """Common explain data encapsulator base class."""
 
 import copy
+from enum import Enum
 
 from mindinsight.utils.exceptions import ParamValueError
 
@@ -64,6 +65,11 @@ def _sort_key_max_confidence_sd(sample, labels):
             max_confidence_sd = confidence_sd
     return max_confidence_sd
 
+class ExplanationKeys(Enum):
+    """Query type enums."""
+    HOC = "hoc_layers"  # HOC: Hierarchical Occlusion, an explanation method we propose
+    SALIENCY = "saliency_maps"
+
 
 class ExplainDataEncap:
     """Explain data encapsulator base class."""
@@ -89,7 +95,7 @@ class ExplanationEncap(ExplainDataEncap):
                        sorted_name,
                        sorted_type,
                        prediction_types=None,
-                       query_type="saliency_maps"):
+                       drop_type=None):
         """
         Query samples.
 
@@ -99,13 +105,22 @@ class ExplanationEncap(ExplainDataEncap):
             sorted_name (str): Field to be sorted.
             sorted_type (str): Sorting order, 'ascending' or 'descending'.
             prediction_types (list[str]): Prediction type filter.
+            drop_type (str, None): When it is None, no filer will be applied. When it is 'hoc_layers', samples without
+                hoc explanations will be filtered out. When it is 'saliency_maps', samples without saliency explanations
+                will be filtered out.
 
         Returns:
              list[dict], samples to be queried.
         """
 
         samples = copy.deepcopy(job.get_all_samples())
-        samples = [sample for sample in samples if any(infer[query_type] for infer in sample['inferences'])]
+        if drop_type not in (None, ExplanationKeys.SALIENCY.value, ExplanationKeys.HOC.value):
+            raise ParamValueError(
+                f"Argument drop_type valid options: None, {ExplanationKeys.SALIENCY.value}, "
+                f"{ExplanationKeys.HOC.value}, but got {drop_type}.")
+
+        if drop_type is not None:
+            samples = [sample for sample in samples if any(infer[drop_type] for infer in sample['inferences'])]
         if labels:
             filtered = []
             for sample in samples:

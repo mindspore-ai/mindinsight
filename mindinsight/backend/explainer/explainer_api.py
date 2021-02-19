@@ -138,7 +138,6 @@ def query_explain_job():
         raise ParamMissError("train_id")
     encapsulator = ExplainJobEncap(EXPLAIN_MANAGER)
     metadata = encapsulator.query_meta(train_id)
-
     return jsonify(metadata)
 
 
@@ -174,6 +173,12 @@ def query_hoc():
     data = _read_post_request(request)
 
     query_kwargs = _get_query_sample_parameters(data)
+
+    filter_empty = data.get("drop_empty", True)
+    if not isinstance(filter_empty, bool):
+        raise ParamTypeError("drop_empty", bool)
+
+    query_kwargs["drop_empty"] = filter_empty
 
     encapsulator = HierarchicalOcclusionEncap(
         _image_url_formatter,
