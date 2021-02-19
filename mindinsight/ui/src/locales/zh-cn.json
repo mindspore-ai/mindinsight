@@ -841,7 +841,7 @@
     "forecastTagPosibility": "预测标签 (概率)",
     "tag": "标签",
     "filterImg": "图片筛选",
-    "tagTip": "查询包含任一筛选标签的图片数据",
+    "tagTip": "查询包含任一筛选标签的图片数据（仅显示有数据的标签）",
     "typeTip": "查询包含任一预测类型的图片数据",
     "labelTip": "仅显示有数据的标签",
     "confidence": "概率",

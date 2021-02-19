@@ -845,7 +845,7 @@
     "forecastTagPosibility": "Prediction Tag (Probability)",
     "tag": "Tag",
     "filterImg": "Filter Image",
-    "tagTip": "Query image data that contains any filter tag",
+    "tagTip": "Query image data that contains any filter tag (Only tags with data are displayed)",
     "typeTip": "Query image data that contains any prediction type",
     "labelTip": "Only tags with data are displayed",
     "confidence": "Probability",
