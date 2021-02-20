@@ -477,6 +477,8 @@
     "processCpuUtil": "Process CPU Usage",
     "operatorCpuUtil": "Operator CPU Usage",
     "utilizationTitle": "Usage(%)",
+    "trainingPerformance": "Training Performance",
+    "resourceUtilization": "Resource Utilization",
     "memory": {
       "memoryDetailLink": "Memory Usage Information",
       "overView": "Memory Allocation OverView",

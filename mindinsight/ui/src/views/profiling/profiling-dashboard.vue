@@ -1,5 +1,5 @@
 <!--
-Copyright 2020 Huawei Technologies Co., Ltd.All Rights Reserved.
+Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -179,7 +179,6 @@ limitations under the License.
             </div>
             <div class="title">{{$t('profiling.connectorQuene')}}</div>
             <div class="description">
-              <div class="line"></div>
               <div class="item"
                    v-if="processSummary.device.empty || processSummary.device.empty === 0">
                 {{$t('profiling.queueTip2')}}
@@ -223,7 +222,6 @@ limitations under the License.
             </div>
             <div class="title">{{$t('profiling.dataQueue')}}</div>
             <div class="description">
-              <div class="line"></div>
               <div class="item"
                    v-if="processSummary.get_next.empty || processSummary.get_next.empty === 0">
                 {{$t('profiling.queueTip2')}}
@@ -1257,8 +1255,8 @@ export default {
   height: 100%;
 }
 .pro-router-wrap > div > div {
-  border: 1px solid #eee;
-  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+  border-radius: 1px;
 }
 .pro-router-wrap > div .title-wrap {
   padding: 15px;
@@ -1266,7 +1264,7 @@ export default {
 .pro-router-wrap > div .title-wrap .title {
   float: left;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
 }
 .pro-router-wrap > div .title-wrap .tip-icon {
   float: right;
@@ -1331,7 +1329,7 @@ export default {
   padding-right: 15px;
 }
 .pro-router-wrap .pro-router-left .step-trace {
-  height: 45%;
+  height: calc(100% - 275px);
   margin-bottom: 15px;
 }
 .pro-router-wrap .pro-router-left .step-trace .trace-container {
@@ -1355,11 +1353,11 @@ export default {
   overflow: visible;
 }
 .pro-router-wrap .pro-router-left .minddata {
-  height: calc(55% - 15px);
+  height: 260px;
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container {
   width: 100%;
-  padding: 20px 20px;
+  padding: 0 20px;
   height: calc(100% - 52px);
   display: flex;
   font-size: 0;
@@ -1434,14 +1432,9 @@ export default {
   white-space: nowrap;
   overflow: visible;
   width: 100%;
+  min-width: 100px;
   text-align: center;
-}
-.pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .description .line {
-  width: 1px;
-  height: 40px;
-  margin: 20px 0;
-  border-left: 1px solid #979797;
-  display: inline-block;
+  margin-top: 30px;
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .description .item {
   font-size: 12px;
@@ -1457,7 +1450,7 @@ export default {
   width: 400px;
 }
 .pro-router-wrap .pro-router-right .op-time-consume {
-  height: calc(60% - 15px);
+  height: calc(100% - 275px);
   margin-bottom: 15px;
 }
 .pro-router-wrap .pro-router-right .op-time-consume .time-list {
@@ -1511,7 +1504,7 @@ export default {
   height: 25px;
 }
 .pro-router-wrap .pro-router-right .time-line {
-  height: 40%;
+  height: 260px;
   overflow: hidden;
 }
 .pro-router-wrap .pro-router-right .time-line .timeline-info {

@@ -15,15 +15,20 @@ limitations under the License.
 -->
 <template>
   <div class="prof-wrap">
+    <div class="prof-head">
+      <span class="cl-title-left">{{$t('summaryManage.viewProfiler')}}</span>
+      <div class="path-message">
+        <span>{{$t('symbols.leftbracket')}}</span>
+        <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
+        <span>{{summaryPath}}</span>
+        <span>{{$t('symbols.rightbracket')}}</span>
+      </div>
+    </div>
     <div class="prof-content">
       <div class="prof-content-left"
            :class="{collapse:collapse}">
         <div class="helper"
              v-show="!collapse">
-          <div class="summary-path">
-            {{$t('trainingDashboard.summaryDirPath')}}
-            <span>{{ summaryPath}}</span>
-          </div>
           <div class="cur-card">
             <label>{{$t('profiling.curCard')}}</label>
             <el-select v-model="curDashboardInfo.curCardNum"
@@ -50,10 +55,26 @@ limitations under the License.
       </div>
       <div class="prof-content-right"
            :class="{collapse:collapse}">
-        <router-view></router-view>
+        <div class="tab-container"
+             v-show="$route.path === '/profiling-gpu/profiling-dashboard'
+                || $route.path === '/profiling-gpu/resource-utilization'">
+          <el-tabs v-model="tabData.activeName"
+                   @tab-click="paneChange">
+            <el-tab-pane v-for="pane in tabData.tabPanes"
+                         :key="pane.name"
+                         :label="pane.label"
+                         :name="pane.name"></el-tab-pane>
+          </el-tabs>
+        </div>
+        <div class="router-container"
+             :class="$route.path === '/profiling-gpu/profiling-dashboard'
+           || $route.path === '/profiling-gpu/resource-utilization'?'dashboard':'detail'">
+          <router-view></router-view>
+        </div>
         <div class="close"
              @click="backToDdashboard"
-             v-if="$route.path !== '/profiling-gpu/profiling-dashboard'">
+             v-if="$route.path !== '/profiling-gpu/profiling-dashboard'
+            && $route.path !== '/profiling-gpu/resource-utilization'">
           <img src="@/assets/images/close-page.png">
         </div>
       </div>
@@ -84,10 +105,27 @@ export default {
         curCardNum: null,
         query: {},
       },
+      tabData: {
+        activeName: '0',
+        tabPanes: [
+          {
+            name: '0',
+            label: this.$t('profiling.trainingPerformance'),
+          },
+          {
+            name: '1',
+            label: this.$t('profiling.resourceUtilization'),
+          },
+        ],
+      },
     };
   },
   watch: {},
   mounted() {
+    if (
+      this.$route.path === 'resource-utilization') {
+      this.tabData.activeName = this.tabData.tabPanes[1].name;
+    }
     this.$nextTick(() => {
       this.init();
     });
@@ -101,12 +139,15 @@ export default {
         this.curDashboardInfo.query.id = this.$route.query.id;
         this.curDashboardInfo.query.dir = this.$route.query.dir;
         this.curDashboardInfo.query.path = this.$route.query.path;
-        this.summaryPath = decodeURIComponent( this.$route.query.id);
+        this.tabData.activeName =
+          this.$route.query.activePane || this.tabData.tabPanes[0].name;
+        this.summaryPath = decodeURIComponent(this.$route.query.id);
         this.getDeviceList();
       } else {
         this.curDashboardInfo.query.trainingJobId = '';
         this.curDashboardInfo.query.dir = '';
         this.curDashboardInfo.query.path = '';
+        this.tabData.activeName = this.tabData.tabPanes[0].name;
         this.$message.error(this.$t('trainingDashboard.invalidId'));
       }
     },
@@ -298,18 +339,53 @@ export default {
      * Router back to profiling-dashboard
      */
     backToDdashboard() {
+      let path = '/profiling-gpu/profiling-dashboard';
+      if (this.tabData.activeName === this.tabData.tabPanes[1].name) {
+        path = '/profiling-gpu/resource-utilization';
+      }
       this.$router.push({
-        path: '/profiling-gpu/profiling-dashboard',
+        path: path,
         query: {
           dir: this.curDashboardInfo.query.dir,
           id: this.curDashboardInfo.query.id,
           path: this.curDashboardInfo.query.path,
+          activePane: this.tabData.activeName,
+          cardNum: this.curDashboardInfo.curCardNum,
         },
       });
     },
     collapseLeft() {
       this.collapse = !this.collapse;
       this.$bus.$emit('collapse');
+    },
+    /**
+     * Tab button click
+     * @param {Object} tabItem Tab
+     */
+    paneChange(tabItem) {
+      if (tabItem && tabItem.name) {
+        let path = '';
+        switch (tabItem.name) {
+          case this.tabData.tabPanes[0].name:
+            path = '/profiling-gpu/profiling-dashboard';
+            break;
+          case this.tabData.tabPanes[1].name:
+            path = '/profiling-gpu/resource-utilization';
+            break;
+        }
+        if (path) {
+          this.$router.push({
+            path: path,
+            query: {
+              dir: this.curDashboardInfo.query.dir,
+              id: this.curDashboardInfo.query.id,
+              path: this.curDashboardInfo.query.path,
+              activePane: this.tabData.activeName,
+              cardNum: this.curDashboardInfo.curCardNum,
+            },
+          });
+        }
+      }
     },
   },
   destroyed() {
@@ -322,9 +398,20 @@ export default {
   height: 100%;
   background: #fff;
 }
+.prof-wrap .prof-head {
+  height: 50px;
+  line-height: 50px;
+  display: inline-block;
+}
+.prof-wrap .prof-head .path-message {
+  display: inline-block;
+  line-height: 20px;
+  padding: 18px 0;
+  font-weight: bold;
+}
 .prof-wrap .prof-content {
-  height: 100%;
-  padding: 24px 24px 24px 0;
+  height: calc(100% - 50px);
+  padding: 0 24px 24px 0;
 }
 .prof-wrap .prof-content > div {
   float: left;
@@ -347,25 +434,12 @@ export default {
   background: #edf0f5;
   word-wrap: break-word;
 }
-.prof-wrap .prof-content .prof-content-left .helper .summary-path {
-  line-height: 24px;
-  font-size: 14px;
-  overflow: hidden;
-  font-weight: bold;
-  padding-bottom: 10px;
-  word-break: break-all;
-  text-overflow: -o-ellipsis-lastline;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-}
 .prof-wrap .prof-content .prof-content-left .helper .nowrap-style {
   white-space: nowrap;
 }
 .prof-wrap .prof-content .prof-content-left .helper .cur-card {
-  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #d9d9d9;
 }
 .prof-wrap .prof-content .prof-content-left .helper .cur-card .card-select {
   width: calc(100% - 120px);
@@ -374,9 +448,9 @@ export default {
   margin-right: 14px;
 }
 .prof-wrap .prof-content .prof-content-left .helper .helper-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
-  margin-bottom: 32px;
+  margin: 24px 0;
 }
 .prof-wrap .prof-content .prof-content-left .helper .helper-title .el-icon-rank {
   float: right;
@@ -398,6 +472,10 @@ export default {
   font-weight: bold;
   margin-bottom: 20px;
   font-size: 16px;
+}
+
+.prof-wrap .prof-content .prof-content-left .helper .link-title {
+  cursor: pointer;
 }
 .prof-wrap .prof-content .prof-content-left .helper .container-bottom {
   margin-bottom: 16px;
@@ -449,6 +527,25 @@ export default {
   padding-left: 20px;
   transition: width 0.2s;
   position: relative;
+}
+.prof-content-right .tab-container {
+  width: 100%;
+  padding-bottom: 5px;
+}
+.prof-content-right .tab-container .el-tabs__item {
+  font-size: 14px;
+  line-height: 14px;
+  height: 27px;
+}
+.prof-content-right .tab-container .el-tabs__item.is-active {
+  color: #00a5a7;
+  font-weight: bold;
+}
+.prof-content-right .router-container.detail {
+  height: 100%;
+}
+.prof-content-right .router-container.dashboard {
+  height: calc(100% - 46px);
 }
 .prof-wrap .prof-content .prof-content-right .close {
   position: absolute;
