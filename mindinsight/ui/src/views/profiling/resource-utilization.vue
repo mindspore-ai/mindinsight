@@ -30,7 +30,7 @@ limitations under the License.
         </div>
       </div>
       <div class="content-item">
-        <div class="cpu-info" v-if="!cpuInfo.noData">
+        <div class="cpu-info" v-show="!cpuInfo.noData">
           <div class="cpu-chart"
               id="deviceCpuChart"
               ref="deviceCpuChart"></div>
@@ -62,7 +62,7 @@ limitations under the License.
             </div>
           </div>
         </div>
-        <div class="noData-content" v-else>
+        <div class="noData-content" v-show="cpuInfo.noData">
           <img :src="require('@/assets/images/nodata.png')" alt="" />
           <p>{{cpuInfo.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
