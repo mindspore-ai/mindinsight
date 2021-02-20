@@ -92,39 +92,42 @@ class PyTorchGraphParser(GraphParser):
             opset_version (int): Op set version of onnx.
         """
 
-        torch = import_module('torch')
-        has_cuda = torch.cuda.is_available()
-        if has_cuda:
-            model = torch.load(f=model_path).cuda()
-            dump_input = torch.randn(*sample_shape, device='cuda')
-        else:
-            model = torch.load(f=model_path, map_location="cpu")
-            dump_input = torch.randn(*sample_shape, device='cpu')
+        try:
+            torch = import_module('torch')
+            has_cuda = torch.cuda.is_available()
+            if has_cuda:
+                model = torch.load(f=model_path).cuda()
+                dump_input = torch.randn(*sample_shape, device='cuda')
+            else:
+                model = torch.load(f=model_path, map_location="cpu")
+                dump_input = torch.randn(*sample_shape, device='cpu')
 
-        if isinstance(model, torch.nn.DataParallel):
-            raise ValueError('torch.nn.DataParallel is not supported by ONNX exporter.')
+            if isinstance(model, torch.nn.DataParallel):
+                raise ValueError('torch.nn.DataParallel is not supported by ONNX exporter.')
 
-        torch_onnx = import_module('torch.onnx')
-        operator_export_types = getattr(torch_onnx, 'OperatorExportTypes')
-        utils = import_module('torch.onnx.utils')
-        model_to_graph = getattr(utils, '_model_to_graph')
+            torch_onnx = import_module('torch.onnx')
+            operator_export_types = getattr(torch_onnx, 'OperatorExportTypes')
+            utils = import_module('torch.onnx.utils')
+            model_to_graph = getattr(utils, '_model_to_graph')
 
-        symbolic_helper = import_module('torch.onnx.symbolic_helper')
-        default_onnx_opset_version = getattr(symbolic_helper, '_default_onnx_opset_version')
-        set_opset_version = getattr(symbolic_helper, '_set_opset_version')
-        set_operator_export_type = getattr(symbolic_helper, '_set_operator_export_type')
-        if not opset_version:
-            opset_version = default_onnx_opset_version
+            symbolic_helper = import_module('torch.onnx.symbolic_helper')
+            default_onnx_opset_version = getattr(symbolic_helper, '_default_onnx_opset_version')
+            set_opset_version = getattr(symbolic_helper, '_set_opset_version')
+            set_operator_export_type = getattr(symbolic_helper, '_set_operator_export_type')
+            if not opset_version:
+                opset_version = default_onnx_opset_version
 
-        operator_export_type = operator_export_types.ONNX
-        set_opset_version(opset_version)
-        set_operator_export_type(operator_export_type)
+            operator_export_type = operator_export_types.ONNX
+            set_opset_version(opset_version)
+            set_operator_export_type(operator_export_type)
 
-        graph, params_dict, _ = model_to_graph(model, dump_input, _retain_param_name=True)
-        export_onnx = getattr(graph, '_export_onnx')
-        proto, _ = export_onnx(
-            params_dict, opset_version, dict(), False,
-            operator_export_type, True, False, dict(),
-            True, False)
+            graph, params_dict, _ = model_to_graph(model, dump_input, _retain_param_name=True)
+            export_onnx = getattr(graph, '_export_onnx')
+            proto, _ = export_onnx(
+                params_dict, opset_version, dict(), False,
+                operator_export_type, True, False, dict(),
+                True, False)
 
-        output_queue.put(proto)
+            output_queue.put(proto)
+        except ModelNotSupportError.raise_from() as e:
+            output_queue.put(e)
