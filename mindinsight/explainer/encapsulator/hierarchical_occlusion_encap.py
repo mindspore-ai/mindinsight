@@ -15,7 +15,8 @@
 """Hierarchical Occlusion encapsulator."""
 
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
-from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap, ExplanationKeys
+from mindinsight.explainer.common.enums import ExplanationKeys, ImageQueryTypes
+from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap
 
 
 class HierarchicalOcclusionEncap(ExplanationEncap):
@@ -81,7 +82,10 @@ class HierarchicalOcclusionEncap(ExplanationEncap):
         Returns:
             dict, the edited sample info.
         """
-        sample["image"] = self._get_image_url(job.train_id, sample["image"], "original")
+        original = ImageQueryTypes.ORIGINAL.value
+        outcome = ImageQueryTypes.OUTCOME.value
+
+        sample["image"] = self._get_image_url(job.train_id, sample["image"], original)
         inferences = sample["inferences"]
         i = 0  # init index for while loop
         while i < len(inferences):
@@ -91,9 +95,9 @@ class HierarchicalOcclusionEncap(ExplanationEncap):
                 continue
             new_list = []
             for idx, hoc_layer in enumerate(inference_item[ExplanationKeys.HOC.value]):
-                hoc_layer["outcome"] = self._get_image_url(job.train_id,
-                                                           f"{sample['id']}_{inference_item['label']}_{idx}.jpg",
-                                                           "outcome")
+                hoc_layer[outcome] = self._get_image_url(job.train_id,
+                                                         f"{sample['id']}_{inference_item['label']}_{idx}.jpg",
+                                                         outcome)
                 new_list.append(hoc_layer)
             inference_item[ExplanationKeys.HOC.value] = new_list
             i += 1

@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,3 +50,16 @@ class CacheStatus(enum.Enum):
     NOT_IN_CACHE = "NOT_IN_CACHE"
     CACHING = "CACHING"
     CACHED = "CACHED"
+
+
+class ExplanationKeys(enum.Enum):
+    """Query type enums."""
+    HOC = "hoc_layers"  # HOC: Hierarchical Occlusion, an explanation method we propose
+    SALIENCY = "saliency_maps"
+
+
+class ImageQueryTypes(enum.Enum):
+    """Image query type enums."""
+    ORIGINAL = 'original'  # Query for the original image
+    OUTCOME = 'outcome'  # Query for outcome of HOC explanation
+    OVERLAY = 'overlay'  # Query for saliency maps overlay

@@ -63,7 +63,7 @@ def pil_apply_edit_steps(image, mask, edit_steps, by_masking=False, inplace=Fals
     Args:
         image (PIL.Image): The input image in RGB mode.
         mask (Union[str, int, tuple[int, int, int], PIL.Image.Image]): The mask to apply on the image, could be string
-            e.g. 'gaussian:9', a single, grey scale intensity [0, 255], a RBG tuple or a PIL Image object.
+            e.g. 'gaussian:9', a single, grey scale intensity [0, 255], an RBG tuple or a PIL Image object.
         edit_steps (list[EditStep]): Edit steps to be drawn.
         by_masking (bool): Whether to use masking method. Default: False.
         inplace (bool): True to draw on the input image, otherwise draw on a cloned image.
@@ -99,7 +99,7 @@ def _pil_apply_edit_steps_unmask(image, mask, edit_steps, inplace=False):
     Args:
         image (PIL.Image): The input image.
         mask (Union[int, tuple[int, int, int], PIL.Image]): The mask to apply on the image, could be a single grey
-            scale intensity [0, 255], a RBG tuple or a PIL Image.
+            scale intensity [0, 255], an RBG tuple or a PIL Image.
         edit_steps (list[EditStep]): Edit steps to be drawn.
         inplace (bool): True to draw on the input image, otherwise draw on a cloned image.
 
@@ -132,7 +132,7 @@ def _pil_apply_edit_steps_mask(image, mask, edit_steps, inplace=False):
     Args:
         image (PIL.Image): The input image.
         mask (Union[int, tuple[int, int, int], PIL.Image]): The mask to apply on the image, could be a single grey
-            scale intensity [0, 255], a RBG tuple or a PIL Image.
+            scale intensity [0, 255], an RBG tuple or a PIL Image.
         edit_steps (list[EditStep]): Edit steps to be drawn.
         inplace (bool): True to draw on the input image, otherwise draw on a cloned image.
 
