@@ -16,7 +16,7 @@ limitations under the License.
 <template>
   <div class="data-process-wrap">
     <div class="title">{{$t('profiling.cpuUtilization')}}</div>
-    <div class="cpu-info" v-if="!cpuInfo.noData">
+    <div class="cpu-info" v-show="!cpuInfo.noData">
       <div class="step-filter">
         <label>{{cpuInfo.stepTip}}</label>
         <label>{{$t('profiling.startStep')}}</label>
@@ -124,7 +124,7 @@ limitations under the License.
         </div>
       </div>
     </div>
-    <div class="image-noData" v-else>
+    <div class="image-noData" v-show="cpuInfo.noData">
         <div>
           <img :src="require('@/assets/images/nodata.png')"
                 alt="" />
