@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,7 +59,12 @@ class MSGraph(Graph):
                 logger.warning("Finding a node with an empty name will not save it.")
                 continue
 
-            if not node_proto.full_name or any(
+            if node_proto.op_type == "Load":
+                # The Load operator needs to be renamed as it has the same name with parameter
+                node_name = Node.create_node_name(scope=node_proto.scope,
+                                                  base_name=f'{node_proto.op_type}-op{node_proto.name}')
+                node_proto.full_name = node_name
+            elif not node_proto.full_name or any(
                     node_proto.full_name.lower().endswith(f'[:{plugin.value.lower()}]') for plugin in PluginNameEnum):
                 node_name = Node.create_node_name(scope=node_proto.scope,
                                                   base_name=f'{node_proto.op_type}{node_proto.name}')
