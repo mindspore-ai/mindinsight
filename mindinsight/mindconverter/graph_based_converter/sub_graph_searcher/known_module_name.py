@@ -49,10 +49,11 @@ def register_module_name(md_name: str, in_degree: int, out_degree: int):
     def _reg(pattern):
         result = pattern()
         if not result:
-            return
+            return pattern
         BUILT_IN_MODULE_NAME[Pattern("->".join(result), len(result),
                                      in_degree, out_degree,
                                      ptn_items=result)] = md_name
+        return pattern
 
     return _reg
 

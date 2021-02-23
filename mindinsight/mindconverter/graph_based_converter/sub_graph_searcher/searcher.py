@@ -39,9 +39,10 @@ def _is_satisfied(path):
     """
     if len(path.recursion_path) > MAX_ITERATION_DEPTH:
         return True
-    if not path.new_pattern or not any([is_pattern_satisfied(p, path) for p in path.new_pattern.values()]):
+    candidate_eval = any([is_pattern_satisfied(p, path) for p in path.new_pattern.values()])
+    if not path.new_pattern or not candidate_eval:
         return True
-    if path.evaluate_score() > SATISFIED_SCORE:
+    if path.evaluate_score() > SATISFIED_SCORE and not candidate_eval:
         return True
     return False
 
@@ -92,6 +93,7 @@ def _search(init_pattern: Dict[str, Pattern], init_topo_order: List[BaseNode],
         if _is_satisfied(cur_path):
             available_path.append(cur_path)
             deduplicate_path.add(cur_path.hash_of_aft_repl)
+            _is_satisfied(cur_path)
             continue
 
         if len(available_path) >= ACCEPTABLE_RESULT_COUNT:
@@ -154,6 +156,7 @@ def _retrieve_scope_name(found_path):
     Args:
         found_path: Found path.
     """
+    _add_known_module_name(found_path)
     module_name_mgr = dict()
 
     module_dict = dict()
@@ -257,6 +260,7 @@ def _build_connection(loader):
     for node_name, node in loader.nodes_dict.items():
         context.precursor_table[node_name] = list(node.get_precursor_dict().keys())
         context.successor_table[node_name] = list(node.get_successor_dict().keys())
+        context.outputs_table[node_name] = node.output_name_list
 
     dag = DagGraph(nodes=context.node_collection.copy(),
                    precursor=context.precursor_table.copy(),
@@ -308,6 +312,7 @@ def _add_known_module_name(search_path):
     for it in search_path.recursion_path:
         if it.pattern.known_module_name:
             ctx.known_module_name[it.pattern.module_name] = it.pattern.known_module_name
+    return ctx
 
 
 @SubGraphSearchingError.check_except("Sub-Graph pattern searching fail.")
@@ -328,9 +333,6 @@ def generate_scope_name(data_loader):
 
         if len(topo_order_with_scope_name_list) != len(data_loader.nodes_dict):
             topo_order_with_scope_name_list = flatten_graph(init_dag)
-
-        if result:
-            _add_known_module_name(result)
 
     except (ValueError, IndexError, AttributeError, KeyError) as _:
         topo_order_with_scope_name_list = flatten_graph(init_dag)

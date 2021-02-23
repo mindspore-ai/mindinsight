@@ -25,6 +25,7 @@ class Pattern:
         self.start_index = []
         self.end_index = []
         self.module_name = None
+        self.ptn_name = ""
         self.ptn_length = pattern_length
         self.ptn_items = pattern.split("->") if ptn_items is None else ptn_items
         self.in_degree = in_degree
