@@ -73,7 +73,7 @@ class TestValidate:
         condition_list = [{'op_type': "xxx"}, {}]
         exception_message = "The op_type in search_condition error, The op_type must in " \
                             "['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "\
-                            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']"
+                            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info']"
         for condition in condition_list:
             with pytest.raises(ProfilerOpTypeException) as exc_info:
                 validate_condition(condition)

@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,6 +34,10 @@ GPU_ACTIVITY_COL = ["name", "type", "op_full_name", "stream_id",
 GPU_DETAIL_COL = ["op_side", "op_type", "op_name", "op_full_name",
                   "op_occurrences", "op_total_time", "op_avg_time",
                   "proportion", "cuda_activity_cost_time", "cuda_activity_call_count"]
+CPU_TYPE_COL = ["op_type", "type_occurrences", "execution_frequency", "total_compute_time",
+                "avg_time", "percent"]
+CPU_DETAIL_COL = ["op_side", "op_type", "op_name", "full_op_name", "op_occurrences",
+                  "op_total_time", "op_avg_time", "total_time_proportion", "subgraph"]
 MINDDATA_PIPELINE_COL = [
     'op_id', 'op_type', 'num_workers', 'output_queue_average_size',
     'output_queue_length', 'output_queue_usage_rate', 'sample_interval',
@@ -82,14 +86,18 @@ def validate_condition(search_condition):
             search_scope = GPU_DETAIL_COL
         elif op_type == "gpu_cuda_activity":
             search_scope = GPU_ACTIVITY_COL
+        elif op_type == "cpu_op_type":
+            search_scope = CPU_TYPE_COL
+        elif op_type == "cpu_op_info":
+            search_scope = CPU_DETAIL_COL
         else:
             raise ProfilerOpTypeException(
                 "The op_type must in ['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "
-                "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']")
+                "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info']")
     else:
         raise ProfilerOpTypeException(
             "The op_type must in ['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "
-            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']")
+            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info']")
 
     if "group_condition" in search_condition:
         validate_group_condition(search_condition)
