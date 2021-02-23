@@ -21,40 +21,34 @@ cd "$(dirname "$0")"/../../ecosystem_tools/VulkanVision
 if [[ ! -d  "SPIRV-Tools" ]]
 then
     echo "Cloning SPIRV-Tools"
-    git clone https://github.com/KhronosGroup/SPIRV-Tools
+    git clone https://github.com/KhronosGroup/SPIRV-Tools --branch v2020.6
     cp st-patches/*.patch SPIRV-Tools
     cd SPIRV-Tools
-    git checkout 17ffa89097b26efeb323e6963220326b5ffb2baf
     # These are the current stable changes and can be updated with new releases
     git apply 0001-spirv-opt-Add-auto-inst-passes.patch
     rm *.patch
+    git clone https://github.com/KhronosGroup/SPIRV-Headers.git external/spirv-headers --branch 1.5.4.raytracing.fixed
+    git clone https://github.com/google/effcee.git external/effcee --branch v2019.1
+    git clone https://github.com/google/re2.git external/re2 --branch 2020-11-01
     cd ..
 fi
 
 if [[ ! -d  "Vulkan-ValidationLayers" ]] 
 then
     echo "Cloning Vulkan-ValidationLayers"
-    git clone https://github.com/KhronosGroup/Vulkan-ValidationLayers
+    git clone https://github.com/KhronosGroup/Vulkan-ValidationLayers --branch sdk-1.2.162
     cp vv-patches/*.patch Vulkan-ValidationLayers
     cd Vulkan-ValidationLayers
-    git checkout aa076dae88e282d7b6cada4f900b2fa7dac8ed08
     # These are the current stable changes and can be updated with new releases
     git apply 0001-layers-Added-auto-inst-layers.patch
     rm *.patch
     cd ..
 fi
 
-
 build_dir=$(pwd)
 
 echo "Building SPIRV-Tools"
 cd SPIRV-Tools
-git clone https://github.com/KhronosGroup/SPIRV-Headers.git external/spirv-headers
-cd external/spirv-headers
-git checkout f027d53ded7e230e008d37c8b47ede7cd308e19d
-cd ../..
-git clone https://github.com/google/effcee.git external/effcee
-git clone https://github.com/google/re2.git external/re2
 mkdir build
 cd build
 mkdir install
