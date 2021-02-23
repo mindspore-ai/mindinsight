@@ -53,9 +53,10 @@ class InputNode(GraphNode):
     def add_input_and_output_shape(self, input_shape, output_shape):
         pass
 
-    def __init__(self, input_shape):
+    def __init__(self, name, input_shape):
         super(InputNode, self).__init__(node=None)
         self._op_name = 'Input'
+        self.node_name = name
         self._op_params = {'input_shape': input_shape,
                            "output_shape": input_shape}
         self._node_type = NodeType.INPUTS.value

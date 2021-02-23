@@ -20,7 +20,7 @@ import argparse
 import mindinsight
 from mindinsight.mindconverter.converter import main
 from mindinsight.mindconverter.graph_based_converter.common.utils import get_framework_type
-from mindinsight.mindconverter.graph_based_converter.constant import ARGUMENT_LENGTH_LIMIT, EXPECTED_NUMBER, \
+from mindinsight.mindconverter.graph_based_converter.constant import ARGUMENT_LENGTH_LIMIT, \
     FrameworkType
 from mindinsight.mindconverter.graph_based_converter.framework import main_graph_base_converter
 
@@ -240,25 +240,21 @@ class ShapeAction(argparse.Action):
         Args:
             parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
-            values (object): Argument values with type depending on argument definition.
+            values (list): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
         """
 
         ArgsCheck.check_repeated(namespace, self.dest, self.default, option_string, parser_in)
 
-        in_shape = None
-        shape_str = values
-
-        shape_list = shape_str.split(':')
-        if not len(shape_list) == EXPECTED_NUMBER:
-            parser_in.error(f"Only support one shape now, but get {len(shape_list)}.")
+        def _convert_to_int(shape_list):
+            return [int(num_shape) for num_shape in shape_list.split(',')]
 
         try:
-            in_shape = [int(num_shape) for num_shape in shape_list[0].split(',')]
+            in_shape = [_convert_to_int(shape) for shape in values]
+            setattr(namespace, self.dest, in_shape)
         except ValueError:
             parser_in.error(
-                f"{option_string} {shape_str} should be a list of integer split by ',', check it please.")
-        setattr(namespace, self.dest, in_shape)
+                f"{option_string} {values} should be list of integers split by ',', check it please.")
 
 
 class NodeAction(argparse.Action):
@@ -271,24 +267,19 @@ class NodeAction(argparse.Action):
         Args:
             parser_in (ArgumentParser): Passed-in argument parser.
             namespace (Namespace): Namespace object to hold arguments.
-            values (object): Argument values with type depending on argument definition.
+            values (list): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
 
         """
 
         ArgsCheck.check_repeated(namespace, self.dest, self.default, option_string, parser_in)
 
-        node_str = values
-        if len(node_str) > ARGUMENT_LENGTH_LIMIT:
-            parser_in.error(
-                f"The length of {option_string}{node_str} should be no more than {ARGUMENT_LENGTH_LIMIT}."
-            )
-
-        node_list = node_str.split(',')
-        if not len(node_list) == EXPECTED_NUMBER:
-            parser_in.error(f"Only support one {option_string} now, but get {len(node_list)}.")
-
-        setattr(namespace, self.dest, node_str)
+        for v in values:
+            if len(v) > ARGUMENT_LENGTH_LIMIT:
+                parser_in.error(
+                    f"The length of {option_string} {v} should be no more than {ARGUMENT_LENGTH_LIMIT}."
+                )
+        setattr(namespace, self.dest, values)
 
 
 parser = argparse.ArgumentParser(
@@ -330,6 +321,7 @@ parser.add_argument(
     action=ShapeAction,
     default=None,
     required=False,
+    nargs="+",
     help="""
             Optional, expected input tensor shape of
             `--model_file`. It's required when use graph based
@@ -343,6 +335,7 @@ parser.add_argument(
     action=NodeAction,
     default=None,
     required=False,
+    nargs="+",
     help="""
             Optional, input node(s) name of `--model_file`. It's required when use Tensorflow model.
             Usage: --input_nodes input_1:0,input_2:0
@@ -354,6 +347,7 @@ parser.add_argument(
     action=NodeAction,
     default=None,
     required=False,
+    nargs="+",
     help="""
             Optional, output node(s) name of `--model_file`. It's required when use Tensorflow model.
             Usage: --output_nodes output_1:0,output_2:0
@@ -474,5 +468,7 @@ def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report
         error_msg = "`--in_file` and `--model_file` should be set at least one."
         error = FileNotFoundError(error_msg)
         log.error(str(error))
-        log.exception(error)
-        raise error
+        log_console.error("\n")
+        log_console.error("mindconverter: error: %s", str(error))
+        log_console.error("\n")
+        sys.exit(-1)

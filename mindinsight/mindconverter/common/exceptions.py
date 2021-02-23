@@ -194,6 +194,7 @@ class BaseConverterError(MindConverterException):
         UNKNOWN_ERROR = 0
         UNKNOWN_MODEL = 1
         PARAM_MISSING = 2
+        BAD_PARAM = 3
 
     BASE_ERROR_CODE = ConverterErrors.BASE_CONVERTER_FAIL.value
     ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
@@ -227,6 +228,18 @@ class ParamMissingError(BaseConverterError):
 
     def __init__(self, msg):
         super(ParamMissingError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        return cls
+
+
+class BadParamError(BaseConverterError):
+    """Define cli bad params error."""
+    ERROR_CODE = BaseConverterError.ErrCode.BAD_PARAM.value
+
+    def __init__(self, msg):
+        super(BadParamError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):

@@ -16,31 +16,30 @@
 import copy
 from importlib import import_module
 
-import numpy as np
-
 from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
-from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model
+from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model, build_feed_dict
 
 
 class OnnxSimplify:
     """To simplify onnx model."""
+
     def __init__(self):
         self._onnx_model = None
         self._constant_nodes = list()
         self._outputs_infer = dict()
 
-    def run_onnx_simplify(self, onnx_model, sample_shape):
+    def run_onnx_simplify(self, onnx_model, input_nodes):
         """
         Run to simplify onnx model.
 
         Args:
             onnx_model (onnx.ModelProto): Onnx Model.
-            sample_shape (tuple): Sample shape of input.
+            input_nodes (dict): Input nodes and corresponding sample shape.
         """
         self._onnx_model = onnx_model
         self._optimizer()
         self._get_constant_nodes()
-        self._onnx_infer(sample_shape)
+        self._onnx_infer(input_nodes)
         self._replace_constant_nodes()
         self._optimizer()
 
@@ -101,18 +100,14 @@ class OnnxSimplify:
         Run onnx inference to get outputs of constant nodes.
 
         Args:
-            infer_inputs_shape (tuple): Input shape for running inference.
+            infer_inputs_shape (dict): Input shape for running inference.
         """
-
-        input_onnx = self._onnx_model.graph.input[0]
-        input_onnx_name = input_onnx.name
-        feed_dict = {input_onnx_name: np.random.rand(*infer_inputs_shape).astype(np.float32)}
-
+        feed_dict = build_feed_dict(self._onnx_model, infer_inputs_shape)
         output_nodes_name = list()
         for node in self._constant_nodes:
             output_nodes_name.extend(node.output)
-
-        self._outputs_infer = fetch_output_from_onnx_model(self._onnx_model, feed_dict, output_nodes_name)
+        self._outputs_infer = fetch_output_from_onnx_model(self._onnx_model,
+                                                           feed_dict, output_nodes_name)
 
     def _replace_constant_nodes(self):
         """Replace constant nodes to nodes with op_type 'Constant'."""
