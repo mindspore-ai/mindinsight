@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,12 +59,13 @@ class ExplainParser(_SummaryParser):
 
         Args:
             filenames (list[str]): File name list.
-        Returns:
-            tuple, will return (file_changed, is_end, event_data),
 
-                file_changed (bool): True if the 9latest file is changed.
-                is_end (bool): True if all the summary files are finished loading.
-                event_data (dict): return an event data, key is field.
+        Returns:
+            tuple, the elements of the tuple are:
+
+                - file_changed (bool): True if the latest file is changed.
+                - is_end (bool): True if all the summary files are finished loading.
+                - event_data (dict): Event data where keys are explanation field.
         """
         summary_files = self.sort_files(filenames)
 
@@ -134,6 +135,12 @@ class ExplainParser(_SummaryParser):
 
         Args:
             event_str (str): Message event string in summary proto, data read from file handler.
+
+        Returns:
+            tuple, the elements of the result tuple are:
+
+                - field_list (list): Explain fields to be parsed.
+                - tensor_value_list (list): Parsed data with respect to the field list.
         """
 
         logger.debug("Start to parse event string. Event string len: %s.", len(event_str))
@@ -172,10 +179,13 @@ class ExplainParser(_SummaryParser):
     @staticmethod
     def _add_image_data(tensor_event_value):
         """
-        Parse image data based on sample_id in Explain message
+        Parse image data based on sample_id in Explain message.
 
         Args:
-            tensor_event_value: the object of Explain message
+            tensor_event_value (Event): The object of Explain message.
+
+        Returns:
+            SampleContainer, a named tuple containing sample data.
         """
         inference = InferfenceContainer(
             ground_truth_prob=tensor_event_value.inference.ground_truth_prob,
@@ -205,10 +215,10 @@ class ExplainParser(_SummaryParser):
         Parse benchmark data from Explain message.
 
         Args:
-            tensor_event_value: the object of Explain message
+            tensor_event_value (Event): The object of Explain message.
 
         Returns:
-            benchmark_data: An object containing benchmark.
+            BenchmarkContainer, a named tuple containing benchmark data.
         """
         benchmark_data = BenchmarkContainer(
             benchmark=tensor_event_value.benchmark,
@@ -223,10 +233,10 @@ class ExplainParser(_SummaryParser):
         Parse  metadata from Explain message.
 
         Args:
-            tensor_event_value: the object of Explain message
+            tensor_event_value (Event): The object of Explain message.
 
         Returns:
-            benchmark_data: An object containing metadata.
+            MetadataContainer, a named tuple containing benchmark data.
         """
         metadata_value = MetadataContainer(
             metadata=tensor_event_value.metadata,

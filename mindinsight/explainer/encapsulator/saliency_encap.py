@@ -15,7 +15,8 @@
 """Saliency map encapsulator."""
 
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
-from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap, ExplanationKeys
+from mindinsight.explainer.common.enums import ExplanationKeys, ImageQueryTypes
+from mindinsight.explainer.encapsulator.explain_data_encap import ExplanationEncap
 
 
 class SaliencyEncap(ExplanationEncap):
@@ -32,6 +33,7 @@ class SaliencyEncap(ExplanationEncap):
                             prediction_types=None):
         """
         Query saliency maps.
+
         Args:
             train_id (str): Job ID.
             labels (list[str]): Label filter.
@@ -65,7 +67,8 @@ class SaliencyEncap(ExplanationEncap):
 
     def _touch_sample(self, sample, job, explainers):
         """
-        Final editing the sample info.
+        Final edit on single sample info.
+
         Args:
             sample (dict): Sample info.
             job (ExplainJob): Explain job.
@@ -74,14 +77,17 @@ class SaliencyEncap(ExplanationEncap):
         Returns:
             dict, the edited sample info.
         """
+        original = ImageQueryTypes.ORIGINAL.value
+        overlay = ImageQueryTypes.OVERLAY.value
+
         sample_cp = sample.copy()
-        sample_cp["image"] = self._get_image_url(job.train_id, sample['image'], "original")
+        sample_cp["image"] = self._get_image_url(job.train_id, sample['image'], original)
         for inference in sample_cp["inferences"]:
             new_list = []
             for saliency_map in inference[ExplanationKeys.SALIENCY.value]:
                 if explainers and saliency_map["explainer"] not in explainers:
                     continue
-                saliency_map["overlay"] = self._get_image_url(job.train_id, saliency_map['overlay'], "overlay")
+                saliency_map[overlay] = self._get_image_url(job.train_id, saliency_map[overlay], overlay)
                 new_list.append(saliency_map)
             inference[ExplanationKeys.SALIENCY.value] = new_list
         return sample_cp

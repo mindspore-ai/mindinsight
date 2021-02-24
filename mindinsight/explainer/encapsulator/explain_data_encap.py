@@ -15,13 +15,13 @@
 """Common explain data encapsulator base class."""
 
 import copy
-from enum import Enum
 
+from mindinsight.explainer.common.enums import ExplanationKeys
 from mindinsight.utils.exceptions import ParamValueError
 
 
 def _sort_key_min_confidence(sample, labels):
-    """Samples sort key by the min. confidence."""
+    """Samples sort key by the minimum confidence."""
     min_confidence = float("+inf")
     for inference in sample["inferences"]:
         if labels and inference["label"] not in labels:
@@ -32,7 +32,7 @@ def _sort_key_min_confidence(sample, labels):
 
 
 def _sort_key_max_confidence(sample, labels):
-    """Samples sort key by the max. confidence."""
+    """Samples sort key by the maximum confidence."""
     max_confidence = float("-inf")
     for inference in sample["inferences"]:
         if labels and inference["label"] not in labels:
@@ -43,7 +43,7 @@ def _sort_key_max_confidence(sample, labels):
 
 
 def _sort_key_min_confidence_sd(sample, labels):
-    """Samples sort key by the min. confidence_sd."""
+    """Samples sort key by the minimum confidence_sd."""
     min_confidence_sd = float("+inf")
     for inference in sample["inferences"]:
         if labels and inference["label"] not in labels:
@@ -55,7 +55,7 @@ def _sort_key_min_confidence_sd(sample, labels):
 
 
 def _sort_key_max_confidence_sd(sample, labels):
-    """Samples sort key by the max. confidence_sd."""
+    """Samples sort key by the maximum confidence_sd."""
     max_confidence_sd = float("-inf")
     for inference in sample["inferences"]:
         if labels and inference["label"] not in labels:
@@ -64,11 +64,6 @@ def _sort_key_max_confidence_sd(sample, labels):
         if confidence_sd > max_confidence_sd:
             max_confidence_sd = confidence_sd
     return max_confidence_sd
-
-class ExplanationKeys(Enum):
-    """Query type enums."""
-    HOC = "hoc_layers"  # HOC: Hierarchical Occlusion, an explanation method we propose
-    SALIENCY = "saliency_maps"
 
 
 class ExplainDataEncap:
@@ -105,9 +100,9 @@ class ExplanationEncap(ExplainDataEncap):
             sorted_name (str): Field to be sorted.
             sorted_type (str): Sorting order, 'ascending' or 'descending'.
             prediction_types (list[str]): Prediction type filter.
-            drop_type (str, None): When it is None, no filer will be applied. When it is 'hoc_layers', samples without
-                hoc explanations will be filtered out. When it is 'saliency_maps', samples without saliency explanations
-                will be filtered out.
+            drop_type (str, None): When it is None, all data will be kept. When it is 'hoc_layers', samples without
+                hoc explanations will be drop out. When it is 'saliency_maps', samples without saliency explanations
+                will be drop out.
 
         Returns:
              list[dict], samples to be queried.

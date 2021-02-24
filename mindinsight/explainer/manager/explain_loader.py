@@ -270,7 +270,7 @@ class ExplainLoader:
         Update the update_time manually.
 
         Args:
-            new_time stamp (datetime.datetime or float): Updated time for the summary file.
+            new_time (datetime.datetime or float): Updated time for the summary file.
         """
         if isinstance(new_time, datetime):
             self._loader_info['update_time'] = new_time.timestamp()
@@ -333,11 +333,10 @@ class ExplainLoader:
 
     def get_all_samples(self) -> List[Dict]:
         """
-        Return a list of sample information cached in the explain job
+        Return a list of sample information cached in the explain job.
 
         Returns:
-            sample_list (List[SampleObj]): a list of sample objects, each object
-                consists of:
+            sample_list (list[SampleObj]): a list of sample objects, each object consists of:
 
                 - id (int): Sample id.
                 - name (str): Basename of image.
@@ -406,7 +405,7 @@ class ExplainLoader:
                 }
 
         Args:
-            benchmarks (benchmark_container): Parsed benchmarks data from summary file.
+            benchmarks (BenchmarkContainer): Parsed benchmarks data from summary file.
         """
         explainer_score = self._benchmark['explainer_score']
         label_score = self._benchmark['label_score']
@@ -429,7 +428,7 @@ class ExplainLoader:
         Parse the sample event.
 
         Detailed data of each sample are store in self._samples, identified by sample_id. Each sample data are stored
-        in the following structure.
+        in the following structure:
 
             - ground_truth_labels (list[int]): A list of ground truth labels of the sample.
             - ground_truth_probs (list[float]): A list of confidences of ground-truth label from black-box model.

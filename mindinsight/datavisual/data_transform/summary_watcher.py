@@ -220,10 +220,7 @@ class SummaryWatcher:
                 summary_dict[relative_path].update(job_dict)
 
             if summary_dict[relative_path]['create_time'] < ctime:
-                summary_dict[relative_path].update({
-                    'create_time': ctime,
-                    'update_time': mtime,
-                })
+                summary_dict[relative_path].update({'create_time': ctime, 'update_time': mtime})
                 job_dict = _get_explain_job_info(summary_base_dir, relative_path, timestamp)
                 summary_dict[relative_path].update(job_dict)
 
@@ -243,12 +240,10 @@ class SummaryWatcher:
             if not is_find:
                 return
 
-            profiler = {
-                'directory': os.path.join('.', entry.name),
-                'create_time': ctime,
-                'update_time': mtime,
-                "profiler_type": profiler_type
-            }
+            profiler = {'directory': os.path.join('.', entry.name),
+                        'create_time': ctime,
+                        'update_time': mtime,
+                        "profiler_type": profiler_type}
 
             if relative_path in summary_dict:
                 summary_dict[relative_path]['profiler'] = profiler

@@ -65,7 +65,7 @@ class ExplainManager:
 
         Args:
             reload_interval (int): Specify the loading period in seconds. If interval == 0, data will only be loaded
-            once. Default: 0.
+                once. Default: 0.
         """
         thread = threading.Thread(target=self._repeat_loading,
                                   name='explainer.start_load_thread',
@@ -80,10 +80,10 @@ class ExplainManager:
         If explain job w.r.t given loader_id is not found, None will be returned.
 
         Args:
-            loader_id (str): The id of expected ExplainLoader
+            loader_id (str): The id of expected ExplainLoader.
 
-        Return:
-            explain_job
+        Returns:
+            ExplainLoader, the data loader specified by loader_id.
         """
         self._check_status_valid()
 
@@ -111,17 +111,19 @@ class ExplainManager:
         Return List of explain jobs. includes job ID, create and update time.
 
         Args:
-            offset (int): An offset for page. Ex, offset is 0, mean current page is 1. Default value is 0.
-            limit (int): The max data items for per page. Default value is 10.
+            offset (int): An offset for page. Ex, offset is 0, mean current page is 1. Default: 0.
+            limit (int): The max data items for per page. Default: 10.
 
         Returns:
-            tuple[total, directories], total indicates the overall number of explain directories and directories
-                    indicate list of summary directory info including the following attributes.
+            tuple, the elements of the returned tuple are:
 
-                - relative_path (str): Relative path of summary directory, referring to settings.SUMMARY_BASE_DIR,
-                                        starting with "./".
-                - create_time (datetime): Creation time of summary file.
-                - update_time (datetime): Modification time of summary file.
+                - total (int): The overall number of explain directories
+                - dir_infos (list): List of summary directory info including the following attributes:
+
+                    - relative_path (str): Relative path of summary directory, referring to settings.SUMMARY_BASE_DIR,
+                         starting with "./".
+                    - create_time (datetime): Creation time of summary file.
+                    - update_time (datetime): Modification time of summary file.
         """
         total, dir_infos = \
             self._summary_watcher.list_explain_directories(self._summary_base_dir, offset=offset, limit=limit)
@@ -216,7 +218,7 @@ class ExplainManager:
         return loader
 
     def _add_loader(self, loader):
-        """add loader to the loader_pool."""
+        """Add loader to the loader_pool."""
         if loader.train_id not in self._loader_pool:
             self._loader_pool[loader.train_id] = loader
         else:

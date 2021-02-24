@@ -40,8 +40,52 @@ URL_PREFIX = settings.URL_PATH_PREFIX + settings.API_PREFIX
 BLUEPRINT = Blueprint("explainer", __name__, url_prefix=URL_PREFIX)
 
 
+def _validate_type(param, name, expected_types):
+    """
+    Common function to validate type.
+
+    Args:
+        param (object): Parameter to be validated.
+        name (str): Name of the parameter.
+        expected_types (type, tuple[type]): Expected type(s) of param.
+
+    Raises:
+        ParamTypeError: When param is not an instance of expected_types.
+    """
+
+    if not isinstance(param, expected_types):
+        raise ParamTypeError(name, expected_types)
+
+
+def _validate_value(param, name, expected_values):
+    """
+    Common function to validate values of param.
+
+    Args:
+        param (object): Parameter to be validated.
+        name (str): Name of the parameter.
+        expected_values (tuple) : Expected values of param.
+
+    Raises:
+        ParamValueError: When param is not in expected_values.
+    """
+
+    if param not in expected_values:
+        raise ParamValueError(f"Valid options for {name} are {expected_values}, but got {param}.")
+
+
 def _image_url_formatter(train_id, image_path, image_type):
-    """Returns image url."""
+    """
+    Returns image url.
+
+    Args:
+        train_id (str): Id that specifies explain job.
+        image_path (str): Local path or unique string that specifies the image for query.
+        image_type (str): Image query type.
+
+    Returns:
+        str, url string for image query.
+    """
     data = {
         "train_id": train_id,
         "path": image_path,
@@ -69,38 +113,48 @@ def _read_post_request(post_request):
 
 
 def _get_query_sample_parameters(data):
-    """Get parameter for query."""
+    """
+    Get parameter for query.
+
+    Args:
+        data (dict): Dict that contains request info.
+
+    Returns:
+        dict, key-value pairs to call backend query functions.
+
+    Raises:
+        ParamMissError: If train_id info is not in the request.
+        ParamTypeError: If certain key is not in the expected type in the request.
+        ParamValueError: If certain key does not have the expected value in the request.
+    """
 
     train_id = data.get("train_id")
     if train_id is None:
         raise ParamMissError('train_id')
 
     labels = data.get("labels")
-    if labels is not None and not isinstance(labels, list):
-        raise ParamTypeError("labels", (list, None))
+    if labels is not None:
+        _validate_type(labels, "labels", list)
     if labels:
         for item in labels:
-            if not isinstance(item, str):
-                raise ParamTypeError("element of labels", str)
+            _validate_type(item, "element of labels", str)
 
     limit = data.get("limit", 10)
     limit = Validation.check_limit(limit, min_value=1, max_value=100)
     offset = data.get("offset", 0)
     offset = Validation.check_offset(offset=offset)
     sorted_name = data.get("sorted_name", "")
+    _validate_value(sorted_name, "sorted_name", ('', 'confidence', 'uncertainty'))
+
     sorted_type = data.get("sorted_type", "descending")
-    if sorted_name not in ("", "confidence", "uncertainty"):
-        raise ParamValueError(f"sorted_name: {sorted_name}, valid options: '' 'confidence' 'uncertainty'")
-    if sorted_type not in ("ascending", "descending"):
-        raise ParamValueError(f"sorted_type: {sorted_type}, valid options: 'confidence' 'uncertainty'")
+    _validate_value(sorted_type, "sorted_type", ("ascending", "descending"))
 
     prediction_types = data.get("prediction_types")
-    if prediction_types is not None and not isinstance(prediction_types, list):
-        raise ParamTypeError("prediction_types", (list, None))
+    if prediction_types is not None:
+        _validate_type(prediction_types, "element of labels", list)
     if prediction_types:
         for item in prediction_types:
-            if item not in ['TP', 'FN', 'FP']:
-                raise ParamValueError(f"Item of prediction_types must be in ['TP', 'FN', 'FP'], but got {item}.")
+            _validate_value(item, "element of prediction_types", ('TP', 'FN', 'FP'))
 
     query_kwarg = {"train_id": train_id,
                    "labels": labels,
@@ -114,7 +168,17 @@ def _get_query_sample_parameters(data):
 
 @BLUEPRINT.route("/explainer/explain-jobs", methods=["GET"])
 def query_explain_jobs():
-    """Query explain jobs."""
+    """
+    Query explain jobs.
+
+    Returns:
+        Response, contains dict that stores base directory, total number of jobs and their detailed job metadata.
+
+    Raises:
+        ParamMissError: If train_id info is not in the request.
+        ParamTypeError: If one of (offset, limit) is not integer in the request.
+        ParamValueError: If one of (offset, limit) does not have the expected value in the request.
+    """
     offset = request.args.get("offset", default=0)
     limit = request.args.get("limit", default=10)
     offset = Validation.check_offset(offset=offset)
@@ -132,7 +196,15 @@ def query_explain_jobs():
 
 @BLUEPRINT.route("/explainer/explain-job", methods=["GET"])
 def query_explain_job():
-    """Query explain job meta-data."""
+    """
+    Query explain job meta-data.
+
+    Returns:
+        Response, contains dict that stores metadata of the requested job.
+
+    Raises:
+        ParamMissError: If train_id info is not in the request.
+    """
     train_id = get_train_id(request)
     if train_id is None:
         raise ParamMissError("train_id")
@@ -143,7 +215,16 @@ def query_explain_job():
 
 @BLUEPRINT.route("/explainer/saliency", methods=["POST"])
 def query_saliency():
-    """Query saliency map related results."""
+    """
+    Query saliency map related results.
+
+    Returns:
+        Response, contains dict that stores number of samples and the detailed sample info.
+
+    Raises:
+        ParamTypeError: If certain key is not in the expected type in the request.
+        ParamValueError: If certain key does not have the expected value in the request.
+    """
     data = _read_post_request(request)
     query_kwarg = _get_query_sample_parameters(data)
     explainers = data.get("explainers")
@@ -169,7 +250,16 @@ def query_saliency():
 
 @BLUEPRINT.route("/explainer/hoc", methods=["POST"])
 def query_hoc():
-    """Query hierarchical occlusion related results."""
+    """
+    Query hierarchical occlusion related results.
+
+    Returns:
+        Response, contains dict that stores number of samples and the detailed sample info.
+
+    Raises:
+        ParamTypeError: If certain key is not in the expected type in the request.
+        ParamValueError: If certain key does not have the expected value in the request.
+    """
     data = _read_post_request(request)
 
     query_kwargs = _get_query_sample_parameters(data)
@@ -193,7 +283,15 @@ def query_hoc():
 
 @BLUEPRINT.route("/explainer/evaluation", methods=["GET"])
 def query_evaluation():
-    """Query saliency explainer evaluation scores."""
+    """
+    Query saliency explainer evaluation scores.
+
+    Returns:
+        Response, contains dict that stores evaluation scores.
+
+    Raises:
+        ParamMissError: If train_id info is not in the request.
+    """
     train_id = get_train_id(request)
     if train_id is None:
         raise ParamMissError("train_id")
@@ -206,7 +304,12 @@ def query_evaluation():
 
 @BLUEPRINT.route("/explainer/image", methods=["GET"])
 def query_image():
-    """Query image."""
+    """
+    Query image.
+
+    Returns:
+        bytes, image binary content for UI to demonstrate.
+    """
     train_id = get_train_id(request)
     if train_id is None:
         raise ParamMissError("train_id")
@@ -230,6 +333,6 @@ def init_module(app):
     Init module entry.
 
     Args:
-        app: the application obj.
+        app (flask.app): The application obj.
     """
     app.register_blueprint(BLUEPRINT)

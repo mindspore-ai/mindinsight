@@ -29,11 +29,13 @@ class ExplainJobEncap(ExplainDataEncap):
     def query_explain_jobs(self, offset, limit):
         """
         Query explain job list.
+
         Args:
             offset (int): Page offset.
-            limit (int): Max. no. of items to be returned.
+            limit (int): Maximum number of items to be returned.
+
         Returns:
-            tuple[int, list[Dict]], total no. of jobs and job list.
+            tuple[int, list[Dict]], total number of jobs and job list.
         """
         total, dir_infos = self.job_manager.get_job_list(offset=offset, limit=limit)
         job_infos = [self._dir_2_info(dir_info) for dir_info in dir_infos]
