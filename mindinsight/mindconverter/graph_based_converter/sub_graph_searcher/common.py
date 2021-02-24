@@ -17,12 +17,13 @@
 __all__ = ["context",
            "gen_hash_key",
            "DagGraph",
-           "MAX_OUT_DEGREE",
+           "MAX_DEGREE",
            "cal_matching_score",
            "ACCEPTABLE_RESULT_COUNT",
            "MINI_FREQUENCY",
            "SATISFIED_SCORE",
-           "MAX_ITERATION_DEPTH"]
+           "MAX_ITERATION_DEPTH_OF_MULTI_IPT",
+           "MAX_ITERATION_DEPTH_OF_SINGLE_IPT"]
 
 import math
 import copy
@@ -32,9 +33,10 @@ from typing import List
 
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import BaseNode
 
-MAX_OUT_DEGREE = 1
+MAX_DEGREE = 1
 MINI_FREQUENCY = 0.07
-MAX_ITERATION_DEPTH = 16
+MAX_ITERATION_DEPTH_OF_MULTI_IPT = 16
+MAX_ITERATION_DEPTH_OF_SINGLE_IPT = 8
 SATISFIED_SCORE = 0.74
 ACCEPTABLE_RESULT_COUNT = 32
 PTN_COVERAGE_THRESHOLD = 0.65
@@ -127,6 +129,7 @@ class AlgorithmContext:
     precursor_table = {}
     successor_table = {}
     outputs_table = {}
+    has_multi_inputs = False
 
     def set_init_node_collection(self, nd_col):
         """Init node_collection."""

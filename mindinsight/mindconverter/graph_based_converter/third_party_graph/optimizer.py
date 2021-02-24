@@ -93,7 +93,8 @@ class OnnxSimplify:
         self._constant_nodes = copy.deepcopy(const_nodes)
 
     @ModelNotSupportError.check_except(
-        "Error occurs in loading model, please check your model or runtime environment integrity."
+        "Error occurs when loading model with given params, please check `--shape`, "
+        "`--input_nodes`, `--output_nodes`, `--model_file` or runtime environment integrity."
     )
     def _onnx_infer(self, infer_inputs_shape):
         """

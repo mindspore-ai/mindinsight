@@ -27,7 +27,8 @@ class PyTorchGraphParser(GraphParser):
 
     @classmethod
     @ModelNotSupportError.check_except(
-        "Error occurs in loading model, please check your model or runtime environment integrity."
+        "Error occurs when loading model with given params, please check `--shape`, "
+        "`--input_nodes`, `--output_nodes`, `--model_file` or runtime environment integrity."
     )
     def parse(cls, model_path: str, **kwargs):
         """
@@ -47,8 +48,9 @@ class PyTorchGraphParser(GraphParser):
             raise error
 
         try:
+            sample_shape = list(kwargs.get("input_nodes").values())[0]
             onnx_model_sim = cls._convert_pytorch_graph_to_onnx(
-                model_path, kwargs['sample_shape'], opset_version=11)
+                model_path, sample_shape, opset_version=11)
             return onnx_model_sim
 
         except ModuleNotFoundError:

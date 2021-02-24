@@ -81,7 +81,7 @@ def build_feed_dict(onnx_model, input_nodes: dict):
         for node in onnx_model.graph.input
     }
     feed_dict = {
-        name: np.random.rand(*shape).astype(input_nodes_types[name.split(":")[0]])
+        name: np.random.rand(*shape).astype(input_nodes_types[name])
         for name, shape in input_nodes.items()
     }
     return feed_dict

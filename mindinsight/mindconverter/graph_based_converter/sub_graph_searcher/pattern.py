@@ -21,7 +21,6 @@ class Pattern:
 
     def __init__(self, pattern, pattern_length, in_degree, out_degree, ptn_items: list = None):
         self.pattern = pattern
-        self.count = 0
         self.start_index = []
         self.end_index = []
         self.module_name = None
@@ -37,6 +36,11 @@ class Pattern:
         self.additional_score = 0
         self.known_module_name = None
 
+    @property
+    def count(self):
+        """Count of the pattern."""
+        return len(self.start_index)
+
     def insert(self, idx, seq_len):
         """
         Insert a new position.
@@ -49,7 +53,6 @@ class Pattern:
             return
         self.start_index.append(idx)
         self.end_index.append(idx + seq_len)
-        self.count += 1
 
     def __str__(self):
         """Override `str()` method."""
