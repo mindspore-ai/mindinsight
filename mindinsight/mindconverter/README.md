@@ -394,6 +394,14 @@ Q2. Can MindConverter run on ARM platform?
 Q3. Why did I get message of `Error detail: [NodeInputMissing] ...` when converting PyTorch model?
 > Answer: For PyTorch model, if operations in `torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx` were used, node parsing could be failed. It's better to replace those operations with `torch.nn.xxx`.
 
+Q4. Why does the conversion process take a lot of time (more than 10 minutes), but the model is not so large?
+> Answer: When converting, MindConverter needs to use protobuf to deserialize the model file. Please make sure that the protobuf installed in Python environment is implemented by C++ backend. The validation method is as follows. If the output is "python", you need to install Python protobuf implemented by C++ (download the protobuf source code, enter the "python" subdirectory in the source code, and use `python setup.py install --cpp_implementation` to install). If the output is "cpp" and the conversion process still takes a long time, please add environment variable `export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp` before conversion.
+
+```python
+from google.protobuf.internal import api_implementation
+print(api_implementation.Type())
+```
+
 ## Appendix
 
 ### TensorFlow Pb model exporting

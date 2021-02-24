@@ -407,6 +407,15 @@ Q3. PyTorch模型转换时为什么提示`Error detail: [NodeInputMissing] ...`?
 
 > 答：对于PyTorch模型，若网络中存在`torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx`层算子，可能存在节点解析失败的情况，需要用户手动替换为torch.nn层算子。
 
+Q4. 为什么使用MindConverter进行模型转换需要很长时间（超过十分钟），而模型并不大？
+
+> 答：MindConverter进行转换时，需要使用Protobuf对模型文件进行反序列化，请确保Python环境中安装的Protobuf采用C++后端实现，检查方法如下，若输出为python，则需要安装采用C++实现的Python Protobuf（下载Protobuf源码并进入源码中的python子目录，使用python setup.py install --cpp_implementation进行安装）；若输出为cpp，转换过程仍耗时较长，请在转换前使用添加环境变量`export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp`。
+
+```python
+from google.protobuf.internal import api_implementation
+print(api_implementation.Type())
+```
+
 ## 附录
 
 ### TensorFlow Pb模型导出
