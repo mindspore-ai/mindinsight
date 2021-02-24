@@ -27,7 +27,8 @@ class TFGraphParser(GraphParser):
 
     @classmethod
     @ModelNotSupportError.check_except(
-        "Error occurs in loading model, please check your model or runtime environment integrity."
+        "Error occurs when loading model with given params, please check `--shape`, "
+        "`--input_nodes`, `--output_nodes`, `--model_file` or runtime environment integrity."
     )
     def parse(cls, model_path: str, **kwargs):
         """

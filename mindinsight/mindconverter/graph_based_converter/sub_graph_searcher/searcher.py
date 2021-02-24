@@ -17,9 +17,9 @@ from queue import PriorityQueue
 from typing import Dict, List
 
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import context, DagGraph, gen_hash_key, \
-    ACCEPTABLE_RESULT_COUNT
+    ACCEPTABLE_RESULT_COUNT, MAX_ITERATION_DEPTH_OF_SINGLE_IPT
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import MINI_FREQUENCY, \
-    MAX_ITERATION_DEPTH, SATISFIED_SCORE
+    MAX_ITERATION_DEPTH_OF_MULTI_IPT, SATISFIED_SCORE
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import BaseNode
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.search_path import SearchPath, Pattern, \
@@ -37,7 +37,9 @@ def _is_satisfied(path):
     Returns:
         bool, True or False.
     """
-    if len(path.recursion_path) > MAX_ITERATION_DEPTH:
+    recursion_depth = MAX_ITERATION_DEPTH_OF_MULTI_IPT if context.has_multi_inputs \
+        else MAX_ITERATION_DEPTH_OF_SINGLE_IPT
+    if len(path.recursion_path) > recursion_depth:
         return True
     candidate_eval = any([is_pattern_satisfied(p, path) for p in path.new_pattern.values()])
     if not path.new_pattern or not candidate_eval:
@@ -262,6 +264,8 @@ def _build_connection(loader):
         context.successor_table[node_name] = list(node.get_successor_dict().keys())
         context.outputs_table[node_name] = node.output_name_list
 
+    # Record the model inputs count, use it to control the search algorithm.
+    context.has_multi_inputs = len(loader.input_nodes) > 1
     dag = DagGraph(nodes=context.node_collection.copy(),
                    precursor=context.precursor_table.copy(),
                    successor=context.successor_table.copy())

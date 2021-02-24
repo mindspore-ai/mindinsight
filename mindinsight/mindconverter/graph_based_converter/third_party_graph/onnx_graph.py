@@ -202,6 +202,8 @@ class OnnxGraph(Graph):
         else:
             onnx_model = PyTorchGraphParser.parse(graph_path, **kwargs)
         onnx_inputs = [onnx_input.name for onnx_input in onnx_model.graph.input]
-        if input_nodes not in onnx_inputs:
-            raise ModelNotSupportError(f"input nodes({input_nodes}) is not in model inputs ({onnx_inputs}).")
+        for ipt in input_nodes:
+            if ipt not in onnx_inputs:
+                raise ModelNotSupportError(f"input nodes({input_nodes}) is not "
+                                           f"in model inputs ({onnx_inputs}).")
         return onnx_model

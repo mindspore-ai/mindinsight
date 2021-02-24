@@ -21,7 +21,7 @@ from typing import Dict, List, Callable, Union
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.built_in_pattern import BUILT_IN_PATTERN, \
     is_built_in_pattern
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import context, gen_hash_key, DagGraph, \
-    MAX_OUT_DEGREE, cal_matching_score
+    MAX_DEGREE, cal_matching_score
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.known_module_name import BUILT_IN_MODULE_NAME
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.pattern import Pattern, scope_name_mapping
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.pattern_fuzzy_matching import \
@@ -390,7 +390,7 @@ def generate_pattern(topo_order: List[BaseNode], dag: DagGraph,
                                              dag=dag)
 
         in_degree, out_degree, _, _ = _get_pattern_degree(found_sequence, dag)
-        if out_degree > MAX_OUT_DEGREE:
+        if out_degree > MAX_DEGREE or (not context.has_multi_inputs and in_degree > MAX_DEGREE):
             cur_idx += 1
             continue
 
@@ -419,6 +419,7 @@ def _post_process_overlap(patterns) -> Dict:
                 patterns[name].start_index.pop(idx)
                 patterns[name].end_index.pop(idx)
                 continue
+            prev_end = patterns[name].end_index[idx]
             idx += 1
     return patterns
 
