@@ -16,7 +16,7 @@
 from importlib import import_module
 from typing import Dict, NoReturn
 
-from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
+from mindinsight.mindconverter.common.exceptions import ModelLoadingError
 from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.input_node import InputNode
@@ -204,6 +204,6 @@ class OnnxGraph(Graph):
         onnx_inputs = [onnx_input.name for onnx_input in onnx_model.graph.input]
         for ipt in input_nodes:
             if ipt not in onnx_inputs:
-                raise ModelNotSupportError(f"input nodes({input_nodes}) is not "
-                                           f"in model inputs ({onnx_inputs}).")
+                raise ModelLoadingError(f"input nodes({input_nodes}) is not "
+                                        f"in model inputs ({onnx_inputs}).")
         return onnx_model

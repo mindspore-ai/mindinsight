@@ -502,10 +502,9 @@ def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name
 |       UnKnownModelError       | 识别网络模型对应的框架失败     | 0000001   | 通常为用户给定模型文件不符合TensorFlow或PyTorch标准。        |
 | ParamMissingError | 缺少转换所需参数 | 0000002 | 通常为`--shape`, `--input_nodes` , `--output_nodes`缺失导致 |
 |      GraphInitFailError      | 依据网络模型构建计算图失败     | 1000000  | 由1000001，1000002，1000003导致的计算图无法解析。                                                           |
-|     ModelNotSupportError     | 解析.pth/.pb文件失败           | 1000001  | 给定的`--input_nodes`, `--output_nodes`与实际模型不符；<br />或模型文件存在问题导致模型无法加载。 |
+|     ModelLoadingError     | 模型加载失败           | 1000001  | 给定的`--input_nodes`, `--output_nodes`, `--shape`与实际模型不符；<br />或模型文件存在问题导致模型无法加载。 |
 |     TfRuntimeError     | TensorFlow库执行出错           | 1000002  | TensorFlow启动申请所需资源失败导致无法正常启动，<br />请检查系统资源（进程数、内存、显存占用、CPU占用）是否充足。 |
-| ModelLoadingError | 模型加载失败                   | 1000003  | 可能由于用户给定网络输入尺寸错误导致模型无法加载。           |
-| RuntimeIntegrityError | 三方依赖库不完整 | 1000004 | MindConverter运行时所需的三方依赖库未安装。 |
+| RuntimeIntegrityError | 三方依赖库不完整 | 1000003 | MindConverter运行时所需的三方依赖库未安装。 |
 | TreeCreateFailError | 依据计算图构建模型树失败       | 2000000  | Tree用于生成最终代码结构，<br />通常由于PyTorch网络中存在`torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx`算子导致。 |
 | NodeInputMissingError | 网络节点输入信息丢失           | 2000001  | 节点的输入信息丢失。                                                            |
 | TreeNodeInsertError | 树节点构建失败                 | 2000002  | 由于scope name错误，无法找到该节点的父节点。                                                             |
