@@ -107,8 +107,16 @@ class OnnxSimplify:
         output_nodes_name = list()
         for node in self._constant_nodes:
             output_nodes_name.extend(node.output)
+        original_outputs = [nd.name for nd in self._onnx_model.graph.output]
         self._outputs_infer = fetch_output_from_onnx_model(self._onnx_model,
                                                            feed_dict, output_nodes_name)
+        idx = 0
+        while idx < len(self._onnx_model.graph.output):
+            cur_opt = self._onnx_model.graph.output[idx]
+            if cur_opt.name not in original_outputs:
+                self._onnx_model.graph.output.remove(cur_opt)
+                continue
+            idx += 1
 
     def _replace_constant_nodes(self):
         """Replace constant nodes to nodes with op_type 'Constant'."""

@@ -131,6 +131,26 @@ def _multi_head_attention():
     ]
 
 
+@register_pattern("Multi-Head-Attention-1", 2, 1)
+@register_module_name("MultiHeadAttn", 2, 1)
+def _multi_head_attention_1():
+    return [
+        "MatMul", "Add", "MatMul", "Add", "MatMul", "Add", "Reshape",
+        "Transpose", "Reshape", "Reshape", "Transpose", "Transpose", "MatMul", "Div", "Add",
+        "Softmax", "MatMul", "Transpose", "Reshape", "MatMul", "Add"
+    ]
+
+
+@register_pattern("Multi-Head-Attention-with-Einsum", 2, 1)
+@register_module_name("MultiHeadAttn", 2, 1)
+def _multi_head_attention_with_einsum():
+    return [
+        "MatMul", "Add", "MatMul", "Add", "MatMul", "Add", "Reshape",
+        "Transpose", "Reshape", "Reshape", "Transpose", "Transpose", "MatMul", "Div", "Add", "Softmax",
+        "MatMul", "Transpose", "Einsum", "Add"
+    ]
+
+
 @register_pattern("Layer-Normalization", 1, 1)
 @register_module_name("LayerNorm", 1, 1)
 def _layer_norm():
@@ -160,4 +180,12 @@ def _gelu():
 def _linear():
     return [
         "MatMul", "Add"
+    ]
+
+
+@register_pattern("New-GeLU", 1, 1)
+@register_module_name("NewGeLU", 1, 1)
+def _new_gelu():
+    return [
+        "Mul", "Pow", "Mul", "Add", "Mul", "Tanh", "Add", "Mul"
     ]
