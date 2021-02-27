@@ -21,7 +21,6 @@ from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.input_node import InputNode
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph_node import OnnxGraphNode
-from mindinsight.mindconverter.graph_based_converter.third_party_graph.pytorch_graph_parser import PyTorchGraphParser
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.tf_graph_parser import TFGraphParser
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import OnnxDataLoader, \
     NodeWeight, NodeOutputShape
@@ -206,11 +205,10 @@ class OnnxGraph(Graph):
             onnx_model = TFGraphParser.parse(graph_path,
                                              input_nodes=input_nodes,
                                              output_nodes=output_nodes)
-        elif graph_path.endswith('.onnx'):
+        else:
             onnx = import_module('onnx')
             onnx_model = onnx.load(graph_path)
-        else:
-            onnx_model = PyTorchGraphParser.parse(graph_path, **kwargs)
+
         onnx_inputs = [onnx_input.name for onnx_input in onnx_model.graph.input]
 
         invalid_input_node_name = list()

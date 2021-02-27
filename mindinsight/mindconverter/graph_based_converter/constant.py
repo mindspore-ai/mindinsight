@@ -47,7 +47,6 @@ ONNXRUNTIME_MIN_VER = "1.5.2"
 ONNXOPTIMIZER_MIN_VER = "0.1.2"
 ONNXOPTIMIZER_MAX_VER = "0.1.2"
 
-TORCH_MIN_VER = "1.5.0"
 
 DTYPE_MAP = {
     1: np.float32,
@@ -111,8 +110,7 @@ class ExchangeMessageKeywords(Enum):
         GROUP_INPUTS = "group_inputs"
 
 
-BINARY_HEADER_PYTORCH_FILE = \
-    b'\x80\x02\x8a\nl\xfc\x9cF\xf9 j\xa8P\x19.\x80\x02M\xe9\x03.\x80\x02}q\x00(X\x10\x00\x00\x00'
+ONNX_MODEL_SUFFIX = "onnx"
 TENSORFLOW_MODEL_SUFFIX = "pb"
 BINARY_HEADER_PYTORCH_BITS = 32
 
@@ -128,7 +126,6 @@ MIN_SCOPE_LENGTH = 2
 
 ONNX_OPSET_VERSION = 11
 
-MODEL_INPUT_NAME = 'input.1'
 
 NO_CONVERTED_OPERATORS = [
     "onnx::Constant",
@@ -136,7 +133,6 @@ NO_CONVERTED_OPERATORS = [
 ]
 
 THIRD_PART_VERSION = {
-    "torch": (TORCH_MIN_VER,),
     "onnx": (ONNX_MIN_VER,),
     "onnxruntime": (ONNXRUNTIME_MIN_VER,),
     "onnxoptimizer": (ONNXOPTIMIZER_MIN_VER,),
@@ -161,7 +157,7 @@ class InputType(Enum):
 
 @unique
 class FrameworkType(Enum):
-    PYTORCH = 0
+    ONNX = 0
     TENSORFLOW = 1
     UNKNOWN = 2
 
