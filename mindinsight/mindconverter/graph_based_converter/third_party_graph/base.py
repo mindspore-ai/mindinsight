@@ -192,7 +192,6 @@ class Graph(BaseGraph, abc.ABC):
         """
         for name, node in self._nodes_collection.items():
             if node.in_degree == 0:
-                # NOTICE: what's usage of `scope`?
                 self._input_nodes.append(name)
 
             if node.out_degree == 0:
