@@ -19,14 +19,14 @@ from importlib import import_module
 
 from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import GraphParser
-from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
+from mindinsight.mindconverter.common.exceptions import ModelLoadingError
 
 
 class PyTorchGraphParser(GraphParser):
     """Define pytorch graph parser."""
 
     @classmethod
-    @ModelNotSupportError.check_except(
+    @ModelLoadingError.check_except(
         "Error occurs when loading model with given params, please check `--shape`, "
         "`--input_nodes`, `--output_nodes`, `--model_file` or runtime environment integrity."
     )
@@ -40,7 +40,6 @@ class PyTorchGraphParser(GraphParser):
         Returns:
             object, torch model.
         """
-
         if not os.path.exists(model_path):
             error = FileNotFoundError("`model_path` must be assigned with "
                                       "an existed file path.")
@@ -52,7 +51,6 @@ class PyTorchGraphParser(GraphParser):
             onnx_model_sim = cls._convert_pytorch_graph_to_onnx(
                 model_path, sample_shape, opset_version=11)
             return onnx_model_sim
-
         except ModuleNotFoundError:
             error_msg = "Cannot find model scripts in system path, " \
                         "set `--project_path` to the path of model scripts folder correctly."
@@ -131,5 +129,5 @@ class PyTorchGraphParser(GraphParser):
                 True, False)
 
             output_queue.put(proto)
-        except ModelNotSupportError.raise_from() as e:
+        except ModelLoadingError.raise_from() as e:
             output_queue.put(e)

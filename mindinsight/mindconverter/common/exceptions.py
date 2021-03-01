@@ -253,10 +253,9 @@ class GraphInitError(MindConverterException):
     class ErrCode(Enum):
         """Define error code of GraphInitError."""
         UNKNOWN_ERROR = 0
-        MODEL_NOT_SUPPORT = 1
+        MODEL_LOADING_ERROR = 1
         TF_RUNTIME_ERROR = 2
-        INPUT_SHAPE_ERROR = 3
-        MI_RUNTIME_ERROR = 4
+        MI_RUNTIME_ERROR = 3
 
     BASE_ERROR_CODE = ConverterErrors.GRAPH_INIT_FAIL.value
     ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
@@ -270,7 +269,6 @@ class GraphInitError(MindConverterException):
         """Raise from exceptions below."""
         except_source = (FileNotFoundError,
                          ModuleNotFoundError,
-                         ModelNotSupportError,
                          ModelLoadingError,
                          RuntimeIntegrityError,
                          TypeError,
@@ -336,13 +334,13 @@ class SourceFilesSaveError(MindConverterException):
         return except_source
 
 
-class ModelNotSupportError(GraphInitError):
+class ModelLoadingError(GraphInitError):
     """The model not support error."""
 
-    ERROR_CODE = GraphInitError.ErrCode.MODEL_NOT_SUPPORT.value
+    ERROR_CODE = GraphInitError.ErrCode.MODEL_LOADING_ERROR.value
 
     def __init__(self, msg):
-        super(ModelNotSupportError, self).__init__(msg=msg)
+        super(ModelLoadingError, self).__init__(msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -538,16 +536,3 @@ class GeneratorError(MindConverterException):
         """Raise from exceptions below."""
         except_source = (ValueError, TypeError, SyntaxError, cls)
         return except_source
-
-
-class ModelLoadingError(GraphInitError):
-    """Model loading fail."""
-    ERROR_CODE = GraphInitError.ErrCode.INPUT_SHAPE_ERROR.value
-
-    def __init__(self, msg):
-        super(ModelLoadingError, self).__init__(msg=msg)
-
-    @classmethod
-    def raise_from(cls):
-        """Define exception when model loading fail."""
-        return ValueError, cls

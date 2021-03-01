@@ -19,14 +19,14 @@ from importlib import import_module
 
 from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import GraphParser
-from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
+from mindinsight.mindconverter.common.exceptions import ModelLoadingError
 
 
 class TFGraphParser(GraphParser):
     """Define TF graph parser."""
 
     @classmethod
-    @ModelNotSupportError.check_except(
+    @ModelLoadingError.check_except(
         "Error occurs when loading model with given params, please check `--shape`, "
         "`--input_nodes`, `--output_nodes`, `--model_file` or runtime environment integrity."
     )
@@ -56,9 +56,9 @@ class TFGraphParser(GraphParser):
         invalid_inputs = TFGraphParser.invalid_nodes_name(input_nodes)
         invalid_outputs = TFGraphParser.invalid_nodes_name(output_nodes)
         if invalid_inputs:
-            raise ModelNotSupportError(f"Invalid Input Node Name Found: {', '.join(invalid_inputs)}")
+            raise ModelLoadingError(f"Invalid Input Node Name Found: {', '.join(invalid_inputs)}")
         if invalid_outputs:
-            raise ModelNotSupportError(f"Invalid Output Node Name Found: {', '.join(invalid_outputs)}")
+            raise ModelLoadingError(f"Invalid Output Node Name Found: {', '.join(invalid_outputs)}")
 
         model = convert_tf_graph_to_onnx(model_path,
                                          model_inputs=input_nodes,

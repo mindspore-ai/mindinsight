@@ -16,7 +16,7 @@
 import copy
 from importlib import import_module
 
-from mindinsight.mindconverter.common.exceptions import ModelNotSupportError
+from mindinsight.mindconverter.common.exceptions import ModelLoadingError
 from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model, build_feed_dict
 
 
@@ -92,7 +92,7 @@ class OnnxSimplify:
 
         self._constant_nodes = copy.deepcopy(const_nodes)
 
-    @ModelNotSupportError.check_except(
+    @ModelLoadingError.check_except(
         "Error occurs when loading model with given params, please check `--shape`, "
         "`--input_nodes`, `--output_nodes`, `--model_file` or runtime environment integrity."
     )

@@ -486,10 +486,9 @@ def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name
 |      UnKnownModelError       |             Fail to recognize model format             | 0000001  | Generally, the given TensorFlow model or PyTorch model doesn't observe the standard |
 | ParamMissingError | Fail to get required conversion params | 0000002 | Mainly caused by missing `--shape`, `--input_nodes`, `--output_nodes` |
 |      GraphInitFailError      |         Fail to trace the computational graph          | 1000000  | Exception caused by 1000001~1000003                          |
-|     ModelNotSupportError     |              Fail to parse .pth/.pb file               | 1000001  | Given `--input_nodes`, `--output_nodes don't  match the input model; Meanwhile, the model file can not be loaded also can cause this error. |
+|     ModelLoadingError     |              Fail to load the model              | 1000001  | Given `--input_nodes`, `--output_nodes`, `--shape` don't  match the input model; Meanwhile, the model file can not be loaded also can cause this error. |
 |        TfRuntimeError        |           Fail to initialize the TF runtime            | 1000002  | Resources required by TensorFlow are not available           |
-|    ModelLoadingError     |                 Fail to load the model                 | 1000003  | Maybe cause by the wrong `--input_shape` value               |
-|    RuntimeIntegrityError     |     Fail to locate required third party dependency     | 1000004  | Caused by required third party packages are not installed    |
+|    RuntimeIntegrityError     |     Fail to locate required third party dependency     | 1000003  | Caused by required third party packages are not installed    |
 |     TreeCreateFailError      |         Fail to create code hierarchical tree          | 2000000  | Mainly caused by usage of `torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx` in PyTorch |
 |    NodeInputMissingError     |            Fail to get the input node info             | 2000001  | Fail to get input node info                                  |
 |     TreeNodeInsertError      |                Fail to insert tree node                | 2000002  | Mainly caused by wrong scope name                            |
