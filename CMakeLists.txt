@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
+project(MindInsight)
+
 find_package(Git QUIET)
 
 if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
@@ -30,7 +32,7 @@ set(CMAKE_C_FLAGS_RELEASE "$ENV{CFLAGS} -fPIC -O3 -Wall -fvisibility=hidden -Wno
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 #add flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I/usr/local/include -Werror")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 
 include_directories(./third_party/securec/include)
 aux_source_directory(./third_party/securec/src SECUREC_SRCS)

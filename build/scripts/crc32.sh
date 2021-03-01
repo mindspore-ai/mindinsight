@@ -17,74 +17,62 @@ set -e
 
 SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
 
-THIRD_PARTY_DIR=$(realpath "$SCRIPT_BASEDIR/../../third_party")
-MINDINSIGHT_DIR=$(realpath "$SCRIPT_BASEDIR/../../mindinsight")
-BUILDDIR="$(dirname "$SCRIPT_BASEDIR")/build_securec"
-
-build_securec() {
-    [ -n "$BUILDDIR" ] && rm -rf "$BUILDDIR"
-    mkdir "$BUILDDIR"
-    cd "$BUILDDIR" || exit
-    if ! command -v cmake; then
-        command cmake
-    fi
-    cmake ../..
-    make
-}
-
-clean_securec() {
-    [ -n "$BUILDDIR" ] && rm -rf "$BUILDDIR"
-}
 
 build_crc32() {
-    DATAVISUAL_DIR=$(realpath "$SCRIPT_BASEDIR/../../mindinsight/datavisual")
-    CRC32_SOURCE_DIR="$DATAVISUAL_DIR/utils/crc32"
-    CRC32_OUTPUT_DIR="$DATAVISUAL_DIR/utils"
-    CRC32_SO_FILE="crc32$(python3-config --extension-suffix)"
+    if ! command -v cmake > /dev/null; then
+        command cmake
+    fi
 
-    cd "$CRC32_SOURCE_DIR" || exit
-
-    if ! command -v c++; then
+    if ! command -v c++ > /dev/null; then
         command c++
     fi
 
-    if command -v python3; then
+    if command -v python3 > /dev/null; then
         PYTHON=python3
-    elif command -v python; then
+    elif command -v python > /dev/null; then
         PYTHON=python
     else
         command python3
     fi
 
-    if ! "$PYTHON" -c 'import sys; assert sys.version_info >= (3, 7)' &>/dev/null; then
+    if ! "$PYTHON" -c 'import sys; assert sys.version_info >= (3, 7)' > /dev/null; then
         echo "Python 3.7 or higher is required. You are running $("$PYTHON" -V)"
         exit 1
     fi
 
-    rm -f "$CRC32_SOURCE_DIR/$CRC32_SO_FILE"
-    rm -f "$CRC32_OUTPUT_DIR/$CRC32_SO_FILE"
-
-    read -ra PYBIND11_INCLUDES <<< "$($PYTHON -m pybind11 --includes)"
-    if [ ! -n "${PYBIND11_INCLUDES[0]}" ]; then
+    PYBIND11_INCLUDES="$($PYTHON -m pybind11 --includes)"
+    if [ ! -n "$PYBIND11_INCLUDES" ]; then
         echo "pybind11 is required"
         exit 1
     fi
 
+    BUILDDIR="$(dirname "$SCRIPT_BASEDIR")/build_securec"
+    [ -d "$BUILDDIR" ] && rm -rf "$BUILDDIR"
+    mkdir "$BUILDDIR"
+    cd "$BUILDDIR" || exit
+
+    cmake ../..
+    cmake --build .
+
+    MINDINSIGHT_DIR=$(realpath "$SCRIPT_BASEDIR/../../mindinsight")
+    THIRD_PARTY_DIR=$(realpath "$SCRIPT_BASEDIR/../../third_party")
+
+    cd "$MINDINSIGHT_DIR/datavisual/utils" || exit
+    CRC32_SO_FILE="crc32$(python3-config --extension-suffix)"
+    rm -f "$CRC32_SO_FILE"
+
+    SECUREC_LIB_FILE="$BUILDDIR/libsecurec.a"
     c++ -O2 -O3 -shared -std=c++11 -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 \
         -Wno-maybe-uninitialized -Wno-unused-parameter -Wall -Wl,-z,relro,-z,now,-z,noexecstack \
-        -I"$MINDINSIGHT_DIR" -I"$THIRD_PARTY_DIR" "${PYBIND11_INCLUDES[0]}" "${PYBIND11_INCLUDES[1]}" \
-        -o "$CRC32_SO_FILE" crc32.cc "$BUILDDIR/libsecurec.a"
+        -I"$MINDINSIGHT_DIR" -I"$THIRD_PARTY_DIR" $PYBIND11_INCLUDES \
+        -o "$CRC32_SO_FILE" crc32/crc32.cc "$SECUREC_LIB_FILE"
 
     if [ ! -f "$CRC32_SO_FILE" ]; then
         echo "$CRC32_SO_FILE file does not exist, build failed"
         exit 1
     fi
 
-    mv "$CRC32_SO_FILE" "$CRC32_OUTPUT_DIR"
+    [ -d "$BUILDDIR" ] && rm -rf "$BUILDDIR"
 }
 
-build_securec
-
 build_crc32
-
-clean_securec

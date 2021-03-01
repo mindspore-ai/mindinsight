@@ -37,10 +37,11 @@ def get_version():
         str, mindinsight version.
     """
     machinery = import_module('importlib.machinery')
-    version_path = os.path.join(os.path.dirname(__file__), 'mindinsight', '_version.py')
+    module_path = os.path.join(os.path.dirname(__file__), 'mindinsight', '_version.py')
     module_name = '__mindinsightversion__'
+
     version_module = types.ModuleType(module_name)
-    loader = machinery.SourceFileLoader(module_name, version_path)
+    loader = machinery.SourceFileLoader(module_name, module_path)
     loader.exec_module(version_module)
     return version_module.VERSION
 

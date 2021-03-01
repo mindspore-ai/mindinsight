@@ -24,13 +24,10 @@ rename_wheel() {
     VERSION="$("$PYTHON" -c 'import platform; print(platform.python_version())')"
     PACKAGE_LIST=$(ls mindinsight-*-any.whl) || exit
     for PACKAGE_ORIG in $PACKAGE_LIST; do
-        MINDINSIGHT_VERSION=$(echo "$PACKAGE_ORIG" | awk -F"-" '{print $2}')
-        PYTHON_VERSION_NUM=$(echo "$VERSION" | awk -F"." '{print $1$2}')
+        MINDINSIGHT_VERSION=$(echo "$PACKAGE_ORIG" | awk -F'-' '{print $2}')
+        PYTHON_VERSION_NUM=$(echo "$VERSION" | awk -F'.' '{print $1$2}')
         PYTHON_VERSION_TAG="cp$PYTHON_VERSION_NUM"
-        PYTHON_ABI_TAG="cp${PYTHON_VERSION_NUM}"
-        if ! "$PYTHON" -c 'import sys; assert sys.version_info >= (3, 8)' &>/dev/null; then
-            PYTHON_ABI_TAG="${PYTHON_ABI_TAG}m"
-        fi
+        PYTHON_ABI_TAG="cp$(python3-config --extension-suffix | awk -F'-' '{print $2}')"
         MACHINE_TAG="$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)"
         PACKAGE_NEW="mindinsight-$MINDINSIGHT_VERSION-$PYTHON_VERSION_TAG-$PYTHON_ABI_TAG-$MACHINE_TAG.whl"
         mv "$PACKAGE_ORIG" "$PACKAGE_NEW"
@@ -63,15 +60,15 @@ build_wheel() {
     echo "start building mindinsight"
     clean_files
 
-    if command -v python3; then
+    if command -v python3 > /dev/null; then
         PYTHON=python3
-    elif command -v python; then
+    elif command -v python > /dev/null; then
         PYTHON=python
     else
         command python3
     fi
 
-    if ! "$PYTHON" -c 'import sys; assert sys.version_info >= (3, 7)' &>/dev/null; then
+    if ! "$PYTHON" -c 'import sys; assert sys.version_info >= (3, 7)' > /dev/null; then
         echo "Python 3.7 or higher is required. You are running $("$PYTHON" -V)"
         exit 1
     fi
