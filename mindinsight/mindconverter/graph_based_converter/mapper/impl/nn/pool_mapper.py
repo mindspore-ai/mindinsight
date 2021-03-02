@@ -63,8 +63,6 @@ class PoolMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
-        template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
-            **kwargs)
         op = kwargs.get("operation")
         args = kwargs.get("converted_params", dict())
 
@@ -74,10 +72,9 @@ class PoolMapper(ONNXToMindSporeMapper):
         kernel_shape = kwargs['raw_params']['kernel_shape']
         dilations = kwargs['raw_params'].get('dilations', (1, 1))
         strides = kwargs['raw_params']['strides']
-        onnx_opt_shape = tensor_opt_shape[-len(ms_opt_shape):]
 
-        if np.all(np.array(ms_opt_shape) == np.array(onnx_opt_shape)):
-            return template, exchange_msg, outputs_list, outputs_mapping
+        if not op:
+            raise ValueError("Can not get MindSpore operation name.")
 
         variable_slot = "var_0"
         init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
@@ -109,7 +106,8 @@ class PoolMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: dict()
             }
         }
-
+        outputs_list = [f"opt_{{{variable_slot}}}"]
+        outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping
 
     @staticmethod
@@ -122,9 +120,12 @@ class PoolMapper(ONNXToMindSporeMapper):
         if np.any(np.array(ms_opt_shape) > np.array(onnx_opt_shape)):
             raise ValueError(f"ms_opt_shape[{ms_opt_shape}] should be no larger than onnx_opt_shape[{onnx_opt_shape}].")
 
-        shape_diff = np.subtract((np.array(onnx_opt_shape) - 1) * np.array(strides),
-                                 np.subtract(np.array(onnx_ipt_shape),
-                                             (np.array(kernel_shape) - 1) * np.array(dilations) + 1)).tolist()
+        if np.all(np.array(ms_opt_shape) == np.array(onnx_opt_shape)):
+            shape_diff = np.zeros(len(ms_opt_shape)).astype(np.int).tolist()
+        else:
+            shape_diff = np.subtract((np.array(onnx_opt_shape) - 1) * np.array(strides),
+                                     np.subtract(np.array(onnx_ipt_shape),
+                                                 (np.array(kernel_shape) - 1) * np.array(dilations) + 1)).tolist()
 
         zero_pad_single = (0, 0)
         paddings = [zero_pad_single]

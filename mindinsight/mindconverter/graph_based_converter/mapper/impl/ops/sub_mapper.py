@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,17 +15,17 @@
 """Mapper module."""
 import numpy as np
 
-from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords, \
-    WeightType
+from mindinsight.mindconverter.graph_based_converter.constant import WeightType, ExchangeMessageKeywords, \
+    TemplateKeywords
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
 
-class AddMapper(ONNXToMindSporeMapper):
-    """Add mapper."""
+class SubMapper(ONNXToMindSporeMapper):
+    """Sub mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "P.Add"
+        return "P.Sub"
 
     @staticmethod
     def _convert_params(**kwargs):
@@ -34,7 +34,7 @@ class AddMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         weights = kwargs.get('weights', list())
-        tensor = AddMapper._find_val_by_index(0, weights)
+        tensor = SubMapper._find_val_by_index(0, weights)
         if isinstance(tensor, np.ndarray) and tensor.shape:
             return {'bias': {'data': tensor, 'type': WeightType.PARAMETER.value}}
         return dict()
@@ -52,13 +52,13 @@ class AddMapper(ONNXToMindSporeMapper):
         if not weights:
             return template, exchange_msg, outputs_list, outputs_mapping
 
-        tensor = AddMapper._find_val_by_index(0, weights)
+        tensor = SubMapper._find_val_by_index(0, weights)
         bias_shape = tensor.shape
         bias_dtype = tensor.dtype
-        bias_location = AddMapper._find_location_by_index(0, weights)
+        bias_location = SubMapper._find_location_by_index(0, weights)
 
         variable_slot = "var_0"
-        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
+        init_template = f"self.{{{variable_slot}}} = {op}()"
         inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
         if bias_location != -1:
             inputs_in_construct.insert(bias_location, f"self.{{{variable_slot}}}_bias")

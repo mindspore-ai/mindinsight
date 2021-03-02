@@ -20,5 +20,15 @@
   "onnx::Mul": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.mul_mapper.MulMapper",
   "onnx::Sigmoid": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.sigmoid_mapper.SigmoidMapper",
   "onnx::Split": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.split_mapper.SplitMapper",
-  "onnx::Resize": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.resize_mapper.ResizeMapper"
+  "onnx::Resize": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.resize_mapper.ResizeMapper",
+  "onnx::Gather": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.gather_mapper.GatherMapper",
+  "onnx::Sub": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.sub_mapper.SubMapper",
+  "onnx::Sqrt": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.sqrt_mapper.SqrtMapper",
+  "onnx::Div": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.div_mapper.DivMapper",
+  "onnx::Unsqueeze": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.expand_dims_mapper.ExpandDimsMapper",
+  "onnx::Cast": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.cast_mapper.CastMapper",
+  "onnx::Erf": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.erf_mapper.ErfMapper",
+  "onnx::Pow": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.pow_mapper.PowMapper",
+  "onnx::Einsum": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.einsum_mapper.EinSumMapper",
+  "onnx::Tanh": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.tanh_mapper.TanhMapper"
 }

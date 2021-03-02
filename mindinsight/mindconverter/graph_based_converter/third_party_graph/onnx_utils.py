@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Define ONNX related operations."""
+import itertools
 import re
 import abc
 from importlib import import_module
@@ -26,7 +27,7 @@ from mindinsight.mindconverter.graph_based_converter.common.global_context impor
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.optimizer import OnnxSimplify
 
 from mindinsight.mindconverter.graph_based_converter.constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
-    ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL
+    ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL, DTYPE_MAP
 from mindinsight.mindconverter.common.exceptions import GraphInitError
 
 
@@ -343,21 +344,51 @@ class OnnxDataLoader:
             i_type = group_match.group('type')
             i_dim_str = group_match.group('dim_str')
 
+            for dim in i_dim_str.split('x'):
+                if not dim.isdigit():
+                    raise ValueError("Unknown output shape.")
+
             return i_name, i_type, i_dim_str
 
         if not self.inferred_model:
             return
 
         value_info = self.inferred_model.graph.value_info
+        node_without_output_shape = dict()
 
-        for v in value_info:
+        for v in itertools.chain(value_info, self.inferred_model.graph.output):
             try:
                 readable_info = onnx.helper.printable_value_info(v)
                 (node_name, node_type, node_dim) = _parse_value_info_re(readable_info)
             except (AssertionError, ValueError, AttributeError) as _:
                 node_name, node_type, node_dim = self._parse_value_info_manually(v)
-            # `node_dim` could be "" or "scalar".
+                node_without_output_shape[node_name] = {'node_type': node_type, 'output_name': v.name}
             self.value_info_dict[node_name] = (node_type, node_dim)
+
+        inferred_outputs_name = [node_inst['output_name'] for node_inst in list(node_without_output_shape.values())]
+
+        inferred_outputs = dict()
+        if inferred_outputs_name:
+            inferred_outputs = self._get_outputs_using_onnxruntime(inferred_outputs_name)
+
+        for node_name, node_inst in node_without_output_shape.items():
+            node_type = node_inst['node_type']
+            output_name = node_inst['output_name']
+            node_dim = 'x'.join(str(shape_axis) for shape_axis in inferred_outputs[output_name].shape)
+            self.value_info_dict[node_name] = (node_type, node_dim)
+
+    def _get_outputs_using_onnxruntime(self, output_nodes_name):
+        """Get outputs using onnxruntime."""
+
+        onnx_inputs = self.inferred_model.graph.input
+        dtype_dict = dict()
+        for onnx_input in onnx_inputs:
+            dtype_dict[onnx_input.name] = DTYPE_MAP[onnx_input.type.tensor_type.elem_type]
+
+        feed_dict = build_feed_dict(self.inferred_model, self.input_nodes)
+
+        outputs_infer = fetch_output_from_onnx_model(self.model, feed_dict, output_nodes_name)
+        return outputs_infer
 
     def _parse_nodes(self):
         """Parse each onnx nodes in the model."""
@@ -569,7 +600,7 @@ class OnnxDataLoader:
 
         if nd_inst.op_type == "Resize":
             # Find the size params
-            to_shape = nd_inst.input_name_list[3]
+            to_shape = nd_inst.input_name_list[-1]
             if to_shape in self.tensors_dict:
                 return
 
@@ -581,9 +612,10 @@ class OnnxDataLoader:
 class NodeWeight:
     """Node weight struct."""
 
-    def __init__(self, weight_name, weight_value):
+    def __init__(self, weight_name, weight_value, weight_location):
         self._weight_name = weight_name
         self._weight_value = weight_value
+        self._weight_location = weight_location
 
     @property
     def name(self):
@@ -592,3 +624,7 @@ class NodeWeight:
     @property
     def value(self):
         return self._weight_value
+
+    @property
+    def location(self):
+        return self._weight_location

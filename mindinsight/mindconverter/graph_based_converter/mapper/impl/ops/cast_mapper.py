@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-import numpy as np
-
-from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords, \
-    WeightType
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
 
-class AddMapper(ONNXToMindSporeMapper):
-    """Add mapper."""
+class CastMapper(ONNXToMindSporeMapper):
+    """Cast mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "P.Add"
+        return "P.Cast"
 
     @staticmethod
     def _convert_params(**kwargs):
@@ -33,51 +30,44 @@ class AddMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
-        weights = kwargs.get('weights', list())
-        tensor = AddMapper._find_val_by_index(0, weights)
-        if isinstance(tensor, np.ndarray) and tensor.shape:
-            return {'bias': {'data': tensor, 'type': WeightType.PARAMETER.value}}
         return dict()
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
-        template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
-            **kwargs)
         op = kwargs.get("operation")
-        args = kwargs.get("converted_params")
+        args = kwargs.get("converted_params", dict())
+        params = kwargs['raw_params']
         weights = kwargs.get("weights")
-        trainable_params = kwargs.get('trainable_params', dict())
+        to = params["to"]
+        type_dict = {1: 'mindspore.float32',
+                     2: 'mindspore.uint8',
+                     3: 'mindspore.int8',
+                     4: 'mindspore.uint16',
+                     5: 'mindspore.int16',
+                     6: 'mindspore.int32',
+                     7: 'mindspore.int64',
+                     8: 'mindspore.string',
+                     9: 'mindspore.bool_',
+                     10: 'mindspore.float16',
+                     11: 'mindspore.double',
+                     12: 'mindspore.uint32',
+                     13: 'mindspore.uint64',
+                     14: 'UNSUPPORTED',
+                     15: 'UNSUPPORTED',
+                     16: 'UNSUPPORTED'}
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
-        if not weights:
-            return template, exchange_msg, outputs_list, outputs_mapping
 
-        tensor = AddMapper._find_val_by_index(0, weights)
-        bias_shape = tensor.shape
-        bias_dtype = tensor.dtype
-        bias_location = AddMapper._find_location_by_index(0, weights)
-
+        args["to"] = type_dict[to]
         variable_slot = "var_0"
-        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
-        inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
-        if bias_location != -1:
-            inputs_in_construct.insert(bias_location, f"self.{{{variable_slot}}}_bias")
-
-        if bias_shape:
-            args["bias_shape"] = bias_shape
-            args["bias_dtype"] = bias_dtype
-            init_tensor = f"self.{{{variable_slot}}}_bias = " \
-                          f"Parameter(Tensor(np.random.uniform(0, 1, {{bias_shape}}).astype(np.{{bias_dtype}})), " \
-                          f"name=None)"
-        else:
-            args["bias_value"] = tensor.tolist()
-            init_tensor = f"self.{{{variable_slot}}}_bias = {{bias_value}}"
-
+        init_template = f"self.{{{variable_slot}}} = {op}()"
+        init_to = f"self.{{{variable_slot}}}_to = {{to}}"
         construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
-                             f"({', '.join(inputs_in_construct)})"
+                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, " \
+                             f"self.{{{variable_slot}}}_to)"
         template = {
             variable_slot: {
-                TemplateKeywords.INIT.value: [init_template, init_tensor],
+                TemplateKeywords.INIT.value: [init_template, init_to],
                 TemplateKeywords.CONSTRUCT.value: [construct_template]
             }
         }
@@ -90,7 +80,7 @@ class AddMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
                 ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
                 ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: dict()
             }
         }
         outputs_list = [f"opt_{{{variable_slot}}}"]

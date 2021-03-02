@@ -125,12 +125,12 @@ class OnnxGraph(Graph):
             node.scope_name = scope_name_list[ind]
             inputs = node.input_name_list
             # check each input from node or tensors
-            for i in inputs:
+            for idx, i in enumerate(inputs):
                 if i in model_data.tensors_dict:
                     tensor = model_data.tensors_dict[i]
                     t_name = tensor.name
                     t_value = tensor.to_array()
-                    node_weights.append(NodeWeight(t_name, t_value))
+                    node_weights.append(NodeWeight(t_name, t_value, idx))
             self._nodes_collection[node_name] = OnnxGraphNode(node, node_weights)
             self._nodes_record[node_name] = node_name
 
@@ -202,8 +202,12 @@ class OnnxGraph(Graph):
         else:
             onnx_model = PyTorchGraphParser.parse(graph_path, **kwargs)
         onnx_inputs = [onnx_input.name for onnx_input in onnx_model.graph.input]
-        for ipt in input_nodes:
-            if ipt not in onnx_inputs:
-                raise ModelLoadingError(f"input nodes({input_nodes}) is not "
-                                        f"in model inputs ({onnx_inputs}).")
+
+        invalid_input_node_name = list()
+        for node_name in input_nodes.keys():
+            if node_name not in onnx_inputs:
+                invalid_input_node_name.append(node_name)
+        if invalid_input_node_name:
+            raise ModelLoadingError(
+                f"input nodes({invalid_input_node_name}) is not in model inputs ({onnx_inputs}).")
         return onnx_model
