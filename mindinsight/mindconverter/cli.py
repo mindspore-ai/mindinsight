@@ -21,7 +21,7 @@ import mindinsight
 from mindinsight.mindconverter.converter import main
 from mindinsight.mindconverter.graph_based_converter.common.utils import get_framework_type
 from mindinsight.mindconverter.graph_based_converter.constant import ARGUMENT_LENGTH_LIMIT, \
-    FrameworkType
+ARGUMENT_NUM_LIMIT, ARGUMENT_LEN_LIMIT, FrameworkType
 from mindinsight.mindconverter.graph_based_converter.framework import main_graph_base_converter
 
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
@@ -250,7 +250,15 @@ class ShapeAction(argparse.Action):
             return [int(num_shape) for num_shape in shape_list.split(',')]
 
         try:
-            in_shape = [_convert_to_int(shape) for shape in values]
+            if len(values) > ARGUMENT_NUM_LIMIT:
+                parser_in.error(f"The length of {option_string} {values} should be no more than {ARGUMENT_NUM_LIMIT}.")
+            in_shape = []
+            for v in values:
+                shape = _convert_to_int(v)
+                if len(shape) > ARGUMENT_LEN_LIMIT:
+                    parser_in.error(
+                        f"The length of {option_string} {shape} should be no more than {ARGUMENT_LEN_LIMIT}.")
+                in_shape.append(shape)
             setattr(namespace, self.dest, in_shape)
         except ValueError:
             parser_in.error(
@@ -273,7 +281,8 @@ class NodeAction(argparse.Action):
         """
 
         ArgsCheck.check_repeated(namespace, self.dest, self.default, option_string, parser_in)
-
+        if len(values) > ARGUMENT_NUM_LIMIT:
+            parser_in.error(f"The length of {option_string} {values} should be no more than {ARGUMENT_NUM_LIMIT}.")
         for v in values:
             if len(v) > ARGUMENT_LENGTH_LIMIT:
                 parser_in.error(
