@@ -19,7 +19,7 @@ limitations under the License.
          :class="{fullScreen:coreFullScreen}"
          v-if="coreCharts.data.length">
       <div>
-        <div class="chart-title">{{$t('profiling.chartTitle')}}</div>
+        <div class="chart-title">{{$t('profiling.chartTitle')}}({{unit}})</div>
         <el-radio-group class="chart-radio-group"
                         v-model="coreCharts.type"
                         @change="coreChartChange"
@@ -281,7 +281,6 @@ export default {
       type: Object,
       default: () => {
         return {
-          hasPercent: true,
           value: 1,
           percent: 3,
         };
@@ -307,6 +306,10 @@ export default {
     accuracy: {
       type: Number,
       default: 3,
+    },
+    unit: {
+      type: String,
+      default: '',
     },
   },
   data() {
@@ -705,7 +708,7 @@ export default {
       const option = {};
       const maxLabelLength = 20;
       const maxTooltipLen = 50;
-
+      const map = {};
       if (!chart.type) {
         option.legend = {
           data: [],
@@ -715,7 +718,7 @@ export default {
             let legendStr = '';
             for (let i = 0; i < chart.data.length; i++) {
               if (chart.data[i].name === params) {
-                const percent = this.chart.hasPercent ? `${chart.data[i].percent.toFixed(2)}%` : '';
+                const percent = `${map[params].toFixed(2)}%`;
                 const name =
                   chart.data[i].name.length > 10 ? `${chart.data[i].name.slice(0, 10)}...` : chart.data[i].name;
                 legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[i].value.toFixed(this.accuracy)}}\n{c|${percent}}`;
@@ -735,7 +738,8 @@ export default {
                 const temp = name.substr(i * maxTooltipLen, maxTooltipLen);
                 str += str ? '<br/>' + temp : temp;
               }
-              return str;
+              const value = chart.data.find((val) => val.name === params.name).value.toFixed(this.accuracy);
+              return `${str} ${value}(${this.unit})`;
             },
           },
           itemWidth: 18,
@@ -790,6 +794,7 @@ export default {
               position: 'outer',
               alignTo: 'labelLine',
               formatter: (params) => {
+                map[params.name] = params.percent;
                 return params.data.name && params.data.name.length > maxLabelLength
                   ? `${params.data.name.slice(0, maxLabelLength)}...`
                   : params.data.name;
@@ -812,7 +817,7 @@ export default {
         option.tooltip = {
           trigger: 'axis',
           formatter: (params) => {
-            return `${params[0].axisValue}<br>${params[0].marker}${params[0].value}`;
+            return `${params[0].axisValue}<br>${params[0].marker}${params[0].value} (${this.unit})`;
           },
           confine: true,
         };
@@ -885,7 +890,9 @@ export default {
             if (params.componentType === 'xAxis') {
               chart.chartDom.setOption({
                 tooltip: {
-                  formatter: '',
+                  formatter: (params) => {
+                    return `${params[0].axisValue}<br>${params[0].marker}${params[0].value} (${this.unit})`;
+                  },
                   alwaysShowContent: false,
                 },
               });

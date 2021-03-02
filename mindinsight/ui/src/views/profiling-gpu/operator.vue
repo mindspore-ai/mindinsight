@@ -29,6 +29,7 @@ limitations under the License.
                          :chart="gpuOpChart"
                          :accuracy="3"
                          :headerFilder="headerFilder"
+                         :unit="$t('profiling.gpuunit')"
                          ref="op" />
         </el-tab-pane>
         <el-tab-pane :label="$t('operator.kernelInfo')"
@@ -45,6 +46,7 @@ limitations under the License.
                          :coreSearchOptions="gpuCudaSearchOptions"
                          :accuracy="3"
                          :headerFilder="headerFilder"
+                         :unit="$t('profiling.gpuunit')"
                          ref="cuda" />
         </el-tab-pane>
         <el-tab-pane label="HOST CPU"
@@ -57,6 +59,7 @@ limitations under the License.
                          :chart="hostChart"
                          :accuracy="3"
                          :headerFilder="hostHeaderFilder"
+                         :unit="$t('profiling.unit')"
                          ref="host" />
         </el-tab-pane>
       </el-tabs>
@@ -105,11 +108,11 @@ export default {
       },
       hostSortCondition: {
         all: {
-          name: 'total_compute_time',
+          name: 'avg_time',
           type: 'descending',
         },
         detail: {
-          name: 'op_total_time',
+          name: 'op_avg_time',
           type: 'descending',
         },
       },
@@ -120,7 +123,7 @@ export default {
         op_avg_time: `op_avg_time (${this.$t('profiling.gpuunit')})`,
         max_duration: 'max_duration (us)',
         min_duration: 'min_duration (us)',
-        avg_duration: 'avg_duration (us)',
+        avg_duration: `avg_duration (${this.$t('profiling.gpuunit')})`,
         total_duration: 'total_duration (us)',
         proportion: 'total_time_proportion (%)',
         cuda_activity_cost_time: 'cuda_activity_cost_time (us)',
@@ -145,8 +148,8 @@ export default {
         total_time_proportion: 'total_time_proportion (%)',
         op_occurrences: `op_occurrences (${this.$t('profiling.countUnit')})`,
         op_total_time: 'op_total_time (ms)',
-        avg_time: 'avg_time (ms)',
-        op_avg_time: 'op_avg_time (ms)',
+        avg_time: `avg_time (${this.$t('profiling.unit')})`,
+        op_avg_time: `op_avg_time (${this.$t('profiling.unit')})`,
       },
       gpuOpSearch: {
         all: {
@@ -203,15 +206,12 @@ export default {
         },
       },
       gpuOpChart: {
-        hasPercent: false,
         value: 4,
       },
       gpuCudaChart: {
-        hasPercent: false,
         value: 8,
       },
       hostChart: {
-        hasPercent: false,
         value: 4,
         percent: 5,
       },
@@ -260,8 +260,12 @@ export default {
   methods: {
     cardChange() {
       const ref = this.$refs[this.apiType];
-      ref.coreStatisticType = 0;
       ref.clearCoreData();
+      if (this.apiType !== 'cuda') {
+        ref.coreStatisticType = 0;
+      } else {
+        ref.coreTableChange();
+      }
       ref.getCoreTypeList();
     },
     tabChange() {
@@ -269,7 +273,9 @@ export default {
       if (this.currentCard !== ref.coreCharts.device_id) {
         ref.getCoreTypeList();
         if (this.apiType === 'cuda') {
-          ref.coreTableChange();
+          setTimeout(() => {
+            ref.coreTableChange();
+          }, 100);
         }
       } else {
         this.$nextTick(() => {

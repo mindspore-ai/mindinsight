@@ -28,6 +28,7 @@ limitations under the License.
                          :search="coreSearch"
                          :accuracy="6"
                          :headerFilder="headerFilder"
+                         :unit="$t('profiling.gpuunit')"
                          ref="core" />
         </el-tab-pane>
         <el-tab-pane label="AI CPU"
@@ -40,6 +41,7 @@ limitations under the License.
                          :search="cpuSearch"
                          :accuracy="6"
                          :headerFilder="headerFilder"
+                         :unit="$t('profiling.gpuunit')"
                          ref="cpu" />
         </el-tab-pane>
         <el-tab-pane label="HOST CPU"
@@ -51,8 +53,9 @@ limitations under the License.
                          :opSortCondition="hostSortCondition"
                          :search="hostSearch"
                          :accuracy="6"
-                         :headerFilder="headerFilder"
+                         :headerFilder="hostHeaderFilder"
                          :chart="hostChart"
+                         :unit="$t('profiling.unit')"
                          ref="host" />
         </el-tab-pane>
       </el-tabs>
@@ -101,11 +104,11 @@ export default {
       },
       hostSortCondition: {
         all: {
-          name: 'total_compute_time',
+          name: 'avg_time',
           type: 'descending',
         },
         detail: {
-          name: 'op_total_time',
+          name: 'op_avg_time',
           type: 'descending',
         },
       },
@@ -122,6 +125,19 @@ export default {
         op_total_time: 'op_total_time (ms)',
         avg_time: 'avg_time (ms)',
         op_avg_time: 'op_avg_time (ms)',
+      },
+      hostHeaderFilder: {
+        type_occurrences: `type_occurrences (${this.$t('profiling.countUnit')})`,
+        execution_frequency: `execution_frequency (${this.$t('profiling.countUnit')})`,
+        percent: 'percent (%)',
+        avg_execution_time: `avg_execution_time (${this.$t('profiling.unit')})`,
+        total_compute_time: 'total_compute_time (ms)',
+        compute_time: `compute_time (${this.$t('profiling.unit')})`,
+        total_time_proportion: 'total_time_proportion (%)',
+        op_occurrences: `op_occurrences (${this.$t('profiling.countUnit')})`,
+        op_total_time: 'op_total_time (ms)',
+        avg_time: `avg_time (${this.$t('profiling.unit')})`,
+        op_avg_time: `op_avg_time (${this.$t('profiling.unit')})`,
       },
       coreSearch: {
         all: {
@@ -178,7 +194,6 @@ export default {
         },
       },
       hostChart: {
-        hasPercent: true,
         value: 4,
         percent: 5,
       },
@@ -207,22 +222,13 @@ export default {
     cardChange() {
       const ref = this.$refs[this.apiType];
       ref.clearCoreData();
-      if (this.apiType !== 'cuda') {
-        ref.coreStatisticType = 0;
-      } else {
-        ref.coreTableChange();
-      }
+      ref.coreStatisticType = 0;
       ref.getCoreTypeList();
     },
     tabChange() {
       const ref = this.$refs[this.apiType];
       if (this.currentCard !== ref.coreCharts.device_id) {
         ref.getCoreTypeList();
-        if (this.apiType === 'cuda') {
-          setTimeout(() => {
-            ref.coreTableChange();
-          }, 100);
-        }
       } else {
         this.$nextTick(() => {
           ref.resizeCallback();
