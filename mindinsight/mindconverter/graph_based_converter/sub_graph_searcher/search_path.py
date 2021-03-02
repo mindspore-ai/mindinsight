@@ -424,7 +424,18 @@ def _post_process_overlap(patterns) -> Dict:
     return patterns
 
 
-class SearchPath:
+class BasePath:
+    """Base class of SearchPath (auto-search) and ReplacePath (greedy-match)."""
+
+    def __init__(self, pattern, sequence: List, prev_path=None):
+        self.pattern = pattern
+        self.recursion_path = prev_path.recursion_path[:] if prev_path is not None else list()
+        if prev_path is not None:
+            self.recursion_path.append(prev_path)
+        self.topo_order_bef_repl = sequence
+
+
+class SearchPath(BasePath):
     """
     Use SearchPath to store the search path.
 
@@ -439,15 +450,9 @@ class SearchPath:
 
     def __init__(self, pattern, sequence: List[BaseNode], prev_path=None,
                  graph=None, sub_graph_size: int = 2):
-        self.pattern = pattern
+        super(SearchPath, self).__init__(pattern, sequence, prev_path)
         self.graph = copy.copy(prev_path.graph) if prev_path is not None \
             else copy.copy(graph)
-        self.recursion_path = prev_path.recursion_path[:] \
-            if prev_path is not None else list()
-        if prev_path is not None:
-            self.recursion_path.append(prev_path)
-
-        self.topo_order_bef_repl = sequence
         self.topo_order_aft_repl, self.inverted_index = self._create_new_order()
         self.node_collection = dict()
         self.hash_of_aft_repl = gen_hash_key(self.topo_order_aft_repl)
@@ -689,3 +694,28 @@ class SearchPath:
                    f"H: {self.heuristic_v}, G: {self.actual_v}, E: {self.evaluate_score()}"
 
         return repr_str
+
+
+class ReplacePath(BasePath):
+    """Data struct of replacing path with greedy matching."""
+
+    def __init__(self, pattern, sequence: List, prev_path=None):
+        super(ReplacePath, self).__init__(pattern, sequence, prev_path)
+        self.topo_order_aft_repl = None
+
+    def replace(self, increment_idx):
+        """
+        Greedy matching.
+
+        Args:
+            increment_idx (int): To deduplicate module name.
+        """
+        src = ",".join(self.topo_order_bef_repl)
+        tgt = self.pattern.pattern
+        md_name = f"Module{increment_idx}"
+        src_aft_repl = src.replace(tgt, md_name)
+        if src != src_aft_repl:
+            self.pattern.module_name = md_name
+            self.topo_order_aft_repl = src_aft_repl.split(",")
+            return md_name
+        return None

@@ -16,6 +16,7 @@
 from queue import PriorityQueue, Queue
 from typing import Dict, List
 
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.built_in_pattern import USER_DEFINED_PATTERN
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.pattern_fuzzy_matching import \
     pattern_fuzzy_matching
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import context, DagGraph, gen_hash_key, \
@@ -25,7 +26,7 @@ from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common i
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import BaseNode
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.search_path import SearchPath, Pattern, \
-    generate_pattern, find_built_in_pattern
+    generate_pattern, find_built_in_pattern, ReplacePath
 from mindinsight.mindconverter.common.exceptions import SubGraphSearchingError
 
 
@@ -371,6 +372,7 @@ def _build_connection(loader):
         context.precursor_table[node_name] = list(node.get_precursor_dict().keys())
         context.successor_table[node_name] = list(node.get_successor_dict().keys())
         context.outputs_table[node_name] = node.output_name_list
+
     # Record the model inputs count, use it to control the search algorithm.
     context.has_multi_inputs = len(loader.input_nodes) > 1
     dag = DagGraph(nodes=context.node_collection.copy(),
@@ -426,6 +428,28 @@ def _add_known_module_name(search_path):
     return ctx
 
 
+def greedy_match(topo_order, user_defined_ptn):
+    """
+    Greedy replace topological order with given pattern by user.
+
+    Args:
+        topo_order (list[str]): Topological order sequence.
+        user_defined_ptn (dict): User defined pattern.
+    """
+    increment_idx = 0
+    prev_path = None
+    for md_name, ptn in user_defined_ptn:
+        ptn = Pattern(",".join(ptn), len(ptn), -1, -1, ptn)
+        ptn.known_module_name = md_name
+        topo_order_aft_rpl = topo_order[:] if prev_path is None else prev_path.topo_order_aft_repl
+        repl_path = ReplacePath(ptn, topo_order_aft_rpl, prev_path=prev_path)
+        module_name = repl_path.replace(increment_idx)
+        if module_name is not None:
+            increment_idx += 1
+            prev_path = repl_path
+    return prev_path
+
+
 @SubGraphSearchingError.check_except("Sub-Graph pattern searching fail.")
 def generate_scope_name(data_loader):
     """
@@ -439,6 +463,12 @@ def generate_scope_name(data_loader):
     """
     init_dag = _build_connection(data_loader)
     try:
+        if USER_DEFINED_PATTERN:
+            topo_order = [node for _, node in context.node_collection.items()]
+            repl_path = greedy_match(topo_order, USER_DEFINED_PATTERN)
+            topo_order_with_scope_name_list = _retrieve_scope_name(repl_path) if repl_path else flatten_graph(init_dag)
+            return topo_order_with_scope_name_list
+
         result = _sub_graph_matching(init_dag, beam_width=5, sub_graph_size=6)
         topo_order_with_scope_name_list = _retrieve_scope_name(result) if result else flatten_graph(init_dag)
 

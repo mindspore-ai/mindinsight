@@ -86,6 +86,7 @@ class ExchangeMessageKeywords(Enum):
         ARGS = "args"
         WEIGHTS = "weights"
         TRAINABLE_PARAMS = "trainable_params"
+        PARAMETERS_DECLARED = "parameters"
 
 
 BINARY_HEADER_PYTORCH_FILE = \

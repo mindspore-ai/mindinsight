@@ -261,7 +261,6 @@ class OnnxDataLoader:
         self.model = onnx_model_sim
         self.graph = onnx_model_sim.graph
         self.nodes = onnx_model_sim.graph.node
-        self.batch_size = list(input_nodes.values())[0][0]
         self.input_nodes = input_nodes
         self.output_nodes = output_nodes
         # args for init
@@ -273,6 +272,9 @@ class OnnxDataLoader:
         self._nodes_dict = OrderedDict()  # {node_name: OnnxNode} NO INPUT NODE
         self.tensors_dict = {}  # {tensor_name: OnnxTensor}
         self.value_info_dict = {}  # Not contains input and output nodes
+
+        # Record the weight names used many times.
+        self.repeated_weight = dict()
 
         self.node_output_shape_dict = OrderedDict()  # {node_name: [int]}
 
@@ -362,6 +364,7 @@ class OnnxDataLoader:
     def _parse_nodes(self):
         """Parse each onnx nodes in the model."""
         nodes_topo_idx = []
+        record_tensors = dict()
         for idx, node in enumerate(self.nodes):
             if not node.name:
                 node.name = "_".join(node.output)
@@ -377,11 +380,21 @@ class OnnxDataLoader:
                         self._global_context.onnx_node_inputs[n.name].append(ipt_nd)
                     else:
                         self._global_context.onnx_node_inputs[n.name] = [ipt_nd]
+                if ipt_nd in self.tensors_dict:
+                    if ipt_nd not in record_tensors:
+                        record_tensors[ipt_nd] = [node.name]
+                        continue
+                    record_tensors[ipt_nd].append(node.name)
+                    self.repeated_weight.setdefault(ipt_nd, [])
 
             self._global_context.onnx_node_name_to_topo_idx[n.name] = idx
 
+        for k in self.repeated_weight:
+            self.repeated_weight[k] = record_tensors[k][:]
+
         self._global_context.onnx_nodes_collection = self._nodes_dict
         self._global_context.onnx_nodes_topo_index = nodes_topo_idx
+        self._global_context.repeated_weights = self.repeated_weight
 
     def _parse_tensors(self):
         """Parse each onnx tensors in the model."""
@@ -405,8 +418,7 @@ class OnnxDataLoader:
             for i, s in enumerate(shape):
                 if 'unk' in s:
                     # Have to adapt user-define axis name, e.g. 'sequence', 'batch'.
-                    shape[i] = self.batch_size if self.batch_size is not None else 1
-                    continue
+                    raise ValueError(f"cannot get shape of {node_opt_name}.")
                 if s == "scalar":
                     shape = SCALAR_WITHOUT_SHAPE
                     continue

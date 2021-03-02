@@ -14,7 +14,10 @@
 # ==============================================================================
 """Introduce some standard pattern into MindConverter."""
 
-__all__ = ["BUILT_IN_PATTERN", "register_pattern", "is_built_in_pattern"]
+__all__ = ["BUILT_IN_PATTERN", "register_pattern", "is_built_in_pattern",
+           "USER_DEFINED_PATTERN", "user_defined_pattern"]
+
+from collections import OrderedDict
 
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.known_module_name import register_module_name
 
@@ -22,6 +25,7 @@ from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common i
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.pattern import Pattern
 
 BUILT_IN_PATTERN = dict()
+USER_DEFINED_PATTERN = OrderedDict()
 
 
 def is_built_in_pattern(pattern: Pattern):
@@ -73,6 +77,26 @@ def register_pattern(ptn_name, in_degree, out_degree):
         return pattern
 
     return _reg
+
+
+def user_defined_pattern(pattern_name: str):
+    """
+    Register user define pattern to MindConverter.
+
+    Args:
+        pattern_name (str): Pattern name.
+    """
+
+    def _f(ptn):
+        pattern = ptn()
+        if not pattern:
+            raise ValueError("`ptn` cannot be None.")
+        if not pattern_name:
+            raise ValueError("`pattern_name` cannot be None.")
+        USER_DEFINED_PATTERN[pattern_name] = pattern
+        return ptn
+
+    return _f
 
 
 @register_pattern("ConvBnClip", 1, 1)

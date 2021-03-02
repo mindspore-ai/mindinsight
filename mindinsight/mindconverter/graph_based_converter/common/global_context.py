@@ -81,6 +81,9 @@ class GlobalContext(metaclass=Singleton):
 
         self.outputs_storage = OutputStorage()
 
+        # Record weights name that used many times.
+        self.repeated_weights = dict()
+
     def get_onnx_node_from_identifier(self, identifier):
         """Return an OnnxUtils defined node by its identifier."""
         onnx_node_name = self.node_struct_to_onnx_node_map.get(identifier)
