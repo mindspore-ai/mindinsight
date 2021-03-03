@@ -21,7 +21,6 @@ from mindinsight.mindconverter.graph_based_converter.generator.node_struct impor
 from mindinsight.mindconverter.graph_based_converter.generator.scope_utils import Scope
 from mindinsight.mindconverter.graph_based_converter.common.utils import get_dict_key_by_value
 from mindinsight.mindconverter.graph_based_converter.generator.args_translator import ArgsTranslation
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import ModuleFragment
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.common.name_mgr import LocalVarNameMgr
 
@@ -183,28 +182,6 @@ class ModuleStruct:
             "nd_idx_range": "{} -> {}".format(self.head_nd_struct_index, self.tail_nd_struct_index),
             "initialized": self.initialized
         })
-
-    def init_module_fragment(self):
-        """Init the module fragment."""
-        if not self.initialized:
-            return
-        # check if fragment exists in global context
-        op = "Module{}".format(self.pattern_id)
-        if op == "Module-1":  # reset as Main Model's op name
-            op = "Model"
-        frag = GlobalContext().get_module_fragment(op)
-        if frag is not None:  # use exists fragment
-            self._fragment = frag
-        else:
-            frag = ModuleFragment(operation=op,
-                                  actual_args=None,
-                                  input_shape=None,
-                                  output_shape=None,
-                                  settings=None)
-            self._fragment = frag
-            # set fragment pattern
-            self._fragment.pattern = self._node_structs
-            GlobalContext().add_module_fragment(op, frag)
 
     def init_args_translator(self):
         """Initialize the Args Translator for the module."""

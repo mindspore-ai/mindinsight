@@ -15,14 +15,11 @@
 """Define graph entity."""
 import abc
 from collections import OrderedDict
-from copy import deepcopy
 
 from typing import List
 
 from mindinsight.mindconverter.common.log import logger as log
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import CodeFragment
-from mindinsight.mindconverter.graph_based_converter.constant import NodeType, InputType
-from mindinsight.mindconverter.graph_based_converter.mapper.base import Mapper
+from mindinsight.mindconverter.graph_based_converter.constant import InputType
 from mindinsight.mindconverter.common.exceptions import NodeInputTypeNotSupportError
 
 
@@ -574,56 +571,3 @@ class GraphNode(abc.ABC):
                 ipt_args_settings_in_construct = ', '.join((ipt_args_settings_in_construct, settings_in_construct))
 
         return ipt_args_settings_in_construct
-
-    def param_transform(self, mapper: Mapper, variable_name):
-        """
-        Transform param in PyTorch operation into MindSpore.
-
-        Args:
-            variable_name (str): Variable name.
-            mapper (ONNXToMindSporeMapper): Mapper between onnx operation
-                and MindSpore.
-
-        Returns:
-            dict, transformed params.
-        """
-        if self._node_type != NodeType.OPERATION.value:
-            args = deepcopy(self._args_in_code)
-            self._args_in_code = dict()
-            for arg, value in args.items():
-                self._args_in_code[self._get_arg_name(arg, variable_name)] = value
-            return CodeFragment(operation="", actual_args=args, settings=None,
-                                input_shape=self.input_shape, output_shape=self.output_shape)
-
-        if self.transformed:
-            raise ValueError("Already transformed.")
-
-        params = deepcopy(self._op_params)
-        params.update({"input_shape": self.input_shape,
-                       "output_shape": self.output_shape})
-
-        ms_op, ms_params, ms_settings, ms_weights = mapper.convert(op_name=self.op_name,
-                                                                   params=params,
-                                                                   weights=self._weight)
-
-        if ms_op:
-            code_fragment = CodeFragment(operation=ms_op,
-                                         actual_args=ms_params,
-                                         settings=ms_settings,
-                                         input_shape=self.input_shape,
-                                         output_shape=self.output_shape,
-                                         trainable_params=ms_weights)
-        else:
-            code_fragment = CodeFragment(operation=self._op_name,
-                                         actual_args=self._op_params,
-                                         settings=None,
-                                         input_shape=self.input_shape,
-                                         output_shape=self.output_shape,
-                                         trainable_params=self._weight)
-
-        for arg, value in code_fragment.actual_args.items():
-            self._args_in_code[self._get_arg_name(arg, variable_name)] = value
-
-        self.transformed = True
-
-        return code_fragment

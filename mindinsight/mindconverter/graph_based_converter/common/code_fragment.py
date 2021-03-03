@@ -163,61 +163,6 @@ class Fragment(abc.ABC):
         return self._output_shape
 
 
-class CodeFragment(Fragment):
-    """
-    Manage the variables related with code generation.
-
-    For single operation type node, the variables in `CodeLine` stands for:
-    ```python
-    class Module(nn.Cell):
-        def __init__ (self, ...):
-            super(Module, self).__init__()
-            self.<CodeLine.declared_variable_name> = <CodeLine.operation>(<CodeLine.scalar_args>,
-                                                                          <CodeLine.init_trainable_params>)
-            self.<CodeLine.trainable_params[k].param_name> = Tensor(<CodeLine.trainable_params[k].shape>,
-                                                                    dtype=<CodeLine._trainable_params[k].dtype>)
-
-        def construct(self, x, ...):
-            <CodeLine.output_var_name> = self.<CodeLine.declared_variable_name>(<CodeLine.operation_inputs>)
-            ...
-            return output
-    ```
-
-    Args:
-        operation (str): Operation name in MindSpore.
-        actual_args (dict): Actual arg values.
-        settings (namedTuple): Code generation setting.
-
-    """
-
-    def __init__(self, operation, actual_args, settings, input_shape, output_shape,
-                 trainable_params=None, trainable_weights=None):
-        super(CodeFragment, self).__init__(operation=operation, actual_args=actual_args,
-                                           input_shape=input_shape, output_shape=output_shape,
-                                           settings=settings)
-        self._trainable_params = dict()  # External weights, like Matmul.
-        self._init_trainable_params = trainable_params  # Can put into operation init method, like Conv2d.
-        self._trainable_weights = trainable_weights
-
-    @property
-    def trainable_params(self):
-        """Return the trainable parameters."""
-        return self._trainable_params
-
-    @property
-    def trainable_weights(self):
-        return self._trainable_weights
-
-
-class ModuleFragment(Fragment):
-    """Manage module type code variables."""
-
-    def __init__(self, operation, actual_args, settings, input_shape, output_shape):
-        super(ModuleFragment, self).__init__(operation=operation, actual_args=actual_args,
-                                             input_shape=input_shape, output_shape=output_shape,
-                                             settings=settings)
-
-
 class NewFragment:
     """
     Fragment definition for MindSpore code generation.
@@ -310,6 +255,12 @@ class NewFragment:
             return f"{opt}[{inner_idx}]"
         return opt
 
+    @staticmethod
+    def create_parameter(weight_shape, weight_dtype):
+        """Create a parameter code line."""
+        return f"Parameter(Tensor(np.random.uniform(0, 1, {weight_shape}).astype(np.{weight_dtype})), " \
+               f"name=None)"
+
     def __call__(self) -> Tuple[List[str], List[str]]:
         """
         Define parameter rewrite function.
@@ -334,6 +285,10 @@ class NewFragment:
                 ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value)
         return init_stats, call_stats
 
+    def register_parameter(self, var, line):
+        """Append a new parameter into template."""
+        self._code_template[var][TemplateKeywords.INIT.value].append(line)
+
     @staticmethod
     def _rewrite(var, data, template: str) -> str:
         """
@@ -353,6 +308,12 @@ class NewFragment:
                 data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value])
         if ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value in data:
             rewrite_data.update(data[ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value])
+        if ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value in data:
+            rewrite_params = {
+                f"{var}/{slot}": data[ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value][slot]
+                for slot in data[ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value]
+            }
+            rewrite_data.update(rewrite_params)
         rewrite_data.update(data[ExchangeMessageKeywords.VariableScope.value.ARGS.value])
         return template.format(**{
             k: str(rewrite_data[k]) for k in rewrite_data
