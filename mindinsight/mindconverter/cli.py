@@ -320,7 +320,7 @@ parser.add_argument(
     help="""
             PyTorch(.pth), Tensorflow(.pb) or ONNX(.onnx) model file path 
             is expected to do script generation based on graph schema. When 
-            `--in_file` and `--model_file` are both provided,
+            `--in_file` and `--model_file` are both provided, 
             use AST schema as default.
         """)
 
@@ -333,9 +333,9 @@ parser.add_argument(
     nargs="+",
     help="""
             Optional, expected input tensor shape of
-            `--model_file`. It's required when use graph based
-            schema. 
-            Usage: --shape 1,3,244,244
+            `--model_file`. It is required when use graph based
+            schema. Both order and number should be consistent with `--input_nodes`. 
+            Usage: --shape 1,512 1,512
         """)
 
 parser.add_argument(
@@ -346,8 +346,8 @@ parser.add_argument(
     required=False,
     nargs="+",
     help="""
-            Optional, input node(s) name of `--model_file`. It's required when use Tensorflow model.
-            Usage: --input_nodes input_1:0,input_2:0
+            Optional, input node(s) name of `--model_file`. It is required when use TensorFlow and ONNX model. 
+            Both order and number should be consistent with `--shape`. Usage: --input_nodes input_1:0 input_2:0
         """)
 
 parser.add_argument(
@@ -358,8 +358,8 @@ parser.add_argument(
     required=False,
     nargs="+",
     help="""
-            Optional, output node(s) name of `--model_file`. It's required when use Tensorflow model.
-            Usage: --output_nodes output_1:0,output_2:0
+            Optional, output node(s) name of `--model_file`. It is required when use TensorFlow and ONNX model. 
+            Usage: --output_nodes output_1:0 output_2:0
         """)
 
 parser.add_argument(
