@@ -414,6 +414,7 @@ export default {
   flex-wrap: wrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
 }
 .cl-checklist-container .select-content .select-content-open {
   flex: 1;
@@ -435,15 +436,15 @@ export default {
 }
 .cl-checklist-container .select-content-all .select-item {
   height: 25px;
-  margin-top: 25px;
+  margin-top: 14px;
 }
 .cl-checklist-container .select-item {
   margin-right: 20px;
   flex-shrink: 0;
   margin-bottom: 1px;
+  max-width: 50%;
 }
 .cl-checklist-container .select-item .label-item {
-  width: 100px;
   display: block;
   text-overflow: ellipsis;
   white-space: nowrap;
