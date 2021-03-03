@@ -146,6 +146,14 @@ export default new Router({
       ],
     },
     {
+      path: '/profiling-cluster',
+      component: () => import('./views/profiling/profiling-cluster.vue'),
+    },
+    {
+      path: '/profiling-gpu-cluster',
+      component: () => import('./views/profiling/profiling-cluster.vue'),
+    },
+    {
       path: '/debugger',
       component: () => import('./views/debugger/debugger.vue'),
     },

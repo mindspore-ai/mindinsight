@@ -196,11 +196,11 @@ export default {
         initOver: false,
       },
       deviceId: 0,
-      radio: this.$t('profiling.lterationGap'),
+      radio: this.$t('profiling.iterationGap'),
       tabsArr: [
         // Detailed chart of data in step trace
         {
-          name: this.$t('profiling.lterationGap'),
+          name: this.$t('profiling.iterationGap'),
           id: 'iter-gap',
           timeSummary: {},
           rate: 'iteration_interval',
@@ -222,7 +222,7 @@ export default {
           initOver: false,
         },
         {
-          name: this.$t('profiling.lterationTail'),
+          name: this.$t('profiling.iterationTail'),
           id: 'tailing',
           timeSummary: {},
           rate: 'tail',
@@ -245,9 +245,7 @@ export default {
           this.deviceId = newValue.curCardNum;
           this.relativePath = newValue.query.path;
           if (this.train_id) {
-            document.title = `${decodeURIComponent(this.train_id)}-${this.$t(
-                'profiling.stepTrace',
-            )}-MindInsight`;
+            document.title = `${decodeURIComponent(this.train_id)}-${this.$t('profiling.stepTrace')}-MindInsight`;
           } else {
             document.title = `${this.$t('profiling.stepTrace')}-MindInsight`;
           }
@@ -734,7 +732,7 @@ export default {
       let name = '';
       switch (data.name) {
         case 'iteration_interval':
-          name = this.$t('profiling.lterationGap');
+          name = this.$t('profiling.iterationGap');
           break;
         case 'fp_and_bp':
           name = this.$t('profiling.deviceQueueOpTip');
@@ -743,7 +741,7 @@ export default {
           name = this.$t('profiling.deviceQueueOpFpTip');
           break;
         case 'tail':
-          name = this.$t('profiling.lterationTail');
+          name = this.$t('profiling.iterationTail');
           break;
         default:
           name = data.name;

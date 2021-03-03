@@ -498,4 +498,12 @@ export default {
       params: params,
     });
   },
+  getClusterInfo(params) {
+    return axios({
+      method: 'post',
+      params: params.params,
+      data: params.body,
+      url: 'v1/mindinsight/profile/cluster-step-trace-summary',
+    });
+  },
 };

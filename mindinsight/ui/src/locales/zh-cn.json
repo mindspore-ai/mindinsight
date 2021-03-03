@@ -267,7 +267,6 @@
     "sidebarTip": "选择要查看的计算图文件，当前最多支持展示10个文件的计算图。当超出10个文件时，部分文件将不展示。如果要查看其他未展示的文件，请将未展示的文件移动到其他训练日志目录中。"
   },
   "operator": {
-    "titleText": "性能分析",
     "currentCard": "当前卡片",
     "pie": "饼图",
     "bar": "柱状图",
@@ -281,7 +280,8 @@
     "operatorInfo": "算子信息",
     "kernelInfo": "内核信息"
   },
-  "profiling": {
+  "profiling": {    
+    "titleText": "性能分析 - 单机",
     "profilingDashboard": "性能看板",
     "showAverage": "展示平均值",
     "iterationGapTime": "迭代间隙时间",
@@ -293,8 +293,8 @@
     "avgCost": "平均总耗时：",
     "getCost": "平均取数据耗时：",
     "pushCost": "平均推送数据耗时：",
-    "lterationGap": "迭代间隙",
-    "lterationTail": "迭代拖尾",
+    "iterationGap": "迭代间隙",
+    "iterationTail": "迭代拖尾",
     "minddataTitle": "数据准备详情",
     "title": "迭代间隙流程分析",
     "dataQueue": "数据队列",
@@ -523,6 +523,12 @@
     "analysisOne": "1、如果迭代间隙较长，并且数据队列部分batch为空，那么可能由于数据处理和数据传输阶段导致的性能异常，参考2，反之则定位数据传输算子get_next内部问题；",
     "analysisTwo": "2、如果通过1定位为数据处理、数据传输阶段异常，则查看主机队列情况，如果大概率为空，则可能为数据处理阶段导致异常，如果大概率不为空，则可能数据传输阶段异常；",
     "chipInfo": "数据队列为空比例："
+  },
+  "profilingCluster": {
+    "titleText": "性能分析 - 集群概览",
+    "clusterView": "集群概览",
+    "rankID": "逻辑卡号",
+    "timeTitle": "时间（ms）"
   },
   "components": {
     "summaryTitle": "训练选择",

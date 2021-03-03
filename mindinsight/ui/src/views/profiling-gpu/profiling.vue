@@ -16,7 +16,7 @@ limitations under the License.
 <template>
   <div class="prof-wrap">
     <div class="prof-head">
-      <span class="cl-title-left">{{$t('summaryManage.viewProfiler')}}</span>
+      <span class="cl-title-left">{{$t('profiling.titleText')}}</span>
       <div class="path-message">
         <span>{{$t('symbols.leftbracket')}}</span>
         <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
@@ -142,6 +142,9 @@ export default {
         this.tabData.activeName =
           this.$route.query.activePane || this.tabData.tabPanes[0].name;
         this.summaryPath = decodeURIComponent(this.$route.query.id);
+        if (!isNaN(this.$route.query.deviceid)) {
+          this.curDashboardInfo.curCardNum = this.$route.query.deviceid;
+        }
         this.getDeviceList();
       } else {
         this.curDashboardInfo.query.trainingJobId = '';
@@ -177,7 +180,9 @@ export default {
                       value: item,
                     });
                   });
-                  this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
+                  if (this.curDashboardInfo.curCardNum === null) {
+                    this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
+                  }
                   this.getDataOfProfileHelper();
                 } else {
                   this.CardNumArr = [];
@@ -408,6 +413,7 @@ export default {
   line-height: 20px;
   padding: 18px 0;
   font-weight: bold;
+  margin-left: 5px;
 }
 .prof-wrap .prof-content {
   height: calc(100% - 50px);
