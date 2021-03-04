@@ -1036,7 +1036,7 @@ export default {
       let name = '';
       switch (data.name) {
         case 'iteration_interval':
-          name = this.$t('profiling.lterationGap');
+          name = this.$t('profiling.iterationGap');
           break;
         case 'fp_and_bp':
           name = this.$t('profiling.deviceQueueOpTip');
@@ -1045,7 +1045,7 @@ export default {
           name = this.$t('profiling.deviceQueueOpFpTip');
           break;
         case 'tail':
-          name = this.$t('profiling.lterationTail');
+          name = this.$t('profiling.iterationTail');
           break;
         default:
           name = data.name;

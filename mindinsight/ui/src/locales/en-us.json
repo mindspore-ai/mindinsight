@@ -269,7 +269,6 @@
     "sidebarTip": "Select computational graph files to be viewed. A maximum of 10 files are supported. When the number of files exceeds 10, some files are not displayed. To view files that are not displayed, move them to other summary log path. "
   },
   "operator": {
-    "titleText": "Profiling",
     "currentCard": "Number of cards",
     "pie": "Pie",
     "bar": "Bar",
@@ -284,9 +283,10 @@
     "searchByCoreFullName": "Enter operator full name"
   },
   "profiling": {
+    "titleText": "Profiling - Single-host",
     "profilingDashboard": "Profiling Dashboard",
     "showAverage": "Average value",
-    "iterationGapTime": "Step interval",
+    "iterationGapTime": "Step Interval",
     "fpBpTime": "Forward and Backward Propagation",
     "fpTime": "Forward Propagation",
     "tailTime": "Step Tail",
@@ -295,8 +295,8 @@
     "avgCost": "Average total consumed time:",
     "getCost": "Average data obtaining time:",
     "pushCost": "Average data push time:",
-    "lterationGap": "Step Interval",
-    "lterationTail": "Step Tail",
+    "iterationGap": "Step Interval",
+    "iterationTail": "Step Tail",
     "minddataTitle": "Data Preparation Details",
     "dataQueue": "Data Queues",
     "smartHelper": "Helper",
@@ -524,6 +524,12 @@
     "analysisOne": "1. If the step interval is long and some batches of the data queue are empty, the performance is abnormal during data processing and transmission. Otherwise, locate the internal problem of the forward and backward propagation get_next.",
     "analysisTwo": "2. If the performance is abnormal during data processing and transmission, check the host queue. If the host queue is empty at a high probability, the exception may occur during data transmission.",
     "chipInfo": "Ratio of empty data queues:"
+  },
+  "profilingCluster": {
+    "titleText": "Profiling - Cluster Overview",
+    "clusterView": "Cluster Overview",
+    "rankID": "Rank ID",
+    "timeTitle": "time(ms)"
   },
   "components": {
     "summaryTitle": "Training Selection",
@@ -822,7 +828,8 @@
       "nonnegative": "The parameter value cannot be less than 0.",
       "allPositive": "he parameter value must be greater than 0.",
       "watchOverflow": "The asynchronous full overflow watching function must be enabled before the training starts."
-    }
+    },
+    "paramValueTip": "Preset Value: {value}"
   },
   "explain": {
     "explain": "Model Explanation",
