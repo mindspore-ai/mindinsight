@@ -17,6 +17,7 @@ import copy
 from collections import OrderedDict
 from importlib import import_module
 
+import numpy as np
 from yapf.yapflib.yapf_api import FormatCode
 
 from mindinsight.mindconverter.common.exceptions import GeneratorError
@@ -32,6 +33,8 @@ from mindinsight.mindconverter.graph_based_converter.constant import NEW_LINE, S
     FIRST_LEVEL_INDENT, get_imported_module, SEPARATOR_BTW_NAME_AND_ID, WeightType, LINK_IN_WEIGHT_NAME
 from mindinsight.mindconverter.graph_based_converter.report_generator import ReportGenerator
 from mindinsight.mindconverter.graph_based_converter.common.utils import replace_string_in_list
+from mindinsight.mindconverter.graph_based_converter.generator.matcher import MatcherLauncher
+from mindinsight.mindconverter.graph_based_converter.generator.shared_weights import SharedWeightHelper
 
 
 class CodeStruct:
@@ -90,6 +93,10 @@ class CodeStruct:
             for formal in md_struct.args_translator.formal_args.keys():
                 module_def_args.append(formal)
 
+        # set passthrough weights for shared weights, no need for main model
+        if md_struct.identifier != []:
+            module_def_args = SharedWeightHelper.add_shared_weights_in_init_statement(md_struct, module_def_args)
+
         # For code line in init  & construct blocks
         init_lines = list()
         cons_lines = list()
@@ -105,7 +112,7 @@ class CodeStruct:
                 init_lines += init_str
                 cons_lines += cons_str
 
-            else:  # is ModuleStruct
+            else: # is ModuleStruct
                 # check if this instance generated CodeStruct
                 if GlobalContext().code_structs.get(struct.pattern_id) is None:
                     CodeStruct(struct, repeated_submodules)
@@ -118,6 +125,13 @@ class CodeStruct:
         # define header of init block
         self.new_line = f"{FIRST_LEVEL_INDENT}def __init__({', '.join(module_def_args)}):"
         self.new_line = f"{SECOND_LEVEL_INDENT}super({class_name}, self).__init__()"
+
+        #add shared weights declaration in init code part
+        if md_struct.identifier == []:
+            passthrough_w_declaration = SharedWeightHelper.public_module_shared_weight_statement_generation(md_struct)
+            for s in passthrough_w_declaration:
+                self.new_line = f"{SECOND_LEVEL_INDENT}{s}"
+
         # add init code lines to code line list.
         self.code_line_list += init_lines
         self.new_line = f"{NEW_LINE * 2}"
@@ -129,16 +143,14 @@ class CodeStruct:
         self.code_line_list += cons_lines
         # define returns
         returns = []
-        if md_struct.external_successor_local_returns_map:
-            for r in list(md_struct.external_successor_local_returns_map.values()):
-                if isinstance(r, tuple):  # results return with index nth output
-                    returns.append(r[0])
-                else:
-                    returns.append(r)
-            returns = list(set(returns))
-        else:
-            returns = [code_line_construct[0]] if isinstance(code_line_construct, tuple) \
-                else [code_line_construct[-1].replace(' ', '').split('=')[0]]
+
+        # take opt_var_name to return_list
+        for output_edge in md_struct.outputs_register.keys():
+            opt_var_name = md_struct.internal_outputs_collection.get(output_edge)
+            if opt_var_name is None:
+                raise ValueError(f"Module {md_struct.identifier} has an output {output_edge} has unknown opt_var_name.")
+            returns.append(opt_var_name)
+
         self.new_line = f"{SECOND_LEVEL_INDENT}return {', '.join(returns)}"
         self.new_line = f"{NEW_LINE * 2}"
         GlobalContext().code_structs[md_struct.pattern_id] = self
@@ -244,6 +256,83 @@ class Generator:
 
         return formal_args
 
+    @staticmethod
+    def _set_translated_args_for_unshared_weights(t_param_postfix, nd_struct_list):
+        """Set the weight with given param postfix to args translation."""
+        for _, nd_struct in nd_struct_list:
+            nparr = nd_struct.fragment.default_var["trainable_params"].get(t_param_postfix).get('data')
+            nd_struct.fragment.default_var["args"][f"{t_param_postfix}_shape"] = nparr.shape
+            nd_struct.fragment.default_var["args"][f"{t_param_postfix}_dtype"] = nparr.dtype
+            init_tensor_template = f"Parameter(Tensor(np.random.uniform(0, 1, "\
+                                    f"{{{t_param_postfix}_shape}}).astype(np.{{{t_param_postfix}_dtype}})), "\
+                                    f"name=None)"
+            nd_struct.fragment.default_var["parameters"][t_param_postfix] = init_tensor_template
+
+    def _get_same_trainable_params_onnx_name_from_repeated_nodes(self,
+                                                                 t_param_postfix,
+                                                                 t_param_data_dict,
+                                                                 nd_struct_list: list):
+        """Return all onnx names from the same weights in repeated nodes."""
+        (_, base_nd_struct) = nd_struct_list[0]
+        t_base_name = t_param_data_dict.get('onnx_name')
+        t_onnx_names = [t_base_name]
+        for (_, nd_struct) in nd_struct_list[1:]:
+            compared_t_param_data_dict = nd_struct.fragment.default_var["trainable_params"].get(t_param_postfix)
+            if not compared_t_param_data_dict:
+                raise ValueError(f"Inconsistent trainable params detected for node "\
+                                    f"{nd_struct.topo_idx} with base node {base_nd_struct.topo_idx}")
+            compared_t_name = compared_t_param_data_dict.get('onnx_name')
+            t_onnx_names.append(compared_t_name)
+        return t_onnx_names
+
+    def _partial_shared_weights_in_repeated_submodule_procs(self, nd_struct_list):
+        """
+        Check each node in repeated submodule to ensure the node has a fully / partial shared weight.
+
+        Args:
+            nd_struct_list (list): A list of node structs which are same node in repeated modules.
+        """
+        # Not repeated will skip this function
+        if len(nd_struct_list) < 2:
+            return
+        (_, base_nd_struct) = nd_struct_list[0]
+        shared_w_list = self._global_context.repeated_weights.keys()
+        if not shared_w_list:
+            if base_nd_struct.fragment.default_var.get("parameters"):
+                # set only if has parameters as it requires rewritten.
+                for (t_param_postfix, t_param_data_dict) in \
+                    base_nd_struct.fragment.default_var["trainable_params"].items():
+                    if not isinstance(t_param_data_dict.get('data'), np.ndarray):
+                        continue
+                    Generator._set_translated_args_for_unshared_weights(t_param_postfix, nd_struct_list)
+            return
+
+        for (t_param_postfix, t_param_data_dict) in base_nd_struct.fragment.default_var["trainable_params"].items():
+            # check each weight if partial shared or fully shared weight
+            if not t_param_data_dict:
+                continue
+            t_onnx_names = self._get_same_trainable_params_onnx_name_from_repeated_nodes(t_param_postfix,
+                                                                                         t_param_data_dict,
+                                                                                         nd_struct_list)
+            t_shared_status = [name in shared_w_list for name in t_onnx_names]
+            if True in t_shared_status and False in t_shared_status:
+                # is partial shared, set unshared to fake shared in GlobalContext
+                for idx, (name, status) in enumerate(zip(t_onnx_names, t_shared_status)):
+                    if status:
+                        # actual shared, do nothing, skip
+                        continue
+                    node_onnx_name = nd_struct_list[idx][1].onnx_name
+                    if not self._global_context.repeated_weights.get(name):
+                        self._global_context.repeated_weights[name] = [node_onnx_name]
+                    else:
+                        self._global_context.repeated_weights[name] += [node_onnx_name]
+            if True not in t_shared_status and base_nd_struct.fragment.default_var.get("parameters"):
+                # if the repeated node is not shared weight and the mapper accept parameters rewritten.
+                if not isinstance(t_param_data_dict.get('data'), np.ndarray):
+                    continue
+                Generator._set_translated_args_for_unshared_weights(t_param_postfix, nd_struct_list)
+
+
     def _list_formal_parameters_in_a_module(self, module_filter_return):
         """
         Find all formal args / params from nodes in a module.
@@ -256,6 +345,9 @@ class Generator:
         """
         formal_params_list = list()
         transposed = [list(e) for e in zip(*module_filter_return)]
+        for operation in transposed:
+            # use the map filtered result for partial shared weights procs
+            self._partial_shared_weights_in_repeated_submodule_procs(operation)
         for operation in transposed:
             formal_parameters = self._compare_with_base_parameters(operation)
             if formal_parameters:
@@ -363,18 +455,33 @@ class Generator:
                 md_collection_len = new_len
             else:
                 len_changes = False
-
+        GlobalContext().build_struct_finished = True
         # 5. Update all translated args from module map
         self._update_all_modules_args_translator()
 
         # 6. Update all nodes and moudles input/output
-        # Enable build_output_connections later.
+        self.build_outputs_connection()
         self.module_structs.get('[]').allocate_construct_header_x()
         self.module_structs.get('[]').collect_returns()
+
+        matcher = MatcherLauncher(self.module_structs.get('[]'))
+        matcher.matching_process()
 
         for nd_struct in self.node_structs.values():
             if nd_struct.fragment.metadata.get("operation") == "Split":
                 self._split_op_procs(nd_struct)
+
+    def _shared_weights_processing(self):
+        """Process shared weights."""
+        # check each node has shared weight
+        for nd_struct in self.node_structs.values():
+            shared_weights = SharedWeightHelper.check_node_has_shared_weight(nd_struct)
+            if shared_weights:
+                # register each shared weight to public module
+                for shared_w in shared_weights:
+                    SharedWeightHelper.register_shared_weight_to_public_parent(nd_struct,
+                                                                               shared_w,
+                                                                               pub_module_identifier=[])
 
     def _update_all_modules_args_translator(self):
         """Update all modules' args translators."""
@@ -426,7 +533,7 @@ class Generator:
         else:
             raise TypeError("Unable to update global depth due to TypeError in NodeStruct.scope.depth")
 
-    def add_node(self, node_identifier, node_instance=None, node_fragment=None, mapper_dict=None):
+    def add_node(self, node_identifier, node_instance=None, node_fragment=None):
         """
         Add Node information to the generator.
 
@@ -434,7 +541,6 @@ class Generator:
             node_identifier (str): The unique identifier for the node passed in.
             node_instance (GraphNode): The GraphNode instance of each node.
             node_fragment (NodeFragment): The NodeFragment instance of this node passed in.
-            mapper_dict (dict): The dict contains converted attributes from mapper.
         """
 
         if node_identifier is None:
@@ -443,8 +549,6 @@ class Generator:
         args = []
         if node_instance is not None:
             args.append(node_instance)
-        if mapper_dict is not None:
-            args.append(mapper_dict)
         if node_fragment is not None:
             args.append(node_fragment)
 
@@ -551,6 +655,7 @@ class Generator:
         """
         self._form_bottom_submodule()
         self._recursive_form_module()
+        self._shared_weights_processing()
 
         ckpt_data_list, weight_map = self.generate_checkpoint()
 
@@ -654,14 +759,13 @@ class Generator:
             # for each output in curr node output manager
             for out in nd_struct.outputs_manager.outputs:
                 # Set the onnx output edge name to this output
-                out.onnx_edge_name = nd_struct.fragment.metadata.get('outputs')[out.idx_in_onnx_provider]
                 self._global_context.outputs_storage.add_output(out)
                 self._global_context.outputs_storage.add_onnx_node_name(out.onnx_edge_name,
                                                                         nd_struct.fragment.metadata.get('source'))
                 self._global_context.outputs_storage.add_ms_identifier(out.onnx_edge_name, nd_struct.identifier)
 
             # Set input with existing output mapping
-            for idx, inp in enumerate(nd_struct.fragment.metadata.get('inputs')):
+            for idx, inp in enumerate(nd_struct.inputs_edges_names):
                 if inp in self._global_context.outputs_storage.outputs_collections:
                     output_obj = self._global_context.outputs_storage.outputs_collections[inp]
                     output_obj.idx_in_onnx_user[nd_struct.onnx_name] = idx
@@ -694,8 +798,10 @@ class Generator:
                 self._collect_output_mgr(module=struct)
             for out in struct.outputs_manager.outputs:
                 if Generator.check_output_need_to_external(root_module, out):
-                    output_mgr_list.append(out)
-        root_module.outputs_manager = ModuleOutputManager(root_module.identifier, base_out=output_mgr_list)
+                    output_mgr_list.append(out.deepcopy())
+        root_module.outputs_manager = ModuleOutputManager(root_module.identifier,
+                                                          base_out=output_mgr_list)
+        root_module.outputs_manager.assign_opt_var_name_to_each_output(root_module.ms_opt_var_name)
 
     @staticmethod
     def check_output_need_to_external(root_module: ModuleStruct, checked_output: BaseOutput):

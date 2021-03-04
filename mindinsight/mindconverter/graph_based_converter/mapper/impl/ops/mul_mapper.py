@@ -36,8 +36,9 @@ class MulMapper(ONNXToMindSporeMapper):
     def _convert_trained_weights(**kwargs):
         weights = kwargs.get('weights', list())
         tensor = MulMapper._find_val_by_index(0, weights)
+        onnx_name = MulMapper._find_onnx_name_by_index(0, weights)
         if isinstance(tensor, np.ndarray) and tensor.shape:
-            return {'w': {'data': tensor, 'type': WeightType.PARAMETER.value}}
+            return {'w': {'data': tensor, 'type': WeightType.PARAMETER.value, 'onnx_name': onnx_name}}
         return dict()
 
     @staticmethod
@@ -47,13 +48,12 @@ class MulMapper(ONNXToMindSporeMapper):
         op = kwargs.get("operation")
         args = kwargs.get("converted_params")
         weights = kwargs.get("weights")
-        trainable_params = kwargs.get("trainable_params", dict())
+        trainable_params = kwargs.get('trainable_params', dict())
         if not weights:
             return template, exchange_msg, outputs_list, outputs_mapping
 
         tensor = MulMapper._find_val_by_index(0, weights)
         w_shape = tensor.shape
-        w_dtype = tensor.dtype
         w_location = MulMapper._find_location_by_index(0, weights)
 
         variable_slot = "var_0"
@@ -63,11 +63,9 @@ class MulMapper(ONNXToMindSporeMapper):
             inputs_in_construct.insert(w_location, f"self.{{{variable_slot}}}_w")
 
         if w_shape:
-            args["w_shape"] = w_shape
-            args["w_dtype"] = w_dtype
-            init_tensor = f"self.{{{variable_slot}}}_w = " \
-                          f"Parameter(Tensor(np.random.uniform(0, 1, {{w_shape}}).astype(np.{{w_dtype}})), " \
-                          f"name=None)"
+            # Note: adding weight shape to args is now deprecated due to conflict of partial weights share processing.
+            variable_slot_param_name = f"{variable_slot}/w"
+            init_tensor = f"self.{{{variable_slot}}}_w = {{{variable_slot_param_name}}}"
         else:
             args["w_value"] = tensor.tolist()
             init_tensor = f"self.{{{variable_slot}}}_w = {{w_value}}"
@@ -90,6 +88,10 @@ class MulMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
             }
         }
+        if w_shape:
+            exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value] = {
+                "w": ""
+            }
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping

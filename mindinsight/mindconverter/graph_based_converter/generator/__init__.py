@@ -18,10 +18,10 @@ __all__ = ["batch_add_nodes"]
 import re
 import copy
 
-from mindinsight.mindconverter.graph_based_converter.generator.generator import Generator, CodeStruct
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords
 from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
 from mindinsight.mindconverter.graph_based_converter.common.outputs import NodeOutputManager
-from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords
+from mindinsight.mindconverter.graph_based_converter.generator.generator import Generator
 
 
 def _tf_model_node_name_reformat(node, node_name):
@@ -123,6 +123,7 @@ def _convert_params(node, mapper, external_inputs):
                                                                                      params=params,
                                                                                      weights=node.weight)
     exchange_msg[ExchangeMessageKeywords.METADATA.value] = _supply_graph_info(node, external_inputs)
+    outputs_order_mapping = _bind_outputs_edges(exchange_msg=exchange_msg, outputs_order_mapping=outputs_order_mapping)
     return code_template, exchange_msg, outputs_lst, outputs_order_mapping
 
 
@@ -145,3 +146,22 @@ def _combine_external_inputs_with_precursor_nodes(node, external_inputs):
         node_idx = node.ir_node_inputs.index(item)
         precursor.insert(node_idx, item)
     return precursor
+
+def _bind_outputs_edges(exchange_msg, outputs_order_mapping):
+    """
+    Bind the outputs edges names with the outputs order mapping.
+
+    Args:
+        exchange_msg (dict): The dict of exchange messages of this node.
+        outputs_order_mapping (tuple): The outputs mapping of this node.
+
+    returns,
+        zip, the zip object of both edges and mapping
+    """
+    outputs_edges = exchange_msg.get('metadata').get('outputs')
+    if not outputs_edges:
+        raise ValueError(f"ONNX Node {exchange_msg.get('metadata').get('source')} has no outputs info.")
+    if len(outputs_edges) != len(outputs_order_mapping):
+        raise ValueError(f"ONNX Node {exchange_msg.get('metadata').get('source')} has inconsistent " \
+                         f"outputs edge number and mapping number")
+    return zip(outputs_edges, outputs_order_mapping)

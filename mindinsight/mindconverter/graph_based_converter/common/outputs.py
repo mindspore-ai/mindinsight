@@ -17,6 +17,9 @@ import abc
 import copy
 from typing import Union, Iterable
 
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
+
+
 class BaseOutput:
     """
     Define the class of output providing a universal nodes' and modules' output data collection.
@@ -36,6 +39,9 @@ class BaseOutput:
         # The following attributes to be set by who referenced this object.
         self.onnx_edge_name = None
         self.to_external = False
+        self.opt_var_name = None
+        # Only for module output edge and its name inside its module
+        self.inner_ret_name = None
 
     @property
     def ms_user(self):
@@ -59,28 +65,41 @@ class BaseOutputManager(abc.ABC):
     Args:
         output_mappings (list): A list of output mapping.
     """
-    def __init__(self, output_mappings):
-        if isinstance(self.__class__, ModuleOutputManager):
+    def __init__(self, identifier, output_mappings: Iterable):
+        if isinstance(self, ModuleOutputManager):
             return
-        self._base_output_list = list()
+        self._base_output_dict = dict()
+        self.identifier = identifier
 
         # init base output obj
-        for mapping in output_mappings:
+        for (onnx_edge_name, mapping) in output_mappings:
             obj = BaseOutput(mapping)
-            self._base_output_list.append(obj)
+            self._base_output_dict[onnx_edge_name] = obj
+            obj.onnx_edge_name = onnx_edge_name
 
     @property
     def outputs(self):
         """Return the list of BaseOutput in this manager."""
-        return self._base_output_list
+        return self._base_output_dict.values()
+
+    @property
+    def outputs_edges(self):
+        """Return the list of outputs edge names in this manager."""
+        return self._base_output_dict.keys()
 
     @outputs.setter
     def outputs(self, val: list):
         """Set the list of BaseOutput in this manager."""
+        tmp = dict()
         for v in val:
             if not isinstance(v, BaseOutput):
                 raise TypeError(f"{self.__class__} does not accept the type {type(v)} in the list given.")
-        self._base_output_list = val
+            tmp[v.onnx_edge_name] = v
+        self._base_output_dict = tmp
+
+    def get_base_out(self, onnx_edge_name: str) -> BaseOutput:
+        """Return the BaseOut by key."""
+        return self._base_output_dict.get(onnx_edge_name)
 
     @abc.abstractmethod
     def deepcopy(self):
@@ -88,7 +107,7 @@ class BaseOutputManager(abc.ABC):
         cls = self.__class__
         result = cls.__new__(cls)
         result.outputs = list()
-        for out in self._base_output_list:
+        for out in self._base_output_dict.values():
             result.outputs.append(out.deepcopy())
         return result
 
@@ -102,13 +121,18 @@ class NodeOutputManager(BaseOutputManager):
         output_mappings (list): A list of the output mapping.
     """
     def __init__(self, identifier, output_mappings=None) -> None:
-        super(NodeOutputManager, self).__init__(output_mappings)
-        self.identifier = identifier
+        super(NodeOutputManager, self).__init__(identifier, output_mappings)
 
     def deepcopy(self):
+        """Self defined deepcopy method."""
         new_mgr = super().deepcopy()
         new_mgr.identifier = self.identifier
         return new_mgr
+
+    def bind_opt_var_names(self, fragment: NewFragment):
+        """Get the opt_var_name in return statement."""
+        for base_out in self._base_output_dict.values():
+            base_out.opt_var_name = fragment.get_outputs_by_idx(base_out.idx_in_ms_provider)
 
 
 class ModuleOutputManager(BaseOutputManager):
@@ -120,14 +144,13 @@ class ModuleOutputManager(BaseOutputManager):
         output_mappings (list): a list of output mapping
     """
     def __init__(self, identifier, base_out: Union[BaseOutput, Iterable[BaseOutput]]) -> None:
-        super(ModuleOutputManager, self).__init__(None)
-        self.identifier = identifier
+        super(ModuleOutputManager, self).__init__(identifier, None)
         self._return_list_counter = 0
-        self._base_output_list = list()
+        self._base_output_dict = dict()
         if isinstance(base_out, BaseOutput):
-            self._base_output_list.append(base_out)
+            self.outputs = [base_out]
         else:
-            self._base_output_list += base_out
+            self.outputs = base_out
 
     @property
     def return_num(self):
@@ -139,12 +162,42 @@ class ModuleOutputManager(BaseOutputManager):
         """Set the number of outputs to be returned."""
         self._return_list_counter = num
 
+    def assign_opt_var_name_to_each_output(self, opt_var_name_base: str):
+        """Assign opt_var_name for each output."""
+        for idx, base_out in enumerate(self._base_output_dict.values()):
+            postfix = str(idx) if idx > 0 else ""
+            base_out.opt_var_name = '_'.join([opt_var_name_base, postfix]) if idx > 0 else opt_var_name_base
+
     def deepcopy(self):
         """Return a deepcopy of current instance."""
         new_mgr = super().deepcopy()
         new_mgr.identifier = self.identifier
         new_mgr.return_num = self._return_list_counter
         return new_mgr
+
+    def bind_module_outputs_internal_name(self, outputs_register: dict):
+        """
+        Get the opt_var_name in return list.
+
+        Args:
+            opt_var_name_list (list): List from module outputs register, registered by submodule and nodes.
+        """
+        for base_out in self._base_output_dict.values():
+            # bind the edge name inside module
+            base_out.inner_ret_name = outputs_register.get(base_out.onnx_edge_name)
+
+    def bind_opt_var_name(self, opt_var_names: list):
+        """
+        Assign the opt_var_name for outputs of this module.
+
+        Args:
+            opt_var_names (list): A list of opt_var_name of this module, generated by module itself.
+        """
+        if len(opt_var_names) != len(self._base_output_dict.values()):
+            raise ValueError(f"Unable to bind the opt_var_name of the Module {self.identifier}" \
+                             f" has inconsistent outputs number.")
+        for idx, base_out in enumerate(self._base_output_dict.values()):
+            base_out.opt_var_name = opt_var_names[idx]
 
 
 class OutputStorage:

@@ -181,9 +181,9 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         return template, exchange_msg, outputs_list, outputs_mapping
 
     @staticmethod
-    def _find_val_by_index(loc_index, weights_list, default_value=None):
+    def _find_val_by_index(loc_index, weights_list, default_val=None):
         """Find value by location index of weights_list."""
-        result = default_value
+        result = default_val
         if loc_index < 0:
             return weights_list[loc_index].value
 
@@ -196,7 +196,6 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
     @staticmethod
     def _find_location_by_index(loc_index, weights_list):
         """Find weight location in inputs of Node."""
-
         result = -1
         if loc_index < 0:
             return weights_list[loc_index].location
@@ -204,5 +203,18 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         for idx, weight in enumerate(weights_list):
             if idx == loc_index:
                 result = weight.location
+                break
+        return result
+
+    @staticmethod
+    def _find_onnx_name_by_index(loc_index, weights_list):
+        """Find weight onnx name in inputs of Node."""
+        result = -1
+        if loc_index < 0:
+            return weights_list[loc_index].name
+
+        for idx, weight in enumerate(weights_list):
+            if idx == loc_index:
+                result = weight.name
                 break
         return result

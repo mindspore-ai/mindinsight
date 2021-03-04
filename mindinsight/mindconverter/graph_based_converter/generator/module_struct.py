@@ -34,7 +34,6 @@ class ModuleStruct:
         init_as_parent (bool): Control init method if the ModuleStruct be init as a parent module struct.
         parent_base (ModuleStruct): The base ModuleStruct the current ModuleStruct to be init as.
     """
-
     def __init__(self, nd_struct_list, init_as_parent=False, parent_base=None):
         """Init. a module by NodeStructs."""
         self.pattern_id = -1  # pattern num, -1 as Main module
@@ -73,6 +72,20 @@ class ModuleStruct:
 
         # Define outputs manager, note this will be assigned later by Generator.
         self.outputs_manager = None
+
+        self._global_context = GlobalContext()
+
+        # Define a dict to store the reference for quick searching
+        self.rapid_reference = dict()
+
+        # new vars for matcher
+        self.inputs_register = dict() # reg by sub
+        self.outputs_register = OrderedDict() # reg by sub
+        self.internal_outputs_collection = dict() # reg by sub
+
+        # new vars for shared weights
+        self.shared_weights_collection = dict() # reg by sub
+        self.shared_weights_counter = 0 # updated by sub
 
         if init_as_parent and (parent_base is not None):
             self.reset_as_parent_passed_in(parent_base)
@@ -293,8 +306,26 @@ class ModuleStruct:
         ret.sort(key=lambda x: x[0])
         return ret
 
+    def _code_line_init_statement_shared_weights_args(self):
+        """Generate the args for shared weights where calling this module."""
+        args_list = list()
+        for passthrough_w_onnx_name, passthrough_w_var_name in self.shared_weights_collection.items():
+            passthrough_w_var_name_in_parent = \
+                self.parent_module_struct.shared_weights_collection.get(passthrough_w_onnx_name)
+            if self.parent_module_struct.identifier == []: # now only consider declaration in main model
+                args_list.append(f"{passthrough_w_var_name}=self.{passthrough_w_var_name_in_parent}")
+            else:
+                args_list.append(f"{passthrough_w_var_name}={passthrough_w_var_name_in_parent}")
+        return args_list
+
+    def _code_line_init_generate_shared_w_declaration_for_repeated(self):
+        """Force to repeat sub nodes init code line for fulfillment of shared weight declaration in main model."""
+        for _, nd_struct in self._node_structs:
+            nd_struct.code_line_in_init()
+
     def code_line_in_init(self):
         """Initialization line of code in module init block."""
+        self._code_line_init_generate_shared_w_declaration_for_repeated()
         left = "self.{}".format(self.ms_var_name)
         args_list = list()
         # Load args in init statement.
@@ -308,26 +339,40 @@ class ModuleStruct:
             args_list += self._args_translator.formal_args_to_str_list  # load from formal args
         else:
             args_list += self._fragment.actual_args
+        args_list += self._code_line_init_statement_shared_weights_args()
         right = f"{self.class_name}({', '.join(args_list)})"
         return left, right
 
     def code_line_in_construct(self, inputs=None):
         """Construct line of code in module construct block."""
-        # check number of outputs this module has
-        opt_var_name_in_module = list(self.external_successor_local_returns_map.values())
-        num_output = len(set(opt_var_name_in_module))
+        outputs_edges = list(self.outputs_register.keys())
+        num_output = len(outputs_edges)
+
+        # Allocate opt_var_name
         if num_output == 1:  # single output
-            left = f"{self.ms_opt_var_name}"
+            left = [f"{self.ms_opt_var_name}"]
         else:
             left = [f"{self.ms_opt_var_name}_{num}" for num in range(num_output)]
 
-        if inputs is None and self.matched_inputs:
-            inputs = self.matched_inputs
+        inputs = []
+        # Update self's outputs mgr
+        for idx, edge in enumerate(outputs_edges):
+            base_out = self.outputs_manager.get_base_out(edge)
+            if base_out.opt_var_name is None:
+                print(f"ModuleStruct {self.identifier} has an output {base_out.onnx_edge_name} not has opt_var_name")
+                base_out.opt_var_name = left[idx]
+            self.parent_module_struct.internal_outputs_collection[base_out.onnx_edge_name] = base_out.opt_var_name
 
-        if isinstance(inputs, str):
-            inputs = [inputs]
+        # Take inputs from parent & previous
+        for input_edge in self.inputs_register:
+            if input_edge in self.parent_module_struct.inputs_register:
+                inputs.append(self.parent_module_struct.inputs_register.get(input_edge))
+            elif input_edge in self.parent_module_struct.internal_outputs_collection:
+                inputs.append(self.parent_module_struct.internal_outputs_collection.get(input_edge))
+
         right = f"self.{self.ms_var_name}({', '.join(inputs)})"
-        return left, right
+        left = ", ".join(left)
+        return (left, right)
 
     @property
     def node_structs(self):
@@ -377,23 +422,36 @@ class ModuleStruct:
     @property
     def onnx_names_from_nodes(self) -> list:
         """Return all nodes onnx names in this module."""
-        ret = []
-        for (_, node) in self.node_structs:
-            ret.append(node.onnx_name)
+        if self._global_context.build_struct_finished and "_onnx_names_from_nodes" in self.rapid_reference:
+            return self.rapid_reference["_onnx_names_from_nodes"]
+        ret = [node.onnx_name for (_, node) in self.node_structs]
+        if self._global_context.build_struct_finished:
+            self.rapid_reference["_onnx_names_from_nodes"] = ret
         return ret
 
     @property
     def onnx_names_from_submodules(self) -> list:
         """Return all nodes onnx names in submodules of this module."""
+        if self._global_context.build_struct_finished and "_onnx_names_from_submodules" in self.rapid_reference:
+            return self.rapid_reference["_onnx_names_from_submodules"]
+
         ret = []
         for md_struct in self.module_structs:
             ret += md_struct.onnx_names
+        if self._global_context.build_struct_finished:
+            self.rapid_reference["_onnx_names_from_submodules"] = ret
+
         return ret
 
     @property
     def onnx_names(self) -> list:
         """Return all nodes' onnx names which contained by this module."""
-        return self.onnx_names_from_nodes + self.onnx_names_from_submodules
+        if self._global_context.build_struct_finished and "_onnx_names" in self.rapid_reference:
+            return self.rapid_reference["_onnx_names"]
+        ret = self.onnx_names_from_nodes + self.onnx_names_from_submodules
+        if self._global_context.build_struct_finished:
+            self.rapid_reference["_onnx_names"] = ret
+        return ret
 
     @property
     def external_precursor_nodes_names(self) -> list:
@@ -434,8 +492,8 @@ class ModuleStruct:
         """Return the class name for generating code of this module."""
         if self.pattern_id == -1:
             return "Model"
-        if GlobalContext().known_module_name.get("Module{}".format(self.pattern_id)) is not None:
-            class_name = GlobalContext().known_module_name.get("Module{}".format(self.pattern_id))
+        if self._global_context.known_module_name.get("Module{}".format(self.pattern_id)) is not None:
+            class_name = self._global_context.known_module_name.get("Module{}".format(self.pattern_id))
         else:
             class_name = "Module{}".format(self.pattern_id)
         return class_name
@@ -676,3 +734,26 @@ class ModuleStruct:
         submodule_opt_var_name = md_struct.ms_opt_var_name
         for (submodule_ext_succ, _, ith_output) in submodule_returns:
             self.external_successor_local_returns_map[submodule_ext_succ] = (submodule_opt_var_name, ith_output)
+
+    # The following funcs are designated to be invoked by matcher.
+    def add_inputs_edge(self, edge_name: str):
+        construct_header_length = len(self.inputs_register.values())
+        default_x_str = "x"
+        if not edge_name in self.inputs_register:
+            self.inputs_register[edge_name] = "".join([default_x_str, str(construct_header_length-1)]) \
+                if construct_header_length > 0 else default_x_str
+
+    def add_outputs_edge(self, edge_name: str):
+        if edge_name in self.outputs_register:
+            return        # to be filled during code generation, should from sub's opt_var_name
+        self.outputs_register[edge_name] = "<placeholder>"
+
+    def fill_outputs_edge(self, edge_name: str, opt_var_name: str):
+        # FILL the outputs edge once you got a opt_var_name of corresponding node!!!
+        if not edge_name in self.outputs_register:
+            raise ValueError(f"ModuleStruct {self.identifier} does not have edge "\
+                             f"{edge_name} and unable to fill its output var name.")
+        if self.outputs_register[edge_name] != "<placeholder>":
+            raise ValueError(f"The edge has been already filled as {self.outputs_register[edge_name]}" \
+                             f" instead of your {opt_var_name}")
+        self.outputs_register[edge_name] = opt_var_name

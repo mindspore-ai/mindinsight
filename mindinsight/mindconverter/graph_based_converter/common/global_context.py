@@ -83,6 +83,9 @@ class GlobalContext(metaclass=Singleton):
 
         # Record weights name that used many times.
         self.repeated_weights = dict()
+        self.repeated_weights_declaration = dict()
+        # Define Module Struct Build Status
+        self.build_struct_finished = False
 
     def get_onnx_node_from_identifier(self, identifier):
         """Return an OnnxUtils defined node by its identifier."""
@@ -144,7 +147,7 @@ class GlobalContext(metaclass=Singleton):
     @property
     def onnx_tensors_collection(self):
         """Return the onnx tensors collection."""
-        return self.onnx_tensors_collection
+        return self._onnx_tensors_collection
 
     @onnx_tensors_collection.setter
     def onnx_tensors_collection(self, arg):

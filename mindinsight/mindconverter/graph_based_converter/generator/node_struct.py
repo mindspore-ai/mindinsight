@@ -35,7 +35,6 @@ class NodeStruct:
         You can pass as many args as possible and the Node Struct will update
         by arguments order.
     """
-
     def __init__(self, args):
         # define attributes here
         self.global_context_mgr = GlobalContext()
@@ -43,6 +42,7 @@ class NodeStruct:
         self._fragment = None
         self._args_translator = None
         self._parent_module_struct = None
+        self._global_context = GlobalContext()
         self.topo_idx = None
         self.onnx_name = None
         self.graph_node_ref = None
@@ -75,7 +75,7 @@ class NodeStruct:
         """Get the original topological index in the onnx graph."""
         ori_name = self._fragment.metadata.get('source')
         self.onnx_name = ori_name
-        return GlobalContext().onnx_node_name_to_topo_idx.get(ori_name)
+        return self._global_context.onnx_node_name_to_topo_idx.get(ori_name)
 
     def update_var_name(self, idx=None):
         """
@@ -114,7 +114,7 @@ class NodeStruct:
         self._fragment = FragmentHandler(frag)
 
         if self.ms_op:
-            idx = GlobalContext().latest_node_struct_count
+            idx = self._global_context.latest_node_struct_count
             self.update_var_name(idx=idx)
 
     def _set_scope_from_identifier(self):
@@ -168,7 +168,7 @@ class NodeStruct:
         self._identifier = s
         self._set_scope_from_identifier()
         self.topo_idx = self.ori_topo_idx()
-        GlobalContext().onnx_node_name_to_node_struct_map[self.onnx_name] = self
+        self._global_context.onnx_node_name_to_node_struct_map[self.onnx_name] = self
 
     @property
     def fragment(self):
@@ -198,7 +198,7 @@ class NodeStruct:
     @property
     def onnx_node(self):
         """Return the original onnx node reference."""
-        return GlobalContext().onnx_nodes_collection.get(self.onnx_name)
+        return self._global_context.onnx_nodes_collection.get(self.onnx_name)
 
     @property
     def ms_op(self):
@@ -241,7 +241,7 @@ class NodeStruct:
         ret = []
         precursor_nodes_names = self.precursor_nodes_names
         for pre_node_name in precursor_nodes_names:
-            nd_struct = GlobalContext().onnx_node_name_to_node_struct_map.get(pre_node_name)
+            nd_struct = self._global_context.onnx_node_name_to_node_struct_map.get(pre_node_name)
             ret.append(nd_struct)
         return ret
 
@@ -255,7 +255,7 @@ class NodeStruct:
         """Return the node struct instances of successor nodes."""
         ret = []
         for pre_node_name in self.successor_nodes_names:
-            nd_struct = GlobalContext().onnx_node_name_to_node_struct_map.get(pre_node_name)
+            nd_struct = self._global_context.onnx_node_name_to_node_struct_map.get(pre_node_name)
             ret.append(nd_struct)
         return ret
 
@@ -278,54 +278,110 @@ class NodeStruct:
         """Return the outputs var(s) in construct statement."""
         return self.fragment.fragment.outputs()
 
+    @property
+    def inputs_edges_names(self):
+        """Return the inputs edges of this node."""
+        # Consider moving this process to metadata.
+        ret = []
+        for edge in self.fragment.metadata.get('inputs'):
+            if not self._global_context.get_onnx_tensor(edge):
+                ret.append(edge)
+        return ret
+
+    @property
+    def shared_weights(self):
+        """Return the shared weights in this node."""
+        shared_weight_names = []
+        for shared_weight_name, repeated_node_list in self._global_context.repeated_weights.items():
+            if self.onnx_name in repeated_node_list:
+                shared_weight_names.append(shared_weight_name)
+        return shared_weight_names
+
     # Code Generation funcs below
+
+    def _get_shared_weight_var_names_from_parent(self, onnx_name=None):
+        """
+        Get shared weight var name in the parent module.
+
+        Args:
+            onnx_name (str): The onnx name of this weight. Default None.
+
+        Returns:
+            [List, str], a list of all shared weights the node has or the specific name provided.
+        """
+        if onnx_name is None:
+            shared_weights_var_name_in_module = []
+            for shared_w in self.shared_weights:
+                for passthrough_w, passthrough_w_var_name in \
+                self._parent_module_struct.shared_weights_collection.items():
+                    if shared_w == passthrough_w:
+                        shared_weights_var_name_in_module.append(passthrough_w_var_name)
+            return shared_weights_var_name_in_module
+        if isinstance(onnx_name, str):
+            return self._parent_module_struct.shared_weights_collection.get(onnx_name)
+
+        return []
+
 
     def code_line_in_init(self):
         """Initialization line of code in module init block."""
-        left = "self.{}".format(self.ms_var_name)
-        args_list = list()
         if self._args_translator is not None:
             self.fragment.default_var['args'] = {**self._args_translator.actual_args,
                                                  **self._args_translator.formal_args}
-            args_list += self._args_translator.actual_args_to_str_list
-            args_list += self._args_translator.formal_args_to_str_list
-        else:
-            actual_args_str = ArgsTranslation.dict_data_to_args_str_list(self._fragment.default_var['args'])
-            args_list += actual_args_str
 
-        if not self._fragment.converted:
-            args_list.append('='.join(["input_shape", str(self._fragment.input_shape)]))
-            args_list.append('='.join(["output_shape", str(self._fragment.output_shape)]))
-            right = f"{self.ms_op.replace('::', '.')}({', '.join(args_list)})"
-        else:
-            right = f"{self.ms_op}({', '.join(args_list)})"
-        return left, right
+        # create a parameter for shared weight scenario
+        trainable_params = self.fragment.default_var.get("trainable_params")
+        if trainable_params and self.fragment.default_var.get("parameters"):
+            # if trainable params and the mappers accept the param declaration rewritten.
+            for trainable_param_postfix, data_dict in trainable_params.items():
+                onnx_name = data_dict.get('onnx_name')
+                nparray = data_dict.get('data')
+                try:
+                    shape = nparray.shape
+                    dtype = nparray.dtype
+                except Exception:
+                    raise ValueError("Parameters has inconsistent data type.")
+                # set declare statement
+                declare_statement = self.fragment.fragment.create_parameter(shape, dtype)
+                if onnx_name not in self._global_context.repeated_weights.keys():
+                    # if the weight is not a shared weight, set to actual declaration.
+                    if not self.fragment.default_var["parameters"].get(trainable_param_postfix):
+                        self.fragment.default_var["parameters"][trainable_param_postfix] = declare_statement
+                    continue # not a shared weight, skip the rest
+
+                if onnx_name in self._global_context.repeated_weights_declaration.keys():
+                    continue # already declared, skip
+                self._global_context.repeated_weights_declaration[onnx_name] = declare_statement
+
+                # set template to mapper parameter rewritten.
+                shared_w_var_in_parent = self._get_shared_weight_var_names_from_parent(onnx_name=onnx_name)
+                # add self for node node under public parent module
+                if self.parent_module_struct.identifier == []:
+                    #now only consider declaration in the main model
+                    shared_w_var_in_parent = f"self.{shared_w_var_in_parent}"
+                self.fragment.default_var["parameters"][trainable_param_postfix] = shared_w_var_in_parent
 
     def code_line_in_construct(self, inputs=None):
         """Construct line of code in module construct block. """
         left = self.ms_opt_var_name
 
-        if not self.matched_inputs and inputs is None:
-            raise ValueError("Unable to generate the code construct statement due to empty inputs.")
+        inputs = []
 
-        if self.matched_inputs:
-            inputs = self.matched_inputs
+        # Bind current node opt_var_name & register to parent
+        self.outputs_manager.bind_opt_var_names(self.fragment.fragment)
+        for base_out in self.outputs_manager.outputs:
+            opt_var = base_out.opt_var_name
+            self.parent_module_struct.internal_outputs_collection[base_out.onnx_edge_name] = opt_var
 
-        # Check original onnx node's input to ensure double inputs are not ignored
-        original_inputs = GlobalContext().onnx_node_inputs.get(self.onnx_name)
-        new_inputs = []
-        for idx, prec_node in enumerate(self.precursor_nodes_names):
-            occurrence = original_inputs.count(prec_node)
-            for _ in range(occurrence):
-                new_inputs.append(inputs[idx])
-        inputs = new_inputs
-
-        if isinstance(inputs, str):
-            inputs = [inputs]
+        # Take inputs from parents module
+        for input_edge in self.inputs_edges_names:
+            if input_edge in self.parent_module_struct.inputs_register:
+                inputs.append(self.parent_module_struct.inputs_register.get(input_edge))
+            elif input_edge in self.parent_module_struct.internal_outputs_collection:
+                inputs.append(self.parent_module_struct.internal_outputs_collection.get(input_edge))
 
         self.fragment.default_var['inputs'] = inputs
-        right = f"self.{self.ms_var_name}({', '.join(inputs)})"
-        return left, right
+        return left
 
     def add_extra_tensor(self):
         """ Add extra tensor."""
@@ -360,12 +416,12 @@ class NodeStruct:
         Args:
             name (str): Can accept both node identifier or original onnx node name.
         """
-        target_nd_struct = GlobalContext().node_struct_collections.get(name) \
-                           or GlobalContext().onnx_node_name_to_node_struct_map.get(name)
+        target_nd_struct = self._global_context.node_struct_collections.get(name) \
+            or self._global_context.onnx_node_name_to_node_struct_map.get(name)
         if target_nd_struct is None and self.topo_idx == 0:  # First node always has external input
             return False
 
-        if target_nd_struct is None and (name in GlobalContext().onnx_graph_info.get('graph_inputs')):
+        if target_nd_struct is None and (name in self._global_context.onnx_graph_info.get('graph_inputs')):
             return False
 
         if target_nd_struct is None:
