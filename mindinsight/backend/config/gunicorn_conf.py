@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@
 """Config file for gunicorn."""
 
 import os
-import multiprocessing
-import signal
-import threading
 import time
+import signal
+import multiprocessing
+import threading
 from importlib import import_module
 
 import psutil
 import gunicorn
+
+from mindinsight.utils.computing_resource_mgr import terminate
 
 
 gunicorn.SERVER_SOFTWARE = 'unknown'
@@ -60,6 +62,7 @@ def post_worker_init(worker):
         worker (ThreadWorker): worker instance.
     """
     def murder_worker_children_processes():
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
         processes_to_kill = []
         # sleep 3 seconds so that all worker children processes have been launched.
         time.sleep(3)
@@ -69,8 +72,10 @@ def post_worker_init(worker):
                 processes_to_kill.append(child)
         while True:
             if os.getppid() != worker.pid:
+                # Kill the remaining sub-processed after the worker process died
+                _, alive = psutil.wait_procs(processes_to_kill, 0.1)
                 current_worker_pid = os.getppid()
-                for proc in processes_to_kill:
+                for proc in alive:
                     worker.log.info("Original worker pid: %d, current worker pid: %d, stop process %d",
                                     worker.pid, current_worker_pid, proc.pid)
                     try:
@@ -79,7 +84,7 @@ def post_worker_init(worker):
                         continue
                     except psutil.Error as ex:
                         worker.log.error("Stop process %d failed. Detail: %s.", proc.pid, str(ex))
-                worker.log.info("%d processes have been killed.", len(processes_to_kill))
+                worker.log.info("%d processes have been terminated by listener.", len(alive))
                 break
             time.sleep(1)
 
@@ -87,3 +92,17 @@ def post_worker_init(worker):
                                              name="murder_worker_children_processes")
     listen_process.start()
     worker.log.info("Server pid: %d, start to listening.", worker.ppid)
+
+
+def worker_int(worker):
+    """Terminate child processes when worker is interrupted."""
+    terminate()
+    process = psutil.Process(worker.pid)
+    children = process.children(recursive=True)
+    for child in children:
+        try:
+            child.send_signal(signal.SIGTERM)
+        except psutil.NoSuchProcess:
+            continue
+        except psutil.Error as ex:
+            worker.log.error("Stop process %d failed. Detail: %s.", child.pid, str(ex))

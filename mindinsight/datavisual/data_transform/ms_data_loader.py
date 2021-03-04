@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -203,7 +203,8 @@ class _PbParser(_Parser):
                 tensor_event = future_value.result()
                 if tensor_event is not None:
                     events_data.add_tensor_event(tensor_event)
-            future.add_done_callback(exception_no_raise_wrapper(add_tensor_event))
+            if future is not None:
+                future.add_done_callback(exception_no_raise_wrapper(add_tensor_event))
             return False
         return True
 
@@ -397,7 +398,8 @@ class _SummaryParser(_Parser):
 
                         events_data.add_tensor_event(tensor_value)
 
-                future.add_done_callback(exception_no_raise_wrapper(_add_tensor_event_callback))
+                if future is not None:
+                    future.add_done_callback(exception_no_raise_wrapper(_add_tensor_event_callback))
                 return False
             except (exceptions.CRCFailedError, exceptions.CRCLengthFailedError) as exc:
                 file_handler.reset_offset(start_offset)

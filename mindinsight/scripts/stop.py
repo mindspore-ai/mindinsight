@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -105,22 +105,27 @@ class Command(BaseCommand):
         self.logfile.info('Stop mindinsight with port %s and pid %s.', port, pid)
 
         process = psutil.Process(pid)
-        processes_to_kill = [process]
-        # Set recursive to True to kill grand children processes.
-        for child in process.children(recursive=True):
-            processes_to_kill.append(child)
-
-        for proc in processes_to_kill:
-            self.logfile.info('Stopping mindinsight process %s.', proc.pid)
-            try:
-                proc.send_signal(signal.SIGKILL)
-            except psutil.Error as ex:
-                self.logfile.warning("Stop process %s failed. Detail: %s.", proc.pid, str(ex))
+        processes = process.children(recursive=True)
+        processes.append(process)
+        try:
+            self._send_signal(process, signal.SIGINT)
+            # Wait 2 second, if not terminate, kill the worker process.
+            _, alive = psutil.wait_procs(processes, 2)
+            for alive_process in alive:
+                self._send_signal(alive_process, signal.SIGKILL)
+        except psutil.Error as ex:
+            self.logfile.error("Stop process %d failed. Detail: %s.", pid, str(ex))
 
         for hook in HookUtils.instance().hooks():
             hook.on_shutdown(self.logfile)
 
         self.console.info('Stop mindinsight service successfully')
+
+    def _send_signal(self, process, proc_signal):
+        try:
+            process.send_signal(proc_signal)
+        except psutil.NoSuchProcess:
+            pass
 
     def get_process(self, port):
         """
