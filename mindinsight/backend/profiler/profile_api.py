@@ -629,6 +629,43 @@ def get_minddata_cpu_utilization_info():
     return jsonify(cpu_utilization)
 
 
+@BLUEPRINT.route("/profile/cluster-step-trace-summary", methods=["POST"])
+def get_cluster_step_trace_info():
+    """
+    Get cluster step trace info.
+
+    Returns:
+        str, the cluster step trace info.
+
+    Raises:
+        ParamValueError: If the search condition contains some errors.
+
+    Examples:
+        >>>POST http://xxx/v1/mindinsight/profile/cluster-step-trace-summary
+    """
+    train_id = get_train_id(request)
+    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
+    try:
+        cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
+    except ValidationError:
+        raise ParamValueError('Invalid cluster_profiler dir')
+
+    condition = request.stream.read()
+    try:
+        condition = json.loads(condition) if condition else {}
+    except (json.JSONDecodeError, ValueError):
+        raise ParamValueError("Json data parse failed.")
+
+    device_id = condition.get("device_id", "0")
+    to_int(device_id, 'device_id')
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'cluster_step_trace', cluster_profiler_dir, device_id
+    )
+    step_trace_info = analyser.query(condition)
+    return jsonify(step_trace_info)
+
+
 def init_module(app):
     """
     Init module entry.
