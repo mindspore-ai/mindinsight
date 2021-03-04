@@ -15,6 +15,9 @@
 """The cpu base analyser."""
 from mindinsight.profiler.analyser.gpu_analyser import GpuAnalyser
 from mindinsight.profiler.common.validator import validate
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerRawFileException
+from mindinsight.profiler.common.log import logger as log
+
 
 class CpuOpTypeAnalyser(GpuAnalyser):
     """Cpu operation type analyser."""
@@ -32,7 +35,11 @@ class CpuOpTypeAnalyser(GpuAnalyser):
         Returns:
             list, the converted data.
         """
-        return [row[0], int(row[1]), int(row[2]), float(row[3]), float(row[4]), float(row[5])*100]
+        try:
+            return [row[0], int(row[1]), int(row[2]), float(row[3]), float(row[4]), float(row[5])*100]
+        except IndexError as err:
+            log.exception(err)
+            raise ProfilerRawFileException('failed to get HOST CPU operator type data.')
 
 
 class CpuOpInfoAnalyser(GpuAnalyser):
@@ -51,5 +58,9 @@ class CpuOpInfoAnalyser(GpuAnalyser):
         Returns:
             list, the converted data.
         """
-        return [row[0], row[1], row[2], row[3], int(row[4]), float(row[5]),
-                float(row[6]), float(row[7]), row[8]]
+        try:
+            return [row[0], row[1], row[2], row[3], int(row[4]), float(row[5]),
+                    float(row[6]), float(row[7]), row[8]]
+        except IndexError as err:
+            log.exception(err)
+            raise ProfilerRawFileException('failed to get HOST CPU operator detail data.')
