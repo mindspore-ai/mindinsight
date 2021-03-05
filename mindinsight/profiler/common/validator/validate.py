@@ -35,7 +35,7 @@ GPU_DETAIL_COL = ["op_side", "op_type", "op_name", "op_full_name",
                   "op_occurrences", "op_total_time", "op_avg_time",
                   "proportion", "cuda_activity_cost_time", "cuda_activity_call_count"]
 CPU_TYPE_COL = ["op_type", "type_occurrences", "execution_frequency", "total_compute_time",
-                "avg_time", "percent"]
+                "avg_time", "total_time_proportion"]
 CPU_DETAIL_COL = ["op_side", "op_type", "op_name", "full_op_name", "op_occurrences",
                   "op_total_time", "op_avg_time", "total_time_proportion", "subgraph"]
 MINDDATA_PIPELINE_COL = [
