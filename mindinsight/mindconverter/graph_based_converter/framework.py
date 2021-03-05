@@ -21,7 +21,7 @@ from typing import List
 from importlib import import_module
 from importlib.util import find_spec
 from functools import partial
-
+from google.protobuf.internal import api_implementation
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, onnx_satisfied, \
     save_code_file_and_report, get_framework_type, check_dependency_integrity, get_third_part_lib_validation_error_info
@@ -35,7 +35,7 @@ from mindinsight.mindconverter.common.exceptions import GraphInitError, TreeCrea
     BadParamError
 from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
 
-from google.protobuf.internal import api_implementation
+
 
 check_common_dependency_integrity = partial(check_dependency_integrity,
                                             "onnx", "onnxruntime", "onnxoptimizer")
@@ -267,7 +267,8 @@ def main_graph_base_converter(file_config):
 
     if api_implementation.Type() != 'cpp' or os.getenv('PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION') != 'cpp':
         log_console.warning("Protobuf is currently implemented in \"Python\". "
-                            "The conversion process may take a long time. Please use the \"C++\" backend version.")
+                            "The conversion process may take a long time. "
+                            "Please use `export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp` to enable cpp backend.")
 
     graph_path = file_config['model_file']
     frame_type = get_framework_type(graph_path)

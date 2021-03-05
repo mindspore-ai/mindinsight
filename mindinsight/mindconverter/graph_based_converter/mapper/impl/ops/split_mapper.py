@@ -27,8 +27,8 @@ class SplitMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_params(**kwargs):
         axis = kwargs["params"]["axis"]
-        split = kwargs["params"]["split"]
-        output_num = len(split)
+        output_shape_list = kwargs["params"]["output_shape"]
+        output_num = len(output_shape_list)
         return {"axis": axis,
                 "output_num": output_num}
 
@@ -43,9 +43,16 @@ class SplitMapper(ONNXToMindSporeMapper):
         weights = kwargs.get("weights")
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
+        converted_params = kwargs["converted_params"]
+        output_num = converted_params["output_num"]
+
         variable_slot = "var_0"
         init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
-        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
+        slot_list = [f"opt_{{{variable_slot}}}"]
+        for i in range(1, output_num): # Here `1` means the second output of the operator
+            slot_list.append(f"opt_{{{variable_slot}}}_{i}")
+        slot_final = ", ".join(slot_list)
+        construct_template = f"{slot_final} = self.{{{variable_slot}}}" \
                              f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}})"
         template = {
             variable_slot: {
@@ -58,13 +65,16 @@ class SplitMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
                 ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
                 ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
-                    ExchangeMessageKeywords.VariableScope.value.ARR_TYPE.value,
+                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
                 ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
                 ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
                 ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
                 ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: {}
             }
         }
-        outputs_list = [f"opt_{{{variable_slot}}}"]
-        outputs_mapping = ((0, 0),)
+        outputs_list = slot_list
+        outputs_mapping = []
+        for i in range(output_num):
+            outputs_mapping.append((i, i))
+        outputs_mapping = tuple(outputs_mapping)
         return template, exchange_msg, outputs_list, outputs_mapping
