@@ -26,14 +26,26 @@ class MatcherHelper:
         """Call in preprocess"""
         # allocate main model construct x
         prec_edges = main_model.external_precursor_nodes_names
-        default_x_str = "x"
+        graph_inputs = GlobalContext().onnx_graph_info.get('graph_inputs')
         inputs = dict()
-        for idx, edge in enumerate(prec_edges):
-            if not edge in inputs:
-                # idx-1 here as we have a x without index and another x0 in module inputs
-                # so the idx 0 position is the second input, not the first x.
-                inputs[edge] = "".join([default_x_str, str(idx-1)]) if idx > 0 else default_x_str
+        for edge in graph_inputs:
+            if not edge in inputs and edge in prec_edges:
+                regular_edge = MatcherHelper.regular_edge_name(edge)
+                inputs[edge] = regular_edge
         main_model.inputs_register = inputs
+
+    @staticmethod
+    def regular_edge_name(name: str) -> str:
+        """Regular the edge name to adapt the python grammar."""
+        regular = ""
+        for char in name:
+            if char.isalpha() or char.isdigit():
+                regular = f"{regular}{char}"
+            else:
+                regular = f"{regular}_"
+        if not regular[0].isalpha():
+            regular = f"input_{regular}"
+        return regular
 
     @staticmethod
     def get_public_parent_module(node_a: NodeStruct, node_b: NodeStruct):
