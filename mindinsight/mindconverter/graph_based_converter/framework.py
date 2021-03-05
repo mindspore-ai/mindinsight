@@ -264,11 +264,11 @@ def main_graph_base_converter(file_config):
     Args:
         file_config (dict): The config of file which to convert.
     """
-    if api_implementation.Type() != 'cpp' \
-        or os.getenv('PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION') != 'cpp':
-        log_console.warning("Protobuf is currently implemented in \"Python\". \
-            The conversion process may take a long time. \
-            Please use the \"C++\" backend version")
+
+    if api_implementation.Type() != 'cpp' or os.getenv('PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION') != 'cpp':
+        log_console.warning("Protobuf is currently implemented in \"Python\". "
+                            "The conversion process may take a long time. Please use the \"C++\" backend version.")
+
     graph_path = file_config['model_file']
     frame_type = get_framework_type(graph_path)
     if not file_config.get("shape"):

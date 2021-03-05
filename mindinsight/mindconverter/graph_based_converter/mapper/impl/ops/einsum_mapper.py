@@ -91,7 +91,7 @@ class EinSumMapper(ONNXToMindSporeMapper):
         default_shape = input_shape[:2]
         inputs_in_construct = [
             f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"
-            f".view({default_shape[0] * default_shape[1]}, -1)"]
+            f".view({default_shape[0]} * {default_shape[1]}, -1)"]
 
         if weights:
             tensor = EinSumMapper._find_val_by_index(0, weights)
