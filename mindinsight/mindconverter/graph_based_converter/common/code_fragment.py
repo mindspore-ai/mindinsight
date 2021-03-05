@@ -310,11 +310,14 @@ class NewFragment:
             rewrite_data.update(data[ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value])
         if ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value in data:
             rewrite_params = {
-                f"{var}/{slot}": data[ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value][slot]
+                f"{var}/{slot}": data[ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value].get(slot)
                 for slot in data[ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value]
             }
             rewrite_data.update(rewrite_params)
         rewrite_data.update(data[ExchangeMessageKeywords.VariableScope.value.ARGS.value])
+        template = template.format(**{
+            k: str(rewrite_data[k]) for k in rewrite_data
+        })
         return template.format(**{
             k: str(rewrite_data[k]) for k in rewrite_data
         })

@@ -33,7 +33,8 @@ class MatMulMapper(ONNXToMindSporeMapper):
     def _convert_trained_weights(**kwargs):
         weights = kwargs['weights']
         weight = MatMulMapper._find_val_by_index(0, weights)
-        return {'w': {'data': weight, 'type': WeightType.PARAMETER.value}}
+        onnx_name = MatMulMapper._find_onnx_name_by_index(0, weights)
+        return {'w': {'data': weight, 'type': WeightType.PARAMETER.value, 'onnx_name': onnx_name}}
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
@@ -48,15 +49,11 @@ class MatMulMapper(ONNXToMindSporeMapper):
         if not weights:
             return template, exchange_msg, outputs_list, outputs_mapping
 
-        tensor = MatMulMapper._find_val_by_index(0, weights)
-
         variable_slot = "var_0"
         init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
-        args["weight_shape"] = tensor.shape
-        args["weight_dtype"] = tensor.dtype
-        init_tensor = f"self.{{{variable_slot}}}_w = " \
-                      f"Parameter(Tensor(np.random.uniform(0, 1, {{weight_shape}}).astype(np.{{weight_dtype}})), " \
-                      f"name=None)"
+        # Note: adding weight shape to args is now deprecated due to conflict of partial weights share processing.
+        variable_slot_param_name = f"{variable_slot}/w"
+        init_tensor = f"self.{{{variable_slot}}}_w = {{{variable_slot_param_name}}}"
         construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
                              f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}," \
                              f"self.{{{variable_slot}}}_w)"
@@ -75,7 +72,10 @@ class MatMulMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
                 ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
                 ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params,
+                ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value: {
+                    "w": ""
+                }
             }
         }
         outputs_list = [f"opt_{{{variable_slot}}}"]

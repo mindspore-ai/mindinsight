@@ -35,8 +35,9 @@ class AddMapper(ONNXToMindSporeMapper):
     def _convert_trained_weights(**kwargs):
         weights = kwargs.get('weights', list())
         tensor = AddMapper._find_val_by_index(0, weights)
+        onnx_name = AddMapper._find_onnx_name_by_index(0, weights)
         if isinstance(tensor, np.ndarray) and tensor.shape:
-            return {'bias': {'data': tensor, 'type': WeightType.PARAMETER.value}}
+            return {'bias': {'data': tensor, 'type': WeightType.PARAMETER.value, 'onnx_name': onnx_name}}
         return dict()
 
     @staticmethod
@@ -54,7 +55,6 @@ class AddMapper(ONNXToMindSporeMapper):
 
         tensor = AddMapper._find_val_by_index(0, weights)
         bias_shape = tensor.shape
-        bias_dtype = tensor.dtype
         bias_location = AddMapper._find_location_by_index(0, weights)
 
         variable_slot = "var_0"
@@ -64,11 +64,10 @@ class AddMapper(ONNXToMindSporeMapper):
             inputs_in_construct.insert(bias_location, f"self.{{{variable_slot}}}_bias")
 
         if bias_shape:
-            args["bias_shape"] = bias_shape
-            args["bias_dtype"] = bias_dtype
-            init_tensor = f"self.{{{variable_slot}}}_bias = " \
-                          f"Parameter(Tensor(np.random.uniform(0, 1, {{bias_shape}}).astype(np.{{bias_dtype}})), " \
-                          f"name=None)"
+            # Note: adding weight shape to args is now deprecated due to conflict of partial weights share processing.
+            variable_slot_param_name = f"{variable_slot}/bias"
+            init_tensor = f"self.{{{variable_slot}}}_bias = {{{variable_slot_param_name}}}"
+
         else:
             args["bias_value"] = tensor.tolist()
             init_tensor = f"self.{{{variable_slot}}}_bias = {{bias_value}}"
@@ -93,6 +92,10 @@ class AddMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
             }
         }
+        if bias_shape:
+            exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value] = {
+                "bias": ""
+            }
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping

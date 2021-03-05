@@ -421,11 +421,16 @@ class OnnxDataLoader:
             self._global_context.onnx_node_name_to_topo_idx[n.name] = idx
 
         for k in self.repeated_weight:
+            if not self.tensors_dict.get(k).to_array().shape:
+                # scalar does not have shape info
+                continue
             self.repeated_weight[k] = record_tensors[k][:]
 
         self._global_context.onnx_nodes_collection = self._nodes_dict
         self._global_context.onnx_nodes_topo_index = nodes_topo_idx
-        self._global_context.repeated_weights = self.repeated_weight
+        # now only process shared weights for multi-inputs models
+        if len(self.input_nodes) > 1:
+            self._global_context.repeated_weights = self.repeated_weight
 
     def _parse_tensors(self):
         """Parse each onnx tensors in the model."""
@@ -500,10 +505,14 @@ class OnnxDataLoader:
         # Parse ONNX Graph level info
         self._parse_graph()
 
-        # 1. parse all nodes
+        # 1. parse all tensors
+        self._parse_tensors()
+
+        # 2. parse all nodes, note that parse tensors must be done as nodes require tensor info
+        # to process the node weight sharing.
         self._parse_nodes()
 
-        # 2. parse value info (incl. node output shape)
+        # 3. parse value info (incl. node output shape)
         if self._is_infer_shape:
             try:
                 self._infer_model()
@@ -513,9 +522,6 @@ class OnnxDataLoader:
                 log.error(str(e))
                 log.exception(e)
                 raise e
-
-        # 3. parse all tensors
-        self._parse_tensors()
 
         # 4. Optimize graph to eliminate some nodes.
         self._find_nodes_to_be_eliminated()
