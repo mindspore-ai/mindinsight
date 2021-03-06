@@ -21,7 +21,7 @@ import mindinsight
 from mindinsight.mindconverter.converter import main
 from mindinsight.mindconverter.graph_based_converter.common.utils import get_framework_type
 from mindinsight.mindconverter.graph_based_converter.constant import ARGUMENT_LENGTH_LIMIT, \
-ARGUMENT_NUM_LIMIT, ARGUMENT_LEN_LIMIT, FrameworkType
+    ARGUMENT_NUM_LIMIT, ARGUMENT_LEN_LIMIT, FrameworkType
 from mindinsight.mindconverter.graph_based_converter.framework import main_graph_base_converter
 
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
@@ -283,11 +283,19 @@ class NodeAction(argparse.Action):
         ArgsCheck.check_repeated(namespace, self.dest, self.default, option_string, parser_in)
         if len(values) > ARGUMENT_NUM_LIMIT:
             parser_in.error(f"The length of {option_string} {values} should be no more than {ARGUMENT_NUM_LIMIT}.")
+        deduplicated = set()
+        abnormal_nodes = []
         for v in values:
             if len(v) > ARGUMENT_LENGTH_LIMIT:
                 parser_in.error(
                     f"The length of {option_string} {v} should be no more than {ARGUMENT_LENGTH_LIMIT}."
                 )
+            if v in deduplicated:
+                abnormal_nodes.append(v)
+                continue
+            deduplicated.add(v)
+        if abnormal_nodes:
+            parser_in.error(f"{', '.join(abnormal_nodes)} {'is' if len(abnormal_nodes) == 1 else 'are'} duplicated.")
         setattr(namespace, self.dest, values)
 
 

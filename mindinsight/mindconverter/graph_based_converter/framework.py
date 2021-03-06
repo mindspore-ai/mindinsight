@@ -281,8 +281,7 @@ def main_graph_base_converter(file_config):
         check_params = ['input_nodes', 'output_nodes']
         check_params_exist(check_params, file_config)
 
-    if len(file_config['shape']) != len(file_config.get("input_nodes", [])) != len(
-            set(file_config.get("input_nodes", []))):
+    if len(file_config['shape']) != len(file_config.get("input_nodes", [])):
         raise BadParamError("`--shape` and `--input_nodes` must have the same length, "
                             "and no redundant node in `--input_nodes`.")
 
