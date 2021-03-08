@@ -304,8 +304,30 @@ class NewFragment:
         """
         rewrite_data = {var: data[ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value]}
         if ExchangeMessageKeywords.VariableScope.value.INPUTS.value in data:
-            rewrite_data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value] = ", ".join(
-                data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value])
+            group_inputs = ExchangeMessageKeywords.VariableScope.value.GROUP_INPUTS.value
+            if group_inputs in data:
+                input_tuple_list = []
+                tuple_index = 0
+                tuple_id = 0
+                while tuple_index < len(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]):
+                    if tuple_id < len(data[group_inputs]) and tuple_index in data[group_inputs][tuple_id]:
+                        tuple_added = ", ".join(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]
+                                                [data[group_inputs][tuple_id][0]:
+                                                 data[group_inputs][tuple_id][-1]+1])
+                        tuple_added = f"({tuple_added})"
+                        input_tuple_list.append(tuple_added)
+                        tuple_index = data[group_inputs][tuple_id][-1]+1
+                        tuple_id += 1
+                        continue
+                    input_tuple_list.append(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]
+                                            [tuple_index])
+                    tuple_index += 1
+
+                rewrite_data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value] = \
+                    ", ".join(input_tuple_list)
+            else:
+                rewrite_data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value] = ", ".join(
+                    data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value])
         if ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value in data:
             rewrite_data.update(data[ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value])
         if ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value in data:

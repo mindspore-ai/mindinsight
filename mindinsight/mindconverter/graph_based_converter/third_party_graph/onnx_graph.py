@@ -23,7 +23,8 @@ from mindinsight.mindconverter.graph_based_converter.third_party_graph.input_nod
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph_node import OnnxGraphNode
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.pytorch_graph_parser import PyTorchGraphParser
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.tf_graph_parser import TFGraphParser
-from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import OnnxDataLoader, NodeWeight
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import OnnxDataLoader, \
+    NodeWeight, NodeOutputShape
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher import generate_scope_name
 
 NONE_SCOPE_OP = {
@@ -139,6 +140,9 @@ class OnnxGraph(Graph):
 
         super(OnnxGraph, self).build()
         self._collect_input_shape_of_each_node()
+        for node_name in self._shape_dict:
+            if len(self._shape_dict[node_name]) == 1:
+                self._shape_dict[node_name] = self._shape_dict[node_name][0].node_output_shape
 
     def _collect_input_shape_of_each_node(self):
         """
@@ -156,11 +160,17 @@ class OnnxGraph(Graph):
                     input_nodes[ipt].set_scope_name(node.scope_name)
                     node.precursor_nodes.insert(0, ipt)
                     input_nodes[ipt].set_successor_nodes(node_name)
-                    self._shape_dict[ipt] = input_nodes[ipt].output_shape
+                    output_shape_single = NodeOutputShape(ipt, None, input_nodes[ipt].output_shape)
+                    if ipt not in self._shape_dict:
+                        self._shape_dict.setdefault(ipt, []).append(output_shape_single)
             ipt_shape = []
-            for p_nd in node.precursor_nodes:
-                shp = self._shape_dict.get(p_nd)
-                ipt_shape.append(tuple(shp) if isinstance(shp, list) else shp)
+            for ipt_nd_name in node.ir_node_inputs:
+                for p_nd in node.precursor_nodes:
+                    shp_list = self._shape_dict.get(p_nd)
+                    for shp in shp_list:
+                        if ipt_nd_name == shp.node_opt_name:
+                            shp_single = shp.node_output_shape
+                            ipt_shape.append(tuple(shp_single) if isinstance(shp_single, list) else shp_single)
 
             self._input_shape[node_name] = ipt_shape[0] if len(ipt_shape) == 1 else ipt_shape
 

@@ -37,6 +37,7 @@ class SliceMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
+        """Generate snippet template."""
         template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
             **kwargs)
         op = kwargs.get("operation")
@@ -47,13 +48,14 @@ class SliceMapper(ONNXToMindSporeMapper):
 
         starts = SliceMapper._find_val_by_index(0, weights)
         ends = SliceMapper._find_val_by_index(1, weights)
-        axes = SliceMapper._find_val_by_index(2, weights, np.array([i for i in range(len(ipt_shape))]))
+        axes = SliceMapper._find_val_by_index(2, weights, np.array(list(range(len(ipt_shape)))))
         steps = SliceMapper._find_val_by_index(3, weights, np.array([1 for _ in range(len(ipt_shape))]))
 
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
+
         if not weights:
-            raise ValueError("Cannot get required params from slice.")
+            raise ValueError("Can not get required params from slice.")
 
         if axes.shape != (1,):
             ordered_begin = sorted(zip(starts.tolist(), axes.tolist()), key=lambda x: x[1], reverse=False)
@@ -71,9 +73,9 @@ class SliceMapper(ONNXToMindSporeMapper):
             end[axis] = min(ends.tolist()[0], end[axis])
             strides[axis] = steps.tolist()[0]
 
-        args["begin"] = tuple(begin)
-        args["end"] = tuple(end)
-        args["strides"] = tuple(strides)
+        args['begin'] = tuple(begin)
+        args['end'] = tuple(end)
+        args['strides'] = tuple(strides)
 
         variable_slot = "var_0"
         init_template = f"self.{{{variable_slot}}} = {op}()"
@@ -84,7 +86,8 @@ class SliceMapper(ONNXToMindSporeMapper):
                              f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, " \
                              f"self.{{{variable_slot}}}_begin, self.{{{variable_slot}}}_end, " \
                              f"self.{{{variable_slot}}}_strides)"
-        template = reset_init_or_construct(template, variable_slot, [init_template, init_begin, init_end, init_strides],
+        template = reset_init_or_construct(template, variable_slot,
+                                           [init_template, init_begin, init_end, init_strides],
                                            TemplateKeywords.INIT.value)
         template = reset_init_or_construct(template, variable_slot, [construct_template],
                                            TemplateKeywords.CONSTRUCT.value)

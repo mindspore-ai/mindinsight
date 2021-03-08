@@ -438,6 +438,15 @@ class OnnxDataLoader:
         for tensor in tensors:
             t = OnnxTensor(tensor)
             self.tensors_dict[t.name] = t
+
+        idx = 0
+        while idx < len(self.model.graph.output):
+            cur_opt = self.model.graph.output[idx]
+            if cur_opt.name not in self.output_nodes:
+                self.model.graph.output.remove(cur_opt)
+                continue
+            idx += 1
+
         self._global_context.onnx_tensors_collection = self.tensors_dict
 
     def _parse_node_output_shape(self):
@@ -465,7 +474,8 @@ class OnnxDataLoader:
             node_name = self.output_name_to_node_name[node_opt_name]
             if not node_name:
                 raise GraphInitError(msg=f"Cannot find where edge {node_opt_name} comes from.")
-            self.node_output_shape_dict[node_name] = shape
+            node_output_shape = NodeOutputShape(node_opt_name, node_name, shape)
+            self.node_output_shape_dict.setdefault(node_name, []).append(node_output_shape)
 
     def get_node(self, node_name):
         """Get the OnnxNode instance by node name."""
@@ -576,12 +586,16 @@ class OnnxDataLoader:
         """Create a PASS to optimize shape and reshape operations in ONNX ir graph."""
         to_be_eliminated_op = {"Cast", "Concat", "Squeeze", "Unsqueeze", "Slice",
                                "Gather", "Shape"}
-
+        def _is_origin_inputs(node):
+            for ipt in node.input_name_list:
+                if ipt not in self.input_nodes:
+                    return False
+            return True
         def _traceback_precursor_nodes_until_shape_op(node_ref):
             nonlocal self
             e_nodes = []
             node = self._nodes_dict[self.output_name_to_node_name[node_ref]]
-            if node.op_type not in to_be_eliminated_op:
+            if node.op_type not in to_be_eliminated_op or _is_origin_inputs(node):
                 return e_nodes
             e_nodes.append(node.name)
             for ipt in node.input_name_list:
@@ -646,3 +660,23 @@ class NodeWeight:
     @property
     def location(self):
         return self._weight_location
+
+
+class NodeOutputShape:
+    """Node output shape and its name."""
+    def __init__(self, node_opt_name, node_name, node_output_shape):
+        self._node_opt_name = node_opt_name
+        self._node_name = node_name
+        self._node_output_shape = node_output_shape
+
+    @property
+    def node_opt_name(self):
+        return self._node_opt_name
+
+    @property
+    def node_name(self):
+        return self._node_name
+
+    @property
+    def node_output_shape(self):
+        return self._node_output_shape
