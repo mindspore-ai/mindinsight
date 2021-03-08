@@ -349,9 +349,8 @@ class NodeStruct:
                         self.fragment.default_var["parameters"][trainable_param_postfix] = declare_statement
                     continue # not a shared weight, skip the rest
 
-                if onnx_name in self._global_context.repeated_weights_declaration.keys():
-                    continue # already declared, skip
-                self._global_context.repeated_weights_declaration[onnx_name] = declare_statement
+                if onnx_name not in self._global_context.repeated_weights_declaration.keys():
+                    self._global_context.repeated_weights_declaration[onnx_name] = declare_statement
 
                 # set template to mapper parameter rewritten.
                 shared_w_var_in_parent = self._get_shared_weight_var_names_from_parent(onnx_name=onnx_name)
