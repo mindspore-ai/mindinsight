@@ -506,6 +506,9 @@ class OnnxDataLoader:
         """Parse ONNX Graph Info For usage in generator."""
         graph_inputs = [inp.name for inp in self.graph.input]
         graph_outputs = [out.name for out in self.graph.output]
+        for output_node in self.output_nodes:
+            if output_node not in graph_outputs:
+                raise ValueError(f"Unexpected Node {output_node} detected which should not be a graph output.")
         self._global_context.onnx_graph_info['graph_inputs'] = graph_inputs
         self._global_context.onnx_graph_info['graph_outputs'] = graph_outputs
 

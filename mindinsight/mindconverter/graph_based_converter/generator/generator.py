@@ -137,7 +137,7 @@ class CodeStruct:
         self.new_line = f"{NEW_LINE * 2}"
 
         # define header of construct block
-        inputs = ['self'] + list(md_struct.construct_header_x.keys())
+        inputs = ['self'] + list(md_struct.inputs_register.values())
         self.new_line = f"{FIRST_LEVEL_INDENT}def construct({', '.join(inputs)}):"
         # add construct code lines to code line list.
         self.code_line_list += cons_lines

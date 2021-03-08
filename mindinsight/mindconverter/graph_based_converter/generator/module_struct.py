@@ -79,7 +79,7 @@ class ModuleStruct:
         self.rapid_reference = dict()
 
         # new vars for matcher
-        self.inputs_register = dict() # reg by sub
+        self.inputs_register = OrderedDict() # reg by sub
         self.outputs_register = OrderedDict() # reg by sub
         self.internal_outputs_collection = dict() # reg by sub
 
