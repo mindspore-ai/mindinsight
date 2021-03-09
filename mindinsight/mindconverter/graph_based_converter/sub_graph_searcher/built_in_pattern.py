@@ -175,11 +175,37 @@ def _multi_head_attention_with_einsum():
     ]
 
 
+@register_pattern("Multi-Head-Attention-TF", 2, 1)
+@register_module_name("MultiHeadAttn", 2, 1)
+def _multi_head_attention_tf():
+    return [
+        "MatMul", "Reshape", "Transpose", "MatMul", "Reshape", "Transpose",
+        "MatMul", "Reshape", "Transpose", "MatMul",
+        "Mul", "Add", "Softmax", "MatMul", "Transpose", "Reshape", "MatMul"
+    ]
+
+
 @register_pattern("Layer-Normalization", 1, 1)
 @register_module_name("LayerNorm", 1, 1)
 def _layer_norm():
     return [
         "ReduceMean", "Sub", "Pow", "ReduceMean", "Add", "Sqrt", "Div", "Mul", "Add"
+    ]
+
+
+@register_pattern("Layer-Normalization-TF", 1, 1)
+@register_module_name("LayerNorm", 1, 1)
+def _layer_norm_tf():
+    return [
+        "ReduceMean", "Sub", "Mul", "ReduceMean", "Add", "Sqrt", "Reciprocal", "Mul", "Mul", "Neg", "Mul", "Add"
+    ]
+
+
+@register_pattern("Feed-Forward-Network-TF", 1, 1)
+@register_module_name("FFN", 1, 1)
+def _ffn_tf():
+    return [
+        "MatMul", "Pow", "Mul", "Add", "Mul", "Tanh", "Add", "Mul", "Mul", "MatMul"
     ]
 
 

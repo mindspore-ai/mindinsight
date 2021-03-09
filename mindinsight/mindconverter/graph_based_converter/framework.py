@@ -26,7 +26,7 @@ from mindinsight.mindconverter.graph_based_converter.common.global_context impor
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, onnx_satisfied, \
     save_code_file_and_report, get_framework_type, check_dependency_integrity, get_third_part_lib_validation_error_info
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
-    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER, ONNXOPTIMIZER_MAX_VER, TORCH_MIN_VER
+    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER, TORCH_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
@@ -34,8 +34,6 @@ from mindinsight.mindconverter.common.exceptions import GraphInitError, TreeCrea
     BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError, \
     BadParamError
 from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
-
-
 
 check_common_dependency_integrity = partial(check_dependency_integrity,
                                             "onnx", "onnxruntime", "onnxoptimizer")
@@ -51,7 +49,7 @@ def onnx_lib_version_satisfied():
                             ONNXRUNTIME_MIN_VER, ort.__version__)
 
     if not lib_version_satisfied(getattr(onnx, "__version__"), ONNX_MIN_VER) \
-            or not lib_version_satisfied(getattr(optimizer, "version"), ONNXOPTIMIZER_MIN_VER, ONNXOPTIMIZER_MAX_VER):
+            or not lib_version_satisfied(getattr(optimizer, "version"), ONNXOPTIMIZER_MIN_VER):
         return False
     return True
 
