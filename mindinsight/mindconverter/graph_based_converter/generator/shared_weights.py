@@ -13,10 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 """Module rocessing for shared weights."""
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.generator.node_struct import NodeStruct
 from mindinsight.mindconverter.graph_based_converter.generator.module_struct import ModuleStruct
-
 
 class SharedWeightHelper:
     """Helper function to process shared weights."""
@@ -61,6 +61,9 @@ class SharedWeightHelper:
             share_weight_name (str): The onnx name of the shared weights.
             pub_module_identifier (list): The identifier of the public module the shared weight in.
         """
+        if not node.fragment.default_var.get(ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value):
+            # No weight shared operator, skip
+            return
         parent_module = node.parent_module_struct
         exit_flag = False
         while True:

@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-from mindinsight.mindconverter.graph_based_converter.common.utils import reset_init_or_construct
 from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
@@ -37,17 +36,41 @@ class ReduceMeanMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
-        template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
-            **kwargs)
+        op = kwargs.get("operation")
+        args = kwargs.get("converted_params")
         raw_params = kwargs.get("raw_params")
         if raw_params.get('axes'):
             axis = raw_params['axes'][0] if len(raw_params['axes']) == 1 else tuple(raw_params['axes'])
         else:
             axis = tuple()
         variable_slot = "var_0"
-        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
-                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, {axis})"
-        template = reset_init_or_construct(template, variable_slot, [construct_template],
-                                           TemplateKeywords.CONSTRUCT.value)
+        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
 
+        args["axis"] = axis
+        init_tensor = f"self.{{{variable_slot}}}_axis = {{axis}}"
+
+        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
+                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, " \
+                             f"self.{{{variable_slot}}}_axis)"
+
+        template = {
+            variable_slot: {
+                TemplateKeywords.INIT.value: [init_template, init_tensor],
+                TemplateKeywords.CONSTRUCT.value: [construct_template]
+            }
+        }
+        exchange_msg = {
+            variable_slot: {
+                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
+                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
+                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
+                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
+                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
+                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
+                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: [],
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: {}
+            }
+        }
+        outputs_list = [f"opt_{{{variable_slot}}}"]
+        outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping
