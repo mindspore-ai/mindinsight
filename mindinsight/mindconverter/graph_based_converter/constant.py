@@ -139,7 +139,7 @@ THIRD_PART_VERSION = {
     "torch": (TORCH_MIN_VER,),
     "onnx": (ONNX_MIN_VER,),
     "onnxruntime": (ONNXRUNTIME_MIN_VER,),
-    "onnxoptimizer": (ONNXOPTIMIZER_MIN_VER, ONNXOPTIMIZER_MAX_VER),
+    "onnxoptimizer": (ONNXOPTIMIZER_MIN_VER,),
     "tf2onnx": (TF2ONNX_MIN_VER,)
 }
 
