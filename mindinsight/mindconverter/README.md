@@ -384,8 +384,10 @@ For users using MindConverter, in addition to install the TensorFlow or PyTorch 
 onnx>=1.8.0
 tf2onnx>=1.7.1
 onnxruntime>=1.5.2
-onnxoptimizer==0.1.2
+onnxoptimizer>=0.1.2
 ```
+
+For some models, if the onnx or tf2onnx error message appears during the conversion process, please try to upgrade the onnx or tf2onnx in the environment to the latest version.
 
 ## Frequently asked questions
 
