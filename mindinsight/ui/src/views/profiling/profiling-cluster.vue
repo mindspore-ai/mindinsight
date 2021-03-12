@@ -191,16 +191,16 @@ export default {
       tableData: [], // table data
       initOver: false, // init over
       pageSizes: [10, 20, 50],
-      group_condition: {
+      group_condition: { // page setting
         offset: 0,
         limit: 10,
       },
-      sort_condition: {
+      sort_condition: { // sort setting
         name: 'iteration_interval',
         type: 'descending',
       },
       totalCount: 0,
-      step: {
+      step: { // step info
         maxStep: '',
         filterStep: '',
         showStep: '',
@@ -322,16 +322,19 @@ export default {
       this.chartOption.dataset = {
         dimensions: ['rankID'].concat(Object.values(this.stepInfoCol)),
         source: this.chartData,
-      },
-      this.chartOption.dataZoom = this.chartData.length > 25 // show bar numbers as default
-            ? [
-              {
-                show: true,
-                startValue: 0,
-                endValue: 25,
-              },
-            ]
-            : [],
+      };
+      const endValue = this.chartData.length > 25 ? 25 : this.chartData.length; // show bar numbers as default
+      this.chartOption.dataZoom = [
+        {
+          startValue: 0,
+          endValue: endValue,
+        },
+        {
+          startValue: 0,
+          endValue: endValue,
+          type: 'inside',
+        },
+      ];
       this.$nextTick(()=> {
         if (!this.chartObj) {
           this.chartObj = echarts.init(this.$refs.clusterChart, null);
@@ -402,7 +405,7 @@ export default {
         type: column.order,
       };
       this.group_condition.offset = 0;
-      this.queryStepTraceInfo(false, false);
+      this.queryStepTraceInfo(true, false);
     },
     /**
      *  filter step to overview
