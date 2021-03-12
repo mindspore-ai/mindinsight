@@ -395,8 +395,10 @@ install）如下依赖库（PyTorch模型脚本转MindSpore的用户无需安装
 onnx>=1.8.0
 tf2onnx>=1.7.1
 onnxruntime>=1.5.2
-onnxoptimizer==0.1.2
+onnxoptimizer>=0.1.2
 ```
+
+对于个别模型，若在转换过程中出现onnx或tf2onnx错误信息，请尝试更新环境中onnx或tf2onnx至最新版本。
 
 ## 常见问题
 
