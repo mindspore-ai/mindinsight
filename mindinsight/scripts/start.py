@@ -236,6 +236,7 @@ class Command(BaseCommand):
             sys.exit(1)
 
         self.console.info('Workspace: %s', os.path.realpath(settings.WORKSPACE))
+        self.console.info('Summary base dir: %s', os.path.realpath(settings.SUMMARY_BASE_DIR))
 
         run_module = import_module('mindinsight.backend.run')
         run_module.start()
