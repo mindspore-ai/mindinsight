@@ -215,7 +215,7 @@ if __name__ == '__main__':
         python_requires='>=3.7',
         install_requires=get_install_requires(),
         classifiers=[
-            'Development Status :: 4 - Beta',
+            'Development Status :: 5 - Production/Stable',
             'Environment :: Console',
             'Environment :: Web Environment',
             'Intended Audience :: Science/Research',
