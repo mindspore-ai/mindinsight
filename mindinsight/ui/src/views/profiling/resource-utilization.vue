@@ -160,7 +160,7 @@ export default {
             },
           ],
           grid: {
-            left: 40,
+            left: 60,
             top: 40,
             right: 70,
             bottom: 60,

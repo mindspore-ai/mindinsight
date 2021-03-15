@@ -21,60 +21,62 @@ limitations under the License.
           {{$t("profiling.memory.memoryDetailLink")}}
         </div>
       </div>
-      <div class="top-content">
-        <div class="title-item">
-          {{$t('profiling.memory.overView')}}
+      <div class="main-content">
+        <div class="top-content"
+             :class="tableFullScreen?'full-screen':''">
+          <div class="title-item">
+            {{$t('profiling.memory.overView')}}
+          </div>
+          <div class="content-item">
+            <div class="detail-item">
+              <div class="value-item">{{overViewData.currentCard}}</div>
+              <div class="label-item">{{$t('profiling.memory.currentCard')}}</div>
+            </div>
+            <div class="detail-item">
+              <div class="value-item">{{overViewData.memoryAssign}}</div>
+              <div class="label-item">{{$t('profiling.memory.memoryAssign')}}</div>
+            </div>
+            <div class="detail-item">
+              <div class="value-item">{{overViewData.memoryRelease}}</div>
+              <div class="label-item">{{$t('profiling.memory.memoryRelease')}}</div>
+            </div>
+            <div class="detail-item">
+              <div>
+                <span class="value-item">
+                  {{formmateUnit(overViewData.totalMemory, 1)}}
+                </span>
+                <span class="unit-item">
+                  {{formmateUnit(overViewData.totalMemory, 2)}}
+                </span>
+              </div>
+              <div class="label-item">{{$t('profiling.memory.totalMemory')}}</div>
+            </div>
+            <div class="detail-item">
+              <div>
+                <span class="value-item">
+                  {{formmateUnit(overViewData.staticMemory, 1)}}
+                </span>
+                <span class="unit-item">
+                  {{formmateUnit(overViewData.staticMemory, 2)}}
+                </span>
+              </div>
+              <div class="label-item">{{$t('profiling.memory.staticMenory')}}</div>
+            </div>
+            <div class="detail-item">
+              <div>
+                <span class="value-item">
+                  {{formmateUnit(overViewData.memoryPeak, 1)}}
+                </span>
+                <span class="unit-item">
+                  {{formmateUnit(overViewData.memoryPeak, 2)}}
+                </span>
+              </div>
+              <div class="label-item">{{$t('profiling.memory.memoryPeak')}}</div>
+            </div>
+          </div>
         </div>
-        <div class="content-item">
-          <div class="detail-item">
-            <div class="value-item">{{overViewData.currentCard}}</div>
-            <div class="label-item">{{$t('profiling.memory.currentCard')}}</div>
-          </div>
-          <div class="detail-item">
-            <div class="value-item">{{overViewData.memoryAssign}}</div>
-            <div class="label-item">{{$t('profiling.memory.memoryAssign')}}</div>
-          </div>
-          <div class="detail-item">
-            <div class="value-item">{{overViewData.memoryRelease}}</div>
-            <div class="label-item">{{$t('profiling.memory.memoryRelease')}}</div>
-          </div>
-          <div class="detail-item">
-            <div>
-              <span class="value-item">
-                {{formmateUnit(overViewData.totalMemory, 1)}}
-              </span>
-              <span class="unit-item">
-                {{formmateUnit(overViewData.totalMemory, 2)}}
-              </span>
-            </div>
-            <div class="label-item">{{$t('profiling.memory.totalMemory')}}</div>
-          </div>
-          <div class="detail-item">
-            <div>
-              <span class="value-item">
-                {{formmateUnit(overViewData.staticMemory, 1)}}
-              </span>
-              <span class="unit-item">
-                {{formmateUnit(overViewData.staticMemory, 2)}}
-              </span>
-            </div>
-            <div class="label-item">{{$t('profiling.memory.staticMenory')}}</div>
-          </div>
-          <div class="detail-item">
-            <div>
-              <span class="value-item">
-                {{formmateUnit(overViewData.memoryPeak, 1)}}
-              </span>
-              <span class="unit-item">
-                {{formmateUnit(overViewData.memoryPeak, 2)}}
-              </span>
-            </div>
-            <div class="label-item">{{$t('profiling.memory.memoryPeak')}}</div>
-          </div>
-        </div>
-      </div>
-      <div class="bottom-content">
-        <div class="chart-container">
+        <div class="chart-container"
+             :class="tableFullScreen?'full-screen':''">
           <div class="title-item">
             {{$t('profiling.memory.usedMemory')}}
           </div>
@@ -82,8 +84,7 @@ limitations under the License.
                v-show="!graphicsInitOver || noGraphicsDataFlag">
             <div class="noData-content">
               <div>
-                <img :src="require('@/assets/images/nodata.png')"
-                     alt="" />
+                <img :src="require('@/assets/images/nodata.png')" />
               </div>
               <div v-if="graphicsInitOver && noGraphicsDataFlag"
                    class="noData-text">{{$t("public.noData")}}</div>
@@ -95,9 +96,16 @@ limitations under the License.
                v-show="!noGraphicsDataFlag && graphicsInitOver"
                ref="memoryChart"></div>
         </div>
-        <div class="table-container">
+        <div class="table-container"
+             :class="tableFullScreen?'full-screen':''">
           <div class="title-item">
-            {{$t('profiling.memory.operatorMemoryAssign')}}
+            <span>
+              {{$t('profiling.memory.operatorMemoryAssign')}}
+            </span>
+            <img src="../../assets/images/full-screen.png"
+                 :title="$t('graph.fullScreen')"
+                 class="fullScreen-icon"
+                 @click="toggleFullScreen">
           </div>
           <div class="table-content">
             <el-table :data="currentBreakdownsData"
@@ -105,7 +113,8 @@ limitations under the License.
                       height="100%"
                       tooltip-effect="light"
                       :empty-text="breakdownsInitOver ? $t('public.noData') : $t('public.dataLoading')">
-              <el-table-column prop="name" sortable>
+              <el-table-column prop="name"
+                               sortable>
                 <template slot="header">
                   <span :title="$t('profiling.memory.tensorName')">
                     {{$t('profiling.memory.tensorName')}}
@@ -115,7 +124,8 @@ limitations under the License.
                   <div class="cell">{{scope.row.name}}</div>
                 </template>
               </el-table-column>
-              <el-table-column prop="size" sortable>
+              <el-table-column prop="size"
+                               sortable>
                 <template slot="header">
                   <span :title="$t('profiling.memory.totalTensorMemoryAssign')">
                     {{$t('profiling.memory.totalTensorMemoryAssign')}}
@@ -221,6 +231,7 @@ export default {
       curGraphId: '', // ID of the current graphics
       breakdownsInitOver: false, // BreakDown data request complete
       firstInit: true, // First init of page
+      tableFullScreen: false, // Table show full screen
     };
   },
   watch: {
@@ -395,32 +406,35 @@ export default {
         node_id: tempNodeData.node_id,
       };
       const tempSelectedPointIndex = this.curSelectedPointIndex;
-      RequestService.queryMemoryBreakdowns(params).then((res) => {
-        if (tempSelectedPointIndex !== this.curSelectedPointIndex) {
-          return;
-        }
-        this.breakdownsInitOver = true;
-        if (!res || !res.data || !res.data.breakdowns) {
-          this.currentBreakdownsData = [];
-          return;
-        }
-        const tempBreakdowns = res.data.breakdowns;
-        const breakdownData = [];
-        tempBreakdowns.forEach((breakdown) => {
-          breakdownData.push({
-            name: breakdown.tensor_name,
-            size: breakdown.size,
-            type: breakdown.type,
-            dataType: breakdown.data_type,
-            shape: breakdown.shape,
-            format: breakdown.format,
-            lifeCycle: `[${breakdown.life_start}, ${breakdown.life_end}]`,
-          });
-        });
-        this.currentBreakdownsData = breakdownData;
-      }, () => {
-        this.breakdownsInitOver = true;
-      });
+      RequestService.queryMemoryBreakdowns(params).then(
+          (res) => {
+            if (tempSelectedPointIndex !== this.curSelectedPointIndex) {
+              return;
+            }
+            this.breakdownsInitOver = true;
+            if (!res || !res.data || !res.data.breakdowns) {
+              this.currentBreakdownsData = [];
+              return;
+            }
+            const tempBreakdowns = res.data.breakdowns;
+            const breakdownData = [];
+            tempBreakdowns.forEach((breakdown) => {
+              breakdownData.push({
+                name: breakdown.tensor_name,
+                size: breakdown.size,
+                type: breakdown.type,
+                dataType: breakdown.data_type,
+                shape: breakdown.shape,
+                format: breakdown.format,
+                lifeCycle: `[${breakdown.life_start}, ${breakdown.life_end}]`,
+              });
+            });
+            this.currentBreakdownsData = breakdownData;
+          },
+          () => {
+            this.breakdownsInitOver = true;
+          },
+      );
     },
     /**
      * Sorting chart data
@@ -710,9 +724,22 @@ export default {
       } else if (type === 2) {
         resultStr = `${this.unitList[utilIndex]}`;
       } else {
-        resultStr = `${Number(baseNumber.toFixed(fixedLimit))} ${this.unitList[utilIndex]}`;
+        resultStr = `${Number(baseNumber.toFixed(fixedLimit))} ${
+          this.unitList[utilIndex]
+        }`;
       }
       return resultStr;
+    },
+    /**
+     * Toggle full screen of table
+     */
+    toggleFullScreen() {
+      this.tableFullScreen = !this.tableFullScreen;
+      if (!this.tableFullScreen) {
+        this.$nextTick(() => {
+          this.resizeCallback();
+        });
+      }
     },
   },
   mounted() {
@@ -747,6 +774,16 @@ export default {
   padding-left: 24px;
   display: flex;
 }
+.cl-memory-detail .top-content.full-screen {
+  display: none;
+}
+.cl-memory-detail .chart-container.full-screen {
+  display: none;
+}
+.cl-memory-detail .table-container.full-screen {
+  margin-top: 0;
+  height: 100%;
+}
 .cl-memory-detail .memory-bk {
   width: 100%;
   height: 100%;
@@ -771,6 +808,11 @@ export default {
   display: flex;
   height: calc(100% - 21px);
   width: 100%;
+}
+
+.cl-memory-detail .main-content {
+  height: calc(100% - 44px);
+  overflow-y: auto;
 }
 
 .cl-memory-detail .noData-content {
@@ -806,14 +848,8 @@ export default {
   font-weight: bold;
 }
 
-.cl-memory-detail .bottom-content {
-  height: calc(100% - 201px);
-  margin-top: 20px;
-  padding-left: 4px;
-  overflow: hidden;
-}
-.cl-memory-detail .bottom-content .chart-container,
-.cl-memory-detail .bottom-content .table-container {
+.cl-memory-detail .chart-container,
+.cl-memory-detail .table-container {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -821,17 +857,25 @@ export default {
   border-radius: 4px;
   padding: 20px 24px;
 }
-.cl-memory-detail .bottom-content .chart-container .chart-content,
-.cl-memory-detail .bottom-content .table-container .table-content {
+.cl-memory-detail .table-container .fullScreen-icon {
+  float: right;
+  margin-top: 2px;
+  cursor: pointer;
+}
+.cl-memory-detail .chart-container .chart-content,
+.cl-memory-detail .table-container .table-content {
   margin-top: 16px;
   height: calc(100% - 37px);
 }
-.cl-memory-detail .bottom-content .chart-container {
-  height: calc(60% - 20px);
-}
-.cl-memory-detail .bottom-content .table-container {
+.cl-memory-detail .chart-container {
+  height: calc(60% - 106px);
   margin-top: 20px;
-  height: 40%;
+  min-height: 280px;
+}
+.cl-memory-detail .table-container {
+  margin-top: 20px;
+  height: calc(40% - 71px);
+  min-height: 160px;
 }
 .cl-memory-detail .title-item {
   font-size: 16px;
