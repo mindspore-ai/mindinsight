@@ -44,7 +44,7 @@ class MatcherHelper:
             else:
                 regular = f"{regular}_"
         if not regular[0].isalpha():
-            regular = f"input_{regular}"
+            regular = f"auto_legalized__{regular}"
         return regular
 
     @staticmethod

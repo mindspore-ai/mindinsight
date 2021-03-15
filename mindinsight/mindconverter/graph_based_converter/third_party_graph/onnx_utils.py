@@ -509,7 +509,10 @@ class OnnxDataLoader:
         for output_node in self.output_nodes:
             if output_node not in graph_outputs:
                 raise ValueError(f"Unexpected Node {output_node} detected which should not be a graph output.")
-        self._global_context.onnx_graph_info['graph_inputs'] = graph_inputs
+        for graph_inp in graph_inputs:
+            if graph_inp not in self.input_nodes.keys():
+                raise ValueError(f"{graph_inp} is one of the graph inputs but user does not provide it.")
+        self._global_context.onnx_graph_info['graph_inputs'] = self.input_nodes.keys()
         self._global_context.onnx_graph_info['graph_outputs'] = graph_outputs
 
     def initialize(self):
