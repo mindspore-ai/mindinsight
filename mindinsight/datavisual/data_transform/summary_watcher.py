@@ -85,6 +85,9 @@ class SummaryWatcher:
             logger.error('Path of summary base directory is not accessible.')
             raise FileSystemPermissionError('Path of summary base directory is not accessible.')
 
+        # sort in ascending order according to modification time.
+        entries = [entry for entry in entries if not entry.is_symlink()]
+        entries = sorted(entries, key=lambda x: x.stat().st_mtime)
         for entry in entries:
             if len(summary_dict) == self.MAX_SUMMARY_DIR_COUNT:
                 break
@@ -127,7 +130,6 @@ class SummaryWatcher:
             entry_name (str): Name of entry.
             counter (Counter): An instance of CountLimiter.
             list_explain (bool): Indicates whether to list only the mindexplain folder.
-
         """
         try:
             subdir_entries = os.scandir(entry_path)
@@ -135,6 +137,9 @@ class SummaryWatcher:
             logger.warning('Path of %s under summary base directory is not accessible.', entry_name)
             return
 
+        # sort in ascending order according to modification time.
+        subdir_entries = [subdir_entry for subdir_entry in subdir_entries if not subdir_entry.is_symlink()]
+        subdir_entries = sorted(subdir_entries, key=lambda x: x.stat().st_mtime)
         for subdir_entry in subdir_entries:
             if len(summary_dict) == self.MAX_SUMMARY_DIR_COUNT:
                 break
@@ -200,7 +205,6 @@ class SummaryWatcher:
 
         ctime = datetime.datetime.fromtimestamp(stat.st_ctime).astimezone()
         mtime = datetime.datetime.fromtimestamp(stat.st_mtime).astimezone()
-
         if entry.is_file():
             summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
             pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)

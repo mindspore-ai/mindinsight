@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ from collections import OrderedDict
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
 from mindinsight.profiler.proposer.allproposers.base_proposer import Proposer
+from mindinsight.profiler.common.log import logger as log
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerRawFileException, ProfilerFileNotFoundException
 
 
 class MinddataProposer(Proposer):
@@ -96,11 +98,13 @@ class MinddataProposer(Proposer):
         minddata_cpu_utilization = OrderedDict()
         minddata_cpu_utilization_analyser = AnalyserFactory.instance().get_analyser(
             'minddata_cpu_utilization', self.profiling_path, self.device_id)
-        result = minddata_cpu_utilization_analyser.query()
-        idle_utilization_avg = result.get("device_info").get("idle_utilization").get("avg_value")
-        # The maximum value of this cpu_activate_utilization_avg is 100%.
-        cpu_activate_utilization_avg = 100 - idle_utilization_avg
-        cpu_activate_utilization_threshold = 80
-        if cpu_activate_utilization_avg > cpu_activate_utilization_threshold:
-            minddata_cpu_utilization["minddata_cpu_utilization"] = [cpu_activate_utilization_avg]
-            self.__proposal_dict.update(minddata_cpu_utilization)
+        try:
+            idle_utilization_avg = minddata_cpu_utilization_analyser.get_idle_utilization_avg()
+            # The maximum value of this cpu_activate_utilization_avg is 100%.
+            cpu_activate_utilization_avg = 100 - idle_utilization_avg
+            cpu_activate_utilization_threshold = 80
+            if cpu_activate_utilization_avg > cpu_activate_utilization_threshold:
+                minddata_cpu_utilization["minddata_cpu_utilization"] = [cpu_activate_utilization_avg]
+                self.__proposal_dict.update(minddata_cpu_utilization)
+        except (ProfilerRawFileException, ProfilerFileNotFoundException) as err:
+            log.exception(err)
