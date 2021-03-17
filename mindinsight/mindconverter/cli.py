@@ -459,9 +459,7 @@ def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report
                 for file in files:
                     files_config['in_files'].append(os.path.join(root_dir, file))
         main(files_config)
-        log_console.info("\n")
         log_console.info("MindConverter: conversion is completed.")
-        log_console.info("\n")
 
     elif model_file:
         file_config = {
@@ -478,14 +476,10 @@ def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report
                 sys.path.append(project_path)
 
         main_graph_base_converter(file_config)
-        log_console.info("\n")
         log_console.info("MindConverter: conversion is completed.")
-        log_console.info("\n")
     else:
         error_msg = "`--in_file` and `--model_file` should be set at least one."
         error = FileNotFoundError(error_msg)
         log.error(str(error))
-        log_console.error("\n")
-        log_console.error("mindconverter: error: %s", str(error))
-        log_console.error("\n")
+        log_console.error(f"mindconverter: error: {str(error)}")
         sys.exit(-1)

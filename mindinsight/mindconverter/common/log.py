@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,35 @@
 # limitations under the License.
 # ============================================================================
 """Create a logger."""
+__all__ = ["logger", "logger_console"]
+
 from mindinsight.utils.log import setup_logger
 
 logger = setup_logger("mindconverter", "mindconverter", console=False)
-logger_console = setup_logger("mindconverter", "mindconverter", console=True,
-                              sub_log_name="logger_console", formatter="%(message)s")
+
+
+class MindConverterLogger:
+    """MindConverter logger for stdout."""
+
+    def __init__(self):
+        self.logger = setup_logger("mindconverter", "mindconverter", console=True,
+                                   sub_log_name="logger_console", formatter="%(message)s")
+
+    def warning(self, msg):
+        """Log warning message to stdout."""
+        self.logger.warning("[WARNING] MINDCONVERTER: %s", msg)
+
+    def info(self, msg):
+        """Log info level message to stdout."""
+        self.logger.info("\n")
+        self.logger.info("[INFO] MINDCONVERTER: %s", msg)
+        self.logger.info("\n")
+
+    def error(self, msg):
+        """Log error level message to stdout."""
+        self.logger.error("\n")
+        self.logger.error("[ERROR] MINDCONVERTER: %s", msg)
+        self.logger.error("\n")
+
+
+logger_console = MindConverterLogger()
