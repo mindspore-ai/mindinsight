@@ -168,9 +168,6 @@ export default {
           },
           axisLabel: {
             color: '#9EA4B3',
-            formatter: (value) => {
-              return value.toExponential(4);
-            },
           },
           splitLine: {
             lineStyle: {
