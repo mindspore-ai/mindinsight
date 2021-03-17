@@ -438,6 +438,7 @@
       "content11": "- Device(AI CPU or AI core) to which an operator is allocated for execution.",
       "content12": "- Flow tiling policy of MindSpore on the network.",
       "content13": "- Execution sequence and duration of an operator on a device.",
+      "content14": "- Scope Name of Operator. For example, the full name of one operator is `Default/network/lenet5/Conv2D-op11`, the first scope of this operator is `Default`, the second scope is `network`. ",
       "title2": "How to view the timeline details?",
       "content21": {
         "part1": "Click ",
@@ -520,7 +521,8 @@
       "fpStart": "Forward",
       "bpEnd": "Backward"
     },
-    "isHeterogeneous": "Heterogeneous training scenarios are not supported temporarily."
+    "isHeterogeneous": "Heterogeneous training scenarios are not supported temporarily.",
+    "scopeNameNum": "ScopeName Layer Counts: "
   },
   "profilingGPU": {
     "minddata_get_next_queue": {

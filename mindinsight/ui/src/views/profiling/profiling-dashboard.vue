@@ -329,6 +329,7 @@ limitations under the License.
                   <div>{{$t("profiling.timelineTips.content11")}}</div>
                   <div>{{$t("profiling.timelineTips.content12")}}</div>
                   <div>{{$t("profiling.timelineTips.content13")}}</div>
+                  <div>{{$t("profiling.timelineTips.content14")}}</div>
                   <br>
                   <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
                   <div>
@@ -359,6 +360,20 @@ limitations under the License.
         <!-- Time line detail -->
         <div class="timeline-info"
              v-if="!timelineInfo.noData">
+          <div class="info-line">
+            <span>{{$t('profiling.scopeNameNum')}}</span><span>
+              <el-select v-model="timelineInfo.scopeNameNum"
+                         :placeholder="$t('public.select')"
+                         class="scope-name"
+                         @change="queryTimeline">
+                <el-option v-for="item in timelineInfo.scopeNameNumArr"
+                           :key="item.value"
+                           :label="item.label"
+                           :value="item.value">
+                </el-option>
+              </el-select>
+            </span>
+          </div>
           <div class="info-line">
             <span>{{$t('profiling.opTotalTime')}}</span><span>{{timelineInfo.totalTime}}ms</span>
           </div>
@@ -446,7 +461,7 @@ export default {
       timeLine: {
         // Time line data
         data: null,
-        waiting: true, // Is it waiting for interface return
+        waiting: false, // Is it waiting for interface return
         disable: true,
       },
       timelineInfo: {
@@ -457,6 +472,8 @@ export default {
         opTimes: 0, // Operator time consuming
         noData: true,
         initOver: false, // Is initialization complete
+        scopeNameNum: '',
+        scopeNameNumArr: [],
       },
       processSummary: {
         // Data of process summary
@@ -497,24 +514,17 @@ export default {
           this.processSummary.initOver = true;
           this.timeLine.waiting = false;
         }
-        if (
-          newValue.query.dir &&
-          newValue.query.id &&
-          newValue.query.path &&
-          newValue.curCardNum
-        ) {
+        if (newValue.query.dir && newValue.query.id && newValue.query.path && newValue.curCardNum) {
           this.summaryPath = newValue.query.dir;
           this.trainingJobId = newValue.query.id;
           this.relativePath = newValue.query.path;
           this.currentCard = newValue.curCardNum;
           if (this.trainingJobId) {
-            document.title = `${decodeURIComponent(
-                this.trainingJobId,
-            )}-${this.$t('profiling.profilingDashboard')}-MindInsight`;
-          } else {
-            document.title = `${this.$t(
+            document.title = `${decodeURIComponent(this.trainingJobId)}-${this.$t(
                 'profiling.profilingDashboard',
             )}-MindInsight`;
+          } else {
+            document.title = `${this.$t('profiling.profilingDashboard')}-MindInsight`;
           }
           this.svg.initOver = false;
           this.pieChart.initOver = false;
@@ -532,7 +542,7 @@ export default {
      * Initialization function
      */
     init() {
-      this.queryTimeline();
+      this.queryTimelineInfo();
       this.queryTrainingTrace();
       this.getProccessSummary();
       this.initPieChart();
@@ -667,15 +677,13 @@ export default {
                 });
                 this.setPieOption();
                 this.pieChart.noData = !!!this.pieChart.data.length;
-                this.pieChart.topN = this.pieChart.data
-                    .slice(0, Math.min(this.pieChart.data.length, 5))
-                    .map((i) => {
-                      return {
-                        name: i.name,
-                        time: i.value,
-                        frequency: i.frequency,
-                      };
-                    });
+                this.pieChart.topN = this.pieChart.data.slice(0, Math.min(this.pieChart.data.length, 5)).map((i) => {
+                  return {
+                    name: i.name,
+                    time: i.value,
+                    frequency: i.frequency,
+                  };
+                });
               }
             }
           })
@@ -707,9 +715,7 @@ export default {
               this.svg.noData = false;
               this.removeTrace();
               this.$nextTick(() => {
-                this.packageTraceData(
-                    JSON.parse(JSON.stringify(res.data.training_trace_graph)),
-                );
+                this.packageTraceData(JSON.parse(JSON.stringify(res.data.training_trace_graph)));
               });
 
               // Set the display information in tip
@@ -841,10 +847,7 @@ export default {
      * @return {Object} Generated DOM object
      */
     createMultipleRowContainer(item) {
-      const rectContainer = document.createElementNS(
-          this.svg.namespaceURI,
-          'g',
-      );
+      const rectContainer = document.createElementNS(this.svg.namespaceURI, 'g');
       rectContainer.setAttribute('class', 'container');
 
       const rect = document.createElementNS(this.svg.namespaceURI, 'rect');
@@ -855,10 +858,7 @@ export default {
       rect.setAttribute('style', 'fill:#edf0f5;stroke:#E2E2E2;stroke-width:1');
       rectContainer.appendChild(rect);
 
-      const temp = this.createRowContainer(
-          item.data,
-          item.startY + this.svg.rowPadding,
-      );
+      const temp = this.createRowContainer(item.data, item.startY + this.svg.rowPadding);
       rectContainer.appendChild(temp);
       return rectContainer;
     },
@@ -872,10 +872,7 @@ export default {
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
 
       data.forEach((row, index) => {
-        const y =
-          startY +
-          this.svg.rowPadding +
-          index * (this.svg.cellPadding + this.svg.cellHeight);
+        const y = startY + this.svg.rowPadding + index * (this.svg.cellPadding + this.svg.cellHeight);
         row.forEach((i) => {
           if (i.duration) {
             let temp;
@@ -899,18 +896,11 @@ export default {
      */
     createRect(data, startY) {
       const color =
-        data.name && this.svg.colors[data.name]
-          ? this.svg.colors[data.name]
-          : this.svg.colors.stream_parallel;
+        data.name && this.svg.colors[data.name] ? this.svg.colors[data.name] : this.svg.colors.stream_parallel;
       // Start x position of box
-      const x1 =
-        (data.start / this.svg.totalTime) * this.svg.totalWidth +
-        this.svg.svgPadding;
+      const x1 = (data.start / this.svg.totalTime) * this.svg.totalWidth + this.svg.svgPadding;
       // The width of the box
-      const width = Math.max(
-          this.svg.minWidth,
-          (data.duration / this.svg.totalTime) * this.svg.totalWidth,
-      );
+      const width = Math.max(this.svg.minWidth, (data.duration / this.svg.totalTime) * this.svg.totalWidth);
 
       // Contents of the box
       let name = '';
@@ -946,20 +936,14 @@ export default {
       rect.setAttribute('width', width);
       rect.setAttribute('style', `fill:${color[1]};stroke:${color[0]};`);
 
-      const foreignObject = document.createElementNS(
-          this.svg.namespaceURI,
-          'foreignObject',
-      );
+      const foreignObject = document.createElementNS(this.svg.namespaceURI, 'foreignObject');
       foreignObject.textContent = textContent;
       foreignObject.setAttribute(
           'x',
         normalSize
           ? x1
           : Math.min(
-              this.svg.svgPadding * 2 +
-                this.svg.totalWidth -
-                textWidth -
-                this.svg.textMargin,
+              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth - this.svg.textMargin,
               Math.max(this.svg.textMargin, x1 + width / 2 - textWidth / 2),
           ),
       );
@@ -968,10 +952,7 @@ export default {
       foreignObject.setAttribute('height', this.svg.cellHeight);
       foreignObject.setAttribute('width', width);
       foreignObject.setAttribute('style', `color:${color[0]}`);
-      foreignObject.setAttribute(
-          'class',
-          `content${normalSize ? '' : ' content-mini'}`,
-      );
+      foreignObject.setAttribute('class', `content${normalSize ? '' : ' content-mini'}`);
 
       const title = document.createElementNS(this.svg.namespaceURI, 'title');
       title.textContent = textContent;
@@ -989,9 +970,7 @@ export default {
      */
     createArrow(data, startY) {
       const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
-      const x1 =
-        (data.start / this.svg.totalTime) * this.svg.totalWidth +
-        this.svg.svgPadding;
+      const x1 = (data.start / this.svg.totalTime) * this.svg.totalWidth + this.svg.svgPadding;
       const centerY = startY + this.svg.cellHeight / 2;
 
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
@@ -1013,21 +992,14 @@ export default {
 
       const text = document.createElementNS(this.svg.namespaceURI, 'text');
       text.textContent = `${
-        data.duration === this.svg.totalTime
-          ? this.$t('profiling.approximateTime')
-          : ''
+        data.duration === this.svg.totalTime ? this.$t('profiling.approximateTime') : ''
       }${this.toFixedFun(data.duration, 4)}ms`;
-      const textWidth = text.textContent
-        ? this.getTextWidth(text.textContent)
-        : 0;
+      const textWidth = text.textContent ? this.getTextWidth(text.textContent) : 0;
       // The position of the text cannot go beyond the border of the SVG
       text.setAttribute(
           'x',
           Math.min(
-              this.svg.svgPadding * 2 +
-            this.svg.totalWidth -
-            textWidth -
-            this.svg.textMargin,
+              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth - this.svg.textMargin,
               Math.max(this.svg.textMargin, width / 2 + x1 - textWidth / 2),
           ),
       );
@@ -1101,37 +1073,55 @@ export default {
     /**
      * Query the data of time line
      */
-    queryTimeline() {
-      this.timeLine.waiting = true;
-      this.timeLine.disable = true;
+    queryTimelineInfo() {
       const params = {
         dir: this.relativePath,
         device_id: this.currentCard,
       };
-      RequestService.queryTimlineInfo(params)
+      RequestService.queryTimelineInfo(params)
           .then((res) => {
             this.timelineInfo.initOver = true;
             if (res && res.data) {
               this.timelineInfo.noData = false;
 
               this.timelineInfo.totalTime =
-              this.toFixedFun(res.data.total_time, 4) ||
-              (res.data.total_time === 0 ? 0 : '--');
-              this.timelineInfo.streamNum =
-              res.data.num_of_streams ||
-              (res.data.num_of_streams === 0 ? 0 : '--');
-              this.timelineInfo.opNum =
-              res.data.num_of_ops || (res.data.num_of_ops === 0 ? 0 : '--');
-              this.timelineInfo.opTimes =
-              res.data.op_exe_times || (res.data.op_exe_times === 0 ? 0 : '--');
+              this.toFixedFun(res.data.total_time, 4) || (res.data.total_time === 0 ? 0 : '--');
+              this.timelineInfo.streamNum = res.data.num_of_streams || (res.data.num_of_streams === 0 ? 0 : '--');
+              this.timelineInfo.opNum = res.data.num_of_ops || (res.data.num_of_ops === 0 ? 0 : '--');
+              this.timelineInfo.opTimes = res.data.op_exe_times || (res.data.op_exe_times === 0 ? 0 : '--');
+              if (res.data.max_scope_name_num >= 0) {
+                this.timelineInfo.scopeNameNum = res.data.max_scope_name_num;
+                this.timelineInfo.scopeNameNumArr = Array(res.data.max_scope_name_num + 1)
+                    .fill()
+                    .map((value, key) => {
+                      return {
+                        label: key,
+                        value: key,
+                      };
+                    });
+                this.queryTimeline();
+              } else {
+                this.timeLine.disable = true;
+              }
             } else {
               this.timelineInfo.noData = true;
+              this.timeLine.disable = true;
             }
           })
           .catch(() => {
             this.timelineInfo.noData = true;
             this.timelineInfo.initOver = true;
+            this.timeLine.disable = true;
           });
+    },
+    queryTimeline() {
+      this.timeLine.waiting = true;
+      this.timeLine.disable = true;
+      const params = {
+        dir: this.relativePath,
+        device_id: this.currentCard,
+        scope_name_num: this.timelineInfo.scopeNameNum,
+      };
       RequestService.queryTimeline(params)
           .then((res) => {
             this.timeLine.waiting = false;
@@ -1517,6 +1507,9 @@ export default {
 }
 .pro-router-wrap .pro-router-right .time-line .info-line {
   line-height: 30px;
+}
+.pro-router-wrap .pro-router-right .time-line .info-line .scope-name {
+  width: 100px;
 }
 .pro-router-wrap .op-time-content {
   height: calc(100% - 54px);
