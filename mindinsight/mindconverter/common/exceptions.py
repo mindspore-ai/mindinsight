@@ -140,17 +140,12 @@ class MindConverterException(Exception):
                     if not isinstance(e, MindConverterException):
                         detail_info = cls.normalize_error_msg(str(e))
                     log.error(error)
-                    log_console.error("\n")
                     log_console.error(detail_info)
-                    log_console.error("\n")
                     log.exception(e)
                     sys.exit(0)
                 except ModuleNotFoundError as e:
                     detail_info = "Error detail: Required package not found, please check the runtime environment."
-                    log_console.error("\n")
-                    log_console.error(str(e))
-                    log_console.error(detail_info)
-                    log_console.error("\n")
+                    log_console.error(f"{str(e)}\n{detail_info}")
                     log.exception(e)
                     sys.exit(0)
                 return res

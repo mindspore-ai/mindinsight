@@ -45,8 +45,8 @@ def onnx_lib_version_satisfied():
     ort = import_module("onnxruntime")
     optimizer = import_module("onnxoptimizer.version")
     if not lib_version_satisfied(getattr(ort, "__version__"), ONNXRUNTIME_MIN_VER):
-        log_console.warning("onnxruntime's version should be greater than %s, however current version is %s.",
-                            ONNXRUNTIME_MIN_VER, ort.__version__)
+        log_console.warning(f"onnxruntime's version should be greater than {ONNXRUNTIME_MIN_VER}, "
+                            f"however current version is {ort.__version__}.")
 
     if not lib_version_satisfied(getattr(onnx, "__version__"), ONNX_MIN_VER) \
             or not lib_version_satisfied(getattr(optimizer, "version"), ONNXOPTIMIZER_MIN_VER):
@@ -57,9 +57,7 @@ def onnx_lib_version_satisfied():
 def _print_error(err):
     """Print error to stdout and record it."""
     log.error(err)
-    log_console.error("\n")
     log_console.error(str(err))
-    log_console.error("\n")
 
 
 def torch_version_satisfied(output_queue):
