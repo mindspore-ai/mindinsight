@@ -136,40 +136,7 @@ Some typical image classification networks have been tested for the Graph mode. 
 > 1. The Dropout operator will be lost after conversion because the inference mode is used to load the PyTorch or TensorFlow model. Manually re-implement is necessary.
 > 2. The Graph-based mode will be continuously developed and optimized with further updates.
 
-Supported models list (Models in below table have been tested based on PyTorch 1.5.0 and TensorFlow 1.15.0, X86 Ubuntu released version):
-
-|  Supported Model | PyTorch Script | TensorFlow Script | Comment | PyTorch Weights Converted | TensorFlow Weights Converted |
-| :----: | :----: | :----: | :----: | :----: | :----: |
-| ResNet18 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | TESTED | / |
-| ResNet34 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | TESTED | / |
-| ResNet50 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | TESTED | TESTED |
-| ResNet50V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
-| ResNet101 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | UNTESTED | TESTED |
-| ResNet101V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
-| ResNet152 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | TESTED | TESTED |
-| ResNet152V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
-| Wide ResNet50 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | | TESTED | / |
-| Wide ResNet101 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | | TESTED | / |
-| VGG11/11BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  | TESTED | / |
-| VGG13/13BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  | TESTED | / |
-| VGG16 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg16.py) |  | TESTED | TESTED |
-| VGG16BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  | TESTED | / |
-| VGG19 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/vgg19.py) |  | TESTED | TESTED |
-| VGG19BN | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/vgg.py) | / |  | TESTED | / |
-| AlexNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/alexnet.py) | / |  | TESTED | / |
-| GoogLeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/googlenet.py) | / |  | TESTED | / |
-| Xception | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/xception.py) |  | / | TESTED |
-| InceptionV3 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/inception.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |  | TESTED | TESTED |
-| InceptionResNetV2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  | / | TESTED |
-| MobileNetV1 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  | / | TESTED |
-| MobileNetV2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  | TESTED | TESTED |
-| MNASNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | / | | mnasnet0_5:TESTED mnasnet0_75:UNTESTED mnasnet1_0:TESTED mnasnet1_3:UNTESTED | / |
-| SqueezeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | / | | TESTED | / |
-| DenseNet121/169/201 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  | TESTED | TESTED |
-| DenseNet161 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | / | | TESTED | / |
-| NASNetMobile/Large | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/nasnet.py) |  | / | TESTED |
-| EfficientNetB0~B7 | [Link](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.15Link](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  | TESTED | TESTED(TF1.15) TESTED(TF2.3) |
-| Unet | [Link](https://github.com/milesial/Pytorch-UNet) | [Link](https://github.com/zhixuhao/unet) | Due to Operator `mindspore.ops.ResizeBilinear` is not implemented on GPU device for now, operator `mindspore.ops.ResizeBilinear` should be replaced by operator `mindspore.ops.ResizeNearestNeighbor`, while running in GPU device | TESTED | TESTED |
+[Supported models list (Models in below table have been tested based on PyTorch 1.5.0 and TensorFlow 1.15.0, X86 Ubuntu released version)](./docs/supported_model_list.md).
 
 ## Example
 
@@ -387,7 +354,7 @@ onnxruntime>=1.5.2
 onnxoptimizer>=0.1.2
 ```
 
-For some models, if the onnx or tf2onnx error message appears during the conversion process, please try to upgrade the onnx or tf2onnx in the environment to the latest version.
+For some models, if the onnx or tf2onnx error message appears during the conversion process, please try to upgrade the onnx, tf2onnx or onnxoptimizer in the environment to the latest version.
 
 ## Frequently asked questions
 
@@ -413,101 +380,8 @@ print(api_implementation.Type())
 
 ### TensorFlow Pb model exporting
 
-If build model with Keras API, user can try the following methods.
-
-For TensorFlow 1.15.x version:
-
-```python
-import tensorflow as tf
-from tensorflow.python.framework import graph_io
-from tensorflow.python.keras.applications.inception_v3 import InceptionV3
-
-def freeze_graph(graph, session, output_nodes, output_folder: str):
-    """
-    Freeze graph for tf 1.x.x.
-
-    Args:
-        graph (tf.Graph): Graph instance.
-        session (tf.Session): Session instance.
-        output_nodes (list): Output nodes name.
-        output_folder (str): Output folder path for frozen model.
-
-    """
-    with graph.as_default():
-        graphdef_inf = tf.graph_util.remove_training_nodes(graph.as_graph_def())
-        graphdef_frozen = tf.graph_util.convert_variables_to_constants(session, graphdef_inf, output_nodes)
-        graph_io.write_graph(graphdef_frozen, output_folder, "frozen_model.pb", as_text=False)
-
-tf.keras.backend.set_learning_phase(0)
-
-keras_model = InceptionV3()
-session = tf.keras.backend.get_session()
-
-INPUT_NODES = [ipt.op.name for ipt in keras_model.inputs]
-OUTPUT_NODES = [opt.op.name for opt in keras_model.outputs]
-freeze_graph(session.graph, session, OUTPUT_NODES, "/home/user/xxx")
-print(f"Input nodes name: {INPUT_NODES}, output nodes name: {OUTPUT_NODES}")
-```
-
-For TensorFlow 2.x.x version:
-
-```python
-import tensorflow as tf
-from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
-
-
-def convert_to_froze_graph(keras_model: tf.python.keras.models.Model, model_name: str,
-                           output_folder: str):
-    """
-    Export keras model to frozen model.
-
-    Args:
-        keras_model (tensorflow.python.keras.models.Model):
-        model_name (str): Model name for the file name.
-        output_folder (str): Output folder for saving model.
-
-    """
-    full_model = tf.function(lambda x: keras_model(x))
-    full_model = full_model.get_concrete_function(
-        tf.TensorSpec(keras_model.inputs[0].shape, keras_model.inputs[0].dtype)
-    )
-
-    frozen_func = convert_variables_to_constants_v2(full_model)
-    frozen_func.graph.as_graph_def()
-
-    print(f"Model inputs: {frozen_func.inputs}")
-    print(f"Model outputs: {frozen_func.outputs}")
-
-    tf.io.write_graph(graph_or_graph_def=frozen_func.graph,
-                      logdir=output_folder,
-                      name=model_name,
-                      as_text=False)
-```
+If build model with Keras API, user can refer to this [tutorial](./docs/tensorflow_model_exporting.md).
 
 ### MindConverter Error Code Definition
 
-|    Exception definition    |          Error description       | Error code |  Common causes                                                    |
-| :--------------------------: | :----------------------------------------------------: | :------- | ------------------------------------------------------------ |
-|    MindConverterException    |                MindConverter base error                | NAN      | MindConverter base error                                     |
-|      BaseConverterError      |        Fail to convert because of unknown error        | 0000000  | Unknown error occurred during runtime, please see the detail in MindInsight log file (default path is `~/mindinsight/log/mindconverter/`) |
-|      UnKnownModelError       |             Fail to recognize model format             | 0000001  | Generally, the given TensorFlow model or PyTorch model doesn't observe the standard |
-| ParamMissingError | Fail to get required conversion params | 0000002 | Mainly caused by missing `--shape`, `--input_nodes`, `--output_nodes` |
-|      GraphInitFailError      |         Fail to trace the computational graph          | 1000000  | Exception caused by 1000001~1000003                          |
-|     ModelLoadingError     |              Fail to load the model              | 1000001  | Given `--input_nodes`, `--output_nodes`, `--shape` don't  match the input model; Meanwhile, the model file can not be loaded also can cause this error. |
-|        TfRuntimeError        |           Fail to initialize the TF runtime            | 1000002  | Resources required by TensorFlow are not available           |
-|    RuntimeIntegrityError     |     Fail to locate required third party dependency     | 1000003  | Caused by required third party packages are not installed    |
-|     TreeCreateFailError      |         Fail to create code hierarchical tree          | 2000000  | Mainly caused by usage of `torch.nn.functional.xxx`, `torch.xxx`, `torch.Tensor.xxx` in PyTorch |
-|    NodeInputMissingError     |            Fail to get the input node info             | 2000001  | Fail to get input node info                                  |
-|     TreeNodeInsertError      |                Fail to insert tree node                | 2000002  | Mainly caused by wrong scope name                            |
-|     SourceFilesSaveError     |       Fail to generate or save converted script        | 3000000  | Exception caused by 3000001~3000005                         |
-| NodeInputTypeNotSupportError | Fail to recognize the input type of converted operator | 3000001  | Wrong input type set in mapper                               |
-|    ScriptGenerationError     |           Fail to generate converted script            | 3000002  | No left space on hard disk; Converted code is not legal; A file with the same name already exists in `--output` |
-|    ReportGenerationError     |           Fail to generate converted script            | 3000003  | No left space on hard disk; No available operator to be converted;A file with the same name already exists in  `--report` |
-|   CheckPointGenerationError  |         Fail to generate converted weight file         | 3000004  | No left space on hard dist; A file with the same name already exists in `--output` |
-|    WeightMapGenerationError  |            Fail to generate weight map file            | 3000005  | No left space on hard dist; A file with the same name already exists in `--output` |
-|        GeneratorError        |                 Fail to generate code                  | 4000000  | Exception caused by 4000001~4000004                          |
-|       NodeLoadingError       |             Fail to load node information              | 4000001  | Essential parameters are missing after conversion of a node  |
-|   NodeArgsTranslationError   |         Fail to translate the node's argument          | 4000002  | Converted nodes have incorrect and conflicted information    |
-|       ModuleBuildError       |             Fail to build module instance              | 4000003  | Converted nodes have incorrect and conflicted information with module |
-|     CodeGenerationError      |          Fail to generate the code statement           | 4000004  | Converted nodes have inconsistent information                |
-|    SubGraphSearchingError    |            Fail to find frequent sub-graph             | 5000000  | Generally, caused by IR graph topological order error      |
+Error code defined in MindConverter, please refer to [LINK](./docs/error_code_definition.md).
