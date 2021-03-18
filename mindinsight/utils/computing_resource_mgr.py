@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,18 +13,21 @@
 # limitations under the License.
 # ============================================================================
 """Compute resource manager."""
+import sys
 import fractions
 import math
 import threading
-import multiprocessing
 from concurrent import futures
+import signal
+import multiprocessing
 
 from mindinsight.utils.log import setup_logger
 from mindinsight.utils.constant import GeneralErrors
 from mindinsight.utils.exceptions import MindInsightException
 
 
-_MP_CONTEXT = multiprocessing.get_context(method="forkserver")
+_MP_CONTEXT = multiprocessing.get_context(method="fork")
+terminating = False
 
 
 class ComputingResourceManager:
@@ -48,7 +51,18 @@ class ComputingResourceManager:
             for ind in range(self._executors_cnt)
         }
         self._remaining_executors = len(self._executors)
-        self._backend = futures.ProcessPoolExecutor(max_workers=max_processes_cnt, mp_context=_MP_CONTEXT)
+
+        def initializer():
+            origin_handler = signal.getsignal(signal.SIGTERM)
+
+            def handler(sig, frame):
+                origin_handler(sig, frame)
+                sys.exit(0)
+
+            signal.signal(signal.SIGTERM, handler)
+
+        self._backend = futures.ProcessPoolExecutor(max_workers=max_processes_cnt, mp_context=_MP_CONTEXT,
+                                                    initializer=initializer)
         self.logger = setup_logger("utils", "utils")
         self.logger.info("Initialized ComputingResourceManager with executors_cnt=%s, max_processes_cnt=%s.",
                          executors_cnt, max_processes_cnt)
@@ -113,7 +127,10 @@ class ComputingResourceManager:
         This method should only be called by Executor. Users should not call this method directly.
         """
         with self._lock:
-            return self._backend.submit(*args, **kwargs)
+            if not terminating:
+                return self._backend.submit(*args, **kwargs)
+            self.logger.info('Got submit after process pool shutdown.')
+            return None
 
 
 class ComputingResourceManagerException(MindInsightException):
@@ -204,6 +221,8 @@ class Executor:
         # Thread will wait on acquire().
         self._slots.acquire()
         future = self._mgr.submit(*args, **kwargs)
+        if future is None:
+            return None
 
         # set.add is atomic in c-python.
         self._futures.add(future)
@@ -265,3 +284,9 @@ class Executor:
         This method is not thread safe.
         """
         futures.wait(self._futures)
+
+
+def terminate():
+    """Set the terminating flag."""
+    global terminating
+    terminating = True
