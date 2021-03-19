@@ -307,11 +307,6 @@ export default {
       svg.on('.zoom', null);
       svg.call(zoom);
       svg.on('dblclick.zoom', null);
-      svg.on('wheel.zoom', null);
-
-      const graph0 = d3.select('#graph #graph0');
-      graph0.on('.zoom', null);
-      graph0.call(zoom);
     },
     /**
      * Default method of the graph rendering adjustment. Set the node format.
