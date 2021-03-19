@@ -35,8 +35,10 @@ class CpuOpTypeAnalyser(GpuAnalyser):
         Returns:
             list, the converted data.
         """
+        factor_us_to_ms = 1e-3
         try:
-            return [row[0], int(row[1]), int(row[2]), float(row[3]), float(row[4]), float(row[5])*100]
+            return [row[0], int(row[1]), int(row[2]), float(row[3]) * factor_us_to_ms,
+                    float(row[4]) * factor_us_to_ms, float(row[5])*100]
         except IndexError as err:
             log.exception(err)
             raise ProfilerRawFileException('failed to get HOST CPU operator type data.')
@@ -58,9 +60,10 @@ class CpuOpInfoAnalyser(GpuAnalyser):
         Returns:
             list, the converted data.
         """
+        factor_us_to_ms = 1e-3
         try:
-            return [row[0], row[1], row[2], row[3], int(row[4]), float(row[5]),
-                    float(row[6]), float(row[7]), row[8]]
+            return [row[0], row[1], row[2], row[3], int(row[4]), float(row[5]) * factor_us_to_ms,
+                    float(row[6]) * factor_us_to_ms, float(row[7]), row[8]]
         except IndexError as err:
             log.exception(err)
             raise ProfilerRawFileException('failed to get HOST CPU operator detail data.')
