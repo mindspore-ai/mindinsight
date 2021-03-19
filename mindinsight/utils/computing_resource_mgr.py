@@ -13,12 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """Compute resource manager."""
-import sys
 import fractions
 import math
 import threading
 from concurrent import futures
-import signal
 import multiprocessing
 
 from mindinsight.utils.log import setup_logger
@@ -26,7 +24,7 @@ from mindinsight.utils.constant import GeneralErrors
 from mindinsight.utils.exceptions import MindInsightException
 
 
-_MP_CONTEXT = multiprocessing.get_context(method="fork")
+_MP_CONTEXT = multiprocessing.get_context(method="forkserver")
 terminating = False
 
 
@@ -51,18 +49,7 @@ class ComputingResourceManager:
             for ind in range(self._executors_cnt)
         }
         self._remaining_executors = len(self._executors)
-
-        def initializer():
-            origin_handler = signal.getsignal(signal.SIGTERM)
-
-            def handler(sig, frame):
-                origin_handler(sig, frame)
-                sys.exit(0)
-
-            signal.signal(signal.SIGTERM, handler)
-
-        self._backend = futures.ProcessPoolExecutor(max_workers=max_processes_cnt, mp_context=_MP_CONTEXT,
-                                                    initializer=initializer)
+        self._backend = futures.ProcessPoolExecutor(max_workers=max_processes_cnt, mp_context=_MP_CONTEXT)
         self.logger = setup_logger("utils", "utils")
         self.logger.info("Initialized ComputingResourceManager with executors_cnt=%s, max_processes_cnt=%s.",
                          executors_cnt, max_processes_cnt)
