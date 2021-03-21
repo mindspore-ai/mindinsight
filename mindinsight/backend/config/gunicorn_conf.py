@@ -17,6 +17,7 @@
 import os
 import time
 import signal
+import sys
 import multiprocessing
 import threading
 from importlib import import_module
@@ -51,6 +52,11 @@ def on_starting(server):
         threading.Thread(target=hook.on_startup, args=(server.log,)).start()
 
 
+# This global variable is to manage the listen process so that we can close the
+# process when gunicorn is exiting.
+LISTEN_PROCESS = None
+
+
 def post_worker_init(worker):
     """
     Launch a process to listen worker after gunicorn worker is initialized.
@@ -62,7 +68,9 @@ def post_worker_init(worker):
         worker (ThreadWorker): worker instance.
     """
     def murder_worker_children_processes():
-        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        signal.signal(
+            signal.SIGTERM,
+            lambda signal_num, handler: sys.exit(0))
         processes_to_kill = []
         # sleep 3 seconds so that all worker children processes have been launched.
         time.sleep(3)
@@ -91,18 +99,15 @@ def post_worker_init(worker):
     listen_process = multiprocessing.Process(target=murder_worker_children_processes,
                                              name="murder_worker_children_processes")
     listen_process.start()
+    global LISTEN_PROCESS
+    LISTEN_PROCESS = listen_process
     worker.log.info("Server pid: %d, start to listening.", worker.ppid)
 
 
 def worker_int(worker):
     """Terminate child processes when worker is interrupted."""
     terminate()
-    process = psutil.Process(worker.pid)
-    children = process.children(recursive=True)
-    for child in children:
-        try:
-            child.send_signal(signal.SIGTERM)
-        except psutil.NoSuchProcess:
-            continue
-        except psutil.Error as ex:
-            worker.log.error("Stop process %d failed. Detail: %s.", child.pid, str(ex))
+    global LISTEN_PROCESS
+    if LISTEN_PROCESS is not None:
+        LISTEN_PROCESS.terminate()
+    worker.log.info("Worker int processed.")
