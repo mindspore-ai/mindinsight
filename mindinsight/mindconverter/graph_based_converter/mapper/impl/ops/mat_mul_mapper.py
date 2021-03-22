@@ -23,7 +23,7 @@ class MatMulMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "nn.MatMul"
+        return "P.matmul"
 
     @staticmethod
     def _convert_params(**kwargs):
@@ -32,34 +32,37 @@ class MatMulMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         weights = kwargs['weights']
-        weight = MatMulMapper._find_val_by_index(0, weights)
-        onnx_name = MatMulMapper._find_onnx_name_by_index(0, weights)
-        return {'w': {'data': weight, 'type': WeightType.PARAMETER.value, 'onnx_name': onnx_name}}
+        if weights:
+            weight = MatMulMapper._find_val_by_index(0, weights)
+            onnx_name = MatMulMapper._find_onnx_name_by_index(0, weights)
+            return {'w': {'data': weight, 'type': WeightType.PARAMETER.value, 'onnx_name': onnx_name}}
+        return dict()
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
-        template, exchange_msg, outputs_list, outputs_mapping = ONNXToMindSporeMapper._generate_snippet_template(
-            **kwargs)
         op = kwargs.get("operation")
         args = kwargs.get("converted_params")
         weights = kwargs.get("weights")
         trainable_params = kwargs.get('trainable_params', dict())
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
-        if not weights:
-            return template, exchange_msg, outputs_list, outputs_mapping
 
         variable_slot = "var_0"
-        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
-        # Note: adding weight shape to args is now deprecated due to conflict of partial weights share processing.
-        variable_slot_param_name = f"{variable_slot}/w"
-        init_tensor = f"self.{{{variable_slot}}}_w = {{{variable_slot_param_name}}}"
-        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
-                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}," \
-                             f"self.{{{variable_slot}}}_w)"
+
+        w_location = MatMulMapper._find_location_by_index(0, weights)
+        init_tensor_list = list()
+
+        inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
+        if w_location != -1:
+            # Note: adding weight shape to args is now deprecated due to conflict of partial weights share processing.
+            variable_slot_param_name = f"{variable_slot}/w"
+            init_tensor_list.append(f"self.{{{variable_slot}}}_w = {{{variable_slot_param_name}}}")
+            inputs_in_construct.insert(w_location, f"self.{{{variable_slot}}}_w")
+        construct_template = f"opt_{{{variable_slot}}} = {op}({', '.join(inputs_in_construct)})"
+
         template = {
             variable_slot: {
-                TemplateKeywords.INIT.value: [init_template, init_tensor],
+                TemplateKeywords.INIT.value: init_tensor_list,
                 TemplateKeywords.CONSTRUCT.value: [construct_template]
             }
         }
@@ -72,12 +75,13 @@ class MatMulMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
                 ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
                 ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params,
-                ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value: {
-                    "w": ""
-                }
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
             }
         }
+        if w_location != -1:
+            exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value] = {
+                "w": ""
+            }
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping

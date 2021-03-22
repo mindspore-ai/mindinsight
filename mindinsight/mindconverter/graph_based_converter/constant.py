@@ -181,6 +181,6 @@ def get_imported_module():
     """
     return f"import numpy as np{NEW_LINE}" \
            f"import mindspore{NEW_LINE}" \
+           f"import mindspore.ops as P{NEW_LINE}" \
            f"from mindspore import nn{NEW_LINE}" \
-           f"from mindspore import Tensor, Parameter{NEW_LINE}" \
-           f"from mindspore.ops import operations as P{NEW_LINE * 3}"
+           f"from mindspore import Tensor, Parameter{NEW_LINE * 3}"
