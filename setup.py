@@ -29,6 +29,12 @@ from setuptools.command.build_py import build_py
 from setuptools.command.install import install
 
 
+def get_readme_content():
+    pwd = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(pwd, 'README.md'), encoding='UTF-8') as f:
+        return f.read()
+
+
 def get_version():
     """
     Get version.
@@ -196,6 +202,8 @@ if __name__ == '__main__':
             'Issue Tracker': 'https://gitee.com/mindspore/mindinsight/issues',
         },
         description=get_description(),
+        long_description=get_readme_content(),
+        long_description_content_type="text/markdown",
         packages=['mindinsight'],
         platforms=[get_platform()],
         include_package_data=True,
