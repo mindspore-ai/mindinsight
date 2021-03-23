@@ -912,18 +912,16 @@ class DataManager:
                 return
             self.status = DataManagerStatus.LOADING.value
 
-        with ComputingResourceManager(executors_cnt=1,
-                                      max_processes_cnt=settings.MAX_PROCESSES_COUNT) as computing_resource_mgr:
-            with computing_resource_mgr.get_executor() as executor:
-                self._brief_cache.update_cache(executor)
-                brief_cache_update = time.time()
-                for _ in self._detail_cache.update_cache(executor):
-                    update_interval = time.time() - brief_cache_update
-                    logger.debug('Loading one round of detail cache taking %ss.', update_interval)
-                    if update_interval > 3: # Use 3 seconds as threshold to avoid updating too often
-                        self._brief_cache.update_cache(executor)
-                        brief_cache_update += update_interval
-                executor.wait_all_tasks_finish()
+        with ComputingResourceManager.get_instance().get_executor(
+                max_processes_cnt=settings.MAX_PROCESSES_COUNT) as executor:
+            self._brief_cache.update_cache(executor)
+            brief_cache_update = time.time()
+            for _ in self._detail_cache.update_cache(executor):
+                update_interval = time.time() - brief_cache_update
+                logger.debug('Loading one round of detail cache taking %ss.', update_interval)
+                if update_interval > 3: # Use 3 seconds as threshold to avoid updating too often
+                    self._brief_cache.update_cache(executor)
+                    brief_cache_update += update_interval
             with self._status_mutex:
                 if not self._brief_cache.has_content() and not self._detail_cache.has_content():
                     self.status = DataManagerStatus.INVALID.value
