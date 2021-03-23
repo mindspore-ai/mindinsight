@@ -102,12 +102,10 @@ class MSDataLoader:
         if executor is not None:
             raise TypeError("'executor' should be an Executor instance or None.")
 
-        with ComputingResourceManager() as mgr:
-            with mgr.get_executor() as new_executor:
-                while not self._load(new_executor):
-                    pass
-                new_executor.wait_all_tasks_finish()
-                return True
+        with ComputingResourceManager.get_instance().get_executor() as new_executor:
+            while not self._load(new_executor):
+                pass
+            return True
 
     def _load(self, executor):
         """
