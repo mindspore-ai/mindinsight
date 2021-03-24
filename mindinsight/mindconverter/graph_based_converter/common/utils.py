@@ -23,10 +23,9 @@ from typing import List, Tuple, Mapping
 import numpy as np
 
 from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
-    UnknownModelError, CheckPointGenerationError, WeightMapGenerationError
-from mindinsight.mindconverter.common.log import logger as log
-from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, BINARY_HEADER_PYTORCH_BITS, \
-    FrameworkType, BINARY_HEADER_PYTORCH_FILE, TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION
+    CheckPointGenerationError, WeightMapGenerationError
+from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, FrameworkType, \
+    TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION, ONNX_MODEL_SUFFIX, DTYPE_MAP
 
 
 def is_converted(operation: str):
@@ -73,7 +72,7 @@ def check_dependency_integrity(*packages):
 
 def build_feed_dict(onnx_model, input_nodes: dict):
     """Build feed dict for onnxruntime."""
-    dtype_mapping = getattr(import_module("tf2onnx.utils"), "ONNX_TO_NUMPY_DTYPE")
+    dtype_mapping = DTYPE_MAP
     input_nodes_types = {
         node.name: dtype_mapping[node.type.tensor_type.elem_type]
         for node in onnx_model.graph.input
@@ -170,7 +169,7 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         except TypeError as error:
             raise CheckPointGenerationError(str(error))
 
-        weight_map_path = os.path.realpath(os.path.join(out_folder, f"weight_map_of_{model_name}.json"))
+        weight_map_path = os.path.realpath(os.path.join(report_folder, f"weight_map_of_{model_name}.json"))
         try:
             if os.path.exists(weight_map_path):
                 raise WeightMapGenerationError("Weight map file with the same name already exists.")
@@ -248,22 +247,14 @@ def convert_bytes_string_to_string(bytes_str):
 
 def get_framework_type(model_path):
     """Get framework type."""
-    if model_path.endswith('.onnx'):
-        return FrameworkType.PYTORCH.value
 
-    try:
-        with open(model_path, 'rb') as f:
-            if f.read(BINARY_HEADER_PYTORCH_BITS) == BINARY_HEADER_PYTORCH_FILE:
-                framework_type = FrameworkType.PYTORCH.value
-            elif os.path.basename(model_path).split(".")[-1].lower() == TENSORFLOW_MODEL_SUFFIX:
-                framework_type = FrameworkType.TENSORFLOW.value
-            else:
-                framework_type = FrameworkType.UNKNOWN.value
-    except IOError:
-        error_msg = "Get UNSUPPORTED model."
-        error = UnknownModelError(error_msg)
-        log.error(str(error))
-        raise error
+    model_suffix = os.path.basename(model_path).split(".")[-1].lower()
+    if model_suffix == ONNX_MODEL_SUFFIX:
+        framework_type = FrameworkType.ONNX.value
+    elif model_suffix == TENSORFLOW_MODEL_SUFFIX:
+        framework_type = FrameworkType.TENSORFLOW.value
+    else:
+        framework_type = FrameworkType.UNKNOWN.value
 
     return framework_type
 
