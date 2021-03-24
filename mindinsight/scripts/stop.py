@@ -109,8 +109,8 @@ class Command(BaseCommand):
         processes.append(process)
         try:
             self._send_signal(process, signal.SIGINT)
-            # Wait a moment, if not terminate, kill the worker process.
-            exit_timeout_seconds = 5
+            # Wait 3 seconds, if not terminate, kill the worker process.
+            exit_timeout_seconds = 3
             _, alive = psutil.wait_procs(processes, exit_timeout_seconds)
             for alive_process in alive:
                 self.logfile.info("Stop process %d because timeout.", alive_process.pid)
