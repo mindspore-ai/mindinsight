@@ -283,6 +283,7 @@ In addition, for operators that are not converted successfully, the input and ou
 2. This script conversion tool relies on operators which supported by ONNX and MindSpore. Unsupported operators may not be successfully mapped to MindSpore operators. You can manually edit, or implement the mapping based on MindConverter, and contribute to our MindInsight repository. We appreciate your support for the MindSpore community.
 3. MindConverter converts dynamic input shape to constant one based on `--shape` while using graph based scheme, as a result, it is required that inputs shape used to retrain or inference in MindSpore are the same as that used to convert using MindConverter. If inputs shape has changed, rerunning MindConverter with new `--shape` or fixing shape related parameters in old script manually is necessary.
 4. MindSpore script and MindSpore checkpoint file are saved in the same file folder path, while report file and weight map are saved in the same one.
+5. The security and consistency of the model file should be guaranteed by the user.
 
 ## Unsupported situation of AST mode
 
