@@ -27,7 +27,7 @@ from mindinsight.mindconverter.graph_based_converter.common.global_context impor
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.optimizer import OnnxSimplify
 
 from mindinsight.mindconverter.graph_based_converter.constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
-    ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL, DTYPE_MAP
+    ONNX_TYPE_FLOATS, ONNX_TYPE_FLOAT, SCALAR_WITHOUT_SHAPE, DYNAMIC_SHAPE, UNKNOWN_DIM_VAL
 from mindinsight.mindconverter.common.exceptions import GraphInitError
 
 
@@ -381,11 +381,6 @@ class OnnxDataLoader:
 
     def _get_outputs_using_onnxruntime(self, output_nodes_name):
         """Get outputs using onnxruntime."""
-
-        onnx_inputs = self.inferred_model.graph.input
-        dtype_dict = dict()
-        for onnx_input in onnx_inputs:
-            dtype_dict[onnx_input.name] = DTYPE_MAP[onnx_input.type.tensor_type.elem_type]
 
         feed_dict = build_feed_dict(self.inferred_model, self.input_nodes)
 

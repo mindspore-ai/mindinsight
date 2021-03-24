@@ -13,9 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Graph based scripts converter workflow."""
-import multiprocessing as mp
 import os
-import re
 import sys
 from typing import List
 from importlib import import_module
@@ -26,7 +24,7 @@ from mindinsight.mindconverter.graph_based_converter.common.global_context impor
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, onnx_satisfied, \
     save_code_file_and_report, get_framework_type, check_dependency_integrity, get_third_part_lib_validation_error_info
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
-    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER, TORCH_MIN_VER
+    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
@@ -60,17 +58,7 @@ def _print_error(err):
     log_console.error(str(err))
 
 
-def torch_version_satisfied(output_queue):
-    """Check Torch version whether is satisfied."""
-    satisfied = False
-    pattern = r"\d+\.\d+\.\d+"
-    torch_version = re.findall(pattern, getattr(import_module('torch'), "__version__"))
-    if torch_version:
-        satisfied = lib_version_satisfied(torch_version[0], TORCH_MIN_VER)
-    output_queue.put(satisfied)
-
-
-def torch_installation_validation(func):
+def onnx_installation_validation(func):
     """
     Validate args of func.
 
@@ -83,40 +71,16 @@ def torch_installation_validation(func):
 
     def _f(graph_path: str, input_nodes: dict, output_nodes: List[str],
            output_folder: str, report_folder: str = None):
-        # Check whether pytorch is installed.
-        error_info = None
-        torch_version_validation = False
-        if graph_path.endswith('.onnx'):
-            if not onnx_satisfied() or not check_common_dependency_integrity():
-                error_info = f"{get_third_part_lib_validation_error_info(['onnx', 'onnxruntime', 'onnxoptimizer'])} " \
-                             f"are required when using graph based scripts converter."
-        else:
-            if not find_spec("torch") or not onnx_satisfied() or not check_common_dependency_integrity():
-                error_info = \
-                    f"{get_third_part_lib_validation_error_info(['torch', 'onnx', 'onnxruntime', 'onnxoptimizer'])} " \
-                    f"are required when using graph based scripts converter, and PyTorch version must " \
-                    f"be consisted with model generation runtime."
+        # Check whether onnx is installed.
+        error_info = f"{get_third_part_lib_validation_error_info(['onnx', 'onnxruntime', 'onnxoptimizer'])} " \
+                     f"are required when using graph based scripts converter or ONNX conversion."
 
-            if not error_info:
-                output_queue = mp.Queue()
-                process = mp.Process(target=torch_version_satisfied, args=(output_queue,))
-                process.start()
-                torch_version_validation = output_queue.get()
-                process.join()
-
-        if error_info:
+        if not onnx_satisfied() or not check_common_dependency_integrity():
             _print_error(RuntimeIntegrityError(error_info))
             sys.exit(0)
 
-        if (not torch_version_validation and not graph_path.endswith('.onnx')) or not onnx_lib_version_satisfied():
-            lib_check_list = ['onnx', 'onnxruntime', 'onnxoptimizer']
-            if not graph_path.endswith('.onnx'):
-                lib_check_list.insert(0, 'torch')
-            error = RuntimeIntegrityError(
-                f"{get_third_part_lib_validation_error_info(lib_check_list)} "
-                f"are required when using graph based scripts converter."
-            )
-            _print_error(error)
+        if not onnx_lib_version_satisfied():
+            _print_error(RuntimeIntegrityError(error_info))
             sys.exit(0)
 
         func(graph_path=graph_path,
@@ -194,16 +158,16 @@ def _extract_model_name(model_path):
     return model_name
 
 
-@torch_installation_validation
+@onnx_installation_validation
 @GraphInitError.uniform_catcher()
 @TreeCreationError.uniform_catcher()
 @SourceFilesSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
-def graph_based_converter_pytorch_to_ms(graph_path: str,
-                                        input_nodes: dict, output_nodes: List[str],
-                                        output_folder: str, report_folder: str = None):
+def graph_based_converter_onnx_to_ms(graph_path: str,
+                                     input_nodes: dict, output_nodes: List[str],
+                                     output_folder: str, report_folder: str = None):
     """
-    PyTorch to MindSpore based on Graph.
+    ONNX to MindSpore based on Graph.
 
     Args:
         graph_path (str): Graph file path.
@@ -271,12 +235,8 @@ def main_graph_base_converter(file_config):
     if not file_config.get("shape"):
         raise ParamMissingError("Param missing, `--shape` is required when using graph mode.")
 
-    if graph_path.endswith("pth") and not file_config.get("input_nodes", []) and \
-            file_config.get("shape") and len(file_config.get("shape", ())) == 1:
-        file_config['input_nodes'] = ["input.1"]
-    else:
-        check_params = ['input_nodes', 'output_nodes']
-        check_params_exist(check_params, file_config)
+    check_params = ['input_nodes', 'output_nodes']
+    check_params_exist(check_params, file_config)
 
     if len(file_config['shape']) != len(file_config.get("input_nodes", [])):
         raise BadParamError("`--shape` and `--input_nodes` must have the same length, "
@@ -286,19 +246,13 @@ def main_graph_base_converter(file_config):
     for shape, node in zip(file_config['shape'], file_config['input_nodes']):
         input_nodes[node] = shape
 
-    if frame_type == FrameworkType.PYTORCH.value:
-        if graph_path.endswith('.onnx'):
-            graph_based_converter_pytorch_to_ms(graph_path=graph_path,
-                                                input_nodes=input_nodes,
-                                                output_nodes=file_config['output_nodes'],
-                                                output_folder=file_config['outfile_dir'],
-                                                report_folder=file_config['report_dir'])
-        else:
-            graph_based_converter_pytorch_to_ms(graph_path=graph_path,
-                                                input_nodes=input_nodes,
-                                                output_nodes=[],
-                                                output_folder=file_config['outfile_dir'],
-                                                report_folder=file_config['report_dir'])
+    if frame_type == FrameworkType.ONNX.value:
+        graph_based_converter_onnx_to_ms(graph_path=graph_path,
+                                         input_nodes=input_nodes,
+                                         output_nodes=file_config['output_nodes'],
+                                         output_folder=file_config['outfile_dir'],
+                                         report_folder=file_config['report_dir'])
+
     elif frame_type == FrameworkType.TENSORFLOW.value:
         graph_based_converter_tf_to_ms(graph_path=graph_path,
                                        input_nodes=input_nodes,

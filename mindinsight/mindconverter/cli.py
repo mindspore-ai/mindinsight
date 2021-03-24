@@ -124,31 +124,6 @@ class OutputDirAction(argparse.Action):
         setattr(namespace, self.dest, output)
 
 
-class ProjectPathAction(argparse.Action):
-    """Project directory action class definition."""
-
-    def __call__(self, parser_in, namespace, values, option_string=None):
-        """
-        Inherited __call__ method from argparse.Action.
-
-        Args:
-            parser_in (ArgumentParser): Passed-in argument parser.
-            namespace (Namespace): Namespace object to hold arguments.
-            values (object): Argument values with type depending on argument definition.
-            option_string (str): Optional string for specific argument name. Default: None.
-        """
-
-        ArgsCheck.check_repeated(namespace, self.dest, self.default, option_string, parser_in)
-
-        outfile_dir = FileDirAction.check_path(parser_in, values, option_string)
-        if not os.path.exists(outfile_dir):
-            parser_in.error(f'{option_string} {outfile_dir} not exists')
-        if not os.path.isdir(outfile_dir):
-            parser_in.error(f'{option_string} [{outfile_dir}] should be a directory.')
-
-        setattr(namespace, self.dest, outfile_dir)
-
-
 class InFileAction(argparse.Action):
     """Input File action class definition."""
 
@@ -202,8 +177,8 @@ class ModelFileAction(argparse.Action):
 
         frame_type = get_framework_type(outfile_dir)
         if frame_type == FrameworkType.UNKNOWN.value:
-            parser_in.error(f'{option_string} {outfile_dir} should be an valid '
-                            f'TensorFlow pb or PyTorch pth model file')
+            parser_in.error(f'{option_string} {outfile_dir} should be '
+                            f'a valid TensorFlow(.pb) or an ONNX(.onnx) model file.')
 
         setattr(namespace, self.dest, outfile_dir)
 
@@ -277,7 +252,6 @@ class NodeAction(argparse.Action):
             namespace (Namespace): Namespace object to hold arguments.
             values (list): Argument values with type depending on argument definition.
             option_string (str): Optional string for specific argument name. Default: None.
-
         """
 
         ArgsCheck.check_repeated(namespace, self.dest, self.default, option_string, parser_in)
@@ -326,7 +300,7 @@ parser.add_argument(
     action=ModelFileAction,
     required=False,
     help="""
-            PyTorch(.pth), Tensorflow(.pb) or ONNX(.onnx) model file path 
+            Tensorflow(.pb) or ONNX(.onnx) model file path 
             is expected to do script generation based on graph schema. When 
             `--in_file` and `--model_file` are both provided, 
             use AST schema as default.
@@ -354,7 +328,7 @@ parser.add_argument(
     required=False,
     nargs="+",
     help="""
-            Optional, input node(s) name of `--model_file`. It is required when use TensorFlow and ONNX model. 
+            Optional, input node(s) name of `--model_file`. It is required when use graph based schema. 
             Both order and number should be consistent with `--shape`. Usage: --input_nodes input_1:0 input_2:0
         """)
 
@@ -366,7 +340,7 @@ parser.add_argument(
     required=False,
     nargs="+",
     help="""
-            Optional, output node(s) name of `--model_file`. It is required when use TensorFlow and ONNX model. 
+            Optional, output node(s) name of `--model_file`. It is required when use graph based schema. 
             Usage: --output_nodes output_1:0 output_2:0
         """)
 
@@ -391,19 +365,6 @@ parser.add_argument(
             converted script directory.
         """)
 
-parser.add_argument(
-    '--project_path',
-    type=str,
-    action=ProjectPathAction,
-    required=False,
-    default=None,
-    help="""
-            Optional, PyTorch scripts project path. If PyTorch
-            project is not in PYTHONPATH, please assign
-            `--project_path` when use graph based schema. 
-            Usage: --project_path ~/script_file/
-        """)
-
 
 def cli_entry():
     """Entry point for mindconverter CLI."""
@@ -425,23 +386,21 @@ def cli_entry():
     _run(args.in_file, args.model_file,
          args.shape,
          args.input_nodes, args.output_nodes,
-         args.output, args.report,
-         args.project_path)
+         args.output, args.report)
 
 
-def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report, project_path):
+def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report):
     """
     Run converter command.
 
     Args:
         in_files (str): The file path or directory to convert.
-        model_file(str): The pytorch .pth to convert on graph based schema.
+        model_file(str): The model to convert on graph based schema.
         shape(list): The input tensor shape of module_file.
-        input_nodes(str): The input node(s) name of Tensorflow model, split by ','.
-        output_nodes(str): The output node(s) name of Tensorflow model, split by ','.
+        input_nodes(str): The input node(s) name of model.
+        output_nodes(str): The output node(s) name of model.
         out_dir (str): The output directory to save converted file.
         report (str): The report file path.
-        project_path(str): Pytorch scripts project path.
     """
     if in_files:
         files_config = {
@@ -470,10 +429,6 @@ def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report
             'outfile_dir': out_dir,
             'report_dir': report if report else out_dir
         }
-        if project_path:
-            paths = sys.path
-            if project_path not in paths:
-                sys.path.append(project_path)
 
         main_graph_base_converter(file_config)
         log_console.info("MindConverter: conversion is completed.")

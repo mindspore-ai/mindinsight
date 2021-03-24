@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Graph based scripts converter definition."""
-__all__ = ["graph_based_converter_pytorch_to_ms", "graph_based_converter_tf_to_ms"]
+__all__ = ["graph_based_converter_onnx_to_ms", "graph_based_converter_tf_to_ms"]
 
-from mindinsight.mindconverter.graph_based_converter.framework import graph_based_converter_pytorch_to_ms
+from mindinsight.mindconverter.graph_based_converter.framework import graph_based_converter_onnx_to_ms
 from mindinsight.mindconverter.graph_based_converter.framework import graph_based_converter_tf_to_ms
