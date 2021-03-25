@@ -388,7 +388,7 @@
     "opNum": "Number of operators:",
     "opTimes": "Total operator execution times:",
     "features": "Functions:",
-    "iterationInfo": "The step trace displays the duration of each step from the start of the previous iteration to the end of the step. The main time is divided into three parts: step interval, forward and backward propagation, and step tail.",
+    "iterationInfo": "The step trace displays the duration of each step from the start of the previous iteration to the end of the step. The main time is divided into three parts: step interval, forward and backward propagation, and step tail.(Note that this feature do not support heterogeneous training scene)",
     "iterationGapInfo": "Reads data from data queues. If this part takes a long time, you are advised to check the data processing for further analysis.",
     "fpbpTitle": "Forward and Backward Propagation",
     "fpbpInfo": "Executes the forward and backward operators on the network, which carry the main calculation work of a step. If this part takes a long time, you are advised to check the operator statistics or timeline for further analysis.",
