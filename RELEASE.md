@@ -2,14 +2,6 @@
 
 ## MindInsight
 
-### Contributors
-
-Thanks goes to these wonderful people:
-
-Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei.
-
-Contributions of any kind are welcome!
-
 ### Major Features and Improvements
 
 #### Profiling
@@ -59,6 +51,14 @@ The pth format model is not supported anymore, please use ONNX to migrate.
 ### Bug fixes
 
 * Error information missing when running on an unsupported device (e.g, cpu). [!11901](https://gitee.com/mind_spore/dashboard/projects/mindspore/mindspore/pulls/11801)
+
+### Thanks to our Contributors
+
+Thanks goes to these wonderful people:
+
+Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei.
+
+Contributions of any kind are welcome!
 
 # MindSpore 1.1.0 Release Notes
 
