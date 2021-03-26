@@ -1,8 +1,72 @@
-# MindInsight 1.1.0 Release Notes
+# MindSpore 1.2.0-rc1 Release Notes
 
-## Major Features and Improvements
+## MindInsight
 
-### Precision tuning framework
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei.
+
+Contributions of any kind are welcome!
+
+### Major Features and Improvements
+
+#### Profiling
+
+* [STABLE] Support memory profiling.(Ascend)
+* [STABLE] Support host cpu utilization profiling.(Ascend/GPU)
+* [STABLE] Support timeline for Host&Device Hybrid Training.(Ascend/GPU)
+* [STABLE] Support show step breakdown information(Step Interval, Forward and Backward Propagation, and Step Tail)of each device in cluster profiling ui page.(Ascend)
+
+#### MindConverter
+
+* [STABLE] Support both classic computer vision and bert model definition script and trained weights migration from TensorFlow or PyTorch.
+* [STABLE] Support ONNX model migration to improve the usability of PyTorch model migration.
+
+#### Model Explanation
+
+* [STABLE] Support counterfactual explanation for image classification.
+
+### API Change
+
+#### Backwards Compatible Change
+
+##### Python API
+
+###### add parameter `export_options` for `SummaryCollector` and `SummaryRecord`([!10881](https://gitee.com/mindspore/mindspore/pulls/10881))
+
+Perform custom operations on the export data. You can customize the export data with a dictionary. For example, you can set `{'tensor_format': 'npy'}` to export tensor as npy file.
+
+###### add parameter `raise_exception` for `SummaryRecord`([!10436](https://gitee.com/mindspore/mindspore/pulls/10436))
+
+The parameter `raise_exception` determines whether to throw an exception when an exception occurs.
+
+###### add API `register_uncertainty` for `explainer.ImageClassificationRunner`([!11309](https://gitee.com/mindspore/mindspore/pulls/11309))
+
+`register_uncertainty` helps register uncertainty instance to compute the epistemic uncertainty base on the Bayes’ theorem.
+
+###### add API `register_hierarchical_occlusion` for `explainer.ImageClassificationRunner`([!11309](https://gitee.com/mindspore/mindspore/pulls/11309))
+
+`register_hierarchical_occlusion` helps register hierarchical occlusion instances.
+
+##### Command Line Interface
+
+###### `MindConverter` removes support for pth format model, `--project_path` deleted([!1253](https://gitee.com/mindspore/mindinsight/pulls/1253))
+
+The pth format model is not supported anymore, please use ONNX to migrate.
+
+### Bug fixes
+
+* Error information missing when running on an unsupported device (e.g, cpu). [!11901](https://gitee.com/mind_spore/dashboard/projects/mindspore/mindspore/pulls/11801)
+
+# MindSpore 1.1.0 Release Notes
+
+## MindInsight
+
+### Major Features and Improvements
+
+#### Precision tuning framework
 
 * Support useful checks on weights, activations, gradients and tensors, such as:
     * check unchanged weight
@@ -15,17 +79,17 @@
 * Support recommending watch points to find common precision problems.
 * Support debugger on multigraph network.
 
-### Profiler
+#### Profiler
 
 * Support GPU step trace profiling.
 * Support GPU minddata profiling.
 
-### MindConverter
+#### MindConverter
 
 * Support TensorFlow model definition script to MindSpore for CV field.
 * Conversion capability of PyTorch is enhanced.
 
-### Model Explanation
+#### Model Explanation
 
 Provide explanations and their benchmarks for image classification deep CNN models.
 
@@ -33,28 +97,28 @@ Provide explanations and their benchmarks for image classification deep CNN mode
 * Support 4 benchmark methods: Localization, Faithfulness, Class Sensitivity, Robustness
 * Provide a high-level API (ImageClassificationRunner) for users to execute explanation methods and benchmark methods and store the results easily.
 
-## API Change
+### API Change
 
-### Improvements
+#### Improvements
 
-#### Command Line Interface
+##### Command Line Interface
 
 * `--enable_debugger`: Support both 1 and True ([!1051](https://gitee.com/mindspore/mindinsight/pulls/1051))
 * `ENABLE_MS_DEBUGGER`: Support both 1 and True ([!10199](https://gitee.com/mindspore/mindspore/pulls/10199))
 * `parse_summary`: Add parse_summary function to convert summary file to image file and csv file ([!774](https://gitee.com/mindspore/mindinsight/pulls/774))
 
-## Bugfixes
+### Bugfixes
 
-### Profiler
+#### Profiler
 
 * Fix parser framework file error if the profiling data of one op is saved separately to two files.([!7824](https://gitee.com/mindspore/mindspore/pulls/7824))
 
-### Model Explanation
+#### Model Explanation
 
 * Add reset_offset when CRCLengthError and CRCError happen([!955](https://gitee.com/mindspore/mindinsight/pulls/955))
 * FIx the bug which ignore the sample_event when sample_id == 0.([!968](https://gitee.com/mindspore/mindinsight/pulls/968))
 
-## Thanks to our Contributors
+### Thanks to our Contributors
 
 Thanks goes to these wonderful people:
 
@@ -62,22 +126,24 @@ Congli Gao, Jianfeng Zhu, Zhenzhong Kou, Longfei Li, Yongxiong Liang, Chongming 
 
 Contributions of any kind are welcome!
 
-# MindInsight 1.0.0 Release Notes
+# MindSpore 1.0.0 Release Notes
 
-## Major Features and Improvements
+## MindInsight
+
+### Major Features and Improvements
 
 * Release MindSpore Debugger.
 * MindConverter ability is enhanced, supporting scripts generation based on PyTorch model.
 * Support training hyper-parameter importance visualization.
 * Support GPU timeline.
 
-## Bugfixes
+### Bugfixes
 
 * Optimize aicpu display method. ([!595](https://gitee.com/mindspore/mindinsight/pulls/595/files))
 * Add the summary loading switch mechanism. ([!601](https://gitee.com/mindspore/mindinsight/pulls/601/files))
 * Detect a summary dir having summary files or not. ([!632](https://gitee.com/mindspore/mindinsight/pulls/632/files))
 
-## Thanks to our Contributors
+### Thanks to our Contributors
 
 Thanks goes to these wonderful people:
 
@@ -85,21 +151,23 @@ Congli Gao, Jianfeng Zhu, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Lia
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.7.0-beta Release Notes
+# MindSpore 0.7.0-beta Release Notes
 
-## Major Features and Improvements
+## MindInsight
+
+### Major Features and Improvements
 
 * Optimize node name display in computation graph.
 * MindSpore Profiler supports network training with GPU operators.
 * MindWizard generates classic network scripts according to user preference.
 * Web UI supports language internationalization, including both Chinese and English.
 
-## Bugfixes
+### Bugfixes
 
 * Optimize UI page initialization to handle timeout requests. ([!503](https://gitee.com/mindspore/mindinsight/pulls/503))
 * Fix the line break problem when the profiling file number is too long. ([!532](https://gitee.com/mindspore/mindinsight/pulls/532))
 
-## Thanks to our Contributors
+### Thanks to our Contributors
 
 Thanks goes to these wonderful people:
 
@@ -107,22 +175,24 @@ Congli Gao, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Li
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.6.0-beta Release Notes
+# MindSpore 0.6.0-beta Release Notes
 
-## Major Features and Improvements
+## MindInsight
+
+### Major Features and Improvements
 
 * Provide monitoring capabilities for each of Ascend AI processor and other hardware resources, including CPU and memory.
 * Visualization of weight, gradient and other tensor data in model training.
     * Provide tabular from presentation of tensor data.
     * Provide histogram to show the distribution of tensor data and its change over time.
 
-## Bugfixes
+### Bugfixes
 
 * UI fix for the error message display mode of the tensor during real-time training. ([!465](https://gitee.com/mindspore/mindinsight/pulls/465))
 * The summary file size is larger than max_file_size. ([!3481](https://gitee.com/mindspore/mindspore/pulls/3481))
 * Fix real-time training error when disk is full. ([!3058](https://gitee.com/mindspore/mindspore/pulls/3058))
 
-## Thanks to our Contributors
+### Thanks to our Contributors
 
 Thanks goes to these wonderful people:
 
@@ -130,9 +200,11 @@ Congli Gao, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Li
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.5.0-beta Release Notes
+# MindSpore 0.5.0-beta Release Notes
 
-## Major Features and Improvements
+## MindInsight
+
+### Major Features and Improvements
 
 * MindSpore Profiler
     * Provide performance analyse tool for the input data pipeline.
@@ -148,13 +220,13 @@ Contributions of any kind are welcome!
     * `SummaryRecord` provide new API `set_mode` to distinguish summary persistence mode at different stages.  
 * MindConverter supports conversion of more operators and networks, and improves its ease of use.
 
-## Bugfixes
+### Bugfixes
 
 * Fix FileNotFound exception by adding robust check for summary watcher ([!281](https://gitee.com/mindspore/mindinsight/pulls/281)).
 * UI fix operator table sort jump problem ([!283](https://gitee.com/mindspore/mindinsight/pulls/283)).
 * Dataset serializer return schema json str when schema type is `mindspore.dataset.engine.Schema` ([!2185](https://gitee.com/mindspore/mindspore/pulls/2185)).
 
-## Thanks to our Contributors
+### Thanks to our Contributors
 
 Thanks goes to these wonderful people:
 
@@ -162,9 +234,11 @@ Chao Chen, Congli Gao, Ye Huang, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Lon
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.3.0-alpha Release Notes
+# MindSpore 0.3.0-alpha Release Notes
 
-## Major Features and Improvements
+## MindInsight
+
+### Major Features and Improvements
 
 * Profiling
     * Provide easy to use apis for profiling start/stop and profiling data analyse (on Ascend only).
@@ -178,7 +252,7 @@ Contributions of any kind are welcome!
 * Scripts conversion from other frameworks
     * Support for converting PyTorch scripts within TorchVision to MindSpore scripts automatically.
 
-## Bugfixes
+### Bugfixes
 
 * Fix pb files loaded problem when files are modified at the same time ([!53](https://gitee.com/mindspore/mindinsight/pulls/53)).
 * Fix load data thread stuck in `LineageCacheItemUpdater` ([!114](https://gitee.com/mindspore/mindinsight/pulls/114)).
@@ -186,7 +260,7 @@ Contributions of any kind are welcome!
 * Fix image and histogram event package error ([!1143](https://gitee.com/mindspore/mindspore/pulls/1143)).
 * Equally distribute histogram ignoring actual step number to avoid large white space ([!66](https://gitee.com/mindspore/mindinsight/pulls/66)).
 
-## Thanks to our Contributors
+### Thanks to our Contributors
 
 Thanks goes to these wonderful people:
 
@@ -194,9 +268,11 @@ Chao Chen, Congli Gao, Ye Huang, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Lon
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.2.0-alpha Release Notes
+# MindSpore 0.2.0-alpha Release Notes
 
-## Major Features and Improvements
+## MindInsight
+
+### Major Features and Improvements
 
 * Parameter distribution graph (Histogram).
 
@@ -206,7 +282,7 @@ Contributions of any kind are welcome!
 * GPU support
 * Model and dataset tracking linkage support
 
-## Bugfixes
+### Bugfixes
 
 * Reduce cyclomatic complexity of `list_summary_directories` ([!11](https://gitee.com/mindspore/mindinsight/pulls/11)).
 * Fix unsafe functions and duplication files and redundant codes ([!14](https://gitee.com/mindspore/mindinsight/pulls/14)).
@@ -214,7 +290,7 @@ Contributions of any kind are welcome!
 * Fix graph bug when node name is empty ([!34](https://gitee.com/mindspore/mindinsight/pulls/34)).
 * Fix start/stop command error code incorrect ([!44](https://gitee.com/mindspore/mindinsight/pulls/44)).
 
-## Thanks to our Contributors
+### Thanks to our Contributors
 
 Thanks goes to these wonderful people:
 
@@ -222,7 +298,9 @@ Ye Huang, Weifeng Huang, Zhenzhong Kou, Pengting Luo, Hongzhang Li, Yongxiong Li
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.1.0-alpha Release Notes
+# MindSpore 0.1.0-alpha Release Notes
+
+## MindInsight
 
 * Training process observation
     * Provides and displays training process information, including computational graphs and training process indicators.
