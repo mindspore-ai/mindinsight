@@ -9,7 +9,7 @@
 - [STABLE] Support memory profiling.(Ascend)
 - [STABLE] Support host cpu utilization profiling.(Ascend/GPU)
 - [STABLE] Support timeline for Host&Device Hybrid Training.(Ascend/GPU)
-- [STABLE] Support show step breakdown information(Step Interval, Forward and Backward Propagation, and Step Tail)of each device in cluster profiling ui page.(Ascend)
+- [STABLE] Support show step breakdown information(Step Interval, Forward and Backward Propagation, and Step Tail) of each device in cluster profiling ui page.(Ascend)
 
 #### MindConverter
 
