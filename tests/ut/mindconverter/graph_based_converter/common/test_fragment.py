@@ -14,7 +14,7 @@
 # ==============================================================================
 """Test fragment."""
 from unittest import TestCase
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment as Fragment
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import Fragment
 
 
 class TestFragment(TestCase):

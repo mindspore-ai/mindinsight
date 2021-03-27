@@ -15,7 +15,7 @@
 """Define the NodeStruct which stores all info. of a node."""
 from collections import OrderedDict
 
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import Fragment
 from mindinsight.mindconverter.graph_based_converter.generator.fragment_utils import FragmentHandler
 from mindinsight.mindconverter.graph_based_converter.generator.scope_utils import Scope
 from mindinsight.mindconverter.graph_based_converter.generator.args_translator import ArgsTranslation
@@ -109,7 +109,7 @@ class NodeStruct:
         """Update basic info from OnnxGraphNode."""
         self._update_basics_from_gn(gn)
 
-    def _update_from_fragment(self, frag: NewFragment):
+    def _update_from_fragment(self, frag: Fragment):
         """Update info from CodeFragment."""
         self._fragment = FragmentHandler(frag)
 
@@ -147,7 +147,7 @@ class NodeStruct:
         """
         if isinstance(arg, OnnxGraphNode):
             self._update_from_onnx_gn(arg)
-        elif isinstance(arg, NewFragment):
+        elif isinstance(arg, Fragment):
             self._update_from_fragment(arg)
         else:
             raise TypeError("NodeStruct received an unsupported initializing argument.")

@@ -89,7 +89,12 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         module_name = TABLE.get(op_name)
 
         if not module_name:
-            return None, dict(), None, dict()
+            code_template, exchange_msg, outputs_list, outputs_mapping = cls._generate_snippet_template(
+                operation=op_name,
+                params=params,
+                weights=weights
+            )
+            return code_template, exchange_msg, outputs_list, outputs_mapping
 
         pos = module_name.rfind(".")
         try:
@@ -103,7 +108,12 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             # If mapper can not be found, then skip it.
             err_msg = f"Converting {op_name} failed, see {str(e)}"
             log.error(err_msg)
-            return None, None, None, None
+            code_template, exchange_msg, outputs_list, outputs_mapping = cls._generate_snippet_template(
+                operation=op_name,
+                params=params,
+                weights=weights
+            )
+            return code_template, exchange_msg, outputs_list, outputs_mapping
 
         try:
             converter_name = op_name_converter(params=params, weights=weights, op_name=op_name)
@@ -148,7 +158,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
 
     @staticmethod
     def _generate_snippet_template(**kwargs):
-        op = kwargs.get("operation")
+        op = kwargs.get("operation").replace("onnx::", "onnx.")
         args = kwargs.get("converted_params", dict())
         weights = kwargs.get("weights")
         trainable_params = kwargs.get("trainable_params", dict())

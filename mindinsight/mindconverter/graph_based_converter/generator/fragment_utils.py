@@ -14,7 +14,7 @@
 # ==============================================================================
 """Miscellaneous Fragment related classes and functions. """
 
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import Fragment
 
 
 class FragmentHandler:
@@ -22,9 +22,9 @@ class FragmentHandler:
     Define a handler to process the information contained by Fragment.
 
     Args:
-        fragment (NewFragment): The refactored fragment class.
+        fragment (Fragment): The refactored fragment class.
     """
-    def __init__(self, fragment: NewFragment):
+    def __init__(self, fragment: Fragment):
         self._fragment = fragment
         # set the var in the fragment to be load and save.
         self._target_var = "var_0"
