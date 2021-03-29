@@ -17,7 +17,7 @@ import abc
 import copy
 from typing import Union, Iterable
 
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import Fragment
 
 
 class BaseOutput:
@@ -129,7 +129,7 @@ class NodeOutputManager(BaseOutputManager):
         new_mgr.identifier = self.identifier
         return new_mgr
 
-    def bind_opt_var_names(self, fragment: NewFragment):
+    def bind_opt_var_names(self, fragment: Fragment):
         """Get the opt_var_name in return statement."""
         for base_out in self._base_output_dict.values():
             base_out.opt_var_name = fragment.get_outputs_by_idx(base_out.idx_in_ms_provider)

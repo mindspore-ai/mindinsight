@@ -19,7 +19,7 @@ import re
 import copy
 
 from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import Fragment
 from mindinsight.mindconverter.graph_based_converter.common.outputs import NodeOutputManager
 from mindinsight.mindconverter.graph_based_converter.generator.generator import Generator
 
@@ -70,8 +70,8 @@ def batch_add_nodes(graph_obj, mapper) -> Generator:
         node_inst.add_input_and_output_shape(node_input, node_output)
         code_template, exchange_msg, outputs_lst, outputs_mapping = _convert_params(node_inst, mapper, external_inputs)
         outputs_mapping = NodeOutputManager(node_name, output_mappings=outputs_mapping)
-        fragment = NewFragment(data_entity=exchange_msg, code_template=code_template,
-                               outputs=outputs_lst, outputs_mapping=outputs_mapping)
+        fragment = Fragment(data_entity=exchange_msg, code_template=code_template,
+                            outputs=outputs_lst, outputs_mapping=outputs_mapping)
         generator_inst.add_node(node_name, node_instance=node_inst, node_fragment=fragment)
     return generator_inst
 
