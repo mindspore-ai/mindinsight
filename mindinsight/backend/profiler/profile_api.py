@@ -156,11 +156,12 @@ def get_training_trace_graph():
         }})
     graph_info['summary'] = analyser.summary
     graph_info['point_info'] = analyser.point_info
+    graph_info['is_heterogeneous'] = False
 
     # In heterogeneous training scene, do not display step trace data.
     cpu_op_type_file_name = f"cpu_op_type_info_{device_id}.csv"
     if cpu_op_type_file_name in os.listdir(profiler_dir_abs):
-        graph_info = {}
+        graph_info = {'is_heterogeneous': True}
 
     return jsonify(graph_info)
 
