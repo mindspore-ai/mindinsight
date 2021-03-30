@@ -16,7 +16,7 @@
 from unittest import TestCase
 import numpy as np
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.common.code_fragment import NewFragment
+from mindinsight.mindconverter.graph_based_converter.common.code_fragment import Fragment
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import NodeWeight
 
 
@@ -38,8 +38,8 @@ class TestCumSum(TestCase):
         exchange_msg['var_0']['variable_name'] = 'cumsum_op'
         exchange_msg['var_0']['inputs'] = ['x']
 
-        fragment = NewFragment(data_entity=exchange_msg, code_template=template, outputs=outputs_lists,
-                               outputs_mapping=outputs_mapping)
+        fragment = Fragment(data_entity=exchange_msg, code_template=template, outputs=outputs_lists,
+                            outputs_mapping=outputs_mapping)
 
         code = fragment()
         init_code = code[0]
