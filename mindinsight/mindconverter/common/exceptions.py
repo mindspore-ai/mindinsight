@@ -19,7 +19,6 @@ from enum import unique, Enum
 from importlib import import_module
 
 from lib2to3.pgen2 import parse
-from treelib.exceptions import DuplicatedNodeIdError, MultipleRootError, NodeIDAbsentError
 
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 
@@ -36,10 +35,9 @@ class ConverterErrors(ScriptConverterErrors):
 
     BASE_CONVERTER_FAIL = 000
     GRAPH_INIT_FAIL = 100
-    TREE_CREATE_FAIL = 200
-    SOURCE_FILES_SAVE_FAIL = 300
-    GENERATOR_FAIL = 400
-    SUB_GRAPH_SEARCHING_FAIL = 500
+    SOURCE_FILES_SAVE_FAIL = 200
+    GENERATOR_FAIL = 300
+    SUB_GRAPH_SEARCHING_FAIL = 400
 
 
 class ScriptNotSupport(MindInsightException):
@@ -273,30 +271,6 @@ class GraphInitError(MindConverterException):
         return except_source
 
 
-class TreeCreationError(MindConverterException):
-    """The tree create fail."""
-
-    @unique
-    class ErrCode(Enum):
-        """Define error code of TreeCreationError."""
-        UNKNOWN_ERROR = 0
-        NODE_INPUT_MISSING = 1
-        TREE_NODE_INSERT_FAIL = 2
-
-    BASE_ERROR_CODE = ConverterErrors.TREE_CREATE_FAIL.value
-    ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
-    DEFAULT_MSG = "Error occurred when create hierarchical tree."
-
-    def __init__(self, msg=DEFAULT_MSG):
-        super(TreeCreationError, self).__init__(user_msg=msg)
-
-    @classmethod
-    def raise_from(cls):
-        """Raise from exceptions below."""
-        except_source = NodeInputMissingError, TreeNodeInsertError, cls
-        return except_source
-
-
 class SourceFilesSaveError(MindConverterException):
     """The source files save fail error."""
 
@@ -388,35 +362,6 @@ class RuntimeIntegrityError(GraphInitError):
     @classmethod
     def raise_from(cls):
         return RuntimeError, AttributeError, ImportError, ModuleNotFoundError, cls
-
-
-class NodeInputMissingError(TreeCreationError):
-    """The node input missing error."""
-    ERROR_CODE = TreeCreationError.ErrCode.NODE_INPUT_MISSING.value
-
-    def __init__(self, msg):
-        super(NodeInputMissingError, self).__init__(msg=msg)
-
-    @classmethod
-    def raise_from(cls):
-        return ValueError, IndexError, KeyError, AttributeError, cls
-
-
-class TreeNodeInsertError(TreeCreationError):
-    """The tree node create fail error."""
-    ERROR_CODE = TreeCreationError.ErrCode.TREE_NODE_INSERT_FAIL.value
-
-    def __init__(self, msg):
-        super(TreeNodeInsertError, self).__init__(msg=msg)
-
-    @classmethod
-    def raise_from(cls):
-        """Raise from exceptions below."""
-        except_source = (OSError,
-                         DuplicatedNodeIdError,
-                         MultipleRootError,
-                         NodeIDAbsentError, cls)
-        return except_source
 
 
 class NodeInputTypeNotSupportError(SourceFilesSaveError):

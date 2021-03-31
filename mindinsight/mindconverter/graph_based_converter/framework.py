@@ -28,7 +28,7 @@ from mindinsight.mindconverter.graph_based_converter.constant import FrameworkTy
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
-from mindinsight.mindconverter.common.exceptions import GraphInitError, TreeCreationError, SourceFilesSaveError, \
+from mindinsight.mindconverter.common.exceptions import GraphInitError, SourceFilesSaveError, \
     BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError, \
     BadParamError
 from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
@@ -160,7 +160,6 @@ def _extract_model_name(model_path):
 
 @onnx_installation_validation
 @GraphInitError.uniform_catcher()
-@TreeCreationError.uniform_catcher()
 @SourceFilesSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
 def graph_based_converter_onnx_to_ms(graph_path: str,
@@ -188,7 +187,6 @@ def graph_based_converter_onnx_to_ms(graph_path: str,
 @tf_installation_validation
 @GraphInitError.uniform_catcher()
 @TfRuntimeError.uniform_catcher()
-@TreeCreationError.uniform_catcher()
 @SourceFilesSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
 def graph_based_converter_tf_to_ms(graph_path: str,
