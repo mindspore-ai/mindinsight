@@ -510,7 +510,8 @@
       "lifeCycle": "Lifecycle",
       "fpStart": "Forward",
       "bpEnd": "Backward"
-    }
+    },
+    "isHeterogeneous": "Heterogeneous training scenarios are not supported temporarily."
   },
   "profilingGPU": {
     "minddata_get_next_queue": {

@@ -106,7 +106,7 @@ limitations under the License.
                    alt="" />
             </div>
             <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
-            <p v-show="svg.initOver">{{$t("public.noData")}}</p>
+            <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
           </div>
         </div>
       </div>
@@ -475,6 +475,7 @@ export default {
         noData: true,
         initOver: false, // Is initialization complete
       },
+      isHeterogeneous: false,
     };
   },
   mounted() {
@@ -823,6 +824,7 @@ export default {
       RequestService.queryTrainingTrace(params).then(
           (res) => {
             this.svg.initOver = true;
+            this.isHeterogeneous = res.data.is_heterogeneous;
             if (res && res.data && res.data.training_trace_graph && res.data.training_trace_graph.length) {
               this.svg.noData = false;
               this.removeTrace();
@@ -866,6 +868,7 @@ export default {
             this.totalSteps = '--';
             this.totalTime = '--';
             this.tailPercent = '--';
+            this.isHeterogeneous = false;
           },
       );
     },
