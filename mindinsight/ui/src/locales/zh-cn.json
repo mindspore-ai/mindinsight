@@ -509,7 +509,8 @@
       "lifeCycle": "生命周期",
       "fpStart": "前向",
       "bpEnd": "后向"
-    }
+    },
+    "isHeterogeneous":"暂不支持异构训练场景"
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
