@@ -25,18 +25,21 @@ class OnnxSimplify:
 
     def __init__(self):
         self._onnx_model = None
+        self.model_path = str()
         self._constant_nodes = list()
         self._outputs_infer = dict()
 
-    def run_onnx_simplify(self, onnx_model, input_nodes):
+    def run_onnx_simplify(self, onnx_model, model_path, input_nodes):
         """
         Run to simplify onnx model.
 
         Args:
             onnx_model (onnx.ModelProto): Onnx Model.
+            model_path (str): Onnx model path.
             input_nodes (dict): Input nodes and corresponding sample shape.
         """
         self._onnx_model = onnx_model
+        self.model_path = model_path
         self._optimizer()
         self._get_constant_nodes()
         self._onnx_infer(input_nodes)
@@ -70,12 +73,34 @@ class OnnxSimplify:
             'fuse_transpose_into_gemm'
         ]
 
+        raw_initializers = dict()
+        for initializer in self._onnx_model.graph.initializer:
+            raw_initializers[initializer.name] = initializer
+
         input_num = len(self._onnx_model.graph.input)
         onnx_model_optimized = onnxoptimizer.optimize(self._onnx_model, optimizers_list, fixed_point=True)
+
+        for initializer in onnx_model_optimized.graph.initializer:
+            if raw_initializers.get(initializer.name, None):
+                raw_initializer = raw_initializers.get(initializer.name)
+                self.copy_initializer_external_data(raw_initializer, initializer)
 
         if self._onnx_model.ir_version > 3:
             del onnx_model_optimized.graph.input[input_num:]
         self._onnx_model = onnx_model_optimized
+
+    def copy_initializer_external_data(self, src, dst):
+        """
+        Copy external_data from src initializer to dst initializer.
+
+        Args:
+            src (graph.initializer): Source initializer.
+            dst (graph.initializer): Destination initializer.
+        """
+        if src.HasField('data_location'):
+            dst.data_location = src.data_location
+        if src.external_data:
+            dst.external_data.extend(src.external_data)
 
     def _get_constant_nodes(self):
         """Get constant nodes."""
@@ -109,6 +134,7 @@ class OnnxSimplify:
             output_nodes_name.extend(node.output)
         original_outputs = [nd.name for nd in self._onnx_model.graph.output]
         self._outputs_infer = fetch_output_from_onnx_model(self._onnx_model,
+                                                           self.model_path,
                                                            feed_dict, output_nodes_name)
         idx = 0
         while idx < len(self._onnx_model.graph.output):

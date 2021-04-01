@@ -16,6 +16,7 @@
 import json
 import os
 import stat
+import uuid
 from importlib import import_module
 from importlib.util import find_spec
 from typing import List, Tuple, Mapping
@@ -23,7 +24,7 @@ from typing import List, Tuple, Mapping
 import numpy as np
 
 from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
-    CheckPointGenerationError, WeightMapGenerationError
+    CheckPointGenerationError, WeightMapGenerationError, ModelLoadingError, OnnxModelSaveError
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, FrameworkType, \
     TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION, ONNX_MODEL_SUFFIX, DTYPE_MAP
 
@@ -84,7 +85,7 @@ def build_feed_dict(onnx_model, input_nodes: dict):
     return feed_dict
 
 
-def fetch_output_from_onnx_model(model, feed_dict: dict, output_nodes: List[str]):
+def fetch_output_from_onnx_model(model, model_path: str, feed_dict: dict, output_nodes: List[str]):
     """
     Fetch specific nodes output from onnx model.
 
@@ -93,6 +94,7 @@ def fetch_output_from_onnx_model(model, feed_dict: dict, output_nodes: List[str]
 
     Args:
         model (ModelProto): ONNX model.
+        model_path (str): ONNX model path.
         feed_dict (dict): Feed forward inputs.
         output_nodes (list[str]): Output nodes list.
 
@@ -105,9 +107,29 @@ def fetch_output_from_onnx_model(model, feed_dict: dict, output_nodes: List[str]
 
     edit_model = _add_outputs_of_onnx_model(model, output_nodes)
 
+    onnx = import_module("onnx")
     ort = import_module("onnxruntime")
-    sess = ort.InferenceSession(path_or_bytes=bytes(edit_model.SerializeToString()))
-    fetched_res = sess.run(output_names=output_nodes, input_feed=feed_dict)
+    try:
+        dir_path = os.path.dirname(model_path)
+        stem_name = os.path.splitext(os.path.basename(model_path))[0]
+        filename = ".~{0}_{1}".format(stem_name, str(uuid.uuid4()))
+        tmp_file = os.path.join(dir_path, filename)
+        onnx.save_tensor(edit_model, tmp_file)
+    except (TypeError, IOError) as error:
+        if os.path.exists(tmp_file):
+            os.remove(tmp_file)
+        raise OnnxModelSaveError("Onnx model save failed, {}".format(str(error)))
+
+
+    try:
+        sess = ort.InferenceSession(path_or_bytes=tmp_file)
+        fetched_res = sess.run(output_names=output_nodes, input_feed=feed_dict)
+    except ModelLoadingError.raise_from() as error:
+        raise ModelLoadingError("OnnxRuntimeError, {}".format(str(error)))
+    finally:
+        if os.path.exists(tmp_file):
+            os.remove(tmp_file)
+
     run_result = dict()
     for idx, opt in enumerate(output_nodes):
         run_result[opt] = fetched_res[idx]
@@ -161,13 +183,17 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
             raise ReportGenerationError(str(error))
 
         save_checkpoint = getattr(import_module("mindspore.train.serialization"), "save_checkpoint")
-        ckpt_file_path = os.path.realpath(os.path.join(out_folder, f"{model_name}.ckpt"))
-        try:
+        for idx, trainable_weight in enumerate(trainable_weights):
+            if len(trainable_weights) > 1:
+                ckpt_file_path = os.path.realpath(os.path.join(out_folder, f"{model_name}_{idx}.ckpt"))
+            else:
+                ckpt_file_path = os.path.realpath(os.path.join(out_folder, f"{model_name}.ckpt"))
             if os.path.exists(ckpt_file_path):
                 raise CheckPointGenerationError("Checkpoint file with the same name already exists.")
-            save_checkpoint(trainable_weights, ckpt_file_path)
-        except TypeError as error:
-            raise CheckPointGenerationError(str(error))
+            try:
+                save_checkpoint(trainable_weight, ckpt_file_path)
+            except TypeError as error:
+                raise CheckPointGenerationError(str(error))
 
         weight_map_path = os.path.realpath(os.path.join(report_folder, f"weight_map_of_{model_name}.json"))
         try:

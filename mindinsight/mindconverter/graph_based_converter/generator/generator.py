@@ -35,7 +35,7 @@ from mindinsight.mindconverter.graph_based_converter.report_generator import Rep
 from mindinsight.mindconverter.graph_based_converter.common.utils import replace_string_in_list
 from mindinsight.mindconverter.graph_based_converter.generator.matcher import MatcherLauncher
 from mindinsight.mindconverter.graph_based_converter.generator.shared_weights import SharedWeightHelper
-
+from mindinsight.mindconverter.graph_based_converter.constant import CHECKPOINT_SEGMENT_SIZE
 
 class CodeStruct:
     """
@@ -635,15 +635,25 @@ class Generator:
                         }
                     )
 
+        save_obj_list = list()
         save_obj = list()
+        data_nbytes = 0
         for weight_name, weight_value in trainable_weights_dict.items():
             obj = {
                 'name': weight_name,
                 'data': mindspore.Tensor(weight_value)
             }
+            data_nbytes += obj['data'].nbytes
+            if data_nbytes > CHECKPOINT_SEGMENT_SIZE:
+                save_obj_list.append(save_obj)
+                save_obj = []
+                data_nbytes = obj['data'].nbytes
             save_obj.append(obj)
 
-        return save_obj, weight_map
+        if save_obj:
+            save_obj_list.append(save_obj)
+
+        return save_obj_list, weight_map
 
     @GeneratorError.check_except("Generator occurs an error when generating code statements.")
     def generate(self):

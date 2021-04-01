@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Define ONNX related operations."""
+import os
 import itertools
 import re
 import abc
@@ -249,17 +250,19 @@ class OnnxDataLoader:
 
     Args:
         onnx_model (onnx.ModelProto): Original Onnx defined model.
+        model_path (str): Onnx model path.
         input_nodes (Union[str, list]): Input nodes of ONNX model.
         output_nodes (Union[str, list]): Output nodes of ONNX model.
         infer_shape (bool): Enable the shape inference after conversion.
             Default: True
     """
 
-    def __init__(self, onnx_model, input_nodes: dict,
+    def __init__(self, onnx_model, model_path: str, input_nodes: dict,
                  output_nodes: list, infer_shape=True):
         onnx_sim = OnnxSimplify()
-        onnx_model_sim = onnx_sim.run_onnx_simplify(onnx_model, input_nodes)
+        onnx_model_sim = onnx_sim.run_onnx_simplify(onnx_model, model_path, input_nodes)
         self.model = onnx_model_sim
+        self.model_path = model_path
         self.graph = onnx_model_sim.graph
         self.nodes = onnx_model_sim.graph.node
         self.input_nodes = input_nodes
@@ -384,7 +387,10 @@ class OnnxDataLoader:
 
         feed_dict = build_feed_dict(self.inferred_model, self.input_nodes)
 
-        outputs_infer = fetch_output_from_onnx_model(self.model, feed_dict, output_nodes_name)
+        outputs_infer = fetch_output_from_onnx_model(self.model,
+                                                     self.model_path,
+                                                     feed_dict,
+                                                     output_nodes_name)
         return outputs_infer
 
     def _parse_nodes(self):
@@ -434,6 +440,9 @@ class OnnxDataLoader:
             t = OnnxTensor(tensor)
             self.tensors_dict[t.name] = t
 
+        self._global_context.onnx_tensors_collection = self.tensors_dict
+
+    def _remove_extra_graph_output(self):
         idx = 0
         while idx < len(self.model.graph.output):
             cur_opt = self.model.graph.output[idx]
@@ -441,8 +450,6 @@ class OnnxDataLoader:
                 self.model.graph.output.remove(cur_opt)
                 continue
             idx += 1
-
-        self._global_context.onnx_tensors_collection = self.tensors_dict
 
     def _parse_node_output_shape(self):
         """
@@ -516,12 +523,12 @@ class OnnxDataLoader:
         # Parse ONNX Graph level info
         self._parse_graph()
 
-        # 1. parse all tensors
-        self._parse_tensors()
-
-        # 2. parse all nodes, note that parse tensors must be done as nodes require tensor info
+        # 1. parse all nodes, note that parse tensors must be done as nodes require tensor info
         # to process the node weight sharing.
         self._parse_nodes()
+
+        # 2. remove extra output from onnx model graph
+        self._remove_extra_graph_output()
 
         # 3. parse value info (incl. node output shape)
         if self._is_infer_shape:
@@ -534,14 +541,28 @@ class OnnxDataLoader:
                 log.exception(e)
                 raise e
 
-        # 4. Optimize graph to eliminate some nodes.
+        # 4. load external_data for initializer
+        self.load_external_data()
+
+        # 5. parse all tensors
+        self._parse_tensors()
+
+        # 6. Optimize graph to eliminate some nodes.
         self._find_nodes_to_be_eliminated()
 
-        # 5. build nodes connections
+        # 7. build nodes connections
         self.build_nodes_connection()
 
-        # 6. Run onnx model to fetch actual value of eliminated nodes.
+        # 8. Run onnx model to fetch actual value of eliminated nodes.
         self._fetch_eliminated_nodes_value()
+
+    def load_external_data(self):
+        load_external_data_for_model = getattr(import_module("onnx.external_data_helper"),
+                                               "load_external_data_for_model")
+        model_filepath = os.path.realpath(self.model_path)
+        if model_filepath:
+            base_dir = os.path.dirname(model_filepath)
+            load_external_data_for_model(self.model, base_dir)
 
     def _fetch_eliminated_nodes_value(self):
         """Fetch eliminated nodes values by running onnx inference."""
@@ -556,7 +577,10 @@ class OnnxDataLoader:
                 shape_ref = self._nodes_dict[node].input_name_list[1]
                 output_tensors.append(shape_ref)
             feed_dict = build_feed_dict(self.model, self.input_nodes)
-            fetch_dict = fetch_output_from_onnx_model(self.model, feed_dict=feed_dict, output_nodes=output_tensors)
+            fetch_dict = fetch_output_from_onnx_model(self.model,
+                                                      self.model_path,
+                                                      feed_dict=feed_dict,
+                                                      output_nodes=output_tensors)
             for opt_tensor_name, value in fetch_dict.items():
                 self.tensors_dict[opt_tensor_name] = OnnxTensor(value, opt_tensor_name)
 
@@ -570,7 +594,10 @@ class OnnxDataLoader:
                 shape_ref = self._nodes_dict[node].input_name_list[3]
                 output_tensors.append(shape_ref)
             feed_dict = build_feed_dict(self.model, self.input_nodes)
-            fetch_dict = fetch_output_from_onnx_model(self.model, feed_dict=feed_dict, output_nodes=output_tensors)
+            fetch_dict = fetch_output_from_onnx_model(self.model,
+                                                      self.model_path,
+                                                      feed_dict=feed_dict,
+                                                      output_nodes=output_tensors)
             for opt_tensor_name, value in fetch_dict.items():
                 self.tensors_dict[opt_tensor_name] = OnnxTensor(value, opt_tensor_name)
 

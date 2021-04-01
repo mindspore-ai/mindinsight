@@ -90,9 +90,10 @@ class Graph(BaseGraph, abc.ABC):
 
     sorted = False
 
-    def __init__(self, model, **kwargs):
+    def __init__(self, model, model_path, **kwargs):
         super(Graph, self).__init__()
         self.model = model
+        self.model_path = model_path
         self._raw_input_nodes = kwargs.get("input_nodes")
         self._raw_output_nodes = kwargs.get("output_nodes")
         self._nodes_collection = OrderedDict()
@@ -246,7 +247,7 @@ class Graph(BaseGraph, abc.ABC):
             cls, graph instance.
         """
         src_graph = cls.load_graph(graph_path=model_path, **kwargs)
-        return cls(src_graph, **kwargs)
+        return cls(src_graph, model_path, **kwargs)
 
 
 class GraphNode(abc.ABC):

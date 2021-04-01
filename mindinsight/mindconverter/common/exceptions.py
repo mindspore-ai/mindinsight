@@ -283,6 +283,7 @@ class SourceFilesSaveError(MindConverterException):
         REPORT_GENERATE_FAIL = 3
         CKPT_GENERATE_FAIL = 4
         MAP_GENERATE_FAIL = 5
+        MODEL_SAVE_FAIL = 6
 
     BASE_ERROR_CODE = ConverterErrors.SOURCE_FILES_SAVE_FAIL.value
     ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
@@ -299,6 +300,7 @@ class SourceFilesSaveError(MindConverterException):
                          ReportGenerationError,
                          CheckPointGenerationError,
                          WeightMapGenerationError,
+                         OnnxModelSaveError,
                          IOError, cls)
         return except_source
 
@@ -430,6 +432,17 @@ class WeightMapGenerationError(SourceFilesSaveError):
         """Raise from exception below."""
         return cls
 
+class OnnxModelSaveError(SourceFilesSaveError):
+    """The onnx model save fail error."""
+    ERROR_CODE = SourceFilesSaveError.ErrCode.MODEL_SAVE_FAIL.value
+
+    def __init__(self, msg):
+        super(OnnxModelSaveError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        """Raise from exception below."""
+        return cls
 
 class SubGraphSearchingError(MindConverterException):
     """Sub-graph searching exception."""
