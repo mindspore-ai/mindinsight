@@ -15,6 +15,8 @@
 """The specific cluster analyser class"""
 import json
 import os
+import csv
+import re
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException, \
@@ -368,3 +370,178 @@ class ClusterFlopsAnalyser(ClusterAnalyser):
             raise ProfilerIOException()
 
         return file_content
+
+
+class ClusterHcclAnalyser(ClusterAnalyser):
+    """The analyser for analyzing the cluster communication info."""
+    _col_names = ['step_num', 'communication_cost', 'wait_cost']
+
+    def __init__(self, cluster_profiler_dir, device_id):
+        super().__init__(cluster_profiler_dir, device_id)
+        self._none_sort_col_names = []
+        self._total_step_num = self._get_total_step_num()
+
+    def get_cluster_link_info(self, condition=None):
+        """Get cluster link info."""
+        self._col_names = ["src_dst", "link_type", "communication_cost", "communication_size", "brand_width"]
+        if condition is None:
+            condition = {}
+        filter_condition = condition.get('filter_condition', {})
+        sort_condition = condition.get('sort_condition')
+        group_condition = condition.get('group_condition')
+        self._analyser_cluster_link_info(filter_condition)
+        self._filter_cluster_link_info(filter_condition)
+        if sort_condition:
+            self._sort(sort_condition)
+        if group_condition:
+            self._group(group_condition)
+
+        return {
+            'cluster_link_info': self._result,
+            'size': self._cluster_link_info_size
+        }
+
+    def _get_total_step_num(self):
+        """Get the num of train step."""
+        total_step_num = 0
+        # Take the data of one of the machines to get the total number of steps.
+        host_ip_dir = self._host_ips_dir[0]
+        target_dir_path = os.path.join(self._cluster_profiler_dir, 'cluster_profiler', host_ip_dir, 'profiler')
+        target_dir_path = validate_and_normalize_path(
+            target_dir_path, raise_key="Invalid profiler dir path.")
+        if not os.path.exists(target_dir_path):
+            log.error('Did not find cluster_profiler dir : %s', target_dir_path)
+            raise ProfilerDirNotFoundException(msg='Did not find cluster_profiler dir:{}'.format(target_dir_path))
+
+        entries = os.scandir(target_dir_path)
+        for entry in entries:
+            if entry.is_symlink():
+                continue
+            if entry.is_file() and entry.name.startswith('hccl_raw'):
+                file_path = os.path.join(target_dir_path, entry.name)
+                with open(file_path, 'r') as src_file:
+                    lines = src_file.readlines()
+                # The first row is col_name, the last row is the average.
+                if len(lines) > 2:
+                    total_step_num = len(lines)-2
+                break
+        return total_step_num
+
+    def _filter_cluster_link_info(self, filter_condition):
+        """Filter cluster link info."""
+        src_rank = filter_condition.get("src_rank", ".")
+        dst_rank = filter_condition.get("dst_rank", ".")
+        src_dst = src_rank + '-' + dst_rank
+        link_type = filter_condition.get("link_type", ".")
+        if src_rank == "." and dst_rank == "." and link_type == ".":
+            self._cluster_link_info_size = len(self._result)
+            return
+
+        def _inner_filter(item: list):
+            # index0:src_dst_rank_id, index1:link type
+            src_dst_pattern = re.match(src_dst, item[0])
+            link_type_pattern = re.match(link_type, item[1])
+            if src_dst_pattern and link_type_pattern:
+                return True
+            return False
+        self._result = list(filter(_inner_filter, self._result))
+        self._cluster_link_info_size = len(self._result)
+
+    def _analyser_cluster_link_info(self, filter_condition):
+        """Get cluster link info."""
+        link_info = []
+        step_id = filter_condition.get("step_id", 0)
+        cluster_communication_info = self._get_cluster_communication_info(step_id)
+        # index3:link_info
+        cluster_link_info = [i[3] for i in cluster_communication_info]
+        for item in cluster_link_info:
+            for src_dst_key, src_dst_value in item.items():
+                for link_type_key, link_type_value in src_dst_value.items():
+                    # index0:communication_cost,index1:communication_size,communication_brand_width
+                    link_info.append([src_dst_key, link_type_key, link_type_value[0],
+                                      link_type_value[1], link_type_value[2]])
+
+        self._result = link_info
+
+    def _get_cluster_communication_info(self, step_num):
+        """Get cluster communication info."""
+        cluster_communication_info = list()
+        for item in self._host_device_rank_relation:
+            # item[0]:host_ip, item[1]:device_id, item[2]:rank_id
+            communication_info = self._get_communication_info(item[0], item[1], step_num)
+            communication_info.append(item[0])
+            communication_info.append(item[1])
+            communication_info.append(item[2])
+            cluster_communication_info.append(communication_info)
+        self._cluster_communication_info_size = len(cluster_communication_info)
+
+        return cluster_communication_info
+
+    def _get_communication_info(self, host_ip, device_id, step_num):
+        """Get step trace info."""
+        file_name = 'hccl_raw_{}.csv'.format(device_id)
+        communication_file_path = \
+            os.path.join(self._cluster_profiler_dir, 'cluster_profiler', host_ip, 'profiler', file_name)
+        communication_file_path = validate_and_normalize_path(
+            communication_file_path, raise_key="Invalid  communication file path.")
+        if not os.path.exists(communication_file_path):
+            log.error('Did not find the file: %s', communication_file_path)
+            raise ProfilerFileNotFoundException(msg='Did not find the file:{}'.format(communication_file_path))
+        communication_info = list()
+        step_num = str(step_num)
+        with open(communication_file_path, 'r') as src_file:
+            csv_reader = csv.reader(src_file)
+            # when the step_num value is 0, it means the average value.
+            # The last line of the step_trace_raw_{}_detail_time.csv records the average value.
+            # The first element of the last line is '-'.
+            step_num = '-' if step_num == '0' else step_num
+            for row in csv_reader:
+                if row[0] == step_num:
+                    communication_info = row
+                    break
+        # Convert string to floating point and dictionary
+        if communication_info:
+            communication_info[1] = float(communication_info[1])
+            communication_info[2] = float(communication_info[2])
+            communication_info[3] = json.loads(communication_info[3])
+        return communication_info
+
+    def _load(self):
+        """Load data according to the parsed profiling files."""
+
+    def _filter(self, filter_condition):
+        """
+        Filter the profiling data according to the filter condition.
+
+        Args:
+            filter_condition (dict): The filter condition.
+
+                - step_id (int): The selected step id.
+        """
+
+        step_id = filter_condition.get("step_id", 0)
+        self._result = self._get_cluster_communication_info(step_id)
+
+    def _organize_query_result(self):
+        """
+        Organize the query result.
+
+        Returns:
+            dict, the query result.
+        """
+        result = list()
+        # item[0]:step_num, item[1]:communication_cost, item[2]:wait_cost, item[3]:link_info,
+        # item[4]:communication_operator_cost, item[5]:host_ip, item[6]:device_id, item[7]:rank_id,
+        for item in self._result:
+            communication_info = dict()
+            communication_info["communication_info"] = item[1:4]
+            communication_info["host_ip"] = item[5]
+            communication_info["device_id"] = item[6]
+            communication_info["rank_id"] = item[7]
+            result.append(communication_info)
+
+        return {
+            'total_step_num': self._total_step_num,
+            'communication': result,
+            'size': self._cluster_communication_info_size
+        }
