@@ -24,7 +24,9 @@
     "dataLoading": "Loading data...",
     "notice": "Information",
     "caseMode": "Not case sensitive",
-    "all": "All"
+    "all": "All",
+    "details": "Details",
+    "delete": "Delete"
   },
   "symbols": {
     "leftbracket": "(",
@@ -52,12 +54,14 @@
     "operation": "Operation",
     "viewDashboard": "Training Dashboard",
     "viewProfiler": "Profiling",
+    "viewOfflineDebugger": "Offline Debugger",
     "modelTraceback": "Model Lineage",
     "dataTraceback": "Dataset Lineage",
     "comparePlate": "Comparison Dashboard",
     "disableProfilerTip": "Failed to view profiling because no profiler log is available.",
     "disableDashboardTip": "Failed to view training dashboard because no summary log or pb files are available.",
     "disableParameterTip": "Failed to view parameter details because no lineage log is available.",
+    "disableOfflineDebugger": "Failed to view offline debugger because no debugger log is available.",
     "openNewTab": "Open Link in New Tab",
     "paramDetails": "Parameter Details",
     "trainingParamDetails": "Training Parameter Details",
@@ -80,7 +84,12 @@
     "tensorUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#tensor-visualization",
     "graphUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#computational-graph-visualization",
     "dataProcessUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#dataset-graph-visualization",
-    "imageUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#image-visualization"
+    "imageUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#image-visualization",
+    "sessionLimit": "The number of sessions of the offline debugger exceeds the number of online sessions",
+    "sessionLimitNum": "At most 2 exist at the same time",
+    "sessionLists": "List of currently existing sessions",
+    "deleteSessionConfirm": "This operation will delete the current session, do you want to continue?",
+    "deleteSessionSuccess": "Delete session successfully!"
   },
   "modelTraceback": {
     "summaryPath": "Summary Path",
@@ -561,7 +570,7 @@
     "terminate": "TERMINATE",
     "selectCondition": "Select a condition",
     "inputStep": "Enter a step value",
-    "inputTip": "A positive integer less than 2147483648",
+    "inputTip": "A positive integer less than or equal to {total_step_num}",
     "curHitNode": "Watch Point Hit List",
     "backstageStatus": "The backend running status is ",
     "view": "View",
@@ -830,7 +839,9 @@
       "allPositive": "he parameter value must be greater than 0.",
       "watchOverflow": "The asynchronous full overflow watching function must be enabled before the training starts."
     },
-    "paramValueTip": "Preset Value: {value}"
+    "paramValueTip": "Preset Value: {value}",
+    "logicCard": "Logic card",
+    "inpStepTip": "Step：0~{total_step_num}"
   },
   "explain": {
     "explain": "Model Explanation",
@@ -952,6 +963,7 @@
     "5054B183": "Backend training is in progress or has ended. Please try again later",
     "5054B184": "The operation is too fast, the backend service has been suspended.",
     "5054B189": "Do not set the value repeatedly.",
-    "5054B083": "Failed to create the watchpoint. Do not use invalid rules."
+    "5054B083": "Failed to create the watchpoint. Do not use invalid rules.",
+    "5054B202": "The debugger offline server module was not found"
   }
 }

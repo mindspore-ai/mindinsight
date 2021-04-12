@@ -362,8 +362,9 @@ export default {
       const params = {
         tensor_name: this.curRowObj.name,
         graph_name: this.curRowObj.graph_name,
+        rank_id: this.curRowObj.rank_id,
       };
-      RequestService.getTensorGraphData(params).then(
+      RequestService.getTensorGraphData(params, this.curRowObj.sessionId).then(
           (res) => {
             if (res && res.data && res.data.graph && res.data.graph.nodes && res.data.graph.nodes.length) {
               this.graphShow = true;
@@ -419,8 +420,9 @@ export default {
       const params = {
         tensor_name: this.curRowObj.name,
         graph_name: this.curRowObj.graph_name,
+        rank_id: this.curRowObj.rank_id,
       };
-      RequestService.tensorHitsData(params).then(
+      RequestService.tensorHitsData(params, this.curRowObj.sessionId).then(
           (res) => {
             if (res && res.data && res.data.watch_points && res.data.watch_points.length) {
               this.leftDataShow = true;
@@ -995,11 +997,12 @@ export default {
         shape: encodeURIComponent(shape),
         tolerance: this.tolerance / 100,
         graph_name: row.graph_name,
+        rank_id: row.rank_id,
       };
       if (loadingFlag) {
         this.loadingInstance = this.$loading(this.loadingOption);
       }
-      RequestService.tensorComparisons(params).then(
+      RequestService.tensorComparisons(params, row.sessionId).then(
           (res) => {
             if (res && res.data && res.data.tensor_value) {
               if (row.shape === '[]') {
@@ -1088,11 +1091,12 @@ export default {
         shape: encodeURIComponent(shape),
         graph_name: row.graph_name,
         prev: this.gridType === 'preStep' ? true : false,
+        rank_id: row.rank_id,
       };
       if (loadingFlag) {
         this.loadingInstance = this.$loading(this.loadingOption);
       }
-      RequestService.tensors(params).then(
+      RequestService.tensors(params, row.sessionId).then(
           (res) => {
             if (row.shape === '[]') {
               this.showFilterInput = false;

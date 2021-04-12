@@ -97,6 +97,16 @@ limitations under the License.
                   {{$t('summaryManage.viewProfiler')}}
                 </span>
                 <span class="menu-item operate-btn"
+                      v-if="scope.row.viewOfflineDebugger"
+                      @contextmenu.prevent="rightClick(scope.row, $event, 2)"
+                      @click.stop="goToOfflineDebugger(scope.row)">
+                  {{$t('summaryManage.viewOfflineDebugger')}} </span>
+                <span class="menu-item operate-btn button-disable"
+                      v-else
+                      :title="$t('summaryManage.disableOfflineDebugger')">
+                  {{$t('summaryManage.viewOfflineDebugger')}}
+                </span>
+                <span class="menu-item operate-btn"
                       v-if="scope.row.paramDetails"
                       @click.stop="showModelDialog(scope.row)">
                   {{$t('summaryManage.paramDetails')}} </span>
@@ -157,6 +167,45 @@ limitations under the License.
         <li @click="doRightClick()">{{$t('summaryManage.openNewTab')}}</li>
       </ul>
     </div>
+    <el-dialog :visible.sync="debuggerDialog.showDialogModel"
+               width="50%"
+               :close-on-click-modal="false"
+               class="details-data-list">
+      <span slot="title">
+        <span class="sessionMsg">{{ debuggerDialog.title }}</span>
+        <el-tooltip placement="right"
+                    effect="light"
+                    popper-class="legend-tip"
+                    :content="$t('summaryManage.sessionLimitNum')">
+          <i class="el-icon-info"></i>
+        </el-tooltip>
+      </span>
+      <div class="session-title">{{ $t('summaryManage.sessionLists') }}</div>
+      <el-table :data="debuggerDialog.trainJobs">
+        <el-table-column width="50"
+                         type=index
+                         :label="$t('summaryManage.sorting')">
+        </el-table-column>
+        <el-table-column min-width="300"
+                         prop="relative_path"
+                         :label="$t('summaryManage.summaryPath')"
+                         show-overflow-tooltip>
+        </el-table-column>
+        <!-- operate -->
+        <el-table-column prop="operate"
+                         :label="$t('summaryManage.operation')"
+                         class-name="operate-container">
+          <template slot-scope="scope">
+            <span class="menu-item operate-btn first-btn"
+                  @click="deleteSession(scope.row.session_id)">
+              {{$t('public.delete')}} </span>
+            <span class="menu-item operate-btn first-btn"
+                  @click="viewSession(scope.row)">
+              {{$t('debugger.view')}} </span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -223,7 +272,12 @@ export default {
         type: 0,
       },
       tableDom: null,
-      operateWidth: localStorage.getItem('milang') === 'en-us' ? 400 : 290,
+      operateWidth: localStorage.getItem('milang') === 'en-us' ? 550 : 400,
+      debuggerDialog: {
+        title: this.$t('summaryManage.sessionLimit'),
+        showDialogModel: false,
+        trainJobs: [],
+      },
     };
   },
   computed: {},
@@ -292,6 +346,7 @@ export default {
                     i.update_time = i.update_time ? i.update_time : '--';
                     i.viewProfiler = i.profiler_dir && i.profiler_dir.length;
                     i.viewDashboard = i.summary_files || i.graph_files || i.lineage_files;
+                    i.viewOfflineDebugger = i.dump_dir;
                     i.paramDetails = i.lineage_files;
                   });
                   this.currentFolder = res.data.name ? res.data.name : '--';
@@ -370,7 +425,83 @@ export default {
         },
       });
     },
-
+    /**
+     * go to Offline Debugger
+     * @param {Object} row select row
+     */
+    goToOfflineDebugger(row) {
+      this.contextMenu.show = false;
+      const debuggerDir = row.dump_dir;
+      const params = {
+        session_type: 'OFFLINE',
+        dump_dir: debuggerDir,
+      };
+      this.getSessionId(params).then((value) => {
+        if (value !== undefined) {
+          this.$router.push({
+            path: '/offline-debugger',
+            query: {
+              dir: debuggerDir,
+              sessionId: value,
+            },
+          });
+        }
+      });
+    },
+    getSessionId(params) {
+      return RequestService.getSession(params).then(
+          (res) => {
+            if (res && res.data) {
+              const sessionId = res.data;
+              return sessionId;
+            }
+          },
+          (error) => {
+            if (error && error.response && error.response.data && error.response.data.error_code === '5054B280') {
+              this.checkSessions();
+            }
+          },
+      );
+    },
+    deleteSession(sessionId) {
+      this.$confirm(this.$t('summaryManage.deleteSessionConfirm'), this.$t('public.notice'), {
+        confirmButtonText: this.$t('public.sure'),
+        cancelButtonText: this.$t('public.cancel'),
+        type: 'warning',
+      }).then(() => {
+        RequestService.deleteSession(sessionId).then((res) => {
+          this.$message({
+            type: 'success',
+            message: this.$t('summaryManage.deleteSessionSuccess'),
+          });
+          this.checkSessions();
+        });
+      });
+    },
+    checkSessions() {
+      RequestService.checkSessions().then((res) => {
+        if (res && res.data && res.data.train_jobs) {
+          const trainJobs = res.data.train_jobs;
+          this.debuggerDialog.trainJobs = Object.keys(trainJobs).map((val) => {
+            return {
+              relative_path: decodeURIComponent(val),
+              session_id: trainJobs[val],
+            };
+          });
+          this.debuggerDialog.showDialogModel = true;
+        }
+      });
+    },
+    viewSession(row) {
+      const dir = row.relative_path;
+      this.$router.push({
+        path: '/offline-debugger',
+        query: {
+          dir,
+          sessionId: row.session_id,
+        },
+      });
+    },
     rightClick(row, event, type) {
       const maxWidth = 175;
       this.contextMenu.data = row;
@@ -387,7 +518,28 @@ export default {
       if (!row) {
         return;
       }
-      if (this.contextMenu.type) {
+      if (this.contextMenu.type === 2) {
+        // open offline debugger
+        this.contextMenu.show = false;
+        const debuggerDir = row.dump_dir;
+        const params = {
+          session_type: 'OFFLINE',
+          dump_dir: debuggerDir,
+        };
+        this.getSessionId(params).then((value) => {
+          if (value !== undefined) {
+            const routeUrl = this.$router.resolve({
+              path: '/offline-debugger',
+              query: {
+                dir: debuggerDir,
+                sessionId: value,
+              },
+            });
+            window.open(routeUrl.href, '_blank');
+          }
+        });
+      } else if (this.contextMenu.type === 1) {
+        // open profiling
         this.contextMenu.show = false;
         const profilerDir = encodeURIComponent(row.profiler_dir);
         const trainId = encodeURIComponent(row.train_id);
@@ -407,7 +559,7 @@ export default {
           },
         });
         window.open(routeUrl.href, '_blank');
-      } else {
+      } else { // open training dashboard
         this.contextMenu.show = false;
         const trainId = encodeURIComponent(row.train_id);
 
@@ -699,6 +851,16 @@ export default {
 }
 #cl-summary-manage .details-data-list .el-dialog__body .details-data-title {
   margin-bottom: 20px;
+}
+#cl-summary-manage .details-data-list .sessionMsg {
+  color: #333;
+  font-weight: bold;
+  font-size: 16px;
+  margin-right: 5px;
+}
+#cl-summary-manage .details-data-list .session-title {
+  margin-bottom: 10px;
+  color: #333;
 }
 #cl-summary-manage .is-disabled.custom-btn {
   background-color: #f5f5f6;

@@ -30,11 +30,11 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
     DebuggerCompareTensorError, DebuggerCreateWatchPointError, DebuggerDeleteWatchPointError
 from mindinsight.debugger.common.utils import Streams
 from mindinsight.debugger.debugger_cache import DebuggerCache
-from mindinsight.debugger.debugger_server import DebuggerServer
-from mindinsight.debugger.debugger_server import grpc_server_base
-from mindinsight.debugger.stream_operator import watchpoint_operator
+from mindinsight.debugger.debugger_services.debugger_server_factory import DebuggerServerContext
+from mindinsight.debugger.debugger_session import DebuggerSession as DebuggerServer
 from mindinsight.debugger.stream_handler import GraphHandler, WatchpointHandler, MetadataHandler, \
     TensorHandler
+from mindinsight.debugger.stream_operator import watchpoint_operator
 from tests.ut.debugger.configurations import compare_debugger_result_with_file, mock_tensor_history
 
 
@@ -48,12 +48,12 @@ class TestDebuggerServer:
 
     def setup_method(self):
         """Prepare debugger server object."""
-        self._server = DebuggerServer()
+        context = DebuggerServerContext(dbg_mode='online')
+        self._server = DebuggerServer(context)
 
     @mock.patch.object(signal, 'signal')
     @mock.patch.object(Thread, 'join')
     @mock.patch.object(Thread, 'start')
-    @mock.patch.object(grpc_server_base, 'add_EventListenerServicer_to_server')
     @mock.patch.object(grpc, 'server')
     def test_stop_server(self, *args):
         """Test stop debugger server."""
@@ -62,7 +62,6 @@ class TestDebuggerServer:
         self._server.start()
         self._server._stop_handler(MagicMock(), MagicMock())
         assert self._server.back_server is not None
-        assert self._server.grpc_server_manager == mock_grpc_server_manager
 
     @mock.patch.object(DebuggerCache, 'get_data')
     def test_poll_data(self, *args):
@@ -186,7 +185,6 @@ class TestDebuggerServer:
             self._server.create_watchpoint({'watch_condition': {'id': 'inf'}})
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
-    @mock.patch.object(MetadataHandler, 'backend', 'GPU')
     @mock.patch.object(GraphHandler, 'get_node_basic_info', return_value=MagicMock())
     @mock.patch.object(GraphHandler, 'get_node_type', return_value='aggregation_scope')
     @mock.patch.object(watchpoint_operator, 'get_basic_node_info', return_value=MagicMock())
@@ -194,6 +192,7 @@ class TestDebuggerServer:
     def test_create_watchpoint(self, *args):
         """Test create watchpoint."""
         args[0].return_value = 1
+        self._server.cache_store.get_stream_handler((Streams.METADATA)).backend = 'GPU'
         res = self._server.create_watchpoint(
             {'watch_condition': {'id': 'tensor_too_large', 'params': [{'name': 'max_gt', 'value': 1.0}]},
              'watch_nodes': ['watch_node_name']})

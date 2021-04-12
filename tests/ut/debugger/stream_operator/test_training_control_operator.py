@@ -48,7 +48,8 @@ class TestTrainingControlOperator:
         """Test validate leaf name."""
         args[0].return_value = 'name_scope'
         with pytest.raises(DebuggerParamValueError, match='Invalid leaf node name.'):
-            self._server._validate_continue_node_name(node_name='mock_node_name', graph_name='mock_graph_name')
+            self._server._validate_continue_node_name(node_name='mock_node_name', graph_name='mock_graph_name',
+                                                      rank_id=0)
 
     @pytest.mark.parametrize('mode, cur_state, state', [
         ('continue', 'waiting', 'sending'),
@@ -64,3 +65,12 @@ class TestTrainingControlOperator:
         """Test construct run event."""
         res = self._server._construct_run_event({'level': 'node'})
         assert res.run_cmd == RunCMD(run_level='node', node_name='')
+
+    @pytest.mark.parametrize('mode, state', [
+        ('reset', 'waiting')])
+    def test_control_reset_step(self, mode, state):
+        """Test control request, in 'reset' mode."""
+        with mock.patch.object(MetadataHandler, 'max_step_num', 10), \
+            mock.patch.object(MetadataHandler, 'debugger_type', 'offline'):
+            res = self._server.control(mode=mode, params={'steps': 9})
+            assert res == {'metadata': {'enable_recheck': False, 'state': state, 'step': 9}}

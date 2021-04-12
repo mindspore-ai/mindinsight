@@ -26,7 +26,7 @@ limitations under the License.
     <div class="cl-center"
          :class="showWarmText ? 'cl-center-height' : ''">
 
-      <router-view></router-view>
+      <router-view :key="$route.fullPath"></router-view>
     </div>
   </div>
 </template>

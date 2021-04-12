@@ -28,6 +28,46 @@ from mindinsight.utils.tensor import TensorUtils, TensorComparison
 TensorBasicInfo = namedtuple('tensor_basic_info', ['full_name', 'node_type', 'iter'])
 
 
+class MultiCardTensorHandler:
+    """Multi-card Tensor Handler."""
+    def __init__(self):
+        self.tensor_handlers = {0: TensorHandler()}
+
+    def set_step(self, step_id):
+        """Set step id."""
+        for tensor_handler in self.tensor_handlers.values():
+            tensor_handler.cur_step = step_id
+
+    def get_tensor_handler_by_rank_id(self, rank_id=0, create_if_not_exit=False):
+        """get handler by rank id"""
+        if rank_id in self.tensor_handlers:
+            return self.tensor_handlers.get(rank_id)
+        if create_if_not_exit:
+            tensor_handler = TensorHandler()
+            self.tensor_handlers[rank_id] = tensor_handler
+            return tensor_handler
+        log.error("There is no rank id %d in MultiCardTensorHandler.", rank_id)
+        raise ValueError
+
+    def put(self, value):
+        """put graphs into graph_handlers"""
+        for rank_id, tensor in value:
+            if rank_id not in self.tensor_handlers:
+                self.tensor_handlers[rank_id] = TensorHandler()
+            self.tensor_handlers[rank_id].put(tensor)
+
+    def get(self, filter_condition=None, rank_id=0):
+        """Get the graph of specific node for specific device."""
+        if rank_id in self.tensor_handlers:
+            return self.tensor_handlers.get(rank_id).get(filter_condition)
+        log.error("There is no rank id %d.", rank_id)
+        raise ValueError
+
+    def clean(self):
+        """Clean cache."""
+        self.__init__()
+
+
 class TensorHandler(StreamHandlerBase):
     """Metadata Handler."""
 
@@ -45,6 +85,11 @@ class TensorHandler(StreamHandlerBase):
     def cur_step(self):
         """The property of current step."""
         return self._cur_step
+
+    @cur_step.setter
+    def cur_step(self, step_id):
+        """The property of current step."""
+        self._cur_step = step_id
 
     @property
     def prev_step(self):
@@ -172,7 +217,7 @@ class TensorHandler(StreamHandlerBase):
             log.error("No tensor named %s at the step %s", name, step)
             raise DebuggerParamValueError("No tensor named {}".format(name))
         tensor_info = tensor.get_full_info(shape)
-        self._update_has_prev_step_field(tensor_info, name, node_type)
+        self._update_has_prev_step_field(tensor_info, name, node_type, self.cur_step)
         return {'tensor_value': tensor_info}
 
     def _get_tensor(self, tensor_name, node_type=None, step=None):
@@ -198,20 +243,21 @@ class TensorHandler(StreamHandlerBase):
 
         return tensor
 
-    def _get_basic_info(self, tensor_name, node_type=None):
+    def _get_basic_info(self, tensor_name, node_type, step):
         """Get the latest basic tensor info by tensor name."""
-        tensor = self._get_tensor(tensor_name, node_type)
+        tensor = self._get_tensor(tensor_name, node_type, step)
         if tensor:
             return tensor.get_basic_info()
 
         return None
 
-    def update_tensor_history(self, tensor_history):
+    def update_tensor_history(self, tensor_history, step=None):
         """
         Add tensor basic info in tensor_history.
 
         Args:
             tensor_history (dict): Tensor history, including a list of tensor name and type.
+            step (int): The step of tensor info. Default: None.
 
         Returns:
             list[dict], the list of tensor basic info cache.
@@ -220,9 +266,9 @@ class TensorHandler(StreamHandlerBase):
         for tensor_info in tensor_history.get('tensor_history'):
             tensor_name = tensor_info.get('full_name')
             node_type = tensor_info.get('node_type')
-            basic_info = self._get_basic_info(tensor_name, node_type)
+            basic_info = self._get_basic_info(tensor_name, node_type, step)
             # add `has_prev_step` field to tensor basic info.
-            missing_tensors_info = self._update_has_prev_step_field(basic_info, tensor_name, node_type)
+            missing_tensors_info = self._update_has_prev_step_field(basic_info, tensor_name, node_type, step)
             if basic_info:
                 tensor_info.update(basic_info)
             if missing_tensors_info:
@@ -230,14 +276,14 @@ class TensorHandler(StreamHandlerBase):
 
         return missed_tensors
 
-    def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type):
+    def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type, step=None):
         """Update has_prev_step field in tensor info."""
-        missing_tensors_info = self._get_missing_tensor_info(tensor_name, node_type)
-        if not missing_tensors_info and node_type == NodeTypeEnum.PARAMETER.value and self.cur_step > 0:
+        missing_tensors_info = self._get_missing_tensor_info(tensor_name, node_type, step)
+        if not missing_tensors_info and node_type == NodeTypeEnum.PARAMETER.value and step > 0:
             tensor_info['has_prev_step'] = True
         return missing_tensors_info
 
-    def _get_missing_tensor_info(self, tensor_name, node_type):
+    def _get_missing_tensor_info(self, tensor_name, node_type, step):
         """
         Get missing tensor infos.
 
@@ -248,7 +294,6 @@ class TensorHandler(StreamHandlerBase):
         Returns:
             list, list of missing tensor basic information.
         """
-        step = self.cur_step
         missing_tensors_info = []
         # check the current step value is missing
         if self._is_tensor_value_missing(tensor_name, step):
@@ -278,13 +323,13 @@ class TensorHandler(StreamHandlerBase):
         tensor = self._get_tensor(tensor_name, step=step)
         return bool(not tensor or tensor.empty)
 
-    def get_valid_tensor_by_name(self, tensor_name, prev=False):
+    def get_valid_tensor_by_name(self, tensor_name, step, prev=False):
         """Get tensor value by name in numpy type."""
-        step = self.prev_step if prev else self.cur_step
-        if step < 0:
-            log.warning("%d step has no previous value for tensor: %s", self.cur_step, tensor_name)
+        target_step = step - 1 if prev else step
+        if target_step < 0:
+            log.warning("Step %d has no previous value for tensor: %s", target_step, tensor_name)
             return None
-        tensor = self._get_tensor(tensor_name, step=step)
+        tensor = self._get_tensor(tensor_name, step=target_step)
         if tensor and tensor.empty:
             log.warning("%s has empty value.", tensor_name)
             return None
@@ -316,9 +361,9 @@ class TensorHandler(StreamHandlerBase):
                 self._tensors.pop(param)
                 log.debug("Clean param %s in cache.", param)
 
-    def get_tensors_diff(self, tensor_name, shape, tolerance=0):
+    def get_tensors_diff(self, tensor_name, shape, tolerance=0, step=None):
         """
-            Get tensor comparisons data for given name, detail, shape and tolerance.
+        Get tensor comparisons data for given name, detail, shape and tolerance.
 
         Args:
             tensor_name (str): The name of tensor for cache.
@@ -329,6 +374,7 @@ class TensorHandler(StreamHandlerBase):
                 calculate the min value and max value of the result of the current step tensor subtract
                 the previous step tensor. If the absolute value of result is less than or equal to
                 boundary value, the result will set to be zero.
+            step (int): The step of the tensor. Default: None.
 
         Raises:
             DebuggerParamValueError, If get current step node and previous step node failed or
@@ -337,8 +383,8 @@ class TensorHandler(StreamHandlerBase):
         Returns:
             dict, the retrieved data.
         """
-        curr_tensor = self.get_valid_tensor_by_name(tensor_name)
-        prev_tensor = self.get_valid_tensor_by_name(tensor_name, prev=True)
+        curr_tensor = self.get_valid_tensor_by_name(tensor_name, step=step)
+        prev_tensor = self.get_valid_tensor_by_name(tensor_name, prev=True, step=step)
         if not (curr_tensor and prev_tensor):
             log.error("Get current step and previous step for this tensor name %s failed.", tensor_name)
             raise DebuggerParamValueError(f"Get current step and previous step for this tensor name "
@@ -386,22 +432,23 @@ class TensorHandler(StreamHandlerBase):
         stats_info['statistics'] = TensorUtils.get_overall_statistic_dict(overall_stats=diff_tensor_stats)
         return stats_info
 
-    def get_tensor_info_for_tensor_graph(self, tensor_name, node_type):
+    def get_tensor_info_for_tensor_graph(self, tensor_name, node_type, step):
         """
         Get Tensor info for tensor graphs.
 
         Args:
             tensor_name (str): Tensor name, format like `node_name:slot`.
             node_type (str): Node type.
+            step (int): The step of tensor info.
 
         Returns:
             dict, tensor infos, including overall statistics, tensor shape and has_prev_step info.
             list, list of missing tensor basic information.
         """
         res = {}
-        tensor = self._get_tensor(tensor_name, node_type)
+        tensor = self._get_tensor(tensor_name, node_type, step)
         if tensor and not tensor.empty:
             res['statistics'] = tensor.get_tensor_statistics()
             res['shape'] = tensor.shape
-        missing_tensors = self._update_has_prev_step_field(res, tensor_name, node_type)
+        missing_tensors = self._update_has_prev_step_field(res, tensor_name, node_type, step)
         return res, missing_tensors

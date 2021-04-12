@@ -122,6 +122,9 @@ message WatchCondition {
 message WatchNode {
   string node_name = 1;
   string node_type = 2;
+  string graph_name = 3;
+  int32 rank_id = 4;
+  int32 device_id = 5;
 }
 
 message WatchpointHit {

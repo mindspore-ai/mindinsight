@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,8 +38,11 @@ NUMPY_TYPE_MAP = {
     'DT_FLOAT32': np.float32,
     'DT_FLOAT64': np.float64,
 
-    'DT_STRING': np.str
+    'DT_STRING': np.str,
+    'DT_TYPE': np.str
 }
+
+MS_VERSION = '1.0.x'
 
 
 @enum.unique
@@ -71,6 +74,7 @@ class Streams(enum.Enum):
     TENSOR = 'tensor'
     WATCHPOINT = 'watchpoint'
     WATCHPOINT_HIT = 'watchpoint_hit'
+    DEVICE = 'device'
 
 
 class RunLevel(enum.Enum):
@@ -152,3 +156,26 @@ def is_scope_type(node_type):
 def is_cst_type(node_type):
     """Judge whether the type is const type."""
     return node_type == NodeTypeEnum.CONST.value
+
+
+def version_match(ms_version, mi_version):
+    """Judge if the version of Mindinsight and Mindspore is matched."""
+    if not ms_version:
+        ms_version = MS_VERSION
+    mi_major, mi_minor = mi_version.split('.')[:2]
+    ms_major, ms_minor = ms_version.split('.')[:2]
+    return mi_major == ms_major and mi_minor == ms_minor
+
+
+@enum.unique
+class DebuggerServerMode(enum.Enum):
+    """Debugger Server Mode."""
+    ONLINE = 'online'
+    OFFLINE = 'offline'
+
+
+class DumpSettings(enum.Enum):
+    """Dump settings."""
+    E2E_DUMP_SETTINGS = 'e2e_dump_settings'
+    COMMON_DUMP_SETTINGS = 'common_dump_settings'
+    ASYNC_DUMP_SETTINGS = 'async_dump_settings'

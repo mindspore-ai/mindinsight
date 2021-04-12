@@ -16,8 +16,10 @@
 import json
 import os
 import time
-
-from tests.st.func.debugger.conftest import DEBUGGER_EXPECTED_RESULTS, DEBUGGER_BASE_URL
+import shutil
+import tempfile
+from mindinsight.debugger.proto import ms_graph_pb2
+from tests.st.func.debugger.conftest import DEBUGGER_EXPECTED_RESULTS, DEBUGGER_BASE_URL, GRAPH_PROTO_FILE
 from tests.utils.tools import compare_result_with_file, get_url
 
 
@@ -74,10 +76,57 @@ def send_and_save_result(app_client, url, body_data, file_path, method='post'):
 
 def delete_random_items(res):
     """delete the random items in metadata."""
-    if isinstance(res, dict) and res.get('metadata'):
-        if res['metadata'].get('ip'):
-            res['metadata'].pop('ip')
-        if res['metadata'].get('pos'):
-            res['metadata'].pop('pos')
-        if res['metadata'].get('debugger_version') and res['metadata']['debugger_version'].get('mi'):
-            res['metadata']['debugger_version'].pop('mi')
+    if isinstance(res, dict):
+        if res.get('metadata'):
+            if res['metadata'].get('ip'):
+                res['metadata'].pop('ip')
+            if res['metadata'].get('pos'):
+                res['metadata'].pop('pos')
+            if res['metadata'].get('debugger_version') and res['metadata']['debugger_version'].get('mi'):
+                res['metadata']['debugger_version'].pop('mi')
+                res['metadata']['debugger_version'].pop('ms')
+        if res.get('devices'):
+            for device in res.get('devices'):
+                if device.get('server_ip'):
+                    device.pop('server_ip')
+
+
+def build_dump_file_structure():
+    """Build the dump file structure."""
+    async_file_structure = {
+        "Ascend/async/device_0/Lenet_graph_1/1": 3,
+        "Ascend/async/device_1/Lenet_graph_1/1": 3
+    }
+
+    sync_file_structure = {
+        "Ascend/sync/Lenet/device_0": 4,
+        "Ascend/sync/Lenet/device_1": 4,
+        "GPU/sync/Lenet/device_0": 3,
+        "GPU/sync/Lenet/device_1": 3
+    }
+
+    debugger_tmp_dir = tempfile.mkdtemp(suffix='debugger_tmp')
+    dump_files_dir = os.path.join(debugger_tmp_dir, 'dump_files')
+    shutil.copytree(os.path.join(os.path.dirname(__file__), 'dump_files'), dump_files_dir)
+
+    for sub_dir, steps in async_file_structure.items():
+        for step in range(1, steps + 1):
+            os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir), str(step)), exist_ok=True)
+
+    for sub_dir, steps in sync_file_structure.items():
+        for step in range(1, steps + 1):
+            os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir), 'iteration_' + str(step)),
+                        exist_ok=True)
+        graph_dir_path = os.path.join(os.path.join(dump_files_dir, sub_dir), 'graphs')
+        os.makedirs(graph_dir_path, exist_ok=True)
+        graph_path = os.path.join(graph_dir_path, 'ms_output_trace_code_graph_0.pb')
+        with open(GRAPH_PROTO_FILE, 'rb') as file_handler:
+            content = file_handler.read()
+
+        model = ms_graph_pb2.ModelProto()
+        model.graph.ParseFromString(content)
+        model_str = model.SerializeToString()
+        with open(graph_path, 'wb') as file_handler:
+            file_handler.write(model_str)
+
+    return debugger_tmp_dir, dump_files_dir

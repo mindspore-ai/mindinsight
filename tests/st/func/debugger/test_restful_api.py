@@ -84,7 +84,7 @@ class TestAscendDebugger:
 
     def test_get_conditions(self, app_client):
         """Test get conditions for ascend."""
-        url = '/v1/mindinsight/conditionmgr/train-jobs/train-id/condition-collections'
+        url = '/v1/mindinsight/debugger/sessions/0/condition-collections'
         body_data = {}
         expect_file = 'get_conditions_for_ascend.json'
         with self._debugger_client.get_thread_instance():
@@ -191,7 +191,7 @@ class TestAscendDebugger:
             check_state(app_client)
             # prepare tensor value
             url = 'tensor-history'
-            body_data = {'name': node_name}
+            body_data = {'name': node_name, 'rank_id': 0}
             expect_file = 'retrieve_empty_tensor_history.json'
             send_and_compare_result(app_client, url, body_data, expect_file)
             # check full tensor history from poll data
@@ -229,7 +229,7 @@ class TestAscendDebugger:
             get_request_result(app_client, url, body_data)
             check_state(app_client)
             get_request_result(
-                app_client=app_client, url='tensor-history', body_data={'name': node_name})
+                app_client=app_client, url='tensor-history', body_data={'name': node_name, 'rank_id': 0})
             res = get_request_result(
                 app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
             assert res.get('receive_tensor', {}).get('node_name') == node_name
@@ -239,30 +239,12 @@ class TestAscendDebugger:
                 'name': node_name + ':0',
                 'detail': 'data',
                 'shape': quote('[:, :]'),
-                'tolerance': 1
-            }
+                'tolerance': 1,
+                'rank_id': 0}
             expect_file = 'compare_tensors.json'
             send_and_compare_result(app_client, url, body_data, expect_file, method='get')
             send_terminate_cmd(app_client)
 
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    @pytest.mark.parametrize("body_data, expect_file", [
-        ({'ascend': True}, 'retrieve_node_by_bfs_ascend.json'),
-        ({'name': 'Default/args0', 'ascend': False}, 'retrieve_node_by_bfs.json')
-    ])
-    def test_retrieve_bfs_node(self, app_client, body_data, expect_file):
-        """Test retrieve bfs node."""
-        with self._debugger_client.get_thread_instance():
-            check_state(app_client)
-            # prepare tensor values
-            url = 'retrieve_node_by_bfs'
-            send_and_compare_result(app_client, url, body_data, expect_file, method='get')
-            send_terminate_cmd(app_client)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -441,7 +423,7 @@ class TestGPUDebugger:
 
     def test_get_conditions(self, app_client):
         """Test get conditions for gpu."""
-        url = '/v1/mindinsight/conditionmgr/train-jobs/train-id/condition-collections'
+        url = '/v1/mindinsight/debugger/sessions/0/condition-collections'
         body_data = {}
         expect_file = 'get_conditions_for_gpu.json'
         with self._debugger_client.get_thread_instance():

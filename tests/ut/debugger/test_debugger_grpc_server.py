@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import numpy as np
 from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus
 from mindinsight.debugger.debugger_cache import DebuggerCache
-from mindinsight.debugger.debugger_grpc_server import DebuggerGrpcServer
+from mindinsight.debugger.debugger_services.debugger_grpc_server import DebuggerGrpcServer
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply, SetCMD, Chunk, WatchpointHit
 from mindinsight.debugger.proto.ms_graph_pb2 import TensorProto, DataType
 from mindinsight.debugger.stream_handler import WatchpointHitHandler, GraphHandler, \

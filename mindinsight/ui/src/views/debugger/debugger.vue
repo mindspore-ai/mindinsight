@@ -47,6 +47,17 @@ limitations under the License.
         <div class="content"
              v-show="radio1==='tree'">
           <div class="node-type">
+            <div class="label">{{ $t('debugger.logicCard') }}</div>
+            <el-select v-model="logicCard.value"
+                       @change="logicCardChange"
+                       :disabled="!trainId">
+              <el-option v-for="item in logicCard.options"
+                         :key="item"
+                         :value="item">
+              </el-option>
+            </el-select>
+          </div>
+          <div class="node-type">
             <div class="label">{{ $t('debugger.graphFile') }}</div>
             <el-select v-model="graphFiles.value"
                        @change="queryGraphByFile">
@@ -209,6 +220,17 @@ limitations under the License.
         </div>
         <div class="content"
              v-show="radio1==='hit'">
+          <div class="node-type">
+            <div class="label">{{ $t('debugger.logicCard') }}</div>
+            <el-select v-model="logicCard.value"
+                       :disabled="!trainId"
+                       @change="logicCardChange();searchWatchpointHits(true);">
+              <el-option v-for="item in logicCard.options"
+                         :key="item"
+                         :value="item">
+              </el-option>
+            </el-select>
+          </div>
           <div class="hit-list-wrap">
             <el-table class="watchpoint-table"
                       :data="watchPointHits"
@@ -261,7 +283,7 @@ limitations under the License.
           <div class="step">
             <el-tooltip class="item"
                         effect="light"
-                        :content="$t('debugger.inputTip')"
+                        :content="$t('debugger.inputTip',{total_step_num:metadata.total_step_num})"
                         placement="top-start">
               <el-input v-model="step"
                         :placeholder="$t('debugger.inputStep')"
@@ -330,6 +352,25 @@ limitations under the License.
                     v-show="metadata.state === state.sending">
           <i class="el-icon-time"></i>
         </el-tooltip>
+        <i class="el-icon-edit"
+           v-if="trainId && !isShowInp"
+           :title="$t('debugger.inpStepTip',{total_step_num:metadata.total_step_num})"
+           @click="editStep"></i>
+        <el-tooltip class="item"
+                    effect="light"
+                    :content="$t('debugger.inputTip',{total_step_num:metadata.total_step_num})"
+                    placement="top-start"
+                    v-if="trainId && isShowInp">
+          <el-input v-model="newStep"
+                    type="text"
+                    @input="newStepChange"></el-input>
+        </el-tooltip>
+        <i class="el-icon-check"
+           v-if="trainId && isShowInp"
+           @click="saveStepValue"></i>
+        <i class="el-icon-close"
+           v-if="trainId && isShowInp"
+           @click="isShowInp=false"></i>
       </div>
       <div class="svg-wrap"
            :class="{collapse: collapseTable}">
@@ -505,7 +546,7 @@ limitations under the License.
                :close-on-click-modal="false"
                :modal-append-to-body="false"
                class="creat-watch-point-dialog"
-               width="890px">
+               width="930px">
 
       <div class="conditions-container">
         <div class="condition-item"
@@ -787,6 +828,11 @@ export default {
         value: '',
         graphs: {},
       },
+      logicCard: {
+        options: [],
+        value: '',
+      },
+      devices: [],
       allGraphData: {}, // Graph Original input data
       firstFloorNodes: [], // ID array of the first layer node.
       nodesCountLimit: 1500, // Maximum number of sub-nodes in a namespace.
@@ -830,7 +876,7 @@ export default {
       expandKeys: [],
       isHitIntoView: true,
       searchedWord: '',
-      trainId: '',
+      trainId: this.$route.query.dir,
       recommendWatchPointDialog: false,
       hitsOutdated: false,
       conflictFlag: false,
@@ -859,6 +905,9 @@ export default {
       },
       loadingInstance: null,
       paramErrorMsg: '',
+      sessionId: this.$route.query.sessionId,
+      isShowInp: false,
+      newStep: '',
     };
   },
   components: {debuggerTensor, tree},
@@ -866,6 +915,12 @@ export default {
   mounted() {
     document.title = `${this.$t('debugger.debugger')}-MindInsight`;
     this.nodeTypes.label = this.$t('debugger.nodeType');
+    if (this.trainId) {
+      document.title = `${this.trainId}-${this.$t('debugger.debugger')}-MindInsight`;
+      this.retrieveAll();
+    } else {
+      this.getSession();
+    }
   },
   watch: {
     'metadata.state': {
@@ -896,7 +951,7 @@ export default {
 
         if (newValue === this.state.waiting) {
           if (this.oldState === this.state.pending || oldValue === this.state.pending) {
-            this.loadNode(this.node, this.resolve);
+            this.retrieveAll();
           } else if (this.oldState === this.state.running || oldValue === this.state.running) {
             this.pagination.currentPage = 1;
             this.watchPointHits = [];
@@ -914,6 +969,8 @@ export default {
       this.curRowObj.type = type;
       this.curRowObj.curFileName = this.graphFiles.value;
       this.curRowObj.step = this.metadata.step;
+      this.curRowObj.rank_id = this.logicCard.value;
+      this.curRowObj.sessionId = this.sessionId;
       this.tensorCompareFlag = true;
     },
     closeTensor(tensor, graphName) {
@@ -921,6 +978,19 @@ export default {
       if (tensor && graphName) {
         this.queryAllTreeData(tensor, true, graphName, true);
       }
+    },
+    logicCardChange() {
+      this.graphFiles.options = JSON.parse(
+          JSON.stringify(this.devices.find((val) => val.rank_id === this.logicCard.value).graph_names),
+      );
+      if (this.graphFiles.options.length > 1) {
+        this.graphFiles.options.unshift(this.$t('debugger.all'));
+      }
+      this.graphFiles.value = this.graphFiles.options[0];
+      const device = this.devices.find((val) => val.rank_id === this.logicCard.value);
+      this.metadata.ip = device.server_ip;
+      this.metadata.device_name = device.device_id;
+      this.queryGraphByFile();
     },
     queryGraphByFile() {
       this.searchWord = '';
@@ -931,12 +1001,13 @@ export default {
         params: {
           watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
           graph_name: this.graphFiles.value,
+          rank_id: this.logicCard.value,
         },
       };
       if (this.graphFiles.value === this.$t('debugger.all')) {
         delete params.params.graph_name;
       }
-      RequestService.retrieve(params).then(
+      RequestService.retrieve(params, this.sessionId).then(
           (res) => {
             if (res.data && res.data.metadata) {
               this.dealMetadata(res.data.metadata);
@@ -975,6 +1046,7 @@ export default {
               d3.select('#graph svg').remove();
               this.selectedNode.name = '';
               this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)));
+              this.tableData = [];
             }
           },
           (err) => {
@@ -1015,11 +1087,12 @@ export default {
           watch_nodes: watchNodes,
           mode: type ? 1 : 0,
           graph_name: this.graphFiles.value,
+          rank_id: this.logicCard.value,
         };
         if (this.graphFiles.value === this.$t('debugger.all')) {
           delete params.graph_name;
         }
-        RequestService.updateWatchpoint(params).then(
+        RequestService.updateWatchpoint(params, this.sessionId).then(
             (res) => {
               this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
               if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
@@ -1049,12 +1122,16 @@ export default {
     queryGraphByWatchpoint(id) {
       const params = {
         mode: 'watchpoint',
-        params: {watch_point_id: id, graph_name: this.graphFiles.value},
+        params: {
+          watch_point_id: id,
+          graph_name: this.graphFiles.value,
+          rank_id: this.logicCard.value,
+        },
       };
       if (this.graphFiles.value === this.$t('debugger.all')) {
         delete params.params.graph_name;
       }
-      RequestService.retrieve(params).then(
+      RequestService.retrieve(params, this.sessionId).then(
           (res) => {
             if (res.data && res.data.graph) {
               const graph = res.data.graph;
@@ -1306,11 +1383,12 @@ export default {
         level: 'node',
         name: this.selectedNode.name.replace('_unfold', ''),
         graph_name: this.graphFiles.value,
+        rank_id: this.logicCard.value,
       };
       if (this.graphFiles.value === this.$t('debugger.all')) {
         delete params.graph_name;
       }
-      RequestService.control(params).then(
+      RequestService.control(params, this.sessionId).then(
           (res) => {
             if (res && res.data) {
             }
@@ -1387,12 +1465,13 @@ export default {
           node_type: type,
           single_node: false,
           graph_name: this.graphFiles.value,
+          rank_id: this.logicCard.value,
         };
         if (this.graphFiles.value === this.$t('debugger.all')) {
           delete params.params.graph_name;
         }
       }
-      RequestService.retrieve(params)
+      RequestService.retrieve(params, this.sessionId)
           .then(
               (response) => {
                 if (response && response.data && response.data.graph) {
@@ -1560,7 +1639,12 @@ export default {
             graphName = key.split('/')[0];
             key = key.replace(`${graphName}/`, '');
           }
-          const obj = {name: key, IOType: 'output', graph_name: graphName};
+          const obj = {
+            name: key,
+            IOType: 'output',
+            graph_name: graphName,
+            rank_id: this.logicCard.value,
+          };
           IOInfo.push(obj);
           this.selectedNode.outputNum++;
         });
@@ -1572,7 +1656,12 @@ export default {
             graphName = key.split('/')[0];
             key = key.replace(`${graphName}/`, '');
           }
-          const obj = {name: key, IOType: 'input', graph_name: graphName};
+          const obj = {
+            name: key,
+            IOType: 'input',
+            graph_name: graphName,
+            rank_id: this.logicCard.value,
+          };
           IOInfo.push(obj);
           this.selectedNode.inputNum++;
         });
@@ -1606,11 +1695,7 @@ export default {
           `translate(${this.graph.transform.x},` + `${this.graph.transform.y}) scale(${this.graph.transform.k})`,
       );
 
-      const transitionTime = Math.min(
-          Math.abs(screenChange.x) * 2,
-          Math.abs(screenChange.y) * 2,
-        needDelay ? 800 : 0,
-      );
+      const transitionTime = Math.min(Math.abs(screenChange.x) * 2, Math.abs(screenChange.y) * 2, needDelay ? 800 : 0);
 
       this.graph.dom.style.transition = `${transitionTime / 1000}s`;
       this.graph.dom.style['transition-timing-function'] = 'linear';
@@ -1829,8 +1914,8 @@ export default {
   height: calc(100% - 145px);
 }
 .deb-wrap .left-wrap .left .content .node-type {
-  height: 50px;
-  padding: 15px 15px 0 15px;
+  height: 40px;
+  padding: 10px 15px 0 15px;
 }
 .deb-wrap .left-wrap .left .content .node-type .label {
   display: inline-block;
@@ -1855,7 +1940,7 @@ export default {
   font-size: 12px;
 }
 .deb-wrap .left-wrap .left .content .tree-wrap {
-  height: calc(70% - 155px);
+  height: calc(70% - 172px);
   overflow-y: auto;
   padding: 0 15px 15px;
   position: relative;
@@ -1973,12 +2058,13 @@ export default {
   color: red;
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap {
-  height: 100%;
+  height: calc(100% - 40px);
   padding: 10px;
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .watchpoint-table {
   max-height: calc(100% - 45px);
   overflow: auto;
+  margin-top: 10px;
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .el-table::before {
   height: 0;
@@ -2096,7 +2182,7 @@ export default {
   /* Opera */
 }
 .deb-wrap .right .header {
-  padding: 15px;
+  line-height: 51px;
   border-bottom: 1px solid #ebeef5;
   position: relative;
   background: #fff;
@@ -2112,6 +2198,25 @@ export default {
 }
 .deb-wrap .right .header .item + .item {
   margin-left: 15px;
+}
+.deb-wrap .right .header .el-icon-edit {
+  margin-left: 5px;
+}
+.deb-wrap .right .header i {
+  font-size: 18px;
+  margin: 0 2px;
+  color: #00a5a7;
+  cursor: pointer;
+}
+.deb-wrap .right .header .el-icon-close {
+  color: #f56c6c;
+}
+.deb-wrap .right .header .el-input {
+  width: 45px;
+}
+.deb-wrap .right .header .el-input input {
+  padding: 0;
+  text-align: center;
 }
 .deb-wrap .right .header .tooltip {
   margin-left: 5px;
@@ -2343,13 +2448,13 @@ export default {
   display: none;
 }
 .deb-wrap .creat-watch-point-dialog .conditions-container .collection {
-  width: 200px;
+  width: 210px;
 }
 .deb-wrap .creat-watch-point-dialog .conditions-container .condition,
 .deb-wrap .creat-watch-point-dialog .conditions-container .param,
 .deb-wrap .creat-watch-point-dialog .conditions-container .param-value {
   margin-left: 10px;
-  width: 200px;
+  width: 210px;
 }
 .deb-wrap .creat-watch-point-dialog .conditions-container .percent-sign {
   display: inline-block;

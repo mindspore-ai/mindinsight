@@ -26,6 +26,7 @@ import psutil
 import gunicorn
 
 from mindinsight.utils.computing_resource_mgr import terminate
+from mindinsight.debugger.session_manager import SessionManager
 
 
 gunicorn.SERVER_SOFTWARE = 'unknown'
@@ -110,4 +111,5 @@ def worker_int(worker):
     global LISTEN_PROCESS
     if LISTEN_PROCESS is not None:
         LISTEN_PROCESS.terminate()
+    SessionManager.get_instance().exit()
     worker.log.info("Worker int processed.")

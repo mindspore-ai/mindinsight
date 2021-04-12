@@ -254,22 +254,24 @@ class MSGraph(Graph):
 
         return searched_list
 
-    def search_leaf_nodes_by_pattern(self, pattern):
+    def search_leaf_nodes_by_pattern(self, pattern, scope_pattern=False):
         """
         Search leaf node by a given pattern.
 
         Args:
             pattern (Union[str, None]): The pattern of the node to search,
                 if None, return all node names.
+            scope_pattern (bool): If true, return the children nodes of the scope. Default: False.
 
         Returns:
             list[Node], a list of nodes.
         """
+        is_match = lambda x, y: x.lower().startswith(y) if scope_pattern else y in x.lower()
         if pattern is not None:
             pattern = pattern.lower()
             searched_nodes = [
                 node for name, node in self._leaf_nodes.items()
-                if pattern in name.lower()
+                if is_match(name, pattern)
             ]
         else:
             searched_nodes = [node for node in self._leaf_nodes.values()]

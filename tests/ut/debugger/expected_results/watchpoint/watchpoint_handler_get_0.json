@@ -1,5 +1,80 @@
 [
-  {"watchCondition": {"condition": "tensor_too_small", "value": 1.0, "params": [{"name": "abs_mean_lt", "disabled": true}, {"name": "max_lt", "value": 1.0}, {"name": "min_lt", "disabled": true}, {"name": "mean_lt", "disabled": true}]}, "id": 1, "watch_nodes_num": 0},
-  {"watchCondition": {"condition": "tensor_too_small", "value": 1.0, "params": [{"name": "abs_mean_lt", "disabled": true}, {"name": "max_lt", "disabled": true}, {"name": "min_lt", "value": 1.0}, {"name": "mean_lt", "disabled": true}]}, "id": 2, "watch_nodes_num": 172},
-  {"watchCondition": {"condition": "tensor_too_large", "value": 1.0, "params": [{"name": "abs_mean_gt", "disabled": true}, {"name": "max_gt", "value": 1.0}, {"name": "min_gt", "disabled": true}, {"name": "mean_gt", "disabled": true}]}, "id": 3, "watch_nodes_num": 1}
+  {
+    "watchCondition": {
+      "condition": "tensor_too_small",
+      "value": 1.0,
+      "params": [
+        {
+          "name": "abs_mean_lt",
+          "disabled": true
+        },
+        {
+          "name": "max_lt",
+          "value": 1.0
+        },
+        {
+          "name": "min_lt",
+          "disabled": true
+        },
+        {
+          "name": "mean_lt",
+          "disabled": true
+        }
+      ]
+    },
+    "id": 1,
+    "watch_nodes_num": 0
+  },
+  {
+    "watchCondition": {
+      "condition": "tensor_too_small",
+      "value": 1.0,
+      "params": [
+        {
+          "name": "abs_mean_lt",
+          "disabled": true
+        },
+        {
+          "name": "max_lt",
+          "disabled": true
+        },
+        {
+          "name": "min_lt",
+          "value": 1.0
+        },
+        {
+          "name": "mean_lt",
+          "disabled": true
+        }
+      ]
+    },
+    "id": 2,
+    "watch_nodes_num": 142
+  },
+  {
+    "watchCondition": {
+      "condition": "tensor_too_large",
+      "value": 1.0,
+      "params": [
+        {
+          "name": "abs_mean_gt",
+          "disabled": true
+        },
+        {
+          "name": "max_gt",
+          "value": 1.0
+        },
+        {
+          "name": "min_gt",
+          "disabled": true
+        },
+        {
+          "name": "mean_gt",
+          "disabled": true
+        }
+      ]
+    },
+    "id": 3,
+    "watch_nodes_num": 1
+  }
 ]

@@ -30,6 +30,7 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
     DebuggerParamTypeError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.stream_cache.watchpoint import Watchpoint
+from mindinsight.debugger.stream_handler import MultiCardGraphHandler
 from mindinsight.debugger.stream_handler.watchpoint_handler import WatchpointHandler, \
     WatchpointHitHandler, validate_watch_condition, validate_watch_condition_params
 from tests.ut.debugger.configurations import init_graph_handler, mock_tensor_proto, \
@@ -48,7 +49,9 @@ class TestWatchpointHandler:
                                        '../expected_results/watchpoint')
         cls.graph_results_dir = os.path.join(os.path.dirname(__file__),
                                              '../expected_results/graph')
+        cls.multi_graph_stream = MultiCardGraphHandler()
         cls.graph_stream = init_graph_handler()
+        cls.multi_graph_stream.register_graph_handler(0, cls.graph_stream)
         cls.conditionmgr = None
         cls.handler = None
 
@@ -69,7 +72,7 @@ class TestWatchpointHandler:
         ]
         for watch_condition, watch_nodes, watch_point_id, expect_new_id in watchpoints:
             watch_nodes = get_node_basic_infos(watch_nodes)
-            watch_point_id = self.handler.create_watchpoint(self.conditionmgr, watch_condition, watch_nodes,
+            watch_point_id = self.handler.create_watchpoint(self.conditionmgr, watch_condition, {0: watch_nodes},
                                                             watch_point_id)
             assert watch_point_id == expect_new_id
 
@@ -105,7 +108,7 @@ class TestWatchpointHandler:
         file_path = os.path.join(self.results_dir, result_file)
         with open(file_path, 'r') as file_handler:
             contents = json.load(file_handler)
-        protos = self.handler.get_pending_commands(self.graph_stream)
+        protos = self.handler.get_pending_commands(self.multi_graph_stream)
         for proto in protos:
             msg_dict = json_format.MessageToDict(proto)
             msg_dict['watch_nodes_num'] = len(msg_dict.pop('watchNodes', []))

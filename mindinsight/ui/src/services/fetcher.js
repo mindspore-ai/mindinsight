@@ -62,7 +62,14 @@ axios.interceptors.response.use(
       const errorData = i18n.messages[i18n.locale].error;
       const path = router.currentRoute.path;
 
-      if (path === '/debugger') {
+      if (path === '/debugger' || path === '/offline-debugger') {
+        if (
+          error.response &&
+        error.response.data &&
+        error.response.data.error_code === '5054B281'
+        ) {
+          router.push('/');
+        }
         return Promise.reject(error);
       }
       // error returned by backend

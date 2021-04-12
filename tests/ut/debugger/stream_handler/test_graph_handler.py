@@ -111,20 +111,6 @@ class TestGraphHandler:
         node_name = self.graph_handler.get_node_name_by_full_name(full_name, 'kernel_graph_0')
         assert node_name == expect_node_name
 
-    @pytest.mark.parametrize("node_name, ascend, expect_next", [
-        (None, True,
-         "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0"),
-        (None, False, None),
-        ("Default/tuple_getitem[10]_0/tuple_getitem-op206", True,
-         "Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89"),
-        ("Default/tuple_getitem[10]_0/tuple_getitem-op206", False,
-         "Default/network-WithLossCell/_backbone-LeNet5/max_pool2d-MaxPool2d/Cast-op205")
-    ])
-    def test_get_node_by_bfs_order(self, node_name, ascend, expect_next):
-        """Test get node by BFS order."""
-        next_node = self.graph_handler.get_node_by_bfs_order(node_name, ascend)
-        assert next_node == expect_next
-
     @pytest.mark.parametrize("tensor_name, expect_file", [
         ("Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/OneHot-op0:0", "get_tensor_graph-0.json"),
         ("Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op89:1", "get_tensor_graph-1.json"),

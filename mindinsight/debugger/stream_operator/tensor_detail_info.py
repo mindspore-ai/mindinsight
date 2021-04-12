@@ -23,17 +23,19 @@ class TensorDetailInfo:
 
     def __init__(self, cache):
         self._put_command = cache.put_command
-        self._tensor_stream = cache.get_stream_handler(Streams.TENSOR)
-        self._graph_stream = cache.get_stream_handler(Streams.GRAPH)
-        self._hit_stream = cache.get_stream_handler(Streams.WATCHPOINT_HIT)
+        self._metadata_stream = cache.get_stream_handler(Streams.METADATA)
+        self._multi_card_tensor_stream = cache.get_stream_handler(Streams.TENSOR)
+        self._multi_card_graph_stream = cache.get_stream_handler(Streams.GRAPH)
+        self._multi_card_hit_stream = cache.get_stream_handler(Streams.WATCHPOINT_HIT)
 
-    def validate_tensor_name(self, tensor_name, graph_name):
+    def validate_tensor_name(self, tensor_name, graph_name, rank_id):
         """
         Get the graph id of the tensor.
 
         Args:
             tensor_name (str): The tensor name on UI.
             graph_name (str): The graph name.
+            rank_id (int): The rank id.
         """
         # validate tensor name format
         if not isinstance(tensor_name, str) or ':' not in tensor_name:
@@ -41,15 +43,17 @@ class TensorDetailInfo:
             raise DebuggerParamValueError("Invalid tensor name.")
         node_name, _ = tensor_name.rsplit(':', 1)
         # check if the node name is in graph
-        self._graph_stream.validate_node_name(node_name=node_name, graph_name=graph_name)
+        self._multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id).validate_node_name(node_name=node_name,
+                                                                                               graph_name=graph_name)
 
-    def get_tensor_graph(self, tensor_name, graph_name):
+    def get_tensor_graph(self, tensor_name, graph_name, rank_id=0):
         """
         Get the graph related to specific tensor.
 
         Args:
             tensor_name (str): The ui name of tensor. Format like {node_name}:{slot}.
             graph_name (str): The graph name.
+            rank_id (int): The rank id.
 
         Returns:
             dict, tensor graph, format is {'nodes': [Node object]}.
@@ -68,8 +72,9 @@ class TensorDetailInfo:
                 'slot_mapping': list[pair<slot, slot>],
             }.
         """
-        self.validate_tensor_name(tensor_name=tensor_name, graph_name=graph_name)
-        graph = self._graph_stream.get_tensor_graph(tensor_name, graph_name)
+        self.validate_tensor_name(tensor_name=tensor_name, graph_name=graph_name, rank_id=rank_id)
+        graph = self._multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id).get_tensor_graph(tensor_name,
+                                                                                                     graph_name)
         # add watchpoint hits info and statistics info for each tensor in tensor graph.
         # record missing tensor basic info
         nodes = graph.get('graph', {}).get('nodes', [])
@@ -77,13 +82,13 @@ class TensorDetailInfo:
         for node in nodes:
             node['graph_name'] = graph_name
             for slot_info in node.get('slots', []):
-                self._add_watchpoint_hit_info(slot_info, node, graph_name)
-                self._add_tensor_info(slot_info, node, missing_tensors)
+                self._add_watchpoint_hit_info(slot_info, node, graph_name, rank_id)
+                self._add_tensor_info(slot_info, node, missing_tensors, rank_id)
         # query missing tensor values from client
         self._ask_for_missing_tensor_value(missing_tensors, tensor_name, graph_name)
         return graph
 
-    def _add_watchpoint_hit_info(self, slot_info, node, graph_name):
+    def _add_watchpoint_hit_info(self, slot_info, node, graph_name, rank_id):
         """
         Add watchpoint hit info for the tensor.
 
@@ -93,9 +98,12 @@ class TensorDetailInfo:
             graph_name (str): Graph name.
         """
         tensor_name = ':'.join([node.get('name'), slot_info.get('slot')])
-        slot_info.update(self._hit_stream.get_tensor_hit_infos(tensor_name, graph_name))
+        if self._multi_card_hit_stream.check_rank_id(rank_id=rank_id):
+            slot_info.update(
+                self._multi_card_hit_stream.get_hit_handler_by_rank_id(rank_id).get_tensor_hit_infos(tensor_name,
+                                                                                                     graph_name))
 
-    def _add_tensor_info(self, slot_info, node, missing_tensors):
+    def _add_tensor_info(self, slot_info, node, missing_tensors, rank_id):
         """
         Add the tensor info and query for missed tensors.
 
@@ -106,7 +114,8 @@ class TensorDetailInfo:
         """
         tensor_name = ':'.join([node.get('full_name'), slot_info.get('slot')])
         node_type = node.get('type')
-        tensor_info, cur_missing_tensors = self._tensor_stream.get_tensor_info_for_tensor_graph(tensor_name, node_type)
+        tensor_info, cur_missing_tensors = self._multi_card_tensor_stream.get_tensor_handler_by_rank_id(
+            rank_id).get_tensor_info_for_tensor_graph(tensor_name, node_type, self._metadata_stream.step)
         slot_info.update(tensor_info)
         if cur_missing_tensors:
             log.debug("Get missing tensor basic infos for %s", tensor_name)
@@ -128,20 +137,24 @@ class TensorDetailInfo:
         self._put_command({'view_cmd': view_cmd, 'tensor_name': tensor_name, 'graph_name': graph_name})
         log.debug("Send view cmd for tensor-graphs.")
 
-    def get_tensor_watch_points(self, tensor_name, graph_name):
+    def get_tensor_watch_points(self, tensor_name, graph_name, rank_id=0):
         """
         Get all watchpoints that the tensor hit.
 
         Args:
             tensor_name (str): Tensor name from UI.
             graph_name (str): The graph name.
+            rank_id (int): The rank id.
 
         Returns:
             list, watchpoint hit infos.
         """
         # validate tensor_name
-        self.validate_tensor_name(tensor_name=tensor_name, graph_name=graph_name)
+        self.validate_tensor_name(tensor_name=tensor_name, graph_name=graph_name, rank_id=rank_id)
         # get watchpoint info that the tensor hit
-        tensor_hit_info = self._hit_stream.get_tensor_hit_infos(tensor_name, graph_name)
+        if not self._multi_card_hit_stream.check_rank_id(rank_id=rank_id):
+            return []
+        tensor_hit_info = self._multi_card_hit_stream.get_hit_handler_by_rank_id(rank_id).get_tensor_hit_infos(
+            tensor_name, graph_name)
         watch_points = tensor_hit_info.get('watch_points', [])
         return watch_points

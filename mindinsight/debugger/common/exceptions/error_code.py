@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ from mindinsight.utils.constant import DebuggerErrors as DebuggerErrorCodes
 _PARAM_ERROR_MASK = 0b00001 << 7
 _DEBUGGER_GRAPH_ERROR = 0b00010 << 7
 _DEBUGGER_RUNNING_ERROR = 0b00011 << 7
+_DEBUGGER_SERVER_ERROR = 0b00100 << 7
+_DEBUGGER_SESSION_ERROR = 0b00101 << 7
 
 
 @unique
@@ -44,6 +46,13 @@ class DebuggerErrors(DebuggerErrorCodes):
     TENSOR_HIT_ERROR = 8 | _DEBUGGER_RUNNING_ERROR
     SET_RECOMMEND_WATCHPOINT_ERROR = 9 | _DEBUGGER_RUNNING_ERROR
 
+    DEBUGGER_SERVER_RUNNING_ERROR = 0 | _DEBUGGER_SERVER_ERROR
+    DEVICE_ID_UNREGISTERED = 1 | _DEBUGGER_SERVER_ERROR
+    MODULE_NOT_FOUND_ERROR = 2 | _DEBUGGER_SERVER_ERROR
+
+    DEBUGGER_SESSION_OVER_BOUND_ERROR = 0 | _DEBUGGER_SESSION_ERROR
+    DEBUGGER_SESSION_NOT_FOUND_ERROR = 1 | _DEBUGGER_SESSION_ERROR
+
 
 @unique
 class DebuggerErrorMsg(Enum):
@@ -63,3 +72,10 @@ class DebuggerErrorMsg(Enum):
     TENSOR_GRAPH_ERROR = "Get tensor graphs failed."
     TENSOR_HIT_ERROR = "Get tensor hits failed."
     SET_RECOMMEND_WATCHPOINT_ERROR = "Set Recommend Watchpoints failed."
+
+    DEBUGGER_SERVER_RUNNING_ERROR = "Debugger server running error. {}"
+    DEVICE_ID_UNREGISTERED = "Device id unregistered. Device id: {}"
+    MODULE_NOT_FOUND_ERROR = "{} module not found."
+
+    DEBUGGER_SESSION_OVER_BOUND_ERROR = "The amount of sessions is over limitation."
+    DEBUGGER_SESSION_NOT_FOUND_ERROR = "Session {} not found."

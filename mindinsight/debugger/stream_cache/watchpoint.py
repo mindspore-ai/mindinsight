@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ class Watchpoint:
     def __init__(self, watchpoint_id, watch_condition, name=None):
         self._id = watchpoint_id
         self._condition = watch_condition
-        self._watch_node = WatchNodeTree()
+        self._watch_node = {0: WatchNodeTree()}
         self.name = name
 
     @property
@@ -214,32 +214,36 @@ class Watchpoint:
         else:
             self._watch_node = other_watchpoint.nodes
 
-    def add_nodes(self, nodes):
+    def add_nodes(self, nodes, rank_id):
         """Add node into watchpoint."""
         if not nodes:
             log.warning("Add empty nodes.")
             return
-
+        if rank_id not in self._watch_node:
+            self._watch_node[rank_id] = WatchNodeTree()
         if not isinstance(nodes, list):
             nodes = [nodes]
         for node in nodes:
-            self._watch_node.add_node(node.name, node.type, node.full_name)
+            watch_node = self._watch_node.get(rank_id)
+            watch_node.add_node(node.name, node.type, node.full_name)
 
-    def remove_nodes(self, nodes):
+    def remove_nodes(self, nodes, rank_id):
         """Remove nodes from watchpoint."""
         if not nodes:
             return
+        self.validate_rank_id(rank_id)
         if not isinstance(nodes, list):
             nodes = [nodes]
         for node in nodes:
-            self._watch_node.remove_node(node.name)
+            self._watch_node.get(rank_id).remove_node(node.name)
 
-    def get_node_status(self, node_name, node_type, full_name):
+    def get_node_status(self, node_name, node_type, full_name, rank_id):
         """Judge if the node is in watch nodes."""
         if is_cst_type(node_type):
             return WatchNodeTree.INVALID
         scope_names = node_name.split('/')
-        cur_node = self._watch_node
+        self.validate_rank_id(rank_id)
+        cur_node = self._watch_node.get(rank_id)
         status = 1
         for scope_name in scope_names:
             cur_node = cur_node.get(scope_name)
@@ -250,7 +254,7 @@ class Watchpoint:
                 status = WatchNodeTree.TOTAL_WATCH
                 break
         if status == WatchNodeTree.TOTAL_WATCH and cur_node.node_name != node_name:
-            self._watch_node.add_node(node_name, node_type, full_name)
+            self._watch_node.get(rank_id).add_node(node_name, node_type, full_name)
 
         return status
 
@@ -278,11 +282,14 @@ class Watchpoint:
         Returns:
             list[NodeBasicInfo], the list of watch node basic infos.
         """
-        watch_nodes = []
-        self._get_watch_node(self._watch_node, watch_nodes)
-        return watch_nodes
+        watch_nodes_for_devices = {}
+        for rank_id, watch_node_tree in self._watch_node.items():
+            watch_nodes = []
+            self._get_watch_node(watch_node_tree, watch_nodes)
+            watch_nodes_for_devices[rank_id] = watch_nodes
+        return watch_nodes_for_devices
 
-    def get_pending_cmd(self, watch_nodes):
+    def get_pending_cmd(self, watch_nodes_for_devices):
         """Return the watchpoint in proto format."""
         # construct SetCMD
         condition_id = self._condition.get('id')
@@ -309,10 +316,12 @@ class Watchpoint:
                 param_proto.name = param_name
                 param_proto.disabled = True
 
-        for watch_node in watch_nodes:
-            event_node = set_cmd.watch_nodes.add()
-            event_node.node_name = watch_node.full_name
-            event_node.node_type = watch_node.type
+        for rank_id, watch_nodes in watch_nodes_for_devices.items():
+            for watch_node in watch_nodes:
+                event_node = set_cmd.watch_nodes.add()
+                event_node.node_name = watch_node.full_name
+                event_node.node_type = watch_node.type
+                event_node.rank_id = rank_id
         return set_cmd
 
     def get_watch_condition_info(self):
@@ -324,6 +333,11 @@ class Watchpoint:
         if self.name:
             watchpoint_info['name'] = self.name
         return watchpoint_info
+
+    def validate_rank_id(self, rank_id):
+        if rank_id not in self._watch_node:
+            log.warning("Rank_id not exist")
+            return
 
 
 class WatchpointHit:

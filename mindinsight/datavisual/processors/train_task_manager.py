@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -150,7 +150,8 @@ class TrainTaskManager(BaseProcessor):
             profiler_type=basic_info.profiler_type,
             summary_files=basic_info.summary_files,
             graph_files=basic_info.graph_files,
-            lineage_files=basic_info.lineage_files
+            lineage_files=basic_info.lineage_files,
+            dump_dir=basic_info.dump_dir
         )
 
         if train_job.cache_status != CacheStatus.NOT_IN_CACHE:

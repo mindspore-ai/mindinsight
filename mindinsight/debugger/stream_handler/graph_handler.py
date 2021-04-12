@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,55 @@ from mindinsight.debugger.common.utils import is_scope_type
 from mindinsight.debugger.stream_cache.debugger_graph import DebuggerGraph
 from mindinsight.debugger.stream_cache.debugger_multigraph import DebuggerMultiGraph
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
+
+
+class MultiCardGraphHandler:
+    """Multi-card Graph Handler."""
+
+    def __init__(self):
+        self._graph_handlers = {0: GraphHandler()}
+
+    @property
+    def graph_handlers(self):
+        """The property of whole_graph."""
+        return self._graph_handlers
+
+    def get_graph_handler_by_rank_id(self, rank_id=0):
+        """Get handler by rank id"""
+        if rank_id in self._graph_handlers:
+            return self._graph_handlers.get(rank_id)
+        log.error("There is no rank id %d.", rank_id)
+        raise ValueError
+
+    def put(self, value):
+        """put graphs into graph_handlers"""
+        for rank_id, graph in value.items():
+            if rank_id not in self._graph_handlers:
+                self._graph_handlers[rank_id] = GraphHandler()
+            self._graph_handlers[rank_id].put(graph)
+
+    def get(self, filter_condition=None, rank_id=0):
+        """Get the graph of specific node for specific device."""
+        if rank_id in self._graph_handlers:
+            return self._graph_handlers.get(rank_id).get(filter_condition)
+        log.error("There is no rank id %d.", rank_id)
+        raise ValueError
+
+    def has_graph(self):
+        """check if has graph"""
+        res = False
+        for graph_handler in self._graph_handlers:
+            res = res or graph_handler.graph
+        return res
+
+    def register_graph_handler(self, rank_id, graph_handler):
+        """Register graph handler."""
+        self._graph_handlers[rank_id] = graph_handler
+
+    def clean(self):
+        """Clean cache."""
+        self.__init__()
+
 
 
 class GraphHandler(StreamHandlerBase):
@@ -68,7 +117,7 @@ class GraphHandler(StreamHandlerBase):
         Put value into graph cache. Called by grpc server.
 
         Args:
-            value (GraphProto): The Graph proto message.
+            value (dict): The Graph proto message. Each item is format like (<graph_name>, GraphProto).
         """
         log.info("Put graph into cache.")
         sorted_value_list = self._sort_graph(value)
@@ -430,8 +479,8 @@ class GraphHandler(StreamHandlerBase):
         graph_name, node_name = self._parse_node_name(scope_name, graph_name)
         graph = self._get_graph(graph_name)
         # to make sure fully match the scope name
-        node_name = node_name + '/' if not node_name.endswith('/') else node_name
-        nodes = graph.search_leaf_nodes_by_pattern(node_name)
+        node_name = node_name + '/' if node_name and not node_name.endswith('/') else node_name
+        nodes = graph.search_leaf_nodes_by_pattern(node_name, True)
         res = [self.construct_node_basic_info(full_name=node.full_name,
                                               graph_name=graph_name,
                                               node_name=node.name,
@@ -447,45 +496,6 @@ class GraphHandler(StreamHandlerBase):
             node_name = ''
             log.debug("Get empty full name.")
         return node_name
-
-    def get_node_by_bfs_order(self, node_name=None, ascend=True):
-        """
-        Traverse the graph in order of breath-first search by given node.
-
-        Args:
-            node_name (str): The name of current chosen leaf node.
-            ascend (bool): If True, traverse the input nodes;
-                If False, traverse the output nodes. Default is True.
-        Returns:
-            Union[None, dict], the next node object in dict type or None.
-        """
-        bfs_order = self.bfs_order
-        length = len(bfs_order)
-
-        if not bfs_order:
-            log.error('Cannot get the BFS order of the graph!')
-            msg = 'Cannot get the BFS order of the graph!'
-            raise DebuggerParamValueError(msg)
-
-        if node_name is None:
-            if ascend is False:
-                next_node = None
-            else:
-                next_node = bfs_order[0]
-        else:
-            try:
-                index = bfs_order.index(node_name)
-                log.debug("The index of the node in BFS list is: %d", index)
-            except ValueError as err:
-                log.error('Cannot find the node: %s. Please check '
-                          'the node name: %s', node_name, err)
-                msg = f'Cannot find the node: {node_name}. ' \
-                      f'Please check the node name {err}.'
-                raise DebuggerParamValueError(msg)
-
-            next_node = self._get_next_node_in_bfs(index, length, ascend)
-
-        return next_node
 
     def _get_next_node_in_bfs(self, index, length, ascend):
         """

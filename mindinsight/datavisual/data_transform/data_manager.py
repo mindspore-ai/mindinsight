@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -111,6 +111,11 @@ class _BasicTrainJob:
     def lineage_files(self):
         """Get the lineage files count in the summary dir."""
         return self._entry['lineage_files']
+
+    @property
+    def dump_dir(self):
+        """Get the dump file path in the summary dir."""
+        return self._entry.get('dump_dir', None)
 
 
 class CachedTrainJob:
@@ -369,6 +374,10 @@ class _BaseCacheManager:
 class _BriefCacheManager(_BaseCacheManager):
     """A cache manager that holds all disk train jobs on disk."""
 
+    def __init__(self, summary_base_dir):
+        super(_BriefCacheManager, self).__init__(summary_base_dir)
+        self._summary_watcher = SummaryWatcher()
+
     def cache_train_job(self, train_id):
         """
         Cache given train job.
@@ -386,7 +395,7 @@ class _BriefCacheManager(_BaseCacheManager):
     def update_cache(self, executor):
         """Update cache."""
         logger.info('Start to update BriefCacheManager.')
-        summaries_info = SummaryWatcher().list_summary_directories(self._summary_base_dir)
+        summaries_info = self._summary_watcher.list_summary_directories(self._summary_base_dir)
 
         basic_train_jobs = []
         for info in summaries_info:
@@ -424,6 +433,10 @@ class _BriefCacheManager(_BaseCacheManager):
                 new_cache_items[train_job.train_id] = reused_train_job
 
         return new_cache_items
+
+    def register_folder_analyzer(self, analyzer):
+        """Register folder analyzer."""
+        self._summary_watcher.register_folder_analyzer(analyzer)
 
     @property
     def cache_items(self):
@@ -1027,6 +1040,10 @@ class DataManager:
     def register_brief_cache_item_updater(self, updater: BaseCacheItemUpdater):
         """Register brief cache item updater for brief cache manager."""
         self._brief_cache.register_cache_item_updater(updater)
+
+    def register_folder_analyzer(self, analyzer):
+        """Register folder analyzer."""
+        self._brief_cache.register_folder_analyzer(analyzer)
 
     def get_brief_cache(self):
         """Get brief cache."""

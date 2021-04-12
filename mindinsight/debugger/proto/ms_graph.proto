@@ -229,6 +229,9 @@ message NodeProto {
 
   // full name with scope
   optional string full_name = 8;
+
+  // The corresponding source code for this node.
+  optional string source_address = 9;
 }
 
 // Models
