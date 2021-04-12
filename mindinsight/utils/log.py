@@ -38,7 +38,7 @@ class MultiCompatibleRotatingFileHandler(RotatingFileHandler):
             if os.path.exists(sfn):
                 if os.path.exists(dfn):
                     os.remove(dfn)
-                os.chmod(sfn, stat.S_IREAD)
+                os.chmod(sfn, stat.S_IRUSR)
                 os.rename(sfn, dfn)
 
     def doRollover(self):
@@ -48,8 +48,8 @@ class MultiCompatibleRotatingFileHandler(RotatingFileHandler):
             self.stream = None
 
         # Attain an exclusive lock with blocking mode by `fcntl` module.
-        with open(self.baseFilename, 'a') as file_pointer:
-            fcntl.lockf(file_pointer.fileno(), fcntl.LOCK_EX)
+        with os.open(self.baseFilename, os.O_APPEND | os.O_CREAT, mode=stat.S_IRUSR | stat.S_IWUSR) as fd:
+            fcntl.lockf(fd, fcntl.LOCK_EX)
 
         try:
             if self.backupCount > 0:
@@ -60,11 +60,11 @@ class MultiCompatibleRotatingFileHandler(RotatingFileHandler):
             if os.path.exists(dfn):
                 os.remove(dfn)
 
-            os.chmod(self.baseFilename, stat.S_IREAD)
+            os.chmod(self.baseFilename, stat.S_IRUSR)
             self.rotate(self.baseFilename, dfn)
 
-            with open(self.baseFilename, 'a'):
-                os.chmod(self.baseFilename, stat.S_IREAD | stat.S_IWRITE)
+            fd = os.open(self.baseFilename, os.O_APPEND | os.O_CREAT, mode=stat.S_IRUSR | stat.S_IWUSR)
+            os.close(fd)
 
             if not self.delay:
                 self.stream = self._open()
@@ -75,7 +75,7 @@ class MultiCompatibleRotatingFileHandler(RotatingFileHandler):
 
     def _open(self):
         """Open the current base file with the (original) mode and encoding."""
-        new_log = open(self.baseFilename, self.mode, encoding=self.encoding)
+        new_log = super()._open()
         os.chmod(self.baseFilename, stat.S_IREAD | stat.S_IWRITE)
         return new_log
 
@@ -218,10 +218,7 @@ def setup_logger(sub_module, log_name, **kwargs):
                                        'backupCount should be int type and > 0.')
 
         logfile_dir = os.path.join(settings.WORKSPACE, 'log', sub_module)
-
-        permissions = os.R_OK | os.W_OK | os.X_OK
-        mode = permissions << 6
-        os.makedirs(logfile_dir, mode=mode, exist_ok=True)
+        os.makedirs(logfile_dir, mode=stat.S_IRWXU, exist_ok=True)
 
         logfile_handler = MultiCompatibleRotatingFileHandler(
             filename=os.path.join(logfile_dir, '{}.{}.log'.format(log_name, settings.PORT)),

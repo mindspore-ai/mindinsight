@@ -15,6 +15,7 @@
 """Hook module."""
 
 import os
+import stat
 import threading
 from importlib import import_module
 
@@ -132,10 +133,8 @@ def init(workspace='', config='', **kwargs):
     Raises:
         FileSystemPermissionError, if workspace is not allowed to access or available.
     """
-    permissions = os.R_OK | os.W_OK | os.X_OK
-
     # set umask to 0o077
-    os.umask(permissions << 3 | permissions)
+    os.umask(stat.S_IRWXG | stat.S_IRWXO)
 
     # assign argument values into environment
     if workspace:
@@ -151,7 +150,7 @@ def init(workspace='', config='', **kwargs):
     settings.refresh()
 
     if os.path.exists(settings.WORKSPACE):
-        if not os.access(settings.WORKSPACE, permissions):
+        if not os.access(settings.WORKSPACE, os.R_OK | os.W_OK | os.X_OK):
             raise FileSystemPermissionError('Workspace {} not allowed to access'.format(workspace))
     else:
         try:
