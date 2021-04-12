@@ -108,6 +108,7 @@ export default {
       timeReloadValue: this.$store.state.timeReloadValue,
       newReloadValue: this.$store.state.timeReloadValue,
       showDebugger: window.enableDebugger,
+      path: null,
     };
   },
   computed: {
@@ -135,9 +136,26 @@ export default {
       return isChinese;
     },
   },
-  watch: {},
+  watch: {
+    'path'(newValue, oldValue) {
+      if (oldValue) {
+        this.clearPageIndex();
+      }
+    },
+  },
   mounted() {},
   methods: {
+    /**
+     * The logic of clear page index memory
+     */
+    clearPageIndex() {
+      if (sessionStorage.getItem('XAIPageIndex')) {
+        sessionStorage.removeItem('XAIPageIndex');
+      }
+      if (sessionStorage.getItem('summaryPageIndex')) {
+        sessionStorage.removeItem('summaryPageIndex');
+      }
+    },
     // click reload
     setReload() {
       this.$store.commit('clearToken');
@@ -191,17 +209,29 @@ export default {
     // get active menu item
     getActive() {
       const str = this.$route.path.split('/');
+      let path;
       if (str.length > 1) {
         if (!str[1]) {
           return;
         }
         if (str[1] === 'debugger') {
-          return this.$route.path;
+          path = '/debugger';
         } else if (str[1] === 'explain') {
-          return `/${str[1]}`;
+          path = '/explain';
+        } else {
+          path = '/summary-manage';
         }
+      } else {
+        path = '/summary-manage';
       }
-      return '/summary-manage';
+      if (this.path) {
+        if (this.path !== path) {
+          this.path = path;
+        }
+      } else {
+        this.path = path;
+      }
+      return path;
     },
     changeLanguage(lan) {
       localStorage.setItem('milang', lan);
