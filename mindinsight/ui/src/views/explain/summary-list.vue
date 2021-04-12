@@ -96,7 +96,7 @@ limitations under the License.
       <div class="pagination-content">
         <el-pagination @current-change="currentPageChange"
                        @size-change="currentPagesizeChange"
-                       :current-page="pagination.currentPage"
+                       :current-page.sync="pagination.currentPage"
                        :page-size="pagination.pageSize"
                        :page-sizes="pagination.pageSizes"
                        :layout="pagination.layout"
@@ -126,7 +126,7 @@ export default {
       // table filter condition
       summaryList: [],
       pagination: {
-        currentPage: 1,
+        currentPage: null,
         pageSize: 20,
         pageSizes: [10, 20, 50],
         total: 0,
@@ -154,7 +154,10 @@ export default {
     document.onclick = null;
     document.onscroll = null;
   },
-  activated() {},
+  created() {
+    const pageIndex = sessionStorage.getItem('XAIPageIndex');
+    this.pagination.currentPage = pageIndex ? +pageIndex : 1;
+  },
   mounted() {
     document.title = `${this.$t('explain.explain')}-MindInsight`;
     this.$nextTick(() => {
@@ -178,7 +181,6 @@ export default {
       document.onscroll = () => {
         this.contextMenu.show = false;
       };
-
       const params = {
         limit: this.pagination.pageSize,
         offset: this.pagination.currentPage - 1,
@@ -195,9 +197,12 @@ export default {
               (res) => {
                 this.loading = false;
                 if (res && res.data && res.data.explain_jobs) {
-                  const summaryList = JSON.parse(
-                      JSON.stringify(res.data.explain_jobs),
-                  );
+                  const summaryList = JSON.parse(JSON.stringify(res.data.explain_jobs));
+                  if (params.offset > 0 && !summaryList.length) {
+                    this.currentPage.currentPage = 1;
+                    this.currentPageChange();
+                    return;
+                  }
                   summaryList.forEach((i) => {
                     i.update_time = i.update_time ? i.update_time : '--';
                   });
@@ -226,8 +231,10 @@ export default {
       };
       this.querySummaryList(params);
     },
-    currentPageChange(currentPage) {
-      this.pagination.currentPage = currentPage;
+    currentPageChange() {
+      if (this.pagination.currentPage > 1) {
+        sessionStorage.setItem('XAIPageIndex', this.pagination.currentPage);
+      }
       const params = {
         offset: this.pagination.currentPage - 1,
         limit: this.pagination.pageSize,
@@ -241,7 +248,6 @@ export default {
     goToSaliencyMap(row) {
       this.contextMenu.show = false;
       const trainId = row.train_id;
-
       this.$router.push({
         path: '/explain/saliency-map',
         query: {id: trainId},
@@ -258,7 +264,6 @@ export default {
       const trainId = row.train_id;
       const path = row.relative_path;
       const router = '/explain/conterfactual-interpretation';
-
       this.$router.push({
         path: router,
         query: {

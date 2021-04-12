@@ -115,7 +115,7 @@ limitations under the License.
       <div class="pagination-content">
         <el-pagination @current-change="currentPageChange"
                        @size-change="currentPagesizeChange"
-                       :current-page="pagination.currentPage"
+                       :current-page.sync="pagination.currentPage"
                        :page-size="pagination.pageSize"
                        :page-sizes="pagination.pageSizes"
                        :layout="pagination.layout"
@@ -209,7 +209,7 @@ export default {
         },
       },
       pagination: {
-        currentPage: 1,
+        currentPage: null,
         pageSize: 20,
         pageSizes: [10, 20, 50],
         total: 0,
@@ -237,7 +237,10 @@ export default {
     document.onclick = null;
     document.onscroll = null;
   },
-  activated() {},
+  created() {
+    const pageIndex = sessionStorage.getItem('summaryPageIndex');
+    this.pagination.currentPage = pageIndex ? +pageIndex : 1;
+  },
   mounted() {
     document.title = `${this.$t('summaryManage.summaryList')}-MindInsight`;
     this.$nextTick(() => {
@@ -278,9 +281,12 @@ export default {
               (res) => {
                 this.loading = false;
                 if (res && res.data && res.data.train_jobs) {
-                  const summaryList = JSON.parse(
-                      JSON.stringify(res.data.train_jobs),
-                  );
+                  const summaryList = JSON.parse(JSON.stringify(res.data.train_jobs));
+                  if (params.offset > 0 && !summaryList.length) {
+                    this.currentPage.currentPage = 1;
+                    this.currentPageChange();
+                    return;
+                  }
                   summaryList.forEach((i) => {
                     i.relative_path = i.relative_path ? i.relative_path : '--';
                     i.update_time = i.update_time ? i.update_time : '--';
@@ -295,6 +301,7 @@ export default {
                 } else {
                   this.currentFolder = '--';
                   this.pagination.total = 0;
+                  this.pagination.currentPage = 1;
                   this.summaryList = [];
                   this.disableState = true;
                 }
@@ -315,8 +322,10 @@ export default {
       };
       this.querySummaryList(params);
     },
-    currentPageChange(currentPage) {
-      this.pagination.currentPage = currentPage;
+    currentPageChange() {
+      if (this.pagination.currentPage > 1) {
+        sessionStorage.setItem('summaryPageIndex', this.pagination.currentPage);
+      }
       const params = {
         offset: this.pagination.currentPage - 1,
         limit: this.pagination.pageSize,
@@ -330,7 +339,6 @@ export default {
     goToTrainDashboard(row) {
       this.contextMenu.show = false;
       const trainId = encodeURIComponent(row.train_id);
-
       this.$router.push({
         path: '/train-manage/training-dashboard',
         query: {id: trainId},
@@ -353,7 +361,6 @@ export default {
       } else if (row.profiler_type === 'cluster_gpu') {
         router = '/profiling-gpu-cluster';
       }
-
       this.$router.push({
         path: router,
         query: {
