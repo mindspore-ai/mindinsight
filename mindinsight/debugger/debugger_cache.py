@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,17 +17,19 @@ import sys
 
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams
-from mindinsight.debugger.stream_handler import EventHandler, MetadataHandler, GraphHandler, \
-    TensorHandler, WatchpointHandler, WatchpointHitHandler
+from mindinsight.debugger.stream_handler import EventHandler, MetadataHandler, MultiCardGraphHandler, \
+    MultiCardTensorHandler, WatchpointHandler, MultiCardWatchpointHitHandler
+from mindinsight.debugger.stream_handler.device_handler import DeviceHandler
 
 STREAM_HANDLER_MAP = {
     Streams.COMMAND.value: EventHandler,
     Streams.DATA.value: EventHandler,
     Streams.METADATA.value: MetadataHandler,
-    Streams.GRAPH.value: GraphHandler,
-    Streams.TENSOR.value: TensorHandler,
+    Streams.GRAPH.value: MultiCardGraphHandler,
+    Streams.TENSOR.value: MultiCardTensorHandler,
     Streams.WATCHPOINT.value: WatchpointHandler,
-    Streams.WATCHPOINT_HIT.value: WatchpointHitHandler
+    Streams.WATCHPOINT_HIT.value: MultiCardWatchpointHitHandler,
+    Streams.DEVICE.value: DeviceHandler
 }
 
 
@@ -40,10 +42,8 @@ class DebuggerCache:
     def initialize(self):
         """Initialize the stream handlers."""
         self._stream_handler = {}
-        for stream in Streams:
-            mode = stream.value
-            stream_handler = STREAM_HANDLER_MAP.get(mode)
-            self._stream_handler[mode] = stream_handler()
+        for mode, stream_class in STREAM_HANDLER_MAP.items():
+            self._stream_handler[mode] = stream_class()
 
     def clean(self):
         """Clean cache for all stream."""

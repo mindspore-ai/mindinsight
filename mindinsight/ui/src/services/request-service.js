@@ -309,55 +309,74 @@ export default {
     });
   },
   // debugger
-  pollData(params) {
+  getSession(params) {
+    return axios({
+      method: 'post',
+      url: 'v1/mindinsight/debugger/sessions',
+      data: params,
+    });
+  },
+  deleteSession(sessionId) {
+    return axios({
+      method: 'post',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/delete`,
+    });
+  },
+  checkSessions() {
     return axios({
       method: 'get',
-      url: 'v1/mindinsight/debugger/poll-data',
+      url: `v1/mindinsight/debugger/sessions`,
+    });
+  },
+  pollData(params, sessionId) {
+    return axios({
+      method: 'get',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/poll-data`,
       params: params,
       headers: {
         ignoreError: true,
       },
     });
   },
-  retrieve(params) {
+  retrieve(params, sessionId) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/retrieve',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/retrieve`,
       data: params,
     });
   },
-  createWatchpoint(params) {
+  createWatchpoint(params, sessionId) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/create-watchpoint',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/create-watchpoint`,
       data: params,
     });
   },
-  updateWatchpoint(params) {
+  updateWatchpoint(params, sessionId) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/update-watchpoint',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/update-watchpoint`,
       data: params,
     });
   },
-  deleteWatchpoint(params) {
+  deleteWatchpoint(params, sessionId) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/delete-watchpoint',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/delete-watchpoint`,
       data: params,
     });
   },
-  control(params) {
+  control(params, sessionId) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/control',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/control`,
       data: params,
     });
   },
-  search(params) {
+  search(params, sessionId) {
     return axios({
       method: 'get',
-      url: 'v1/mindinsight/debugger/search',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/search`,
       params: params,
     });
   },
@@ -368,43 +387,43 @@ export default {
       params: params,
     });
   },
-  tensorComparisons(params) {
+  tensorComparisons(params, sessionId) {
     return axios({
       method: 'get',
-      url: 'v1/mindinsight/debugger/tensor-comparisons',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/tensor-comparisons`,
       params: params,
     });
   },
-  tensors(params) {
+  tensors(params, sessionId) {
     return axios({
       method: 'get',
-      url: 'v1/mindinsight/debugger/tensors',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/tensors`,
       params: params,
     });
   },
-  retrieveTensorHistory(params) {
+  retrieveTensorHistory(params, sessionId) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/debugger/tensor-history',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/tensor-history`,
       data: params,
     });
   },
-  queryConditions(trainId) {
+  queryConditions(sessionId) {
     return axios({
       method: 'get',
-      url: `v1/mindinsight/conditionmgr/train-jobs/${trainId}/condition-collections`,
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/condition-collections`,
     });
   },
-  recheckWatchPoints() {
+  recheckWatchPoints(sessionId) {
     return axios({
       method: 'post',
-      url: `v1/mindinsight/debugger/recheck`,
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/recheck`,
     });
   },
-  searchWatchpointHits(params) {
+  searchWatchpointHits(params, sessionId) {
     return axios({
       method: 'post',
-      url: `v1/mindinsight/debugger/search-watchpoint-hits`,
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/search-watchpoint-hits`,
       data: params,
     });
   },
@@ -447,33 +466,25 @@ export default {
       data: params,
     });
   },
-  tensorHitsData(params) {
+  tensorHitsData(params, sessionId) {
     return axios({
       method: 'get',
-      url: 'v1/mindinsight/debugger/tensor-hits',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/tensor-hits`,
       params: params,
     });
   },
-  getTensorGraphData(params) {
+  getTensorGraphData(params, sessionId) {
     return axios({
       method: 'get',
-      url: 'v1/mindinsight/debugger/tensor-graphs',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/tensor-graphs`,
       params: params,
     });
   },
-  getCpuUtilization(params) {
+  setRecommendWatchPoints(params, sessionId) {
     return axios({
       method: 'post',
-      url: 'v1/mindinsight/profile/minddata-cpu-utilization-summary',
-      params: params.params,
-      data: params.body,
-    });
-  },
-  setRecommendWatchPoints(params) {
-    return axios({
-      method: 'post',
-      url: `v1/mindinsight/conditionmgr/train-jobs/${params.trainId}/set-recommended-watch-points`,
-      data: params.body,
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/set-recommended-watch-points`,
+      data: params,
     });
   },
   // memory-datail apis

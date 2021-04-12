@@ -105,12 +105,12 @@ class WatchpointHandler(StreamHandlerBase):
 
         return {'watch_points': reply}
 
-    def get_pending_commands(self, graph_stream):
+    def get_pending_commands(self, multi_card_graph_stream):
         """
         Get all watchpoint in SetCMD proto format.
 
         Args:
-            graph_stream (GraphHandler): Graph handler.
+            multi_card_graph_stream (MultiCardGraphHandler): Multi card graph handler.
 
         Returns:
             list[SetCMD], updated watchpoint to be sent to MindSpore.
@@ -118,9 +118,13 @@ class WatchpointHandler(StreamHandlerBase):
         newly_set_cmds = []
         for _, watchpoint in self._updated_watchpoints.items():
             # construct set command with leaf nodes
-            watch_nodes = watchpoint.get_watch_nodes()
-            leaf_watch_nodes = self._expand_to_leaf_nodes(graph_stream, watch_nodes)
-            newly_set_cmds.append(watchpoint.get_pending_cmd(leaf_watch_nodes))
+            watch_nodes_for_devices = watchpoint.get_watch_nodes()
+            leaf_watch_nodes_for_devices = {}
+            for rank_id, watch_nodes in watch_nodes_for_devices.items():
+                graph_stream = multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id)
+                leaf_watch_nodes = self._expand_to_leaf_nodes(graph_stream, watch_nodes)
+                leaf_watch_nodes_for_devices[rank_id] = leaf_watch_nodes
+            newly_set_cmds.append(watchpoint.get_pending_cmd(leaf_watch_nodes_for_devices))
         newly_set_cmds.extend(self._deleted_watchpoints)
         self.sync_set_cmd(newly_set_cmds)
 
@@ -161,7 +165,7 @@ class WatchpointHandler(StreamHandlerBase):
         """
         return self._outdated
 
-    def set_watch_nodes(self, graph, graph_stream, watch_point_id, graph_name=None):
+    def set_watch_nodes(self, graph, graph_stream, watch_point_id, graph_name=None, rank_id=0):
         """
         set watch nodes for graph.
 
@@ -170,23 +174,24 @@ class WatchpointHandler(StreamHandlerBase):
             graph_stream (GraphHandler): The graph handler.
             watch_point_id (int): The id of watchpoint.
             graph_name (str): The graph name.
+            rank_id (int): The rank id.
         """
         if not (watch_point_id and graph):
             return
         log.debug("add watch flags")
         watchpoint = self._watchpoints.get(watch_point_id)
-        self._set_watch_status_recursively(graph, graph_stream, watchpoint, graph_name)
+        self._set_watch_status_recursively(graph, graph_stream, watchpoint, graph_name, rank_id)
 
-    def _set_watch_status_recursively(self, graph, graph_stream, watchpoint, graph_name=None):
+    def _set_watch_status_recursively(self, graph, graph_stream, watchpoint, graph_name=None, rank_id=0):
         """Set watch status to graph."""
         if graph.get('children'):
             self._set_watch_status_recursively(
-                graph.get('children'), graph_stream, watchpoint, graph_name)
+                graph.get('children'), graph_stream, watchpoint, graph_name, rank_id=0)
 
         if graph.get('nodes'):
-            _ = self._set_watch_state_for_nodes(graph['nodes'], graph_stream, watchpoint, graph_name)
+            _ = self._set_watch_state_for_nodes(graph['nodes'], graph_stream, watchpoint, graph_name, rank_id)
 
-    def _set_watch_state_for_nodes(self, nodes, graph_stream, watchpoint, graph_name):
+    def _set_watch_state_for_nodes(self, nodes, graph_stream, watchpoint, graph_name, rank_id=0):
         """
         Set watch state for nodes.
 
@@ -204,11 +209,11 @@ class WatchpointHandler(StreamHandlerBase):
             node_name = node.get('name')
             # search result could have `nodes` in nodes object
             if node.get('nodes'):
-                flag = self._set_watch_state_for_nodes(node.get('nodes'), graph_stream, watchpoint, graph_name)
+                flag = self._set_watch_state_for_nodes(node.get('nodes'), graph_stream, watchpoint, graph_name, rank_id)
             else:
                 full_name = graph_stream.get_full_name(node_name, graph_name)
                 new_node_name = node_name if graph_name is None else '/'.join([graph_name, node_name])
-                flag = watchpoint.get_node_status(new_node_name, node.get('type'), full_name)
+                flag = watchpoint.get_node_status(new_node_name, node.get('type'), full_name, rank_id)
             node['watched'] = flag
             if flag == WatchNodeTree.NOT_WATCH:
                 continue
@@ -224,7 +229,8 @@ class WatchpointHandler(StreamHandlerBase):
             state = WatchNodeTree.TOTAL_WATCH
         return state
 
-    def create_watchpoint(self, condition_mgr, watch_condition, watch_nodes=None, watch_point_id=None, name=None):
+    def create_watchpoint(self, condition_mgr, watch_condition, watch_nodes=None, watch_point_id=None, name=None,
+                          device_amount=8):
         """
         Create watchpoint.
         Args:
@@ -241,9 +247,10 @@ class WatchpointHandler(StreamHandlerBase):
                 }
                 - id (str): Id of condition.
                 - param (list[dict]): The list of param for this condition.
-            watch_nodes (list[NodeBasicInfo]): The list of node basic info.
+            watch_nodes (dict[list[NodeBasicInfo]]): The list of node basic info.
             watch_point_id (int): The id of watchpoint.
             name (str): The name of watchpoint.
+            device_amount (int): The amount of devices.
 
         Returns:
             int, the new id of watchpoint.
@@ -253,7 +260,9 @@ class WatchpointHandler(StreamHandlerBase):
         new_id = self._latest_id + 1
         watchpoint = Watchpoint(new_id, watch_condition, name)
         if watch_nodes:
-            watchpoint.add_nodes(watch_nodes)
+            for rank_id, watch_nodes_for_device in watch_nodes.items():
+                validate_rank_id(rank_id, device_amount)
+                watchpoint.add_nodes(watch_nodes_for_device, rank_id)
         elif watch_point_id:
             self.validate_watchpoint_id(watch_point_id)
             watchpoint.copy_nodes_from(self._watchpoints.get(watch_point_id))
@@ -261,7 +270,7 @@ class WatchpointHandler(StreamHandlerBase):
         self._outdated = True
         return new_id
 
-    def update_watchpoint(self, watch_point_id, watch_nodes, watched=False):
+    def update_watchpoint(self, watch_point_id, watch_nodes, watched=False, rank_id=0):
         """
         Update watchpoint.
 
@@ -270,13 +279,14 @@ class WatchpointHandler(StreamHandlerBase):
             watch_nodes (list[NodeBasicInfo]): The list of node basic info.
             watched (bool): The update operator on nodes. If False, remove nodes from watch nodes.
                 If True, add nodes to watch nodes. Default: False.
+            rank_id (int): The rank id.
         """
         self.validate_watchpoint_id(watch_point_id)
         watchpoint = self._watchpoints.get(watch_point_id)
         if watched:
-            watchpoint.add_nodes(watch_nodes)
+            watchpoint.add_nodes(watch_nodes, rank_id)
         else:
-            watchpoint.remove_nodes(watch_nodes)
+            watchpoint.remove_nodes(watch_nodes, rank_id)
         self._updated_watchpoints[watch_point_id] = watchpoint
         self._outdated = True
         log.debug("Update watchpoint %d in cache.", watch_point_id)
@@ -326,6 +336,58 @@ class WatchpointHandler(StreamHandlerBase):
         if watch_point_id and watch_point_id not in self._watchpoints:
             log.error("Invalid watchpoint id: %d.", watch_point_id)
             raise DebuggerParamValueError("Invalid watchpoint id: {}".format(watch_point_id))
+
+
+class MultiCardWatchpointHitHandler:
+    """Multi-card Watchpoint-hit Handler."""
+
+    def __init__(self):
+        self.watchpoint_hit_handlers = {0: WatchpointHitHandler()}
+
+    def get_hit_handler_by_rank_id(self, rank_id=0):
+        """Get handler by rank id."""
+        if rank_id in self.watchpoint_hit_handlers:
+            return self.watchpoint_hit_handlers.get(rank_id)
+        log.error("There is no rank id %d.", rank_id)
+        raise ValueError
+
+    def put(self, value):
+        """Put watchpoint hit into cache."""
+        for rank_id, tensor_hit_values in value.items():
+            if rank_id not in self.watchpoint_hit_handlers:
+                self.watchpoint_hit_handlers[rank_id] = WatchpointHitHandler()
+            cur_hit_handler = self.watchpoint_hit_handlers[rank_id]
+            for tensor_hit_value in tensor_hit_values:
+                cur_hit_handler.put(tensor_hit_value)
+
+    def get(self, filter_condition=None, rank_id=0):
+        """Get the graph of specific node for specific device."""
+        if rank_id in self.watchpoint_hit_handlers:
+            return self.watchpoint_hit_handlers.get(rank_id).get(filter_condition)
+        log.error("There is no rank id %d.", rank_id)
+        raise ValueError
+
+    def update_tensor_history(self, tensor_history, rank_id):
+        """
+        Add hit flag to tensor history.
+
+        Args:
+            tensor_history (dict): The tensor history.
+            rank_id (int): The rank id.
+        """
+        if rank_id in self.watchpoint_hit_handlers:
+            self.watchpoint_hit_handlers[rank_id].update_tensor_history(tensor_history)
+        else:
+            for tensor_info in tensor_history.get('tensor_history'):
+                tensor_info['is_hit'] = False
+
+    def check_rank_id(self, rank_id):
+        """check if has the rank id."""
+        return rank_id in self.watchpoint_hit_handlers
+
+    def clean(self):
+        """Clean cache."""
+        self.__init__()
 
 
 class WatchpointHitHandler(StreamHandlerBase):
@@ -743,3 +805,9 @@ def _get_error_list(error_code):
             error_list.append(error_str)
 
     return error_list
+
+
+def validate_rank_id(rank_id, device_amount):
+    """validate rank id"""
+    if rank_id >= device_amount:
+        log.debug("The rank id %d over device amount.", rank_id)

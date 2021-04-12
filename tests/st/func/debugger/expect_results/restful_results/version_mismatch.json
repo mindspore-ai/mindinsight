@@ -1,1 +1,1 @@
-{"metadata": {"state": "mismatch", "step": 0, "device_name": "0", "node_name": "", "backend": "Ascend", "enable_recheck": false, "graph_name": "", "recommendation_confirmed": false, "debugger_version": {"ms": "1.0.0"}}, "graph": {}, "watch_points": []}
+{"metadata": {"state": "mismatch", "step": 0, "device_name": "0", "node_name": "", "backend": "Ascend", "enable_recheck": false, "graph_name": "", "recommendation_confirmed": false, "debugger_version": {}}, "graph": {}, "devices": [{"rank_id": 0, "device_id": "0", "graph_names": []}], "watch_points": []}

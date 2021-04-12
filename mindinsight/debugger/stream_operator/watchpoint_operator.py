@@ -31,8 +31,9 @@ class WatchpointOperator:
 
     def __init__(self, cache_store, condition_mgr):
         self._watchpoint_stream = cache_store.get_stream_handler(Streams.WATCHPOINT)
-        self._graph_stream = cache_store.get_stream_handler(Streams.GRAPH)
+        self._multi_card_graph_stream = cache_store.get_stream_handler(Streams.GRAPH)
         self._metadata_stream = cache_store.get_stream_handler(Streams.METADATA)
+        self._device_stream = cache_store.get_stream_handler(Streams.DEVICE)
         self._condition_mgr = condition_mgr
 
     def create_watchpoint(self, params):
@@ -70,11 +71,6 @@ class WatchpointOperator:
                 "Failed to create watchpoint as the MindSpore is not in waiting state.")
         self._validate_watch_condition(watch_condition)
 
-        watch_nodes = self._get_watch_node_with_basic_info(
-            node_names=params.get('watch_nodes'),
-            search_pattern=params.get('search_pattern'),
-            graph_name=params.get('graph_name'))
-
         validate_watch_condition(self._condition_mgr, watch_condition)
         condition_id = watch_condition.get('id')
         condition = self._condition_mgr.get_condition(condition_id)
@@ -84,10 +80,11 @@ class WatchpointOperator:
             raise DebuggerConditionUnavailableError(
                 "Failed to create watchpoint as the condition is not available.")
 
-        watch_nodes = get_basic_node_info(condition.supported_target_type.value, self._graph_stream).copy()
+        watch_nodes = get_basic_node_info(condition.supported_target_type.value, self._multi_card_graph_stream)
         watchpoint_stream = self._watchpoint_stream
-        watch_point_id = watchpoint_stream.create_watchpoint(
-            self._condition_mgr, watch_condition, watch_nodes, params.get('watch_point_id'))
+        watch_point_id = watchpoint_stream.create_watchpoint(self._condition_mgr, watch_condition, watch_nodes,
+                                                             params.get('watch_point_id'),
+                                                             self._device_stream.device_amount)
         log.info("Create watchpoint %d", watch_point_id)
 
         metadata_stream.enable_recheck = watchpoint_stream.is_recheckable()
@@ -115,6 +112,7 @@ class WatchpointOperator:
                     1 for add nodes to watch nodes.
                 - search_pattern (dict): The search pattern.
                 - graph_name (str): The relative graph_name of the watched node.
+                - rank_id (int): The rank id.
 
         Returns:
             dict, the metadata info.
@@ -137,13 +135,14 @@ class WatchpointOperator:
         watch_nodes = self._get_watch_node_with_basic_info(
             node_names=params.get('watch_nodes'),
             search_pattern=params.get('search_pattern'),
-            graph_name=params.get('graph_name'))
-        watchpoint_stream.update_watchpoint(watch_point_id, watch_nodes, params.get('mode'))
+            graph_name=params.get('graph_name'),
+            rank_id=params.get('rank_id', 0))
+        watchpoint_stream.update_watchpoint(watch_point_id, watch_nodes, params.get('mode'), params.get('rank_id', 0))
         metadata_stream.enable_recheck = watchpoint_stream.is_recheckable()
         log.info("Update watchpoint with id: %d", watch_point_id)
         return metadata_stream.get(['state', 'enable_recheck'])
 
-    def _get_watch_node_with_basic_info(self, node_names, search_pattern=None, graph_name=None):
+    def _get_watch_node_with_basic_info(self, node_names, search_pattern=None, graph_name=None, rank_id=0):
         """
         Get watch node with basic info.
 
@@ -151,20 +150,21 @@ class WatchpointOperator:
             node_names (list[str]): A list of node names.
             search_pattern (dict): Get watch node with search pattern. Default: None
             graph_name (str): The relative graph_name of the watched node. Default: None.
+            rank_id (int): The rank id.
 
         Returns:
             list[NodeBasicInfo], a list of node basic infos.
         """
         if not node_names:
             return []
-        graph_name = self._graph_stream.validate_graph_name(graph_name)
+        graph_name = self._multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id).validate_graph_name(graph_name)
         if search_pattern is not None:
-            watch_nodes = self._get_watch_nodes_by_search(node_names, search_pattern, graph_name)
+            watch_nodes = self._get_watch_nodes_by_search(node_names, search_pattern, graph_name, rank_id)
         else:
-            watch_nodes = self._get_node_basic_infos(node_names, graph_name=graph_name)
+            watch_nodes = self._get_node_basic_infos(node_names, graph_name=graph_name, rank_id=rank_id)
         return watch_nodes
 
-    def _get_watch_nodes_by_search(self, node_names, search_pattern, graph_name):
+    def _get_watch_nodes_by_search(self, node_names, search_pattern, graph_name, rank_id):
         """
         Get watched leaf nodes by search name.
 
@@ -180,7 +180,7 @@ class WatchpointOperator:
             list[NodeBasicInfo], a list of node basic infos.
         """
         search_pattern['graph_name'] = graph_name
-        search_nodes = self._graph_stream.search_nodes(search_pattern)
+        search_nodes = self._multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id).search_nodes(search_pattern)
         watch_node_names = set()
         for name in node_names:
             names = self._get_watch_names_by_search(search_nodes, name)
@@ -260,7 +260,7 @@ class WatchpointOperator:
         log.info("Delete watchpoint with id: %s", watch_point_id)
         return metadata_stream.get(['state', 'enable_recheck'])
 
-    def _get_node_basic_infos(self, node_names, graph_name=None):
+    def _get_node_basic_infos(self, node_names, graph_name=None, rank_id=0):
         """
         Get watch node info according to node names.
 
@@ -273,7 +273,7 @@ class WatchpointOperator:
         """
         if not node_names:
             return []
-        graph_stream = self._graph_stream
+        graph_stream = self._multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id)
         node_infos = []
         for node_name in node_names:
             node_info = graph_stream.get_node_basic_info(node_name, graph_name)

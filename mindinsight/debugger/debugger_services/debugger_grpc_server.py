@@ -19,7 +19,7 @@ from functools import wraps
 import mindinsight
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus, \
-    Streams, RunLevel
+    Streams, RunLevel, version_match
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum, ParamNameEnum
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.debugger.proto.ms_graph_pb2 import GraphProto
@@ -117,9 +117,10 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         # clean cache data at the beginning of new step or node has been changed.
         if is_new_step or is_new_node:
             self._cache_store.clean_data()
-            self._cache_store.get_stream_handler(Streams.TENSOR).clean_tensors(request.cur_step)
+            self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0).clean_tensors(
+                request.cur_step)
         if is_new_step:
-            self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
+            self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).get_hit_handler_by_rank_id(0).clean()
         # receive graph at the beginning of the training
         if self._status == ServerStatus.RECEIVE_GRAPH:
             self._send_graph_flag(metadata_stream)
@@ -141,7 +142,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._status = ServerStatus.WAITING
         metadata_stream.state = ServerStatus.WAITING.value
         metadata = metadata_stream.get()
-        res = self._cache_store.get_stream_handler(Streams.GRAPH).get()
+        res = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0).get()
         res.update(metadata)
         self._cache_store.put_data(res)
         log.debug("Put graph into data queue.")
@@ -157,7 +158,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         # put new metadata into cache
         metadata_stream.put(metadata_proto)
         # update current node name and graph name
-        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
+        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0)
         full_name = metadata_proto.cur_node
         graph_name = graph_stream.get_graph_id_by_full_name(
             full_name) if full_name else metadata_stream.graph_name
@@ -182,7 +183,8 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
     def _send_watchpoint_hit_flag(self):
         """Send Watchpoint hit flag."""
-        watchpoint_hit_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
+        watchpoint_hit_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).get_hit_handler_by_rank_id(
+            0)
         if not self._received_hit:
             return
         watchpoint_hits = self._received_hit
@@ -344,7 +346,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             run_cmd.node_name = ''
         # clean watchpoint hit cache
         if run_cmd.run_level == RunLevel.RECHECK.value:
-            self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).clean()
+            self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT).get_hit_handler_by_rank_id(0).clean()
             log.debug("Receive RunCMD. Clean watchpoint hit cache.")
         # update metadata state from sending to running
         metadata_stream.state = ServerStatus.RUNNING.value
@@ -365,8 +367,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             log.info("The training from %s has finished.", client_ip)
         else:
             ms_version = request.ms_version
-            if not ms_version:
-                ms_version = '1.0.x'
             if version_match(ms_version, mindinsight.__version__) is False:
                 log.info("Version is mismatched, mindspore is: %s, mindinsight is: %s",
                          ms_version, mindinsight.__version__)
@@ -403,8 +403,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         graph = GraphProto.FromString(serial_graph)
         log.debug("Deserialize the graph %s. Receive %s nodes", graph.name, len(graph.node))
         graph_dict = {graph.name: graph}
-        self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_dict)
-        self._cache_store.get_stream_handler(Streams.TENSOR).put_const_vals(graph.const_vals)
+        self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0).put(graph_dict)
+        self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0).put_const_vals(
+            graph.const_vals)
         self._cache_store.get_stream_handler(Streams.METADATA).graph_name = graph.name
         self._record_parameter_names()
         self._status = ServerStatus.RECEIVE_GRAPH
@@ -429,10 +430,10 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                 log.debug("Deserialize the graph %s. Receive %s nodes", sub_graph.name,
                           len(sub_graph.node))
                 serial_graph = b""
-                self._cache_store.get_stream_handler(Streams.TENSOR).put_const_vals(
+                self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0).put_const_vals(
                     sub_graph.const_vals)
 
-        self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_dict)
+        self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0).put(graph_dict)
         self._record_parameter_names()
         self._status = ServerStatus.RECEIVE_GRAPH
         log.debug("Send the reply for graph.")
@@ -440,9 +441,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
     def _record_parameter_names(self):
         """Record parameter full names in tensor handler."""
-        parameter_nodes = self._cache_store.get_stream_handler(Streams.GRAPH).search_in_graph(
-            pattern={'node_category': TargetTypeEnum.PARAMETER.value})
-        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR)
+        parameter_nodes = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0)\
+            .search_in_graph(pattern={'node_category': TargetTypeEnum.PARAMETER.value})
+        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
         for node in parameter_nodes:
             tensor_name = [node.full_name + ':0']
             tensor_stream.record_parameter_names(tensor_name)
@@ -452,7 +453,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """Send tensors into DebuggerCache."""
         log.info("Received tensor.")
         tensor_contents = []
-        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR)
+        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
         step = metadata_stream.step
         for tensor in request_iterator:
@@ -482,7 +483,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         # save the watchpoint_hits data
         watchpoint_hits = []
         watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
-        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
+        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0)
         for watchpoint_hit_proto in request_iterator:
             node_full_name = watchpoint_hit_proto.tensor.node_name
             graph_name = graph_stream.get_graph_id_by_full_name(node_full_name)
@@ -517,10 +518,3 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._received_hit = watchpoint_hits
         reply = get_ack_reply()
         return reply
-
-
-def version_match(mi_version, ms_version):
-    """Judge if the version of Mindinsight and Mindspore is matched"""
-    mi_major, mi_minor = mi_version.split('.')[:2]
-    ms_major, ms_minor = ms_version.split('.')[:2]
-    return mi_major == ms_major and mi_minor == ms_minor

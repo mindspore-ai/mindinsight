@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -188,5 +188,60 @@ class DebuggerConditionUnavailableError(MindInsightException):
         super(DebuggerConditionUnavailableError, self).__init__(
             error=DebuggerErrors.DEBUGGER_CONDITION_UNAVAILABLE_ERROR,
             message=DebuggerErrorMsg.DEBUGGER_CONDITION_UNAVAILABLE_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
+class DebuggerServerRunningError(MindInsightException):
+    """The condition unavailable error in debugger module."""
+
+    def __init__(self, msg):
+        super(DebuggerServerRunningError, self).__init__(
+            error=DebuggerErrors.DEBUGGER_SERVER_RUNNING_ERROR,
+            message=DebuggerErrorMsg.DEBUGGER_SERVER_RUNNING_ERROR.value.format(msg),
+            http_code=500
+        )
+
+
+class DeviceIdUnregistered(MindInsightException):
+    """The condition unavailable error in debugger module."""
+
+    def __init__(self, msg):
+        super(DeviceIdUnregistered, self).__init__(
+            error=DebuggerErrors.DEVICE_ID_UNREGISTERED,
+            message=DebuggerErrorMsg.DEVICE_ID_UNREGISTERED.value.format(msg),
+            http_code=400
+        )
+
+
+class DebuggerModuleNotFoundError(MindInsightException):
+    """The condition unavailable error in debugger module."""
+
+    def __init__(self, msg):
+        super(DebuggerModuleNotFoundError, self).__init__(
+            error=DebuggerErrors.MODULE_NOT_FOUND_ERROR,
+            message=DebuggerErrorMsg.MODULE_NOT_FOUND_ERROR.value.format(msg),
+            http_code=500
+        )
+
+
+class DebuggerSessionNumOverBoundError(MindInsightException):
+    """The condition unavailable error in debugger module."""
+
+    def __init__(self):
+        super(DebuggerSessionNumOverBoundError, self).__init__(
+            error=DebuggerErrors.DEBUGGER_SESSION_OVER_BOUND_ERROR,
+            message=DebuggerErrorMsg.DEBUGGER_SESSION_OVER_BOUND_ERROR.value,
+            http_code=400
+        )
+
+
+class DebuggerSessionNotFoundError(MindInsightException):
+    """The condition unavailable error in debugger module."""
+
+    def __init__(self, msg):
+        super(DebuggerSessionNotFoundError, self).__init__(
+            error=DebuggerErrors.DEBUGGER_SESSION_NOT_FOUND_ERROR,
+            message=DebuggerErrorMsg.DEBUGGER_SESSION_NOT_FOUND_ERROR.value.format(msg),
             http_code=400
         )

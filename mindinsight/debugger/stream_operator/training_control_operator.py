@@ -18,7 +18,8 @@ import enum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerContinueError, DebuggerParamValueError, \
     DebuggerPauseError, DebuggerRecheckError, DebuggerStepNumError
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import Streams, get_ack_reply, ServerStatus, RunLevel, is_scope_type
+from mindinsight.debugger.common.utils import Streams, get_ack_reply, ServerStatus, RunLevel, is_scope_type, \
+    DebuggerServerMode
 from mindinsight.debugger.proto.debug_grpc_pb2 import RunCMD
 from mindinsight.utils.exceptions import MindInsightException
 
@@ -29,6 +30,7 @@ class ControlTypeEnum(enum.Enum):
     CONTINUE = 'continue'  # continue to run training
     PAUSE = 'pause'  # suspend training
     TERMINATE = 'terminate'  # terminate training
+    RESET = 'reset'  # reset the step_id in offline debugger
 
 
 class TrainingControlOperator:
@@ -39,7 +41,7 @@ class TrainingControlOperator:
     def __init__(self, cache_store):
         self._cache_store = cache_store
         self._watchpoint_stream = cache_store.get_stream_handler(Streams.WATCHPOINT)
-        self._graph_stream = cache_store.get_stream_handler(Streams.GRAPH)
+        self._multi_card_graph_stream = cache_store.get_stream_handler(Streams.GRAPH)
         self._metadata_stream = cache_store.get_stream_handler(Streams.METADATA)
 
     @staticmethod
@@ -71,6 +73,9 @@ class TrainingControlOperator:
         """
         if mode == ControlTypeEnum.CONTINUE.value:
             reply = self.continue_training(params)
+        elif mode == ControlTypeEnum.RESET.value:
+            step_id = params['steps']
+            reply = self.reset_training_step(step_id)
         else:
             mode_mapping = {
                 ControlTypeEnum.PAUSE.value: self.pause_training,
@@ -150,13 +155,15 @@ class TrainingControlOperator:
         if level == RunLevel.NODE.value:
             node_name = params.get('name')
             graph_name = params.get('graph_name')
-            self._validate_continue_node_name(node_name, graph_name)
+            rank_id = params.get('rank_id', 0)
+            self._validate_continue_node_name(node_name, graph_name, rank_id)
 
-    def _validate_continue_node_name(self, node_name, graph_name):
+    def _validate_continue_node_name(self, node_name, graph_name, rank_id):
         """Validate if the node is a leaf node."""
         if not node_name:
             return
-        node_type = self._graph_stream.get_node_type(node_name, graph_name)
+        node_type = self._multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id).get_node_type(node_name,
+                                                                                                      graph_name)
         if is_scope_type(node_type):
             log.error("Scope type node has no tensor history.")
             raise DebuggerParamValueError("Invalid leaf node name.")
@@ -188,7 +195,9 @@ class TrainingControlOperator:
             name = params.get('name', '')
             graph_name = params.get('graph_name')
             if name:
-                name = self._cache_store.get_stream_handler(Streams.GRAPH).get_full_name(name, graph_name)
+                rank_id = params.get('rank_id', 0)
+                name = self._multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id).get_full_name(name,
+                                                                                                         graph_name)
             run_cmd = RunCMD(run_level='node', node_name=name)
         else:
             run_cmd = RunCMD(run_level='recheck')
@@ -199,7 +208,7 @@ class TrainingControlOperator:
 
     def _send_watchpoints(self):
         """Send watchpoints to client."""
-        set_commands = self._watchpoint_stream.get_pending_commands(self._graph_stream)
+        set_commands = self._watchpoint_stream.get_pending_commands(self._multi_card_graph_stream)
         if not set_commands:
             return
         for set_cmd in set_commands:
@@ -274,3 +283,30 @@ class TrainingControlOperator:
         else:
             log.debug("Send the recheck to command queue.")
         return metadata_stream.get(['state', 'enable_recheck'])
+
+    def reset_training_step(self, step_id):
+        """
+        Reset the training step.
+
+        Args:
+            step_id (int): The target step_id.
+
+        Returns:
+            dict, metadata info.
+        """
+        metadata_stream = self._metadata_stream
+        if metadata_stream.debugger_type == DebuggerServerMode.ONLINE.value:
+            log.error("'step_id' can not be changed manually in online debugger.")
+            return metadata_stream.get(['state', 'enable_recheck', 'step'])
+        if step_id > metadata_stream.max_step_num:
+            log.error("Invalid step_id, step_id should be less than %d.", metadata_stream.max_step_num)
+            raise DebuggerParamValueError("Invalid step_id.")
+        metadata_stream.state = ServerStatus.SENDING.value
+        metadata_stream.step = step_id
+        self._cache_store.get_stream_handler(Streams.TENSOR).set_step(step_id)
+        self._cache_store.clean_data()
+        self._cache_store.clean_command()
+        metadata_stream.enable_recheck = False
+        metadata_stream.state = ServerStatus.WAITING.value
+        log.debug("Send the Change_training_step CMD.")
+        return metadata_stream.get(['state', 'enable_recheck', 'step'])

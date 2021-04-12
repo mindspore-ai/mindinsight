@@ -40,7 +40,7 @@ class TestTensorHandler:
 
     def test_get_tensor_value_by_name_none(self):
         """Test get_tensor_value_by_name."""
-        res = self.tensor_handler.get_valid_tensor_by_name('tensor_name', True)
+        res = self.tensor_handler.get_valid_tensor_by_name('tensor_name', step=0, prev=True)
         assert res is None
 
     @mock.patch.object(log, "error")
@@ -49,5 +49,5 @@ class TestTensorHandler:
         """Test get_tensors_diff."""
         mock_error.return_value = None
         with pytest.raises(DebuggerParamValueError) as ex:
-            self.tensor_handler.get_tensors_diff(tensor_name, {1, 1})
+            self.tensor_handler.get_tensors_diff(tensor_name, {1, 1}, step=0)
         assert f"Get current step and previous step for this tensor name {tensor_name} failed." in str(ex.value)

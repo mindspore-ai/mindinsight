@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,10 @@
 """Import the streams handlers."""
 from .event_handler import EventHandler
 from .metadata_handler import MetadataHandler
-from .graph_handler import GraphHandler
-from .tensor_handler import TensorHandler
-from .watchpoint_handler import WatchpointHandler, WatchpointHitHandler
+from .graph_handler import GraphHandler, MultiCardGraphHandler
+from .tensor_handler import TensorHandler, MultiCardTensorHandler
+from .watchpoint_handler import WatchpointHandler, WatchpointHitHandler, MultiCardWatchpointHitHandler
 
-__all__ = ['EventHandler', 'MetadataHandler', 'GraphHandler', 'TensorHandler',
-           'WatchpointHandler', 'WatchpointHitHandler']
+__all__ = ['EventHandler', 'MetadataHandler', 'GraphHandler', 'TensorHandler', 'WatchpointHitHandler',
+           'MultiCardGraphHandler', 'MultiCardTensorHandler',
+           'WatchpointHandler', 'MultiCardWatchpointHitHandler']

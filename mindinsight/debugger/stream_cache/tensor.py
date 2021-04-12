@@ -14,7 +14,6 @@
 # ============================================================================
 """The definition of tensor stream."""
 from abc import abstractmethod, ABC
-
 import numpy as np
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
@@ -149,7 +148,10 @@ class OpTensor(BaseTensor):
     @property
     def shape(self):
         """The property of tensor shape."""
-        return list(self._tensor_proto.dims)
+        dims = list(self._tensor_proto.dims)
+        if dims == [0]:
+            dims = []
+        return dims
 
     @property
     def value(self):
@@ -254,12 +256,13 @@ class OpTensor(BaseTensor):
 class ConstTensor(BaseTensor):
     """Tensor data structure for Const Node."""
     _STRING_TYPE = 'DT_STRING'
+    _DT_TYPE = 'DT_TYPE'
 
     def __init__(self, const_proto):
         # the type of const_proto is NamedValueProto
         super(ConstTensor, self).__init__()
         self._const_proto = const_proto
-        self._value = self.generate_value_from_proto(const_proto)
+        self._value = self.generate_value_from_proto(const_proto.value)
 
     def set_step(self, step):
         """Set step value."""
@@ -295,16 +298,25 @@ class ConstTensor(BaseTensor):
         Returns:
             Union[None, str, np.ndarray], the value of the tensor.
         """
-        fields = tensor_proto.value.ListFields()
+        fields = tensor_proto.ListFields()
         if len(fields) != 2:
             log.warning("Unexpected const proto <%s>.\n Please check offline.", tensor_proto)
         tensor_value = None
         for field_obj, field_value in fields:
             if field_obj.name != 'dtype':
-                tensor_value = field_value
+                if tensor_proto.dtype == DataType.DT_TUPLE:
+                    tensor_values = []
+                    for field_value_element in field_value:
+                        value_element = self.generate_value_from_proto(field_value_element)
+                        tensor_values.append(value_element)
+                    tensor_value = tensor_values
+                elif tensor_proto.dtype == DataType.DT_TYPE:
+                    tensor_value = DataType.Name(field_value.data_type)
+                else:
+                    tensor_value = field_value
                 break
-        if tensor_value is not None and self.dtype != self._STRING_TYPE:
-            tensor_value = np.array(tensor_value, dtype=NUMPY_TYPE_MAP.get(self.dtype))
+        if tensor_value is not None and tensor_proto.dtype != self._STRING_TYPE:
+            tensor_value = np.array(tensor_value, dtype=NUMPY_TYPE_MAP.get(tensor_proto.dtype))
         return tensor_value
 
     def get_tensor_value_by_shape(self, shape=None):
@@ -328,7 +340,8 @@ class ConstTensor(BaseTensor):
         Returns:
             dict, overall statistics.
         """
-        if self.empty or self.dtype == self._STRING_TYPE:
+        if self.empty or self.dtype == self._STRING_TYPE or self.dtype == self._DT_TYPE:
+            log.debug("The tensor dtype is: %s, skip getting statistics.", self.dtype)
             return {}
         stats = TensorUtils.get_statistics_from_tensor(self.value)
         statistics = TensorUtils.get_overall_statistic_dict(stats)

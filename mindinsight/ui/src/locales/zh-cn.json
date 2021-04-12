@@ -24,7 +24,9 @@
     "dataLoading": "数据加载中",
     "notice": "提示",
     "caseMode": "不区分大小写",
-    "all": "全部"
+    "all": "全部",
+    "details": "详情",
+    "delete": "删除"
   },
   "symbols": {
     "leftbracket": "（",
@@ -52,12 +54,14 @@
     "operation": "操作",
     "viewDashboard": "训练看板",
     "viewProfiler": "性能分析",
+    "viewOfflineDebugger": "离线调试器",
     "modelTraceback": "模型溯源",
     "dataTraceback": "数据溯源",
     "comparePlate": "对比看板",
     "disableProfilerTip": "无profiler日志，无法查看性能分析",
     "disableDashboardTip": "无summary日志或pb文件，无法查看训练看板",
     "disableParameterTip": "无lineage日志，无法查看参数详情",
+    "disableOfflineDebugger": "无Debugger日志，无法查看离线调试器",
     "openNewTab": "打开新页签",
     "paramDetails": "参数详情",
     "trainingParamDetails": "训练参数详情",
@@ -80,7 +84,12 @@
     "tensorUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id8",
     "graphUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id5",
     "dataProcessUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id6",
-    "imageUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id7"
+    "imageUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id7",
+    "sessionLimit": "离线调试器的session个数超过上线",
+    "sessionLimitNum": "最多同时存在2个",
+    "sessionLists": "目前存在的session列表",
+    "deleteSessionConfirm": "此操作将删除当前session, 是否继续?",
+    "deleteSessionSuccess": "删除session成功!"
   },
   "modelTraceback": {
     "summaryPath": "训练日志路径",
@@ -560,7 +569,7 @@
     "terminate": "结束",
     "selectCondition": "请选择条件",
     "inputStep": "请输入轮次值",
-    "inputTip": "小于2147483648的正整数",
+    "inputTip": "小于等于{total_step_num}的正整数",
     "curHitNode": "命中的监测点",
     "backstageStatus": "后台运行状态是",
     "view": "查看",
@@ -825,7 +834,9 @@
       "allPositive": "此参数值必须大于0",
       "watchOverflow": "训练开始前需开启异步全量溢出监测功能"
     },
-    "paramValueTip": "设置值为：{value}"
+    "paramValueTip": "设置值为：{value}",
+    "logicCard": "逻辑卡",
+    "inpStepTip": "可输入当前轮次：0~{total_step_num}"
   },
   "explain": {
     "explain": "模型解释",
@@ -947,6 +958,7 @@
     "5054B183": "后台训练运行中，请稍后重试",
     "5054B184": "操作过快，后台服务已暂停。",
     "5054B189": "请勿重复设置。",
-    "5054B083": "监测点创建失败，请勿使用已失效规则。"
+    "5054B083": "监测点创建失败，请勿使用已失效规则。",
+    "5054B202": "未找到调试器离线服务器模块"
   }
 }

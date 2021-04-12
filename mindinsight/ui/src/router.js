@@ -158,6 +158,10 @@ export default new Router({
       component: () => import('./views/debugger/debugger.vue'),
     },
     {
+      path: '/offline-debugger',
+      component: () => import('./views/debugger/debugger.vue'),
+    },
+    {
       path: '/explain',
       component: () => import('./views/explain/summary-list.vue'),
     },

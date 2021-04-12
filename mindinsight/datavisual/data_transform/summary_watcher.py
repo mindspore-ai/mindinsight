@@ -29,6 +29,7 @@ from mindinsight.utils.exceptions import FileSystemPermissionError
 
 LINEAGE_SUMMARY_SUFFIX = '_lineage'
 EXPLAIN_SUMMARY_SUFFIX = '_explain'
+DUMP_FILE_PREFIX = 'dump_'
 
 
 class SummaryWatcher:
@@ -44,6 +45,13 @@ class SummaryWatcher:
     # if overall is False in SummaryWatcher.list_summary_directories
     # to avoid long-time blocking
     MAX_SCAN_COUNT = 20000
+
+    def __init__(self):
+        self._analyzers = []
+
+    def register_folder_analyzer(self, analyzer):
+        """Register folder analyzer."""
+        self._analyzers.append(analyzer)
 
     def list_summary_directories(self, summary_base_dir, overall=True, list_explain=False):
         """
@@ -104,7 +112,7 @@ class SummaryWatcher:
             elif entry.is_dir():
                 self._update_summary_dict(summary_dict, summary_base_dir, relative_path, entry, list_explain)
                 entry_path = os.path.realpath(os.path.join(summary_base_dir, entry.name))
-                self._scan_subdir_entries(summary_dict, summary_base_dir, entry_path, entry.name, counter, list_explain)
+                self._scan_subdir_entries(summary_dict, summary_base_dir, entry_path, entry, counter, list_explain)
 
         directories = []
         for key, value in summary_dict.items():
@@ -119,7 +127,7 @@ class SummaryWatcher:
 
         return directories
 
-    def _scan_subdir_entries(self, summary_dict, summary_base_dir, entry_path, entry_name, counter, list_explain):
+    def _scan_subdir_entries(self, summary_dict, summary_base_dir, entry_path, entry, counter, list_explain):
         """
         Scan subdir entries.
 
@@ -134,7 +142,7 @@ class SummaryWatcher:
         try:
             subdir_entries = os.scandir(entry_path)
         except PermissionError:
-            logger.warning('Path of %s under summary base directory is not accessible.', entry_name)
+            logger.warning('Path of %s under summary base directory is not accessible.', entry.name)
             return
 
         # sort in ascending order according to modification time.
@@ -149,10 +157,13 @@ class SummaryWatcher:
                 logger.info('Stop further scanning due to overall is False and '
                             'number of scanned files exceeds upper limit.')
                 break
-            subdir_relative_path = os.path.join('.', entry_name)
+            subdir_relative_path = os.path.join('.', entry.name)
             if subdir_entry.is_symlink():
                 pass
             self._update_summary_dict(summary_dict, summary_base_dir, subdir_relative_path, subdir_entry, list_explain)
+
+        relative_path = './'
+        self._check_by_analyzers(entry, summary_base_dir, relative_path, summary_dict)
 
     def _is_valid_summary_directory(self, summary_base_dir, relative_path):
         """
@@ -198,13 +209,11 @@ class SummaryWatcher:
             list_explain (bool): Indicates whether to list only the mindexplain folder.
         """
         try:
-            stat = entry.stat()
+            ctime, mtime = self._get_stat_time(entry)
         except FileNotFoundError:
             logger.warning('File %s not found', entry.name)
             return
 
-        ctime = datetime.datetime.fromtimestamp(stat.st_ctime).astimezone()
-        mtime = datetime.datetime.fromtimestamp(stat.st_mtime).astimezone()
         if entry.is_file():
             summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
             pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
@@ -238,7 +247,10 @@ class SummaryWatcher:
                 summary_dict[relative_path]['explain_files'] += 1
             else:
                 summary_dict[relative_path]['summary_files'] += 1
+            self._check_by_analyzers(entry, summary_base_dir, relative_path, summary_dict)
         elif entry.is_dir():
+            self._check_by_analyzers(entry, summary_base_dir, relative_path, summary_dict)
+
             if list_explain:
                 return
 
@@ -260,6 +272,28 @@ class SummaryWatcher:
                     summary_dict[relative_path]['profiler'] = profiler
                 else:
                     summary_dict[relative_path] = _new_entry(ctime, mtime, profiler)
+
+    def _check_by_analyzers(self, entry, summary_base_dir, relative_path, summary_dict):
+        """Check by all analyzers."""
+        try:
+            ctime, mtime = self._get_stat_time(entry)
+        except FileNotFoundError:
+            logger.warning('File %s not found', entry.name)
+            return
+
+        for analyzer in self._analyzers:
+            register_info = analyzer.analyze(entry, summary_base_dir, relative_path)
+            if register_info:
+                if relative_path not in summary_dict:
+                    summary_dict[relative_path] = _new_entry(ctime, mtime)
+                summary_dict[relative_path].update(register_info)
+
+    def _get_stat_time(self, entry):
+        """Get ctime and mtime."""
+        stat = entry.stat()
+        ctime = datetime.datetime.fromtimestamp(stat.st_ctime).astimezone()
+        mtime = datetime.datetime.fromtimestamp(stat.st_mtime).astimezone()
+        return ctime, mtime
 
     def _find_profiler_dir(self, entry, summary_base_dir, relative_path):
         """Find profiler dir by the given relative path."""
@@ -342,6 +376,9 @@ class SummaryWatcher:
                     if self._is_valid_profiler_directory(full_path)[0] or \
                             self._is_valid_cluster_profiler_directory(full_path)[0]:
                         return True
+                if os.path.exists(os.path.join(summary_directory, os.path.join(entry.name, ".metadata"))):
+                    return True
+
         return False
 
     def _is_valid_profiler_directory(self, directory):
@@ -515,7 +552,8 @@ def _new_entry(ctime, mtime, profiler=None):
         'lineage_files': 0,
         'explain_files': 0,
         'graph_files': 0,
-        'profiler': profiler
+        'profiler': profiler,
+        'dump_dir': None
     }
 
 

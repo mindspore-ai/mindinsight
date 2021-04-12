@@ -68,6 +68,13 @@ def compare_result_with_file(result, expected_file_path):
         assert result == expected_results
 
 
+def compare_result_with_binary_file(result, expected_file_path):
+    """Compare result with binary file which contain the expected results."""
+    with open(expected_file_path, 'rb') as file:
+        expected_results = file.read()
+        assert result == expected_results
+
+
 def deal_float_for_dict(res: dict, expected_res: dict, decimal_num):
     """
     Deal float rounded to specified decimals in dict.

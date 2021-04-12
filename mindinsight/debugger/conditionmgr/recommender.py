@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -64,13 +64,13 @@ class _ConditionParameterValue:
         return self.parameter.name
 
 
-def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_context):
+def recommend_watchpoints(condition_mgr: ConditionMgr, multi_card_graph_stream, condition_context):
     """
     Recommend watchpoints.
 
     Args:
         condition_mgr (ConditionMgr): Condition manager instance.
-        graph_stream (GraphHandler): Graph handler instance.
+        multi_card_graph_stream (GraphHandler): Multi card graph handler instance.
         condition_context (ConditionContext): Context for condition.
 
     Returns:
@@ -78,7 +78,7 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_c
     """
     watch_points = []
 
-    if not graph_stream.graph:
+    if not multi_card_graph_stream.has_graph:
         logger.warning("Given graph is None.")
         return watch_points
 
@@ -86,7 +86,7 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_c
         return watch_points
 
     # add weight watch points
-    merged_info = get_basic_node_info(TargetTypeEnum.WEIGHT.value, graph_stream)
+    merged_info = get_basic_node_info(TargetTypeEnum.WEIGHT.value, multi_card_graph_stream)
     _recommend_weight_initialization(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_weight_change_too_large(merged_info, condition_mgr, watch_points, condition_context)
 
@@ -97,25 +97,27 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, graph_stream, condition_c
     _recommend_weight_change_too_small(condition_mgr, trainable_weight_nodes, watch_points, condition_context)
 
     # add gradient watch points
-    merged_info = get_basic_node_info(TargetTypeEnum.GRADIENT.value, graph_stream)
+    merged_info = get_basic_node_info(TargetTypeEnum.GRADIENT.value, multi_card_graph_stream)
     _recommend_gradient_vanishing(merged_info, condition_mgr, watch_points, condition_context)
 
     # add tensor watch points
-    merged_info = get_basic_node_info(TargetTypeEnum.TENSOR.value, graph_stream)
+    merged_info = get_basic_node_info(TargetTypeEnum.TENSOR.value, multi_card_graph_stream)
     _recommend_operator_overflow(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_tensor_overflow(merged_info, condition_mgr, watch_points, condition_context)
     _recommend_tensor_all_zero(merged_info, condition_mgr, watch_points, condition_context)
 
     # add activation watch points
-    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, graph_stream, ActivationFuncEnum.TANH.value)
+    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, multi_card_graph_stream,
+                                      ActivationFuncEnum.TANH.value)
     _recommend_activation_range(merged_info, condition_mgr, watch_points, condition_context,
                                 ActivationFuncEnum.TANH.value)
 
-    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, graph_stream, ActivationFuncEnum.SIGMOID.value)
+    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, multi_card_graph_stream,
+                                      ActivationFuncEnum.SIGMOID.value)
     _recommend_activation_range(merged_info, condition_mgr, watch_points, condition_context,
                                 ActivationFuncEnum.SIGMOID.value)
 
-    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, graph_stream,
+    merged_info = get_basic_node_info(TargetTypeEnum.ACTIVATION.value, multi_card_graph_stream,
                                       [ActivationFuncEnum.RELU.value, ActivationFuncEnum.RELUV2.value])
     _recommend_activation_range(merged_info, condition_mgr, watch_points, condition_context,
                                 ActivationFuncEnum.RELU.value)
@@ -318,12 +320,21 @@ def _recommend_activation_range(basic_info_nodes, condition_mgr, watch_points, c
     watch_points.append(activation_range_watchpoint)
 
 
-def get_basic_node_info(node_category, graph_stream, activation_func=None):
+def get_basic_node_info(node_category, multi_card_graph_stream, activation_func=None):
     """Get node merged info."""
-    basic_info_nodes = _get_basic_node_info_by_node_category(node_category, graph_stream, activation_func)
-    merged_info = _merge_nodes(basic_info_nodes, graph_stream.whole_graph)
-    merged_info = _add_graph_name(merged_info, graph_stream)
-    return merged_info
+    nodes_for_devices = {}
+    has_node = False
+    for rank_id, graph_stream in multi_card_graph_stream.graph_handlers.items():
+        basic_info_nodes = _get_basic_node_info_by_node_category(node_category, graph_stream, activation_func)
+        merged_info = _merge_nodes(basic_info_nodes, graph_stream.whole_graph)
+        merged_info = _add_graph_name(merged_info, graph_stream)
+        nodes_for_devices[rank_id] = merged_info
+        has_node = has_node or merged_info
+
+    if has_node:
+        return nodes_for_devices
+
+    return {}
 
 
 def _get_basic_node_info_by_node_category(node_category, graph_stream, activation_func=None):
