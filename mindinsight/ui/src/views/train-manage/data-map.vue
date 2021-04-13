@@ -255,19 +255,23 @@ export default {
         'ShuffleDataset',
         'RepeatDataset',
         'MapDataset',
+        'Batch',
+        'Shuffle',
+        'Repeat',
+        'Map',
       ];
       let nodeStr = '';
       let edgeStr = '';
       Object.keys(this.allGraphData).forEach((key) => {
         const node = this.allGraphData[key];
-        if (node.op_type === 'MapDataset') {
+        if (node.op_type.startsWith('Map')) {
           nodeStr += this.packageSubGraph(key);
         } else {
           node.id = key;
           nodeStr +=
             `<${node.key}>[id="${node.key}";label="${node.op_type}";` +
             `class=${
-              nodeType.includes(node.op_type) ? node.op_type : 'CreatDataset'
+              nodeType.includes(node.op_type) ? node.op_type.replace('Dataset', '') : 'Create'
             };shape=rect;fillcolor="#9cc3e5";];`;
         }
       });
@@ -277,12 +281,8 @@ export default {
         node.children.forEach((k) => {
           const child = this.allGraphData[k];
           edgeStr += `<${child.id}>-><${node.id}>[${
-            child.op_type === 'MapDataset'
-              ? `ltail=<cluster_${child.key}>;`
-              : ''
-          }${
-            node.op_type === 'MapDataset' ? `lhead=<cluster_${node.key}>;` : ''
-          }];`;
+            child.op_type.startsWith('Map') ? `ltail=<cluster_${child.key}>;` : ''
+          }${node.op_type.startsWith('Map') ? `lhead=<cluster_${node.key}>;` : ''}];`;
         });
       });
       const initSetting =
@@ -692,7 +692,7 @@ export default {
   stroke: red !important;
   stroke-width: 2px;
 }
-.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .CreatDataset > polygon,
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Create > polygon,
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Operator > ellipse {
   stroke: #4ea6e6;
   fill: #b8e0ff;
@@ -701,15 +701,15 @@ export default {
   fill: #8df1f2;
   stroke: #00a5a7;
 }
-.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .RepeatDataset > polygon {
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Repeat > polygon {
   stroke: #fdca5a;
   fill: #fff2d4;
 }
-.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .ShuffleDataset > polygon {
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Shuffle > polygon {
   stroke: #e37d29;
   fill: #ffd0a6;
 }
-.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .BatchDataset > polygon {
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Batch > polygon {
   stroke: #de504e;
   fill: #ffbcba;
 }

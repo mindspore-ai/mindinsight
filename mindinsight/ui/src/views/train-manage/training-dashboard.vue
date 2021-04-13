@@ -2011,19 +2011,23 @@ export default {
         'ShuffleDataset',
         'RepeatDataset',
         'MapDataset',
+        'Batch',
+        'Shuffle',
+        'Repeat',
+        'Map',
       ];
       let nodeStr = '';
       let edgeStr = '';
       Object.keys(this.allDatasetGraphData).forEach((key) => {
         const node = this.allDatasetGraphData[key];
-        if (node.op_type === 'MapDataset') {
+        if (node.op_type.startsWith('Map')) {
           nodeStr += this.packageSubGraph(key);
         } else {
           node.id = key;
           nodeStr +=
             `<${node.key}>[id="${node.key}";label="${node.op_type}";` +
             `class=${
-              nodeType.includes(node.op_type) ? node.op_type : 'CreatDataset'
+              nodeType.includes(node.op_type) ? node.op_type.replace('Dataset', '') : 'Create'
             };shape=rect;fillcolor="#9cc3e5";];`;
         }
       });
@@ -2033,12 +2037,8 @@ export default {
         node.children.forEach((k) => {
           const child = this.allDatasetGraphData[k];
           edgeStr += `<${child.id}>-><${node.id}>[${
-            child.op_type === 'MapDataset'
-              ? `ltail=<cluster_${child.key}>;`
-              : ''
-          }${
-            node.op_type === 'MapDataset' ? `lhead=<cluster_${node.key}>;` : ''
-          }];`;
+            child.op_type.startsWith('Map') ? `ltail=<cluster_${child.key}>;` : ''
+          }${node.op_type.startsWith('Map') ? `lhead=<cluster_${node.key}>;` : ''}];`;
         });
       });
       const initSetting =
@@ -2345,7 +2345,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
 }
-.cl-dashboard #dataMapGraph .CreatDataset > polygon,
+.cl-dashboard #dataMapGraph .Create > polygon,
 .cl-dashboard #dataMapGraph .Operator > ellipse {
   stroke: #4ea6e6;
   fill: #b8e0ff;
@@ -2354,15 +2354,15 @@ export default {
   fill: #8df1f2;
   stroke: #00a5a7;
 }
-.cl-dashboard #dataMapGraph .RepeatDataset > polygon {
+.cl-dashboard #dataMapGraph .Repeat > polygon {
   stroke: #fdca5a;
   fill: #fff2d4;
 }
-.cl-dashboard #dataMapGraph .ShuffleDataset > polygon {
+.cl-dashboard #dataMapGraph .Shuffle > polygon {
   stroke: #e37d29;
   fill: #ffd0a6;
 }
-.cl-dashboard #dataMapGraph .BatchDataset > polygon {
+.cl-dashboard #dataMapGraph .Batch > polygon {
   stroke: #de504e;
   fill: #ffbcba;
 }
