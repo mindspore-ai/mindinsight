@@ -13,25 +13,153 @@
 # limitations under the License.
 # ============================================================================
 """Define the tensor stream handler."""
+import os
+import time
+import threading
+import tempfile
 from collections import namedtuple
+from collections import OrderedDict
 
 import numpy as np
 
+from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform.graph.node import NodeTypeEnum
-from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
+from mindinsight.debugger.common.utils import MAX_CACHE_SPACE, MAX_SINGLE_TENSOR_CACHE
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, DebuggerDownloadOverQueue, \
+    DebuggerDownloadTensorNotExist
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.proto.ms_graph_pb2 import DataType
-from mindinsight.debugger.stream_cache.tensor import OpTensor, ConstTensor
+from mindinsight.debugger.stream_cache.tensor import OpTensor, ConstTensor, TensorStatusEnum, DownloadStatusEnum
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
 from mindinsight.utils.tensor import TensorUtils, TensorComparison
 
 TensorBasicInfo = namedtuple('tensor_basic_info', ['full_name', 'node_type', 'iter'])
+FILE_MODE = 0o600
+DIR_MODE = 0o700
+
+
+class MemoryMgr:
+    """The memory manager of tensors."""
+
+    def __init__(self):
+        self._memory_queue = OrderedDict()
+        self._remaining_cache_space = MAX_CACHE_SPACE
+        self._lock = threading.Lock()
+
+    @property
+    def remaining_cache_space(self):
+        return self._remaining_cache_space
+
+    def request(self, key, request_space, release_func):
+        """Request for the memory space."""
+        if self.check_space(request_space):
+            release_func(True)
+            return
+        if request_space == 0:
+            return
+        with self._lock:
+            if key in self._memory_queue:
+                log.error("Key already exist error for memory queue.")
+                raise ValueError("Key already exist error for memory queue.")
+            self._remaining_cache_space -= request_space
+        while self._remaining_cache_space <= 0:
+            self.release()
+        with self._lock:
+            self._memory_queue[key] = (request_space, release_func)
+
+    def release(self, key=None):
+        """Release the memory space."""
+        with self._lock:
+            if key is not None:
+                if key not in self._memory_queue:
+                    return
+                self._memory_queue.move_to_end(key, last=False)
+            _, value = self._memory_queue.popitem(last=False)
+            free_space, release_func = value
+            release_func()
+            self._remaining_cache_space += free_space
+            log.debug("Update cache space.")
+
+    @staticmethod
+    def check_space(space):
+        """Check if the space over allowed space."""
+        return space >= MAX_SINGLE_TENSOR_CACHE
+
+
+class DownloadMgr:
+    """The download manager."""
+
+    def __init__(self):
+        """Download manager."""
+
+        self._temp_base_dir = self.mk_temp_base_dir()
+        self.tensor_info = None
+        self.file_name = None
+        self.file_path = None
+        self.temp_dir = None
+        self._lock = threading.Lock()
+        self.status = DownloadStatusEnum.PENDING.value
+
+    @property
+    def temp_base_dir(self):
+        return self._temp_base_dir
+
+    def add(self, file_name, file_path, temp_dir, **tensor_info):
+        """Add the temp file path."""
+        with self._lock:
+            if self.status != DownloadStatusEnum.SENDING.value:
+                self.file_name = file_name
+                self.file_path = file_path
+                self.temp_dir = temp_dir
+                self.tensor_info = tensor_info
+                return
+        log.error("There is already a tensor in download")
+        raise DebuggerDownloadOverQueue()
+
+    def get(self, **tensor_info):
+        """Get the temp file path."""
+        with self._lock:
+            if self.tensor_info == tensor_info:
+                self.status = DownloadStatusEnum.SENDING.value
+                return self.file_name, self.file_path, self.clean
+        log.error("No such tensor to download")
+        raise DebuggerDownloadTensorNotExist()
+
+    def check_status(self):
+        """Check the download status."""
+        if self.status == DownloadStatusEnum.SENDING.value:
+            log.error("There is already a tensor in download")
+            raise DebuggerDownloadOverQueue()
+
+    @staticmethod
+    def mk_temp_base_dir():
+        workspace = settings.WORKSPACE
+        temp_base_dir = os.path.join(workspace, 'tempdata')
+        os.makedirs(temp_base_dir, DIR_MODE, exist_ok=True)
+        return temp_base_dir
+
+    def clean(self):
+        """Clean cache."""
+        with self._lock:
+            if self.temp_dir:
+                self.temp_dir.cleanup()
+            self.temp_dir = None
+            self.tensor_info = None
+            self.file_name = None
+            self.file_path = None
+            self.status = DownloadStatusEnum.PENDING.value
 
 
 class MultiCardTensorHandler:
     """Multi-card Tensor Handler."""
     def __init__(self):
-        self.tensor_handlers = {0: TensorHandler()}
+        self._memory_mgr = MemoryMgr()
+        self._download_mgr = DownloadMgr()
+        self.tensor_handlers = {0: TensorHandler(self._memory_mgr, self._download_mgr, rank_id=0)}
+
+    @property
+    def download_mgr(self):
+        return self._download_mgr
 
     def set_step(self, step_id):
         """Set step id."""
@@ -43,7 +171,7 @@ class MultiCardTensorHandler:
         if rank_id in self.tensor_handlers:
             return self.tensor_handlers.get(rank_id)
         if create_if_not_exit:
-            tensor_handler = TensorHandler()
+            tensor_handler = TensorHandler(self._memory_mgr, self._download_mgr, rank_id=rank_id)
             self.tensor_handlers[rank_id] = tensor_handler
             return tensor_handler
         log.error("There is no rank id %d in MultiCardTensorHandler.", rank_id)
@@ -53,7 +181,7 @@ class MultiCardTensorHandler:
         """put graphs into graph_handlers"""
         for rank_id, tensor in value:
             if rank_id not in self.tensor_handlers:
-                self.tensor_handlers[rank_id] = TensorHandler()
+                self.tensor_handlers[rank_id] = TensorHandler(self._memory_mgr, self._download_mgr, rank_id=rank_id)
             self.tensor_handlers[rank_id].put(tensor)
 
     def get(self, filter_condition=None, rank_id=0):
@@ -67,11 +195,15 @@ class MultiCardTensorHandler:
         """Clean cache."""
         self.__init__()
 
+    @staticmethod
+    def tensor_basic_info(full_name, node_type, iter_step):
+        return TensorBasicInfo(full_name=full_name, node_type=node_type, iter=iter_step)
+
 
 class TensorHandler(StreamHandlerBase):
     """Metadata Handler."""
 
-    def __init__(self):
+    def __init__(self, memory_mgr, download_mgr, rank_id):
         # the collection of parameter full names
         self._param_names = set()
         # const value objects, the format is like: dict[<const name>, <OpTensor object>]
@@ -80,6 +212,10 @@ class TensorHandler(StreamHandlerBase):
         # dict[<tensor full name>, dict[<step_num>, <OpTensor object>]]
         self._tensors = {}
         self._cur_step = 0
+        self._memory_mgr = memory_mgr
+        self.download_mgr = download_mgr
+        self._rank_id = rank_id
+        self._hold_value = {}
 
     @property
     def cur_step(self):
@@ -110,6 +246,26 @@ class TensorHandler(StreamHandlerBase):
         Returns:
             bool, the tensor has updated successfully.
         """
+        tensor = self._deal_with_tensor(value)
+        tensor_info = value.get('load')
+        if tensor_info is not None:
+            self.load(tensor_info.get('tensor_name'), tensor_info.get('graph_name'), tensor_info.get('prev'),
+                      tensor_info.get('node_type'), tensor=tensor)
+
+        stats = None
+        if value.get('stats', False) and tensor.status != TensorStatusEnum.EMPTY.value:
+            tensor.calculate_stats()
+            stats = tensor.stats
+
+        flag = self._put_tensors(tensor)
+        new_tensor = self._tensors.get(tensor.name).get(tensor.step)
+        new_tensor.stats = stats
+        log.info("Put tensor %s of step: %d, into cache. Flag: %s", tensor.name, tensor.step, flag)
+        return flag
+
+    @staticmethod
+    def _deal_with_tensor(value):
+        """Deal with tensor from tensor proto."""
         tensor_proto = value.get('tensor_proto')
         tensor_proto.ClearField('tensor_content')
         step = value.get('step', 0)
@@ -118,33 +274,47 @@ class TensorHandler(StreamHandlerBase):
             step -= 1
         tensor_content = b''.join(value.get('tensor_contents'))
         tensor = OpTensor(tensor_proto, tensor_content, step)
-        flag = self._put_tensor_into_cache(tensor, step)
-        log.info("Put tensor %s of step: %d, into cache. Flag: %s", tensor.name, step, flag)
-        return flag
+        if value.get('oversize'):
+            tensor.clean_tensor_value(oversize=True)
+        return tensor
 
-    def _put_tensor_into_cache(self, tensor, step):
+    def _put_tensors(self, tensor):
         """
         Put tensor into cache.
 
         Args:
             tensor (OpTensor): The tensor value.
-            step (int): The step of tensor.
 
         Returns:
             bool, the tensor has updated successfully.
         """
+        step = tensor.step
         cache_tensor = self._tensors.get(tensor.name)
         if cache_tensor is None:
             cache_tensor = {}
             self._tensors[tensor.name] = cache_tensor
 
+        if not self._hold_value.pop((tensor.name, tensor.step), False):
+            tensor.clean_tensor_value(oversize=False)
+
         old_tensor = cache_tensor.get(step)
-        if old_tensor and not self._is_value_diff(old_tensor.value, tensor.value):
-            log.debug("Tensor %s of step %s has no change. Ignore it.", tensor.name, step)
-            return False
+        if not old_tensor or (old_tensor.status == TensorStatusEnum.CACHED.value and self._is_value_diff(
+                old_tensor.value, tensor.value)) or (old_tensor.status == TensorStatusEnum.UNCACHED.value):
+            self._put_tensor_into_cache(cache_tensor, tensor)
+            return True
+        return False
+
+    def _put_tensor_into_cache(self, cache_tensor, tensor):
+        """Put tensor into cache."""
+        step = tensor.step
+        self._memory_mgr.release((self._rank_id, tensor.name, step))
+
+        def release_func(over_size=False):
+            cache_tensor.get(step).clean_tensor_value(over_size)
+
+        self._memory_mgr.request((self._rank_id, tensor.name, step), tensor.nbytes, release_func)
         cache_tensor[step] = tensor
         log.debug("Put updated tensor value for %s of step %s.", tensor.name, step)
-        return True
 
     @staticmethod
     def _is_value_diff(old_value, new_value):
@@ -203,7 +373,7 @@ class TensorHandler(StreamHandlerBase):
                 - prev (bool): Whether to get previous tensor.
 
         Returns:
-            dict, the tensor_value.
+            dict, the tensor_value and whether need to send view_command.
         """
         name = filter_condition.get('name')
         node_type = filter_condition.get('node_type')
@@ -218,7 +388,14 @@ class TensorHandler(StreamHandlerBase):
             raise DebuggerParamValueError("No tensor named {}".format(name))
         tensor_info = tensor.get_full_info(shape)
         self._update_has_prev_step_field(tensor_info, name, node_type, self.cur_step)
-        return {'tensor_value': tensor_info}
+        res = {
+            'tensor_value': tensor_info,
+            'view_cmd': False
+        }
+        if tensor.status == TensorStatusEnum.UNCACHED.value:
+            self._add_hold_value_tensors(name, step)
+            res['view_cmd'] = True
+        return res
 
     def _get_tensor(self, tensor_name, node_type=None, step=None):
         """
@@ -276,42 +453,56 @@ class TensorHandler(StreamHandlerBase):
 
         return missed_tensors
 
-    def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type, step=None):
+    def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type, step=None, check_cache=False,
+                                    check_stats=False):
         """Update has_prev_step field in tensor info."""
-        missing_tensors_info = self._get_missing_tensor_info(tensor_name, node_type, step)
+        if step is None:
+            step = self._cur_step
+        missing_tensors_info = self.get_missing_tensor_info(tensor_name, node_type, step, check_cache=check_cache,
+                                                            check_stats=check_stats)
         if not missing_tensors_info and node_type == NodeTypeEnum.PARAMETER.value and step > 0:
             tensor_info['has_prev_step'] = True
         return missing_tensors_info
 
-    def _get_missing_tensor_info(self, tensor_name, node_type, step):
+    def get_missing_tensor_info(self, tensor_name, node_type, step=None, cur=True, prev=True, check_cache=False,
+                                check_stats=False):
         """
         Get missing tensor infos.
 
         Args:
             tensor_name (str): The full name of Tensor.
             node_type (str): The type of the relative node.
+            step (int): The step of tensor info. Default: None.
+            check_cache (bool): Whether to check the tensor value. Default: False.
+            check_stats (bool): Whether to check the tensor statistic. Default: False.
+            cur (bool): Whether to get the current tensor info. Default: True.
+            prev (bool): Whether to get the previous tensor info. Default: True.
 
         Returns:
             list, list of missing tensor basic information.
         """
+        if step is None:
+            step = self._cur_step
         missing_tensors_info = []
         # check the current step value is missing
-        if self._is_tensor_value_missing(tensor_name, step):
+        if self._is_tensor_value_missing(tensor_name, step, check_cache, check_stats) and cur:
             missing_tensors_info.append(TensorBasicInfo(full_name=tensor_name, node_type=node_type, iter=''))
             log.debug("Add current step view cmd for %s", tensor_name)
         # check the previous step value is missing
-        if node_type == NodeTypeEnum.PARAMETER.value and self._is_tensor_value_missing(tensor_name, step - 1):
+        if node_type == NodeTypeEnum.PARAMETER.value and \
+                self._is_tensor_value_missing(tensor_name, step - 1, check_cache, check_stats) and prev:
             missing_tensors_info.append(TensorBasicInfo(full_name=tensor_name, node_type=node_type, iter='prev'))
             log.debug("Add previous view cmd for %s", tensor_name)
         return missing_tensors_info
 
-    def _is_tensor_value_missing(self, tensor_name, step):
+    def _is_tensor_value_missing(self, tensor_name, step, check_cache=False, check_stats=False):
         """
         Get the status of tensor value of previous step.
 
         Args:
             tensor_name (str): Tensor name.
             step (int): The step of the tensor.
+            check_cache (bool): Whether to check the tensor value. Default: False.
 
         Returns:
             Union[None, bool], the status of tensor value. If False, there is valid
@@ -321,7 +512,12 @@ class TensorHandler(StreamHandlerBase):
         if step < 0:
             return None
         tensor = self._get_tensor(tensor_name, step=step)
-        return bool(not tensor or tensor.empty)
+        res = bool(not tensor or tensor.status == TensorStatusEnum.EMPTY.value)
+        if check_cache:
+            res = bool(res or tensor.status == TensorStatusEnum.UNCACHED.value)
+        if check_stats:
+            res = bool(res or tensor.stats is None)
+        return res
 
     def get_valid_tensor_by_name(self, tensor_name, step, prev=False):
         """Get tensor value by name in numpy type."""
@@ -330,9 +526,6 @@ class TensorHandler(StreamHandlerBase):
             log.warning("Step %d has no previous value for tensor: %s", target_step, tensor_name)
             return None
         tensor = self._get_tensor(tensor_name, step=target_step)
-        if tensor and tensor.empty:
-            log.warning("%s has empty value.", tensor_name)
-            return None
         return tensor
 
     def clean_tensors(self, cur_step):
@@ -348,7 +541,7 @@ class TensorHandler(StreamHandlerBase):
         for tensor_name, tensor in self._tensors.items():
             expired_step = [step for step in tensor.keys() if step <= cur_step - 2]
             for step in expired_step:
-                tensor.pop(step)
+                self._memory_mgr.release((self._rank_id, tensor_name, step))
             if not tensor:
                 expired_tensor.append(tensor_name)
         for tensor_name in expired_tensor:
@@ -358,7 +551,9 @@ class TensorHandler(StreamHandlerBase):
         """Clean parameter cache."""
         for param in self._param_names:
             if param in self._tensors:
-                self._tensors.pop(param)
+                params = self._tensors.pop(param)
+                for step in params:
+                    self._memory_mgr.release((self._rank_id, param, step))
                 log.debug("Clean param %s in cache.", param)
 
     def get_tensors_diff(self, tensor_name, shape, tolerance=0, step=None):
@@ -385,10 +580,14 @@ class TensorHandler(StreamHandlerBase):
         """
         curr_tensor = self.get_valid_tensor_by_name(tensor_name, step=step)
         prev_tensor = self.get_valid_tensor_by_name(tensor_name, prev=True, step=step)
-        if not (curr_tensor and prev_tensor):
+        if not (curr_tensor and prev_tensor) or self._check_no_comparison_status(
+                curr_tensor) or self._check_no_comparison_status(prev_tensor):
             log.error("Get current step and previous step for this tensor name %s failed.", tensor_name)
             raise DebuggerParamValueError(f"Get current step and previous step for this tensor name "
                                           f"{tensor_name} failed.")
+        if self._check_not_cached_status(curr_tensor) or self._check_not_cached_status(prev_tensor):
+            self._add_hold_value_tensors(tensor_name, step)
+            return {'view_cmd': True}
         curr_tensor_slice = curr_tensor.get_tensor_value_by_shape(shape)
         prev_tensor_slice = prev_tensor.get_tensor_value_by_shape(shape)
         # get tensor comparison basic info
@@ -420,6 +619,23 @@ class TensorHandler(StreamHandlerBase):
         reply = {'tensor_value': tensor_info}
         return reply
 
+    def _add_hold_value_tensors(self, tensor_name, step):
+        """Add tensors which hold tensor values."""
+        self._hold_value[(tensor_name, step)] = True
+        # if the current step > 1, the last step will be also recorded
+        if step - 1 > 0:
+            self._hold_value[(tensor_name, step - 1)] = True
+
+    @staticmethod
+    def _check_no_comparison_status(tensor):
+        """Check the status that have no comparison."""
+        return tensor.status == TensorStatusEnum.EMPTY.value or tensor.status == TensorStatusEnum.OVERSIZE.value
+
+    @staticmethod
+    def _check_not_cached_status(tensor):
+        """Check the tensor with not cached status."""
+        return tensor.status == TensorStatusEnum.UNCACHED.value
+
     @staticmethod
     def _get_comparison_statistics(curr_tensor, prev_tensor):
         """Get comparison statistics."""
@@ -447,8 +663,42 @@ class TensorHandler(StreamHandlerBase):
         """
         res = {}
         tensor = self._get_tensor(tensor_name, node_type, step)
-        if tensor and not tensor.empty:
+        if tensor and (not tensor.empty or tensor.stats):
             res['statistics'] = tensor.get_tensor_statistics()
             res['shape'] = tensor.shape
         missing_tensors = self._update_has_prev_step_field(res, tensor_name, node_type, step)
         return res, missing_tensors
+
+    def load(self, tensor_name, graph_name, prev, node_type, tensor=None):
+        """Load the tensor."""
+        self.download_mgr.check_status()
+        step = self._cur_step
+        if prev:
+            step -= 1
+        tensor = self._get_tensor(tensor_name, node_type, step) if tensor is None else tensor
+        if not tensor or tensor.status == TensorStatusEnum.EMPTY.value:
+            log.error("No tensor named %s at the step %s", tensor_name, step)
+            raise DebuggerParamValueError("No tensor named {}".format(tensor_name))
+        if tensor.bytes > MAX_CACHE_SPACE:
+            log.error("Tensor named %s at the step %s is too large to download.", tensor_name, step)
+            raise DebuggerParamValueError(
+                "Tensor named {} at the step {} is too large to download.".format(tensor_name, step))
+        if tensor.status == TensorStatusEnum.CACHED.value:
+            temp_dir = tempfile.TemporaryDirectory(dir=self.download_mgr.temp_base_dir)
+            os.chmod(temp_dir.name, DIR_MODE)
+            node_name, slot = tensor_name.rsplit(':', 1)
+            _, node_name = node_name.rsplit('/', 1)
+            file_name = "{}.{}.0.0.{}.output.{}.NONE.npy".format(node_type, node_name, round(time.time() * 100),
+                                                                 slot)
+            file_path = os.path.join(temp_dir.name, file_name)
+            np.save(file_path, tensor.value)
+            os.chmod(file_path, FILE_MODE)
+            tensor_info = {
+                "tensor_name": tensor_name,
+                "graph_name": graph_name,
+                "step": step,
+                "rank_id": self._rank_id
+            }
+            self.download_mgr.add(file_name, file_path, temp_dir, **tensor_info)
+            return {'in_memory': True}
+        return {'in_memory': False}

@@ -47,6 +47,10 @@ class DataLoaderGenerator(LoaderGenerator):
         self._summary_path = self._check_and_normalize_summary_path(summary_path)
         self._summary_watcher = SummaryWatcher()
 
+    def register_folder_analyzer(self, analyzer):
+        """Register folder analyzer."""
+        self._summary_watcher.register_folder_analyzer(analyzer)
+
     def _check_and_normalize_summary_path(self, summary_path):
         """
         Check and normalize summary path.

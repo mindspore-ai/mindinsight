@@ -14,6 +14,7 @@
 # ============================================================================
 """The definition of tensor stream."""
 from abc import abstractmethod, ABC
+from enum import Enum
 import numpy as np
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
@@ -21,6 +22,20 @@ from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import NUMPY_TYPE_MAP
 from mindinsight.debugger.proto.ms_graph_pb2 import DataType
 from mindinsight.utils.tensor import TensorUtils
+
+
+class TensorStatusEnum(Enum):
+    """Tensor status."""
+    CACHED = "cached"
+    UNCACHED = "uncached"
+    EMPTY = 'empty'
+    OVERSIZE = "oversize"
+
+
+class DownloadStatusEnum(Enum):
+    """Tensor status."""
+    PENDING = "pending"
+    SENDING = "sending"
 
 
 class BaseTensor(ABC):
@@ -47,6 +62,11 @@ class BaseTensor(ABC):
     @property
     @abstractmethod
     def value(self):
+        """The property of tensor shape."""
+
+    @property
+    @abstractmethod
+    def bytes(self):
         """The property of tensor shape."""
 
     @property
@@ -89,6 +109,7 @@ class BaseTensor(ABC):
             'step': self._step,
             'dtype': self.dtype,
             'shape': self.shape,
+            'bytes': self.bytes,
             'has_prev_step': False
         }
         return res
@@ -128,8 +149,10 @@ class OpTensor(BaseTensor):
         super(OpTensor, self).__init__(step)
         self._tensor_proto = tensor_proto
         self._value = self.to_numpy(tensor_content)
+        self._bytes = self._value.nbytes if self._value is not None else 0
         self._stats = None
         self._tensor_comparison = None
+        self._status = TensorStatusEnum.EMPTY.value if self._value is None else TensorStatusEnum.CACHED.value
 
     @property
     def name(self):
@@ -139,10 +162,14 @@ class OpTensor(BaseTensor):
         return ':'.join([node_name, slot])
 
     @property
+    def step(self):
+        """The step of the tensor value."""
+        return self._step
+
+    @property
     def dtype(self):
         """The property of tensor dtype."""
         tensor_type = DataType.Name(self._tensor_proto.data_type)
-
         return tensor_type
 
     @property
@@ -157,6 +184,16 @@ class OpTensor(BaseTensor):
     def value(self):
         """The property of tensor value."""
         return self._value
+
+    @property
+    def nbytes(self):
+        """The property of tensor value."""
+        return self._value.nbytes if self._value is not None else 0
+
+    @property
+    def bytes(self):
+        """The property of tensor value."""
+        return self._bytes
 
     @property
     def stats(self):
@@ -174,9 +211,26 @@ class OpTensor(BaseTensor):
         self._stats = stats
 
     @property
+    def status(self):
+        """The property of tensor status."""
+        return self._status
+
+    @property
     def tensor_comparison(self):
         """The property of tensor_comparison."""
         return self._tensor_comparison
+
+    def calculate_stats(self):
+        """Calculate the tensor statistics."""
+        self._stats = TensorUtils.get_statistics_from_tensor(self._value)
+
+    def clean_tensor_value(self, oversize=True):
+        """Clean the tensor."""
+        self._value = None
+        if oversize:
+            self._status = TensorStatusEnum.OVERSIZE.value
+        elif self._status == TensorStatusEnum.CACHED.value:
+            self._status = TensorStatusEnum.UNCACHED.value
 
     def to_numpy(self, tensor_content):
         """
@@ -202,12 +256,12 @@ class OpTensor(BaseTensor):
         Returns:
             dict, overall statistics.
         """
+        if self.stats:
+            return TensorUtils.get_overall_statistic_dict(self.stats)
         if self.empty:
             return {}
-        if not self.stats:
-            self.stats = TensorUtils.get_statistics_from_tensor(self.value)
-        statistics = TensorUtils.get_overall_statistic_dict(self.stats)
-        return statistics
+        self.stats = TensorUtils.get_statistics_from_tensor(self.value)
+        return TensorUtils.get_overall_statistic_dict(self.stats)
 
     def update_tensor_comparisons(self, tensor_comparison):
         """
@@ -229,6 +283,9 @@ class OpTensor(BaseTensor):
         Returns:
             Union[None, str, numpy.ndarray], the value of parsed tensor.
         """
+        if self._status == TensorStatusEnum.OVERSIZE.value:
+            log.info("%s is too large to show on UI.", self.name)
+            return "Too large to show on UI."
         if self._value is None:
             log.warning("%s has no value yet.", self.name)
             return None
@@ -263,6 +320,7 @@ class ConstTensor(BaseTensor):
         super(ConstTensor, self).__init__()
         self._const_proto = const_proto
         self._value = self.generate_value_from_proto(const_proto.value)
+        self._status = TensorStatusEnum.CACHED.value
 
     def set_step(self, step):
         """Set step value."""
@@ -287,6 +345,16 @@ class ConstTensor(BaseTensor):
     def value(self):
         """The property of tensor shape."""
         return self._value
+
+    @property
+    def status(self):
+        """The property of tensor status."""
+        return self._status
+
+    @property
+    def bytes(self):
+        """The property of tensor value."""
+        return 0
 
     def generate_value_from_proto(self, tensor_proto):
         """

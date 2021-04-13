@@ -376,7 +376,9 @@ class SummaryWatcher:
                     if self._is_valid_profiler_directory(full_path)[0] or \
                             self._is_valid_cluster_profiler_directory(full_path)[0]:
                         return True
-                if os.path.exists(os.path.join(summary_directory, os.path.join(entry.name, ".metadata"))):
+
+            for analyzer in self._analyzers:
+                if analyzer.analyze(entry, summary_base_dir, relative_path):
                     return True
 
         return False

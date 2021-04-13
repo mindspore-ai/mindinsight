@@ -258,6 +258,28 @@ class DebuggerOnlineSessionUnavailable(MindInsightException):
         )
 
 
+class DebuggerDownloadOverQueue(MindInsightException):
+    """The error of that the download queue is oversize."""
+
+    def __init__(self):
+        super(DebuggerDownloadOverQueue, self).__init__(
+            error=DebuggerErrors.DEBUGGER_DOWNLOAD_OVER_QUEUE,
+            message=DebuggerErrorMsg.DEBUGGER_DOWNLOAD_OVER_QUEUE.value,
+            http_code=400
+        )
+
+
+class DebuggerDownloadTensorNotExist(MindInsightException):
+    """The error of that the Tensor is not exist."""
+
+    def __init__(self):
+        super(DebuggerDownloadTensorNotExist, self).__init__(
+            error=DebuggerErrors.DEBUGGER_DOWNLOAD_TENSOR_NOT_EXIST,
+            message=DebuggerErrorMsg.DEBUGGER_DOWNLOAD_TENSOR_NOT_EXIST.value,
+            http_code=400
+        )
+
+
 class RankDirNotFound(MindInsightException):
     """The error of that the dumped rank directory is not found."""
 

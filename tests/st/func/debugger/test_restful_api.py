@@ -19,6 +19,7 @@ Usage:
     pytest tests/st/func/debugger/test_restful_api.py
 """
 import os
+import time
 from urllib.parse import quote
 
 import pytest
@@ -195,7 +196,7 @@ class TestAscendDebugger:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    def test_retrieve_tensor_value(self, app_client):
+    def test_retrieve_tensor_history(self, app_client):
         """Test retrieve tensor value."""
         node_name = 'Default/TransData-op99'
         with self._debugger_client.get_thread_instance():
@@ -210,18 +211,41 @@ class TestAscendDebugger:
             # check full tensor history from poll data
             res = get_request_result(
                 app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
-            assert res.get('receive_tensor', {}).get('node_name') == node_name
+            assert res.get('receive_tensor', {}).get('node_name') == node_name, 'Node name unmatched.'
             expect_file = 'retrieve_full_tensor_history.json'
             if self.save_results:
                 send_and_save_result(app_client, url, body_data, expect_file)
             send_and_compare_result(app_client, url, body_data, expect_file)
-            # check tensor value
+            send_terminate_cmd(app_client)
+
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    def test_retrieve_tensor_value(self, app_client):
+        """Test retrieve tensor value."""
+        node_name = 'Default/TransData-op99'
+        with self._debugger_client.get_thread_instance():
+            check_state(app_client)
+            # prepare tensor value
+            url = 'tensor-history'
+            body_data = {'name': node_name, 'rank_id': 0}
+            get_request_result(app_client, url, body_data, method='post')
+            get_request_result(app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
             url = 'tensors'
             body_data = {
                 'name': node_name + ':0',
                 'detail': 'data',
                 'shape': quote('[1, 1:3]')
             }
+            get_request_result(app_client, url, body_data, method='GET')
+            # sleep 0.01 second to  wait the tensor update.
+            time.sleep(0.01)
+            res = get_request_result(
+                app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
+            assert res.get('receive_tensor', {}).get('node_name') == node_name, 'Node name unmatched.'
             expect_file = 'retrieve_tensor_value.json'
             if self.save_results:
                 send_and_save_result(app_client, url, body_data, expect_file, method='get')
@@ -249,7 +273,7 @@ class TestAscendDebugger:
                 app_client=app_client, url='tensor-history', body_data={'name': node_name, 'rank_id': 0})
             res = get_request_result(
                 app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
-            assert res.get('receive_tensor', {}).get('node_name') == node_name
+            assert res.get('receive_tensor', {}).get('node_name') == node_name, 'Node name unmatched.'
             # get compare results
             url = 'tensor-comparisons'
             body_data = {
@@ -258,6 +282,12 @@ class TestAscendDebugger:
                 'shape': quote('[:, :]'),
                 'tolerance': 1,
                 'rank_id': 0}
+            get_request_result(app_client, url, body_data, method='GET')
+            # sleep 0.01 second to  wait the tensor update.
+            time.sleep(0.01)
+            res = get_request_result(
+                app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
+            assert res.get('receive_tensor', {}).get('node_name') == node_name, 'Node name unmatched.'
             expect_file = 'compare_tensors.json'
             if self.save_results:
                 send_and_save_result(app_client, url, body_data, expect_file, method='get')
@@ -354,6 +384,8 @@ class TestAscendDebugger:
         with self._debugger_client.get_thread_instance():
             create_watchpoint_and_wait(app_client)
             get_request_result(app_client, url, body_data, method='GET')
+            # sleep 0.01 second to  wait the tensor update.
+            time.sleep(0.01)
             # check full tensor history from poll data
             res = get_request_result(
                 app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
