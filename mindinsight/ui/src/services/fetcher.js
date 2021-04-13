@@ -43,6 +43,11 @@ axios.interceptors.request.use(
     },
 );
 
+const ignoreCode = {
+  ignoreError: ['50545005', '50546083'],
+  regardError: ['50545013', '50545014', '50545016', '5054500D'],
+};
+
 // Add a response interceptor
 axios.interceptors.response.use(
     function(response) {
@@ -61,15 +66,9 @@ axios.interceptors.response.use(
     function(error) {
       const errorData = i18n.messages[i18n.locale].error;
       const path = router.currentRoute.path;
-
       if (path === '/debugger' || path === '/offline-debugger') {
-        if (
-          error.response &&
-        error.response.data &&
-        error.response.data.error_code === '5054B281'
-        ) {
-          router.push('/');
-        }
+        // eslint-disable-next-line camelcase
+        if (error.response?.data?.error_code === '5054B281') router.push('/');
         return Promise.reject(error);
       }
       // error returned by backend
@@ -79,24 +78,14 @@ axios.interceptors.response.use(
       error.response.data.error_code
       ) {
         const errorCode = error.response.data.error_code.toString();
-
-        const ignoreCode = {
-          ignoreError: ['50545005', '50546083'],
-          regardError: ['50545013', '50545014', '50545016', '5054500D'],
-        };
-
         if (ignoreCode.ignoreError.includes(errorCode)) {
           if (errorData[errorCode]) {
             Vue.prototype.$message.error(errorData[errorCode]);
           }
-          setTimeout(()=>{
-            router.push('/');
-          }, 2500);
+          setTimeout(() => router.push('/'), 2500);
           return Promise.reject(error);
         }
-        if (
-          path.includes('-dashboard') ||
-        ignoreCode.regardError.includes(errorCode)) {
+        if (path.includes('-dashboard') || ignoreCode.regardError.includes(errorCode)) {
           return Promise.reject(error);
         }
         if (errorData[errorCode]) {
@@ -104,16 +93,14 @@ axios.interceptors.response.use(
         }
         return Promise.reject(error);
       } else {
-      // error returned by browser
+        // error returned by browser
         if (error.code === 'ECONNABORTED' && /^timeout/.test(error.message)) {
-          if (error.config.headers.ignoreError) {
-            return Promise.reject(error);
-          }
+          if (error.config.headers.ignoreError) return Promise.reject(error);
           // timeout processing
           Vue.prototype.$message.error(i18n.messages[i18n.locale].public.timeout);
           return Promise.reject(error);
         } else if (error.message === 'routeJump') {
-        // route jump
+          // route jump
           return false;
         } else {
           // show network error
