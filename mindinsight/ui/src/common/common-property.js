@@ -138,11 +138,11 @@ export default {
   dataMapDownloadStyle: '<style> #graph0 > polygon { fill: transparent; }' +
     '.node, .cluster { cursor: pointer; }' +
     '.selected { polygon, ellipse { stroke: red !important; stroke-width: 2px; } }' +
-    '.CreatDataset > polygon, .Operator > ellipse { stroke: #4ea6e6; fill: #b8e0ff; }' +
+    '.Create > polygon, .Operator > ellipse { stroke: #4ea6e6; fill: #b8e0ff; }' +
     '.cluster > polygon { fill: #8df1f2; stroke: #00a5a7; }' +
-    '.RepeatDataset > polygon { stroke: #fdca5a; fill: #fff2d4; }' +
-    '.ShuffleDataset > polygon { stroke: #e37d29; fill: #ffd0a6; }' +
-    '.BatchDataset > polygon { stroke: #de504e; fill: #ffbcba; }' +
-    '.edge { path { stroke: rgb(167, 167, 167); }' +
-    'polygon { fill: rgb(167, 167, 167); stroke: rgb(167, 167, 167); } }</style>',
+    '.Repeat > polygon { stroke: #fdca5a; fill: #fff2d4; }' +
+    '.Shuffle > polygon { stroke: #e37d29; fill: #ffd0a6; }' +
+    '.Batch > polygon { stroke: #de504e; fill: #ffbcba; }' +
+    '.edge path { stroke: rgb(167, 167, 167); }' +
+    '.edge polygon { fill: rgb(167, 167, 167); stroke: rgb(167, 167, 167); }</style>',
 };
