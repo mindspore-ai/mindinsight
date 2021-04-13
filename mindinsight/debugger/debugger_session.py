@@ -114,7 +114,6 @@ class DebuggerSession:
         """Start server."""
         self.back_server.start()
         # register stop server handler
-        #signal.signal(signal.SIGINT, self._stop_handler)
         log.info("Start debugger backend server.")
 
     def _stop_handler(self, signum, frame):
