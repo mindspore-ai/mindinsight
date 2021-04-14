@@ -260,11 +260,12 @@ export default {
         'Repeat',
         'Map',
       ];
+      const subGraphNodeType = ['Map', 'MapDataset'];
       let nodeStr = '';
       let edgeStr = '';
       Object.keys(this.allGraphData).forEach((key) => {
         const node = this.allGraphData[key];
-        if (node.op_type.startsWith('Map')) {
+        if (subGraphNodeType.includes(node.op_type)) {
           nodeStr += this.packageSubGraph(key);
         } else {
           node.id = key;
@@ -281,8 +282,8 @@ export default {
         node.children.forEach((k) => {
           const child = this.allGraphData[k];
           edgeStr += `<${child.id}>-><${node.id}>[${
-            child.op_type.startsWith('Map') ? `ltail=<cluster_${child.key}>;` : ''
-          }${node.op_type.startsWith('Map') ? `lhead=<cluster_${node.key}>;` : ''}];`;
+            subGraphNodeType.includes(child.op_type) ? `ltail=<cluster_${child.key}>;` : ''
+          }${subGraphNodeType.includes(node.op_type) ? `lhead=<cluster_${node.key}>;` : ''}];`;
         });
       });
       const initSetting =
