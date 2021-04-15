@@ -1,4 +1,4 @@
-# MindInsight 1.2.0-rc1
+# MindInsight 1.2.0
 
 ## MindInsight 1.2.0 Release Notes
 
