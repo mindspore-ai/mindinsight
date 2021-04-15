@@ -56,10 +56,11 @@ class OnnxGraph(Graph):
 
     Args:
         model (onnx.ModelProto): Onnx defined model proto.
+        model_path (str): Onnx model path.
     """
 
-    def __init__(self, model, **kwargs):
-        super(OnnxGraph, self).__init__(model=model, **kwargs)
+    def __init__(self, model, model_path, **kwargs):
+        super(OnnxGraph, self).__init__(model=model, model_path=model_path, **kwargs)
 
         self.build()
 
@@ -115,6 +116,7 @@ class OnnxGraph(Graph):
     def build(self):
         """Build graph tree."""
         model_data = OnnxDataLoader(self.model,
+                                    self.model_path,
                                     input_nodes=self._raw_input_nodes,
                                     output_nodes=self._raw_output_nodes)
         scope_name_list = generate_scope_name(model_data)
@@ -207,7 +209,7 @@ class OnnxGraph(Graph):
                                              output_nodes=output_nodes)
         else:
             onnx = import_module('onnx')
-            onnx_model = onnx.load(graph_path)
+            onnx_model = onnx.load(graph_path, load_external_data=False)
 
         onnx_inputs = [onnx_input.name for onnx_input in onnx_model.graph.input]
 
