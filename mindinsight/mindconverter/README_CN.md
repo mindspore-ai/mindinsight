@@ -21,7 +21,6 @@
     - [AST方案不支持场景](#ast方案不支持场景)
         - [场景1](#场景1)
         - [场景2](#场景2)
-    - [三方库依赖](#三方库依赖)
     - [常见问题](#常见问题)
     - [附录](#附录)
         - [TensorFlow Pb模型导出](#tensorflow-pb模型导出)
@@ -36,6 +35,20 @@ MindConverter是一款用于将PyTorch、TensorFlow脚本或者ONNX文件转换�
 ## 安装
 
 此工具为MindInsight的子模块，安装MindInsight后，即可使用MindConverter，MindInsight安装请参考该[安装文档](https://www.mindspore.cn/install/)。
+
+### 三方库依赖
+
+下列三方库未在MindInsight依赖列表（requirements.txt）中声明。用户除安装可满足模型加载、训练、推理的**TensorFlow**外，还需要安装（pip
+install）如下依赖库（ONNX模型文件转MindSpore的用户无需安装tf2onnx）：
+
+```text
+onnx>=1.8.0
+tf2onnx>=1.7.1
+onnxruntime>=1.5.2
+onnxoptimizer>=0.1.2
+```
+
+对于个别模型，若在转换过程中出现onnx或tf2onnx错误信息，请尝试更新环境中onnx或tf2onnx或onnxoptimizer至最新版本。
 
 ## 用法
 
@@ -59,19 +72,22 @@ optional arguments:
                         schema. When `--in_file` and `--model_file` are both
                         provided, use AST schema as default.
   --shape SHAPE [SHAPE ...]
-                        Optional, expected input tensor shape of
-                        `--model_file`. It is required when use graph based
-                        schema. Both order and number should be consistent
-                        with `--input_nodes`. Usage: --shape 1,512 1,512
-  --input_nodes INPUT_NODES [INPUT_NODES ...]
-                        Optional, input node(s) name of `--model_file`. It is
+                        Expected input tensor shape of `--model_file`. It is
                         required when use graph based schema. Both order and
-                        number should be consistent with `--shape`. Usage:
-                        --input_nodes input_1:0 input_2:0
+                        number should be consistent with `--input_nodes`.
+                        Given that (1,128) and (1,512) are shapes of input_1
+                        and input_2 separately. Usage: --shape 1,128 1,512
+  --input_nodes INPUT_NODES [INPUT_NODES ...]
+                        Input node(s) name of `--model_file`. It is required
+                        when use graph based schema. Both order and number
+                        should be consistent with `--shape`. Given that both
+                        input_1 and input_2 are inputs of model. Usage:
+                        --input_nodes input_1 input_2
   --output_nodes OUTPUT_NODES [OUTPUT_NODES ...]
-                        Optional, output node(s) name of `--model_file`. It is
-                        required when use graph based schema. Usage:
-                        --output_nodes output_1:0 output_2:0
+                        Output node(s) name of `--model_file`. It is required
+                        when use graph based schema. Given that both output_1
+                        and output_2 are outputs of model. Usage:
+                        --output_nodes output_1 output_2
   --output OUTPUT       Optional, specify path for converted script file
                         directory. Default output directory is `output` folder
                         in the current working directory.
@@ -321,20 +337,6 @@ class ConvBNReLU(nn.Sequential):
             nn.ReLU6(inplace=True)
         )
 ```
-
-## 三方库依赖
-
-用户在使用MindConverter时，下列三方库未在MindInsight依赖列表（requirements.txt）中声明。用户除安装可满足模型加载、训练、推理的TensorFlow外，还需要安装（pip
-install）如下依赖库（ONNX模型文件转MindSpore的用户无需安装tf2onnx）：
-
-```text
-onnx>=1.8.0
-tf2onnx>=1.7.1
-onnxruntime>=1.5.2
-onnxoptimizer>=0.1.2
-```
-
-对于个别模型，若在转换过程中出现onnx或tf2onnx错误信息，请尝试更新环境中onnx或tf2onnx或onnxoptimizer至最新版本。
 
 ## 常见问题
 
