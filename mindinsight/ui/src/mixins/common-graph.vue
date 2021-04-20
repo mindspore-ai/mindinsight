@@ -22,33 +22,83 @@ const d3 = {select, selectAll, zoom};
 export default {
   data() {
     return {
+      graph: {
+        dom: Object,
+        size: Object, // When scale = 1
+        transform: Object,
+        minScale: Number,
+        defaultPadding: 4,
+      }, // Basic information about graph0 in svg
+      svg: {
+        size: Object,
+      },
+      graphviz: null,
+      graphvizTemp: null,
+      scaleRange: [0.001, 10], // graph zooms in and zooms out.
       clickScope: {}, // Information about the node that is clicked for the first time.
       frameSpace: 25, // Distance between the namespace border and the internal node
       curColorIndex: 0,
       totalMemory: 16777216 * 2, // Memory size of the graph plug-in
-      viewBox: {
-        max: 10000,
-        scale: {x: 1, y: 1},
-      },
+      allGraphData: {}, // graph Original input data
+      firstFloorNodes: [], // ID array of the first layer node.
+      nodesCountLimit: 4500, // Maximum number of sub-nodes in a namespace.
+      maxChainNum: 70,
+      graphContainer: null,
+      resizeDelay: 500, // The delay of resize's event
     };
+  },
+  mounted() {
+    this.$nextTick(() => {
+      // Generate the dom of the submap.
+      if (!d3.select('#graphTemp').size()) {
+        d3.select('body').append('div').attr('id', 'graphTemp');
+      }
+      // Stores the dom of all the sorted subgraphs.
+      if (!d3.select('#subgraphTemp').size()) {
+        d3.select('body').append('div').attr('id', 'subgraphTemp');
+      }
+
+      this.graphContainer = document.querySelector('#graph');
+      if (this.graphContainer) {
+        this.graphContainer.addEventListener('click', this.controlEvent.bind(null, 'click'));
+        this.graphContainer.addEventListener('dblclick', this.controlEvent.bind(null, 'dblclick'));
+      }
+    });
   },
   methods: {
     /**
+     * Handles and executes click and double-click events
+     * @param {String} type Event type
+     * @param {Object} event Event data
+     */
+    controlEvent(type, event) {
+      if (!event) return;
+      const path = Array.from(event.path || (event.composedPath && event.composedPath()) || []);
+      let target;
+      for (let i = 0; i < path.length; i++) {
+        const classList = path[i].classList;
+        if (classList && classList.contains('node')) {
+          target = path[i];
+          break;
+        }
+      }
+
+      if (target) {
+        if (type === 'click') {
+          this.clickEvent(target, 'graph');
+        } else {
+          this.dblclickEvent(target, 'graph');
+        }
+      }
+    },
+    /**
      * Initializing the click event
      * @param {Object} target The target of the click event
-     * @param {Number} index Index of the target
-     * @param {Array} nodesList List of nodes on the page
      * @param {String} pageKey Page identification mark
      */
-    clickEvent(target, index, nodesList, pageKey) {
-      // The target value of the element converted from the HTML attribute of the variable is null.
-      const event = currentEvent;
-      event.stopPropagation();
-      event.preventDefault();
-
-      const clickNode = nodesList[index];
-      const nodeId = clickNode.id;
-      const nodeClass = clickNode.classList.value;
+    clickEvent(target, pageKey) {
+      const nodeId = target.id;
+      const nodeClass = target.classList.value;
       setTimeout(() => {
         this.clickScope = {
           id: nodeId,
@@ -69,20 +119,11 @@ export default {
     /**
      * Initializing the click event
      * @param {Object} target The target of the click event
-     * @param {Number} index Index of the target
-     * @param {Array} nodesList List of nodes on the page
      * @param {String} pageKey Page identification mark
      */
-    dblclickEvent(target, index, nodesList, pageKey) {
-      // The target of the element converted from the HTML attribute of the variable is empty and
-      // needs to be manually encapsulated.
-      const event = currentEvent;
-      event.stopPropagation();
-      event.preventDefault();
-
-      const clickNode = nodesList[index];
-      const nodeId = clickNode.id;
-      const nodeClass = clickNode.classList.value;
+    dblclickEvent(target, pageKey) {
+      const nodeId = target.id;
+      const nodeClass = target.classList.value;
       let name = nodeId;
       this.selectedNode.more =
         name.indexOf('more...') !== -1 &&
@@ -147,61 +188,64 @@ export default {
             .zoomScaleExtent(this.scaleRange)
             .dot(dot)
             .attributer(this.attributer)
-            .render(() => {
-              this.initSvg(true);
-              this.afterInitGraph();
-            });
+            .render(this.afterInitGraph);
       } catch (error) {
         const svg = document.querySelector('#graph svg');
-        if (svg) {
-          svg.remove();
-        }
+        if (svg) svg.remove();
         this.initGraph(dot);
-      }
-
-      // Generate the dom of the submap.
-      if (!d3.select('#graphTemp').size()) {
-        d3.select('body').append('div').attr('id', 'graphTemp');
-      }
-      // Stores the dom of all the sorted subgraphs.
-      if (!d3.select('#subgraphTemp').size()) {
-        d3.select('body').append('div').attr('id', 'subgraphTemp');
       }
     },
     /**
-     * Initialize svg
-     * @param {Bealoon} setSize Weather to set svg origin width and height
+     * Add the location attribute to each node to facilitate the obtaining of node location parameters.
      */
-    initSvg(setSize) {
-      this.svg.dom = document.querySelector('#graph svg');
-      this.svg.rect = this.svg.dom.getBoundingClientRect();
-      const viewBoxData = this.svg.dom.getAttribute('viewBox').split(' ');
-      this.viewBox.scale.x = 1;
-      if (setSize) {
-        this.svg.originSize = {width: viewBoxData[2], height: viewBoxData[3]};
-      }
-      if (viewBoxData[2] > this.viewBox.max) {
-        this.viewBox.scale.x = viewBoxData[2] / this.viewBox.max;
-        viewBoxData[2] = this.viewBox.max;
-      }
+    afterInitGraph() {
+      const svg = document.querySelector('#graph svg');
+      if (svg) svg.removeAttribute('viewBox');
 
-      this.viewBox.scale.y = 1;
-      if (viewBoxData[3] > this.viewBox.max) {
-        this.viewBox.scale.y = viewBoxData[3] / this.viewBox.max;
-        viewBoxData[3] = this.viewBox.max;
-      }
-      this.svg.dom.setAttribute('viewBox', viewBoxData.join(' '));
-      this.svg.viewWidth = viewBoxData[2];
-      this.svg.viewHeight = viewBoxData[3];
+      setTimeout(() => {
+        const keys = ['_data', '_dictionary'];
+        if (this.graphviz) {
+          for (const key of keys) {
+            this.graphviz[key] = null;
+          }
+          this.graphviz = null;
+        }
+
+        if (this.graphvizTemp) {
+          for (const key of keys) {
+            this.graphvizTemp[key] = null;
+          }
+          this.graphvizTemp = null;
+        }
+      }, 100);
+
+      this.fitGraph('graph');
+      this.transplantChildrenDom();
+      const tempSvg = document.querySelector('#subgraphTemp svg');
+      if (tempSvg) tempSvg.remove();
+
+      const elements = Array.from(d3.select('#graph').selectAll('g.node, g.edge').nodes());
+      elements.forEach((ele) => {
+        if (!ele.hasAttribute('transform')) {
+          ele.setAttribute('transform', 'translate(0,0)');
+        }
+        // The title value needs to be manually set for the virtual node.
+        if (Array.prototype.includes.call(ele.classList, 'plain')) {
+          const title = ele.querySelector('title');
+          title.textContent = title.textContent.split('^')[0];
+        }
+      });
+      d3.selectAll('g.edge>title').remove();
+      d3.select('#graph g#graph0 title').remove();
+
+      this.startApp();
     },
     /**
      * Initializing the graph zoom
      * @param {String} pageKey
      */
     initZooming(pageKey) {
-      const graphBox = this.graph.dom.getBBox();
-      const padding = 4;
-      const minDistance = 20;
+      const minDistance = 100;
       const pointer = {start: {x: 0, y: 0}, end: {x: 0, y: 0}};
       const zoom = d3
           .zoom()
@@ -222,45 +266,13 @@ export default {
             let tempStr = '';
             let change = {};
             let scale = transformData.scale[0];
-            const graphRect = this.graph.dom.getBoundingClientRect();
-            const transRate = graphBox.width / graphRect.width;
             if (event.type === 'mousemove') {
               pointer.end.x = event.x;
               pointer.end.y = event.y;
-              let tempX = pointer.end.x - pointer.start.x;
-              let tempY = pointer.end.y - pointer.start.y;
-              const paddingTrans = Math.max(
-                  (padding / transRate) / scale,
-                  minDistance,
-              );
-              if (
-                graphRect.left + paddingTrans + tempX >=
-              this.svg.rect.left + this.svg.rect.width
-              ) {
-                tempX = Math.min(tempX, 0);
-              }
-              if (
-                graphRect.left + graphRect.width - paddingTrans + tempX <=
-              this.svg.rect.left
-              ) {
-                tempX = Math.max(tempX, 0);
-              }
-              if (
-                graphRect.top + paddingTrans + tempY >=
-              this.svg.rect.top + this.svg.rect.height
-              ) {
-                tempY = Math.min(tempY, 0);
-              }
-              if (
-                graphRect.top + graphRect.height - paddingTrans + tempY <=
-              this.svg.rect.top
-              ) {
-                tempY = Math.max(tempY, 0);
-              }
 
               change = {
-                x: tempX * transRate * scale,
-                y: tempY * transRate * scale,
+                x: pointer.end.x - pointer.start.x,
+                y: pointer.end.y - pointer.start.y,
               };
               pointer.start.x = pointer.end.x;
               pointer.start.y = pointer.end.y;
@@ -276,12 +288,12 @@ export default {
               scale = Math.min(this.scaleRange[1], scale);
               change = {
                 x:
-                (graphRect.x + padding / transRate - event.x) *
-                transRate *
+                ((this.svg.size.left - this.graph.defaultPadding - event.x + this.graph.transform.x) /
+                  transformData.scale[0]) *
                 (scale - transformData.scale[0]),
                 y:
-                (graphRect.bottom - padding / transRate - event.y) *
-                transRate *
+                ((this.svg.size.top + this.graph.transform.y - this.graph.defaultPadding - event.y) /
+                  transformData.scale[0]) *
                 (scale - transformData.scale[0]),
               };
             }
@@ -291,8 +303,14 @@ export default {
               y: transformData.translate[1] + change.y,
               k: scale,
             };
-            this.graph.transRate =
-            graphRect.width / graphBox.width / this.graph.transform.k;
+
+            this.graph.transform.x = Math.max(minDistance - this.graph.size.width * scale, this.graph.transform.x);
+            this.graph.transform.x = Math.min(this.svg.size.width - minDistance, this.graph.transform.x);
+            this.graph.transform.y = Math.max(this.graph.transform.y, minDistance);
+            this.graph.transform.y = Math.min(
+                this.graph.size.height * scale + this.svg.size.height - minDistance,
+                this.graph.transform.y
+            );
 
             tempStr =
             `translate(${this.graph.transform.x},${this.graph.transform.y}) ` +
@@ -335,33 +353,33 @@ export default {
      */
     fitGraph(id) {
       const graph = document.getElementById(id);
-      const maxShowWidth = graph.offsetWidth * 1.5;
-      const maxShowHeight = graph.offsetHeight * 1.5;
+      const maxShowWidth = graph.offsetWidth;
+      const maxShowHeight = graph.offsetHeight;
       const graphDom = document.querySelector(`#${id} #graph0`);
       const box = graphDom.getBBox();
-      let transformStr = '';
-      const graphTransformData = this.getTransformData(graphDom);
-      if (box.width > maxShowWidth || box.height > maxShowHeight) {
-        const scale = Math.max(
-            box.width / maxShowWidth / this.viewBox.scale.x,
-            box.height / maxShowHeight / this.viewBox.scale.y,
-        );
-        const translate = {x: (box.width - maxShowWidth) / 2};
+      let {
+        translate: [x, y],
+        scale: [scale],
+      } = this.getTransformData(graphDom);
 
-        if (!this.selectedNode.name) {
-          graphTransformData.translate[0] = translate.x;
-        }
-        graphTransformData.scale[0] = scale;
+      if (this.selectedNode.more) {
+        scale = this.graph.transform.k;
       } else {
-        graphTransformData.translate = [-box.x, -box.y];
+        if (box.width <= maxShowWidth && box.height <= maxShowHeight) {
+          const showAreaRite = 0.8;
+          scale = Math.min((maxShowWidth * showAreaRite) / box.width, (maxShowHeight * showAreaRite) / box.height);
+          x = (maxShowWidth - box.width * scale) / 2 + scale * this.graph.defaultPadding;
+          y = (maxShowHeight + box.height * scale) / 2 - scale * this.graph.defaultPadding;
+        } else if (box.width > maxShowWidth && box.height > maxShowHeight) {
+          x = -(box.width * scale - maxShowWidth) / 2;
+        } else if (box.width <= maxShowWidth) {
+          x = (maxShowWidth - box.width * scale) / 2;
+        } else if (box.height <= maxShowHeight) {
+          y = maxShowHeight / 2 + box.height / 2;
+        }
       }
-      if (id === 'graph' && this.selectedNode.more) {
-        graphTransformData.scale[0] = this.graph.transform.k;
-      }
-      Object.keys(graphTransformData).forEach((key) => {
-        transformStr += `${key}(${graphTransformData[key].join(',')}) `;
-      });
-      graphDom.setAttribute('transform', transformStr.trim());
+
+      graphDom.setAttribute('transform', `translate(${x},${y}) scale(${scale})`);
     },
     /**
      * Expand a namespace.
@@ -386,7 +404,8 @@ export default {
                 }
               })
               .render(() => {
-                this.fitGraph('graphTemp');
+                const svg = document.querySelector('#graphTemp svg');
+                if (svg) svg.removeAttribute('viewBox');
                 this.dealNamescopeTempGraph(name);
               });
         } catch (error) {
@@ -1519,5 +1538,19 @@ export default {
       }
     },
   },
+  destroyed() {
+    if (this.graphContainer) {
+      this.graphContainer.removeEventListener('click', this.controlEvent);
+      this.graphContainer.removeEventListener('dblclick', this.controlEvent);
+    }
+  },
 };
 </script>
+<style>
+#graphTemp,
+#subgraphTemp {
+  position: absolute;
+  bottom: 0;
+  visibility: hidden;
+}
+</style>
