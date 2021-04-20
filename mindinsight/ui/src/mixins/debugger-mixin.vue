@@ -136,9 +136,7 @@ export default {
      */
     collapseBtnClick() {
       this.leftShow = !this.leftShow;
-      setTimeout(() => {
-        this.initSvg(false);
-      }, 500);
+      setTimeout(this.initSvgSize, this.resizeDelay);
     },
     /**
      * Step input validation
