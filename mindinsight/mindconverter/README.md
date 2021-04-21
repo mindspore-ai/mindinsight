@@ -21,7 +21,6 @@
     - [Unsupported situation of AST mode](#unsupported-situation-of-ast-mode)
         - [Situation1](#situation1)
         - [Situation2](#situation2)
-    - [Requirements](#requirements)
     - [Frequently asked questions](#frequently-asked-questions)
     - [Appendix](#appendix)
         - [Tensorflow Pb Model Exporting](#tensorflow-pb-model-exporting)
@@ -36,6 +35,19 @@ MindConverter is a migration tool to transform the model scripts and weights fro
 ## Installation
 
 MindConverter is a submodule in MindInsight. Please follow the [Guide](https://www.mindspore.cn/install/en) here to install MindInsight.
+
+### Third party Requirements
+
+For users using MindConverter, in addition to install the **TensorFlow** that can satisfy the model loading, inference and training requirements, users also need to install the following third party package (tf2onnx is not required for users that convert ONNX model definition file to MindSpore):
+
+```text
+onnx>=1.8.0
+tf2onnx>=1.7.1
+onnxruntime>=1.5.2
+onnxoptimizer>=0.1.2
+```
+
+For some models, if the onnx or tf2onnx error message appears during the conversion process, please try to upgrade the onnx, tf2onnx or onnxoptimizer in the environment to the latest version.
 
 ## Usage
 
@@ -59,19 +71,22 @@ optional arguments:
                         schema. When `--in_file` and `--model_file` are both
                         provided, use AST schema as default.
   --shape SHAPE [SHAPE ...]
-                        Optional, expected input tensor shape of
-                        `--model_file`. It is required when use graph based
-                        schema. Both order and number should be consistent
-                        with `--input_nodes`. Usage: --shape 1,512 1,512
-  --input_nodes INPUT_NODES [INPUT_NODES ...]
-                        Optional, input node(s) name of `--model_file`. It is
+                        Expected input tensor shape of `--model_file`. It is
                         required when use graph based schema. Both order and
-                        number should be consistent with `--shape`. Usage:
-                        --input_nodes input_1:0 input_2:0
+                        number should be consistent with `--input_nodes`.
+                        Given that (1,128) and (1,512) are shapes of input_1
+                        and input_2 separately. Usage: --shape 1,128 1,512
+  --input_nodes INPUT_NODES [INPUT_NODES ...]
+                        Input node(s) name of `--model_file`. It is required
+                        when use graph based schema. Both order and number
+                        should be consistent with `--shape`. Given that both
+                        input_1 and input_2 are inputs of model. Usage:
+                        --input_nodes input_1 input_2
   --output_nodes OUTPUT_NODES [OUTPUT_NODES ...]
-                        Optional, output node(s) name of `--model_file`. It is
-                        required when use graph based schema. Usage:
-                        --output_nodes output_1:0 output_2:0
+                        Output node(s) name of `--model_file`. It is required
+                        when use graph based schema. Given that both output_1
+                        and output_2 are outputs of model. Usage:
+                        --output_nodes output_1 output_2
   --output OUTPUT       Optional, specify path for converted script file
                         directory. Default output directory is `output` folder
                         in the current working directory.
@@ -315,19 +330,6 @@ class ConvBNReLU(nn.Sequential):
             nn.ReLU6(inplace=True)
         )
 ```
-
-## Requirements
-
-For users using MindConverter, in addition to install the TensorFlow that can satisfy the model loading, inference and training requirements, users also need to pip install the following third party package (tf2onnx is not required for users that convert ONNX model definition file to MindSpore):
-
-```text
-onnx>=1.8.0
-tf2onnx>=1.7.1
-onnxruntime>=1.5.2
-onnxoptimizer>=0.1.2
-```
-
-For some models, if the onnx or tf2onnx error message appears during the conversion process, please try to upgrade the onnx, tf2onnx or onnxoptimizer in the environment to the latest version.
 
 ## Frequently asked questions
 

@@ -314,10 +314,11 @@ parser.add_argument(
     required=False,
     nargs="+",
     help="""
-            Optional, expected input tensor shape of
+            Expected input tensor shape of
             `--model_file`. It is required when use graph based
             schema. Both order and number should be consistent with `--input_nodes`. 
-            Usage: --shape 1,512 1,512
+            Given that (1,128) and (1,512) are shapes of input_1 and input_2 separately. 
+            Usage: --shape 1,128 1,512
         """)
 
 parser.add_argument(
@@ -328,8 +329,10 @@ parser.add_argument(
     required=False,
     nargs="+",
     help="""
-            Optional, input node(s) name of `--model_file`. It is required when use graph based schema. 
-            Both order and number should be consistent with `--shape`. Usage: --input_nodes input_1:0 input_2:0
+            Input node(s) name of `--model_file`. It is required when use graph based schema. 
+            Both order and number should be consistent with `--shape`. 
+            Given that both input_1 and input_2 are inputs of model. 
+            Usage: --input_nodes input_1 input_2
         """)
 
 parser.add_argument(
@@ -340,8 +343,9 @@ parser.add_argument(
     required=False,
     nargs="+",
     help="""
-            Optional, output node(s) name of `--model_file`. It is required when use graph based schema. 
-            Usage: --output_nodes output_1:0 output_2:0
+            Output node(s) name of `--model_file`. It is required when use graph based schema. 
+            Given that both output_1 and output2 are outputs of model. 
+            Usage: --output_nodes output_1 output_2
         """)
 
 parser.add_argument(
