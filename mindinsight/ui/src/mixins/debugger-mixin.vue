@@ -1440,7 +1440,6 @@ export default {
                 }
                 if (
                   !res.data.metadata.recommendation_confirmed &&
-                this.sessionId &&
                 this.metadata.state === this.state.waiting
                 ) {
                   this.recommendWatchPointDialog = true;
