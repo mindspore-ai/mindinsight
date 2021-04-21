@@ -126,7 +126,7 @@ class MemoryUsageAnalyser(BaseAnalyser):
                 file_content = json.load(f_obj)
         except (IOError, OSError, json.JSONDecodeError) as err:
             logger.error('Error occurred when read memory file: %s', err)
-            raise ProfilerIOException
+            raise ProfilerIOException()
 
         return file_content
 
