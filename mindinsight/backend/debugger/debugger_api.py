@@ -395,12 +395,12 @@ def creat_session():
 @BLUEPRINT.route("/debugger/sessions", methods=["GET"])
 def get_sessions():
     """
-    Check the cuurent active sessions.
+    Check the current active sessions.
 
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/check-sessions
     """
-    reply = _wrap_reply(SessionManager.get_instance().get_sessions)
+    reply = _wrap_reply(SessionManager.get_instance().get_train_jobs)
     return reply
 
 

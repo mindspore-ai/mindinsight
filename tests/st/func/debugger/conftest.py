@@ -68,4 +68,4 @@ def app_client():
         yield client
     finally:
         settings.ENABLE_RECOMMENDED_WATCHPOINTS = original_val
-    SessionManager.get_instance().online_session.stop()
+    SessionManager.get_instance().exit()

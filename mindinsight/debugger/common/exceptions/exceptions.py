@@ -193,7 +193,7 @@ class DebuggerConditionUnavailableError(MindInsightException):
 
 
 class DebuggerServerRunningError(MindInsightException):
-    """The condition unavailable error in debugger module."""
+    """The server running error in debugger module."""
 
     def __init__(self, msg):
         super(DebuggerServerRunningError, self).__init__(
@@ -204,7 +204,7 @@ class DebuggerServerRunningError(MindInsightException):
 
 
 class DeviceIdUnregistered(MindInsightException):
-    """The condition unavailable error in debugger module."""
+    """The error of that the device id is unregister."""
 
     def __init__(self, msg):
         super(DeviceIdUnregistered, self).__init__(
@@ -215,7 +215,7 @@ class DeviceIdUnregistered(MindInsightException):
 
 
 class DebuggerModuleNotFoundError(MindInsightException):
-    """The condition unavailable error in debugger module."""
+    """The error of that the module is not found."""
 
     def __init__(self, msg):
         super(DebuggerModuleNotFoundError, self).__init__(
@@ -226,7 +226,7 @@ class DebuggerModuleNotFoundError(MindInsightException):
 
 
 class DebuggerSessionNumOverBoundError(MindInsightException):
-    """The condition unavailable error in debugger module."""
+    """The error of that the session number is out of bound."""
 
     def __init__(self):
         super(DebuggerSessionNumOverBoundError, self).__init__(
@@ -237,11 +237,22 @@ class DebuggerSessionNumOverBoundError(MindInsightException):
 
 
 class DebuggerSessionNotFoundError(MindInsightException):
-    """The condition unavailable error in debugger module."""
+    """The error of that the session is not found."""
 
     def __init__(self, msg):
         super(DebuggerSessionNotFoundError, self).__init__(
             error=DebuggerErrors.DEBUGGER_SESSION_NOT_FOUND_ERROR,
             message=DebuggerErrorMsg.DEBUGGER_SESSION_NOT_FOUND_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
+class DebuggerSessionAlreadyExistError(MindInsightException):
+    """The error of that the session already exist."""
+
+    def __init__(self, msg):
+        super(DebuggerSessionAlreadyExistError, self).__init__(
+            error=DebuggerErrors.DEBUGGER_SESSION_ALREADY_EXIST_ERROR,
+            message=DebuggerErrorMsg.DEBUGGER_SESSION_ALREADY_EXIST_ERROR.value.format(msg),
             http_code=400
         )
