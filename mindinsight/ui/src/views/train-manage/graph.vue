@@ -575,7 +575,6 @@ export default {
       isIntoView: true,
     };
   },
-  computed: {},
   watch: {
     guide: {
       handler(newVal) {
@@ -608,6 +607,7 @@ export default {
       window.localStorage.setItem('graphShowGuide', true);
     }
 
+    this.pageKey = 'graph';
     this.trainJobID = this.$route.query.train_id;
 
     this.language = window.localStorage.getItem('milang');
@@ -786,7 +786,7 @@ export default {
         this.loading.show = false;
       });
       this.initSmallMap();
-      this.initZooming('graph');
+      this.initZooming();
       if (this.selectedNode.name) {
         this.selectNode(true);
       }
