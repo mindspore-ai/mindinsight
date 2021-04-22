@@ -85,7 +85,7 @@
     "graphUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id5",
     "dataProcessUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id6",
     "imageUrl": "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/dashboard.html#id7",
-    "sessionLimit": "离线调试器的session个数超过上线",
+    "sessionLimit": "离线调试器的session个数超过上限",
     "sessionLimitNum": "最多同时存在2个",
     "sessionLists": "目前存在的session列表",
     "deleteSessionConfirm": "此操作将删除当前session, 是否继续?",

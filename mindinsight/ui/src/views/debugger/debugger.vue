@@ -902,16 +902,17 @@ export default {
     };
   },
   components: {debuggerTensor, tree},
-  computed: {},
   mounted() {
     document.title = `${this.$t('debugger.debugger')}-MindInsight`;
     this.nodeTypes.label = this.$t('debugger.nodeType');
+    this.pageKey = 'debugger';
     if (this.trainId) {
       document.title = `${this.trainId}-${this.$t('debugger.debugger')}-MindInsight`;
       this.retrieveAll();
     } else {
       this.getSession();
     }
+    window.addEventListener('resize', this.initSvgSize, false);
   },
   watch: {
     'metadata.state': {
@@ -1232,7 +1233,7 @@ export default {
           this.svg.size.width / 2 / this.graph.size.width,
           this.svg.size.height / 2 / this.graph.size.height
       );
-      this.initZooming('debugger');
+      this.initZooming();
       this.initContextMenu();
 
       if (this.selectedNode.name) {
@@ -1786,14 +1787,20 @@ export default {
     },
     rightCollapse() {
       this.collapseTable = !this.collapseTable;
-      setTimeout(this.initSvgSize, this.resizeDelay);
+      this.initSvgSize();
     },
     initSvgSize() {
-      const svgRect = document.querySelector('#graph svg').getBoundingClientRect();
-      this.svg.size = {width: svgRect.width, height: svgRect.height, left: svgRect.left, top: svgRect.top};
+      if (this.resizeTimer) clearTimeout(this.resizeTimer);
+      this.resizeTimer = setTimeout(() => {
+        const svgRect = document.querySelector('#graph svg').getBoundingClientRect();
+        this.svg.size = {width: svgRect.width, height: svgRect.height, left: svgRect.left, top: svgRect.top};
+        this.resizeTimer = null;
+      }, this.resizeDelay);
     },
   },
-  destroyed() {},
+  destroyed() {
+    window.removeEventListener('resize', this.initSvgSize);
+  },
 };
 </script>
 <style>

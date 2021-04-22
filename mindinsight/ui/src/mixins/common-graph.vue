@@ -44,7 +44,9 @@ export default {
       nodesCountLimit: 4500, // Maximum number of sub-nodes in a namespace.
       maxChainNum: 70,
       graphContainer: null,
+      resizeTimer: null,
       resizeDelay: 500, // The delay of resize's event
+      pageKey: '',
     };
   },
   mounted() {
@@ -85,18 +87,17 @@ export default {
 
       if (target) {
         if (type === 'click') {
-          this.clickEvent(target, 'graph');
+          this.clickEvent(target);
         } else {
-          this.dblclickEvent(target, 'graph');
+          this.dblclickEvent(target);
         }
       }
     },
     /**
      * Initializing the click event
      * @param {Object} target The target of the click event
-     * @param {String} pageKey Page identification mark
      */
-    clickEvent(target, pageKey) {
+    clickEvent(target) {
       const nodeId = target.id;
       const nodeClass = target.classList.value;
       setTimeout(() => {
@@ -109,9 +110,9 @@ export default {
         this.clickScope = {};
       }, 1000);
       this.selectedNode.name = nodeId;
-      if (pageKey === 'graph') {
+      if (this.pageKey === 'graph') {
         this.selectNode(false);
-      } else if (pageKey === 'debugger') {
+      } else if (this.pageKey === 'debugger') {
         this.selectNode(false, true);
         this.contextmenu.dom.style.display = 'none';
       }
@@ -119,9 +120,8 @@ export default {
     /**
      * Initializing the click event
      * @param {Object} target The target of the click event
-     * @param {String} pageKey Page identification mark
      */
-    dblclickEvent(target, pageKey) {
+    dblclickEvent(target) {
       const nodeId = target.id;
       const nodeClass = target.classList.value;
       let name = nodeId;
@@ -157,7 +157,7 @@ export default {
         this.dealDoubleClick(name);
       } else if (this.clickScope.id) {
         this.selectedNode.name = this.clickScope.id;
-        if (pageKey === 'graph') {
+        if (this.pageKey === 'graph') {
           this.selectNode(false);
         }
       }
@@ -242,9 +242,8 @@ export default {
     },
     /**
      * Initializing the graph zoom
-     * @param {String} pageKey
      */
-    initZooming(pageKey) {
+    initZooming() {
       const minDistance = 100;
       const pointer = {start: {x: 0, y: 0}, end: {x: 0, y: 0}};
       const zoom = d3
@@ -253,7 +252,7 @@ export default {
             const event = currentEvent.sourceEvent;
             pointer.start.x = event.x;
             pointer.start.y = event.y;
-            if (pageKey === 'debugger') {
+            if (this.pageKey === 'debugger') {
               this.contextmenu.dom.style.display = 'none';
             }
           })
@@ -316,7 +315,7 @@ export default {
             `translate(${this.graph.transform.x},${this.graph.transform.y}) ` +
             `scale(${this.graph.transform.k})`;
             this.graph.dom.setAttribute('transform', tempStr);
-            if (pageKey === 'graph') {
+            if (this.pageKey === 'graph') {
               this.setInsideBoxData();
             }
           });
