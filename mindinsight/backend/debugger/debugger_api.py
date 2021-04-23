@@ -375,7 +375,7 @@ def set_recommended_watch_points(session_id):
 
 
 @BLUEPRINT.route("/debugger/sessions", methods=["POST"])
-def creat_session():
+def create_session():
     """
     Get session id if session exist, else create a session.
 
@@ -383,22 +383,22 @@ def creat_session():
         str, session id.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/debugger/get-session
+        >>> POST http://xxxx/v1/mindinsight/debugger/sessions
     """
     body = _read_post_request(request)
     summary_dir = body.get('dump_dir')
     session_type = body.get('session_type')
-    reply = _wrap_reply(SessionManager.get_instance().creat_session, session_type, summary_dir)
+    reply = _wrap_reply(SessionManager.get_instance().create_session, session_type, summary_dir)
     return reply
 
 
 @BLUEPRINT.route("/debugger/sessions", methods=["GET"])
-def get_sessions():
+def get_train_jobs():
     """
     Check the current active sessions.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/debugger/check-sessions
+        >>> POST http://xxxx/v1/mindinsight/debugger/sessions
     """
     reply = _wrap_reply(SessionManager.get_instance().get_train_jobs)
     return reply

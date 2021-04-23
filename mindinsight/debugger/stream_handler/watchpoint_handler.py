@@ -46,6 +46,10 @@ class WatchpointHandler(StreamHandlerBase):
         # whether the watchpoint list has been changed since last step
         self._outdated = False
 
+    def set_outdated(self):
+        """"Set outdated as True."""
+        self._outdated = True
+
     def put(self, value):
         """
         Put Watchpoint into watchpoint handler.
