@@ -22,7 +22,7 @@ import _thread
 from mindinsight.conf import settings
 from mindinsight.debugger.common.log import LOGGER as logger
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerSessionNumOverBoundError, \
-    DebuggerSessionNotFoundError, DebuggerSessionAlreadyExistError
+    DebuggerSessionNotFoundError, DebuggerOnlineSessionUnavailable
 from mindinsight.debugger.debugger_services.debugger_server_factory import DebuggerServerContext
 from mindinsight.debugger.debugger_session import DebuggerSession
 
@@ -45,7 +45,7 @@ class SessionManager:
         self._exiting = False
         enable_debugger = settings.ENABLE_DEBUGGER if hasattr(settings, 'ENABLE_DEBUGGER') else False
         if enable_debugger:
-            self.creat_session(self.ONLINE_TYPE)
+            self._create_online_session()
 
     @classmethod
     def get_instance(cls):
@@ -81,9 +81,36 @@ class SessionManager:
             logger.error('Debugger session %s is not found.', session_id)
             raise DebuggerSessionNotFoundError("{}".format(session_id))
 
-    def creat_session(self, session_type, train_job=None):
+    def _create_online_session(self):
+        """Create online session."""
+        with self._lock:
+            context = DebuggerServerContext(dbg_mode='online')
+            online_session = DebuggerSession(context)
+            online_session.start()
+            self.sessions[self.ONLINE_SESSION_ID] = online_session
+
+    def _create_offline_session(self, train_job):
+        """Create offline session."""
+        self._check_session_num()
+        if not isinstance(train_job, str):
+            logger.error('The train job path should be string.')
+            raise ValueError("The train job path should be string.")
+        summary_base_dir = settings.SUMMARY_BASE_DIR
+        unquote_path = unquote(train_job, errors='strict')
+        whole_path = os.path.join(summary_base_dir, unquote_path)
+        normalized_path = validate_and_normalize_path(whole_path)
+        context = DebuggerServerContext(dbg_mode='offline', train_job=train_job, dbg_dir=normalized_path)
+        session = DebuggerSession(context)
+        session.start()
+        session_id = str(self._next_session_id)
+        self.sessions[session_id] = session
+        self.train_jobs[train_job] = session_id
+        self._next_session_id += 1
+        return session_id
+
+    def create_session(self, session_type, train_job=None):
         """
-        Create session by the train job info.
+        Create the session by the train job info or session type if the session doesn't exist.
 
         Args:
             session_type (str): The session_type.
@@ -100,30 +127,16 @@ class SessionManager:
 
             if session_type == self.ONLINE_TYPE:
                 if self.ONLINE_SESSION_ID not in self.sessions:
-                    context = DebuggerServerContext(dbg_mode='online')
-                    online_session = DebuggerSession(context)
-                    online_session.start()
-                    self.sessions[self.ONLINE_SESSION_ID] = online_session
-                    return self.ONLINE_SESSION_ID
-                logger.error('Online session is already exist, cannot create online session twice.')
-                raise DebuggerSessionAlreadyExistError("online session")
+                    logger.error(
+                        'Online session is unavailable, set --enable-debugger as true/1 to enable debugger '
+                        'when start Mindinsight server.')
+                    raise DebuggerOnlineSessionUnavailable()
+                return self.ONLINE_SESSION_ID
 
             if train_job in self.train_jobs:
                 return self.train_jobs.get(train_job)
 
-            self._check_session_num()
-            summary_base_dir = settings.SUMMARY_BASE_DIR
-            unquote_path = unquote(train_job, errors='strict')
-            whole_path = os.path.join(summary_base_dir, unquote_path)
-            normalized_path = validate_and_normalize_path(whole_path)
-            context = DebuggerServerContext(dbg_mode='offline', train_job=train_job, dbg_dir=normalized_path)
-            session = DebuggerSession(context)
-            session.start()
-            session_id = str(self._next_session_id)
-            self.sessions[session_id] = session
-            self.train_jobs[train_job] = session_id
-            self._next_session_id += 1
-            return session_id
+            return self._create_offline_session(train_job)
 
     def delete_session(self, session_id):
         """Delete session by session id."""

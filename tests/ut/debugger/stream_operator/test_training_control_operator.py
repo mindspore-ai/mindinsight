@@ -73,4 +73,4 @@ class TestTrainingControlOperator:
         with mock.patch.object(MetadataHandler, 'max_step_num', 10), \
             mock.patch.object(MetadataHandler, 'debugger_type', 'offline'):
             res = self._server.control(mode=mode, params={'steps': 9})
-            assert res == {'metadata': {'enable_recheck': False, 'state': state, 'step': 9}}
+            assert res == {'metadata': {'enable_recheck': True, 'state': state, 'step': 9}}

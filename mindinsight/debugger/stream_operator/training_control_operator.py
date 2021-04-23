@@ -306,7 +306,8 @@ class TrainingControlOperator:
         self._cache_store.get_stream_handler(Streams.TENSOR).set_step(step_id)
         self._cache_store.clean_data()
         self._cache_store.clean_command()
-        metadata_stream.enable_recheck = False
+        metadata_stream.enable_recheck = True
         metadata_stream.state = ServerStatus.WAITING.value
+        self._cache_store.get_stream_handler(Streams.WATCHPOINT).set_outdated()
         log.debug("Send the Change_training_step CMD.")
         return metadata_stream.get(['state', 'enable_recheck', 'step'])

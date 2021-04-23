@@ -247,12 +247,12 @@ class DebuggerSessionNotFoundError(MindInsightException):
         )
 
 
-class DebuggerSessionAlreadyExistError(MindInsightException):
+class DebuggerOnlineSessionUnavailable(MindInsightException):
     """The error of that the session already exist."""
 
-    def __init__(self, msg):
-        super(DebuggerSessionAlreadyExistError, self).__init__(
-            error=DebuggerErrors.DEBUGGER_SESSION_ALREADY_EXIST_ERROR,
-            message=DebuggerErrorMsg.DEBUGGER_SESSION_ALREADY_EXIST_ERROR.value.format(msg),
+    def __init__(self):
+        super(DebuggerOnlineSessionUnavailable, self).__init__(
+            error=DebuggerErrors.DEBUGGER_ONLINE_SESSION_UNAVAILABLE,
+            message=DebuggerErrorMsg.DEBUGGER_ONLINE_SESSION_UNAVAILABLE.value,
             http_code=400
         )
