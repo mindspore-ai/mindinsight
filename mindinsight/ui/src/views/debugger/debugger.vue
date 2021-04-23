@@ -1212,7 +1212,7 @@ export default {
      * Initialization method executed after the graph rendering is complete
      */
     startApp() {
-      this.initSvgSize();
+      this.initSvgSize(true);
       this.graph.dom = document.querySelector(`#graph #graph0`);
       const graphBox = this.graph.dom.getBBox();
       this.graph.size = {width: graphBox.width, height: graphBox.height};
@@ -1789,13 +1789,18 @@ export default {
       this.collapseTable = !this.collapseTable;
       this.initSvgSize();
     },
-    initSvgSize() {
-      if (this.resizeTimer) clearTimeout(this.resizeTimer);
-      this.resizeTimer = setTimeout(() => {
+    initSvgSize(immediate = false) {
+      const setData = () => {
         const svgRect = document.querySelector('#graph svg').getBoundingClientRect();
         this.svg.size = {width: svgRect.width, height: svgRect.height, left: svgRect.left, top: svgRect.top};
         this.resizeTimer = null;
-      }, this.resizeDelay);
+      };
+      if (!immediate) {
+        if (this.resizeTimer) clearTimeout(this.resizeTimer);
+        this.resizeTimer = setTimeout(setData, this.resizeDelay);
+      } else {
+        setData();
+      }
     },
   },
   destroyed() {
