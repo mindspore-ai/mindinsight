@@ -15,13 +15,22 @@
 """Mapper module."""
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
+# The segmentation of BatchNorm's dim attribute.
+DIM_SEGMENT = 2
+
 
 class BatchNormMapper(ONNXToMindSporeMapper):
     """BatchNorm mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        dim = len(kwargs['params']['output_shape']) - 2
+        output_shape = len(kwargs['params']['output_shape'])
+        if output_shape == DIM_SEGMENT:
+            dim = 1
+        elif output_shape > DIM_SEGMENT:
+            dim = len(kwargs['params']['output_shape']) - 2
+        else:
+            return None
         return f"nn.BatchNorm{dim}d"
 
     @staticmethod
