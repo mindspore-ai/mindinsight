@@ -59,6 +59,9 @@ export default {
       RequestService.control(params, this.sessionId).then(
           (res) => {
             this.queryTensorHistory();
+            if (this.radio1 === 'hit') {
+              this.searchWatchpointHits(true);
+            }
           },
           (err) => {
             this.showErrorMsg(err);
@@ -585,26 +588,28 @@ export default {
      * Update tensor history by current selected node
      */
     queryTensorHistory() {
-      const path = this.selectedNode.name.split('^');
-      const type = this.allGraphData[path[0].replace('_unfold', '')].type;
-      const ignoreType = ['name_scope', 'aggregation_scope'];
-      if (
-        !this.selectedNode.name.includes('more...') &&
-        !ignoreType.includes(type)
-      ) {
-        const name = path[0].replace('_unfold', '');
-        if (this.graphFiles.value === this.$t('debugger.all')) {
-          this.retrieveTensorHistory(
-              {name: name.replace(`${name.split('/')[0]}/`, '')},
-              name.split('/')[0],
-          );
-        } else {
-          this.retrieveTensorHistory(
-              {
-                name,
-              },
-              this.graphFiles.value,
-          );
+      if (this.selectedNode.name) {
+        const path = this.selectedNode.name.split('^');
+        const type = this.allGraphData[path[0].replace('_unfold', '')].type;
+        const ignoreType = ['name_scope', 'aggregation_scope'];
+        if (
+          !this.selectedNode.name.includes('more...') &&
+          !ignoreType.includes(type)
+        ) {
+          const name = path[0].replace('_unfold', '');
+          if (this.graphFiles.value === this.$t('debugger.all')) {
+            this.retrieveTensorHistory(
+                {name: name.replace(`${name.split('/')[0]}/`, '')},
+                name.split('/')[0],
+            );
+          } else {
+            this.retrieveTensorHistory(
+                {
+                  name,
+                },
+                this.graphFiles.value,
+            );
+          }
         }
       }
     },
