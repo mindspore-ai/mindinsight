@@ -358,6 +358,10 @@ from google.protobuf.internal import api_implementation
 print(api_implementation.Type())
 ```
 
+Q4. 使用.pb文件进行转换时，已确定`model_file`，`shape`，`input_nodes`，`output_nodes`均无误，并且环境中的依赖库已经正常安装，但是仍然报异常代码1000001，可能是什么原因？
+
+> 答：请检查生成该.pb文件所使用的TensorFlow版本不高于用于转换时安装的TensorFlow版本，避免由于旧版本TensorFlow无法解析新版本生成的.pb文件，而导致的模型文件解析失败。
+
 ## 附录
 
 ### TensorFlow Pb模型导出

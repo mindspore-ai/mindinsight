@@ -28,7 +28,8 @@ class TFGraphParser(GraphParser):
     @classmethod
     @ModelLoadingError.check_except(
         "Error occurs when loading model with given params, please check `--shape`, "
-        "`--input_nodes`, `--output_nodes`, `--model_file` or runtime environment integrity."
+        "`--input_nodes`, `--output_nodes`, `--model_file` or runtime environment integrity(please make sure "
+        "TensorFlow in current environment is consistent with the one used to export pb file). "
     )
     def parse(cls, model_path: str, **kwargs):
         """
