@@ -624,8 +624,8 @@
       "activation": "激活节点"
     },
     "recheckSuccess": "重新检查成功",
-    "curStatisticsLabel": "当前step：",
-    "preStatisticsLabel": "上一个step：",
+    "curStatisticsLabel": "当前轮次：",
+    "preStatisticsLabel": "上一个轮次：",
     "diffStatisticsLabel": "对比结果：",
     "graphFile": "图文件",
     "tensorDiagram": "张量关系图",
@@ -803,14 +803,14 @@
       ]
     },
     "noAdvice": "没有可用的建议",
-    "curStep": "显示当前step",
-    "preStep": "显示上一step",
+    "curStep": "显示当前轮次",
+    "preStep": "显示上一轮次",
     "compareResult": "显示对比结果",
     "recommendTip": "使用推荐监测点?",
     "recommendDetail": "对张量全为零、梯度消失、权重更新过大等现象使用推荐监测点。",
     "use": "使用",
     "notUse": "不使用",
-    "outdateTip": "监测点列表发生修改，结果可能过时，请重新检查或执行后续step训练。",
+    "outdateTip": "监测点列表或者当前轮次发生修改，结果可能过时，请重新检查或执行后续轮次训练。",
     "versionConflictTip": "MindSpore和MindInsight版本不匹配，MindSpore版本：{msv}；MindInsight版本：{miv}；",
     "checkTips": {
       "nan": "张量中含有NaN，",

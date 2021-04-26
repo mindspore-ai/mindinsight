@@ -678,7 +678,7 @@
       "param": "Threshold",
       "max_min_lt": "MAX-MIN <",
       "max_min_gt": "MAX-MIN >",
-      "outdateTip": "When a watchpoint list is modified, the result may be outdated. Check again or perform subsequent step training. "
+      "outdateTip": "When a watchpoint list or the current step is modified, the result may be outdated. Check again or perform subsequent step training. "
     },
     "tensorTuningAdvice": {
       "operator_real_data_validation": [
