@@ -47,7 +47,7 @@ class TestTimelineAnalyser:
             filename.format(self.device_id)
         )
 
-        result = self._analyser.get_display_timeline(device_target)
+        result = self._analyser.get_display_timeline(device_target, 0)
         compare_result_with_file(result, file_path)
 
     @pytest.mark.parametrize(

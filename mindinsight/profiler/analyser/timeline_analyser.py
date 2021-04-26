@@ -43,7 +43,7 @@ class TimelineAnalyser(BaseAnalyser):
             filter_condition (dict): The filter condition.
         """
 
-    def get_display_timeline(self, device_type):
+    def get_display_timeline(self, device_type, scope_name_num):
         """
         Get timeline data for UI display.
 
@@ -67,6 +67,11 @@ class TimelineAnalyser(BaseAnalyser):
             try:
                 with open(file_path, 'r') as f_obj:
                     timeline = json.load(f_obj)
+                    for idx, time_item in enumerate(timeline):
+                        if time_item["tid"] == "Name Scope" and \
+                                                time_item["scope_level"] >= scope_name_num:
+                            timeline[idx] = None
+                    timeline = list(filter(lambda x: x, timeline))
             except (IOError, OSError, json.JSONDecodeError) as err:
                 logger.error('Error occurred when read timeline display file: %s', err)
                 raise ProfilerIOException

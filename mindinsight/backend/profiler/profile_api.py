@@ -489,13 +489,14 @@ def get_timeline_detail():
     device_id = request.args.get("device_id", default='0')
     _ = to_int(device_id, 'device_id')
     device_type = request.args.get("device_type", default='ascend')
+    scope_name_num = request.args.get("scope_name_num", default='0')
     if device_type not in ['gpu', 'ascend']:
         logger.info("Invalid device_type, device_type should be gpu or ascend.")
         raise ParamValueError("Invalid device_type.")
 
     analyser = AnalyserFactory.instance().get_analyser(
         'timeline', profiler_dir_abs, device_id)
-    timeline = analyser.get_display_timeline(device_type)
+    timeline = analyser.get_display_timeline(device_type, scope_name_num)
 
     return jsonify(timeline)
 

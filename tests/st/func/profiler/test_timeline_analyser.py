@@ -62,10 +62,10 @@ class TestTimelineAnalyser:
             self.ascend_display_filename.format(self.device_id)
         )
 
-        result = self._analyser.get_display_timeline("gpu")
+        result = self._analyser.get_display_timeline("gpu", 0)
         compare_result_with_file(result, gpu_file_path)
 
-        result = self._analyser.get_display_timeline("ascend")
+        result = self._analyser.get_display_timeline("ascend", 0)
         compare_result_with_file(result, ascend_file_path)
 
     @pytest.mark.level0
@@ -103,4 +103,4 @@ class TestTimelineAnalyser:
         analyser = AnalyserFactory.instance().get_analyser(
             'timeline', self.profiler, device_id)
         analyser.get_timeline_summary("gpu")
-        analyser.get_display_timeline("gpu")
+        analyser.get_display_timeline("gpu", 0)

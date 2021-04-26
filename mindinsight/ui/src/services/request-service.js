@@ -247,7 +247,7 @@ export default {
       },
     });
   },
-  queryTimlineInfo(params) {
+  queryTimelineInfo(params) {
     return axios({
       method: 'get',
       url: 'v1/mindinsight/profile/timeline-summary',

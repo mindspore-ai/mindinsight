@@ -436,7 +436,8 @@
       "title1": "时间线功能可以帮您对训练过程进行分析，它可以展示：",
       "content11": "- 算子分配到哪个设备 (AI CPU/AI Core) 执行；",
       "content12": "- MindSpore对该网络的流切分策略；",
-      "content13": "- 算子在Device上的执行序列和执行时长。",
+      "content13": "- 算子在Device上的执行序列和执行时长；",
+      "content14": "- 算子ScopeName信息，例如算子Conv2D-op11的全名为：Default/network/lenet5/Conv2D-op11，该算子的第一层ScopeName为Default、第二层为network。",
       "title2": "如何查看时间线：",
       "content21": {
         "part1": "要查看时间线的详细信息，您可以点击 \"",
@@ -519,7 +520,8 @@
       "fpStart": "前向",
       "bpEnd": "后向"
     },
-    "isHeterogeneous":"暂不支持异构训练场景"
+    "isHeterogeneous":"暂不支持异构训练场景",
+    "scopeNameNum":"展示算子ScopeName层数: "
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
