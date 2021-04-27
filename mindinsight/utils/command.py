@@ -14,8 +14,9 @@
 # ============================================================================
 """Command module."""
 
-import sys
 import os
+import sys
+import stat
 import argparse
 from importlib import import_module
 
@@ -91,10 +92,8 @@ def main():
         console.error('Python version should be at least 3.7')
         sys.exit(1)
 
-    permissions = os.R_OK | os.W_OK | os.X_OK
-
     # set umask to 0o077
-    os.umask(permissions << 3 | permissions)
+    os.umask(stat.S_IRWXG | stat.S_IRWXO)
 
     parser = argparse.ArgumentParser(
                 prog='mindinsight',
