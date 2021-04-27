@@ -54,6 +54,14 @@ MindInsight为MindSpore提供了简单易用的调优调试能力。在训练过
 
 #### pip安装
 
+安装PyPI上的版本:
+
+```bash
+pip install mindinsight
+```
+
+安装自定义版本:
+
 ```bash
 pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
