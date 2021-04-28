@@ -55,6 +55,14 @@ You can install MindInsight either by pip or by source code.
 
 #### Installation by pip
 
+Install from PyPI:
+
+```bash
+pip install mindinsight
+```
+
+Install with customized version:
+
 ```bash
 pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
