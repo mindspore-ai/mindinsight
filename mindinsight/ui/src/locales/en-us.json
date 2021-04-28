@@ -314,7 +314,7 @@
       "desc": "How Do I Use Profiler for Profiling?",
       "anchor": ["desc"],
       "url": [
-        "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/performance_profiling.html"
+        "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/performance_profiling_ascend.html"
       ],
       "gpuUrl": [
         "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/performance_profiling_gpu.html"
@@ -679,8 +679,7 @@
       "abs_mean_update_ratio_lt": "Ratio of mean update <",
       "param": "Threshold",
       "max_min_lt": "MAX-MIN <",
-      "max_min_gt": "MAX-MIN >",
-      "outdateTip": "When a watchpoint list or the current step is modified, the result may be outdated. Check again or perform subsequent step training. "
+      "max_min_gt": "MAX-MIN >"
     },
     "tensorTuningAdvice": {
       "operator_real_data_validation": [
@@ -818,6 +817,7 @@
     "recommendDetail": "The recommended watchpoints check zero tensors, gradient disappearances, and update weight above threshold.",
     "use": "Yes",
     "notUse": "No",
+    "outdateTip": "When a watchpoint list or the current step is modified, the result may be outdated. Check again or perform subsequent step training. ",
     "versionConflictTip": "MindSpore and MindInsight versions do not match. MindSpore version: {msv}; MindInsight version: {miv}",
     "checkTips": {
       "nan": "A tensor contains NaN, ",

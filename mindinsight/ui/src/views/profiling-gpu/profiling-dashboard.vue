@@ -826,7 +826,10 @@ export default {
       const second = dealNumber(date.getSeconds());
       const millisecond = date.getMilliseconds();
       const timestamp = `${year}${mouth}${day}${hour}${minute}${second}${millisecond}`;
-      return `timeline_${this.trainingJobId}_${this.currentCard}_${timestamp}.json`;
+      return (
+        `timeline_${this.trainingJobId}_${this.currentCard}` +
+        `_ScopeNumber=${this.timelineInfo.scopeNameNum}_${timestamp}.json`
+      );
     },
     /**
      * Keep the number with n decimal places.
@@ -1255,6 +1258,7 @@ export default {
   float: left;
   font-weight: bold;
   font-size: 18px;
+  max-width: 300px;
 }
 .pro-router-wrap > div .title-wrap .tip-icon {
   float: right;
@@ -1508,7 +1512,7 @@ export default {
   width: 100px;
 }
 .pro-router-wrap .op-time-content {
-  height: calc(100% - 54px);
+  height: calc(100% - 72px);
   overflow: auto;
 }
 .pro-router-wrap .pie-chart {
