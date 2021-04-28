@@ -154,8 +154,7 @@ def init(workspace='', config='', **kwargs):
             raise FileSystemPermissionError('Workspace {} not allowed to access'.format(workspace))
     else:
         try:
-            mode = permissions << 6
-            os.makedirs(settings.WORKSPACE, mode=mode, exist_ok=True)
+            os.makedirs(settings.WORKSPACE, mode=stat.S_IRWXU, exist_ok=True)
         except OSError:
             # race condition or priority problem
             raise FileSystemPermissionError('Workspace {} not available'.format(workspace))
