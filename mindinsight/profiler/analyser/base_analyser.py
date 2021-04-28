@@ -253,3 +253,12 @@ class BaseAnalyser(ABC):
             'object': self._result,
             'size': self._size
         }
+
+    @staticmethod
+    def _format_float_data(float_data):
+        """Format the float data."""
+        if float_data < 1:
+            float_data = round(float_data, 6)
+        else:
+            float_data = round(float_data, 3)
+        return float_data

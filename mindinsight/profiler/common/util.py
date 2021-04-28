@@ -42,7 +42,11 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
 
     device_id_list = set()
     gpu_device_id_list = set()
+
+    depth = 0
     for _, _, filenames in os.walk(profiler_dir):
+        if depth == 1:
+            break
         for filename in filenames:
             if filename.startswith("step_trace_raw"):
                 items = filename.split("_")
@@ -57,6 +61,7 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
                 device_id_list.add(device_num)
             elif device_num.isdigit() and '_'.join(items[:-1]) in gpu_profiler_file_prefix:
                 gpu_device_id_list.add(device_num)
+        depth += 1
 
     if device_id_list:
         result_list = sorted(list(device_id_list))

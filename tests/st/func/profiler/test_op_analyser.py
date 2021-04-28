@@ -31,7 +31,7 @@ OP_GATHER_V2_INFO = {
     ],
     'object': [
         [
-            'GatherV2-op55', 'GatherV2', 42.220212142857136, 'Default',
+            'GatherV2-op55', 'GatherV2', 42.220, 'Default',
             'Default/network-TrainStepWrap/network-VirtualDatasetCellTriple/'
             '_backbone-NetWithLossClass/network-WideDeepModel/GatherV2-op55',
             {
@@ -53,7 +53,7 @@ OP_GATHER_V2_INFO = {
             }
         ],
         [
-            'GatherV2-op33', 'GatherV2', 0.9352293333333332, 'Default',
+            'GatherV2-op33', 'GatherV2', 0.935229, 'Default',
             'Default/network-TrainStepWrap/network-VirtualDatasetCellTriple/'
             '_backbone-NetWithLossClass/network-WideDeepModel/GatherV2-op33',
             {
@@ -107,15 +107,15 @@ class TestOpAnalyser:
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
-                ['UnsortedSegmentSum', 44.607826, 2, 35.28],
-                ['GatherV2', 43.155441, 2, 34.13],
-                ['Slice', 20.376315, 16, 16.12],
-                ['Concat', 5.808454, 4, 4.59],
-                ['Split', 2.714277, 2, 2.15],
-                ['MatMul', 1.936681, 15, 1.53],
-                ['Mul', 1.902949, 32, 1.51],
-                ['StridedSliceGrad', 1.506834, 2, 1.19],
-                ['TransData', 1.115158, 30, 0.88],
+                ['UnsortedSegmentSum', 44.608, 2, 35.28],
+                ['GatherV2', 43.155, 2, 34.13],
+                ['Slice', 20.376, 16, 16.12],
+                ['Concat', 5.808, 4, 4.59],
+                ['Split', 2.714, 2, 2.15],
+                ['MatMul', 1.937, 15, 1.53],
+                ['Mul', 1.903, 32, 1.51],
+                ['StridedSliceGrad', 1.507, 2, 1.19],
+                ['TransData', 1.115, 30, 0.88],
                 ['ReluGrad', 0.854069, 5, 0.68],
                 ['Cast', 0.484685, 15, 0.38],
                 ['ReLU', 0.483282, 5, 0.38],
@@ -159,8 +159,8 @@ class TestOpAnalyser:
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
-                ['MatMul', 1.936681, 15, 1.53],
-                ['Mul', 1.902949, 32, 1.51]
+                ['MatMul', 1.937, 15, 1.53],
+                ['Mul', 1.903, 32, 1.51]
             ],
             'size': 2
         }
