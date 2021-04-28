@@ -24,7 +24,7 @@ from mindinsight.debugger.common.utils import DumpSettings
 class DataLoader:
     """The DataLoader object provides interface to load graphs and device information from base_dir."""
     def __init__(self, base_dir):
-        self._debugger_base_dir = base_dir
+        self._debugger_base_dir = os.path.realpath(base_dir)
         self._graph_protos = []
         self._device_info = {}
         self._step_num = {}
@@ -46,7 +46,7 @@ class DataLoader:
             if dump_config.get(DumpSettings.E2E_DUMP_SETTINGS.value) and \
                     dump_config[DumpSettings.E2E_DUMP_SETTINGS.value]['enable']:
                 self._is_sync = True
-                self._net_dir = os.path.join(self._debugger_base_dir, self._net_name)
+                self._net_dir = os.path.realpath(os.path.join(self._debugger_base_dir, self._net_name))
             elif dump_config.get(DumpSettings.ASYNC_DUMP_SETTINGS.value) and \
                     dump_config[DumpSettings.ASYNC_DUMP_SETTINGS.value]['enable']:
                 self._is_sync = False
