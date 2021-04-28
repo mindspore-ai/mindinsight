@@ -102,3 +102,10 @@ class OptimizerErrors(Enum):
     OPTIMIZER_TERMINATE = 4
     CONFIG_PARAM_ERROR = 5
     HYPER_CONFIG_ENV_ERROR = 6
+
+
+class GraphDomainErrors(Enum):
+    """Enum definition for graph domain errors."""
+    UNKNOWN_DATA_TYPE_ERROR = 1
+    TUPLE_GETITEM_INDEX_ERROR = 2
+    UNKNOWN_TENSOR_ERROR = 3
