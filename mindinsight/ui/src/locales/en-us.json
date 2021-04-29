@@ -85,11 +85,11 @@
     "graphUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#computational-graph-visualization",
     "dataProcessUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#dataset-graph-visualization",
     "imageUrl": "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/dashboard.html#image-visualization",
-    "sessionLimit": "The number of sessions of the offline debugger exceeds the number of online sessions",
-    "sessionLimitNum": "At most 2 exist at the same time",
-    "sessionLists": "List of currently existing sessions",
-    "deleteSessionConfirm": "This operation will delete the current session, do you want to continue?",
-    "deleteSessionSuccess": "Delete session successfully!"
+    "sessionLimit": "The number of offline debugger sessions exceeds the upper limit.",
+    "sessionLimitNum": "A maximum of two sessions are allowed.",
+    "sessionLists": "Existing Sessions List",
+    "deleteSessionConfirm": "The session will be deleted. Are you sure you want to continue?",
+    "deleteSessionSuccess": "Session deleted."
   },
   "modelTraceback": {
     "summaryPath": "Summary Path",
@@ -966,6 +966,6 @@
     "5054B184": "The operation is too fast, the backend service has been suspended.",
     "5054B189": "Do not set the value repeatedly.",
     "5054B083": "Failed to create the watchpoint. Do not use invalid rules.",
-    "5054B202": "The debugger offline server module was not found"
+    "5054B202": "The debugger offline server module is not found"
   }
 }

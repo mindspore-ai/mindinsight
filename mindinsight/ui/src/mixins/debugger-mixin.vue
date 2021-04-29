@@ -26,6 +26,10 @@ export default {
   },
   methods: {
     editStep() {
+      if (this.metadata.state === this.state.running ||
+          this.metadata.state === this.state.sending) {
+        return;
+      }
       this.isShowInp = true;
       this.newStep = this.metadata.step;
     },

@@ -470,7 +470,7 @@ export default {
         this.formateWatchpointParams(item.params);
         param = item.params.map((i) => i.content).join('; ');
       }
-      return `${this.$parent.transCondition(item.condition)} (${param})`;
+      return `${this.$parent.transCondition(item.condition)}${param ? ` (${param})` : ''}`;
     },
     packageData() {
       let nodeStr = '';

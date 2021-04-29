@@ -210,6 +210,8 @@ limitations under the License.
                        v-if="item.selected"
                        @click.stop="showOrigin()"></i>
                     <i class="el-icon-close icon"
+                       :class="{disabled:metadata.state === state.running ||
+                        metadata.state === state.sending}"
                        v-if="item.selected"
                        @click.stop="deleteWatchpoint(item)"></i>
                   </div>
@@ -353,6 +355,7 @@ limitations under the License.
           <i class="el-icon-time"></i>
         </el-tooltip>
         <i class="el-icon-edit"
+           :class="{disabled:metadata.state === state.running || metadata.state === state.sending}"
            v-if="trainId && !isShowInp"
            :title="$t('debugger.inpStepTip',{total_step_num:metadata.total_step_num})"
            @click="editStep"></i>
@@ -1231,7 +1234,7 @@ export default {
 
       this.graph.minScale = Math.min(
           this.svg.size.width / 2 / this.graph.size.width,
-          this.svg.size.height / 2 / this.graph.size.height
+          this.svg.size.height / 2 / this.graph.size.height,
       );
       this.initZooming();
       this.initContextMenu();
@@ -1985,6 +1988,19 @@ export default {
 .deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name.selected .el-icon-close {
   right: 10px;
 }
+.deb-wrap
+  .left-wrap
+  .left
+  .content
+  .watch-point-wrap
+  .content-wrap
+  .list-wrap
+  .list
+  .name.selected
+  .el-icon-close.disabled {
+  cursor: not-allowed;
+  color: #adb0b8;
+}
 .deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name.selected .el-icon-check {
   right: 30px;
 }
@@ -2149,6 +2165,10 @@ export default {
 }
 .deb-wrap .right .header .el-icon-edit {
   margin-left: 5px;
+}
+.deb-wrap .right .header .el-icon-edit.disabled::before {
+  cursor: not-allowed;
+  color: #adb0b8;
 }
 .deb-wrap .right .header i {
   font-size: 18px;
