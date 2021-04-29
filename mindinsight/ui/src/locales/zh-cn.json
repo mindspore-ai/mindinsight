@@ -313,7 +313,7 @@
       "desc": "如何使用Profiler进行性能分析",
       "anchor": ["desc"],
       "url": [
-        "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/performance_profiling.html"
+        "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/performance_profiling_ascend.html"
       ],
       "gpuUrl": [
         "https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/performance_profiling_gpu.html"
