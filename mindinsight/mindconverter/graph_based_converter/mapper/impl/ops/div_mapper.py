@@ -49,6 +49,15 @@ class DivMapper(ONNXToMindSporeMapper):
         weights = kwargs.get("weights")
         trainable_params = kwargs.get("trainable_params", dict())
         if not weights:
+            variable_slot = "var_0"
+            construct_template = \
+                f"opt_{{{variable_slot}}} = {op}()({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}) "
+            template = {
+                variable_slot: {
+                    TemplateKeywords.INIT.value: [],
+                    TemplateKeywords.CONSTRUCT.value: [construct_template]
+                }
+            }
             return template, exchange_msg, outputs_list, outputs_mapping
 
         tensor = DivMapper._find_val_by_index(0, weights)
@@ -57,7 +66,6 @@ class DivMapper(ONNXToMindSporeMapper):
         w_location = DivMapper._find_location_by_index(0, weights)
 
         variable_slot = "var_0"
-        init_template = f"self.{{{variable_slot}}} = {op}()"
         inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
         if w_location != -1:
             inputs_in_construct.insert(w_location, f"self.{{{variable_slot}}}_w")
@@ -72,9 +80,8 @@ class DivMapper(ONNXToMindSporeMapper):
             args["w_value"] = tensor.tolist()
             init_tensor = f"self.{{{variable_slot}}}_w = {{w_value}}"
 
-        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
-                             f"({', '.join(inputs_in_construct)})"
-        template = reset_init_or_construct(template, variable_slot, [init_template, init_tensor],
+        construct_template = f"opt_{{{variable_slot}}} = {' / '.join(inputs_in_construct)}"
+        template = reset_init_or_construct(template, variable_slot, [init_tensor],
                                            TemplateKeywords.INIT.value)
         template = reset_init_or_construct(template, variable_slot, [construct_template],
                                            TemplateKeywords.CONSTRUCT.value)
