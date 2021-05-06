@@ -387,13 +387,13 @@ def cli_entry():
     if args.report is None:
         args.report = args.output
     os.makedirs(args.report, mode=mode, exist_ok=True)
-    _run(args.in_file, args.model_file,
-         args.shape,
-         args.input_nodes, args.output_nodes,
-         args.output, args.report)
+    run(args.in_file, args.model_file,
+        args.shape,
+        args.input_nodes, args.output_nodes,
+        args.output, args.report)
 
 
-def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report):
+def run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report):
     """
     Run converter command.
 
