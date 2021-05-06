@@ -118,7 +118,7 @@ class DebuggerOfflineManager:
         """Get dbg service module from MindSpore."""
         try:
             dbg_services_module = import_module('mindspore.offline_debug.dbg_services')
-        except ModuleNotFoundError as err:
+        except (ModuleNotFoundError, ImportError) as err:
             log.error("Failed to find module dbg_services. %s", err)
             raise DebuggerModuleNotFoundError("dbg_services")
         return dbg_services_module
