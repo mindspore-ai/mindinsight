@@ -352,7 +352,7 @@ class ModuleStruct:
         if num_output == 1:  # single output
             left = [f"{self.ms_opt_var_name}"]
         else:
-            left = [f"{self.ms_opt_var_name}_{num}" for num in range(num_output)]
+            left = [f"{base_out.opt_var_name}" for base_out in self.outputs_manager.return_base_output]
 
         inputs = []
         # Update self's outputs mgr

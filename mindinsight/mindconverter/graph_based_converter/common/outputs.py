@@ -157,6 +157,11 @@ class ModuleOutputManager(BaseOutputManager):
         """Return the number of outputs to be returned."""
         return self._return_list_counter
 
+    @property
+    def return_base_output(self):
+        """Return base output."""
+        return self._base_output_dict.values()
+
     @return_num.setter
     def return_num(self, num: int):
         """Set the number of outputs to be returned."""
