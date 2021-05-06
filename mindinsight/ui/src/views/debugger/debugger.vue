@@ -289,6 +289,7 @@ limitations under the License.
                         placement="top-start">
               <el-input v-model="step"
                         :placeholder="$t('debugger.inputStep')"
+                        :disabled="metadata.step === metadata.total_step_num && !!trainId"
                         @input="stepChange"
                         @keyup.native.enter="control(0)">
               </el-input>
@@ -296,13 +297,15 @@ limitations under the License.
             <el-button type="primary"
                        size="mini"
                        class="custom-btn green"
-                       :disabled="!(step && metadata.state === state.waiting)"
+                       :disabled="!(step && metadata.state === state.waiting)
+                       || (metadata.step === metadata.total_step_num && !!trainId)"
                        @click="control(0)">{{ $t('public.sure') }}</el-button>
           </div>
           <div class="btn-two">
             <el-button size="mini"
                        class="custom-btn white"
-                       :disabled="metadata.state !== state.waiting"
+                       :disabled="metadata.state !== state.waiting
+                       || (metadata.step === metadata.total_step_num && !!trainId)"
                        @click="control(1)">{{$t('debugger.continue')}}</el-button>
             <el-button size="mini"
                        class="custom-btn white"
