@@ -362,6 +362,10 @@ Q4. 使用.pb文件进行转换时，已确定`model_file`，`shape`，`input_no
 
 > 答：请检查生成该.pb文件所使用的TensorFlow版本不高于用于转换时安装的TensorFlow版本，避免由于旧版本TensorFlow无法解析新版本生成的.pb文件，而导致的模型文件解析失败。
 
+Q5. 出现报错信息`[ERROR] MINDCONVERTER: [BaseConverterError] code: 0000000, msg: {python_home}/lib/libgomp.so.1: cannot allocate memory in static TLS block`时，应该怎么处理？
+
+> 答：该问题通常是由于环境变量导入不正确导致的。建议用户设置`export LD_PRELOAD={python_home}/lib/libgomp.so.1.0.0`这一环境变量，然后重新尝试进行转换。
+
 ## 附录
 
 ### TensorFlow Pb模型导出
