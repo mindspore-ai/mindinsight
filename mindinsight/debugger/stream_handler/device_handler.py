@@ -116,6 +116,10 @@ class DeviceHandler(StreamHandlerBase):
         """
         for rank_id, graph_info in graphs.items():
             graph_names = list(graph_info)
+            if len(graph_names) > 1:
+                # if more than one graphs in a device, sort them
+                # by the number following the last "_" in the graph_name
+                graph_names = sorted(graph_names, key=lambda x: x.split("_")[-1])
             self._rank_info[rank_id].graph_names = graph_names
 
     def get(self, filter_condition=None):
