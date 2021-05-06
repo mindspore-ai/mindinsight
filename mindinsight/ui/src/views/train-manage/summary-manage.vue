@@ -70,7 +70,7 @@ limitations under the License.
                              :label="$t('summaryManage.updateTime')"
                              show-overflow-tooltip>
             </el-table-column>
-            <!--operate   -->
+            <!-- operate -->
             <el-table-column prop="operate"
                              :label="$t('summaryManage.operation')"
                              class-name="operate-container"
@@ -121,7 +121,7 @@ limitations under the License.
         </div>
 
       </div>
-      <!--   outer Page   -->
+      <!-- outer Page -->
       <div class="pagination-content">
         <el-pagination @current-change="currentPageChange"
                        @size-change="currentPagesizeChange"
@@ -412,9 +412,9 @@ export default {
       if (row.profiler_type === 'gpu') {
         router = '/profiling-gpu';
       } else if (row.profiler_type === 'cluster_ascend') {
-        router = '/profiling-cluster';
+        router = '/cluster-dashboard';
       } else if (row.profiler_type === 'cluster_gpu') {
-        router = '/profiling-gpu-cluster';
+        router = '/cluster-dashboard';
       }
       this.$router.push({
         path: router,

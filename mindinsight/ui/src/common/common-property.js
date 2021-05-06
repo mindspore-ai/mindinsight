@@ -145,4 +145,10 @@ export default {
     '.Batch > polygon { stroke: #de504e; fill: #ffbcba; }' +
     '.edge path { stroke: rgb(167, 167, 167); }' +
     '.edge polygon { fill: rgb(167, 167, 167); stroke: rgb(167, 167, 167); }</style>',
+  clusterHeatmapDashboardColorArr: [
+    '#fff2d0', '#fbeeb2', '#f8eb94', '#c1e891', '#8ae58f', '#64d4ab', '#3fc3c8', '#36afc2', '#2d9cbc', '#1e74a0',
+  ],
+  clusterHeatmapColorArr: [
+    '#fff2d0', '#f8eb94', '#8ae58f', '#3fc3c8', '#2d9cbc', '#104d85',
+  ],
 };

@@ -146,12 +146,16 @@ export default new Router({
       ],
     },
     {
-      path: '/profiling-cluster',
-      component: () => import('./views/profiling/profiling-cluster.vue'),
+      path: '/cluster-dashboard',
+      component: () => import('./views/profiling/cluster-dashboard.vue'),
     },
     {
-      path: '/profiling-gpu-cluster',
-      component: () => import('./views/profiling/profiling-cluster.vue'),
+      path: '/profiling-performance',
+      component: () => import('./views/profiling/profiling-performance.vue'),
+    },
+    {
+      path: '/memory-heatmap',
+      component: () => import('./views/profiling/memory-heatmap.vue'),
     },
     {
       path: '/debugger',
