@@ -438,8 +438,10 @@ def greedy_match(topo_order, user_defined_ptn):
     """
     increment_idx = 0
     prev_path = None
+    merged_md_name_recorder = dict()
     for md_name, ptn_items in user_defined_ptn.items():
-        ptn = Pattern(",".join(ptn_items), len(ptn_items), -1, -1, ptn_items)
+        norm_ptn_items = [merged_md_name_recorder.get(item, item) for item in ptn_items]
+        ptn = Pattern(",".join(norm_ptn_items), len(norm_ptn_items), -1, -1, norm_ptn_items)
         ptn.known_module_name = md_name
         topo_order_aft_rpl = topo_order[:] if prev_path is None else prev_path.topo_order_aft_repl
         repl_path = ReplacePath(ptn, topo_order_aft_rpl, prev_path=prev_path)
@@ -447,6 +449,7 @@ def greedy_match(topo_order, user_defined_ptn):
         if module_name is not None:
             increment_idx += 1
             prev_path = repl_path
+            merged_md_name_recorder[md_name] = module_name
     return prev_path
 
 

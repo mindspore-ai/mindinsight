@@ -19,7 +19,8 @@ MindConverter is a migration tool to transform the model scripts from PyTorch to
 Users can migrate their PyTorch models to Mindspore rapidly with minor changes according to the conversion report.
 """
 
-__all__ = ["user_defined_pattern", "main_entry"]
+__all__ = ["register_pattern", "convert", "query_graph"]
 
-from mindinsight.mindconverter.cli import run as main_entry
-from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.built_in_pattern import user_defined_pattern
+from mindinsight.mindconverter.cli import convert, query_graph
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.built_in_pattern import \
+    user_defined_pattern as register_pattern

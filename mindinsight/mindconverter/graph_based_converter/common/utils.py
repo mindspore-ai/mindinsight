@@ -13,9 +13,9 @@
 # limitations under the License.
 # ============================================================================
 """Define common utils."""
-import json
 import os
 import stat
+import json
 import uuid
 from importlib import import_module
 from importlib.util import find_spec
@@ -27,7 +27,8 @@ from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
     CheckPointGenerationError, WeightMapGenerationError, ModelLoadingError, OnnxModelSaveError
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, FrameworkType, \
-    TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION, ONNX_MODEL_SUFFIX, DTYPE_MAP
+    TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION, ONNX_MODEL_SUFFIX, DTYPE_MAP, WRITE_FLAGS, RW_MODE_FOR_OWNER, \
+    RWX_MODE_FOR_OWNER
 
 
 def is_converted(operation: str):
@@ -148,10 +149,6 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         out_folder (str): Output folder.
         report_folder (str): Report output folder.
     """
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    modes = stat.S_IRUSR | stat.S_IWUSR
-    modes_usr = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
-
     out_folder = os.path.realpath(out_folder)
     if not report_folder:
         report_folder = out_folder
@@ -159,9 +156,9 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         report_folder = os.path.realpath(report_folder)
 
     if not os.path.exists(out_folder):
-        os.makedirs(out_folder, modes_usr)
+        os.makedirs(out_folder, RWX_MODE_FOR_OWNER)
     if not os.path.exists(report_folder):
-        os.makedirs(report_folder, modes_usr)
+        os.makedirs(report_folder, RWX_MODE_FOR_OWNER)
 
     for file_name in code_lines:
         code, report, trainable_weights, weight_map = code_lines[file_name]
@@ -170,7 +167,7 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         try:
             if os.path.exists(code_file_path):
                 raise ScriptGenerationError("Code file with the same name already exists.")
-            with os.fdopen(os.open(code_file_path, flags, modes), 'w') as file:
+            with os.fdopen(os.open(code_file_path, WRITE_FLAGS, RW_MODE_FOR_OWNER), 'w') as file:
                 file.write(code)
         except (IOError, FileExistsError) as error:
             raise ScriptGenerationError(str(error))
@@ -178,7 +175,7 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         try:
             if os.path.exists(report_file_path):
                 raise ReportGenerationError("Report file with the same name already exists.")
-            with os.fdopen(os.open(report_file_path, flags, stat.S_IRUSR), "w") as rpt_f:
+            with os.fdopen(os.open(report_file_path, WRITE_FLAGS, stat.S_IRUSR), "w") as rpt_f:
                 rpt_f.write(report)
         except (IOError, FileExistsError) as error:
             raise ReportGenerationError(str(error))
@@ -200,7 +197,7 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
         try:
             if os.path.exists(weight_map_path):
                 raise WeightMapGenerationError("Weight map file with the same name already exists.")
-            with os.fdopen(os.open(weight_map_path, flags, stat.S_IRUSR), 'w') as map_f:
+            with os.fdopen(os.open(weight_map_path, WRITE_FLAGS, stat.S_IRUSR), 'w') as map_f:
                 weight_map_json = {f"{model_name}": weight_map}
                 json.dump(weight_map_json, map_f)
         except (IOError, FileExistsError) as error:
@@ -208,7 +205,7 @@ def save_code_file_and_report(model_name: str, code_lines: Mapping[str, Tuple],
 
 
 def onnx_satisfied():
-    """Validate ONNX , ONNXRUNTIME, ONNXOPTIMIZER installation."""
+    """Validate ONNX, ONNXRUNTIME, ONNXOPTIMIZER installation."""
     if not find_spec("onnx") or not find_spec("onnxruntime") or not find_spec("onnxoptimizer"):
         return False
     return True
@@ -332,3 +329,52 @@ def get_third_part_lib_validation_error_info(lib_list):
         else:
             error_info = link_str.join((error_info, info))
     return error_info
+
+
+def save_intermediate_graph(dataloader, output_folder):
+    """
+    Save intermediate graph and topological order into output_folder.
+
+    Args:
+        dataloader (OnnxDataLoader): Dataloader inst.
+        output_folder (str): Output folder path.
+    """
+    node_topo_order = []
+    placeholder_width = 30
+    for node_name, node in dataloader.nodes_dict.items():
+        row = f"{node.op_type.ljust(placeholder_width)} {node_name}\n"
+        node_topo_order.append(row)
+
+    # Import onnx lib.
+    onnx = import_module("onnx")
+
+    out_folder = os.path.realpath(output_folder)
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder, RWX_MODE_FOR_OWNER)
+
+    graph_file = os.path.join(out_folder, "graph.onnx")
+    topological_order_file = os.path.join(out_folder, "topological_order.txt")
+
+    if os.path.exists(topological_order_file):
+        err_msg = f"{os.path.basename(topological_order_file)} already exists."
+        log.error(err_msg)
+        raise FileExistsError(err_msg)
+    if os.path.exists(graph_file):
+        err_msg = f"{os.path.basename(graph_file)} already exists."
+        log.error(err_msg)
+        raise FileExistsError(err_msg)
+
+    # Write topological order to disk.
+    with os.fdopen(os.open(topological_order_file, WRITE_FLAGS, stat.S_IRUSR), "w") as topo_file:
+        topo_file.writelines(node_topo_order)
+
+    try:
+        # Save graph to disk.
+        onnx.save_model(dataloader.inferred_model, graph_file)
+        os.chmod(graph_file, RW_MODE_FOR_OWNER)
+    except (IOError, OSError, FileExistsError) as e:
+        if os.path.exists(topological_order_file):
+            os.remove(topological_order_file)
+        if os.path.exists(graph_file):
+            os.remove(graph_file)
+        raise e

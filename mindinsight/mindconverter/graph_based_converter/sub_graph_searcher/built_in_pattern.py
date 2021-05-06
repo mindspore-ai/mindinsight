@@ -18,7 +18,9 @@ __all__ = ["BUILT_IN_PATTERN", "register_pattern", "is_built_in_pattern",
            "USER_DEFINED_PATTERN", "user_defined_pattern"]
 
 from collections import OrderedDict
+from typing import List
 
+from mindinsight.mindconverter.common.exceptions import PatternInvalidError, PatternConflictError
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.known_module_name import register_module_name
 
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.common import cal_matching_score
@@ -79,24 +81,30 @@ def register_pattern(ptn_name, in_degree, out_degree):
     return _reg
 
 
-def user_defined_pattern(pattern_name: str):
+def user_defined_pattern(pattern_name: str, sub_graph_pattern: List[str]):
     """
     Register user define pattern to MindConverter.
 
     Args:
         pattern_name (str): Pattern name.
+        sub_graph_pattern (List[str]): Sub-graph pattern sequence.
+
+    Examples:
+        >>> from mindinsight.mindconverter import register_pattern, convert
+        >>> user_defined_pattern("BasicConvBlock", ["Conv2d", "BatchNorm", "Relu"])
+        >>> model_file = "resnet50.onnx"
+        >>> input_nodes = ["img"]
+        >>> shape = [(1, 3, 224, 224)]
+        >>> output_nodes = ["logits"]
+        >>> convert(model_file, shape, input_nodes, output_nodes)
     """
-
-    def _f(ptn):
-        pattern = ptn()
-        if not pattern:
-            raise ValueError("`ptn` cannot be None.")
-        if not pattern_name:
-            raise ValueError("`pattern_name` cannot be None.")
-        USER_DEFINED_PATTERN[pattern_name] = pattern
-        return ptn
-
-    return _f
+    if not sub_graph_pattern:
+        raise PatternInvalidError("`sub_graph_pattern` cannot be None.")
+    if not pattern_name:
+        raise PatternInvalidError("`pattern_name` cannot be None.")
+    if pattern_name in USER_DEFINED_PATTERN:
+        raise PatternConflictError(f"{pattern_name} is already registered.")
+    USER_DEFINED_PATTERN[pattern_name] = sub_graph_pattern
 
 
 @register_pattern("ConvBnClip", 1, 1)

@@ -271,7 +271,7 @@ class GraphInitError(MindConverterException):
         return except_source
 
 
-class SourceFilesSaveError(MindConverterException):
+class FileSaveError(MindConverterException):
     """The source files save fail error."""
 
     @unique
@@ -290,7 +290,7 @@ class SourceFilesSaveError(MindConverterException):
     DEFAULT_MSG = "Error occurred when save source files."
 
     def __init__(self, msg=DEFAULT_MSG):
-        super(SourceFilesSaveError, self).__init__(user_msg=msg)
+        super(FileSaveError, self).__init__(user_msg=msg)
 
     @classmethod
     def raise_from(cls):
@@ -366,9 +366,9 @@ class RuntimeIntegrityError(GraphInitError):
         return RuntimeError, AttributeError, ImportError, ModuleNotFoundError, cls
 
 
-class NodeInputTypeNotSupportError(SourceFilesSaveError):
+class NodeInputTypeNotSupportError(FileSaveError):
     """The node input type NOT support error."""
-    ERROR_CODE = SourceFilesSaveError.ErrCode.NODE_INPUT_TYPE_NOT_SUPPORT.value
+    ERROR_CODE = FileSaveError.ErrCode.NODE_INPUT_TYPE_NOT_SUPPORT.value
 
     def __init__(self, msg):
         super(NodeInputTypeNotSupportError, self).__init__(msg=msg)
@@ -378,9 +378,9 @@ class NodeInputTypeNotSupportError(SourceFilesSaveError):
         return ValueError, TypeError, IndexError, cls
 
 
-class ScriptGenerationError(SourceFilesSaveError):
+class ScriptGenerationError(FileSaveError):
     """The script generate fail error."""
-    ERROR_CODE = SourceFilesSaveError.ErrCode.SCRIPT_GENERATE_FAIL.value
+    ERROR_CODE = FileSaveError.ErrCode.SCRIPT_GENERATE_FAIL.value
 
     def __init__(self, msg):
         super(ScriptGenerationError, self).__init__(msg=msg)
@@ -394,9 +394,9 @@ class ScriptGenerationError(SourceFilesSaveError):
         return except_source
 
 
-class ReportGenerationError(SourceFilesSaveError):
+class ReportGenerationError(FileSaveError):
     """The report generate fail error."""
-    ERROR_CODE = SourceFilesSaveError.ErrCode.REPORT_GENERATE_FAIL.value
+    ERROR_CODE = FileSaveError.ErrCode.REPORT_GENERATE_FAIL.value
 
     def __init__(self, msg):
         super(ReportGenerationError, self).__init__(msg=msg)
@@ -407,9 +407,9 @@ class ReportGenerationError(SourceFilesSaveError):
         return ZeroDivisionError, cls
 
 
-class CheckPointGenerationError(SourceFilesSaveError):
+class CheckPointGenerationError(FileSaveError):
     """The checkpoint generate fail error."""
-    ERROR_CODE = SourceFilesSaveError.ErrCode.CKPT_GENERATE_FAIL.value
+    ERROR_CODE = FileSaveError.ErrCode.CKPT_GENERATE_FAIL.value
 
     def __init__(self, msg):
         super(CheckPointGenerationError, self).__init__(msg=msg)
@@ -420,9 +420,9 @@ class CheckPointGenerationError(SourceFilesSaveError):
         return cls
 
 
-class WeightMapGenerationError(SourceFilesSaveError):
+class WeightMapGenerationError(FileSaveError):
     """The weight names map generate fail error."""
-    ERROR_CODE = SourceFilesSaveError.ErrCode.MAP_GENERATE_FAIL.value
+    ERROR_CODE = FileSaveError.ErrCode.MAP_GENERATE_FAIL.value
 
     def __init__(self, msg):
         super(WeightMapGenerationError, self).__init__(msg=msg)
@@ -432,9 +432,10 @@ class WeightMapGenerationError(SourceFilesSaveError):
         """Raise from exception below."""
         return cls
 
-class OnnxModelSaveError(SourceFilesSaveError):
+
+class OnnxModelSaveError(FileSaveError):
     """The onnx model save fail error."""
-    ERROR_CODE = SourceFilesSaveError.ErrCode.MODEL_SAVE_FAIL.value
+    ERROR_CODE = FileSaveError.ErrCode.MODEL_SAVE_FAIL.value
 
     def __init__(self, msg):
         super(OnnxModelSaveError, self).__init__(msg=msg)
@@ -444,6 +445,7 @@ class OnnxModelSaveError(SourceFilesSaveError):
         """Raise from exception below."""
         return cls
 
+
 class SubGraphSearchingError(MindConverterException):
     """Sub-graph searching exception."""
 
@@ -451,8 +453,8 @@ class SubGraphSearchingError(MindConverterException):
     class ErrCode(Enum):
         """Define error code of SourceFilesSaveError."""
         BASE_ERROR = 0
-        CANNOT_FIND_VALID_PATTERN = 1
-        MODEL_NOT_SUPPORT = 2
+        PATTERN_REG_CONFLICT_ERROR = 1
+        PATTERN_INVALID_ERROR = 2
 
     BASE_ERROR_CODE = ConverterErrors.SUB_GRAPH_SEARCHING_FAIL.value
     ERROR_CODE = ErrCode.BASE_ERROR.value
@@ -465,6 +467,32 @@ class SubGraphSearchingError(MindConverterException):
     def raise_from(cls):
         """Define exception in sub-graph searching module."""
         return IndexError, KeyError, ValueError, AttributeError, ZeroDivisionError, cls
+
+
+class PatternConflictError(SubGraphSearchingError):
+    """Pattern conflict exception for user defined pattern."""
+    ERROR_CODE = SubGraphSearchingError.ErrCode.PATTERN_REG_CONFLICT_ERROR.value
+
+    def __init__(self, msg):
+        super(PatternConflictError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        """Define exception in sub-graph searching module."""
+        return KeyError, ValueError, cls
+
+
+class PatternInvalidError(SubGraphSearchingError):
+    """Registered pattern is invalid for user defined pattern."""
+    ERROR_CODE = SubGraphSearchingError.ErrCode.PATTERN_INVALID_ERROR.value
+
+    def __init__(self, msg):
+        super(PatternInvalidError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        """Define exception in sub-graph searching module."""
+        return KeyError, ValueError, cls
 
 
 class GeneratorError(MindConverterException):

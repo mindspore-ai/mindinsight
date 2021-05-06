@@ -41,7 +41,7 @@ class GraphFactory:
         """
         if not isinstance(input_nodes, dict):
             raise TypeError("`input_nodes` must be type of dict.")
-        if not isinstance(output_nodes, list):
+        if not isinstance(output_nodes, (list, tuple)):
             raise TypeError("`output_nodes` must be type of list.")
         return OnnxGraph.load(model_path=graph_path, input_nodes=input_nodes,
                               output_nodes=output_nodes)

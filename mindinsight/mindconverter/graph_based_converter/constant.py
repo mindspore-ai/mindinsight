@@ -14,6 +14,8 @@
 # ==============================================================================
 """Constant definition."""
 from enum import Enum, unique
+import os
+import stat
 
 import numpy as np
 
@@ -46,7 +48,11 @@ TF2ONNX_MIN_VER = "1.7.1"
 ONNXRUNTIME_MIN_VER = "1.5.2"
 ONNXOPTIMIZER_MIN_VER = "0.1.2"
 ONNXOPTIMIZER_MAX_VER = "0.1.2"
-CHECKPOINT_SEGMENT_SIZE = 2040109465 # 1.9GB, no more than 2GB
+CHECKPOINT_SEGMENT_SIZE = 2040109465  # 1.9GB, no more than 2GB
+
+WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+RW_MODE_FOR_OWNER = stat.S_IRUSR | stat.S_IWUSR
+RWX_MODE_FOR_OWNER = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
 
 DTYPE_MAP = {
     1: np.float32,
@@ -125,7 +131,6 @@ EXPECTED_NUMBER = 1
 MIN_SCOPE_LENGTH = 2
 
 ONNX_OPSET_VERSION = 11
-
 
 NO_CONVERTED_OPERATORS = [
     "onnx::Constant",
