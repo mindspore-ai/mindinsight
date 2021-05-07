@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ class Node:
         self.full_name = ""
         # This value will be used as the priority field.
         self.topological_index = topological_index
+        self.stack = []
 
     def to_dict(self):
         """Converts the node object to dictionary format."""
@@ -68,7 +69,8 @@ class Node:
             'proxy_input': self._proxy_input,
             'proxy_output': self._proxy_output,
             'subnode_count': self.subnode_count,
-            'independent_layout': self.independent_layout
+            'independent_layout': self.independent_layout,
+            'stack_info': [source.to_dict() for source in self.stack]
         }
 
     @property
@@ -224,6 +226,7 @@ class Node:
         dst_node.output_nums = src_node.output_nums
         dst_node.elem_types = src_node.elem_types
         dst_node.add_attr(src_node.attr)
+        dst_node.stack = src_node.stack
 
     def __str__(self):
         return f'<Node, name: {self.name}, type: {self.type}>'

@@ -33,10 +33,9 @@ from mindinsight.datavisual.data_transform.data_manager import DataManager
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
 from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
-
+from ..mock import MockLogger
 from ....utils.log_operations import LogOperations
 from ....utils.tools import compare_result_with_file, delete_files_or_dirs
-from ..mock import MockLogger
 
 
 class TestGraphProcessor:

@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,9 +66,9 @@ def send_and_compare_result(app_client, url, body_data, expect_file=None, method
         compare_result_with_file(res, real_path)
 
 
-def send_and_save_result(app_client, url, body_data, file_path, method='post'):
+def send_and_save_result(app_client, url, body_data, file_path, method='post', full_url=False):
     """Send and save result."""
-    res = get_request_result(app_client, url, body_data, method=method)
+    res = get_request_result(app_client, url, body_data, method=method, full_url=full_url)
     delete_random_items(res)
     real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, 'restful_results', file_path)
     json.dump(res, open(real_path, 'w'))
