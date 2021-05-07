@@ -109,7 +109,7 @@ def search(session_id):
                          'graph_name': graph_name,
                          'watch_point_id': watch_point_id,
                          'node_category': node_category,
-                         'rand_id': rank_id})
+                         'rank_id': rank_id})
 
     return reply
 
