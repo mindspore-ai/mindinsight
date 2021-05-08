@@ -18,7 +18,7 @@ import os
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException, \
-    ProfilerDirNotFoundException
+    ProfilerDirNotFoundException, ProfilerIOException
 from mindinsight.profiler.common.log import logger as log
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 
@@ -251,3 +251,57 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
             'step_trace': result,
             'size': self._cluster_step_trace_info_size
         }
+
+
+class ClusterMemoryAnalyser(ClusterAnalyser):
+    """The analyser for analyzing the cluster memory usage."""
+    _summary_filename = 'memory_usage_summary_{}.json'
+
+    def __init__(self, cluster_profiler_dir, device_id='0'):
+        super().__init__(cluster_profiler_dir, device_id)
+        self._cluster_dir = os.path.join(cluster_profiler_dir, 'cluster_profiler')
+
+    def get_peak_memory(self):
+        """Get peak memory for each device."""
+        peak_mem_list = []
+
+        for host_map_ip, device_id, rank_id in self._host_device_rank_relation:
+            host_dir = os.path.join(self._cluster_dir, host_map_ip, 'profiler')
+            validate_and_normalize_path(host_dir, raise_key='Invalid host directory {}.'.format(host_map_ip))
+            file_path = self._get_memory_file_for_each_device(host_dir, device_id)
+            file_content = self._get_file_content(file_path)
+            capacity = file_content.get('capacity')
+            peak_mem = file_content.get('peak_mem')
+
+            mem_dict = {
+                'host_ip': host_map_ip,
+                'device_id': device_id,
+                'rank_id': rank_id,
+                'capacity': capacity,
+                'peak_mem': peak_mem
+            }
+            peak_mem_list.append(mem_dict)
+
+        return peak_mem_list
+
+    def _get_memory_file_for_each_device(self, path, device_id):
+        """Get memory file for each device."""
+        filename = self._summary_filename.format(device_id)
+        file_path = os.path.join(path, filename)
+        validate_and_normalize_path(
+            file_path, raise_key='Invalid memory usage file path.'
+        )
+
+        return file_path
+
+    @staticmethod
+    def _get_file_content(file_path):
+        """Get file content."""
+        try:
+            with open(file_path, 'r') as f_obj:
+                file_content = json.load(f_obj)
+        except (IOError, OSError, json.JSONDecodeError) as err:
+            log.error('Error occurred when read memory file: %s', err)
+            raise ProfilerIOException()
+
+        return file_content

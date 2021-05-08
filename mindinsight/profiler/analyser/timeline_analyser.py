@@ -74,7 +74,7 @@ class TimelineAnalyser(BaseAnalyser):
                     timeline = list(filter(lambda x: x, timeline))
             except (IOError, OSError, json.JSONDecodeError) as err:
                 logger.error('Error occurred when read timeline display file: %s', err)
-                raise ProfilerIOException
+                raise ProfilerIOException()
         else:
             logger.info('No timeline file. Please check the output path.')
 
@@ -106,7 +106,7 @@ class TimelineAnalyser(BaseAnalyser):
                     timeline_summary = json.load(f_obj)
             except (IOError, OSError, json.JSONDecodeError) as err:
                 logger.error('Error occurred when read timeline summary file: %s', err)
-                raise ProfilerIOException
+                raise ProfilerIOException()
         else:
             logger.info('No timeline summary file. Please check the output path.')
 

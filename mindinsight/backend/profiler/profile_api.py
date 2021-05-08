@@ -674,6 +674,34 @@ def get_cluster_step_trace_info():
     return jsonify(step_trace_info)
 
 
+@BLUEPRINT.route("/profile/cluster-peak-memory", methods=["GET"])
+def get_cluster_peak_memory():
+    """
+    Get cluster peak memory.
+
+    Returns:
+        str, the cluster peak memory.
+
+    Raises:
+        ParamValueError: If the cluster profiler dir is invalid.
+
+    Examples:
+        >>>GET http://xxx/v1/mindinsight/profile/cluster-peak-memory
+    """
+    train_id = get_train_id(request)
+    if not train_id:
+        raise ParamValueError('No train id.')
+    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
+    cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
+    check_train_job_and_profiler_dir(cluster_profiler_dir)
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'cluster_memory', cluster_profiler_dir
+    )
+    peak_mem = analyser.get_peak_memory()
+    return jsonify(peak_mem)
+
+
 def init_module(app):
     """
     Init module entry.
