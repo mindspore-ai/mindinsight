@@ -538,9 +538,14 @@
   },
   "profilingCluster": {
     "titleText": "性能分析 - 集群概览",
+    "commTitle": "通信信息 - 集群概览",
     "clusterView": "集群概览",
     "rankID": "逻辑卡号",
-    "timeTitle": "时间（ms）"
+    "timeTitle": "时间（ms）",
+    "performanceChartTitle": "性能分析",
+    "memoryHeatMapTitle": "内存热力图分析",
+    "deviceId": "设备",
+    "granuLarity": "粒度"
   },
   "components": {
     "summaryTitle": "训练选择",

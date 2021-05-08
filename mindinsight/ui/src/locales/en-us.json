@@ -539,9 +539,14 @@
   },
   "profilingCluster": {
     "titleText": "Profiling - Cluster Overview",
+    "commTitle": "Communication - Cluster Overview",
     "clusterView": "Cluster Overview",
     "rankID": "Rank ID",
-    "timeTitle": "time(ms)"
+    "timeTitle": "time(ms)",
+    "performanceChartTitle": "Performance Analysis",
+    "memoryHeatMapTitle": "Memory Heat Map Analysis",
+    "deviceId": "Device",
+    "granuLarity": "GranuLarity"
   },
   "components": {
     "summaryTitle": "Training Selection",

@@ -525,4 +525,11 @@ export default {
       url: 'v1/mindinsight/profile/cluster-step-trace-summary',
     });
   },
+  getClusterPeakMemory(params) {
+    return axios({
+      method: 'get',
+      params: params,
+      url: 'v1/mindinsight/profile/cluster-peak-memory',
+    });
+  },
 };

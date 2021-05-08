@@ -22,7 +22,7 @@ limitations under the License.
         <div class="path-message">
         <span>{{$t('symbols.leftbracket')}}</span>
         <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
-        <span>{{summaryPath}}</span>
+        <span>{{trainInfo.path}}</span>
         <span>{{$t('symbols.rightbracket')}}</span>
       </div>
       </div>
@@ -94,6 +94,10 @@ limitations under the License.
       </div>
     </div>
 
+    <img src="@/assets/images/close-page.png"
+         class="cl-cluster-close"
+         @click="backToDashboard">
+
     <div class="no-data-img"
          v-show="!chartData.length">
       <div>
@@ -111,8 +115,12 @@ import RequestService from '../../services/request-service';
 export default {
   data() {
     return {
-      summaryPath: '',
-      trainingJobId: this.$route.query.id, // ID of the current training job
+      trainInfo: {
+        id: this.$route.query.id,
+        path: this.$route.query.path,
+        dir: this.$route.query.dir,
+      },
+      activeName: this.$route.query.activeName,
       chartObj: null, // chart obj
       chartData: [], // chart data
       chartOption: { // chart option
@@ -211,14 +219,14 @@ export default {
     };
   },
   mounted() {
-    if (!this.trainingJobId) {
+    if (!this.trainInfo.id) {
       this.$message.error(this.$t('trainingDashboard.invalidId'));
       document.title = `${this.$t('profilingCluster.clusterView')}-MindInsight`;
       this.initOver = true;
       return;
     }
-    this.summaryPath = decodeURIComponent(this.trainingJobId);
-    document.title = `${this.summaryPath}-${this.$t(
+    // const summaryPath = decodeURIComponent(this.trainInfo.path);
+    document.title = `${this.trainInfo.path}-${this.$t(
         'profilingCluster.clusterView',
     )}-MindInsight`;
 
@@ -237,6 +245,14 @@ export default {
     }
   },
   methods: {
+    backToDashboard() {
+      this.$router.push({
+        path: 'cluster-dashboard',
+        query: Object.assign({
+          activeName: this.activeName,
+        }, this.trainInfo),
+      });
+    },
     /**
      *  initialize
      *  @param {Boolean} isInit whether get all data
@@ -246,7 +262,7 @@ export default {
     queryStepTraceInfo(isInit, isSort) {
       const params = {};
       params.params = {
-        train_id: this.trainingJobId,
+        train_id: this.trainInfo.id,
       };
       params.body = {
         sort_condition: this.sort_condition,
@@ -366,9 +382,9 @@ export default {
       const routeUrl = this.$router.resolve({
         path: path,
         query: {
-          id: this.trainingJobId + '/cluster_profiler/' + row.host_ip,
+          id: this.trainInfo.id + '/cluster_profiler/' + row.host_ip,
           dir: row.profiler_dir,
-          path: this.trainingJobId + '/cluster_profiler/' + row.host_ip,
+          path: this.trainInfo.path + '/cluster_profiler/' + row.host_ip,
           deviceid: row.device_id.toString(),
         },
       });
@@ -436,6 +452,13 @@ export default {
   display: flex;
   flex-direction: column;
   padding: 0 32px 24px 32px;
+}
+.cl-cluster .cl-cluster-close {
+  object-fit: none;
+  position: absolute;
+  cursor: pointer;
+  top: 36px;
+  right: 24px;
 }
 .cl-cluster .no-data-img {
   background: #fff;
