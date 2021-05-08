@@ -257,6 +257,7 @@ export default {
 .performance-dashboard .header .jump {
   cursor: pointer;
   color: #b8b8b8;
+  font-size: 12px;
 }
 .performance-dashboard .header .is-effective {
   color: #00a5a7;

@@ -227,9 +227,9 @@ export default {
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item .detail-link {
   cursor: pointer;
   font-size: 12px;
-  height: 18px;
-  line-height: 12px;
-  padding-top: 2px;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item .detail-link a {
   color: #00a5a7;
@@ -240,6 +240,7 @@ export default {
   border: none;
   background-color: #fff;
   cursor: pointer;
+  padding: 0;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item .detail-link.disabled button {
   color: #c0c4cc;
@@ -272,7 +273,7 @@ export default {
   height: 56px;
   border-bottom: solid 1px #e6ebf5;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 .legend-content .legend-item {
   width: 26px;
@@ -282,8 +283,8 @@ export default {
 }
 .legend-content .legend-item .color-item {
   width: 100%;
-  padding: 0 6px;
-  height: calc(100% - 20px);
+  padding: 0 1px;
+  height: calc(100% - 19px);
 }
 .legend-content .legend-item .color-item div {
   width: 100%;
@@ -317,6 +318,7 @@ export default {
   flex-wrap: wrap;
   overflow-y: auto;
   padding-bottom: 10px;
+  border-radius: 6px;
 }
 .heatmap-content .heatmap-item .detail-content .device-item {
   flex-shrink: 0;
