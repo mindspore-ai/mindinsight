@@ -438,8 +438,8 @@ def greedy_match(topo_order, user_defined_ptn):
     """
     increment_idx = 0
     prev_path = None
-    for md_name, ptn in user_defined_ptn:
-        ptn = Pattern(",".join(ptn), len(ptn), -1, -1, ptn)
+    for md_name, ptn_items in user_defined_ptn.items():
+        ptn = Pattern(",".join(ptn_items), len(ptn_items), -1, -1, ptn_items)
         ptn.known_module_name = md_name
         topo_order_aft_rpl = topo_order[:] if prev_path is None else prev_path.topo_order_aft_repl
         repl_path = ReplacePath(ptn, topo_order_aft_rpl, prev_path=prev_path)
