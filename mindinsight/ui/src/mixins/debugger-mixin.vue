@@ -1436,6 +1436,9 @@ export default {
                   this.debuggerVersion = res.data.metadata.debugger_version;
                 }
                 this.metadata = res.data.metadata;
+                if (!this.trainId) {
+                  this.metadata.total_step_num = 2147483648;
+                }
                 if (
                   res &&
                 res.data &&
