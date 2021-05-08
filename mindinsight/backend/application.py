@@ -41,7 +41,7 @@ def get_security_headers():
         domain_white_list += hook.register_secure_domains()
 
     content_security_policy = {
-        'img-src': ["'self'", 'data:'],
+        'img-src': ["'self'", 'data:', 'blob:'],
         'style-src': ["'self'", "'unsafe-inline'"],
         'frame-src': ["'self'"] + domain_white_list,
         'frame-ancestors': ["'self'"] + domain_white_list,
