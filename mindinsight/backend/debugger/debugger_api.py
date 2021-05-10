@@ -104,12 +104,14 @@ def search(session_id):
     watch_point_id = int(request.args.get('watch_point_id', 0))
     node_category = request.args.get('node_category')
     rank_id = int(request.args.get('rank_id', 0))
+    stack_pattern = request.args.get('stack_info_key_word')
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).search,
                         {'name': name,
                          'graph_name': graph_name,
                          'watch_point_id': watch_point_id,
                          'node_category': node_category,
-                         'rank_id': rank_id})
+                         'rank_id': rank_id,
+                         'stack_pattern': stack_pattern})
 
     return reply
 

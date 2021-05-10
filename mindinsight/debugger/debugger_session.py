@@ -157,6 +157,7 @@ class DebuggerSession:
                 - watch_point_id (int): The id of watchpoint. Default: 0.
                 - node_category (str): The node_category. Default: None
                 - rank_id (int): The id of rank. Default: 0.
+                - stack_pattern (str): The pattern of stack info. Default: None.
 
         Returns:
             dict, the searched nodes.

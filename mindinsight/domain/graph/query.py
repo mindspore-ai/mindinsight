@@ -17,13 +17,6 @@
 import re
 
 
-class BaseStackOperator:
-    """Base stack operator."""
-
-    def __init__(self, stack=None):
-        self.stack = stack or []
-
-
 class StackQuery:
     """Stack query."""
 
