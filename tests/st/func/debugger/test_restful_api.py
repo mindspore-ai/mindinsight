@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ from mindinsight.debugger.common.utils import ServerStatus
 from tests.st.func.debugger.conftest import DEBUGGER_BASE_URL
 from tests.st.func.debugger.mock_ms_client import MockDebuggerClient
 from tests.st.func.debugger.utils import check_state, get_request_result, \
-    send_and_compare_result
+    send_and_compare_result, send_and_save_result
 
 
 def send_terminate_cmd(app_client):
@@ -44,6 +44,7 @@ class TestAscendDebugger:
     @classmethod
     def setup_class(cls):
         """Setup class."""
+        cls.save_results = False
         cls._debugger_client = MockDebuggerClient(backend='Ascend')
 
     @pytest.mark.level0
@@ -79,6 +80,8 @@ class TestAscendDebugger:
         url = 'retrieve'
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file)
             send_and_compare_result(app_client, url, body_data, expect_file)
             send_terminate_cmd(app_client)
 
@@ -89,6 +92,8 @@ class TestAscendDebugger:
         expect_file = 'get_conditions_for_ascend.json'
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file, method='get', full_url=True)
             send_and_compare_result(app_client, url, body_data, expect_file, method='get', full_url=True)
             send_terminate_cmd(app_client)
 
@@ -117,6 +122,8 @@ class TestAscendDebugger:
         debugger_client = MockDebuggerClient(backend='Ascend', graph_num=2)
         with debugger_client.get_thread_instance():
             check_state(app_client)
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file)
             send_and_compare_result(app_client, url, body_data, expect_file)
             send_terminate_cmd(app_client)
 
@@ -148,6 +155,8 @@ class TestAscendDebugger:
             url = 'retrieve'
             body_data = {'mode': 'watchpoint'}
             expect_file = 'create_and_delete_watchpoint.json'
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file)
             send_and_compare_result(app_client, url, body_data, expect_file)
             send_terminate_cmd(app_client)
 
@@ -175,6 +184,8 @@ class TestAscendDebugger:
             url = 'search'
             body_data = {'name': leaf_node_name, 'watch_point_id': watch_point_id}
             expect_file = 'search_unwatched_leaf_node.json'
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file, method='get')
             send_and_compare_result(app_client, url, body_data, expect_file, method='get')
             send_terminate_cmd(app_client)
 
@@ -193,12 +204,16 @@ class TestAscendDebugger:
             url = 'tensor-history'
             body_data = {'name': node_name, 'rank_id': 0}
             expect_file = 'retrieve_empty_tensor_history.json'
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file)
             send_and_compare_result(app_client, url, body_data, expect_file)
             # check full tensor history from poll data
             res = get_request_result(
                 app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
             assert res.get('receive_tensor', {}).get('node_name') == node_name
             expect_file = 'retrieve_full_tensor_history.json'
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file)
             send_and_compare_result(app_client, url, body_data, expect_file)
             # check tensor value
             url = 'tensors'
@@ -208,6 +223,8 @@ class TestAscendDebugger:
                 'shape': quote('[1, 1:3]')
             }
             expect_file = 'retrieve_tensor_value.json'
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file, method='get')
             send_and_compare_result(app_client, url, body_data, expect_file, method='get')
             send_terminate_cmd(app_client)
 
@@ -242,6 +259,8 @@ class TestAscendDebugger:
                 'tolerance': 1,
                 'rank_id': 0}
             expect_file = 'compare_tensors.json'
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file, method='get')
             send_and_compare_result(app_client, url, body_data, expect_file, method='get')
             send_terminate_cmd(app_client)
 
@@ -339,6 +358,8 @@ class TestAscendDebugger:
             res = get_request_result(
                 app_client=app_client, url='poll-data', body_data={'pos': 0}, method='get')
             assert res.get('receive_tensor', {}).get('tensor_name') == body_data.get('tensor_name')
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file, method='GET')
             send_and_compare_result(app_client, url, body_data, expect_file, method='GET')
             send_terminate_cmd(app_client)
 
@@ -349,6 +370,7 @@ class TestGPUDebugger:
     @classmethod
     def setup_class(cls):
         """Setup class."""
+        cls.save_results = False
         cls._debugger_client = MockDebuggerClient(backend='GPU')
 
     @pytest.mark.level0
@@ -360,6 +382,7 @@ class TestGPUDebugger:
     def test_next_node_on_gpu(self, app_client):
         """Test get next node on GPU."""
         gpu_debugger_client = MockDebuggerClient(backend='GPU')
+        check_state(app_client, 'pending')
         with gpu_debugger_client.get_thread_instance():
             check_state(app_client)
             # send run command to get watchpoint hit
@@ -374,6 +397,8 @@ class TestGPUDebugger:
             url = 'retrieve'
             body_data = {'mode': 'all'}
             expect_file = 'retrieve_next_node_on_gpu.json'
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file)
             send_and_compare_result(app_client, url, body_data, expect_file)
             send_terminate_cmd(app_client)
 
@@ -428,6 +453,8 @@ class TestGPUDebugger:
         expect_file = 'get_conditions_for_gpu.json'
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file, method='get', full_url=True)
             send_and_compare_result(app_client, url, body_data, expect_file, method='get', full_url=True)
             send_terminate_cmd(app_client)
 
@@ -476,6 +503,7 @@ class TestMultiGraphDebugger:
     @classmethod
     def setup_class(cls):
         """Setup class."""
+        cls.save_results = False
         cls._debugger_client = MockDebuggerClient(backend='Ascend', graph_num=2)
 
     @pytest.mark.level0
@@ -500,8 +528,11 @@ class TestMultiGraphDebugger:
     def test_multi_retrieve_when_train_begin(self, app_client, body_data, expect_file):
         """Test retrieve when train_begin."""
         url = 'retrieve'
+        check_state(app_client, 'pending')
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file)
             send_and_compare_result(app_client, url, body_data, expect_file)
             send_terminate_cmd(app_client)
 
@@ -521,6 +552,8 @@ class TestMultiGraphDebugger:
         """Test search by category request."""
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
+            if self.save_results:
+                send_and_save_result(app_client, 'search', filter_condition, expect_file, method='get')
             send_and_compare_result(app_client, 'search', filter_condition, expect_file, method='get')
             send_terminate_cmd(app_client)
 
@@ -577,6 +610,8 @@ class TestMultiGraphDebugger:
                 check_state(app_client)
                 url = 'retrieve'
                 body_data = {'mode': 'all'}
+                if self.save_results:
+                    send_and_save_result(app_client, url, body_data, expect_file)
                 send_and_compare_result(app_client, url, body_data, expect_file)
                 send_terminate_cmd(app_client)
         finally:
@@ -598,6 +633,8 @@ class TestMultiGraphDebugger:
         url = 'tensor-hits'
         with self._debugger_client.get_thread_instance():
             check_state(app_client)
+            if self.save_results:
+                send_and_save_result(app_client, url, body_data, expect_file, method='GET')
             send_and_compare_result(app_client, url, body_data, expect_file, method='GET')
             send_terminate_cmd(app_client)
 

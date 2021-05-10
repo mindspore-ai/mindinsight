@@ -16,6 +16,7 @@
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
 from mindinsight.datavisual.common.enums import PluginNameEnum
+from mindinsight.domain.graph.base import Source
 from .node_tree import NodeTree
 from .node import Node
 from .node import NodeTypeEnum
@@ -77,7 +78,8 @@ class MSGraph(Graph):
             node = Node(name=node_name, node_id=node_proto.name, topological_index=topological_index)
             node.full_name = node_proto.full_name
             node.type = node_proto.op_type
-
+            if getattr(node_proto, 'source_address', None):
+                node.stack = Source.build_stack_from_source_address(node_proto.source_address)
             self._parse_attributes(node_proto.attribute, node)
             self._parse_inputs(node_proto.input, node)
 

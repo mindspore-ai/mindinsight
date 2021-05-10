@@ -72,7 +72,6 @@ class MultiCardGraphHandler:
         self.__init__()
 
 
-
 class GraphHandler(StreamHandlerBase):
     """Metadata Handler."""
 
@@ -88,7 +87,6 @@ class GraphHandler(StreamHandlerBase):
         self.graph_node_map = {}
         # dict of <node ui name, Node object> for all graphs
         self._all_leaf_nodes = {}
-
         # the whole graph
         self._whole_graph = None
 
