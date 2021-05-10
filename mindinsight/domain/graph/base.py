@@ -302,7 +302,7 @@ class OutputType(enum.Enum):
     TUPLE = 'tuple'
 
 
-class Input:
+class NodeInput:
     """
     Graph node input.
 
@@ -326,7 +326,7 @@ class Input:
         })
 
 
-class Output:
+class NodeOutput:
     """
     Graph node output.
 

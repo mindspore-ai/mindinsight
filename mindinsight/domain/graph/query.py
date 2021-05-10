@@ -17,13 +17,6 @@
 import re
 
 
-class BaseStackOperator:
-    """Base stack operator."""
-
-    def __init__(self, stack=None):
-        self.stack = stack or []
-
-
 class StackQuery:
     """Stack query."""
 
@@ -53,13 +46,14 @@ class StackQuery:
             return self.operators[index]
         return None
 
-    def filter(self, qs, use_regex=False):
+    def filter(self, qs, case_sensitive=False, use_regex=False):
         """
         Filter operators with query.
 
         Args:
             qs (str): Query string.
-            use_regex (bool): Indicates if qs is regex.
+            case_sensitive (bool): Indicates if case is sensitive. Default is False.
+            use_regex (bool): Indicates if qs is regex. Default is False.
 
         Returns:
             StackQuery, cloned object.
@@ -67,9 +61,15 @@ class StackQuery:
         compose = lambda x: f'{x.file_path}:{x.line_no}\n{x.code_line}'
 
         if use_regex:
-            func = lambda x: bool(re.search(qs, compose(x)))
+            if case_sensitive:
+                func = lambda x: bool(re.search(qs, compose(x)))
+            else:
+                func = lambda x: bool(re.search(qs, compose(x), flags=re.I))
         else:
-            func = lambda x: compose(x).find(qs) > -1
+            if case_sensitive:
+                func = lambda x: compose(x).find(qs) > -1
+            else:
+                func = lambda x: compose(x).lower().find(qs.lower()) > -1
 
         operators = []
         for operator in self.operators:

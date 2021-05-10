@@ -15,6 +15,7 @@
 """Parse utils module."""
 
 import os
+import stat
 
 import xlsxwriter
 
@@ -85,6 +86,20 @@ class Toolkit:
             worksheet.freeze_panes(1, 1)
 
         workbook.close()
+        os.chmod(file_path, stat.S_IRUSR)
+
+    def _write_columns(self, worksheet, metas):
+        """
+        Write columns according to column metas.
+
+        Args:
+            worksheet (Workbook): Target worksheet.
+            metas (list): Column metas.
+        """
+        for index, (column, fmt, width) in enumerate(metas):
+            worksheet.set_column(index, index, width)
+            worksheet.write(0, index, column, fmt)
+        worksheet.autofilter(0, 0, 0, len(metas) - 1)
 
     def _convert_column_indices(self, metas):
         """
@@ -116,25 +131,22 @@ class Toolkit:
             ('argument', styles['header_center_fmt'], 20),
             ('value', styles['header_left_fmt'], 150),
         ]
-        for index, (column, fmt, width) in enumerate(column_metas):
-            worksheet.set_column(index, index, width)
-            worksheet.write(0, index, column, fmt)
-        worksheet.autofilter(0, 0, 0, len(column_metas) - 1)
+        self._write_columns(worksheet, column_metas)
 
         indices = self._convert_column_indices(column_metas)
         worksheet.write(1, indices.get('argument'), 'dump-dir', styles['content_center_fmt'])
         worksheet.write(1, indices.get('value'), self.dump_dir or '', styles['content_left_fmt'])
 
-    def _get_operator_input_info(self, operator, input_types):
+    def _get_operator_input_content(self, operator, input_types):
         """
-        Add operator worksheet.
+        Add operator input content.
 
         Args:
             operator (Operator): Operator.
             input_types (dict): Input types.
 
         Returns:
-            dict, input info content.
+            tuple, input content, input dtype content and input shape content.
         """
         input_content = ''
         input_dtype_content = ''
@@ -176,11 +188,81 @@ class Toolkit:
                 input_dtype_content += Toolkit.PLACEHOLDER + '\n'
                 input_shape_content += Toolkit.PLACEHOLDER + '\n'
 
-        return {
-            'input': input_content.strip(),
-            'input_dtype': input_dtype_content.strip(),
-            'input_shape': input_shape_content.strip(),
-        }
+        return input_content.strip(), input_dtype_content.strip(), input_shape_content.strip()
+
+    def _get_operator_type_content(self, operator):
+        """
+        Get operator downstream content.
+
+        Args:
+            operator (Operator): Operator.
+            mapping (dict): Operator mapping.
+
+        Returns:
+            str, downstream content.
+        """
+        if operator.type == 'Load':
+            return f'{operator.type}_{operator.name}'
+        return f'{operator.type}_{operator.op_id}'
+
+    def _get_operator_output_content(self, operator):
+        """
+        Get operator output content.
+
+        Args:
+            operator (Operator): Operator.
+
+        Returns:
+            tuple, output dtype content and output shape content.
+        """
+        output_dtype_content = ''
+        output_shape_content = ''
+        if operator.output:
+            if operator.output.type == OutputType.TENSOR:
+                output_dtype_content = operator.output.info['dtype']
+                output_shape_content = str(operator.output.info['shape'])
+            elif operator.output.type == OutputType.TUPLE:
+                output_dtype_content = '\n'.join([
+                    Toolkit.PLACEHOLDER if dtype is None else dtype
+                    for dtype in operator.output.info['dtypes']
+                ])
+                output_shape_content = '\n'.join([
+                    Toolkit.PLACEHOLDER if shape is None else str(shape)
+                    for shape in operator.output.info['shapes']
+                ])
+        return output_dtype_content, output_shape_content
+
+    def _get_operator_downstream_content(self, operator, mapping):
+        """
+        Get operator downstream content.
+
+        Args:
+            operator (Operator): Operator.
+            mapping (dict): Operator mapping.
+
+        Returns:
+            str, downstream content.
+        """
+        content = ''
+        for op_id in operator.downstream:
+            op = mapping[op_id]
+            content += f'{op.type}_{op.op_id}' + '\n'
+        return content.strip()
+
+    def _get_operator_stack_content(self, operator):
+        """
+        Get operator stack content.
+
+        Args:
+            operator (Operator): Operator.
+
+        Returns:
+            str, stack content.
+        """
+        content = ''
+        for source in operator.stack:
+            content += f'{source.file_path}:{source.line_no}\n{source.code_line}\n'
+        return content.strip()
 
     def _add_operator_worksheet(self, workbook, styles):
         """
@@ -190,12 +272,10 @@ class Toolkit:
             workbook (WorkBook): Excel workbook.
             styles (dict): Workbook styles.
         """
-        constant_mapping = dict((constant.name, constant) for constant in self.constants)
-        parameter_mapping = dict((parameter.name, parameter) for parameter in self.parameters)
         operator_mapping = dict((operator.op_id, operator) for operator in self.operators)
         input_types = {
-            InputType.CONSTANT: constant_mapping,
-            InputType.PARAMETER: parameter_mapping,
+            InputType.CONSTANT: dict((constant.name, constant) for constant in self.constants),
+            InputType.PARAMETER: dict((parameter.name, parameter) for parameter in self.parameters),
             InputType.OPERATOR: operator_mapping,
         }
 
@@ -217,62 +297,30 @@ class Toolkit:
             ('graph_name', styles['header_left_fmt'], 30),
             ('stack', styles['header_left_fmt'], 150),
         ]
-        for index, (column, fmt, width) in enumerate(column_metas):
-            worksheet.set_column(index, index, width)
-            worksheet.write(0, index, column, fmt)
-        worksheet.autofilter(0, 0, 0, len(column_metas) - 1)
+        self._write_columns(worksheet, column_metas)
 
         indices = self._convert_column_indices(column_metas)
         for index, operator in enumerate(self.operators):
-            if operator.type == 'Load':
-                operator_content = f'{operator.type}_{operator.name}'
-            else:
-                operator_content = f'{operator.type}_{operator.op_id}'
-
-            worksheet.write(index + 1, indices.get('operator'), operator_content, styles['content_left_fmt'])
+            operator_type_content = self._get_operator_type_content(operator)
+            worksheet.write(index + 1, indices.get('operator'), operator_type_content, styles['content_left_fmt'])
 
             if operator.type == 'make_tuple':
                 worksheet.write(index + 1, indices.get('device_id'), operator.device_id, styles['content_left_fmt'])
                 worksheet.write(index + 1, indices.get('graph_name'), operator.graph_name, styles['content_left_fmt'])
                 continue
 
-            input_info = self._get_operator_input_info(operator, input_types)
-            worksheet.write(index + 1, indices.get('input'), input_info['input'], styles['content_wrapped_fmt'])
-            worksheet.write(
-                index + 1, indices.get('input_dtype'),
-                input_info['input_dtype'], styles['content_wrapped_fmt'])
-            worksheet.write(
-                index + 1, indices.get('input_shape'),
-                input_info['input_shape'], styles['content_wrapped_fmt'])
+            input_content, input_dtype_content, input_shape_content = \
+                self._get_operator_input_content(operator, input_types)
+            worksheet.write(index + 1, indices.get('input'), input_content, styles['content_wrapped_fmt'])
+            worksheet.write(index + 1, indices.get('input_dtype'), input_dtype_content, styles['content_wrapped_fmt'])
+            worksheet.write(index + 1, indices.get('input_shape'), input_shape_content, styles['content_wrapped_fmt'])
 
-            output_dtype_content = ''
-            output_shape_content = ''
-            if operator.output and operator.output.type == OutputType.TENSOR:
-                output_dtype_content = operator.output.info['dtype']
-                output_shape_content = str(operator.output.info['shape'])
-            elif operator.output and operator.output.type == OutputType.TUPLE:
-                output_dtype_content = '\n'.join([
-                    Toolkit.PLACEHOLDER if dtype is None else dtype
-                    for dtype in operator.output.info['dtypes']
-                ])
-                output_shape_content = '\n'.join([
-                    Toolkit.PLACEHOLDER if shape is None else str(shape)
-                    for shape in operator.output.info['shapes']
-                ])
-            worksheet.write(
-                index + 1, indices.get('output_dtype'),
-                output_dtype_content, styles['content_wrapped_fmt'])
-            worksheet.write(
-                index + 1, indices.get('output_shape'),
-                output_shape_content, styles['content_wrapped_fmt'])
+            output_dtype_content, output_shape_content = self._get_operator_output_content(operator)
+            worksheet.write(index + 1, indices.get('output_dtype'), output_dtype_content, styles['content_wrapped_fmt'])
+            worksheet.write(index + 1, indices.get('output_shape'), output_shape_content, styles['content_wrapped_fmt'])
 
-            downstream_content = ''
-            for op_id in operator.downstream:
-                op = operator_mapping[op_id]
-                downstream_content += f'{op.type}_{op.op_id}' + '\n'
-            worksheet.write(
-                index + 1, indices.get('downstream'),
-                downstream_content.strip(), styles['content_wrapped_fmt'])
+            downstream_content = self._get_operator_downstream_content(operator, operator_mapping)
+            worksheet.write(index + 1, indices.get('downstream'), downstream_content, styles['content_wrapped_fmt'])
 
             worksheet.write(index + 1, indices.get('name'), operator.name, styles['content_center_fmt'])
             worksheet.write(index + 1, indices.get('attrs'), str(operator.attrs), styles['content_left_fmt'])
@@ -280,10 +328,8 @@ class Toolkit:
             worksheet.write(index + 1, indices.get('device_id'), operator.device_id, styles['content_left_fmt'])
             worksheet.write(index + 1, indices.get('graph_name'), operator.graph_name, styles['content_left_fmt'])
 
-            stack_content = ''
-            for source in operator.stack:
-                stack_content += f'{source.file_path}:{source.line_no}\n{source.code_line}\n'
-            worksheet.write(index + 1, indices.get('stack'), stack_content.strip(), styles['content_wrapped_fmt'])
+            stack_content = self._get_operator_stack_content(operator)
+            worksheet.write(index + 1, indices.get('stack'), stack_content, styles['content_wrapped_fmt'])
 
     def _add_parameter_worksheet(self, workbook, styles):
         """
@@ -304,10 +350,7 @@ class Toolkit:
             ('device_id', styles['header_left_fmt'], 20),
             ('graph_name', styles['header_left_fmt'], 30),
         ]
-        for index, (column, fmt, width) in enumerate(column_metas):
-            worksheet.set_column(index, index, width)
-            worksheet.write(0, index, column, fmt)
-        worksheet.autofilter(0, 0, 0, len(column_metas) - 1)
+        self._write_columns(worksheet, column_metas)
 
         indices = self._convert_column_indices(column_metas)
         operator_mapping = dict((operator.op_id, operator) for operator in self.operators)
@@ -323,6 +366,8 @@ class Toolkit:
             downstream_nodes = [operator_mapping[op_id] for op_id in parameter.downstream]
             downstream_content = ''
             for op in downstream_nodes:
+                # Load is virtual operator for network parameters.
+                # It is recommended to export its name rather than its op_id.
                 if op.type == 'Load':
                     downstream_content += f'{op.type}_{op.name}' + '\n'
                 else:
@@ -352,10 +397,7 @@ class Toolkit:
             ('device_id', styles['header_left_fmt'], 20),
             ('graph_name', styles['header_left_fmt'], 30),
         ]
-        for index, (column, fmt, width) in enumerate(column_metas):
-            worksheet.set_column(index, index, width)
-            worksheet.write(0, index, column, fmt)
-        worksheet.autofilter(0, 0, 0, len(column_metas) - 1)
+        self._write_columns(worksheet, column_metas)
 
         indices = self._convert_column_indices(column_metas)
         operator_mapping = dict((operator.op_id, operator) for operator in self.operators)
@@ -399,10 +441,7 @@ class Toolkit:
             ('operator', styles['header_left_fmt'], 30),
             ('count', styles['header_center_fmt'], 20),
         ]
-        for index, (column, fmt, width) in enumerate(column_metas):
-            worksheet.set_column(index, index, width)
-            worksheet.write(0, index, column, fmt)
-        worksheet.autofilter(0, 0, 0, len(column_metas) - 1)
+        self._write_columns(worksheet, column_metas)
 
         operator_type_set = set()
         for operator in self.operators:
@@ -436,10 +475,7 @@ class Toolkit:
             ('device_id', styles['header_left_fmt'], 20),
             ('graph_name', styles['header_left_fmt'], 30),
         ]
-        for index, (column, fmt, width) in enumerate(column_metas):
-            worksheet.set_column(index, index, width)
-            worksheet.write(0, index, column, fmt)
-        worksheet.autofilter(0, 0, 0, len(column_metas) - 1)
+        self._write_columns(worksheet, column_metas)
 
         source_mapping = {}
         for operator in self.operators:

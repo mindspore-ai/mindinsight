@@ -16,7 +16,7 @@
 
 from mindinsight.domain.graph.proto import ms_graph_pb2 as graph_proto
 from mindinsight.domain.graph.base import MindSporeType, InputType, OutputType
-from mindinsight.domain.graph.base import Input, Output, Tensor, Source, Constant, Parameter, Operator, Parser
+from mindinsight.domain.graph.base import NodeInput, NodeOutput, Tensor, Source, Constant, Parameter, Operator, Parser
 from mindinsight.domain.graph.exceptions import UnknownDataTypeError, TupleGetitemIndexError
 
 
@@ -75,13 +75,13 @@ class PBParser(Parser):
         constant.raw = str(pb_constant)
 
         if pb_constant.value.dtype in self.int_types:
-            constant.output = Output(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
+            constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
             constant.output.info['value'] = pb_constant.value.int_val
         elif pb_constant.value.dtype in self.float_types:
-            constant.output = Output(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
+            constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
             constant.output.info['value'] = pb_constant.value.float_val
         elif pb_constant.value.dtype == self.proto.DT_TENSOR:
-            constant.output = Output(OutputType.TENSOR)
+            constant.output = NodeOutput(OutputType.TENSOR)
             if pb_constant.value.tensor_val.data_type:
                 constant.output.info['dtype'] = self.dtype_mapping[pb_constant.value.tensor_val.data_type]
                 constant.output.info['shape'] = tuple(pb_constant.value.tensor_val.dims)
@@ -92,7 +92,7 @@ class PBParser(Parser):
                 value = values[0]
                 constant.output.info['tensor'] = Tensor(constant.name, 0, value.path)
         else:
-            constant.output = Output(OutputType.NONE)
+            constant.output = NodeOutput(OutputType.NONE)
 
         self.constants.append(constant)
 
@@ -106,7 +106,7 @@ class PBParser(Parser):
         parameter = Parameter(pb_parameter.name)
         parameter.raw = str(pb_parameter)
 
-        output = Output(OutputType.TENSOR)
+        output = NodeOutput(OutputType.TENSOR)
         if pb_parameter.type.tensor_type.elem_type == self.proto.DT_UNDEFINED:
             output.type = OutputType.NONE
         else:
@@ -273,7 +273,7 @@ class PBParser(Parser):
             elif pb_input.name in op_mapping:
                 input_type = InputType.OPERATOR
 
-            op_input = Input(input_type, pb_input.name)
+            op_input = NodeInput(input_type, pb_input.name)
             if input_type == InputType.OPERATOR:
                 op_input.op_id = op_mapping[op_input.name].op_id
 
@@ -282,16 +282,16 @@ class PBParser(Parser):
         # parse output
         proto_output = pb_operator.output_type
         if proto_output.data_type in (self.proto.DT_UNDEFINED, self.proto.DT_NONE):
-            output = Output(OutputType.NONE)
+            output = NodeOutput(OutputType.NONE)
         elif proto_output.data_type == self.proto.DT_BOOL:
-            output = Output(OutputType.BOOL)
+            output = NodeOutput(OutputType.BOOL)
         elif proto_output.data_type == self.proto.DT_TENSOR:
-            output = Output(OutputType.TENSOR)
+            output = NodeOutput(OutputType.TENSOR)
             output.info['dtype'] = self.dtype_mapping[proto_output.tensor_type.elem_type]
             if proto_output.tensor_type.shape:
                 output.info['shape'] = tuple([dim.size for dim in proto_output.tensor_type.shape.dim])
         elif proto_output.data_type == self.proto.DT_TUPLE:
-            output = Output(OutputType.TUPLE)
+            output = NodeOutput(OutputType.TUPLE)
             for elem_type in proto_output.sequence_type.elem_types:
                 dtype = self._get_tuple_item_dtype(elem_type)
                 output.info['dtypes'].append(dtype)
@@ -334,7 +334,7 @@ class PBParser(Parser):
         """
         if operator.inputs[1].type == InputType.CONSTANT:
             constant = constant_mapping[operator.inputs[1].name]
-            if constant.output.type in Output.SCALAR_TYPES:
+            if constant.output.type in NodeOutput.SCALAR_TYPES:
                 return int(constant.output.info['value'])
             raise TupleGetitemIndexError(operator.name, constant.name)
 
@@ -342,10 +342,42 @@ class PBParser(Parser):
             return int(operator.inputs[1].name)
         raise TupleGetitemIndexError(operator.name, f'{operator.inputs[1].name}')
 
+    def _process_tuple_operator(self, operator, operator_mapping, constant_mapping):
+        """
+        Process tuple operator.
+
+        Args:
+            operator (Operator): Tuple operator.
+            operator_mapping (dict): Dict mapping of operators.
+            constant_mapping (dict): Dict mapping of constants.
+        """
+        if operator.type in ('make_tuple', 'MakeTuple'):
+            return
+
+        if operator.type in ('tuple_getitem', 'TupleGetItem'):
+            index = self._get_tuple_getitem_index(operator, constant_mapping)
+            output = operator_mapping[operator.inputs[0].name].output
+            if output.type == OutputType.TUPLE and len(output.info['tensors']) > index:
+                operator.output.info['tensor'] = output.info['tensors'][index]
+
+    def _process_transition_operator(self, operator, input_types):
+        """
+        Process transition operator.
+
+        Args:
+            operator (Operator): Transition operator.
+            input_types (dict): Dict mapping of input types.
+        """
+        if operator.output.info['tensor'] is None:
+            op_input = operator.inputs[0]
+            if op_input.type in input_types:
+                node = input_types[op_input.type][op_input.name]
+                operator.output.info['tensor'] = node.output.info['tensor']
+
     def _post_process(self):
         """Post-process."""
-        constant_mapping = self.get_constants()
-        parameter_mapping = self.get_parameters()
+        constant_mapping = dict((constant.name, constant) for constant in self.constants)
+        parameter_mapping = dict((parameter.name, parameter) for parameter in self.parameters)
         operator_mapping = dict((operator.name, operator) for operator in self.operators)
         input_types = {
             InputType.CONSTANT: constant_mapping,
@@ -353,23 +385,15 @@ class PBParser(Parser):
             InputType.OPERATOR: operator_mapping,
         }
 
+        tuple_operator_types = ('make_tuple', 'MakeTuple', 'tuple_getitem', 'TupleGetItem')
         transition_operator_types = ('Squeeze', 'Reshape', 'ExpandDims', 'Flatten')
 
         for operator in self.operators:
-            if operator.type in ('make_tuple', 'MakeTuple'):
-                continue
+            if operator.type in tuple_operator_types:
+                self._process_tuple_operator(operator, operator_mapping, constant_mapping)
 
-            if operator.type in ('tuple_getitem', 'TupleGetItem'):
-                index = self._get_tuple_getitem_index(operator, constant_mapping)
-                output = operator_mapping[operator.inputs[0].name].output
-                if output.type == OutputType.TUPLE and len(output.info['tensors']) > index:
-                    operator.output.info['tensor'] = output.info['tensors'][index]
-
-            elif operator.type in transition_operator_types and operator.output.info['tensor'] is None:
-                op_input = operator.inputs[0]
-                if op_input.type in input_types:
-                    node = input_types[op_input.type][op_input.name]
-                    operator.output.info['tensor'] = node.output.info['tensor']
+            elif operator.type in transition_operator_types:
+                self._process_transition_operator(operator, input_types)
 
             elif operator.type == 'Depend':
                 if operator.output.type in (OutputType.NONE, OutputType.BOOL) \
@@ -379,7 +403,7 @@ class PBParser(Parser):
                         node = operator_mapping[op_input.name]
                         operator.output = node.output
 
-            if operator.type == 'Assign' and len(operator.inputs) == 3:
+            elif operator.type == 'Assign' and len(operator.inputs) == 3:
                 operator.inputs = operator.inputs[1:]
 
             for input_index, op_input in enumerate(operator.inputs):
