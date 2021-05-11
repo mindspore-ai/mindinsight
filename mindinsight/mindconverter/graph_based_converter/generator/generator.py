@@ -828,14 +828,13 @@ class Generator:
             if isinstance(struct, ModuleStruct) and struct.outputs_manager is None:
                 self._collect_output_mgr(module=struct)
             for out in struct.outputs_manager.outputs:
-                if Generator.check_output_need_to_external(root_module, out):
+                if self.check_output_need_to_external(root_module, out):
                     output_mgr_list.append(out.deepcopy())
         root_module.outputs_manager = ModuleOutputManager(root_module.identifier,
                                                           base_out=output_mgr_list)
         root_module.outputs_manager.assign_opt_var_name_to_each_output(root_module.ms_opt_var_name)
 
-    @staticmethod
-    def check_output_need_to_external(root_module: ModuleStruct, checked_output: BaseOutput):
+    def check_output_need_to_external(self, root_module: ModuleStruct, checked_output: BaseOutput):
         """
         Check the output still need to be returned to module external.
 
@@ -849,6 +848,8 @@ class Generator:
         for user in checked_output.onnx_user:
             if user in root_module.external_successor_nodes_names:
                 return True
+        if checked_output.onnx_edge_name in self._global_context.onnx_graph_info['graph_outputs']:
+            return True
         return False
 
     def _split_op_procs(self, split_struct: NodeStruct):

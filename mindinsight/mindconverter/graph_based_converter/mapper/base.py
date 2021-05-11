@@ -124,7 +124,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
             if "output_shape" in converted_params:
                 converted_params.pop("output_shape")
             # set to converted_weights to enable weight migration
-            converted_weights = weights_converter(weights=weights) if weights else dict()
+            converted_weights = weights_converter(params=params, weights=weights) if weights else dict()
             code_template, exchange_msg, outputs_list, outputs_mapping = template_generator(
                 operation=converter_name,
                 converted_params=converted_params,
