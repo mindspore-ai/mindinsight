@@ -178,8 +178,10 @@ def graph_based_converter_onnx_to_ms(graph_path: str,
     graph_obj = GraphFactory.init(graph_path, input_nodes=input_nodes, output_nodes=output_nodes)
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
+    log_console.info("Code saving begins.")
     code_fragments = generator_inst.generate()
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
+    log_console.info("Code saving is finished.")
     # Release global context.
     GlobalContext.release()
 
@@ -208,8 +210,10 @@ def graph_based_converter_tf_to_ms(graph_path: str,
     graph_obj = GraphFactory.init(graph_path, input_nodes=input_nodes, output_nodes=output_nodes)
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
+    log_console.info("Code saving begins.")
     code_fragments = generator_inst.generate()
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
+    log_console.info("Code saving is finished.")
     # Release global context.
     GlobalContext.release()
 

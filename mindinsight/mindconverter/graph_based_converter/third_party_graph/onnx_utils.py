@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from mindinsight.mindconverter.common.log import logger as log
+from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model, build_feed_dict
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.optimizer import OnnxSimplify
@@ -259,8 +259,10 @@ class OnnxDataLoader:
 
     def __init__(self, onnx_model, model_path: str, input_nodes: dict,
                  output_nodes: list, infer_shape=True):
+        log_console.info("Onnx simplifying begins.")
         onnx_sim = OnnxSimplify()
         onnx_model_sim = onnx_sim.run_onnx_simplify(onnx_model, model_path, input_nodes)
+        log_console.info("Onnx simplifying is finished.")
         self.model = onnx_model_sim
         self.model_path = model_path
         self.graph = onnx_model_sim.graph
