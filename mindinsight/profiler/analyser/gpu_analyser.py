@@ -43,8 +43,7 @@ class GpuAnalyser(BaseAnalyser):
             for info in csv_reader:
                 self._data.append(self._convert_field_type(info))
 
-    @staticmethod
-    def _convert_field_type(row):
+    def _convert_field_type(self, row):
         """
         Convert the field type to the specific type.
 
@@ -74,8 +73,7 @@ class GpuOpTypeAnalyser(GpuAnalyser):
     _col_names = ["op_type", "type_occurrences", "total_time", "proportion", "avg_time"]
     _csv_file_to_analyse = 'gpu_op_type_info_{}.csv'
 
-    @staticmethod
-    def _convert_field_type(row):
+    def _convert_field_type(self, row):
         """
         Convert the field type to the specific type.
 
@@ -85,7 +83,8 @@ class GpuOpTypeAnalyser(GpuAnalyser):
         Returns:
             list, the converted data.
         """
-        return [row[0], int(row[1]), float(row[2]), float(row[3])*100, float(row[4])]
+        return [row[0], int(row[1]), self._format_float_data(float(row[2])),
+                self._format_float_data(float(row[3])*100), self._format_float_data(float(row[4]))]
 
 
 class GpuOpInfoAnalyser(GpuAnalyser):
@@ -95,8 +94,7 @@ class GpuOpInfoAnalyser(GpuAnalyser):
                   "proportion", "cuda_activity_cost_time", "cuda_activity_call_count"]
     _csv_file_to_analyse = 'gpu_op_detail_info_{}.csv'
 
-    @staticmethod
-    def _convert_field_type(row):
+    def _convert_field_type(self, row):
         """
         Convert the field type to the specific type.
 
@@ -106,8 +104,9 @@ class GpuOpInfoAnalyser(GpuAnalyser):
         Returns:
             list, the converted data.
         """
-        return [row[0], row[1], row[2], row[3], int(row[4]), float(row[5]),
-                float(row[6]), float(row[7]), float(row[8]), int(row[9])]
+        return [row[0], row[1], row[2], row[3], int(row[4]),
+                self._format_float_data(float(row[5])), self._format_float_data(float(row[6])),
+                self._format_float_data(float(row[7])), self._format_float_data(float(row[8])), int(row[9])]
 
 
 class GpuCudaActivityAnalyser(GpuAnalyser):
@@ -117,8 +116,7 @@ class GpuCudaActivityAnalyser(GpuAnalyser):
                   "avg_duration", "max_duration", "min_duration"]
     _csv_file_to_analyse = 'gpu_activity_data_{}.csv'
 
-    @staticmethod
-    def _convert_field_type(row):
+    def _convert_field_type(self, row):
         """
         Convert the field type to the specific type.
 
@@ -129,4 +127,5 @@ class GpuCudaActivityAnalyser(GpuAnalyser):
             list, the converted data.
         """
         return [row[0], row[1], row[2], row[3], row[4], row[5], int(row[6]),
-                float(row[7]), float(row[8]), float(row[9]), float(row[10])]
+                self._format_float_data(float(row[7])), self._format_float_data(float(row[8])),
+                self._format_float_data(float(row[9])), self._format_float_data(float(row[10]))]

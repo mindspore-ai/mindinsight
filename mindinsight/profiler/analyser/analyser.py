@@ -90,7 +90,8 @@ class AicoreTypeAnalyser(BaseAnalyser):
         Returns:
             list[Union[str, float]], the converted data.
         """
-        return [row[0], float(row[1]), int(row[2]), float(row[3])]
+        return [row[0], self._format_float_data(float(row[1])),
+                int(row[2]), self._format_float_data(float(row[3]))]
 
 
 class AicoreDetailAnalyser(BaseAnalyser):
@@ -270,7 +271,7 @@ class AicoreDetailAnalyser(BaseAnalyser):
             list[Union[str, float]], the operator detail information in one row.
         """
         framework_info = framework_infos.get(row[0])
-        return [framework_info[1], framework_info[2], float(row[1]),
+        return [framework_info[1], framework_info[2], self._format_float_data(float(row[1])),
                 framework_info[3], framework_info[0], framework_info[4]]
 
 
@@ -402,5 +403,5 @@ class AicpuDetailAnalyser(BaseAnalyser):
         Returns:
             list[Union[str, float]], the converted data.
         """
-        return [int(row[0]), row[1], float(row[2]), float(row[3]), int(row[4]),
-                int(row[5])]
+        return [int(row[0]), row[1], self._format_float_data(float(row[2])),
+                self._format_float_data(float(row[3])), int(row[4]), int(row[5])]

@@ -68,8 +68,9 @@ class TimelineAnalyser(BaseAnalyser):
                 with open(file_path, 'r') as f_obj:
                     timeline = json.load(f_obj)
                     for idx, time_item in enumerate(timeline):
-                        if time_item["tid"] == "Name Scope" and \
-                                                time_item["scope_level"] >= scope_name_num:
+                        if time_item["tid"] == 100001 and \
+                                time_item["ph"] != "M" and \
+                                int(time_item["scope_level"]) >= int(scope_name_num):
                             timeline[idx] = None
                     timeline = list(filter(lambda x: x, timeline))
             except (IOError, OSError, json.JSONDecodeError) as err:
@@ -109,5 +110,7 @@ class TimelineAnalyser(BaseAnalyser):
                 raise ProfilerIOException()
         else:
             logger.info('No timeline summary file. Please check the output path.')
+
+        timeline_summary.setdefault("max_scope_name_num", 0)
 
         return timeline_summary
