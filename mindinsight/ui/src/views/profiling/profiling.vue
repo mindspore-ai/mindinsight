@@ -144,7 +144,7 @@ export default {
         this.curDashboardInfo.query.path = this.$route.query.path;
         this.tabData.activeName =
           this.$route.query.activePane || this.tabData.tabPanes[0].name;
-        this.summaryPath = decodeURIComponent(this.$route.query.id);
+        this.summaryPath = decodeURIComponent(this.$route.query.path);
         if (!isNaN(this.$route.query.deviceid)) {
           this.curDashboardInfo.curCardNum = this.$route.query.deviceid;
         }
@@ -347,20 +347,29 @@ export default {
      * Router back to profiling-dashboard
      */
     backToDdashboard() {
-      let path = '/profiling/profiling-dashboard';
-      if (this.tabData.activeName === this.tabData.tabPanes[1].name) {
-        path = '/profiling/resource-utilization';
+      if (this.$route.query.activeName) {
+        const {dir, id, path, activeName} = this.$route.query;
+        const pathTemp = path.split('/cluster_profiler/')[0];
+        this.$router.push({
+          path: '/memory-heatmap',
+          query: {dir, id, path: pathTemp, activeName},
+        });
+      } else {
+        let path = '/profiling/profiling-dashboard';
+        if (this.tabData.activeName === this.tabData.tabPanes[1].name) {
+          path = '/profiling/resource-utilization';
+        }
+        this.$router.push({
+          path: path,
+          query: {
+            dir: this.curDashboardInfo.query.dir,
+            id: this.curDashboardInfo.query.id,
+            path: this.curDashboardInfo.query.path,
+            activePane: this.tabData.activeName,
+            cardNum: this.curDashboardInfo.curCardNum,
+          },
+        });
       }
-      this.$router.push({
-        path: path,
-        query: {
-          dir: this.curDashboardInfo.query.dir,
-          id: this.curDashboardInfo.query.id,
-          path: this.curDashboardInfo.query.path,
-          activePane: this.tabData.activeName,
-          cardNum: this.curDashboardInfo.curCardNum,
-        },
-      });
     },
     collapseLeft() {
       this.collapse = !this.collapse;
