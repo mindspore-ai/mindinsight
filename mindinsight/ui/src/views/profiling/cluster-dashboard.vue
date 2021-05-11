@@ -54,7 +54,7 @@ export default {
   props: {},
   data() {
     return {
-      summaryPath: this.$route.query.path, // Path of the current training job
+      summaryPath: decodeURIComponent(this.$route.query.path), // Path of the current training job
       trainingJobId: this.$route.query.id, // ID of the current training job
       summaryDir: this.$route.query.dir, // Dir of the current training job
       tabData: {
