@@ -91,7 +91,7 @@ export default {
   props: {},
   data() {
     return {
-      summaryPath: this.$route.query.path,
+      summaryPath: decodeURIComponent(this.$route.query.path),
       trainingJobId: this.$route.query.id, // ID of the current training job
       summaryDir: this.$route.query.dir,
       memoryHeatmapInitOver: false, // init Heat map
