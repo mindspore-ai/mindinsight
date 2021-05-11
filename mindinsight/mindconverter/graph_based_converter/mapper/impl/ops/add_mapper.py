@@ -51,6 +51,15 @@ class AddMapper(ONNXToMindSporeMapper):
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
         if not weights:
+            variable_slot = "var_0"
+            construct_template = \
+                f"opt_{{{variable_slot}}} = {op}()({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}})"
+            template = {
+                variable_slot: {
+                    TemplateKeywords.INIT.value: [],
+                    TemplateKeywords.CONSTRUCT.value: [construct_template]
+                }
+            }
             return template, exchange_msg, outputs_list, outputs_mapping
 
         tensor = AddMapper._find_val_by_index(0, weights)
@@ -58,7 +67,6 @@ class AddMapper(ONNXToMindSporeMapper):
         bias_location = AddMapper._find_location_by_index(0, weights)
 
         variable_slot = "var_0"
-        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
         inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
         if bias_location != -1:
             inputs_in_construct.insert(bias_location, f"self.{{{variable_slot}}}_bias")
@@ -72,11 +80,10 @@ class AddMapper(ONNXToMindSporeMapper):
             args["bias_value"] = tensor.tolist()
             init_tensor = f"self.{{{variable_slot}}}_bias = {{bias_value}}"
 
-        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
-                             f"({', '.join(inputs_in_construct)})"
+        construct_template = f"opt_{{{variable_slot}}} = {' + '.join(inputs_in_construct)}"
         template = {
             variable_slot: {
-                TemplateKeywords.INIT.value: [init_template, init_tensor],
+                TemplateKeywords.INIT.value: [init_tensor],
                 TemplateKeywords.CONSTRUCT.value: [construct_template]
             }
         }
