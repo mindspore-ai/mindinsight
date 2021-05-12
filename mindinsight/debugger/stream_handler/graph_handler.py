@@ -14,7 +14,7 @@
 # ============================================================================
 """Define the graph stream handler."""
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
-    DebuggerNodeNotInGraphError, DebuggerGraphNotExistError, DebuggerParamTypeError
+    DebuggerNodeNotInGraphError, DebuggerGraphNotExistError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import is_scope_type
 from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
@@ -22,36 +22,52 @@ from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum as Catego
 from mindinsight.debugger.stream_cache.debugger_graph import DebuggerGraph
 from mindinsight.debugger.stream_cache.debugger_multigraph import DebuggerMultiGraph
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
+from mindinsight.debugger.stream_handler.source_handler import validate_stack_pattern, SourceHandler
 from mindinsight.domain.graph.query import StackQuery
 
 
-class MultiCardGraphHandler:
+class MultiCardGraphHandler(StreamHandlerBase):
     """Multi-card Graph Handler."""
 
     def __init__(self):
         self._graph_handlers = {0: GraphHandler()}
+        self._source_handler = SourceHandler()
 
     @property
     def graph_handlers(self):
         """The property of whole_graph."""
         return self._graph_handlers
 
+    @property
+    def source_handler(self):
+        """The property of source handler."""
+        return self._source_handler
+
     def get_graph_handler_by_rank_id(self, rank_id=0):
-        """Get handler by rank id"""
+        """Get handler by rank id."""
         if rank_id in self._graph_handlers:
             return self._graph_handlers.get(rank_id)
         log.error("There is no rank id %d.", rank_id)
         raise ValueError
 
     def put(self, value):
-        """put graphs into graph_handlers"""
+        """Put graphs into graph_handlers."""
         for rank_id, graph in value.items():
             if rank_id not in self._graph_handlers:
                 self._graph_handlers[rank_id] = GraphHandler()
             self._graph_handlers[rank_id].put(graph)
 
-    def get(self, filter_condition=None, rank_id=0):
+    def parse_stack_infos(self):
+        """Add stack infos into cache."""
+        source_handler = self._source_handler
+        for graph_stream in self._graph_handlers.values():
+            for leaf_node in graph_stream.leaf_nodes.values():
+                source_handler.put(leaf_node.stack)
+        self._source_handler.sort()
+
+    def get(self, filter_condition=None):
         """Get the graph of specific node for specific device."""
+        rank_id = filter_condition.get('rank_id', 0) if filter_condition else 0
         if rank_id in self._graph_handlers:
             return self._graph_handlers.get(rank_id).get(filter_condition)
         log.error("There is no rank id %d.", rank_id)
@@ -110,6 +126,11 @@ class GraphHandler(StreamHandlerBase):
     def debugger_graph_obj(self):
         """The property of graph object."""
         return self._graph
+
+    @property
+    def leaf_nodes(self):
+        """The property of leaf nodes among all graphs."""
+        return self._all_leaf_nodes
 
     def put(self, value):
         """
@@ -332,7 +353,7 @@ class GraphHandler(StreamHandlerBase):
         node_category = pattern.get('node_category')
         graph = self._get_graph(graph_name=graph_name)
         stack_pattern = pattern.get('stack_pattern')
-        self._validate_stack_pattern(stack_pattern)
+        validate_stack_pattern(stack_pattern)
         # filter nodes by name
         if pattern.get('name'):
             if node_category or stack_pattern:
@@ -361,19 +382,6 @@ class GraphHandler(StreamHandlerBase):
             query = StackQuery(temp_node_list)
             temp_node_list = query.filter(stack_pattern).all()
         return temp_node_list
-
-    @staticmethod
-    def _validate_stack_pattern(stack_pattern):
-        """Check stack pattern."""
-        if stack_pattern:
-            if not isinstance(stack_pattern, str):
-                log.error("Invalid stack pattern. String type is required, but got %s.", type(stack_pattern))
-                raise DebuggerParamTypeError("stack_pattern is not string type.")
-            pattern_limit = 255
-            if len(stack_pattern) > pattern_limit:
-                log.error("The length of stack_pattern is %s, which should no greater than %s.", len(stack_pattern),
-                          pattern_limit)
-                raise DebuggerParamValueError("stack_pattern is over length limit.")
 
     @staticmethod
     def _get_inner_node_category(node_category):

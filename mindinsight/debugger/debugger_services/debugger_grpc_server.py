@@ -404,6 +404,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         log.debug("Deserialize the graph %s. Receive %s nodes", graph.name, len(graph.node))
         graph_dict = {graph.name: graph}
         self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0).put(graph_dict)
+        self._cache_store.get_stream_handler(Streams.GRAPH).parse_stack_infos()
         self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0).put_const_vals(
             graph.const_vals)
         self._cache_store.get_stream_handler(Streams.METADATA).graph_name = graph.name
@@ -434,6 +435,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                     sub_graph.const_vals)
 
         self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0).put(graph_dict)
+        self._cache_store.get_stream_handler(Streams.GRAPH).parse_stack_infos()
         self._record_parameter_names()
         self._status = ServerStatus.RECEIVE_GRAPH
         log.debug("Send the reply for graph.")
