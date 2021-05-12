@@ -29,29 +29,29 @@ User may need to change module name or variable name in order to improve the rea
 
 ```bash
 usage: fix_checkpoint_file.py [-h]
-                              source_py_file fixed_py_file source_ckpt_file
+                              source_py_file source_ckpt_file fixed_py_file
                               fixed_ckpt_file
 
 Fix weight name in CheckPoint file.
 
 positional arguments:
   source_py_file    source model script file
-  fixed_py_file     fixed model script file
-  source_ckpt_file  source_checkpoint file  
+  source_ckpt_file  source_checkpoint file
+  fixed_py_file     fixed model script file  
   fixed_ckpt_file   fixed_checkpoint file
 
 optional arguments:
-  -h, --help        show this hekp message and exit
+  -h, --help        show this help message and exit
 ```
 
 ### Example
 
-Assuming that the source model script file is `xxx/model.py`, the fixed model script file is `xxx/fixed_model.py`, the source checkpoint file is `xxx/model.ckpt` and the new checkpoint file is `xxx/fixed_model.ckpt`.
+Assuming that the source model script file is `xxx/model.py`, the source checkpoint file is `xxx/model.ckpt`, the fixed model script file is `xxx/fixed_model.py` and the new checkpoint file is `xxx/fixed_model.ckpt`.
 
 The command is that:
 
 ```bash
-python -m mindinsight.mindconverter.tools.fix_checkpoit_file xxx/model.py xxx/fixed_model.py xxx/model.ckpt xxx/fixed_model.ckpt
+python -m mindinsight.mindconverter.tools.fix_checkpoit_file xxx/model.py xxx/model.ckpt xxx/fixed_model.py xxx/fixed_model.ckpt
 ```
 
 If generation is successful, the result below would be shown:

@@ -237,13 +237,13 @@ parser.add_argument(
     action=ScriptAction,
     help="source model script file")
 parser.add_argument(
-    "fixed_py_file",
-    action=ScriptAction,
-    help="fixed model script file")
-parser.add_argument(
     "source_ckpt_file",
     action=InCheckPointAction,
     help="source checkpoint file")
+parser.add_argument(
+    "fixed_py_file",
+    action=ScriptAction,
+    help="fixed model script file")
 parser.add_argument(
     "fixed_ckpt_file",
     action=OutCheckPointAction,
@@ -259,8 +259,8 @@ if __name__ == '__main__':
         args = parser.parse_args()
 
     source_py_file = args.source_py_file
-    fixed_py_file = args.fixed_py_file
     source_ckpt_file = args.source_ckpt_file
+    fixed_py_file = args.fixed_py_file
     fixed_ckpt_file = args.fixed_ckpt_file
 
     if not source_checker(source_py_file, source_ckpt_file):
