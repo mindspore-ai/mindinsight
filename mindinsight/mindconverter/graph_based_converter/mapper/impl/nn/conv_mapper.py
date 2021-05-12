@@ -98,16 +98,15 @@ class ConvMapper(ONNXToMindSporeMapper):
             stride = params.get('strides')
 
         kernel_size = params.get('kernel_shape')
-        # Onnx in_channel equals ms inchannel divided by group
+
+        # ms in_channel <- ONNX in_channel x group.
         in_channels = weight.shape[1] * params.get('group', 1)
         out_channels = weight.shape[0]
         if len(kernel_size) == 1:
             kernel_size = kernel_size[0]
         else:
             kernel_size = tuple(kernel_size)
-
         pad_mode, padding = _convert_padding(params=params)
-
         if auto_pad == "SAME_UPPER":
             pad_mode = "\'same\'"
             padding = 0
