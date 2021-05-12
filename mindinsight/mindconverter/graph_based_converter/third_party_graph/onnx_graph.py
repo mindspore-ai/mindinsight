@@ -17,7 +17,7 @@ from importlib import import_module
 from typing import Dict, NoReturn
 
 from mindinsight.mindconverter.common.exceptions import ModelLoadingError
-from mindinsight.mindconverter.common.log import logger as log
+from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.input_node import InputNode
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph_node import OnnxGraphNode
@@ -203,6 +203,7 @@ class OnnxGraph(Graph):
         """
         input_nodes = kwargs.get('input_nodes')
         output_nodes = kwargs.get('output_nodes')
+        log_console.info("Onnx model loading begins.")
         if graph_path.endswith('.pb'):
             onnx_model = TFGraphParser.parse(graph_path,
                                              input_nodes=input_nodes,
@@ -210,7 +211,7 @@ class OnnxGraph(Graph):
         else:
             onnx = import_module('onnx')
             onnx_model = onnx.load(graph_path, load_external_data=False)
-
+        log_console.info("Onnx model loading is finished.")
         onnx_inputs = [onnx_input.name for onnx_input in onnx_model.graph.input]
 
         invalid_input_node_name = list()
