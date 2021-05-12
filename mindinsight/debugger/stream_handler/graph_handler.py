@@ -13,15 +13,16 @@
 # limitations under the License.
 # ============================================================================
 """Define the graph stream handler."""
-from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
-from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum as CategoryTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
-    DebuggerNodeNotInGraphError, DebuggerGraphNotExistError
+    DebuggerNodeNotInGraphError, DebuggerGraphNotExistError, DebuggerParamTypeError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import is_scope_type
+from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
+from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum as CategoryTypeEnum
 from mindinsight.debugger.stream_cache.debugger_graph import DebuggerGraph
 from mindinsight.debugger.stream_cache.debugger_multigraph import DebuggerMultiGraph
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
+from mindinsight.domain.graph.query import StackQuery
 
 
 class MultiCardGraphHandler:
@@ -297,8 +298,9 @@ class GraphHandler(StreamHandlerBase):
 
                 - name (str): The name pattern.
                 - graph_name (str): The graph name.
-                - node_category (str): The node_category. Default: None
+                - node_category (str): The node_category.
                 - condition (dict): The additional filter condition.
+                - stack_pattern (str): The pattern of stack info.
 
         Returns:
             dict, the searched node.
@@ -320,7 +322,8 @@ class GraphHandler(StreamHandlerBase):
                 - name (str): The name pattern.
                 - node_category (str): The node_category. Default: None.
                 - condition (dict): The additional filter condition.
-            graph_name (str): The graph name.
+                - stack_pattern (str): The pattern of stack info.
+            graph_name (str): The graph name. Default: None.
 
         Returns:
             list, the searched node list.
@@ -328,9 +331,11 @@ class GraphHandler(StreamHandlerBase):
         temp_node_list = []
         node_category = pattern.get('node_category')
         graph = self._get_graph(graph_name=graph_name)
+        stack_pattern = pattern.get('stack_pattern')
+        self._validate_stack_pattern(stack_pattern)
         # filter nodes by name
         if pattern.get('name'):
-            if node_category:
+            if node_category or stack_pattern:
                 # get leaf nodes for forward filter
                 temp_node_list = graph.search_leaf_nodes_by_pattern(pattern.get('name'))
             else:
@@ -345,7 +350,30 @@ class GraphHandler(StreamHandlerBase):
             condition = pattern['condition'].copy() if pattern.get('condition') else {}
             condition['search_range'] = temp_node_list
             temp_node_list = graph.search_nodes_by_category(node_category, condition=condition)
+            if not temp_node_list:
+                log.debug("No node with category %s", node_category)
+                return []
+        # filter nodes by stack_pattern
+        if stack_pattern:
+            if not temp_node_list:
+                temp_node_list = graph.leaf_nodes.values()
+            log.info("Begin to filter nodes by `stack_pattern`.")
+            query = StackQuery(temp_node_list)
+            temp_node_list = query.filter(stack_pattern).all()
         return temp_node_list
+
+    @staticmethod
+    def _validate_stack_pattern(stack_pattern):
+        """Check stack pattern."""
+        if stack_pattern:
+            if not isinstance(stack_pattern, str):
+                log.error("Invalid stack pattern. String type is required, but got %s.", type(stack_pattern))
+                raise DebuggerParamTypeError("stack_pattern is not string type.")
+            pattern_limit = 255
+            if len(stack_pattern) > pattern_limit:
+                log.error("The length of stack_pattern is %s, which should no greater than %s.", len(stack_pattern),
+                          pattern_limit)
+                raise DebuggerParamValueError("stack_pattern is over length limit.")
 
     @staticmethod
     def _get_inner_node_category(node_category):
@@ -570,6 +598,7 @@ class GraphHandler(StreamHandlerBase):
             nodes (list[Node]): List of nodes object.
             graph_name (str): The graph name.
         """
+
         def _get_updated_node_info(cur_node, node_type):
             """Add graph scope in key."""
             old_node = cur_node.get(node_type)
@@ -640,5 +669,6 @@ class GraphHandler(StreamHandlerBase):
 
 
 def get_graph_number(graph_name):
+    """Get the number of graph."""
     number = graph_name.split("_")[-1]
     return int(number)
