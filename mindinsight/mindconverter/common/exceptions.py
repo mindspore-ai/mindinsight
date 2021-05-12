@@ -140,12 +140,12 @@ class MindConverterException(Exception):
                     log.error(error)
                     log_console.error(detail_info)
                     log.exception(e)
-                    sys.exit(0)
+                    sys.exit(-1)
                 except ModuleNotFoundError as e:
                     detail_info = "Error detail: Required package not found, please check the runtime environment."
                     log_console.error(f"{str(e)}\n{detail_info}")
                     log.exception(e)
-                    sys.exit(0)
+                    sys.exit(-1)
                 return res
 
             return _f
