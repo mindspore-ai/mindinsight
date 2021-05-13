@@ -127,7 +127,7 @@ export default {
       summaryList: [],
       pagination: {
         currentPage: null,
-        pageSize: 20,
+        pageSize: null,
         pageSizes: [10, 20, 50],
         total: 0,
         layout: 'total, sizes, prev, pager, next, jumper',
@@ -157,6 +157,8 @@ export default {
   created() {
     const pageIndex = sessionStorage.getItem('XAIPageIndex');
     this.pagination.currentPage = pageIndex ? +pageIndex : 1;
+    const pageSize = sessionStorage.getItem('XAIPageSize');
+    this.pagination.pageSize = pageSize ? +pageSize : 20; // Default page size
   },
   mounted() {
     document.title = `${this.$t('explain.explain')}-MindInsight`;
@@ -225,16 +227,12 @@ export default {
     },
     currentPagesizeChange(pageSize) {
       this.pagination.pageSize = pageSize;
-      const params = {
-        offset: this.pagination.currentPage - 1,
-        limit: this.pagination.pageSize,
-      };
-      this.querySummaryList(params);
+      this.pagination.currentPage = 1;
+      sessionStorage.setItem('XAIPageSize', pageSize);
+      this.currentPageChange();
     },
     currentPageChange() {
-      if (this.pagination.currentPage > 1) {
-        sessionStorage.setItem('XAIPageIndex', this.pagination.currentPage);
-      }
+      sessionStorage.setItem('XAIPageIndex', this.pagination.currentPage);
       const params = {
         offset: this.pagination.currentPage - 1,
         limit: this.pagination.pageSize,

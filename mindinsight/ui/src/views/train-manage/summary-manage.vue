@@ -259,7 +259,7 @@ export default {
       },
       pagination: {
         currentPage: null,
-        pageSize: 20,
+        pageSize: null,
         pageSizes: [10, 20, 50],
         total: 0,
         layout: 'total, sizes, prev, pager, next, jumper',
@@ -294,6 +294,8 @@ export default {
   created() {
     const pageIndex = sessionStorage.getItem('summaryPageIndex');
     this.pagination.currentPage = pageIndex ? +pageIndex : 1;
+    const pageSize = sessionStorage.getItem('summaryPageSize');
+    this.pagination.pageSize = pageSize ? +pageSize : 20; // Default page size
   },
   mounted() {
     document.title = `${this.$t('summaryManage.summaryList')}-MindInsight`;
@@ -371,16 +373,12 @@ export default {
     },
     currentPagesizeChange(pageSize) {
       this.pagination.pageSize = pageSize;
-      const params = {
-        offset: this.pagination.currentPage - 1,
-        limit: this.pagination.pageSize,
-      };
-      this.querySummaryList(params);
+      sessionStorage.setItem('summaryPageSize', pageSize);
+      this.pagination.currentPage = 1;
+      this.currentPageChange();
     },
     currentPageChange() {
-      if (this.pagination.currentPage > 1) {
-        sessionStorage.setItem('summaryPageIndex', this.pagination.currentPage);
-      }
+      sessionStorage.setItem('summaryPageIndex', this.pagination.currentPage);
       const params = {
         offset: this.pagination.currentPage - 1,
         limit: this.pagination.pageSize,
