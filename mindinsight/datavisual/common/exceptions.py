@@ -55,15 +55,6 @@ class SummaryLogPathInvalid(MindInsightException):
                                                     http_code=400)
 
 
-class CRCFailedError(MindInsightException):
-    """CRC fail, record corrupted."""
-    def __init__(self, error_detail):
-        error_msg = 'CRC Failed. Detail: %s' % error_detail
-        super(CRCFailedError, self).__init__(DataVisualErrors.CRC_FAILED,
-                                             error_msg,
-                                             http_code=400)
-
-
 class CRCLengthFailedError(MindInsightException):
     """CRC length fail, record corrupted."""
     def __init__(self, error_detail):

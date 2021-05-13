@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@ import os
 import shutil
 import tempfile
 from unittest.mock import Mock
-
-import pytest
 
 from mindinsight.datavisual.data_transform import ms_data_loader
 from mindinsight.datavisual.data_transform.ms_data_loader import MSDataLoader
@@ -56,16 +54,6 @@ class TestMsDataLoader:
         MockLogger.exception = mock_exception
         ms_data_loader.logger = MockLogger
 
-    @pytest.fixture(scope="function")
-    def crc_pass(self):
-        """Mock the crc to pass the check."""
-        ms_data_loader.crc32.CheckValueAgainstData = Mock(return_value=True)
-
-    @pytest.fixture(scope="function")
-    def crc_fail(self):
-        """Mock the crc to fail the check."""
-        ms_data_loader.crc32.CheckValueAgainstData = Mock(return_value=False)
-
     def test_check_files_update_success_deleted_files(self):
         """Test new file list delete some files."""
         old_file_list = ['summary.01', 'summary.02']
@@ -76,31 +64,6 @@ class TestMsDataLoader:
         shutil.rmtree(summary_dir)
         assert MockLogger.log_msg['info'] == "There are some files has been deleted, " \
                                              "we will reload all files in path {}.".format(summary_dir)
-
-    @pytest.mark.usefixtures('crc_pass')
-    def test_load_success_with_crc_pass(self):
-        """Test load success."""
-        summary_dir = tempfile.mkdtemp()
-        file1 = os.path.join(summary_dir, 'summary.01')
-        write_file(file1, SCALAR_RECORD)
-        ms_loader = MSDataLoader(summary_dir)
-        ms_loader._latest_summary_filename = 'summary.00'
-        ms_loader.load()
-        shutil.rmtree(summary_dir)
-        tag = ms_loader.get_events_data().list_tags_by_plugin('scalar')
-        tensors = ms_loader.get_events_data().tensors(tag[0])
-        assert len(tensors) == 3
-
-    @pytest.mark.usefixtures('crc_fail')
-    def test_load_with_crc_fail(self):
-        """Test when crc_fail and will not go to func _event_parse."""
-        summary_dir = tempfile.mkdtemp()
-        file2 = os.path.join(summary_dir, 'summary.02')
-        write_file(file2, SCALAR_RECORD)
-        ms_loader = MSDataLoader(summary_dir)
-        ms_loader.load()
-        shutil.rmtree(summary_dir)
-        assert 'Check crc failed' in str(MockLogger.log_msg['error'])
 
     def test_filter_event_files(self):
         """Test filter_event_files function ok."""

@@ -106,7 +106,7 @@ class ExplainParser(_SummaryParser):
                 logger.debug("Parse summary file offset %d, file path: %s.",
                              self._summary_file_handler.offset, file_path)
                 return file_changed, is_end, event_data
-            except (exceptions.CRCFailedError, exceptions.CRCLengthFailedError) as ex:
+            except exceptions.CRCLengthFailedError as ex:
                 self._summary_file_handler.reset_offset(start_offset)
                 is_end = True
                 logger.warning("Check crc failed and reset offset, file_path=%s, offset=%s. Detail: %r.",

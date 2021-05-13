@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import pytest
 
 from mindinsight.datavisual.common.enums import DataManagerStatus, PluginNameEnum
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
-from mindinsight.datavisual.data_transform import data_manager, ms_data_loader
+from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.data_loader import DataLoader
 from mindinsight.datavisual.data_transform.data_manager import DataManager
 from mindinsight.datavisual.data_transform.events_data import EventsData
@@ -45,11 +45,6 @@ class TestDataManager:
     """Test data_manager."""
     _plugin_name = PluginNameEnum.IMAGE.value
     _train_id_suffix = "_test_data_manager"
-
-    @pytest.fixture(scope="function")
-    def crc_pass(self):
-        """Mock the crc to pass the check."""
-        ms_data_loader.crc32.CheckValueAgainstData = Mock(return_value=True)
 
     def _make_path_and_file_list(self, dir_name):
         """Utils function for tests."""
