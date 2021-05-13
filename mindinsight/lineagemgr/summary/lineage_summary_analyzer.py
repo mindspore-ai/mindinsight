@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,9 +21,8 @@ from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import DecodeError
 
 from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
-from mindinsight.datavisual.utils import crc32
 from mindinsight.lineagemgr.common.exceptions.exceptions import MindInsightException, \
-    LineageVerificationException, LineageSummaryAnalyzeException
+    LineageSummaryAnalyzeException
 from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.validator.validate_path import safe_normalize_path
 from mindinsight.lineagemgr.summary.file_handler import FileHandler
@@ -53,7 +52,7 @@ class SummaryAnalyzer:
         file_path (str): The path of summary log.
 
     Raises:
-        LineageVerificationException: Raise when verification failed.
+        LineageSummaryAnalyzeException: Raise when read files failed.
     """
     HEADER_SIZE = 8
     HEADER_CRC_SIZE = 4
@@ -105,9 +104,7 @@ class SummaryAnalyzer:
             int, the length of event body.
         """
         header_str = self.file_handler.read(self.HEADER_SIZE)
-        header_crc_str = self.file_handler.read(self.HEADER_CRC_SIZE)
-        SummaryAnalyzer._check_crc(header_str, header_crc_str)
-
+        self.file_handler.read(self.HEADER_CRC_SIZE)
         body_len = struct.unpack("<Q", header_str)[0]
 
         return body_len
@@ -123,26 +120,9 @@ class SummaryAnalyzer:
             bytes, the event body in bytes.
         """
         body_str = self.file_handler.read(body_size)
-        body_crc_str = self.file_handler.read(self.BODY_CRC_SIZE)
-        SummaryAnalyzer._check_crc(body_str, body_crc_str)
+        self.file_handler.read(self.BODY_CRC_SIZE)
 
         return body_str
-
-    @staticmethod
-    def _check_crc(source_str, crc_str):
-        """
-        Check the integrity of source string.
-
-        Args:
-            source_str (bytes): Source string in bytes.
-            crc_str (bytes): CRC string of source string in bytes.
-
-        Raises:
-            LineageVerificationException: Raise when verification failed.
-        """
-        if not crc32.CheckValueAgainstData(crc_str, source_str, len(source_str)):
-            log.debug("The CRC verification not pass. source_str: %s. crc_str: %s.", source_str, crc_str)
-            raise LineageVerificationException("The CRC verification failed.")
 
 
 class LineageSummaryAnalyzer(SummaryAnalyzer):
