@@ -29,29 +29,29 @@ MindSpore>=1.2
 
 ```bash
 usage: fix_checkpoint_file.py [-h]
-                              source_py_file fixed_py_file source_ckpt_file
+                              source_py_file source_ckpt_file fixed_py_file
                               fixed_ckpt_file
 
 Fix weight name in CheckPoint file.
 
 positional arguments:
   source_py_file    source model script file
-  fixed_py_file     fixed model script file
-  source_ckpt_file  source_checkpoint file  
+  source_ckpt_file  source_checkpoint file
+  fixed_py_file     fixed model script file  
   fixed_ckpt_file   fixed_checkpoint file
 
 optional arguments:
-  -h, --help        show this hekp message and exit
+  -h, --help        show this help message and exit
 ```
 
 ### 使用示例
 
-假设原始网络脚本为`xxx/model.py`，修改后的网络脚本为`xxx/fixed_model.py`，原始权重文件为`xxx/model.ckpt`，生成的新权重文件为`xxx/fixed_model.ckpt`。
+假设原始网络脚本为`xxx/model.py`，原始权重文件为`xxx/model.ckpt`，修改后的网络脚本为`xxx/fixed_model.py`，生成的新权重文件为`xxx/fixed_model.ckpt`。
 
 则运行命令为：
 
 ```bash
-python -m mindinsight.mindconverter.tools.fix_checkpoit_file xxx/model.py xxx/fixed_model.py xxx/model.ckpt xxx/fixed_model.ckpt
+python -m mindinsight.mindconverter.tools.fix_checkpoit_file xxx/model.py xxx/model.ckpt xxx/fixed_model.py xxx/fixed_model.ckpt
 ```
 
 如果显示结果如下，则说明转换完成：
