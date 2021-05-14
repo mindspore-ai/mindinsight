@@ -77,11 +77,11 @@ def onnx_installation_validation(func):
 
         if not onnx_satisfied() or not check_common_dependency_integrity():
             _print_error(RuntimeIntegrityError(error_info))
-            sys.exit(0)
+            sys.exit(-1)
 
         if not onnx_lib_version_satisfied():
             _print_error(RuntimeIntegrityError(error_info))
-            sys.exit(0)
+            sys.exit(-1)
 
         func(graph_path=graph_path,
              input_nodes=input_nodes, output_nodes=output_nodes,
@@ -121,19 +121,19 @@ def tf_installation_validation(func):
         # Check whether tensorflow is installed.
         if not _check_tf_installation() or not onnx_satisfied():
             _print_error(not_integral_error)
-            sys.exit(0)
+            sys.exit(-1)
 
         if not any([check_common_dependency_integrity("tensorflow"),
                     check_common_dependency_integrity("tensorflow-gpu")]):
             _print_error(not_integral_error)
-            sys.exit(0)
+            sys.exit(-1)
 
         tf2onnx = import_module("tf2onnx")
 
         if not lib_version_satisfied(getattr(tf2onnx, "__version__"), TF2ONNX_MIN_VER) \
                 or not onnx_lib_version_satisfied():
             _print_error(not_integral_error)
-            sys.exit(0)
+            sys.exit(-1)
 
         func(graph_path=graph_path,
              input_nodes=input_nodes, output_nodes=output_nodes,
