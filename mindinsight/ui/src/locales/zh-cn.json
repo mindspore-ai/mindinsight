@@ -289,7 +289,7 @@
     "operatorInfo": "算子信息",
     "kernelInfo": "内核信息"
   },
-  "profiling": {    
+  "profiling": {
     "titleText": "性能分析 - 单机",
     "profilingDashboard": "性能看板",
     "showAverage": "展示平均值",
@@ -520,8 +520,8 @@
       "fpStart": "前向",
       "bpEnd": "后向"
     },
-    "isHeterogeneous":"暂不支持异构训练场景",
-    "scopeNameNum":"展示算子ScopeName层数: "
+    "isHeterogeneous": "暂不支持异构训练场景",
+    "scopeNameNum": "展示算子ScopeName层数: "
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
@@ -843,7 +843,13 @@
     },
     "paramValueTip": "设置值为：{value}",
     "logicCard": "逻辑卡",
-    "inpStepTip": "可输入当前轮次：0~{total_step_num}"
+    "inpStepTip": "可输入当前轮次：0~{total_step_num}",
+    "stackList": "堆栈列表",
+    "searchConditions": "搜索条件",
+    "nodeName": "节点名称",
+    "stackInfo": "堆栈信息",
+    "inputStack": "请输入堆栈信息",
+    "search": "搜索"
   },
   "explain": {
     "explain": "模型解释",

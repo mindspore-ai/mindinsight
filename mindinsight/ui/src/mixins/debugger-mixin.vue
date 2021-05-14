@@ -81,6 +81,7 @@ export default {
         if (res) {
           this.sessionId = res.data;
           this.retrieveAll();
+          this.queryStacks();
         }
       });
     },
@@ -1248,7 +1249,7 @@ export default {
      * Function to be executed after the search value changes
      */
     filterChange() {
-      if (this.searchWord === '' && this.nodeTypes.value === 'all') {
+      if (this.searchWord === '' && this.nodeTypes.value === 'all' && this.searchStackContent === '') {
         this.treeFlag = true;
         this.$nextTick(() => {
           setTimeout(() => {
@@ -1266,14 +1267,16 @@ export default {
      * Filter tree data by node name
      */
     filter() {
-      this.treeFlag = this.searchWord === '' && this.nodeTypes.value === 'all';
-      if (this.searchWord || this.nodeTypes.value !== 'all') {
+      this.treeFlag = this.searchWord === '' && this.nodeTypes.value === 'all' && this.searchStackContent === '';
+      if (this.searchWord || this.nodeTypes.value !== 'all' || this.searchStackContent) {
         this.searchedWord = this.searchWord;
+        this.searchedStackContent = this.searchStackContent;
         const params = {
           name: this.searchWord,
           watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
           graph_name: this.graphFiles.value,
           rank_id: this.logicCard.value,
+          stack_info_key_word: encodeURIComponent(this.searchStackContent),
         };
         if (this.graphFiles.value === this.$t('debugger.all')) {
           delete params.graph_name;
@@ -1709,7 +1712,7 @@ export default {
             val.selected = true;
             this.curWatchPointId = val.id;
             this.queryGraphByWatchpoint(val.id);
-            if (this.searchWord !== '' || this.nodeTypes.value !== 'all') {
+            if (this.searchWord !== '' || this.nodeTypes.value !== 'all' || this.searchStackContent !== '') {
               this.filter();
             }
           } else {
@@ -1892,7 +1895,7 @@ export default {
               this.showErrorMsg(err);
             },
         );
-      } else {
+      } else if (this.radio1 === 'tree') {
         this.$nextTick(() => {
           setTimeout(() => {
             const dom = document.querySelector(
@@ -2229,6 +2232,32 @@ export default {
       } else {
         this.resetGraph();
       }
+    },
+    queryStacks() {
+      const param = {
+        offset: this.stacks.currentPage - 1,
+        limit: this.stacks.pageSize.size,
+        key_word: encodeURIComponent(this.stacks.searchContent),
+      };
+      RequestService.queryStackList(param, this.sessionId).then(
+          (res) => {
+            if (res && res.data) {
+              this.stacks.total = res.data.total;
+              this.stacks.currentPage = res.data.offset + 1;
+              this.stacks.list = JSON.parse(JSON.stringify(res.data.stack_infos));
+            } else {
+              this.stacks.currentPage = 1;
+              this.stacks.total = 0;
+              this.stacks.list = [];
+            }
+          },
+          (error) => {
+            this.stacks.currentPage = 1;
+            this.stacks.total = 0;
+            this.stacks.list = [];
+            this.showErrorMsg(error);
+          },
+      );
     },
   },
 };

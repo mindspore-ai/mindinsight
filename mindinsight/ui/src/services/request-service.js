@@ -427,6 +427,13 @@ export default {
       data: params,
     });
   },
+  queryStackList(params, sessionId) {
+    return axios({
+      method: 'get',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/stacks`,
+      params,
+    });
+  },
   // explain list
   getExplainList(params) {
     return axios({
