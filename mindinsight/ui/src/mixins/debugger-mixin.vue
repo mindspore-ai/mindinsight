@@ -421,7 +421,7 @@ export default {
     handleNodeClick(data) {
       this.isIntoView = false;
       this.selectedNode.name = data.name;
-      if (this.treeFlag) {
+      if (this.treeFlag && this.allGraphData[data.name]) {
         this.querySingleNode({}, data.name, true);
       } else {
         if (this.graphFiles.value === this.$t('debugger.all')) {
@@ -1241,7 +1241,7 @@ export default {
       node.loaded = false;
       node.childNodes = [];
       if (this.treeFlag) {
-        this.dealDoubleClick(node.data.name);
+        this.dealDoubleClick(node.data.name, node.expanded);
       }
     },
     /**

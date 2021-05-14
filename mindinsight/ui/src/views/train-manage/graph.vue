@@ -678,7 +678,7 @@ export default {
     nodeCollapse(_, node) {
       node.loaded = false;
       if (this.treeFlag) {
-        this.dealDoubleClick(node.data.name);
+        this.dealDoubleClick(node.data.name, node.expanded);
       }
     },
     /**
@@ -794,8 +794,9 @@ export default {
     /**
      * Double-click the processing to be performed on the node to expand or narrow the namespace or aggregation node.
      * @param {String} name Name of the current node (also the ID of the node)
+     * @param {Boolean} expanded The expanded state of the current node
      */
-    dealDoubleClick(name) {
+    dealDoubleClick(name, expanded = false) {
       this.loading.info = this.$t('graph.queryLoading');
       this.loading.show = true;
       this.$nextTick(() => {
@@ -806,8 +807,10 @@ export default {
           if (this.allGraphData[name].isUnfold) {
             this.selectedNode.name = name;
             this.deleteNamespace(name);
-          } else {
+          } else if (!expanded) {
             this.queryGraphData(name);
+          } else {
+            this.loading.show = false;
           }
         }, timeOut);
       });
