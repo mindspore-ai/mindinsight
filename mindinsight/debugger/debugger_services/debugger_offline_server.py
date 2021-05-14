@@ -177,6 +177,7 @@ class DebuggerOfflineManager:
     def _load_graphs(self):
         """Load graphs."""
         # the format of graphs is a list of {'device_id': int, 'graph_protos': [GraphProto]}}
+        log.debug("Begin to load graphs.")
         graphs = self._data_loader.load_graphs()
         device_stream = self._cache_store.get_stream_handler(Streams.DEVICE)
         graph_per_rank = {}
@@ -191,8 +192,10 @@ class DebuggerOfflineManager:
                 tensor_stream_per_rank.put_const_vals(graph_proto.const_vals)
         # the graph_per_rank is format like: Dict[<rank_id>, Dict[<graph_name>, <GraphProto>]]
         self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_per_rank)
+        self._cache_store.get_stream_handler(Streams.GRAPH).parse_stack_infos()
         device_stream.add_graph_name_info(graph_per_rank)
         self._metadata_stream.state = ServerStatus.RECEIVE_GRAPH.value
+        log.debug("Finish to load graphs.")
 
     @debugger_server_wrap
     def wait_for_termination(self):

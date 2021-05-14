@@ -674,3 +674,24 @@ class DebuggerSession:
                 ui_watch_condition.append(param)
             reply['watch_points'][i]['watch_condition']['params'] = ui_watch_condition
         return reply
+
+    def get_stack_infos(self, filter_condition):
+        """
+        Get stack infos.
+
+        Args:
+            filter_condition (dict): The filter condition to query stack infos.
+
+                - pattern (str): The pattern of stack infos.
+                - limit (int): The size of each page.
+                - offset (int): The index of the page. Valid only when `limit` is not 0.
+
+        Returns:
+            dict, the stack info object.
+        """
+        source_handler = self.cache_store.get_stream_handler(Streams.GRAPH).source_handler
+        res = source_handler.get_stack_info_by_offset(
+            pattern=filter_condition.get('pattern'),
+            limit=filter_condition.get('limit', 0),
+            offset=filter_condition.get('offset', 0))
+        return res

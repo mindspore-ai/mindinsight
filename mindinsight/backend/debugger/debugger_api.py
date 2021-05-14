@@ -104,7 +104,7 @@ def search(session_id):
     watch_point_id = int(request.args.get('watch_point_id', 0))
     node_category = request.args.get('node_category')
     rank_id = int(request.args.get('rank_id', 0))
-    stack_pattern = request.args.get('stack_info_key_word')
+    stack_pattern = _unquote_param(request.args.get('stack_info_key_word'))
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).search,
                         {'name': name,
                          'graph_name': graph_name,
@@ -400,7 +400,7 @@ def get_train_jobs():
     Check the current active sessions.
 
     Examples:
-        >>> POST http://xxxx/v1/mindinsight/debugger/sessions
+        >>> GET http://xxxx/v1/mindinsight/debugger/sessions
     """
     reply = _wrap_reply(SessionManager.get_instance().get_train_jobs)
     return reply
@@ -415,6 +415,26 @@ def delete_session(session_id):
         >>> POST http://xxxx/v1/mindinsight/debugger/xxx/delete-session
     """
     reply = _wrap_reply(SessionManager.get_instance().delete_session, session_id)
+    return reply
+
+
+@BLUEPRINT.route("/debugger/sessions/<session_id>/stacks", methods=["GET"])
+def get_stack_infos(session_id):
+    """
+    Get stack infos.
+
+    Examples:
+        >>> GET /v1/mindsight/debugger/sessions/<session_id>/stacks?key_word=xxx&offset=0
+    """
+    key_word = _unquote_param(request.args.get('key_word'))
+    limit = int(request.args.get('limit', 10))
+    offset = int(request.args.get('offset', 0))
+    filter_condition = {
+        'pattern': key_word,
+        'limit': limit,
+        'offset': offset
+    }
+    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).get_stack_infos, filter_condition)
     return reply
 
 
