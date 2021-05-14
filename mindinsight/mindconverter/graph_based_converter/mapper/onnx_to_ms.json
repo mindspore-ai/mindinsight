@@ -42,5 +42,7 @@
   "onnx::Sin": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.sin_mapper.SinMapper",
   "onnx::Cos": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.cos_mapper.CosMapper",
   "onnx::ReduceSum": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.reduce_sum_mapper.ReduceSumMapper",
-  "onnx::Dropout": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.drop_out_mapper.DropoutMapper"
+  "onnx::Dropout": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.drop_out_mapper.DropoutMapper",
+  "onnx::ConvTranspose": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.conv_transpose_mapper.Conv2dTransposeMapper",
+  "onnx::PRelu": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.prelu_mapper.PReLUMapper"
 }
