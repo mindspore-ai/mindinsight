@@ -28,7 +28,7 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from 'echarts';
+import echarts from '../js/echarts';
 import CommonProperty from '../common/common-property';
 import {format, precisionRound} from 'd3';
 const d3 = {format, precisionRound};

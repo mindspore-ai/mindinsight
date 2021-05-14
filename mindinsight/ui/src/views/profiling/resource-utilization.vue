@@ -103,7 +103,7 @@ limitations under the License.
 </template>
 <script>
 import RequestService from '../../services/request-service';
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 export default {
   data() {
     return {
@@ -128,10 +128,21 @@ export default {
         id: 'deviceCpuChart',
         chartDom: null,
         option: {
+          color: [
+            '#c23531',
+            '#2f4554',
+            '#61a0a8',
+            '#d48265',
+          ],
           tooltip: {
             trigger: 'axis',
             formatter: null,
             confine: true,
+            backgroundColor: 'rgba(50, 50, 50, 0.7)',
+            borderWidth: 0,
+            textStyle: {
+              color: '#fff',
+            },
           },
           legend: {
             right: 70,
@@ -463,6 +474,11 @@ export default {
           trigger: 'axis',
           axisPointer: {
             type: 'line',
+          },
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
           },
           formatter(params) {
             let tipStr = '';

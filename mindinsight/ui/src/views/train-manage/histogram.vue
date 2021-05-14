@@ -128,10 +128,10 @@ limitations under the License.
 </template>
 
 <script>
+import echarts from '../../js/echarts';
 import multiselectGroupComponents from '../../components/multiselect-group.vue';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
-import echarts from 'echarts';
 import {format, precisionRound} from 'd3';
 import autoUpdate from '../../mixins/auto-update.vue';
 const d3 = {format, precisionRound};

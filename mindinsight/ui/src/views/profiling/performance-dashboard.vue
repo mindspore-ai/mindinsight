@@ -34,7 +34,7 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import empty, {NO_DATA, LOADING_DATA} from '../../components/empty';
 export default {
@@ -149,6 +149,11 @@ export default {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow',
+          },
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
           },
         },
         legend: {

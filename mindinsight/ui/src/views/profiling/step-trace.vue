@@ -147,7 +147,7 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 export default {
   data() {
@@ -410,6 +410,11 @@ export default {
                   tooltip: {
                     trigger: 'axis',
                     confine: true,
+                    backgroundColor: 'rgba(50, 50, 50, 0.7)',
+                    borderWidth: 0,
+                    textStyle: {
+                      color: '#fff',
+                    },
                   },
                   dataZoom: [
                     {

@@ -307,7 +307,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import {select, selectAll, zoom} from 'd3';
 import {event as currentEvent} from 'd3-selection';
@@ -602,6 +602,11 @@ export default {
         tooltip: {
           trigger: 'axis',
           confine: true,
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
+          },
         },
         toolbox: {
           show: true,
@@ -802,6 +807,11 @@ export default {
                     axisPointer: {
                       type: 'shadow',
                     },
+                    backgroundColor: 'rgba(50, 50, 50, 0.7)',
+                    borderWidth: 0,
+                    textStyle: {
+                      color: '#fff',
+                    },
                     confine: true,
                     formatter(params) {
                       let value = {};
@@ -916,6 +926,11 @@ export default {
             tooltip: {
               trigger: 'axis',
               confine: true,
+              backgroundColor: 'rgba(50, 50, 50, 0.7)',
+              borderWidth: 0,
+              textStyle: {
+                color: '#fff',
+              },
             },
             xAxis: {
               name: `${this.$t('profiling.sampleInterval')}/${
