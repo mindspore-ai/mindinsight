@@ -20,8 +20,9 @@ limitations under the License.
       <div class="left"
            v-show="!leftShow">
         <div class="header">
-          {{radio1==='tree' ? $t('debugger.nodeList') :
-          ($t('debugger.curHitNode') + '(' + pagination.total + ')')}}
+          {{radio1==='tree' ? $t('debugger.nodeList') : (
+            radio1==='stack' ? $t('debugger.stackList') :
+          ($t('debugger.curHitNode') + '(' + pagination.total + ')'))}}
           <div class="outdate-tip"
                v-if="hitsOutdated && radio1==='hit'">
             <el-tooltip class="item"
@@ -35,60 +36,88 @@ limitations under the License.
             <el-radio-group v-model="radio1"
                             size='mini'
                             @change="searchWatchpointHits(true)">
+              <el-radio-button label="hit">
+                <i class="el-icon-s-fold"></i>
+              </el-radio-button>
               <el-radio-button label="tree">
                 <i class="el-icon-s-grid"></i>
               </el-radio-button>
-              <el-radio-button label="hit">
-                <i class="el-icon-s-fold"></i>
+              <el-radio-button label="stack">
+                <i class="el-icon-s-unfold"></i>
               </el-radio-button>
             </el-radio-group>
           </div>
         </div>
         <div class="content"
              v-show="radio1==='tree'">
-          <div class="node-type">
-            <div class="label">{{ $t('debugger.logicCard') }}</div>
-            <el-select v-model="logicCard.value"
-                       @change="logicCardChange"
-                       :disabled="!trainId">
-              <el-option v-for="item in logicCard.options"
-                         :key="item"
-                         :value="item">
-              </el-option>
-            </el-select>
+          <div class="search-conditions"
+               :class="collapseConditions ? 'collapse-top':''">
+            <div class="condition-title">
+              {{$t('debugger.searchConditions')}}
+              <div class="img-btn"
+                   :class="collapseConditions ? 'collapse':''"
+                   @click="collapseConditions=!collapseConditions"></div>
+            </div>
+            <div class="condition-container"
+                 v-show="!collapseConditions">
+              <div class="node-type">
+                <div class="label">{{ $t('debugger.logicCard') }}</div>
+                <el-select v-model="logicCard.value"
+                           @change="logicCardChange"
+                           :disabled="!trainId">
+                  <el-option v-for="item in logicCard.options"
+                             :key="item"
+                             :value="item">
+                  </el-option>
+                </el-select>
+              </div>
+              <div class="node-type">
+                <div class="label">{{ $t('debugger.graphFile') }}</div>
+                <el-select v-model="graphFiles.value"
+                           @change="queryGraphByFile">
+                  <el-option v-for="item in graphFiles.options"
+                             :key="item"
+                             :value="item">
+                  </el-option>
+                </el-select>
+              </div>
+              <div class="node-type">
+                <div class="label">{{$t('debugger.nodeTypes')}}</div>
+                <el-select v-model="nodeTypes.value"
+                           @change="nodeTypesChange">
+                  <el-option v-for="item in nodeTypes.options"
+                             :key="item"
+                             :label="nodeTypes.label[item]"
+                             :value="item"
+                             :class="{'deb-indent': item != 'all'}">
+                  </el-option>
+                </el-select>
+              </div>
+              <div class="select-wrap">
+                <div class="label">{{$t('debugger.nodeName')}}</div>
+                <el-input :placeholder="$t('graph.inputNodeName')"
+                          v-model="searchWord"
+                          class="input-with-select"
+                          @input="filterChange"
+                          @keyup.enter.native="filter"
+                          clearable>
+                </el-input>
+              </div>
+              <div class="select-wrap">
+                <div class="label">{{$t('debugger.stackInfo')}}</div>
+                <el-input :placeholder="$t('debugger.inputStack')"
+                          v-model="searchStackContent"
+                          class="input-with-select"
+                          @input="filterChange"
+                          @keyup.enter.native="filter"
+                          clearable>
+                </el-input>
+              </div>
+            </div>
           </div>
-          <div class="node-type">
-            <div class="label">{{ $t('debugger.graphFile') }}</div>
-            <el-select v-model="graphFiles.value"
-                       @change="queryGraphByFile">
-              <el-option v-for="item in graphFiles.options"
-                         :key="item"
-                         :value="item">
-              </el-option>
-            </el-select>
-          </div>
-          <div class="node-type">
-            <div class="label">{{$t('debugger.nodeTypes')}}</div>
-            <el-select v-model="nodeTypes.value"
-                       @change="nodeTypesChange">
-              <el-option v-for="item in nodeTypes.options"
-                         :key="item"
-                         :label="nodeTypes.label[item]"
-                         :value="item"
-                         :class="{'deb-indent': item != 'all'}">
-              </el-option>
-            </el-select>
-          </div>
-          <div class="select-wrap">
-            <el-input :placeholder="$t('graph.inputNodeName')"
-                      v-model="searchWord"
-                      class="input-with-select"
-                      @input="filterChange"
-                      @keyup.enter.native="filter"
-                      clearable>
-            </el-input>
-          </div>
-          <div class="tree-wrap">
+
+          <div class="tree-wrap"
+               :class="!collapseConditions ? 'collapse':''">
             <div class="select-all-files"
                  v-if="curWatchPointId && treeFlag">
               <el-button type="primary"
@@ -278,6 +307,49 @@ limitations under the License.
                            layout="prev, pager, next, jumper"
                            :total="pagination.total"
                            v-show="pagination.total">
+            </el-pagination>
+          </div>
+        </div>
+        <div class="content"
+             v-show="radio1==='stack'">
+          <div class="stack-search">
+            <div class="label">{{$t('debugger.stackInfo')}}</div>
+            <el-input :placeholder="$t('debugger.inputStack')"
+                      v-model="stacks.searchContent"
+                      @keyup.enter.native="queryStacks"
+                      clearable>
+            </el-input>
+          </div>
+
+          <div class="hit-list-wrap">
+            <el-table class="watchpoint-table"
+                      :data="stacks.list">
+              <el-table-column type="expand">
+                <template slot-scope="props">
+                  <ul class="stack-info">
+                    <li v-for="i in props.row.items"
+                        :key="i.line_no">
+                      {{i.line_no}}: {{i.code_line}}
+                      <el-button type="text"
+                                 class="btn"
+                                 @click="stackOperator(i)">{{$t('debugger.search')}}</el-button>
+                    </li>
+                  </ul>
+                </template>
+              </el-table-column>
+              <el-table-column prop="file_path"
+                               :label="$t('graph.name')">
+              </el-table-column>
+            </el-table>
+            <el-pagination class="watchpoint-page"
+                           small
+                           @current-change="handleCurrentChange"
+                           :current-page="stacks.currentPage"
+                           :page-size="stacks.pageSize.size"
+                           :pager-count="pagination.pageCount"
+                           layout="prev, pager, next, jumper"
+                           :total="stacks.total"
+                           v-show="stacks.total">
             </el-pagination>
           </div>
         </div>
@@ -536,6 +608,29 @@ limitations under the License.
               </div>
             </div>
           </el-tab-pane>
+          <el-tab-pane :label="$t('debugger.stackInfo')"
+                       name="stack">
+            <div class="table-content">
+              <ul class="stack-content">
+                <li class="stack-item"
+                    v-show="nodeStackContent.length"
+                    v-for="(item, index) in nodeStackContent"
+                    :key="index">
+                  {{item.file_path}}:{{item.line_no}}
+                  <br>
+                  {{item.code_line}}
+                  <div class="operator-btns">
+                    <el-button type="text"
+                               @click="stackOperator(item)">{{$t('debugger.search')}}</el-button>
+                  </div>
+                </li>
+                <div class="noData-text"
+                     v-show="!nodeStackContent.length">
+                  {{$t("public.noData")}}
+                </div>
+              </ul>
+            </div>
+          </el-tab-pane>
         </el-tabs>
       </div>
     </div>
@@ -777,6 +872,9 @@ export default {
     return {
       leftShow: false,
       searchWord: '',
+      searchedWord: '',
+      searchStackContent: '',
+      searchedStackContent: '',
       tableData: [],
       currentRow: null,
       tipsFlag: false,
@@ -872,7 +970,6 @@ export default {
       isCurrentGraph: true, // Check whether the new and old graphs are the same.
       expandKeys: [],
       isHitIntoView: true,
-      searchedWord: '',
       trainId: this.$route.query.dir,
       recommendWatchPointDialog: false,
       hitsOutdated: false,
@@ -905,6 +1002,18 @@ export default {
       sessionId: this.$route.query.sessionId,
       isShowInp: false,
       newStep: '',
+      nodeStackContent: [],
+      collapseConditions: false,
+      stacks: {
+        list: [],
+        total: 0,
+        currentPage: 1,
+        pageSize: {
+          options: [10, 20, 50],
+          size: 10,
+        },
+        searchContent: '',
+      },
     };
   },
   components: {debuggerTensor, tree},
@@ -915,6 +1024,7 @@ export default {
     if (this.trainId) {
       document.title = `${this.trainId}-${this.$t('debugger.debugger')}-MindInsight`;
       this.retrieveAll();
+      this.queryStacks();
     } else {
       this.getSession();
     }
@@ -962,6 +1072,12 @@ export default {
     },
   },
   methods: {
+    stackOperator(stack) {
+      if (!stack || !stack.file_path || !(stack.line_no || stack.line_no === 0)) return;
+      this.searchStackContent = `${stack.file_path}:${stack.line_no}`;
+      this.radio1 = 'tree';
+      this.filter();
+    },
     showTensor(row, type) {
       this.curRowObj = JSON.parse(JSON.stringify(row));
       this.curRowObj.type = type;
@@ -988,12 +1104,13 @@ export default {
       const device = this.devices.find((val) => val.rank_id === this.logicCard.value);
       this.metadata.ip = device.server_ip;
       this.metadata.device_name = device.device_id;
-      this.queryGraphByFile();
+      if (this.nodeTypes.value === 'all' && !this.searchWord && !this.searchStackContent) {
+        this.queryGraphByFile();
+      } else {
+        this.filter();
+      }
     },
     queryGraphByFile() {
-      this.searchWord = '';
-      this.nodeTypes.value = 'all';
-      this.treeFlag = true;
       const params = {
         mode: 'node',
         params: {
@@ -1104,12 +1221,11 @@ export default {
       }
     },
     nodeTypesChange() {
-      if (this.nodeTypes.value === 'all' && !this.searchWord) {
+      if (this.nodeTypes.value === 'all' && !this.searchWord && !this.searchStackContent) {
         this.treeFlag = true;
         this.node.level = 0;
         this.queryGraphByFile();
       } else {
-        this.treeFlag = false;
         this.filter();
       }
     },
@@ -1555,6 +1671,8 @@ export default {
       }
       if (this.tabs.activeName === 'detail') {
         this.setSelectedNodeData(node.data);
+      } else if (this.tabs.activeName === 'stack') {
+        this.nodeStackContent = JSON.parse(JSON.stringify(node.data.stack_info || []));
       }
 
       if (this.watchPointHits.length && this.radio1 === 'hit' && this.isHitIntoView) {
@@ -1777,9 +1895,12 @@ export default {
       }
     },
     tabsChange() {
+      const node = this.allGraphData[this.selectedNode.name];
+      if (!node) return;
       if (this.tabs.activeName === 'detail') {
-        const node = this.allGraphData[this.selectedNode.name];
         this.setSelectedNodeData(node);
+      } else if (this.tabs.activeName === 'stack') {
+        this.nodeStackContent = JSON.parse(JSON.stringify(node.stack_info || []));
       }
     },
     /**
@@ -1867,39 +1988,87 @@ export default {
 .deb-wrap .left-wrap .left .content {
   height: calc(100% - 145px);
 }
-.deb-wrap .left-wrap .left .content .node-type {
+.deb-wrap .left-wrap .left .content .search-conditions {
+  height: 245px;
+  position: relative;
+}
+.deb-wrap .left-wrap .left .content .search-conditions.collapse-top {
+  height: 30px;
+}
+.deb-wrap .left-wrap .left .content .search-conditions .condition-title {
+  height: 30px;
+  line-height: 30px;
+  padding: 0 20px;
+  position: relative;
+  border-bottom: 1px solid #ebeef5;
+  font-weight: bold;
+}
+.deb-wrap .left-wrap .left .content .search-conditions .condition-title .img-btn {
+  height: 20px;
+  width: 20px;
+  background-image: url('../../assets/images/all-drop-down.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  float: right;
+  margin-top: 5px;
+  cursor: pointer;
+}
+.deb-wrap .left-wrap .left .content .search-conditions .condition-title .img-btn.collapse {
+  transform: rotate(180deg);
+}
+
+.deb-wrap .left-wrap .left .content .search-conditions .condition-container {
+  border-bottom: 1px solid #ebeef5;
+}
+
+.deb-wrap .left-wrap .left .content .node-type,
+.stack-search {
   height: 40px;
   padding: 10px 15px 0 15px;
 }
-.deb-wrap .left-wrap .left .content .node-type .label {
+
+.deb-wrap .left-wrap .left .content .node-type .label,
+.deb-wrap .left-wrap .left .content .stack-search .label {
   display: inline-block;
   width: 80px;
 }
-.deb-wrap .left-wrap .left .content .node-type .el-select {
+.deb-wrap .left-wrap .left .content .node-type .el-select,
+.deb-wrap .left-wrap .left .content .stack-search .el-input {
   width: calc(100% - 80px);
 }
-.deb-wrap .left-wrap .left .content .select-wrap {
+.deb-wrap .left-wrap .left .content .search-conditions .select-wrap {
   padding: 10px 15px;
   font-size: 14px;
 }
-.deb-wrap .left-wrap .left .content .select-wrap .el-select .el-input {
-  width: 100%;
+.deb-wrap .left-wrap .left .content .search-conditions .select-wrap .label {
+  display: inline-block;
+  width: 80px;
 }
-.deb-wrap .left-wrap .left .content .select-wrap .input-with-select .el-input-group__prepend {
+.deb-wrap .left-wrap .left .content .search-conditions .select-wrap .el-input {
+  width: calc(100% - 80px);
+}
+.deb-wrap .left-wrap .left .content .search-conditions .select-wrap + .select-wrap {
+  padding-top: 0px;
+}
+.deb-wrap .left-wrap .left .content .search-conditions .select-wrap .input-with-select .el-input-group__prepend {
   background-color: #fff;
 }
-.deb-wrap .left-wrap .left .content .select-wrap .el-input--suffix .el-input__inner {
+.deb-wrap .left-wrap .left .content .search-conditions .select-wrap .el-input--suffix .el-input__inner {
   padding-left: 5px;
   padding-right: 30px;
   font-size: 12px;
 }
 .deb-wrap .left-wrap .left .content .tree-wrap {
-  height: calc(70% - 172px);
+  height: calc(70% - 30px);
   overflow-y: auto;
-  padding: 0 15px 15px;
+  padding: 10px 15px 15px;
   position: relative;
   z-index: 2;
 }
+.deb-wrap .left-wrap .left .content .tree-wrap.collapse {
+  height: calc(70% - 245px);
+}
+
 .deb-wrap .left-wrap .left .content .tree-wrap .image-type {
   width: 20px;
   height: 10px;
@@ -2032,6 +2201,16 @@ export default {
   max-height: calc(100% - 45px);
   overflow: auto;
   margin-top: 10px;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .watchpoint-table .stack-info > li {
+  padding: 5px 50px 5px 10px !important;
+  position: relative;
+}
+.deb-wrap .left-wrap .left .content .hit-list-wrap .watchpoint-table .stack-info > li > .btn {
+  padding: 0;
+  position: absolute;
+  right: 10px;
+  top: calc(50% - 8px);
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .el-table::before {
   height: 0;
@@ -2300,7 +2479,7 @@ export default {
   height: calc(50% - 60px);
   position: relative;
 }
-.deb-wrap .right .table-container img {
+.deb-wrap .right .table-container > img {
   position: absolute;
   right: 10px;
   top: 12px;
@@ -2320,6 +2499,33 @@ export default {
   height: 100%;
   overflow: hidden;
   position: relative;
+}
+.deb-wrap .right .table-container .table-content .stack-content {
+  background-color: #f5f7fa;
+  height: 100%;
+  overflow: auto;
+}
+.deb-wrap .right .table-container .table-content .stack-content .stack-item {
+  line-height: 18px;
+  padding: 5px 60px 5px 10px !important;
+  position: relative;
+  word-break: break-all;
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
+}
+.deb-wrap .right .table-container .table-content .stack-content .stack-item:hover {
+  background-color: #dfe7f5;
+}
+.deb-wrap .right .table-container .table-content .stack-content .operator-btns {
+  position: absolute;
+  right: 10px;
+  top: calc(50% - 20px);
+}
+
+.deb-wrap .right .table-container .table-content .stack-content .noData-text {
+  text-align: center;
+  line-height: 60px;
+  color: #909399;
 }
 .deb-wrap .right .table-container .table-content .table-wrap {
   height: 100%;
