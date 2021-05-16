@@ -42,11 +42,8 @@ Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/tra
 - Confirm that [Python](https://www.python.org/ftp/python/3.7.5/Python-3.7.5.tgz) 3.7.5 is installed.
 - The versions of MindInsight and MindSpore must be consistent.
 - If you use source code to compile and install, the following dependencies also need to be installed:
-    - Confirm that [CMake](https://cmake.org/download/) 3.14.1 or later is installed.
-    - Confirm that [GCC](https://gcc.gnu.org/releases.html) 7.3.0 is installed.
     - Confirm that [node.js](https://nodejs.org/en/download/) 10.19.0 or later is installed.
     - Confirm that [wheel](https://pypi.org/project/wheel/) 0.32.0 or later is installed.
-    - Confirm that [pybind11](https://pypi.org/project/pybind11/) 2.4.3 or later is installed.
 - All other dependencies are included in [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt).
 
 ### Installation Methods
@@ -64,13 +61,12 @@ pip install mindinsight
 Install with customized version:
 
 ```bash
-pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/mindinsight-{version}-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)). In other cases, you need to manually install dependency items.  
-> - `{version}` denotes the version of MindInsight. For example, when you are downloading MindSpore 1.0.1, `{version}` should be 1.0.1.  
-> - `{arch}` denotes the system architecture. For example, the Linux system you are using is x86 architecture 64-bit, `{arch}` should be `x86_64`. If the system is ARM architecture 64-bit, then it should be `aarch64`.  
-> - `{system}` denotes the system version. For example, if you are using EulerOS ARM architecture, `{system}` should be `euleros_aarch64`. Currently, the following systems are supported by Ascend: `euleros_aarch64`/`centos_aarch64`/`centos_x86`/`ubuntu_aarch64`/`ubuntu_x86`. `ubuntu_x86` is supported by GPU.
+> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)). In other cases, you need to manually install dependency items.
+> - `{version}` denotes the version of MindInsight. For example, when you are downloading MindSpore 1.0.1, `{version}` should be 1.0.1.
+> - MindInsight supports only Linux distro with x86 architecture 64-bit or ARM architecture 64-bit.
 
 #### Installation by Source Code
 
@@ -99,7 +95,7 @@ You can choose any of the following installation methods:
     ```bash
     cd mindinsight
     bash build/build.sh
-    pip install output/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install output/mindinsight-{version}-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 ### Installation Verification
