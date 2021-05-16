@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,16 +48,6 @@ class LineageSummaryAnalyzeException(MindInsightException):
         super(LineageSummaryAnalyzeException, self).__init__(
             error=LineageErrors.SUMMARY_ANALYZE_ERROR,
             message=LineageErrorMsg.SUMMARY_ANALYZE_ERROR.value.format(msg),
-            http_code=400
-        )
-
-
-class LineageVerificationException(MindInsightException):
-    """The summary verification error in lineage module."""
-    def __init__(self, msg):
-        super(LineageVerificationException, self).__init__(
-            error=LineageErrors.SUMMARY_VERIFICATION_ERROR,
-            message=LineageErrorMsg.SUMMARY_VERIFICATION_ERROR.value.format(msg),
             http_code=400
         )
 

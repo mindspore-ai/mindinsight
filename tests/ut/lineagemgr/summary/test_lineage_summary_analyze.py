@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,7 @@ from unittest import mock, TestCase
 from unittest.mock import MagicMock
 
 from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
-from mindinsight.lineagemgr.common.exceptions.exceptions import LineageVerificationException, \
-    LineageSummaryAnalyzeException
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageSummaryAnalyzeException
 from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.summary.lineage_summary_analyzer import LineageSummaryAnalyzer, \
     LineageInfo, SummaryAnalyzer
@@ -66,10 +65,8 @@ class TestSummaryAnalyzer(TestCase):
         res = self.analyzer._read_event()
         self.assertEqual(res, "event")
 
-    @mock.patch.object(SummaryAnalyzer, '_check_crc')
-    def test_read_header(self, *args):
+    def test_read_header(self):
         """Test read_header method."""
-        args[0].return_value = None
         header_str = b'\x01' + b'\x00' * 7
         header_crc_str = b'\x00' * 4
         self.analyzer.file_handler.read.side_effect = [
@@ -77,27 +74,14 @@ class TestSummaryAnalyzer(TestCase):
         res = self.analyzer._read_header()
         self.assertEqual(res, 1)
 
-    @mock.patch.object(SummaryAnalyzer, '_check_crc')
-    def test_read_body(self, *args):
+    def test_read_body(self):
         """Test read_body method."""
-        args[0].return_value = None
         body_str = b'\x01' * 5
         body_crc_str = b'\x00' * 4
         self.analyzer.file_handler.read.side_effect = [
             body_str, body_crc_str]
         res = self.analyzer._read_body(5)
         self.assertEqual(res, body_str)
-
-    @mock.patch("mindinsight.lineagemgr.summary.lineage_summary_analyzer.crc32")
-    @mock.patch.object(log, "error")
-    def test_check_crc(self, *args):
-        """Test _check_crc method."""
-        args[0].return_value = None
-        args[1].CheckValueAgainstData.return_value = False
-        source_str = b'\x01' * 10
-        crc_str = b'\x00' * 4
-        with self.assertRaisesRegex(LineageVerificationException, "The CRC verification failed."):
-            self.analyzer._check_crc(source_str, crc_str)
 
 
 class TestLineageSummaryAnalyzer(TestCase):
@@ -136,6 +120,6 @@ class TestLineageSummaryAnalyzer(TestCase):
     @mock.patch.object(LineageSummaryAnalyzer, 'get_latest_info')
     def test_get_summary_infos_except(self, *args):
         """Test get_summary_infos method with exception."""
-        args[0].side_effect = LineageVerificationException("mock exception")
+        args[0].side_effect = IOError("mock exception")
         with self.assertRaises(LineageSummaryAnalyzeException):
             _ = LineageSummaryAnalyzer.get_summary_infos('fake_path.log')
