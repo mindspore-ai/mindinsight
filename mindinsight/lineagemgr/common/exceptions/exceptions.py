@@ -124,3 +124,13 @@ class LineageSearchConditionParamError(MindInsightException):
             message=LineageErrorMsg.LINEAGE_SEARCH_CONDITION_PARAM_ERROR.value.format(msg),
             http_code=400
         )
+
+
+class LineageFileHandlerReadError(MindInsightException):
+    """File_handler read error in lineage module."""
+    def __init__(self, msg):
+        super(LineageFileHandlerReadError, self).__init__(
+            error=LineageErrors.LINEAGE_FILE_HANDLER_READ_ERROR,
+            message=LineageErrorMsg.LINEAGE_FILE_HANDLER_READ_ERROR.value.format(msg),
+            http_code=400
+        )

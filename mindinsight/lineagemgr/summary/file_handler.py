@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 # ============================================================================
 """File handler for lineage summary log."""
 import os
-
+from mindinsight.lineagemgr.common.exceptions.exceptions import LineageFileHandlerReadError
 
 class FileHandler:
     """
@@ -89,6 +89,8 @@ class FileHandler:
             offset = self._offset
 
         new_offset = offset + size
+        if new_offset > self.size:
+            raise LineageFileHandlerReadError('The sum of offset and size is out of range.')
         result = self._cache[offset:new_offset]
         self._offset = new_offset
 
