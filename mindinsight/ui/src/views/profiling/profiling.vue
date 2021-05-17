@@ -349,10 +349,11 @@ export default {
     backToDdashboard() {
       if (this.$route.query.activeName) {
         const {dir, id, path, activeName} = this.$route.query;
+        const idTemp = id.split('/cluster_profiler/')[0];
         const pathTemp = path.split('/cluster_profiler/')[0];
         this.$router.push({
           path: '/memory-heatmap',
-          query: {dir, id, path: pathTemp, activeName},
+          query: {dir, id: idTemp, path: pathTemp, activeName},
         });
       } else {
         let path = '/profiling/profiling-dashboard';

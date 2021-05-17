@@ -238,7 +238,7 @@ export default {
     // Listening card number
     '$parent.curDashboardInfo.curCardNum': {
       handler(newValue) {
-        if (isNaN(newValue) || newValue === this.curCardNum || this.firstInit) {
+        if (isNaN(parseInt(newValue)) || newValue === this.curCardNum || this.firstInit) {
           return;
         }
         this.curCardNum = newValue;

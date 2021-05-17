@@ -287,8 +287,8 @@ export default {
       this.$router.push({
         path: '/profiling/memory-detail',
         query: {
-          dir: this.summaryDir,
-          id: this.trainingJobId,
+          dir: 'profiler',
+          id: `${this.trainingJobId}/cluster_profiler/${hostIP}`,
           path: `${this.summaryPath}/cluster_profiler/${hostIP}`,
           cardNum: item.deviceId,
           deviceid: item.deviceId,
