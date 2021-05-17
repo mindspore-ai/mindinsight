@@ -22,7 +22,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from 'echarts';
+import echarts from '../js/echarts';
 import common from '../common/common-property';
 
 export default {
@@ -142,6 +142,11 @@ export default {
               temp += `${this.indicators[i]}: ${params.data.value[i]}<br>`;
             }
             return temp;
+          },
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
           },
         },
         title: {

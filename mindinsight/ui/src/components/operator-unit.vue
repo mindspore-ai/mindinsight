@@ -46,7 +46,7 @@ limitations under the License.
       <img src="../assets/images/full-screen.png"
            :title="$t('graph.fullScreen')"
            class="fullScreen"
-           @click="fullScreenControl()">
+           @click="fullScreenControl">
       <div>
         <el-radio-group v-model="coreStatisticType"
                         @change="coreTableChange"
@@ -66,26 +66,26 @@ limitations under the License.
                     v-if="!coreStatisticType && hasBarChart"
                     :placeholder="search.all.label"
                     clearable
-                    @clear="searchOpCoreList()"
-                    @keyup.enter.native="searchOpCoreList()"></el-input>
+                    @clear="searchOpCoreList"
+                    @keyup.enter.native="searchOpCoreList"></el-input>
           <el-input v-model="searchByNameInput"
                     v-if="coreStatisticType && hasBarChart"
                     :placeholder="search.detail.label"
                     clearable
-                    @clear="searchOpCoreList()"
-                    @keyup.enter.native="searchOpCoreList()"></el-input>
+                    @clear="searchOpCoreList"
+                    @keyup.enter.native="searchOpCoreList"></el-input>
           <el-input v-model="searchByNameInput"
                     v-if="!hasBarChart"
                     :placeholder="searchPlaceholder"
                     clearable
-                    @clear="searchOpCoreList()"
-                    @keyup.enter.native="searchOpCoreList()"></el-input>
+                    @clear="searchOpCoreList"
+                    @keyup.enter.native="searchOpCoreList"></el-input>
         </div>
         <el-select v-if="!hasBarChart"
                    v-model="searchType"
                    class="core-search-type"
                    :placeholder="$t('public.select')"
-                   @change="searchTypeChange()">
+                   @change="searchTypeChange">
           <el-option v-for="item in coreSearchOptions"
                      :key="item.value"
                      :label="item.label"
@@ -218,7 +218,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from 'echarts';
+import echarts from '../js/echarts';
 import requestService from '../services/request-service';
 import CommonProperty from '../common/common-property';
 
@@ -484,7 +484,7 @@ export default {
                   this.coreCharts.device_id = this.currentCard;
                   this.coreCharts.data = [];
                   res.data.object.forEach((k) => {
-                    if (this.coreCharts.data && this.coreCharts.data.length < 19) {
+                    if (this.coreCharts.data.length < 19) {
                       this.coreCharts.data.push({
                         name: k[0],
                         value: k[this.chart.value],
@@ -530,33 +530,30 @@ export default {
         sort_condition: row.op_sort_condition,
         group_condition: row.opDetailPage,
       };
-      requestService
-          .getProfilerOpData(params)
-          .then((res) => {
-            if (res && res.data) {
-              this.formatterDetailData(row, res.data);
-              this.$nextTick(() => {
-                let item = null;
-                if (this.coreStatisticType) {
-                  item = this.$refs['opAllTable'];
-                } else {
-                  item = this.$refs['expandCoreChild'];
-                  this.curActiveRow = {
-                    rowItem: row,
-                    childProp: row.op_sort_condition.name,
-                    childOrder: row.op_sort_condition.type,
-                  };
-                }
-                if (item && isSort) {
-                  item.sort(row.op_sort_condition.name, row.op_sort_condition.type);
-                }
-                if (this.$refs.expandTable) {
-                  this.$refs.expandTable.doLayout();
-                }
-              });
+      requestService.getProfilerOpData(params).then((res) => {
+        if (res && res.data) {
+          this.formatterDetailData(row, res.data);
+          this.$nextTick(() => {
+            let item = null;
+            if (this.coreStatisticType) {
+              item = this.$refs['opAllTable'];
+            } else {
+              item = this.$refs['expandCoreChild'];
+              this.curActiveRow = {
+                rowItem: row,
+                childProp: row.op_sort_condition.name,
+                childOrder: row.op_sort_condition.type,
+              };
             }
-          })
-          .catch(() => {});
+            if (item && isSort) {
+              item.sort(row.op_sort_condition.name, row.op_sort_condition.type);
+            }
+            if (this.$refs.expandTable) {
+              this.$refs.expandTable.doLayout();
+            }
+          });
+        }
+      });
     },
     /**
      * Operator detail list page change
@@ -715,6 +712,9 @@ export default {
           orient: 'vertical',
           icon: 'circle',
           formatter: (params) => {
+            if (Object.keys(map).length < 1) {
+              return '';
+            }
             let legendStr = '';
             for (let i = 0; i < chart.data.length; i++) {
               if (chart.data[i].name === params) {
@@ -728,6 +728,11 @@ export default {
           },
           tooltip: {
             show: true,
+            backgroundColor: 'rgba(50, 50, 50, 0.7)',
+            borderWidth: 0,
+            textStyle: {
+              color: '#fff',
+            },
             formatter: (params) => {
               let name = params.name;
               name = name.replace(/</g, '< ');
@@ -747,13 +752,14 @@ export default {
           padding: [0, 50, 0, 0],
           top: '5%',
           left: '45%',
+          itemGap: 30,
           textStyle: {
             padding: [15, 0, 0, 0],
             rich: {
               a: {
                 width: 24,
                 align: 'center',
-                padding: [0, 10, 3, -26],
+                padding: [0, 10, -4, -26],
                 color: '#FFF',
               },
               b: {
@@ -770,6 +776,11 @@ export default {
         };
         option.tooltip = {
           trigger: 'item',
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
+          },
           formatter: (params) => {
             const name = params.data.name.replace(/</g, '< ');
             const strTemp = `${name} ${params.percent.toFixed(2) + '%'}`;
@@ -820,6 +831,11 @@ export default {
             return `${params[0].axisValue}<br>${params[0].marker}${params[0].value} (${this.unit})`;
           },
           confine: true,
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
+          },
         };
         option.series = [
           {
@@ -875,6 +891,11 @@ export default {
                 tooltip: {
                   formatter: params.value,
                   alwaysShowContent: true,
+                  backgroundColor: 'rgba(50, 50, 50, 0.7)',
+                  borderWidth: 0,
+                  textStyle: {
+                    color: '#fff',
+                  },
                 },
               });
               chart.chartDom.dispatchAction({
@@ -894,9 +915,36 @@ export default {
                     return `${params[0].axisValue}<br>${params[0].marker}${params[0].value} (${this.unit})`;
                   },
                   alwaysShowContent: false,
+                  backgroundColor: 'rgba(50, 50, 50, 0.7)',
+                  borderWidth: 0,
+                  textStyle: {
+                    color: '#fff',
+                  },
                 },
               });
             }
+          });
+        } else {
+          chart.chartDom.off('legendselectchanged');
+          chart.chartDom.on('legendselectchanged', () => {
+            chart.chartDom.setOption({
+              legend: {
+                formatter: (params) => {
+                  let legendStr = '';
+                  for (let i = 0; i < chart.data.length; i++) {
+                    if (chart.data[i].name === params) {
+                      const percent = `${map[params].toFixed(2)}%`;
+                      const name =
+                        chart.data[i].name.length > 10 ? `${chart.data[i].name.slice(0, 10)}...` : chart.data[i].name;
+                      legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[i].value.toFixed(
+                          this.accuracy,
+                      )}}\n{c|${percent}}`;
+                    }
+                  }
+                  return legendStr;
+                },
+              },
+            });
           });
         }
         chart.chartDom.resize();
@@ -931,7 +979,7 @@ export default {
       this.$nextTick(() => {
         this.rowName = `op_info${this.$t('dataTraceback.details')}`;
         this.detailsDialogVisible = true;
-        this.detailsDataList = this.formateJsonString(val);
+        this.detailsDataList = this.formatJsonString(val);
       });
     },
     /**
@@ -952,7 +1000,7 @@ export default {
      * @param {String} str
      * @return {Array}
      */
-    formateJsonString(str) {
+    formatJsonString(str) {
       if (!str) {
         return [];
       }
@@ -974,7 +1022,7 @@ export default {
               const item = {};
               item.key = k;
               item.value = dataObj[key][k];
-              item.id = `${new Date().getTime()}` + `${this.$store.state.tableId}`;
+              item.id = `${new Date().getTime()}${this.$store.state.tableId}`;
               this.$store.commit('increaseTableId');
               tempData.children.push(item);
             });

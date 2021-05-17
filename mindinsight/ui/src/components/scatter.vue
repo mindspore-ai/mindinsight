@@ -24,7 +24,7 @@ limitations under the License.
 
 </template>
 <script>
-import echarts from 'echarts';
+import echarts from '../js/echarts';
 
 export default {
   props: {
@@ -82,6 +82,11 @@ export default {
           show: this.showTooltip,
           axisPointer: {
             type: 'cross',
+          },
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
           },
           confine: true,
           formatter: (params) => {

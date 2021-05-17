@@ -137,7 +137,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import multiSelectGroupComponents from '../../components/multiselect-group.vue';
@@ -708,6 +708,11 @@ export default {
           trigger: 'axis',
           axisPointer: {
             type: 'line',
+          },
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
           },
           position: (point, params, dom, rect, size) => {
             const curDom = document.getElementById(sampleObject.domId);

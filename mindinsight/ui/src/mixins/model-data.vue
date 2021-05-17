@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <script>
-import Echarts from 'echarts';
+import echarts from '../js/echarts';
 import CommonProperty from '@/common/common-property.js';
 export default {
   data() {
@@ -93,7 +93,7 @@ export default {
 
     setChartOfPie() {
       if (!this.myPieChart) {
-        this.myPieChart = Echarts.init(document.getElementById('pie-chart'));
+        this.myPieChart = echarts.init(document.getElementById('pie-chart'));
       }
       const pieOption = {
         grid: {
@@ -105,6 +105,11 @@ export default {
           trigger: 'item',
           formatter: '{a} <br/> {b} : {c} ({d}%)',
           confine: true,
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
+          },
         },
         legend: {
           data: this.pieLegendData,
@@ -171,6 +176,11 @@ export default {
           },
           confine: true,
           formatter: this.barToolTipFormatter,
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
+          },
         },
         label: {
           show: true,
@@ -259,7 +269,7 @@ export default {
       if (this.myBarChart) {
         this.myBarChart.setOption(this.barOption, true);
       } else {
-        this.myBarChart = Echarts.init(document.getElementById('bar-chart'));
+        this.myBarChart = echarts.init(document.getElementById('bar-chart'));
         this.myBarChart.setOption(this.barOption, true);
         this.setBarChartEvent();
       }
@@ -317,6 +327,11 @@ export default {
                 ? this.learningRate
                 : params.value,
             alwaysShowContent: true,
+            backgroundColor: 'rgba(50, 50, 50, 0.7)',
+            borderWidth: 0,
+            textStyle: {
+              color: '#fff',
+            },
           },
         });
         this.myBarChart.dispatchAction({
@@ -331,6 +346,11 @@ export default {
           tooltip: {
             formatter: this.barToolTipFormatter,
             alwaysShowContent: false,
+            backgroundColor: 'rgba(50, 50, 50, 0.7)',
+            borderWidth: 0,
+            textStyle: {
+              color: '#fff',
+            },
           },
         });
       });

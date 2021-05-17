@@ -141,7 +141,7 @@ limitations under the License.
 <script>
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 
 export default {
   props: {
@@ -822,6 +822,11 @@ export default {
           confine: true,
           axisPointer: {
             type: 'line',
+          },
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
           },
           formatter(params) {
             const unit = 's';

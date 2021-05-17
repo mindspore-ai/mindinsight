@@ -19,7 +19,7 @@ limitations under the License.
 </template>
 
 <script type="text/javascript">
-import echarts from 'echarts';
+import echarts from '../js/echarts';
 
 export default {
   name: 'BenchmarkBarChart',
@@ -135,6 +135,11 @@ export default {
           axisPointer: {
             type: 'shadow',
           },
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
+          },
           formatter(params) {
             const colon = self.$t('symbols.colon');
             let tipStr = '';
@@ -175,6 +180,11 @@ export default {
             formatter: (param) => {
               const tip = param.name;
               return tip;
+            },
+            backgroundColor: 'rgba(50, 50, 50, 0.7)',
+            borderWidth: 0,
+            textStyle: {
+              color: '#fff',
             },
           },
         },

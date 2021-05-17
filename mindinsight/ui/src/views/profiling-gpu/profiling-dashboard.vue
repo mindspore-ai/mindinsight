@@ -402,7 +402,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 export default {
@@ -626,6 +626,11 @@ export default {
       const option = {};
       option.tooltip = {
         trigger: 'item',
+        backgroundColor: 'rgba(50, 50, 50, 0.7)',
+        borderWidth: 0,
+        textStyle: {
+          color: '#fff',
+        },
         formatter: (params) => {
           return `${params.data.name}<br>${params.marker}${params.percent}%`;
         },

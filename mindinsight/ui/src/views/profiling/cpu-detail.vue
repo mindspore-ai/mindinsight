@@ -134,7 +134,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import initDot from '../../mixins/init-dot';
 import {select, selectAll, zoom} from 'd3';
@@ -147,16 +147,13 @@ export default {
       dir: '', // Profiler path
       currentCard: '', // Current card number
       trainId: '',
-
-      chartGrid: {
+      chartOptions: {
         grid: {
           left: 60,
           top: 40,
           right: 70,
           bottom: 60,
         },
-      }, // The grid setting of chart
-      chartDataZoom: {
         dataZoom: [
           {
             start: 0,
@@ -170,7 +167,13 @@ export default {
             bottom: 0,
           },
         ],
-      }, // The data zoom setting of chart
+        color: [
+          '#c23531',
+          '#2f4554',
+          '#61a0a8',
+          '#d48265',
+        ],
+      }, // The options setting of chart
       deviceCpuChart: {
         id: 'deviceCpuChart',
         chartDom: null,
@@ -179,6 +182,11 @@ export default {
             trigger: 'axis',
             formatter: null,
             confine: true,
+            backgroundColor: 'rgba(50, 50, 50, 0.7)',
+            borderWidth: 0,
+            textStyle: {
+              color: '#fff',
+            },
           },
           legend: {
             right: 70,
@@ -211,6 +219,11 @@ export default {
             trigger: 'axis',
             formatter: null,
             confine: true,
+            backgroundColor: 'rgba(50, 50, 50, 0.7)',
+            borderWidth: 0,
+            textStyle: {
+              color: '#fff',
+            },
           },
           legend: {
             right: 70,
@@ -238,6 +251,11 @@ export default {
             trigger: 'axis',
             formatter: null,
             confine: true,
+            backgroundColor: 'rgba(50, 50, 50, 0.7)',
+            borderWidth: 0,
+            textStyle: {
+              color: '#fff',
+            },
           },
           legend: {
             right: 70,
@@ -319,9 +337,9 @@ export default {
   },
   computed: {},
   created() {
-    Object.assign(this.deviceCpuChart.option, this.chartGrid, this.chartDataZoom);
-    Object.assign(this.processCpuChart.option, this.chartGrid, this.chartDataZoom);
-    Object.assign(this.operatorCpuChart.option, this.chartGrid, this.chartDataZoom);
+    Object.assign(this.deviceCpuChart.option, this.chartOptions);
+    Object.assign(this.processCpuChart.option, this.chartOptions);
+    Object.assign(this.operatorCpuChart.option, this.chartOptions);
   },
   mounted() {
     this.resizeDebounce = this.debounce(this.resizeCallback, 200);

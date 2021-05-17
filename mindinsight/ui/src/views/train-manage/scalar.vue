@@ -270,7 +270,7 @@ limitations under the License.
 </template>
 <script>
 import ScalarButton from './scalar-button';
-import echarts from 'echarts';
+import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import ScalarCompare from './scalar-compare';
@@ -802,6 +802,11 @@ export default {
           trigger: 'axis',
           axisPointer: {
             type: 'line',
+          },
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
           },
           position: (point, params, dom, rect, size) => {
             const curDom = document.getElementById(sampleObject.domId);
@@ -2028,22 +2033,20 @@ export default {
   padding-right: 20px;
 }
 
-.delDialog {
-  .delThresholdItem {
-    display: flex;
-    margin-bottom: 10px;
-  }
+.delDialog .delThresholdItem {
+  display: flex;
+  margin-bottom: 10px;
+}
 
-  .delThresholdIcon {
-    color: #e6a23c;
-    font-size: 24px;
-    width: 40px;
-    margin-right: 10px;
-  }
+.delDialog .delThresholdIcon {
+  color: #e6a23c;
+  font-size: 24px;
+  width: 40px;
+  margin-right: 10px;
+}
 
-  .delThresholdInfo {
-    line-height: 24px;
-    height: 24px;
-  }
+.delDialog .delThresholdInfo {
+  line-height: 24px;
+  height: 24px;
 }
 </style>

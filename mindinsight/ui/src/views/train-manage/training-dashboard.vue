@@ -260,13 +260,13 @@ limitations under the License.
 </template>
 
 <script>
+import echarts from '../../js/echarts';
 import RequestService from '@/services/request-service';
 import {basePath} from '@/services/fetcher';
 import CommonProperty from '@/common/common-property.js';
 import {select, selectAll, format, precisionRound} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, format, precisionRound};
-import echarts from 'echarts';
 import gridTableComponents from '../../components/grid-table-simple';
 export default {
   data() {

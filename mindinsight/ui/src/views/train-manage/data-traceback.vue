@@ -380,7 +380,7 @@ limitations under the License.
 <script>
 import RequestService from '../../services/request-service';
 import CommonProperty from '@/common/common-property.js';
-import Echarts from 'echarts';
+import echarts from '../../js/echarts';
 export default {
   data() {
     return {
@@ -1025,6 +1025,11 @@ export default {
         parallelAxis: parallelAxis,
         tooltip: {
           trigger: 'axis',
+          backgroundColor: 'rgba(50, 50, 50, 0.7)',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
+          },
         },
         parallel: {
           top: 30,
@@ -1037,6 +1042,11 @@ export default {
             },
             tooltip: {
               show: true,
+              backgroundColor: 'rgba(50, 50, 50, 0.7)',
+              borderWidth: 0,
+              textStyle: {
+                color: '#fff',
+              },
             },
             realtime: false,
           },
@@ -1054,7 +1064,7 @@ export default {
         this.parallelEchart.off('axisareaselected', null);
         window.removeEventListener('resize', this.resizeChart, false);
       } else {
-        this.parallelEchart = Echarts.init(
+        this.parallelEchart = echarts.init(
             document.querySelector('#data-echart'),
         );
       }
