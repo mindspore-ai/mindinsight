@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ _DATASET_COLLECTOR_ERROR_MASK = 0b00101 << 7
 _DATASET_LINEAGE_ERROR_MASK = 0b00110 << 7
 _SUMMARY_ANALYZE_ERROR_MASK = 0b00111 << 7
 _QUERIER_ERROR_MASK = 0b01000 << 7
-
+_FILE_HANDLER_MASK = 0b01001 << 7
 
 @unique
 class LineageErrors(LineageErrorCodes):
@@ -95,6 +95,8 @@ class LineageErrors(LineageErrorCodes):
     SUMMARY_PARSE_FAIL_ERROR = 2 | _QUERIER_ERROR_MASK
     EVENT_FIELD_NOT_EXIST_ERROR = 4 | _QUERIER_ERROR_MASK
 
+    # File_handler read error codes
+    LINEAGE_FILE_HANDLER_READ_ERROR = 0 | _FILE_HANDLER_MASK
 
 @unique
 class LineageErrorMsg(Enum):
@@ -212,3 +214,5 @@ class LineageErrorMsg(Enum):
     EVENT_FIELD_NOT_EXIST_ERROR = 'Event field <{}> not exist.'
 
     LOG_LINEAGE_INFO_ERROR = "Fail to write lineage information into log file. {}"
+
+    LINEAGE_FILE_HANDLER_READ_ERROR = "Fail to read in cache. {}"

@@ -22,7 +22,7 @@ from google.protobuf.message import DecodeError
 
 from mindinsight.datavisual.proto_files.mindinsight_lineage_pb2 import LineageEvent
 from mindinsight.lineagemgr.common.exceptions.exceptions import MindInsightException, \
-    LineageSummaryAnalyzeException
+    LineageSummaryAnalyzeException, LineageFileHandlerReadError
 from mindinsight.lineagemgr.common.log import logger as log
 from mindinsight.lineagemgr.common.validator.validate_path import safe_normalize_path
 from mindinsight.lineagemgr.summary.file_handler import FileHandler
@@ -184,7 +184,7 @@ class LineageSummaryAnalyzer(SummaryAnalyzer):
         err_msg = "Can not analyze lineage info, file path is %s. Detail: %s"
         try:
             lineage_info = analyzer.get_latest_info()
-        except (MindInsightException, IOError, DecodeError) as err:
+        except (MindInsightException, IOError, DecodeError, LineageFileHandlerReadError) as err:
             log.debug(err_msg, file_path, str(err))
             raise LineageSummaryAnalyzeException(str(err))
         except Exception as err:
