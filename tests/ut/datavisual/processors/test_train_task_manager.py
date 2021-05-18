@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ Usage:
 """
 import tempfile
 import time
-from unittest.mock import Mock
 
 import pytest
 
@@ -28,7 +27,6 @@ from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.processors.train_task_manager import TrainTaskManager
-from mindinsight.datavisual.utils import crc32
 
 from ....utils.log_operations import LogOperations
 from ....utils.tools import delete_files_or_dirs
@@ -58,7 +56,6 @@ class TestTrainTaskManager:
         """
         Mock common environment for train task unittest.
         """
-        crc32.CheckValueAgainstData = Mock(return_value=True)
         data_manager.logger = MockLogger
 
     def teardown_class(self):

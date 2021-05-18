@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ Usage:
 """
 import os
 import tempfile
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -31,7 +31,6 @@ from mindinsight.datavisual.common.exceptions import NodeNotInGraphError
 from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.data_manager import DataManager
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
-from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
 from ..mock import MockLogger
 from ....utils.log_operations import LogOperations
@@ -54,7 +53,6 @@ class TestGraphProcessor:
     @classmethod
     def setup_class(cls):
         """Mock common environment for graph unittest."""
-        crc32.CheckValueAgainstData = Mock(return_value=True)
         data_manager.logger = MockLogger
 
     def teardown_class(self):

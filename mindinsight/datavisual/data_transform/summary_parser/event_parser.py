@@ -119,11 +119,6 @@ class EventParser:
                 file_handler.reset_offset(start_offset)
                 crc_check_time += 1
                 time.sleep(0.5)
-            except exceptions.CRCFailedError:
-                parse_summary_logger.error(
-                    "Check crc failed, the file may have been modified, file_path=%s, offset=%s.",
-                    file_handler.file_path, start_offset)
-                return True
             except (OSError, DecodeError, exceptions.MindInsightException) as ex:
                 parse_summary_logger.error("Parse file fail, detail: %r, file path: %s.", str(ex),
                                            file_handler.file_path)

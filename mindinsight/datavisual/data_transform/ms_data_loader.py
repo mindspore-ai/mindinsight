@@ -38,7 +38,6 @@ from mindinsight.datavisual.data_transform.image_container import ImageContainer
 from mindinsight.datavisual.data_transform.tensor_container import TensorContainer, MAX_TENSOR_COUNT
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
-from mindinsight.datavisual.utils import crc32
 from mindinsight.datavisual.utils.tools import exception_no_raise_wrapper
 from mindinsight.utils.computing_resource_mgr import ComputingResourceManager, Executor
 from mindinsight.utils.exceptions import UnknownError
@@ -399,7 +398,7 @@ class _SummaryParser(_Parser):
                 if future is not None:
                     future.add_done_callback(exception_no_raise_wrapper(_add_tensor_event_callback))
                 return False
-            except (exceptions.CRCFailedError, exceptions.CRCLengthFailedError) as exc:
+            except exceptions.CRCLengthFailedError as exc:
                 file_handler.reset_offset(start_offset)
                 file_size = file_handler.file_stat(file_handler.file_path).size
                 logger.error("Check crc failed and ignore this file, please check the integrity of the file, "
@@ -436,8 +435,6 @@ class _SummaryParser(_Parser):
 
         if len(header_str) != HEADER_SIZE or len(header_crc_str) != CRC_STR_SIZE:
             raise exceptions.CRCLengthFailedError("CRC header length or event header length is incorrect.")
-        if not crc32.CheckValueAgainstData(header_crc_str, header_str, HEADER_SIZE):
-            raise exceptions.CRCFailedError("The header of event crc is failed.")
 
         # read the event body if integrity of header is verified
         header = struct.unpack('Q', header_str)
@@ -452,8 +449,6 @@ class _SummaryParser(_Parser):
 
         if len(event_str) != event_len or len(event_crc_str) != CRC_STR_SIZE:
             raise exceptions.CRCLengthFailedError("The event string length or crc length is incorrect.")
-        if not crc32.CheckValueAgainstData(event_crc_str, event_str, event_len):
-            raise exceptions.CRCFailedError("The event string crc is incorrect.")
 
         return event_str
 

@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ Usage:
     pytest tests/ut/datavisual
 """
 import tempfile
-from unittest.mock import Mock
 
 import pytest
 import numpy as np
@@ -31,7 +30,6 @@ from mindinsight.datavisual.data_transform import data_manager
 from mindinsight.datavisual.data_transform.tensor_container import calc_original_buckets
 from mindinsight.datavisual.processors.tensor_processor import TensorProcessor
 from mindinsight.utils.tensor import TensorUtils
-from mindinsight.datavisual.utils import crc32
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import ParamMissError
 
@@ -57,7 +55,6 @@ class TestTensorProcessor:
     @classmethod
     def setup_class(cls):
         """Mock common environment for tensors unittest."""
-        crc32.CheckValueAgainstData = Mock(return_value=True)
         data_manager.logger = MockLogger
 
     def teardown_class(self):

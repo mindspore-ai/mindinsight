@@ -24,11 +24,7 @@ import time
 import shutil
 import tempfile
 from urllib.parse import quote
-from unittest.mock import Mock
 
-import pytest
-
-from mindinsight.datavisual.data_transform import ms_data_loader
 from mindinsight.datavisual.data_transform.summary_parser.event_parser import EventParser
 from tests.utils.log_generators.images_log_generator import ImagesLogGenerator
 from tests.utils.log_generators.scalars_log_generator import ScalarsLogGenerator
@@ -48,12 +44,6 @@ class TestSummaryParser:
         if os.path.exists(self.base_summary_dir):
             shutil.rmtree(self.base_summary_dir)
 
-    @pytest.fixture(scope="function")
-    def crc_pass(self):
-        """Mock the crc to pass the check."""
-        ms_data_loader.crc32.CheckValueAgainstData = Mock(return_value=True)
-
-    @pytest.mark.usefixtures('crc_pass')
     def test_parse_and_export_save_csv_file(self):
         """Test parse summary file and save scalar to csv file."""
         summary_dir = tempfile.mkdtemp(dir=self.base_summary_dir)
@@ -66,7 +56,6 @@ class TestSummaryParser:
         shutil.rmtree(summary_dir)
         assert result == expect_value
 
-    @pytest.mark.usefixtures('crc_pass')
     def test_parse_and_export_png_file(self):
         """Test parse summary file and save image to png files."""
         summary_dir = tempfile.mkdtemp(dir=self.base_summary_dir)
