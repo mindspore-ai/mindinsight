@@ -147,9 +147,12 @@ def source_checker(py_path, ckpt_path):
 
     sys.path.append(os.path.dirname(py_path))
     model = getattr(import_module(os.path.basename(py_path).replace('.py', '')), 'Model')()
-    param_dict = load_checkpoint(ckpt_path)
-    not_load_name = load_param_into_net(model, param_dict)
-    return not bool(not_load_name)
+    try:
+        param_dict = load_checkpoint(ckpt_path)
+        not_load_name = load_param_into_net(model, param_dict)
+        return not not_load_name
+    except (ValueError, TypeError, RuntimeError):
+        return False
 
 
 def file_existed_checker(parser_in, in_file, action_type):
