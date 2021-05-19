@@ -99,7 +99,7 @@ class ConvMapper(ONNXToMindSporeMapper):
 
         kernel_size = params.get('kernel_shape')
 
-        # ms in_channel <- ONNX in_channel x group.
+        # MindSpore's Conv2d attr 'in_channels' is calculated by ONNX in_channel times group.
         in_channels = weight.shape[1] * params.get('group', 1)
         out_channels = weight.shape[0]
         if len(kernel_size) == 1:

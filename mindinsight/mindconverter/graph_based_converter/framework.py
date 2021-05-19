@@ -22,13 +22,14 @@ from functools import partial
 from google.protobuf.internal import api_implementation
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, onnx_satisfied, \
-    save_code_file_and_report, get_framework_type, check_dependency_integrity, get_third_part_lib_validation_error_info
+    save_code_file_and_report, get_framework_type, check_dependency_integrity, \
+    get_third_part_lib_validation_error_info, save_intermediate_graph
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
     ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
-from mindinsight.mindconverter.common.exceptions import GraphInitError, SourceFilesSaveError, \
+from mindinsight.mindconverter.common.exceptions import GraphInitError, FileSaveError, \
     BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError, \
     BadParamError
 from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
@@ -69,8 +70,7 @@ def onnx_installation_validation(func):
         type, inner function.
     """
 
-    def _f(graph_path: str, input_nodes: dict, output_nodes: List[str],
-           output_folder: str, report_folder: str = None):
+    def _f(*args, **kwargs):
         # Check whether onnx is installed.
         error_info = f"{get_third_part_lib_validation_error_info(['onnx', 'onnxruntime', 'onnxoptimizer'])} " \
                      f"are required when using graph based scripts converter or ONNX conversion."
@@ -83,9 +83,7 @@ def onnx_installation_validation(func):
             _print_error(RuntimeIntegrityError(error_info))
             sys.exit(-1)
 
-        func(graph_path=graph_path,
-             input_nodes=input_nodes, output_nodes=output_nodes,
-             output_folder=output_folder, report_folder=report_folder)
+        func(*args, **kwargs)
 
     return _f
 
@@ -111,8 +109,7 @@ def tf_installation_validation(func):
         type, inner function.
     """
 
-    def _f(graph_path: str, input_nodes: dict, output_nodes: List[str],
-           output_folder: str, report_folder: str):
+    def _f(*args, **kwargs):
         not_integral_error = RuntimeIntegrityError(
             f"TensorFlow, "
             f"{get_third_part_lib_validation_error_info(['tf2onnx', 'onnx', 'onnxruntime', 'onnxoptimizer'])} "
@@ -135,9 +132,7 @@ def tf_installation_validation(func):
             _print_error(not_integral_error)
             sys.exit(-1)
 
-        func(graph_path=graph_path,
-             input_nodes=input_nodes, output_nodes=output_nodes,
-             output_folder=output_folder, report_folder=report_folder)
+        func(*args, **kwargs)
 
     return _f
 
@@ -160,11 +155,12 @@ def _extract_model_name(model_path):
 
 @onnx_installation_validation
 @GraphInitError.uniform_catcher()
-@SourceFilesSaveError.uniform_catcher()
+@FileSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
 def graph_based_converter_onnx_to_ms(graph_path: str,
                                      input_nodes: dict, output_nodes: List[str],
-                                     output_folder: str, report_folder: str = None):
+                                     output_folder: str, report_folder: str = None,
+                                     query_result_folder: str = None):
     """
     ONNX to MindSpore based on Graph.
 
@@ -174,8 +170,14 @@ def graph_based_converter_onnx_to_ms(graph_path: str,
         output_nodes (list[str]): Output node(s) of the model.
         output_folder (str): Output folder.
         report_folder (str): Report output folder path.
+        query_result_folder (str): Save the optimized graph and its topological order to disk.
     """
     graph_obj = GraphFactory.init(graph_path, input_nodes=input_nodes, output_nodes=output_nodes)
+    if query_result_folder:
+        save_intermediate_graph(graph_obj.dataloader, query_result_folder)
+        GlobalContext.release()
+        return
+    graph_obj.build()
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
     log_console.info("Code saving begins.")
@@ -189,11 +191,12 @@ def graph_based_converter_onnx_to_ms(graph_path: str,
 @tf_installation_validation
 @GraphInitError.uniform_catcher()
 @TfRuntimeError.uniform_catcher()
-@SourceFilesSaveError.uniform_catcher()
+@FileSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
 def graph_based_converter_tf_to_ms(graph_path: str,
                                    input_nodes: dict, output_nodes: List[str],
-                                   output_folder: str, report_folder: str = None):
+                                   output_folder: str, report_folder: str = None,
+                                   query_result_folder: str = None):
     """
     Tensorflow to MindSpore based on Graph.
 
@@ -203,11 +206,17 @@ def graph_based_converter_tf_to_ms(graph_path: str,
         output_nodes (list[str]): Output node(s) of the model.
         output_folder (str): Output folder.
         report_folder (str): Report output folder path.
+        query_result_folder (str): Save the optimized graph and its topological order to disk.
     """
     # Close unnecessary log.
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     graph_obj = GraphFactory.init(graph_path, input_nodes=input_nodes, output_nodes=output_nodes)
+    if query_result_folder:
+        save_intermediate_graph(graph_obj.dataloader, query_result_folder)
+        GlobalContext.release()
+        return
+    graph_obj.build()
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
     log_console.info("Code saving begins.")
@@ -253,14 +262,17 @@ def main_graph_base_converter(file_config):
                                          input_nodes=input_nodes,
                                          output_nodes=file_config['output_nodes'],
                                          output_folder=file_config['outfile_dir'],
-                                         report_folder=file_config['report_dir'])
+                                         report_folder=file_config['report_dir'],
+                                         query_result_folder=file_config.get("query_result_folder"))
 
     elif frame_type == FrameworkType.TENSORFLOW.value:
         graph_based_converter_tf_to_ms(graph_path=graph_path,
                                        input_nodes=input_nodes,
                                        output_nodes=file_config['output_nodes'],
                                        output_folder=file_config['outfile_dir'],
-                                       report_folder=file_config['report_dir'])
+                                       report_folder=file_config['report_dir'],
+                                       query_result_folder=file_config.get("query_result_folder"))
+
     else:
         error_msg = "Get UNSUPPORTED model."
         error = UnknownModelError(error_msg)

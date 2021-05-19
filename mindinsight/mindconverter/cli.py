@@ -387,22 +387,22 @@ def cli_entry():
     if args.report is None:
         args.report = args.output
     os.makedirs(args.report, mode=mode, exist_ok=True)
-    run(args.in_file, args.model_file,
-        args.shape,
-        args.input_nodes, args.output_nodes,
-        args.output, args.report)
+    _run(args.in_file, args.model_file,
+         args.shape,
+         args.input_nodes, args.output_nodes,
+         args.output, args.report)
 
 
-def run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report):
+def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report):
     """
     Run converter command.
 
     Args:
         in_files (str): The file path or directory to convert.
-        model_file(str): The model to convert on graph based schema.
-        shape(list): The input tensor shape of module_file.
-        input_nodes(str): The input node(s) name of model.
-        output_nodes(str): The output node(s) name of model.
+        model_file (str): The model to convert on graph based schema.
+        shape (Sequence[tuple]): The input tensor shape of the model.
+        input_nodes (Sequence[str]): The input node(s) name of model.
+        output_nodes (Sequence[str]): The output node(s) name of model.
         out_dir (str): The output directory to save converted file.
         report (str): The report file path.
     """
@@ -413,7 +413,6 @@ def run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report)
             'outfile_dir': out_dir,
             'report_dir': report if report else out_dir
         }
-
         if os.path.isfile(in_files):
             files_config['root_path'] = os.path.dirname(in_files)
             files_config['in_files'] = [in_files]
@@ -433,12 +432,81 @@ def run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report)
             'outfile_dir': out_dir,
             'report_dir': report if report else out_dir
         }
-
         main_graph_base_converter(file_config)
         log_console.info("MindConverter: conversion is completed.")
     else:
         error_msg = "`--in_file` and `--model_file` should be set at least one."
         error = FileNotFoundError(error_msg)
         log.error(str(error))
-        log_console.error(f"mindconverter: error: {str(error)}")
+        log_console.error(str(error))
         sys.exit(-1)
+
+
+def convert(model_file, shape, input_nodes, output_nodes, out_dir: str = "output",
+            report: str = None):
+    """
+    Run converter command.
+
+    Args:
+        model_file (str): The model to convert on graph based schema.
+        shape (Sequence[tuple]): The input tensor shape of the model.
+        input_nodes (Sequence[str]): The input node(s) name of model.
+        output_nodes (Sequence[str]): The output node(s) name of model.
+        out_dir (str): The output directory to save converted file.
+        report (str): The report file path.
+
+    Examples:
+        >>> from mindinsight.mindconverter import convert
+        >>> model_file = "resnet50.onnx"
+        >>> input_nodes = ["img"]
+        >>> shape = [(1, 3, 224, 224)]
+        >>> output_nodes = ["logits"]
+        >>> convert(model_file, shape, input_nodes, output_nodes)
+    """
+    file_config = {
+        'model_file': model_file,
+        'shape': shape if shape else [],
+        'input_nodes': input_nodes,
+        'output_nodes': output_nodes,
+        'outfile_dir': out_dir,
+        'report_dir': report if report else out_dir
+    }
+    main_graph_base_converter(file_config)
+    log_console.info("MindConverter: conversion is completed.")
+
+
+def query_graph(model_file, shape, input_nodes, output_nodes, query_result_folder):
+    """
+    Run converter command.
+
+    Args:
+        model_file (str): The model to convert on graph based schema.
+        shape (Sequence[tuple]): The input tensor shape of the model.
+        input_nodes (Sequence[str]): The input node(s) name of model.
+        output_nodes (Sequence[str]): The output node(s) name of model.
+        query_result_folder (str): Save the optimized graph and its topological order to disk.
+
+    Examples:
+        >>> from mindinsight.mindconverter import query_graph
+        >>> model_file = "resnet50.onnx"
+        >>> input_nodes = ["img"]
+        >>> shape = [(1, 3, 224, 224)]
+        >>> output_nodes = ["logits"]
+        >>> query_result_folder = "result"
+        >>> query_graph(model_file, shape, input_nodes, output_nodes, query_result_folder)
+    """
+    if not query_result_folder:
+        err_msg = "`query_result_folder` is required, when query the optimized graph and its topological order."
+        log.error(err_msg)
+        raise ValueError(err_msg)
+    file_config = {
+        "model_file": model_file,
+        "shape": shape if shape else [],
+        "input_nodes": input_nodes,
+        "output_nodes": output_nodes,
+        "outfile_dir": "",
+        "report_dir": "",
+        "query_result_folder": query_result_folder
+    }
+    main_graph_base_converter(file_config)
+    log_console.info("MindConverter: query is completed.")

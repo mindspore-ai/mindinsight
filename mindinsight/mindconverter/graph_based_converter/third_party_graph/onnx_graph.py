@@ -61,8 +61,10 @@ class OnnxGraph(Graph):
 
     def __init__(self, model, model_path, **kwargs):
         super(OnnxGraph, self).__init__(model=model, model_path=model_path, **kwargs)
-
-        self.build()
+        self.dataloader = OnnxDataLoader(self.model,
+                                         self.model_path,
+                                         input_nodes=self._raw_input_nodes,
+                                         output_nodes=self._raw_output_nodes)
 
     @staticmethod
     def _extract_shape(shape):
@@ -115,21 +117,17 @@ class OnnxGraph(Graph):
 
     def build(self):
         """Build graph tree."""
-        model_data = OnnxDataLoader(self.model,
-                                    self.model_path,
-                                    input_nodes=self._raw_input_nodes,
-                                    output_nodes=self._raw_output_nodes)
-        scope_name_list = generate_scope_name(model_data)
+        scope_name_list = generate_scope_name(self.dataloader)
 
-        self._shape_dict = model_data.node_output_shape_dict
-        for ind, (node_name, node) in enumerate(model_data.nodes_dict.items()):
+        self._shape_dict = self.dataloader.node_output_shape_dict
+        for ind, (node_name, node) in enumerate(self.dataloader.nodes_dict.items()):
             node_weights = list()
             node.scope_name = scope_name_list[ind]
             inputs = node.input_name_list
             # check each input from node or tensors
             for idx, i in enumerate(inputs):
-                if i in model_data.tensors_dict:
-                    tensor = model_data.tensors_dict[i]
+                if i in self.dataloader.tensors_dict:
+                    tensor = self.dataloader.tensors_dict[i]
                     t_name = tensor.name
                     t_value = tensor.to_array()
                     node_weights.append(NodeWeight(t_name, t_value, idx))
