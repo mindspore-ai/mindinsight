@@ -257,6 +257,11 @@ class BaseAnalyser(ABC):
     @staticmethod
     def _format_float_data(float_data):
         """Format the float data."""
+        if float_data == '-':
+            return float_data
+        if isinstance(float_data, str):
+            float_data = float(float_data)
+
         if float_data < 1:
             float_data = round(float_data, 6)
         else:
