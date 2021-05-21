@@ -18,42 +18,15 @@ set -e
 SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
 
 PROJECT_DIR=$(realpath "$SCRIPT_BASEDIR/../../")
-CRC32_SCRIPT_PATH="$PROJECT_DIR/build/scripts/crc32.sh"
-CRC32_OUTPUT_DIR="$PROJECT_DIR/mindinsight/datavisual/utils/"
 UT_PATH="$PROJECT_DIR/tests/ut"
-IS_BUILD_CRC=""
-
-build_crc32() {
-    echo "Start to check crc32."
-    if [ -d "$CRC32_OUTPUT_DIR" ]; then
-        cd "$CRC32_OUTPUT_DIR" || exit
-        result=$(find . -maxdepth 1 -name "crc32*.so")
-        if [ -z "$result" ]; then
-            echo "Start to build crc32."
-            IS_BUILD_CRC="true"
-            bash "$CRC32_SCRIPT_PATH"
-        fi
-    fi
-
-}
-
-clean_crc32() {
-    echo "Start to clean crc32."
-    if [ -n "$IS_BUILD_CRC" ]; then
-        rm -f "$CRC32_OUTPUT_DIR"/crc32*.so
-    fi
-}
 
 before_run_test() {
     echo "Before run tests."
     export PYTHONPATH=$PROJECT_DIR:$PYTHONPATH
-    build_crc32
 }
 
 after_run_test() {
     echo "After run tests."
-    clean_crc32
-
     echo "End to run test."
 }
 

@@ -37,15 +37,12 @@ MindInsight为MindSpore提供了简单易用的调优调试能力。在训练过
 
 ### 确认系统环境信息
 
-- 硬件平台为Ascend或GPU。  
+- 硬件平台为Ascend或GPU。
 - 确认安装[Python](https://www.python.org/ftp/python/3.7.5/Python-3.7.5.tgz) 3.7.5版本。
 - MindInsight与MindSpore的版本需保持一致。
 - 若采用源码编译安装，还需确认安装以下依赖。
-    - 确认安装[CMake](https://cmake.org/download/) 3.14.1及以上版本。
-    - 确认安装[GCC](https://gcc.gnu.org/releases.html) 7.3.0版本。
     - 确认安装[node.js](https://nodejs.org/en/download/) 10.19.0及以上版本。
     - 确认安装[wheel](https://pypi.org/project/wheel/) 0.32.0及以上版本。
-    - 确认安装[pybind11](https://pypi.org/project/pybind11/) 2.4.3及以上版本。
 - 其他依赖参见[requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)。
 
 ### 安装方式
@@ -63,13 +60,12 @@ pip install mindinsight
 安装自定义版本:
 
 ```bash
-pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/ascend/{system}/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/mindinsight-{version}-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-> - 在联网状态下，安装whl包时会自动下载MindInsight安装包的依赖项（依赖项详情参见[requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)），其余情况需自行安装。  
-> - `{version}`表示MindInsight版本号，例如下载1.0.1版本MindInsight时，`{version}`应写为1.0.1。  
-> - `{arch}`表示系统架构，例如使用的Linux系统是x86架构64位时，`{arch}`应写为`x86_64`。如果系统是ARM架构64位，则写为`aarch64`。  
-> - `{system}`表示系统版本，例如使用的欧拉系统ARM架构，`{system}`应写为`euleros_aarch64`，目前Ascend版本可支持以下系统`euleros_aarch64`/`centos_aarch64`/`centos_x86`/`ubuntu_aarch64`/`ubuntu_x86`；GPU版本可支持以下系统`ubuntu_x86`。
+> - 在联网状态下，安装whl包时会自动下载MindInsight安装包的依赖项（依赖项详情参见[requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)），其余情况需自行安装。
+> - `{version}`表示MindInsight版本号，例如下载1.0.1版本MindInsight时，`{version}`应写为1.0.1。
+> - MindInsight支持使用x86 64位或ARM 64位架构的Linux发行版系统。
 
 #### 源码编译安装
 
@@ -98,7 +94,7 @@ git clone https://gitee.com/mindspore/mindinsight.git
     ```bash
     cd mindinsight
     bash build/build.sh
-    pip install output/mindinsight-{version}-cp37-cp37m-linux_{arch}.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install output/mindinsight-{version}-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 ### 验证是否成功安装

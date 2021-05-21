@@ -137,13 +137,6 @@ def build_dependencies():
     """Build dependencies."""
     build_dir = os.path.join(os.path.dirname(__file__), 'build')
 
-    sys.stdout.write('building crc32 ...\n')
-    crc32_script = os.path.join(build_dir, 'scripts', 'crc32.sh')
-    rc = run_script(crc32_script)
-    if rc:
-        sys.stdout.write('building crc32 failure\n')
-        sys.exit(1)
-
     sys.stdout.write('building ui ...\n')
     ui_script = os.path.join(build_dir, 'scripts', 'ui.sh')
     rc = run_script(ui_script)
