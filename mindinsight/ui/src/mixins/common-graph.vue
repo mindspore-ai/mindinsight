@@ -41,7 +41,7 @@ export default {
       totalMemory: 16777216 * 2, // Memory size of the graph plug-in
       allGraphData: {}, // graph Original input data
       firstFloorNodes: [], // ID array of the first layer node.
-      nodesCountLimit: 4500, // Maximum number of sub-nodes in a namespace.
+      nodesCountLimit: 1500, // Maximum number of sub-nodes in a namespace.
       maxChainNum: 70,
       graphContainer: null,
       resizeTimer: null,
@@ -976,6 +976,7 @@ export default {
      * @param {String} name Name of the namespace to be expanded.
      */
     dealNamescopeTempGraph(name) {
+      if (!(name && this.allGraphData[name])) return;
       const type = this.allGraphData[name].type;
       const classText =
         type === 'aggregation_scope'
@@ -1070,6 +1071,7 @@ export default {
      * @param {String} name Name of the namespace to be expanded.
      */
     transplantChildrenDom(name) {
+      if (!(name && this.allGraphData[name])) return;
       let nameList = [];
       let idStr = '#subgraphTemp ';
       if (name) {
@@ -1519,7 +1521,10 @@ export default {
      */
     findStartUnfoldNode(data) {
       if (data && data.scope_name) {
-        if (this.allGraphData[data.scope_name].isUnfold) {
+        if (
+          this.allGraphData[data.scope_name] &&
+          this.allGraphData[data.scope_name].isUnfold
+        ) {
           if (
             data.nodes.some((node) => {
               return node.name === this.selectedNode.name;

@@ -797,13 +797,14 @@ export default {
      * @param {Boolean} expanded The expanded state of the current node
      */
     dealDoubleClick(name, expanded = false) {
+      name = name.replace('_unfold', '');
+      if (!(name && this.allGraphData[name])) return;
       this.loading.info = this.$t('graph.queryLoading');
       this.loading.show = true;
       this.$nextTick(() => {
         // DOM tree needs time to respond, otherwise the loading icon will not be displayed
         const timeOut = 500;
         setTimeout(() => {
-          name = name.replace('_unfold', '');
           if (this.allGraphData[name].isUnfold) {
             this.selectedNode.name = name;
             this.deleteNamespace(name);
@@ -1016,7 +1017,10 @@ export default {
       const path = this.selectedNode.name.split('^');
       const node = {};
       let id = path[0].replace('_unfold', '');
-      id = this.allGraphData[id].isUnfold ? `${id}_unfold` : id;
+      id =
+        this.allGraphData[id] && this.allGraphData[id].isUnfold
+          ? `${id}_unfold`
+          : id;
       node.eld3 = d3.select(`#graph g[id="${id}"]`);
       node.el = node.eld3.node();
       this.graph.dom.style.transition = '';
@@ -1456,7 +1460,10 @@ export default {
       if (!data.scope_name) {
         return this.dealAutoUnfoldNamescopesData(data.children);
       } else {
-        if (this.allGraphData[data.scope_name].isUnfold) {
+        if (
+          this.allGraphData[data.scope_name] &&
+          this.allGraphData[data.scope_name].isUnfold
+        ) {
           return this.dealAutoUnfoldNamescopesData(data.children);
         } else {
           // If the namespace is a namespace and the number of subnodes exceeds the upper limit,

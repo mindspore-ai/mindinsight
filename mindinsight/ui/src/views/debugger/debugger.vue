@@ -1462,6 +1462,7 @@ export default {
      */
     dealDoubleClick(name, expanded = false) {
       name = name.replace('_unfold', '');
+      if (!(name && this.allGraphData[name])) return;
       this.loadingInstance = this.$loading(this.loadingOption);
       this.$nextTick(() => {
         // Delay is required, otherwise loading cannot be displayed
@@ -1832,7 +1833,7 @@ export default {
       if (!data.scope_name) {
         return this.dealAutoUnfoldNamescopesData(data.children);
       } else {
-        if (this.allGraphData[data.scope_name].isUnfold) {
+        if (this.allGraphData[data.scope_name] && this.allGraphData[data.scope_name].isUnfold) {
           return this.dealAutoUnfoldNamescopesData(data.children);
         } else {
           // If the namespace is a namespace and the number of subnodes exceeds the upper limit,
@@ -1847,7 +1848,10 @@ export default {
             // Normal expansion
             const nodes = JSON.parse(JSON.stringify(data.nodes));
             this.packageDataToObject(data.scope_name, true, nodes);
-            if (this.allGraphData[data.scope_name].type === 'aggregation_scope') {
+            if (
+              this.allGraphData[data.scope_name] &&
+              this.allGraphData[data.scope_name].type === 'aggregation_scope'
+            ) {
               this.dealAggregationNodes(data.scope_name);
               const aggregationNode = this.allGraphData[data.scope_name];
               if (aggregationNode) {
