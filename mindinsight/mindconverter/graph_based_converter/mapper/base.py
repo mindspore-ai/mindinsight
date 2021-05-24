@@ -204,6 +204,38 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         return result
 
     @staticmethod
+    def _generate_snippet_template_for_math_operation(**kwargs):
+        """Generate code snippet for math operation."""
+        op = kwargs.get("operation").replace("onnx::", "onnx.")
+        args = kwargs.get("converted_params", dict())
+        if not op:
+            raise ValueError("Can not get MindSpore operation name.")
+        variable_slot = "var_0"
+        construct_template = f"opt_{{{variable_slot}}} = {op}()" \
+                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}})"
+        template = {
+            variable_slot: {
+                TemplateKeywords.INIT.value: [],
+                TemplateKeywords.CONSTRUCT.value: [construct_template]
+            }
+        }
+        exchange_msg = {
+            variable_slot: {
+                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
+                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
+                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
+                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
+                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
+                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
+                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: dict(),
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: dict()
+            }
+        }
+        outputs_list = [f"opt_{{{variable_slot}}}"]
+        outputs_mapping = ((0, 0),)
+        return template, exchange_msg, outputs_list, outputs_mapping
+
+    @staticmethod
     def _find_location_by_index(loc_index, weights_list):
         """Find weight location in inputs of Node."""
         result = -1

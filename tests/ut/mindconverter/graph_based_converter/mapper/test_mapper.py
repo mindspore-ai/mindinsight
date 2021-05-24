@@ -15,6 +15,7 @@
 """Test all operator mappers on transformation from pytorch to mindspore."""
 import numpy as np
 import pytest
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import NodeWeight
 
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
@@ -135,20 +136,10 @@ class TestMappers:
         'expected_output': {}
     }, {
         'input': {'op_name': 'onnx::Clip',
-                  'params': {'max': 6,
-                             'min': 0},
-                  'weights': dict()},
-        'expected_output': {}
-    }, {
-        'input': {'op_name': 'onnx::Clip',
-                  'params': dict(),
-                  'weights': dict()},
-        'expected_output': {}
-    }, {
-        'input': {'op_name': 'onnx::Clip',
-                  'params': {'max': 3,
-                             'min': 2},
-                  'weights': dict()},
+                  'params': {},
+                  'weights': [
+                      NodeWeight("min", np.array(0).astype(np.float32), 0),
+                      NodeWeight("min", np.array(6).astype(np.float32), 0)]},
         'expected_output': {}
     }])
     def test_mapper(self, params):
