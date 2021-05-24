@@ -546,7 +546,9 @@ export default {
         if (row.profiler_type === 'gpu') {
           router = '/profiling-gpu';
         } else if (row.profiler_type === 'cluster_ascend') {
-          router = '/profiling-cluster';
+          router = '/cluster-dashboard';
+        } else if (row.profiler_type === 'cluster_gpu') {
+          router = '/cluster-dashboard';
         }
         const routeUrl = this.$router.resolve({
           path: router,
