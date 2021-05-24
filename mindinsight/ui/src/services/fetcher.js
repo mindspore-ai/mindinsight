@@ -67,7 +67,6 @@ axios.interceptors.response.use(
       const errorData = i18n.messages[i18n.locale].error;
       const path = router.currentRoute.path;
       if (path === '/debugger' || path === '/offline-debugger') {
-        // eslint-disable-next-line camelcase
         if (error.response?.data?.error_code === '5054B281') router.push('/');
         return Promise.reject(error);
       }

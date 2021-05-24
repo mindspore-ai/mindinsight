@@ -57,7 +57,7 @@ limitations under the License.
                  v-for="(item, itemIndex) in memoryHeatmapDataList"
                  :key="itemIndex"
                  :class="{'mt0': itemIndex < colNum}">
-              <div class="detail-content">
+              <div class="detail-content" :class="{'center': item.showCenter}">
                 <div class="device-item"
                      v-for="(deviceItem, deviceItemIndex) in item.data"
                      :key="deviceItemIndex">
@@ -66,6 +66,12 @@ limitations under the License.
                       <div slot="content">
                         <div>
                           {{$t('profilingCluster.rankID') + $t('symbols.colon') + deviceItem.rankId}}
+                          <br>
+                          {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem.toFixed(3)
+                          + $t('unit.KiB')}}
+                          <br>
+                          {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
+                          + $t('unit.GiB')}}
                         </div>
                       </div>
                       <div :style="{backgroundColor: deviceItem.backgroundColor}"></div>
@@ -77,7 +83,7 @@ limitations under the License.
                 </div>
               </div>
               <div class="info-content">
-                {{item.hostIp}}
+                {{$t('profilingCluster.host') + item.hostIp}}
               </div>
             </div>
           </div>
@@ -149,54 +155,62 @@ export default {
       const params = {
         train_id: this.trainingJobId,
       };
-      RequestService.getClusterPeakMemory(params).then((res) => {
-        if (!res || !res.data) {
-          this.memoryHeatmapInitOver = true;
-          return;
-        }
-        const resData = res.data;
-        const heatmapDataDic = {};
-        const HeatmapDataArr = [];
-        resData.forEach((heatmap) => {
-          let dataIndex = heatmapDataDic[heatmap.host_ip];
-          if (isNaN(dataIndex)) {
-            dataIndex = HeatmapDataArr.length;
-            heatmapDataDic[heatmap.host_ip] = dataIndex;
-            HeatmapDataArr.push({
-              hostIp: heatmap.host_ip,
-              data: [],
+      RequestService.getClusterPeakMemory(params)
+          .then((res) => {
+            if (!res || !res.data) {
+              this.memoryHeatmapInitOver = true;
+              return;
+            }
+            const resData = res.data;
+            const heatmapDataMap = {};
+            const heatmapDataArr = [];
+            resData.forEach((data) => {
+              let arrayIndex;
+              if (heatmapDataMap[data.host_ip] === undefined) {
+                // New host_ip
+                arrayIndex = heatmapDataArr.push({
+                  hostIp: data.host_ip,
+                  data: [],
+                  showCenter: true,
+                }) - 1;
+                heatmapDataMap[data.host_ip] = arrayIndex;
+              } else {
+                // Exist host_ip
+                arrayIndex = heatmapDataMap[data.host_ip];
+              }
+              // Factor used to avoid JS floating point number question
+              const factor = 1000000;
+              const factorFromGiBToKiB = 1024 * 1024;
+              const capacityInKiB = data.capacity * factorFromGiBToKiB;
+              const index = Math.floor(
+                  ((data.peak_mem / capacityInKiB) * factor) / (this.granularity * factor),
+              ); // 1024: Transform GiB to KiB
+              const deviceId = data.device_id;
+              heatmapDataArr[arrayIndex].data[deviceId] = {
+                deviceId,
+                rankId: data.rank_id,
+                peakMem: data.peak_mem,
+                capacity: data.capacity,
+                backgroundColor: this.legendArr[index]
+                  ? this.legendArr[index].backgroundColor
+                  : this.legendArr.splie(-1).backgroundColor,
+              };
             });
-          }
-          // Factor used to avoid JS floating point number question
-          const factor = 100;
-          const index = Math.floor(((heatmap.peak_mem / heatmap.capacity) * factor) / (this.granularity * factor));
-          HeatmapDataArr[dataIndex].data.push({
-            deviceId: heatmap.device_id,
-            rankId: heatmap.rank_id,
-            peakMem: heatmap.peak_mem,
-            capacity: heatmap.capacity,
-            backgroundColor: this.legendArr[index].backgroundColor,
+            heatmapDataArr.forEach((data) => {
+              // Avoid device_id incoherent
+              data.data = data.data.filter((item) => {
+                return item !== undefined;
+              });
+              if (data.data.length > this.colNum) {
+                data.showCenter = false;
+              }
+            });
+            this.memoryHeatmapDataList = heatmapDataArr;
+            this.memoryHeatmapInitOver = true;
+          })
+          .catch(() => {
+            this.memoryHeatmapInitOver = true;
           });
-        });
-        this.memoryHeatmapDataList = this.sortByDeviceId(HeatmapDataArr);
-        this.memoryHeatmapInitOver = true;
-      });
-    },
-    /**
-     * The logic of sort data by device ID
-     * @param {Array} oriData
-     * @return {Array}
-     */
-    sortByDeviceId(oriData) {
-      if (!oriData) {
-        return [];
-      }
-      oriData.forEach((hostData) => {
-        hostData.data.sort((a, b) => {
-          return a.deviceId - b.deviceId;
-        });
-      });
-      return oriData;
     },
   },
 };
@@ -319,6 +333,10 @@ export default {
   overflow-y: auto;
   padding-bottom: 10px;
   border-radius: 6px;
+}
+ .heatmap-content .heatmap-item .detail-content.center {
+  justify-content: center;
+  align-items: center;
 }
 .heatmap-content .heatmap-item .detail-content .device-item {
   flex-shrink: 0;

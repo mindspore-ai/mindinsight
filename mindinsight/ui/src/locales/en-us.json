@@ -28,6 +28,11 @@
     "details": "Details",
     "delete": "Delete"
   },
+  "unit": {
+    "KiB": "KiB",
+    "MiB": "MiB",
+    "GiB": "GiB"
+  },
   "symbols": {
     "leftbracket": "(",
     "rightbracket": ")",
@@ -542,11 +547,20 @@
     "commTitle": "Communication - Cluster Overview",
     "clusterView": "Cluster Overview",
     "rankID": "Rank ID",
+    "host": "Host",
+    "peakMem": "Memory Peak",
+    "capaCity": "Maximum Available Memory",
+    "unit": "KIB",
     "timeTitle": "time(ms)",
     "performanceChartTitle": "Performance Analysis",
     "memoryHeatMapTitle": "Memory Heat Map Analysis",
     "deviceId": "Device",
-    "granuLarity": "GranuLarity"
+    "granuLarity": "GranuLarity",
+    "mainTipTitle": "Function description:",
+    "mainTipPartOne": "This feature provides the user with an overview of memory usage in the form of a heat map in a cluster scenario. The thermal map reflects the ratio of the peak memory per device in the cluster to the total available memory.",
+    "mainTipPartTwo": "Peak Memory Ratio = Memory Peak / Maximum Available Memory of device(The maximum peak memory ratio is 1)",
+    "mainTipPartThree": "Granularity: Represents the thickness of the color value corresponding to the memory peak proportion of different cards.",
+    "mainTipPartFour": "You can also view the cluster overview of the training in the UI, such as how many servers were used in the training and how many devices were used on each server. Click on a device to jump to the memory details page of that device."
   },
   "components": {
     "summaryTitle": "Training Selection",
