@@ -595,7 +595,9 @@ export default {
     queryTensorHistory() {
       if (this.selectedNode.name) {
         const path = this.selectedNode.name.split('^');
-        const type = this.allGraphData[path[0].replace('_unfold', '')].type;
+        const id = path[0].replace('_unfold', '');
+        if (!(id && this.allGraphData[id])) return;
+        const type = this.allGraphData[id].type;
         const ignoreType = ['name_scope', 'aggregation_scope'];
         if (
           !this.selectedNode.name.includes('more...') &&
@@ -1576,7 +1578,10 @@ export default {
                   this.$refs.tree.getNode(val).indeterminate = true;
                 });
                 this.selectedNode.name = node.data.name;
-                if (!this.allGraphData[node.data.name].isUnfold) {
+                if (
+                  this.allGraphData[node.data.name] &&
+                !this.allGraphData[node.data.name].isUnfold
+                ) {
                   this.dealGraphData(
                       JSON.parse(JSON.stringify(graph.nodes)),
                       node.data.name,
