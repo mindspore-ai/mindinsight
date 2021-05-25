@@ -38,7 +38,7 @@ Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/tra
 
 ### System Environment Information Confirmation
 
-- The hardware platform is Ascend or GPU.
+- The hardware platform supports Ascend, GPU and CPU.
 - Confirm that [Python](https://www.python.org/ftp/python/3.7.5/Python-3.7.5.tgz) 3.7.5 is installed.
 - The versions of MindInsight and MindSpore must be consistent.
 - If you use source code to compile and install, the following dependencies also need to be installed:
@@ -65,7 +65,7 @@ pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindIn
 ```
 
 > - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)). In other cases, you need to manually install dependency items.
-> - `{version}` denotes the version of MindInsight. For example, when you are downloading MindSpore 1.0.1, `{version}` should be 1.0.1.
+> - `{version}` denotes the version of MindInsight. For example, when you are downloading MindSpore 1.3.0, `{version}` should be 1.3.0.
 > - MindInsight supports only Linux distro with x86 architecture 64-bit or ARM architecture 64-bit.
 
 #### Installation by Source Code

@@ -37,7 +37,7 @@ MindInsight为MindSpore提供了简单易用的调优调试能力。在训练过
 
 ### 确认系统环境信息
 
-- 硬件平台为Ascend或GPU。
+- 硬件平台支持Ascend，GPU和CPU。
 - 确认安装[Python](https://www.python.org/ftp/python/3.7.5/Python-3.7.5.tgz) 3.7.5版本。
 - MindInsight与MindSpore的版本需保持一致。
 - 若采用源码编译安装，还需确认安装以下依赖。
@@ -64,7 +64,7 @@ pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindIn
 ```
 
 > - 在联网状态下，安装whl包时会自动下载MindInsight安装包的依赖项（依赖项详情参见[requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)），其余情况需自行安装。
-> - `{version}`表示MindInsight版本号，例如下载1.0.1版本MindInsight时，`{version}`应写为1.0.1。
+> - `{version}`表示MindInsight版本号，例如下载1.3.0版本MindInsight时，`{version}`应写为1.3.0。
 > - MindInsight支持使用x86 64位或ARM 64位架构的Linux发行版系统。
 
 #### 源码编译安装
