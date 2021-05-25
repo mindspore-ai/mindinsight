@@ -1071,7 +1071,6 @@ export default {
      * @param {String} name Name of the namespace to be expanded.
      */
     transplantChildrenDom(name) {
-      if (!(name && this.allGraphData[name])) return;
       let nameList = [];
       let idStr = '#subgraphTemp ';
       if (name) {
