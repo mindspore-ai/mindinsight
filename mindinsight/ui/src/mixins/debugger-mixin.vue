@@ -2246,7 +2246,7 @@ export default {
       };
       RequestService.queryStackList(param, this.sessionId).then(
           (res) => {
-            if (res && res.data) {
+            if (res && res.data && res.data.stack_infos) {
               this.stacks.total = res.data.total;
               this.stacks.currentPage = res.data.offset + 1;
               this.stacks.list = JSON.parse(JSON.stringify(res.data.stack_infos));
