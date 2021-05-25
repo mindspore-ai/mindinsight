@@ -45,10 +45,22 @@ class BatchNormMapper(ONNXToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         weights = kwargs['weights']
+        output_shape = len(kwargs['params']['output_shape'])
+
         gamma = BatchNormMapper._find_val_by_index(0, weights)
         beta = BatchNormMapper._find_val_by_index(1, weights)
         moving_mean = BatchNormMapper._find_val_by_index(2, weights)
         moving_variance = BatchNormMapper._find_val_by_index(3, weights)
+
+        dim = 1 if output_shape == DIM_SEGMENT else output_shape - 2
+        if dim > 2:
+            return {
+                'bn2d.gamma': {'data': gamma},
+                'bn2d.beta': {'data': beta},
+                'bn2d.moving_mean': {'data': moving_mean},
+                'bn2d.moving_variance': {'data': moving_variance}
+            }
+
         return {
             'gamma': {'data': gamma},
             'beta': {'data': beta},
