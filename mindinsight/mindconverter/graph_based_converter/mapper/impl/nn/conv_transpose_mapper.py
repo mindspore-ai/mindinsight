@@ -89,7 +89,7 @@ class ConvTransposeMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_params(**kwargs):
-        kernel_size = kwargs["param"].get("kernel_shape", 0)
+        kernel_size = kwargs["params"].get("kernel_shape", 0)
         dim = len(kernel_size)
         if dim == 3:
             return ConvTransposeMapper._convert_params_for_raw_conv3dtranspose(**kwargs)

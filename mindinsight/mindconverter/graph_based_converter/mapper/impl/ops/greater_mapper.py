@@ -38,10 +38,17 @@ class GreaterMapper(ONNXToMindSporeMapper):
         weights = kwargs.get("weights")
         variable_slot = "var_0"
         op = kwargs.get("operation")
-        cmp_to = GreaterMapper._find_val_by_index(0, weights).tolist()
+        cmp_to = GreaterMapper._find_val_by_index(0, weights)
+        has_shape = bool(cmp_to.shape)
+        cmp_to = cmp_to.tolist() if not has_shape else cmp_to
+        args = dict()
 
-        cmp_value = f"self.{{{variable_slot}}}_cmp_to = {{cmp_to}}"
-        args = {"cmp_to": cmp_to}
+        if has_shape:
+            variable_slot_param_name = f"{variable_slot}/cmp"
+            cmp_value = f"self.{{{variable_slot}}}_cmp_to = {{{variable_slot_param_name}}}"
+        else:
+            args["cmp_to"] = cmp_to
+            cmp_value = f"self.{{{variable_slot}}}_cmp_to = {{cmp_to}}"
 
         construct_template = f"opt_{{{variable_slot}}} = {op}()" \
                              f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, " \
@@ -64,6 +71,10 @@ class GreaterMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: {}
             }
         }
+        if has_shape:
+            exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value] = {
+                "cmp": ""
+            }
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping
