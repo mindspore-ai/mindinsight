@@ -625,8 +625,18 @@ class Generator:
             if node_inst.fragment.exchange_msg['var_0']['trainable_params']:
                 weights_scope_name = self.generate_weight_scope_name(node_name)
                 onnx_weight_inst = node_inst.fragment.exchange_msg['var_0']['weights']
-                for idx, (weight_key, weight_value_object) in \
-                        enumerate(node_inst.fragment.exchange_msg['var_0']['trainable_params'].items()):
+                ms_weight_inst = node_inst.fragment.exchange_msg['var_0']['trainable_params']
+                source_weights = list()
+                converted_weights = list()
+                for onnx_weight in onnx_weight_inst:
+                    source_weights.append(
+                        {
+                            'name': onnx_weight.name,
+                            'shape': onnx_weight.value.shape,
+                            'data_type': str(onnx_weight.value.dtype)
+                        }
+                    )
+                for weight_key, weight_value_object in ms_weight_inst.items():
                     value_type = weight_value_object.get('type', WeightType.COMMON.value)
                     value_data = weight_value_object['data']
                     if value_type == WeightType.PARAMETER.value:
@@ -636,23 +646,28 @@ class Generator:
                     weight_shape = mindspore.Tensor(value_data).shape
                     data_type = mindspore.Tensor(value_data).dtype
                     trainable_weights_dict[weight_name] = value_data
-
-                    onnx_weight_name = onnx_weight_inst[idx].name
-                    onnx_weight_shape = onnx_weight_inst[idx].value.shape
-                    onnx_data_type = onnx_weight_inst[idx].value.dtype
-
+                    converted_weights.append(
+                        {
+                            'name': weight_name,
+                            'shape': weight_shape,
+                            'data_type': str(data_type)
+                        }
+                    )
+                source_weights_num = len(source_weights)
+                converted_weights_num = len(converted_weights)
+                if source_weights_num == converted_weights_num:
+                    for idx in range(source_weights_num):
+                        weight_map.append(
+                            {
+                                'converted_weight': converted_weights[idx],
+                                'spource_weight': source_weights[idx]
+                            }
+                        )
+                else:
                     weight_map.append(
                         {
-                            'converted_weight': {
-                                'name': weight_name,
-                                'shape': weight_shape,
-                                'data_type': str(data_type)
-                            },
-                            'source_weight': {
-                                'name': onnx_weight_name,
-                                'shape': onnx_weight_shape,
-                                'data_type': str(onnx_data_type)
-                            }
+                            'converted_weight': converted_weights,
+                            'spource_weight': source_weights
                         }
                     )
 
