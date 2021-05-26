@@ -115,10 +115,9 @@ export default {
         };
         RequestService.getClusterInfo(params)
             .then((res) => {
-              // eslint-disable-next-line camelcase
               if (res?.data?.step_trace.length > 0) {
                 const chartData = [];
-                res.data.step_trace.forEach((item)=>{
+                res.data.step_trace.forEach((item) => {
                   const chartItem = [item.rank_id].concat(item.step_trace_info);
                   chartData.push(chartItem);
                 });

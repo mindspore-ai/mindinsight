@@ -28,6 +28,11 @@
     "details": "详情",
     "delete": "删除"
   },
+  "unit": {
+    "KiB": "KiB",
+    "MiB": "MiB",
+    "GiB": "GiB"
+  },
   "symbols": {
     "leftbracket": "（",
     "rightbracket": "）",
@@ -541,11 +546,20 @@
     "commTitle": "通信信息 - 集群概览",
     "clusterView": "集群概览",
     "rankID": "逻辑卡号",
+    "host": "主机",
+    "peakMem": "内存峰值",
+    "capaCity": "最大可用内存",
+    "unit": "KIB",
     "timeTitle": "时间（ms）",
     "performanceChartTitle": "性能分析",
     "memoryHeatMapTitle": "内存热力图分析",
     "deviceId": "设备",
-    "granuLarity": "粒度"
+    "granuLarity": "粒度",
+    "mainTipTitle": "功能说明：",
+    "mainTipPartOne": "该功能以热力图的形式为用户提供集群场景下的内存使用概况，反映了集群内每张训练卡的内存峰值在训练卡最大可用内存中的占比。",
+    "mainTipPartTwo": "内存峰值占比 = 内存峰值 / 训练卡最大可用内存值（内存峰值占比最大值为1）",
+    "mainTipPartThree": "粒度：代表不同卡的内存峰值占比，在划分对应色值时的粗细程度。",
+    "mainTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几台服务器、每台服务器上使用了几张训练卡。点击某个训练卡可以跳转到该张卡的内存详情页面。"
   },
   "components": {
     "summaryTitle": "训练选择",

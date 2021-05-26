@@ -16,7 +16,33 @@ limitations under the License.
 <template>
   <div class="cl-memory-heatmap">
     <div class="cl-cluster-title">
-      <div class="cl-cluster-title-left">{{$t("profilingCluster.memoryHeatMapTitle")}}</div>
+      <div class="cl-cluster-title-left">
+        {{$t("profilingCluster.memoryHeatMapTitle")}}
+        <el-tooltip placement="right-start"
+                    effect="light">
+        <div slot="content"
+             class="heatmap-tooltip-container">
+          <div class="cl-memory-heatmap-tip">
+            <div class="tip-title">
+              {{$t("profilingCluster.mainTipTitle")}}
+            </div>
+            <div class="tip-part">
+              {{$t("profilingCluster.mainTipPartOne")}}
+            </div>
+            <div class="tip-part">
+              {{$t("profilingCluster.mainTipPartTwo")}}
+            </div>
+            <div class="tip-part">
+              {{$t("profilingCluster.mainTipPartThree")}}
+            </div>
+            <div class="tip-part">
+              {{$t("profilingCluster.mainTipPartFour")}}
+            </div>
+          </div>
+        </div>
+        <i class="el-icon-info"></i>
+      </el-tooltip>
+      </div>
       <div class="path-message">
         <span>{{$t('symbols.leftbracket')}}</span>
         <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
@@ -51,7 +77,7 @@ limitations under the License.
            v-for="(item, itemIndex) in memoryHeatmapDataList"
            :key="itemIndex"
            :class="{'mt0': itemIndex < colNum}">
-        <div class="detail-content">
+        <div class="detail-content" :class="{'center': item.showCenter}">
           <div class="device-item"
                v-for="(deviceItem, deviceItemIndex) in item.data"
                :key="deviceItemIndex">
@@ -60,6 +86,12 @@ limitations under the License.
                 <div slot="content">
                   <div>
                     {{$t('profilingCluster.rankID') + $t('symbols.colon') + deviceItem.rankId}}
+                    <br>
+                    {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem.toFixed(3)
+                     + $t('unit.KiB')}}
+                    <br>
+                    {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
+                     + $t('unit.GiB')}}
                   </div>
                 </div>
                 <div :style="{background:deviceItem.background}"
@@ -72,7 +104,7 @@ limitations under the License.
           </div>
         </div>
         <div class="info-content">
-          {{item.hostIp}}
+          {{$t('profilingCluster.host') + item.hostIp}}
         </div>
       </div>
     </div>
@@ -154,38 +186,57 @@ export default {
       const params = {
         train_id: this.trainingJobId,
       };
-      RequestService.getClusterPeakMemory(params).then((res) => {
-        if (!res || !res.data) {
-          this.memoryHeatmapInitOver = true;
-          return;
-        }
-        const resData = res.data;
-        const heatmapDataDic = {};
-        const HeatmapDataArr = [];
-        // merge host ip
-        resData.forEach((heatmap) => {
-          let dataIndex = heatmapDataDic[heatmap.host_ip];
-          if (isNaN(dataIndex)) {
-            dataIndex = HeatmapDataArr.length;
-            heatmapDataDic[heatmap.host_ip] = dataIndex;
-            HeatmapDataArr.push({
-              hostIp: heatmap.host_ip,
-              data: [],
+      RequestService.getClusterPeakMemory(params)
+          .then((res) => {
+            if (!res || !res.data) {
+              this.memoryHeatmapInitOver = true;
+              return;
+            }
+            const resData = res.data;
+            const heatmapDataMap = {};
+            const heatmapDataArr = [];
+            // Merge host ip
+            resData.forEach((data) => {
+              let arrayIndex;
+              if (heatmapDataMap[data.host_ip] === undefined) {
+                // New host_ip
+                arrayIndex = heatmapDataArr.push({
+                  hostIp: data.host_ip,
+                  data: [],
+                  showCenter: true,
+                }) - 1;
+                heatmapDataMap[data.host_ip] = arrayIndex;
+              } else {
+                // Exist host_ip
+                arrayIndex = heatmapDataMap[data.host_ip];
+              }
+              const deviceId = data.device_id;
+              const factorFromGiBToKiB = 1024 * 1024; // 1024: Transform GiB to KiB
+              const capacityInKiB = data.capacity * factorFromGiBToKiB;
+              heatmapDataArr[arrayIndex].data[deviceId] = {
+                deviceId,
+                rankId: data.rank_id,
+                peakMem: data.peak_mem,
+                capacity: data.capacity,
+                peakRatio: data.peak_mem / capacityInKiB,
+                background: '',
+              };
             });
-          }
-          HeatmapDataArr[dataIndex].data.push({
-            deviceId: heatmap.device_id,
-            rankId: heatmap.rank_id,
-            peakMem: heatmap.peak_mem,
-            capacity: heatmap.capacity,
-            value: heatmap.peak_mem / heatmap.capacity,
-            background: '',
+            heatmapDataArr.forEach((data) => {
+              // Avoid device_id incoherent
+              data.data = data.data.filter((item) => {
+                return item !== undefined;
+              });
+              if (data.data.length > this.colNum) {
+                data.showCenter = false;
+              }
+            });
+            this.memoryHeatmapDataList = heatmapDataArr;
+            this.changeBackground();
+          })
+          .catch(() => {
+            this.memoryHeatmapInitOver = true;
           });
-        });
-        // sort host ip by device id
-        this.memoryHeatmapDataList = this.sortByDeviceId(HeatmapDataArr);
-        this.changeBackground();
-      });
     },
     /**
      * Calculate gradient color
@@ -263,22 +314,6 @@ export default {
       }
     },
     /**
-     * sort host ip by device id
-     * @param {Array} oriData Heat map data
-     * @return {Array} Heat map data
-     */
-    sortByDeviceId(oriData) {
-      if (!oriData) {
-        return [];
-      }
-      oriData.forEach((hostData) => {
-        hostData.data.sort((a, b) => {
-          return a.deviceId - b.deviceId;
-        });
-      });
-      return oriData;
-    },
-    /**
      * page turn memory
      * @param {Object} item Jump parameters
      * @param {String} hostIP host ip
@@ -301,16 +336,21 @@ export default {
      */
     changeBackground() {
       // Factor used to avoid JS floating point number question
-      const factor = 100;
+      const factor = 1000000;
+      const maxPeakRatio = 1;
       this.memoryHeatmapDataList.forEach((data) => {
         data.data.forEach((item) => {
-          const colorIndex = Math.floor((item.value * factor) / (+this.granuLarity * factor));
-          item.background = this.colorArr[colorIndex].background;
+          if (item.peakRatio !== maxPeakRatio) {
+            const colorIndex = Math.floor((item.peakRatio * factor) / (+this.granuLarity * factor));
+            item.background = this.colorArr[colorIndex].background;
+          } else {
+            item.background = this.colorArr[this.colorArr.length - 1].background;
+          }
         });
       });
     },
     /**
-     * Back cluster
+     * Back to cluster dashboard
      */
     backToDashboard() {
       this.$router.push({
@@ -338,6 +378,24 @@ export default {
   line-height: 56px;
   position: relative;
   flex-shrink: 0;
+}
+.cl-memory-heatmap .el-icon-info {
+  color: #6c7280;
+}
+.el-tooltip__popper .heatmap-tooltip-container .cl-memory-heatmap-tip {
+  padding: 10px;
+}
+.el-tooltip__popper .heatmap-tooltip-container .cl-memory-heatmap-tip .tip-title {
+  font-size: 16px;
+  font-weight: bold;
+  padding: 0px 0px 3px 0px;
+}
+.el-tooltip__popper .heatmap-tooltip-container .tag-tip .tip-title {
+  color: #333333;
+}
+.el-tooltip__popper .heatmap-tooltip-container .cl-memory-heatmap-tip .tip-part {
+  line-height: 20px;
+  word-break: normal;
 }
 .cl-memory-heatmap .cl-cluster-title .cl-cluster-title-left {
   display: inline-block;
@@ -436,6 +494,10 @@ export default {
   overflow-y: auto;
   padding-bottom: 10px;
   border-radius: 6px;
+}
+.cl-memory-heatmap .heatmap-content .heatmap-item .detail-content.center {
+  justify-content: center;
+  align-items: center;
 }
 .heatmap-content .heatmap-item .detail-content .device-item {
   flex-shrink: 0;
