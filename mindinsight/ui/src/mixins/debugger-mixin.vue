@@ -680,6 +680,7 @@ export default {
                       res.data.receive_tensor.graph_name,
                       res.data.receive_tensor.tensor_name,
                   );
+                  debTensor.tabChange(debTensor.gridType);
                 }
               }
               this.pollData();
