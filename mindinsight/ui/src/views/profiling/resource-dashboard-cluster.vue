@@ -193,7 +193,7 @@ export default {
                 capacity: data.capacity,
                 backgroundColor: this.legendArr[index]
                   ? this.legendArr[index].backgroundColor
-                  : this.legendArr.splie(-1).backgroundColor,
+                  : this.legendArr.slice(-1).backgroundColor,
               };
             });
             heatmapDataArr.forEach((data) => {
