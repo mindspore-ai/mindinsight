@@ -51,7 +51,7 @@ optional arguments:
 则运行命令为：
 
 ```bash
-python -m mindinsight.mindconverter.tools.fix_checkpoit_file xxx/model.py xxx/model.ckpt xxx/fixed_model.py xxx/fixed_model.ckpt
+python -m mindinsight.mindconverter.tools.fix_checkpoint_file xxx/model.py xxx/model.ckpt xxx/fixed_model.py xxx/fixed_model.ckpt
 ```
 
 如果显示结果如下，则说明转换完成：
