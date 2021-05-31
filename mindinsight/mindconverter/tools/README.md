@@ -51,7 +51,7 @@ Assuming that the source model script file is `xxx/model.py`, the source checkpo
 The command is that:
 
 ```bash
-python -m mindinsight.mindconverter.tools.fix_checkpoit_file xxx/model.py xxx/model.ckpt xxx/fixed_model.py xxx/fixed_model.ckpt
+python -m mindinsight.mindconverter.tools.fix_checkpoint_file xxx/model.py xxx/model.ckpt xxx/fixed_model.py xxx/fixed_model.ckpt
 ```
 
 If generation is successful, the result below would be shown:
