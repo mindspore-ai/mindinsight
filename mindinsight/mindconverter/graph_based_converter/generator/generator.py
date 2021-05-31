@@ -660,14 +660,14 @@ class Generator:
                         weight_map.append(
                             {
                                 'converted_weight': converted_weights[idx],
-                                'spource_weight': source_weights[idx]
+                                'source_weight': source_weights[idx]
                             }
                         )
                 else:
                     weight_map.append(
                         {
                             'converted_weight': converted_weights,
-                            'spource_weight': source_weights
+                            'source_weight': source_weights
                         }
                     )
 
