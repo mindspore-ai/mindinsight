@@ -16,8 +16,10 @@
 
 import os
 
-from mindinsight.utils.folder_analyzer import FolderAnalyzer
 from mindinsight.datavisual.common.log import logger
+from mindinsight.debugger.common.utils import is_valid_rank_dir_name
+from mindinsight.utils.folder_analyzer import FolderAnalyzer
+
 
 class DebuggerFolderAnalyzer(FolderAnalyzer):
     """Debugger train job register."""
@@ -35,7 +37,7 @@ class DebuggerFolderAnalyzer(FolderAnalyzer):
             subdir_entries = [subdir_entry for subdir_entry in subdir_entries if not subdir_entry.is_symlink()]
             subdir_entries = sorted(subdir_entries, key=lambda x: x.stat().st_mtime)
             for subdir_entry in subdir_entries:
-                if subdir_entry.is_dir() and subdir_entry.name.startswith(".metadata"):
+                if subdir_entry.is_dir() and is_valid_rank_dir_name(subdir_entry.name):
                     update_info = {'dump_dir': sub_relative_path}
                     return update_info
         return update_info

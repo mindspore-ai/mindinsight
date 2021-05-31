@@ -53,6 +53,7 @@ class DebuggerErrors(DebuggerErrorCodes):
     DEBUGGER_SESSION_OVER_BOUND_ERROR = 0 | _DEBUGGER_SESSION_ERROR
     DEBUGGER_SESSION_NOT_FOUND_ERROR = 1 | _DEBUGGER_SESSION_ERROR
     DEBUGGER_ONLINE_SESSION_UNAVAILABLE = 2 | _DEBUGGER_SESSION_ERROR
+    DEBUGGER_RANK_DIR_NOT_FOUND = 3 | _DEBUGGER_SESSION_ERROR
 
 
 @unique
@@ -81,3 +82,4 @@ class DebuggerErrorMsg(Enum):
     DEBUGGER_SESSION_OVER_BOUND_ERROR = "The amount of sessions is over limitation."
     DEBUGGER_SESSION_NOT_FOUND_ERROR = "Session {} not found."
     DEBUGGER_ONLINE_SESSION_UNAVAILABLE = "Online session is unavailable."
+    DEBUGGER_RANK_DIR_NOT_FOUND = "No rank directory found under {}."

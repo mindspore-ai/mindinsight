@@ -248,11 +248,22 @@ class DebuggerSessionNotFoundError(MindInsightException):
 
 
 class DebuggerOnlineSessionUnavailable(MindInsightException):
-    """The error of that the session already exist."""
+    """The error of that the online session is unavailable."""
 
     def __init__(self):
         super(DebuggerOnlineSessionUnavailable, self).__init__(
             error=DebuggerErrors.DEBUGGER_ONLINE_SESSION_UNAVAILABLE,
             message=DebuggerErrorMsg.DEBUGGER_ONLINE_SESSION_UNAVAILABLE.value,
+            http_code=400
+        )
+
+
+class RankDirNotFound(MindInsightException):
+    """The error of that the dumped rank directory is not found."""
+
+    def __init__(self, msg):
+        super(RankDirNotFound, self).__init__(
+            error=DebuggerErrors.DEBUGGER_RANK_DIR_NOT_FOUND,
+            message=DebuggerErrorMsg.DEBUGGER_RANK_DIR_NOT_FOUND.value.format(msg),
             http_code=400
         )

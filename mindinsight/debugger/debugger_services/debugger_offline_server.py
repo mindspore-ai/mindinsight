@@ -129,8 +129,8 @@ class DebuggerOfflineManager:
         self._data_loader.initialize()
         is_sync = self._data_loader.get_sync_flag()
         net_name = self._data_loader.get_net_name()
-        net_dir = self._data_loader.get_net_dir()
-        self._dbg_service = self._dbg_services_module.DbgServices(net_dir)
+        dump_dir = self._data_loader.get_dump_dir()
+        self._dbg_service = self._dbg_services_module.DbgServices(dump_dir)
         self._dbg_service.initialize(net_name=net_name, is_sync_mode=is_sync)
         self._cache_store.clean()
         self._command_listener.start()
@@ -169,10 +169,10 @@ class DebuggerOfflineManager:
         rank_id = 0
         rank_0_info = device_stream.get(rank_id)['devices'][0]
         self._metadata_stream.client_ip = rank_0_info.get('server_id')
-        # get step number per device. dict(device_id, step_num), may be increased with time goes by
-        step_num_per_device = self._data_loader.load_step_number()
-        device_stream.add_step_num_info(step_num_per_device)
-        self._metadata_stream.max_step_num = max(step_num_per_device.values())
+        # get step number per device. dict(rank_id, step_num), may be increased with time goes by
+        step_num_per_rank = self._data_loader.load_step_number()
+        device_stream.add_step_num_info(step_num_per_rank)
+        self._metadata_stream.max_step_num = max(step_num_per_rank.values())
 
     def _load_graphs(self):
         """Load graphs."""
@@ -182,8 +182,7 @@ class DebuggerOfflineManager:
         device_stream = self._cache_store.get_stream_handler(Streams.DEVICE)
         graph_per_rank = {}
         for graph in graphs:
-            device_id = int(graph.get('device_id'))
-            rank_id = device_stream.get_rank_id_by_device_id(device_id)
+            rank_id = graph.get('rank_id')
             graph_per_rank[rank_id] = {}
             tensor_stream_per_rank = self._cache_store.get_stream_handler(Streams.TENSOR).\
                 get_tensor_handler_by_rank_id(rank_id, create_if_not_exit=True)

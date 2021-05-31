@@ -61,7 +61,7 @@ class DeviceHandler(StreamHandlerBase):
             raise DebuggerParamTypeError("List object is expected.")
         try:
             self._extract_rank_info(value)
-        except TypeError as err:
+        except (TypeError, ValueError) as err:
             log.exception(err)
             log.error("Invalid Device info.")
             raise DebuggerParamValueError("Invalid device info.")
@@ -85,26 +85,16 @@ class DeviceHandler(StreamHandlerBase):
 
     def add_step_num_info(self, step_info):
         """
-        Add step number information for each device.
+        Add step number information for each rank.
 
         Args:
-            step_info (dict): Step info per device. The key is the device id, the value
+            step_info (dict): Step info per rank. The key is the rank id, the value
                 is the relative step number.
         """
         if not step_info:
             log.warning("No step number information.")
             return
-        if len(step_info) == 1 and not self._rank_info:
-            device_id = int(list(step_info)[0])
-            log.info("Default registered device %d as rank 0.", device_id)
-            self._rank_info[0].device_id = device_id
-        if len(step_info) > 1 and not self._rank_info:
-            log.error("Missing device info for multi-card training.")
-            raise DeviceIdUnregistered("all")
-
-        for device_id, step_num in step_info.items():
-            device_id = int(device_id)
-            rank_id = self.get_rank_id_by_device_id(device_id)
+        for rank_id, step_num in step_info.items():
             self._rank_info[rank_id].step_num = step_num
 
     def add_graph_name_info(self, graphs):
