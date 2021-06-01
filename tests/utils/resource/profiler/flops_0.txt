@@ -1,0 +1,5 @@
+op_full_name, FLOPs, FLOPS, FLOPS utilization
+Default/Cast-op6, 333, 333, 33
+Default/TransData-op7, 333, 333, 33
+Default/network-WithLossCell/_backbone-ResNet/conv1-Conv2d/Cast-op5, 333, 333, 33
+Default/network-WithLossCell/_backbone-ResNet/layer1-SequentialCell/0-ResidualBlock/conv1-Conv2d/Cast-op28, 333, 333, 33

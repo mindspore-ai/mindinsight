@@ -305,3 +305,66 @@ class ClusterMemoryAnalyser(ClusterAnalyser):
             raise ProfilerIOException()
 
         return file_content
+
+
+class ClusterFlopsAnalyser(ClusterAnalyser):
+    """The analyser for analyzing the cluster flops."""
+    _summary_filename = 'flops_summary_{}.json'
+
+    def __init__(self, cluster_profiler_dir, device_id='0'):
+        super().__init__(cluster_profiler_dir, device_id)
+        self._cluster_dir = os.path.join(cluster_profiler_dir, 'cluster_profiler')
+
+    def get_flops(self):
+        """Get flops for each device."""
+        flops_info_list = []
+        max_flops = 0
+
+        for host_map_ip, device_id, rank_id in self._host_device_rank_relation:
+            host_dir = os.path.join(self._cluster_dir, host_map_ip, 'profiler')
+            validate_and_normalize_path(host_dir, raise_key='Invalid host directory {}.'.format(host_map_ip))
+            file_path = self._get_flops_file_for_each_device(host_dir, device_id)
+
+            # Forward compatible. If flops file do not exist, return empty data.
+            if not os.path.exists(file_path):
+                flops_info_list = []
+                break
+
+            file_content = self._get_file_content(file_path)
+            max_flops = max(max_flops, file_content.get('FLOPs'))
+
+            flops_dict = {
+                'host_ip': host_map_ip,
+                'device_id': device_id,
+                'rank_id': rank_id,
+            }
+            flops_dict.update(file_content)
+            flops_info_list.append(flops_dict)
+
+        # Normalize the flops by divide the max flops in all device.
+        for flops_info in flops_info_list:
+            flops_info['FLOPs_norm'] = flops_info['FLOPs'] / max_flops
+
+        return flops_info_list
+
+    def _get_flops_file_for_each_device(self, path, device_id):
+        """Get memory file for each device."""
+        filename = self._summary_filename.format(device_id)
+        file_path = os.path.join(path, filename)
+        validate_and_normalize_path(
+            file_path, raise_key='Invalid flops file path.'
+        )
+
+        return file_path
+
+    @staticmethod
+    def _get_file_content(file_path):
+        """Get file content."""
+        try:
+            with open(file_path, 'r') as f_obj:
+                file_content = json.load(f_obj)
+        except (IOError, OSError, json.JSONDecodeError) as err:
+            log.error('Error occurred when read flops file: %s', err)
+            raise ProfilerIOException()
+
+        return file_content

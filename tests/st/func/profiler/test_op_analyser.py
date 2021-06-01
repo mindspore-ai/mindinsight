@@ -27,11 +27,12 @@ from tests.st.func.profiler.conftest import BASE_SUMMARY_DIR
 
 OP_GATHER_V2_INFO = {
     'col_name': [
-        'op_name', 'op_type', 'avg_execution_time', 'subgraph', 'full_op_name', 'op_info'
+        'op_name', 'op_type', 'avg_execution_time', 'FLOPs', 'FLOPS', 'FLOPS_Utilization',
+        'subgraph', 'full_op_name', 'op_info'
     ],
     'object': [
         [
-            'GatherV2-op55', 'GatherV2', 42.220, 'Default',
+            'GatherV2-op55', 'GatherV2', 42.220, 333.0, 333.0, 33.0, 'Default',
             'Default/network-TrainStepWrap/network-VirtualDatasetCellTriple/'
             '_backbone-NetWithLossClass/network-WideDeepModel/GatherV2-op55',
             {
@@ -53,7 +54,7 @@ OP_GATHER_V2_INFO = {
             }
         ],
         [
-            'GatherV2-op33', 'GatherV2', 0.935229, 'Default',
+            'GatherV2-op33', 'GatherV2', 0.935229, 333.0, 333.0, 33.0, 'Default',
             'Default/network-TrainStepWrap/network-VirtualDatasetCellTriple/'
             '_backbone-NetWithLossClass/network-WideDeepModel/GatherV2-op33',
             {

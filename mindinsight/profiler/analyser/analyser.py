@@ -54,7 +54,7 @@ class AicoreTypeAnalyser(BaseAnalyser):
 
         with open(op_type_file_path, 'r') as file:
             csv_reader = csv.reader(file)
-            _ = next(csv_reader)
+            next(csv_reader)
             for info in csv_reader:
                 self._data.append(self._convert_field_type(info))
 
@@ -106,9 +106,10 @@ class AicoreDetailAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['op_name', 'op_type', 'avg_execution_time', 'subgraph',
-                  'full_op_name', 'op_info']
+    _col_names = ['op_name', 'op_type', 'avg_execution_time', 'FLOPs', 'FLOPS',
+                  'FLOPS_Utilization', 'subgraph', 'full_op_name', 'op_info']
     _file_name_aicore_detail_time = 'aicore_intermediate_{}_detail.csv'
+    _file_name_flops = 'flops_{}.txt'
     _file_name_framework_info = 'framework_raw_{}.csv'
 
     def __init__(self, profiling_dir, device_id):
@@ -168,12 +169,18 @@ class AicoreDetailAnalyser(BaseAnalyser):
             self._profiling_dir,
             self._file_name_framework_info.format(self._device_id)
         )
+        flops_file_path = os.path.join(
+            self._profiling_dir,
+            self._file_name_flops.format(self._device_id)
+        )
         op_detail_file_path = validate_and_normalize_path(
             op_detail_file_path, raise_key='Invalid aicore_detail file path.'
         )
-
         framework_file_path = validate_and_normalize_path(
             framework_file_path, raise_key='Invalid framework file path.'
+        )
+        flops_file_path = validate_and_normalize_path(
+            flops_file_path, raise_key='Invalid flops file path.'
         )
         if not os.path.isfile(op_detail_file_path):
             logger.warning('The file <%s> does not exist.', op_detail_file_path)
@@ -185,20 +192,33 @@ class AicoreDetailAnalyser(BaseAnalyser):
         framework_infos = dict()
         with open(framework_file_path, 'r') as file:
             csv_reader = csv.reader(file)
-            _ = next(csv_reader)
+            next(csv_reader)
             for info in csv_reader:
                 framework_infos[info[3]] = self._convert_framework_field_type(
                     info
                 )
 
+        flops_infos = dict()
+        if os.path.isfile(flops_file_path):
+            with open(flops_file_path, 'r') as f_obj:
+                # skip the first line which is header info.
+                next(f_obj)
+                for line in f_obj:
+                    flops_line = line.strip().split(',')
+                    # flops_line[0] is full_op_name.
+                    flops_infos[flops_line[0]] = flops_line[1:]
+        else:
+            logger.warning('The file <%s> does not exist.', flops_file_path)
+
         with open(op_detail_file_path, 'r') as file:
             csv_reader = csv.reader(file)
-            _ = next(csv_reader)
+            next(csv_reader)
             for info in csv_reader:
-                detail_info = self._get_op_detail_info(info, framework_infos)
+                detail_info = self._get_op_detail_info(info, framework_infos, flops_infos)
                 self._data.append(detail_info)
 
         del framework_infos
+        del flops_infos
 
     def _filter(self, filter_condition):
         """
@@ -211,11 +231,11 @@ class AicoreDetailAnalyser(BaseAnalyser):
             return self._default_filter(item, filter_condition)
 
         def _inner_map(item: list):
-            inner_item = item[0:4]
+            inner_item = item[0:7]
             if is_display_full_op_name:
-                inner_item.append(item[4])
+                inner_item.append(item[7])
             if is_display_detail:
-                inner_item.append(item[5])
+                inner_item.append(item[8])
             return inner_item
 
         is_display_detail = filter_condition.get('is_display_detail', True)
@@ -240,13 +260,14 @@ class AicoreDetailAnalyser(BaseAnalyser):
             is_display_full_op_name (bool): Whether to display the operator full
                 name.
         """
-        self._display_col_names = self._col_names[0:4]
+        self._display_col_names = self._col_names[0:7]
         if is_display_full_op_name:
-            self._display_col_names.append(self._col_names[4])
+            self._display_col_names.append(self._col_names[7])
         if is_display_detail:
-            self._display_col_names.append(self._col_names[5])
+            self._display_col_names.append(self._col_names[8])
 
-    def _convert_framework_field_type(self, row):
+    @staticmethod
+    def _convert_framework_field_type(row):
         """
         Convert the field type of framework file to the specific type.
 
@@ -259,19 +280,25 @@ class AicoreDetailAnalyser(BaseAnalyser):
         return [row[3], row[4], row[5], row[6],
                 json.loads(row[7]) if row[7] else None]
 
-    def _get_op_detail_info(self, row, framework_infos):
+    def _get_op_detail_info(self, row, framework_infos, flops_infos):
         """
         Get operator detail information.
 
         Args:
             row (list[str]): One row data from parsed operator file.
             framework_infos (dict): All framework information.
+            flops_infos (dict): All flops information.
 
         Returns:
             list[Union[str, float]], the operator detail information in one row.
         """
         framework_info = framework_infos.get(row[0])
-        return [framework_info[1], framework_info[2], self._format_float_data(float(row[1])),
+        flops_info = flops_infos.get(row[0], ['-', '-', '-'])
+        return [framework_info[1], framework_info[2],
+                self._format_float_data(row[1]),
+                self._format_float_data(flops_info[0]),
+                self._format_float_data(flops_info[1]),
+                self._format_float_data(flops_info[2]),
                 framework_info[3], framework_info[0], framework_info[4]]
 
 
@@ -307,7 +334,7 @@ class AicpuTypeAnalyser(BaseAnalyser):
         type_detail_cache = dict()
         with open(aicpu_file_path, 'r') as file:
             csv_reader = csv.reader(file)
-            _ = next(csv_reader)
+            next(csv_reader)
             for item in csv_reader:
                 op_type = item[1]
                 info = type_detail_cache.get(op_type)
@@ -377,7 +404,7 @@ class AicpuDetailAnalyser(BaseAnalyser):
 
         with open(aicpu_file_path, 'r') as file:
             csv_reader = csv.reader(file)
-            _ = next(csv_reader)
+            next(csv_reader)
             for info in csv_reader:
                 aicpu_info = self._convert_field_type(info)
                 self._data.append(aicpu_info)

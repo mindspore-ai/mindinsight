@@ -50,7 +50,8 @@ class AnalyserFactory:
             cls._instance = cls()
         return cls._instance
 
-    def get_analyser(self, analyser_type, *args):
+    @staticmethod
+    def get_analyser(analyser_type, *args):
         """
         Get the specified analyser according to the analyser type.
 

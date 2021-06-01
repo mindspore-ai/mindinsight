@@ -141,7 +141,7 @@ def get_training_trace_graph():
     graph_type = request.args.get("type", default='0')
     graph_type = to_int(graph_type, 'graph_type')
     device_id = request.args.get("device_id", default='0')
-    _ = to_int(device_id, 'device_id')
+    to_int(device_id, 'device_id')
     graph_info = {}
     try:
         analyser = AnalyserFactory.instance().get_analyser(
@@ -184,7 +184,7 @@ def get_target_time_info():
     proc_name = request.args.get("type")
     validate_ui_proc(proc_name)
     device_id = request.args.get("device_id", default='0')
-    _ = to_int(device_id, 'device_id')
+    to_int(device_id, 'device_id')
 
     analyser = AnalyserFactory.instance().get_analyser(
         'step_trace', profiler_dir_abs, device_id)
@@ -458,7 +458,7 @@ def get_timeline_summary():
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
     device_id = request.args.get("device_id", default='0')
-    _ = to_int(device_id, 'device_id')
+    to_int(device_id, 'device_id')
     device_type = request.args.get("device_type", default='ascend')
     if device_type not in ['gpu', 'ascend']:
         logger.info("Invalid device_type, device_type should be gpu or ascend.")
@@ -487,7 +487,7 @@ def get_timeline_detail():
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
     device_id = request.args.get("device_id", default='0')
-    _ = to_int(device_id, 'device_id')
+    to_int(device_id, 'device_id')
     device_type = request.args.get("device_type", default='ascend')
     scope_name_num = request.args.get("scope_name_num", default='0')
     if device_type not in ['gpu', 'ascend']:
@@ -700,6 +700,59 @@ def get_cluster_peak_memory():
     )
     peak_mem = analyser.get_peak_memory()
     return jsonify(peak_mem)
+
+
+@BLUEPRINT.route("/profile/cluster-flops", methods=["GET"])
+def get_cluster_flops():
+    """
+    Get cluster FLOPs.
+
+    Returns:
+        str, the cluster FLOPs.
+
+    Raises:
+        ParamValueError: If the cluster profiler dir is invalid.
+
+    Examples:
+        >>>GET http://xxx/v1/mindinsight/profile/cluster-flops
+    """
+    train_id = get_train_id(request)
+    if not train_id:
+        raise ParamValueError('No train id.')
+    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
+    cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
+    check_train_job_and_profiler_dir(cluster_profiler_dir)
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'cluster_flops', cluster_profiler_dir
+    )
+    flops = analyser.get_flops()
+    return jsonify(flops)
+
+
+@BLUEPRINT.route("/profile/flops-summary", methods=["GET"])
+def get_flops_summary():
+    """
+    Get flops summary info.
+
+    Returns:
+        Response, the flops summary info.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/flops-summary
+    """
+    train_id = request.args.get("train_id")
+    profiler_dir_abs = validate_and_normalize_profiler_path(train_id, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    device_id = request.args.get("device_id", default='0')
+    to_int(device_id, 'device_id')
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'flops', profiler_dir_abs, device_id)
+    summary = analyser.get_flops_summary()
+
+    return summary
 
 
 def init_module(app):

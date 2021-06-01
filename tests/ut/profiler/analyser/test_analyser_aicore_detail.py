@@ -21,8 +21,8 @@ from unittest import TestCase
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
 
-COL_NAMES = ['op_name', 'op_type', 'avg_execution_time', 'subgraph',
-             'full_op_name', 'op_info']
+COL_NAMES = ['op_name', 'op_type', 'avg_execution_time', 'FLOPs', 'FLOPS',
+             'FLOPS_Utilization', 'subgraph', 'full_op_name', 'op_info']
 
 
 def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
@@ -39,16 +39,21 @@ def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
     """
     framework_path = os.path.join(PROFILER_DIR, 'framework_raw_1.csv')
     detail_path = os.path.join(PROFILER_DIR, 'aicore_intermediate_1_detail.csv')
+    flops_path = os.path.join(PROFILER_DIR, 'flops_1.txt')
 
-    with open(framework_path, 'r') as fm_file, open(detail_path, 'r') as detail_file:
+    with open(framework_path, 'r') as fm_file, open(detail_path, 'r') as detail_file,\
+         open(flops_path, 'r') as flops_file:
         fm_csv_reader = csv.reader(fm_file)
         detail_csv_reader = csv.reader(detail_file)
+        flops_reader = flops_file.readlines()[1:]
         _ = next(fm_csv_reader)
         _ = next(detail_csv_reader)
         cache = []
-        for fm_info, detail_info in zip(fm_csv_reader, detail_csv_reader):
+        for fm_info, detail_info, flops_line in zip(fm_csv_reader, detail_csv_reader, flops_reader):
+            flops = flops_line.strip().split(',')
             cache.append(
-                [fm_info[4], fm_info[5], float(detail_info[1]), fm_info[6],
+                [fm_info[4], fm_info[5], float(detail_info[1]), float(flops[1]),
+                 float(flops[2]), float(flops[3]), fm_info[6],
                  fm_info[3], json.loads(fm_info[7]) if fm_info[7] else None]
             )
 
@@ -236,8 +241,8 @@ class TestAicoreDetailAnalyser(TestCase):
         detail_infos = get_detail_infos(indexes=[9])
 
         expect_result = {
-            'col_name': COL_NAMES[0:5],
-            'object': [item[0:5] for item in detail_infos],
+            'col_name': COL_NAMES[0:8],
+            'object': [item[0:8] for item in detail_infos],
             'size': 1
         }
         condition = {
@@ -252,8 +257,8 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES[0:4],
-            'object': [item[0:4] for item in detail_infos],
+            'col_name': COL_NAMES[0:7],
+            'object': [item[0:7] for item in detail_infos],
             'size': 1
         }
         condition = {
@@ -272,8 +277,8 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 5, 3, 4])
         expect_result = {
-            'col_name': COL_NAMES[0:4],
-            'object': [item[0:4] for item in detail_infos]
+            'col_name': COL_NAMES[0:7],
+            'object': [item[0:7] for item in detail_infos]
         }
 
         filter_condition = {
@@ -294,8 +299,8 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 3, 4, 8, 6])
         expect_result = {
-            'col_name': COL_NAMES[0:4],
-            'object': [item[0:4] for item in detail_infos]
+            'col_name': COL_NAMES[0:7],
+            'object': [item[0:7] for item in detail_infos]
         }
 
         filter_condition = {
