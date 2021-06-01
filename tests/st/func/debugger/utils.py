@@ -94,15 +94,15 @@ def delete_random_items(res):
 def build_dump_file_structure():
     """Build the dump file structure."""
     async_file_structure = {
-        "Ascend/async/device_0/Lenet_graph_1/1": 3,
-        "Ascend/async/device_1/Lenet_graph_1/1": 3
+        "Ascend/async/rank_0": 3,
+        "Ascend/async/rank_1": 3
     }
 
     sync_file_structure = {
-        "Ascend/sync/Lenet/device_0": 4,
-        "Ascend/sync/Lenet/device_1": 4,
-        "GPU/sync/Lenet/device_0": 3,
-        "GPU/sync/Lenet/device_1": 3
+        "Ascend/sync/rank_0": 4,
+        "Ascend/sync/rank_1": 4,
+        "GPU/sync/rank_0": 3,
+        "GPU/sync/rank_1": 3
     }
 
     debugger_tmp_dir = tempfile.mkdtemp(suffix='debugger_tmp')
@@ -111,11 +111,11 @@ def build_dump_file_structure():
 
     for sub_dir, steps in async_file_structure.items():
         for step in range(1, steps + 1):
-            os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir), str(step)), exist_ok=True)
+            os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir, 'Lenet/1'), str(step)), exist_ok=True)
 
     for sub_dir, steps in sync_file_structure.items():
         for step in range(1, steps + 1):
-            os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir), 'iteration_' + str(step)),
+            os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir, 'Lenet/0'), str(step)),
                         exist_ok=True)
         graph_dir_path = os.path.join(os.path.join(dump_files_dir, sub_dir), 'graphs')
         os.makedirs(graph_dir_path, exist_ok=True)

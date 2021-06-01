@@ -45,7 +45,7 @@ class DumpParser:
         """Parse dump graph files."""
         graphs = self.loader.load_graphs()
         for graph in graphs:
-            device_id = graph['device_id']
+            device_id = graph['rank_id']
             graph_protos = graph['graph_protos']
             for graph_data in graph_protos:
                 parser = PBParser(graph_data=graph_data)
@@ -93,20 +93,20 @@ class DumpParser:
         """
         return self.operators
 
-    def get_tensor_files(self, qs, use_regex=False, device_ids=None, iterations=None):
+    def get_tensor_files(self, qs, use_regex=False, rank_ids=None, iterations=None):
         """
         Get tensor files.
 
         Args:
             qs (str): Query string.
             use_regex (bool): Indicates if query is regex.
-            device_ids (list): Selected device IDs.
+            rank_ids (list): Selected rank IDs.
             iterations (list): Selected iterations.
 
         Returns:
-            dict, paths of tensor files. The format is like:
-                {[op_full_name]:
-                    {'device_[device_id]':
+            dict, paths of tensor files. The format is like: {[op_full_name]: OpPathManager}.
+                Call OpPathManager.to_dict(), the result is format like:
+                    {'rank_[rank_id]':
                         {[iteration_id]:
                             {
                                 'input': list[file_path],
@@ -114,14 +114,13 @@ class DumpParser:
                             }
                         }
                     }
-                }
         """
         operators = []
-        if device_ids is None:
+        if rank_ids is None:
             operators = self.operators
         else:
             for operator in self.operators:
-                if operator.device_id in device_ids:
+                if operator.device_id in rank_ids:
                     operators.append(operator)
 
         query = StackQuery(operators)
@@ -130,7 +129,7 @@ class DumpParser:
         file_mapping = FileMapping(self.loader)
         for operator in operators:
             op_pattern = os.path.basename(operator.full_name)
-            res = file_mapping.find_tensor_file(op_pattern, device_ids=device_ids, iterations=iterations)
+            res = file_mapping.find_tensor_file(op_pattern, rank_ids=rank_ids, iterations=iterations)
             file_paths[operator.full_name] = res
         return file_paths
 

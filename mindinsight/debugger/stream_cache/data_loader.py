@@ -13,152 +13,192 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the DataLoader."""
-import os
 import json
-from mindinsight.debugger.proto.ms_graph_pb2 import ModelProto
+from collections import namedtuple
+from pathlib import Path
+
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, RankDirNotFound
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.utils.exceptions import ParamValueError
-from mindinsight.debugger.common.utils import DumpSettings
+from mindinsight.debugger.common.utils import DumpSettings, is_valid_rank_dir_name
+from mindinsight.debugger.proto.ms_graph_pb2 import ModelProto
+
+RankDir = namedtuple("rank_dir", ["rank_id", "path"])
 
 
 class DataLoader:
     """The DataLoader object provides interface to load graphs and device information from base_dir."""
+
+    DUMP_METADATA = '.dump_metadata'
+
     def __init__(self, base_dir):
-        self._debugger_base_dir = os.path.realpath(base_dir)
-        self._graph_protos = []
-        self._device_info = {}
-        self._step_num = {}
-        # flag for whether the data is from sync dump or async dump, True for sync dump, False for async dump.
-        self._is_sync = None
-        self._net_dir = ""
+        self._debugger_base_dir = Path(base_dir).absolute()
+        # list of RankDir objects
+        self._rank_dirs = []
+        # flag for whether the data is from sync dump or async dump.
+        self._is_sync = False
         self._net_name = ""
         self.initialize()
 
+    @property
+    def rank_dirs(self):
+        """The property of RankDir."""
+        return self._rank_dirs
+
     def initialize(self):
         """Initialize the data_mode and net_dir of DataLoader."""
-        dump_config_file = os.path.join(self._debugger_base_dir, os.path.join(".metadata", "data_dump.json"))
-        with open(dump_config_file, 'r') as load_f:
-            dump_config = json.load(load_f)
-            common_settings = dump_config.get(DumpSettings.COMMON_DUMP_SETTINGS.value)
-            if not common_settings:
-                raise ParamValueError('common_dump_settings not found in dump_config file.')
+        self.load_rank_dirs()
+        if not self._rank_dirs:
+            log.error("No rank directory found under %s", str(self._debugger_base_dir))
+            raise RankDirNotFound(str(self._debugger_base_dir))
+        rank_dir = self._rank_dirs[0].path
+        dump_config = self._load_json_file(rank_dir / self.DUMP_METADATA / 'data_dump.json')
+        common_settings = dump_config.get(DumpSettings.COMMON_DUMP_SETTINGS.value, {})
+        try:
             self._net_name = common_settings['net_name']
-            if dump_config.get(DumpSettings.E2E_DUMP_SETTINGS.value) and \
-                    dump_config[DumpSettings.E2E_DUMP_SETTINGS.value]['enable']:
-                self._is_sync = True
-                self._net_dir = os.path.realpath(os.path.join(self._debugger_base_dir, self._net_name))
-            elif dump_config.get(DumpSettings.ASYNC_DUMP_SETTINGS.value) and \
-                    dump_config[DumpSettings.ASYNC_DUMP_SETTINGS.value]['enable']:
-                self._is_sync = False
-                self._net_dir = self._debugger_base_dir
-            else:
-                raise ParamValueError('The data must be generated from sync dump or async dump.')
+        except KeyError:
+            raise DebuggerParamValueError('Invalid common_dump_settings data_dump.json file.')
+        if dump_config.get(DumpSettings.E2E_DUMP_SETTINGS.value) and \
+                dump_config[DumpSettings.E2E_DUMP_SETTINGS.value]['enable']:
+            self._is_sync = True
+        else:
+            self._is_sync = False
+
+    def load_rank_dirs(self):
+        """Load rank directories."""
+        self._rank_dirs = []
+        rank_dirs = self._debugger_base_dir.glob('rank_*')
+        for rank_dir in rank_dirs:
+            if not rank_dir.is_dir() or not is_valid_rank_dir_name(rank_dir.name):
+                continue
+            rank_id = int(rank_dir.name.split('_', 1)[-1])
+            self._rank_dirs.append(RankDir(rank_id, rank_dir))
+        if self._rank_dirs:
+            self._rank_dirs.sort(key=lambda x: x.rank_id)
 
     def load_graphs(self):
-        """Load graphs from the debugger_base_dir."""
-        files = os.listdir(self._net_dir)
-        for file in files:
-            if not self.is_device_dir(file):
-                continue
-            device_id, device_dir = self.get_device_id_and_dir(file)
-            graphs_dir = os.path.join(device_dir, 'graphs')
-            if not os.path.exists(graphs_dir) or not os.path.isdir(graphs_dir):
-                log.debug("Directory '%s' not exist.", graphs_dir)
-                self._graph_protos.append({'device_id': device_id, 'graph_protos': []})
+        """
+        Load graphs from the debugger_base_dir.
+
+        Returns:
+            list, list of graph protos from all ranks. Each item is like:
+                {'rank_id': int,
+                'graph_protos': [GraphProto]}
+        """
+        res = []
+        for rank_dir in self._rank_dirs:
+            rank_id, rank_path = rank_dir.rank_id, rank_dir.path
+            graphs_dir = rank_path / 'graphs'
+            if not graphs_dir.is_dir():
+                log.debug("Directory '%s' doesn't exist.", graphs_dir)
+                res.append({'rank_id': rank_id, 'graph_protos': []})
                 continue
             graph_protos = get_graph_protos_from_dir(graphs_dir)
-            self._graph_protos.append({'device_id': device_id, 'graph_protos': graph_protos})
+            res.append({'rank_id': rank_id, 'graph_protos': graph_protos})
 
-        return self._graph_protos
+        return res
 
     def load_device_info(self):
-        """Load device_info from file"""
-        hccl_json_file = os.path.join(self._debugger_base_dir, '.metadata/hccl.json')
-        if not os.path.isfile(hccl_json_file):
-            device = []
-            device_ids = self.get_all_device_id()
-            device_ids.sort()
-            for i, device_id in enumerate(device_ids):
-                rank_id = i
-                device.append({'device_id': str(device_id), 'rank_id': str(rank_id)})
-            device_target = 'Ascend'
-            self._device_info = {'device_target': device_target,
-                                 'server_list': [{'server_id': 'localhost', 'device': device}]}
+        """Load device_info from dump path."""
+        device_info = {}
+        if not self._rank_dirs:
+            log.info("No rank directory found under dump path.")
+            return device_info
+        rank_dir = self._rank_dirs[0].path
+        config_json = self._load_json_file(rank_dir / '.dump_metadata' / 'config.json')
+        device_target = config_json.get('device_target', 'Ascend')
+        hccl_json = self._load_json_file(rank_dir / '.dump_metadata' / 'hccl.json')
+        if hccl_json.get('server_list'):
+            device_info = {'device_target': device_target, 'server_list': hccl_json['server_list']}
         else:
-            with open(hccl_json_file, 'r') as load_f:
-                load_dict = json.load(load_f)
-                self._device_info = {'device_target': 'Ascend', 'server_list': load_dict['server_list']}
-        return self._device_info
+            log.info("Server List info is missing. Set device id same with rank id as default.")
+            devices = []
+            for rank_dir in self._rank_dirs:
+                rank_id = rank_dir.rank_id
+                devices.append({'device_id': str(rank_id), 'rank_id': str(rank_id)})
+            device_info = {'device_target': device_target,
+                           'server_list': [{'server_id': 'localhost', 'device': devices}]}
+        return device_info
+
+    @staticmethod
+    def _load_json_file(file):
+        """
+        Load json file content.
+
+        Args:
+            file (Path): The Path object.
+
+        Returns:
+            dict, the json content.
+        """
+        if not file.is_file():
+            log.info("File <%s> is missing.", str(file))
+            return {}
+        with file.open() as handler:
+            try:
+                return json.load(handler)
+            except json.decoder.JSONDecodeError as err:
+                log.warning("Failed to load json file %s. %s", str(file), str(err))
+                return {}
 
     def load_step_number(self):
-        """Load step number in the directory"""
-        files = os.listdir(self._net_dir)
-        for file in files:
-            if not self.is_device_dir(file):
+        """
+        Load step number in the directory.
+
+        Returns:
+            dict, the total step number in each rank id. The format is like Dict[str, int].
+        """
+        step_num = {}
+        for rank_dir in self._rank_dirs:
+            rank_id, rank_path = rank_dir.rank_id, rank_dir.path
+            net_path = rank_path / self._net_name
+            if not net_path.is_dir():
+                log.info("No net directory under rank dir: %s", str(rank_dir))
                 continue
-            device_id, device_dir = self.get_device_id_and_dir(file)
             max_step = 0
-            files_in_device = os.listdir(device_dir)
-            if self._is_sync:
-                for file_in_device in files_in_device:
-                    abs_file_in_device = os.path.join(device_dir, file_in_device)
-                    if os.path.isdir(abs_file_in_device) and file_in_device.startswith("iteration_"):
-                        step_id_str = file_in_device.split('_')[-1]
-                        max_step = update_max_step(step_id_str, max_step)
-                self._step_num[str(device_id)] = max_step
-            else:
-                net_graph_dir = []
-                for file_in_device in files_in_device:
-                    abs_file_in_device = os.path.join(device_dir, file_in_device)
-                    if os.path.isdir(abs_file_in_device) and file_in_device.startswith(self._net_name):
-                        net_graph_dir.append(abs_file_in_device)
-                if len(net_graph_dir) > 1:
-                    log.warning("There are more than one graph directory in device_dir: %s. "
-                                "OfflineDebugger use data in %s.", device_dir, net_graph_dir[0])
-                net_graph_dir_to_use = net_graph_dir[0]
-                graph_id = net_graph_dir_to_use.split('_')[-1]
-                graph_id_dir = os.path.join(net_graph_dir_to_use, graph_id)
-                step_ids = os.listdir(graph_id_dir)
-                for step_id_str in step_ids:
-                    max_step = update_max_step(step_id_str, max_step)
-                self._step_num[str(device_id)] = max_step
+            for graph_dir in net_path.iterdir():
+                if not graph_dir.name.isdigit():
+                    log.info("Invalid graph dir under net dir:%s", str(net_path))
+                for iteration_dir in graph_dir.iterdir():
+                    iteration_id = iteration_dir.name
+                    if not iteration_id.isdigit():
+                        log.info("Invalid iteration dir under graph dir:%s", str(graph_dir))
+                    max_step = max(int(iteration_id), max_step)
+                log.debug("Current max iteration number is %s", max_step)
+            step_num[rank_id] = max_step
 
-        return self._step_num
+        return step_num
 
-    def is_device_dir(self, file_name):
-        """Judge if the file_name is a sub directory named 'device_x'."""
-        if not file_name.startswith("device_"):
-            return False
-        id_str = file_name.split("_")[-1]
-        if not id_str.isdigit():
-            return False
-        device_dir = os.path.join(self._net_dir, file_name)
-        if not os.path.isdir(device_dir):
-            return False
-        return True
+    def get_rank_dir(self, rank_id):
+        """
+        Get the rank directory according to rank_id.
 
-    def get_device_id_and_dir(self, file_name):
-        """Get device_id and absolute directory of file_name."""
-        id_str = file_name.split("_")[-1]
-        device_id = int(id_str)
-        device_dir = os.path.join(self._net_dir, file_name)
-        return device_id, device_dir
+        Args:
+            rank_id (int): The rank id.
 
-    def get_all_device_id(self):
-        """Get all device_id int the debugger_base_dir"""
-        device_ids = []
-        files = os.listdir(self._net_dir)
-        for file in files:
-            if not self.is_device_dir(file):
-                continue
-            id_str = file.split("_")[-1]
-            device_id = int(id_str)
-            device_ids.append(device_id)
-        return device_ids
+        Returns:
+            RankDir, the rank dir info.
+        """
+        rank_path = self._debugger_base_dir / f'rank_{rank_id}'
+        if rank_path.is_dir():
+            return RankDir(rank_id, rank_path)
+        log.error("No rank directory found.")
+        raise DebuggerParamValueError("Invalid rank_id.")
 
-    def get_net_dir(self):
+    def get_step_iter(self, rank_id=None, step=None):
+        """Get the generator of step path."""
+        step_pattern = '[0-9]*' if step is None else step
+        if rank_id is None:
+            rank_dirs = self._rank_dirs
+        else:
+            rank_dirs = list(self.get_rank_dir(rank_id))
+        for rank_dir in rank_dirs:
+            step_dirs = rank_dir.path.glob(f'{self._net_name}/[0-9]*/{step_pattern}')
+            for step_dir in step_dirs:
+                yield step_dir
+
+    def get_dump_dir(self):
         """Get graph_name directory of the data."""
-        return self._net_dir
+        return str(self._debugger_base_dir)
 
     def get_sync_flag(self):
         """Get the sync flag of the data."""
@@ -169,9 +209,17 @@ class DataLoader:
         return self._net_name
 
 
-def load_graph_from_file(graph_file_name):
-    """Load graph from file."""
-    with open(graph_file_name, 'rb') as file_handler:
+def load_graph_from_file(graph_file_path):
+    """
+    Load graph from file.
+
+    Args:
+        graph_file_path (Path): Graph file path.
+
+    Returns:
+        GraphProto, the parsed GraphProto object.
+    """
+    with graph_file_path.open('rb') as file_handler:
         model_bytes = file_handler.read()
         model = ModelProto.FromString(model_bytes)
         graph = model.graph
@@ -184,27 +232,16 @@ def get_graph_protos_from_dir(graphs_dir):
     Get graph from graph directory.
 
     Args:
-        graph_dir (str): The absolute directory of graph files.
+        graphs_dir (Path): The Path object of graph directory.
 
     Returns:
         list, list of 'GraphProto' object.
     """
-    files_in_graph_dir = os.listdir(graphs_dir)
     graph_protos = []
     pre_file_name = "ms_output_trace_code_graph_"
-    for file_in_device in files_in_graph_dir:
-        if file_in_device.startswith(pre_file_name) and file_in_device.endswith(".pb"):
-            abs_graph_file = os.path.join(graphs_dir, file_in_device)
-            graph_proto = load_graph_from_file(abs_graph_file)
+    for file_in_device in graphs_dir.iterdir():
+        file_name = file_in_device.name
+        if file_name.startswith(pre_file_name) and file_name.endswith(".pb"):
+            graph_proto = load_graph_from_file(file_in_device)
             graph_protos.append(graph_proto)
     return graph_protos
-
-
-def update_max_step(step_id_str, max_step):
-    """Update max_step by compare step_id_str and max_step."""
-    res = max_step
-    if step_id_str.isdigit():
-        step_id = int(step_id_str)
-        if step_id > max_step:
-            res = step_id
-    return res

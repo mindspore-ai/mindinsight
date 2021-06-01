@@ -14,6 +14,7 @@
 # ============================================================================
 """Define the utils."""
 import enum
+import re
 
 import numpy as np
 
@@ -179,3 +180,8 @@ class DumpSettings(enum.Enum):
     E2E_DUMP_SETTINGS = 'e2e_dump_settings'
     COMMON_DUMP_SETTINGS = 'common_dump_settings'
     ASYNC_DUMP_SETTINGS = 'async_dump_settings'
+
+
+def is_valid_rank_dir_name(name):
+    """Check if the name followed the rank directory format."""
+    return bool(re.search(r'^rank_\d+$', name))

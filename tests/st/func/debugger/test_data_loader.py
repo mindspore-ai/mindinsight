@@ -86,7 +86,7 @@ class TestDataLoader:
     def test_load_step_num_ascend(self):
         """Test load_step_num of ascend chip for offline-debugger."""
         res = self.data_loader_ascend.load_step_number()
-        expected_result = {"0": 4, "1": 4}
+        expected_result = {0: 4, 1: 4}
         assert res == expected_result
 
     @pytest.mark.level0
@@ -133,7 +133,7 @@ class TestDataLoader:
     def test_load_step_num_gpu(self):
         """Test load_step_num of ascend chip for offline-debugger."""
         res = self.data_loader_gpu.load_step_number()
-        expected_result = {"0": 3, "1": 3}
+        expected_result = {0: 3, 1: 3}
         assert res == expected_result
 
     @pytest.mark.level0
@@ -145,5 +145,5 @@ class TestDataLoader:
     def test_load_step_num_ascend_async(self):
         """Test load_step_num of ascend chip for offline-debugger."""
         res = self.data_loader_ascend_async.load_step_number()
-        expected_result = {"0": 3, "1": 3}
+        expected_result = {0: 3, 1: 3}
         assert res == expected_result
