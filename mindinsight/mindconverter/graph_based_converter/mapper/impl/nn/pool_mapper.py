@@ -31,6 +31,8 @@ class PoolMapper(ONNXToMindSporeMapper):
         else:
             op_name = 'nn.MaxPool{}d'
         dim = len(kwargs['params']['strides'])
+        if dim == 3:
+            return "P.MaxPool3D"
         return op_name.format(dim)
 
     @staticmethod
@@ -38,7 +40,12 @@ class PoolMapper(ONNXToMindSporeMapper):
         params = kwargs['params']
         transformed_params = dict()
         transformed_params["kernel_size"] = tuple(params['kernel_shape'])
-        transformed_params["stride"] = tuple(params['strides'])
+
+        dim = len(kwargs['params']['strides'])
+        if dim == 3:
+            transformed_params["strides"] = tuple(params['strides'])
+        else:
+            transformed_params["stride"] = tuple(params['strides'])
 
         return transformed_params
 
@@ -65,6 +72,8 @@ class PoolMapper(ONNXToMindSporeMapper):
     def _generate_snippet_template(**kwargs):
         op = kwargs.get("operation")
         args = kwargs.get("converted_params", dict())
+        if "onnx" in op or op == "P.MaxPool3D":
+            return ONNXToMindSporeMapper._generate_snippet_template(**kwargs)
 
         ms_opt_shape = PoolMapper._get_ms_opt_shape(**kwargs)
         tensor_opt_shape = kwargs['raw_params']['output_shape']
