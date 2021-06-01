@@ -47,9 +47,12 @@ class MultiCompatibleRotatingFileHandler(RotatingFileHandler):
             self.stream.close()
             self.stream = None
 
+        flags = os.O_WRONLY | os.O_CREAT
+        mode = stat.S_IRUSR | stat.S_IWUSR
+
         # Attain an exclusive lock with blocking mode by `fcntl` module.
-        with os.open(self.baseFilename, os.O_APPEND | os.O_CREAT, mode=stat.S_IRUSR | stat.S_IWUSR) as fd:
-            fcntl.lockf(fd, fcntl.LOCK_EX)
+        with os.fdopen(os.open(self.baseFilename, flags, mode), 'w') as fp:
+            fcntl.lockf(fp.fileno(), fcntl.LOCK_EX)
 
         try:
             if self.backupCount > 0:
@@ -63,8 +66,8 @@ class MultiCompatibleRotatingFileHandler(RotatingFileHandler):
             os.chmod(self.baseFilename, stat.S_IRUSR)
             self.rotate(self.baseFilename, dfn)
 
-            fd = os.open(self.baseFilename, os.O_APPEND | os.O_CREAT, mode=stat.S_IRUSR | stat.S_IWUSR)
-            os.close(fd)
+            fp = os.fdopen(os.open(self.baseFilename, flags, mode), 'w')
+            fp.close()
 
             if not self.delay:
                 self.stream = self._open()

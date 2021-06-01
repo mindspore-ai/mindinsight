@@ -196,16 +196,15 @@ def _check_server_start_stat(pid, log_abspath, log_pos):
     # sleep 1 second for gunicorn master to be ready
     time.sleep(1)
 
-    try_cnt = 0
-    try_cnt_max = 2
-
-    while try_cnt < try_cnt_max:
+    try_cnt = 10
+    while try_cnt > 0:
+        try_cnt -= 1
         time.sleep(1)
-        try_cnt += 1
         file_size = _get_file_size(log_abspath)
         if file_size > log_pos:
             state_result.update(_check_state_from_log(pid, log_abspath, log_pos))
-            break
+            if state_result['state'] != ServerStateEnum.UNKNOWN.value:
+                break
 
     if not state_result['prompt_message']:
         state_result["prompt_message"].append(

@@ -102,6 +102,7 @@ def post_worker_init(worker):
     listen_process.start()
     global LISTEN_PROCESS
     LISTEN_PROCESS = listen_process
+    worker.log.info("Service start state: success.")
     worker.log.info("Server pid: %d, start to listening.", worker.ppid)
 
 
