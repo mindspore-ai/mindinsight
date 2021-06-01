@@ -172,7 +172,7 @@ class Graph(BaseGraph, abc.ABC):
         Returns:
             GraphNode, node instance.
         """
-        prefix = node_name.split(":")[0]
+        prefix = node_name
         if prefix not in self._nodes_collection:
             return None
         return self._nodes_collection[prefix]
@@ -202,7 +202,7 @@ class Graph(BaseGraph, abc.ABC):
         def is_connected(src, dst):
             """Judge two node whether are connected."""
             for precursor in dst.precursor_nodes:
-                if src == precursor.split(":")[0]:
+                if src == precursor:
                     return 1
             return 0
 
