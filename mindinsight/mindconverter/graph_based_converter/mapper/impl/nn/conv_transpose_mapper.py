@@ -72,7 +72,10 @@ class ConvTransposeMapper(ONNXToMindSporeMapper):
         if auto_pad == "SAME_UPPER":
             pad_mode = '\"same\"'
             padding = 0
+
         output_padding = params.get("output_padding", 0)
+        if isinstance(output_padding, list):
+            output_padding = tuple(output_padding)
 
         return {
             "in_channels": in_channels,
@@ -99,7 +102,7 @@ class ConvTransposeMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
-        kernel_size = kwargs["params"].get("kernel_size", tuple())
+        kernel_size = kwargs["params"].get("kernel_shape", tuple())
         dim = len(kernel_size)
         if dim == 2:
             return ConvBackPropInputMapper.convert_trained_weights(**kwargs)
