@@ -40,6 +40,7 @@ class Toolkit:
         Args:
             file_path (str) : Excel file path.
         """
+        file_path = os.path.realpath(file_path)
         target_dir = os.path.dirname(file_path)
         if not os.path.isdir(target_dir):
             print(f'Directory {target_dir} not exists')
@@ -293,7 +294,7 @@ class Toolkit:
             ('name', styles['header_center_fmt'], 10),
             ('attrs', styles['header_left_fmt'], 30),
             ('full_name', styles['header_left_fmt'], 20),
-            ('device_id', styles['header_left_fmt'], 20),
+            ('rank_id', styles['header_left_fmt'], 20),
             ('graph_name', styles['header_left_fmt'], 30),
             ('stack', styles['header_left_fmt'], 150),
         ]
@@ -305,7 +306,7 @@ class Toolkit:
             worksheet.write(index + 1, indices.get('operator'), operator_type_content, styles['content_left_fmt'])
 
             if operator.type == 'make_tuple':
-                worksheet.write(index + 1, indices.get('device_id'), operator.device_id, styles['content_left_fmt'])
+                worksheet.write(index + 1, indices.get('rank_id'), operator.rank_id, styles['content_left_fmt'])
                 worksheet.write(index + 1, indices.get('graph_name'), operator.graph_name, styles['content_left_fmt'])
                 continue
 
@@ -325,7 +326,7 @@ class Toolkit:
             worksheet.write(index + 1, indices.get('name'), operator.name, styles['content_center_fmt'])
             worksheet.write(index + 1, indices.get('attrs'), str(operator.attrs), styles['content_left_fmt'])
             worksheet.write(index + 1, indices.get('full_name'), operator.full_name, styles['content_left_fmt'])
-            worksheet.write(index + 1, indices.get('device_id'), operator.device_id, styles['content_left_fmt'])
+            worksheet.write(index + 1, indices.get('rank_id'), operator.rank_id, styles['content_left_fmt'])
             worksheet.write(index + 1, indices.get('graph_name'), operator.graph_name, styles['content_left_fmt'])
 
             stack_content = self._get_operator_stack_content(operator)
@@ -347,7 +348,7 @@ class Toolkit:
             ('output_dtype', styles['header_left_fmt'], 20),
             ('output_shape', styles['header_left_fmt'], 25),
             ('downstream', styles['header_left_fmt'], 30),
-            ('device_id', styles['header_left_fmt'], 20),
+            ('rank_id', styles['header_left_fmt'], 20),
             ('graph_name', styles['header_left_fmt'], 30),
         ]
         self._write_columns(worksheet, column_metas)
@@ -376,7 +377,7 @@ class Toolkit:
                 index + 1, indices.get('downstream'),
                 downstream_content.strip(), styles['content_wrapped_fmt'])
 
-            worksheet.write(index + 1, indices.get('device_id'), parameter.device_id, styles['content_left_fmt'])
+            worksheet.write(index + 1, indices.get('rank_id'), parameter.rank_id, styles['content_left_fmt'])
             worksheet.write(index + 1, indices.get('graph_name'), parameter.graph_name, styles['content_left_fmt'])
 
     def _add_constant_worksheet(self, workbook, styles):
@@ -394,7 +395,7 @@ class Toolkit:
             ('name', styles['header_left_fmt'], 10),
             ('value', styles['header_left_fmt'], 30),
             ('downstream', styles['header_left_fmt'], 30),
-            ('device_id', styles['header_left_fmt'], 20),
+            ('rank_id', styles['header_left_fmt'], 20),
             ('graph_name', styles['header_left_fmt'], 30),
         ]
         self._write_columns(worksheet, column_metas)
@@ -423,7 +424,7 @@ class Toolkit:
                 index + 1, indices.get('downstream'),
                 downstream_content.strip(), styles['content_wrapped_fmt'])
 
-            worksheet.write(index + 1, indices.get('device_id'), constant.device_id, styles['content_left_fmt'])
+            worksheet.write(index + 1, indices.get('rank_id'), constant.rank_id, styles['content_left_fmt'])
             worksheet.write(index + 1, indices.get('graph_name'), constant.graph_name, styles['content_left_fmt'])
 
     def _add_statistics_worksheet(self, workbook, styles):
@@ -472,7 +473,7 @@ class Toolkit:
             ('stack', styles['header_left_fmt'], 150),
             ('operator', styles['header_left_fmt'], 30),
             ('full_name', styles['header_left_fmt'], 20),
-            ('device_id', styles['header_left_fmt'], 20),
+            ('rank_id', styles['header_left_fmt'], 20),
             ('graph_name', styles['header_left_fmt'], 30),
         ]
         self._write_columns(worksheet, column_metas)
@@ -510,8 +511,8 @@ class Toolkit:
                     row + index + 1, indices.get('full_name'),
                     operator.full_name, styles['content_left_fmt'])
                 worksheet.write(
-                    row + index + 1, indices.get('device_id'),
-                    operator.device_id, styles['content_left_fmt'])
+                    row + index + 1, indices.get('rank_id'),
+                    operator.rank_id, styles['content_left_fmt'])
                 worksheet.write(
                     row + index + 1, indices.get('graph_name'),
                     operator.graph_name, styles['content_left_fmt'])

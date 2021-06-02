@@ -30,22 +30,22 @@ class DumpParser:
     Dump Parser.
 
     Args:
-        dump_dir (str): Dump directory path. Default is None, indicating current working directory.
+        dump_dir (str): Dump directory path.
     """
 
-    def __init__(self, dump_dir=None):
-        self.dump_dir = os.path.realpath(dump_dir) if dump_dir else ''
-        self.loader = DataLoader(self.dump_dir)
-        self.constants = []
-        self.parameters = []
-        self.operators = []
+    def __init__(self, dump_dir):
+        self._dump_dir = os.path.realpath(dump_dir)
+        self._loader = DataLoader(self._dump_dir)
+        self._constants = []
+        self._parameters = []
+        self._operators = []
         self._parse()
 
     def _parse(self):
         """Parse dump graph files."""
-        graphs = self.loader.load_graphs()
+        graphs = self._loader.load_graphs()
         for graph in graphs:
-            device_id = graph['rank_id']
+            rank_id = graph['rank_id']
             graph_protos = graph['graph_protos']
             for graph_data in graph_protos:
                 parser = PBParser(graph_data=graph_data)
@@ -53,45 +53,18 @@ class DumpParser:
 
                 for constant in parser.constants:
                     constant.graph_name = graph_data.name
-                    constant.device_id = device_id
-                self.constants += parser.constants
+                    constant.rank_id = rank_id
+                self._constants += parser.constants
 
                 for parameter in parser.parameters:
                     parameter.graph_name = graph_data.name
-                    parameter.device_id = device_id
-                self.parameters += parser.parameters
+                    parameter.rank_id = rank_id
+                self._parameters += parser.parameters
 
                 for operator in parser.operators:
                     operator.graph_name = graph_data.name
-                    operator.device_id = device_id
-                self.operators += parser.operators
-
-    def get_constants(self):
-        """
-        Get constants.
-
-        Returns:
-            list, constant node objects.
-        """
-        return self.constants
-
-    def get_parameters(self):
-        """
-        Get parameters.
-
-        Returns:
-            list, parameters node objects.
-        """
-        return self.parameters
-
-    def get_operators(self):
-        """
-        Get operators.
-
-        Returns:
-            list, operator node objects.
-        """
-        return self.operators
+                    operator.rank_id = rank_id
+                self._operators += parser.operators
 
     def get_tensor_files(self, qs, use_regex=False, rank_ids=None, iterations=None):
         """
@@ -117,16 +90,16 @@ class DumpParser:
         """
         operators = []
         if rank_ids is None:
-            operators = self.operators
+            operators = self._operators
         else:
-            for operator in self.operators:
-                if operator.device_id in rank_ids:
+            for operator in self._operators:
+                if operator.rank_id in rank_ids:
                     operators.append(operator)
 
         query = StackQuery(operators)
         operators = query.filter(qs, use_regex=use_regex).all()
         file_paths = {}
-        file_mapping = FileMapping(self.loader)
+        file_mapping = FileMapping(self._loader)
         for operator in operators:
             op_pattern = os.path.basename(operator.full_name)
             res = file_mapping.find_tensor_file(op_pattern, rank_ids=rank_ids, iterations=iterations)
@@ -140,7 +113,7 @@ class DumpParser:
         Returns:
             list, failed tensors.
         """
-        conversion = DumpRootDirConverter(self.loader)
+        conversion = DumpRootDirConverter(self._loader)
         failed_lines = conversion.convert()
         return failed_lines
 
@@ -162,10 +135,10 @@ class DumpParser:
                 os.makedirs(output_dir, mode=stat.S_IRUSR | stat.S_IXUSR, exist_ok=True)
 
         toolkit = Toolkit(
-            dump_dir=self.dump_dir,
-            constants=self.constants,
-            parameters=self.parameters,
-            operators=self.operators)
+            dump_dir=self._dump_dir,
+            constants=self._constants,
+            parameters=self._parameters,
+            operators=self._operators)
 
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
         file_path = os.path.join(output_dir, f'dump_{timestamp}.xlsx')
