@@ -569,6 +569,13 @@ limitations under the License.
                           {{ scope.row.value }}</el-button>
                         <el-button size="mini"
                                    type="text"
+                                   :disabled="metadata.state === state.running || metadata.state === state.sending ||
+                                   scope.row.value === 'null' || !scope.row.value || scope.row.oversized"
+                                   @click="loadTensor(scope.row)">
+                          {{ $t('graph.downloadPic') }}
+                        </el-button>
+                        <el-button size="mini"
+                                   type="text"
                                    :disabled="metadata.state===state.running || metadata.state === state.sending ||
                                   !scope.row.has_prev_step"
                                    @click="showTensor(scope.row,'compare')">

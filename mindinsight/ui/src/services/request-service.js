@@ -434,6 +434,13 @@ export default {
       params,
     });
   },
+  loadTensor(params, sessionId) {
+    return axios({
+      method: 'post',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/tensor-files/load`,
+      data: params,
+    });
+  },
   // explain list
   getExplainList(params) {
     return axios({
