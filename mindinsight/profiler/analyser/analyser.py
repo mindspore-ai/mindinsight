@@ -430,5 +430,8 @@ class AicpuDetailAnalyser(BaseAnalyser):
         Returns:
             list[Union[str, float]], the converted data.
         """
+        # Make the previous data (mindspore version before 2021.06.02) compatible.
+        if len(row) == 6:
+            row.insert(4, '0')
         return [int(row[0]), row[1], self._format_float_data(float(row[2])),
-                self._format_float_data(float(row[3])), int(row[4]), int(row[5])]
+                self._format_float_data(float(row[3])), float(row[5]), float(row[6])]
