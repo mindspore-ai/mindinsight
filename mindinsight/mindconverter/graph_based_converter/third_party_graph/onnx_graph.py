@@ -35,21 +35,6 @@ NONE_SCOPE_OP = {
 }
 
 
-def normalize_node_name(node):
-    """
-    Rename the node name by removing :0
-
-    Args:
-        node (Node, str): ONNX node instance or node name string.
-
-    Returns:
-        str, normalized node name.
-    """
-    if isinstance(node, str):
-        return node.split(':')[0]
-    return node.name.split(':')[0]
-
-
 class OnnxGraph(Graph):
     """
     Define ONNX graph.
@@ -103,17 +88,15 @@ class OnnxGraph(Graph):
         """
         # If src and tgt are the same node, src not in node_collection or
         # tgt not in node_collection, then skip this edge.
-        src = normalize_node_name(src)
-        tgt = normalize_node_name(tgt)
         if src == tgt or src not in self._nodes_collection or tgt not in self._nodes_collection:
-            if src.split(':')[0] not in self._nodes_collection:
+            if src not in self._nodes_collection:
                 log.warning(
                     "Graph construct a self-loop node %s. Ignored.", src)
                 return
-        if tgt not in self._nodes_collection[src.split(':')[0]].successor_nodes:
-            self._nodes_collection[src.split(':')[0]].successor_nodes.append(tgt)
+        if tgt not in self._nodes_collection[src].successor_nodes:
+            self._nodes_collection[src].successor_nodes.append(tgt)
         if src not in self._nodes_collection[tgt].precursor_nodes:
-            self._nodes_collection[tgt.split(':')[0]].precursor_nodes.append(src)
+            self._nodes_collection[tgt].precursor_nodes.append(src)
 
     def build(self):
         """Build graph tree."""
