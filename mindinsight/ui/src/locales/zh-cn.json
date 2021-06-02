@@ -361,10 +361,10 @@
       "desc": "迭代间隙性能分析"
     },
     "minddata_device_queue": {
-      "desc": "主机侧队列为空比例{n1}/{n2}，为满比例{n3}/{n4}。"
+      "desc": "主机侧队列为空比例{n1}/{n2}，非空比例{n3}/{n4}。"
     },
     "minddata_get_next_queue": {
-      "desc": "芯片侧队列为空比例{n1}/{n2}。"
+      "desc": "芯片侧队列为空比例{n1}/{n2}，非空比例{n3}/{n4}。"
     },
     "millisecond": "ms",
     "curCard": "当前卡片",
@@ -421,12 +421,12 @@
     "higherAnalysis": "注：可结合下方算子耗时进行高阶分析",
     "chipInfo": "芯片侧数据队列为空比例：",
     "hostIsEmpty": "主机侧队列为空比例：",
-    "hostIsFull": "主机侧队列为满比例：",
+    "hostIsFull": "主机侧队列非空比例：",
     "operatorInfo": "{msg1}、{msg2}算子信息",
     "workersNum": "使用线程数",
     "queueDeepChartTitle": "{msg}队列深度折线图",
     "sampleInterval": "采样间隔",
-    "queueTip1": "队列为满比例：",
+    "queueTip1": "队列非空比例：",
     "queueTip2": "队列为空比例：",
     "totalCapacity": "总容量",
     "averageCapacity": "平均使用容量",
@@ -530,10 +530,10 @@
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
-      "desc": "数据队列为空比例{n1}/{n2}。"
+      "desc": "数据队列为空比例{n1}/{n2}，非空比例{n3}/{n4}。"
     },
     "minddata_device_queue": {
-      "desc": "主机侧队列为空比例{n1}/{n2}，为满比例{n3}/{n4}。"
+      "desc": "主机侧队列为空比例{n1}/{n2}，非空比例{n3}/{n4}。"
     },
     "dataProcess": "该图展示了数据处理阶段的流程，数据通过数据处理阶段存入主机队列，再通过数据传输阶段存入数据队列，最终由数据传输算子get_next发送给前向训练使用。",
     "dataProcessInfo": "综合分析该阶段的流程，通过判断主机队列和数据队列为空的情况就可以初步判断可能出现性能异常的阶段。",
