@@ -166,9 +166,8 @@ class DebuggerOfflineManager:
         self._metadata_stream.backend = backend
         device_stream = self._cache_store.get_stream_handler(Streams.DEVICE)
         device_stream.put(device_info.get('server_list'))
-        rank_id = 0
-        rank_0_info = device_stream.get(rank_id)['devices'][0]
-        self._metadata_stream.client_ip = rank_0_info.get('server_id')
+        first_rank_info = device_stream.get()['devices'][0]
+        self._metadata_stream.client_ip = first_rank_info.get('server_id')
         # get step number per device. dict(rank_id, step_num), may be increased with time goes by
         step_num_per_rank = self._data_loader.load_step_number()
         device_stream.add_step_num_info(step_num_per_rank)
