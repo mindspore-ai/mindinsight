@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2020-2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,14 @@ syntax = "proto3";
 
 package debugger;
 
-import "mindinsight/debugger/proto/ms_graph.proto";
+import "mindinsight/domain/graph/proto/ms_graph.proto";
 
 
 service EventListener {
   rpc WaitCMD (Metadata) returns (EventReply) {};
   rpc SendMetadata (Metadata) returns (EventReply) {};
   rpc SendGraph (stream Chunk) returns (EventReply) {};
-  rpc SendTensors (stream TensorProto) returns (EventReply) {};
+  rpc SendTensors (stream mindinsight.domain.graph.TensorProto) returns (EventReply) {};
   rpc SendWatchpointHits (stream WatchpointHit) returns (EventReply) {};
   rpc SendMultiGraphs (stream Chunk) returns (EventReply) {};
 }
@@ -86,7 +86,7 @@ message SetCMD {
 }
 
 message ViewCMD {
-  repeated TensorProto tensors = 1;
+  repeated mindinsight.domain.graph.TensorProto tensors = 1;
 }
 
 message WatchCondition {
@@ -128,7 +128,7 @@ message WatchNode {
 }
 
 message WatchpointHit {
-  TensorProto tensor = 1;
+  mindinsight.domain.graph.TensorProto tensor = 1;
   WatchCondition watch_condition = 2;
   int32 id = 3;
   int32 error_code = 4;

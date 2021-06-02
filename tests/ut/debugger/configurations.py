@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ import os
 
 from google.protobuf import json_format
 
-from mindinsight.debugger.proto import ms_graph_pb2
 from mindinsight.debugger.stream_handler.graph_handler import GraphHandler
 from mindinsight.debugger.stream_handler.watchpoint_handler import WatchpointHitHandler
+from mindinsight.domain.graph.proto import ms_graph_pb2
 from tests.utils.tools import compare_result_with_file
 
 GRAPH_PROTO_FILE = os.path.join(

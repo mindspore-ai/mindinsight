@@ -23,14 +23,14 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
-from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus
+from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_services.debugger_grpc_server import DebuggerGrpcServer
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply, SetCMD, Chunk, WatchpointHit
-from mindinsight.debugger.proto.ms_graph_pb2 import TensorProto, DataType
 from mindinsight.debugger.stream_handler import WatchpointHitHandler, GraphHandler, \
     WatchpointHandler
+from mindinsight.domain.graph.proto.ms_graph_pb2 import TensorProto, DataType
 from tests.ut.debugger.configurations import GRAPH_PROTO_FILE
 
 

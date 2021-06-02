@@ -16,8 +16,8 @@
 import copy
 from collections import defaultdict
 from importlib import import_module
-from threading import Event
 from multiprocessing import Process, Manager
+from threading import Event
 
 import mindinsight
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
@@ -28,8 +28,8 @@ from mindinsight.debugger.common.utils import Streams, ServerStatus, version_mat
 from mindinsight.debugger.conditionmgr.condition import ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import DebuggerServerBase, debugger_server_wrap
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
-from mindinsight.debugger.proto.ms_graph_pb2 import TensorProto
 from mindinsight.debugger.stream_cache.data_loader import DataLoader
+from mindinsight.domain.graph.proto.ms_graph_pb2 import TensorProto
 from mindinsight.utils.exceptions import MindInsightException
 
 
@@ -126,7 +126,6 @@ class DebuggerOfflineManager:
     @debugger_server_wrap
     def initialize(self):
         """Start to load offline debugger data."""
-        self._data_loader.initialize()
         is_sync = self._data_loader.get_sync_flag()
         net_name = self._data_loader.get_net_name()
         dump_dir = self._data_loader.get_dump_dir()

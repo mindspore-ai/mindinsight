@@ -20,7 +20,7 @@ from pathlib import Path
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, RankDirNotFound
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import DumpSettings, is_valid_rank_dir_name
-from mindinsight.debugger.proto.ms_graph_pb2 import ModelProto
+from mindinsight.domain.graph.proto.ms_graph_pb2 import ModelProto
 
 RankDir = namedtuple("rank_dir", ["rank_id", "path"])
 
