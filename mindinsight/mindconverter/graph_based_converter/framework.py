@@ -120,8 +120,7 @@ def tf_installation_validation(func):
             _print_error(not_integral_error)
             sys.exit(-1)
 
-        if not any([check_common_dependency_integrity("tensorflow"),
-                    check_common_dependency_integrity("tensorflow-gpu")]):
+        if not check_common_dependency_integrity("tensorflow"):
             _print_error(not_integral_error)
             sys.exit(-1)
 
