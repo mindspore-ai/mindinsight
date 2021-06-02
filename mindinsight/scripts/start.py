@@ -30,54 +30,6 @@ from mindinsight.utils.hook import HookUtils
 from mindinsight.utils.hook import init
 
 
-class ConfigAction(argparse.Action):
-    """Config action class definition."""
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        """
-        Inherited __call__ method from argparse.Action.
-
-        Args:
-            parser (ArgumentParser): Passed-in argument parser.
-            namespace (Namespace): Namespace object to hold arguments.
-            values (object): Argument values with type depending on argument definition.
-            option_string (str): Optional string for specific argument name. Default: None.
-        """
-        config = values
-        if not config:
-            setattr(namespace, self.dest, config)
-
-        # python:full.path.for.config.module
-        if config.startswith('python:'):
-            config = config[len('python:'):]
-            try:
-                import_module(config)
-            except ModuleNotFoundError:
-                parser.error(f'{option_string} {config} not exists')
-
-            config = f'python:{config}'
-        else:
-            # file:/full/path/for/config/module.py
-            if config.startswith('file:'):
-                config = config[len('file:'):]
-
-            if config.startswith('~'):
-                config = os.path.realpath(os.path.expanduser(config))
-
-            if not config.startswith('/'):
-                config = os.path.realpath(os.path.join(os.getcwd(), config))
-
-            if not os.path.exists(config):
-                parser.error(f'{option_string} {config} not exists')
-
-            if not os.access(config, os.R_OK):
-                parser.error(f'{option_string} {config} not accessible')
-
-            config = f'file:{config}'
-
-        setattr(namespace, self.dest, config)
-
-
 class WorkspaceAction(argparse.Action):
     """Workspace action class definition."""
 
@@ -163,15 +115,6 @@ class Command(BaseCommand):
             parser (ArgumentParser): Specify parser to which arguments are added.
         """
         parser.add_argument(
-            '--config',
-            type=str,
-            action=ConfigAction,
-            help="""
-                Specify path for user config module or file of the form python:path.to.config.module
-                or file:/path/to/config.py
-            """)
-
-        parser.add_argument(
             '--workspace',
             type=str,
             action=WorkspaceAction,
@@ -255,7 +198,6 @@ class Command(BaseCommand):
                 continue
             if connection.laddr.port == settings.PORT:
                 raise PortNotAvailableError(f'Port {settings.PORT} is no available for MindInsight')
-
 
     def check_debugger_port(self):
         """Check if the debugger_port is available"""
