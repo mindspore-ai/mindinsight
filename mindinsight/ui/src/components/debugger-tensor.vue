@@ -128,6 +128,11 @@ limitations under the License.
                      :class="{green:gridType==='compare'}"
                      :disabled="!curRowObj.has_prev_step || state==='running'"
                      @click="tabChange('compare')">{{ $t('debugger.compareResult') }}</el-button>
+          <el-button size="mini"
+                     class="custom-btn"
+                     :disabled="state==='running' || gridType==='compare' ||
+                     !showFilterInput || curRowObj.oversized"
+                     @click="$parent.loadTensor(curRowObj)">{{ $t('graph.downloadPic') }}</el-button>
         </div>
         <div class="deb-con-slide-left"
              v-if="gridType === 'compare'">
@@ -1127,6 +1132,9 @@ export default {
               this.$nextTick(() => {
                 this.$refs.tensorValue.updateGridData(this.tensorValue, JSON.parse(row.shape), statistics, shape);
               });
+              this.curRowObj.bytes = res.data.tensor_value.bytes || 0;
+              const [size, unit] = this.$parent.fileSizeConversion(this.curRowObj.bytes);
+              this.curRowObj.oversized = unit === this.$parent.maxFileSize[1] && size > this.$parent.maxFileSize[0];
             }
             this.$nextTick(() => {
               this.dealLoading();
@@ -1350,10 +1358,8 @@ export default {
   border-left: none;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-con-slide {
-  height: 40px;
   line-height: 40px;
   flex-shrink: 0;
-  position: relative;
   margin: 5px 0;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left {
@@ -1387,8 +1393,8 @@ export default {
   color: #00a5a7;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-middle {
-  position: absolute;
-  right: 32px;
+  float: right;
+  margin-right: 32px;
   width: 150px;
   padding: 10px 0;
   line-height: 15px;

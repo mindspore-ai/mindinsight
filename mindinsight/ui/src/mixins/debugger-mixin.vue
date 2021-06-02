@@ -15,6 +15,7 @@ limitations under the License.
 -->
 <script>
 import RequestService from '@/services/request-service';
+import {basePath} from '@/services/fetcher';
 import {select, selectAll, zoom, dispatch} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom, dispatch};
@@ -22,6 +23,8 @@ export default {
   data() {
     return {
       conditionRulesMap: this.$t('debugger.tensorTuningRule'),
+      downloadTensorName: '',
+      maxFileSize: [2, 'GB'],
     };
   },
   methods: {
@@ -507,6 +510,11 @@ export default {
         if (val.dtype !== undefined) {
           val.dtype = val.dtype + '';
         }
+        if (val.bytes) {
+          const [value, unit] = this.fileSizeConversion(val.bytes);
+          val.oversized =
+            unit === this.maxFileSize[1] && value > this.maxFileSize[0];
+        }
       });
     },
     /**
@@ -683,6 +691,8 @@ export default {
                   debTensor.tabChange(debTensor.gridType);
                 }
               }
+
+              if (res.data.tensor_file) this.downloadTensor();
               this.pollData();
             }
           },
@@ -2264,6 +2274,53 @@ export default {
             this.showErrorMsg(error);
           },
       );
+    },
+    loadTensor(tensor) {
+      const param = {
+        name: tensor.name,
+        rank_id: this.logicCard.value,
+      };
+      RequestService.loadTensor(param, this.sessionId).then(
+          (res) => {
+            if (res) {
+              const fileSize = this.fileSizeConversion(tensor.bytes);
+              this.$message(
+                  this.$t('debugger.downloadTip', {fileSize: fileSize.join('')}),
+              );
+              this.downloadTensorName = tensor.name;
+            }
+          },
+          (err) => {
+            this.showErrorMsg(err);
+            this.downloadTensorName = '';
+          },
+      );
+    },
+    downloadTensor() {
+      const url =
+        basePath +
+        `v1/mindinsight/debugger/sessions/${this.sessionId}/tensor-files/download?` +
+        `name=${this.downloadTensorName}&rank_id=${this.logicCard.value}`;
+      const a = document.createElement('a');
+      a.download = '';
+      a.href = url;
+      a.rel = 'noopener noreferrer';
+      a.target = '_blank';
+      a.click();
+    },
+    fileSizeConversion(value = 0, unit = 'bytes') {
+      const units = ['bytes', 'KB', 'MB', 'GB'];
+      let index = units.indexOf(unit);
+      if (value < 0 || index === -1) return [value, unit];
+
+      const ratio = 1024;
+      while (value >= ratio && index < units.length - 1) {
+        value = value / ratio;
+        index++;
+      }
+
+      value = parseFloat(value.toFixed(2));
+      return [value, units[index]];
     },
   },
 };
