@@ -362,10 +362,10 @@
       "desc": "Step interval profiling"
     },
     "minddata_device_queue": {
-      "desc": "The ratio of empty queues on a host is {n1}/{n2}, and the ratio of full queues is {n3}/{n4}."
+      "desc": "The ratio of empty queues on a host is {n1}/{n2}, and the ratio of non empty queues is {n3}/{n4}."
     },
     "minddata_get_next_queue": {
-      "desc": "The ratio of empty queues on a chip is {n1}/{n2}."
+      "desc": "The ratio of empty queues on a chip is {n1}/{n2}, and the ratio of non empty queues is {n3}/{n4}."
     },
     "millisecond": "ms",
     "curCard": "Number of cards",
@@ -422,12 +422,12 @@
     "higherAnalysis": "Note: You can perform advanced analysis based on the time consumed by operators.",
     "chipInfo": "Ratio of empty data queues on a chip:",
     "hostIsEmpty": "Ratio of empty queues on a host:",
-    "hostIsFull": "Ratio of full queues on a host:",
+    "hostIsFull": "Ratio of non empty queues on a host:",
     "operatorInfo": "Operator information of {msg1} and {msg2}",
     "workersNum": "Number of threads",
     "queueDeepChartTitle": "{msg} Depth Line Chart",
     "sampleInterval": "Sampling interval",
-    "queueTip1": "Ratio of full queues:",
+    "queueTip1": "Ratio of non empty queues:",
     "queueTip2": "Ratio of empty queues:",
     "totalCapacity": "Total capacity",
     "averageCapacity": "Average used capacity",
@@ -531,10 +531,10 @@
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
-      "desc": "The ratio of empty data queues is {n1}/{n2}."
+      "desc": "The ratio of empty data queues is {n1}/{n2}, and the ratio of non empty queues is {n3}/{n4}."
     },
     "minddata_device_queue": {
-      "desc": "The ratio of empty queues on a host is {n1}/{n2}, and the ratio of full queues is {n3}/{n4}."
+      "desc": "The ratio of empty queues on a host is {n1}/{n2}, and the ratio of non empty queues is {n3}/{n4}."
     },
     "dataProcess": "This shows the data processing. Data is stored in the host queue during data processing, and then stored in the data queue during data transmission. Finally, the forward and backward propagation get_next transmits the data to forward propagation.",
     "dataProcessInfo": "By determining the empty host and data queues, you can preliminarily determine the stage where the performance is abnormal.",

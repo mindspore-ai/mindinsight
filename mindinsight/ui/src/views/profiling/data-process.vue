@@ -123,12 +123,14 @@ limitations under the License.
                    :class="{highlight:selected==='connector_queue'}">
                 <div class="title">{{connectorQuene}}</div>
                 <template v-if="!connectQueueChart.noData">
-                  <div class="data-tips">
-                    <div v-if="connectQueueChart.queueSummary.empty_queue!==undefined">
+                  <div class="data-tips"
+                       v-if="connectQueueChart.queueSummary.empty_queue!==undefined">
+                    <div>
                       {{$t('profiling.queueTip2')}}{{connectQueueChart.queueSummary.empty_queue}}
                       /{{connectQueueChart.size}}</div>
-                    <div v-if="connectQueueChart.queueSummary.full_queue!==undefined">
-                      {{$t('profiling.queueTip1')}}{{connectQueueChart.queueSummary.full_queue}}
+                    <div>
+                      {{$t('profiling.queueTip1')}}
+                      {{connectQueueChart.size - connectQueueChart.queueSummary.empty_queue}}
                       /{{connectQueueChart.size}}</div>
                   </div>
                   <div id="connect-queue"
@@ -146,12 +148,14 @@ limitations under the License.
                    :class="{highlight:selected==='data_queue'}">
                 <div class="title">{{$t('profiling.dataQueue')}}</div>
                 <template v-if="!dataQueueChart.noData">
-                  <div class="data-tips">
-                    <div v-if="dataQueueChart.queueSummary.empty_queue!==undefined">
+                  <div class="data-tips"
+                       v-if="dataQueueChart.queueSummary.empty_queue!==undefined">
+                    <div>
                       {{$t('profiling.queueTip2')}}{{dataQueueChart.queueSummary.empty_queue}}
                       /{{dataQueueChart.size}}</div>
-                    <div v-if="dataQueueChart.queueSummary.full_queue!==undefined">
-                      {{$t('profiling.queueTip1')}}{{dataQueueChart.queueSummary.full_queue}}
+                    <div>
+                      {{$t('profiling.queueTip1')}}
+                      {{dataQueueChart.size - dataQueueChart.queueSummary.empty_queue}}
                       /{{dataQueueChart.size}}</div>
                   </div>
                   <div id="data-queue"
@@ -227,12 +231,14 @@ limitations under the License.
                    :class="{highlight:selected==='connector_queue'}">
                 <div class="title">{{connectorQuene}}</div>
                 <template v-if="!connectQueueChart.noData">
-                  <div class="data-tips">
-                    <div v-if="connectQueueChart.queueSummary.empty_queue!==undefined">
+                  <div class="data-tips"
+                       v-if="connectQueueChart.queueSummary.empty_queue!==undefined">
+                    <div>
                       {{$t('profiling.queueTip2')}}{{connectQueueChart.queueSummary.empty_queue}}
                       /{{connectQueueChart.size}}</div>
-                    <div v-if="connectQueueChart.queueSummary.full_queue!==undefined">
-                      {{$t('profiling.queueTip1')}}{{connectQueueChart.queueSummary.full_queue}}
+                    <div>
+                      {{$t('profiling.queueTip1')}}
+                      {{connectQueueChart.size - connectQueueChart.queueSummary.empty_queue}}
                       /{{connectQueueChart.size}}</div>
                   </div>
                   <div id="connect-queue"
@@ -739,14 +745,14 @@ export default {
         if (data.device_queue_info && data.device_queue_info.summary) {
           this.processSummary.device = {
             empty: data.device_queue_info.summary.empty_batch_count,
-            full: data.device_queue_info.summary.full_batch_count,
+            full: data.device_queue_info.summary.total_batch - data.device_queue_info.summary.empty_batch_count,
             total: data.device_queue_info.summary.total_batch,
           };
         }
         if (data.get_next_queue_info && data.get_next_queue_info.summary) {
           this.processSummary.get_next = {
             empty: data.get_next_queue_info.summary.empty_batch_count,
-            full: data.get_next_queue_info.summary.full_batch_count,
+            full: data.get_next_queue_info.summary.total_batch - data.get_next_queue_info.summary.empty_batch_count,
             total: data.get_next_queue_info.summary.total_batch,
           };
         }

@@ -1174,7 +1174,7 @@ export default {
           this.deviceInfoShow = true;
           this.processSummary.device = {
             empty: data.device_queue_info.summary.empty_batch_count,
-            full: data.device_queue_info.summary.full_batch_count,
+            full: data.device_queue_info.summary.total_batch - data.device_queue_info.summary.empty_batch_count,
             total: data.device_queue_info.summary.total_batch,
           };
         }
@@ -1182,7 +1182,7 @@ export default {
           this.queueInfoShow = true;
           this.processSummary.get_next = {
             empty: data.get_next_queue_info.summary.empty_batch_count,
-            full: data.get_next_queue_info.summary.full_batch_count,
+            full: data.get_next_queue_info.summary.total_batch - data.get_next_queue_info.summary.empty_batch_count,
             total: data.get_next_queue_info.summary.total_batch,
           };
         }

@@ -255,10 +255,6 @@ export default {
                   resp.data['minddata_device_queue'][1] >= 0
                     ? resp.data['minddata_device_queue'][1]
                     : '--';
-                  const deviceFull =
-                  resp.data['minddata_device_queue'][2] >= 0
-                    ? resp.data['minddata_device_queue'][2]
-                    : '--';
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
                   const content = `${this.$t(`profiling`)[item].desc}`
@@ -272,7 +268,9 @@ export default {
                       )
                       .replace(
                           `{n3}`,
-                          `<span class="nowrap-style"> ${deviceFull}</span>`,
+                          `<span class="nowrap-style"> ${
+                            deviceTotal - deviceEmpty
+                          }</span>`,
                       )
                       .replace(
                           `{n4}`,
@@ -299,6 +297,16 @@ export default {
                       )
                       .replace(
                           `{n2}`,
+                          `<span class="nowrap-style"> ${getNextTotal}</span>`,
+                      )
+                      .replace(
+                          `{n3}`,
+                          `<span class="nowrap-style"> ${
+                            getNextTotal - getNextEmpty
+                          }</span>`,
+                      )
+                      .replace(
+                          `{n4}`,
                           `<span class="nowrap-style"> ${getNextTotal}</span>`,
                       );
                   divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
