@@ -44,6 +44,10 @@ NUMPY_TYPE_MAP = {
 }
 
 MS_VERSION = '1.0.x'
+# The debugger need 2g memory space.
+MAX_CACHE_SPACE = 2 * 1024 * 1024 * 1024
+# The debugger need to cache 2 tensors.
+MAX_SINGLE_TENSOR_CACHE = 1 * 1024 * 1024 * 1024
 
 
 @enum.unique

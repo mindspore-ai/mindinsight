@@ -178,22 +178,20 @@ class DebuggerSession:
         watchpoint_stream.set_watch_nodes(graph, graph_stream, watch_point_id, graph_name, rank_id)
         return graph
 
-    def tensor_comparisons(self, name, shape, detail='data', tolerance='0', rank_id=0):
+    def tensor_comparisons(self, name, shape, detail='data', tolerance='0', rank_id=0, graph_name=None):
         """
         Get tensor comparisons data for given name, detail, shape and tolerance.
 
         Args:
             name (str): The name of tensor for ui.
+            shape (str): Specify concrete dimensions of shape.
             detail (str): Specify which data to query. Current available value is 'data' which means
                           concrete tensor data. Histogram or unique count can be supported in the future.
-            shape (str): Specify concrete dimensions of shape.
+            rank_id (int): The id of rank. Default: 0.
             tolerance (str): Specify tolerance of difference between current step tensor and previous
                              step tensor. Default value is 0.
-            rank_id (int): The id of rank. Default: 0.
+            graph_name (str): The graph name. Default: None.
 
-        Raises:
-            DebuggerParamValueError, If node type is not parameter or value of detail is not support.
-            DebuggerCompareTensorError, If MindSpore is not in waiting state.
         Returns:
             dict, the retrieved data.
         """
@@ -206,7 +204,7 @@ class DebuggerSession:
         self.validate_tensor_param(name, detail)
         # Limit to query max two dimensions for tensor in table view.
         parsed_shape = TensorUtils.parse_shape(shape, limit=MAX_DIMENSIONS_FOR_TENSOR)
-        node_type, tensor_name = self._get_tensor_name_and_type_by_ui_name(name)
+        node_type, tensor_name, graph_name = self._get_tensor_name_and_type_by_ui_name(name, graph_name, rank_id)
         tolerance = to_float(tolerance, 'tolerance')
         tensor_stream = self.cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(rank_id)
         cur_step = self.cache_store.get_stream_handler(Streams.METADATA).step
@@ -215,6 +213,8 @@ class DebuggerSession:
         else:
             raise DebuggerParamValueError(
                 "The node type must be parameter, but got {}.".format(node_type))
+        if reply.pop('view_cmd', False):
+            self._send_view_cmd(name, graph_name, rank_id, tensor_name, node_type)
         return reply
 
     def retrieve(self, mode, filter_condition=None):
@@ -408,7 +408,7 @@ class DebuggerSession:
         self.validate_tensor_param(name, detail)
         # Limit to query max two dimensions for tensor in table view.
         parsed_shape = TensorUtils.parse_shape(shape, limit=MAX_DIMENSIONS_FOR_TENSOR)
-        node_type, tensor_name = self._get_tensor_name_and_type_by_ui_name(name, graph_name, rank_id)
+        node_type, tensor_name, graph_name = self._get_tensor_name_and_type_by_ui_name(name, graph_name, rank_id)
         reply = self.cache_store.get_stream_handler(Streams.TENSOR).get(
             {'name': tensor_name,
              'node_type': node_type,
@@ -417,8 +417,89 @@ class DebuggerSession:
             rank_id
         )
         reply['tensor_value']['name'] = name
-
+        if reply.pop('view_cmd', False):
+            self._send_view_cmd(name, graph_name, rank_id, tensor_name, node_type)
         return reply
+
+    def _send_view_cmd(self, name, graph_name, rank_id, tensor_name, node_type):
+        """Send view command."""
+        tensor_basic_info = self.cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(
+            rank_id).get_missing_tensor_info(tensor_name, node_type, check_cache=True)
+        if tensor_basic_info:
+            view_cmd = create_view_event_from_tensor_basic_info(tensor_basic_info)
+            self.cache_store.put_command(
+                {'view_cmd': view_cmd, 'node_name': name, 'graph_name': graph_name, 'rank_id': rank_id})
+            log.debug("Send view cmd.")
+
+    def load(self, name, prev, graph_name=None, rank_id=0):
+        """
+        Load the tensor value.
+
+        Args:
+            name (str): Node name shown in UI.
+            prev (bool): The previous step or current step.
+            graph_name (Union[str, None]): The graph name, default is: None.
+            rank_id (int): The id of rank. Default: 0.
+        """
+        if not isinstance(name, str) or ':' not in name:
+            log.error("Invalid tensor name. Received: %s", name)
+            raise DebuggerParamValueError("Invalid tensor name.")
+        node_type, tensor_name, graph_name = self._get_tensor_name_and_type_by_ui_name(name, graph_name, rank_id)
+        log.info("Load the tensor value: name: %s", tensor_name)
+        reply = self.cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(
+            rank_id).load(tensor_name=tensor_name, graph_name=graph_name, prev=prev, node_type=node_type)
+        if not reply.get('in_memory'):
+            prev_step = 'prev' if prev else ''
+            tensor_basic_info = self.cache_store.get_stream_handler(Streams.TENSOR).\
+                tensor_basic_info(tensor_name, node_type, prev_step)
+            view_cmd = create_view_event_from_tensor_basic_info([tensor_basic_info])
+            self.cache_store.put_command(
+                {'view_cmd': view_cmd,
+                 'node_name': name,
+                 'graph_name': graph_name,
+                 'rank_id': rank_id,
+                 'load': {
+                     'tensor_name': tensor_name,
+                     'prev': prev,
+                     'node_type': node_type
+                 }})
+            log.debug("Send view cmd.")
+        else:
+            metadata = self.cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
+            ret = {'tensor_file': True}
+            ret.update(metadata)
+            self.cache_store.put_data(ret)
+
+    def download(self, name, prev, graph_name=None, rank_id=0):
+        """
+        Download the tensor value.
+
+        Args:
+            name (str): Node name shown in UI.
+            prev (bool): The previous step or current step.
+            graph_name (Union[str, None]): The graph name, default is: None.
+            rank_id (int): The id of rank. Default: 0.
+
+        Returns:
+            str, the file path.
+            str, the file name.
+        """
+        if not isinstance(name, str) or ':' not in name:
+            log.error("Invalid tensor name. Received: %s", name)
+            raise DebuggerParamValueError("Invalid tensor name.")
+        _, tensor_name, graph_name = self._get_tensor_name_and_type_by_ui_name(name, graph_name, rank_id)
+        log.info("Download the tensor value: name: %s", tensor_name)
+        tensor_stream = self.cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(rank_id)
+        step = tensor_stream.cur_step
+        if prev:
+            step -= 1
+        tensor_info = {
+            "tensor_name": tensor_name,
+            "graph_name": graph_name,
+            "step": step,
+            "rank_id": rank_id
+        }
+        return tensor_stream.download_mgr.get(**tensor_info)
 
     def _get_tensor_name_and_type_by_ui_name(self, name, graph_name=None, rank_id=0):
         """
@@ -436,10 +517,11 @@ class DebuggerSession:
         node_name, slot = name.rsplit(':', 1)
         graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(rank_id)
         graph_name = graph_name if graph_name else graph_stream.get_graph_id_by_name(node_name)
+        graph_name = graph_stream.validate_graph_name(graph_name)
         node_type = graph_stream.get_node_type(node_name, graph_name)
         full_name = graph_stream.get_full_name(node_name, graph_name)
         tensor_name = full_name + ':' + slot
-        return node_type, tensor_name
+        return node_type, tensor_name, graph_name
 
     @staticmethod
     def validate_tensor_param(name, detail):

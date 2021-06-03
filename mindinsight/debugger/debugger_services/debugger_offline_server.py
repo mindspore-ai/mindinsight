@@ -308,7 +308,6 @@ class DebuggerOfflineManager:
 
     def _put_tensor_value_into_cache(self, cur_step, node_info, rank_id, tensor_protos):
         """Put tensor value into tensor cache."""
-
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR). \
             get_tensor_handler_by_rank_id(rank_id)
         update_data_flag = False
@@ -317,11 +316,23 @@ class DebuggerOfflineManager:
                 log.warning("Tensor %s:%s is empty.",
                             tensor_proto.node_name, tensor_proto.slot)
             try:
-                has_update = tensor_stream.put({
+                load_info = node_info.get('load')
+                if load_info is not None:
+                    load_info['graph_name'] = node_info.get('graph_name')
+                value = {
                     'step': cur_step,
                     'tensor_proto': tensor_proto,
-                    'tensor_contents': [tensor_proto.tensor_content]
-                })
+                    'tensor_contents': [tensor_proto.tensor_content],
+                    'stats': node_info.get('stats', False),
+                    'load': load_info
+                }
+                has_update = tensor_stream.put(value)
+                if value.get('load'):
+                    metadata = self._metadata_stream.get(['step', 'state'])
+                    ret = {'tensor_file': True}
+                    ret.update(metadata)
+                    self._cache_store.put_data(ret)
+
             except ValueError as err:
                 log.warning("Failed to put %s:%s into cache. Ignore it. %s",
                             tensor_proto.node_name, tensor_proto.slot, str(err))

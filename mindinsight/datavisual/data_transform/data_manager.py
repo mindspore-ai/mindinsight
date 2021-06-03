@@ -464,6 +464,11 @@ class _DetailCacheManager(_BaseCacheManager):
         """Whether this cache manager has train jobs."""
         return bool(self._loader_pool)
 
+    def register_folder_analyzer(self, analyzer):
+        """Register folder analyzer."""
+        for generator in self._loader_generators:
+            generator.register_folder_analyzer(analyzer)
+
     def size(self):
         """
         Get the number of items in this cache manager.
@@ -1044,6 +1049,7 @@ class DataManager:
     def register_folder_analyzer(self, analyzer):
         """Register folder analyzer."""
         self._brief_cache.register_folder_analyzer(analyzer)
+        self._detail_cache.register_folder_analyzer(analyzer)
 
     def get_brief_cache(self):
         """Get brief cache."""

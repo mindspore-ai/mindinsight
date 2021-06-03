@@ -94,6 +94,7 @@ class TestDebuggerServer:
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
     @mock.patch.object(GraphHandler, 'get_node_type')
     @mock.patch.object(GraphHandler, 'get_graph_id_by_name')
+    @mock.patch.object(GraphHandler, 'validate_graph_name')
     @mock.patch.object(GraphHandler, 'get_full_name', return_value='mock_node_name')
     def test_tensor_comparision_with_wrong_type(self, *args):
         """Test tensor comparison with wrong type."""
@@ -103,6 +104,7 @@ class TestDebuggerServer:
 
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
     @mock.patch.object(GraphHandler, 'get_graph_id_by_name')
+    @mock.patch.object(GraphHandler, 'validate_graph_name')
     @mock.patch.object(GraphHandler, 'get_node_type', return_value='Parameter')
     @mock.patch.object(GraphHandler, 'get_full_name', return_value='mock_node_name')
     @mock.patch.object(TensorHandler, 'get_tensors_diff')
@@ -158,7 +160,7 @@ class TestDebuggerServer:
     def test_retrieve_tensor_value(self, *args):
         """Test retrieve tensor value."""
         mock_tensor_value = {'tensor_value': {'name': 'mock_name:0'}}
-        args[0].return_value = ('Parameter', 'mock_node_name')
+        args[0].return_value = ('Parameter', 'mock_node_name', 'mock_graph_name')
         args[1].return_value = mock_tensor_value
         res = self._server.retrieve_tensor_value('mock_name:0', 'data', '[:, :]')
         assert res == mock_tensor_value

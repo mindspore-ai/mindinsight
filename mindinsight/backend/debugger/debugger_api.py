@@ -14,13 +14,14 @@
 # ============================================================================
 """Debugger restful api."""
 import json
+import weakref
 from urllib.parse import unquote
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, Response
 
 from mindinsight.conf import settings
 from mindinsight.debugger.session_manager import SessionManager
-from mindinsight.utils.exceptions import ParamMissError, ParamValueError
+from mindinsight.utils.exceptions import ParamMissError, ParamValueError, ParamTypeError
 
 BLUEPRINT = Blueprint("debugger", __name__,
                       url_prefix=settings.URL_PATH_PREFIX + settings.API_PREFIX)
@@ -62,6 +63,15 @@ def _read_post_request(post_request):
     return body
 
 
+def to_int(param, param_name):
+    """Transfer param to int type."""
+    try:
+        param = int(param)
+    except ValueError:
+        raise ParamTypeError(param_name, 'Integer')
+    return param
+
+
 def _wrap_reply(func, *args, **kwargs):
     """Serialize reply."""
     reply = func(*args, **kwargs)
@@ -101,9 +111,9 @@ def search(session_id):
     """
     name = request.args.get('name')
     graph_name = request.args.get('graph_name')
-    watch_point_id = int(request.args.get('watch_point_id', 0))
+    watch_point_id = to_int(request.args.get('watch_point_id', 0), 'watch_point_id')
     node_category = request.args.get('node_category')
-    rank_id = int(request.args.get('rank_id', 0))
+    rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
     stack_pattern = _unquote_param(request.args.get('stack_info_key_word'))
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).search,
                         {'name': name,
@@ -130,10 +140,11 @@ def tensor_comparisons(session_id):
     name = request.args.get('name')
     detail = request.args.get('detail', 'data')
     shape = _unquote_param(request.args.get('shape'))
+    graph_name = request.args.get('graph_name', '')
     tolerance = request.args.get('tolerance', '0')
-    rank_id = int(request.args.get('rank_id', 0))
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).tensor_comparisons, name, shape, detail,
-                        tolerance, rank_id)
+    rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
+    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).tensor_comparisons, name, shape,
+                        detail, tolerance, rank_id, graph_name)
 
     return reply
 
@@ -170,7 +181,7 @@ def retrieve_tensor_history(session_id):
     body = _read_post_request(request)
     name = body.get('name')
     graph_name = body.get('graph_name')
-    rank_id = body.get('rank_id')
+    rank_id = to_int(body.get('rank_id', 0), 'rank_id')
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve_tensor_history, name, graph_name,
                         rank_id)
     return reply
@@ -192,7 +203,7 @@ def retrieve_tensor_value(session_id):
     shape = _unquote_param(request.args.get('shape'))
     graph_name = request.args.get('graph_name')
     prev = bool(request.args.get('prev') == 'true')
-    rank_id = int(request.args.get('rank_id', 0))
+    rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
 
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve_tensor_value, name, detail,
                         shape, graph_name, prev, rank_id)
@@ -313,7 +324,7 @@ def retrieve_tensor_graph(session_id):
     """
     tensor_name = request.args.get('tensor_name')
     graph_name = request.args.get('graph_name')
-    rank_id = int(request.args.get('rank_id', 0))
+    rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve_tensor_graph, tensor_name,
                         graph_name, rank_id)
     return reply
@@ -332,7 +343,7 @@ def retrieve_tensor_hits(session_id):
     """
     tensor_name = request.args.get('tensor_name')
     graph_name = request.args.get('graph_name')
-    rank_id = int(request.args.get('rank_id', 0))
+    rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve_tensor_hits, tensor_name,
                         graph_name, rank_id)
     return reply
@@ -374,6 +385,58 @@ def set_recommended_watch_points(session_id):
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).set_recommended_watch_points,
                         set_recommended)
     return reply
+
+
+@BLUEPRINT.route("/debugger/sessions/<session_id>/tensor-files/load", methods=["POST"])
+def load(session_id):
+    """
+    Retrieve tensor value according to name and shape.
+
+    Returns:
+        str, the required data.
+
+    Examples:
+        >>> GET http://xxx/v1/mindinsight/debugger/sessions/xxxx/tensor-files/load
+    """
+    body = _read_post_request(request)
+    name = body.get('name')
+    graph_name = body.get('graph_name')
+    rank_id = to_int(body.get('rank_id', 0), 'rank_id')
+    prev = bool(request.args.get('prev') == 'true')
+    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).load, name, prev, graph_name, rank_id)
+    return reply
+
+
+@BLUEPRINT.route("/debugger/sessions/<session_id>/tensor-files/download", methods=["GET"])
+def download(session_id):
+    """
+    Retrieve tensor value according to name and shape.
+
+    Returns:
+        str, the required data.
+
+    Examples:
+        >>> GET http://xxx/v1/mindinsight/debugger/sessions/xxx/tensor-files/download?name=name&graph_name=xxx&prev=xxx
+    """
+    name = request.args.get('name')
+    graph_name = request.args.get('graph_name')
+    rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
+    prev = bool(request.args.get('prev') == 'true')
+    file_name, file_path, clean_func = SessionManager.get_instance().get_session(session_id).\
+        download(name, prev, graph_name, rank_id)
+
+    def file_send():
+        with open(file_path, 'rb') as fb:
+            while True:
+                data = fb.read(50 * 1024 * 1024)
+                if not data:
+                    break
+                yield data
+
+    response = Response(file_send(), content_type='application/octet-stream')
+    response.headers["Content-disposition"] = 'attachment; filename=%s' % file_name
+    weakref.finalize(response, clean_func,)
+    return response
 
 
 @BLUEPRINT.route("/debugger/sessions", methods=["POST"])

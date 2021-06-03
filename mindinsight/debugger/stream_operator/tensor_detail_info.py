@@ -134,7 +134,7 @@ class TensorDetailInfo:
             return
         log.debug("Ask for tensor value for: %s", missing_tensors)
         view_cmd = create_view_event_from_tensor_basic_info(missing_tensors)
-        self._put_command({'view_cmd': view_cmd, 'tensor_name': tensor_name, 'graph_name': graph_name})
+        self._put_command({'view_cmd': view_cmd, 'tensor_name': tensor_name, 'graph_name': graph_name, 'stats': True})
         log.debug("Send view cmd for tensor-graphs.")
 
     def get_tensor_watch_points(self, tensor_name, graph_name, rank_id=0):
