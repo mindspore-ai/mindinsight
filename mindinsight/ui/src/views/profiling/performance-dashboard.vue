@@ -30,6 +30,21 @@ limitations under the License.
         <empty :state="performanceState"></empty>
       </div>
     </div>
+    <div class="container">
+      <div class="header" @click="jump('communication', commState === normalState)">
+        <span class="title">{{ commChart.title }}</span>
+        <span :class="{
+                'jump': true,
+                'is-effective': commState === normalState
+              }">
+          {{ $t('profiling.viewDetail') }}
+          <i class="el-icon-d-arrow-right"></i>
+        </span>
+      </div>
+      <div class="content" ref="comm">
+        <empty :state="commState"></empty>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -37,6 +52,7 @@ limitations under the License.
 import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import empty, {NO_DATA, LOADING_DATA} from '../../components/empty';
+import {handleFloatNumber} from './profiling-comm.vue';
 export default {
   props: {
     activeName: String,
@@ -65,13 +81,30 @@ export default {
         ],
         title: this.$t('profilingCluster.performanceChartTitle'),
       }, // Chart object of performance window
+      commState: LOADING_DATA,
+      commChart: {
+        dom: null,
+        instance: null,
+        data: null,
+        dimensions: [
+          this.$t('profilingCluster.rankID'),
+          this.$t('profilingCluster.waitCost'),
+          this.$t('profilingCluster.commCost'),
+        ],
+        title: this.$t('profilingCluster.commChartTitle'),
+      },
       normalState: 'normal', // Normal page state
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
   mounted() {
     this.performanceChart.dom = this.$refs.performance ? this.$refs.performance : null;
+    this.commChart.dom = this.$refs.comm ? this.$refs.comm : null;
     this.queryPerformanceInfo().then((state) => {
       if (state) this.initChart(this.performanceChart);
+    });
+    this.queryCommInfo().then((state) => {
+      if (state) this.initChart(this.commChart);
     });
     window.addEventListener('resize', this.resizeCallBack);
   },
@@ -86,6 +119,9 @@ export default {
       this.resizeTimer = setTimeout(() => {
         if (this.performanceChart.dom && this.performanceChart.instance) {
           this.performanceChart.instance.resize();
+        }
+        if (this.commChart.dom && this.commChart.instance) {
+          this.commChart.instance.resize();
         }
       }, 100); // 100: Delay of debounce of callback
     },
@@ -135,6 +171,41 @@ export default {
       });
     },
     /**
+     * The logic of query communication info
+     * @return {Promise}
+     */
+    queryCommInfo() {
+      return new Promise((resolve) => {
+        const params = {};
+        params.params = {
+          train_id: this.trainInfo.id,
+        };
+        RequestService.getCommInfo(params)
+            .then((res) => {
+              if (res?.data?.communication.length > 0) {
+                const chartData = [];
+                res.data.communication.forEach((item) => {
+                  chartData.push([
+                    item.rank_id,
+                    handleFloatNumber(item.communication_info[0]),
+                    handleFloatNumber( item.communication_info[1]),
+                  ]);
+                });
+                this.commChart.data = chartData;
+                this.commState = this.normalState;
+                resolve(true);
+              } else {
+                this.commState = NO_DATA;
+              }
+            })
+            .catch((e) => {
+              this.commState = NO_DATA;
+              resolve(false);
+            });
+      });
+    },
+
+    /**
      * The logic of init echart
      * @param {Object} chart
      */
@@ -166,8 +237,7 @@ export default {
           right: 80,
         },
         dataset: {
-          dimensions: chart.dimensions,
-          source: chart.data,
+          source: [chart.dimensions].concat(chart.data),
         },
         xAxis: {
           name: this.$t('profilingCluster.rankID'),
@@ -230,7 +300,7 @@ export default {
 <style scoped>
 .performance-dashboard {
   display: grid;
-  grid-template-rows: 100%;
+  grid-template-rows: calc(50% - 10px) calc(50% - 10px);
   grid-template-columns: 100%;
   height: 100%;
   row-gap: 20px;

@@ -539,6 +539,22 @@ export default {
       url: 'v1/mindinsight/profile/cluster-step-trace-summary',
     });
   },
+  getCommInfo(params) {
+    return axios({
+      method: 'post',
+      params: params.params,
+      data: params.body,
+      url: 'v1/mindinsight/profile/search-cluster-communication',
+    });
+  },
+  getLinkInfo(params) {
+    return axios({
+      method: 'post',
+      params: params.params,
+      data: params.body,
+      url: 'v1/mindinsight/profile/search-cluster-link',
+    });
+  },
   getClusterPeakMemory(params) {
     return axios({
       method: 'get',

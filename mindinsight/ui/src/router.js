@@ -150,6 +150,10 @@ export default new Router({
       component: () => import('./views/profiling/cluster-dashboard.vue'),
     },
     {
+      path: '/profiling-communication',
+      component: () => import('./views/profiling/profiling-comm.vue'),
+    },
+    {
       path: '/profiling-performance',
       component: () => import('./views/profiling/profiling-performance.vue'),
     },
