@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
 """The definition of tensor stream."""
 from abc import abstractmethod, ABC
 from enum import Enum
+
 import numpy as np
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import NUMPY_TYPE_MAP
-from mindinsight.debugger.proto.ms_graph_pb2 import DataType
+from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
 from mindinsight.utils.tensor import TensorUtils
 
 

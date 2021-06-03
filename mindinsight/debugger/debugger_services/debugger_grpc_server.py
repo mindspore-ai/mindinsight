@@ -13,10 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """Implement the debugger grpc server."""
-import os
 import copy
-import tempfile
+import os
 import struct
+import tempfile
 import time
 from functools import wraps
 
@@ -28,7 +28,7 @@ from mindinsight.debugger.common.utils import MAX_SINGLE_TENSOR_CACHE, get_ack_r
     Streams, RunLevel, version_match, NUMPY_TYPE_MAP
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum, ParamNameEnum
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
-from mindinsight.debugger.proto.ms_graph_pb2 import GraphProto, DataType
+from mindinsight.domain.graph.proto.ms_graph_pb2 import GraphProto, DataType
 
 
 def debugger_wrap(func):

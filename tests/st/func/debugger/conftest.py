@@ -23,9 +23,9 @@ from flask import Response
 
 from mindinsight.conf import settings
 from mindinsight.datavisual.utils import tools
-from mindinsight.debugger.proto import ms_graph_pb2
-from mindinsight.debugger.stream_handler.graph_handler import GraphHandler
 from mindinsight.debugger.session_manager import SessionManager
+from mindinsight.debugger.stream_handler.graph_handler import GraphHandler
+from mindinsight.domain.graph.proto import ms_graph_pb2
 
 GRAPH_PROTO_FILE = os.path.join(
     os.path.dirname(__file__), '../../../utils/resource/graph_pb/lenet.pb'

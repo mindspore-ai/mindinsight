@@ -14,10 +14,10 @@
 # ============================================================================
 """PB parser module."""
 
-from mindinsight.domain.graph.proto import ms_graph_pb2 as graph_proto
 from mindinsight.domain.graph.base import MindSporeType, InputType, OutputType
 from mindinsight.domain.graph.base import NodeInput, NodeOutput, Tensor, Source, Constant, Parameter, Operator, Parser
 from mindinsight.domain.graph.exceptions import UnknownDataTypeError, TupleGetitemIndexError
+from mindinsight.domain.graph.proto import ms_graph_pb2 as graph_proto
 
 
 class PBParser(Parser):

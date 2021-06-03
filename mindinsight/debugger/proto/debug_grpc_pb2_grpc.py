@@ -2,7 +2,7 @@
 import grpc
 
 from mindinsight.debugger.proto import debug_grpc_pb2 as mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2
-from mindinsight.debugger.proto import ms_graph_pb2 as mindinsight_dot_debugger_dot_proto_dot_ms__graph__pb2
+from mindinsight.domain.graph.proto import ms_graph_pb2 as mindinsight_dot_domain_dot_graph_dot_proto_dot_ms__graph__pb2
 
 
 class EventListenerStub(object):
@@ -31,7 +31,7 @@ class EventListenerStub(object):
                 )
         self.SendTensors = channel.stream_unary(
                 '/debugger.EventListener/SendTensors',
-                request_serializer=mindinsight_dot_debugger_dot_proto_dot_ms__graph__pb2.TensorProto.SerializeToString,
+                request_serializer=mindinsight_dot_domain_dot_graph_dot_proto_dot_ms__graph__pb2.TensorProto.SerializeToString,
                 response_deserializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.FromString,
                 )
         self.SendWatchpointHits = channel.stream_unary(
@@ -105,7 +105,7 @@ def add_EventListenerServicer_to_server(servicer, server):
             ),
             'SendTensors': grpc.stream_unary_rpc_method_handler(
                     servicer.SendTensors,
-                    request_deserializer=mindinsight_dot_debugger_dot_proto_dot_ms__graph__pb2.TensorProto.FromString,
+                    request_deserializer=mindinsight_dot_domain_dot_graph_dot_proto_dot_ms__graph__pb2.TensorProto.FromString,
                     response_serializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.SerializeToString,
             ),
             'SendWatchpointHits': grpc.stream_unary_rpc_method_handler(
@@ -187,7 +187,7 @@ class EventListener(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_unary(request_iterator, target, '/debugger.EventListener/SendTensors',
-            mindinsight_dot_debugger_dot_proto_dot_ms__graph__pb2.TensorProto.SerializeToString,
+            mindinsight_dot_domain_dot_graph_dot_proto_dot_ms__graph__pb2.TensorProto.SerializeToString,
             mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.FromString,
             options, channel_credentials,
             call_credentials, compression, wait_for_ready, timeout, metadata)

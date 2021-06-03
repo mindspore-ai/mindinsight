@@ -15,10 +15,11 @@
 """Test debugger server utils."""
 import json
 import os
-import time
 import shutil
 import tempfile
-from mindinsight.debugger.proto import ms_graph_pb2
+import time
+
+from mindinsight.domain.graph.proto import ms_graph_pb2
 from tests.st.func.debugger.conftest import DEBUGGER_EXPECTED_RESULTS, DEBUGGER_BASE_URL, GRAPH_PROTO_FILE
 from tests.utils.tools import compare_result_with_file, get_url
 
