@@ -33,7 +33,7 @@ from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_services.debugger_server_factory import DebuggerServerContext
 from mindinsight.debugger.debugger_session import DebuggerSession as DebuggerServer
 from mindinsight.debugger.stream_handler import GraphHandler, WatchpointHandler, MetadataHandler, \
-    TensorHandler
+    TensorHandler, MultiCardGraphHandler
 from mindinsight.debugger.stream_operator import watchpoint_operator
 from tests.ut.debugger.configurations import compare_debugger_result_with_file, mock_tensor_history
 
@@ -79,6 +79,8 @@ class TestDebuggerServer:
     @mock.patch.object(GraphHandler, 'search_nodes')
     def test_search(self, *args):
         """Test search node."""
+        graph_stream = self._server.cache_store.get_stream_handler(Streams.GRAPH)
+        setattr(graph_stream, '_graph_handlers', {0: GraphHandler()})
         mock_graph = {'nodes': ['mock_nodes']}
         args[0].return_value = mock_graph
         res = self._server.search({'name': 'mock_name'})
@@ -91,6 +93,7 @@ class TestDebuggerServer:
                 match='Failed to compare tensors as the MindSpore is not in waiting state.'):
             self._server.tensor_comparisons(name='mock_node_name:0', shape='[:, :]')
 
+    @mock.patch.object(MultiCardGraphHandler, 'get_graph_handler_by_rank_id')
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
     @mock.patch.object(GraphHandler, 'get_node_type')
     @mock.patch.object(GraphHandler, 'get_graph_id_by_name')
@@ -110,6 +113,8 @@ class TestDebuggerServer:
     @mock.patch.object(TensorHandler, 'get_tensors_diff')
     def test_tensor_comparision(self, *args):
         """Test tensor comparison"""
+        graph_stream = self._server.cache_store.get_stream_handler(Streams.GRAPH)
+        setattr(graph_stream, '_graph_handlers', {0: GraphHandler()})
         mock_diff_res = {'tensor_value': {}}
         args[0].return_value = mock_diff_res
         res = self._server.tensor_comparisons('mock_node_name:0', '[:, :]')
@@ -136,6 +141,8 @@ class TestDebuggerServer:
     @mock.patch.object(GraphHandler, 'get_full_name', return_value='mock_node_name')
     def test_retrieve_node(self, *args):
         """Test retrieve node information."""
+        graph_stream = self._server.cache_store.get_stream_handler(Streams.GRAPH)
+        setattr(graph_stream, '_graph_handlers', {0: GraphHandler()})
         mock_graph = {'graph': {}}
         args[2].return_value = mock_graph
         res = self._server._retrieve_node({'name': 'mock_node_name'})
@@ -151,6 +158,8 @@ class TestDebuggerServer:
     @mock.patch.object(GraphHandler, 'get_node_type', return_value='Parameter')
     def test_retrieve_tensor_history(self, *args):
         """Test retrieve tensor history."""
+        graph_stream = self._server.cache_store.get_stream_handler(Streams.GRAPH)
+        setattr(graph_stream, '_graph_handlers', {0: GraphHandler()})
         args[1].return_value = mock_tensor_history()
         res = self._server.retrieve_tensor_history('mock_node_name')
         compare_debugger_result_with_file(res, 'debugger_server/retrieve_tensor_history.json')
@@ -200,6 +209,7 @@ class TestDebuggerServer:
              'watch_nodes': ['watch_node_name']})
         assert res == {'id': 1, 'metadata': {'enable_recheck': False, 'state': 'waiting'}}
 
+    @mock.patch.object(MultiCardGraphHandler, 'get_graph_handler_by_rank_id')
     @mock.patch.object(MetadataHandler, 'state', 'waiting')
     @mock.patch.object(GraphHandler, 'validate_graph_name', return_value='kernel_graph_0')
     @mock.patch.object(GraphHandler, 'get_node_basic_info')

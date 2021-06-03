@@ -30,7 +30,7 @@ class MultiCardGraphHandler(StreamHandlerBase):
     """Multi-card Graph Handler."""
 
     def __init__(self):
-        self._graph_handlers = {0: GraphHandler()}
+        self._graph_handlers = {}
         self._source_handler = SourceHandler()
 
     @property
@@ -47,6 +47,10 @@ class MultiCardGraphHandler(StreamHandlerBase):
         """Get handler by rank id."""
         if rank_id in self._graph_handlers:
             return self._graph_handlers.get(rank_id)
+        if rank_id == 0:
+            # ms side still using device id instead of rank id, so the first rank_id is not 0
+            for graph_handler in self._graph_handlers.values():
+                return graph_handler
         log.error("There is no rank id %d.", rank_id)
         raise ValueError
 
@@ -67,7 +71,18 @@ class MultiCardGraphHandler(StreamHandlerBase):
 
     def get(self, filter_condition=None):
         """Get the graph of specific node for specific device."""
-        rank_id = filter_condition.get('rank_id', 0) if filter_condition else 0
+        if not self._graph_handlers:
+            log.warning('There is no graph received yet.')
+            return {'graph': {}}
+
+        def _get_first_rank_id():
+            rank_ids = list(self._graph_handlers.keys())
+            rank_ids.sort()
+            return rank_ids[0]
+        if not filter_condition or not filter_condition.get('rank_id'):
+            rank_id = _get_first_rank_id()
+        else:
+            rank_id = filter_condition.get('rank_id')
         if rank_id in self._graph_handlers:
             return self._graph_handlers.get(rank_id).get(filter_condition)
         log.error("There is no rank id %d.", rank_id)
