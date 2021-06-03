@@ -16,74 +16,139 @@ limitations under the License.
 <template>
   <div class="cl-memory-heatmap-dasnhoard">
     <div class="dashboard-item">
-      <div class="title-item">
-        <div class="title-text">
-          {{$t('profilingCluster.memoryHeatMapTitle')}}
-        </div>
-        <div class="detail-link"
-             :class="{disabled:!memoryHeatmapInitOver || !memoryHeatmapDataList.length}">
-          <button :disabled="!memoryHeatmapInitOver || !memoryHeatmapDataList.length"
-                  @click="jumpToMemoryHeatmap">
-            {{$t('profiling.viewDetail')}}
-            <i class="el-icon-d-arrow-right"></i>
-          </button>
+      <div class="legend-content">
+        <div class="legend-item"
+             v-for="(item, itemIndex) in legendArr"
+             :key="itemIndex">
+          <div class="color-item">
+            <div :style="{backgroundColor: item.backgroundColor}"></div>
+          </div>
+          <div class="value-item">{{item.info}}</div>
         </div>
       </div>
-      <div class="content-item">
-        <div class="noData-content"
-             v-show="!memoryHeatmapInitOver || !memoryHeatmapDataList.length">
-          <div>
-            <img :src="require('@/assets/images/nodata.png')" />
+      <div class="cluster-wrap">
+        <div class="title-item">
+          <div class="title-text">
+            {{$t('profilingCluster.memoryHeatMapTitle')}}
           </div>
-          <div v-if="memoryHeatmapInitOver && !memoryHeatmapDataList.length"
-               class="noData-text">{{$t("public.noData")}}</div>
-          <div v-else
-               class="noData-text">{{$t("public.dataLoading")}}</div>
+          <div class="detail-link"
+               :class="{disabled:!memoryHeatmapInitOver || !memoryHeatmapDataList.length}">
+            <button :disabled="!memoryHeatmapInitOver || !memoryHeatmapDataList.length"
+                    @click="jumpToHeatmapDetail('/memory-heatmap')">
+              {{$t('profiling.viewDetail')}}
+              <i class="el-icon-d-arrow-right"></i>
+            </button>
+          </div>
         </div>
-        <div class="dashboard-chart-content"
-             v-show="memoryHeatmapDataList.length && memoryHeatmapInitOver">
-          <div class="legend-content">
-            <div class="legend-item"
-                 v-for="(item, itemIndex) in legendArr"
-                 :key="itemIndex">
-              <div class="color-item">
-                <div :style="{backgroundColor: item.backgroundColor}"></div>
-              </div>
-              <div class="value-item">{{item.info}}</div>
+        <div class="content-item">
+          <div class="noData-content"
+               v-show="!memoryHeatmapInitOver || !memoryHeatmapDataList.length">
+            <div>
+              <img :src="require('@/assets/images/nodata.png')" />
             </div>
+            <div v-if="memoryHeatmapInitOver && !memoryHeatmapDataList.length"
+                 class="noData-text">{{$t("public.noData")}}</div>
+            <div v-else
+                 class="noData-text">{{$t("public.dataLoading")}}</div>
           </div>
-          <div class="heatmap-content">
-            <div class="heatmap-item"
-                 v-for="(item, itemIndex) in memoryHeatmapDataList"
-                 :key="itemIndex"
-                 :class="{'mt0': itemIndex < colNum}">
-              <div class="detail-content" :class="{'center': item.showCenter}">
-                <div class="device-item"
-                     v-for="(deviceItem, deviceItemIndex) in item.data"
-                     :key="deviceItemIndex">
-                  <div class="color-item">
-                    <el-tooltip placement="top">
-                      <div slot="content">
-                        <div>
-                          {{$t('profilingCluster.rankID') + $t('symbols.colon') + deviceItem.rankId}}
-                          <br>
-                          {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem.toFixed(3)
+          <div class="dashboard-chart-content"
+               v-show="memoryHeatmapDataList.length && memoryHeatmapInitOver">
+            <div class="heatmap-content">
+              <div class="heatmap-item"
+                   v-for="(item, itemIndex) in memoryHeatmapDataList"
+                   :key="itemIndex"
+                   :class="{'mt0': itemIndex < colNum}">
+                <div class="detail-content"
+                     :class="{'center': item.showCenter}">
+                  <div class="device-item"
+                       v-for="(deviceItem, deviceItemIndex) in item.data"
+                       :key="deviceItemIndex">
+                    <div class="color-item">
+                      <el-tooltip placement="top">
+                        <div slot="content">
+                          <div>
+                            {{$t('profilingCluster.rankID') + $t('symbols.colon') + deviceItem.rankId}}
+                            <br>
+                            {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem.toFixed(3)
                           + $t('unit.KiB')}}
-                          <br>
-                          {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
+                            <br>
+                            {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
                           + $t('unit.GiB')}}
+                          </div>
                         </div>
-                      </div>
-                      <div :style="{backgroundColor: deviceItem.backgroundColor}"></div>
-                    </el-tooltip>
-                  </div>
-                  <div class="info-item">
-                    {{$t('profilingCluster.deviceId') + deviceItem.deviceId}}
+                        <div :style="{backgroundColor: deviceItem.backgroundColor}"></div>
+                      </el-tooltip>
+                    </div>
+                    <div class="info-item">
+                      {{$t('profilingCluster.deviceId') + deviceItem.deviceId}}
+                    </div>
                   </div>
                 </div>
+                <div class="info-content">
+                  {{$t('profilingCluster.host') + item.hostIp}}
+                </div>
               </div>
-              <div class="info-content">
-                {{$t('profilingCluster.host') + item.hostIp}}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cluster-wrap">
+        <div class="title-item">
+          <div class="title-text">
+            {{$t('profilingCluster.flopsHeatMapTitle')}}
+          </div>
+          <div class="detail-link"
+               :class="{disabled:!flopsHeatmapInitOver || !flopsHeatmapDataList.length}">
+            <button :disabled="!flopsHeatmapInitOver || !flopsHeatmapDataList.length"
+                    @click="jumpToHeatmapDetail('/flops-heatmap')">
+              {{$t('profiling.viewDetail')}}
+              <i class="el-icon-d-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+        <div class="content-item">
+          <div class="noData-content"
+               v-show="!flopsHeatmapInitOver || !flopsHeatmapDataList.length">
+            <div>
+              <img :src="require('@/assets/images/nodata.png')" />
+            </div>
+            <div v-if="flopsHeatmapInitOver && !flopsHeatmapDataList.length"
+                 class="noData-text">{{$t("public.noData")}}</div>
+            <div v-else
+                 class="noData-text">{{$t("public.dataLoading")}}</div>
+          </div>
+          <div class="dashboard-chart-content"
+               v-show="flopsHeatmapDataList.length && flopsHeatmapInitOver">
+            <div class="heatmap-content">
+              <div class="heatmap-item"
+                   v-for="(item, itemIndex) in flopsHeatmapDataList"
+                   :key="itemIndex"
+                   :class="{'mt0': itemIndex < colNum}">
+                <div class="detail-content"
+                     :class="{'center': item.showCenter}">
+                  <div class="device-item"
+                       v-for="(deviceItem, deviceItemIndex) in item.data"
+                       :key="deviceItemIndex">
+                    <div class="color-item">
+                      <el-tooltip placement="top">
+                        <div slot="content">
+                          <div>
+                            {{$t('profilingCluster.rankID') + $t('symbols.colon') + deviceItem.rankId}}
+                            <br>
+                            FLOPs{{$t('symbols.colon')+deviceItem.flops}}M
+                          </div>
+                        </div>
+                        <div :style="{backgroundColor: deviceItem.backgroundColor}"></div>
+                      </el-tooltip>
+                    </div>
+                    <div class="info-item">
+                      {{$t('profilingCluster.deviceId') + deviceItem.deviceId}}
+                    </div>
+                  </div>
+                </div>
+                <div class="info-content">
+                  {{$t('profilingCluster.host') + item.hostIp}}
+                </div>
               </div>
             </div>
           </div>
@@ -107,8 +172,10 @@ export default {
       summaryPath: this.$route.query.path, // Path of the current training job
       trainingJobId: this.$route.query.id, // ID of the current training job
       summaryDir: this.$route.query.dir, // Dir of the current training job
-      memoryHeatmapInitOver: false, // The page state
-      memoryHeatmapDataList: [], // The heatmap daata
+      memoryHeatmapInitOver: false, // The memory heatmap state
+      memoryHeatmapDataList: [], // The memory heatmap data
+      flopsHeatmapInitOver: false, // The flops heatmap state
+      flopsHeatmapDataList: [], // The flops heatmap data
       legendArr: [], // Legend
       legendArrLength: 10, // Length of legend
       colNum: 4, // Column num of heatmap
@@ -117,15 +184,17 @@ export default {
   },
   mounted() {
     this.initLegendArr();
-    this.getHeatMapData();
+    this.getMemoryHeatMapData();
+    this.getFlopsHeatMapData();
   },
   methods: {
     /**
      * The logic of jump to heatmap page
+     * @param {String} path The router path
      */
-    jumpToMemoryHeatmap() {
+    jumpToHeatmapDetail(path) {
       this.$router.push({
-        path: '/memory-heatmap',
+        path,
         query: {
           dir: this.summaryDir,
           id: this.trainingJobId,
@@ -149,9 +218,61 @@ export default {
       this.legendArr = tempArr;
     },
     /**
-     * The logic of get heatmap data
+     * The logic of get flops heatmap data
      */
-    getHeatMapData() {
+    getFlopsHeatMapData() {
+      const params = {
+        train_id: this.trainingJobId,
+      };
+      RequestService.getClusterFlops(params)
+          .then((res) => {
+            if (!res || !res.data) {
+              this.flopsHeatmapInitOver = true;
+              return;
+            }
+            const resData = res.data;
+            const heatmapDataDic = {};
+            const heatmapDataArr = [];
+            resData.forEach((heatmap) => {
+              let arrayIndex;
+              if (heatmapDataDic[heatmap.host_ip] === undefined) {
+                arrayIndex =
+                heatmapDataArr.push({
+                  hostIp: heatmap.host_ip,
+                  data: [],
+                  center: false,
+                }) - 1;
+                heatmapDataDic[heatmap.host_ip] = arrayIndex;
+              } else {
+                arrayIndex = heatmapDataDic[heatmap.host_ip];
+              }
+              // Factor used to avoid JS floating point number question
+              const factor = 100;
+              const index = Math.floor((heatmap.FLOPs_norm * factor) / (this.granularity * factor));
+              heatmapDataArr[arrayIndex].data.push({
+                deviceId: heatmap.device_id,
+                rankId: heatmap.rank_id,
+                flops: heatmap.FLOPs,
+                backgroundColor: this.legendArr[heatmap.FLOPs_norm === 1 ? index - 1 : index].backgroundColor,
+              });
+            });
+            heatmapDataArr.forEach((data) => {
+              if (data.data.length > this.colNum) {
+                data.showCenter = false;
+              }
+            });
+            this.flopsHeatmapDataList = heatmapDataArr;
+
+            this.flopsHeatmapInitOver = true;
+          })
+          .catch(() => {
+            this.flopsHeatmapInitOver = true;
+          });
+    },
+    /**
+     * The logic of get memory heatmap data
+     */
+    getMemoryHeatMapData() {
       const params = {
         train_id: this.trainingJobId,
       };
@@ -228,9 +349,14 @@ export default {
   border-radius: 4px;
   min-height: 284px;
 }
+.cluster-wrap {
+  height: calc(50% - 28px);
+  border-top: 1px solid #e6ebf5;
+}
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item {
   display: flex;
   height: 24px;
+  margin-top: 5px;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item .title-text {
   flex: 1;
@@ -261,7 +387,7 @@ export default {
   cursor: not-allowed;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .content-item {
-  height: calc(100% - 44px);
+  height: calc(100% - 49px);
   margin-top: 20px;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .content-item .dashboard-chart-content {
@@ -285,7 +411,6 @@ export default {
 }
 .legend-content {
   height: 56px;
-  border-bottom: solid 1px #e6ebf5;
   display: flex;
   justify-content: flex-start;
 }
@@ -309,7 +434,7 @@ export default {
   margin-top: 4px;
 }
 .heatmap-content {
-  height: calc(100% - 132px);
+  height: calc(100% - 29px);
   overflow-y: auto;
   display: flex;
   flex-wrap: wrap;

@@ -162,6 +162,10 @@ export default new Router({
       component: () => import('./views/profiling/memory-heatmap.vue'),
     },
     {
+      path: '/flops-heatmap',
+      component: () => import('./views/profiling/flops-heatmap.vue'),
+    },
+    {
       path: '/debugger',
       component: () => import('./views/debugger/debugger.vue'),
     },
