@@ -15,6 +15,18 @@ limitations under the License.
 -->
 <template>
   <div class="cl-profiler-wrap">
+    <div class="flops-info"
+         v-if="hasFlopsInfo">
+      <span :title="$t('operator.flops')">
+        FLOPs{{$t('symbols.colon')}}{{flops.FLOPs===undefined?'--':flops.FLOPs}}M
+      </span>
+      <span :title="$t('operator.flopsS')">
+        FLOPS{{$t('symbols.colon')}}{{flops.FLOPS===undefined?'--':flops.FLOPS}}G/{{$t('header.timeSecond')}}
+      </span>
+      <span :title="$t('operator.flopsUtilizationTitle')">
+        {{$t('operator.flopsUtilization')}}{{flops.FLOPS_Utilization===undefined?'--':flops.FLOPS_Utilization}}%
+      </span>
+    </div>
     <div class="cl-profiler-top"
          :class="{fullScreen:coreFullScreen}"
          v-if="coreCharts.data.length">
@@ -41,7 +53,7 @@ limitations under the License.
       </div>
     </div>
     <div class="cl-profiler-bottom"
-         :class="{fullScreen:coreFullScreen}"
+         :class="{fullScreen:coreFullScreen,flops:hasFlopsInfo}"
          v-if="coreCharts.data.length">
       <img src="../assets/images/full-screen.png"
            :title="$t('graph.fullScreen')"
@@ -311,6 +323,10 @@ export default {
       type: String,
       default: '',
     },
+    hasFlopsInfo: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -353,6 +369,7 @@ export default {
       coreFullScreen: false,
       searchPlaceholder: this.coreSearchOptions[0].placeHolder,
       searchType: this.coreSearchType,
+      flops: {},
     };
   },
   destroyed() {
@@ -365,6 +382,17 @@ export default {
     }
   },
   methods: {
+    getFlopsSummary() {
+      const params = {
+        train_id: this.train_id,
+        device_id: this.currentCard,
+      };
+      requestService.getFlopsSummary(params).then((res) => {
+        if (res && res.data) {
+          this.flops = res.data;
+        }
+      });
+    },
     searchTypeChange() {
       this.coreSearchOptions.forEach((val) => {
         if (val.label === this.searchType) {
@@ -1061,6 +1089,15 @@ export default {
 .cl-profiler-wrap {
   height: 100%;
 }
+.flops-info {
+  line-height: 30px;
+  background: #f1f1f1;
+  margin-bottom: 8px;
+}
+.flops-info span {
+  margin-right: 15px;
+  font-weight: bold;
+}
 .cl-search-box {
   float: right;
   margin-bottom: 10px;
@@ -1090,6 +1127,9 @@ export default {
   height: 53%;
   padding-top: 10px;
 }
+.cl-profiler-bottom.flops {
+  height: calc(53% - 38px);
+}
 .cl-profiler-bottom .fullScreen {
   float: right;
   margin-top: 5px;
@@ -1097,6 +1137,9 @@ export default {
 }
 .cl-profiler-bottom.fullScreen {
   height: 100%;
+}
+.cl-profiler-bottom.fullScreen.flops {
+  height: calc(100% - 38px);
 }
 .cl-profiler-echarts {
   width: 100%;

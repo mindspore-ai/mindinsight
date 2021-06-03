@@ -292,7 +292,11 @@
     "searchByCoreName": "请输入内核名称搜索",
     "searchByCoreFullName": "请输入算子全名搜索",
     "operatorInfo": "算子信息",
-    "kernelInfo": "内核信息"
+    "kernelInfo": "内核信息",
+    "flops": "浮点运算次数",
+    "flopsS": "每秒浮点运算次数",
+    "flopsUtilization": "FLOPS利用率：",
+    "flopsUtilizationTitle": "FLOPS/峰值FLOPS"
   },
   "profiling": {
     "titleText": "性能分析 - 单机",
@@ -554,6 +558,7 @@
     "performanceChartTitle": "性能分析",
     "commChartTitle": "集群通信",
     "memoryHeatMapTitle": "内存热力图分析",
+    "flopsHeatMapTitle": "FLOPs热力图分析",
     "waitCost": "等待时长",
     "commCost": "通信时长",
     "commView": "通信概览",
@@ -570,7 +575,11 @@
     "mainTipPartOne": "该功能以热力图的形式为用户提供集群场景下的内存使用概况，反映了集群内每张训练卡的内存峰值在训练卡最大可用内存中的占比。",
     "mainTipPartTwo": "内存峰值占比 = 内存峰值 / 训练卡最大可用内存值（内存峰值占比最大值为1）",
     "mainTipPartThree": "粒度：代表不同卡的内存峰值占比，在划分对应色值时的粗细程度。",
-    "mainTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几台服务器、每台服务器上使用了几张训练卡。点击某个训练卡可以跳转到该张卡的内存详情页面。"
+    "mainTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几台服务器、每台服务器上使用了几张训练卡。点击某个训练卡可以跳转到该张卡的内存详情页面。",
+    "flopsTipPartOne": "该功能以热力图的形式为用户提供集群场景下的每个设备的FLOPs(浮点运算次数)数据。",
+    "flopsTipPartTwo": "热力图反映了设备之间FLOPs的相对大小，每个设备对应的矩形块颜色代表当前设备FLOPs与所有设备中最大FLOPs的比值。",
+    "flopsTipPartThree": "粒度：代表划分不同设备FLOPs数据对应色值的粗细程度。",
+    "flopsTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几台服务器、每台服务器使用了几个设备。点击某个设备可以跳转到该设备的算子详情页面。"
   },
   "components": {
     "summaryTitle": "训练选择",
@@ -875,7 +884,8 @@
     "stackInfo": "堆栈信息",
     "inputStack": "请输入堆栈信息",
     "search": "搜索",
-    "downloadTip": "文件正在加载，大小约为{fileSize}，请稍候"
+    "downloadTip": "文件正在加载，大小约为{fileSize}，请稍候",
+    "noOfflineGraphData": "计算图加载失败，请检查离线数据再重试"
   },
   "explain": {
     "explain": "模型解释",

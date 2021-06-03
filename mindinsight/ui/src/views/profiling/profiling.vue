@@ -184,7 +184,9 @@ export default {
                     });
                   });
                   if (this.curDashboardInfo.curCardNum === null) {
-                    this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
+                    this.curDashboardInfo.curCardNum = this.$route.query.deviceid
+                  ? this.$route.query.deviceid
+                  : this.CardNumArr[0].value;
                   }
                   this.getDataOfProfileHelper();
                 } else {
@@ -356,12 +358,16 @@ export default {
      */
     backToDdashboard() {
       if (this.$route.query.activeName) {
-        const {dir, id, path, activeName} = this.$route.query;
-        const idTemp = id.split('/cluster_profiler/')[0];
+        let {dir, id, path, activeName, from} = this.$route.query;
         const pathTemp = path.split('/cluster_profiler/')[0];
+        let backPath = '/memory-heatmap';
+        id = id.split('/cluster_profiler/')[0];
+        if (from === 'flops') {
+          backPath = '/flops-heatmap';
+        }
         this.$router.push({
-          path: '/memory-heatmap',
-          query: {dir, id: idTemp, path: pathTemp, activeName},
+          path: backPath,
+          query: {dir, id, path: pathTemp, activeName},
         });
       } else {
         let path = '/profiling/profiling-dashboard';

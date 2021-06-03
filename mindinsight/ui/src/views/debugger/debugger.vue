@@ -794,7 +794,9 @@ limitations under the License.
       <span class="dialog-icon">
         <span class="el-icon-warning"></span>
       </span>
-      <span v-if="initFail"
+      <span v-if="noOfflineGraph"
+            class="dialog-content">{{ $t('debugger.noOfflineGraphData') }}</span>
+      <span v-else-if="initFail"
             class="dialog-content">{{ $t('debugger.debuggerError') }}</span>
       <span v-else
             class="dialog-content">{{ $t('debugger.pendingTips') }}</span>
@@ -1021,6 +1023,7 @@ export default {
         },
         searchContent: '',
       },
+      noOfflineGraph: false,
     };
   },
   components: {debuggerTensor, tree},

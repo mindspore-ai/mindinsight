@@ -29,6 +29,7 @@ limitations under the License.
                          :accuracy="6"
                          :headerFilder="headerFilder"
                          :unit="$t('profiling.gpuunit')"
+                         :hasFlopsInfo="true"
                          ref="core" />
         </el-tab-pane>
         <el-tab-pane label="AI CPU"
@@ -125,10 +126,17 @@ export default {
         op_total_time: 'op_total_time (ms)',
         avg_time: 'avg_time (ms)',
         op_avg_time: 'op_avg_time (ms)',
+        FLOPs: 'FLOPs (M)',
+        FLOPS: 'FLOPS (G/s)',
+        FLOPS_Utilization: 'FLOPS_Utilization (%)',
       },
       hostHeaderFilder: {
-        type_occurrences: `type_occurrences (${this.$t('profiling.countUnit')})`,
-        execution_frequency: `execution_frequency (${this.$t('profiling.countUnit')})`,
+        type_occurrences: `type_occurrences (${this.$t(
+            'profiling.countUnit',
+        )})`,
+        execution_frequency: `execution_frequency (${this.$t(
+            'profiling.countUnit',
+        )})`,
         percent: 'percent (%)',
         avg_execution_time: `avg_execution_time (${this.$t('profiling.unit')})`,
         total_compute_time: 'total_compute_time (ms)',
@@ -224,6 +232,9 @@ export default {
       ref.clearCoreData();
       ref.coreStatisticType = 0;
       ref.getCoreTypeList();
+      if (this.apiType === 'core') {
+        ref.getFlopsSummary();
+      }
     },
     tabChange() {
       const ref = this.$refs[this.apiType];
@@ -270,7 +281,6 @@ export default {
   height: calc(100% - 24px);
   overflow-y: auto;
   width: 100%;
-  background: #fff;
   padding: 0 16px;
   overflow: hidden;
 }

@@ -294,7 +294,11 @@
     "operatorInfo": "Operator",
     "kernelInfo": "Kernel",
     "searchByCoreName": "Enter kernel name",
-    "searchByCoreFullName": "Enter operator full name"
+    "searchByCoreFullName": "Enter operator full name",
+    "flops": "Number of floating point operations",
+    "flopsS": "Number of floating point operations per second",
+    "flopsUtilization": "FLOPS utilization:",
+    "flopsUtilizationTitle": "FLOPS/peak FLOPS"
   },
   "profiling": {
     "titleText": "Profiling - Single-host",
@@ -555,6 +559,7 @@
     "performanceChartTitle": "Performance Analysis",
     "commChartTitle": "Cluster Communication",
     "memoryHeatMapTitle": "Memory Heat Map Analysis",
+    "flopsHeatMapTitle": "FLOPs Heat Map Analysis",
     "waitCost": "Waiting Cost",
     "commCost": "Communication Cost",
     "commView": "Communication View",
@@ -571,7 +576,11 @@
     "mainTipPartOne": "This feature provides the user with an overview of memory usage in the form of a heat map in a cluster scenario. The thermal map reflects the ratio of the peak memory per device in the cluster to the total available memory.",
     "mainTipPartTwo": "Peak Memory Ratio = Memory Peak / Maximum Available Memory of device(The maximum peak memory ratio is 1)",
     "mainTipPartThree": "Granularity: Represents the thickness of the color value corresponding to the memory peak proportion of different cards.",
-    "mainTipPartFour": "You can also view the cluster overview of the training in the UI, such as how many servers were used in the training and how many devices were used on each server. Click on a device to jump to the memory details page of that device."
+    "mainTipPartFour": "You can also view the cluster overview of the training in the UI, such as how many servers were used in the training and how many devices were used on each server. Click on a device to jump to the memory details page of that device.",
+    "flopsTipPartOne": "This function provides users with FLOPs (number of floating point operations) data for each device in a cluster scenario in the form of a heat map.",
+    "flopsTipPartTwo": "The heat map reflects the relative size of FLOPs between devices. The color of the rectangular block corresponding to each device represents the ratio of the FLOPs of the current device to the largest FLOPs of all devices.",
+    "flopsTipPartThree": "Granularity: Represents the thickness of the corresponding color values of the FLOPs data of different devices.",
+    "flopsTipPartFour": "You can also see the cluster overview of this training on the interface, for example, how many servers were used in this training, and how many devices each server used. Click on a device to jump to the counter details page of that device."
   },
   "components": {
     "summaryTitle": "Training Selection",
@@ -874,6 +883,7 @@
     "paramValueTip": "Preset Value: {value}",
     "logicCard": "Logic card",
     "inpStepTip": "Step：0~{total_step_num}"
+
   },
   "explain": {
     "explain": "Model Explanation",

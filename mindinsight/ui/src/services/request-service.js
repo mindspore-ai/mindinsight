@@ -562,4 +562,18 @@ export default {
       url: 'v1/mindinsight/profile/cluster-peak-memory',
     });
   },
+  getFlopsSummary(params) {
+    return axios({
+      method: 'get',
+      params: params,
+      url: 'v1/mindinsight/profile/flops-summary',
+    });
+  },
+  getClusterFlops(params) {
+    return axios({
+      method: 'get',
+      params: params,
+      url: 'v1/mindinsight/profile/cluster-flops',
+    });
+  },
 };
