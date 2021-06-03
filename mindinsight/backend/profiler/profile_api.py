@@ -755,6 +755,80 @@ def get_flops_summary():
     return summary
 
 
+@BLUEPRINT.route("/profile/search-cluster-communication", methods=["POST"])
+def get_cluster_communication_info():
+    """
+    Get cluster communication info.
+
+    Returns:
+        Response, the cluster communication info.
+
+    Raises:
+        ParamValueError: If the search condition contains some errors.
+
+    Examples:
+        >>>POST http://xxx/v1/mindinsight/profile/search-cluster-communication
+    """
+    train_id = get_train_id(request)
+    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
+    try:
+        cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
+    except ValidationError:
+        raise ParamValueError('Invalid cluster_profiler dir')
+
+    condition = request.stream.read()
+    try:
+        condition = json.loads(condition) if condition else {}
+    except (json.JSONDecodeError, ValueError):
+        raise ParamValueError("Json data parse failed.")
+
+    device_id = condition.get("device_id", "0")
+    to_int(device_id, 'device_id')
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'cluster_hccl', cluster_profiler_dir, device_id
+    )
+    communication_info = analyser.query(condition)
+    return jsonify(communication_info)
+
+
+@BLUEPRINT.route("/profile/search-cluster-link", methods=["POST"])
+def get_cluster_link_info():
+    """
+    Get cluster link info.
+
+    Returns:
+        Response, the cluster link info.
+
+    Raises:
+        ParamValueError: If the search condition contains some errors.
+
+    Examples:
+        >>>POST http://xxx/v1/mindinsight/profile/search-cluster-link
+    """
+    train_id = get_train_id(request)
+    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
+    try:
+        cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
+    except ValidationError:
+        raise ParamValueError('Invalid cluster_profiler dir')
+
+    condition = request.stream.read()
+    try:
+        condition = json.loads(condition) if condition else {}
+    except (json.JSONDecodeError, ValueError):
+        raise ParamValueError("Json data parse failed.")
+
+    device_id = condition.get("device_id", "0")
+    to_int(device_id, 'device_id')
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'cluster_hccl', cluster_profiler_dir, device_id
+    )
+    link_info = analyser.get_cluster_link_info(condition)
+    return jsonify(link_info)
+
+
 def init_module(app):
     """
     Init module entry.
