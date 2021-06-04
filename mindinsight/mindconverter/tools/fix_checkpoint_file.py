@@ -39,7 +39,6 @@ class FixCheckPointGenerator(NodeTransformer):
 
     def _extract(self, script_path):
         """Extract info from AST Tree."""
-
         with open(script_path, 'r') as rf:
             tree = ast.parse(rf.read())
 
@@ -62,7 +61,6 @@ class FixCheckPointGenerator(NodeTransformer):
     @staticmethod
     def _extract_init(init_body):
         """Extract init information."""
-
         variable_names = list()
         for block in init_body.body:
             if not isinstance(block, Assign):
@@ -73,7 +71,6 @@ class FixCheckPointGenerator(NodeTransformer):
 
     def _check_data(self, data_1, data_2):
         """Check the shape of two inputs."""
-
         if len(data_1) != len(data_2):
             logger_console.error(
                 f"The construct of {self._source_script_name} and that of {self._target_script_name} ars not matched.")
@@ -81,7 +78,6 @@ class FixCheckPointGenerator(NodeTransformer):
 
     def _generator(self):
         """Generator fixed_mapper."""
-
         main_module_name = list(self._target_variable_mapper.keys())[-1].lower()
         fixed_variable_mapper = dict()
         fixed_module_mapper = dict()
@@ -103,7 +99,6 @@ class FixCheckPointGenerator(NodeTransformer):
 
     def _fixed_variable_mapper_generator(self, source_variable_names, target_variable_names):
         """Generate fixed_variable_mapper."""
-
         self._check_data(source_variable_names, target_variable_names)
 
         fixed_variable_mapper = dict()
@@ -114,7 +109,6 @@ class FixCheckPointGenerator(NodeTransformer):
 
     def fix_ckpt(self, ckpt_path, new_ckpt_path):
         """Fix checkpoint file."""
-
         param_dict = load_checkpoint(ckpt_path)
 
         main_module_name = self._fixed_mapper['main_module_name']
@@ -142,9 +136,31 @@ class FixCheckPointGenerator(NodeTransformer):
         logger_console.info(f'Saved new checkpoint file to {new_ckpt_path}.')
 
 
+def extract_fixed_ckpt_file(ckpt_file_path, py_name):
+    """
+    Extract fixed_ckpt_file.
+
+    Case 1:
+        Only dir_path is set, return dir_path + {py_name}.ckpt
+    Case 2:
+        Name of CheckPoint is set, return ckpt_file_path + .ckpt
+
+    Args:
+        ckpt_file_path (str): ckpt file path.
+        py_name (str): model script name.
+
+    Returns:
+        str, extracted file path.
+    """
+    dir_path = os.path.dirname(ckpt_file_path)
+    file_name = os.path.basename(ckpt_file_path)
+
+    extract_file_path = os.path.join(dir_path, file_name) if file_name else os.path.join(dir_path, py_name)
+    return extract_file_path if extract_file_path.endswith('.ckpt') else extract_file_path + '.ckpt'
+
+
 def source_checker(py_path, ckpt_path):
     """Check source model script and source checkpoint file."""
-
     sys.path.append(os.path.dirname(py_path))
     model = getattr(import_module(os.path.basename(py_path).replace('.py', '')), 'Model')()
     try:
@@ -157,8 +173,7 @@ def source_checker(py_path, ckpt_path):
 
 def file_existed_checker(parser_in, in_file, action_type):
     """Check file exists or not."""
-
-    out_file = os.path.realpath(in_file)
+    out_file = os.path.realpath(in_file) if not in_file.endswith('/') else os.path.realpath(in_file) + '/'
     if not os.path.exists(out_file):
         if action_type == 'in':
             parser_in.error(f"{out_file} does NOT exist, check it.")
@@ -167,11 +182,11 @@ def file_existed_checker(parser_in, in_file, action_type):
     return out_file
 
 
-def file_validation_checker(parser_in, in_file, expected_type):
+def file_validation_checker(parser_in, in_file, expected_type, attribute_name):
     """Check file is valid or not."""
-
     if not in_file.endswith(expected_type):
-        parser_in.error(f"'xxx{expected_type}' is expected, but gotten {os.path.basename(in_file)}.")
+        parser_in.error(
+            f"Param '{attribute_name}' requires 'xxx{expected_type}', but has gotten {os.path.basename(in_file)}.")
 
 
 class ScriptAction(argparse.Action):
@@ -187,9 +202,8 @@ class ScriptAction(argparse.Action):
             values (str): Argument values.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-
         out_file = file_existed_checker(parser_in, values, "in")
-        file_validation_checker(parser_in, out_file, ".py")
+        file_validation_checker(parser_in, out_file, ".py", self.dest)
 
         setattr(namespace, self.dest, out_file)
 
@@ -207,9 +221,8 @@ class InCheckPointAction(argparse.Action):
             values (str): Argument values.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-
         out_file = file_existed_checker(parser_in, values, "in")
-        file_validation_checker(parser_in, out_file, ".ckpt")
+        file_validation_checker(parser_in, out_file, ".ckpt", self.dest)
 
         setattr(namespace, self.dest, out_file)
 
@@ -227,10 +240,7 @@ class OutCheckPointAction(argparse.Action):
             values (str): Argument values.
             option_string (str): Optional string for specific argument name. Default: None.
         """
-
         out_file = file_existed_checker(parser_in, values, "out")
-        file_validation_checker(parser_in, out_file, ".ckpt")
-
         setattr(namespace, self.dest, out_file)
 
 
@@ -248,9 +258,14 @@ parser.add_argument(
     action=ScriptAction,
     help="fixed model script file")
 parser.add_argument(
-    "fixed_ckpt_file",
+    "--fixed_ckpt_file",
     action=OutCheckPointAction,
-    help="fixed checkpoint file")
+    type=str,
+    default=os.path.realpath('.') + '/',
+    help="""
+            Optional, the output path of fixed checkpoint file.
+            Default output file is saved in the current working directory, with the same name as `fixed_py_file`.
+        """)
 
 if __name__ == '__main__':
 
@@ -266,9 +281,11 @@ if __name__ == '__main__':
     fixed_py_file = args.fixed_py_file
     fixed_ckpt_file = args.fixed_ckpt_file
 
+    fixed_ckpt_file = extract_fixed_ckpt_file(fixed_ckpt_file, os.path.basename(fixed_py_file).replace(".py", ""))
+
     if not source_checker(source_py_file, source_ckpt_file):
         logger_console.error("source checkpoint file is not inconsistent with source model script.")
-        exit(0)
+        exit(-1)
 
     fix_checkpoint_generator = FixCheckPointGenerator(source_py_file, fixed_py_file)
     fix_checkpoint_generator.fix_ckpt(source_ckpt_file, fixed_ckpt_file)
