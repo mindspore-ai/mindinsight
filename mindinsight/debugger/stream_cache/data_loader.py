@@ -17,7 +17,8 @@ import json
 from collections import namedtuple
 from pathlib import Path
 
-from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, RankDirNotFound
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, RankDirNotFound, \
+    DebuggerJsonFileParseError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import DumpSettings, is_valid_rank_dir_name
 from mindinsight.domain.graph.proto.ms_graph_pb2 import ModelProto
@@ -56,7 +57,7 @@ class DataLoader:
         try:
             self._net_name = common_settings['net_name']
         except KeyError:
-            raise DebuggerParamValueError('Invalid common_dump_settings data_dump.json file.')
+            raise DebuggerJsonFileParseError()
         if dump_config.get(DumpSettings.E2E_DUMP_SETTINGS.value) and \
                 dump_config[DumpSettings.E2E_DUMP_SETTINGS.value]['enable']:
             self._is_sync = True

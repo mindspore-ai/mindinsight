@@ -45,9 +45,9 @@ class DebuggerOfflineServer(DebuggerServerBase):
 
     def run(self):
         """Start the debugger offline server."""
+        self._running.set()
         log.info("Initialize Offline Debugger Server for dbg_dir: %s", self._context.dbg_dir)
         self._offline_server_manager.initialize()
-        self._running.set()
         log.info("Start Offline Debugger Server for dbg_dir: %s", self._context.dbg_dir)
         try_count = 0
         while self._running.is_set() and try_count < self._MAX_TRY_EXCEPT_COUNT:
