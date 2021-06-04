@@ -1424,7 +1424,10 @@ export default {
                 this.dealGraphData(
                     JSON.parse(JSON.stringify(res.data.graph.nodes)),
                 );
-              } else if (this.trainId) {
+              } else if (
+                res.data.metadata &&
+              res.data.metadata.state === this.state.waiting
+              ) {
                 this.loadingInstance.close();
                 this.noOfflineGraph = true;
                 this.dialogVisible = true;
