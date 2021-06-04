@@ -15,7 +15,7 @@
 """Graph based scripts converter workflow."""
 import os
 import sys
-from typing import List
+from typing import List, Mapping, Dict
 from importlib import import_module
 from importlib.util import find_spec
 from functools import partial
@@ -31,7 +31,7 @@ from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSpo
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import GraphInitError, FileSaveError, \
     BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError, \
-    BadParamError
+    BadParamError, SubGraphSearchingError
 from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
 
 check_common_dependency_integrity = partial(check_dependency_integrity,
@@ -218,6 +218,32 @@ def graph_based_converter_tf_to_ms(graph_path: str,
     graph_obj.build()
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
+    log_console.info("Code saving begins.")
+    code_fragments = generator_inst.generate()
+    save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
+    log_console.info("Code saving is finished.")
+    # Release global context.
+    GlobalContext.release()
+
+
+@FileSaveError.uniform_catcher()
+@GeneratorError.uniform_catcher()
+@SubGraphSearchingError.uniform_catcher()
+def convert_according_to_user_selections(graph_obj, output_folder: str, report_folder: str = None,
+                                         user_operations: Mapping[str, Dict] = None):
+    """
+    ONNX to MindSpore based on Graph.
+
+    Args:
+        graph_obj (OnnxGraph): Onnx graph object.
+        output_folder (str): Output folder.
+        report_folder (str): Report output folder path.
+        user_operations (dict): Record user's operations.
+    """
+    graph_obj.generate_scope_name(user_operations)
+    graph_obj.build()
+    generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
+    model_name = _extract_model_name(graph_obj.model_path)
     log_console.info("Code saving begins.")
     code_fragments = generator_inst.generate()
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)

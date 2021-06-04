@@ -14,10 +14,12 @@
 # ==============================================================================
 """Define ONNX graph."""
 from importlib import import_module
-from typing import Dict, NoReturn
+from typing import Dict, NoReturn, Mapping
 
 from mindinsight.mindconverter.common.exceptions import ModelLoadingError
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
+from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.scope_name_rebuilder import \
+    rebuild_name_scope_according_to_user_selections
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.input_node import InputNode
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph_node import OnnxGraphNode
@@ -50,6 +52,7 @@ class OnnxGraph(Graph):
                                          self.model_path,
                                          input_nodes=self._raw_input_nodes,
                                          output_nodes=self._raw_output_nodes)
+        self._scope_names = None
 
     @staticmethod
     def _extract_shape(shape):
@@ -98,14 +101,30 @@ class OnnxGraph(Graph):
         if src not in self._nodes_collection[tgt].precursor_nodes:
             self._nodes_collection[tgt].precursor_nodes.append(src)
 
+    def generate_scope_name(self, user_operations: Mapping[str, Dict] = None):
+        """
+        Generate scope names according to user operations or auto-merging.
+
+        Args:
+            user_operations (dict): User selections on ui.
+        """
+        if user_operations:
+            self._scope_names = rebuild_name_scope_according_to_user_selections(self.dataloader, user_operations)
+        else:
+            self._scope_names = generate_scope_name(self.dataloader)
+
     def build(self):
         """Build graph tree."""
-        scope_name_list = generate_scope_name(self.dataloader)
+        if self._scope_names is None:
+            self.generate_scope_name()
 
         self._shape_dict = self.dataloader.node_output_shape_dict
         for ind, (node_name, node) in enumerate(self.dataloader.nodes_dict.items()):
             node_weights = list()
-            node.scope_name = scope_name_list[ind]
+            if isinstance(self._scope_names, dict):
+                node.scope_name = self._scope_names[node_name]
+            else:
+                node.scope_name = self._scope_names[ind]
             inputs = node.input_name_list
             # check each input from node or tensors
             for idx, i in enumerate(inputs):

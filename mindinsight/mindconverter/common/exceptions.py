@@ -455,6 +455,7 @@ class SubGraphSearchingError(MindConverterException):
         BASE_ERROR = 0
         PATTERN_REG_CONFLICT_ERROR = 1
         PATTERN_INVALID_ERROR = 2
+        MODULE_NAME_INVALID_ERROR = 3
 
     BASE_ERROR_CODE = ConverterErrors.SUB_GRAPH_SEARCHING_FAIL.value
     ERROR_CODE = ErrCode.BASE_ERROR.value
@@ -493,6 +494,19 @@ class PatternInvalidError(SubGraphSearchingError):
     def raise_from(cls):
         """Define exception in sub-graph searching module."""
         return KeyError, ValueError, cls
+
+
+class ModuleNameDefineError(SubGraphSearchingError):
+    """Registered module name is invalid."""
+    ERROR_CODE = SubGraphSearchingError.ErrCode.MODULE_NAME_INVALID_ERROR.value
+
+    def __init__(self, msg):
+        super(ModuleNameDefineError, self).__init__(msg=msg)
+
+    @classmethod
+    def raise_from(cls):
+        """It will be raised when user-define module name is invalid."""
+        return cls
 
 
 class GeneratorError(MindConverterException):
