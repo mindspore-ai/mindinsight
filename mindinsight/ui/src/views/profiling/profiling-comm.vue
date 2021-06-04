@@ -233,7 +233,7 @@ limitations under the License.
             </el-option>
           </el-select>
         </div>
-        <div class="dialog-content">
+        <div class="dialog-content" :style="{height: linkInfo.tableHeight}">
           <!-- Link Diglog -->
           <el-table :data="linkInfo.tableData" height="100%">
             <!-- Column 1 / src_dst -->
@@ -370,6 +370,7 @@ export default {
         linkTypes: [this.$t('public.all')],
         tableData: [],
         totalData: [],
+        tableHeight: '0px',
       }, // Link info dialog data
       linkTableProps: [
         {
@@ -726,7 +727,6 @@ export default {
      * @param {Object} row
      */
     showLinkInfo(row) {
-      this.linkInfo.visible = true;
       const tableData = [];
       const types = [this.$t('public.all')];
       Object.keys(row.info).forEach((range) => {
@@ -744,7 +744,9 @@ export default {
       });
       this.linkInfo.linkTypes = types;
       this.linkInfo.totalData = tableData;
+      this.linkInfo.filterType = types[0];
       this.filterLinkInfo();
+      this.linkInfo.visible = true;
     },
     /**
      * The logic of filter total link info
@@ -752,11 +754,13 @@ export default {
     filterLinkInfo() {
       if (this.linkInfo.filterType === this.$t('public.all')) {
         this.linkInfo.tableData = this.linkInfo.totalData;
-        return;
+      } else {
+        this.linkInfo.tableData = this.linkInfo.totalData.filter((data) => {
+          return data.link_type === this.linkInfo.filterType;
+        });
       }
-      this.linkInfo.tableData = this.linkInfo.totalData.filter((data) => {
-        return data.link_type === this.linkInfo.filterType;
-      });
+      const tableHeight = (this.linkInfo.tableData.length + 1) * 42; // 42: The table default line-height in 'px'
+      this.linkInfo.tableHeight = `${tableHeight > 600 ? 600 : tableHeight}px`; // 600: The table max-height in 'px'
     },
     /**
      * Current page change
