@@ -44,6 +44,11 @@ class EventListenerStub(object):
                 request_serializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.Chunk.SerializeToString,
                 response_deserializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.FromString,
                 )
+        self.SendHeartbeat = channel.unary_unary(
+                '/debugger.EventListener/SendHeartbeat',
+                request_serializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.Heartbeat.SerializeToString,
+                response_deserializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.FromString,
+                )
 
 
 class EventListenerServicer(object):
@@ -85,6 +90,12 @@ class EventListenerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendHeartbeat(self, request, context):
+        """Missing associated documentation comment in .proto file"""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_EventListenerServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -116,6 +127,11 @@ def add_EventListenerServicer_to_server(servicer, server):
             'SendMultiGraphs': grpc.stream_unary_rpc_method_handler(
                     servicer.SendMultiGraphs,
                     request_deserializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.Chunk.FromString,
+                    response_serializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.SerializeToString,
+            ),
+            'SendHeartbeat': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendHeartbeat,
+                    request_deserializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.Heartbeat.FromString,
                     response_serializer=mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.SerializeToString,
             ),
     }
@@ -220,6 +236,22 @@ class EventListener(object):
             metadata=None):
         return grpc.experimental.stream_unary(request_iterator, target, '/debugger.EventListener/SendMultiGraphs',
             mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.Chunk.SerializeToString,
+            mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.FromString,
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SendHeartbeat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/debugger.EventListener/SendHeartbeat',
+            mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.Heartbeat.SerializeToString,
             mindinsight_dot_debugger_dot_proto_dot_debug__grpc__pb2.EventReply.FromString,
             options, channel_credentials,
             call_credentials, compression, wait_for_ready, timeout, metadata)

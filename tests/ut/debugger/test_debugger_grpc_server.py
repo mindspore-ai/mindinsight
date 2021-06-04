@@ -24,12 +24,11 @@ from unittest.mock import MagicMock
 import numpy as np
 
 from mindinsight.debugger.common.utils import get_ack_reply, ServerStatus
-from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_services.debugger_grpc_server import DebuggerGrpcServer
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply, SetCMD, Chunk, WatchpointHit
 from mindinsight.debugger.stream_handler import WatchpointHitHandler, GraphHandler, \
-    WatchpointHandler
+    WatchpointHandler, MultiCardGraphHandler
 from mindinsight.domain.graph.proto.ms_graph_pb2 import TensorProto, DataType
 from tests.ut.debugger.configurations import GRAPH_PROTO_FILE
 
@@ -118,13 +117,14 @@ class TestDebuggerGrpcServer:
     def setup_method(self):
         """Initialize for each testcase."""
         cache_store = DebuggerCache()
-        self._server = DebuggerGrpcServer(cache_store, condition_mgr=ConditionMgr())
+        self._server = DebuggerGrpcServer(cache_store)
 
     def test_waitcmd_with_pending_status(self):
         """Test wait command interface when status is pending."""
         res = self._server.WaitCMD(MagicMock(), MagicMock())
         assert res.status == EventReply.Status.FAILED
 
+    @mock.patch.object(MultiCardGraphHandler, 'get_graph_handler_by_rank_id')
     @mock.patch.object(WatchpointHitHandler, 'empty', False)
     @mock.patch.object(WatchpointHitHandler, 'put')
     @mock.patch.object(DebuggerGrpcServer, '_deal_with_old_command')
@@ -138,6 +138,7 @@ class TestDebuggerGrpcServer:
         res = self._server.WaitCMD(MagicMock(cur_step=1, cur_node=''), MagicMock())
         assert res == old_command
 
+    @mock.patch.object(MultiCardGraphHandler, 'get_graph_handler_by_rank_id')
     @mock.patch.object(DebuggerGrpcServer, '_deal_with_old_command', return_value=None)
     @mock.patch.object(DebuggerGrpcServer, '_wait_for_next_command')
     def test_waitcmd_with_next_command(self, *args):
@@ -148,10 +149,12 @@ class TestDebuggerGrpcServer:
         res = self._server.WaitCMD(MagicMock(cur_step=1, cur_node=''), MagicMock())
         assert res == old_command
 
+    @mock.patch.object(MultiCardGraphHandler, 'get_graph_handler_by_rank_id')
     @mock.patch.object(DebuggerGrpcServer, '_deal_with_old_command', return_value=None)
     @mock.patch.object(DebuggerGrpcServer, '_wait_for_next_command')
     def test_waitcmd_with_next_command_is_none(self, *args):
         """Test wait command interface with next command is None."""
+        args[2].return_value.get.return_value = {}
         args[0].return_value = None
         setattr(self._server, '_status', ServerStatus.RECEIVE_GRAPH)
         res = self._server.WaitCMD(MagicMock(cur_step=1, cur_node=''), MagicMock())
@@ -238,6 +241,7 @@ class TestDebuggerGrpcServer:
         res = self._server.SendTensors(MockDataGenerator.get_tensors(), MagicMock())
         assert res == get_ack_reply()
 
+    @mock.patch.object(MultiCardGraphHandler, 'get_graph_handler_by_rank_id')
     @mock.patch.object(WatchpointHandler, 'get_watchpoint_by_id')
     @mock.patch.object(GraphHandler, 'get_graph_id_by_full_name', return_value='mock_graph_name')
     @mock.patch.object(GraphHandler, 'get_node_name_by_full_name')

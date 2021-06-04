@@ -25,7 +25,7 @@ import pytest
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.proto.debug_grpc_pb2 import RunCMD
-from mindinsight.debugger.stream_handler import GraphHandler, MetadataHandler
+from mindinsight.debugger.stream_handler import GraphHandler, MetadataHandler, MultiCardGraphHandler
 from mindinsight.debugger.stream_operator.training_control_operator import TrainingControlOperator
 
 
@@ -43,6 +43,7 @@ class TestTrainingControlOperator:
         cache_store.initialize()
         self._server = TrainingControlOperator(cache_store)
 
+    @mock.patch.object(MultiCardGraphHandler, 'get_graph_handler_by_rank_id')
     @mock.patch.object(GraphHandler, 'get_node_type')
     def test_validate_leaf_name(self, *args):
         """Test validate leaf name."""

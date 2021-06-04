@@ -17,8 +17,10 @@ import copy
 import os
 import struct
 import tempfile
+import threading
 import time
 from functools import wraps
+from queue import Queue, Full, Empty
 
 import numpy as np
 
@@ -27,6 +29,7 @@ from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import MAX_SINGLE_TENSOR_CACHE, get_ack_reply, ServerStatus, \
     Streams, RunLevel, version_match, NUMPY_TYPE_MAP
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum, ParamNameEnum
+from mindinsight.debugger.debugger_services.debugger_server_base import debugger_server_wrap
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.domain.graph.proto.ms_graph_pb2 import GraphProto, DataType
 
@@ -48,7 +51,7 @@ def debugger_wrap(func):
 class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     """The grpc server used to interactive with grpc client."""
 
-    def __init__(self, cache_store, condition_mgr):
+    def __init__(self, cache_store):
         """
         Initialize.
 
@@ -57,7 +60,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """
         cache_store.initialize()
         self._cache_store = cache_store
-        self._condition_mgr = condition_mgr
         # the next position of command queue to be queried
         self._pos = None
         # the status of grpc server, the value is in ServerStatus
@@ -68,6 +70,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._received_view_cmd = None
         # the flag of receiving watch point hit
         self._received_hit = None
+        self._heartbeat = None
         self.init()
 
     def init(self):
@@ -77,6 +80,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._old_run_cmd = {}
         self._received_view_cmd = {}
         self._received_hit = []
+        if self._heartbeat is not None:
+            self._heartbeat.stop()
+        self._heartbeat = None
         self._cache_store.clean()
 
     @debugger_wrap
@@ -409,7 +415,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         graph = GraphProto.FromString(serial_graph)
         log.debug("Deserialize the graph %s. Receive %s nodes", graph.name, len(graph.node))
         graph_dict = {graph.name: graph}
-        self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0).put(graph_dict)
+        self._cache_store.get_stream_handler(Streams.GRAPH).put({0: graph_dict})
         self._cache_store.get_stream_handler(Streams.GRAPH).parse_stack_infos()
         self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0).put_const_vals(
             graph.const_vals)
@@ -440,7 +446,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                 self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0).put_const_vals(
                     sub_graph.const_vals)
 
-        self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0).put(graph_dict)
+        self._cache_store.get_stream_handler(Streams.GRAPH).put({0: graph_dict})
         self._cache_store.get_stream_handler(Streams.GRAPH).parse_stack_infos()
         self._record_parameter_names()
         self._status = ServerStatus.RECEIVE_GRAPH
@@ -599,3 +605,71 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         self._received_hit = watchpoint_hits
         reply = get_ack_reply()
         return reply
+
+    def SendHeartbeat(self, request, context):
+        """Deal with heartbeat sent from training client."""
+        # only support single card training now
+        if self._heartbeat is None or not self._heartbeat.is_alive():
+            period = request.period
+            min_period_seconds = 5
+            max_period_seconds = 3600
+            if min_period_seconds <= period <= max_period_seconds:
+                log.error("Invalid period time which should be in [5, 3600].")
+                return get_ack_reply(-1)
+            self._heartbeat = HeartbeatListener(self._cache_store, request.period)
+            self._heartbeat.start()
+        self._heartbeat.send()
+        return get_ack_reply()
+
+
+class HeartbeatListener(threading.Thread):
+    """Heartbeat listener."""
+
+    def __init__(self, cache_store, period=None):
+        """
+        Initialize Heartbeat listener object.
+
+        Args:
+            cache_store (DebuggerCacheStore): Cache store for debugger server.
+            period (int): The max waiting seconds for each period.
+        """
+        super(HeartbeatListener, self).__init__()
+        self._heartbeat_queue = Queue(maxsize=1)
+        self._cache_store = cache_store
+        # the waiting period time for next heartbeat, default waiting for 15 seconds
+        self._period = period if period else 15
+        self._running = threading.Event()
+        self._running.clear()
+
+    @debugger_server_wrap
+    def run(self):
+        """Function that should be called when thread started."""
+        self._running.set()
+        log.info("Start listening for heartbeat.")
+        while self._running.is_set():
+            try:
+                self._heartbeat_queue.get(timeout=self._period)
+            except Empty:
+                log.warning("Missing heartbeat.")
+                break
+        self._cache_store.clean()
+        metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
+        # put metadata into data queue
+        metadata = metadata_stream.get()
+        self._cache_store.put_data(metadata)
+
+    def send(self):
+        """Send heartbeat signal."""
+        try:
+            self._heartbeat_queue.put(True, block=False)
+        except Full:
+            log.debug("Too many heartbeat received.")
+
+    @debugger_server_wrap
+    def stop(self):
+        """Stop debugger server."""
+        self._running.wait()
+        log.info("Start to stop offline debugger server.")
+        self._running.clear()
+        self.send()
+        self.join()

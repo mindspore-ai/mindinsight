@@ -47,7 +47,7 @@ class DebuggerOnlineServer(DebuggerServerBase):
         """Get grpc server instance according to hostname."""
         if self._context.hostname is None:
             self._context.hostname = get_debugger_hostname()
-        grpc_server = DebuggerGrpcServer(self._cache_store, None)
+        grpc_server = DebuggerGrpcServer(self._cache_store)
         grpc_server_manager = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         grpc_server_base.add_EventListenerServicer_to_server(grpc_server, grpc_server_manager)
         grpc_server_manager.add_insecure_port(self._context.hostname)

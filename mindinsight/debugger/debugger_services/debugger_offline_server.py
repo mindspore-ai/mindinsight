@@ -212,7 +212,7 @@ class DebuggerOfflineManager:
             return
         self._metadata_stream.state = ServerStatus.WAITING.value
         metadata = self._metadata_stream.get()
-        res = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0).get()
+        res = self._cache_store.get_stream_handler(Streams.GRAPH).get()
         res.update(metadata)
         self._cache_store.put_data(res)
 
