@@ -289,3 +289,14 @@ class RankDirNotFound(MindInsightException):
             message=DebuggerErrorMsg.DEBUGGER_RANK_DIR_NOT_FOUND.value.format(msg),
             http_code=400
         )
+
+
+class DebuggerJsonFileParseError(MindInsightException):
+    """The error of that failed to parse the debugger json files."""
+
+    def __init__(self):
+        super(DebuggerJsonFileParseError, self).__init__(
+            error=DebuggerErrors.DEBUGGER_JSON_FILE_PARSE_ERROR,
+            message=DebuggerErrorMsg.DEBUGGER_JSON_FILE_PARSE_ERROR.value,
+            http_code=400
+        )

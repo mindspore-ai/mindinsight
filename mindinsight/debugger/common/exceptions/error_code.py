@@ -56,6 +56,7 @@ class DebuggerErrors(DebuggerErrorCodes):
     DEBUGGER_DOWNLOAD_OVER_QUEUE = 3 | _DEBUGGER_SESSION_ERROR
     DEBUGGER_DOWNLOAD_TENSOR_NOT_EXIST = 4 | _DEBUGGER_SESSION_ERROR
     DEBUGGER_RANK_DIR_NOT_FOUND = 5 | _DEBUGGER_SESSION_ERROR
+    DEBUGGER_JSON_FILE_PARSE_ERROR = 6 | _DEBUGGER_SESSION_ERROR
 
 
 @unique
@@ -87,3 +88,4 @@ class DebuggerErrorMsg(Enum):
     DEBUGGER_DOWNLOAD_OVER_QUEUE = "There is already a tensor in download"
     DEBUGGER_DOWNLOAD_TENSOR_NOT_EXIST = "No such tensor to download"
     DEBUGGER_RANK_DIR_NOT_FOUND = "No rank directory found under {}."
+    DEBUGGER_JSON_FILE_PARSE_ERROR = "Failed to parse the json files."
