@@ -18,7 +18,7 @@ limitations under the License.
   <div class="cl-comm">
     <div class="comm-title">
       <div class="first-level">
-        {{ $t('profilingCluster.commTitle') }}
+        {{ $t('profilingCluster.clusterCommView') }}
       </div>
       <div class="second-level">
         {{
@@ -32,7 +32,7 @@ limitations under the License.
 
     <el-tabs v-model="tab" @tab-click="handleTabClick">
       <el-tab-pane
-        :label="$t('profilingCluster.commView')"
+        :label="$t('profilingCluster.commPerformance')"
         :name="tabNames[0]"
       ></el-tab-pane>
       <el-tab-pane
