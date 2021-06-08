@@ -28,20 +28,22 @@ User may need to change module name or variable name in order to improve the rea
 ### Usage
 
 ```bash
-usage: fix_checkpoint_file.py [-h]
+usage: fix_checkpoint_file.py [-h] [--fixed_ckpt_file FIXED_CKPT_FILE]
                               source_py_file source_ckpt_file fixed_py_file
-                              fixed_ckpt_file
 
 Fix weight name in CheckPoint file.
 
 positional arguments:
-  source_py_file    source model script file
-  source_ckpt_file  source_checkpoint file
-  fixed_py_file     fixed model script file  
-  fixed_ckpt_file   fixed_checkpoint file
+  source_py_file        source model script file
+  source_ckpt_file      source_checkpoint file
+  fixed_py_file         fixed model script file  
 
 optional arguments:
-  -h, --help        show this help message and exit
+  -h, --help            show this help message and exit
+  --fixed_ckpt_file FIXED_CKPT_FILE
+                        Optional, the output path of fixed checkpoint file.
+                        Default output file is saved in the current working
+                        directory, with the same name as `fixed_py_file`.
 ```
 
 ### Example
@@ -51,7 +53,7 @@ Assuming that the source model script file is `xxx/model.py`, the source checkpo
 The command is that:
 
 ```bash
-python -m mindinsight.mindconverter.tools.fix_checkpoint_file xxx/model.py xxx/model.ckpt xxx/fixed_model.py xxx/fixed_model.ckpt
+python -m mindinsight.mindconverter.tools.fix_checkpoint_file xxx/model.py xxx/model.ckpt xxx/fixed_model.py --fixed_ckpt_file xxx/fixed_model
 ```
 
 If generation is successful, the result below would be shown:
