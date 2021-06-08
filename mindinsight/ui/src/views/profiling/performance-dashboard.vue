@@ -79,7 +79,7 @@ export default {
           this.$t('profiling.fpBpTime'),
           this.$t('profiling.tailTime'),
         ],
-        title: this.$t('profilingCluster.performanceChartTitle'),
+        title: this.$t('profilingCluster.stepChartTitle'),
       }, // Chart object of performance window
       commState: LOADING_DATA,
       commChart: {

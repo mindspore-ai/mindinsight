@@ -18,7 +18,7 @@ limitations under the License.
   <div class="cl-cluster">
     <div class="cl-cluster-bk">
       <div class="cl-cluster-title">
-        <div class="cl-cluster-title-left">{{$t("profilingCluster.titleText")}}</div>
+        <div class="cl-cluster-title-left">{{$t("profilingCluster.clusterStepView")}}</div>
         <div class="path-message">
         <span>{{$t('symbols.leftbracket')}}</span>
         <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
@@ -42,7 +42,7 @@ limitations under the License.
                   width="100%"
                   ref="table"
                   stripe
-                  @sort-change="tabeSortChange">
+                  @sort-change="tableSortChange">
           <el-table-column width="120"
                            prop="rank_id"
                            :label="$t('profilingCluster.rankID')">
@@ -117,7 +117,8 @@ export default {
     return {
       trainInfo: {
         id: this.$route.query.id,
-        path: this.$route.query.path,
+        // The parameter incoming has been encode, so use decode here
+        path: decodeURIComponent(this.$route.query.path),
         dir: this.$route.query.dir,
       },
       activeName: this.$route.query.activeName,
@@ -417,7 +418,7 @@ export default {
      *  table sort change
      *  @param {Object} column current column
      */
-    tabeSortChange(column) {
+    tableSortChange(column) {
       this.sort_condition = {
         name: column.prop,
         type: column.order,
