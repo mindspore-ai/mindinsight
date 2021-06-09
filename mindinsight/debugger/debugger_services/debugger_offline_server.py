@@ -328,7 +328,10 @@ class DebuggerOfflineManager:
                 has_update = tensor_stream.put(value)
                 if value.get('load'):
                     metadata = self._metadata_stream.get(['step', 'state'])
-                    ret = {'tensor_file': True}
+                    ret = {
+                        'tensor_file': True,
+                        'tensor_name': load_info.get('tensor_name')
+                    }
                     ret.update(metadata)
                     self._cache_store.put_data(ret)
 

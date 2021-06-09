@@ -530,7 +530,10 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         }
         tensor_stream.download_mgr.add(file_name, file_path, temp_dir, **tensor_info)
         metadata = self._cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
-        ret = {'tensor_file': True}
+        ret = {
+            'tensor_file': True,
+            'tensor_name': tensor_info.get("tensor_name")
+        }
         ret.update(metadata)
         self._cache_store.put_data(ret)
 

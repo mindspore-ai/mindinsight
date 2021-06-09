@@ -623,7 +623,7 @@ class TensorHandler(StreamHandlerBase):
         """Add tensors which hold tensor values."""
         self._hold_value[(tensor_name, step)] = True
         # if the current step > 1, the last step will be also recorded
-        if step - 1 > 0:
+        if step - 1 >= 0:
             self._hold_value[(tensor_name, step - 1)] = True
 
     @staticmethod
