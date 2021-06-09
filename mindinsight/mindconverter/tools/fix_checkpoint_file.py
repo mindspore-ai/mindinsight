@@ -73,7 +73,7 @@ class FixCheckPointGenerator(NodeTransformer):
         """Check the shape of two inputs."""
         if len(data_1) != len(data_2):
             logger_console.error(
-                f"The construct of {self._source_script_name} and that of {self._target_script_name} ars not matched.")
+                f"The construct of {self._source_script_name} and that of {self._target_script_name} are not matched.")
             exit(0)
 
     def _generator(self):
