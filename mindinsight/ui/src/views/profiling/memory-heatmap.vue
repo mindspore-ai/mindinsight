@@ -88,7 +88,7 @@ limitations under the License.
                     {{$t('profilingCluster.rankID') + $t('symbols.colon') + deviceItem.rankId}}
                     <br>
                     {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem.toFixed(3)
-                     + $t('unit.KiB')}}
+                     + $t('unit.GiB')}}
                     <br>
                     {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
                      + $t('unit.GiB')}}
@@ -211,14 +211,13 @@ export default {
                 arrayIndex = heatmapDataMap[data.host_ip];
               }
               const deviceId = data.device_id;
-              const factorFromGiBToKiB = 1024 * 1024; // 1024: Transform GiB to KiB
-              const capacityInKiB = data.capacity * factorFromGiBToKiB;
+              const capacity = data.capacity;
               heatmapDataArr[arrayIndex].data[deviceId] = {
                 deviceId,
                 rankId: data.rank_id,
                 peakMem: data.peak_mem,
-                capacity: data.capacity,
-                peakRatio: data.peak_mem / capacityInKiB,
+                capacity,
+                peakRatio: data.peak_mem / capacity,
                 background: '',
               };
             });
@@ -335,13 +334,11 @@ export default {
      * Change Color
      */
     changeBackground() {
-      // Factor used to avoid JS floating point number question
-      const factor = 1000000;
       const maxPeakRatio = 1;
       this.memoryHeatmapDataList.forEach((data) => {
         data.data.forEach((item) => {
           if (item.peakRatio !== maxPeakRatio) {
-            const colorIndex = Math.floor((item.peakRatio * factor) / (+this.granuLarity * factor));
+            const colorIndex = Math.floor((item.peakRatio) / (+this.granuLarity));
             item.background = this.colorArr[colorIndex].background;
           } else {
             item.background = this.colorArr[this.colorArr.length - 1].background;
