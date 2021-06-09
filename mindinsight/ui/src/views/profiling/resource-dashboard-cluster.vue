@@ -70,7 +70,7 @@ limitations under the License.
                             {{$t('profilingCluster.rankID') + $t('symbols.colon') + deviceItem.rankId}}
                             <br>
                             {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem.toFixed(3)
-                          + $t('unit.KiB')}}
+                          + $t('unit.GiB')}}
                             <br>
                             {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
                           + $t('unit.GiB')}}
@@ -262,7 +262,10 @@ export default {
               }
             });
             this.flopsHeatmapDataList = heatmapDataArr;
-
+            this.flopsHeatmapDataList =
+            this.flopsHeatmapDataList.length > this.colNum
+              ? this.flopsHeatmapDataList.slice(0, this.colNum)
+              : this.flopsHeatmapDataList;
             this.flopsHeatmapInitOver = true;
           })
           .catch(() => {
@@ -299,19 +302,14 @@ export default {
                 // Exist host_ip
                 arrayIndex = heatmapDataMap[data.host_ip];
               }
-              // Factor used to avoid JS floating point number question
-              const factor = 1000000;
-              const factorFromGiBToKiB = 1024 * 1024;
-              const capacityInKiB = data.capacity * factorFromGiBToKiB;
-              const index = Math.floor(
-                  ((data.peak_mem / capacityInKiB) * factor) / (this.granularity * factor),
-              ); // 1024: Transform GiB to KiB
+              const capacity = data.capacity;
+              const index = Math.floor(((data.peak_mem / capacity)) / (this.granularity));
               const deviceId = data.device_id;
               heatmapDataArr[arrayIndex].data[deviceId] = {
                 deviceId,
                 rankId: data.rank_id,
                 peakMem: data.peak_mem,
-                capacity: data.capacity,
+                capacity,
                 backgroundColor: this.legendArr[index]
                   ? this.legendArr[index].backgroundColor
                   : this.legendArr.slice(-1).backgroundColor,
@@ -327,6 +325,10 @@ export default {
               }
             });
             this.memoryHeatmapDataList = heatmapDataArr;
+            this.memoryHeatmapDataList =
+            this.memoryHeatmapDataList.length > this.colNum
+              ? this.memoryHeatmapDataList.slice(0, this.colNum)
+              : this.memoryHeatmapDataList;
             this.memoryHeatmapInitOver = true;
           })
           .catch(() => {
