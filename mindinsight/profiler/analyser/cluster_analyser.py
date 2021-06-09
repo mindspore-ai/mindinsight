@@ -383,7 +383,7 @@ class ClusterHcclAnalyser(ClusterAnalyser):
 
     def get_cluster_link_info(self, condition=None):
         """Get cluster link info."""
-        self._col_names = ["src_dst", "link_type", "communication_cost", "communication_size", "brand_width"]
+        self._col_names = ["src_dst", "link_type", "communication_cost", "communication_size", "band_width"]
         if condition is None:
             condition = {}
         filter_condition = condition.get('filter_condition', {})
@@ -429,17 +429,18 @@ class ClusterHcclAnalyser(ClusterAnalyser):
 
     def _filter_cluster_link_info(self, filter_condition):
         """Filter cluster link info."""
-        src_rank = filter_condition.get("src_rank", ".")
-        dst_rank = filter_condition.get("dst_rank", ".")
+        src_rank = filter_condition.get("src_rank", ".*")
+        dst_rank = filter_condition.get("dst_rank", ".*")
         src_dst = src_rank + '-' + dst_rank
+        src_dst_regex = '^' + src_dst + '$'
         link_type = filter_condition.get("link_type", ".")
-        if src_rank == "." and dst_rank == "." and link_type == ".":
+        if src_rank == ".*" and dst_rank == ".*" and link_type == ".":
             self._cluster_link_info_size = len(self._result)
             return
 
         def _inner_filter(item: list):
             # index0:src_dst_rank_id, index1:link type
-            src_dst_pattern = re.match(src_dst, item[0])
+            src_dst_pattern = re.match(src_dst_regex, item[0])
             link_type_pattern = re.match(link_type, item[1])
             if src_dst_pattern and link_type_pattern:
                 return True
