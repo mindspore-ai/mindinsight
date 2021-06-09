@@ -468,7 +468,7 @@ limitations under the License.
                      @click="getNodeByBfs(false)">
             {{ $t('debugger.previousNode')}}
           </el-button>
-          <el-button v-if="version==='GPU'"
+          <el-button v-if="version==='GPU' && !trainId"
                      type="primary"
                      size="mini"
                      class="custom-btn green"
@@ -484,7 +484,7 @@ limitations under the License.
                      @click="getNodeByBfs(true)">
             {{ $t('debugger.nextNode')}}
           </el-button>
-          <el-button v-if="version==='GPU'"
+          <el-button v-if="version==='GPU' && !trainId"
                      type="primary"
                      size="mini"
                      class="custom-btn white"
