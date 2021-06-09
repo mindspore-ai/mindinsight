@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
+# Copyright 2021 Huawei Technologies Co., Ltd.All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ class MatMulMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "nn.MatMul"
+        return "P.matmul"
 
     @staticmethod
     def _convert_params(**kwargs):
@@ -51,14 +51,14 @@ class MatMulMapper(ONNXToMindSporeMapper):
 
         w_location = MatMulMapper._find_location_by_index(0, weights)
 
-        init_template_list = [f"self.{{{variable_slot}}} = {op}()"]
+        init_template_list = list()
         inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
         if w_location != -1:
             # Note: adding weight shape to args is now deprecated due to conflict of partial weights share processing.
             variable_slot_param_name = f"{variable_slot}/w"
             init_template_list.append(f"self.{{{variable_slot}}}_w = {{{variable_slot_param_name}}}")
             inputs_in_construct.insert(w_location, f"self.{{{variable_slot}}}_w")
-        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}({', '.join(inputs_in_construct)})"
+        construct_template = f"opt_{{{variable_slot}}} = {op}({', '.join(inputs_in_construct)})"
 
         template = {
             variable_slot: {
