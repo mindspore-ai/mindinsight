@@ -24,7 +24,7 @@
   "onnx::LSTM": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.lstm_mapper.LSTMMapper",
   "onnx::LeakyRelu": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.leaky_relu_mapper.LeakyReLUMapper",
   "onnx::Log": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.log_mapper.LogMapper",
-  "onnx::MatMul": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.mat_mul_mapper.MatMulMapper",
+  "onnx::MatMul": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.mat_mul_mapper.MatMulMapper",
   "onnx::MaxPool": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.pool_mapper.PoolMapper",
   "onnx::Mul": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.mul_mapper.MulMapper",
   "onnx::Neg": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.neg_mapper.NegMapper",
