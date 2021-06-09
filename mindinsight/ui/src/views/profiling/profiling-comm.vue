@@ -503,10 +503,10 @@ export default {
      *  @param {number} val
      */
     linkTableSizeChange(val) {
-      this.linkTable.pageCondition.page = 1;
       const params = this.linkTable.params;
+      this.linkTable.pageCondition.page = 1;
       params.body.group_condition.offset = 0;
-      params.body.group_condition.limit = val;
+      params.body.group_condition.limit = this.linkTable.pageCondition.limit = val;
       this.useLinkTable(params);
     },
     /**
@@ -590,6 +590,7 @@ export default {
           }
           this.linkTable.tableData = tableData;
         } else {
+          this.linkTable.pageCondition.total = 0;
           this.linkTable.tableData = [];
         }
       });
@@ -795,8 +796,9 @@ export default {
         type: column.order,
       };
       this.pageCondition.page = 1;
-      const params = this.useParams();
+      const params = this.useParams(true);
       this.queryCommInfo(params).then((res) => {
+        this.useChart(res.communication);
         this.useTable(res.communication);
       });
     },
