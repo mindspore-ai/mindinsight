@@ -88,4 +88,4 @@ class DebuggerErrorMsg(Enum):
     DEBUGGER_DOWNLOAD_OVER_QUEUE = "There is already a tensor in download"
     DEBUGGER_DOWNLOAD_TENSOR_NOT_EXIST = "No such tensor to download"
     DEBUGGER_RANK_DIR_NOT_FOUND = "No rank directory found under {}."
-    DEBUGGER_JSON_FILE_PARSE_ERROR = "Failed to parse the json files."
+    DEBUGGER_JSON_FILE_PARSE_ERROR = "Failed to parse the json files. {}"

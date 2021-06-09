@@ -37,6 +37,7 @@ class DataLoader:
         self._rank_dirs = []
         # flag for whether the data is from sync dump or async dump.
         self._is_sync = False
+        self._device_target = "Ascend"
         self._net_name = ""
         self.initialize()
 
@@ -53,16 +54,27 @@ class DataLoader:
             raise RankDirNotFound(str(self._debugger_base_dir))
         rank_dir = self._rank_dirs[0].path
         dump_config = self._load_json_file(rank_dir / self.DUMP_METADATA / 'data_dump.json')
-        common_settings = dump_config.get(DumpSettings.COMMON_DUMP_SETTINGS.value, {})
-        try:
-            self._net_name = common_settings['net_name']
-        except KeyError:
-            raise DebuggerJsonFileParseError()
-        if dump_config.get(DumpSettings.E2E_DUMP_SETTINGS.value) and \
-                dump_config[DumpSettings.E2E_DUMP_SETTINGS.value]['enable']:
-            self._is_sync = True
-        else:
-            self._is_sync = False
+
+        def _set_net_name():
+            nonlocal dump_config
+            common_settings = dump_config.get(DumpSettings.COMMON_DUMP_SETTINGS.value, {})
+            try:
+                self._net_name = common_settings['net_name']
+            except KeyError:
+                raise DebuggerJsonFileParseError("data_dump.json")
+
+        def _set_dump_mode_and_device_target():
+            nonlocal dump_config
+            config_json = self._load_json_file(rank_dir / self.DUMP_METADATA / 'config.json')
+            self._device_target = config_json.get('device_target', 'Ascend')
+            if self._device_target == 'GPU' or dump_config.get(DumpSettings.E2E_DUMP_SETTINGS.value) and \
+                    dump_config[DumpSettings.E2E_DUMP_SETTINGS.value]['enable']:
+                self._is_sync = True
+            else:
+                self._is_sync = False
+
+        _set_net_name()
+        _set_dump_mode_and_device_target()
 
     def load_rank_dirs(self):
         """Load rank directories."""
@@ -105,18 +117,16 @@ class DataLoader:
             log.info("No rank directory found under dump path.")
             return device_info
         rank_dir = self._rank_dirs[0].path
-        config_json = self._load_json_file(rank_dir / '.dump_metadata' / 'config.json')
-        device_target = config_json.get('device_target', 'Ascend')
         hccl_json = self._load_json_file(rank_dir / '.dump_metadata' / 'hccl.json')
         if hccl_json.get('server_list'):
-            device_info = {'device_target': device_target, 'server_list': hccl_json['server_list']}
+            device_info = {'device_target': self._device_target, 'server_list': hccl_json['server_list']}
         else:
             log.info("Server List info is missing. Set device id same with rank id as default.")
             devices = []
             for rank_dir in self._rank_dirs:
                 rank_id = rank_dir.rank_id
                 devices.append({'device_id': str(rank_id), 'rank_id': str(rank_id)})
-            device_info = {'device_target': device_target,
+            device_info = {'device_target': self._device_target,
                            'server_list': [{'server_id': 'localhost', 'device': devices}]}
         return device_info
 
