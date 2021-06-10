@@ -165,17 +165,18 @@ class DataLoader:
             if not net_path.is_dir():
                 log.info("No net directory under rank dir: %s", str(rank_dir))
                 continue
-            max_step = 0
+            max_step = -1
             for graph_dir in net_path.iterdir():
                 if not graph_dir.name.isdigit():
                     log.info("Invalid graph dir under net dir:%s", str(net_path))
+                    continue
                 for iteration_dir in graph_dir.iterdir():
                     iteration_id = iteration_dir.name
                     if not iteration_id.isdigit():
                         log.info("Invalid iteration dir under graph dir:%s", str(graph_dir))
                     max_step = max(int(iteration_id), max_step)
                 log.debug("Current max iteration number is %s", max_step)
-            step_num[rank_id] = max_step
+            step_num[rank_id] = max_step + 1
 
         return step_num
 
@@ -218,6 +219,21 @@ class DataLoader:
     def get_net_name(self):
         """Get net_name of the data."""
         return self._net_name
+
+    def get_root_graph_id(self):
+        """Get the root graph id."""
+        graph_id = 0
+        if not self._rank_dirs:
+            return graph_id
+        net_path = self._rank_dirs[0].path / self._net_name
+        if not net_path.is_dir():
+            return graph_id
+        for graph_dir in net_path.iterdir():
+            if graph_dir.name.isdigit():
+                graph_id = int(graph_dir.name)
+                log.debug("Find root graph id %s", graph_id)
+                break
+        return graph_id
 
 
 def load_graph_from_file(graph_file_path):
