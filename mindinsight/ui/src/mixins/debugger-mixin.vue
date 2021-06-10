@@ -2257,6 +2257,10 @@ export default {
         this.resetGraph();
       }
     },
+    stackPageChange(page) {
+      this.stacks.currentPage = page;
+      this.queryStacks();
+    },
     queryStacks() {
       const param = {
         offset: this.stacks.currentPage - 1,
