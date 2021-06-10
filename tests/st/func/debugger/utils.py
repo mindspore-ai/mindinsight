@@ -111,11 +111,11 @@ def build_dump_file_structure():
     shutil.copytree(os.path.join(os.path.dirname(__file__), 'dump_files'), dump_files_dir)
 
     for sub_dir, steps in async_file_structure.items():
-        for step in range(1, steps + 1):
+        for step in range(0, steps):
             os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir, 'Lenet/1'), str(step)), exist_ok=True)
 
     for sub_dir, steps in sync_file_structure.items():
-        for step in range(1, steps + 1):
+        for step in range(0, steps):
             os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir, 'Lenet/0'), str(step)),
                         exist_ok=True)
         graph_dir_path = os.path.join(os.path.join(dump_files_dir, sub_dir), 'graphs')

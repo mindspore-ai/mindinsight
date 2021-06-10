@@ -276,18 +276,23 @@ class DebuggerOfflineManager:
         rank_id = node_info.get('rank_id', 0)
         device_id = self._cache_store.get_stream_handler(Streams.DEVICE).get_device_id_by_rank_id(rank_id)
         cur_step = self._metadata_stream.step
+        # as dbg_services hasn't support -1 yet, set it to 0 instead of -1
+        iteration_id = cur_step - 1 if cur_step > 0 else 0
         tensor_protos = view_cmd.tensors
         root_graph_id = self.get_root_graph_id()
         tensor_infos = [
             self._dbg_services_module.TensorInfo(
                 node_name=tensor_proto.node_name,
                 slot=int(tensor_proto.slot),
-                iteration=cur_step - 1 if tensor_proto.iter == 'prev' else cur_step,
+                iteration=iteration_id - 1 if tensor_proto.iter == 'prev' else iteration_id,
                 device_id=device_id,
                 is_parameter=tensor_proto.truncate,
                 root_graph_id=root_graph_id
             ) for tensor_proto in tensor_protos]
         res = self._dbg_service.read_tensors(tensor_infos)
+        if len(tensor_protos) != len(res):
+            log.error("Invalid view command. The result unmatched.")
+            return
         # put tensor into cache
         for tensor_proto, tensor_data in zip(tensor_protos, res):
             log.debug("Tensor name: %s:%s, tensor type: %s, tensor size: %s", tensor_proto.node_name, tensor_proto.slot,
@@ -301,9 +306,7 @@ class DebuggerOfflineManager:
 
     def get_root_graph_id(self):
         """Get root graph id."""
-        is_sync = self._data_loader.get_sync_flag()
-        graph_id = 0 if is_sync else 1
-        return graph_id
+        return self._data_loader.get_root_graph_id()
 
     def _put_tensor_value_into_cache(self, cur_step, node_info, rank_id, tensor_protos):
         """Put tensor value into tensor cache."""
@@ -389,13 +392,21 @@ class DebuggerOfflineManager:
         return run_cmd
 
     def _check_watchpoint(self, step):
-        """Save watchpoint hits into cache."""
+        """
+        Save watchpoint hits into cache.
+
+        Args:
+            step (int): The step number which starts from 1.
+        """
+        # the iteration number in dump structure which starts from 0.
+        # as dbg_services hasn't support -1 yet, set it to 0 instead of -1
+        iteration_id = step - 1 if step > 0 else 0
         self._update_state(ServerStatus.RUNNING)
         # Clean watchpoint_hits in cache
         multi_card_hit_streams = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         multi_card_hit_streams.clean()
         hits = Manager().list()
-        check_watchpoints_process = Process(target=self._check_watchpoint_work, args=(hits, step,))
+        check_watchpoints_process = Process(target=self._check_watchpoint_work, args=(hits, iteration_id,))
         check_watchpoints_process.start()
         check_watchpoints_process.join()
         log.info("finish check watchpoint of %s", step)
