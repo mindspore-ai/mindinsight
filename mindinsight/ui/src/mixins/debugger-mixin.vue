@@ -23,7 +23,7 @@ export default {
   data() {
     return {
       conditionRulesMap: this.$t('debugger.tensorTuningRule'),
-      downloadTensorName: '',
+      downloadedTensor: {},
       maxFileSize: [2, 'GB'],
     };
   },
@@ -692,7 +692,12 @@ export default {
                 }
               }
 
-              if (res.data.tensor_file) this.downloadTensor();
+              if (
+                res.data.tensor_file &&
+              this.downloadedTensor.name === res.data.tensor_name
+              ) {
+                this.downloadTensor();
+              }
               this.pollData();
             }
           },
@@ -1930,6 +1935,11 @@ export default {
             }
           }, 200);
         });
+      } else if (this.radio1 === 'stack') {
+        if (!this.stacks.list.length) {
+          this.stacks.currentPage = 1;
+          this.queryStacks();
+        }
       }
     },
     dealWatchpointHits(data) {
@@ -2287,24 +2297,28 @@ export default {
           },
       );
     },
-    loadTensor(tensor) {
+    loadTensor(tensor, prev = false) {
       const param = {
         name: tensor.name,
         rank_id: this.logicCard.value,
+        graph_name: tensor.graph_name,
+        prev: prev + '',
       };
       RequestService.loadTensor(param, this.sessionId).then(
           (res) => {
-            if (res) {
+            if (res && res.data && res.data.tensor_name) {
               const fileSize = this.fileSizeConversion(tensor.bytes);
               this.$message(
                   this.$t('debugger.downloadTip', {fileSize: fileSize.join('')}),
               );
-              this.downloadTensorName = tensor.name;
+              this.downloadedTensor.name = res.data.tensor_name;
+              this.downloadedTensor.graph_name = tensor.graph_name;
+              this.downloadedTensor.prev = prev;
             }
           },
           (err) => {
             this.showErrorMsg(err);
-            this.downloadTensorName = '';
+            this.downloadedTensor = {};
           },
       );
     },
@@ -2312,13 +2326,15 @@ export default {
       const url =
         basePath +
         `v1/mindinsight/debugger/sessions/${this.sessionId}/tensor-files/download?` +
-        `name=${this.downloadTensorName}&rank_id=${this.logicCard.value}`;
+        `name=${this.downloadedTensor.name}&rank_id=${this.logicCard.value}&` +
+        `graph_name=${this.downloadedTensor.graph_name}&prev=${this.downloadedTensor.prev}`;
       const a = document.createElement('a');
       a.download = '';
       a.href = url;
       a.rel = 'noopener noreferrer';
       a.target = '_blank';
       a.click();
+      this.downloadedTensor = {};
     },
     fileSizeConversion(value = 0, unit = 'bytes') {
       const units = ['bytes', 'KB', 'MB', 'GB'];

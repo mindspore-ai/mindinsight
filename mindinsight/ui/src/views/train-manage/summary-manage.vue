@@ -278,6 +278,12 @@ export default {
         showDialogModel: false,
         trainJobs: [],
       },
+      loadingOption: {
+        lock: true,
+        text: this.$t('public.dataLoading'),
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.3)',
+      },
     };
   },
   computed: {},
@@ -447,14 +453,17 @@ export default {
       });
     },
     getSessionId(params) {
+      const loadingInstance = this.$loading(this.loadingOption);
       return RequestService.getSession(params).then(
           (res) => {
+            loadingInstance.close();
             if (res && res.data) {
               const sessionId = res.data;
               return sessionId;
             }
           },
           (error) => {
+            loadingInstance.close();
             if (error && error.response && error.response.data && error.response.data.error_code === '5054B280') {
               this.checkSessions();
             }

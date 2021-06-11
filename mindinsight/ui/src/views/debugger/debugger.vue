@@ -97,6 +97,7 @@ limitations under the License.
                 <div class="label">{{$t('debugger.nodeName')}}</div>
                 <el-input :placeholder="$t('graph.inputNodeName')"
                           v-model="searchWord"
+                          :title="searchWord"
                           class="input-with-select"
                           @input="filterChange"
                           @keyup.enter.native="filter"
@@ -108,6 +109,7 @@ limitations under the License.
                 <div class="label">{{$t('debugger.stackInfo')}}</div>
                 <el-input :placeholder="$t('debugger.inputStack')"
                           v-model="searchStackContent"
+                          :title="searchStackContent"
                           class="input-with-select"
                           @input="filterChange"
                           @keyup.enter.native="filter"
@@ -318,8 +320,10 @@ limitations under the License.
             <div class="label">{{$t('debugger.stackInfo')}}</div>
             <el-input :placeholder="$t('debugger.inputStack')"
                       v-model="stacks.searchContent"
+                      :title="stacks.searchContent"
                       @keyup.enter.native="queryStacks"
-                      clearable>
+                      clearable
+                      @clear="stackPageChange(1)">
             </el-input>
           </div>
 

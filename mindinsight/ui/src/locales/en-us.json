@@ -882,8 +882,15 @@
     },
     "paramValueTip": "Preset Value: {value}",
     "logicCard": "Logic card",
-    "inpStepTip": "Step：0~{total_step_num}"
-
+    "inpStepTip": "Step：0~{total_step_num}",
+    "stackList": "Stack List",
+    "searchConditions": "Search Conditions",
+    "nodeName": "Node Name",
+    "stackInfo": "Stack Info",
+    "inputStack": "Enter stack information",
+    "search": "Search",
+    "downloadTip": "The file is being loaded. The file size is about {fileSize}. Please wait.",
+    "noOfflineGraphData": "Failed to load the computational graph. Check the offline data and try again."
   },
   "explain": {
     "explain": "Model Explanation",
@@ -1006,6 +1013,7 @@
     "5054B184": "The operation is too fast, the backend service has been suspended.",
     "5054B189": "Do not set the value repeatedly.",
     "5054B083": "Failed to create the watchpoint. Do not use invalid rules.",
-    "5054B202": "The debugger offline server module is not found"
+    "5054B202": "The debugger offline server module is not found",
+    "5054B283": "A tensor is being downloaded. Please try again later."
   }
 }

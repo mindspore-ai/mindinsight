@@ -132,7 +132,8 @@ limitations under the License.
                      class="custom-btn"
                      :disabled="state==='running' || gridType==='compare' ||
                      !showFilterInput || curRowObj.oversized"
-                     @click="$parent.loadTensor(curRowObj)">{{ $t('graph.downloadPic') }}</el-button>
+                     @click="$parent.loadTensor(curRowObj,gridType==='preStep')">
+            {{ $t('graph.downloadPic') }}</el-button>
         </div>
         <div class="deb-con-slide-left"
              v-if="gridType === 'compare'">
