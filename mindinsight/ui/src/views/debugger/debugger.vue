@@ -100,6 +100,7 @@ limitations under the License.
                           class="input-with-select"
                           @input="filterChange"
                           @keyup.enter.native="filter"
+                          @clear="filter"
                           clearable>
                 </el-input>
               </div>
@@ -110,6 +111,7 @@ limitations under the License.
                           class="input-with-select"
                           @input="filterChange"
                           @keyup.enter.native="filter"
+                          @clear="filter"
                           clearable>
                 </el-input>
               </div>
@@ -343,7 +345,7 @@ limitations under the License.
             </el-table>
             <el-pagination class="watchpoint-page"
                            small
-                           @current-change="handleCurrentChange"
+                           @current-change="stackPageChange"
                            :current-page="stacks.currentPage"
                            :page-size="stacks.pageSize.size"
                            :pager-count="pagination.pageCount"
