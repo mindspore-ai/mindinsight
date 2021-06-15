@@ -76,6 +76,7 @@ class MindConverterException(Exception):
     def __init__(self, **kwargs):
         """Initialization of MindInsightException."""
         user_msg = kwargs.get('user_msg', '')
+        only_console = kwargs.get('only_console', False)
 
         if isinstance(user_msg, str):
             user_msg = ' '.join(user_msg.split())
@@ -83,6 +84,7 @@ class MindConverterException(Exception):
         super(MindConverterException, self).__init__()
         self.user_msg = user_msg
         self.root_exception_error_code = None
+        self.only_console = only_console
 
     def __str__(self):
         return '[{}] code: {}, msg: {}'.format(self.__class__.__name__, self.error_code(), self.user_msg)
@@ -137,9 +139,10 @@ class MindConverterException(Exception):
                     detail_info = str(e)
                     if not isinstance(e, MindConverterException):
                         detail_info = cls.normalize_error_msg(str(e))
-                    log.error(error)
-                    log_console.error(detail_info)
-                    log.exception(e)
+                    log_console.error(detail_info, only_console=e.only_console)
+                    if not e.only_console:
+                        log.error(error)
+                        log.exception(e)
                     sys.exit(-1)
                 except ModuleNotFoundError as e:
                     detail_info = "Error detail: Required package not found, please check the runtime environment."
@@ -193,8 +196,8 @@ class BaseConverterError(MindConverterException):
     ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
     DEFAULT_MSG = "Failed to start base converter."
 
-    def __init__(self, msg=DEFAULT_MSG):
-        super(BaseConverterError, self).__init__(user_msg=msg)
+    def __init__(self, msg=DEFAULT_MSG, **kwargs):
+        super(BaseConverterError, self).__init__(user_msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -207,8 +210,8 @@ class UnknownModelError(BaseConverterError):
     """The unknown model error."""
     ERROR_CODE = BaseConverterError.ErrCode.UNKNOWN_MODEL.value
 
-    def __init__(self, msg):
-        super(UnknownModelError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(UnknownModelError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -219,8 +222,8 @@ class ParamMissingError(BaseConverterError):
     """Define cli params missing error."""
     ERROR_CODE = BaseConverterError.ErrCode.PARAM_MISSING.value
 
-    def __init__(self, msg):
-        super(ParamMissingError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(ParamMissingError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -231,8 +234,8 @@ class BadParamError(BaseConverterError):
     """Define cli bad params error."""
     ERROR_CODE = BaseConverterError.ErrCode.BAD_PARAM.value
 
-    def __init__(self, msg):
-        super(BadParamError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(BadParamError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):

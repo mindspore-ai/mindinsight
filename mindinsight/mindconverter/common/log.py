@@ -24,24 +24,30 @@ class MindConverterLogger:
     """MindConverter logger for stdout."""
 
     def __init__(self):
-        self.logger = setup_logger("mindconverter", "mindconverter", console=True,
-                                   sub_log_name="logger_console", formatter="%(message)s")
+        self.logger = setup_logger("mindconverter", "mindconverter", console=True, sub_log_name="logger_console")
+        self.console = setup_logger("mindconverter", "mindconverter", console=True, sub_log_name="logger_only_console",
+                                    logfile=False)
 
-    def warning(self, msg):
+    def warning(self, msg, only_console=False):
         """Log warning message to stdout."""
-        self.logger.warning("[WARNING] MINDCONVERTER: %s", msg)
+        if only_console:
+            self.console.warning(msg)
+        else:
+            self.logger.warning(msg)
 
-    def info(self, msg):
+    def info(self, msg, only_console=False):
         """Log info level message to stdout."""
-        self.logger.info("\n")
-        self.logger.info("[INFO] MINDCONVERTER: %s", msg)
-        self.logger.info("\n")
+        if only_console:
+            self.console.info(msg)
+        else:
+            self.logger.info(msg)
 
-    def error(self, msg):
+    def error(self, msg, only_console=False):
         """Log error level message to stdout."""
-        self.logger.error("\n")
-        self.logger.error("[ERROR] MINDCONVERTER: %s", msg)
-        self.logger.error("\n")
+        if only_console:
+            self.console.error(msg)
+        else:
+            self.logger.error(msg)
 
 
 logger_console = MindConverterLogger()
