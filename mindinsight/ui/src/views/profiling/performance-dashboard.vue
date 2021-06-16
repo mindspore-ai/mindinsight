@@ -88,8 +88,8 @@ export default {
         data: null,
         dimensions: [
           this.$t('profilingCluster.rankID'),
-          this.$t('profilingCluster.waitCost'),
           this.$t('profilingCluster.commCost'),
+          this.$t('profilingCluster.waitCost'),
         ],
         title: this.$t('profilingCluster.commChartTitle'),
       },
