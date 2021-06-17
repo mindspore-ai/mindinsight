@@ -856,8 +856,7 @@ export default {
                       this.packageDataToObject(name, true, nodes);
                       // If the name is empty, it indicates the outermost layer.
                       if (!name) {
-                        const dot = this.packageGraphData();
-                        this.initGraph(dot);
+                        this.initGraph();
                       } else {
                         if (this.allGraphData[name].type === 'aggregation_scope') {
                           this.dealAggregationNodes(name);
@@ -982,27 +981,6 @@ export default {
         this.allGraphData[name].isUnfold = true;
         this.selectedNode.name = `${name}_unfold`;
         this.layoutNamescope(name, true);
-      }
-    },
-    /**
-     * Controls the invoking method of the next step.
-     * @param {String} name Name of the namespace to be expanded.
-     */
-    layoutController(name) {
-      if (!this.loading.show) {
-        this.loading.info = this.$t('graph.searchLoading');
-        this.loading.show = true;
-      }
-      if (name.includes('/')) {
-        const subPath = name.split('/').slice(0, -1).join('/');
-        this.layoutNamescope(subPath, true);
-      } else {
-        const svg = document.querySelector('#graph svg');
-        if (svg) {
-          svg.remove();
-        }
-        const dot = this.packageGraphData();
-        this.initGraph(dot);
       }
     },
     /**

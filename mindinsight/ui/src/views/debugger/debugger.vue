@@ -1509,23 +1509,6 @@ export default {
       }
     },
     /**
-     * Controls the invoking method of the next step.
-     * @param {String} name Name of the namespace to be expanded.
-     */
-    layoutController(name) {
-      if (name.includes('/')) {
-        const subPath = name.split('/').slice(0, -1).join('/');
-        this.layoutNamescope(subPath, true);
-      } else {
-        const svg = document.querySelector('#graph svg');
-        if (svg) {
-          svg.remove();
-        }
-        const dot = this.packageGraphData();
-        this.initGraph(dot);
-      }
-    },
-    /**
      * To obtain graph data, initialize and expand the namespace or aggregate nodes.
      * @param {String} name Name of the current node.
      */
@@ -1597,8 +1580,7 @@ export default {
           this.packageDataToObject(name, true, nodes);
           // If the name is empty, it indicates the outermost layer.
           if (!name) {
-            const dot = this.packageGraphData();
-            this.initGraph(dot);
+            this.initGraph();
           } else {
             if (this.allGraphData[name].type === 'aggregation_scope') {
               this.dealAggregationNodes(name);
@@ -1799,8 +1781,7 @@ export default {
       this.allGraphData = JSON.parse(JSON.stringify(temp));
       d3.select('#graph svg').remove();
       this.selectedNode.name = '';
-      const dot = this.packageGraphData();
-      this.initGraph(dot);
+      this.initGraph();
     },
     /**
      * Search for all data of a specific node and its namespace.
