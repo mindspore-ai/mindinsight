@@ -47,10 +47,15 @@ export default {
       resizeTimer: null,
       resizeDelay: 500, // The delay of resize's event
       pageKey: '',
+      errorCount: 0,
+      maxErrorCount: 3,
     };
   },
   mounted() {
-    this.$nextTick(() => {
+    this.$nextTick(this.init);
+  },
+  methods: {
+    init() {
       // Generate the dom of the submap.
       if (!d3.select('#graphTemp').size()) {
         d3.select('body').append('div').attr('id', 'graphTemp');
@@ -65,9 +70,20 @@ export default {
         this.graphContainer.addEventListener('click', this.controlEvent.bind(null, 'click'));
         this.graphContainer.addEventListener('dblclick', this.controlEvent.bind(null, 'dblclick'));
       }
-    });
-  },
-  methods: {
+      this.graphviz = d3
+          .select('#graph')
+          .graphviz({useWorker: false, totalMemory: this.totalMemory})
+          .attributer(this.attributer);
+
+      this.graphvizTemp = d3
+          .select('#graphTemp')
+          .graphviz({useWorker: false, totalMemory: this.totalMemory})
+          .attributer((datum) => {
+            if (datum.tag === 'polygon' && datum.attributes.stroke !== 'transparent') {
+              datum.attributes.stroke = 'rgb(120, 120, 120)';
+            }
+          });
+    },
     /**
      * Handles and executes click and double-click events
      * @param {String} type Event type
@@ -178,22 +194,30 @@ export default {
     },
     /**
      * Initializing the graph
-     * @param {String} dot Dot statement encapsulated in graph data
      */
-    initGraph(dot) {
-      try {
-        this.graphviz = d3
-            .select('#graph')
-            .graphviz({useWorker: false, totalMemory: this.totalMemory})
-            .zoomScaleExtent(this.scaleRange)
-            .dot(dot)
-            .attributer(this.attributer)
-            .render(this.afterInitGraph);
-      } catch (error) {
-        const svg = document.querySelector('#graph svg');
-        if (svg) svg.remove();
-        this.initGraph(dot);
-      }
+    initGraph() {
+      const dot = this.packageGraphData();
+      const renderFun = () => {
+        try {
+          this.graphviz.dot(dot).render(() => {
+            this.errorCount = 0;
+            this.afterInitGraph();
+          });
+        } catch (error) {
+          const svg = document.querySelector('#graph svg');
+          if (svg) svg.remove();
+          this.errorCount++;
+          if (this.errorCount <= this.maxErrorCount) {
+            renderFun();
+          } else {
+            this.$message.error(this.$t('graph.openFail'));
+            if (this.loadingInstance) this.loadingInstance.close();
+            if (this.loading) this.loading.show = false;
+            return;
+          }
+        }
+      };
+      renderFun();
     },
     /**
      * Add the location attribute to each node to facilitate the obtaining of node location parameters.
@@ -208,14 +232,12 @@ export default {
           for (const key of keys) {
             this.graphviz[key] = null;
           }
-          this.graphviz = null;
         }
 
         if (this.graphvizTemp) {
           for (const key of keys) {
             this.graphvizTemp[key] = null;
           }
-          this.graphvizTemp = null;
         }
       }, 100);
 
@@ -381,45 +403,53 @@ export default {
       graphDom.setAttribute('transform', `translate(${x},${y}) scale(${scale})`);
     },
     /**
+     * Controls the invoking method of the next step.
+     * @param {String} name Name of the namespace to be expanded.
+     */
+    layoutController(name) {
+      if (this.pageKey === 'graph' && !this.loading.show) {
+        this.loading.info = this.$t('graph.searchLoading');
+        this.loading.show = true;
+      }
+      if (name.includes('/')) {
+        const subPath = name.split('/').slice(0, -1).join('/');
+        this.layoutNamescope(subPath, true);
+      } else {
+        const svg = document.querySelector('#graph svg');
+        if (svg) svg.remove();
+        this.initGraph();
+      }
+    },
+    /**
      * Expand a namespace.
      * @param {String} name Nodes to be expanded or zoomed out
      * @param {Boolean} toUnfold Expand the namespace.
      */
-    layoutNamescope(name, toUnfold) {
-      this.$nextTick(() => {
+    layoutNamescope(name) {
+      const dotStr = this.packageNamescope(name);
+      const renderFun = () => {
         try {
-          const dotStr = this.packageNamescope(name);
-          this.graphvizTemp = d3
-              .select('#graphTemp')
-              .graphviz({useWorker: false, totalMemory: this.totalMemory})
-              .dot(dotStr)
-              .zoomScaleExtent(this.scaleRange)
-              .attributer((datum, index, nodes) => {
-                if (
-                  datum.tag === 'polygon' &&
-                datum.attributes.stroke !== 'transparent'
-                ) {
-                  datum.attributes.stroke = 'rgb(120, 120, 120)';
-                }
-              })
-              .render(() => {
-                const svg = document.querySelector('#graphTemp svg');
-                if (svg) svg.removeAttribute('viewBox');
-                this.dealNamescopeTempGraph(name);
-              });
+          this.graphvizTemp.dot(dotStr).render(() => {
+            this.errorCount = 0;
+            const svg = document.querySelector('#graphTemp svg');
+            if (svg) svg.removeAttribute('viewBox');
+            this.dealNamescopeTempGraph(name);
+          });
         } catch (error) {
           const graphTempSvg = document.querySelector('#graphTemp svg');
-          if (graphTempSvg) {
-            graphTempSvg.remove();
+          if (graphTempSvg) graphTempSvg.remove();
+          this.errorCount++;
+          if (this.errorCount <= this.maxErrorCount) {
+            renderFun();
+          } else {
+            this.$message.error(this.$t('graph.openFail'));
+            if (this.loadingInstance) this.loadingInstance.close();
+            if (this.loading) this.loading.show = false;
+            return;
           }
-          const subGraphTempSvg = document.querySelector('#subgraphTemp svg');
-          if (subGraphTempSvg) {
-            subGraphTempSvg.remove();
-          }
-
-          this.dealDoubleClick(this.selectedNode.name);
         }
-      });
+      };
+      renderFun();
     },
     /**
      * Process the data returned by the background interface.
