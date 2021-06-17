@@ -269,14 +269,14 @@ def main_graph_base_converter(file_config):
     graph_path = file_config['model_file']
     frame_type = get_framework_type(graph_path)
     if not file_config.get("shape"):
-        raise ParamMissingError("Param missing, `--shape` is required when using graph mode.")
+        raise ParamMissingError("Param missing, `--shape` is required when using graph mode.", only_console=True)
 
     check_params = ['input_nodes', 'output_nodes']
     check_params_exist(check_params, file_config)
 
     if len(file_config['shape']) != len(file_config.get("input_nodes", [])):
         raise BadParamError("`--shape` and `--input_nodes` must have the same length, "
-                            "and no redundant node in `--input_nodes`.")
+                            "and no redundant node in `--input_nodes`.", only_console=True)
 
     input_nodes = dict()
     for shape, node in zip(file_config['shape'], file_config['input_nodes']):
@@ -312,4 +312,5 @@ def check_params_exist(params: list, config):
             miss_param_list = ', '.join((miss_param_list, param)) if miss_param_list else param
 
     if miss_param_list:
-        raise ParamMissingError(f"Param(s) missing, {miss_param_list} is(are) required when using graph mode.")
+        raise ParamMissingError(
+            f"Param(s) missing, {miss_param_list} is(are) required when using graph mode.", only_console=True)
