@@ -28,6 +28,7 @@ class PBParser(Parser):
 
         self.proto = graph_proto
         self.dtype_mapping = {
+            self.proto.DT_UNDEFINED: None,
             self.proto.DT_BOOL: 'bool',
             self.proto.DT_INT8: 'int8',
             self.proto.DT_INT16: 'int16',
@@ -294,6 +295,8 @@ class PBParser(Parser):
             output = NodeOutput(OutputType.TUPLE)
             for elem_type in proto_output.sequence_type.elem_types:
                 dtype = self._get_tuple_item_dtype(elem_type)
+                if dtype is None:
+                    continue
                 output.info['dtypes'].append(dtype)
                 output.info['shapes'].append(None)
                 output.info['tensors'].append(None)
