@@ -20,7 +20,9 @@ from importlib import import_module
 from importlib.util import find_spec
 from functools import partial
 from google.protobuf.internal import api_implementation
+from mindinsight.mindconverter.graph_based_converter.common.convert_graph import convert_msgraph
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
+from mindinsight.mindconverter.graph_based_converter.common.mcgraph import ConverterGraph
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, onnx_satisfied, \
     save_code_file_and_report, get_framework_type, check_dependency_integrity, \
     get_third_part_lib_validation_error_info, save_intermediate_graph
@@ -314,3 +316,20 @@ def check_params_exist(params: list, config):
     if miss_param_list:
         raise ParamMissingError(
             f"Param(s) missing, {miss_param_list} is(are) required when using graph mode.", only_console=True)
+
+
+def get_ms_graph_from_onnx(graph_path: str, input_nodes: dict, output_nodes: List[str]):
+    """
+    Get ConverterGraph data structure from onnx model.
+
+    Args:
+        graph_path (str): Graph file path.
+        input_nodes (dict): Input node(s) of the model.
+        output_nodes (list[str]): Output node(s) of the model.
+    """
+    graph_obj = GraphFactory.init(graph_path, input_nodes=input_nodes, output_nodes=output_nodes)
+    ms_graph = convert_msgraph(graph_obj.dataloader.inferred_model)
+    mcgraph = ConverterGraph()
+    mcgraph.build_graph(ms_graph.graph)
+    nodes = mcgraph.list_node_by_scope()
+    return {'nodes': nodes}

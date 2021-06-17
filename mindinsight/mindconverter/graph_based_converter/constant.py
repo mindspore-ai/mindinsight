@@ -73,6 +73,10 @@ DTYPE_MAP = {
     16: None
 }
 
+MS_DATA_EDGE = 0
+
+OUTPUT_PROTO_TYPE = "Output"
+
 
 @unique
 class TemplateKeywords(Enum):
@@ -185,3 +189,96 @@ def get_imported_module():
            f"import mindspore.ops as P{NEW_LINE}" \
            f"from mindspore import nn{NEW_LINE}" \
            f"from mindspore import Tensor, Parameter{NEW_LINE * 3}"
+
+
+@unique
+class ONNXAttributeType(Enum):
+    """The ONNX AttributeProto data type enum."""
+    UNDEFINED = 0
+    FLOAT = 1
+    INT = 2
+    STRING = 3
+    TENSOR = 4
+    GRAPH = 5
+    SPARSE_TENSOR = 11
+    TYPE_PROTO = 13
+
+    FLOATS = 6
+    INTS = 7
+    STRINGS = 8
+    TENSORS = 9
+    GRAPHS = 10
+    SPARSE_TENSORS = 12
+    TYPE_PROTOS = 14
+
+
+@unique
+class ONNXTensorType(Enum):
+    """The ONNX TensorProto data type enum."""
+    UNDEFINED = 0
+    FLOAT = 1
+    UINT8 = 2
+    INT8 = 3
+    UINT16 = 4
+    INT16 = 5
+    INT32 = 6
+    INT64 = 7
+    STRING = 8
+    BOOL = 9
+
+    FLOAT16 = 10
+
+    DOUBLE = 11
+    UINT32 = 12
+    UINT64 = 13
+    COMPLEX64 = 14
+
+    BFLOAT16 = 16
+
+
+@unique
+class MSDataType(Enum):
+    """The MSGraph data type enum."""
+    DT_UNDEFINED = 0
+    DT_BOOL = 1
+    DT_INT8 = 2
+    DT_INT16 = 3
+    DT_INT32 = 4
+    DT_INT64 = 5
+    DT_UINT8 = 6
+    DT_UINT16 = 7
+    DT_UINT32 = 8
+    DT_UINT64 = 9
+    DT_FLOAT16 = 10
+    DT_FLOAT32 = 11
+    DT_FLOAT64 = 12
+    DT_STRING = 13
+    DT_TENSOR = 14
+    DT_GRAPH = 15
+    DT_BOOLS = 16
+    DT_INTS8 = 17
+    DT_INTS16 = 18
+    DT_INTS32 = 19
+    DT_INTS64 = 20
+    DT_UINTS8 = 21
+    DT_UINTS16 = 22
+    DT_UINTS32 = 23
+    DT_UINTS64 = 24
+    DT_FLOATS16 = 25
+    DT_FLOATS32 = 26
+    DT_FLOATS64 = 27
+    DT_STRINGS = 28
+    DT_TENSORS = 29
+    DT_GRAPHS = 30
+    DT_TUPLE = 31
+    DT_LIST = 32
+    DT_DICT = 33
+    DT_NONE = 34
+    DT_SYM_INST = 35
+    DT_BASE_INT = 36
+    DT_BASE_UINT = 37
+    DT_BASE_FLOAT = 38
+    DT_TYPE = 39
+    DT_ANYTHING = 40
+    DT_REFKEY = 41
+    DT_REF = 42
