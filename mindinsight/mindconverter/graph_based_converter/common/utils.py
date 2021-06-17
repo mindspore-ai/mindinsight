@@ -305,7 +305,7 @@ def replace_string_in_list(str_list: list, original_str: str, target_str: str):
     return [s.replace(original_str, target_str) for s in str_list]
 
 
-def get_third_part_lib_validation_error_info(lib_list):
+def get_third_part_lib_error_info(lib_list):
     """Get error info when not satisfying third part lib validation."""
     error_info = None
     link_str = ', '
@@ -313,16 +313,19 @@ def get_third_part_lib_validation_error_info(lib_list):
         if idx == len(lib_list) - 1:
             link_str = ' and '
 
-        lib_version_required = THIRD_PART_VERSION[lib]
-        if len(lib_version_required) == 2:
-            lib_version_required_min = lib_version_required[0]
-            lib_version_required_max = lib_version_required[1]
-            if lib_version_required_min == lib_version_required_max:
-                info = f"{lib}(=={lib_version_required_min})"
+        lib_version_required = THIRD_PART_VERSION.get(lib)
+        if lib_version_required:
+            if len(lib_version_required) == 2:
+                lib_version_required_min = lib_version_required[0]
+                lib_version_required_max = lib_version_required[1]
+                if lib_version_required_min == lib_version_required_max:
+                    info = f"{lib}(=={lib_version_required_min})"
+                else:
+                    info = f"{lib}(>={lib_version_required_min} and <{lib_version_required_max})"
             else:
-                info = f"{lib}(>={lib_version_required_min} and <{lib_version_required_max})"
+                info = f"{lib}(>={lib_version_required[0]})"
         else:
-            info = f"{lib}(>={lib_version_required[0]})"
+            info = f"{lib}"
 
         if not error_info:
             error_info = info

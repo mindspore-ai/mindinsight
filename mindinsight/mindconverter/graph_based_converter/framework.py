@@ -23,9 +23,9 @@ from google.protobuf.internal import api_implementation
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindinsight.mindconverter.graph_based_converter.common.utils import lib_version_satisfied, onnx_satisfied, \
     save_code_file_and_report, get_framework_type, check_dependency_integrity, \
-    get_third_part_lib_validation_error_info, save_intermediate_graph
+    get_third_part_lib_error_info, save_intermediate_graph
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType, \
-    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER
+    ONNX_MIN_VER, TF2ONNX_MIN_VER, ONNXRUNTIME_MIN_VER, ONNXOPTIMIZER_MIN_VER, MINDSPORE_MIN_VER
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
@@ -35,20 +35,22 @@ from mindinsight.mindconverter.common.exceptions import GraphInitError, FileSave
 from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
 
 check_common_dependency_integrity = partial(check_dependency_integrity,
-                                            "onnx", "onnxruntime", "onnxoptimizer")
+                                            "onnx", "onnxruntime", "onnxoptimizer", "mindspore")
 
 
-def onnx_lib_version_satisfied():
+def common_lib_version_satisfied():
     """Check onnx libs version whether is satisfied."""
     onnx = import_module("onnx")
     ort = import_module("onnxruntime")
     optimizer = import_module("onnxoptimizer.version")
+    mindspore = import_module("mindspore")
     if not lib_version_satisfied(getattr(ort, "__version__"), ONNXRUNTIME_MIN_VER):
         log_console.warning(f"onnxruntime's version should be greater than {ONNXRUNTIME_MIN_VER}, "
                             f"however current version is {ort.__version__}.")
 
     if not lib_version_satisfied(getattr(onnx, "__version__"), ONNX_MIN_VER) \
-            or not lib_version_satisfied(getattr(optimizer, "version"), ONNXOPTIMIZER_MIN_VER):
+            or not lib_version_satisfied(getattr(optimizer, "version"), ONNXOPTIMIZER_MIN_VER) \
+            or not lib_version_satisfied(getattr(mindspore, "__version__"), MINDSPORE_MIN_VER):
         return False
     return True
 
@@ -71,15 +73,16 @@ def onnx_installation_validation(func):
     """
 
     def _f(*args, **kwargs):
-        # Check whether onnx is installed.
-        error_info = f"{get_third_part_lib_validation_error_info(['onnx', 'onnxruntime', 'onnxoptimizer'])} " \
-                     f"are required when using graph based scripts converter or ONNX conversion."
+        error_info = \
+            f"{get_third_part_lib_error_info(['mindspore', 'onnx', 'onnxruntime', 'onnxoptimizer'])} " \
+            f"are required when using graph based scripts converter or ONNX conversion."
 
+        # Check whether common dependency integrity is installed.
         if not onnx_satisfied() or not check_common_dependency_integrity():
             _print_error(RuntimeIntegrityError(error_info))
             sys.exit(-1)
 
-        if not onnx_lib_version_satisfied():
+        if not common_lib_version_satisfied():
             _print_error(RuntimeIntegrityError(error_info))
             sys.exit(-1)
 
@@ -112,10 +115,10 @@ def tf_installation_validation(func):
     def _f(*args, **kwargs):
         not_integral_error = RuntimeIntegrityError(
             f"TensorFlow, "
-            f"{get_third_part_lib_validation_error_info(['tf2onnx', 'onnx', 'onnxruntime', 'onnxoptimizer'])} "
+            f"{get_third_part_lib_error_info(['mindspore', 'tf2onnx', 'onnx', 'onnxruntime', 'onnxoptimizer'])} "
             f"are required when using graph based scripts converter for TensorFlow conversion."
         )
-        # Check whether tensorflow is installed.
+        # Check whether tensorflow and common dependency integrity are installed.
         if not _check_tf_installation() or not onnx_satisfied():
             _print_error(not_integral_error)
             sys.exit(-1)
@@ -127,7 +130,7 @@ def tf_installation_validation(func):
         tf2onnx = import_module("tf2onnx")
 
         if not lib_version_satisfied(getattr(tf2onnx, "__version__"), TF2ONNX_MIN_VER) \
-                or not onnx_lib_version_satisfied():
+                or not common_lib_version_satisfied():
             _print_error(not_integral_error)
             sys.exit(-1)
 
