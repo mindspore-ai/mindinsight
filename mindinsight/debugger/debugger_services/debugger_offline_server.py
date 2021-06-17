@@ -174,7 +174,7 @@ class DebuggerOfflineManager:
 
     def _load_graphs(self):
         """Load graphs."""
-        # the format of graphs is a list of {'device_id': int, 'graph_protos': [GraphProto]}}
+        # the format of graphs is a list of {'rank_id': int, 'graph_protos': [GraphProto]}}
         log.debug("Begin to load graphs.")
         graphs = self._data_loader.load_graphs()
         device_stream = self._cache_store.get_stream_handler(Streams.DEVICE)
@@ -274,9 +274,8 @@ class DebuggerOfflineManager:
             return
         # read tensor value by dbg_service
         rank_id = node_info.get('rank_id', 0)
-        device_id = self._cache_store.get_stream_handler(Streams.DEVICE).get_device_id_by_rank_id(rank_id)
         cur_step = self._metadata_stream.step
-        # as dbg_services hasn't support -1 yet, set it to 0 instead of -1
+        # as DbgServices hasn't support -1 yet, set it to 0 instead of -1
         iteration_id = cur_step - 1 if cur_step > 0 else 0
         tensor_protos = view_cmd.tensors
         root_graph_id = self.get_root_graph_id()
@@ -285,22 +284,23 @@ class DebuggerOfflineManager:
                 node_name=tensor_proto.node_name,
                 slot=int(tensor_proto.slot),
                 iteration=iteration_id - 1 if tensor_proto.iter == 'prev' else iteration_id,
-                device_id=device_id,
+                device_id=rank_id,  # change the param field name after DbgServices has changed it.
                 is_parameter=tensor_proto.truncate,
                 root_graph_id=root_graph_id
             ) for tensor_proto in tensor_protos]
         res = self._dbg_service.read_tensors(tensor_infos)
         if len(tensor_protos) != len(res):
-            log.error("Invalid view command. The result unmatched.")
-            return
-        # put tensor into cache
-        for tensor_proto, tensor_data in zip(tensor_protos, res):
-            log.debug("Tensor name: %s:%s, tensor type: %s, tensor size: %s", tensor_proto.node_name, tensor_proto.slot,
-                      tensor_data.dtype, tensor_data.data_size)
-            tensor_proto.tensor_content = tensor_data.data_ptr
-            tensor_proto.ClearField('dims')
-            tensor_proto.dims.extend(tensor_data.shape)
-            tensor_proto.data_type = tensor_data.dtype
+            log.error("Invalid view command. The result unmatched. %d/%d", len(tensor_protos), len(res))
+        else:
+            # put tensor into cache
+            for tensor_proto, tensor_data in zip(tensor_protos, res):
+                log.debug("Tensor name: %s:%s, tensor type: %s, tensor size: %s",
+                          tensor_proto.node_name, tensor_proto.slot,
+                          tensor_data.dtype, tensor_data.data_size)
+                tensor_proto.tensor_content = tensor_data.data_ptr
+                tensor_proto.ClearField('dims')
+                tensor_proto.dims.extend(tensor_data.shape)
+                tensor_proto.data_type = tensor_data.dtype
         self._put_tensor_value_into_cache(cur_step, node_info, rank_id, tensor_protos)
         log.info("Put tensor value into cache.")
 
@@ -423,7 +423,6 @@ class DebuggerOfflineManager:
         """Save watchpoint hits."""
         multi_card_hit_streams = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         multi_card_graph_streams = self._cache_store.get_stream_handler(Streams.GRAPH)
-        device_stream = self._cache_store.get_stream_handler(Streams.DEVICE)
         watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
 
         watchpoint_hits = defaultdict(list)
@@ -431,10 +430,10 @@ class DebuggerOfflineManager:
             log.info("Received hit\n: "
                      "name:%s, slot:%s, condition:%s, "
                      "watchpoint_id:%s"
-                     "error_code:%s, device_id:%s",
+                     "error_code:%s, rank_id:%s",
                      hit['name'], hit['slot'], hit['condition'],
-                     hit['watchpoint_id'], hit['error_code'], hit['device_id'])
-            rank_id = device_stream.get_rank_id_by_device_id(hit['device_id'])
+                     hit['watchpoint_id'], hit['error_code'], hit['rank_id'])
+            rank_id = hit['rank_id']
             watchpoint_hit = {}
             self._add_hit_node_info(watchpoint_hit, multi_card_graph_streams, rank_id, hit)
             if not watchpoint_hit:
@@ -518,21 +517,19 @@ class DebuggerOfflineManager:
     def _get_check_nodes(self, watch_nodes):
         """Get check nodes format"""
         check_nodes = {}
-        device_stream = self._cache_store.get_stream_handler(Streams.DEVICE)
         root_graph_id = self.get_root_graph_id()
         for watch_node in watch_nodes:
             node_name = watch_node.node_name
             rank_id = watch_node.rank_id
-            device_id = device_stream.get_device_id_by_rank_id(rank_id)
             if node_name not in check_nodes:
                 is_parameter = bool(watch_node.node_type == NodeTypeEnum.PARAMETER.value)
                 check_nodes[node_name] = {
-                    "device_id": [device_id],
+                    "device_id": [rank_id],
                     "is_parameter": is_parameter,
                     "root_graph_id": [root_graph_id]
                 }
             else:
-                check_nodes[node_name]["device_id"].append(device_id)
+                check_nodes[node_name]["device_id"].append(rank_id)
         return check_nodes
 
     def _update_state(self, server_status):
@@ -619,7 +616,7 @@ def convert_watchpointhit(watchpointhit):
         param_dict = convert_param(param)
         param_list.append(param_dict)
     watchpointhit_dict = {'condition': watchpointhit.condition,
-                          'device_id': watchpointhit.device_id,
+                          'rank_id': watchpointhit.device_id,
                           'error_code': watchpointhit.error_code,
                           'name': watchpointhit.name,
                           'parameters': param_list,
