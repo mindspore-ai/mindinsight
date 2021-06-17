@@ -402,7 +402,7 @@ def load(session_id):
     name = body.get('name')
     graph_name = body.get('graph_name')
     rank_id = to_int(body.get('rank_id', 0), 'rank_id')
-    prev = bool(request.args.get('prev') == 'true')
+    prev = bool(body.get('prev') == 'true')
     reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).load, name, prev, graph_name, rank_id)
     return reply
 
