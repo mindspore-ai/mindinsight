@@ -21,7 +21,7 @@ from threading import Event
 
 import mindinsight
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
-from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
     RunLevel
@@ -188,9 +188,13 @@ class DebuggerOfflineManager:
                 graph_per_rank[rank_id][graph_proto.name] = graph_proto
                 tensor_stream_per_rank.put_const_vals(graph_proto.const_vals)
         # the graph_per_rank is format like: Dict[<rank_id>, Dict[<graph_name>, <GraphProto>]]
-        self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_per_rank)
-        self._cache_store.get_stream_handler(Streams.GRAPH).parse_stack_infos()
-        device_stream.add_graph_name_info(graph_per_rank)
+        try:
+            self._cache_store.get_stream_handler(Streams.GRAPH).put(graph_per_rank)
+            self._cache_store.get_stream_handler(Streams.GRAPH).parse_stack_infos()
+            device_stream.add_graph_name_info(graph_per_rank)
+        except DebuggerParamValueError:
+            log.warning("Parse graph failed. The graph file is invalid.")
+            self._cache_store.get_stream_handler(Streams.GRAPH).clean()
         self._metadata_stream.state = ServerStatus.RECEIVE_GRAPH.value
         log.debug("Finish to load graphs.")
 
