@@ -65,7 +65,7 @@ class TestTrainingTraceAnalyser:
                 'step_id': 0
             }})
         result['summary'] = self._analyser.summary
-        result['point_info'] = self._analyser.point_info
+        result['point_info'] = self._analyser.point_info(1)
         del result["training_trace_graph"]
         assert expect_result == result
 

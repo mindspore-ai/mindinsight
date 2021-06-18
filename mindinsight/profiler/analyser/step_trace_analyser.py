@@ -44,9 +44,10 @@ class StepTraceAnalyser(BaseAnalyser):
         summary['total_steps'] = self._size
         return summary
 
-    @property
-    def point_info(self):
+    def point_info(self, step_id):
         """The property of point info."""
+        if isinstance(self._point_info, list):
+            return self._point_info[step_id-1]
         return self._point_info
 
     def query(self, condition=None):
@@ -109,6 +110,14 @@ class StepTraceAnalyser(BaseAnalyser):
         file_path = os.path.join(self._profiling_dir, 'step_trace_point_info.json')
         file_path = validate_and_normalize_path(
             file_path, raise_key="Invalid step_trace_point_info file path.")
+
+        # If step_trace_point_info_{self._device_id}.json file exist, load this file.
+        file_path_new = os.path.join(self._profiling_dir, f'step_trace_point_info_{self._device_id}.json')
+        file_path_new = validate_and_normalize_path(
+            file_path_new, raise_key="Invalid step_trace_point_info file path.")
+        if os.path.isfile(file_path_new):
+            file_path = file_path_new
+
         if os.path.isfile(file_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 try:
