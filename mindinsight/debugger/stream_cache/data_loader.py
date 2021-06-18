@@ -22,6 +22,7 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import DumpSettings, is_valid_rank_dir_name
 from mindinsight.domain.graph.proto.ms_graph_pb2 import ModelProto
+from google.protobuf.message import DecodeError
 
 RankDir = namedtuple("rank_dir", ["rank_id", "path"])
 
@@ -269,6 +270,10 @@ def get_graph_protos_from_dir(graphs_dir):
     for file_in_device in graphs_dir.iterdir():
         file_name = file_in_device.name
         if file_name.startswith(pre_file_name) and file_name.endswith(".pb"):
-            graph_proto = load_graph_from_file(file_in_device)
+            try:
+                graph_proto = load_graph_from_file(file_in_device)
+            except DecodeError:
+                log.warning("Load graph failed. The graph file is invalid.")
+                return []
             graph_protos.append(graph_proto)
     return graph_protos

@@ -428,7 +428,7 @@ class DebuggerSession:
         if tensor_basic_info:
             view_cmd = create_view_event_from_tensor_basic_info(tensor_basic_info)
             self.cache_store.put_command(
-                {'view_cmd': view_cmd, 'node_name': name, 'graph_name': graph_name, 'rank_id': rank_id})
+                {'view_cmd': view_cmd, 'tensor_name': name, 'graph_name': graph_name, 'rank_id': rank_id})
             log.debug("Send view cmd.")
 
     def load(self, name, prev, graph_name=None, rank_id=0):
