@@ -42,6 +42,7 @@ MindConverter是一款用于将PyTorch、TensorFlow脚本或者ONNX文件转换�
 install）如下依赖库（ONNX模型文件转MindSpore的用户无需安装tf2onnx）：
 
 ```text
+mindspore>=1.2.0
 onnx>=1.8.0
 tf2onnx>=1.7.1
 onnxruntime>=1.5.2

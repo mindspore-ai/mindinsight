@@ -41,6 +41,7 @@ MindConverter is a submodule in MindInsight. Please follow the [Guide](https://w
 For users using MindConverter, in addition to install the **TensorFlow** that can satisfy the model loading, inference and training requirements, users also need to install the following third party package (tf2onnx is not required for users that convert ONNX model definition file to MindSpore):
 
 ```text
+mindspore>=1.2.0
 onnx>=1.8.0
 tf2onnx>=1.7.1
 onnxruntime>=1.5.2
