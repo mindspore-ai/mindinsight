@@ -17,12 +17,13 @@ import json
 from collections import namedtuple
 from pathlib import Path
 
+from google.protobuf.message import DecodeError
+
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, RankDirNotFound, \
     DebuggerJsonFileParseError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import DumpSettings, is_valid_rank_dir_name
 from mindinsight.domain.graph.proto.ms_graph_pb2 import ModelProto
-from google.protobuf.message import DecodeError
 
 RankDir = namedtuple("rank_dir", ["rank_id", "path"])
 
@@ -220,21 +221,6 @@ class DataLoader:
     def get_net_name(self):
         """Get net_name of the data."""
         return self._net_name
-
-    def get_root_graph_id(self):
-        """Get the root graph id."""
-        graph_id = 0
-        if not self._rank_dirs:
-            return graph_id
-        net_path = self._rank_dirs[0].path / self._net_name
-        if not net_path.is_dir():
-            return graph_id
-        for graph_dir in net_path.iterdir():
-            if graph_dir.name.isdigit():
-                graph_id = int(graph_dir.name)
-                log.debug("Find root graph id %s", graph_id)
-                break
-        return graph_id
 
 
 def load_graph_from_file(graph_file_path):

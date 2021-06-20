@@ -46,6 +46,11 @@ class WatchpointHandler(StreamHandlerBase):
         # whether the watchpoint list has been changed since last step
         self._outdated = False
 
+    @property
+    def empty(self):
+        """Check the there is no watchpoint."""
+        return not self._watchpoints
+
     def set_outdated(self):
         """"Set outdated as True."""
         self._outdated = True

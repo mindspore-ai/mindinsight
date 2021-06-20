@@ -319,6 +319,7 @@ class Watchpoint:
         for rank_id, watch_nodes in watch_nodes_for_devices.items():
             for watch_node in watch_nodes:
                 event_node = set_cmd.watch_nodes.add()
+                event_node.graph_name = watch_node.name.split('/', 1)[0]
                 event_node.node_name = watch_node.full_name
                 event_node.node_type = watch_node.type
                 event_node.rank_id = rank_id
@@ -335,6 +336,7 @@ class Watchpoint:
         return watchpoint_info
 
     def validate_rank_id(self, rank_id):
+        """Validate the rank id."""
         if rank_id not in self._watch_node:
             log.warning("Rank_id not exist")
             return

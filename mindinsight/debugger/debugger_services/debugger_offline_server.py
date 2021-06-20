@@ -182,7 +182,7 @@ class DebuggerOfflineManager:
         for graph in graphs:
             rank_id = graph.get('rank_id')
             graph_per_rank[rank_id] = {}
-            tensor_stream_per_rank = self._cache_store.get_stream_handler(Streams.TENSOR).\
+            tensor_stream_per_rank = self._cache_store.get_stream_handler(Streams.TENSOR). \
                 get_tensor_handler_by_rank_id(rank_id, create_if_not_exit=True)
             for graph_proto in graph.get('graph_protos'):
                 graph_per_rank[rank_id][graph_proto.name] = graph_proto
@@ -281,8 +281,10 @@ class DebuggerOfflineManager:
         cur_step = self._metadata_stream.step
         # as DbgServices hasn't support -1 yet, set it to 0 instead of -1
         iteration_id = cur_step - 1 if cur_step > 0 else 0
+        root_graph_id = self.get_root_graph_id(rank_id=rank_id,
+                                               graph_name=node_info.get('graph_name'),
+                                               node_name=node_info.get('node_name'))
         tensor_protos = view_cmd.tensors
-        root_graph_id = self.get_root_graph_id()
         tensor_infos = [
             self._dbg_services_module.TensorInfo(
                 node_name=tensor_proto.node_name,
@@ -308,9 +310,10 @@ class DebuggerOfflineManager:
         self._put_tensor_value_into_cache(cur_step, node_info, rank_id, tensor_protos)
         log.info("Put tensor value into cache.")
 
-    def get_root_graph_id(self):
+    def get_root_graph_id(self, rank_id, graph_name, node_name=None):
         """Get root graph id."""
-        return self._data_loader.get_root_graph_id()
+        graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(rank_id)
+        return graph_stream.get_root_graph_id(graph_name, node_name)
 
     def _put_tensor_value_into_cache(self, cur_step, node_info, rank_id, tensor_protos):
         """Put tensor value into tensor cache."""
@@ -376,7 +379,8 @@ class DebuggerOfflineManager:
         self._check_watchpoint(new_step)
         self._metadata_stream.step = new_step
         self._cache_store.get_stream_handler(Streams.TENSOR).set_step(new_step)
-        self._cache_store.put_data(self._metadata_stream.get('step'))
+        self._cache_store.clean_data()
+        self._cache_store.put_data(self._metadata_stream.get(['step', 'state']))
 
     def _get_parsed_run_cmd(self, run_cmd):
         """Get parsed run command."""
@@ -405,13 +409,18 @@ class DebuggerOfflineManager:
         Args:
             step (int): The step number which starts from 1.
         """
-        # the iteration number in dump structure which starts from 0.
-        # as dbg_services hasn't support -1 yet, set it to 0 instead of -1
-        iteration_id = step - 1 if step > 0 else 0
         self._update_state(ServerStatus.RUNNING)
         # Clean watchpoint_hits in cache
         multi_card_hit_streams = self._cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         multi_card_hit_streams.clean()
+        if step <= 0:
+            log.info("Offline debugger does not support checking initial weights yet.")
+            return
+        if self._cache_store.get_stream_handler(Streams.WATCHPOINT).empty:
+            log.debug("No watchpoint is set. Ignore checking watchpoint.")
+            return
+        # the iteration number in dump structure which starts from 0.
+        iteration_id = step - 1
         hits = Manager().list()
         check_watchpoints_process = Process(target=self._check_watchpoint_work, args=(hits, iteration_id,))
         check_watchpoints_process.start()
@@ -519,14 +528,16 @@ class DebuggerOfflineManager:
             self._dbg_service.remove_watchpoint(set_cmd_id)
 
     def _get_check_nodes(self, watch_nodes):
-        """Get check nodes format"""
+        """Get check nodes format."""
         check_nodes = {}
-        root_graph_id = self.get_root_graph_id()
         for watch_node in watch_nodes:
             node_name = watch_node.node_name
             rank_id = watch_node.rank_id
             if node_name not in check_nodes:
                 is_parameter = bool(watch_node.node_type == NodeTypeEnum.PARAMETER.value)
+                root_graph_id = self.get_root_graph_id(rank_id=rank_id,
+                                                       graph_name=watch_node.graph_name,
+                                                       node_name=node_name)
                 check_nodes[node_name] = {
                     "device_id": [rank_id],
                     "is_parameter": is_parameter,
@@ -545,6 +556,7 @@ class DebuggerOfflineManager:
         """
         if self._metadata_stream.state != server_status.value:
             self._metadata_stream.state = server_status.value
+            self._cache_store.clean_data()
             self._cache_store.put_data(self._metadata_stream.get())
 
     def _check_watchpoint_work(self, hits, step):

@@ -223,11 +223,8 @@ class GraphHandler(StreamHandlerBase):
         Returns:
             dict, every layer nodes until this node.
         """
-        if graph_name:
-            graph = self._get_graph(graph_name=graph_name)
-            searched_graph = graph.search_single_node(name)
-        else:
-            searched_graph = self._whole_graph.search_single_node(name)
+        graph = self._get_graph(graph_name=graph_name)
+        searched_graph = graph.search_single_node(name)
 
         return searched_graph
 
@@ -271,13 +268,9 @@ class GraphHandler(StreamHandlerBase):
                       ]
                     }
         """
-        if graph_name:
-            graph = self._get_graph(graph_name, scope)
-            nodes = graph.list_node_by_scope(scope=scope)
-            res = {'nodes': nodes}
-        else:
-            nodes = self._whole_graph.list_node_by_scope(scope=scope)
-            res = {'nodes': nodes}
+        graph = self._get_graph(graph_name, scope)
+        nodes = graph.list_node_by_scope(scope=scope)
+        res = {'nodes': nodes}
 
         return res
 
@@ -642,7 +635,7 @@ class GraphHandler(StreamHandlerBase):
 
     def _parse_node_name(self, node_name, graph_name):
         """
-        Check if the node name should have graph scope.
+        Parse node_name according to graph_name.
 
         Args:
             node_name (str): The ui node name.
@@ -689,6 +682,12 @@ class GraphHandler(StreamHandlerBase):
             return graphs.items()
         sorted_graphs = sorted(graphs.items(), key=lambda x: get_graph_number(x[0]))
         return sorted_graphs
+
+    def get_root_graph_id(self, graph_name, node_name=None):
+        """Get the root_graph_id of a graph."""
+        graph_name, node_name = self._parse_node_name(node_name=node_name, graph_name=graph_name)
+        graph = self._get_graph(graph_name=graph_name)
+        return graph.root_graph_id
 
 
 def get_graph_number(graph_name):

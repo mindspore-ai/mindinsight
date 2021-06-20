@@ -44,6 +44,20 @@ def _is_match(identifier, node, condition):
 class DebuggerGraph(MSGraph):
     """The `DebuggerGraph` object provides interfaces to describe a debugger graph."""
 
+    def __init__(self):
+        super(DebuggerGraph, self).__init__()
+        self._root_graph_id = None
+
+    def _parse_data(self, proto_data):
+        super(DebuggerGraph, self)._parse_data(proto_data)
+        root_name = proto_data.root_name
+        self._root_graph_id = int(root_name) if root_name.isdigit() else 0
+
+    @property
+    def root_graph_id(self):
+        """Get the root graph id of current graph."""
+        return self._root_graph_id
+
     @property
     def leaf_nodes(self):
         """Return the leaf nodes."""
