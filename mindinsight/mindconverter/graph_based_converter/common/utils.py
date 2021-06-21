@@ -211,32 +211,6 @@ def onnx_satisfied():
     return True
 
 
-def lib_version_satisfied(current_ver: str, mini_ver_limited: str,
-                          newest_ver_limited: str = ""):
-    """
-    Check python lib version whether is satisfied.
-
-    Notes:
-        Version number must be format of x.x.x, e.g. 1.1.0.
-
-    Args:
-        current_ver (str): Current lib version.
-        mini_ver_limited (str): Mini lib version.
-        newest_ver_limited (str): Newest lib version.
-
-    Returns:
-        bool, true or false.
-    """
-    required_version_number_len = 3
-    if len(list(current_ver.split("."))) != required_version_number_len or \
-            len(list(mini_ver_limited.split("."))) != required_version_number_len or \
-            (newest_ver_limited and len(newest_ver_limited.split(".")) != required_version_number_len):
-        raise ValueError("Version number must be format of x.x.x.")
-    if current_ver < mini_ver_limited or (newest_ver_limited and current_ver > newest_ver_limited):
-        return False
-    return True
-
-
 def get_dict_key_by_value(val, dic):
     """
     Return the first appeared key of a dictionary by given value.
@@ -305,15 +279,16 @@ def replace_string_in_list(str_list: list, original_str: str, target_str: str):
     return [s.replace(original_str, target_str) for s in str_list]
 
 
-def get_third_part_lib_error_info(lib_list):
+def get_third_part_lib_error_info(lib_list, required_lib_versions=None):
     """Get error info when not satisfying third part lib validation."""
+    required_lib_versions = required_lib_versions or THIRD_PART_VERSION
     error_info = None
     link_str = ', '
     for idx, lib in enumerate(lib_list):
         if idx == len(lib_list) - 1:
             link_str = ' and '
 
-        lib_version_required = THIRD_PART_VERSION.get(lib)
+        lib_version_required = required_lib_versions.get(lib)
         if lib_version_required:
             if len(lib_version_required) == 2:
                 lib_version_required_min = lib_version_required[0]
@@ -323,7 +298,8 @@ def get_third_part_lib_error_info(lib_list):
                 else:
                     info = f"{lib}(>={lib_version_required_min} and <{lib_version_required_max})"
             else:
-                info = f"{lib}(>={lib_version_required[0]})"
+                link_mark = '' if lib_version_required[0] == 'NotFound' else '>='
+                info = f"{lib}({link_mark}{lib_version_required[0]})"
         else:
             info = f"{lib}"
 
@@ -381,3 +357,33 @@ def save_intermediate_graph(dataloader, output_folder):
         if os.path.exists(graph_file):
             os.remove(graph_file)
         raise e
+
+
+def get_current_lib_versions(lib_list):
+    """Get current lib versions."""
+    current_lib_versions = dict()
+    for lib in lib_list:
+        try:
+            if lib == 'onnxoptimizer':
+                ver = getattr(import_module("onnxoptimizer.version"), 'version')
+            else:
+                ver = getattr(import_module(lib), '__version__')
+        except ImportError:
+            ver = 'NotFound'
+        current_lib_versions[lib] = (ver, ver)
+    return current_lib_versions
+
+
+def get_lib_notice_info():
+    """Get current lib information and required lib information."""
+    common_lib_list = ['mindspore', 'onnx', 'onnxruntime', 'onnxoptimizer']
+    tf_lib_list = ['tensorflow', 'tf2onnx']
+    current_lib_versions = get_current_lib_versions(common_lib_list + tf_lib_list)
+    info = f"Please make sure the libraries installed are consistent with the ones required. " \
+           f"These libraries {get_third_part_lib_error_info(common_lib_list)} are required " \
+           f"when using graph based scripts converter, " \
+           f"and extra libraries {get_third_part_lib_error_info(tf_lib_list)} are required " \
+           f"when using the converter for tensorflow(.pb) conversion. " \
+           f"Currently, {get_third_part_lib_error_info(common_lib_list + tf_lib_list, current_lib_versions)} " \
+           f"are gotten."
+    return info
