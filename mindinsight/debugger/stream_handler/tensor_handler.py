@@ -679,7 +679,7 @@ class TensorHandler(StreamHandlerBase):
         if not tensor or tensor.status == TensorStatusEnum.EMPTY.value:
             log.error("No tensor named %s at the step %s", tensor_name, step)
             raise DebuggerParamValueError("No tensor named {}".format(tensor_name))
-        if tensor.bytes > MAX_CACHE_SPACE:
+        if tensor.download_size > MAX_CACHE_SPACE:
             log.error("Tensor named %s at the step %s is too large to download.", tensor_name, step)
             raise DebuggerParamValueError(
                 "Tensor named {} at the step {} is too large to download.".format(tensor_name, step))

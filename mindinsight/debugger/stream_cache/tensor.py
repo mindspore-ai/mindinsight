@@ -67,7 +67,7 @@ class BaseTensor(ABC):
 
     @property
     @abstractmethod
-    def bytes(self):
+    def download_size(self):
         """The property of tensor shape."""
 
     @property
@@ -110,7 +110,7 @@ class BaseTensor(ABC):
             'step': self._step,
             'dtype': self.dtype,
             'shape': self.shape,
-            'bytes': self.bytes,
+            'bytes': self.download_size,
             'has_prev_step': False
         }
         return res
@@ -150,7 +150,8 @@ class OpTensor(BaseTensor):
         super(OpTensor, self).__init__(step)
         self._tensor_proto = tensor_proto
         self._value = self.to_numpy(tensor_content)
-        self._bytes = self._value.nbytes if self._value is not None else 0
+        # the npy file header is 128 bytes
+        self._download_size = self._value.nbytes + 128 if self._value is not None else 0
         self._stats = None
         self._tensor_comparison = None
         self._status = TensorStatusEnum.EMPTY.value if self._value is None else TensorStatusEnum.CACHED.value
@@ -192,9 +193,9 @@ class OpTensor(BaseTensor):
         return self._value.nbytes if self._value is not None else 0
 
     @property
-    def bytes(self):
-        """The property of tensor value."""
-        return self._bytes
+    def download_size(self):
+        """The property of download size."""
+        return self._download_size
 
     @property
     def stats(self):
@@ -353,8 +354,9 @@ class ConstTensor(BaseTensor):
         return self._status
 
     @property
-    def bytes(self):
-        """The property of tensor value."""
+    def download_size(self):
+        """The property of download size."""
+        # cannot download the const value, so the the download size is 0
         return 0
 
     def generate_value_from_proto(self, tensor_proto):
