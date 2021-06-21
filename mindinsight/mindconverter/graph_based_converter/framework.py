@@ -336,3 +336,23 @@ def get_ms_graph_from_onnx(graph_path: str, input_nodes: dict, output_nodes: Lis
     mcgraph.build_graph(ms_graph.graph)
     nodes = mcgraph.list_node_by_scope()
     return {'nodes': nodes}
+
+
+def convert_from_ui(graph_path: str, scope: dict, input_nodes: dict, output_nodes: List[str], output_folder: str):
+    """
+    Convert the graph according to user selections.
+
+    Args:
+        graph_path (str): Graph file path.
+        scope (dict): Dict of User operations.
+        input_nodes (dict): Input node(s) of the model.
+        output_nodes (list[str]): Output node(s) of the model.
+        output_folder (str): Output folder of the code.
+
+    Returns:
+        str, reply message.
+    """
+    graph_obj = GraphFactory.init(graph_path, input_nodes=input_nodes, output_nodes=output_nodes)
+    convert_according_to_user_selections(graph_obj, output_folder=output_folder,
+                                         user_operations=scope["user_operations"])
+    return {'msg': "Convert successfully."}

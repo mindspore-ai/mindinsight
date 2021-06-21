@@ -32,6 +32,7 @@ class ConverterErrors(ScriptConverterErrors):
     SCRIPT_NOT_SUPPORT = 1
     NODE_TYPE_NOT_SUPPORT = 2
     CODE_SYNTAX_ERROR = 3
+    CONVERT_FROM_UI_ERRORS = 4
 
     BASE_CONVERTER_FAIL = 000
     GRAPH_INIT_FAIL = 100
@@ -534,3 +535,10 @@ class GeneratorError(MindConverterException):
         """Raise from exceptions below."""
         except_source = (ValueError, TypeError, SyntaxError, cls)
         return except_source
+
+
+class ConvertFromUIError(MindInsightException):
+    """The ConvertFromUIError class definition"""
+
+    def __init__(self, msg):
+        super(ConvertFromUIError, self).__init__(ConverterErrors.CONVERT_FROM_UI_ERRORS, msg, http_code=500)

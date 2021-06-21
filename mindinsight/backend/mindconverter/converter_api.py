@@ -13,12 +13,17 @@
 # limitations under the License.
 # ============================================================================
 """MindConverter API module."""
+from importlib import import_module
+import os
 import json
 from flask import Blueprint, jsonify, request
 
+from marshmallow import ValidationError
+
 from mindinsight.conf import settings
-from mindinsight.mindconverter.graph_based_converter.framework import get_ms_graph_from_onnx
+from mindinsight.mindconverter.graph_based_converter.framework import get_ms_graph_from_onnx, convert_from_ui
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.mindconverter.common.exceptions import ConvertFromUIError
 
 BLUEPRINT = Blueprint("converter", __name__, url_prefix=settings.URL_PATH_PREFIX + settings.API_PREFIX)
 
@@ -34,7 +39,78 @@ def get_graph_nodes():
     for index, node in enumerate(input_node):
         input_nodes[node] = tuple(shape[index])
     output_nodes = body.get('output_nodes')
-    response = get_ms_graph_from_onnx(model_file, input_node, output_nodes)
+    model_path = os.path.join(settings.SUMMARY_BASE_DIR, model_file)
+    try:
+        # most unix systems allow
+        model_path = os.path.realpath(model_path)
+    except ValueError:
+        raise ValidationError("The path is invalid!")
+    response = get_ms_graph_from_onnx(model_path, input_node, output_nodes)
+    return jsonify(response)
+
+
+@BLUEPRINT.route("/converter/models", methods=["GET"])
+def list_models():
+    """List onnx and pb models in current dir."""
+    files = [f for f in os.listdir(settings.SUMMARY_BASE_DIR) if f.endswith(".onnx") or f.endswith(".pb")]
+    files = sorted(files)
+    return {"models_files": files}
+
+
+@BLUEPRINT.route("/converter/models/info", methods=["GET"])
+def get_info_from_onnx():
+    """Get the parameter of inputs, shape and outputs according to the onnx file."""
+    file_name = request.args.get('file_name')
+    path = os.path.join(settings.SUMMARY_BASE_DIR, file_name)
+    try:
+        # most unix systems allow
+        path = os.path.realpath(path)
+    except ValueError:
+        raise ValidationError("The path is invalid!")
+    onnx = import_module("onnx")
+    model = onnx.load(path)
+    inputs = []
+    shape = []
+    outputs = []
+    input_name = model.graph.input
+    for n in input_name:
+        inputs.append(n.name)
+        tmp = []
+        for i in n.type.tensor_type.shape.dim:
+            tmp.append(i.dim_value)
+        shape.append(tmp)
+    for o in model.graph.output:
+        outputs.append(o.name)
+    return {"name": file_name, "inputs": inputs, "shape": shape, "outputs": outputs}
+
+
+@BLUEPRINT.route("/converter/convert", methods=["POST"])
+def convert_ui():
+    """
+    Convert the graph according to user selections from UI.
+
+    Returns:
+        str, reply message.
+
+    Raises:
+        ConvertFromUIError: If method fails to be called.
+    """
+    body = _read_post_request(request)
+    model_file = body.get('model_file')
+    input_node = body.get('input_nodes')
+    shape = body.get('shape')
+    path = body.get('output')
+    output_folder = os.path.join(settings.SUMMARY_BASE_DIR, path)
+    input_nodes = {}
+    for index, node in enumerate(input_node):
+        input_nodes[node] = tuple(shape[index])
+    output_nodes = body.get('output_nodes')
+    scope = body.get('scope')
+    model_path = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, model_file))
+    try:
+        response = convert_from_ui(model_path, scope, input_nodes, output_nodes, output_folder)
+    except ConvertFromUIError as e:
+        raise ConvertFromUIError(str(e))
     return jsonify(response)
 
 
