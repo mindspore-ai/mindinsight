@@ -17,7 +17,7 @@ limitations under the License.
   <div class="cl-checkboxes-container">
     <!-- Title -->
     <div class="checkboxes-title left"
-         v-if="typeof title !== 'undefined'">
+         v-if="(typeof title !== 'undefined')">
       {{ title }}
     </div>
     <!-- Group -->
@@ -25,11 +25,8 @@ limitations under the License.
       <el-tooltip v-for="checkbox in checkboxes"
                   :key="checkbox.label"
                   effect="dark"
-                  :content="
-          checkbox.label + (typeof checkbox.title === 'string' && checkbox.title !== ''
-            ? ($t('symbols.comma') + checkbox.title)
-            : '')
-        "
+                  :content="checkbox.label + (typeof checkbox.title === 'string' &&
+                   checkbox.title !== '' ? ($t('symbols.comma') + checkbox.title): '')"
                   placement="top">
         <template v-if="typeof checkbox.disabled === 'boolean' && checkbox.disabled">
           <div class="checkboxes-item item item-disabled">
@@ -66,14 +63,14 @@ limitations under the License.
 export default {
   props: {
     /** The structure of checkboxes should be Array<Checkbox>
-    *   The structure of Checkbox should as follow
-    *   Class Checkbox {
-    *     checked: boolean,
-    *     label: string,
-    *     title?: string,
-    *     disabled?: Boolean,
-    *   }
-    */
+     *   The structure of Checkbox should as follow
+     *   Class Checkbox {
+     *     checked: boolean,
+     *     label: string,
+     *     title?: string,
+     *     disabled?: Boolean,
+     *   }
+     */
     checkboxes: Array,
     title: String, // The title of group
   },
@@ -133,7 +130,7 @@ export default {
 .cl-checkboxes-container .left .checkboxes-title {
   line-height: 22px;
   font-size: 14px;
-  color: #333333;
+  color: var(--font-color);
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -160,20 +157,20 @@ export default {
   text-overflow: ellipsis;
   overflow: hidden;
   font-size: 14px;
-  color: #333333;
+  color: var(--font-color);
 }
 .cl-checkboxes-container .right .checkboxes-item .label-disabled {
-  color: #c0c4cc;
+  opacity: 0.7;
+  color: var(--button-disabled-font-color);
 }
 .cl-checkboxes-container .right .checkboxes-item .is-checked {
-  background-image: url("../assets/images/mult-select.png");
+  background-image: url('../assets/images/mult-select.png');
 }
 .cl-checkboxes-container .right .checkboxes-item .is-unchecked {
-  background-image: url("../assets/images/mult-unselect.png");
+  background-image: url('../assets/images/mult-unselect.png');
 }
 .cl-checkboxes-container .right .checkboxes-item .is-disabled {
-  border: 1px solid #dbdbdb;
-  background-color: #e7e7e7;
+  border: 1px solid var(--border-color);
 }
 .cl-checkboxes-container .item {
   padding-bottom: 10px;

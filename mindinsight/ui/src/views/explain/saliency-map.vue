@@ -418,6 +418,7 @@ export default {
       hasPrediction: true, // If prediction type filter is effective
       hasMetric: false, // If has metric information
       requestDelay: 500, // The delay of request in ms
+      timer: null, // The timer's ID of page request
     };
   },
   computed: {
@@ -506,9 +507,7 @@ export default {
     showImgDiglog(rowObj, title) {
       this.imageDetails.title = title;
       this.imageDetails.imgUrl = this.getImgURL(rowObj.image);
-      this.imageDetails.targetUrl = this.getImgURL(
-          rowObj.inferences[rowObj.activeLabelIndex][title],
-      );
+      this.imageDetails.targetUrl = this.getImgURL(rowObj.inferences[rowObj.activeLabelIndex][title]);
       this.imageDetails.imgShow = true;
     },
     /**
@@ -520,31 +519,29 @@ export default {
       return new Promise((resolve, reject) => {
         requestService
             .queryTrainInfo(params)
-            .then(
-                (res) => {
-                  if (res && res.data) {
-                    const status = res.data.status.toUpperCase();
-                    if (status !== STATUS.LOADED) {
-                      resolve({
-                        again: true,
-                        continue: false,
-                      });
-                    } else {
-                      // status === 'LOADED'
-                      this.processTrainInfo(res.data);
-                      resolve({
-                        again: false,
-                        continue: true,
-                      });
-                    }
-                  } else {
-                    resolve({
-                      again: false,
-                      continue: false,
-                    });
-                  }
-                },
-            )
+            .then((res) => {
+              if (res && res.data) {
+                const status = res.data.status.toUpperCase();
+                if (status !== STATUS.LOADED) {
+                  resolve({
+                    again: true,
+                    continue: false,
+                  });
+                } else {
+                // status === 'LOADED'
+                  this.processTrainInfo(res.data);
+                  resolve({
+                    again: false,
+                    continue: true,
+                  });
+                }
+              } else {
+                resolve({
+                  again: false,
+                  continue: false,
+                });
+              }
+            })
             .catch((error) => {
               reject(error);
             });
@@ -565,9 +562,7 @@ export default {
       if (data.saliency) {
         this.minConfidence = data.saliency.min_confidence;
         this.hasMetric = data.saliency.metrics.length ? true : false;
-        this.allExplainers = this.arrayToCheckBox(
-            data.saliency.explainers,
-        );
+        this.allExplainers = this.arrayToCheckBox(data.saliency.explainers);
       }
       if (data.uncertainty) {
         this.uncertaintyEnabled = data.uncertainty.enabled ? true : false;
@@ -595,9 +590,7 @@ export default {
             paramsTemp[attr] === null ||
             paramsTemp[attr] === undefined ||
             // Some array has no element in does not mean query when it empty
-            (Array.isArray(paramsTemp[attr]) &&
-              paramsTemp[attr].length === 0 &&
-              attr !== 'explainer')
+            (Array.isArray(paramsTemp[attr]) && paramsTemp[attr].length === 0 && attr !== 'explainer')
           ) {
             Reflect.deleteProperty(paramsTemp, attr);
           }
@@ -742,16 +735,21 @@ export default {
               (res) => {
                 if (res.again) {
                   // Request again
-                  setTimeout(() => {
+                  this.timer = setTimeout(() => {
                     this.initPage();
+                    this.timer = null;
                   }, this.requestDelay);
                 } else {
                   // No need to request again
                   if (res.continue) {
-                    this.updateTable(this.baseQueryParameters, {
-                      limit: this.pageInfo.pageSize,
-                      offset: this.pageInfo.currentPage - 1,
-                    }, true);
+                    this.updateTable(
+                        this.baseQueryParameters,
+                        {
+                          limit: this.pageInfo.pageSize,
+                          offset: this.pageInfo.currentPage - 1,
+                        },
+                        true,
+                    );
                   } else {
                     this.isLoading = false;
                   }
@@ -760,7 +758,8 @@ export default {
               () => {
                 // Has error
                 this.isLoading = false;
-              })
+              },
+          )
           .catch(() => {
             this.isLoading = false;
           });
@@ -778,11 +777,14 @@ export default {
   mounted() {
     // Change the page title
     if (this.$route.query.id) {
-      document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t(
-          'explain.title',
-      )}-MindInsight`;
+      document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t('explain.title')}-MindInsight`;
     } else {
       document.title = `${this.$t('explain.title')}-MindInsight`;
+    }
+  },
+  beforeDestroy() {
+    if (this.timer) {
+      clearTimeout(this.timer);
     }
   },
 };
@@ -811,38 +813,26 @@ export default {
   border-radius: 0px;
 }
 .cl-saliency-map .el-checkbox__label {
-  color: #333333 !important;
+  color: var(--font-color) !important;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .el-table__body
-  .pic-cell
-  .cell {
+.cl-saliency-map .cl-saliency-map-table .table-data .el-table__body .pic-cell .cell {
   text-overflow: clip;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .el-table__body
-  .pic-cell
-  .cell
-  img {
+.cl-saliency-map .cl-saliency-map-table .table-data .el-table__body .pic-cell .cell img {
   height: 250px;
   width: 250px;
   object-fit: contain;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .el-table__body
-  .canvas-cell
-  img {
+.cl-saliency-map .cl-saliency-map-table .table-data .el-table__body .canvas-cell img {
   cursor: pointer;
 }
 .cl-saliency-map .cl-saliency-map-table .table-data .el-table__body .cell {
   height: 270px;
   padding: 10px;
+}
+
+.cl-saliency-map .el-checkbox__inner {
+  background-color: var(--bg-color);
 }
 
 .table-tooltip {
@@ -852,10 +842,7 @@ export default {
 .el-tooltip__popper .saliency-tooltip-container .cl-saliency-map-tip {
   padding: 10px;
 }
-.el-tooltip__popper
-  .saliency-tooltip-container
-  .cl-saliency-map-tip
-  .tip-title {
+.el-tooltip__popper .saliency-tooltip-container .cl-saliency-map-tip .tip-title {
   font-size: 16px;
   font-weight: bold;
 }
@@ -866,7 +853,6 @@ export default {
 .el-tooltip__popper .saliency-tooltip-container .tag-tip .tip-item {
   margin-bottom: 10px;
   font-size: 12px;
-  color: #575d6c;
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -874,21 +860,15 @@ export default {
 .el-tooltip__popper .saliency-tooltip-container .tag-tip .tip-item .tip-icon {
   margin-right: 4px;
 }
-.el-tooltip__popper
-  .saliency-tooltip-container
-  .tag-tip
-  .tip-item:last-of-type {
+.el-tooltip__popper .saliency-tooltip-container .tag-tip .tip-item:last-of-type {
   margin-bottom: 0px;
-}
-.el-tooltip__popper .saliency-tooltip-container .tag-tip .tip-title {
-  color: #333333;
 }
 </style>
 <style scoped>
 .cl-saliency-map {
   height: 100%;
   box-sizing: border-box;
-  background-color: #ffffff;
+  background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
 }
@@ -898,7 +878,7 @@ export default {
   height: 56px;
   padding: 0 32px;
   font-size: 20px;
-  color: #282b33;
+  color: var(--font-color);
   letter-spacing: -0.86px;
   font-weight: bold;
 }
@@ -925,7 +905,7 @@ export default {
   line-height: 37px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #e6ebf5;
+  border-bottom: 1px solid var(--table-border-color);
   flex-wrap: wrap;
 }
 .cl-saliency-map .cl-saliency-map-condition .item-gap {
@@ -987,90 +967,48 @@ export default {
   display: flex;
   flex-direction: column;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .center {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .center {
   text-align: center;
 }
 .cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag div,
 .cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag span {
   font-size: 12px;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-title-true {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-title-true {
   display: grid;
   grid-template-columns: 35% 35% 30%;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-title-true
-  .first {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-title-true .first {
   padding-left: 12px;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-title-false {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-title-false {
   display: grid;
   grid-template-columns: 20% 40% 40%;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content {
   flex-grow: 1;
   overflow-y: scroll;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content::-webkit-scrollbar {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content::-webkit-scrollbar {
   width: 0px;
   height: 0px;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-content-item {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item {
   background-repeat: no-repeat;
   background-position: 2px 0px;
   box-sizing: border-box;
   cursor: pointer;
   height: 48px;
-  border: 1px solid #d9ecff;
-  background-color: #f5fbfb;
+  border: 1px solid var(--table-border-color);
+  background-color: var(--bg-color);
   border-radius: 3px;
   margin-bottom: 6px;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-content-item
-  .first {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item .first {
   padding-left: 10px;
   background-color: rgba(0, 0, 0, 0) !important;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-content-item
-  .more-action {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item .more-action {
   cursor: pointer;
   text-decoration: underline;
 }
@@ -1085,74 +1023,34 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-content-item-true {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item-true {
   display: grid;
   grid-template-columns: 35% 35% 30%;
   align-items: center;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-content-item-false {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-content-item-false {
   display: grid;
   grid-template-columns: 20% 40% 40%;
   align-items: center;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-active {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-active {
   background-color: #00a5a7;
   color: #ffffff;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  :hover {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content :hover {
   background-color: #00a5a7;
   color: #ffffff;
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-tp {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-tp {
   background-image: url('../../assets/images/explain-tp.svg');
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-fn {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-fn {
   background-image: url('../../assets/images/explain-fn.svg');
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-fp {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-fp {
   background-image: url('../../assets/images/explain-fp.svg');
 }
-.cl-saliency-map
-  .cl-saliency-map-table
-  .table-data
-  .table-forecast-tag
-  .tag-content
-  .tag-tn {
+.cl-saliency-map .cl-saliency-map-table .table-data .table-forecast-tag .tag-content .tag-tn {
   background-image: url('../../assets/images/explain-tn.svg');
 }
 .cl-saliency-map .cl-saliency-map-pagination {

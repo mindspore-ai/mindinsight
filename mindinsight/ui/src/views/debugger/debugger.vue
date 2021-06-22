@@ -397,7 +397,7 @@ limitations under the License.
         </div>
       </div>
       <div class="collapse-btn"
-           :class="{collapse:leftShow}"
+           :class="[leftShow?'collapse':'',`collapse-btn-${$store.state.themeIndex}`]"
            @click="collapseBtnClick">
       </div>
     </div>
@@ -1099,7 +1099,9 @@ export default {
   },
   methods: {
     stackOperator(stack) {
-      if (!stack || !stack.file_path || !(stack.line_no || stack.line_no === 0)) return;
+      if (!stack || !stack.file_path || !(stack.line_no || stack.line_no === 0)) {
+        return;
+      }
       this.searchStackContent = `${stack.file_path}:${stack.line_no}`;
       this.radio1 = 'tree';
       this.filter();
@@ -1857,10 +1859,7 @@ export default {
             // Normal expansion
             const nodes = JSON.parse(JSON.stringify(data.nodes));
             this.packageDataToObject(data.scope_name, true, nodes);
-            if (
-              this.allGraphData[data.scope_name] &&
-              this.allGraphData[data.scope_name].type === 'aggregation_scope'
-            ) {
+            if (this.allGraphData[data.scope_name] && this.allGraphData[data.scope_name].type === 'aggregation_scope') {
               this.dealAggregationNodes(data.scope_name);
               const aggregationNode = this.allGraphData[data.scope_name];
               if (aggregationNode) {
@@ -1900,6 +1899,7 @@ export default {
       }
       if (error.code === 'ECONNABORTED' && /^timeout/.test(error.message)) {
         this.$message.error(this.$t('public.timeout'));
+        return;
       }
       if (error && error.response && error.response.data && error.response.data.error_code) {
         if (this.$t('error')[`${error.response.data.error_code}`]) {
@@ -1938,7 +1938,12 @@ export default {
     initSvgSize(immediate = false) {
       const setData = () => {
         const svgRect = document.querySelector('#graph svg').getBoundingClientRect();
-        this.svg.size = {width: svgRect.width, height: svgRect.height, left: svgRect.left, top: svgRect.top};
+        this.svg.size = {
+          width: svgRect.width,
+          height: svgRect.height,
+          left: svgRect.left,
+          top: svgRect.top,
+        };
         this.resizeTimer = null;
       };
       if (!immediate) {
@@ -1957,7 +1962,7 @@ export default {
 <style>
 .deb-wrap {
   height: 100%;
-  background-color: white;
+  background-color: var(--bg-color);
   position: relative;
   overflow: hidden;
 }
@@ -1969,7 +1974,6 @@ export default {
   width: 400px;
   padding-right: 25px;
   height: 100%;
-  background-color: white;
   position: relative;
   transition: width 0.2s;
   -moz-transition: width 0.2s;
@@ -1981,12 +1985,12 @@ export default {
 }
 .deb-wrap .left-wrap .left {
   height: 100%;
-  background: #fff;
+  border-right: 1px solid var(--table-border-color);
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.22);
 }
 .deb-wrap .left-wrap .left .header {
   padding: 15px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--table-border-color);
   position: relative;
   font-weight: bold;
 }
@@ -2019,7 +2023,7 @@ export default {
   line-height: 30px;
   padding: 0 20px;
   position: relative;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--table-border-color);
   font-weight: bold;
 }
 .deb-wrap .left-wrap .left .content .search-conditions .condition-title .img-btn {
@@ -2037,7 +2041,7 @@ export default {
 }
 
 .deb-wrap .left-wrap .left .content .search-conditions .condition-container {
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--table-border-color);
 }
 
 .deb-wrap .left-wrap .left .content .node-type,
@@ -2099,14 +2103,14 @@ export default {
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap {
   height: 30%;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--table-border-color);
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .title-wrap {
   height: 30px;
   line-height: 30px;
   padding: 0 20px;
   position: relative;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--table-border-color);
   font-weight: bold;
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .check-wrap {
@@ -2115,7 +2119,7 @@ export default {
   top: 0px;
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .check-wrap .el-icon-circle-check {
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .check-wrap .disable:before {
@@ -2128,7 +2132,7 @@ export default {
   top: 0px;
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .delete-wrap .el-icon-delete:before {
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .delete-wrap .disable:before {
@@ -2141,7 +2145,7 @@ export default {
   top: 0px;
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .add-wrap .el-icon-circle-plus:before {
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .add-wrap .disable:before {
@@ -2170,10 +2174,10 @@ export default {
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name:hover {
   cursor: pointer;
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name.selected {
-  color: #00a5a7;
+  color: var(--theme-color);
   position: relative;
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name.selected .el-icon-close {
@@ -2246,30 +2250,30 @@ export default {
   cursor: pointer;
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .selected {
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] {
   padding: 0px 10px 0 50px;
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul {
-  background-color: #f5f7fa;
+  background-color: var(--el-select-dropdown-item-hover-bg-color);
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul li {
   line-height: 18px;
   padding: 10px;
   word-break: break-all;
-  border-top: 1px solid white;
-  border-bottom: 1px solid white;
+  border-top: 1px solid var(--bg-color);
+  border-bottom: 1px solid var(--bg-color);
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul li:hover {
-  background-color: #ebeef5;
+  background-color: var(--table-border-color);
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul li .param .tensor-icon {
   display: inline-block;
   width: 6px;
   height: 6px;
   border-radius: 3px;
-  background-color: #00a5a7;
+  background-color: var(--theme-color);
   margin-top: 8px;
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .el-table__expanded-cell[class*='cell'] ul li .hit-tip {
@@ -2292,7 +2296,7 @@ export default {
 }
 .deb-wrap .left-wrap .left .btn-wrap {
   padding: 10px 20px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--table-border-color);
 }
 .deb-wrap .left-wrap .left .btn-wrap .step {
   width: 100%;
@@ -2326,10 +2330,18 @@ export default {
   line-height: 86px;
   z-index: 1;
   text-align: center;
-  background-image: url('../../assets/images/collapse-left.svg');
 }
-.deb-wrap .left-wrap .collapse-btn.collapse {
-  background-image: url('../../assets/images/collapse-right.svg');
+.deb-wrap .left-wrap .collapse-btn-0 {
+  background-image: url('../../assets/images/0/collapse-left.svg');
+}
+.deb-wrap .left-wrap .collapse-btn-1 {
+  background-image: url('../../assets/images/1/collapse-left.svg');
+}
+.deb-wrap .left-wrap .collapse-btn-0.collapse {
+  background-image: url('../../assets/images/0/collapse-right.svg');
+}
+.deb-wrap .left-wrap .collapse-btn-1.collapse {
+  background-image: url('../../assets/images/1/collapse-right.svg');
 }
 .deb-wrap .left-wrap.collapse {
   width: 0px;
@@ -2348,18 +2360,17 @@ export default {
 }
 .deb-wrap .right .header {
   line-height: 51px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--table-border-color);
   position: relative;
-  background: #fff;
 }
 .deb-wrap .right .header .link {
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .deb-wrap .right .header .host {
   margin-left: 25px;
 }
 .deb-wrap .right .header span.item .content {
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .deb-wrap .right .header .item + .item {
   margin-left: 15px;
@@ -2393,7 +2404,7 @@ export default {
 }
 .deb-wrap .right .svg-wrap {
   height: 50%;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--table-border-color);
   position: relative;
 }
 .deb-wrap .right .svg-wrap .btn-wrap {
@@ -2408,7 +2419,7 @@ export default {
 }
 .deb-wrap .right .svg-wrap .graph-container #graph {
   height: 100%;
-  background-color: #f7faff;
+  background-color: var(--graph-bg-color);
 }
 .deb-wrap .right .svg-wrap .graph-container #graph .node:hover > path,
 .deb-wrap .right .svg-wrap .graph-container #graph .node:hover > ellipse,
@@ -2447,25 +2458,24 @@ export default {
 }
 .deb-wrap .right .svg-wrap .graph-container #graph .node.aggregation > polygon {
   stroke: #e3aa00;
-  fill: #ffe794;
+  fill: var(--graph-aggregation-color);
 }
 .deb-wrap .right .svg-wrap .graph-container #graph .node.cluster.aggregation > rect {
   stroke: #e3aa00;
-  fill: #ffe794;
   stroke-dasharray: 3, 3;
 }
 .deb-wrap .right .svg-wrap .graph-container #graph .node > polygon {
-  stroke: #00a5a7;
-  fill: #8df1f2;
+  stroke: var(--theme-color);
+  fill: var(--graph-polygon-color);
 }
 .deb-wrap .right .svg-wrap .graph-container #graph .node > ellipse {
   stroke: #4ea6e6;
-  fill: #b8e0ff;
+  fill: var(--graph-operator-color);
 }
 .deb-wrap .right .svg-wrap .graph-container #graph .plain > path,
 .deb-wrap .right .svg-wrap .graph-container #graph .plain ellipse {
   stroke: #e6a23c;
-  fill: #ffd0a6;
+  fill: var(--graph-plain-color);
   stroke-dasharray: 1.5, 1.5;
 }
 .deb-wrap .right .svg-wrap .graph-container #graph .edge-point ellipse {
@@ -2473,7 +2483,7 @@ export default {
   fill: #a7a7a7;
 }
 .deb-wrap .right .svg-wrap .graph-container #graph text {
-  fill: black;
+  fill: var(--font-color);
 }
 .deb-wrap .right .svg-wrap .graph-container #contextMenu {
   display: none;
@@ -2494,7 +2504,6 @@ export default {
   color: white;
 }
 .deb-wrap .right .table-container {
-  background: #fff;
   height: calc(50% - 60px);
   position: relative;
 }
@@ -2520,7 +2529,7 @@ export default {
   position: relative;
 }
 .deb-wrap .right .table-container .table-content .stack-content {
-  background-color: #f5f7fa;
+  background-color: var(--bg-color);
   height: 100%;
   overflow: auto;
 }
@@ -2529,11 +2538,10 @@ export default {
   padding: 5px 60px 5px 10px !important;
   position: relative;
   word-break: break-all;
-  border-top: 1px solid white;
-  border-bottom: 1px solid white;
+  border-bottom: 1px solid var(--table-border-color);
 }
 .deb-wrap .right .table-container .table-content .stack-content .stack-item:hover {
-  background-color: #dfe7f5;
+  background-color: var(--table-hover-color);
 }
 .deb-wrap .right .table-container .table-content .stack-content .operator-btns {
   position: absolute;
@@ -2551,7 +2559,7 @@ export default {
   overflow-y: auto;
 }
 .deb-wrap .right .table-container .table-content .table-wrap .el-table .success-row {
-  background: #f0f9eb;
+  background: var(--table-success-row-bg-color);
 }
 .deb-wrap .right .table-container .table-content .value-wrap {
   text-align: right;
@@ -2566,7 +2574,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
-  color: #00a5a7;
+  color: var(--theme-color);
   display: inline-block;
   width: 100%;
 }
@@ -2617,28 +2625,28 @@ export default {
   width: calc(100% - 25px);
 }
 .deb-wrap .custom-btn {
-  border: 1px solid #00a5a7;
+  border: 1px solid var(--theme-color);
   border-radius: 2px;
-  background-color: white;
-  color: #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
 }
 .deb-wrap .custom-btn:hover {
-  background-color: #e9f7f7;
+  background-color: var(--button-hover-color);
 }
 .deb-wrap .custom-btn.green {
-  background-color: #00a5a7;
+  background-color: var(--theme-color);
   color: white;
 }
 .deb-wrap .custom-btn.green:hover {
   background-color: #33b7b9;
 }
 .deb-wrap .is-disabled.custom-btn {
-  background-color: #f5f5f6;
-  border: 1px solid #dfe1e6 !important;
+  background-color: var(--button-disabled-bg-color);
+  border: 1px solid var(--table-border-color) !important;
   color: #adb0b8;
 }
 .deb-wrap .is-disabled.custom-btn:hover {
-  background-color: #f5f5f6;
+  background-color: var(--button-disabled-bg-color);
 }
 .deb-wrap .notShow {
   display: none;

@@ -24,12 +24,12 @@ limitations under the License.
          :style="{'position': 'absolute', 'top':`${backTop}px`,'left':`${backLeft}px`,
                   'height': `${imageHeight}px`, 'width':`${imageWidth}px`}">
     <img v-if="targetReady"
-          :src="targetImg"
-          :style="{'position': 'absolute', 'top': `${targetTop}px`, 'left':`${targetLeft}px`,
+         :src="targetImg"
+         :style="{'position': 'absolute', 'top': `${targetTop}px`, 'left':`${targetLeft}px`,
                 'height': `${imageHeight}px`, 'width':`${imageWidth}px`}"
-          class="first-level"
-          :class="!ifSuperpose?'overlay-background':''"
-          @error="targetError()">
+         class="first-level"
+         :class="!ifSuperpose?'overlay-background':''"
+         @error="targetError()">
   </div>
 </template>
 <script>
@@ -65,14 +65,12 @@ export default {
       backgroundTemp.onload = () => {
         if (backgroundTemp.width > backgroundTemp.height) {
           this.imageWidth = this.containerSize;
-          this.imageHeight =
-            this.containerSize * (backgroundTemp.height / backgroundTemp.width);
+          this.imageHeight = this.containerSize * (backgroundTemp.height / backgroundTemp.width);
           this.backTop = this.containerSize / 2 - this.imageHeight / 2;
           this.targetTop = this.backTop;
         } else if (backgroundTemp.width < backgroundTemp.height) {
           this.imageHeight = this.containerSize;
-          this.imageWidth =
-            this.containerSize * (backgroundTemp.width / backgroundTemp.height);
+          this.imageWidth = this.containerSize * (backgroundTemp.width / backgroundTemp.height);
           this.backLeft = this.containerSize / 2 - this.imageWidth / 2;
           this.targetLeft = this.backLeft;
         } else {

@@ -318,7 +318,6 @@ export default {
   height: calc(100% - 24px);
   overflow-y: auto;
   width: 100%;
-  background: #fff;
   padding: 0 16px;
   overflow: hidden;
 }

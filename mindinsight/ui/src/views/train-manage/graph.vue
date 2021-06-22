@@ -32,7 +32,7 @@ limitations under the License.
                :key="item"
                class="guide-span">{{ item }}</div>
           <div class="step-pic">
-            <img :src="require(`@/assets/images/graph-stepimg${guide.step}.svg`)" />
+            <img :src="require(`@/assets/images/${themeIndex}/graph-stepimg${guide.step}.svg`)" />
           </div>
 
           <el-button type="primary"
@@ -42,17 +42,17 @@ limitations under the License.
         </el-popover>
         <div class="step"
              v-show="guide.step == 1">
-          <img :src="require(`@/assets/images/graph-step1${language === 'en-us' ? '-en' : ''}.svg`)"
+          <img :src="require(`@/assets/images/${themeIndex}/graph-step1${language === 'en-us' ? '-en' : ''}.svg`)"
                alt="" />
         </div>
         <div class="step"
              v-show="guide.step == 2">
-          <img :src="require(`@/assets/images/graph-step2${language === 'en-us' ? '-en' : ''}.svg`)"
+          <img :src="require(`@/assets/images/${themeIndex}/graph-step2${language === 'en-us' ? '-en' : ''}.svg`)"
                alt="" />
         </div>
         <div class="step"
              v-show="guide.step == 3">
-          <img :src="require(`@/assets/images/graph-step3${language === 'en-us' ? '-en' : ''}.svg`)"
+          <img :src="require(`@/assets/images/${themeIndex}/graph-step3${language === 'en-us' ? '-en' : ''}.svg`)"
                alt="" />
         </div>
       </div>
@@ -67,7 +67,8 @@ limitations under the License.
           </div>
           <span @click="showUserGuide"
                 class="guide">
-            <i class="guide-icon"></i>
+            <i class="guide-icon"
+               :class="`guide-icon-${themeIndex}`"></i>
             {{$t('graph.guide')}}
           </span>
         </div>
@@ -114,8 +115,8 @@ limitations under the License.
             <div id="sidebar"
                  :class="rightShow ? '' : 'right-hide'">
               <div class="toggle-right"
-                   @click="toggleRight">
-                <i :class="rightShow ? 'icon-toggle' : 'icon-toggle icon-left'"></i>
+                   @click="toggleRight"
+                   :class="[rightShow?'':'toggle-left',`toggle-${themeIndex}-btn`]">
               </div>
               <!-- Search box -->
               <div class="sidebar-tooltip">
@@ -573,6 +574,7 @@ export default {
       searchNode: null,
       searchResolve: null,
       isIntoView: true,
+      themeIndex: this.$store.state.themeIndex,
     };
   },
   watch: {
@@ -651,10 +653,7 @@ export default {
         this.$refs.tree.append(val, name);
       });
       node.childNodes.forEach((val) => {
-        if (
-          val.data.type !== 'name_scope' &&
-          val.data.type !== 'aggregation_scope'
-        ) {
+        if (val.data.type !== 'name_scope' && val.data.type !== 'aggregation_scope') {
           val.isLeaf = true;
         }
       });
@@ -731,10 +730,7 @@ export default {
             const data = res.data.nodes.map((val) => {
               return {
                 label: val.name.split('/').pop(),
-                leaf:
-                  val.type === 'name_scope' || val.type === 'aggregation_scope'
-                    ? false
-                    : true,
+                leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                 ...val,
               };
             });
@@ -860,9 +856,7 @@ export default {
                       } else {
                         if (this.allGraphData[name].type === 'aggregation_scope') {
                           this.dealAggregationNodes(name);
-                          if (
-                            this.allGraphData[name].maxChainNum > this.maxChainNum
-                          ) {
+                          if (this.allGraphData[name].maxChainNum > this.maxChainNum) {
                             this.$message.error(this.$t('graph.tooManyChain'));
                             this.allGraphData[name].isUnfold = true;
                             this.selectedNode.name = name;
@@ -883,11 +877,7 @@ export default {
                     const data = response.data.nodes.map((val) => {
                       return {
                         label: val.name.split('/').pop(),
-                        leaf:
-                      val.type === 'name_scope' ||
-                      val.type === 'aggregation_scope'
-                        ? false
-                        : true,
+                        leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                         ...val,
                       };
                     });
@@ -934,13 +924,7 @@ export default {
       RequestService.getDatavisualPlugins(params)
           .then((res) => {
             this.fileSearchBox.suggestions = [];
-            if (
-              !res ||
-            !res.data ||
-            !res.data.plugins ||
-            !res.data.plugins.graph ||
-            !res.data.plugins.graph.length
-            ) {
+            if (!res || !res.data || !res.data.plugins || !res.data.plugins.graph || !res.data.plugins.graph.length) {
               this.initOver = true;
               return;
             }
@@ -950,8 +934,7 @@ export default {
               this.fileSearchBox.suggestions.push({
                 value: k,
               });
-              hasFileSearchValue =
-              k === this.fileSearchBox.value || hasFileSearchValue;
+              hasFileSearchValue = k === this.fileSearchBox.value || hasFileSearchValue;
             });
             if (!this.initOver) {
               this.initOver = true;
@@ -989,16 +972,11 @@ export default {
      */
     selectNode(needFocus = false) {
       window.getSelection().removeAllRanges();
-      d3.selectAll(
-          '.node polygon, .node ellipse, .node rect, .node path',
-      ).classed('selected', false);
+      d3.selectAll('.node polygon, .node ellipse, .node rect, .node path').classed('selected', false);
       const path = this.selectedNode.name.split('^');
       const node = {};
       let id = path[0].replace('_unfold', '');
-      id =
-        this.allGraphData[id] && this.allGraphData[id].isUnfold
-          ? `${id}_unfold`
-          : id;
+      id = this.allGraphData[id] && this.allGraphData[id].isUnfold ? `${id}_unfold` : id;
       node.eld3 = d3.select(`#graph g[id="${id}"]`);
       node.el = node.eld3.node();
       this.graph.dom.style.transition = '';
@@ -1007,9 +985,7 @@ export default {
       if ((needFocus || needDelay) && node.el) {
         this.selectNodePosition(id, needDelay);
       }
-      node.eld3
-          .select('polygon, rect, ellipse, path')
-          .classed('selected', true);
+      node.eld3.select('polygon, rect, ellipse, path').classed('selected', true);
       this.highlightProxyNodes(id.replace('_unfold', ''));
       this.$refs.tree.setCurrentKey(id.replace('_unfold', ''));
       if (this.isIntoView) {
@@ -1049,13 +1025,8 @@ export default {
         this.selectedNode.name = selectedNode.name;
         this.selectedNode.title = selectedNode.name.replace('_unfold', '');
         this.selectedNode.type =
-          selectedNode.type === 'name_scope' ||
-          selectedNode.type === 'aggregation_scope'
-            ? ''
-            : selectedNode.type;
-        this.selectedNode.countShow =
-          selectedNode.type === 'name_scope' ||
-          selectedNode.type === 'aggregation_scope';
+          selectedNode.type === 'name_scope' || selectedNode.type === 'aggregation_scope' ? '' : selectedNode.type;
+        this.selectedNode.countShow = selectedNode.type === 'name_scope' || selectedNode.type === 'aggregation_scope';
         this.selectedNode.count = selectedNode.subnode_count;
         const attrTemp = JSON.parse(JSON.stringify(selectedNode.attr || {}));
         if (attrTemp.shape) {
@@ -1140,14 +1111,10 @@ export default {
 
       this.graph.dom.setAttribute(
           'transform',
-          `translate(${this.graph.transform.x},${this.graph.transform.y}) scale(${this.graph.transform.k})`
+          `translate(${this.graph.transform.x},${this.graph.transform.y}) scale(${this.graph.transform.k})`,
       );
 
-      const transitionTime = Math.min(
-          Math.abs(screenChange.x) * 2,
-          Math.abs(screenChange.y) * 2,
-        needDelay ? 800 : 0,
-      );
+      const transitionTime = Math.min(Math.abs(screenChange.x) * 2, Math.abs(screenChange.y) * 2, needDelay ? 800 : 0);
 
       this.graph.dom.style.transition = `${transitionTime / 1000}s`;
       this.graph.dom.style['transition-timing-function'] = 'linear';
@@ -1171,8 +1138,7 @@ export default {
      */
     selectBoxVisibleTriggle(event) {
       setTimeout(() => {
-        document.querySelector('.el-autocomplete-suggestion').style.display =
-          event.type === 'blur' ? 'none' : 'block';
+        document.querySelector('.el-autocomplete-suggestion').style.display = event.type === 'blur' ? 'none' : 'block';
       }, 300);
     },
     /**
@@ -1268,10 +1234,7 @@ export default {
       children.forEach((val) => {
         const node = this.$refs.searchTree.getNode(val.parentName);
         val.label = val.name.split('/').pop();
-        val.leaf =
-          val.type === 'name_scope' || val.type === 'aggregation_scope'
-            ? false
-            : true;
+        val.leaf = val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true;
         this.$refs.searchTree.append(val, node);
         node.expanded = true;
         if (val.nodes && val.nodes.length) {
@@ -1291,26 +1254,17 @@ export default {
       this.selectedNode.more = false;
       // If a node exists on the map, select the node.
       if (this.allGraphData[option.value]) {
-        if (
-          d3
-              .select(`g[id="${option.value}"], g[id="${option.value}_unfold"]`)
-              .size()
-        ) {
+        if (d3.select(`g[id="${option.value}"], g[id="${option.value}_unfold"]`).size()) {
           // If the namespace or aggregation node is expanded, you need to close it and select
           if (!this.allGraphData[option.value].isUnfold) {
             this.selectNode(true);
           } else {
+            this.$refs.tree.getNode(option.value).expanded = false;
             this.dealDoubleClick(option.value);
           }
         } else {
-          const parentId = option.value.substring(
-              0,
-              option.value.lastIndexOf('/'),
-          );
-          if (
-            this.allGraphData[parentId] &&
-            this.allGraphData[parentId].isUnfold
-          ) {
+          const parentId = option.value.substring(0, option.value.lastIndexOf('/'));
+          if (this.allGraphData[parentId] && this.allGraphData[parentId].isUnfold) {
             const aggregationNode = this.allGraphData[parentId];
             if (aggregationNode && aggregationNode.childIdsList) {
               for (let i = 0; i < aggregationNode.childIdsList.length; i++) {
@@ -1392,11 +1346,7 @@ export default {
         data.forEach((val) => {
           const node = this.$refs.tree.getNode(children.scope_name);
           if (node.childNodes) {
-            if (
-              node.childNodes
-                  .map((value) => value.data.name)
-                  .indexOf(val.name) === -1
-            ) {
+            if (node.childNodes.map((value) => value.data.name).indexOf(val.name) === -1) {
               this.$refs.tree.append(val, node);
             }
           } else {
@@ -1405,10 +1355,7 @@ export default {
         });
         const node = this.$refs.tree.getNode(children.scope_name);
         node.childNodes.forEach((val) => {
-          if (
-            val.data.type !== 'name_scope' &&
-            val.data.type !== 'aggregation_scope'
-          ) {
+          if (val.data.type !== 'name_scope' && val.data.type !== 'aggregation_scope') {
             val.isLeaf = true;
           }
         });
@@ -1438,18 +1385,12 @@ export default {
       if (!data.scope_name) {
         return this.dealAutoUnfoldNamescopesData(data.children);
       } else {
-        if (
-          this.allGraphData[data.scope_name] &&
-          this.allGraphData[data.scope_name].isUnfold
-        ) {
+        if (this.allGraphData[data.scope_name] && this.allGraphData[data.scope_name].isUnfold) {
           return this.dealAutoUnfoldNamescopesData(data.children);
         } else {
           // If the namespace is a namespace and the number of subnodes exceeds the upper limit,
           // an error is reported and the namespace is selected.
-          if (
-            this.allGraphData[data.scope_name].type === 'name_scope' &&
-            data.nodes.length > this.nodesCountLimit
-          ) {
+          if (this.allGraphData[data.scope_name].type === 'name_scope' && data.nodes.length > this.nodesCountLimit) {
             this.selectedNode.name = data.scope_name;
             this.querySingleNode({value: data.scope_name});
             this.$message.error(this.$t('graph.tooManyNodes'));
@@ -1460,27 +1401,18 @@ export default {
             // Normal expansion
             const nodes = JSON.parse(JSON.stringify(data.nodes));
             this.packageDataToObject(data.scope_name, true, nodes);
-            if (
-              this.allGraphData[data.scope_name].type === 'aggregation_scope'
-            ) {
+            if (this.allGraphData[data.scope_name].type === 'aggregation_scope') {
               this.dealAggregationNodes(data.scope_name);
               const aggregationNode = this.allGraphData[data.scope_name];
               if (aggregationNode) {
                 for (let i = 0; i < aggregationNode.childIdsList.length; i++) {
-                  if (
-                    aggregationNode.childIdsList[i].includes(
-                        this.selectedNode.name,
-                    )
-                  ) {
+                  if (aggregationNode.childIdsList[i].includes(this.selectedNode.name)) {
                     aggregationNode.index = i;
                     break;
                   }
                 }
               }
-              if (
-                this.allGraphData[data.scope_name].maxChainNum >
-                this.maxChainNum
-              ) {
+              if (this.allGraphData[data.scope_name].maxChainNum > this.maxChainNum) {
                 this.selectedNode.name = data.scope_name;
                 this.allGraphData[data.scope_name].isUnfold = false;
                 this.deleteNamespace(data.scope_name);
@@ -1512,9 +1444,7 @@ export default {
      * @param {String} item Determines the control edge of the input or output.
      */
     toggleControl(item) {
-      this.selectedNode.showControl[item] = !this.selectedNode.showControl[
-          item
-      ];
+      this.selectedNode.showControl[item] = !this.selectedNode.showControl[item];
     },
     /**
      * Click the node information name.
@@ -1558,7 +1488,9 @@ export default {
         `<svg xmlns="http://www.w3.org/2000/svg" ` +
         `xmlns:xlink="http://www.w3.org/1999/xlink" ` +
         `width="${bbox.width}" height="${bbox.height}" ` +
-        `viewBox="${viewBoxSize}">${CommonProperty.graphDownloadStyle}<g>${svgXml}</g></svg>`;
+        `viewBox="${viewBoxSize}">${
+          CommonProperty.graphDownloadStyle[this.$store.state.themeIndex]
+        }<g>${svgXml}</g></svg>`;
 
       const downloadLink = document.createElement('a');
       downloadLink.download = 'graph.svg';
@@ -1662,13 +1594,21 @@ export default {
   height: 16px;
   vertical-align: -2.5px;
   margin-right: 4px;
-  background: url("../../assets/images/guideIcon.svg");
+}
+.cl-graph-manage .cl-graph-title .guide .guide-icon-0 {
+  background: url('../../assets/images/0/guideIcon.svg');
+}
+.cl-graph-manage .cl-graph-title .guide .guide-icon-1 {
+  background: url('../../assets/images/1/guideIcon.svg');
 }
 .cl-graph-manage .cl-graph-title .guide:hover {
-  color: #00a5a7;
+  color: var(--theme-color);
 }
-.cl-graph-manage .cl-graph-title .guide:hover .guide-icon {
-  background: url("../../assets/images/guideIconHover.svg");
+.cl-graph-manage .cl-graph-title .guide:hover .guide-icon-0 {
+  background: url('../../assets/images/0/guideIconHover.svg');
+}
+.cl-graph-manage .cl-graph-title .guide:hover .guide-icon-1 {
+  background: url('../../assets/images/1/guideIconHover.svg');
 }
 .cl-graph-manage .graph-p32 {
   height: 100%;
@@ -1678,8 +1618,8 @@ export default {
   height: 100%;
   width: 100%;
   position: absolute;
-  background-color: #c6c8cc;
-  z-index: 9999;
+  background-color: var(--graph-guide-content-bg-color);
+  z-index: 999;
 }
 .cl-graph-manage .graph-p32 .guide-content .step-pic {
   text-align: center;
@@ -1695,7 +1635,6 @@ export default {
 }
 .cl-graph-manage .graph-p32 .guide-content .guide-span {
   font-size: 12px;
-  color: #575d6c;
   line-height: 18px;
   text-align: left;
   display: inline-block;
@@ -1708,11 +1647,10 @@ export default {
   font-size: 20px;
 }
 .cl-graph-manage .graph-p32 .guide-content .el-popover .el-icon-close:hover {
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .cl-graph-manage .graph-p32 .guide-content .el-popover__title {
   font-size: 16px;
-  color: #252b3a;
   line-height: 24px;
   font-weight: bold;
 }
@@ -1749,7 +1687,7 @@ export default {
   width: 100%;
   max-height: 224px;
   overflow: auto;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--table-border-color);
   border-top: none;
   background: #fff;
 }
@@ -1772,7 +1710,7 @@ export default {
   position: relative;
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   padding: 0 32px 10px;
   min-height: 700px;
   overflow: hidden;
@@ -1801,16 +1739,16 @@ export default {
   right: 0;
   top: 0;
   width: 442px;
-  height: 100%;
+  height: calc(100% - 15px);
   border-radius: 6px;
   text-align: left;
-  background-color: #ffffff;
+  background-color: var(--item-bg-color);
   display: inline-block;
-  box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.1);
-  color: #333333;
+  color: var(--font-color);
   font-size: 14px;
   line-height: 14px;
   padding: 18px 32px 10px;
+  border: 1px solid var(--graph-right-module-border-color);
 }
 .cl-graph-manage #graphs #sidebar .sidebar-tooltip {
   position: absolute;
@@ -1831,9 +1769,9 @@ export default {
   height: 209px;
   width: 100%;
   z-index: 100;
-  border: 1px solid #e6ebf5;
+  border: 1px solid var(--pagination-btn-color);
   overflow: hidden;
-  background-color: white;
+  background-color: var(--bg-color);
   position: relative;
 }
 .cl-graph-manage #graphs #sidebar #small-container #inside-box {
@@ -1850,7 +1788,6 @@ export default {
 .cl-graph-manage #graphs #sidebar .title {
   padding: 20px 0;
   font-size: 14px;
-  color: #333333;
 }
 .cl-graph-manage #graphs #sidebar .title img {
   float: right;
@@ -1873,27 +1810,26 @@ export default {
   z-index: 200;
   width: 10px;
   height: 10px;
-  background: #fff;
   cursor: pointer;
 }
 .cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button:horizontal:single-button:start {
-  background-image: url("../../assets/images/scroll-btn-left.png");
+  background-image: url('../../assets/images/scroll-btn-left.png');
   background-position: center;
 }
 .cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button:horizontal:single-button:end {
-  background-image: url("../../assets/images/scroll-btn-right.png");
+  background-image: url('../../assets/images/scroll-btn-right.png');
   background-position: center;
 }
 .cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button:vertical:single-button:start {
-  background-image: url("../../assets/images/scroll-btn-up.png");
+  background-image: url('../../assets/images/scroll-btn-up.png');
   background-position: center;
 }
 .cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-button:vertical:single-button:end {
-  background-image: url("../../assets/images/scroll-btn-down.png");
+  background-image: url('../../assets/images/scroll-btn-down.png');
   background-position: center;
 }
 .cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar-thumb {
-  background-color: #bac5cc;
+  background-color: var(--graph-legend-scrollbar-thumb);
 }
 .cl-graph-manage #graphs #sidebar .node-info-con ::-webkit-scrollbar {
   width: 6px;
@@ -1910,14 +1846,14 @@ export default {
   padding: 0 20px;
   height: calc(100% - 54px);
   overflow: auto;
-  color: #333;
-  background-color: #f7faff;
+  color: var(--font-color);
+  background-color: var(--graph-legend-bg-color);
 }
 .cl-graph-manage #graphs #sidebar .node-info .clear {
   clear: both;
 }
 .cl-graph-manage #graphs #sidebar .node-info .hover li:hover {
-  background: #fce8b2;
+  background: var(--graph-legend-node-info-color);
 }
 .cl-graph-manage #graphs #sidebar .node-info .hover .control-list .dependence-title {
   line-height: 30px;
@@ -1933,7 +1869,7 @@ export default {
   transform: rotate(-90deg);
 }
 .cl-graph-manage #graphs #sidebar .node-info .hover .control-list li:hover {
-  background: #fce8b2;
+  background: var(--graph-legend-node-info-color);
 }
 .cl-graph-manage #graphs #sidebar .node-info .hover .control-list:hover {
   background: none;
@@ -2008,10 +1944,11 @@ export default {
   line-height: 20px;
 }
 .cl-graph-manage #graphs #sidebar .legend .legend-content {
-  background-color: #f7faff;
+  background-color: var(--graph-legend-bg-color);
   padding: 0 32px;
   height: 94px;
   overflow-y: auto;
+  border: 1px solid var(--table-border-color);
 }
 .cl-graph-manage #graphs #sidebar .legend .legend-item {
   padding: 5px 0;
@@ -2048,22 +1985,23 @@ export default {
 .cl-graph-manage #graphs #sidebar .toggle-right {
   position: absolute;
   top: calc(50% - 43px);
-  left: -16px;
-  width: 18px;
-  height: 86px;
+  left: -14px;
+  width: 24px;
+  height: 88px;
   cursor: pointer;
-  background-image: url("../../assets/images/toggle-right-bg.png");
-}
-.cl-graph-manage #graphs #sidebar .icon-toggle {
-  width: 6px;
-  height: 9px;
-  background-image: url("../../assets/images/toggle-right-icon.png");
-  position: absolute;
-  top: calc(50% - 4.5px);
-  left: calc(50% - 3px);
-}
-.cl-graph-manage #graphs #sidebar .icon-toggle.icon-left {
   transform: rotateY(180deg);
+}
+.cl-graph-manage #graphs #sidebar .toggle-right.toggle-0-btn {
+  background-image: url('../../assets/images/0/collapse-left.svg');
+}
+.cl-graph-manage #graphs #sidebar .toggle-right.toggle-1-btn {
+  background-image: url('../../assets/images/1/collapse-left.svg');
+}
+.cl-graph-manage #graphs #sidebar .toggle-right.toggle-left.toggle-0-btn {
+  background-image: url('../../assets/images/0/collapse-right.svg');
+}
+.cl-graph-manage #graphs #sidebar .toggle-right.toggle-left.toggle-1-btn {
+  background-image: url('../../assets/images/1/collapse-right.svg');
 }
 .cl-graph-manage #graphs .operate-button-list {
   position: absolute;
@@ -2079,10 +2017,10 @@ export default {
   margin: 5px;
 }
 .cl-graph-manage #graphs .operate-button-list .download-button {
-  background-image: url("../../assets/images/download.png");
+  background-image: url('../../assets/images/download.png');
 }
 .cl-graph-manage #graphs .operate-button-list .full-screen-button {
-  background-image: url("../../assets/images/full-screen.png");
+  background-image: url('../../assets/images/full-screen.png');
 }
 .cl-graph-manage #graphs .graph-container.all {
   width: 100%;
@@ -2116,7 +2054,7 @@ export default {
 }
 .cl-graph-manage #graphs .graph-container .graph {
   height: 100%;
-  background-color: #f7faff;
+  background-color: var(--graph-bg-color);
 }
 .cl-graph-manage #graphs .graph-container #graph0 > polygon {
   fill: transparent;
@@ -2142,7 +2080,7 @@ export default {
 }
 .cl-graph-manage #graphs .graph-container .node.aggregation > polygon {
   stroke: #e3aa00;
-  fill: #ffe794;
+  fill: var(--graph-aggregation-color);
 }
 .cl-graph-manage #graphs .graph-container .node.cluster.aggregation > rect {
   stroke: #e3aa00;
@@ -2150,17 +2088,17 @@ export default {
   stroke-dasharray: 3, 3;
 }
 .cl-graph-manage #graphs .graph-container .node > polygon {
-  stroke: #00a5a7;
-  fill: #8df1f2;
+  stroke: var(--theme-color);
+  fill: var(--graph-polygon-color);
 }
 .cl-graph-manage #graphs .graph-container .node > ellipse {
   stroke: #4ea6e6;
-  fill: #b8e0ff;
+  fill: var(--graph-operator-color);
 }
 .cl-graph-manage #graphs .graph-container .plain > path,
 .cl-graph-manage #graphs .graph-container .plain ellipse {
   stroke: #e37d29;
-  fill: #ffd0a6;
+  fill: var(--graph-plain-color);
   stroke-dasharray: 1.5, 1.5;
 }
 .cl-graph-manage #graphs .graph-container .edge-point ellipse {
@@ -2168,7 +2106,7 @@ export default {
   fill: #a7a7a7;
 }
 .cl-graph-manage #graphs .graph-container text {
-  fill: black;
+  fill: var(--font-color);
 }
 .cl-graph-manage #graphs .image-noData {
   width: 100%;

@@ -16,7 +16,8 @@ limitations under the License.
 <template>
   <div class="data-process-wrap">
     <div class="title">{{$t('profiling.cpuUtilization')}}</div>
-    <div class="cpu-info" v-show="!cpuInfo.noData">
+    <div class="cpu-info"
+         v-show="!cpuInfo.noData">
       <div class="step-filter">
         <label>{{cpuInfo.stepTip}}</label>
         <label>{{$t('profiling.startStep')}}</label>
@@ -33,8 +34,8 @@ limitations under the License.
           <div class="detail-item-title">{{$t('profiling.structuralCpuUtil')}}</div>
           <div class="detail-item">
             <div class="cpu-chart"
-                id="deviceCpuChart"
-                ref="deviceCpuChart"></div>
+                 id="deviceCpuChart"
+                 ref="deviceCpuChart"></div>
             <div class="cpu-chart-info">
               <div class="info-line">
                 <span>{{$t('profiling.logicCores')}}</span><span>{{deviceCpuChart.logicCores}}</span>
@@ -68,8 +69,8 @@ limitations under the License.
           <div class="detail-item-title">{{$t('profiling.processCpuUtil')}}</div>
           <div class="detail-item">
             <div class="cpu-chart"
-                id="processCpuChart"
-                ref="processCpuChart">
+                 id="processCpuChart"
+                 ref="processCpuChart">
             </div>
             <div class="cpu-chart-info">
               <div class="info-line">
@@ -86,11 +87,11 @@ limitations under the License.
         <div class="cpu-detail-item cpu-detail-item-top">
           <div class="detail-item-title">{{$t('profiling.operatorCpuUtil')}}</div>
           <div class="detail-item-graph"
-              id="operator-graph"></div>
+               id="operator-graph"></div>
           <div class="detail-item">
             <div class="cpu-chart"
-                id="operatorCpuChart"
-                ref="operatorCpuChart">
+                 id="operatorCpuChart"
+                 ref="operatorCpuChart">
             </div>
             <div class="cpu-chart-info">
               <div class="info-title">
@@ -124,17 +125,18 @@ limitations under the License.
         </div>
       </div>
     </div>
-    <div class="image-noData" v-show="cpuInfo.noData">
-        <div>
-          <img :src="require('@/assets/images/nodata.png')"
-                alt="" />
-        </div>
-        <p>{{cpuInfo.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
+    <div class="image-noData"
+         v-show="cpuInfo.noData">
+      <div>
+        <img :src="require('@/assets/images/nodata.png')"
+             alt="" />
       </div>
+      <p>{{cpuInfo.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
+    </div>
   </div>
 </template>
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import initDot from '../../mixins/init-dot';
 import {select, selectAll, zoom} from 'd3';
@@ -167,12 +169,7 @@ export default {
             bottom: 0,
           },
         ],
-        color: [
-          '#c23531',
-          '#2f4554',
-          '#61a0a8',
-          '#d48265',
-        ],
+        color: ['#c23531', '#2f4554', '#61a0a8', '#d48265'],
       }, // The options setting of chart
       deviceCpuChart: {
         id: 'deviceCpuChart',
@@ -182,11 +179,6 @@ export default {
             trigger: 'axis',
             formatter: null,
             confine: true,
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
-            },
           },
           legend: {
             right: 70,
@@ -219,11 +211,6 @@ export default {
             trigger: 'axis',
             formatter: null,
             confine: true,
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
-            },
           },
           legend: {
             right: 70,
@@ -251,11 +238,6 @@ export default {
             trigger: 'axis',
             formatter: null,
             confine: true,
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
-            },
           },
           legend: {
             right: 70,
@@ -319,8 +301,8 @@ export default {
           this.trainId = this.$route.query.id;
           this.currentCard = newValue;
           if (this.trainId) {
-            document.title = `${decodeURIComponent(this.trainId)}`
-            + `-${this.$t('profiling.cpuUtilization')}-MindInsight`;
+            document.title =
+              `${decodeURIComponent(this.trainId)}` + `-${this.$t('profiling.cpuUtilization')}-MindInsight`;
           } else {
             document.title = `${this.$t('profiling.cpuUtilization')}-MindInsight`;
           }
@@ -383,11 +365,7 @@ export default {
      *  Resize callback function
      */
     resizeCallback() {
-      const chartArr = [
-        'deviceCpuChart',
-        'processCpuChart',
-        'operatorCpuChart',
-      ];
+      const chartArr = ['deviceCpuChart', 'processCpuChart', 'operatorCpuChart'];
       chartArr.forEach((val) => {
         if (this[val].chartDom) {
           this[val].chartDom.resize();
@@ -410,26 +388,25 @@ export default {
             device_id: this.currentCard,
           },
         };
-        RequestService.queryOpQueue(params)
-            .then((res) => {
-              if (res.data && res.data.object) {
-              // Keep data order right
-                const newData = this.ensureDataOrder(res.data.object);
-                // Process data
-                const graphData = this.processGraphData(newData);
-                // Transform to dot
-                const dot = initDot.objectToDot(graphData);
-                // Render dot
-                this.initOperatorGraph(dot).then(() => {
-                  const nodes = d3.selectAll('g.node');
-                  // Add click event
-                  this.addGraphEvent(nodes);
-                  // Add cursor style
-                  this.updateGraphStyle(nodes);
-                  resolve(true);
-                });
-              }
+        RequestService.queryOpQueue(params).then((res) => {
+          if (res.data && res.data.object) {
+            // Keep data order right
+            const newData = this.ensureDataOrder(res.data.object);
+            // Process data
+            const graphData = this.processGraphData(newData);
+            // Transform to dot
+            const dot = initDot.objectToDot(graphData);
+            // Render dot
+            this.initOperatorGraph(dot).then(() => {
+              const nodes = d3.selectAll('g.node');
+              // Add click event
+              this.addGraphEvent(nodes);
+              // Add cursor style
+              this.updateGraphStyle(nodes);
+              resolve(true);
             });
+          }
+        });
       });
     },
     /**
@@ -481,12 +458,15 @@ export default {
       if (Array.isArray(dataArr)) {
         dataArr.forEach((data) => {
           const text = `${data[1]}_${data[0]}`;
-          const node = Object.assign({
-            name: text,
-            id: text,
-            label: text,
-          }, nodeStyle);
-            // If has the parent node
+          const node = Object.assign(
+              {
+                name: text,
+                id: text,
+                label: text,
+              },
+              nodeStyle,
+          );
+          // If has the parent node
           if (typeof data[6] === 'number') {
             const next = data[6];
             node.next = [
@@ -660,22 +640,25 @@ export default {
         this.cpuInfo.startStep.step = this.cpuInfo.startStep.showStep;
         this.cpuInfo.endStep.step = this.cpuInfo.endStep.showStep;
         this.queryCpuInfo(true, false);
-      } else if (this.cpuInfo.endStep.showStep === '' &&
-      stepValidation.test(this.cpuInfo.startStep.showStep) &&
-      this.cpuInfo.startStep.showStep <= this.cpuInfo.step) {
+      } else if (
+        this.cpuInfo.endStep.showStep === '' &&
+        stepValidation.test(this.cpuInfo.startStep.showStep) &&
+        this.cpuInfo.startStep.showStep <= this.cpuInfo.step
+      ) {
         this.cpuInfo.startStep.step = this.cpuInfo.startStep.showStep;
         this.cpuInfo.endStep.step = this.cpuInfo.step;
         this.cpuInfo.endStep.showStep = this.cpuInfo.step;
         this.queryCpuInfo(true, false);
-      } else if (this.cpuInfo.startStep.showStep === '' &&
-      stepValidation.test(this.cpuInfo.endStep.showStep) &&
-      this.cpuInfo.endStep.showStep <= this.cpuInfo.step) {
+      } else if (
+        this.cpuInfo.startStep.showStep === '' &&
+        stepValidation.test(this.cpuInfo.endStep.showStep) &&
+        this.cpuInfo.endStep.showStep <= this.cpuInfo.step
+      ) {
         this.cpuInfo.startStep.step = 1;
         this.cpuInfo.startStep.showStep = 1;
         this.cpuInfo.endStep.step = this.cpuInfo.endStep.showStep;
         this.queryCpuInfo(true, false);
-      } else if (this.cpuInfo.startStep.showStep === '' &&
-      this.cpuInfo.endStep.showStep === '') {
+      } else if (this.cpuInfo.startStep.showStep === '' && this.cpuInfo.endStep.showStep === '') {
         this.resetStepFilter();
       } else {
         this.cpuInfo.startStep.showStep = this.cpuInfo.startStep.step;
@@ -703,17 +686,13 @@ export default {
       const data = params;
       let str = '';
       if (data && data.length) {
-        const colorArray = [
-          '#c23531',
-          '#2f4554',
-          '#61a0a8',
-          '#d48265',
-        ];
+        const colorArray = ['#c23531', '#2f4554', '#61a0a8', '#d48265'];
         const index = data[0].dataIndex;
         str += `step: ${stepArray[index]}`;
         data.forEach((item, index) => {
-          str += `<br><span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
-          `${item.seriesName}: ${item.data}`;
+          str +=
+            `<br><span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
+            `${item.seriesName}: ${item.data}`;
         });
         str += `</div>`;
       }
@@ -747,8 +726,9 @@ export default {
       this.deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
       this.deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
       this.deviceCpuChart.option.series = series;
-      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${
-        this.$t('symbols.leftbracket')}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+          'symbols.leftbracket',
+      )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
       this.deviceCpuChart.option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
           (val, index) => index + 1,
       );
@@ -759,7 +739,7 @@ export default {
       this.$nextTick(() => {
         if (!this.deviceCpuChart.chartDom) {
           if (this.$refs.deviceCpuChart) {
-            this.deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart);
+            this.deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart, echartsThemeName);
           }
         }
         this.deviceCpuChart.chartDom.setOption(this.deviceCpuChart.option);
@@ -788,8 +768,9 @@ export default {
       this.processCpuChart.cpuAvgUser = processInfo.user_utilization.avg_value;
       this.processCpuChart.cpuAvgSystem = processInfo.sys_utilization.avg_value;
       this.processCpuChart.option.series = series;
-      this.processCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${
-        this.$t('symbols.leftbracket')}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+      this.processCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+          'symbols.leftbracket',
+      )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
       this.processCpuChart.option.xAxis.data = processInfo[Object.keys(processInfo)[0]].metrics.map(
           (val, index) => index + 1,
       );
@@ -800,7 +781,7 @@ export default {
       this.$nextTick(() => {
         if (!this.processCpuChart.chartDom) {
           if (this.$refs.processCpuChart) {
-            this.processCpuChart.chartDom = echarts.init(this.$refs.processCpuChart);
+            this.processCpuChart.chartDom = echarts.init(this.$refs.processCpuChart, echartsThemeName);
           }
         }
         this.processCpuChart.chartDom.setOption(this.processCpuChart.option);
@@ -822,7 +803,7 @@ export default {
         const node = document.getElementById(this.operatorCPUList[this.selIndex]);
         if (node) {
           this.clickEvent(node);
-        };
+        }
       }
       this.operatorCpuChart.cpuAvgTotalUser = opInfo.total_op_avg_value.user_utilization;
       this.operatorCpuChart.cpuAvgTotalSystem = opInfo.total_op_avg_value.sys_utilization;
@@ -856,8 +837,9 @@ export default {
           this.operatorCpuChart.cpuAvgOpSystem = currentOpInfo.sys_utilization.avg_value;
           this.operatorCpuChart.processNumber = numWorkers;
           this.operatorCpuChart.option.series = series;
-          this.operatorCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${
-            this.$t('symbols.leftbracket')}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+          this.operatorCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+              'symbols.leftbracket',
+          )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
           this.operatorCpuChart.option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map(
               (val, index) => index + 1,
           );
@@ -868,7 +850,7 @@ export default {
           this.$nextTick(() => {
             if (!this.operatorCpuChart.chartDom) {
               if (this.$refs.operatorCpuChart) {
-                this.operatorCpuChart.chartDom = echarts.init(this.$refs.operatorCpuChart);
+                this.operatorCpuChart.chartDom = echarts.init(this.$refs.operatorCpuChart, echartsThemeName);
               }
             }
             this.operatorCpuChart.chartDom.setOption(this.operatorCpuChart.option);
@@ -887,7 +869,6 @@ export default {
 <style>
 .data-process-wrap {
   height: 100%;
-  background: #fff;
   padding: 0 16px;
 }
 .data-process-wrap .title {
@@ -910,12 +891,12 @@ export default {
 .data-process-wrap .el-button {
   border: 1px solid #00a5a7;
   border-radius: 2px;
-  background-color: white;
+  background-color: var(--bg-color);
   color: #00a5a7;
   padding: 7px 15px;
 }
 .data-process-wrap .el-button:hover {
-  background: rgb(230, 246, 246);
+  background: var(--button-hover-tip);
 }
 .cpu-info {
   height: calc(100% - 24px);
@@ -940,7 +921,7 @@ export default {
 }
 .cpu-info .cpu-detail .cpu-detail-item {
   padding: 16px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   margin-right: 8px;
 }
@@ -954,8 +935,18 @@ export default {
 }
 .cpu-info .cpu-detail .detail-item-graph {
   height: 120px;
-  background-color: #f7faff;
+  background-color: var(--graph-bg-color);
   margin: 10px 0;
+}
+.cpu-info .cpu-detail .detail-item-graph svg path {
+  fill: var(--data-process-operator-color);
+  stroke: #e6ebf5;
+}
+.cpu-info .cpu-detail .detail-item-graph svg text {
+  fill: var(--font-color);
+}
+.cpu-info .cpu-detail .detail-item-graph .is-active {
+  stroke: red;
 }
 .cpu-info .cpu-detail .detail-item {
   height: 400px;
@@ -976,7 +967,7 @@ export default {
   flex-direction: column;
   justify-content: center;
   padding-left: 20px;
-  background-color: #f1f1f1;
+  background-color: var(--module-bg-color);
 }
 .cpu-info .cpu-detail .detail-item .cpu-chart-info .info-title {
   font-size: 14px;

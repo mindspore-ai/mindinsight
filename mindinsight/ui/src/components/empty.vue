@@ -15,7 +15,7 @@ limitations under the License.
 -->
 <template>
   <div class="empty-container">
-    <img :src="require('@/assets/images/nodata.png')"/>
+    <img :src="require('@/assets/images/nodata.png')" />
     <span>{{ text }}</span>
   </div>
 </template>

@@ -129,7 +129,6 @@ export default {
       granuLarityList: [], // Array of granularity
       granuLarity: '0.1', // GranuLarity value
       colorArr: [], // Array of color index
-      strr: null,
     };
   },
   watch: {},
@@ -339,13 +338,11 @@ export default {
      * Change Color
      */
     changeBackground() {
-      // Factor used to avoid JS floating point number question
-      const factor = 1000000;
       const maxPeakRatio = 1;
       this.memoryHeatmapDataList.forEach((data) => {
         data.data.forEach((item) => {
           if (item.value !== maxPeakRatio) {
-            const colorIndex = Math.floor((item.value * factor) / (+this.granuLarity * factor));
+            const colorIndex = Math.floor(item.value / +this.granuLarity);
             item.background = this.colorArr[colorIndex].background;
           } else {
             item.background = this.colorArr[this.colorArr.length - 1].background;
@@ -375,7 +372,7 @@ export default {
   height: 100%;
   width: 100%;
   padding: 0 32px 24px 32px;
-  background: #fff;
+  background: var(--bg-color);
 }
 .cl-memory-heatmap .cl-cluster-title {
   height: 56px;
@@ -440,7 +437,7 @@ export default {
   margin-left: 30px;
   width: 100%;
   margin-top: 3px;
-  border-bottom: solid 1px #e6ebf5;
+  border-bottom: solid 1px var(--border-color);
   padding: 8px 0px;
 }
 .cl-memory-heatmap .content .legend-content {
@@ -492,7 +489,7 @@ export default {
 }
 .cl-memory-heatmap .heatmap-content .heatmap-item .detail-content {
   height: calc(100% - 28px);
-  background: #e6ebf5;
+  background: var(--heatmap-content-color);
   display: flex;
   flex-wrap: wrap;
   overflow-y: auto;
@@ -533,7 +530,7 @@ export default {
 .cl-memory-heatmap .heatmap-content .heatmap-item .info-content {
   margin-top: 10px;
   font-size: 16px;
-  color: #333;
+  color: var(--font-color);
   font-weight: 600;
   text-align: center;
 }

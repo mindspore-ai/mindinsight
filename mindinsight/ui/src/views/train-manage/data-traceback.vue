@@ -82,25 +82,25 @@ limitations under the License.
                 </el-option>
                 <div slot="empty">
                   <div class="select-input-button empty-container">
-                  <div class="select-inner-input">
-                    <el-input v-model="keyWord"
-                              v-on:input="myfilter"
-                              :placeholder="$t('public.search')"
-                              ref="keyEmptyInput">
-                    </el-input>
+                    <div class="select-inner-input">
+                      <el-input v-model="keyWord"
+                                v-on:input="myfilter"
+                                :placeholder="$t('public.search')"
+                                ref="keyEmptyInput">
+                      </el-input>
+                    </div>
+                    <button type="text"
+                            class="select-all-button"
+                            disabled>
+                      {{ $t('public.selectAll')}}
+                    </button>
+                    <button type="text"
+                            class="deselect-all-button"
+                            disabled>
+                      {{ $t('public.deselectAll')}}
+                    </button>
+                    <div class="search-no-data">{{$t('public.emptyData')}}</div>
                   </div>
-                  <button type="text"
-                          class="select-all-button"
-                          disabled>
-                    {{ $t('public.selectAll')}}
-                  </button>
-                  <button type="text"
-                          class="deselect-all-button"
-                          disabled>
-                    {{ $t('public.deselectAll')}}
-                  </button>
-                  <div class="search-no-data">{{$t('public.emptyData')}}</div>
-                </div>
                 </div>
               </el-select>
             </div>
@@ -380,7 +380,7 @@ limitations under the License.
 <script>
 import RequestService from '../../services/request-service';
 import CommonProperty from '@/common/common-property.js';
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 export default {
   data() {
     return {
@@ -569,6 +569,7 @@ export default {
         metric: 'metric/',
         userDefined: 'user_defined/',
       },
+      themeIndex: this.$store.state.themeIndex,
     };
   },
   computed: {},
@@ -596,12 +597,8 @@ export default {
      * Init
      */
     init() {
-      this.customizedColumnOptions =
-        this.$store.state.customizedColumnOptions || [];
-      this.table.columnOptions = Object.assign(
-          this.table.columnOptions,
-          this.customizedColumnOptions,
-      );
+      this.customizedColumnOptions = this.$store.state.customizedColumnOptions || [];
+      this.table.columnOptions = Object.assign(this.table.columnOptions, this.customizedColumnOptions);
       // Obtain the value of summary_dir from the store,
       this.summaryDirList = this.$store.state.summaryDirList;
       this.selectedBarList = this.$store.state.selectedBarList;
@@ -660,19 +657,12 @@ export default {
                   const metricKeys = {};
                   tempList.forEach((item) => {
                     if (item.model_lineage) {
-                      const modelData = JSON.parse(
-                          JSON.stringify(item.model_lineage),
-                      );
-                      modelData.model_size = parseFloat(
-                          ((modelData.model_size || 0) / 1024 / 1024).toFixed(2),
-                      );
+                      const modelData = JSON.parse(JSON.stringify(item.model_lineage));
+                      modelData.model_size = parseFloat(((modelData.model_size || 0) / 1024 / 1024).toFixed(2));
                       const keys = Object.keys(modelData.metric || {});
                       if (keys.length) {
                         keys.forEach((key) => {
-                          if (
-                            modelData.metric[key] ||
-                        modelData.metric[key] === 0
-                          ) {
+                          if (modelData.metric[key] || modelData.metric[key] === 0) {
                             const temp = this.replaceStr.metric + key;
                             metricKeys[temp] = key;
                             modelData[temp] = modelData.metric[key];
@@ -683,10 +673,7 @@ export default {
                       const udkeys = Object.keys(modelData.user_defined || {});
                       if (udkeys.length) {
                         udkeys.forEach((key) => {
-                          if (
-                            modelData.user_defined[key] ||
-                        modelData.user_defined[key] === 0
-                          ) {
+                          if (modelData.user_defined[key] || modelData.user_defined[key] === 0) {
                             const temp = this.replaceStr.userDefined + key;
                             modelData[temp] = modelData.user_defined[key];
                           }
@@ -775,9 +762,7 @@ export default {
                       this.checkedSeries.map((i) => i.id),
                   );
                 } else {
-                  this.table.column = this.dirPathList.concat(
-                      this.checkedSeries.map((i) => i.id),
-                  );
+                  this.table.column = this.dirPathList.concat(this.checkedSeries.map((i) => i.id));
                 }
               },
               (error) => {
@@ -839,10 +824,7 @@ export default {
           let startIndex = 0;
           let tempNodeListMap = fullNodeList.map((nodeObj) => nodeObj.name);
           objectData.nodeList.forEach((nodeItem) => {
-            const tempIndex = tempNodeListMap.indexOf(
-                nodeItem.name,
-                startIndex,
-            );
+            const tempIndex = tempNodeListMap.indexOf(nodeItem.name, startIndex);
             if (tempIndex === -1) {
               if (!tempDic[nodeItem.name]) {
                 tempDic[nodeItem.name] = 0;
@@ -921,10 +903,7 @@ export default {
         const list = this.echart.showData;
         for (let i = 0; i < list.length; i++) {
           const temp = this.modelObjectArray[i];
-          this.echart.showData[i] = Object.assign(
-              this.echart.showData[i],
-              temp,
-          );
+          this.echart.showData[i] = Object.assign(this.echart.showData[i], temp);
         }
       }
     },
@@ -969,7 +948,7 @@ export default {
         item = {
           lineStyle: {
             normal: {
-              color: CommonProperty.commonColorArr[i % 10],
+              color: CommonProperty.commonColorArr[this.$store.state.themeIndex][i % 10],
             },
           },
           value: [],
@@ -1019,17 +998,10 @@ export default {
         }
         parallelAxis.push(obj);
       });
-
       const option = {
-        backgroundColor: 'white',
         parallelAxis: parallelAxis,
         tooltip: {
           trigger: 'axis',
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
         },
         parallel: {
           top: 30,
@@ -1042,11 +1014,6 @@ export default {
             },
             tooltip: {
               show: true,
-              backgroundColor: 'rgba(50, 50, 50, 0.7)',
-              borderWidth: 0,
-              textStyle: {
-                color: '#fff',
-              },
             },
             realtime: false,
           },
@@ -1064,9 +1031,7 @@ export default {
         this.parallelEchart.off('axisareaselected', null);
         window.removeEventListener('resize', this.resizeChart, false);
       } else {
-        this.parallelEchart = echarts.init(
-            document.querySelector('#data-echart'),
-        );
+        this.parallelEchart = echarts.init(document.querySelector('#data-echart'), echartsThemeName);
       }
       this.parallelEchart.setOption(option, true);
       window.addEventListener('resize', this.resizeChart, false);
@@ -1083,10 +1048,7 @@ export default {
         });
         if (axisData && range.length === 2) {
           if (axisData.type === this.categoryType) {
-            const selectedAxisKeys = axisData.data.slice(
-                range[0],
-                range[1] + 1,
-            );
+            const selectedAxisKeys = axisData.data.slice(range[0], range[1] + 1);
             this.echart.brushData = this.echart.showData.filter((i) => {
               return selectedAxisKeys.includes(i[key]);
             });
@@ -1184,6 +1146,7 @@ export default {
      * @param {Object} obj
      */
     setColorOfSelectedBar(selectedBarList, obj) {
+      const modelTracebackTheme = CommonProperty.modelTracebackChartTheme[this.themeIndex];
       if (selectedBarList && obj.dim < selectedBarList.length) {
         obj.nameTextStyle = {
           color: '#00a5a7',
@@ -1223,7 +1186,7 @@ export default {
       } else {
         // Text color
         obj.nameTextStyle = {
-          color: 'black',
+          color: modelTracebackTheme.paralleAxisColor,
         };
       }
     },
@@ -1448,6 +1411,7 @@ export default {
       this.selectCheckAll = !this.selectCheckAll;
       this.$nextTick(() => {
         this.initChart();
+        this.$refs.table.doLayout();
       });
       const list = [];
       this.checkOptions.forEach((item) => {
@@ -1479,6 +1443,7 @@ export default {
       this.selectCheckAll = false;
       this.$nextTick(() => {
         this.initChart();
+        this.$refs.table.doLayout();
       });
       const list = [];
       this.checkOptions.forEach((item) => {
@@ -1502,18 +1467,16 @@ export default {
     myfilter() {
       const queryString = this.keyWord;
       const restaurants = this.basearr;
-      const results = queryString
-        ? this.createFilter(queryString, restaurants)
-        : restaurants;
+      const results = queryString ? this.createFilter(queryString, restaurants) : restaurants;
       this.checkOptions = results;
       if (!this.checkOptions.length) {
-        this.$nextTick(()=>{
+        this.$nextTick(() => {
           if (this.$refs.keyEmptyInput) {
             this.$refs.keyEmptyInput.focus();
           }
         });
       } else {
-        this.$nextTick(()=>{
+        this.$nextTick(() => {
           if (this.$refs.keyInput) {
             this.$refs.keyInput.focus();
           }
@@ -1531,10 +1494,7 @@ export default {
       const list = [];
       restaurants.forEach((item) => {
         const object = {};
-        if (
-          item &&
-          item.label.toLowerCase().indexOf(queryString.toLowerCase()) >= 0
-        ) {
+        if (item && item.label.toLowerCase().indexOf(queryString.toLowerCase()) >= 0) {
           object.label = item.label;
           object.value = item.value;
           object.disabled = item.disabled;
@@ -1565,6 +1525,7 @@ export default {
       }
       this.$nextTick(() => {
         this.initChart();
+        this.$refs.table.doLayout();
       });
       const list = [];
       this.basearr.forEach((item) => {
@@ -1587,7 +1548,7 @@ export default {
      * @param {String} val
      */
     jumpToTrainDashboard(val) {
-      const trainId = encodeURIComponent(val);
+      const trainId = val;
       const routeUrl = this.$router.resolve({
         path: '/train-manage/training-dashboard',
         query: {id: trainId},
@@ -1627,10 +1588,7 @@ export default {
         } else {
           const num = 1000;
           if (value < num) {
-            return (
-              Math.round(value * Math.pow(10, numDigits)) /
-              Math.pow(10, numDigits)
-            );
+            return Math.round(value * Math.pow(10, numDigits)) / Math.pow(10, numDigits);
           } else {
             const reg = /(?=(\B)(\d{3})+$)/g;
             return (value + '').replace(reg, ',');
@@ -1723,19 +1681,12 @@ export default {
                   const metricKeys = {};
                   tempList.forEach((item) => {
                     if (item.model_lineage) {
-                      const modelData = JSON.parse(
-                          JSON.stringify(item.model_lineage),
-                      );
-                      modelData.model_size = parseFloat(
-                          ((modelData.model_size || 0) / 1024 / 1024).toFixed(2),
-                      );
+                      const modelData = JSON.parse(JSON.stringify(item.model_lineage));
+                      modelData.model_size = parseFloat(((modelData.model_size || 0) / 1024 / 1024).toFixed(2));
                       const keys = Object.keys(modelData.metric || {});
                       if (keys.length) {
                         keys.forEach((key) => {
-                          if (
-                            modelData.metric[key] ||
-                        modelData.metric[key] === 0
-                          ) {
+                          if (modelData.metric[key] || modelData.metric[key] === 0) {
                             const temp = this.replaceStr.metric + key;
                             metricKeys[temp] = key;
                             modelData[temp] = modelData.metric[key];
@@ -1746,10 +1697,7 @@ export default {
                       const udkeys = Object.keys(modelData.user_defined || {});
                       if (udkeys.length) {
                         udkeys.forEach((key) => {
-                          if (
-                            modelData.user_defined[key] ||
-                        modelData.user_defined[key] === 0
-                          ) {
+                          if (modelData.user_defined[key] || modelData.user_defined[key] === 0) {
                             const temp = this.replaceStr.userDefined + key;
                             modelData[temp] = modelData.user_defined[key];
                           }
@@ -1813,8 +1761,8 @@ export default {
       }
     },
     /**
-    * Show selected data
-    */
+     * Show selected data
+     */
     showSelectedTableData() {
       // At this time only need to pass in the filter data
       this.tableFilter.summary_dir = {
@@ -1831,16 +1779,14 @@ export default {
       this.init();
     },
     /**
-    * Hide selected table columns
-    */
+     * Hide selected table columns
+     */
     hideSelectedRows() {
       // Get previous filter data
       this.summaryDirList = this.$store.state.summaryDirList;
       // Set hidden data
       if (this.hideTableIdList) {
-        this.hideTableIdList = this.hideTableIdList.concat(
-            this.selectRowIdList,
-        );
+        this.hideTableIdList = this.hideTableIdList.concat(this.selectRowIdList);
       } else {
         this.hideTableIdList = this.selectRowIdList;
       }
@@ -1963,12 +1909,7 @@ export default {
         in: summaryDirList,
         not_in: this.hideTableIdList,
       };
-      params.body = Object.assign(
-          params.body,
-          this.chartFilter,
-          tempParam,
-          this.tableFilter,
-      );
+      params.body = Object.assign(params.body, this.chartFilter, tempParam, this.tableFilter);
       this.queryTableLineagesData(params);
     },
 
@@ -2042,10 +1983,7 @@ export default {
         };
         if (dataObj[key] === null) {
           tempData.value = 'None';
-        } else if (
-          typeof dataObj[key] === this.objectType &&
-          dataObj[key] !== null
-        ) {
+        } else if (typeof dataObj[key] === this.objectType && dataObj[key] !== null) {
           if (!(dataObj[key] instanceof Array)) {
             tempData.hasChildren = true;
             tempData.children = [];
@@ -2057,8 +1995,7 @@ export default {
               } else {
                 item.value = dataObj[key][k];
               }
-              item.id =
-                `${new Date().getTime()}` + `${this.$store.state.tableId}`;
+              item.id = `${new Date().getTime()}` + `${this.$store.state.tableId}`;
               this.$store.commit('increaseTableId');
               tempData.children.push(item);
             });
@@ -2096,14 +2033,14 @@ export default {
 <style>
 .cl-data-traceback {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
 }
 
 .traceback-tab {
   height: 51px;
   line-height: 56px;
   padding: 0 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--table-border-color);
 }
 
 .traceback-tab-item {
@@ -2115,18 +2052,18 @@ export default {
   display: inline-block;
   list-style: none;
   font-size: 18px;
-  color: #303133;
+  color: var(--el-tabs-item-color);
   position: relative;
 }
 
 .item-active {
-  color: #00a5a7;
+  color: var(--theme-color);
   font-weight: bold;
-  border-bottom: 3px solid #00a5a7;
+  border-bottom: 3px solid var(--theme-color);
 }
 
 .traceback-tab-item:hover {
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 
@@ -2170,7 +2107,7 @@ export default {
 }
 
 .checked-color {
-  color: #00a5a7 !important;
+  color: var(--theme-color) !important;
 }
 
 .el-tag.el-tag--info .el-tag__close {
@@ -2220,24 +2157,24 @@ export default {
   height: calc(100% - 51px);
   overflow-y: auto;
   position: relative;
-  background: #fff;
+  background: var(--bg-color);
 }
 #data-traceback-con .select-container .el-select > .el-input {
   width: 280px !important;
   max-width: 500px !important;
 }
 #data-traceback-con .el-table th.is-leaf {
-  background: #f5f7fa;
+  background: var(--el-select-dropdown-item-hover-bg-color);
 }
 #data-traceback-con .el-table td,
 #data-traceback-con .el-table th.is-leaf {
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--table-border-color);
 }
 #data-traceback-con .inline-block-set {
   display: inline-block;
 }
 #data-traceback-con .icon-border {
-  border: 1px solid #00a5a7 !important;
+  border: 1px solid var(--theme-color) !important;
 }
 #data-traceback-con .btn-container-margin {
   margin: 0 10%;
@@ -2248,37 +2185,37 @@ export default {
   text-align: center;
 }
 #data-traceback-con .custom-btn {
-  border: 1px solid #00a5a7;
+  border: 1px solid var(--theme-color);
   border-radius: 2px;
-  background-color: white;
-  color: #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
 }
 #data-traceback-con .custom-btn:hover {
-  color: #00a5a7;
-  background: #e9f7f7;
+  color: var(--theme-color);
+  background: var(--button-hover-color);
 }
 #data-traceback-con .disabled-btn-color {
   border-radius: 2px;
-  background-color: #f5f5f6;
-  border: 1px solid #dfe1e6;
+  background-color: var(--button-disabled-bg-color);
+  border: 1px solid var(--table-border-color);
   color: #adb0b8;
 }
 #data-traceback-con .abled-btn-color {
-  border: 1px solid #00a5a7;
-  color: #00a5a7;
-  background: white;
+  border: 1px solid var(--theme-color);
+  color: var(--theme-color);
+  background: var(--bg-color);
 }
 #data-traceback-con .abled-btn-color:hover {
-  color: #00a5a7;
-  background: #e9f7f7;
+  color: var(--theme-color);
+  background: var(--button-hover-color);
 }
 #data-traceback-con #tag-dialog {
   z-index: 999;
-  border: 1px solid #d6c9c9;
+  border: 1px solid var(--border-color);
   position: fixed;
   width: 326px;
   height: 120px;
-  background-color: #efebeb;
+  background-color: var(--module-bg-color);
   right: 106px;
   border-radius: 4px;
 }
@@ -2295,7 +2232,7 @@ export default {
 #data-traceback-con .tag-icon-container {
   width: 21px;
   height: 21px;
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--table-border-color);
   cursor: pointer;
   border-radius: 2px;
 }
@@ -2310,7 +2247,6 @@ export default {
   height: 282px !important;
 }
 #data-traceback-con .no-data-page .no-data-img {
-  background: #fff;
   text-align: center;
   height: 200px;
   width: 310px;
@@ -2340,7 +2276,7 @@ export default {
 #data-traceback-con .table-container i {
   font-size: 18px;
   margin: 0 2px;
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 #data-traceback-con .table-container .el-icon-close {
@@ -2360,7 +2296,6 @@ export default {
   display: flex;
   flex-direction: column;
   flex: 1;
-  background-color: #fff;
   -webkit-box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
   box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
   overflow: hidden;
@@ -2382,7 +2317,6 @@ export default {
   padding: 0 12px;
 }
 #data-traceback-con .cl-data-right .table-container {
-  background-color: white;
   height: calc(67% - 77px);
   padding: 6px 32px 0px;
   position: relative;
@@ -2430,11 +2364,11 @@ export default {
 #data-traceback-con .details-data-list .el-table td,
 #data-traceback-con .details-data-list .el-table th.is-leaf {
   border: none;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--table-border-color);
 }
 #data-traceback-con .details-data-list .el-table th {
   padding: 10px 0;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--table-border-color);
 }
 #data-traceback-con .details-data-list .el-table th .cell {
   border-left: 1px solid #d9d8dd;
@@ -2454,12 +2388,12 @@ export default {
 #data-traceback-con .details-data-list .el-table__row--level-0 td:first-child:after {
   width: 20px;
   height: 1px;
-  background: #ebeef5;
+  background: var(--table-border-color);
   z-index: 11;
   position: absolute;
   left: 0;
   bottom: -1px;
-  content: "";
+  content: '';
   display: block;
 }
 #data-traceback-con .details-data-list .el-table__row--level-1 td {
@@ -2468,14 +2402,14 @@ export default {
 }
 #data-traceback-con .details-data-list .el-table__row--level-1 td:first-child::before {
   width: 42px;
-  background: #f0fdfd;
-  border-right: 2px #00a5a7 solid;
+  background: var(--expand-table-before-bg-color);
+  border-right: 2px var(--theme-color) solid;
   z-index: 10;
   position: absolute;
   left: 0;
   top: -1px;
   bottom: 0px;
-  content: "";
+  content: '';
   display: block;
 }
 #data-traceback-con .details-data-list .el-table__row--level-1:first-child td:first-child::before {

@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <script>
-import echarts from '../js/echarts';
+import echarts, {echartsThemeName} from '../js/echarts';
 import CommonProperty from '@/common/common-property.js';
+import commonProperty from '../common/common-property';
 export default {
   data() {
     return {
@@ -68,15 +69,13 @@ export default {
           const minPositiveNum = 0.0001;
           const maxPositiveNum = 10000;
           if (
-            ((preNum > maxPositiveNum || preNum < minPositiveNum) &&
-              preNum > 0) ||
+            ((preNum > maxPositiveNum || preNum < minPositiveNum) && preNum > 0) ||
             ((preNum < minNegativeNum || preNum > maxNegativeNum) && preNum < 0)
           ) {
             preNum = preNum.toExponential(2);
           }
           if (
-            ((numSum > maxPositiveNum || numSum < minPositiveNum) &&
-              numSum > 0) ||
+            ((numSum > maxPositiveNum || numSum < minPositiveNum) && numSum > 0) ||
             ((numSum < minNegativeNum || numSum > maxNegativeNum) && numSum < 0)
           ) {
             numSum = numSum.toExponential(2);
@@ -93,8 +92,9 @@ export default {
 
     setChartOfPie() {
       if (!this.myPieChart) {
-        this.myPieChart = echarts.init(document.getElementById('pie-chart'));
+        this.myPieChart = echarts.init(document.getElementById('pie-chart'), echartsThemeName);
       }
+      const commonTheme = CommonProperty.commonChartTheme[this.themeIndex];
       const pieOption = {
         grid: {
           y2: 0,
@@ -105,11 +105,6 @@ export default {
           trigger: 'item',
           formatter: '{a} <br/> {b} : {c} ({d}%)',
           confine: true,
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
         },
         legend: {
           data: this.pieLegendData,
@@ -121,8 +116,11 @@ export default {
           orient: 'vertical',
           left: 'left',
           top: 'bottom',
+          textStyle: {
+            color: commonTheme.legendTextColor,
+          },
         },
-        color: CommonProperty.barColorArr,
+        color: CommonProperty.barColorArr[this.themeIndex],
         series: [
           {
             name: this.targetLabel,
@@ -130,10 +128,8 @@ export default {
             radius: '65%',
             center: ['65%', '50%'],
             label: {
-              normal: {
-                show: false,
-                positionL: 'inner',
-              },
+              show: false,
+              positionL: 'inner',
             },
             data: this.pieSeriesData,
             emphasis: {
@@ -167,7 +163,8 @@ export default {
 
       this.barStart = Math.max(0, barDataLength - 1 - showDataZoomLimitLength);
       this.barEnd = barDataLength - 1;
-
+      const commonTheme = CommonProperty.commonChartTheme[this.themeIndex];
+      const modelTracebackChartTheme = commonProperty.modelTracebackChartTheme[this.themeIndex];
       this.barOption = {
         tooltip: {
           trigger: 'axis',
@@ -176,19 +173,13 @@ export default {
           },
           confine: true,
           formatter: this.barToolTipFormatter,
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
+          backgroundColor: commonTheme.tooltipBgColor,
         },
         label: {
           show: true,
           position: 'right',
           formatter: (params) => {
-            return this.barEnd - this.barStart > showDataZoomLimitLength
-              ? ''
-              : params.value;
+            return this.barEnd - this.barStart > showDataZoomLimitLength ? '' : params.value;
           },
         },
         xAxis: {
@@ -203,6 +194,18 @@ export default {
               return value;
             },
           },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: commonTheme.axisLineColor,
+            },
+          },
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: commonTheme.splitLineColor,
+            },
+          },
         },
         yAxis: [
           {
@@ -213,20 +216,24 @@ export default {
             axisLabel: {
               formatter: (params) => {
                 const maxLength = 12;
-                const axisName =
-                  params === 'learning_rate' ? this.learningRate : params;
+                const axisName = params === 'learning_rate' ? this.learningRate : params;
                 if (axisName.length > maxLength) {
                   return axisName.substring(0, maxLength) + '...';
                 } else {
                   return axisName;
                 }
               },
-              textStyle: {
-                color: (params) => {
-                  const textColor =
-                    params === this.xTitle ? '#cc5b58' : 'black';
-                  return textColor;
-                },
+              color: (params) => {
+                const textColor =
+                  params === this.xTitle
+                    ? modelTracebackChartTheme.epochTextColor
+                    : modelTracebackChartTheme.batchSizeTextColor;
+                return textColor;
+              },
+            },
+            axisLine: {
+              lineStyle: {
+                color: commonTheme.axisLineColor,
               },
             },
           },
@@ -239,15 +246,13 @@ export default {
             barWidth: 10,
             data: this.barSeriesData,
             itemStyle: {
-              normal: {
-                color: (params) => {
-                  // Determine the selected name to change the color setting of the column
-                  if (params.name === this.xTitle) {
-                    return '#cc5b58';
-                  } else {
-                    return '#6c92fa';
-                  }
-                },
+              color: (params) => {
+                // Determine the selected name to change the color setting of the column
+                if (params.name === this.xTitle) {
+                  return '#cc5b58';
+                } else {
+                  return '#6c92fa';
+                }
               },
             },
           },
@@ -269,7 +274,7 @@ export default {
       if (this.myBarChart) {
         this.myBarChart.setOption(this.barOption, true);
       } else {
-        this.myBarChart = echarts.init(document.getElementById('bar-chart'));
+        this.myBarChart = echarts.init(document.getElementById('bar-chart'), echartsThemeName);
         this.myBarChart.setOption(this.barOption, true);
         this.setBarChartEvent();
       }
@@ -291,18 +296,11 @@ export default {
       }
 
       const item = this.currentBarData[value[0].axisValue];
-      const msg =
-        item && item.message
-          ? item.message
-          : item.disabled
-          ? this.$t('modelTraceback.mustExist')
-          : '';
+      const msg = item && item.message ? item.message : item.disabled ? this.$t('modelTraceback.mustExist') : '';
       const res = `<div class="tooltip-msg"><p>${str}</p><p>${
         this.$t('modelTraceback.parameterImportance') + this.$t('symbols.colon')
       }${value[0].value}</p><p>${
-        msg
-          ? this.$t('modelTraceback.explan') + this.$t('symbols.colon') + msg
-          : ''
+        msg ? this.$t('modelTraceback.explan') + this.$t('symbols.colon') + msg : ''
       }</p></div>`;
       return res;
     },
@@ -312,26 +310,16 @@ export default {
      */
     setBarChartEvent() {
       this.myBarChart.on('datazoom', (params) => {
-        this.barStart =
-          Math.round((this.barYAxisData.length * params.start) / 100) - 1;
-        this.barEnd =
-          Math.round((this.barYAxisData.length * params.end) / 100) - 1;
+        this.barStart = Math.round((this.barYAxisData.length * params.start) / 100) - 1;
+        this.barEnd = Math.round((this.barYAxisData.length * params.end) / 100) - 1;
       });
       this.myBarChart.on('mouseover', 'yAxis', (params) => {
         const offsetX = params.event.offsetX + 10;
         const offsetY = params.event.offsetY + 10;
         this.myBarChart.setOption({
           tooltip: {
-            formatter:
-              params.value === 'learning_rate'
-                ? this.learningRate
-                : params.value,
+            formatter: params.value === 'learning_rate' ? this.learningRate : params.value,
             alwaysShowContent: true,
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
-            },
           },
         });
         this.myBarChart.dispatchAction({
@@ -346,11 +334,6 @@ export default {
           tooltip: {
             formatter: this.barToolTipFormatter,
             alwaysShowContent: false,
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
-            },
           },
         });
       });
@@ -379,8 +362,7 @@ export default {
       this.tooltipsData = [];
       const hyper = this.scatterData.metadata.possible_hyper_parameters;
       for (let m = 0; m < hyper.length; m++) {
-        hyper[m].name =
-          hyper[m].name === 'learning_rate' ? this.learningRate : hyper[m].name;
+        hyper[m].name = hyper[m].name === 'learning_rate' ? this.learningRate : hyper[m].name;
         if (hyper[m].name === this.xTitle) {
           xvalue = hyper[m].data;
         }
@@ -514,8 +496,7 @@ export default {
         arrayTotal = tempData;
       }
       tempData.forEach((item) => {
-        item.name =
-          item.name === 'learning_rate' ? this.learningRate : item.name;
+        item.name = item.name === 'learning_rate' ? this.learningRate : item.name;
         if (!item.unselected) {
           if (item.name.startsWith('[U]')) {
             barHyper.unshift(item);
@@ -540,11 +521,7 @@ export default {
               label: item.name,
               disabled: item.unselected ? true : false,
               unselected: item.unselected ? item.unselected : undefined,
-              message: item.reason_code
-                ? this.$t('modelTraceback.reasonCode')[
-                    item.reason_code.toString()
-                ]
-                : '',
+              message: item.reason_code ? this.$t('modelTraceback.reasonCode')[item.reason_code.toString()] : '',
             });
           } else {
             otherListOptions.push({
@@ -552,11 +529,7 @@ export default {
               label: item.name,
               disabled: item.unselected ? true : false,
               unselected: item.unselected ? item.unselected : undefined,
-              message: item.reason_code
-                ? this.$t('modelTraceback.reasonCode')[
-                    item.reason_code.toString()
-                ]
-                : '',
+              message: item.reason_code ? this.$t('modelTraceback.reasonCode')[item.reason_code.toString()] : '',
             });
           }
         } else {
@@ -567,11 +540,7 @@ export default {
               label: item.name,
               disabled: true,
               unselected: item.unselected ? item.unselected : undefined,
-              message: item.reason_code
-                ? this.$t('modelTraceback.reasonCode')[
-                    item.reason_code.toString()
-                ]
-                : '',
+              message: item.reason_code ? this.$t('modelTraceback.reasonCode')[item.reason_code.toString()] : '',
             });
           } else {
             mustSelectOptions.push({
@@ -579,11 +548,7 @@ export default {
               label: item.name,
               disabled: true,
               unselected: item.unselected ? item.unselected : undefined,
-              message: item.reason_code
-                ? this.$t('modelTraceback.reasonCode')[
-                    item.reason_code.toString()
-                ]
-                : '',
+              message: item.reason_code ? this.$t('modelTraceback.reasonCode')[item.reason_code.toString()] : '',
             });
           }
         }
@@ -610,10 +575,7 @@ export default {
       this.barNameList.push(nameObjMust, nameObjOther);
       this.barNameList.forEach((item) => {
         item.options.forEach((options) => {
-          options.label =
-            options.label === 'learning_rate'
-              ? this.learningRate
-              : options.label;
+          options.label = options.label === 'learning_rate' ? this.learningRate : options.label;
         });
       });
       // Save all the contents of the drop-down box
@@ -627,8 +589,7 @@ export default {
         if (importanceValue < smallNum && importanceValue > 0) {
           importanceValue = importanceValue.toExponential(4);
         } else {
-          importanceValue =
-            Math.round(importanceValue * Math.pow(10, 4)) / Math.pow(10, 4);
+          importanceValue = Math.round(importanceValue * Math.pow(10, 4)) / Math.pow(10, 4);
         }
         if (!barHyper[i].name.startsWith('[U]') && importanceValue !== 0) {
           this.barYAxisData.push(name);
@@ -639,8 +600,7 @@ export default {
         }
         this.currentBarData[name].value = importanceValue;
       }
-      this.selectedAllBar =
-        barHyper.length > this.barYAxisData.length ? false : true;
+      this.selectedAllBar = barHyper.length > this.barYAxisData.length ? false : true;
     },
 
     /** right data**/
@@ -708,16 +668,8 @@ export default {
         optionalColumn: [], // Optional Table Column
         data: [],
         // no checked list
-        optionsNotInCheckbox: [
-          'summary_dir',
-          'train_dataset_path',
-          'test_dataset_path',
-        ],
-        optionsNotInEchart: [
-          'summary_dir',
-          'train_dataset_path',
-          'test_dataset_path',
-        ],
+        optionsNotInCheckbox: ['summary_dir', 'train_dataset_path', 'test_dataset_path'],
+        optionsNotInEchart: ['summary_dir', 'train_dataset_path', 'test_dataset_path'],
         optionsNotInTable: ['dataset_mark'],
         selectedColumn: [],
         selectAll: false, // Whether to select all columns
@@ -734,13 +686,8 @@ export default {
         'test_dataset_path',
         'dataset_mark',
       ]; // All keys whose values are character strings
-      this.keysOfIntValue = [
-        'train_dataset_count',
-        'test_dataset_count',
-        'epoch',
-        'batch_size',
-        'device_num',
-      ]; // All keys whose values are int
+      // All keys whose values are int
+      this.keysOfIntValue = ['train_dataset_count', 'test_dataset_count', 'epoch', 'batch_size', 'device_num'];
       this.keysOfMixed = [];
       this.keysOfListType = [];
     },
@@ -785,9 +732,7 @@ export default {
         // Parameter importance drop-down box
         const queryString = this.barKeyWord;
         const restaurants = this.baseSelectOptions;
-        const results = queryString
-          ? this.createFilter(queryString, restaurants)
-          : restaurants;
+        const results = queryString ? this.createFilter(queryString, restaurants) : restaurants;
         this.barNameList = results;
         this.searchOptions = [];
         let list = [];
@@ -796,13 +741,13 @@ export default {
         });
         this.searchOptions = list;
         if (!this.searchOptions.length) {
-          this.$nextTick(()=>{
+          this.$nextTick(() => {
             if (this.$refs.barKeyEmptyInput) {
               this.$refs.barKeyEmptyInput.focus();
             }
           });
         } else {
-          this.$nextTick(()=>{
+          this.$nextTick(() => {
             if (this.$refs.barKeyInput) {
               this.$refs.barKeyInput.focus();
             }
@@ -812,9 +757,7 @@ export default {
         // Model traceability drop-down box on the right
         const queryString = this.keyWord;
         const restaurants = this.basearr;
-        const results = queryString
-          ? this.createFilter(queryString, restaurants)
-          : restaurants;
+        const results = queryString ? this.createFilter(queryString, restaurants) : restaurants;
         this.checkOptions = results;
         this.showOptions = [];
         let list = [];
@@ -823,13 +766,13 @@ export default {
         });
         this.showOptions = list;
         if (!this.showOptions.length) {
-          this.$nextTick(()=>{
+          this.$nextTick(() => {
             if (this.$refs.keyEmptyInput) {
               this.$refs.keyEmptyInput.focus();
             }
           });
         } else {
-          this.$nextTick(()=>{
+          this.$nextTick(() => {
             if (this.$refs.keyInput) {
               this.$refs.keyInput.focus();
             }
@@ -851,9 +794,7 @@ export default {
         const options = [];
         if (item.options) {
           item.options.forEach((item) => {
-            if (
-              item.label.toLowerCase().indexOf(queryString.toLowerCase()) >= 0
-            ) {
+            if (item.label.toLowerCase().indexOf(queryString.toLowerCase()) >= 0) {
               const tempObj = {};
               tempObj.label = item.label;
               tempObj.value = item.value;
@@ -918,8 +859,7 @@ export default {
       this.tagDialogShow = true;
       const dialogHeight = 130;
       const ev = window.event || event;
-      document.getElementById('tag-dialog').style.top =
-        ev.clientY - dialogHeight + 'px';
+      document.getElementById('tag-dialog').style.top = ev.clientY - dialogHeight + 'px';
     },
 
     /**
@@ -1075,7 +1015,7 @@ export default {
      * @param {String} id
      */
     jumpToTrainDashboard(id) {
-      const trainId = encodeURIComponent(id);
+      const trainId = id;
       const routeUrl = this.$router.resolve({
         path: '/train-manage/training-dashboard',
         query: {id: trainId},
@@ -1127,10 +1067,7 @@ export default {
         } else {
           const num = 1000;
           if (value < num) {
-            return (
-              Math.round(value * Math.pow(10, numDigits)) /
-              Math.pow(10, numDigits)
-            );
+            return Math.round(value * Math.pow(10, numDigits)) / Math.pow(10, numDigits);
           } else {
             const reg = /(?=(\B)(\d{3})+$)/g;
             return (value + '').replace(reg, ',');
@@ -1143,12 +1080,7 @@ export default {
      */
     resizeChart() {
       const chartDom = document.getElementById('echart');
-      if (
-        chartDom &&
-        chartDom.style.display !== 'none' &&
-        this.echart &&
-        this.echart.chart
-      ) {
+      if (chartDom && chartDom.style.display !== 'none' && this.echart && this.echart.chart) {
         this.$nextTick(() => {
           this.echart.chart.resize();
         });
@@ -1174,9 +1106,7 @@ export default {
       this.summaryDirList = this.$store.state.summaryDirList;
       // Set hidden data
       if (this.hideTableIdList) {
-        this.hideTableIdList = this.hideTableIdList.concat(
-            this.selectRowIdList,
-        );
+        this.hideTableIdList = this.hideTableIdList.concat(this.selectRowIdList);
       } else {
         this.hideTableIdList = this.selectRowIdList;
       }

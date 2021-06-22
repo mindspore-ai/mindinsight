@@ -20,18 +20,19 @@ limitations under the License.
       <div class="cl-cluster-title">
         <div class="cl-cluster-title-left">{{$t("profilingCluster.clusterStepView")}}</div>
         <div class="path-message">
-        <span>{{$t('symbols.leftbracket')}}</span>
-        <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
-        <span>{{trainInfo.path}}</span>
-        <span>{{$t('symbols.rightbracket')}}</span>
-      </div>
+          <span>{{$t('symbols.leftbracket')}}</span>
+          <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
+          <span>{{trainInfo.path}}</span>
+          <span>{{$t('symbols.rightbracket')}}</span>
+        </div>
       </div>
       <div class="cl-step-filter">
         <label>{{stepTip}}</label>
-            <el-input class="step-input" clearable
-                      @clear="viewStepFilter"
-                      v-model.number="step.showStep"></el-input>
-            <el-button @click="viewStepFilter">{{$t("public.sure")}}</el-button>
+        <el-input class="step-input"
+                  clearable
+                  @clear="viewStepFilter"
+                  v-model.number="step.showStep"></el-input>
+        <el-button @click="viewStepFilter">{{$t("public.sure")}}</el-button>
       </div>
       <div class="cl-cluster-chart"
            ref="clusterChart">
@@ -101,7 +102,8 @@ limitations under the License.
     <div class="no-data-img"
          v-show="!chartData.length">
       <div>
-        <img :src="require('@/assets/images/nodata.png')" alt="">
+        <img :src="require('@/assets/images/nodata.png')"
+             alt="">
         <p>{{initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
       </div>
     </div>
@@ -109,9 +111,8 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
-
 export default {
   data() {
     return {
@@ -124,17 +125,13 @@ export default {
       activeName: this.$route.query.activeName,
       chartObj: null, // chart obj
       chartData: [], // chart data
-      chartOption: { // chart option
+      chartOption: {
+        // chart option
         color: ['#6B92FA', '#6CBFFF', '#F6DF66'], // bar color
         tooltip: {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow',
-          },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
           },
         },
         legend: {
@@ -153,18 +150,8 @@ export default {
           nameTextStyle: {
             align: 'left',
             padding: [0, 5],
-            color: '#9EA4B3',
           },
           type: 'category',
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
-          axisLabel: {
-            color: '#9EA4B3',
-          },
         },
         yAxis: {
           name: this.$t('profilingCluster.timeTitle'),
@@ -172,20 +159,9 @@ export default {
           nameTextStyle: {
             align: 'right',
             padding: [0, 5],
-            color: '#9EA4B3',
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
-          axisLabel: {
-            color: '#9EA4B3',
           },
           splitLine: {
             lineStyle: {
-              color: ['#E6EBF5'],
               width: 1,
               type: 'dashed',
             },
@@ -202,16 +178,19 @@ export default {
       tableData: [], // table data
       initOver: false, // init over
       pageSizes: [10, 20, 50],
-      group_condition: { // page setting
+      group_condition: {
+        // page setting
         offset: 0,
         limit: 10,
       },
-      sort_condition: { // sort setting
+      sort_condition: {
+        // sort setting
         name: 'iteration_interval',
         type: 'descending',
       },
       totalCount: 0,
-      step: { // step info
+      step: {
+        // step info
         maxStep: '',
         filterStep: '',
         showStep: '',
@@ -232,9 +211,7 @@ export default {
       return;
     }
     // const summaryPath = decodeURIComponent(this.trainInfo.path);
-    document.title = `${this.trainInfo.path}-${this.$t(
-        'profilingCluster.clusterView',
-    )}-MindInsight`;
+    document.title = `${this.trainInfo.path}-${this.$t('profilingCluster.clusterView')}-MindInsight`;
 
     // adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
@@ -254,9 +231,12 @@ export default {
     backToDashboard() {
       this.$router.push({
         path: 'cluster-dashboard',
-        query: Object.assign({
-          activeName: this.activeName,
-        }, this.trainInfo),
+        query: Object.assign(
+            {
+              activeName: this.activeName,
+            },
+            this.trainInfo,
+        ),
       });
     },
     /**
@@ -289,7 +269,7 @@ export default {
               this.totalCount = res.data.size;
               const tempChartData = [];
               if (isInit) {
-                res.data.step_trace.forEach((item)=>{
+                res.data.step_trace.forEach((item) => {
                   const chartItem = [item.rank_id].concat(item.step_trace_info);
                   tempChartData.push(chartItem);
                 });
@@ -297,7 +277,7 @@ export default {
                 this.initChart();
               }
               if (isSort) {
-                this.$nextTick(()=>{
+                this.$nextTick(() => {
                   const tableDom = this.$refs.table;
                   if (tableDom) {
                     tableDom.sort(this.sort_condition.name, this.sort_condition.type);
@@ -354,9 +334,9 @@ export default {
           type: 'inside',
         },
       ];
-      this.$nextTick(()=> {
+      this.$nextTick(() => {
         if (!this.chartObj) {
-          this.chartObj = echarts.init(this.$refs.clusterChart, null);
+          this.chartObj = echarts.init(this.$refs.clusterChart, echartsThemeName);
         }
         this.chartObj.setOption(this.chartOption, true);
       });
@@ -430,8 +410,7 @@ export default {
      *  filter step to overview
      */
     viewStepFilter() {
-      if (/^[0-9]*[1-9][0-9]*$/.test(this.step.showStep) &&
-      this.step.showStep <= this.step.maxStep) {
+      if (/^[0-9]*[1-9][0-9]*$/.test(this.step.showStep) && this.step.showStep <= this.step.maxStep) {
         this.step.filterStep = this.step.showStep;
         this.group_condition.offset = 0;
         this.queryStepTraceInfo(true, false);
@@ -450,7 +429,7 @@ export default {
 <style>
 .cl-cluster {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   position: relative;
 }
 .cl-cluster .cl-cluster-bk {
@@ -467,7 +446,7 @@ export default {
   right: 24px;
 }
 .cl-cluster .no-data-img {
-  background: #fff;
+  background: var(--bg-color);
   text-align: center;
   position: absolute;
   top: 56px;
@@ -483,7 +462,7 @@ export default {
   padding-top: 10px;
 }
 .cl-cluster .el-table th > .cell {
-  color: #282b33;
+  color: var(--font-color);
 }
 .cl-cluster .el-table td > .cell {
   margin-left: 10px;
@@ -541,11 +520,8 @@ export default {
 .cl-cluster .cl-step-filter .el-button {
   border: 1px solid #00a5a7;
   border-radius: 2px;
-  background-color: white;
-  color: #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
   padding: 7px 15px;
-}
-.cl-cluster .cl-step-filter .el-button:hover {
-  background: rgb(230, 246, 246);
 }
 </style>

@@ -21,11 +21,13 @@ import store from './store';
 import ElementUI from 'element-ui';
 import './assets/css/element.css';
 import './assets/css/reset.css';
+import './assets/css/theme-config.css';
 import i18n from './i18n';
 import $ from 'jquery';
 import locale from 'element-ui/lib/locale/lang/en';
 import localezh from 'element-ui/lib/locale/lang/zh-CN';
 import {basePath} from '@/services/fetcher';
+import CommonProperty from './common/common-property';
 
 let language = window.localStorage.getItem('milang');
 const languageList = ['zh-cn', 'en-us'];
@@ -55,6 +57,14 @@ if (language !== languageList[0]) {
 window.$ = window.jQuery = $;
 
 Vue.prototype.$bus = new Vue();
+
+// theme color
+let themeIndex = localStorage.getItem('miTheme');
+if (!['0', '1'].includes(themeIndex)) {
+  themeIndex = '0';
+}
+store.commit('setThemeIndex', themeIndex);
+initThemeColor(themeIndex);
 
 // Route interception
 router.beforeEach((to, from, next) => {
@@ -114,6 +124,31 @@ function appInstantiation() {
     }).$mount('#app');
   }, 100);
 }
+/**
+ * Init theme color
+ * @param {String} colorIndex color index
+ */
+function initThemeColor(colorIndex) {
+  let colorArr = [];
+  if (!colorIndex) {
+    colorArr = CommonProperty.themes['0'];
+  } else {
+    colorArr = CommonProperty.themes[colorIndex];
+  }
+  setThemeColor(colorArr);
+}
+/**
+ * Set theme color
+ * @param {Array} colorArr color arr
+ */
+function setThemeColor(colorArr) {
+  if (colorArr.length) {
+    for (let i = 0; i < colorArr.length; i++) {
+      const tempItem = colorArr[i];
+      document.documentElement.style.setProperty(tempItem.key, tempItem.value);
+    }
+  }
+}
 
 window.enableDebugger = true;
 window.onload = function(e) {
@@ -130,7 +165,7 @@ window.onload = function(e) {
       }
       appInstantiation();
     },
-    error: ()=> {
+    error: () => {
       appInstantiation();
     },
   });

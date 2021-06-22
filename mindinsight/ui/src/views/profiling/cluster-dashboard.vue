@@ -35,10 +35,11 @@ limitations under the License.
         </el-tabs>
       </div>
       <div class="item-container">
-        <PerformanceDashboard v-if="tabData.activeName === '0'"
-                              :activeName="'0'"></PerformanceDashboard>
-        <ResourceDashboard v-else
-                           :activeName="'1'"></ResourceDashboard>
+        <performance-dashboard v-if="tabData.activeName === '0'"
+                               :activeName="'0'"></performance-dashboard>
+        <resource-dashboard v-else
+                            :activeName="'1'"></resource-dashboard>
+
       </div>
     </div>
   </div>
@@ -78,9 +79,7 @@ export default {
       document.title = `${this.$t('profilingCluster.clusterView')}-MindInsight`;
       return;
     }
-    document.title = `${this.summaryPath}-${this.$t(
-        'profilingCluster.clusterView',
-    )}-MindInsight`;
+    document.title = `${this.summaryPath}-${this.$t('profilingCluster.clusterView')}-MindInsight`;
   },
   methods: {
     /**
@@ -99,7 +98,7 @@ export default {
 <style>
 .cl-cluster-dashboard {
   height: 100%;
-  background: #FFF;
+  background: var(--bg-color);
 }
 .cl-cluster-dashboard .cluster-head {
   height: 56px;
@@ -117,7 +116,7 @@ export default {
   height: calc(100% - 56px);
   padding: 0 32px 24px 32px;
 }
-.cl-cluster-dashboard .content-container .item-container{
+.cl-cluster-dashboard .content-container .item-container {
   height: calc(100% - 47px);
 }
 .cl-cluster-dashboard .tab-container {
@@ -130,7 +129,7 @@ export default {
   height: 27px;
 }
 .cl-cluster-dashboard .tab-container .el-tabs__item.is-active {
-  color: #00a5a7;
+  color: var(--theme-color);
   font-weight: bold;
 }
 </style>

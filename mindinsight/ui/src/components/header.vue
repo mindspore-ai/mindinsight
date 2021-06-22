@@ -29,7 +29,8 @@ limitations under the License.
                  class="el-menu-demo"
                  mode="horizontal">
           <el-menu-item index="/summary-manage">{{$t("summaryManage.summaryList")}}</el-menu-item>
-          <el-menu-item index="/debugger" v-if="showDebugger">{{$t("debugger.debugger")}}</el-menu-item>
+          <el-menu-item index="/debugger"
+                        v-if="showDebugger">{{$t("debugger.debugger")}}</el-menu-item>
           <el-menu-item index="/explain">{{$t("explain.explain")}}</el-menu-item>
         </el-menu>
       </div>
@@ -82,6 +83,15 @@ limitations under the License.
            v-if="isReload"
            :title="$t('header.refreshingData')" />
     </div>
+    <div class="theme-container">
+      <el-select v-model="themeIndex"
+                 @change="themeChange">
+        <el-option v-for="option in themeOptions"
+                   :key="option.value"
+                   :label="option.label"
+                   :value="option.value"></el-option>
+      </el-select>
+    </div>
     <div class="md-header-language"
          v-show="isLanguage">
       <span class="spanLanguage"
@@ -108,6 +118,17 @@ export default {
       timeReloadValue: this.$store.state.timeReloadValue,
       newReloadValue: this.$store.state.timeReloadValue,
       showDebugger: window.enableDebugger,
+      themeIndex: this.$store.state.themeIndex,
+      themeOptions: [
+        {
+          value: '0',
+          label: this.$t('public.light'),
+        },
+        {
+          value: '1',
+          label: this.$t('public.dark'),
+        },
+      ],
       path: null,
     };
   },
@@ -132,12 +153,13 @@ export default {
         isChinese = language === languageList[0];
       } else {
         window.localStorage.setItem('milang', languageList[0]);
+        this.$store.setLanguage(languageList[0]);
       }
       return isChinese;
     },
   },
   watch: {
-    'path'(newValue, oldValue) {
+    path(newValue, oldValue) {
       if (oldValue) {
         this.clearPageIndex();
       }
@@ -237,16 +259,38 @@ export default {
       localStorage.setItem('milang', lan);
       window.location.reload();
     },
+    themeChange() {
+      localStorage.setItem('miTheme', this.themeIndex);
+      window.location.reload();
+    },
   },
 };
 </script>
 <style>
 .cl-header {
   height: 64px;
-  background-image: linear-gradient(180deg, #263d5f 0%, #16233b 100%);
+  background-image: linear-gradient(180deg, var(--header-bg-min-color) 0%, var(--header-bg-max-color) 100%);
   display: flex;
   color: #fff;
   flex-shrink: 0;
+}
+.cl-header .md-header-theme {
+  width: 100px;
+  line-height: 64px;
+}
+.cl-header .md-header-theme .spanLine {
+  margin: 0 5px;
+}
+.cl-header .md-header-theme .spanTheme {
+  cursor: pointer;
+}
+.cl-header .md-header-theme .active {
+  color: #00a5a7;
+}
+.cl-header .theme-container {
+  width: 150px;
+  line-height: 64px;
+  margin-right: 15px;
 }
 .cl-header .md-header-language {
   width: 100px;
@@ -322,7 +366,6 @@ export default {
   font-size: 16px;
   color: #fff;
   padding-top: 4px;
-  max-width: 20%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

@@ -28,7 +28,7 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from '../js/echarts';
+import echarts, {echartsThemeName} from '../js/echarts';
 import CommonProperty from '../common/common-property';
 import {format, precisionRound} from 'd3';
 const d3 = {format, precisionRound};
@@ -70,6 +70,7 @@ export default {
       requestError: false, // Exceeded the specification
       errorMsg: '', // Error message
       viewResizeFlag: false, // Size reset flag
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
   computed: {},
@@ -82,8 +83,7 @@ export default {
      * Initialize
      */
     init() {
-      this.itemId =
-        `${new Date().getTime()}` + `${this.$store.state.componentsCount}`;
+      this.itemId = `${new Date().getTime()}` + `${this.$store.state.componentsCount}`;
       this.$store.commit('componentsNum');
     },
     /**
@@ -146,7 +146,7 @@ export default {
         if (!chartItem) {
           return;
         }
-        this.charObj = echarts.init(chartItem, null);
+        this.charObj = echarts.init(chartItem, echartsThemeName);
       }
       this.removeTooltip();
       this.charObj.setOption(this.charOption, true);
@@ -178,14 +178,13 @@ export default {
      * @return {Object} chatr option
      */
     formatCharOption() {
-      const colorMin = '#346E69';
-      const colorMax = '#EBFFFD';
+      const histogramThemeObj = CommonProperty.histogramThemes[this.themeIndex];
+      const chartThemeObj = CommonProperty.commonChartTheme[this.themeIndex];
+      const commonThemeObj = CommonProperty.commonThemes[this.themeIndex];
+      const colorMin = histogramThemeObj.lineMinColor;
+      const colorMax = histogramThemeObj.lineMaxColor;
       const oriData = this.oriData;
-      const colorArr = this.getGrientColor(
-          colorMin,
-          colorMax,
-          oriData.seriesData.length,
-      );
+      const colorArr = this.getGrientColor(colorMin, colorMax, oriData.seriesData.length);
       const fullScreenFun = this.toggleFullScreen;
       const axisName = this.axisName;
       const that = this;
@@ -199,11 +198,16 @@ export default {
         xAxis: {
           max: oriData.maxX,
           min: oriData.minX,
-          axisLine: {onZero: false},
+          axisLine: {
+            onZero: false,
+            lineStyle: {
+              color: chartThemeObj.axisTextColor,
+            },
+          },
           axisLabel: {
             fontSize: '11',
             formatter: function(value) {
-              return that.formateNUmber(value);
+              return that.formatNumber(value);
             },
           },
           splitLine: {show: false},
@@ -211,13 +215,19 @@ export default {
         yAxis: {
           position: 'right',
           axisLine: {onZero: false, show: false},
-          splitLine: {show: true},
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: chartThemeObj.splitLineColor,
+            },
+          },
           axisTick: {show: false},
           boundaryGap: false,
           axisLabel: {
             fontSize: '11',
+            color: chartThemeObj.axisTextColor,
             formatter: function(value) {
-              return that.formateNUmber(value);
+              return that.formatNumber(value);
             },
           },
         },
@@ -227,7 +237,7 @@ export default {
           emphasis: {
             iconStyle: {
               textPosition: 'top',
-              borderColor: '#00A5A7',
+              borderColor: commonThemeObj.themeColor,
             },
           },
           // toolbox
@@ -237,9 +247,9 @@ export default {
               show: true,
               title: this.$t('histogram.fullScreen'),
               iconStyle: {
-                borderColor: this.fullScreen ? '#00A5A7' : '#6D7278',
+                borderColor: this.fullScreen ? commonThemeObj.themeColor : commonThemeObj.fullScreenIconActive,
               },
-              icon: CommonProperty.fullScreenIcon,
+              icon: CommonProperty.fullScreenIcon[this.$store.state.themeIndex],
               onclick() {
                 fullScreenFun();
               },
@@ -264,11 +274,7 @@ export default {
             type: 'custom',
             dimensions: ['x', 'y'],
             renderItem: (params, api) => {
-              const points = this.makePolyPoints(
-                  params.dataIndex,
-                  api.coord,
-                  params.coordSys.y - 10,
-              );
+              const points = this.makePolyPoints(params.dataIndex, api.coord, params.coordSys.y - 10);
 
               return {
                 type: 'polyline',
@@ -278,7 +284,7 @@ export default {
                   points,
                 },
                 style: api.style({
-                  stroke: '#bbb',
+                  stroke: histogramThemeObj.polylineBorderColor,
                   lineWidth: 1,
                 }),
               };
@@ -317,16 +323,15 @@ export default {
      */
     toggleFullScreen() {
       this.removeTooltip();
+      const commonThemeObj = CommonProperty.commonThemes[this.themeIndex];
       if (!this.fullScreen) {
         if (this.axisName === 2) {
           this.charOption.grid.right = 140;
         }
-        this.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
-          '#00A5A7';
+        this.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor = commonThemeObj.themeColor;
       } else {
         this.charOption.grid.right = 80;
-        this.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
-          '#6D7278';
+        this.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor = commonThemeObj.fullScreenIconActive;
       }
       this.charObj.setOption(this.charOption);
       this.$emit('toggleFullScreen');
@@ -396,15 +401,12 @@ export default {
       const filter = this.fullData.filter((k) => k.step === value);
       if (filter.length) {
         if (this.axisName === 2) {
-          data = this.fullScreen
-            ? this.dealrelativeTime(
-                new Date(filter[0].wall_time * 1000).toString(),
-            )
-            : [];
+          // 1000: s to ms 
+          data = this.fullScreen ? this.dealrelativeTime(new Date(filter[0].wall_time * 1000).toString()) : [];
         } else if (this.axisName === 1) {
-          data = this.formateNUmber(filter[0].relative_time.toFixed(0));
+          data = this.formatNumber(filter[0].relative_time.toFixed(0));
         } else {
-          data = this.formateNUmber(filter[0].step);
+          data = this.formatNumber(filter[0].step);
         }
       }
       return data;
@@ -414,11 +416,14 @@ export default {
      * @param {Number} value
      * @return {Number} Formatted number
      */
-    formateNUmber(value) {
+    formatNumber(value) {
       value = Number(value);
+      // Keep three decimal places while decimal places is more than six
       if (value.toString().length > 6) {
+        // Scientific counting method
         return value.toExponential(3);
       } else {
+        // Normal format
         return Math.round(value * 1000) / 1000;
       }
     },
@@ -437,22 +442,16 @@ export default {
      * @param {Object} e Original event
      */
     mousemoveEvent(e) {
+      const themeColorObj = CommonProperty.commonChartTheme[this.themeIndex];
       const unit = 's';
       const nearestIndex = this.findNearestValue([e.offsetX, e.offsetY]);
-      if (
-        nearestIndex &&
-        nearestIndex.yIndex !== null &&
-        nearestIndex.binIndex !== null
-      ) {
+      if (nearestIndex && nearestIndex.yIndex !== null && nearestIndex.binIndex !== null) {
         const {binIndex, yIndex} = nearestIndex;
         const chartData = this.fullData;
         const hoveredItem = chartData[yIndex];
         const p = Math.max(0, d3.precisionRound(0.01, 1.01) - 1);
         const yValueFormat = d3.format(`.${p}e`);
-        const gridRect = this.charObj
-            .getModel()
-            .getComponent('grid', 0)
-            .coordinateSystem.getRect();
+        const gridRect = this.charObj.getModel().getComponent('grid', 0).coordinateSystem.getRect();
         const gridRectY = gridRect.y - 10;
         let linePoints = [];
         if (!hoveredItem || !hoveredItem.items[binIndex]) {
@@ -508,10 +507,7 @@ export default {
             z: 1000,
           };
           if (this.viewName === 1) {
-            pt[1] -=
-              ((z - this.oriData.minZ) /
-                (this.oriData.maxZ - this.oriData.minZ)) *
-              gridRectY;
+            pt[1] -= ((z - this.oriData.minZ) / (this.oriData.maxZ - this.oriData.minZ)) * gridRectY;
             circleOption.shape = {
               cx: itemX,
               cy: pt[1],
@@ -534,33 +530,19 @@ export default {
         let htmlStr = '';
         const hoveredAxis = hoveredItem.items[binIndex][3];
         htmlStr = `<td>${
-          hoveredAxis.toString().length >= 6
-            ? yValueFormat(hoveredAxis)
-            : hoveredAxis
-        }</td><td style="text-align:center;">${this.formateNUmber(
-            hoveredItem.step,
-        )}</td><td>${this.formateNUmber(
-            (hoveredItem.relative_time).toFixed(0),
-        )}${unit}</td><td>${this.dealrelativeTime(
-            new Date(hoveredItem.wall_time * 1000).toString(),
-        )}</td>`;
+          hoveredAxis.toString().length >= 6 ? yValueFormat(hoveredAxis) : hoveredAxis
+        }</td><td style="text-align:center;">${this.formatNumber(hoveredItem.step)}</td><td>${this.formatNumber(
+            hoveredItem.relative_time.toFixed(0),
+        )}${unit}</td><td>${this.dealrelativeTime(new Date(hoveredItem.wall_time * 1000).toString())}</td>`;
         const dom = document.querySelector('#tipTr');
         dom.innerHTML = htmlStr;
         const chartElement = document.getElementById(this.itemId);
         if (chartElement) {
           if (!this.fullScreen) {
-            const chartWidth =
-              chartElement.parentNode.parentNode.parentNode.parentNode
-                  .clientWidth;
-            const chartHeight =
-              chartElement.parentNode.parentNode.parentNode.parentNode
-                  .clientHeight;
-            const left =
-              chartElement.parentNode.parentNode.parentNode.parentNode
-                  .offsetLeft;
-            const top =
-              chartElement.parentNode.parentNode.parentNode.parentNode
-                  .offsetTop;
+            const chartWidth = chartElement.parentNode.parentNode.parentNode.parentNode.clientWidth;
+            const chartHeight = chartElement.parentNode.parentNode.parentNode.parentNode.clientHeight;
+            const left = chartElement.parentNode.parentNode.parentNode.parentNode.offsetLeft;
+            const top = chartElement.parentNode.parentNode.parentNode.parentNode.offsetTop;
             const echartTip = document.querySelector('#echartTip');
             echartTip.style.top = `${top + chartHeight - 60}px`;
             if (left > echartTip.clientWidth) {
@@ -573,51 +555,33 @@ export default {
             const height = document.querySelector('#echartTip').clientHeight;
             const screenWidth = document.body.scrollWidth;
             const screenHeight = document.body.scrollHeight;
-            const scrollTop = document.querySelector('.cl-show-data-content')
-                .scrollTop;
-            const offsetTop = document.querySelector('.cl-show-data-content')
-                .offsetTop;
-            if (
-              height + e.event.y + 20 > screenHeight &&
-              screenHeight > height
-            ) {
-              document.querySelector('#echartTip').style.top = `${e.event.y +
-                scrollTop -
-                height -
-                20 -
-                offsetTop}px`;
+            const scrollTop = document.querySelector('.cl-show-data-content').scrollTop;
+            const offsetTop = document.querySelector('.cl-show-data-content').offsetTop;
+            const bufferSize = 20; // the buffer size of css
+            if (height + e.event.y + bufferSize > screenHeight && screenHeight > height) {
+              document.querySelector('#echartTip').style.top = `${
+                e.event.y + scrollTop - height - bufferSize - offsetTop
+              }px`;
             } else {
-              document.querySelector('#echartTip').style.top = `${e.event.y +
-                scrollTop +
-                20 -
-                offsetTop}px`;
+              document.querySelector('#echartTip').style.top = `${e.event.y + scrollTop + bufferSize - offsetTop}px`;
             }
             // Blank area on the right of the chart is 80
             if (width + e.event.x + 80 > screenWidth && screenWidth > width) {
-              document.querySelector('#echartTip').style.left = `${e.event.x -
-                width -
-                20}px`;
+              document.querySelector('#echartTip').style.left = `${e.event.x - width - bufferSize}px`;
             } else {
-              document.querySelector('#echartTip').style.left = `${e.event.x +
-                20}px`;
+              document.querySelector('#echartTip').style.left = `${e.event.x + bufferSize}px`;
             }
           }
         }
 
         this.zrDrawElement.tooltipX = new echarts.graphic.Text({
-          position: [itemX, gridRect.y + gridRect.height],
+          x: itemX,
+          y: gridRect.y + gridRect.height,
           style: {
-            text:
-              x.toString().length >= 6
-                ? x.toExponential(3)
-                : Math.round(x * 1000) / 1000,
-            textFill: '#fff',
-            textAlign: 'center',
+            // Keep three decimal places while decimal places is more than six
+            text: x.toString().length >= 6 ? x.toExponential(3) : Math.round(x * 1000) / 1000,
+            fill: themeColorObj.tipFontColor,
             fontSize: 12,
-            textBackgroundColor: '#333',
-            textBorderWidth: 2,
-            textPadding: [5, 7],
-            rich: {},
           },
           z: 2000,
         });
@@ -628,19 +592,12 @@ export default {
             text = this.yAxisFormatter(hoveredItem.step);
           }
           this.zrDrawElement.tooltipY = new echarts.graphic.Text({
-            position: [
-              gridRect.x + gridRect.width,
-              linePoints[linePoints.length - 1][1],
-            ],
+            x: gridRect.x + gridRect.width,
+            y: linePoints[linePoints.length - 1][1],
             style: {
               text: text,
-              textFill: '#fff',
-              textVerticalAlign: 'middle',
+              fill: themeColorObj.tipFontColor,
               fontSize: 12,
-              textBackgroundColor: '#333',
-              textBorderWidth: 2,
-              textPadding: [5, 7],
-              rich: {},
             },
             z: 2000,
           });
@@ -666,10 +623,7 @@ export default {
       let nearestX = Infinity;
       let nearestY = -Infinity;
       let nearestYData = Infinity;
-      const gridRect = this.charObj
-          .getModel()
-          .getComponent('grid', 0)
-          .coordinateSystem.getRect();
+      const gridRect = this.charObj.getModel().getComponent('grid', 0).coordinateSystem.getRect();
       const gridRectY = gridRect.y - 10;
       const x = value[0];
       this.fullData.forEach((dataItem, i) => {
@@ -695,15 +649,8 @@ export default {
         } else if (this.viewName === 1) {
           const pt = this.getCoord([x, dataItem.step]);
           const ptStep = pt[1];
-          pt[1] -=
-            ((yAxis - this.oriData.minZ) /
-              (this.oriData.maxZ - this.oriData.minZ)) *
-            gridRectY;
-          if (
-            eventPoint[1] > pt[1] &&
-            eventPoint[1] < ptStep &&
-            ptStep > nearestY
-          ) {
+          pt[1] -= ((yAxis - this.oriData.minZ) / (this.oriData.maxZ - this.oriData.minZ)) * gridRectY;
+          if (eventPoint[1] > pt[1] && eventPoint[1] < ptStep && ptStep > nearestY) {
             nearestY = ptStep;
             yIndex = i;
           }
@@ -725,12 +672,7 @@ export default {
             binIndex = index;
           }
         });
-        binIndex =
-          binIndex === 0
-            ? 1
-            : binIndex === yData.length - 1
-            ? yData.length - 2
-            : binIndex;
+        binIndex = binIndex === 0 ? 1 : binIndex === yData.length - 1 ? yData.length - 2 : binIndex;
       }
       return {
         binIndex,
@@ -775,9 +717,7 @@ export default {
         let colorStrNew = '';
         if (colorStr.length === 3) {
           for (let i = 0; i < 3; i++) {
-            colorStrNew += colorStrNew
-                .slice(i, i + 1)
-                .concat(colorStrNew.slice(i, i + 1));
+            colorStrNew += colorStrNew.slice(i, i + 1).concat(colorStrNew.slice(i, i + 1));
           }
           colorStr = colorStrNew;
         }

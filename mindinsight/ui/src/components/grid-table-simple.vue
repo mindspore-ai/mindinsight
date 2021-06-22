@@ -99,6 +99,7 @@ import 'slickgrid/lib/jquery.event.drag-2.3.0.js';
 import 'slickgrid/slick.core.js';
 import 'slickgrid/slick.dataview.js';
 import 'slickgrid/slick.grid.js';
+import CommonProperty from '@/common/common-property.js';
 export default {
   props: {
     // Table data
@@ -174,6 +175,7 @@ export default {
         },
       ],
       category: 'value', // value: Numerical; science: Scientific notation
+      gridTableThemeObj: CommonProperty.tensorThemes[this.$store.state.themeIndex],
     };
   },
   computed: {},
@@ -186,8 +188,7 @@ export default {
      * Initialize
      */
     init() {
-      this.itemId =
-        `${new Date().getTime()}` + `${this.$store.state.componentsCount}`;
+      this.itemId = `${new Date().getTime()}` + `${this.$store.state.componentsCount}`;
       this.$store.commit('componentsNum');
     },
     /**
@@ -214,8 +215,7 @@ export default {
           const curFilterArr = tempFilterArr[i].split(':');
           if (curFilterArr[0]) {
             let startIndex = Number(curFilterArr[0]);
-            startIndex =
-              startIndex < 0 ? dimension[i] + startIndex : startIndex;
+            startIndex = startIndex < 0 ? dimension[i] + startIndex : startIndex;
             multiDimsArr.push(startIndex);
           } else {
             multiDimsArr.push(0);
@@ -280,20 +280,14 @@ export default {
      * @return {String}
      */
     formateValueColor(row, cell, value, columnDef, dataContext) {
-      if (
-        !cell ||
-        !value ||
-        isNaN(value) ||
-        value === Infinity ||
-        value === -Infinity
-      ) {
+      if (!cell || !value || isNaN(value) || value === Infinity || value === -Infinity) {
         return value;
       } else if (value < 0) {
-        return `<span class="table-item-span" style="background:rgba(227, 125, 41, ${
+        return `<span class="table-item-span" style="background:rgba(${this.gridTableThemeObj.negativeColor}, ${
           value / this.statistics.overall_min
         })">${value}</span>`;
       } else {
-        return `<span class="table-item-span" style="background:rgba(0, 165, 167, ${
+        return `<span class="table-item-span" style="background:rgba(${this.gridTableThemeObj.positiveColor}, ${
           value / this.statistics.overall_max
         })">${value}</span>`;
       }
@@ -343,12 +337,7 @@ export default {
     updateGrid() {
       this.$nextTick(() => {
         if (!this.gridObj) {
-          this.gridObj = new Slick.Grid(
-              `#${this.itemId}`,
-              this.formateArr,
-              this.columnsData,
-              this.optionObj,
-          );
+          this.gridObj = new window.Slick.Grid(`#${this.itemId}`, this.formateArr, this.columnsData, this.optionObj);
           this.columnsLength = this.columnsData.length;
         }
         this.gridObj.setData(this.formateArr, this.scrollTop);
@@ -384,12 +373,7 @@ export default {
       this.filterArr.forEach((filter, index) => {
         let value = filter.model.trim();
         if (!isNaN(value)) {
-          if (
-            value < -(filter.max + 1) ||
-            value > filter.max ||
-            value === '' ||
-            value % 1
-          ) {
+          if (value < -(filter.max + 1) || value > filter.max || value === '' || value % 1) {
             filter.showError = true;
             filterCorrect = false;
           } else {
@@ -419,12 +403,7 @@ export default {
       if (indexArr.length) {
         const lastIndex = indexArr.pop();
         const filterItem = this.filterArr[lastIndex];
-        if (
-          this.columnLimitNum > 0 &&
-          filterItem &&
-          !filterItem.showError &&
-          filterItem.max >= this.columnLimitNum
-        ) {
+        if (this.columnLimitNum > 0 && filterItem && !filterItem.showError && filterItem.max >= this.columnLimitNum) {
           const result = this.checkFilterLimitOver(filterItem);
           if (result) {
             filterItem.showError = true;
@@ -457,7 +436,7 @@ export default {
       let endValue = tempArr[1] ? tempArr[1] : filter.max + 1;
       startValue = startValue < 0 ? filter.max + Number(startValue) + 1 : Number(startValue);
       endValue = endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
-      if ((endValue - startValue) > this.columnLimitNum) {
+      if (endValue - startValue > this.columnLimitNum) {
         result = true;
       }
       return result;
@@ -473,20 +452,12 @@ export default {
       const startValue = tempArr[0];
       const endValue = tempArr[1];
       const limitCount = 2;
-      if (
-        !!startValue &&
-        (isNaN(startValue) ||
-          startValue < -(filter + 1) ||
-          startValue > filter.max)
-      ) {
+      if (!!startValue && (isNaN(startValue) || startValue < -(filter + 1) || startValue > filter.max)) {
         return false;
       }
       if (
         !!endValue &&
-        (isNaN(endValue) ||
-          endValue <= -(filter.max + 1) ||
-          endValue > (filter.max + 1) ||
-          !Number(endValue))
+        (isNaN(endValue) || endValue <= -(filter.max + 1) || endValue > filter.max + 1 || !Number(endValue))
       ) {
         return false;
       }
@@ -495,12 +466,8 @@ export default {
       } else if (!startValue && !endValue) {
         return true;
       } else if (!!startValue && !!endValue) {
-        const sv =
-          startValue < 0
-            ? filter.max + Number(startValue) + 1
-            : Number(startValue);
-        const ev =
-          endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
+        const sv = startValue < 0 ? filter.max + Number(startValue) + 1 : Number(startValue);
+        const ev = endValue < 0 ? filter.max + Number(endValue) + 1 : Number(endValue);
         if (ev <= sv) {
           return false;
         } else {
@@ -590,27 +557,30 @@ export default {
   width: 100%;
   height: 100%;
 }
+.cl-slickgrid-container .ui-widget-content {
+  color: var(--grid-table-content-color);
+}
 .cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button {
   z-index: 200;
   width: 10px;
   height: 10px;
-  background: #fff;
+  background: var(--bg-color);
   cursor: pointer;
 }
 .cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:horizontal:single-button:start {
-  background-image: url("../assets/images/scroll-btn-left.png");
+  background-image: url('../assets/images/scroll-btn-left.png');
   background-position: center;
 }
 .cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:horizontal:single-button:end {
-  background-image: url("../assets/images/scroll-btn-right.png");
+  background-image: url('../assets/images/scroll-btn-right.png');
   background-position: center;
 }
 .cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:vertical:single-button:start {
-  background-image: url("../assets/images/scroll-btn-up.png");
+  background-image: url('../assets/images/scroll-btn-up.png');
   background-position: center;
 }
 .cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:vertical:single-button:end {
-  background-image: url("../assets/images/scroll-btn-down.png");
+  background-image: url('../assets/images/scroll-btn-down.png');
   background-position: center;
 }
 .cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-thumb {

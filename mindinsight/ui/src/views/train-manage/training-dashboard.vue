@@ -260,7 +260,7 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '@/services/request-service';
 import {basePath} from '@/services/fetcher';
 import CommonProperty from '@/common/common-property.js';
@@ -274,7 +274,7 @@ export default {
       // training job id
       trainingJobId: '',
       summaryPath: '',
-      defColorCount: CommonProperty.commonColorArr.length, // default color
+      defColorCount: CommonProperty.commonColorArr[this.$store.state.themeIndex].length, // default color
       colorNum: 0,
       charObj: null,
       histogramObj: null,
@@ -329,6 +329,7 @@ export default {
         graph: false,
         dataMap: false,
       },
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
   computed: {
@@ -430,13 +431,9 @@ export default {
         this.trainingJobId = this.$route.query.id;
         this.summaryPath = decodeURIComponent(this.trainingJobId);
         document.title =
-          this.summaryPath +
-          '-' +
-          this.$t('trainingDashboard.trainingDashboardTitle') +
-          '-MindInsight';
+          this.summaryPath + '-' + this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
       } else {
-        document.title =
-          this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
+        document.title = this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
         this.trainingJobId = '';
         this.$message.error(this.$t('trainingDashboard.invalidId'));
       }
@@ -499,11 +496,7 @@ export default {
               graph: true,
               dataMap: true,
             };
-            if (
-              !error.response ||
-            !error.response.data ||
-            !error.response.data.error_code
-            ) {
+            if (!error.response || !error.response.data || !error.response.data.error_code) {
               return;
             }
             if (error.response.data.error_code.toString() === '50545005') {
@@ -565,10 +558,7 @@ export default {
           this.tensorMouseData.timeStamp = event.timeStamp;
         }
       } else if (event.type === this.mouseEventKey.click) {
-        if (
-          this.tensorMouseData.isClick &&
-          event.timeStamp === this.tensorMouseData.timeStamp
-        ) {
+        if (this.tensorMouseData.isClick && event.timeStamp === this.tensorMouseData.timeStamp) {
           this.$router.push({
             path: '/train-manage/tensor',
             query: {
@@ -656,21 +646,12 @@ export default {
       };
       RequestService.getSingleTrainJob(params, true)
           .then((res) => {
-            if (
-              !res ||
-            !res.data ||
-            !res.data.train_jobs ||
-            !res.data.train_jobs.length
-            ) {
+            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
               this.initOverKey.scalar = true;
               return;
             }
             if (res.data && res.data.error_code) {
-              this.$message.error(
-                  `${res.data.error_code} : ${
-                    this.$t('error')[res.data.error_code]
-                  }`,
-              );
+              this.$message.error(`${res.data.error_code} : ${this.$t('error')[res.data.error_code]}`);
               return;
             }
             let dataList = [];
@@ -750,9 +731,9 @@ export default {
               relativeData: [],
             },
             yAxisIndex: res[i].yIndex,
-            color: CommonProperty.commonColorArr[this.colorNum]
-              ? CommonProperty.commonColorArr[this.colorNum]
-              : CommonProperty.commonColorArr[this.defColorCount - 1],
+            color: CommonProperty.commonColorArr[this.themeIndex][this.colorNum]
+              ? CommonProperty.commonColorArr[this.themeIndex][this.colorNum]
+              : CommonProperty.commonColorArr[this.themeIndex][this.defColorCount - 1],
             tagName: res[i].params.tag,
           };
           let relativeTimeBench = 0;
@@ -761,14 +742,8 @@ export default {
           }
           resData.metadatas.forEach((metaData) => {
             tempObject.valueData.stepData.push([metaData.step, metaData.value]);
-            tempObject.valueData.absData.push([
-              metaData.wall_time,
-              metaData.value,
-            ]);
-            tempObject.valueData.relativeData.push([
-              metaData.wall_time - relativeTimeBench,
-              metaData.value,
-            ]);
+            tempObject.valueData.absData.push([metaData.wall_time, metaData.value]);
+            tempObject.valueData.relativeData.push([metaData.wall_time - relativeTimeBench, metaData.value]);
           });
           this.colorNum++;
           this.charData.push(tempObject);
@@ -820,10 +795,7 @@ export default {
         return;
       }
       if (document.getElementById('module-chart')) {
-        this.charObj = echarts.init(
-            document.getElementById('module-chart'),
-            null,
-        );
+        this.charObj = echarts.init(document.getElementById('module-chart'), echartsThemeName);
         this.charObj.setOption(this.charOption, true);
       }
     },
@@ -841,14 +813,7 @@ export default {
         const yAxisData = {
           type: 'value',
           scale: true,
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
           axisLabel: {
-            color: '#9EA4B3',
             formatter(value) {
               const symbol = Math.abs(value);
               if (symbol.toString().length > 6) {
@@ -903,14 +868,7 @@ export default {
             scale: true,
             nameGap: 30,
             minInterval: 1,
-            axisLine: {
-              lineStyle: {
-                color: '#E6EBF5',
-                width: 2,
-              },
-            },
             axisLabel: {
-              color: '#9EA4B3',
               interval: 0,
               formatter(value) {
                 const symbol = Math.abs(value);
@@ -1089,9 +1047,7 @@ export default {
             let statistics = {};
             if (curStepData) {
               this.tensorData =
-              curStepData.value.data instanceof Array
-                ? curStepData.value.data
-                : [curStepData.value.data];
+              curStepData.value.data instanceof Array ? curStepData.value.data : [curStepData.value.data];
               statistics = curStepData.value.statistics;
             } else {
               this.tensorData = [[]];
@@ -1099,11 +1055,7 @@ export default {
             this.$nextTick(() => {
               const elementItem = this.$refs.tensorChart;
               if (elementItem) {
-                elementItem.updateGridData(
-                    this.tensorNewDataFlag,
-                    curStepData.value.dims,
-                    statistics,
-                );
+                elementItem.updateGridData(this.tensorNewDataFlag, curStepData.value.dims, statistics);
               }
             });
           },
@@ -1163,12 +1115,7 @@ export default {
       RequestService.getHistogramData(params).then(
           (res) => {
             this.initOverKey.histogram = true;
-            if (
-              !res ||
-            !res.data ||
-            !res.data.histograms ||
-            !res.data.histograms.length
-            ) {
+            if (!res || !res.data || !res.data.histograms || !res.data.histograms.length) {
               return;
             }
             const data = JSON.parse(JSON.stringify(res.data));
@@ -1197,21 +1144,16 @@ export default {
           const xData = bucket[0] + bucket[1] / 2;
           const filter = chartArr.filter((k) => k[0] === xData);
           if (!filter.length) {
-            chartArr.push([
-              histogram.wall_time,
-              step,
-              xData,
-              Math.floor(bucket[2]),
-            ]);
+            chartArr.push([histogram.wall_time, step, xData, Math.floor(bucket[2])]);
           }
         });
         chartArr.sort((a, b) => a[0] - b[0]);
         if (chartArr.length) {
           const minItem = chartArr[0][2];
           const maxItem = chartArr[chartArr.length - 1][2];
-          const chartAll = [
-            [histogram.wall_time, step, minItem, 0],
-          ].concat(chartArr, [[histogram.wall_time, step, maxItem, 0]]);
+          const chartAll = [[histogram.wall_time, step, minItem, 0]].concat(chartArr, [
+            [histogram.wall_time, step, maxItem, 0],
+          ]);
           chartItem.items = chartAll;
           chartData.push(chartItem);
         }
@@ -1250,14 +1192,12 @@ export default {
       };
     },
     formatCharOption() {
-      const colorMin = '#346E69';
-      const colorMax = '#EBFFFD';
+      const histogramThemeObj = CommonProperty.histogramThemes[this.themeIndex];
+      const chartThemeObj = CommonProperty.commonChartTheme[this.themeIndex];
+      const colorMin = histogramThemeObj.lineMinColor;
+      const colorMax = histogramThemeObj.lineMaxColor;
       const oriData = this.histogramOriData;
-      const colorArr = this.getGrientColor(
-          colorMin,
-          colorMax,
-          oriData.seriesData.length,
-      );
+      const colorArr = this.getGrientColor(colorMin, colorMax, oriData.seriesData.length);
       const seriesData = [];
       oriData.seriesData.forEach((item, dataIndex) => {
         const dataItem = {
@@ -1279,7 +1219,12 @@ export default {
         xAxis: {
           max: oriData.maxX,
           min: oriData.minX,
-          axisLine: {onZero: false},
+          axisLine: {
+            onZero: false,
+            lineStyle: {
+              color: chartThemeObj.axisTextColor,
+            },
+          },
           axisLabel: {
             fontSize: '11',
             formatter: function(value) {
@@ -1309,11 +1254,7 @@ export default {
             type: 'custom',
             dimensions: ['x', 'y'],
             renderItem: (params, api) => {
-              const points = this.makePolyPoints(
-                  params.dataIndex,
-                  api.coord,
-                  params.coordSys.y - 10,
-              );
+              const points = this.makePolyPoints(params.dataIndex, api.coord, params.coordSys.y - 10);
 
               return {
                 type: 'polyline',
@@ -1323,7 +1264,7 @@ export default {
                   points,
                 },
                 style: api.style({
-                  stroke: '#bbb',
+                  stroke: histogramThemeObj.polylineBorderColor,
                   lineWidth: 1,
                 }),
               };
@@ -1344,9 +1285,7 @@ export default {
         let colorStrNew = '';
         if (colorStr.length === 3) {
           for (let i = 0; i < 3; i++) {
-            colorStrNew += colorStrNew
-                .slice(i, i + 1)
-                .concat(colorStrNew.slice(i, i + 1));
+            colorStrNew += colorStrNew.slice(i, i + 1).concat(colorStrNew.slice(i, i + 1));
           }
           colorStr = colorStrNew;
         }
@@ -1401,10 +1340,7 @@ export default {
       this.histogramOption = this.formatCharOption();
       setTimeout(() => {
         if (!this.histogramObj) {
-          this.histogramObj = echarts.init(
-              document.getElementById('distribution-chart'),
-              null,
-          );
+          this.histogramObj = echarts.init(document.getElementById('distribution-chart'), echartsThemeName);
         }
         this.histogramObj.setOption(this.histogramOption, true);
       }, 100);
@@ -1436,9 +1372,7 @@ export default {
       if (error.response && error.response.data) {
         this.scalarClearAllData();
       } else {
-        if (
-          !(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))
-        ) {
+        if (!(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))) {
           // Clear Display Data
           this.scalarClearAllData();
         }
@@ -1461,14 +1395,9 @@ export default {
     getSampleRandomly() {
       if (this.originImageDataArr.length) {
         if (this.originImageDataArr.length > 1) {
-          const sampleIndex = Math.floor(
-              Math.random() * this.originImageDataArr.length,
-          );
+          const sampleIndex = Math.floor(Math.random() * this.originImageDataArr.length);
           const curSample = this.originImageDataArr[sampleIndex];
-          if (
-            curSample.tagName !== this.curImageShowSample.tagName ||
-            this.imageRandomLoopCount >= 15
-          ) {
+          if (curSample.tagName !== this.curImageShowSample.tagName || this.imageRandomLoopCount >= 15) {
             this.curImageShowSample = curSample;
             this.imageRandomLoopCount = 0;
           } else {
@@ -1520,13 +1449,10 @@ export default {
                 // Initialize the current step information
                 if (sampleItem.sampleData.length) {
                   const sampleIndex = sampleItem.sampleData.length - 1;
-                  const sampleWallTime =
-                sampleItem.sampleData[sampleIndex].wall_time;
+                  const sampleWallTime = sampleItem.sampleData[sampleIndex].wall_time;
                   sampleItem.curImgUrl =
                 `${basePath}${this.imageBasePath}` +
-                `train_id=${sampleItem.runId}&tag=${encodeURIComponent(
-                    sampleItem.tagName,
-                )}` +
+                `train_id=${encodeURIComponent(sampleItem.runId)}&tag=${encodeURIComponent(sampleItem.tagName)}` +
                 `&step=-1&wt=${sampleWallTime}`;
                 } else {
                   this.curImageShowSample = {};
@@ -1615,12 +1541,7 @@ export default {
       RequestService.queryGraphData(params)
           .then(
               (response) => {
-                if (
-                  response &&
-              response.data &&
-              response.data.nodes &&
-              response.data.nodes.length
-                ) {
+                if (response && response.data && response.data.nodes && response.data.nodes.length) {
                   const nodes = response.data.nodes;
                   this.packageDataToObject(nodes);
                   const dot = this.packageGraphData();
@@ -1665,8 +1586,7 @@ export default {
      * @return {String} dot string for packing graph data
      */
     packageGraphData() {
-      const initSetting =
-        'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
+      const initSetting = 'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
       return `digraph {${initSetting}${this.packageNodes()}${this.packageEdges()}}`;
     },
     /**
@@ -1680,11 +1600,9 @@ export default {
         const name = node.name.split('/').pop();
         // Different types of nodes are generated for different data types.
         if (node.type === 'polymeric_scope') {
-          tempStr +=
-            `<${node.name}>[id="${node.name}";shape="octagon";` +
-            `label="${name}";class="polymeric"];`;
+          tempStr += `<${node.name}>[id="${node.name}";shape="octagon";` + `label="${name}";class="polymeric"];`;
         } else if (node.type === 'name_scope') {
-          const fillColor = CommonProperty.graphColorArrPhg[this.curColorIndex];
+          const fillColor = CommonProperty.graphColorArr[this.$store.state.themeIndex][this.curColorIndex];
           this.curColorIndex = this.curColorIndex % 4;
           this.curColorIndex++;
           tempStr +=
@@ -1695,9 +1613,7 @@ export default {
             `<${node.name}>[id="${node.name}";label="${name}\n\n\n";` +
             `shape="circle";width="0.14";height="0.14";fixedsize=true;];`;
         } else {
-          tempStr +=
-            `<${node.name}>[id="${node.name}";shape="ellipse";` +
-            `label="${name}";];`;
+          tempStr += `<${node.name}>[id="${node.name}";shape="ellipse";` + `label="${name}";];`;
         }
         // A maximum of five virtual nodes can be displayed. Other virtual nodes are displayed in XXXmore.
         // The ID of the omitted aggregation node is analogNodesInput||analogNodeOutput^nodeId.
@@ -1708,18 +1624,13 @@ export default {
         let isConst = false;
         for (let i = 0; i < Math.min(5, keys.length); i++) {
           source = keys[i];
-          isConst = !!(
-            this.allGraphData[keys[i]] &&
-            this.allGraphData[keys[i]].type === 'Const'
-          );
+          isConst = !!(this.allGraphData[keys[i]] && this.allGraphData[keys[i]].type === 'Const');
           const nodeStr = isConst
             ? `shape="circle";width="0.14";height="0.14";fixedsize=true;` +
               `label="${source.split('/').pop()}\n\n\n";`
             : `shape="Mrecord";label="${source.split('/').pop()}";`;
 
-          tempStr +=
-            `<${source}^${target}>[id="${source}^${target}";` +
-            `${nodeStr}class="plain"];`;
+          tempStr += `<${source}^${target}>[id="${source}^${target}";` + `${nodeStr}class="plain"];`;
         }
         if (keys.length > 5) {
           tempStr +=
@@ -1737,9 +1648,7 @@ export default {
               `label="${target.split('/').pop()}\n\n\n";`
             : `shape="Mrecord";label="${target.split('/').pop()}";`;
 
-          tempStr +=
-            `<${target}^${source}>[id="${target}^${source}";` +
-            `${nodeStr}class="plain";];`;
+          tempStr += `<${target}^${source}>[id="${target}^${source}";` + `${nodeStr}class="plain";];`;
         }
         if (keys.length > 5) {
           tempStr +=
@@ -1768,22 +1677,14 @@ export default {
             // It can only connect to the outer namespace of the aggregation node.
             // If there is no namespace in the outer layer,
             // you do not need to connect cables. Other connections are normal.
-            const temp =
-              input[key].scope === 'polymeric_scope'
-                ? key.substring(0, key.lastIndexOf('/'))
-                : key;
+            const temp = input[key].scope === 'polymeric_scope' ? key.substring(0, key.lastIndexOf('/')) : key;
             const source = temp.split('/')[0];
             const target =
               node.type === 'polymeric_scope' || node.polymeric_scope_name
                 ? `${node.name.substring(0, node.name.lastIndexOf('/'))}`
                 : node.name;
             // The namespace is not nested.
-            if (
-              source &&
-              target &&
-              !target.includes(source) &&
-              !source.includes(target)
-            ) {
+            if (source && target && !target.includes(source) && !source.includes(target)) {
               const obj = {
                 source: source,
                 target: target,
@@ -1804,10 +1705,7 @@ export default {
             source: `${source}^${target}`,
             target: target,
             shape: [],
-            edge_type:
-              node.type !== 'polymeric_scope' && !node.polymeric_scope_name
-                ? 'polymeric'
-                : '',
+            edge_type: node.type !== 'polymeric_scope' && !node.polymeric_scope_name ? 'polymeric' : '',
             count: 1,
           };
           edges.push(obj);
@@ -1817,10 +1715,7 @@ export default {
             source: `analogNodesInput^${node.name}`,
             target: node.name,
             shape: [],
-            edge_type:
-              node.type !== 'polymeric_scope' && !node.polymeric_scope_name
-                ? 'polymeric'
-                : '',
+            edge_type: node.type !== 'polymeric_scope' && !node.polymeric_scope_name ? 'polymeric' : '',
             count: 1,
           };
           edges.push(obj);
@@ -1834,10 +1729,7 @@ export default {
             source: source,
             target: `${target}^${source}`,
             shape: [],
-            edge_type:
-              node.type !== 'polymeric_scope' && !node.polymeric_scope_name
-                ? 'polymeric'
-                : '',
+            edge_type: node.type !== 'polymeric_scope' && !node.polymeric_scope_name ? 'polymeric' : '',
             count: 1,
           };
           edges.push(obj);
@@ -1847,10 +1739,7 @@ export default {
             source: node.name,
             target: `analogNodesOutput^${node.name}`,
             shape: [],
-            edge_type:
-              node.type !== 'polymeric_scope' && !node.polymeric_scope_name
-                ? 'polymeric'
-                : '',
+            edge_type: node.type !== 'polymeric_scope' && !node.polymeric_scope_name ? 'polymeric' : '',
             count: 1,
           };
           edges.push(obj);
@@ -1943,12 +1832,7 @@ export default {
       RequestService.queryDatasetGraph(params)
           .then(
               (res) => {
-                if (
-                  res &&
-              res.data &&
-              res.data.dataset_graph &&
-              Object.keys(res.data.dataset_graph).length
-                ) {
+                if (res && res.data && res.data.dataset_graph && Object.keys(res.data.dataset_graph).length) {
                   const data = JSON.parse(JSON.stringify(res.data.dataset_graph));
                   this.dealDatasetGraph(data);
                   if (Object.keys(this.allDatasetGraphData).length) {
@@ -1977,9 +1861,7 @@ export default {
       if (!data) {
         return;
       }
-      const key = `${parentKey ? parentKey + '/' : ''}${
-        data.op_type || ''
-      }_${index}`;
+      const key = `${parentKey ? parentKey + '/' : ''}${data.op_type || ''}_${index}`;
       const obj = {
         key: key,
         id: '',
@@ -2042,8 +1924,7 @@ export default {
           }${subGraphNodeType.includes(node.op_type) ? `lhead=<cluster_${node.key}>;` : ''}];`;
         });
       });
-      const initSetting =
-        'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
+      const initSetting = 'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
       return `digraph {compound=true;rankdir=LR;${initSetting}${nodeStr}${edgeStr}}`;
     },
 
@@ -2116,12 +1997,7 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.querySummaryList(params, true).then((response) => {
-        if (
-          response &&
-          response.data &&
-          response.data.train_jobs &&
-          response.data.train_jobs.length
-        ) {
+        if (response && response.data && response.data.train_jobs && response.data.train_jobs.length) {
           const curTrain = response.data.train_jobs[0];
           const showIcon = curTrain.graph_files || curTrain.summary_files;
           if (showIcon && curTrain.cache_status === this.cacheKey.notInCache) {
@@ -2145,6 +2021,7 @@ export default {
   overflow-y: auto;
   width: 100%;
   overflow: hidden;
+  background-color: var(--dashboard-bg-color);
 }
 .cl-dashboard .cl-dashboard-top {
   width: 100%;
@@ -2165,7 +2042,7 @@ export default {
 }
 .cl-dashboard .cl-dashboard-top .cl-dashboard-top-title {
   float: left;
-  color: #000000;
+  color: var(--font-color);
   font-weight: bold;
   font-size: 20px;
   line-height: 56px;
@@ -2183,7 +2060,7 @@ export default {
 }
 .cl-dashboard .cl-dashboard-title {
   font-size: 20px;
-  color: #000000;
+  color: var(--font-color);
   line-height: 20px;
   font-weight: bold;
   margin-bottom: 1vw;
@@ -2192,7 +2069,7 @@ export default {
 }
 .cl-dashboard .cl-dashboard-title .cl-dashboard-title-left {
   font-size: 20px;
-  color: #000000;
+  color: var(--font-color);
   line-height: 20px;
   font-weight: bold;
   flex: 1;
@@ -2207,7 +2084,7 @@ export default {
   padding: 0px;
 }
 .cl-dashboard .cl-dashboard-con-up {
-  background-color: #fff;
+  background-color: var(--item-bg-color);
   padding: 1.6vw;
   cursor: pointer;
   overflow: hidden;
@@ -2216,12 +2093,12 @@ export default {
   margin: 5px;
   float: left;
   border-radius: 3px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: var(--box-shadow-color);
 }
 .cl-dashboard .cl-dashboard-con-up .link-text {
   cursor: pointer;
   font-size: 16px;
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .cl-dashboard .cl-module {
   height: calc(100% - 35px);
@@ -2241,7 +2118,7 @@ export default {
 .cl-dashboard .cl-module .cl-scalar-tagName {
   height: 22px;
   font-size: 14px;
-  color: #333;
+  color: var(--font-color);
   z-index: 999;
   line-height: 22px;
   display: flex;
@@ -2258,7 +2135,7 @@ export default {
 }
 .cl-dashboard .cl-module .graph {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--item-bg-color);
 }
 .cl-dashboard .cl-module .graph #graph0 > polygon {
   fill: transparent;
@@ -2270,8 +2147,8 @@ export default {
   fill: #787878;
 }
 .cl-dashboard .cl-module .graph .node.polymeric > polygon {
-  stroke: #fdca5a;
-  fill: #ffe8b5;
+  stroke: #e3aa00;
+  fill: var(--graph-aggregation-color);
 }
 .cl-dashboard .cl-module .graph .node.cluster.polymeric > rect {
   stroke: #fdca5a;
@@ -2279,17 +2156,20 @@ export default {
   stroke-dasharray: 3, 3;
 }
 .cl-dashboard .cl-module .graph .node > polygon {
-  stroke: #00a5a7;
-  fill: #8df1f2;
+  stroke: var(--theme-color);
+  fill: var(--graph-polygon-color);
+}
+.cl-dashboard text {
+  fill: var(--font-color);
 }
 .cl-dashboard .cl-module .graph .node > ellipse {
-  stroke: #58a4e0;
-  fill: #d1ebff;
+  stroke: #4ea6e6;
+  fill: var(--graph-operator-color);
 }
 .cl-dashboard .cl-module .graph .plain > path,
 .cl-dashboard .cl-module .graph .plain ellipse {
-  stroke: #56b077;
-  fill: #c1f5d5;
+  stroke: #e37d29;
+  fill: var(--graph-plain-color);
   stroke-dasharray: 1.5, 1.5;
 }
 .cl-dashboard .cl-module .image-container {
@@ -2305,7 +2185,7 @@ export default {
   cursor: not-allowed;
 }
 .cl-dashboard .no-data-img {
-  background: #fff;
+  background: var(--item-bg-color);
   text-align: center;
   height: 100%;
   padding-top: 26px;
@@ -2348,30 +2228,30 @@ export default {
 }
 .cl-dashboard #dataMapGraph .Create > polygon,
 .cl-dashboard #dataMapGraph .Operator > ellipse {
-  stroke: #4ea6e6;
-  fill: #b8e0ff;
+  stroke: var(--create-dataset-polygon-stroke-color);
+  fill: var(--create-dataset-polygon-fill-color);
 }
 .cl-dashboard #dataMapGraph .cluster > polygon {
-  fill: #8df1f2;
-  stroke: #00a5a7;
+  fill: var(--graph-polygon-color);
+  stroke: var(--theme-color);
 }
 .cl-dashboard #dataMapGraph .Repeat > polygon {
-  stroke: #fdca5a;
-  fill: #fff2d4;
+  stroke: var(--repeat-dataset-polygon-stroke-color);
+  fill: var(--repeat-dataset-polygon-fill-color);
 }
 .cl-dashboard #dataMapGraph .Shuffle > polygon {
-  stroke: #e37d29;
-  fill: #ffd0a6;
+  stroke: var(--shuffle-dataset-polygon-stroke-color);
+  fill: var(--shuffle-dataset-polygon-fill-color);
 }
 .cl-dashboard #dataMapGraph .Batch > polygon {
-  stroke: #de504e;
-  fill: #ffbcba;
+  stroke: var(--batch-dataset-polygon-stroke-color);
+  fill: var(--batch-dataset-polygon-fill-color);
 }
 .cl-dashboard #dataMapGraph .edge path {
-  stroke: #a7a7a7;
+  stroke: var(--edge-path-color);
 }
 .cl-dashboard #dataMapGraph .edge polygon {
-  fill: #a7a7a7;
-  stroke: #a7a7a7;
+  fill: var(--edge-path-color);
+  stroke: var(--edge-path-color);
 }
 </style>

@@ -26,6 +26,12 @@ limitations under the License.
       <span :title="$t('operator.flopsUtilizationTitle')">
         {{$t('operator.flopsUtilization')}}{{flops.FLOPS_Utilization===undefined?'--':flops.FLOPS_Utilization}}%
       </span>
+      <div class="view-detail">
+        <button @click="showFlopsDetails"
+                :disabled="Object.keys(flops).length===0"
+                :class="{disabled:Object.keys(flops).length===0}">{{ $t('profiling.viewDetail') }}
+          <i class="el-icon-d-arrow-right"></i></button>
+      </div>
     </div>
     <div class="cl-profiler-top"
          :class="{fullScreen:coreFullScreen}"
@@ -227,10 +233,18 @@ limitations under the License.
         </el-table-column>
       </el-table>
     </el-dialog>
+    <el-dialog :title="$t('operator.scopeLevelFlops')"
+               :visible.sync="flopsDialogVisible"
+               width="70%"
+               :close-on-click-modal="false"
+               class="flops-data-list">
+      <div id="flopsChart"
+           :style="{width:`${flopsChartWidth}px`,height:`${flopsChartHeight}px`}"></div>
+    </el-dialog>
   </div>
 </template>
 <script>
-import echarts from '../js/echarts';
+import echarts, {echartsThemeName} from '../js/echarts';
 import requestService from '../services/request-service';
 import CommonProperty from '../common/common-property';
 
@@ -370,6 +384,10 @@ export default {
       searchPlaceholder: this.coreSearchOptions[0].placeHolder,
       searchType: this.coreSearchType,
       flops: {},
+      flopsDialogVisible: false,
+      flopsChartDom: null,
+      flopsChartWidth: 800,
+      flopsChartHeight: 540,
     };
   },
   destroyed() {
@@ -382,6 +400,71 @@ export default {
     }
   },
   methods: {
+    showFlopsDetails() {
+      this.flopsDialogVisible = true;
+      const params = {
+        train_id: this.train_id,
+        device_id: this.currentCard,
+      };
+      requestService.getFlopsScope(params).then((res) => {
+        if (res.data.data && res.data.max_scope_num) {
+          const nodes = res.data.data.nodes;
+          const links = res.data.data.links;
+          const maxScopeNum = res.data.max_scope_num;
+          let maxNodeNum = 0;
+          nodes.forEach((value) => {
+            if (!links.find((val) => val.source === value.name)) {
+              maxNodeNum++;
+            }
+          });
+          this.flopsChartWidth = 150 * maxScopeNum;
+          this.flopsChartHeight = 25 * maxNodeNum;
+          this.$nextTick(() => {
+            if (!this.flopsChartDom) {
+              this.flopsChartDom = echarts.init(document.querySelector('#flopsChart'), echartsThemeName);
+            }
+            this.flopsChartDom.setOption({
+              title: {
+                text: 'Sankey Diagram',
+              },
+              tooltip: {
+                trigger: 'item',
+                triggerOn: 'mousemove',
+                confine: true,
+              },
+              itemStyle: {
+                borderWidth: 1,
+              },
+              label: {
+                width: 100,
+                overflow: 'truncate',
+                ellipsis: '...',
+                color: CommonProperty.modelTracebackChartTheme[this.$store.state.themeIndex].batchSizeTextColor,
+              },
+              series: [
+                {
+                  type: 'sankey',
+                  data: nodes,
+                  links: links,
+                  emphasis: {
+                    focus: 'adjacency',
+                  },
+                  nodeGap: 10,
+                  left: 0,
+                  right: 110,
+                  top: 30,
+                  bottom: 30,
+                  lineStyle: {
+                    curveness: 0.5,
+                    color: CommonProperty.commonChartTheme[this.$store.state.themeIndex].lineStyleColor,
+                  },
+                },
+              ],
+            });
+          });
+        }
+      });
+    },
     getFlopsSummary() {
       const params = {
         train_id: this.train_id,
@@ -756,11 +839,6 @@ export default {
           },
           tooltip: {
             show: true,
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
-            },
             formatter: (params) => {
               let name = params.name;
               name = name.replace(/</g, '< ');
@@ -804,11 +882,6 @@ export default {
         };
         option.tooltip = {
           trigger: 'item',
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
           formatter: (params) => {
             const name = params.data.name.replace(/</g, '< ');
             const strTemp = `${name} ${params.percent.toFixed(2) + '%'}`;
@@ -838,12 +911,11 @@ export default {
                   ? `${params.data.name.slice(0, maxLabelLength)}...`
                   : params.data.name;
               },
+              color: CommonProperty.modelTracebackChartTheme[this.$store.state.themeIndex].batchSizeTextColor,
             },
             itemStyle: {
-              normal: {
-                color: function(params) {
-                  return CommonProperty.pieColorArr[params.dataIndex];
-                },
+              color: (params) => {
+                return CommonProperty.pieColorArr[this.$store.state.themeIndex][params.dataIndex];
               },
             },
           },
@@ -859,11 +931,6 @@ export default {
             return `${params[0].axisValue}<br>${params[0].marker}${params[0].value} (${this.unit})`;
           },
           confine: true,
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
         };
         option.series = [
           {
@@ -898,7 +965,7 @@ export default {
       this.$nextTick(() => {
         const cpuDom = document.getElementById(chart.id);
         if (cpuDom) {
-          chart.chartDom = echarts.init(cpuDom, null);
+          chart.chartDom = echarts.init(cpuDom, echartsThemeName);
         } else {
           if (chart.chartDom) {
             chart.chartDom.off('mouseover');
@@ -919,11 +986,6 @@ export default {
                 tooltip: {
                   formatter: params.value,
                   alwaysShowContent: true,
-                  backgroundColor: 'rgba(50, 50, 50, 0.7)',
-                  borderWidth: 0,
-                  textStyle: {
-                    color: '#fff',
-                  },
                 },
               });
               chart.chartDom.dispatchAction({
@@ -943,11 +1005,6 @@ export default {
                     return `${params[0].axisValue}<br>${params[0].marker}${params[0].value} (${this.unit})`;
                   },
                   alwaysShowContent: false,
-                  backgroundColor: 'rgba(50, 50, 50, 0.7)',
-                  borderWidth: 0,
-                  textStyle: {
-                    color: '#fff',
-                  },
                 },
               });
             }
@@ -1091,12 +1148,29 @@ export default {
 }
 .flops-info {
   line-height: 30px;
-  background: #f1f1f1;
+  background: var(--module-bg-color);
   margin-bottom: 8px;
 }
 .flops-info span {
   margin-right: 15px;
   font-weight: bold;
+}
+.flops-info .view-detail {
+  float: right;
+  cursor: pointer;
+  font-size: 12px;
+  height: 30px;
+  line-height: 30px;
+}
+.flops-info .view-detail button {
+  color: var(--theme-color);
+  border: none;
+  background-color: var(--module-bg-color);
+  cursor: pointer;
+}
+.flops-info .view-detail button.disabled {
+  cursor: not-allowed;
+  color: var(--button-disabled-font-color);
 }
 .cl-search-box {
   float: right;
@@ -1238,6 +1312,12 @@ export default {
   padding-top: 10px;
   overflow: auto;
 }
+.flops-data-list .el-dialog__body {
+  max-height: 600px;
+  padding-top: 10px;
+  overflow: auto;
+  text-align: center;
+}
 .details-data-list .el-dialog__body .details-data-title {
   margin-bottom: 20px;
 }
@@ -1273,5 +1353,8 @@ export default {
 .image-noData p {
   font-size: 16px;
   padding-top: 10px;
+}
+#flopsChart {
+  display: inline-block;
 }
 </style>

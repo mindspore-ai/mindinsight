@@ -64,8 +64,8 @@ limitations under the License.
             <div id="sidebar"
                  :class="rightShow ? '' : 'right-hide'">
               <div class="toggle-right"
-                   @click="toggleRight">
-                <i :class="rightShow?'icon-toggle':'icon-toggle icon-left'"></i>
+                   @click="toggleRight"
+                   :class="[rightShow?'':'toggle-left',`toggle-${themeIndex}-btn`]">
               </div>
               <!-- Node information -->
               <div class="node-info"
@@ -170,6 +170,7 @@ export default {
       selectedNode: [],
       noData: false,
       summaryPath: this.$route.query.summaryPath,
+      themeIndex: this.$store.state.themeIndex,
     };
   },
   mounted() {
@@ -181,9 +182,7 @@ export default {
       return;
     }
     this.trainJobID = this.$route.query.train_id;
-    document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t(
-        'trainingDashboard.dataMap',
-    )}-MindInsight`;
+    document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t('trainingDashboard.dataMap')}-MindInsight`;
     this.$nextTick(() => {
       this.queryGraphData();
     });
@@ -221,9 +220,7 @@ export default {
       if (!data) {
         return;
       }
-      const key = `${parentKey ? parentKey + '/' : ''}${
-        data.op_type || ''
-      }_${index}`;
+      const key = `${parentKey ? parentKey + '/' : ''}${data.op_type || ''}_${index}`;
       const obj = {
         key: key,
         id: '',
@@ -286,8 +283,7 @@ export default {
           }${subGraphNodeType.includes(node.op_type) ? `lhead=<cluster_${node.key}>;` : ''}];`;
         });
       });
-      const initSetting =
-        'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
+      const initSetting = 'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
       return `digraph {compound=true;rankdir=LR;${initSetting}${nodeStr}${edgeStr}}`;
     },
 
@@ -382,10 +378,7 @@ export default {
       const graphRect = graphDom.getBoundingClientRect();
       let graphTransform = {};
 
-      const minScale = Math.min(
-          svgRect.width / 2 / graphRect.width,
-          svgRect.height / 2 / graphRect.height,
-      );
+      const minScale = Math.min(svgRect.width / 2 / graphRect.width, svgRect.height / 2 / graphRect.height);
 
       const padding = 4;
       const minDistance = 50;
@@ -419,32 +412,17 @@ export default {
               pointer.end.y = event.y;
               let tempX = pointer.end.x - pointer.start.x;
               let tempY = pointer.end.y - pointer.start.y;
-              const paddingTrans = Math.max(
-                  (padding / transRate) * scale,
-                  minDistance,
-              );
-              if (
-                graphRect.left + paddingTrans + tempX >=
-              svgRect.left + svgRect.width
-              ) {
+              const paddingTrans = Math.max(padding / transRate / scale, minDistance);
+              if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
                 tempX = Math.min(tempX, 0);
               }
-              if (
-                graphRect.left + graphRect.width - paddingTrans + tempX <=
-              svgRect.left
-              ) {
+              if (graphRect.left + graphRect.width - paddingTrans + tempX <= svgRect.left) {
                 tempX = Math.max(tempX, 0);
               }
-              if (
-                graphRect.top + paddingTrans + tempY >=
-              svgRect.top + svgRect.height
-              ) {
+              if (graphRect.top + paddingTrans + tempY >= svgRect.top + svgRect.height) {
                 tempY = Math.min(tempY, 0);
               }
-              if (
-                graphRect.top + graphRect.height - paddingTrans + tempY <=
-              svgRect.top
-              ) {
+              if (graphRect.top + graphRect.height - paddingTrans + tempY <= svgRect.top) {
                 tempY = Math.max(tempY, 0);
               }
 
@@ -457,22 +435,13 @@ export default {
             } else if (event.type === 'wheel') {
               const wheelDelta = -event.deltaY;
               const rate = 1.2;
-              scale =
-              wheelDelta > 0
-                ? transformData.scale[0] * rate
-                : transformData.scale[0] / rate;
+              scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
 
               scale = Math.max(this.scaleRange[0], scale, minScale);
               scale = Math.min(this.scaleRange[1], scale);
               change = {
-                x:
-                (graphRect.x + padding / transRate - event.x) *
-                transRate *
-                (scale - transformData.scale[0]),
-                y:
-                (graphRect.bottom - padding / transRate - event.y) *
-                transRate *
-                (scale - transformData.scale[0]),
+                x: (graphRect.x + padding / transRate - event.x) * transRate * (scale - transformData.scale[0]),
+                y: (graphRect.bottom - padding / transRate - event.y) * transRate * (scale - transformData.scale[0]),
               };
             }
 
@@ -538,10 +507,7 @@ export default {
       let id = '';
       let select = '';
       if (target.attributes.class.indexOf('Operator') !== -1) {
-        id = target.attributes.id.slice(
-            0,
-            target.attributes.id.lastIndexOf('/'),
-        );
+        id = target.attributes.id.slice(0, target.attributes.id.lastIndexOf('/'));
         let index = -1;
         if (target.attributes.id.match(/\d+$/)) {
           index = parseInt(target.attributes.id.match(/\d+$/)[0]);
@@ -554,22 +520,11 @@ export default {
         select = this.allGraphData[id];
       }
       if (select) {
-        const ignoreKeys = [
-          'op_module',
-          'op_type',
-          'children',
-          'operations',
-          'id',
-          'key',
-        ];
+        const ignoreKeys = ['op_module', 'op_type', 'children', 'operations', 'id', 'key'];
         Object.keys(select).forEach((item) => {
           if (!ignoreKeys.includes(item)) {
             const value =
-              select[item] instanceof Array
-                ? select[item].join(', ')
-                : select[item] === null
-                ? 'None'
-                : select[item];
+              select[item] instanceof Array ? select[item].join(', ') : select[item] === null ? 'None' : select[item];
             this.selectedNode.push({key: item, value: value});
           }
         });
@@ -595,7 +550,9 @@ export default {
         `<svg xmlns="http://www.w3.org/2000/svg" ` +
         `xmlns:xlink="http://www.w3.org/1999/xlink" ` +
         `width="${bbox.width}" height="${bbox.height}" ` +
-        `viewBox="${viewBoxSize}">${CommonProperty.dataMapDownloadStyle}<g>${svgXml}</g></svg>`;
+        `viewBox="${viewBoxSize}">${
+          CommonProperty.dataMapDownloadStyle[this.$store.state.themeIndex]
+        }<g>${svgXml}</g></svg>`;
 
       // Write the svg stream encoded by base64 to the image object.
       const src = `data:image/svg+xml;base64,
@@ -665,7 +622,7 @@ export default {
   position: relative;
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   padding: 0 32px 24px;
   min-height: 700px;
   overflow: hidden;
@@ -679,7 +636,10 @@ export default {
   height: 100%;
   width: 100%;
   padding: 16px;
-  background-color: #f7faff;
+  background-color: var(--graph-bg-color);
+}
+.cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph text {
+  fill: var(--font-color);
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph #graph0 > polygon {
   fill: transparent;
@@ -695,31 +655,31 @@ export default {
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Create > polygon,
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Operator > ellipse {
-  stroke: #4ea6e6;
-  fill: #b8e0ff;
+  stroke: var(--create-dataset-polygon-stroke-color);
+  fill: var(--create-dataset-polygon-fill-color);
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .cluster > polygon {
-  fill: #8df1f2;
-  stroke: #00a5a7;
+  fill: var(--graph-polygon-color);
+  stroke: var(--theme-color);
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Repeat > polygon {
-  stroke: #fdca5a;
-  fill: #fff2d4;
+  stroke: var(--repeat-dataset-polygon-stroke-color);
+  fill: var(--repeat-dataset-polygon-fill-color);
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Shuffle > polygon {
-  stroke: #e37d29;
-  fill: #ffd0a6;
+  stroke: var(--shuffle-dataset-polygon-stroke-color);
+  fill: var(--shuffle-dataset-polygon-fill-color);
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .Batch > polygon {
-  stroke: #de504e;
-  fill: #ffbcba;
+  stroke: var(--batch-dataset-polygon-stroke-color);
+  fill: var(--batch-dataset-polygon-fill-color);
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .edge path {
-  stroke: #a7a7a7;
+  stroke: var(--edge-path-color);
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container #graph .edge polygon {
-  fill: #a7a7a7;
-  stroke: #a7a7a7;
+  fill: var(--edge-path-color);
+  stroke: var(--edge-path-color);
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container .full-screen-button {
   position: absolute;
@@ -730,7 +690,7 @@ export default {
   height: 12px;
   z-index: 999;
   display: inline-block;
-  background-image: url("../../assets/images/full-screen.png");
+  background-image: url('../../assets/images/full-screen.png');
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container .fit-screen {
   position: absolute;
@@ -741,7 +701,7 @@ export default {
   z-index: 999;
   cursor: pointer;
   display: inline-block;
-  background-image: url("../../assets/images/fit.png");
+  background-image: url('../../assets/images/fit.png');
 }
 .cl-data-map-manage #data-maps .cl-data-map .data-map-container .download-button {
   position: absolute;
@@ -752,7 +712,7 @@ export default {
   z-index: 999;
   cursor: pointer;
   display: inline-block;
-  background-image: url("../../assets/images/download.png");
+  background-image: url('../../assets/images/download.png');
   background-size: 14px 14px;
   background-repeat: no-repeat;
 }
@@ -780,16 +740,16 @@ export default {
   right: 0;
   top: 0;
   width: 442px;
-  height: 100%;
+  height: calc(100% - 24px);
   border-radius: 6px;
   text-align: left;
-  background-color: #ffffff;
+  background-color: var(--item-bg-color);
   display: inline-block;
-  box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.1);
-  color: #333333;
+  color: var(--font-color);
   font-size: 14px;
   line-height: 14px;
   padding: 24px 32px;
+  border: 1px solid var(--graph-right-module-border-color);
 }
 .cl-data-map-manage #data-maps #sidebar div,
 .cl-data-map-manage #data-maps #sidebar span,
@@ -799,7 +759,7 @@ export default {
 .cl-data-map-manage #data-maps #sidebar .title {
   padding: 24px 0;
   font-size: 14px;
-  color: #333333;
+  color: var(--font-color);
 }
 .cl-data-map-manage #data-maps #sidebar .title img {
   float: right;
@@ -815,7 +775,7 @@ export default {
 .cl-data-map-manage #data-maps #sidebar .node-info .title {
   padding: 0 0 24px;
   font-size: 14px;
-  color: #333;
+  color: var(--font-color);
 }
 .cl-data-map-manage #data-maps #sidebar .node-info .node-info-list {
   height: calc(100% - 62px);
@@ -824,7 +784,7 @@ export default {
 .cl-data-map-manage #data-maps #sidebar .node-info .item {
   line-height: 20px;
   padding: 5px 0 5px 20px;
-  background-color: #f2f2f2;
+  background-color: var(--graph-legend-bg-color);
 }
 .cl-data-map-manage #data-maps #sidebar .node-info .item .label {
   vertical-align: top;
@@ -840,7 +800,7 @@ export default {
   word-break: break-all;
 }
 .cl-data-map-manage #data-maps #sidebar .legend .legend-content {
-  background-color: #f7faff;
+  background-color: var(--graph-legend-bg-color);
   padding: 0 32px;
   height: 94px;
   overflow-y: auto;
@@ -870,22 +830,23 @@ export default {
 .cl-data-map-manage #data-maps #sidebar .toggle-right {
   position: absolute;
   top: calc(50% - 43px);
-  left: -16px;
-  width: 18px;
-  height: 86px;
+  left: -14px;
+  width: 24px;
+  height: 88px;
   cursor: pointer;
-  background-image: url("../../assets/images/toggle-right-bg.png");
-}
-.cl-data-map-manage #data-maps #sidebar .icon-toggle {
-  width: 6px;
-  height: 9px;
-  background-image: url("../../assets/images/toggle-right-icon.png");
-  position: absolute;
-  top: calc(50% - 4.5px);
-  left: calc(50% - 3px);
-}
-.cl-data-map-manage #data-maps #sidebar .icon-toggle.icon-left {
   transform: rotateY(180deg);
+}
+.cl-data-map-manage #data-maps #sidebar .toggle-right.toggle-0-btn {
+  background-image: url('../../assets/images/0/collapse-left.svg');
+}
+.cl-data-map-manage #data-maps #sidebar .toggle-right.toggle-1-btn {
+  background-image: url('../../assets/images/1/collapse-left.svg');
+}
+.cl-data-map-manage #data-maps #sidebar .toggle-right.toggle-left.toggle-0-btn {
+  background-image: url('../../assets/images/0/collapse-right.svg');
+}
+.cl-data-map-manage #data-maps #sidebar .toggle-right.toggle-left.toggle-1-btn {
+  background-image: url('../../assets/images/1/collapse-right.svg');
 }
 .cl-data-map-manage #data-maps .data-map-container.all {
   width: 100%;

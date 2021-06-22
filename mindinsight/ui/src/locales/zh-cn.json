@@ -26,7 +26,9 @@
     "caseMode": "不区分大小写",
     "all": "全部",
     "details": "详情",
-    "delete": "删除"
+    "delete": "删除",
+    "dark": "深色主题",
+    "light": "浅色主题"
   },
   "unit": {
     "KiB": "KiB",
@@ -94,7 +96,8 @@
     "sessionLimitNum": "最多同时存在2个",
     "sessionLists": "目前存在的session列表",
     "deleteSessionConfirm": "此操作将删除当前session, 是否继续?",
-    "deleteSessionSuccess": "删除session成功!"
+    "deleteSessionSuccess": "删除session成功!",
+    "dumpPath":"Dump路径"
   },
   "modelTraceback": {
     "summaryPath": "训练日志路径",
@@ -296,7 +299,8 @@
     "flops": "浮点运算次数",
     "flopsS": "每秒浮点运算次数",
     "flopsUtilization": "FLOPS利用率：",
-    "flopsUtilizationTitle": "FLOPS/峰值FLOPS"
+    "flopsUtilizationTitle": "FLOPS/峰值FLOPS",
+    "scopeLevelFlops":"Scope层级FLOPs(M)"
   },
   "profiling": {
     "titleText": "性能分析 - 单机",

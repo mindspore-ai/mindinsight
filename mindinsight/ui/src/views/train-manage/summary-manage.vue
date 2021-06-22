@@ -188,7 +188,7 @@ limitations under the License.
         </el-table-column>
         <el-table-column min-width="300"
                          prop="relative_path"
-                         :label="$t('summaryManage.summaryPath')"
+                         :label="$t('summaryManage.dumpPath')"
                          show-overflow-tooltip>
         </el-table-column>
         <!-- operate -->
@@ -258,8 +258,8 @@ export default {
         },
       },
       pagination: {
-        currentPage: null,
-        pageSize: null,
+        currentPage: null, // Init default value in created hook
+        pageSize: null, // Init default value in created hook
         pageSizes: [10, 20, 50],
         total: 0,
         layout: 'total, sizes, prev, pager, next, jumper',
@@ -397,7 +397,7 @@ export default {
      */
     goToTrainDashboard(row) {
       this.contextMenu.show = false;
-      const trainId = encodeURIComponent(row.train_id);
+      const trainId = row.train_id;
       this.$router.push({
         path: '/train-manage/training-dashboard',
         query: {id: trainId},
@@ -409,9 +409,9 @@ export default {
      */
     goToProfiler(row) {
       this.contextMenu.show = false;
-      const profilerDir = encodeURIComponent(row.profiler_dir);
-      const trainId = encodeURIComponent(row.train_id);
-      const path = encodeURIComponent(row.relative_path);
+      const profilerDir = row.profiler_dir;
+      const trainId = row.train_id;
+      const path = row.relative_path;
       let router = '/profiling';
       if (row.profiler_type === 'gpu') {
         router = '/profiling-gpu';
@@ -548,9 +548,9 @@ export default {
       } else if (this.contextMenu.type === 1) {
         // open profiling
         this.contextMenu.show = false;
-        const profilerDir = encodeURIComponent(row.profiler_dir);
-        const trainId = encodeURIComponent(row.train_id);
-        const path = encodeURIComponent(row.relative_path);
+        const profilerDir = row.profiler_dir;
+        const trainId = row.train_id;
+        const path = row.relative_path;
         let router = '/profiling';
         if (row.profiler_type === 'gpu') {
           router = '/profiling-gpu';
@@ -568,9 +568,10 @@ export default {
           },
         });
         window.open(routeUrl.href, '_blank');
-      } else { // open training dashboard
+      } else {
+        // open training dashboard
         this.contextMenu.show = false;
-        const trainId = encodeURIComponent(row.train_id);
+        const trainId = row.train_id;
 
         const routeUrl = this.$router.resolve({
           path: '/train-manage/training-dashboard',
@@ -614,8 +615,7 @@ export default {
      * @param {Object} row select row
      */
     showModelDialog(row) {
-      this.rowName =
-        row.train_id + ' ' + this.$t('summaryManage.trainingParamDetails');
+      this.rowName = row.train_id + ' ' + this.$t('summaryManage.trainingParamDetails');
       const params = {
         body: {},
       };
@@ -624,12 +624,7 @@ export default {
       RequestService.queryLineagesData(params)
           .then((resp) => {
             this.showDialogModel = true;
-            if (
-              resp &&
-            resp.data &&
-            resp.data.object &&
-            resp.data.object.length
-            ) {
+            if (resp && resp.data && resp.data.object && resp.data.object.length) {
               const resultArr = [];
               const tempdata = resp.data.object[0].model_lineage;
               const keys = Object.keys(tempdata);
@@ -642,24 +637,15 @@ export default {
                 };
                 if (tempdata[key] === null) {
                   data.value = 'None';
-                } else if (
-                  typeof tempdata[key] === this.objectType &&
-                tempdata[key] !== null
-                ) {
-                  if (
-                    !(tempdata[key] instanceof Array) &&
-                  JSON.stringify(tempdata[key]) !== '{}'
-                  ) {
+                } else if (typeof tempdata[key] === this.objectType && tempdata[key] !== null) {
+                  if (!(tempdata[key] instanceof Array) && JSON.stringify(tempdata[key]) !== '{}') {
                     data.hasChildren = true;
                     data.children = [];
                     Object.keys(tempdata[key]).forEach((k, j) => {
                       const item = {};
                       item.key = k;
                       item.value = tempdata[key][k];
-                      item.id =
-                      `model` +
-                      `${new Date().getTime()}` +
-                      `${this.$store.state.tableId}`;
+                      item.id = `model` + `${new Date().getTime()}` + `${this.$store.state.tableId}`;
                       this.$store.commit('increaseTableId');
                       data.children.push(item);
                     });
@@ -685,7 +671,7 @@ export default {
 #cl-summary-manage {
   height: 100%;
   width: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
 }
 #cl-summary-manage .no-data-page {
   width: 100%;
@@ -695,7 +681,6 @@ export default {
   align-items: center;
 }
 #cl-summary-manage .no-data-page .no-data-img {
-  background: #fff;
   text-align: center;
   height: 200px;
   width: 310px;
@@ -769,7 +754,7 @@ export default {
   cursor: not-allowed;
 }
 #cl-summary-manage .menu-item {
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 #cl-summary-manage .menu-item.operate-btn.first-btn {
@@ -781,7 +766,7 @@ export default {
   border: 1px solid #d4d4d4;
 }
 #cl-summary-manage #contextMenu ul {
-  background-color: #f7faff;
+  background-color: var(--bg-color);
   border-radius: 2px;
 }
 #cl-summary-manage #contextMenu ul li {
@@ -795,11 +780,11 @@ export default {
 #cl-summary-manage .details-data-list .el-table td,
 #cl-summary-manage .details-data-list .el-table th.is-leaf {
   border: none;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--table-border-color);
 }
 #cl-summary-manage .details-data-list .el-table th {
   padding: 10px 0;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--table-border-color);
 }
 #cl-summary-manage .details-data-list .el-table th .cell {
   border-left: 1px solid #d9d8dd;
@@ -819,12 +804,12 @@ export default {
 #cl-summary-manage .details-data-list .el-table__row--level-0 td:first-child:after {
   width: 20px;
   height: 1px;
-  background: #ebeef5;
+  background: var(--table-border-color);
   z-index: 11;
   position: absolute;
   left: 0;
   bottom: -1px;
-  content: "";
+  content: '';
   display: block;
 }
 #cl-summary-manage .details-data-list .el-table__row--level-1 td {
@@ -833,14 +818,14 @@ export default {
 }
 #cl-summary-manage .details-data-list .el-table__row--level-1 td:first-child::before {
   width: 42px;
-  background: #f0fdfd;
-  border-right: 2px #00a5a7 solid;
+  background: var(--expand-table-before-bg-color);
+  border-right: 2px var(--theme-color) solid;
   z-index: 10;
   position: absolute;
   left: 0;
   top: -1px;
   bottom: 0px;
-  content: "";
+  content: '';
   display: block;
 }
 #cl-summary-manage .details-data-list .el-table__row--level-1:first-child td:first-child::before {
@@ -862,32 +847,32 @@ export default {
   margin-bottom: 20px;
 }
 #cl-summary-manage .details-data-list .sessionMsg {
-  color: #333;
+  color: var(--font-color);
   font-weight: bold;
   font-size: 16px;
   margin-right: 5px;
 }
 #cl-summary-manage .details-data-list .session-title {
   margin-bottom: 10px;
-  color: #333;
+  color: var(--font-color);
 }
 #cl-summary-manage .is-disabled.custom-btn {
-  background-color: #f5f5f6;
-  border: 1px solid #dfe1e6 !important;
+  background-color: var(--button-disabled-bg-color);
+  border: 1px solid var(--table-border-color) !important;
   color: #adb0b8;
 }
 #cl-summary-manage .is-disabled.custom-btn:hover {
-  background-color: #f5f5f6;
+  background-color: var(--button-disabled-bg-color);
 }
 #cl-summary-manage .custom-btn {
-  border: 1px solid #00a5a7;
+  border: 1px solid var(--theme-color);
   border-radius: 2px;
 }
 #cl-summary-manage .white {
-  background-color: white;
-  color: #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
 }
 #cl-summary-manage .white:hover {
-  background-color: #e9f7f7;
+  background-color: var(--button-hover-color);
 }
 </style>

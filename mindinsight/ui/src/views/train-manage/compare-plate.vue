@@ -137,7 +137,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import multiSelectGroupComponents from '../../components/multiselect-group.vue';
@@ -168,7 +168,7 @@ export default {
       smoothValueNumber: 0,
       smoothSliderValueTimer: null, // Smoothness slider timer
       // Number of predefined colors
-      defColorCount: CommonProperty.commonColorArr.length,
+      defColorCount: CommonProperty.commonColorArr[this.$store.state.themeIndex].length,
       curAvlColorIndexArr: [], // Color subscript
       DomIdIndex: 0, // DomId num
       originDataArr: [], // Original data
@@ -180,6 +180,7 @@ export default {
       curBenchX: 'stepData', // Front axle reference
       curAxisName: this.$t('scalar.step'), // Current chart tip
       axisBenchChangeTimer: null, // Horizontal axis reference switching timing
+      themeIndex: this.$store.state.themeIndex,
     };
   },
 
@@ -246,12 +247,7 @@ export default {
       RequestService.querySummaryList(params)
           .then((res) => {
           // Error
-            if (
-              !res ||
-            !res.data ||
-            !res.data.train_jobs ||
-            !res.data.train_jobs.length
-            ) {
+            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
               this.initOver = true;
               return;
             }
@@ -269,7 +265,7 @@ export default {
               const colorIndex = this.curAvlColorIndexArr.length
               ? this.curAvlColorIndexArr.shift()
               : this.defColorCount - 1;
-              const summaryNmeColor = CommonProperty.commonColorArr[colorIndex];
+              const summaryNmeColor = CommonProperty.commonColorArr[this.$store.state.themeIndex][colorIndex];
 
               tempSummaryList.push({
                 label: summaryObj.train_id,
@@ -458,25 +454,13 @@ export default {
                     hasInvalidData = true;
                   }
 
-                  tempObject.valueData.stepData.push([
-                    metaData.step,
-                    metaData.value,
-                  ]);
-                  tempObject.valueData.absData.push([
-                    metaData.wall_time,
-                    metaData.value,
-                  ]);
-                  tempObject.valueData.relativeData.push([
-                    metaData.wall_time - relativeTimeBench,
-                    metaData.value,
-                  ]);
+                  tempObject.valueData.stepData.push([metaData.step, metaData.value]);
+                  tempObject.valueData.absData.push([metaData.wall_time, metaData.value]);
+                  tempObject.valueData.relativeData.push([metaData.wall_time - relativeTimeBench, metaData.value]);
                   const logValue = metaData.value >= 0 ? metaData.value : '';
                   tempObject.logData.stepData.push([metaData.step, logValue]);
                   tempObject.logData.absData.push([metaData.wall_time, logValue]);
-                  tempObject.logData.relativeData.push([
-                    metaData.wall_time - relativeTimeBench,
-                    logValue,
-                  ]);
+                  tempObject.logData.relativeData.push([metaData.wall_time - relativeTimeBench, logValue]);
                 });
 
                 sampleObject.charData.oriData[scalarIndex] = tempObject;
@@ -486,9 +470,7 @@ export default {
               if (hasInvalidData) {
                 this.$set(this.originDataArr[sampleIndex], 'invalidData', true);
               }
-              sampleObject.charData.charOption = this.formateCharOption(
-                  sampleIndex,
-              );
+              sampleObject.charData.charOption = this.formateCharOption(sampleIndex);
 
               this.$nextTick(() => {
                 if (sampleObject.charObj) {
@@ -545,14 +527,10 @@ export default {
 
         if (curOriData) {
           if (sampleObject.log) {
-            dataObj.data = this.formateSmoothData(
-                curOriData.logData[this.curBenchX],
-            );
+            dataObj.data = this.formateSmoothData(curOriData.logData[this.curBenchX]);
             dataObjBackend.data = curOriData.logData[this.curBenchX];
           } else {
-            dataObj.data = this.formateSmoothData(
-                curOriData.valueData[this.curBenchX],
-            );
+            dataObj.data = this.formateSmoothData(curOriData.valueData[this.curBenchX]);
             dataObjBackend.data = curOriData.valueData[this.curBenchX];
           }
         } else {
@@ -589,15 +567,7 @@ export default {
           scale: true,
           nameGap: 30,
           minInterval: this.isActive === 0 ? 1 : 0,
-
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
           axisLabel: {
-            color: '#9EA4B3',
             interval: 0,
             formatter: (value) => {
               if (sampleObject.zoomDataXTimer) {
@@ -618,6 +588,7 @@ export default {
                 }, 50);
               }
               if (that.isActive === 2) {
+                // absolute
                 if (sampleObject.fullScreen) {
                   const date = new Date(value * 1000);
                   const dateTime = date.toTimeString().split(' ')[0];
@@ -627,6 +598,7 @@ export default {
                   return '';
                 }
               } else if (that.isActive === 1) {
+                // relative
                 if (value < 1 && value.toString().length > 6) {
                   return value.toFixed(3);
                 } else if (value.toString().length > 6) {
@@ -635,6 +607,7 @@ export default {
                   return value;
                 }
               } else {
+                // step
                 const symbol = Math.abs(value);
                 if (symbol.toString().length > 6) {
                   return value.toExponential(0);
@@ -653,15 +626,7 @@ export default {
           type: sampleObject.log ? 'log' : 'value',
           scale: true,
           logBase: 10,
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
-
           axisLabel: {
-            color: '#9EA4B3',
             formatter: (value) => {
               if (sampleObject.zoomDataYTimer) {
                 clearTimeout(sampleObject.zoomDataYTimer);
@@ -709,11 +674,6 @@ export default {
           axisPointer: {
             type: 'line',
           },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
           position: (point, params, dom, rect, size) => {
             const curDom = document.getElementById(sampleObject.domId);
             if (!curDom) {
@@ -737,16 +697,16 @@ export default {
               }
             }
           },
-          formatter(params) {
+          formatter: (params) => {
             const unit = 's';
             const strhead =
               `<table class="char-tip-table" class="borderspacing3"><tr><td></td>` +
-              `<td>${that.$t('scalar.charTipHeadName')}</td>` +
-              `<td>${that.$t('scalar.charSmoothedValue')}</td>` +
-              `<td>${that.$t('scalar.charTipHeadValue')}</td>` +
-              `<td>${that.$t('scalar.step')}</td>` +
-              `<td>${that.$t('scalar.relativeTime')}</td>` +
-              `<td>${that.$t('scalar.absoluteTime')}</td>` +
+              `<td>${this.$t('scalar.charTipHeadName')}</td>` +
+              `<td>${this.$t('scalar.charSmoothedValue')}</td>` +
+              `<td>${this.$t('scalar.charTipHeadValue')}</td>` +
+              `<td>${this.$t('scalar.step')}</td>` +
+              `<td>${this.$t('scalar.relativeTime')}</td>` +
+              `<td>${this.$t('scalar.absoluteTime')}</td>` +
               `</tr>`;
             let strBody = '';
             const summaryArr = [];
@@ -766,9 +726,7 @@ export default {
                 if (curStep === null) {
                   curStep = curSerieOriData.stepData[parma.dataIndex][0];
                 } else {
-                  if (
-                    curSerieOriData.stepData[parma.dataIndex][0] === curStep
-                  ) {
+                  if (curSerieOriData.stepData[parma.dataIndex][0] === curStep) {
                     const sameSummaryIndex = [];
                     summaryArr.forEach((summaryName, index) => {
                       if (parma.seriesName === summaryName) {
@@ -779,10 +737,8 @@ export default {
                       sameSummaryIndex.forEach((sameIndex) => {
                         if (
                           detialArr[sameIndex] &&
-                          detialArr[sameIndex].value ===
-                            curSerieOriData.stepData[parma.dataIndex][1] &&
-                          detialArr[sameIndex].wallTime ===
-                            curSerieOriData.absData[parma.dataIndex][0]
+                          detialArr[sameIndex].value === curSerieOriData.stepData[parma.dataIndex][1] &&
+                          detialArr[sameIndex].wallTime === curSerieOriData.absData[parma.dataIndex][0]
                         ) {
                           addFlag = false;
                         }
@@ -810,18 +766,12 @@ export default {
                     `<tr><td style="border-radius:50%;width:15px;height:15px;vertical-align: middle;` +
                     `margin-right: 5px;background-color:${sampleObject.colors[curIndex]};` +
                     `display:inline-block;"></td><td>${parma.seriesName}</td>` +
-                    `<td>${that.formateYaxisValue(parma.value[1])}</td>` +
-                    `<td>${that.formateYaxisValue(
-                        curSerieOriData.stepData[parma.dataIndex][1],
-                    )}</td>` +
+                    `<td>${this.formateYaxisValue(parma.value[1])}</td>` +
+                    `<td>${this.formateYaxisValue(curSerieOriData.stepData[parma.dataIndex][1])}</td>` +
                     `<td>${curSerieOriData.stepData[parma.dataIndex][0]}</td>` +
-                    `<td>${curSerieOriData.relativeData[
-                        parma.dataIndex
-                    ][0].toFixed(3)}${unit}</td>` +
-                    `<td>${that.dealrelativeTime(
-                        new Date(
-                            curSerieOriData.absData[parma.dataIndex][0] * 1000,
-                        ).toString(),
+                    `<td>${curSerieOriData.relativeData[parma.dataIndex][0].toFixed(3)}${unit}</td>` +
+                    `<td>${this.dealrelativeTime(
+                        new Date(curSerieOriData.absData[parma.dataIndex][0] * 1000).toString(),
                     )}</td>` +
                     `</tr>`;
                 }
@@ -851,7 +801,7 @@ export default {
               iconStyle: {
                 borderColor: sampleObject.fullScreen ? '#00A5A7' : '#6D7278',
               },
-              icon: CommonProperty.fullScreenIcon,
+              icon: CommonProperty.fullScreenIcon[this.$store.state.themeIndex],
               onclick() {
                 fullScreenFun(sampleIndex);
               },
@@ -907,19 +857,13 @@ export default {
       if (sampleObject.charObj) {
         // Updating chart option
         if (sampleObject.updateFlag) {
-          sampleObject.charObj.setOption(
-              sampleObject.charData.charOption,
-              sampleObject.dataRemove,
-          );
+          sampleObject.charObj.setOption(sampleObject.charData.charOption, sampleObject.dataRemove);
           sampleObject.updateFlag = false;
           sampleObject.dataRemove = false;
         }
       } else {
         // Create chart
-        sampleObject.charObj = echarts.init(
-            document.getElementById(sampleObject.domId),
-            null,
-        );
+        sampleObject.charObj = echarts.init(document.getElementById(sampleObject.domId), echartsThemeName);
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
       }
     },
@@ -1031,12 +975,10 @@ export default {
       // Background color of the refresh button
       sampleObject.fullScreen = !sampleObject.fullScreen;
       if (sampleObject.fullScreen) {
-        sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
-          '#00A5A7';
+        sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor = '#00A5A7';
         sampleObject.charData.charOption.grid.right = 80;
       } else {
-        sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
-          '#6D7278';
+        sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor = '#6D7278';
         sampleObject.charData.charOption.grid.right = 10;
       }
       sampleObject.updateFlag = true;
@@ -1108,21 +1050,16 @@ export default {
                 series[index * 2].data = this.formateSmoothData(
                     sampleObject.charData.oriData[index].logData[this.curBenchX],
                 );
-                series[index * 2 + 1].data =
-                  sampleObject.charData.oriData[index].logData[this.curBenchX];
+                series[index * 2 + 1].data = sampleObject.charData.oriData[index].logData[this.curBenchX];
               } else {
                 series[index * 2].data = this.formateSmoothData(
                     sampleObject.charData.oriData[index].valueData[this.curBenchX],
                 );
-                series[index * 2 + 1].data =
-                  sampleObject.charData.oriData[index].valueData[
-                      this.curBenchX
-                  ];
+                series[index * 2 + 1].data = sampleObject.charData.oriData[index].valueData[this.curBenchX];
               }
             });
 
-            sampleObject.charData.charOption.xAxis.minInterval =
-              this.isActive === 0 ? 1 : 0;
+            sampleObject.charData.charOption.xAxis.minInterval = this.isActive === 0 ? 1 : 0;
             sampleObject.updateFlag = true;
             sampleObject.charObj.clear();
             this.updateOrCreateChar(sampleObject.sampleIndex);
@@ -1186,8 +1123,7 @@ export default {
         if (sampleObject.charObj) {
           sampleObject.updateFlag = true;
           sampleObject.summaryNames.forEach((summaryName) => {
-            const sampleSelect =
-              sampleObject.charData.charOption.legend.selected;
+            const sampleSelect = sampleObject.charData.charOption.legend.selected;
             if (!sampleSelect) {
               return;
             }
@@ -1342,9 +1278,7 @@ export default {
         } else {
           const oldSummaryLength = oldSample.summaryNames.length;
           for (let j = oldSummaryLength - 1; j >= 0; j--) {
-            const sameSummaryIndex = summaryList[sameTagIndex].indexOf(
-                oldSample.summaryNames[j],
-            );
+            const sameSummaryIndex = summaryList[sameTagIndex].indexOf(oldSample.summaryNames[j]);
             if (sameSummaryIndex === -1) {
               oldSample.summaryNames.splice(j, 1);
               oldSample.colors.splice(j, 1);
@@ -1384,7 +1318,7 @@ export default {
           const colorIndex = this.curAvlColorIndexArr.length
             ? this.curAvlColorIndexArr.shift()
             : this.defColorCount - 1;
-          summaryColor = CommonProperty.commonColorArr[colorIndex];
+          summaryColor = CommonProperty.commonColorArr[this.$store.state.themeIndex][colorIndex];
           this.summaryOperateList.push({
             label: summaryObj.train_id,
             checked: true,
@@ -1441,10 +1375,7 @@ export default {
             this.DomIdIndex++;
           } else {
             const sameSampleObj = this.originDataArr[sameTagIndex];
-            if (
-              sameSampleObj &&
-              sameSampleObj.summaryNames.indexOf(summaryObj.train_id) === -1
-            ) {
+            if (sameSampleObj && sameSampleObj.summaryNames.indexOf(summaryObj.train_id) === -1) {
               sameSampleObj.summaryNames.push(summaryObj.train_id);
               sameSampleObj.colors.push(summaryColor);
             }
@@ -1472,12 +1403,7 @@ export default {
             }
 
             // Fault tolerance processing
-            if (
-              !res ||
-            !res.data ||
-            !res.data.train_jobs ||
-            !res.data.train_jobs.length
-            ) {
+            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
               if (res.toString() === 'false') {
                 return;
               }
@@ -1616,15 +1542,11 @@ export default {
             if (index % 2 === 0) {
               if (log) {
                 singleItem.data = this.formateSmoothData(
-                    sampleObject.charData.oriData[index / 2].logData[
-                        this.curBenchX
-                    ],
+                    sampleObject.charData.oriData[index / 2].logData[this.curBenchX],
                 );
               } else {
                 singleItem.data = this.formateSmoothData(
-                    sampleObject.charData.oriData[index / 2].valueData[
-                        this.curBenchX
-                    ],
+                    sampleObject.charData.oriData[index / 2].valueData[this.curBenchX],
                 );
               }
             }
@@ -1701,13 +1623,11 @@ export default {
       }
       const log = !sampleObject.log;
       if (log) {
-        sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
-          '#00A5A7';
+        sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor = '#00A5A7';
         sampleObject.charData.charOption.yAxis.type = 'log';
       } else {
         sampleObject.charData.charOption.yAxis.type = 'value';
-        sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor =
-          '#666';
+        sampleObject.charData.charOption.toolbox.feature.myTool2.iconStyle.borderColor = '#666';
       }
       sampleObject.charData.oriData.forEach((originData, index) => {
         const series = sampleObject.charData.charOption.series;
@@ -1715,14 +1635,12 @@ export default {
           series[index * 2].data = this.formateSmoothData(
               sampleObject.charData.oriData[index].logData[this.curBenchX],
           );
-          series[index * 2 + 1].data =
-            sampleObject.charData.oriData[index].logData[this.curBenchX];
+          series[index * 2 + 1].data = sampleObject.charData.oriData[index].logData[this.curBenchX];
         } else {
           series[index * 2].data = this.formateSmoothData(
               sampleObject.charData.oriData[index].valueData[this.curBenchX],
           );
-          series[index * 2 + 1].data =
-            sampleObject.charData.oriData[index].valueData[this.curBenchX];
+          series[index * 2 + 1].data = sampleObject.charData.oriData[index].valueData[this.curBenchX];
         }
       });
       sampleObject.log = log;
@@ -1760,7 +1678,7 @@ export default {
 }
 .cl-compare-manage .compare-bk {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
 }
@@ -1775,17 +1693,15 @@ export default {
 .cl-compare-manage .cl-eval-operate-content {
   width: 100%;
   padding: 0px 32px 22px 32px;
-  background: #ffffff;
 }
 .cl-compare-manage .cl-eval-operate-content .cl-eval-operate-component {
   margin-top: 8px;
 }
 .cl-compare-manage .cl-eval-slider-operate-content {
-  background: #ffffff;
   padding: 0 32px 21px 32px;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid #e6ebf5;
+  border-bottom: 2px solid var(--item-split-line-color);
 }
 .cl-compare-manage .cl-eval-slider-operate-content .xaxis-title {
   font-size: 14px;
@@ -1821,7 +1737,6 @@ export default {
   display: none;
 }
 .cl-compare-manage .cl-eval-show-data-content {
-  background: #fff;
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -1841,7 +1756,6 @@ export default {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  background-color: #fff;
 }
 .cl-compare-manage .cl-eval-show-data-content .data-content .char-full-screen {
   width: 100%;
@@ -1851,9 +1765,13 @@ export default {
   flex: 1;
   padding: 0 15px 0 15px;
   position: relative;
+  background-color: var(--bg-color);
+  border: 1px solid var(--echarts-border-color);
+  border-radius: 4px;
+  margin: 15px 20px;
 }
 .cl-compare-manage .cl-eval-show-data-content .tag-name {
-  color: #333;
+  color: var(--font-color);
   font-size: 16px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1917,6 +1835,7 @@ export default {
 .tooltip-show-content {
   max-width: 50%;
 }
+
 .cl-title-right {
   padding-right: 20px;
 }

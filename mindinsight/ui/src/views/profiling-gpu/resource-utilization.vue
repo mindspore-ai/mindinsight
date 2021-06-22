@@ -23,17 +23,18 @@ limitations under the License.
         <div class="detail-link"
              :class="{disabled:!cpuInfo.initOver || cpuInfo.noData}">
           <button :disabled="!cpuInfo.initOver || cpuInfo.noData"
-             @click="jumpToCpuDetail">
+                  @click="jumpToCpuDetail">
             {{$t('profiling.viewDetail')}}
             <i class="el-icon-d-arrow-right"></i>
           </button>
         </div>
       </div>
       <div class="content-item">
-        <div class="cpu-info" v-show="!cpuInfo.noData">
+        <div class="cpu-info"
+             v-show="!cpuInfo.noData">
           <div class="cpu-chart"
-              id="deviceCpuChart"
-              ref="deviceCpuChart"></div>
+               id="deviceCpuChart"
+               ref="deviceCpuChart"></div>
           <div class="cpu-chart-info">
             <div class="info-line">
               <span>{{$t('profiling.logicCores')}}</span><span>{{deviceCpuChart.logicCores}}</span>
@@ -62,8 +63,10 @@ limitations under the License.
             </div>
           </div>
         </div>
-        <div class="noData-content" v-show="cpuInfo.noData">
-          <img :src="require('@/assets/images/nodata.png')" alt="" />
+        <div class="noData-content"
+             v-show="cpuInfo.noData">
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
           <p>{{cpuInfo.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </div>
@@ -73,6 +76,7 @@ limitations under the License.
 <script>
 import RequestService from '../../services/request-service';
 import echarts from '../../js/echarts';
+import CommonProperty from '../../common/common-property';
 export default {
   data() {
     return {
@@ -92,26 +96,19 @@ export default {
         id: 'deviceCpuChart',
         chartDom: null,
         option: {
-          color: [
-            '#c23531',
-            '#2f4554',
-            '#61a0a8',
-            '#d48265',
-          ],
+          color: ['#c23531', '#2f4554', '#61a0a8', '#d48265'],
           tooltip: {
             trigger: 'axis',
             formatter: null,
             confine: true,
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
-            },
           },
           legend: {
             right: 70,
             top: 8,
             data: [],
+            textStyle: {
+              color: CommonProperty.commonChartTheme[this.$store.state.themeIndex].legendTextColor,
+            },
           },
           xAxis: {
             name: '',
@@ -189,11 +186,7 @@ export default {
       path: this.$route.query.path,
       activePane: this.$route.query.activePane,
     };
-    if (
-      this.$route.query &&
-      this.$route.query.path &&
-      !isNaN(this.$route.query.cardNum)
-    ) {
+    if (this.$route.query && this.$route.query.path && !isNaN(this.$route.query.cardNum)) {
       this.summaryPath = this.$route.query.path;
       this.curCardNum = this.$route.query.cardNum;
       this.init();
@@ -235,7 +228,7 @@ export default {
     /**
      * Query cpu info
      */
-    queryCpuInfo( ) {
+    queryCpuInfo() {
       const params = {
         params: {
           profile: this.queryData.dir,
@@ -291,17 +284,13 @@ export default {
       const data = params;
       let str = '';
       if (data && data.length) {
-        const colorArray = [
-          '#c23531',
-          '#2f4554',
-          '#61a0a8',
-          '#d48265',
-        ];
+        const colorArray = ['#c23531', '#2f4554', '#61a0a8', '#d48265'];
         const index = data[0].dataIndex;
         str += `step: ${stepArray[index]}`;
         data.forEach((item, index) => {
-          str += `<br><span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
-          `${item.seriesName}: ${item.data}`;
+          str +=
+            `<br><span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
+            `${item.seriesName}: ${item.data}`;
         });
         str += `</div>`;
       }
@@ -334,8 +323,9 @@ export default {
       this.deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
       this.deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
       this.deviceCpuChart.option.series = series;
-      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${
-        this.$t('symbols.leftbracket')}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+          'symbols.leftbracket',
+      )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
       this.deviceCpuChart.option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
           (val, index) => index + 1,
       );
@@ -356,18 +346,16 @@ export default {
      * Router to memory-detail
      */
     jumpToCpuDetail() {
-      if (this.$route.path !== '/profiling-gpu/cpu-detail') {
-        this.$router.push({
-          path: '/profiling-gpu/cpu-detail',
-          query: {
-            dir: this.queryData.dir,
-            id: this.queryData.id,
-            cardNum: this.curCardNum,
-            path: this.queryData.path,
-            activePane: this.queryData.activePane,
-          },
-        });
-      }
+      this.$router.push({
+        path: '/profiling-gpu/cpu-detail',
+        query: {
+          dir: this.queryData.dir,
+          id: this.queryData.id,
+          cardNum: this.curCardNum,
+          path: this.queryData.path,
+          activePane: this.queryData.activePane,
+        },
+      });
     },
   },
   destroyed() {
@@ -391,7 +379,7 @@ export default {
   width: 100%;
   height: 100%;
   padding: 15px;
-  border: solid 1px #d9d9d9;
+  border: solid 1px var(--border-color);
   border-radius: 4px;
 }
 .cl-resource-content .dashboard-item .title-item {
@@ -418,7 +406,7 @@ export default {
 .cl-resource-content .dashboard-item .title-item .detail-link button {
   color: #00a5a7;
   border: none;
-  background-color: #fff;
+  background-color: var(--bg-color);
   cursor: pointer;
 }
 .cl-resource-content .dashboard-item .title-item .detail-link.disabled button {
@@ -455,7 +443,7 @@ export default {
 }
 .content-item .cpu-info .cpu-chart {
   height: 100%;
-  width: 100%
+  width: 100%;
 }
 .content-item .cpu-info .cpu-chart-info {
   height: 100%;
@@ -464,7 +452,7 @@ export default {
   flex-direction: column;
   justify-content: center;
   padding-left: 20px;
-  background-color: #f1f1f1;
+  background-color: var(--module-bg-color);
 }
 .content-item .cpu-chart-info .info-title {
   font-size: 14px;
