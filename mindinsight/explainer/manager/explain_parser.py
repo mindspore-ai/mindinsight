@@ -22,7 +22,7 @@ from collections import namedtuple
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.ms_data_loader import _SummaryParser
-from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
+from mindinsight.datavisual.proto_files import mindinsight_xai_pb2 as xai_pb2
 from mindinsight.explainer.common.enums import ExplainFieldsEnum
 from mindinsight.explainer.common.log import logger
 from mindinsight.utils.exceptions import UnknownError
@@ -144,7 +144,7 @@ class ExplainParser(_SummaryParser):
         """
 
         logger.debug("Start to parse event string. Event string len: %s.", len(event_str))
-        event = summary_pb2.Event.FromString(event_str)
+        event = xai_pb2.Event.FromString(event_str)
         logger.debug("Deserialize event string completed.")
 
         fields = {
