@@ -339,34 +339,6 @@ class ConvBNReLU(nn.Sequential):
         )
 ```
 
-## 常见问题
-
-Q1. `terminate called after throwing an instance of 'std::system_error', what(): Resource temporarily unavailable, Aborted (core dumped)`:
-
-> 答: 该问题由TensorFlow导致。脚本转换时，需要通过TensorFlow库加载TensorFlow的模型文件，此时TensorFlow会申请相关资源进行初始化，若申请资源失败（可能由于系统进程数超过Linux最大进程数限制），TensorFlow C/C++层会出现Core Dumped问题。详细信息请参考TensorFlow官方ISSUE，如下ISSUE仅供参考：[TF ISSUE 14885](https://github.com/tensorflow/tensorflow/issues/14885), [TF ISSUE 37449](https://github.com/tensorflow/tensorflow/issues/37449)
-
-Q2. MindConverter是否可以在ARM平台运行？
-
-> 答：MindConverter同时支持X86、ARM平台，若在ARM平台运行需要用户自行安装模型所需的依赖包和运行环境。
-
-Q3. 为什么使用MindConverter进行模型转换需要很长时间（超过十分钟），而模型并不大？
-
-> 答：MindConverter进行转换时，需要使用Protobuf对模型文件进行反序列化，请确保Python环境中安装的Protobuf采用C++后端实现，检查方法如下，若输出为python，则需要安装采用C++实现的Python Protobuf（下载Protobuf源码并进入源码中的python子目录，使用python setup.py install --cpp_implementation进行安装）；若输出为cpp，转换过程仍耗时较长，请在转换前使用添加环境变量`export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp`。
-
-```python
-from google.protobuf.internal import api_implementation
-
-print(api_implementation.Type())
-```
-
-Q4. 使用.pb文件进行转换时，已确定`model_file`，`shape`，`input_nodes`，`output_nodes`均无误，并且环境中的依赖库已经正常安装，但是仍然报异常代码1000001，可能是什么原因？
-
-> 答：请检查生成该.pb文件所使用的TensorFlow版本不高于用于转换时安装的TensorFlow版本，避免由于旧版本TensorFlow无法解析新版本生成的.pb文件，而导致的模型文件解析失败。
-
-Q5. 出现报错信息`[ERROR] MINDCONVERTER: [BaseConverterError] code: 0000000, msg: {python_home}/lib/libgomp.so.1: cannot allocate memory in static TLS block`时，应该怎么处理？
-
-> 答：该问题通常是由于环境变量导入不正确导致的。建议用户设置`export LD_PRELOAD={python_home}/lib/libgomp.so.1.0.0`这一环境变量，然后重新尝试进行转换。
-
 ## 附录
 
 ### TensorFlow Pb模型导出

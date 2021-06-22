@@ -129,6 +129,8 @@ class MindConverterException(Exception):
     @classmethod
     def uniform_catcher(cls, msg: str = ""):
         """Uniform exception catcher."""
+        get_lib_notice_info = getattr(import_module("mindinsight.mindconverter.graph_based_converter.common.utils"),
+                                      "get_lib_notice_info")
 
         def decorator(func):
             def _f(*args, **kwargs):
@@ -143,11 +145,13 @@ class MindConverterException(Exception):
                     if not e.only_console:
                         log.error(error)
                         log.exception(e)
+                        log_console.error(get_lib_notice_info())
                     sys.exit(-1)
                 except ModuleNotFoundError as e:
                     detail_info = "Error detail: Required package not found, please check the runtime environment."
                     log_console.error(f"{str(e)}\n{detail_info}")
                     log.exception(e)
+                    log_console.error(get_lib_notice_info())
                     sys.exit(-1)
                 return res
 
@@ -257,8 +261,8 @@ class GraphInitError(MindConverterException):
     ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
     DEFAULT_MSG = "Error occurred when init graph object."
 
-    def __init__(self, msg=DEFAULT_MSG):
-        super(GraphInitError, self).__init__(user_msg=msg)
+    def __init__(self, msg=DEFAULT_MSG, **kwargs):
+        super(GraphInitError, self).__init__(user_msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -292,8 +296,8 @@ class FileSaveError(MindConverterException):
     ERROR_CODE = ErrCode.UNKNOWN_ERROR.value
     DEFAULT_MSG = "Error occurred when save source files."
 
-    def __init__(self, msg=DEFAULT_MSG):
-        super(FileSaveError, self).__init__(user_msg=msg)
+    def __init__(self, msg=DEFAULT_MSG, **kwargs):
+        super(FileSaveError, self).__init__(user_msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -313,8 +317,8 @@ class ModelLoadingError(GraphInitError):
 
     ERROR_CODE = GraphInitError.ErrCode.MODEL_LOADING_ERROR.value
 
-    def __init__(self, msg):
-        super(ModelLoadingError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(ModelLoadingError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -347,8 +351,8 @@ class TfRuntimeError(GraphInitError):
     ERROR_CODE = GraphInitError.ErrCode.TF_RUNTIME_ERROR.value
     DEFAULT_MSG = "Error occurred when init graph, TensorFlow runtime error."
 
-    def __init__(self, msg=DEFAULT_MSG):
-        super(TfRuntimeError, self).__init__(msg=msg)
+    def __init__(self, msg=DEFAULT_MSG, **kwargs):
+        super(TfRuntimeError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -361,8 +365,8 @@ class RuntimeIntegrityError(GraphInitError):
     """Catch runtime error."""
     ERROR_CODE = GraphInitError.ErrCode.MI_RUNTIME_ERROR.value
 
-    def __init__(self, msg):
-        super(RuntimeIntegrityError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(RuntimeIntegrityError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -373,8 +377,8 @@ class NodeInputTypeNotSupportError(FileSaveError):
     """The node input type NOT support error."""
     ERROR_CODE = FileSaveError.ErrCode.NODE_INPUT_TYPE_NOT_SUPPORT.value
 
-    def __init__(self, msg):
-        super(NodeInputTypeNotSupportError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(NodeInputTypeNotSupportError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -385,8 +389,8 @@ class ScriptGenerationError(FileSaveError):
     """The script generate fail error."""
     ERROR_CODE = FileSaveError.ErrCode.SCRIPT_GENERATE_FAIL.value
 
-    def __init__(self, msg):
-        super(ScriptGenerationError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(ScriptGenerationError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -401,8 +405,8 @@ class ReportGenerationError(FileSaveError):
     """The report generate fail error."""
     ERROR_CODE = FileSaveError.ErrCode.REPORT_GENERATE_FAIL.value
 
-    def __init__(self, msg):
-        super(ReportGenerationError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(ReportGenerationError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -414,8 +418,8 @@ class CheckPointGenerationError(FileSaveError):
     """The checkpoint generate fail error."""
     ERROR_CODE = FileSaveError.ErrCode.CKPT_GENERATE_FAIL.value
 
-    def __init__(self, msg):
-        super(CheckPointGenerationError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(CheckPointGenerationError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -427,8 +431,8 @@ class WeightMapGenerationError(FileSaveError):
     """The weight names map generate fail error."""
     ERROR_CODE = FileSaveError.ErrCode.MAP_GENERATE_FAIL.value
 
-    def __init__(self, msg):
-        super(WeightMapGenerationError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(WeightMapGenerationError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -440,8 +444,8 @@ class OnnxModelSaveError(FileSaveError):
     """The onnx model save fail error."""
     ERROR_CODE = FileSaveError.ErrCode.MODEL_SAVE_FAIL.value
 
-    def __init__(self, msg):
-        super(OnnxModelSaveError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(OnnxModelSaveError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -464,8 +468,8 @@ class SubGraphSearchingError(MindConverterException):
     ERROR_CODE = ErrCode.BASE_ERROR.value
     DEFAULT_MSG = "Sub-Graph pattern searching fail."
 
-    def __init__(self, msg=DEFAULT_MSG):
-        super(SubGraphSearchingError, self).__init__(user_msg=msg)
+    def __init__(self, msg=DEFAULT_MSG, **kwargs):
+        super(SubGraphSearchingError, self).__init__(user_msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -477,8 +481,8 @@ class PatternConflictError(SubGraphSearchingError):
     """Pattern conflict exception for user defined pattern."""
     ERROR_CODE = SubGraphSearchingError.ErrCode.PATTERN_REG_CONFLICT_ERROR.value
 
-    def __init__(self, msg):
-        super(PatternConflictError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(PatternConflictError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -490,8 +494,8 @@ class PatternInvalidError(SubGraphSearchingError):
     """Registered pattern is invalid for user defined pattern."""
     ERROR_CODE = SubGraphSearchingError.ErrCode.PATTERN_INVALID_ERROR.value
 
-    def __init__(self, msg):
-        super(PatternInvalidError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(PatternInvalidError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -503,8 +507,8 @@ class ModuleNameDefineError(SubGraphSearchingError):
     """Registered module name is invalid."""
     ERROR_CODE = SubGraphSearchingError.ErrCode.MODULE_NAME_INVALID_ERROR.value
 
-    def __init__(self, msg):
-        super(ModuleNameDefineError, self).__init__(msg=msg)
+    def __init__(self, msg, **kwargs):
+        super(ModuleNameDefineError, self).__init__(msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
@@ -526,8 +530,8 @@ class GeneratorError(MindConverterException):
     ERROR_CODE = ErrCode.BASE_ERROR.value
     DEFAULT_MSG = "Error occurred when generate code."
 
-    def __init__(self, msg=DEFAULT_MSG):
-        super(GeneratorError, self).__init__(user_msg=msg)
+    def __init__(self, msg=DEFAULT_MSG, **kwargs):
+        super(GeneratorError, self).__init__(user_msg=msg, **kwargs)
 
     @classmethod
     def raise_from(cls):
