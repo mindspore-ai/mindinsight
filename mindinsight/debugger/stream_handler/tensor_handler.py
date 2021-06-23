@@ -295,7 +295,7 @@ class TensorHandler(StreamHandlerBase):
             self._tensors[tensor.name] = cache_tensor
 
         if not self._hold_value.pop((tensor.name, tensor.step), False):
-            tensor.clean_tensor_value(oversize=False)
+            tensor.clean_tensor_value(oversize=False, remain_scalar=True)
 
         old_tensor = cache_tensor.get(step)
         if not old_tensor or (old_tensor.status == TensorStatusEnum.CACHED.value and self._is_value_diff(
