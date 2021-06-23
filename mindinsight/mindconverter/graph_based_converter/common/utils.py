@@ -379,11 +379,8 @@ def get_lib_notice_info():
     common_lib_list = ['mindspore', 'onnx', 'onnxruntime', 'onnxoptimizer']
     tf_lib_list = ['tensorflow', 'tf2onnx']
     current_lib_versions = get_current_lib_versions(common_lib_list + tf_lib_list)
-    info = f"Please make sure the libraries installed are consistent with the ones required. " \
-           f"These libraries {get_third_part_lib_error_info(common_lib_list)} are required " \
-           f"when using graph based scripts converter, " \
-           f"and extra libraries {get_third_part_lib_error_info(tf_lib_list)} are required " \
-           f"when using the converter for tensorflow(.pb) conversion. " \
-           f"Currently, {get_third_part_lib_error_info(common_lib_list + tf_lib_list, current_lib_versions)} " \
-           f"are gotten."
+    info = f"Libraries {get_third_part_lib_error_info(common_lib_list)} are required by converter, " \
+           f"{get_third_part_lib_error_info(tf_lib_list)} are required when converted from TF(.pb). " \
+           f"Current versions are: " \
+           f"{get_third_part_lib_error_info(common_lib_list + tf_lib_list, current_lib_versions)}."
     return info
