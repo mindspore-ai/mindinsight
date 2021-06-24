@@ -647,8 +647,8 @@ export default {
                 this.dealMetadata(res.data.metadata);
               }
               let name = null;
-              if (this.$refs.tree && this.$refs.tree.getCurrentKey()) {
-                name = this.$refs.tree.getCurrentKey();
+              if (this.selectedNode.name) {
+                name = this.selectedNode.name.replace('_unfold', '');
               }
               let graphName = this.graphFiles.value;
               if (
@@ -2227,7 +2227,7 @@ export default {
           }, 800);
         });
       }
-      if (children.children && Object.keys(children.children).length) {
+      if (children.children) {
         this.dealTreeData(children.children, name);
       }
     },
