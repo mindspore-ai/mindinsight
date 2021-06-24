@@ -49,6 +49,7 @@ ONNXRUNTIME_MIN_VER = "1.5.2"
 ONNXOPTIMIZER_MIN_VER = "0.1.2"
 ONNXOPTIMIZER_MAX_VER = "0.1.2"
 MINDSPORE_MIN_VER = "1.2.0"
+TENSORFLOW_MIN_VER = "1.15.0"
 CHECKPOINT_SEGMENT_SIZE = 2040109465  # 1.9GB, no more than 2GB
 
 WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_EXCL
@@ -147,7 +148,8 @@ THIRD_PART_VERSION = {
     "onnxruntime": (ONNXRUNTIME_MIN_VER,),
     "onnxoptimizer": (ONNXOPTIMIZER_MIN_VER,),
     "tf2onnx": (TF2ONNX_MIN_VER,),
-    "mindspore": (MINDSPORE_MIN_VER,)
+    "mindspore": (MINDSPORE_MIN_VER,),
+    "tensorflow": (TENSORFLOW_MIN_VER,)
 }
 
 

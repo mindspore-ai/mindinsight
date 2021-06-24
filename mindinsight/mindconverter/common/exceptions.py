@@ -145,13 +145,13 @@ class MindConverterException(Exception):
                     if not e.only_console:
                         log.error(error)
                         log.exception(e)
-                        log_console.error(get_lib_notice_info())
+                        log_console.warning(get_lib_notice_info())
                     sys.exit(-1)
                 except ModuleNotFoundError as e:
                     detail_info = "Error detail: Required package not found, please check the runtime environment."
                     log_console.error(f"{str(e)}\n{detail_info}")
                     log.exception(e)
-                    log_console.error(get_lib_notice_info())
+                    log_console.warning(get_lib_notice_info())
                     sys.exit(-1)
                 return res
 
