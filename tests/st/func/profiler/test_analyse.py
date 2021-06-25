@@ -67,7 +67,7 @@ class TestProfilerAnalyse(TestCase):
     @pytest.mark.platform_x86_ascend_training
     def test_step_trace_point_info(self):
         """Test the step trace file has been generated"""
-        point_info = self.step_trace_analyser.point_info
+        point_info = self.step_trace_analyser.point_info(1)
         assert point_info == {
             'fp_start': 'Default/Cast-op6',
             'bp_end': 'Default/TransData-op7'

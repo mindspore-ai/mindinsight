@@ -155,7 +155,7 @@ def get_training_trace_graph():
             'step_id': graph_type
         }})
     graph_info['summary'] = analyser.summary
-    graph_info['point_info'] = analyser.point_info
+    graph_info['point_info'] = analyser.point_info(graph_type)
     graph_info['is_heterogeneous'] = False
 
     # In heterogeneous training scene, do not display step trace data.
