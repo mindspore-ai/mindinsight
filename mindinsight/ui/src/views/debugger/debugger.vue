@@ -1463,7 +1463,8 @@ export default {
       }
       RequestService.control(params, this.sessionId).then(
           (res) => {
-            if (res && res.data) {
+            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+              this.enableRecheck = res.data.metadata.enable_recheck;
             }
           },
           (error) => {
@@ -1883,6 +1884,12 @@ export default {
      * @param {Object} error Error data
      */
     showErrorMsg(error) {
+      if (this.loadingInstance) {
+        this.loadingInstance.close();
+      }
+      if (error.code === 'ECONNABORTED' && /^timeout/.test(error.message)) {
+        this.$message.error(this.$t('public.timeout'));
+      }
       if (error && error.response && error.response.data && error.response.data.error_code) {
         if (this.$t('error')[`${error.response.data.error_code}`]) {
           this.$message.error(this.$t('error')[`${error.response.data.error_code}`]);
@@ -1893,9 +1900,6 @@ export default {
           }
           this.$message.error(error.response.data.error_msg);
         }
-      }
-      if (this.loadingInstance) {
-        this.loadingInstance.close();
       }
     },
     tabsChange() {
