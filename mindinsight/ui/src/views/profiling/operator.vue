@@ -28,7 +28,7 @@ limitations under the License.
                          :search="coreSearch"
                          :accuracy="6"
                          :headerFilder="headerFilder"
-                         :unit="$t('profiling.gpuunit')"
+                         :unit="$t('profiling.unit')"
                          :hasFlopsInfo="true"
                          ref="core" />
         </el-tab-pane>
@@ -42,7 +42,7 @@ limitations under the License.
                          :search="cpuSearch"
                          :accuracy="6"
                          :headerFilder="headerFilder"
-                         :unit="$t('profiling.gpuunit')"
+                         :unit="$t('profiling.unit')"
                          ref="cpu" />
         </el-tab-pane>
         <el-tab-pane label="HOST CPU"

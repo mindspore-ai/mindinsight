@@ -65,6 +65,9 @@ export default {
       }
       RequestService.control(params, this.sessionId).then(
           (res) => {
+            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+              this.enableRecheck = res.data.metadata.enable_recheck;
+            }
             this.queryTensorHistory();
             if (this.radio1 === 'hit') {
               this.searchWatchpointHits(true);
@@ -753,6 +756,9 @@ export default {
               }, 500);
 
               this.metadata.state = res.data.metadata.state;
+              if (res.data.metadata.enable_recheck !== undefined) {
+                this.enableRecheck = res.data.metadata.enable_recheck;
+              }
             }
           },
           (err) => {
@@ -1510,6 +1516,7 @@ export default {
             this.initFail = true;
             this.dialogVisible = true;
             this.loadingInstance.close();
+            this.showErrorMsg(err);
           },
       );
     },
