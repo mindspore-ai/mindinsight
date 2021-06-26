@@ -20,7 +20,6 @@ from multiprocessing import Process, Manager
 from threading import Event
 
 import mindinsight
-from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
@@ -45,10 +44,10 @@ class DebuggerOfflineServer(DebuggerServerBase):
 
     def run(self):
         """Start the debugger offline server."""
-        self._running.set()
         log.info("Initialize Offline Debugger Server for dbg_dir: %s", self._context.dbg_dir)
         self._offline_server_manager.initialize()
         log.info("Start Offline Debugger Server for dbg_dir: %s", self._context.dbg_dir)
+        self._running.set()
         try_count = 0
         while self._running.is_set() and try_count < self._MAX_TRY_EXCEPT_COUNT:
             try:
@@ -69,6 +68,9 @@ class DebuggerOfflineServer(DebuggerServerBase):
 
     def stop(self):
         """Stop offline debugger server."""
+        if not self.is_alive():
+            log.info("Offline debugger has already stop")
+            return
         log.debug("Start to wait for thread started.")
         self._running.wait()
         log.info("Start to stop offline debugger server.")
@@ -170,7 +172,7 @@ class DebuggerOfflineManager:
         # get step number per device. dict(rank_id, step_num), may be increased with time goes by
         step_num_per_rank = self._data_loader.load_step_number()
         device_stream.add_step_num_info(step_num_per_rank)
-        self._metadata_stream.max_step_num = max(step_num_per_rank.values())
+        self._metadata_stream.max_step_num = max(step_num_per_rank.values()) if step_num_per_rank else 0
 
     def _load_graphs(self):
         """Load graphs."""
@@ -279,8 +281,12 @@ class DebuggerOfflineManager:
         # read tensor value by dbg_service
         rank_id = node_info.get('rank_id', 0)
         cur_step = self._metadata_stream.step
-        # as DbgServices hasn't support -1 yet, set it to 0 instead of -1
-        iteration_id = cur_step - 1 if cur_step > 0 else 0
+        # as DbgServices hasn't support -1 yet, put empty tensor value into cache.
+        if cur_step <= 0:
+            log.info("Offline debugger not support to read initial weights yet.")
+            self._put_tensor_value_into_cache(cur_step, node_info, rank_id, view_cmd.tensors)
+            return
+        iteration_id = cur_step - 1
         root_graph_id = self.get_root_graph_id(rank_id=rank_id,
                                                graph_name=node_info.get('graph_name'),
                                                node_name=node_info.get('node_name'))
@@ -290,8 +296,8 @@ class DebuggerOfflineManager:
                 node_name=tensor_proto.node_name,
                 slot=int(tensor_proto.slot),
                 iteration=iteration_id - 1 if tensor_proto.iter == 'prev' else iteration_id,
-                device_id=rank_id,  # change the param field name after DbgServices has changed it.
-                is_parameter=tensor_proto.truncate,
+                rank_id=rank_id,
+                is_output=True,
                 root_graph_id=root_graph_id
             ) for tensor_proto in tensor_protos]
         res = self._dbg_service.read_tensors(tensor_infos)
@@ -534,17 +540,16 @@ class DebuggerOfflineManager:
             node_name = watch_node.node_name
             rank_id = watch_node.rank_id
             if node_name not in check_nodes:
-                is_parameter = bool(watch_node.node_type == NodeTypeEnum.PARAMETER.value)
                 root_graph_id = self.get_root_graph_id(rank_id=rank_id,
                                                        graph_name=watch_node.graph_name,
                                                        node_name=node_name)
                 check_nodes[node_name] = {
-                    "device_id": [rank_id],
-                    "is_parameter": is_parameter,
+                    "rank_id": [rank_id],
+                    "is_output": True,
                     "root_graph_id": [root_graph_id]
                 }
             else:
-                check_nodes[node_name]["device_id"].append(rank_id)
+                check_nodes[node_name]["rank_id"].append(rank_id)
         return check_nodes
 
     def _update_state(self, server_status):
@@ -632,7 +637,7 @@ def convert_watchpointhit(watchpointhit):
         param_dict = convert_param(param)
         param_list.append(param_dict)
     watchpointhit_dict = {'condition': watchpointhit.condition,
-                          'rank_id': watchpointhit.device_id,
+                          'rank_id': watchpointhit.rank_id,
                           'error_code': watchpointhit.error_code,
                           'name': watchpointhit.name,
                           'parameters': param_list,
