@@ -29,7 +29,7 @@ from tests.st.func.debugger.conftest import GRAPH_PROTO_FILE
 class MockDebuggerClient:
     """Mocked Debugger client."""
 
-    def __init__(self, hostname='localhost:50051', backend='Ascend', graph_num=1, ms_version='1.2.0'):
+    def __init__(self, hostname='localhost:50051', backend='Ascend', graph_num=1, ms_version='1.3.0'):
         channel = grpc.insecure_channel(hostname)
         self.stub = EventListenerStub(channel)
         self.flag = True
