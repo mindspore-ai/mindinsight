@@ -226,12 +226,14 @@ class OpTensor(BaseTensor):
         """Calculate the tensor statistics."""
         self._stats = TensorUtils.get_statistics_from_tensor(self._value)
 
-    def clean_tensor_value(self, oversize=True):
+    def clean_tensor_value(self, oversize=True, remain_scalar=False):
         """Clean the tensor."""
-        self._value = None
         if oversize:
             self._status = TensorStatusEnum.OVERSIZE.value
-        elif self._status == TensorStatusEnum.CACHED.value:
+        if remain_scalar and not self.shape and self._status != TensorStatusEnum.EMPTY.value:
+            return
+        self._value = None
+        if self._status == TensorStatusEnum.CACHED.value:
             self._status = TensorStatusEnum.UNCACHED.value
 
     def to_numpy(self, tensor_content):
