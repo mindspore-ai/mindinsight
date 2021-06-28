@@ -190,6 +190,20 @@ class ConvBackPropInputMapper(ONNXToMindSporeMapper):
                 TemplateKeywords.CONSTRUCT.value: construct_template_list
             }
         }
+        exchange_msg = ConvBackPropInputMapper._get_exchange_msg(variable_slot, op, args, weights, trainable_params)
+
+        exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value] = {
+            "weight": ""}
+        if trainable_params.get("bias"):
+            exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value][
+                "bias"] = ""
+        outputs_list = [f"opt_{{{variable_slot}}}"]
+        outputs_mapping = ((0, 0),)
+        return template, exchange_msg, outputs_list, outputs_mapping
+
+    @staticmethod
+    def _get_exchange_msg(variable_slot, op, args, weights, trainable_params):
+        """Generate exchange msg."""
         exchange_msg = {
             variable_slot: {
                 ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
@@ -202,15 +216,7 @@ class ConvBackPropInputMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
             }
         }
-
-        exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value] = {
-            "weight": ""}
-        if trainable_params.get("bias"):
-            exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value][
-                "bias"] = ""
-        outputs_list = [f"opt_{{{variable_slot}}}"]
-        outputs_mapping = ((0, 0),)
-        return template, exchange_msg, outputs_list, outputs_mapping
+        return exchange_msg
 
     @staticmethod
     def output_shape_str(variable_slot, has_value=False):

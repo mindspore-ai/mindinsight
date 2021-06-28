@@ -110,7 +110,6 @@ class CodeStruct:
                 init_str, cons_str = struct.fragment.fragment()
                 init_str = [f"{SECOND_LEVEL_INDENT}{x}" for x in init_str]
                 cons_str = [f"{SECOND_LEVEL_INDENT}{x}" for x in cons_str]
-                code_line_construct = cons_str
                 init_lines += init_str
                 cons_lines += cons_str
 
@@ -615,10 +614,47 @@ class Generator:
 
         return weight_scope_name.lower()
 
+    @staticmethod
+    def _generate_onnx_weights_info(onnx_weight_inst):
+        """Generate onnx weights info for weight mapper."""
+        source_weights = list()
+        for onnx_weight in onnx_weight_inst:
+            source_weights.append(
+                {
+                    'name': onnx_weight.name,
+                    'shape': onnx_weight.value.shape,
+                    'data_type': str(onnx_weight.value.dtype)
+                }
+            )
+        return source_weights
+
+    @staticmethod
+    def _generate_ms_weights(ms_weight_inst, weights_scope_name, mindspore):
+        """Generate MindSpore weights for checkpoint file and info for weight mapper."""
+        converted_weights = list()
+        node_weights_dict = dict()
+        for weight_key, weight_value_object in ms_weight_inst.items():
+            value_type = weight_value_object.get('type', WeightType.COMMON.value)
+            value_data = weight_value_object['data']
+            if value_type == WeightType.PARAMETER.value:
+                weight_name = SEPARATOR_BTW_NAME_AND_ID.join((weights_scope_name, weight_key))
+            else:
+                weight_name = LINK_IN_WEIGHT_NAME.join((weights_scope_name, weight_key))
+            weight_shape = mindspore.Tensor(value_data).shape
+            data_type = mindspore.Tensor(value_data).dtype
+            node_weights_dict[weight_name] = value_data
+            converted_weights.append(
+                {
+                    'name': weight_name,
+                    'shape': weight_shape,
+                    'data_type': str(data_type)
+                }
+            )
+        return converted_weights, node_weights_dict
+
     def generate_checkpoint(self):
         """Generate checkpoint."""
-
-        mindspore = import_module('mindspore')
+        mindspore = import_module("mindspore")
         trainable_weights_dict = dict()
         weight_map = list()
         for node_name, node_inst in self.node_structs.items():
@@ -626,33 +662,12 @@ class Generator:
                 weights_scope_name = self.generate_weight_scope_name(node_name)
                 onnx_weight_inst = node_inst.fragment.exchange_msg['var_0']['weights']
                 ms_weight_inst = node_inst.fragment.exchange_msg['var_0']['trainable_params']
-                source_weights = list()
-                converted_weights = list()
-                for onnx_weight in onnx_weight_inst:
-                    source_weights.append(
-                        {
-                            'name': onnx_weight.name,
-                            'shape': onnx_weight.value.shape,
-                            'data_type': str(onnx_weight.value.dtype)
-                        }
-                    )
-                for weight_key, weight_value_object in ms_weight_inst.items():
-                    value_type = weight_value_object.get('type', WeightType.COMMON.value)
-                    value_data = weight_value_object['data']
-                    if value_type == WeightType.PARAMETER.value:
-                        weight_name = SEPARATOR_BTW_NAME_AND_ID.join((weights_scope_name, weight_key))
-                    else:
-                        weight_name = LINK_IN_WEIGHT_NAME.join((weights_scope_name, weight_key))
-                    weight_shape = mindspore.Tensor(value_data).shape
-                    data_type = mindspore.Tensor(value_data).dtype
-                    trainable_weights_dict[weight_name] = value_data
-                    converted_weights.append(
-                        {
-                            'name': weight_name,
-                            'shape': weight_shape,
-                            'data_type': str(data_type)
-                        }
-                    )
+
+                source_weights = Generator._generate_onnx_weights_info(onnx_weight_inst)
+                converted_weights, node_weights_dict = Generator._generate_ms_weights(ms_weight_inst,
+                                                                                      weights_scope_name, mindspore)
+                trainable_weights_dict.update(node_weights_dict)
+
                 source_weights_num = len(source_weights)
                 converted_weights_num = len(converted_weights)
                 if source_weights_num == converted_weights_num:

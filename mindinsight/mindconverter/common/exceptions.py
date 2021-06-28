@@ -139,10 +139,13 @@ class MindConverterException(Exception):
                 except cls.raise_from() as e:
                     error = cls() if not msg else cls(msg=msg)
                     detail_info = str(e)
+                    only_console = False
                     if not isinstance(e, MindConverterException):
                         detail_info = cls.normalize_error_msg(str(e))
-                    log_console.error(detail_info, only_console=e.only_console)
-                    if not e.only_console:
+                    else:
+                        only_console = e.only_console
+                    log_console.error(detail_info, only_console=only_console)
+                    if not only_console:
                         log.error(error)
                         log.exception(e)
                         log_console.warning(get_lib_notice_info())

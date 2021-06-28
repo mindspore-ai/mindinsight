@@ -75,6 +75,25 @@ DTYPE_MAP = {
     16: None
 }
 
+
+ONNX_MS_MAP = {1: 'mindspore.float32',
+               2: 'mindspore.uint8',
+               3: 'mindspore.int8',
+               4: 'mindspore.uint16',
+               5: 'mindspore.int16',
+               6: 'mindspore.int32',
+               7: 'mindspore.int64',
+               8: 'mindspore.string',
+               9: 'mindspore.bool_',
+               10: 'mindspore.float16',
+               11: 'mindspore.double',
+               12: 'mindspore.uint32',
+               13: 'mindspore.uint64',
+               14: 'UNSUPPORTED',
+               15: 'UNSUPPORTED',
+               16: 'UNSUPPORTED'}
+
+
 MS_DATA_EDGE = 0
 
 OUTPUT_PROTO_TYPE = "Output"

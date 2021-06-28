@@ -63,26 +63,10 @@ class ExpandDimsMapper(ONNXToMindSporeMapper):
                                  f"self.{{{variable_slot}}}_axis)"
             construct_template_list.append(construct_template)
         else:
-            for idx, axis in enumerate(axes):
-                if not construct_template_list:
-                    args[f"axis_{idx}"] = axis
-                    init_template = f"self.{{{variable_slot}}}_{idx}_axis = {{axis_{idx}}}"
-                    construct_template = f"opt_{{{variable_slot}}}_{idx} = self.{{{variable_slot}}}" \
-                                         f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, " \
-                                         f"self.{{{variable_slot}}}_{idx}_axis)"
-                elif idx == len(axes) - 1:
-                    args["axis"] = axis
-                    init_template = f"self.{{{variable_slot}}}_axis = {{axis}}"
-                    construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
-                                         f"({{{variable_slot}}}_{idx - 1}, self.{{{variable_slot}}}_axis)"
-                else:
-                    args[f"axis_{idx}"] = axis
-                    init_template = f"self.{{{variable_slot}}}_{idx}_axis = {{axis_{idx}}}"
-                    construct_template = f"opt_{{{variable_slot}}}_{idx} = self.{{{variable_slot}}}" \
-                                         f"({{{variable_slot}}}_{idx - 1}, self.{{{variable_slot}}}_{idx}_axis)"
-
-                init_template_list.append(init_template)
-                construct_template_list.append(construct_template)
+            init_template_list, construct_template_list, args_axes = \
+                ExpandDimsMapper._generate_init_construct_with_multi_axis(axes, variable_slot,
+                                                                          init_template_list, construct_template_list)
+            args.update(args_axes)
 
         template = {
             variable_slot: {
@@ -105,3 +89,30 @@ class ExpandDimsMapper(ONNXToMindSporeMapper):
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping
+
+    @staticmethod
+    def _generate_init_construct_with_multi_axis(axes, variable_slot, init_template_list, construct_template_list):
+        """Generate init and construct for multi axis."""
+        args_axes = dict()
+        for idx, axis in enumerate(axes):
+            if not construct_template_list:
+                args_axes[f"axis_{idx}"] = axis
+                init_template = f"self.{{{variable_slot}}}_{idx}_axis = {{axis_{idx}}}"
+                construct_template = f"opt_{{{variable_slot}}}_{idx} = self.{{{variable_slot}}}" \
+                                     f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, " \
+                                     f"self.{{{variable_slot}}}_{idx}_axis)"
+            elif idx == len(axes) - 1:
+                args_axes["axis"] = axis
+                init_template = f"self.{{{variable_slot}}}_axis = {{axis}}"
+                construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}" \
+                                     f"({{{variable_slot}}}_{idx - 1}, self.{{{variable_slot}}}_axis)"
+            else:
+                args_axes[f"axis_{idx}"] = axis
+                init_template = f"self.{{{variable_slot}}}_{idx}_axis = {{axis_{idx}}}"
+                construct_template = f"opt_{{{variable_slot}}}_{idx} = self.{{{variable_slot}}}" \
+                                     f"({{{variable_slot}}}_{idx - 1}, self.{{{variable_slot}}}_{idx}_axis)"
+
+            init_template_list.append(init_template)
+            construct_template_list.append(construct_template)
+
+        return init_template_list, construct_template_list, args_axes
