@@ -214,7 +214,7 @@ class TestDebuggerGrpcServer:
 
     def test_send_matadata(self):
         """Test SendMatadata interface."""
-        res = self._server.SendMetadata(MagicMock(training_done=False, ms_version='1.2.0'), MagicMock())
+        res = self._server.SendMetadata(MagicMock(training_done=False, ms_version='1.3.0'), MagicMock())
         expect_reply = get_ack_reply()
         expect_reply.version_matched = True
         assert res == expect_reply
