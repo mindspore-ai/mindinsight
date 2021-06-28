@@ -215,39 +215,10 @@ class SummaryWatcher:
             return
 
         if entry.is_file():
-            summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
-            pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
-            if not self._is_valid_pattern_result(summary_pattern, pb_pattern, list_explain, entry):
+            break_checking = self._update_summary_dict_by_check_file(summary_dict, summary_base_dir, relative_path,
+                                                                     entry, list_explain, ctime, mtime)
+            if break_checking:
                 return
-
-            timestamp = None
-            if summary_pattern is not None:
-                timestamp = int(summary_pattern.groupdict().get('timestamp'))
-                try:
-                    # extract created time from filename
-                    ctime = datetime.datetime.fromtimestamp(timestamp).astimezone()
-                except OverflowError:
-                    return
-
-            if relative_path not in summary_dict:
-                summary_dict[relative_path] = _new_entry(ctime, mtime)
-                job_dict = _get_explain_job_info(summary_base_dir, relative_path, timestamp)
-                summary_dict[relative_path].update(job_dict)
-
-            if summary_dict[relative_path]['create_time'] < ctime:
-                summary_dict[relative_path].update({'create_time': ctime, 'update_time': mtime})
-                job_dict = _get_explain_job_info(summary_base_dir, relative_path, timestamp)
-                summary_dict[relative_path].update(job_dict)
-
-            if not summary_pattern:
-                summary_dict[relative_path]['graph_files'] += 1
-            elif entry.name.endswith(LINEAGE_SUMMARY_SUFFIX):
-                summary_dict[relative_path]['lineage_files'] += 1
-            elif entry.name.endswith(EXPLAIN_SUMMARY_SUFFIX):
-                summary_dict[relative_path]['explain_files'] += 1
-            else:
-                summary_dict[relative_path]['summary_files'] += 1
-            self._check_by_analyzers(entry, summary_base_dir, relative_path, summary_dict)
         elif entry.is_dir():
             self._check_by_analyzers(entry, summary_base_dir, relative_path, summary_dict)
 
@@ -272,6 +243,43 @@ class SummaryWatcher:
                     summary_dict[relative_path]['profiler'] = profiler
                 else:
                     summary_dict[relative_path] = _new_entry(ctime, mtime, profiler)
+
+    def _update_summary_dict_by_check_file(self, summary_dict, summary_base_dir, relative_path, entry, list_explain,
+                                           ctime, mtime):
+        """"Update the summary dict by checking file."""
+        summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
+        pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
+        if not self._is_valid_pattern_result(summary_pattern, pb_pattern, list_explain, entry):
+            return True
+
+        timestamp = None
+        if summary_pattern is not None:
+            timestamp = int(summary_pattern.groupdict().get('timestamp'))
+            try:
+                # extract created time from filename
+                ctime = datetime.datetime.fromtimestamp(timestamp).astimezone()
+            except OverflowError:
+                return True
+        if relative_path not in summary_dict:
+            summary_dict[relative_path] = _new_entry(ctime, mtime)
+            job_dict = _get_explain_job_info(summary_base_dir, relative_path, timestamp)
+            summary_dict[relative_path].update(job_dict)
+
+        if summary_dict[relative_path]['create_time'] < ctime:
+            summary_dict[relative_path].update({'create_time': ctime, 'update_time': mtime})
+            job_dict = _get_explain_job_info(summary_base_dir, relative_path, timestamp)
+            summary_dict[relative_path].update(job_dict)
+
+        if not summary_pattern:
+            summary_dict[relative_path]['graph_files'] += 1
+        elif entry.name.endswith(LINEAGE_SUMMARY_SUFFIX):
+            summary_dict[relative_path]['lineage_files'] += 1
+        elif entry.name.endswith(EXPLAIN_SUMMARY_SUFFIX):
+            summary_dict[relative_path]['explain_files'] += 1
+        else:
+            summary_dict[relative_path]['summary_files'] += 1
+        self._check_by_analyzers(entry, summary_base_dir, relative_path, summary_dict)
+        return False
 
     def _check_by_analyzers(self, entry, summary_base_dir, relative_path, summary_dict):
         """Check by all analyzers."""
