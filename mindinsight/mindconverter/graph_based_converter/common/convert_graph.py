@@ -67,13 +67,13 @@ class AttributeProto:
 
     def decode(self, onnx_attribute_proto):
         """This func converts the onnx attribute proto into ms attribute proto."""
-        self.ms_attribute_proto = onnx_attribute_proto.name
+        self.ms_attribute_proto.name = onnx_attribute_proto.name
         ms_type = CONVERT_ATTRIBUTE_TYPE[onnx_attribute_proto.type]
         self.ms_attribute_proto.value.dtype = ms_type
         if ms_type == MSDataType.DT_INT64.value:
             self.ms_attribute_proto.value.int_val = onnx_attribute_proto.i
         elif ms_type == MSDataType.DT_FLOAT64.value:
-            self.ms_attribute_proto.value.int_val = onnx_attribute_proto.f
+            self.ms_attribute_proto.value.float_val = onnx_attribute_proto.f
         elif ms_type == MSDataType.DT_TENSOR.value:
             tp = TensorProto()
             tp.decode(onnx_attribute_proto.t)
@@ -100,7 +100,7 @@ class TensorProto:
         self.ms_tensor_proto.node_name = onnx_tensor_proto.name
         self.ms_tensor_proto.tensor_content = onnx_tensor_proto.raw_data
         self.ms_tensor_proto.data_type = CONVERT_TENSOR_TYPE[onnx_tensor_proto.data_type]
-        for dim in onnx_tensor_proto:
+        for dim in onnx_tensor_proto.dims:
             self.ms_tensor_proto.dims.append(dim)
 
 
@@ -148,7 +148,7 @@ class GraphProto:
         for out in onnx_graph_proto.output:
             ms_output = ms_graph_pb2.NodeProto()
             ms_output.name = out.name
-            ms_output.type = OUTPUT_PROTO_TYPE
+            ms_output.op_type = OUTPUT_PROTO_TYPE
             input_node = ms_graph_pb2.InputProto()
             input_node.type = MS_DATA_EDGE
             input_node.name = convert_output[out.name] if out.name in convert_output else out.name
@@ -158,10 +158,10 @@ class GraphProto:
             ms_input = ms_graph_pb2.ParameterProto()
             ms_input.name = input_node.name
             self.ms_graph_proto.parameters.append(ms_input)
-        for n in onnx_graph_proto:
+        for n in onnx_graph_proto.node:
             onnx_node = NodeProto()
             onnx_node.decode(n, convert_output)
-            ms_node = onnx_node.ms_node_proto()
+            ms_node = onnx_node.ms_node_proto
             self.ms_graph_proto.node.append(ms_node)
         for t in onnx_graph_proto.initializer:
             ms_value = ms_graph_pb2.NamedValueProto()
