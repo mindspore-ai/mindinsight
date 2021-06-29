@@ -130,8 +130,7 @@ limitations under the License.
                      @click="tabChange('compare')">{{ $t('debugger.compareResult') }}</el-button>
           <el-button size="mini"
                      class="custom-btn"
-                     :disabled="state==='running' || gridType==='compare' ||
-                     !showFilterInput || curRowObj.oversized"
+                     :disabled="state==='running' || gridType==='compare' || curRowObj.oversized"
                      @click="$parent.loadTensor(curRowObj,gridType==='preStep')">
             {{ $t('graph.downloadPic') }}</el-button>
         </div>
