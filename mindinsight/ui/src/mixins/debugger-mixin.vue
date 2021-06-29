@@ -696,10 +696,10 @@ export default {
               }
 
               if (res.data.tensor_file) {
-                if (this.downloadedTensor.name === res.data.tensor_name) {
+                if (this.downloadedTensor.name === res.data.node_name) {
                   this.downloadTensor();
                 } else {
-                  this.downloadedTensor.name = res.data.tensor_name;
+                  this.downloadedTensor.name = res.data.node_name;
                 }
               }
               this.pollData();
@@ -2313,16 +2313,16 @@ export default {
       };
       RequestService.loadTensor(param, this.sessionId).then(
           (res) => {
-            if (res && res.data && res.data.tensor_name) {
+            if (res && res.data && res.data.node_name) {
               const fileSize = this.fileSizeConversion(tensor.bytes);
               this.$message(this.$t('debugger.downloadTip', {fileSize: fileSize.join('')}));
               this.downloadedTensor.graph_name = tensor.graph_name;
               this.downloadedTensor.prev = prev;
 
-              if (this.downloadedTensor.name === res.data.tensor_name) {
+              if (this.downloadedTensor.name === res.data.node_name) {
                 this.downloadTensor();
               } else {
-                this.downloadedTensor.name = res.data.tensor_name;
+                this.downloadedTensor.name = res.data.node_name;
               }
             }
           },
