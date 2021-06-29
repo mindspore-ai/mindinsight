@@ -19,7 +19,6 @@ from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMes
     WeightType
 
 
-
 class LSTMMapper(ONNXToMindSporeMapper):
     """LSTM mapper."""
 
@@ -60,16 +59,8 @@ class LSTMMapper(ONNXToMindSporeMapper):
         init_c = LSTMMapper._find_val_by_index(4, weights)
 
         ih_shape = weight_ih.shape
-        weight_ih = weight_ih.reshape(ih_shape[0], 4, -1, ih_shape[-1])
-        gpu_weight_ih = weight_ih[:, [0, 2, 3, 1], :, :]
-        gpu_weight_ih = gpu_weight_ih.reshape(ih_shape)
-        ascend_weight_ih = weight_ih[:, [0, 3, 2, 1], :, :].reshape(ih_shape)
-
-        hh_shape = weight_hh.shape
-        weight_hh = weight_hh.reshape(hh_shape[0], 4, -1, hh_shape[-1])
-        gpu_weight_hh = weight_hh[:, [0, 2, 3, 1], :, :]
-        gpu_weight_hh = gpu_weight_hh.reshape(hh_shape)
-        ascend_weight_hh = weight_hh[:, [0, 3, 2, 1], :, :].reshape(hh_shape)
+        gpu_weight_ih, ascend_weight_ih = LSTMMapper._get_gpu_ascend_weight(weight_ih)
+        gpu_weight_hh, ascend_weight_hh = LSTMMapper._get_gpu_ascend_weight(weight_hh)
 
         bidirectional = bool(ih_shape[0] > 1)
         gpu_weights = list()
@@ -111,6 +102,16 @@ class LSTMMapper(ONNXToMindSporeMapper):
         return converted_weights
 
     @staticmethod
+    def _get_gpu_ascend_weight(weight):
+        """Get GPU and Ascend weight."""
+        weight_shape = weight.shape
+        weight = weight.reshape(weight_shape[0], 4, -1, weight_shape[-1])
+        gpu_weight = weight[:, [0, 2, 3, 1], :, :]
+        gpu_weight = gpu_weight.reshape(weight_shape)
+        ascend_weight = weight[:, [0, 3, 2, 1], :, :].reshape(weight_shape)
+        return gpu_weight, ascend_weight
+
+    @staticmethod
     def _generate_snippet_template(**kwargs):
         """generate snippet template"""
         op = kwargs.get("operation")
@@ -125,58 +126,79 @@ class LSTMMapper(ONNXToMindSporeMapper):
             raise ValueError("Can not get MindSpore operation name.")
         variable_slot = "var_0"
         init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
-        init_reshape = f"self.{{{variable_slot}}}_reshape = P.Reshape()"
-        init_transpose = f"self.{{{variable_slot}}}_transpose = P.Transpose()"
-        init_cast = f"self.{{{variable_slot}}}_cast = P.Cast()"
-        construct_template_cast = f"opt_{{{variable_slot}}} = " \
-                                     f"self.{{{variable_slot}}}_cast(" \
-                                     f"opt_{{{variable_slot}}}, mindspore.float32)"
-        construct_template_reshape = f"opt_{{{variable_slot}}} = " \
-                                     f"self.{{{variable_slot}}}_reshape(" \
-                                     f"opt_{{{variable_slot}}}, {output_reshape})"
-        construct_template_transpose = f"opt_{{{variable_slot}}} = " \
-                                       f"self.{{{variable_slot}}}_transpose(" \
-                                       f"opt_{{{variable_slot}}}, (0, 2, 1, 3))"
+        init_params, construct_params = LSTMMapper._get_init_construct_params(variable_slot, output_reshape)
 
         if init_h is not None:
             h_shape = init_h.shape
             h_dtype = init_h.dtype
             args['h_shape'] = h_shape
             args['h_dtype'] = h_dtype
-            init_h_param = f"self.{{{variable_slot}}}_init_h = " \
-                           f"Parameter(Tensor(np.zeros({{h_shape}}).astype(np.{{h_dtype}})), " \
-                           f"name=None, requires_grad=False)"
-            init_c_param = f"self.{{{variable_slot}}}_init_c = " \
-                           f"Parameter(Tensor(np.zeros({{h_shape}}).astype(np.{{h_dtype}})), " \
-                           f"name=None, requires_grad=False)"
-            construct_template = f"opt_{{{variable_slot}}}, (opt_{{{variable_slot}}}_h, " \
-                                f"opt_{{{variable_slot}}}_c) = self.{{{variable_slot}}}" \
-                                f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}," \
-                                f"(self.{{{variable_slot}}}_init_h, self.{{{variable_slot}}}_init_c))"
-            template = {
-                variable_slot: {
-                    TemplateKeywords.INIT.value: [init_h_param, init_c_param, init_template, init_cast,
-                                                  init_reshape, init_transpose],
-                    TemplateKeywords.CONSTRUCT.value: [construct_template,
-                                                       construct_template_cast,
-                                                       construct_template_reshape,
-                                                       construct_template_transpose]
-                }
-            }
+            template = LSTMMapper._get_template_with_init_h(variable_slot, init_template, init_params, construct_params)
         else:
             construct_template = f"opt_{{{variable_slot}}}, (opt_{{{variable_slot}}}_h, " \
-                                f"opt_{{{variable_slot}}}_c) = self.{{{variable_slot}}}" \
-                                f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}})"
+                                 f"opt_{{{variable_slot}}}_c) = self.{{{variable_slot}}}" \
+                                 f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}})"
             template = {
                 variable_slot: {
-                    TemplateKeywords.INIT.value: [init_template, init_cast, init_reshape, init_transpose],
+                    TemplateKeywords.INIT.value: [init_template, init_params["cast"], init_params["reshape"],
+                                                  init_params["transpose"]],
                     TemplateKeywords.CONSTRUCT.value: [construct_template,
-                                                       construct_template_cast,
-                                                       construct_template_reshape,
-                                                       construct_template_transpose]
+                                                       construct_params["cast"],
+                                                       construct_params["reshape"],
+                                                       construct_params["transpose"]]
                 }
             }
 
+        exchange_msg = LSTMMapper._get_exchange_msg(variable_slot, op, args, weights, trainable_params)
+        outputs_list = [f"opt_{{{variable_slot}}}", f"opt_{{{variable_slot}}}_h", f"opt_{{{variable_slot}}}_c"]
+        outputs_mapping = ((0, 0), (1, 1), (2, 2),)
+        return template, exchange_msg, outputs_list, outputs_mapping
+
+    @staticmethod
+    def _get_init_construct_params(variable_slot, output_reshape):
+        """Get init and construct codes for parameters."""
+        init_reshape = f"self.{{{variable_slot}}}_reshape = P.Reshape()"
+        init_transpose = f"self.{{{variable_slot}}}_transpose = P.Transpose()"
+        init_cast = f"self.{{{variable_slot}}}_cast = P.Cast()"
+        construct_cast = f"opt_{{{variable_slot}}} = " \
+                         f"self.{{{variable_slot}}}_cast(opt_{{{variable_slot}}}, mindspore.float32)"
+        construct_reshape = f"opt_{{{variable_slot}}} = " \
+                            f"self.{{{variable_slot}}}_reshape(opt_{{{variable_slot}}}, {output_reshape})"
+        construct_transpose = f"opt_{{{variable_slot}}} = " \
+                              f"self.{{{variable_slot}}}_transpose(opt_{{{variable_slot}}}, (0, 2, 1, 3))"
+
+        init_codes = {"cast": init_cast, "reshape": init_reshape, "transpose": init_transpose}
+        construct_codes = {"cast": construct_cast, "reshape": construct_reshape, "transpose": construct_transpose}
+        return init_codes, construct_codes
+
+    @staticmethod
+    def _get_template_with_init_h(variable_slot, init_template, init_params, construct_params):
+        """Get template with init_h."""
+        init_h_param = f"self.{{{variable_slot}}}_init_h = " \
+                       f"Parameter(Tensor(np.zeros({{h_shape}}).astype(np.{{h_dtype}})), " \
+                       f"name=None, requires_grad=False)"
+        init_c_param = f"self.{{{variable_slot}}}_init_c = " \
+                       f"Parameter(Tensor(np.zeros({{h_shape}}).astype(np.{{h_dtype}})), " \
+                       f"name=None, requires_grad=False)"
+        construct_template = f"opt_{{{variable_slot}}}, (opt_{{{variable_slot}}}_h, " \
+                             f"opt_{{{variable_slot}}}_c) = self.{{{variable_slot}}}" \
+                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}," \
+                             f"(self.{{{variable_slot}}}_init_h, self.{{{variable_slot}}}_init_c))"
+        template = {
+            variable_slot: {
+                TemplateKeywords.INIT.value: [init_h_param, init_c_param, init_template, init_params["cast"],
+                                              init_params["reshape"], init_params["transpose"]],
+                TemplateKeywords.CONSTRUCT.value: [construct_template,
+                                                   construct_params["cast"],
+                                                   construct_params["reshape"],
+                                                   construct_params["transpose"]]
+            }
+        }
+        return template
+
+    @staticmethod
+    def _get_exchange_msg(variable_slot, op, args, weights, trainable_params):
+        """Get exchange msg for mapper."""
         exchange_msg = {
             variable_slot: {
                 ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
@@ -190,6 +212,4 @@ class LSTMMapper(ONNXToMindSporeMapper):
                 ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
             }
         }
-        outputs_list = [f"opt_{{{variable_slot}}}", f"opt_{{{variable_slot}}}_h", f"opt_{{{variable_slot}}}_c"]
-        outputs_mapping = ((0, 0), (1, 1), (2, 2),)
-        return template, exchange_msg, outputs_list, outputs_mapping
+        return exchange_msg

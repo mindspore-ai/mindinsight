@@ -60,7 +60,11 @@ class MulMapper(ONNXToMindSporeMapper):
                 }
             }
             return template, exchange_msg, outputs_list, outputs_mapping
+        return MulMapper._generate_snippet_template_with_weights(weights, args, template, op, trainable_params)
 
+    @staticmethod
+    def _generate_snippet_template_with_weights(weights, args, template, op, trainable_params):
+        """Generate template when weights exist."""
         tensor = MulMapper._find_val_by_index(0, weights)
         w_shape = tensor.shape
         w_location = MulMapper._find_location_by_index(0, weights)

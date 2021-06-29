@@ -13,7 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
+from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords, \
+    ONNX_MS_MAP
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
 
@@ -39,22 +40,7 @@ class CastMapper(ONNXToMindSporeMapper):
         params = kwargs['raw_params']
         weights = kwargs.get("weights")
         to = params["to"]
-        type_dict = {1: 'mindspore.float32',
-                     2: 'mindspore.uint8',
-                     3: 'mindspore.int8',
-                     4: 'mindspore.uint16',
-                     5: 'mindspore.int16',
-                     6: 'mindspore.int32',
-                     7: 'mindspore.int64',
-                     8: 'mindspore.string',
-                     9: 'mindspore.bool_',
-                     10: 'mindspore.float16',
-                     11: 'mindspore.double',
-                     12: 'mindspore.uint32',
-                     13: 'mindspore.uint64',
-                     14: 'UNSUPPORTED',
-                     15: 'UNSUPPORTED',
-                     16: 'UNSUPPORTED'}
+        type_dict = ONNX_MS_MAP
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
 

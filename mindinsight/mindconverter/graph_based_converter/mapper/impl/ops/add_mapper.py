@@ -61,7 +61,11 @@ class AddMapper(ONNXToMindSporeMapper):
                 }
             }
             return template, exchange_msg, outputs_list, outputs_mapping
+        return AddMapper._generate_snippet_template_with_weights(weights, args, op, trainable_params)
 
+    @staticmethod
+    def _generate_snippet_template_with_weights(weights, args, op, trainable_params):
+        """Generate template when weights exist."""
         tensor = AddMapper._find_val_by_index(0, weights)
         bias_shape = tensor.shape
         bias_location = AddMapper._find_location_by_index(0, weights)
