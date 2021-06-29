@@ -298,9 +298,16 @@ class TensorHandler(StreamHandlerBase):
             tensor.clean_tensor_value(oversize=False, remain_scalar=True)
 
         old_tensor = cache_tensor.get(step)
-        if not old_tensor or (old_tensor.status == TensorStatusEnum.CACHED.value and self._is_value_diff(
-                old_tensor.value, tensor.value)) or (old_tensor.status == TensorStatusEnum.UNCACHED.value):
+        if self._check_tensor_update(old_tensor, tensor):
             self._put_tensor_into_cache(cache_tensor, tensor)
+            return True
+        return False
+
+    def _check_tensor_update(self, old_tensor, tensor):
+        """Check if the tensor update compared with old_tensor."""
+        if not old_tensor or (old_tensor.status == TensorStatusEnum.CACHED.value and self._is_value_diff(
+                old_tensor.value, tensor.value)) or (old_tensor.status == TensorStatusEnum.UNCACHED.value
+                                                     and tensor.status == TensorStatusEnum.CACHED.value):
             return True
         return False
 

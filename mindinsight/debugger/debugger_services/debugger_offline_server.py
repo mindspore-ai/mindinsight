@@ -346,7 +346,7 @@ class DebuggerOfflineManager:
                     metadata = self._metadata_stream.get(['step', 'state'])
                     ret = {
                         'tensor_file': True,
-                        'tensor_name': load_info.get('tensor_name')
+                        'node_name': node_info.get('node_name')
                     }
                     ret.update(metadata)
                     self._cache_store.put_data(ret)
