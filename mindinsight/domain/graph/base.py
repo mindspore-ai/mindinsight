@@ -408,9 +408,16 @@ class Source:
         for line in source_address.strip().split('\n'):
             regex = r'#\sIn\sfile\s(?P<file_path>.+)\((?P<line_no>\d+)\)/(?P<code_line>.+)/'
             pattern = re.search(regex, line.strip())
-            source = pattern.groupdict()
-            source['line_no'] = int(source['line_no'])
-            source['code_line'] = source['code_line'].strip()
+            if pattern is None:
+                source = {
+                    'file_path': '',
+                    'line_no': 0,
+                    'code_line': line.strip(),
+                }
+            else:
+                source = pattern.groupdict()
+                source['line_no'] = int(source['line_no'])
+                source['code_line'] = source['code_line'].strip()
             stack.append(cls(**source))
 
         return stack
