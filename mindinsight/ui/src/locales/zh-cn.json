@@ -885,7 +885,8 @@
     "inputStack": "请输入堆栈信息",
     "search": "搜索",
     "downloadTip": "文件正在加载，大小约为{fileSize}，请稍候",
-    "noOfflineGraphData": "计算图加载失败，请检查离线数据再重试"
+    "noOfflineGraphData": "计算图加载失败，这可能是由于summary目录下离线dump数据中的graphs文件缺失或损坏，请尝试重新dump数据。",
+    "largeDataLoading":"张量数据过大，正在加载中..."
   },
   "explain": {
     "explain": "模型解释",

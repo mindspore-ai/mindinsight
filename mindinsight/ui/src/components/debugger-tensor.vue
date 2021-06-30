@@ -1043,6 +1043,18 @@ export default {
               this.$nextTick(() => {
                 this.$refs.tensorValue.updateGridData(this.tensorValue, JSON.parse(row.shape), statistics, shape);
               });
+            } else if (res.data.tensor_status === 'uncached') {
+              this.tensorValue = [];
+              this.$nextTick(() => {
+                this.$refs.tensorValue.showRequestErrorMessage(
+                    this.$t('debugger.largeDataLoading'),
+                    JSON.parse(row.shape),
+                    shape,
+                    true,
+                );
+              });
+              this.dealLoading();
+              return;
             }
             this.$nextTick(() => {
               this.dealLoading();
@@ -1112,14 +1124,16 @@ export default {
               let value = res.data.tensor_value.value;
               const statistics = res.data.tensor_value.statistics || {};
               this.statisticsArr = [statistics];
-              if (value === 'Too large to show.') {
+              if (value === 'Too large to show.' || res.data.tensor_value.tensor_status === 'uncached') {
                 this.tensorValue = [];
                 this.$nextTick(() => {
                   this.$refs.tensorValue.showRequestErrorMessage(
-                      this.$t('debugger.largeDataTip'),
-                      JSON.parse(row.shape),
-                      shape,
-                      true,
+                  value === 'Too large to show.'
+                    ? this.$t('debugger.largeDataTip')
+                    : this.$t('debugger.largeDataLoading'),
+                  JSON.parse(row.shape),
+                  shape,
+                  true,
                   );
                 });
                 this.dealLoading();
