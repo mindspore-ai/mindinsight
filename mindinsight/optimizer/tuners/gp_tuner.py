@@ -170,6 +170,11 @@ class GPBaseTuner(BaseTuner):
             logger.info("Without valid histories or the rows of lineages < %s, "
                         "parameters will be recommended randomly.", min_lineage_rows)
             suggestion = generate_arrays(params_info)
+        # in scikit-learn<0.24.2, if np.std(target) include 0, errors would occur.
+        elif (np.std(target, axis=0) == 0).any():
+            logger.warning("The std of target: %s include zero. To avoid errors, "
+                           "parameters will be recommended randomly.", target)
+            suggestion = generate_arrays(params_info)
         else:
             self._gp.fit(params, target)
             suggestion = self._acq_max(
