@@ -468,11 +468,11 @@ class DebuggerSession:
             metadata = self.cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
             ret = {
                 'tensor_file': True,
-                'tensor_name': tensor_name
+                'node_name': name
             }
             ret.update(metadata)
             self.cache_store.put_data(ret)
-        reply = {'tensor_name': tensor_name}
+        reply = {'node_name': name}
         return reply
 
     def download(self, name, prev, graph_name=None, rank_id=0):

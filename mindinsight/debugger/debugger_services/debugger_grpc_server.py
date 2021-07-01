@@ -50,6 +50,7 @@ def debugger_wrap(func):
 
 class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     """The grpc server used to interactive with grpc client."""
+    _TIMESTAMP_CARRY = 100
 
     def __init__(self, cache_store):
         """
@@ -475,6 +476,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         if node_info and node_info.get('load'):
             load_info = node_info.get('load')
             load_info['graph_name'] = node_info.get('graph_name')
+            load_info['node_name'] = node_info.get('node_name')
             self._load_tensor(load_info, step, request_iterator)
         else:
             for tensor in request_iterator:
@@ -500,19 +502,19 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         reply = get_ack_reply()
         return reply
 
-    def _load_tensor(self, tensor_info, step, request_iterator):
+    def _load_tensor(self, load_info, step, request_iterator):
         """Load tensor to tmp file."""
         file_mode = 0o600
         dir_mode = 0o700
-        if tensor_info.get('prev') == 'prev':
+        if load_info.get('prev') == 'prev':
             step -= 1
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
         temp_dir = tempfile.TemporaryDirectory(dir=tensor_stream.download_mgr.temp_base_dir)
         os.chmod(temp_dir.name, dir_mode)
-        node_name, slot = tensor_info.get('tensor_name').rsplit(':', 1)
+        node_name, slot = load_info.get('tensor_name').rsplit(':', 1)
         _, node_name = node_name.rsplit('/', 1)
         file_name = "{}.{}.0.0.{}.output.{}.NONE.npy".format(
-            tensor_info.get('node_type'), node_name, round(time.time() * 100), slot)
+            load_info.get('node_type'), node_name, round(time.time() * self._TIMESTAMP_CARRY), slot)
         file_path = os.path.join(temp_dir.name, file_name)
         tensor = next(request_iterator)
         header = self._generate_npy_header(tensor)
@@ -523,8 +525,8 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             self._write(file_path, tensor.tensor_content)
         # Online session id is 0.
         tensor_info = {
-            "tensor_name": tensor_info.get("tensor_name"),
-            "graph_name": tensor_info.get("graph_name"),
+            "tensor_name": load_info.get("tensor_name"),
+            "graph_name": load_info.get("graph_name"),
             "step": step,
             "rank_id": 0
         }
@@ -532,7 +534,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         metadata = self._cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
         ret = {
             'tensor_file': True,
-            'tensor_name': tensor_info.get("tensor_name")
+            'node_name': load_info.get("node_name")
         }
         ret.update(metadata)
         self._cache_store.put_data(ret)
