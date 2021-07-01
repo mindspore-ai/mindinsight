@@ -587,7 +587,11 @@ class TensorHandler(StreamHandlerBase):
                                           f"{tensor_name} failed.")
         if self._check_not_cached_status(curr_tensor) or self._check_not_cached_status(prev_tensor):
             self._add_hold_value_tensors(tensor_name, step)
-            return {'view_cmd': True}
+            reply = {
+                'tensor_status': TensorStatusEnum.UNCACHED.value,
+                'view_cmd': True
+            }
+            return reply
         curr_tensor_slice = curr_tensor.get_tensor_value_by_shape(shape)
         prev_tensor_slice = prev_tensor.get_tensor_value_by_shape(shape)
         # get tensor comparison basic info
@@ -616,7 +620,10 @@ class TensorHandler(StreamHandlerBase):
             tensor_info['diff'] = curr_tensor_slice
         # add comparison statistics
         tensor_info.update(self._get_comparison_statistics(curr_tensor, prev_tensor))
-        reply = {'tensor_value': tensor_info}
+        reply = {
+            'tensor_status': TensorStatusEnum.CACHED.value,
+            'tensor_value': tensor_info
+        }
         return reply
 
     def _add_hold_value_tensors(self, tensor_name, step):

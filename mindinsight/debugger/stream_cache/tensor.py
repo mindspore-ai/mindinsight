@@ -63,12 +63,17 @@ class BaseTensor(ABC):
     @property
     @abstractmethod
     def value(self):
-        """The property of tensor shape."""
+        """The property of tensor value."""
 
     @property
     @abstractmethod
     def download_size(self):
-        """The property of tensor shape."""
+        """The property of download size."""
+
+    @property
+    @abstractmethod
+    def status(self):
+        """The property of tensor status."""
 
     @property
     def empty(self):
@@ -111,6 +116,7 @@ class BaseTensor(ABC):
             'dtype': self.dtype,
             'shape': self.shape,
             'bytes': self.download_size,
+            'tensor_status': self.status,
             'has_prev_step': False
         }
         return res
