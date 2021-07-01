@@ -138,6 +138,30 @@ class Toolkit:
         worksheet.write(1, indices.get('argument'), 'dump-dir', styles['content_center_fmt'])
         worksheet.write(1, indices.get('value'), self.dump_dir or '', styles['content_left_fmt'])
 
+    def _get_dtype_content(self, dtype):
+        """
+        Get dtype content.
+
+        Args:
+            dtype (Any): Tensor dtype.
+
+        Returns:
+            str, dtype content.
+        """
+        return Toolkit.PLACEHOLDER if dtype is None else str(dtype)
+
+    def _get_shape_content(self, shape):
+        """
+        Get shape content.
+
+        Args:
+            shape (Any): Tensor shape.
+
+        Returns:
+            str, shape content.
+        """
+        return Toolkit.PLACEHOLDER if shape is None else str(shape)
+
     def _get_operator_input_content(self, operator, input_types):
         """
         Add operator input content.
@@ -156,38 +180,39 @@ class Toolkit:
         for op_input in operator.inputs:
             if op_input.type == InputType.OPERATOR:
                 op = input_types[InputType.OPERATOR][op_input.op_id]
-                if op.type == 'Load':
-                    input_content += f'{op.type}_{op.name}' + '\n'
+                input_content += f'{op.type}_{op.name}' if op.type == 'Load' else f'{op.type}_{op.op_id}'
+                if op_input.info:
+                    input_dtype_content += self._get_dtype_content(op_input.info['dtype'])
+                    input_shape_content += self._get_dtype_content(op_input.info.get('shape'))
                 else:
-                    input_content += f'{op.type}_{op.op_id}' + '\n'
-                    if op_input.info:
-                        input_dtype_content += str(op_input.info['dtype']) + '\n'
-                        input_shape_content += str(op_input.info.get('shape') or Toolkit.PLACEHOLDER) + '\n'
-                    else:
-                        input_dtype_content += Toolkit.PLACEHOLDER + '\n'
-                        input_shape_content += Toolkit.PLACEHOLDER + '\n'
+                    input_dtype_content += Toolkit.PLACEHOLDER
+                    input_shape_content += Toolkit.PLACEHOLDER
             elif op_input.type == InputType.PARAMETER:
-                input_content += op_input.name + '\n'
+                input_content += op_input.name
                 param = input_types[InputType.PARAMETER][op_input.name]
                 if param.output:
-                    input_dtype_content += param.output.info['dtype'] + '\n'
-                    input_shape_content += str(param.output.info.get('shape') or Toolkit.PLACEHOLDER) + '\n'
+                    input_dtype_content += self._get_dtype_content(param.output.info['dtype'])
+                    input_shape_content += self._get_shape_content(param.output.info.get('shape'))
                 else:
-                    input_dtype_content += Toolkit.PLACEHOLDER + '\n'
-                    input_shape_content += Toolkit.PLACEHOLDER + '\n'
+                    input_dtype_content += Toolkit.PLACEHOLDER
+                    input_shape_content += Toolkit.PLACEHOLDER
             elif op_input.type == InputType.CONSTANT:
-                input_content += op_input.name + '\n'
+                input_content += op_input.name
                 cst = input_types[InputType.CONSTANT][op_input.name]
                 if cst.output.type == OutputType.TENSOR:
-                    input_dtype_content += cst.output.info.get('dtype') or Toolkit.PLACEHOLDER + '\n'
-                    input_shape_content += str(cst.output.info.get('shape') or Toolkit.PLACEHOLDER) + '\n'
+                    input_dtype_content += self._get_dtype_content(cst.output.info.get('dtype'))
+                    input_shape_content += self._get_shape_content(cst.output.info.get('shape'))
                 else:
-                    input_dtype_content += Toolkit.PLACEHOLDER + '\n'
-                    input_shape_content += Toolkit.PLACEHOLDER + '\n'
+                    input_dtype_content += Toolkit.PLACEHOLDER
+                    input_shape_content += Toolkit.PLACEHOLDER
             else:
-                input_content += op_input.name + '\n'
-                input_dtype_content += Toolkit.PLACEHOLDER + '\n'
-                input_shape_content += Toolkit.PLACEHOLDER + '\n'
+                input_content += op_input.name
+                input_dtype_content += Toolkit.PLACEHOLDER
+                input_shape_content += Toolkit.PLACEHOLDER
+
+            input_content += '\n'
+            input_dtype_content += '\n'
+            input_shape_content += '\n'
 
         return input_content.strip(), input_dtype_content.strip(), input_shape_content.strip()
 
@@ -262,7 +287,11 @@ class Toolkit:
         """
         content = ''
         for source in operator.stack:
-            content += f'{source.file_path}:{source.line_no}\n{source.code_line}\n'
+            if source.file_path:
+                source_content = f'{source.file_path}:{source.line_no}\n{source.code_line}\n'
+            else:
+                source_content = f'{source.code_line}\n'
+            content += source_content
         return content.strip()
 
     def _add_operator_worksheet(self, workbook, styles):
@@ -482,7 +511,10 @@ class Toolkit:
         for operator in self.operators:
             if not operator.stack:
                 continue
-            stack = [f'{source.file_path}:{source.line_no}\n{source.code_line}' for source in operator.stack]
+            stack = [
+                f'{source.file_path}:{source.line_no}\n{source.code_line}'
+                for source in operator.stack if source.file_path
+            ]
             key = '\n'.join(stack)
             if key in source_mapping:
                 source_mapping[key].append(operator)
