@@ -890,7 +890,8 @@
     "inputStack": "Enter stack information",
     "search": "Search",
     "downloadTip": "The file is being loaded. The file size is about {fileSize}. Please wait.",
-    "noOfflineGraphData": "Failed to load the computational graph. Check the offline data and try again."
+    "noOfflineGraphData": "Failed to load the computational graph. This may be due to the missing or damaged graphs file in the offline dump data in the summary directory. Please try to dump the data again.",
+    "largeDataLoading":"The tensor data is too large, loading..."
   },
   "explain": {
     "explain": "Model Explanation",
