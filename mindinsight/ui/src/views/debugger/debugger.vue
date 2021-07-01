@@ -516,8 +516,17 @@ limitations under the License.
 
         <el-tabs v-model="tabs.activeName"
                  @tab-click="tabsChange">
-          <el-tab-pane :label="$t('debugger.tensorMsg')"
-                       name="tensor">
+          <el-tab-pane name="tensor">
+            <span slot="label">
+              {{$t('debugger.tensorMsg')}}
+              <el-tooltip class="item"
+                          effect="dark"
+                          :content="$t('public.dataLoading')"
+                          placement="top"
+                          v-if="tableData.length && tableData.find(val=>val.value===undefined)">
+                <i class="el-icon-loading"></i>
+              </el-tooltip>
+            </span>
             <div class="table-content">
               <div class="table-wrap">
                 <el-table ref="singleTable"
