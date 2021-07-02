@@ -18,6 +18,7 @@ import numpy as np
 
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.exceptions import ParamTypeError
+from mindinsight.utils.exceptions import MindInsightMemoryError
 from mindinsight.utils.log import setup_logger
 
 F32_MIN, F32_MAX = np.finfo(np.float32).min, np.finfo(np.float32).max
@@ -241,7 +242,12 @@ class TensorUtils:
         Returns:
              Statistics, an instance of Statistics.
         """
-        ma_value = np.ma.masked_invalid(tensors)
+        logger = setup_logger("utils", "utils")
+        try:
+            ma_value = np.ma.masked_invalid(tensors)
+        except MemoryError as err:
+            logger.error("Memory Error. %s", str(err))
+            raise MindInsightMemoryError(str(err))
         total, valid = tensors.size, ma_value.count()
         invalids = []
         for isfn in np.isnan, np.isposinf, np.isneginf:
@@ -252,7 +258,6 @@ class TensorUtils:
                 invalids.append(0)
 
         nan_count, pos_inf_count, neg_inf_count = invalids
-        logger = setup_logger("utils", "utils")
         if not valid:
             logger.warning('There are no valid values in the tensors(size=%d, shape=%s)', total, tensors.shape)
             statistics = Statistics({'max_value': 0,
