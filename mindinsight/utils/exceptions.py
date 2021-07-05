@@ -185,3 +185,12 @@ class UrlDecodeError(MindInsightException):
         super(UrlDecodeError, self).__init__(GeneralErrors.URL_DECODE_ERROR,
                                              error_msg,
                                              http_code=400)
+
+
+class MindInsightMemoryError(MindInsightException):
+    """Unknown error."""
+    def __init__(self, error_msg):
+        super(MindInsightMemoryError, self).__init__(
+            GeneralErrors.MEMORY_ERROR,
+            error_msg,
+            http_code=400)

@@ -47,6 +47,7 @@ class GeneralErrors(Enum):
     PORT_NOT_AVAILABLE_ERROR = 9
     URL_DECODE_ERROR = 10
     COMPUTING_RESOURCE_ERROR = 11
+    MEMORY_ERROR = 12
 
 
 class ProfilerMgrErrors(Enum):
