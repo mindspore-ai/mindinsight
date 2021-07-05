@@ -126,7 +126,7 @@ limitations under the License.
           <el-button size="mini"
                      class="custom-btn"
                      :class="{green:gridType==='compare'}"
-                     :disabled="!curRowObj.has_prev_step || state==='running'"
+                     :disabled="!curRowObj.has_prev_step || state==='running' || curRowObj.tensor_status==='oversize'"
                      @click="tabChange('compare')">{{ $t('debugger.compareResult') }}</el-button>
           <el-button size="mini"
                      class="custom-btn"
@@ -1123,18 +1123,21 @@ export default {
             if (res.data.tensor_value) {
               let value = res.data.tensor_value.value;
               const statistics = res.data.tensor_value.statistics || {};
+              const tensorStatus = res.data.tensor_value.tensor_status;
               this.statisticsArr = [statistics];
-              if (value === 'Too large to show.' || res.data.tensor_value.tensor_status === 'uncached') {
+              if (value === 'Too large to show.' || tensorStatus === 'uncached' || tensorStatus === 'oversize') {
+                let errorMsg = null;
+                if (tensorStatus === 'uncached') {
+                  errorMsg = this.$t('debugger.largeDataLoading');
+                } else if (tensorStatus === 'oversize') {
+                  errorMsg = this.$t('debugger.overSize');
+                  this.showFilterInput = false;
+                } else {
+                  errorMsg = this.$t('debugger.largeDataTip');
+                }
                 this.tensorValue = [];
                 this.$nextTick(() => {
-                  this.$refs.tensorValue.showRequestErrorMessage(
-                  value === 'Too large to show.'
-                    ? this.$t('debugger.largeDataTip')
-                    : this.$t('debugger.largeDataLoading'),
-                  JSON.parse(row.shape),
-                  shape,
-                  true,
-                  );
+                  this.$refs.tensorValue.showRequestErrorMessage(errorMsg, JSON.parse(row.shape), shape, true);
                 });
                 this.dealLoading();
                 return;

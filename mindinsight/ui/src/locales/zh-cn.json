@@ -886,7 +886,8 @@
     "search": "搜索",
     "downloadTip": "文件正在加载，大小约为{fileSize}，请稍候",
     "noOfflineGraphData": "计算图加载失败，这可能是由于summary目录下离线dump数据中的graphs文件缺失或损坏，请尝试重新dump数据。",
-    "largeDataLoading":"张量数据过大，正在加载中..."
+    "largeDataLoading": "张量数据较大，正在加载中...",
+    "overSize": "请求的张量过大，数值总大小超过1GiB,无法显示。"
   },
   "explain": {
     "explain": "模型解释",
@@ -1011,6 +1012,7 @@
     "5054B083": "监测点创建失败，请勿使用已失效规则。",
     "5054B202": "未找到调试器离线服务器模块",
     "5054B283": "已有张量正在下载队列，请稍后再试",
-    "5054B286": "Summary 目录下dump数据的data_dump.json文件缺失或已损坏，请检查该目录下的dump数据完整性。"
+    "5054B286": "Summary 目录下dump数据的data_dump.json文件缺失或已损坏，请检查该目录下的dump数据完整性。",
+    "5054000C": "内存不足，请在释放内存后重试。"
   }
 }
