@@ -14,24 +14,18 @@
 # ============================================================================
 """Implement the debugger grpc server."""
 import copy
-import os
-import struct
-import tempfile
 import threading
-import time
 from functools import wraps
 from queue import Queue, Full, Empty
-
-import numpy as np
 
 import mindinsight
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import MAX_SINGLE_TENSOR_CACHE, get_ack_reply, ServerStatus, \
-    Streams, RunLevel, version_match, NUMPY_TYPE_MAP
+    Streams, RunLevel, version_match, load_tensor
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum, ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import debugger_server_wrap
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
-from mindinsight.domain.graph.proto.ms_graph_pb2 import GraphProto, DataType
+from mindinsight.domain.graph.proto.ms_graph_pb2 import GraphProto
 
 
 def debugger_wrap(func):
@@ -50,7 +44,6 @@ def debugger_wrap(func):
 
 class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     """The grpc server used to interactive with grpc client."""
-    _TIMESTAMP_CARRY = 100
 
     def __init__(self, cache_store):
         """
@@ -477,7 +470,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             load_info = node_info.get('load')
             load_info['graph_name'] = node_info.get('graph_name')
             load_info['node_name'] = node_info.get('node_name')
-            self._load_tensor(load_info, step, request_iterator)
+            # The rank_id of online debugger is 0
+            load_tensor(load_info=load_info, step=step, request_iterator=request_iterator,
+                        cache_store=self._cache_store, rank_id=0)
         else:
             for tensor in request_iterator:
                 tensor_contents.append(tensor.tensor_content)
@@ -501,66 +496,6 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                     continue
         reply = get_ack_reply()
         return reply
-
-    def _load_tensor(self, load_info, step, request_iterator):
-        """Load tensor to tmp file."""
-        file_mode = 0o600
-        dir_mode = 0o700
-        if load_info.get('prev') == 'prev':
-            step -= 1
-        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
-        temp_dir = tempfile.TemporaryDirectory(dir=tensor_stream.download_mgr.temp_base_dir)
-        os.chmod(temp_dir.name, dir_mode)
-        node_name, slot = load_info.get('tensor_name').rsplit(':', 1)
-        _, node_name = node_name.rsplit('/', 1)
-        file_name = "{}.{}.0.0.{}.output.{}.NONE.npy".format(
-            load_info.get('node_type'), node_name, round(time.time() * self._TIMESTAMP_CARRY), slot)
-        file_path = os.path.join(temp_dir.name, file_name)
-        tensor = next(request_iterator)
-        header = self._generate_npy_header(tensor)
-        self._write(file_path, header)
-        os.chmod(file_path, file_mode)
-        self._write(file_path, tensor.tensor_content)
-        for tensor in request_iterator:
-            self._write(file_path, tensor.tensor_content)
-        # Online session id is 0.
-        tensor_info = {
-            "tensor_name": load_info.get("tensor_name"),
-            "graph_name": load_info.get("graph_name"),
-            "step": step,
-            "rank_id": 0
-        }
-        tensor_stream.download_mgr.add(file_name, file_path, temp_dir, **tensor_info)
-        metadata = self._cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
-        ret = {
-            'tensor_file': True,
-            'node_name': load_info.get("node_name")
-        }
-        ret.update(metadata)
-        self._cache_store.put_data(ret)
-
-    @staticmethod
-    def _generate_npy_header(tensor_proto):
-        """Generate the header for npy file."""
-        shape = tuple(tensor_proto.dims)
-        if shape == (0,):
-            shape = ()
-        np_type = np.dtype(NUMPY_TYPE_MAP.get(DataType.Name(tensor_proto.data_type)))
-        array_info = "{" + "'descr': {}, 'fortran_order': False, 'shape': {}".format(repr(np_type.str),
-                                                                                     repr(shape)) + "}"
-        array_info = array_info.encode('latin1')
-        header_length = len(array_info) + 1
-        # the length of npy header need to be divided by 64 exactly, so fill by b' '.
-        padding_length = 64 - ((10 + header_length) % 64)
-        header = b'\x93NUMPY' + bytes([1, 0]) + struct.pack('<H', header_length + padding_length) + \
-                 array_info + b' ' * padding_length + b'\n'
-        return header
-
-    @staticmethod
-    def _write(file_path, value):
-        """Write into temp file."""
-        with open(file_path, 'ab') as fb:
-            fb.write(value)
 
     @debugger_wrap
     def SendWatchpointHits(self, request_iterator, context):

@@ -15,11 +15,16 @@
 """Define the utils."""
 import enum
 import re
+import os
+import struct
+import tempfile
+import time
 
 import numpy as np
 
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
+from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
 
 # translate the MindSpore type to numpy type.
 NUMPY_TYPE_MAP = {
@@ -189,3 +194,65 @@ class DumpSettings(enum.Enum):
 def is_valid_rank_dir_name(name):
     """Check if the name followed the rank directory format."""
     return bool(re.search(r'^rank_\d+$', name))
+
+
+def load_tensor(load_info, step, request_iterator, cache_store, rank_id):
+    """Load tensor to tmp file."""
+    file_mode = 0o600
+    dir_mode = 0o700
+    if load_info.get('prev') == 'prev':
+        step -= 1
+    tensor_stream = cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(rank_id)
+    temp_dir = tempfile.TemporaryDirectory(dir=tensor_stream.download_mgr.temp_base_dir)
+    os.chmod(temp_dir.name, dir_mode)
+    node_name, slot = load_info.get('tensor_name').rsplit(':', 1)
+    _, node_name = node_name.rsplit('/', 1)
+    # Carry 2 digit for timestamp to ensure remaining 12 digit after round method
+    timestamp_carry = 100
+    file_name = "{}.{}.0.0.{}.output.{}.NONE.npy".format(
+        load_info.get('node_type'), node_name, round(time.time() * timestamp_carry), slot)
+    file_path = os.path.join(temp_dir.name, file_name)
+    tensor = next(request_iterator)
+    header = _generate_npy_header(tensor)
+    _write_tensor(file_path, header)
+    os.chmod(file_path, file_mode)
+    _write_tensor(file_path, tensor.tensor_content)
+    for tensor in request_iterator:
+        _write_tensor(file_path, tensor.tensor_content)
+    tensor_info = {
+        "tensor_name": load_info.get("tensor_name"),
+        "graph_name": load_info.get("graph_name"),
+        "step": step,
+        "rank_id": rank_id
+    }
+    tensor_stream.download_mgr.add(file_name, file_path, temp_dir, **tensor_info)
+    metadata = cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
+    ret = {
+        'tensor_file': True,
+        'node_name': load_info.get("node_name")
+    }
+    ret.update(metadata)
+    cache_store.put_data(ret)
+
+
+def _generate_npy_header(tensor_proto):
+    """Generate the header for npy file."""
+    shape = tuple(tensor_proto.dims)
+    if shape == (0,):
+        shape = ()
+    np_type = np.dtype(NUMPY_TYPE_MAP.get(DataType.Name(tensor_proto.data_type)))
+    array_info = "{" + "'descr': {}, 'fortran_order': False, 'shape': {}".format(repr(np_type.str),
+                                                                                 repr(shape)) + "}"
+    array_info = array_info.encode('latin1')
+    header_length = len(array_info) + 1
+    # the length of npy header need to be divided by 64 exactly, so fill by b' '.
+    padding_length = 64 - ((10 + header_length) % 64)
+    header = b'\x93NUMPY' + bytes([1, 0]) + struct.pack('<H', header_length + padding_length) + \
+             array_info + b' ' * padding_length + b'\n'
+    return header
+
+
+def _write_tensor(file_path, value):
+    """Write into temp file."""
+    with open(file_path, 'ab') as fb:
+        fb.write(value)
