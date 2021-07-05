@@ -247,13 +247,8 @@ class TensorHandler(StreamHandlerBase):
             bool, the tensor has updated successfully.
         """
         tensor = self._deal_with_tensor(value)
-        tensor_info = value.get('load')
-        if tensor_info is not None:
-            self.load(tensor_info.get('tensor_name'), tensor_info.get('graph_name'), tensor_info.get('prev'),
-                      tensor_info.get('node_type'), tensor=tensor)
-
         stats = None
-        if value.get('stats', False) and tensor.status != TensorStatusEnum.EMPTY.value:
+        if value.get('stats', False) and tensor.status == TensorStatusEnum.CACHED.value:
             tensor.calculate_stats()
             stats = tensor.stats
 

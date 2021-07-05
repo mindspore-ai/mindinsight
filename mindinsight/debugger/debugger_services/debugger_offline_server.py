@@ -23,7 +23,7 @@ import mindinsight
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
-    RunLevel
+    RunLevel, MAX_SINGLE_TENSOR_CACHE, load_tensor
 from mindinsight.debugger.conditionmgr.condition import ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import DebuggerServerBase, debugger_server_wrap
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
@@ -300,7 +300,11 @@ class DebuggerOfflineManager:
                 is_output=True,
                 root_graph_id=root_graph_id
             ) for tensor_proto in tensor_protos]
-        res = self._dbg_service.read_tensors(tensor_infos)
+        res = Manager().list()
+        read_tensor_process = Process(target=self._read_tensor_work, args=(tensor_infos, res,))
+        read_tensor_process.start()
+        read_tensor_process.join()
+
         if len(tensor_protos) != len(res):
             log.error("Invalid view command. The result unmatched. %d/%d", len(tensor_protos), len(res))
         else:
@@ -308,13 +312,22 @@ class DebuggerOfflineManager:
             for tensor_proto, tensor_data in zip(tensor_protos, res):
                 log.debug("Tensor name: %s:%s, tensor type: %s, tensor size: %s",
                           tensor_proto.node_name, tensor_proto.slot,
-                          tensor_data.dtype, tensor_data.data_size)
-                tensor_proto.tensor_content = tensor_data.data_ptr
+                          tensor_data.get('dtype'), tensor_data.get('data_size'))
+                tensor_proto.tensor_content = tensor_data.get('data_ptr')
                 tensor_proto.ClearField('dims')
-                tensor_proto.dims.extend(tensor_data.shape)
-                tensor_proto.data_type = tensor_data.dtype
+                tensor_proto.dims.extend(tensor_data.get('shape'))
+                tensor_proto.data_type = tensor_data.get('dtype')
         self._put_tensor_value_into_cache(cur_step, node_info, rank_id, tensor_protos)
         log.info("Put tensor value into cache.")
+
+    def _read_tensor_work(self, tensor_infos, res):
+        """The check WatchPoint function work in another process."""
+        log.info("Start read tensor process.")
+        tensor_data_res = self._dbg_service.read_tensors(tensor_infos)
+        for tensor_data in tensor_data_res:
+            tensor_data_dict = convert_tensor_data(tensor_data)
+            res.append(tensor_data_dict)
+        log.info("Reading tensor process is finished.")
 
     def get_root_graph_id(self, rank_id, graph_name, node_name=None):
         """Get root graph id."""
@@ -334,22 +347,18 @@ class DebuggerOfflineManager:
                 load_info = node_info.get('load')
                 if load_info is not None:
                     load_info['graph_name'] = node_info.get('graph_name')
+                    load_info['node_name'] = node_info.get('node_name')
+                    load_tensor(load_info=load_info, step=cur_step, request_iterator=iter([tensor_proto]),
+                                cache_store=self._cache_store, rank_id=rank_id)
+                oversize = len(tensor_proto.tensor_content) > MAX_SINGLE_TENSOR_CACHE
                 value = {
                     'step': cur_step,
                     'tensor_proto': tensor_proto,
-                    'tensor_contents': [tensor_proto.tensor_content],
+                    'tensor_contents': [tensor_proto.tensor_content] if not oversize else [],
                     'stats': node_info.get('stats', False),
-                    'load': load_info
+                    'oversize': oversize,
                 }
                 has_update = tensor_stream.put(value)
-                if value.get('load'):
-                    metadata = self._metadata_stream.get(['step', 'state'])
-                    ret = {
-                        'tensor_file': True,
-                        'node_name': node_info.get('node_name')
-                    }
-                    ret.update(metadata)
-                    self._cache_store.put_data(ret)
 
             except ValueError as err:
                 log.warning("Failed to put %s:%s into cache. Ignore it. %s",
@@ -644,6 +653,15 @@ def convert_watchpointhit(watchpointhit):
                           'slot': watchpointhit.slot,
                           'watchpoint_id': watchpointhit.watchpoint_id}
     return watchpointhit_dict
+
+
+def convert_tensor_data(tensor_data):
+    """Convert tensor object to dict."""
+    tensor_data_dict = {'dtype': tensor_data.dtype,
+                        'shape': tensor_data.shape,
+                        'data_size': tensor_data.data_size,
+                        'data_ptr': tensor_data.data_ptr}
+    return tensor_data_dict
 
 
 def convert_param(param):
