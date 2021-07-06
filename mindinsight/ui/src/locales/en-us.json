@@ -891,7 +891,8 @@
     "search": "Search",
     "downloadTip": "The file is being loaded. The file size is about {fileSize}. Please wait.",
     "noOfflineGraphData": "Failed to load the computational graph. This may be due to the missing or damaged graphs file in the offline dump data in the summary directory. Please try to dump the data again.",
-    "largeDataLoading":"The tensor data is too large, loading..."
+    "largeDataLoading": "The tensor data is large and loading...",
+    "overSize": "The requested tensor is too large. The total value of the value exceeds 1GiB and cannot be displayed."
   },
   "explain": {
     "explain": "Model Explanation",
@@ -1015,6 +1016,7 @@
     "5054B189": "Do not set the value repeatedly.",
     "5054B083": "Failed to create the watchpoint. Do not use invalid rules.",
     "5054B202": "The debugger offline server module is not found",
-    "5054B283": "A tensor is being downloaded. Please try again later."
+    "5054B283": "A tensor is being downloaded. Please try again later.",
+    "5054000C": "Insufficient memory, please try again after freeing memory."
   }
 }

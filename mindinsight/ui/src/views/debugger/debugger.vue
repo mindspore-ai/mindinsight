@@ -592,7 +592,7 @@ limitations under the License.
                         <el-button size="mini"
                                    type="text"
                                    :disabled="metadata.state===state.running || metadata.state === state.sending ||
-                                  !scope.row.has_prev_step"
+                                  !scope.row.has_prev_step || scope.row.tensor_status==='oversize'"
                                    @click="showTensor(scope.row,'compare')">
                           {{ $t('debugger.compareToPre') }}
                         </el-button>
