@@ -281,12 +281,7 @@ class TensorUtils:
             tensor_min = ma_value.min()
             tensor_max = ma_value.max()
         tensor_sum = ma_value.sum(dtype=np.float64)
-        with np.errstate(invalid='ignore'):
-            neg_zero_count = np.sum(ma_value < 0)
-        with np.errstate(invalid='ignore'):
-            pos_zero_count = np.sum(ma_value > 0)
-        with np.errstate(invalid='ignore'):
-            zero_count = np.sum(ma_value == 0)
+        neg_zero_count, pos_zero_count, zero_count = TensorUtils._np_count_comp_zero(ma_value)
         statistics = Statistics({'is_bool': tensors.dtype == np.bool,
                                  'max_value': tensor_max,
                                  'min_value': tensor_min,
@@ -299,6 +294,17 @@ class TensorUtils:
                                  'neg_inf_count': neg_inf_count,
                                  'pos_inf_count': pos_inf_count})
         return statistics
+
+    @staticmethod
+    def _np_count_comp_zero(ma_value):
+        """Sum the count of >0, <0 and =0."""
+        with np.errstate(invalid='ignore'):
+            neg_zero_count = np.sum(ma_value < 0)
+        with np.errstate(invalid='ignore'):
+            pos_zero_count = np.sum(ma_value > 0)
+        with np.errstate(invalid='ignore'):
+            zero_count = np.sum(ma_value == 0)
+        return neg_zero_count, pos_zero_count, zero_count
 
     @staticmethod
     def get_statistics_dict(stats, overall_stats):
