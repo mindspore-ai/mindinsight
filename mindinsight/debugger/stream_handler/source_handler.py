@@ -40,7 +40,9 @@ class SourceHandler(StreamHandlerBase):
         if not isinstance(value, list):
             value = [value]
         for source in value:
-            self._stack_info_set.add(source)
+            # avoid showing annotation which has no file_path
+            if source.file_path:
+                self._stack_info_set.add(source)
 
     def sort(self):
         """Sort the stack info according to file path and line number."""
