@@ -638,11 +638,12 @@ limitations under the License.
                     v-show="nodeStackContent.length"
                     v-for="(item, index) in nodeStackContent"
                     :key="index">
-                  {{item.file_path}}:{{item.line_no}}
-                  <br>
+                  {{item.file_path ? item.file_path + ':' + item.line_no : ''}}
+                  <br v-if="item.file_path">
                   {{item.code_line}}
                   <div class="operator-btns">
                     <el-button type="text"
+                               v-if="item.file_path"
                                @click="stackOperator(item)">{{$t('debugger.search')}}</el-button>
                   </div>
                 </li>
