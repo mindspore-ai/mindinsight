@@ -58,18 +58,16 @@ class StackQuery:
         Returns:
             StackQuery, cloned object.
         """
-        compose = lambda x: f'{x.file_path}:{x.line_no}\n{x.code_line}'
-
         if use_regex:
             if case_sensitive:
-                func = lambda x: bool(re.search(qs, compose(x)))
+                func = lambda x: bool(re.search(qs, str(x)))
             else:
-                func = lambda x: bool(re.search(qs, compose(x), flags=re.I))
+                func = lambda x: bool(re.search(qs, str(x), flags=re.I))
         else:
             if case_sensitive:
-                func = lambda x: compose(x).find(qs) > -1
+                func = lambda x: str(x).find(qs) > -1
             else:
-                func = lambda x: compose(x).lower().find(qs.lower()) > -1
+                func = lambda x: str(x).lower().find(qs.lower()) > -1
 
         operators = []
         for operator in self.operators:

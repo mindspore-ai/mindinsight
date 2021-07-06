@@ -393,6 +393,9 @@ class Source:
     def __repr__(self):
         return str(self.to_dict())
 
+    def __str__(self):
+        return f'{self.file_path}:{self.line_no}\n{self.code_line}' if self.file_path else self.code_line
+
     @classmethod
     def build_stack_from_source_address(cls, source_address):
         """
