@@ -45,7 +45,7 @@ def get_graph_nodes():
         model_path = os.path.realpath(model_path)
     except ValueError:
         raise ValidationError("The path is invalid!")
-    response = get_ms_graph_from_onnx(model_path, input_node, output_nodes)
+    response = get_ms_graph_from_onnx(model_path, input_nodes, output_nodes)
     return jsonify(response)
 
 
