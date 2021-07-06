@@ -1061,6 +1061,7 @@ export default {
             });
           },
           (err) => {
+            this.$parent.showErrorMsg(err);
             this.dealLoading();
           },
       );
