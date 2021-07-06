@@ -1,3 +1,60 @@
+# MindInsight 1.3.0
+
+## MindInsight 1.3.0 Release Notes
+
+### Major Features and Improvements
+
+#### Profiling
+
+- [STABLE] Support memory analysis using heat map in cluster profiling ui page.(Ascend)
+- [STABLE] Support show scope information of operations in timeline.(Ascend/GPU)
+- [STABLE] Support FLOPs statistics.(Ascend/GPU)
+- [STABLE] Support show link bandwidth, waiting and communication time of communication promitives including allreduce,allgather,etc in cluster profiling ui page.(Ascend)
+
+#### MindConverter
+
+- [STABLE] Support both recommend model(wide&deep, deepfm) and NLP model(albert, bert, bert_nezha) definition script and trained weights migration from TensorFlow or PyTorch.
+
+#### Model Explanation
+
+- [STABLE] Support counterfactual explanation for image classification.
+
+#### Debugger
+
+- [STABLE] Support offline debugger.(Ascend/GPU)
+- [STABLE] Support source code mapping.(Ascend/GPU)
+- [STABLE] Support download tensor from UI.(Ascend/GPU)
+
+#### Build & Installation
+
+- [STABLE] Unified MindInsight installation package, supporting multiple Linux distributions, CPU architectures(x86/ARM), and Python versions(3.7/3.8/3.9).
+
+### API Change
+
+#### Backwards Compatible Change
+
+##### Python API
+
+###### Add parameter profile_memory for Profiler.([!17742](https://gitee.com/mindspore/mindspore/pulls/17742))
+
+Determine whether collect memory information while profiling.Default is False.
+
+##### Command Line Interface
+
+NA
+
+### Bug fixes
+
+- Error information missing when running on an unsupported device (e.g, cpu).([!11801](https://gitee.com/mindspore/mindspore/pulls/11801))
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei.
+
+Contributions of any kind are welcome!
+
 # MindInsight 1.2.0
 
 ## MindInsight 1.2.0 Release Notes
@@ -217,7 +274,7 @@ Contributions of any kind are welcome!
     - Provide unified callback `SummaryCollector` to log most commonly visualization event.
     - Discard the original visualization callback `SummaryStep`, `TrainLineage` and `EvalLineage`.
     - `SummaryRecord` provide new API `add_value` to collect data into cache for summary persistence.
-    - `SummaryRecord` provide new API `set_mode` to distinguish summary persistence mode at different stages.  
+    - `SummaryRecord` provide new API `set_mode` to distinguish summary persistence mode at different stages.
 - MindConverter supports conversion of more operators and networks, and improves its ease of use.
 
 ### Bugfixes
