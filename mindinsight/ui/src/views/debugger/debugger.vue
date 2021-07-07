@@ -874,7 +874,7 @@ limitations under the License.
         <el-button type="primary"
                    size="mini"
                    class="custom-btn green"
-                   @click="control(2)">{{$t('public.sure')}}</el-button>
+                   @click="trainId?deleteSession():control(2)">{{$t('public.sure')}}</el-button>
       </span>
     </el-dialog>
 
