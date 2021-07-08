@@ -525,7 +525,7 @@ class Toolkit:
         indices = self._convert_column_indices(column_metas)
         for key in source_mapping:
             operators = source_mapping[key]
-            operators.sort(key=lambda x: int(x.op_id))
+            operators.sort(key=lambda x: int(x.op_id) if x.op_id.isdigit() else x.op_id)
 
             if len(operators) == 1:
                 worksheet.write(row + 1, indices.get('stack'), key, styles['content_wrapped_fmt'])
