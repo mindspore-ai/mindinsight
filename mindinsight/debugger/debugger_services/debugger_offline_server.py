@@ -391,10 +391,10 @@ class DebuggerOfflineManager:
             log.info("The server is already at the last step. %s", self._metadata_stream.max_step_num)
             return
         log.info("Go to next step: %s.", new_step)
+        self._cache_store.clean_data()
         self._check_watchpoint(new_step)
         self._metadata_stream.step = new_step
         self._cache_store.get_stream_handler(Streams.TENSOR).set_step(new_step)
-        self._cache_store.clean_data()
         self._cache_store.put_data(self._metadata_stream.get(['step', 'state']))
 
     def _get_parsed_run_cmd(self, run_cmd):
