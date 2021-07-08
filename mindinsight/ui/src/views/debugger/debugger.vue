@@ -1195,6 +1195,7 @@ export default {
             this.resolve([]);
           },
       );
+      this.filter();
     },
     selectAllFiles(type) {
       if (!type && !this.$refs.tree.getCheckedKeys().length && !this.$refs.tree.getHalfCheckedKeys().length) {
