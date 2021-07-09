@@ -675,7 +675,7 @@ class TensorHandler(StreamHandlerBase):
         if tensor and (not tensor.empty or tensor.stats):
             res['statistics'] = tensor.get_tensor_statistics()
             res['shape'] = tensor.shape
-        missing_tensors = self._update_has_prev_step_field(res, tensor_name, node_type, step, check_stats=True)
+        missing_tensors = self._update_has_prev_step_field(res, tensor_name, node_type, step)
         return res, missing_tensors
 
     def load(self, tensor_name, graph_name, prev, node_type, tensor=None):
