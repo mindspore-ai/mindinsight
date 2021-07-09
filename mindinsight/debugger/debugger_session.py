@@ -399,7 +399,8 @@ class DebuggerSession:
         if missed_tensors:
             view_cmd = create_view_event_from_tensor_basic_info(missed_tensors)
             self.cache_store.put_command(
-                {'view_cmd': view_cmd, 'node_name': node_name, 'graph_name': graph_name, 'rank_id': rank_id})
+                {'view_cmd': view_cmd, 'node_name': node_name, 'graph_name': graph_name, 'rank_id': rank_id,
+                 'stats': True})
             log.debug("Send view cmd.")
 
     def retrieve_tensor_value(self, name, detail, shape, graph_name=None, prev=False, rank_id=0):
