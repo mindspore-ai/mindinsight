@@ -44,6 +44,7 @@ class BaseTensor(ABC):
 
     def __init__(self, step=0):
         self._step = step
+        self._stats = None
 
     @property
     @abstractmethod
@@ -79,6 +80,21 @@ class BaseTensor(ABC):
     def empty(self):
         """If the tensor value is valid."""
         return self.value is None
+
+    @property
+    def stats(self):
+        """The property of tensor stats."""
+        return self._stats
+
+    @stats.setter
+    def stats(self, stats):
+        """
+        Update tensor stats.
+
+        Args:
+            stats (Statistics): Instance of Statistics.
+        """
+        self._stats = stats
 
     def get_tensor_serializable_value_by_shape(self, shape=None):
         """
@@ -204,21 +220,6 @@ class OpTensor(BaseTensor):
         return self._download_size
 
     @property
-    def stats(self):
-        """The property of tensor stats."""
-        return self._stats
-
-    @stats.setter
-    def stats(self, stats):
-        """
-        Update tensor stats.
-
-        Args:
-            stats (Statistics): Instance of Statistics.
-        """
-        self._stats = stats
-
-    @property
     def status(self):
         """The property of tensor status."""
         return self._status
@@ -331,6 +332,8 @@ class ConstTensor(BaseTensor):
         self._const_proto = const_proto
         self._value = self.generate_value_from_proto(const_proto.value)
         self._status = TensorStatusEnum.CACHED.value
+        self._stats = None
+        self.calculate_stats()
 
     def set_step(self, step):
         """Set step value."""
@@ -412,6 +415,11 @@ class ConstTensor(BaseTensor):
             log.warning("Invalid shape for const value.")
         return self._value
 
+    def calculate_stats(self):
+        """Calculate the tensor statistics."""
+        if not (self.empty or self.dtype == self._STRING_TYPE or self.dtype == self._DT_TYPE):
+            self._stats = TensorUtils.get_statistics_from_tensor(self._value)
+
     def get_tensor_statistics(self):
         """
         Get Tensor statistics.
@@ -422,6 +430,5 @@ class ConstTensor(BaseTensor):
         if self.empty or self.dtype == self._STRING_TYPE or self.dtype == self._DT_TYPE:
             log.debug("The tensor dtype is: %s, skip getting statistics.", self.dtype)
             return {}
-        stats = TensorUtils.get_statistics_from_tensor(self.value)
-        statistics = TensorUtils.get_overall_statistic_dict(stats)
+        statistics = TensorUtils.get_overall_statistic_dict(self._stats)
         return statistics
