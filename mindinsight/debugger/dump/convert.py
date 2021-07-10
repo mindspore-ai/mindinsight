@@ -212,6 +212,9 @@ class DirConvert:
                 except (ValueError, OSError, AttributeError) as err:
                     self.hisi_utils.print_error_log(f'Failed to convert {failed_line} to Host format. \n {str(err)}')
                     failed_lines.append(failed_line)
+                except self.hisi_utils.CompareError as err:
+                    self.hisi_utils.print_error_log(f'Failed to convert {failed_line} to Host format. \n {str(err)}')
+                    failed_lines.append(failed_line)
                 failed_line = handler.readline().strip('\n')
         if failed_lines:
             self.hisi_utils.print_error_log(f"Failed to convert: {failed_lines}")
