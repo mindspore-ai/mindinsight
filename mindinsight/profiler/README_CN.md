@@ -10,15 +10,16 @@ MindInsight Profiler是系统化的性能分析工具，能够帮助理解、分
 
 使用MindInsight Profiler，用户可以：
 
-* 方便地在训练脚本中启动、停止Profile功能
-* 分析神经网络中算子的执行性能
+- 方便地在训练脚本中启动、停止Profile功能
+- 分析神经网络中算子的执行性能
 
 ## 准备训练脚本
 
 为了收集神经网络的性能数据，需要在训练脚本中添加Profiler接口。
-* 导入`Profiler`模块。
-* 在`set context`之后，初始化网络和HCCL之前，需要初始化`Profiler`对象。
-* 在训练结束后，调用`Profiler.analyse()`停止性能数据收集并生成性能分析结果。
+
+- 导入`Profiler`模块。
+- 在`set context`之后，初始化网络和HCCL之前，需要初始化`Profiler`对象。
+- 在训练结束后，调用`Profiler.analyse()`停止性能数据收集并生成性能分析结果。
 
 样例代码如下：
 
@@ -30,10 +31,10 @@ from mindspore import Model, nn, context
 def test_profiler():
     # Init context env
     context.set_context(mode=context.GRAPH_MODE, device_target='Ascend', device_id=int(os.environ["DEVICE_ID"]))
-    
+
     # Init Profiler
     profiler = Profiler(output_path='./data', is_detail=True, is_show_op_path=False, subgraph='all')
-    
+
     # Init hyperparameter
     epoch = 2
     # Init network and Model
@@ -45,13 +46,14 @@ def test_profiler():
     train_ds = create_mindrecord_dataset_for_training()
     # Model Train
     model.train(epoch, train_ds)
-    
+
     # Profiler end
     profiler.analyse()
 ```
 
 其中， `Profiler`对象的参数配置包括：
-- subgraph: 统计的子图信息，可选项有'all'、'Default'、'Gradients'，默认值为'all'。 
+
+- subgraph: 统计的子图信息，可选项有'all'、'Default'、'Gradients'，默认值为'all'。
 - is_detail: 除了按照算子类型汇总数据外，是否要统计详细的算子实例信息，默认值为True。
 - is_show_op_path: 算子实例是否显示带graph和scope的全名，设置为True时生效，默认值为False。
 - output_path: 生成的统计数据文件存放路径，默认值为'./data'。
@@ -89,17 +91,16 @@ def test_profiler():
 图2展示了迭代轨迹分析页面。在迭代轨迹详情中，会展示各阶段在训练step中的起止时间，默认显示的是各step的平均值，用户也可以在下拉菜单选择某个step查看该step的迭代轨迹情况。
 在页面下方显示了迭代间隙、前后向计算、迭代拖尾时间（前后向计算结束到参数更新完成的时间）随着step的变化曲线等，用户可以据此判断某个阶段是否存在性能优化空间。
 
-
 迭代轨分析时需要识别前向第一个算子和后向最后一个算子。
-    
+
 - 前向第一个节点和后向结束的节点由MindSpore自动进行识别，识别方法是：
 
    前向第一个节点默认为get_next之后连接的算子，后向结束的节点默认为最后一次allreduce之前的算子。
-    
+
    Profiler不保证在所有情况下自动识别的结果和用户的预期一致，用户可以根据网络的特点自行调整，调整方法如下：
-    
-   * 设置`FP_POINT`环境变量指定前向计算开始的算子，如`export FP_POINT=fp32_vars/conv2d/BatchNorm`。
-   * 设置`BP_POINT`环境变量指定反向计算结束的算子，如`export BP_POINT=loss_scale/gradients/AddN_70`。 
+
+    - 设置`FP_POINT`环境变量指定前向计算开始的算子，如`export FP_POINT=fp32_vars/conv2d/BatchNorm`。
+    - 设置`BP_POINT`环境变量指定反向计算结束的算子，如`export BP_POINT=loss_scale/gradients/AddN_70`。
 
 ### 算子性能分析
 
@@ -159,7 +160,6 @@ def test_profiler():
 - 如果MapOp类型的算子是性能瓶颈，建议增加num_parallel_workers，如果该算子为Python算子，可以尝试优化脚本；
 - 如果BatchOp类型的算子是性能瓶颈，建议调整prefetch_size的大小。
 
-
 ### Timeline分析
 
 Timeline组件可以展示：
@@ -172,6 +172,7 @@ Timeline组件可以展示：
 算子执行时间等。
 
 用户可以点击总览页面Timeline部分的下载按钮，将Timeline数据文件 (json格式) 保存至本地，再通过工具查看Timeline的详细信息。推荐使用 `chrome://tracing` 或者 [Perfetto](https://ui.perfetto.dev/#!viewer) 做Timeline展示。
+
 - Chrome tracing：点击左上角"load"加载文件。
 - Perfetto：点击左侧"Open trace file"加载文件。
 
@@ -187,11 +188,9 @@ Timeline主要包含如下几个部分：
 可以使用W/A/S/D来放大、缩小地查看timline图信息。
 
 ### 注意事项
+
 目前Profiler具有以下限制：
-* 只支持运行在Ascend芯片上的程序。
-* 为了控制性能测试时生成数据的大小，大型网络建议性能调试的step数目限制在10以内。
-* Timeline数据的解析比较耗时，且一般几个step的数据即足够分析出结果。出于数据解析和UI展示性能的考虑，Profiler最多展示20M数据（对大型网络20M可以显示10+条step的信息）。
 
-
-
-
+- 只支持运行在Ascend芯片上的程序。
+- 为了控制性能测试时生成数据的大小，大型网络建议性能调试的step数目限制在10以内。
+- Timeline数据的解析比较耗时，且一般几个step的数据即足够分析出结果。出于数据解析和UI展示性能的考虑，Profiler最多展示20M数据（对大型网络20M可以显示10+条step的信息）。

@@ -31,8 +31,8 @@ MindInsight provides MindSpore with easy-to-use debugging and tuning capabilitie
 
 ![MindInsight Architecture](docs/arch.png)
 
-Click to view the [MindInsight design document](https://www.mindspore.cn/doc/note/en/master/design/mindinsight.html), learn more about the design.
-Click to view the [Tutorial documentation](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html) learn more about the MindInsight tutorial.
+Click to view the [MindInsight design document](https://www.mindspore.cn/mindinsight/docs/en/r1.3/training_visual_design.html), learn more about the design.
+Click to view the [Tutorial documentation](https://www.mindspore.cn/mindinsight/docs/en/r1.3/index.html) learn more about the MindInsight tutorial.
 
 ## Installation
 
@@ -117,7 +117,7 @@ service start state: success
 
 Before using MindInsight, the data in the training process should be recorded. When starting MindInsight, the directory of the saved data should be specified. After successful startup, the data can be viewed through the web page. Here is a brief introduction to recording training data, as well as starting and stopping MindInsight.
 
-[SummaryCollector](https://www.mindspore.cn/doc/api_python/en/master/mindspore/mindspore.train.html#mindspore.train.callback.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
+[SummaryCollector](https://www.mindspore.cn/docs/api/en/r1.3/api_python/mindspore.train.html#mindspore.train.callback.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
 
 ```python
 ...
@@ -127,7 +127,7 @@ summary_collector = SummaryCollector(summary_dir='./summary_dir')
 model.train(epoch=1, ds_train, callbacks=[summary_collector])
 ```
 
-For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/visualization_tutorials.html).
+For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/mindinsight/docs/en/r1.3/index.html).
 
 After you've collected the data, when you launch MindInsight, specify the directory in which the data has been stored.
 
