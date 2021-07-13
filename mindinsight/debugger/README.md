@@ -10,14 +10,14 @@ In `Graph Mode` training, the computation results of intermediate nodes in the c
 
 - Visualize the computational graph on the UI and analyze the output of the graph node;
 - Set conditional breakpoint to monitor training exceptions (such as Nan/Inf), if the condition (Nan/Inf etc.) is met, users can track the cause of the bug when an exception occurs;
-- Visualize and analyze the change of parameters, such as weights.   
+- Visualize and analyze the change of parameters, such as weights.
 
 ## Operation Process
 
 - Launch MindInsight in debugger mode, and set Debugger environment variables for the training;
 - At the beginning of the training, set conditional breakpoints to monitor the outputs of the graph nodes;
-- Analyze the training progress on MindInsight Debugger UI. 
+- Analyze the training progress on MindInsight Debugger UI.
 
 ## Debugger Instructions
 
-For the details of how to use MindSpore Debugger, please refer to <https://www.mindspore.cn/tutorial/training/en/master/advanced_use/debugger.html>.
+For the details of how to use MindSpore Debugger, please refer to <https://www.mindspore.cn/mindinsight/docs/en/master/debugger.html>.
