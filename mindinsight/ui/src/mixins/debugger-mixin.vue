@@ -1275,6 +1275,9 @@ export default {
      */
     filterChange() {
       if (this.searchWord === '' && this.nodeTypes.value === 'all' && this.searchStackContent === '') {
+        if (this.curWatchPointId) {
+          this.queryGraphByWatchpoint(this.curWatchPointId);
+        }
         this.treeFlag = true;
         this.$nextTick(() => {
           setTimeout(() => {
