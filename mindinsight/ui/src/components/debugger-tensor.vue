@@ -130,7 +130,8 @@ limitations under the License.
                      @click="tabChange('compare')">{{ $t('debugger.compareResult') }}</el-button>
           <el-button size="mini"
                      class="custom-btn"
-                     :disabled="state==='running' || gridType==='compare' || curRowObj.oversized"
+                     :disabled="state==='running' || gridType==='compare' ||
+                     curRowObj.oversized || curRowObj.value==='null'"
                      @click="$parent.loadTensor(curRowObj,gridType==='preStep')">
             {{ $t('graph.downloadPic') }}</el-button>
         </div>
@@ -1123,6 +1124,7 @@ export default {
             }
             if (res.data.tensor_value) {
               let value = res.data.tensor_value.value;
+              this.curRowObj.value = `${value}`;
               const statistics = res.data.tensor_value.statistics || {};
               const tensorStatus = res.data.tensor_value.tensor_status;
               this.statisticsArr = [statistics];

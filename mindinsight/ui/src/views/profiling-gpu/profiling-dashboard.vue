@@ -311,7 +311,7 @@ limitations under the License.
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.timeLine') }}</div>
           <div class="view-detail">
-            <button @click="downloadTimelineFile()"
+            <button @click="queryTimeline"
                     v-show="!timeLine.waiting"
                     :disabled="timeLine.disable"
                     :class="{disabled:timeLine.disable}">{{ $t('profiling.downloadTimeline') }}
@@ -364,8 +364,7 @@ limitations under the License.
             <span>{{$t('profiling.scopeNameNum')}}</span><span>
               <el-select v-model="timelineInfo.scopeNameNum"
                          :placeholder="$t('public.select')"
-                         class="scope-name"
-                         @change="queryTimeline">
+                         class="scope-name">
                 <el-option v-for="item in timelineInfo.scopeNameNumArr"
                            :key="item.value"
                            :label="item.label"
@@ -764,7 +763,7 @@ export default {
                         value: key,
                       };
                     });
-                this.queryTimeline();
+                this.timeLine.disable = false;
               } else {
                 this.timeLine.disable = true;
               }
@@ -791,9 +790,10 @@ export default {
       RequestService.queryTimeline(params)
           .then((res) => {
             this.timeLine.waiting = false;
+            this.timeLine.disable = false;
             if (res && res.data && res.data.length) {
               this.timeLine.data = JSON.stringify(res.data);
-              this.timeLine.disable = false;
+              this.downloadTimelineFile();
             }
           })
           .catch(() => {
