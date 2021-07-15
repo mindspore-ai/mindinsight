@@ -553,7 +553,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             period = request.period
             min_period_seconds = 5
             max_period_seconds = 3600
-            if min_period_seconds <= period <= max_period_seconds:
+            if not min_period_seconds <= period <= max_period_seconds:
                 log.error("Invalid period time which should be in [5, 3600].")
                 return get_ack_reply(-1)
             self._heartbeat = HeartbeatListener(self._cache_store, request.period)
@@ -564,6 +564,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
 class HeartbeatListener(threading.Thread):
     """Heartbeat listener."""
+    _MAX_TRY_EXCEPT_COUNT = 3
 
     def __init__(self, cache_store, period=None):
         """
@@ -577,7 +578,8 @@ class HeartbeatListener(threading.Thread):
         self._heartbeat_queue = Queue(maxsize=1)
         self._cache_store = cache_store
         # the waiting period time for next heartbeat, default waiting for 15 seconds
-        self._period = period if period else 15
+        time_delay = 0.5
+        self._period = period + time_delay if period else 15
         self._running = threading.Event()
         self._running.clear()
 
@@ -586,12 +588,19 @@ class HeartbeatListener(threading.Thread):
         """Function that should be called when thread started."""
         self._running.set()
         log.info("Start listening for heartbeat.")
+        try_count = 0
         while self._running.is_set():
             try:
                 self._heartbeat_queue.get(timeout=self._period)
+                # reset try count if received heartbeat
+                try_count = 0
             except Empty:
-                log.warning("Missing heartbeat.")
-                break
+                try_count += 1
+                if try_count >= self._MAX_TRY_EXCEPT_COUNT:
+                    break
+                log.info("Missing heartbeat. Try again.")
+
+        log.warning("Missing heartbeat. Reset online session.")
         self._cache_store.clean()
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
         # put metadata into data queue
