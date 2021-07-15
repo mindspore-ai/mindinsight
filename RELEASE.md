@@ -13,7 +13,9 @@
 
 #### MindConverter
 
-- [STABLE] Support both recommend model(wide&deep, deepfm) and NLP model(albert, bert, bert_nezha) definition script and trained weights migration from TensorFlow or PyTorch.
+- [STABLE] Support both recommend model(wide&deep, deepfm) and NLP model(albert, bert, bert_nezha, LSTM) definition script and trained weights migration from TensorFlow or PyTorch.
+- [STABLE] Support convert ONNX model whose size is larger than 2GB.
+- [STABLE] Support adjust readability using `Fix CheckPoint file Tool`.
 
 #### Model Explanation
 
