@@ -8,7 +8,7 @@
 
 - [STABLE] Support memory analysis using heat map in cluster profiling ui page.(Ascend)
 - [STABLE] Support show scope information of operations in timeline.(Ascend/GPU)
-- [STABLE] Support FLOPs statistics.(Ascend/GPU)
+- [STABLE] Support FLOPs statistics in single machine and cluster profiling ui page.(Ascend)
 - [STABLE] Support show link bandwidth, waiting and communication time of communication promitives including allreduce,allgather,etc in cluster profiling ui page.(Ascend)
 
 #### MindConverter
