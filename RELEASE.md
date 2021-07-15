@@ -37,9 +37,13 @@
 
 ##### Python API
 
-###### Add parameter profile_memory for Profiler.([!17742](https://gitee.com/mindspore/mindspore/pulls/17742))
+###### Add parameter 'profile_memory' to Profiler.([!17742](https://gitee.com/mindspore/mindspore/pulls/17742))
 
-Determine whether collect memory information while profiling.Default is False.
+Determine whether collect memory information while profiling. Default is False.
+
+###### Add parameter 'profile_communication' to Profiler.([!17558](https://gitee.com/mindspore/mindspore/pulls/17558))
+
+Determine whether collect communication performance information while profiling. Default is False.
 
 ##### Command Line Interface
 
