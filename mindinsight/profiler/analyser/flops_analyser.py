@@ -27,6 +27,7 @@ class FlopsAnalyser(BaseAnalyser):
     Analyse flops data from file.
     """
     _flops_summary_filename = 'flops_summary_{}.json'
+    _flops_scope_filename = 'flops_scope_{}.json'
 
     def _load(self):
         """Load data according to the parsed profiling files."""
@@ -65,3 +66,30 @@ class FlopsAnalyser(BaseAnalyser):
             logger.warning('No flops summary file. Please check the output path.')
 
         return flops_summary
+
+    def get_flops_scope(self):
+        """
+        Get flops information of each scope for UI display.
+
+        Returns:
+            json, the content of flops summary information.
+        """
+        flops_scope_filename = self._flops_scope_filename.format(self._device_id)
+
+        file_path = os.path.join(self._profiling_dir, flops_scope_filename)
+        file_path = validate_and_normalize_path(
+            file_path, raise_key='Invalid flops scope path.'
+        )
+
+        flops_scope = {}
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, 'r') as f_obj:
+                    flops_scope = json.load(f_obj)
+            except (IOError, OSError, json.JSONDecodeError) as err:
+                logger.error('Error occurred when read flops scope file: %s', err)
+                raise ProfilerIOException()
+        else:
+            logger.warning('No flops scope file. Please check the output path.')
+
+        return flops_scope
