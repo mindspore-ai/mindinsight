@@ -113,8 +113,6 @@ class GraphHandler(StreamHandlerBase):
         # dict of <graph_name, DebuggerGraph object>
         self._graph = {}
         self._searched_node_list = {}
-        # list of node names in bfs order
-        self.bfs_order = []
         # dict of <node full name, graph_name>
         self.graph_node_map = {}
         # dict of <node ui name, Node object> for all graphs
@@ -162,7 +160,6 @@ class GraphHandler(StreamHandlerBase):
             graph = DebuggerGraph()
             graph.build_graph(graph_value)
             self._graph[graph_name] = graph
-            self.bfs_order.extend(graph.get_bfs_order())
             leaf_nodes = graph.leaf_nodes
             self._all_leaf_nodes.update(leaf_nodes)
             for _, node in leaf_nodes.items():
@@ -538,27 +535,6 @@ class GraphHandler(StreamHandlerBase):
             node_name = ''
             log.debug("Get empty full name.")
         return node_name
-
-    def _get_next_node_in_bfs(self, index, length, ascend):
-        """
-        Get the next node in bfs order.
-
-        Args:
-            index (int): The current index.
-            length (int): The number of all leaf nodes.
-            ascend (bool): Whether get the node in ascend order or not.
-
-        Returns:
-            Union[None, dict], the next node object in dict type or None.
-        """
-        next_node = None
-        if 0 <= index < length:
-            if ascend is True and index < length - 1:
-                next_node = self.bfs_order[index + 1]
-            elif ascend is False and index > 0:
-                next_node = self.bfs_order[index - 1]
-
-        return next_node
 
     def _graph_exists(self):
         """
