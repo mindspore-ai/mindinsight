@@ -18,7 +18,7 @@ from copy import deepcopy
 
 from mindinsight.datavisual.data_transform.graph.msgraph import MSGraph
 from mindinsight.debugger.common.exceptions.exceptions import \
-    DebuggerNodeNotInGraphError, DebuggerParamValueError
+    DebuggerNodeNotInGraphError
 from mindinsight.debugger.common.log import LOGGER as log
 from .node_type_identifier import NodeTypeIdentifier
 
@@ -215,79 +215,6 @@ class DebuggerGraph(MSGraph):
             tensors_info.extend(tensor_info)
 
         return tensors_info
-
-    def get_bfs_order(self):
-        """
-        Traverse the graph in order of breath-first search.
-
-        Returns:
-            list, including the leaf nodes arranged in BFS order.
-        """
-        root = self.get_default_root()
-        log.info('Randomly choose node %s as root to do BFS.', root.name)
-
-        bfs_order = []
-        self.get_bfs_graph(root.name, bfs_order)
-        length = len(self._leaf_nodes.keys())
-        # Find rest un-traversed nodes
-        for node_name, _ in self._leaf_nodes.items():
-            if node_name not in bfs_order:
-                self.get_bfs_graph(node_name, bfs_order)
-
-        if len(bfs_order) != length:
-            log.error("The length of bfs and leaf nodes are not equal.")
-            msg = "Not all nodes are traversed!"
-            raise DebuggerParamValueError(msg)
-
-        return bfs_order
-
-    def get_bfs_graph(self, node_name, bfs_order):
-        """
-        Traverse the graph in order of breath-first search.
-
-        Returns:
-            list, including the leaf nodes arranged in BFS order.
-        """
-        temp_list = deque()
-        temp_list.append(node_name)
-        while temp_list:
-            node_name = temp_list.popleft()
-            node = self._leaf_nodes.get(node_name)
-
-            if not node:
-                log.warning('Cannot find node %s in graph. Ignored.', node_name)
-                continue
-
-            bfs_order.append(node_name)
-            if node.inputs:
-                for name in node.inputs.keys():
-                    if name not in temp_list and name not in bfs_order:
-                        temp_list.append(name)
-            if node.outputs:
-                for name in node.outputs.keys():
-                    if name not in temp_list and name not in bfs_order:
-                        temp_list.append(name)
-
-    def get_default_root(self):
-        """
-        Get a node as default root for BFS in graph. Using the
-        leaf node with the smallest node id as the default root.
-
-        Returns:
-            str, the name of the default root.
-        """
-        default_root = None
-        for _, item in self._leaf_nodes.items():
-            if item.node_id == '1':
-                default_root = item
-                break
-
-        if default_root is None:
-            log.error("Abnormal graph. Invalid node for BFS.")
-            msg = 'Abnormal graph. Invalid node for BFS.'
-            raise DebuggerParamValueError(msg)
-
-        return default_root
 
     def get_tensor_graph(self, node_name):
         """
