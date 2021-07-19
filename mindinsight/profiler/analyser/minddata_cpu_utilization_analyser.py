@@ -29,7 +29,7 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
     _minddata_pipeline_display_filename = "pipeline_profiling_{}.json"
 
     def __init__(self, profiling_dir, device_id):
-        super().__init__(profiling_dir, device_id)
+        super(MinddataCpuUtilizationAnalyser, self).__init__(profiling_dir, device_id)
         self._steps_info = self._get_minddata_cpu_utilization_steps_info()
         self._cpu_utilization_info = dict()
 
@@ -37,6 +37,12 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
         """Get the idle utilization information of the whole machine."""
         filter_condition = {}
         self._filter(filter_condition)
+        # When the idle utilization information is empty,
+        # set the idle utilization rate to 100 to prevent the recommendation module from giving misleading suggestions
+        # that the CPU utilization is too high.
+        if not self._data.get("device_info").get("idle_utilization"):
+            idle_utilization_avg = 100
+            return idle_utilization_avg
         device_key_value = "device_info"
         self._get_cpu_utilization_average_value(device_key_value)
         idle_utilization_avg = self._cpu_utilization_info.get("device_info").get("idle_utilization").get("avg_value")
@@ -82,9 +88,9 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
             log.error('Did not find the cpu utilization file: %s', file_path)
             raise ProfilerFileNotFoundException(msg='Did not find the cpu utilization file.')
 
-        with open(file_path, 'r', encoding='utf-8') as file:
+        with open(file_path, 'r', encoding='utf-8') as src_file:
             try:
-                self._data = json.load(file)
+                self._data = json.load(src_file)
             except json.JSONDecodeError as err:
                 log.exception(err)
                 raise ProfilerRawFileException("Fail to parse cpu_utilization info file")
@@ -103,13 +109,23 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
         """
         start_step = filter_condition.get("start_step", 1)
         end_step = filter_condition.get("end_step", self._step_total_num)
-        while not self._steps_info.count(str(start_step)):
-            start_step += 1
-        left_index = self._steps_info.index(str(start_step))
-        while not self._steps_info.count(str(end_step)):
-            end_step -= 1
-        right_index = self._steps_info.index(str(end_step)) + \
-            self._steps_info.count(str(end_step)) - 1
+        step_info_len = len(self._steps_info)
+        if not step_info_len:
+            return
+        left_index = 0
+        right_index = step_info_len - 1
+        # Find the first point that greater than or equal to start_step.
+        while left_index <= right_index:
+            if int(self._steps_info[left_index]) >= start_step:
+                break
+            left_index += 1
+
+        # Find the last point that smaller than or equal to end_step.
+        while left_index <= right_index:
+            if int(self._steps_info[right_index]) <= end_step:
+                break
+            right_index -= 1
+
         self._steps_info = self._steps_info[left_index:right_index + 1]
         # filter device CPU utilization
         for key in self._data.get("device_info").keys():
@@ -131,6 +147,9 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
         left_index = 0
         right_index = 0
         time_stamp = self._data.get("time_stamp")
+        # Two sampling points are used to calculate the utilization,
+        # and the second sampling point is used as the starting sampling point to calculate the step.
+        time_stamp = time_stamp[1:]
         queue_step_time_info = self._get_minddata_queue_step_time_info()
         self._step_total_num = len(queue_step_time_info)
         step0 = 0
