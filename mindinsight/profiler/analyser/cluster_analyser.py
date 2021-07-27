@@ -438,14 +438,14 @@ class ClusterHcclAnalyser(ClusterAnalyser):
             self._cluster_link_info_size = len(self._result)
             return
 
-        def _inner_filter(item: list):
+        def inner_filter(item: list):
             # index0:src_dst_rank_id, index1:link type
             src_dst_pattern = re.match(src_dst_regex, item[0])
             link_type_pattern = re.match(link_type, item[1])
             if src_dst_pattern and link_type_pattern:
                 return True
             return False
-        self._result = list(filter(_inner_filter, self._result))
+        self._result = list(filter(inner_filter, self._result))
         self._cluster_link_info_size = len(self._result)
 
     def _analyser_cluster_link_info(self, filter_condition):
@@ -505,6 +505,8 @@ class ClusterHcclAnalyser(ClusterAnalyser):
             communication_info[1] = float(communication_info[1])
             communication_info[2] = float(communication_info[2])
             communication_info[3] = json.loads(communication_info[3])
+            communication_info[4] = json.loads(communication_info[4])
+
         return communication_info
 
     def _load(self):
@@ -535,7 +537,7 @@ class ClusterHcclAnalyser(ClusterAnalyser):
         # item[4]:communication_operator_cost, item[5]:host_ip, item[6]:device_id, item[7]:rank_id,
         for item in self._result:
             communication_info = dict()
-            communication_info["communication_info"] = item[1:4]
+            communication_info["communication_info"] = item[1:5]
             communication_info["host_ip"] = item[5]
             communication_info["device_id"] = item[6]
             communication_info["rank_id"] = item[7]
