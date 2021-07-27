@@ -16,7 +16,8 @@ limitations under the License.
 <template>
   <div class="performance-dashboard">
     <div class="container">
-      <div class="header" @click="jump('performance', performanceState === normalState)">
+      <div class="header"
+           @click="jump('performance', performanceState === normalState)">
         <span class="title">{{ performanceChart.title }}</span>
         <span :class="{
                 'jump': true,
@@ -26,12 +27,14 @@ limitations under the License.
           <i class="el-icon-d-arrow-right"></i>
         </span>
       </div>
-      <div class="content" ref="performance">
+      <div class="content"
+           ref="performance">
         <empty :state="performanceState"></empty>
       </div>
     </div>
     <div class="container">
-      <div class="header" @click="jump('communication', commState === normalState)">
+      <div class="header"
+           @click="jump('communication', commState === normalState)">
         <span class="title">{{ commChart.title }}</span>
         <span :class="{
                 'jump': true,
@@ -41,7 +44,8 @@ limitations under the License.
           <i class="el-icon-d-arrow-right"></i>
         </span>
       </div>
-      <div class="content" ref="comm">
+      <div class="content"
+           ref="comm">
         <empty :state="commState"></empty>
       </div>
     </div>
@@ -52,7 +56,8 @@ limitations under the License.
 import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import empty, {NO_DATA, LOADING_DATA} from '../../components/empty';
-import {handleFloatNumber} from './profiling-comm.vue';
+import {keepDecimalPlaces} from '../../js/utils';
+const DEFAULT_DECIMAL_PLACES = 4;
 export default {
   props: {
     activeName: String,
@@ -187,8 +192,8 @@ export default {
                 res.data.communication.forEach((item) => {
                   chartData.push([
                     item.rank_id,
-                    handleFloatNumber(item.communication_info[0]),
-                    handleFloatNumber( item.communication_info[1]),
+                    keepDecimalPlaces(item.communication_info[0], DEFAULT_DECIMAL_PLACES),
+                    keepDecimalPlaces(item.communication_info[1], DEFAULT_DECIMAL_PLACES),
                   ]);
                 });
                 this.commChart.data = chartData;

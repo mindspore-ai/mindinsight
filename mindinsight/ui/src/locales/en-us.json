@@ -560,6 +560,7 @@
     "commChartTitle": "Cluster Communication",
     "memoryHeatMapTitle": "Memory Heatmap Analysis",
     "flopsHeatMapTitle": "FLOPs Heatmap Analysis",
+    "opName": "Operator Name",
     "waitCost": "Waiting Duration",
     "commCost": "Communication Duration",
     "commPerformance": "Communication Performance",
