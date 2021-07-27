@@ -42,6 +42,8 @@ export default new Vuex.Store({
     customizedColumnOptions: [],
     // Current language
     language: 'en-us',
+    // Theme index
+    themeIndex: '0',
   },
   mutations: {
     // set cancelTokenArr
@@ -91,6 +93,10 @@ export default new Vuex.Store({
     },
     setLanguage(state, val) {
       state.language = val;
+    },
+    setThemeIndex(state, val) {
+      state.themeIndex = val;
+      localStorage.setItem('miTheme', val);
     },
   },
   actions: {},

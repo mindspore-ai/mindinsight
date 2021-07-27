@@ -188,10 +188,7 @@ export default {
       return;
     }
     document.title =
-      decodeURIComponent(this.$route.query.train_id) +
-      '-' +
-      this.$t('images.titleText') +
-      '-MindInsight';
+      decodeURIComponent(this.$route.query.train_id) + '-' + this.$t('images.titleText') + '-MindInsight';
     this.getTagList();
     // Automatic refresh
     if (this.isTimeReload) {
@@ -322,8 +319,7 @@ export default {
                   if (sampleItem.sliderValue > sampleItem.totalStepNum) {
                     sampleItem.sliderValue = sampleItem.totalStepNum;
                   }
-                  const curSampleData =
-                sampleItem.sampleData[sampleItem.sliderValue];
+                  const curSampleData = sampleItem.sampleData[sampleItem.sliderValue];
                   // Initialize the current step information
                   if (curSampleData) {
                     sampleItem.curStep = curSampleData.step;
@@ -334,13 +330,8 @@ export default {
                       wt: curSampleData.wall_time,
                     };
                     this.getImageData(params, sampleItem);
-                    sampleItem.curTime = this.dealrelativeTime(
-                        new Date(curSampleData.wall_time * 1000).toString(),
-                    );
-                    sampleItem.curImageSize = [
-                      curSampleData.width,
-                      curSampleData.height,
-                    ];
+                    sampleItem.curTime = this.dealrelativeTime(new Date(curSampleData.wall_time * 1000).toString());
+                    sampleItem.curImageSize = [curSampleData.width, curSampleData.height];
                   }
                   this.$forceUpdate();
                 },
@@ -378,9 +369,7 @@ export default {
         wt: curStepData.wall_time,
       };
       this.getImageData(params, sampleItem);
-      sampleItem.curTime = this.dealrelativeTime(
-          new Date(curStepData.wall_time * 1000).toString(),
-      );
+      sampleItem.curTime = this.dealrelativeTime(new Date(curStepData.wall_time * 1000).toString());
       sampleItem.curImageSize = [curStepData.width, curStepData.height];
     },
     /**
@@ -393,12 +382,8 @@ export default {
           (res) => {
             sampleItem.showErrMsg = false;
             sampleItem.curImgUrl =
-            `${basePath}${this.imageBasePath}train_id=${encodeURIComponent(
-                sampleItem.summaryId,
-            )}` +
-            `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${
-              params.step
-            }&wt=${params.wt}`;
+            `${basePath}${this.imageBasePath}train_id=${encodeURIComponent(sampleItem.summaryId)}` +
+            `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${params.step}&wt=${params.wt}`;
           },
           (e) => {
             if (e.response && e.response.data && e.response.data.error_code) {
@@ -492,9 +477,7 @@ export default {
       if (error.response && error.response.data) {
         this.clearAllData();
       } else {
-        if (
-          !(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))
-        ) {
+        if (!(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))) {
           // Clear display Data
           this.clearAllData();
         }
@@ -648,7 +631,7 @@ export default {
 }
 .cl-image-manage .image-bk {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
 }
@@ -685,24 +668,28 @@ export default {
 .cl-image-manage .cl-img-operate-content {
   width: 100%;
   padding: 8px 32px 22px 32px;
-  background: #ffffff;
+  background: var(--bg-color);
 }
 .cl-image-manage .cl-img-slider-operate-content {
-  background: #ffffff;
+  background: var(--bg-color);
   padding: 0 32px 22px 32px;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid #e6ebf5;
+  border-bottom: 2px solid var(--item-split-line-color);
 }
 .cl-image-manage .cl-img-slider-operate-content .button-disable {
   color: #80d2d3 !important;
-  border: 1px solid #80d2d3 !important;
+  background-color: var(--button-disabled-bg-color);
+  border: 1px solid var(--table-border-color) !important;
+}
+.cl-image-manage .cl-img-slider-operate-content .button-disable:hover {
+  background-color: var(--button-disabled-bg-color);
 }
 .cl-image-manage .cl-img-slider-operate-content .setBright-text,
 .cl-image-manage .cl-img-slider-operate-content .setContrast-text {
   font-size: 14px;
   line-height: 14px;
-  color: #282b33;
+  color: var(--font-color);
   margin-right: 14px;
 }
 .cl-image-manage .cl-img-slider-operate-content .setContrast-text {
@@ -715,15 +702,19 @@ export default {
 .cl-image-manage .cl-img-slider-operate-content .reset-btn {
   width: 96px;
   border-radius: 2px;
-  color: #00a5a7;
-  border: 1px solid #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
+  border: 1px solid var(--theme-color);
   font-size: 14px;
   line-height: 20px;
   padding-top: 4px;
   padding-bottom: 5px;
 }
+.cl-image-manage .cl-img-slider-operate-content .reset-btn:hover {
+  background-color: var(--button-hover-color);
+}
 .cl-image-manage .cl-img-show-data-content {
-  background: #ffffff;
+  background: var(--bg-color);
   padding: 0 23px;
   flex: 1;
   overflow: auto;
@@ -760,12 +751,12 @@ export default {
 }
 .cl-image-manage .cl-img-show-data-content .data-content .sample-content .image-container .sample-img {
   object-fit: contain;
-  background: #f0f3fa;
+  background: var(--image-sample-bg-color);
 }
 .cl-image-manage .cl-img-show-data-content .data-content .sample-content .image-container .error-message-container {
   height: 100%;
   display: flex;
-  background-color: #f0f3fa;
+  background-color: var(--image-sample-bg-color);
 }
 .cl-image-manage
   .cl-img-show-data-content
@@ -781,7 +772,7 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  background-color: #f0f3fa;
+  background-color: var(--image-sample-bg-color);
   margin-top: 3px;
 }
 .cl-image-manage .cl-img-show-data-content .data-content .sample-content .sample-data-show .tag-title,
@@ -798,7 +789,7 @@ export default {
   vertical-align: middle;
   line-height: 20px;
   margin-top: 24px;
-  color: #000000;
+  color: var(--font-color);
   position: relative;
   text-overflow: ellipsis;
   white-space: nowrap;

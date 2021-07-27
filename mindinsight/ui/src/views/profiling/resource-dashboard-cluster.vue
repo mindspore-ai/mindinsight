@@ -291,19 +291,20 @@ export default {
             resData.forEach((data) => {
               let arrayIndex;
               if (heatmapDataMap[data.host_ip] === undefined) {
-                // New host_ip
-                arrayIndex = heatmapDataArr.push({
+              // New host_ip
+                arrayIndex =
+                heatmapDataArr.push({
                   hostIp: data.host_ip,
                   data: [],
                   showCenter: true,
                 }) - 1;
                 heatmapDataMap[data.host_ip] = arrayIndex;
               } else {
-                // Exist host_ip
+              // Exist host_ip
                 arrayIndex = heatmapDataMap[data.host_ip];
               }
               const capacity = data.capacity;
-              const index = Math.floor(((data.peak_mem / capacity)) / (this.granularity));
+              const index = Math.floor(data.peak_mem / capacity / this.granularity);
               const deviceId = data.device_id;
               heatmapDataArr[arrayIndex].data[deviceId] = {
                 deviceId,
@@ -311,12 +312,12 @@ export default {
                 peakMem: data.peak_mem,
                 capacity,
                 backgroundColor: this.legendArr[index]
-                  ? this.legendArr[index].backgroundColor
-                  : this.legendArr.slice(-1).backgroundColor,
+                ? this.legendArr[index].backgroundColor
+                : this.legendArr.slice(-1).backgroundColor,
               };
             });
             heatmapDataArr.forEach((data) => {
-              // Avoid device_id incoherent
+            // Avoid device_id incoherent
               data.data = data.data.filter((item) => {
                 return item !== undefined;
               });
@@ -342,18 +343,19 @@ export default {
 .cl-memory-heatmap-dasnhoard {
   height: 100%;
   width: 100%;
+  background: var(--bg-color);
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item {
   width: 100%;
   height: 100%;
   padding: 15px;
-  border: solid 1px #d9d9d9;
+  border: solid 1px var(--border-color);
   border-radius: 4px;
   min-height: 284px;
 }
 .cluster-wrap {
   height: calc(50% - 28px);
-  border-top: 1px solid #e6ebf5;
+  border-top: 1px solid var(--item-split-line-color);
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item {
   display: flex;
@@ -374,18 +376,18 @@ export default {
   align-items: center;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item .detail-link a {
-  color: #00a5a7;
+  color: var(--theme-color);
   padding-right: 6px;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item .detail-link button {
-  color: #00a5a7;
+  color: var(--theme-color);
   border: none;
-  background-color: #fff;
+  background-color: var(--bg-color);
   cursor: pointer;
   padding: 0;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .title-item .detail-link.disabled button {
-  color: #c0c4cc;
+  color: var(--button-disabled-font-color);
   cursor: not-allowed;
 }
 .cl-memory-heatmap-dasnhoard .dashboard-item .content-item {
@@ -454,14 +456,14 @@ export default {
 }
 .heatmap-content .heatmap-item .detail-content {
   height: calc(100% - 28px);
-  background: #e6ebf5;
+  background: var(--heatmap-content-color);
   display: flex;
   flex-wrap: wrap;
   overflow-y: auto;
   padding-bottom: 10px;
   border-radius: 6px;
 }
- .heatmap-content .heatmap-item .detail-content.center {
+.heatmap-content .heatmap-item .detail-content.center {
   justify-content: center;
   align-items: center;
 }
@@ -494,7 +496,7 @@ export default {
 .heatmap-content .heatmap-item .info-content {
   margin-top: 10px;
   font-size: 16px;
-  color: #333;
+  color: var(--font-color);
   font-weight: 600;
   text-align: center;
 }

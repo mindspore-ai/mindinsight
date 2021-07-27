@@ -43,10 +43,10 @@ limitations under the License.
             <div class="detail-item">
               <div>
                 <span class="value-item">
-                  {{formmateUnit(overViewData.totalMemory, 1)}}
+                  {{formatUnit(overViewData.totalMemory, 1)}}
                 </span>
                 <span class="unit-item">
-                  {{formmateUnit(overViewData.totalMemory, 2)}}
+                  {{formatUnit(overViewData.totalMemory, 2)}}
                 </span>
               </div>
               <div class="label-item">{{$t('profiling.memory.totalMemory')}}</div>
@@ -54,10 +54,10 @@ limitations under the License.
             <div class="detail-item">
               <div>
                 <span class="value-item">
-                  {{formmateUnit(overViewData.staticMemory, 1)}}
+                  {{formatUnit(overViewData.staticMemory, 1)}}
                 </span>
                 <span class="unit-item">
-                  {{formmateUnit(overViewData.staticMemory, 2)}}
+                  {{formatUnit(overViewData.staticMemory, 2)}}
                 </span>
               </div>
               <div class="label-item">{{$t('profiling.memory.staticMenory')}}</div>
@@ -65,10 +65,10 @@ limitations under the License.
             <div class="detail-item">
               <div>
                 <span class="value-item">
-                  {{formmateUnit(overViewData.memoryPeak, 1)}}
+                  {{formatUnit(overViewData.memoryPeak, 1)}}
                 </span>
                 <span class="unit-item">
-                  {{formmateUnit(overViewData.memoryPeak, 2)}}
+                  {{formatUnit(overViewData.memoryPeak, 2)}}
                 </span>
               </div>
               <div class="label-item">{{$t('profiling.memory.memoryPeak')}}</div>
@@ -132,7 +132,7 @@ limitations under the License.
                   </span>
                 </template>
                 <template slot-scope="scope">
-                  <div class="cell">{{formmateUnit(scope.row.size)}}</div>
+                  <div class="cell">{{formatUnit(scope.row.size)}}</div>
                 </template>
               </el-table-column>
               <el-table-column prop="type">
@@ -193,8 +193,9 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
+import CommonProperty from '../../common/common-property';
 export default {
   data() {
     return {
@@ -230,6 +231,7 @@ export default {
       curSelectedPointIndex: 0, // Subscript of the current selection point
       curGraphId: '', // ID of the current graphics
       breakdownsInitOver: false, // BreakDown data request complete
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
       firstInit: true, // First init of page
       tableFullScreen: false, // Table show full screen
     };
@@ -322,9 +324,7 @@ export default {
                     currentCard: params.device_id,
                     memoryAssign: resData.allocations || '-',
                     memoryRelease: resData.deallocations || '-',
-                    staticMemory: isNaN(resData.static_mem)
-                  ? '-'
-                  : resData.static_mem,
+                    staticMemory: isNaN(resData.static_mem) ? '-' : resData.static_mem,
                     totalMemory: isNaN(resData.capacity) ? '-' : resData.capacity,
                     memoryPeak: isNaN(resData.peak_mem) ? '-' : resData.peak_mem,
                   };
@@ -391,9 +391,7 @@ export default {
         this.breakdownsInitOver = true;
         return;
       }
-      const tempNodeData = this.currentGraphicsDic.nodes[
-          this.curSelectedPointIndex
-      ];
+      const tempNodeData = this.currentGraphicsDic.nodes[this.curSelectedPointIndex];
       if (!tempNodeData) {
         this.currentBreakdownsData = [];
         this.breakdownsInitOver = true;
@@ -451,16 +449,14 @@ export default {
       const lifeCycle = [];
       let startIndex = -1;
       let endIndex = -1;
+      const themeColorObj = CommonProperty.commonThemes[this.themeIndex];
       this.currentGraphicsDic.nodes.forEach((node, index) => {
         if (node.node_id === this.currentGraphicsDic.fp_start) {
           startIndex = index;
         } else if (node.node_id === this.currentGraphicsDic.bp_end) {
           endIndex = index;
         }
-        allocationData.push([
-          node.node_id,
-          this.currentGraphicsDic.lines[index],
-        ]);
+        allocationData.push([node.node_id, this.currentGraphicsDic.lines[index]]);
         topData.push([node.node_id, this.overViewData.totalMemory]);
         staticData.push([node.node_id, this.currentGraphicsDic.static_mem]);
         const curLifeCycle = [];
@@ -487,13 +483,9 @@ export default {
             formatter(param) {
               let labelStr = '';
               if (param.dataIndex) {
-                labelStr = `${that.$t('profiling.memory.bpEnd')}${that.$t(
-                    'symbols.colon',
-                )}${endIndex}`;
+                labelStr = `${that.$t('profiling.memory.bpEnd')}${that.$t('symbols.colon')}${endIndex}`;
               } else {
-                labelStr = `${that.$t('profiling.memory.fpStart')}${that.$t(
-                    'symbols.colon',
-                )}${startIndex}`;
+                labelStr = `${that.$t('profiling.memory.fpStart')}${that.$t('symbols.colon')}${startIndex}`;
               }
               return labelStr;
             },
@@ -540,10 +532,7 @@ export default {
       const selectedDic = {};
       selectedDic[this.$t('profiling.memory.curMemorySize')] = true;
       selectedDic[this.$t('profiling.memory.staticMenory')] = true;
-      const legendData = [
-        this.$t('profiling.memory.curMemorySize'),
-        this.$t('profiling.memory.staticMenory'),
-      ];
+      const legendData = [this.$t('profiling.memory.curMemorySize'), this.$t('profiling.memory.staticMenory')];
       if (!isNaN(this.overViewData.totalMemory)) {
         seriesData.push(topLine);
         legendData.unshift(this.$t('profiling.memory.totalMemory'));
@@ -556,6 +545,10 @@ export default {
           icon: 'circle',
           data: legendData,
           selected: selectedDic,
+          inactiveColor: themeColorObj.inactiveFontColor,
+          textStyle: {
+            color: themeColorObj.fontColor,
+          },
         },
         grid: {
           top: 60,
@@ -576,11 +569,6 @@ export default {
           axisPointer: {
             type: 'line',
           },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
           formatter(params) {
             let tipStr = '';
             params.forEach((param) => {
@@ -593,20 +581,14 @@ export default {
                     `${that.$t('symbols.colon')}${curData.node_id}</div>` +
                     `<div>${that.$t('profiling.memory.curOperator')}` +
                     `${that.$t('symbols.colon')}${curData.name}</div>` +
-                    `<div>${that.$t(
-                        'profiling.memory.curOperatorMemorySize',
-                    )}` +
-                    `${that.$t('symbols.colon')}${that.formmateNummber(
-                        curData.size,
-                    )}</div>` +
+                    `<div>${that.$t('profiling.memory.curOperatorMemorySize')}` +
+                    `${that.$t('symbols.colon')}${that.formatNumber(curData.size)}</div>` +
                     `<div>${that.$t('profiling.memory.curMemorySize')}` +
-                    `${that.$t('symbols.colon')}${that.formmateNummber(
+                    `${that.$t('symbols.colon')}${that.formatNumber(
                         that.currentGraphicsDic.lines[dataIndex],
                     )}</div>` +
                     `<div>${that.$t('profiling.memory.memoryChanged')}` +
-                    `${that.$t('symbols.colon')}${that.formmateNummber(
-                        curData.allocated,
-                    )}</div>`;
+                    `${that.$t('symbols.colon')}${that.formatNumber(curData.allocated)}</div>`;
                 }
               }
             });
@@ -641,18 +623,14 @@ export default {
       }
       this.$nextTick(() => {
         if (!this.graphicsChart) {
-          this.graphicsChart = echarts.init(this.$refs.memoryChart, null);
+          this.graphicsChart = echarts.init(this.$refs.memoryChart, echartsThemeName);
         }
         this.graphicsChart.setOption(this.graphicsOption);
         if (!this.chartClickListenerOn) {
           this.chartClickListenerOn = true;
-          this.graphicsChart.on(
-              'click',
-              {seriesName: this.$t('profiling.memory.curMemorySize')},
-              (param) => {
-                this.pointChanged(param);
-              },
-          );
+          this.graphicsChart.on('click', {seriesName: this.$t('profiling.memory.curMemorySize')}, (param) => {
+            this.pointChanged(param);
+          });
         }
         this.graphicsChart.resize();
       });
@@ -687,7 +665,7 @@ export default {
      * @param {Number} number
      * @return {String} Formatted number
      */
-    formmateNummber(number) {
+    formatNumber(number) {
       const digitMax = 10;
       const digitMin = 1;
       if (!isNaN(number) && number.toString().length > this.numberLimit) {
@@ -706,7 +684,7 @@ export default {
      * @param {Number} type default: number and unit; 1: number only; 2: unit only
      * @return {String} Formatted string
      */
-    formmateUnit(number, type) {
+    formatUnit(number, type) {
       const baseStr = '-';
       if (number === baseStr) {
         return baseStr;
@@ -729,9 +707,7 @@ export default {
       } else if (type === 2) {
         resultStr = `${this.unitList[utilIndex]}`;
       } else {
-        resultStr = `${Number(baseNumber.toFixed(fixedLimit))} ${
-          this.unitList[utilIndex]
-        }`;
+        resultStr = `${Number(baseNumber.toFixed(fixedLimit))} ${this.unitList[utilIndex]}`;
       }
       return resultStr;
     },
@@ -753,17 +729,11 @@ export default {
           'profiling.memory.memoryDetailLink',
       )}-MindInsight`;
     } else {
-      document.title = `${this.$t(
-          'profiling.memory.memoryDetailLink',
-      )}-MindInsight`;
+      document.title = `${this.$t('profiling.memory.memoryDetailLink')}-MindInsight`;
     }
     window.addEventListener('resize', this.resizeCallback, false);
     this.$bus.$on('collapse', this.resizeCallback);
-    if (
-      this.$route.query &&
-      this.$route.query.path &&
-      !isNaN(this.$route.query.cardNum)
-    ) {
+    if (this.$route.query && this.$route.query.path && !isNaN(this.$route.query.cardNum)) {
       this.summaryPath = this.$route.query.path;
       this.curCardNum = this.$route.query.cardNum;
       this.init();
@@ -800,7 +770,7 @@ export default {
 .cl-memory-detail .title-content {
   height: 44px;
   padding-bottom: 20px;
-  color: #000;
+  color: var(--font-color);
   font-weight: bold;
   font-size: 20px;
 }
@@ -834,6 +804,7 @@ export default {
   padding: 24px;
   border: solid 1px #d9d9d9;
   border-radius: 4px;
+  background: var(--item-bg-color);
 }
 .cl-memory-detail .top-content .detail-item {
   width: 16.6%;
@@ -846,7 +817,7 @@ export default {
 .cl-memory-detail .top-content .unit-item {
   font-size: 12px;
   line-height: 12px;
-  color: #6c7280;
+  color: var(--icon-info-color);
 }
 .cl-memory-detail .top-content .value-item {
   font-size: 24px;
@@ -861,6 +832,10 @@ export default {
   border: solid 1px #ccc;
   border-radius: 4px;
   padding: 20px 24px;
+  background: var(--item-bg-color);
+}
+.cl-memory-detail .chart-container {
+  background: var(--bg-color);
 }
 .cl-memory-detail .table-container .fullScreen-icon {
   float: right;

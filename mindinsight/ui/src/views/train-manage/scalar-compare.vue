@@ -83,15 +83,15 @@ limitations under the License.
                       text-color="#FFFFFF"
                       size="small "
                       @change="timeTypeChange">
-          <el-radio-button :label="$t('scalar.step')">
-            {{$t('scalar.step')}}
-          </el-radio-button>
-          <el-radio-button :label="$t('scalar.relativeTime')">
-            {{$t('scalar.relativeTime') + $t('symbols.leftbracket') + 's' + $t('symbols.rightbracket')}}
-          </el-radio-button>
-          <el-radio-button :label="$t('scalar.absoluteTime')">
-            {{$t('scalar.absoluteTime')}}
-          </el-radio-button>
+        <el-radio-button :label="$t('scalar.step')">
+          {{$t('scalar.step')}}
+        </el-radio-button>
+        <el-radio-button :label="$t('scalar.relativeTime')">
+          {{$t('scalar.relativeTime') + $t('symbols.leftbracket') + 's' + $t('symbols.rightbracket')}}
+        </el-radio-button>
+        <el-radio-button :label="$t('scalar.absoluteTime')">
+          {{$t('scalar.absoluteTime')}}
+        </el-radio-button>
       </el-radio-group>
       <div class="xaxis-title">{{$t('scalar.smoothness')}}</div>
       <el-slider v-model="smoothValue"
@@ -99,11 +99,10 @@ limitations under the License.
                  :max="0.99"
                  @input="updataInputValue"></el-slider>
 
-                 <el-input v-model="smoothValueNumber"
-                   class="w60"
-                   @input="smoothValueChange"
-                   @blur="smoothValueBlur"
-                   ></el-input>
+      <el-input v-model="smoothValueNumber"
+                class="w60"
+                @input="smoothValueChange"
+                @blur="smoothValueBlur"></el-input>
     </div>
     <!-- Content display -->
     <div class="cl-eval-show-data-content"
@@ -141,7 +140,7 @@ limitations under the License.
 <script>
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 
 export default {
   props: {
@@ -154,7 +153,7 @@ export default {
     return {
       trainingJobId: '',
       // Number of predefined colors
-      defColorCount: CommonProperty.commonColorArr.length, // Default colors num
+      defColorCount: CommonProperty.commonColorArr[this.$store.state.themeIndex].length, // Default colors num
       colorNum: 0, // Number of colors
       isActive: 0, // Horizontal axis selected value
       tagList: [], // Tag list
@@ -180,6 +179,7 @@ export default {
       isCompare: false, // IsCompare
       tagOverRowFlag: false, // The value of tag is greater than one line
       perSelectItemMarginBottom: 1, // Bottom of each selection box
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
   computed: {},
@@ -302,8 +302,7 @@ export default {
         const tagSelectItemContent = this.$refs.tagSelectItemContent;
         if (tagSelectItemContent) {
           this.tagOverRowFlag =
-            tagSelectItemContent.clientHeight <
-            tagSelectItemContent.scrollHeight - this.perSelectItemMarginBottom;
+            tagSelectItemContent.clientHeight < tagSelectItemContent.scrollHeight - this.perSelectItemMarginBottom;
         }
         this.charResizeTimer = setTimeout(() => {
           if (this.charObj) {
@@ -438,17 +437,12 @@ export default {
           break;
       }
       this.axisBenchChangeTimer = setTimeout(() => {
-        if (
-          this.charObj &&
-          Object.keys(this.multiSelectedTagNames).length > 0
-        ) {
+        if (this.charObj && Object.keys(this.multiSelectedTagNames).length > 0) {
           this.charData.forEach((originData, index) => {
             this.charOption.series[index * 2].data = this.formateSmoothData(
                 this.charData[index].valueData[this.curBenchX],
             );
-            this.charOption.series[index * 2 + 1].data = this.charData[
-                index
-            ].valueData[this.curBenchX];
+            this.charOption.series[index * 2 + 1].data = this.charData[index].valueData[this.curBenchX];
           });
           this.charOption.xAxis[0].minInterval = this.isActive === 0 ? 1 : 0;
 
@@ -509,9 +503,7 @@ export default {
         if (this.charOption.series && this.charOption.series.length > 0) {
           this.charOption.series.forEach((singleItem, index) => {
             if (index % 2 === 0) {
-              singleItem.data = this.formateSmoothData(
-                  this.charData[index / 2].valueData[this.curBenchX],
-              );
+              singleItem.data = this.formateSmoothData(this.charData[index / 2].valueData[this.curBenchX]);
             }
           });
         }
@@ -594,20 +586,21 @@ export default {
           ajaxArr.push(this.addAjax(params, yIndex));
         });
 
-        Promise.all(ajaxArr.map(function(promiseItem) {
-          return promiseItem.catch(function(err) {
-            return err;
-          });
-        }))
+        Promise.all(
+            ajaxArr.map(function(promiseItem) {
+              return promiseItem.catch(function(err) {
+                return err;
+              });
+            }),
+        )
             .then((res) => {
               if (!res) {
                 return;
               }
               this.curPageArr.forEach((sampleObject, yIndex) => {
-                sampleObject.colors=
-                  CommonProperty.commonColorArr[this.colorNum]
-                    ? CommonProperty.commonColorArr[this.colorNum]
-                    : CommonProperty.commonColorArr[this.defColorCount - 1];
+                sampleObject.colors = CommonProperty.commonColorArr[this.$store.state.themeIndex][this.colorNum]
+                ? CommonProperty.commonColorArr[this.$store.state.themeIndex][this.colorNum]
+                : CommonProperty.commonColorArr[this.$store.state.themeIndex][this.defColorCount - 1];
                 this.colorNum++;
               });
               this.colorNum = 0;
@@ -624,9 +617,9 @@ export default {
                     relativeData: [],
                   },
                   yAxisIndex: res[i].yIndex,
-                  color: CommonProperty.commonColorArr[this.colorNum]
-                  ? CommonProperty.commonColorArr[this.colorNum]
-                  : CommonProperty.commonColorArr[this.defColorCount - 1],
+                  color: CommonProperty.commonColorArr[this.$store.state.themeIndex][this.colorNum]
+                  ? CommonProperty.commonColorArr[this.$store.state.themeIndex][this.colorNum]
+                  : CommonProperty.commonColorArr[this.$store.state.themeIndex][this.defColorCount - 1],
                   runName: this.trainingJobId,
                   curBackName: this.trainingJobId + this.backendString,
                   tagName: res[i].params.tag,
@@ -637,18 +630,9 @@ export default {
                 }
                 // Initializing chart Data
                 resData.metadatas.forEach((metaData) => {
-                  tempObject.valueData.stepData.push([
-                    metaData.step,
-                    metaData.value,
-                  ]);
-                  tempObject.valueData.absData.push([
-                    metaData.wall_time,
-                    metaData.value,
-                  ]);
-                  tempObject.valueData.relativeData.push([
-                    metaData.wall_time - relativeTimeBench,
-                    metaData.value,
-                  ]);
+                  tempObject.valueData.stepData.push([metaData.step, metaData.value]);
+                  tempObject.valueData.absData.push([metaData.wall_time, metaData.value]);
+                  tempObject.valueData.relativeData.push([metaData.wall_time - relativeTimeBench, metaData.value]);
                 });
                 this.colorNum++;
                 this.charData.push(tempObject);
@@ -664,7 +648,6 @@ export default {
             .catch((error) => {});
       }
     },
-
 
     /**
      * Add request
@@ -704,14 +687,7 @@ export default {
         const yAxisData = {
           type: 'value',
           scale: true,
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
           axisLabel: {
-            color: '#9EA4B3',
             formatter(value) {
               const symbol = Math.abs(value);
               if (symbol.toString().length > 6) {
@@ -754,9 +730,7 @@ export default {
           color: tempObj.color,
           yAxisIndex: tempObj.yAxisIndex,
         };
-        dataObj.data = this.formateSmoothData(
-            tempObj.valueData[this.curBenchX],
-        );
+        dataObj.data = this.formateSmoothData(tempObj.valueData[this.curBenchX]);
         dataObjBackend.data = tempObj.valueData[this.curBenchX];
         seriesData.push(dataObj, dataObjBackend);
       });
@@ -776,14 +750,7 @@ export default {
             scale: true,
             nameGap: 30,
             minInterval: this.isActive === 0 ? 1 : 0,
-            axisLine: {
-              lineStyle: {
-                color: '#E6EBF5',
-                width: 2,
-              },
-            },
             axisLabel: {
-              color: '#9EA4B3',
               interval: 0,
               formatter(value) {
                 if (_this.isActive === 2) {
@@ -823,11 +790,6 @@ export default {
           axisPointer: {
             type: 'line',
           },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
           formatter(params) {
             const unit = 's';
             const strhead =
@@ -847,29 +809,25 @@ export default {
               _this.$t('scalar.absoluteTime') +
               '</td></tr>';
             let strBody = '';
-            const runArr=[];
-            const detialArr=[];
-            let curStep=null;
+            const runArr = [];
+            const detialArr = [];
+            let curStep = null;
             let dataCount = 0;
             params.forEach((parma) => {
               if (parma.componentIndex % 2 === 0) {
-                let addFlag=true;
+                let addFlag = true;
                 const curIndex = parseInt(parma.componentIndex / 2);
-                const curSerieOriData=_this.charData[curIndex]
-                 ? _this.charData[curIndex].valueData
-                 : null;
+                const curSerieOriData = _this.charData[curIndex] ? _this.charData[curIndex].valueData : null;
 
                 if (!curSerieOriData) {
                   return;
                 }
-                if (curStep===null) {
-                  curStep=curSerieOriData.stepData[parma.dataIndex][0];
+                if (curStep === null) {
+                  curStep = curSerieOriData.stepData[parma.dataIndex][0];
                 } else {
-                  if (
-                    curSerieOriData.stepData[parma.dataIndex][0]===curStep
-                  ) {
-                    const sameRunIndex=[];
-                    runArr.forEach((runName, index)=>{
+                  if (curSerieOriData.stepData[parma.dataIndex][0] === curStep) {
+                    const sameRunIndex = [];
+                    runArr.forEach((runName, index) => {
                       if (parma.seriesName === runName) {
                         sameRunIndex.push(index);
                       }
@@ -878,10 +836,8 @@ export default {
                       sameRunIndex.forEach((sameIndex) => {
                         if (
                           detialArr[sameIndex] &&
-                          detialArr[sameIndex].value ===
-                            curSerieOriData.stepData[parma.dataIndex][1] &&
-                          detialArr[sameIndex].wallTime ===
-                            curSerieOriData.absData[parma.dataIndex][0]
+                          detialArr[sameIndex].value === curSerieOriData.stepData[parma.dataIndex][1] &&
+                          detialArr[sameIndex].wallTime === curSerieOriData.absData[parma.dataIndex][0]
                         ) {
                           addFlag = false;
                         }
@@ -916,23 +872,15 @@ export default {
                     _this.formateYaxisValue(parma.value[1]) +
                     `</td>
                   <td>` +
-                    _this.formateYaxisValue(
-                        curSerieOriData.stepData[parma.dataIndex][1],
-                    ) +
+                    _this.formateYaxisValue(curSerieOriData.stepData[parma.dataIndex][1]) +
                     `</td>
                   <td>` +
                     curSerieOriData.stepData[parma.dataIndex][0] +
                     `</td><td>` +
-                    curSerieOriData.relativeData[parma.dataIndex][0].toFixed(
-                        3,
-                    ) +
+                    curSerieOriData.relativeData[parma.dataIndex][0].toFixed(3) +
                     unit +
                     `</td><td>` +
-                    _this.dealrelativeTime(
-                        new Date(
-                            curSerieOriData.absData[parma.dataIndex][0] * 1000,
-                        ).toString(),
-                    ) +
+                    _this.dealrelativeTime(new Date(curSerieOriData.absData[parma.dataIndex][0] * 1000).toString()) +
                     `</td>
                 </tr>`;
                 }
@@ -996,10 +944,7 @@ export default {
         this.charObj.setOption(this.charOption, true);
         return;
       }
-      this.charObj = echarts.init(
-          document.getElementById('compareChart'),
-          null,
-      );
+      this.charObj = echarts.init(document.getElementById('compareChart'), echartsThemeName);
       this.charObj.setOption(this.charOption, true);
     },
 
@@ -1068,14 +1013,14 @@ export default {
 
 .data-contentCompare {
   width: 100%;
-  background: #fff;
+  background: var(--bg-color);
 }
 
 .data-contentCompare-title {
   padding-top: 32px;
   padding-left: 32px;
   font-size: 16px;
-  color: #333333;
+  color: var(--font-color);
   font-weight: 600;
 }
 
@@ -1085,7 +1030,7 @@ export default {
 .data-contentCompare-content .data-contentCompare-tagName {
   height: 22px;
   font-size: 14px;
-  color: #333;
+  color: var(--font-color);
   z-index: 999;
   line-height: 22px;
   display: flex;

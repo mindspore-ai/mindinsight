@@ -147,8 +147,9 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
+import CommonProperty from '../../common/common-property';
 export default {
   data() {
     return {
@@ -187,9 +188,18 @@ export default {
         resizeTimer: null, // Response delay of resize event
         colors: {
           // Colors of different types of data presentation
-          iteration_interval: ['#A6DD82', '#edf8e6'],
-          fp_and_bp: ['#6CBFFF', '#e2f2ff'],
-          tail: ['#fa8e5b', '#fff4de'],
+          iteration_interval: [
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactIterationIntervalStroke,
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactIterationIntervalFill,
+          ],
+          fp_and_bp: [
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactFpAndBpstroke,
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactFpAndBpFill,
+          ],
+          tail: [
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactTailStroke,
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactTailFill,
+          ],
           stream_parallel: ['#01a5a7', '#cceded'],
         },
         noData: true,
@@ -309,17 +319,12 @@ export default {
         this.steps.step = null;
         this.steps.trueStep = null;
         this.queryTrainingTrace(0, false);
-      } else if (
-        /^[0-9]*[1-9][0-9]*$/.test(this.steps.step) &&
-        this.steps.step <= this.steps.max
-      ) {
+      } else if (/^[0-9]*[1-9][0-9]*$/.test(this.steps.step) && this.steps.step <= this.steps.max) {
         this.steps.trueStep = this.steps.step;
         this.queryTrainingTrace(this.steps.step, false);
       } else {
         this.steps.step = this.steps.trueStep;
-        this.$message.error(
-            this.$t('profiling.inputError').replace('{max}', this.steps.max),
-        );
+        this.$message.error(this.$t('profiling.inputError').replace('{max}', this.steps.max));
       }
     },
     /**
@@ -367,10 +372,7 @@ export default {
               if (res.data.size && !this.steps.max) {
                 this.steps.max = res.data.size;
                 this.steps.disabled = false;
-                this.steps.label = this.steps.label.replace(
-                    '{max}',
-                    this.steps.max,
-                );
+                this.steps.label = this.steps.label.replace('{max}', this.steps.max);
               }
 
               const xAxisData = [];
@@ -410,11 +412,6 @@ export default {
                   tooltip: {
                     trigger: 'axis',
                     confine: true,
-                    backgroundColor: 'rgba(50, 50, 50, 0.7)',
-                    borderWidth: 0,
-                    textStyle: {
-                      color: '#fff',
-                    },
                   },
                   dataZoom: [
                     {
@@ -427,9 +424,7 @@ export default {
                   ],
                 };
                 if (type === 'iteration_interval') {
-                  option.yAxis.name = `${this.$t(
-                      'profiling.iterationGapTime',
-                  )}(ms)`;
+                  option.yAxis.name = `${this.$t('profiling.iterationGapTime')}(ms)`;
                   this.tabsArr[0].noData = this.steps.max ? false : true;
                   this.tabsArr[0].initOver = true;
                 } else if (type === 'fp_and_bp' || type === 'fp') {
@@ -479,7 +474,7 @@ export default {
      */
     initChart(option, id) {
       this.$nextTick(() => {
-        const chart = echarts.init(document.getElementById(id));
+        const chart = echarts.init(document.getElementById(id), echartsThemeName);
         chart.setOption(option, true);
         this.charts.push(chart);
       });
@@ -508,20 +503,11 @@ export default {
       RequestService.queryTrainingTrace(params).then(
           (res) => {
             this.svg.initOver = true;
-            if (
-              res &&
-            res.data &&
-            res.data.training_trace_graph &&
-            res.data.training_trace_graph.length
-            ) {
+            if (res && res.data && res.data.training_trace_graph && res.data.training_trace_graph.length) {
               this.svg.noData = false;
               if (res.data.point_info) {
-                this.fp_start = res.data.point_info.fp_start
-                ? res.data.point_info.fp_start
-                : '--';
-                this.bp_end = res.data.point_info.bp_end
-                ? res.data.point_info.bp_end
-                : '';
+                this.fp_start = res.data.point_info.fp_start ? res.data.point_info.fp_start : '--';
+                this.bp_end = res.data.point_info.bp_end ? res.data.point_info.bp_end : '';
               } else {
                 this.fp_start = '--';
                 this.bp_end = '--';
@@ -529,9 +515,7 @@ export default {
 
               this.removeTrace();
               this.$nextTick(() => {
-                this.packageTraceData(
-                    JSON.parse(JSON.stringify(res.data.training_trace_graph)),
-                );
+                this.packageTraceData(JSON.parse(JSON.stringify(res.data.training_trace_graph)));
               });
               if (init) {
                 this.getTimeInfo('fp-bp', this.bp_end ? 'fp_and_bp' : 'fp');
@@ -546,7 +530,7 @@ export default {
               this.svg.data = [];
               this.svg.noData = true;
               this.removeTrace();
-              this.tabsArr.forEach((val)=> {
+              this.tabsArr.forEach((val) => {
                 val.noData = true;
                 val.initOver = true;
               });
@@ -559,7 +543,7 @@ export default {
             this.svg.noData = true;
             this.svg.initOver = true;
             this.removeTrace();
-            this.tabsArr.forEach((val)=> {
+            this.tabsArr.forEach((val) => {
               val.noData = true;
               val.initOver = true;
             });
@@ -660,10 +644,7 @@ export default {
      * @return {Object} Generated DOM object
      */
     createMultipleRowContainer(item) {
-      const rectContainer = document.createElementNS(
-          this.svg.namespaceURI,
-          'g',
-      );
+      const rectContainer = document.createElementNS(this.svg.namespaceURI, 'g');
       rectContainer.setAttribute('class', 'container');
 
       const rect = document.createElementNS(this.svg.namespaceURI, 'rect');
@@ -671,13 +652,15 @@ export default {
       rect.setAttribute('y', item.startY + this.svg.rowPadding);
       rect.setAttribute('height', item.height);
       rect.setAttribute('width', this.svg.totalWidth);
-      rect.setAttribute('style', 'fill:#edf0f5;stroke:#E2E2E2;stroke-width:1');
+      rect.setAttribute(
+          'style',
+          `fill:${CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactContainerFill};stroke:${
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactContainerStroke
+          };stroke-width:1`,
+      );
       rectContainer.appendChild(rect);
 
-      const temp = this.createRowContainer(
-          item.data,
-          item.startY + this.svg.rowPadding,
-      );
+      const temp = this.createRowContainer(item.data, item.startY + this.svg.rowPadding);
       rectContainer.appendChild(temp);
       return rectContainer;
     },
@@ -692,10 +675,7 @@ export default {
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
 
       data.forEach((row, index) => {
-        const y =
-          startY +
-          this.svg.rowPadding +
-          index * (this.svg.cellPadding + this.svg.cellHeight);
+        const y = startY + this.svg.rowPadding + index * (this.svg.cellPadding + this.svg.cellHeight);
         row.forEach((i) => {
           if (i.duration) {
             let temp;
@@ -720,18 +700,11 @@ export default {
      */
     createRect(data, startY) {
       const color =
-        data.name && this.svg.colors[data.name]
-          ? this.svg.colors[data.name]
-          : this.svg.colors.stream_parallel;
+        data.name && this.svg.colors[data.name] ? this.svg.colors[data.name] : this.svg.colors.stream_parallel;
       // Start x position of box
-      const x1 =
-        (data.start / this.svg.totalTime) * this.svg.totalWidth +
-        this.svg.svgPadding;
+      const x1 = (data.start / this.svg.totalTime) * this.svg.totalWidth + this.svg.svgPadding;
       // The width of the box
-      const width = Math.max(
-          this.svg.minWidth,
-          (data.duration / this.svg.totalTime) * this.svg.totalWidth,
-      );
+      const width = Math.max(this.svg.minWidth, (data.duration / this.svg.totalTime) * this.svg.totalWidth);
 
       // Contents of the box
       let name = '';
@@ -767,20 +740,14 @@ export default {
       rect.setAttribute('width', width);
       rect.setAttribute('style', `fill:${color[1]};stroke:${color[0]};`);
 
-      const foreignObject = document.createElementNS(
-          this.svg.namespaceURI,
-          'foreignObject',
-      );
+      const foreignObject = document.createElementNS(this.svg.namespaceURI, 'foreignObject');
       foreignObject.textContent = textContent;
       foreignObject.setAttribute(
           'x',
         normalSize
           ? x1
           : Math.min(
-              this.svg.svgPadding * 2 +
-                this.svg.totalWidth -
-                textWidth -
-                this.svg.textMargin,
+              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth - this.svg.textMargin,
               Math.max(this.svg.textMargin, x1 + width / 2 - textWidth / 2),
           ),
       );
@@ -789,10 +756,7 @@ export default {
       foreignObject.setAttribute('height', this.svg.cellHeight);
       foreignObject.setAttribute('width', width);
       foreignObject.setAttribute('style', `color:${color[0]}`);
-      foreignObject.setAttribute(
-          'class',
-          `content${normalSize ? '' : ' content-mini'}`,
-      );
+      foreignObject.setAttribute('class', `content${normalSize ? '' : ' content-mini'}`);
 
       const title = document.createElementNS(this.svg.namespaceURI, 'title');
       title.textContent = textContent;
@@ -811,9 +775,7 @@ export default {
      */
     createArrow(data, startY) {
       const width = (data.duration / this.svg.totalTime) * this.svg.totalWidth;
-      const x1 =
-        (data.start / this.svg.totalTime) * this.svg.totalWidth +
-        this.svg.svgPadding;
+      const x1 = (data.start / this.svg.totalTime) * this.svg.totalWidth + this.svg.svgPadding;
       const centerY = startY + this.svg.cellHeight / 2;
 
       const g = document.createElementNS(this.svg.namespaceURI, 'g');
@@ -835,28 +797,21 @@ export default {
 
       const text = document.createElementNS(this.svg.namespaceURI, 'text');
       text.textContent = `${
-        data.duration === this.svg.totalTime
-          ? this.$t('profiling.approximateTime')
-          : ''
+        data.duration === this.svg.totalTime ? this.$t('profiling.approximateTime') : ''
       }${this.toFixedFun(data.duration, 4)}ms`;
-      const textWidth = text.textContent
-        ? this.getTextWidth(text.textContent)
-        : 0;
+      const textWidth = text.textContent ? this.getTextWidth(text.textContent) : 0;
 
       // The position of the text cannot go beyond the border of the SVG
       text.setAttribute(
           'x',
           Math.min(
-              this.svg.svgPadding * 2 +
-            this.svg.totalWidth -
-            textWidth -
-            this.svg.textMargin,
+              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth - this.svg.textMargin,
               Math.max(this.svg.textMargin, width / 2 + x1 - textWidth / 2),
           ),
       );
       text.setAttribute('y', centerY - this.svg.fontSize / 2);
       text.setAttribute('font-size', this.svg.fontSize);
-      text.setAttribute('fill', 'black');
+      text.setAttribute('fill', CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactFontColor);
 
       const startLine = document.createElementNS(this.svg.namespaceURI, 'line');
       startLine.setAttribute('x1', x1);
@@ -969,14 +924,14 @@ export default {
   margin-right: 16px;
 }
 .step-trace .step-trace-title .el-button {
-  border: 1px solid #00a5a7;
+  border: 1px solid var(--theme-color);
   border-radius: 2px;
-  background-color: white;
-  color: #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
   padding: 7px 15px;
 }
 .step-trace .step-trace-title .el-button:hover {
-  background: #e6f6f6;
+  background: var(--button-hover-color);
 }
 .step-trace .step-trace-title .show-average {
   float: right;
@@ -1007,7 +962,7 @@ export default {
 .step-trace .pf-content-middle #trace-container {
   width: 100%;
   height: 50%;
-  border: 1px solid #D9D9D9;
+  border: 1px solid var(--border-color);
   overflow: auto;
 }
 .step-trace .pf-content-middle #trace-container .training-trace {
@@ -1031,7 +986,7 @@ export default {
   margin-top: 20px;
   margin-right: 15px;
   width: calc(33.3% - 10px);
-  border: 1px solid #D9D9D9;
+  border: 1px solid var(--border-color);
   padding: 30px 30px 0;
   border-radius: 1px;
   overflow: auto;
@@ -1057,11 +1012,11 @@ export default {
 .step-trace .pf-content-middle .chart-wrap .rate-wrap > div {
   display: inline-block;
   margin: 0 15px 5px 0;
-  color: #464950;
+  color: var(--step-trace-chart-text-color);
 }
 .step-trace .pf-content-middle .chart-wrap .rate-wrap > div span {
   margin-right: 10px;
-  color: #6c7280;
+  color: var(--step-trace-chart-label-color);
 }
 .step-trace .pf-content-middle .chart-wrap.chart-show {
   width: calc(50% - 7.5px);

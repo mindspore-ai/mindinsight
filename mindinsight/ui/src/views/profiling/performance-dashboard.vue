@@ -53,7 +53,7 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import empty, {NO_DATA, LOADING_DATA} from '../../components/empty';
 import {keepDecimalPlaces} from '../../js/utils';
@@ -139,9 +139,12 @@ export default {
       if (!effective) return;
       this.$router.push({
         path: `profiling-${path}`,
-        query: Object.assign({
-          activeName: this.activeName,
-        }, this.trainInfo),
+        query: Object.assign(
+            {
+              activeName: this.activeName,
+            },
+            this.trainInfo,
+        ),
       });
     },
     /**
@@ -217,18 +220,13 @@ export default {
     initChart(chart) {
       if (!chart.dom) return;
       if (!chart.instance) {
-        chart.instance = echarts.init(chart.dom);
+        chart.instance = echarts.init(chart.dom, echartsThemeName);
       }
       chart.instance.setOption({
         tooltip: {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow',
-          },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
           },
         },
         legend: {
@@ -249,17 +247,12 @@ export default {
           nameTextStyle: {
             align: 'left',
             padding: [0, 5],
-            color: '#9EA4B3',
           },
           type: 'category',
           axisLine: {
             lineStyle: {
-              color: '#E6EBF5',
               width: 2,
             },
-          },
-          axisLabel: {
-            color: '#9EA4B3',
           },
         },
         yAxis: {
@@ -268,28 +261,19 @@ export default {
           nameTextStyle: {
             align: 'right',
             padding: [0, 5],
-            color: '#9EA4B3',
           },
           axisLine: {
             lineStyle: {
-              color: '#E6EBF5',
               width: 2,
             },
           },
-          axisLabel: {
-            color: '#9EA4B3',
-          },
           splitLine: {
             lineStyle: {
-              color: ['#E6EBF5'],
-              width: 1,
               type: 'dashed',
             },
           },
         },
-        series: new Array(chart.dimensions.length - 1).fill(
-            {type: 'bar', barWidth: 8},
-        ),
+        series: new Array(chart.dimensions.length - 1).fill({type: 'bar', barWidth: 8}),
       });
     },
   },
@@ -313,7 +297,7 @@ export default {
 .performance-dashboard .container {
   width: 100%;
   height: 100%;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 15px;
   position: relative;
@@ -335,10 +319,10 @@ export default {
 }
 .performance-dashboard .header .jump {
   cursor: pointer;
-  color: #b8b8b8;
+  color: var(--button-disabled-font-color);
   font-size: 12px;
 }
 .performance-dashboard .header .is-effective {
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 </style>

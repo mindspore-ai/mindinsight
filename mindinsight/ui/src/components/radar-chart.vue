@@ -22,7 +22,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from '../js/echarts';
+import echarts, {echartsThemeName} from '../js/echarts';
 import common from '../common/common-property';
 
 export default {
@@ -46,6 +46,7 @@ export default {
       titleHeight: 50, // The default height of title
       legendHeight: 20, // The default height of every legend line
       resizeDelay: 100, // The delay of resize's event
+      timer: null, // The timer of resize's event
     };
   },
   props: [
@@ -62,6 +63,7 @@ export default {
     window.addEventListener('resize', this.resizeRadarChart);
   },
   beforeDestroy() {
+    if (this.timer) clearTimeout(this.timer);
     window.removeEventListener('resize', this.resizeRadarChart);
   },
   watch: {
@@ -77,7 +79,7 @@ export default {
      * The logic of resize radar chart
      */
     resizeRadarChart() {
-      clearTimeout(this.timer);
+      if (this.timer) clearTimeout(this.timer);
       this.timer = setTimeout(() => {
         if (this.instance) {
           this.instance.resize();
@@ -93,11 +95,8 @@ export default {
       // Show two legends per line
       const count = Math.ceil(length / 2);
       if (this.$refs.radar) {
-        const width = parseFloat(
-            getComputedStyle(this.$refs.radar)['width'].replace('px', ''),
-        );
-        const minHeight = width + count * this.legendHeight + this.titleHeight;
-        this.minHeight = minHeight;
+        const width = parseFloat(getComputedStyle(this.$refs.radar)['width'].replace('px', ''));
+        this.minHeight = width + count * this.legendHeight + this.titleHeight;
       }
     },
     /**
@@ -109,11 +108,9 @@ export default {
       const count = Math.ceil(length / 2);
       const pos = '50%';
       if (this.$refs.radar) {
-        const height = parseFloat(
-            getComputedStyle(this.$refs.radar)['height'].replace('px', ''),
-        );
+        const height = parseFloat(getComputedStyle(this.$refs.radar)['height'].replace('px', ''));
         // 100 : transform to percentage
-        const headerPer = (count * this.legendHeight + this.titleHeight) / height * 100;
+        const headerPer = ((count * this.legendHeight + this.titleHeight) / height) * 100;
         const yPos = (100 - headerPer) / 2 + headerPer + '%';
         return [pos, yPos];
       }
@@ -130,7 +127,7 @@ export default {
       const dom = this.$refs.radar;
       if (dom) {
         this.calMinHeight(data.legend.length);
-        this.instance = echarts.init(dom);
+        this.instance = echarts.init(dom, echartsThemeName);
       } else {
         return;
       }
@@ -142,11 +139,6 @@ export default {
               temp += `${this.indicators[i]}: ${params.data.value[i]}<br>`;
             }
             return temp;
-          },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
           },
         },
         title: {
@@ -161,17 +153,15 @@ export default {
         color: common.radarColorArr,
         radar: {
           shape: 'circle',
-          name: {
+          axisName: {
             textStyle: {
               color: '#909399',
             },
             formatter: (text) => {
-              return this.formatIndicator(
-                  text,
-                  this.indicators,
-              );
+              return this.formatIndicator(text, this.indicators);
             },
           },
+          axisNameGap: 6,
           center: this.calCenter(data.legend.length),
           radius: this.radius ? this.radius : this.defaultRadius,
         },
@@ -200,9 +190,7 @@ export default {
         legend: data.legend
           ? this.formatLegend(
               data.legend,
-              this.legendSetting
-                ? this.legendSetting
-                : this.defaultLegendSetting,
+              this.legendSetting ? this.legendSetting : this.defaultLegendSetting,
               this.ifTwo ? this.ifTwo : true,
           )
           : [],
@@ -313,11 +301,7 @@ export default {
       // 100 : The parameter to convert percentage to decimal
       const radiusNumber = radiusString.replace('%', '') / 100;
       const dom = this.$refs.radar;
-      const indicatorSpace = this.getSpace(
-          degree,
-          radiusNumber,
-          dom.offsetWidth,
-      );
+      const indicatorSpace = this.getSpace(degree, radiusNumber, dom.offsetWidth);
       // 10 : The maximum PX of a single English letter in the current font size
       const split = Math.ceil(indicatorSpace / 10);
       const chars = indicator.split('');

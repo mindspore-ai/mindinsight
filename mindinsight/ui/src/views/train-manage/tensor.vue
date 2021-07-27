@@ -136,7 +136,8 @@ limitations under the License.
                               :fullData="sampleItem.curData"></histogramUntil>
               <div class="loading-cover"
                    v-if="sampleItem.showLoading">
-                <i class="el-icon-loading"></i></div>
+                <i class="el-icon-loading"></i>
+              </div>
             </div>
             <!-- Information display area -->
             <div class="sample-data-show"
@@ -217,6 +218,7 @@ export default {
       curAxisName: 0, // Current histogran axis type
       chartTipFlag: false, // Whether to display tips of the histogram
       columnLimitNum: 1000, // Maximum number of columns is 1000
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
   computed: {},
@@ -305,12 +307,7 @@ export default {
       };
       RequestService.getSingleTrainJob(params)
           .then((res) => {
-            if (
-              !res ||
-            !res.data ||
-            !res.data.train_jobs ||
-            !res.data.train_jobs.length
-            ) {
+            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
               this.initOver = true;
               return;
             }
@@ -442,8 +439,7 @@ export default {
         if (!sampleItem || !sampleItem.tagName) {
           return;
         }
-        const dataType = this.curDataType;
-        if (dataType) {
+        if (this.curDataType) {
           this.getHistogramData(sampleItem);
         } else {
           sampleItem.newDataFlag = !!isFromTypeChange || sampleItem.newDataFlag;
@@ -496,7 +492,7 @@ export default {
             }
             const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
             sampleItem.summaryName = resData.train_id;
-            // sampleItem.fullData = resData;
+            sampleItem.fullData = resData;
             sampleItem.curData = this.formHistogramOriData(resData);
             this.$nextTick(() => {
               const elementItem = this.$refs[sampleItem.ref];
@@ -559,21 +555,15 @@ export default {
             const oldStep = sampleItem.curStep;
             sampleItem.curStep = sampleItem.formateData.step;
             if (!sampleItem.filterStr) {
-              sampleItem.filterStr = this.initFilterStr(
-                  sampleItem.formateData.value.dims,
-              );
+              sampleItem.filterStr = this.initFilterStr(sampleItem.formateData.value.dims);
               sampleItem.newDataFlag = true;
             }
             if (sampleItem.curStep !== oldStep) {
               sampleItem.newDataFlag = true;
             }
-            sampleItem.curTime = this.dealrelativeTime(
-                new Date(sampleItem.formateData.wall_time * 1000).toString(),
-            );
+            sampleItem.curTime = this.dealrelativeTime(new Date(sampleItem.formateData.wall_time * 1000).toString());
             sampleItem.curDataType = sampleItem.formateData.value.data_type;
-            sampleItem.curDims = JSON.stringify(
-                sampleItem.formateData.value.dims,
-            );
+            sampleItem.curDims = JSON.stringify(sampleItem.formateData.value.dims);
             this.freshtMartixData(sampleItem);
           },
           () => {
@@ -619,9 +609,7 @@ export default {
             let statistics = {};
             if (curStepData) {
               sampleItem.curData =
-              curStepData.value.data instanceof Array
-                ? curStepData.value.data
-                : [curStepData.value.data];
+              curStepData.value.data instanceof Array ? curStepData.value.data : [curStepData.value.data];
               statistics = curStepData.value.statistics;
             } else {
               sampleItem.curData = [[]];
@@ -656,11 +644,11 @@ export default {
       let errorMsg = '';
       if (
         errorData.response &&
-            errorData.response.data &&
-            errorData.response.data.error_code &&
-            (errorData.response.data.error_code.toString() === '50545013' ||
-              errorData.response.data.error_code.toString() === '50545014' ||
-              errorData.response.data.error_code.toString() === '50545016')
+        errorData.response.data &&
+        errorData.response.data.error_code &&
+        (errorData.response.data.error_code.toString() === '50545013' ||
+          errorData.response.data.error_code.toString() === '50545014' ||
+          errorData.response.data.error_code.toString() === '50545016')
       ) {
         showLimitError = true;
         sampleItem.showErrorTip = true;
@@ -692,11 +680,7 @@ export default {
         elementItem = this.$refs[sampleItem.ref];
         if (elementItem) {
           if (showLimitError) {
-            elementItem[0].showRequestErrorMessage(
-                errorMsg,
-                sampleItem.formateData.value.dims,
-                sampleItem.filterStr,
-            );
+            elementItem[0].showRequestErrorMessage(errorMsg, sampleItem.formateData.value.dims, sampleItem.filterStr);
           } else {
             elementItem[0].updateGridData();
           }
@@ -819,9 +803,7 @@ export default {
       if (error.response && error.response.data) {
         this.clearAllData();
       } else {
-        if (
-          !(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))
-        ) {
+        if (!(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))) {
           // Clear data
           this.clearAllData();
         }
@@ -979,9 +961,7 @@ export default {
       sampleItem.newDataFlag = true;
       sampleItem.formateData = sampleItem.fullData[sliderValue];
       sampleItem.curStep = sampleItem.formateData.step;
-      sampleItem.curTime = this.dealrelativeTime(
-          new Date(sampleItem.formateData.wall_time * 1000).toString(),
-      );
+      sampleItem.curTime = this.dealrelativeTime(new Date(sampleItem.formateData.wall_time * 1000).toString());
       sampleItem.curDataType = sampleItem.formateData.value.data_type;
       sampleItem.curDims = JSON.stringify(sampleItem.formateData.value.dims);
       if (sampleItem.curMartixShowSliderValue === sliderValue) {
@@ -1014,21 +994,16 @@ export default {
           const xData = bucket[0] + bucket[1] / 2;
           const filter = chartArr.filter((k) => k[0] === xData);
           if (!filter.length) {
-            chartArr.push([
-              histogram.wall_time,
-              step,
-              xData,
-              Math.floor(bucket[2]),
-            ]);
+            chartArr.push([histogram.wall_time, step, xData, Math.floor(bucket[2])]);
           }
         });
         chartArr.sort((a, b) => a[0] - b[0]);
         if (chartArr.length) {
           const minItem = chartArr[0][2];
           const maxItem = chartArr[chartArr.length - 1][2];
-          const chartAll = [
-            [histogram.wall_time, step, minItem, 0],
-          ].concat(chartArr, [[histogram.wall_time, step, maxItem, 0]]);
+          const chartAll = [[histogram.wall_time, step, minItem, 0]].concat(chartArr, [
+            [histogram.wall_time, step, maxItem, 0],
+          ]);
           chartItem.items = chartAll;
           formateData.push(chartItem);
         }
@@ -1051,7 +1026,7 @@ export default {
 }
 .cl-tensor-manage .tensor-bk {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
 }
@@ -1076,15 +1051,15 @@ export default {
 .cl-tensor-manage .tensor-bk .cl-tensor-operate-content {
   width: 100%;
   padding: 8px 32px 22px 32px;
-  background: #ffffff;
+  background: var(--bg-color);
 }
 .cl-tensor-manage .tensor-bk .cl-tensor-view-type-select-content {
-  background: #ffffff;
+  background: var(--bg-color);
   padding: 0 32px 21px 32px;
   height: 58px;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid #e6ebf5;
+  border-bottom: 2px solid var(--item-split-line-color);
 }
 .cl-tensor-manage .tensor-bk .cl-tensor-view-type-select-content .view-title {
   font-size: 14px;
@@ -1098,7 +1073,7 @@ export default {
   flex-shrink: 0;
 }
 .cl-tensor-manage .tensor-bk .cl-show-data-content {
-  background: #ffffff;
+  background: var(--bg-color);
   padding: 0 23px;
   flex: 1;
   overflow: auto;
@@ -1117,7 +1092,7 @@ export default {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  background-color: #fff;
+  background-color: var(--bg-color);
   position: relative;
   padding: 32px 9px 0 9px;
 }
@@ -1129,7 +1104,7 @@ export default {
   flex: 1;
   padding: 10px 15px 0 15px;
   position: relative;
-  background: #f0f3fa;
+  background: var(--image-sample-bg-color);
   overflow-x: hidden;
 }
 .cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .chars-container .loading-cover {
@@ -1150,7 +1125,7 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  background-color: #f0f3fa;
+  background-color: var(--image-sample-bg-color);
   margin-top: 1px;
 }
 .cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .tensor-demension,
@@ -1163,7 +1138,7 @@ export default {
 }
 .cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .tensor-demension span,
 .cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .tensor-type span {
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .cl-tensor-manage .tensor-bk .cl-show-data-content .data-content .sample-data-show .sample-operate-info {
   width: 100%;
@@ -1171,7 +1146,7 @@ export default {
   vertical-align: middle;
   line-height: 20px;
   margin-top: 24px;
-  color: #000000;
+  color: var(--font-color);
   position: relative;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1228,11 +1203,11 @@ export default {
   padding: 5px;
   z-index: 9999;
   font-size: 14px;
-  font-family: "Microsoft YaHei";
-  background-color: rgba(50, 50, 50, 0.7);
+  font-family: 'Microsoft YaHei';
   border: 0;
   border-radius: 4px;
-  color: #fff;
+  background-color: var(--echarts-tooltip-bg-color);
+  color: var(--echarts-tooltip-font-color);
 }
 .cl-tensor-manage .char-tip-table td {
   padding-left: 5px;

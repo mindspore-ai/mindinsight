@@ -313,8 +313,9 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
+import CommonProperty from '../../common/common-property';
 import {select, selectAll, zoom} from 'd3';
 import {event as currentEvent} from 'd3-selection';
 import 'd3-graphviz';
@@ -412,6 +413,9 @@ export default {
       trainId: '',
       selected: '',
       connectorQuene: '',
+      resizeDebounce: null,
+      themeColor: '',
+      chartThemeObj: CommonProperty.commonChartTheme[this.$store.state.themeIndex],
     };
   },
   watch: {
@@ -442,10 +446,12 @@ export default {
   },
   computed: {},
   mounted() {
-    window.addEventListener('resize', this.debounce(this.resizeCallback, 200), false);
+    this.resizeDebounce = this.debounce(this.resizeCallback, 200);
+    window.addEventListener('resize', this.resizeDebounce, false);
     setTimeout(() => {
-      this.$bus.$on('collapse', this.debounce(this.resizeCallback, 200));
+      this.$bus.$on('collapse', this.resizeDebounce);
     }, 500);
+    this.themeColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-color');
   },
   methods: {
     /**
@@ -603,16 +609,11 @@ export default {
      * @param {Object} chart Chart object
      */
     setOption(chart) {
-      const myChart = echarts.init(document.getElementById(chart.id));
+      const myChart = echarts.init(document.getElementById(chart.id), echartsThemeName);
       const option = {
         tooltip: {
           trigger: 'axis',
           confine: true,
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
         },
         toolbox: {
           show: true,
@@ -661,23 +662,15 @@ export default {
         arr.push(item);
       });
       option.series = arr;
-      option.xAxis.data = chart.data[Object.keys(chart.data)[0]].map(
-          (val, index) => index + 1,
-      );
+      option.xAxis.data = chart.data[Object.keys(chart.data)[0]].map((val, index) => index + 1);
 
       myChart.setOption(option);
       chart.chartDom = myChart;
       if (this.connectQueueChart.chartDom && this.deviceQueueOpChart.chartDom) {
-        echarts.connect([
-          this.connectQueueChart.chartDom,
-          this.deviceQueueOpChart.chartDom,
-        ]);
+        echarts.connect([this.connectQueueChart.chartDom, this.deviceQueueOpChart.chartDom]);
       }
       if (this.getNextChart.chartDom && this.dataQueueChart.chartDom) {
-        echarts.connect([
-          this.getNextChart.chartDom,
-          this.dataQueueChart.chartDom,
-        ]);
+        echarts.connect([this.getNextChart.chartDom, this.dataQueueChart.chartDom]);
       }
     },
     /**
@@ -813,11 +806,6 @@ export default {
                     axisPointer: {
                       type: 'shadow',
                     },
-                    backgroundColor: 'rgba(50, 50, 50, 0.7)',
-                    borderWidth: 0,
-                    textStyle: {
-                      color: '#fff',
-                    },
                     confine: true,
                     formatter(params) {
                       let value = {};
@@ -859,12 +847,12 @@ export default {
                       type: 'bar',
                       data: dataY,
                       itemStyle: {
-                        color: '#00a5a7',
+                        color: this.themeColor,
                       },
                       label: {
                         show: true,
                         position: 'right',
-                        color: '#000',
+                        color: this.chartThemeObj.legendTextColor,
                         formatter(params) {
                           return `${params.value}%`;
                         },
@@ -883,9 +871,7 @@ export default {
                   ],
                 };
                 this.$nextTick(() => {
-                  const echart = echarts.init(
-                      document.getElementById(this.averageRateChart.id),
-                  );
+                  const echart = echarts.init(document.getElementById(this.averageRateChart.id), echartsThemeName);
                   echart.setOption(option);
                   this.averageRateChart.chartDom = echart;
                 });
@@ -925,6 +911,7 @@ export default {
               }),
               textStyle: {
                 fontSize: 13,
+                color: this.chartThemeObj.legendTextColor,
               },
               left: 20,
               top: 10,
@@ -932,18 +919,9 @@ export default {
             tooltip: {
               trigger: 'axis',
               confine: true,
-              backgroundColor: 'rgba(50, 50, 50, 0.7)',
-              borderWidth: 0,
-              textStyle: {
-                color: '#fff',
-              },
             },
             xAxis: {
-              name: `${this.$t('profiling.sampleInterval')}/${
-                data.sample_interval
-              }ms`
-                  .split(' ')
-                  .join('\n'),
+              name: `${this.$t('profiling.sampleInterval')}/${data.sample_interval}ms`.split(' ').join('\n'),
               data: dataY.map((val, index) => index + 1),
             },
             yAxis: {
@@ -954,7 +932,7 @@ export default {
                 type: 'line',
                 data: dataY,
                 itemStyle: {
-                  color: '#00a5a7',
+                  color: this.themeColor,
                 },
               },
             ],
@@ -974,9 +952,7 @@ export default {
             ],
           };
           this.$nextTick(() => {
-            const echart = echarts.init(
-                document.getElementById(this.queueDeepChart.id),
-            );
+            const echart = echarts.init(document.getElementById(this.queueDeepChart.id), echartsThemeName);
             echart.setOption(option);
             this.queueDeepChart.chartDom = echart;
           });
@@ -984,10 +960,7 @@ export default {
       });
     },
     highlight(key) {
-      if (
-        key === 'device_queue_op' &&
-        this.processSummary.count !== this.processSummary.maxCount
-      ) {
+      if (key === 'device_queue_op' && this.processSummary.count !== this.processSummary.maxCount) {
         return;
       }
       const domList = document.querySelectorAll('.data-process-top *[clickKey]');
@@ -1062,9 +1035,7 @@ export default {
           `<${key}>[id="${key}";` +
           `${
             node.op_type === 'queue'
-              ? `shape=rect;class="queue";label="Queue_${
-                node.op_id
-              }(${parseFloat(
+              ? `shape=rect;class="queue";label="Queue_${node.op_id}(${parseFloat(
                   ((node.output_queue_usage_rate || 0) * 100).toFixed(4),
               )}%)";`
               : `shape=Mrecord;class="operator";label="${node.op_type}_${node.op_id}";`
@@ -1075,8 +1046,7 @@ export default {
         }
       });
 
-      const initSetting =
-        'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
+      const initSetting = 'node[style="filled";fontsize="10px"];edge[fontsize="6px";];';
       return `digraph {compound=true;rankdir=LR;${initSetting}${nodeStr}${edgeStr}}`;
     },
 
@@ -1132,12 +1102,8 @@ export default {
 
           const title = node.querySelector('title');
           title.textContent =
-            `${this.$t('profiling.averageCapacity')}:${
-              data.output_queue_average_size || 0
-            }\n` +
-            `${this.$t('profiling.totalCapacity')}:${
-              data.output_queue_length || 0
-            }`;
+            `${this.$t('profiling.averageCapacity')}:${data.output_queue_average_size || 0}\n` +
+            `${this.$t('profiling.totalCapacity')}:${data.output_queue_length || 0}`;
         }
       }
 
@@ -1169,10 +1135,7 @@ export default {
       const graphRect = graphDom.getBoundingClientRect();
       let graphTransform = {};
 
-      const minScale = Math.min(
-          svgRect.width / 2 / graphRect.width,
-          svgRect.height / 2 / graphRect.height,
-      );
+      const minScale = Math.min(svgRect.width / 2 / graphRect.width, svgRect.height / 2 / graphRect.height);
 
       const padding = 4;
       const minDistance = 20;
@@ -1206,32 +1169,17 @@ export default {
               pointer.end.y = event.y;
               let tempX = pointer.end.x - pointer.start.x;
               let tempY = pointer.end.y - pointer.start.y;
-              const paddingTrans = Math.max(
-                  (padding / transRate) * scale,
-                  minDistance,
-              );
-              if (
-                graphRect.left + paddingTrans + tempX >=
-              svgRect.left + svgRect.width
-              ) {
+              const paddingTrans = Math.max(padding / transRate / scale, minDistance);
+              if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
                 tempX = Math.min(tempX, 0);
               }
-              if (
-                graphRect.left + graphRect.width - paddingTrans + tempX <=
-              svgRect.left
-              ) {
+              if (graphRect.left + graphRect.width - paddingTrans + tempX <= svgRect.left) {
                 tempX = Math.max(tempX, 0);
               }
-              if (
-                graphRect.top + paddingTrans + tempY >=
-              svgRect.top + svgRect.height
-              ) {
+              if (graphRect.top + paddingTrans + tempY >= svgRect.top + svgRect.height) {
                 tempY = Math.min(tempY, 0);
               }
-              if (
-                graphRect.top + graphRect.height - paddingTrans + tempY <=
-              svgRect.top
-              ) {
+              if (graphRect.top + graphRect.height - paddingTrans + tempY <= svgRect.top) {
                 tempY = Math.max(tempY, 0);
               }
 
@@ -1244,22 +1192,13 @@ export default {
             } else if (event.type === 'wheel') {
               const wheelDelta = -event.deltaY;
               const rate = 1.2;
-              scale =
-              wheelDelta > 0
-                ? transformData.scale[0] * rate
-                : transformData.scale[0] / rate;
+              scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
 
               scale = Math.max(this.scaleRange[0], scale, minScale);
               scale = Math.min(this.scaleRange[1], scale);
               change = {
-                x:
-                (graphRect.x + padding / transRate - event.x) *
-                transRate *
-                (scale - transformData.scale[0]),
-                y:
-                (graphRect.bottom - padding / transRate - event.y) *
-                transRate *
-                (scale - transformData.scale[0]),
+                x: (graphRect.x + padding / transRate - event.x) * transRate * (scale - transformData.scale[0]),
+                y: (graphRect.bottom - padding / transRate - event.y) * transRate * (scale - transformData.scale[0]),
               };
             }
 
@@ -1323,11 +1262,7 @@ export default {
   },
   destroyed() {
     // Remove the listener of window size change
-    window.removeEventListener(
-        'resize',
-        this.debounce(this.resizeCallback, 200),
-        false,
-    );
+    window.removeEventListener('resize', this.resizeDebounce, false);
     this.$bus.$off('collapse');
   },
 };
@@ -1335,7 +1270,6 @@ export default {
 <style>
 .data-process-wrap {
   height: 100%;
-  background: #fff;
   padding: 0 16px;
 }
 .data-process-wrap .title {
@@ -1353,7 +1287,7 @@ export default {
   height: 100%;
 }
 .data-process-wrap .el-tabs__item.is-active {
-  color: #00a5a7;
+  color: var(--theme-color);
   font-weight: bold;
 }
 .data-process-wrap .data-process-top {
@@ -1376,23 +1310,23 @@ export default {
   font-weight: bold;
 }
 .data-process-wrap .data-process-top .data-process {
-  background-color: #e3f8eb;
+  background-color: var(--data-process-color);
   cursor: default;
 }
 .data-process-wrap .data-process-top .data-process .title {
-  border-left: 2px solid #00a5a7;
+  border-left: 2px solid var(--data-process-title-color);
 }
 .data-process-wrap .data-process-top .device_queue_op {
-  background-color: #e1f2ff;
+  background-color: var(--device-queue-op-color);
 }
 .data-process-wrap .data-process-top .device_queue_op .title {
-  border-left: 2px solid #6cbfff;
+  border-left: 2px solid var(--device-queue-op-title-color);
 }
 .data-process-wrap .data-process-top .get-next {
-  background-color: #fef4dd;
+  background-color: var(--get-next-color);
 }
 .data-process-wrap .data-process-top .get-next .title {
-  border-left: 2px solid #fdca5a;
+  border-left: 2px solid var(--get-next-title-color);
 }
 .data-process-wrap .data-process-top .queue-container {
   width: 20%;
@@ -1471,7 +1405,7 @@ export default {
   height: calc(100% - 10px);
   border-radius: 4px;
   overflow-y: auto;
-  border: 1px solid #D9D9D9;
+  border: 1px solid var(--border-color);
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap:first-child {
   margin-right: 20px;
@@ -1482,7 +1416,7 @@ export default {
   font-weight: bold;
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap .data-tips {
-  color: #999;
+  color: var(--data-process-chart-data-color);
   padding: 0 0 0 10px;
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap .data-tips > div {
@@ -1538,7 +1472,10 @@ export default {
 .data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph {
   width: 100%;
   height: 100%;
-  background-color: #f7faff;
+  background-color: var(--graph-bg-color);
+}
+.data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph text {
+  fill: var(--font-color);
 }
 .data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph #graph0 > polygon {
   fill: transparent;
@@ -1548,7 +1485,7 @@ export default {
 }
 .data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .operator path {
   stroke: #e6ebf5;
-  fill: #e6ebf5;
+  fill: var(--data-process-operator-color);
 }
 .data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .selected path,
 .data-process-wrap .pipeline-wrap .pipeline-middle .operator-graph #graph .selected polygon {
@@ -1564,7 +1501,7 @@ export default {
 }
 .data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap {
   height: 100%;
-  background: #fafbfc;
+  background: var(--graph-bg-color);
 }
 .data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap > div {
   float: left;
@@ -1574,7 +1511,7 @@ export default {
   width: calc(60% - 20px);
   overflow-y: auto;
   height: 100%;
-  border-right: 1px dashed #ccc;
+  border-right: 1px dashed var(--border-color);
   padding-right: 20px;
   margin-right: 20px;
 }
@@ -1600,7 +1537,7 @@ export default {
   margin-top: 10px;
 }
 .data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right .item-wrap .item > span {
-  color: #757b88;
+  color: var(--data-process-chart-data-color);
   display: inline-block;
   width: 50%;
 }
@@ -1617,13 +1554,13 @@ export default {
   padding-top: 10px;
 }
 .data-process-wrap .el-button {
-  border: 1px solid #00a5a7;
+  border: 1px solid var(--theme-color);
   border-radius: 2px;
-  background-color: white;
-  color: #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
   padding: 7px 15px;
 }
 .data-process-wrap .el-button:hover {
-  background: rgb(230, 246, 246);
+  background: var(--button-hover-color);
 }
 </style>

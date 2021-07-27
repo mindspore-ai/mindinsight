@@ -24,7 +24,8 @@ limitations under the License.
 
 </template>
 <script>
-import echarts from '../js/echarts';
+import echarts, {echartsThemeName} from '../js/echarts';
+import CommonProperty from '@/common/common-property.js';
 
 export default {
   props: {
@@ -47,6 +48,7 @@ export default {
       chartObj: null,
       chartOption: {},
       charResizeTimer: null,
+      themeIndex: this.$store.state.themeIndex,
     };
   },
   destroyed() {
@@ -68,6 +70,7 @@ export default {
      */
 
     formateCharOption() {
+      const commonTheme = CommonProperty.commonChartTheme[this.themeIndex];
       const tempOption = {
         // Set the top, bottom, left, and right blanks of the echart diagram
         grid: {
@@ -82,11 +85,9 @@ export default {
           show: this.showTooltip,
           axisPointer: {
             type: 'cross',
-          },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
+            label: {
+              backgroundColor: commonTheme.tooltipBgColor,
+            },
           },
           confine: true,
           formatter: (params) => {
@@ -112,15 +113,27 @@ export default {
         xAxis: {
           axisLine: {
             show: true,
+            lineStyle: {
+              color: commonTheme.axisLineColor,
+            },
           },
           axisTick: {
             show: false,
           },
           axisLabel: {},
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: commonTheme.splitLineColor,
+            },
+          },
         },
         yAxis: {
           axisLine: {
             show: true,
+            lineStyle: {
+              color: commonTheme.axisLineColor,
+            },
           },
           axisTick: {
             show: false,
@@ -141,7 +154,7 @@ export default {
           },
           splitLine: {
             lineStyle: {
-              color: '#E6EBF5',
+              color: commonTheme.splitLineColor,
               width: 1,
             },
           },
@@ -170,7 +183,7 @@ export default {
         return;
       }
       if (!this.chartObj) {
-        this.chartObj = echarts.init(this.$refs.scatter);
+        this.chartObj = echarts.init(this.$refs.scatter, echartsThemeName);
         this.chartObj.setOption(this.chartOption, true);
       } else {
         this.chartObj.setOption(this.chartOption, false);

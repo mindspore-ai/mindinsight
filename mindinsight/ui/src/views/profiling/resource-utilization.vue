@@ -23,17 +23,18 @@ limitations under the License.
         <div class="detail-link"
              :class="{disabled:!cpuInfo.initOver || cpuInfo.noData}">
           <button :disabled="!cpuInfo.initOver || cpuInfo.noData"
-             @click="jumpToCpuDetail">
+                  @click="jumpToCpuDetail">
             {{$t('profiling.viewDetail')}}
             <i class="el-icon-d-arrow-right"></i>
           </button>
         </div>
       </div>
       <div class="content-item">
-        <div class="cpu-info" v-show="!cpuInfo.noData">
+        <div class="cpu-info"
+             v-show="!cpuInfo.noData">
           <div class="cpu-chart"
-              id="deviceCpuChart"
-              ref="deviceCpuChart"></div>
+               id="deviceCpuChart"
+               ref="deviceCpuChart"></div>
           <div class="cpu-chart-info">
             <div class="info-line">
               <span>{{$t('profiling.logicCores')}}</span><span>{{deviceCpuChart.logicCores}}</span>
@@ -62,8 +63,9 @@ limitations under the License.
             </div>
           </div>
         </div>
-        <div class="noData-content" v-show="cpuInfo.noData">
-          <img :src="require('@/assets/images/nodata.png')" alt="" />
+        <div class="noData-content"
+             v-show="cpuInfo.noData">
+          <img :src="require('@/assets/images/nodata.png')" />
           <p>{{cpuInfo.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </div>
@@ -76,7 +78,7 @@ limitations under the License.
         <div class="detail-link"
              :class="{disabled:!graphicsInitOver || noGraphicsDataFlag}">
           <button :disabled="!graphicsInitOver || noGraphicsDataFlag"
-             @click="jumpToMemoryDetail">
+                  @click="jumpToMemoryDetail">
             {{$t('profiling.viewDetail')}}
             <i class="el-icon-d-arrow-right"></i>
           </button>
@@ -86,8 +88,7 @@ limitations under the License.
         <div class="noData-content"
              v-show="!graphicsInitOver || noGraphicsDataFlag">
           <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
+            <img :src="require('@/assets/images/nodata.png')" />
           </div>
           <div v-if="graphicsInitOver && noGraphicsDataFlag"
                class="noData-text">{{$t("public.noData")}}</div>
@@ -103,7 +104,8 @@ limitations under the License.
 </template>
 <script>
 import RequestService from '../../services/request-service';
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
+import CommonProperty from '../../common/common-property';
 export default {
   data() {
     return {
@@ -118,7 +120,9 @@ export default {
       curCardNum: '',
       pageResizeTimer: null, // Timer for changing the window size
       firstInit: true, // First init of page
+      numberLimit: 10, // Maximum length of a number displayed
       // ------------------------memory--------------------
+      graphicsId: 'allocationLine', // ID of the memory data in the chart
       graphicsInitOver: false, // Graphics loading completed
       noGraphicsDataFlag: false, // No graphics data
       totalMemory: '-', // Total memory
@@ -128,26 +132,19 @@ export default {
         id: 'deviceCpuChart',
         chartDom: null,
         option: {
-          color: [
-            '#c23531',
-            '#2f4554',
-            '#61a0a8',
-            '#d48265',
-          ],
+          color: ['#c23531', '#2f4554', '#61a0a8', '#d48265'],
           tooltip: {
             trigger: 'axis',
             formatter: null,
             confine: true,
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
-            },
           },
           legend: {
             right: 70,
             top: 8,
             data: [],
+            textStyle: {
+              color: CommonProperty.commonChartTheme[this.$store.state.themeIndex].legendTextColor,
+            },
           },
           xAxis: {
             name: '',
@@ -162,6 +159,19 @@ export default {
               start: 0,
               end: 100,
               bottom: 0,
+              textStyle: {
+                color: CommonProperty.commonChartTheme[this.$store.state.themeIndex].legendTextColor,
+              },
+              dataBackground: {
+                areaStyle: {
+                  opacity: 0,
+                },
+                lineStyle: {
+                  opacity: 0,
+                },
+              },
+              fillerColor: CommonProperty.commonChartTheme[this.$store.state.themeIndex].dataZoomFillerColor,
+              borderColor: CommonProperty.commonChartTheme[this.$store.state.themeIndex].dataZoomBorderColor,
             },
             {
               start: 0,
@@ -198,6 +208,7 @@ export default {
         },
         samplingInterval: 0,
       },
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
   watch: {
@@ -225,11 +236,7 @@ export default {
       path: this.$route.query.path,
       activePane: this.$route.query.activePane,
     };
-    if (
-      this.$route.query &&
-      this.$route.query.path &&
-      !isNaN(this.$route.query.cardNum)
-    ) {
+    if (this.$route.query && this.$route.query.path && !isNaN(this.$route.query.cardNum)) {
       this.summaryPath = this.$route.query.path;
       this.curCardNum = this.$route.query.cardNum;
       this.init();
@@ -293,9 +300,7 @@ export default {
               (res) => {
                 if (res && res.data && res.data.summary) {
                   const resData = res.data.summary;
-                  this.totalMemory = isNaN(resData.capacity)
-                ? '-'
-                : resData.capacity;
+                  this.totalMemory = isNaN(resData.capacity) ? '-' : resData.capacity;
                 } else {
                   this.totalMemory = '-';
                 }
@@ -350,16 +355,14 @@ export default {
       const lifeCycle = [];
       let startIndex = -1;
       let endIndex = -1;
+      const themeColorObj = CommonProperty.commonThemes[this.themeIndex];
       this.currentGraphicsDic.nodes.forEach((node, index) => {
         if (node.node_id === this.currentGraphicsDic.fp_start) {
           startIndex = index;
         } else if (node.node_id === this.currentGraphicsDic.bp_end) {
           endIndex = index;
         }
-        allocationData.push([
-          node.node_id,
-          this.currentGraphicsDic.lines[index],
-        ]);
+        allocationData.push([node.node_id, this.currentGraphicsDic.lines[index]]);
         topData.push([node.node_id, this.totalMemory]);
         staticData.push([node.node_id, this.currentGraphicsDic.static_mem]);
         const curLifeCycle = [];
@@ -386,13 +389,9 @@ export default {
             formatter(param) {
               let labelStr = '';
               if (param.dataIndex) {
-                labelStr = `${that.$t('profiling.memory.bpEnd')}${that.$t(
-                    'symbols.colon',
-                )}${endIndex}`;
+                labelStr = `${that.$t('profiling.memory.bpEnd')}${that.$t('symbols.colon')}${endIndex}`;
               } else {
-                labelStr = `${that.$t('profiling.memory.fpStart')}${that.$t(
-                    'symbols.colon',
-                )}${startIndex}`;
+                labelStr = `${that.$t('profiling.memory.fpStart')}${that.$t('symbols.colon')}${startIndex}`;
               }
               return labelStr;
             },
@@ -439,10 +438,7 @@ export default {
       const selectedDic = {};
       selectedDic[this.$t('profiling.memory.curMemorySize')] = true;
       selectedDic[this.$t('profiling.memory.staticMenory')] = true;
-      const legendData = [
-        this.$t('profiling.memory.curMemorySize'),
-        this.$t('profiling.memory.staticMenory'),
-      ];
+      const legendData = [this.$t('profiling.memory.curMemorySize'), this.$t('profiling.memory.staticMenory')];
       if (!isNaN(this.totalMemory)) {
         seriesData.push(topLine);
         legendData.unshift(this.$t('profiling.memory.totalMemory'));
@@ -455,6 +451,10 @@ export default {
           icon: 'circle',
           data: legendData,
           selected: selectedDic,
+          inactiveColor: themeColorObj.inactiveFontColor,
+          textStyle: {
+            color: themeColorObj.fontColor,
+          },
         },
         grid: {
           top: 60,
@@ -475,11 +475,6 @@ export default {
           axisPointer: {
             type: 'line',
           },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
           formatter(params) {
             let tipStr = '';
             params.forEach((param) => {
@@ -492,20 +487,14 @@ export default {
                     `${that.$t('symbols.colon')}${curData.node_id}</div>` +
                     `<div>${that.$t('profiling.memory.curOperator')}` +
                     `${that.$t('symbols.colon')}${curData.name}</div>` +
-                    `<div>${that.$t(
-                        'profiling.memory.curOperatorMemorySize',
-                    )}` +
-                    `${that.$t('symbols.colon')}${that.formmateNummber(
-                        curData.size,
-                    )}</div>` +
+                    `<div>${that.$t('profiling.memory.curOperatorMemorySize')}` +
+                    `${that.$t('symbols.colon')}${that.formmateNummber(curData.size)}</div>` +
                     `<div>${that.$t('profiling.memory.curMemorySize')}` +
                     `${that.$t('symbols.colon')}${that.formmateNummber(
                         that.currentGraphicsDic.lines[dataIndex],
                     )}</div>` +
                     `<div>${that.$t('profiling.memory.memoryChanged')}` +
-                    `${that.$t('symbols.colon')}${that.formmateNummber(
-                        curData.allocated,
-                    )}</div>`;
+                    `${that.$t('symbols.colon')}${that.formmateNummber(curData.allocated)}</div>`;
                 }
               }
             });
@@ -540,10 +529,7 @@ export default {
       }
       this.$nextTick(() => {
         if (!this.memoryGraphicsChart) {
-          this.memoryGraphicsChart = echarts.init(
-              this.$refs.dashboardMemoryChart,
-              null,
-          );
+          this.memoryGraphicsChart = echarts.init(this.$refs.dashboardMemoryChart, echartsThemeName);
         }
         this.memoryGraphicsChart.setOption(this.graphicsOption);
         this.memoryGraphicsChart.resize();
@@ -583,7 +569,7 @@ export default {
     /**
      * Query cpu info
      */
-    queryCpuInfo( ) {
+    queryCpuInfo() {
       const params = {
         params: {
           profile: this.queryData.dir,
@@ -639,17 +625,13 @@ export default {
       const data = params;
       let str = '';
       if (data && data.length) {
-        const colorArray = [
-          '#c23531',
-          '#2f4554',
-          '#61a0a8',
-          '#d48265',
-        ];
+        const colorArray = ['#c23531', '#2f4554', '#61a0a8', '#d48265'];
         const index = data[0].dataIndex;
         str += `step: ${stepArray[index]}`;
         data.forEach((item, index) => {
-          str += `<br><span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
-          `${item.seriesName}: ${item.data}`;
+          str +=
+            `<br><span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
+            `${item.seriesName}: ${item.data}`;
         });
         str += `</div>`;
       }
@@ -682,8 +664,9 @@ export default {
       this.deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
       this.deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
       this.deviceCpuChart.option.series = series;
-      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${
-        this.$t('symbols.leftbracket')}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+          'symbols.leftbracket',
+      )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
       this.deviceCpuChart.option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
           (val, index) => index + 1,
       );
@@ -694,7 +677,7 @@ export default {
       this.$nextTick(() => {
         if (!this.deviceCpuChart.chartDom) {
           if (this.$refs.deviceCpuChart) {
-            this.deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart);
+            this.deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart, echartsThemeName);
           }
         }
         this.deviceCpuChart.chartDom.setOption(this.deviceCpuChart.option);
@@ -704,18 +687,16 @@ export default {
      * Router to memory-detail
      */
     jumpToCpuDetail() {
-      if (this.$route.path !== '/profiling/cpu-detail') {
-        this.$router.push({
-          path: '/profiling/cpu-detail',
-          query: {
-            dir: this.queryData.dir,
-            id: this.queryData.id,
-            cardNum: this.curCardNum,
-            path: this.queryData.path,
-            activePane: this.queryData.activePane,
-          },
-        });
-      }
+      this.$router.push({
+        path: '/profiling/cpu-detail',
+        query: {
+          dir: this.queryData.dir,
+          id: this.queryData.id,
+          cardNum: this.curCardNum,
+          path: this.queryData.path,
+          activePane: this.queryData.activePane,
+        },
+      });
     },
   },
   destroyed() {
@@ -734,13 +715,16 @@ export default {
 <style>
 .cl-resource-content {
   height: 100%;
+  overflow-y: auto;
 }
 .cl-resource-content .dashboard-item {
   width: 100%;
   height: calc(50% - 10px);
   padding: 15px;
-  border: solid 1px #d9d9d9;
+  border: solid 1px var(--border-color);
+  background: var(--bg-color);
   border-radius: 4px;
+  min-height: 284px;
 }
 .cl-resource-content .dashboard-item .title-item {
   display: flex;
@@ -766,7 +750,7 @@ export default {
 .cl-resource-content .dashboard-item .title-item .detail-link button {
   color: #00a5a7;
   border: none;
-  background-color: #fff;
+  background-color: var(--bg-color);
   cursor: pointer;
 }
 .cl-resource-content .dashboard-item .title-item .detail-link.disabled button {
@@ -803,7 +787,7 @@ export default {
 }
 .content-item .cpu-info .cpu-chart {
   height: 100%;
-  width: 100%
+  width: 100%;
 }
 .content-item .cpu-info .cpu-chart-info {
   height: 100%;
@@ -812,7 +796,7 @@ export default {
   flex-direction: column;
   justify-content: center;
   padding-left: 20px;
-  background-color: #f1f1f1;
+  background-color: var(--module-bg-color);
 }
 .content-item .cpu-chart-info .info-title {
   font-size: 14px;

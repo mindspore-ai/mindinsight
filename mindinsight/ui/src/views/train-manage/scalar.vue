@@ -269,15 +269,14 @@ limitations under the License.
   </div>
 </template>
 <script>
+import echarts, {echartsThemeName} from '../../js/echarts';
 import ScalarButton from './scalar-button';
-import echarts from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 import ScalarCompare from './scalar-compare';
 import multiselectGroupComponents from '../../components/multiselect-group.vue';
 import autoUpdate from '../../mixins/auto-update.vue';
 import threshold from '../../mixins/threshold.vue';
-
 
 export default {
   mixins: [threshold, autoUpdate],
@@ -311,6 +310,7 @@ export default {
       trainingJobId: this.$route.query.train_id, // ID of the current training job
       summaryPath: this.$route.query.summaryPath,
       decodeTrainingJobId: '',
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
 
@@ -345,9 +345,7 @@ export default {
       document.title = `${this.$t('scalar.titleText')}-MindInsight`;
       return;
     }
-    document.title = `${decodeURIComponent(
-        this.$route.query.train_id,
-    )}-${this.$t('scalar.titleText')}-MindInsight`;
+    document.title = `${decodeURIComponent(this.$route.query.train_id)}-${this.$t('scalar.titleText')}-MindInsight`;
     // Adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
     // Dom ready
@@ -380,12 +378,7 @@ export default {
       RequestService.getSingleTrainJob(params, false)
           .then((res) => {
           // Error
-            if (
-              !res ||
-            !res.data ||
-            !res.data.train_jobs ||
-            !res.data.train_jobs.length
-            ) {
+            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
               this.initOver = true;
               return;
             }
@@ -393,7 +386,7 @@ export default {
             const dataList = [];
             const propsList = [];
             const data = res.data.train_jobs[0];
-            const runNmeColor = CommonProperty.commonColorArr[0];
+            const runNmeColor = CommonProperty.commonColorArr[this.$store.state.themeIndex][0];
             data.tags.forEach((tagObj) => {
               if (!this.oriDataDictionaries[tagObj]) {
                 this.oriDataDictionaries[tagObj] = true;
@@ -547,27 +540,15 @@ export default {
                 if (!isNaN(metaData.value) && metaData.value !== null) {
                   mathData.push(metaData.value);
                 }
-                tempObject.valueData.stepData.push([
-                  metaData.step,
-                  metaData.value,
-                ]);
-                tempObject.valueData.absData.push([
-                  metaData.wall_time,
-                  metaData.value,
-                ]);
-                tempObject.valueData.relativeData.push([
-                  metaData.wall_time - relativeTimeBench,
-                  metaData.value,
-                ]);
+                tempObject.valueData.stepData.push([metaData.step, metaData.value]);
+                tempObject.valueData.absData.push([metaData.wall_time, metaData.value]);
+                tempObject.valueData.relativeData.push([metaData.wall_time - relativeTimeBench, metaData.value]);
                 // Values less than 0 have no logarithm
                 // Set empty string and echart does not render
                 const logValue = metaData.value > 0 ? metaData.value : '';
                 tempObject.logData.stepData.push([metaData.step, logValue]);
                 tempObject.logData.absData.push([metaData.wall_time, logValue]);
-                tempObject.logData.relativeData.push([
-                  metaData.wall_time - relativeTimeBench,
-                  logValue,
-                ]);
+                tempObject.logData.relativeData.push([metaData.wall_time - relativeTimeBench, logValue]);
               });
 
               // Numerical range
@@ -592,14 +573,9 @@ export default {
                 this.$set(sampleObject, 'invalidData', false);
               }
 
-              sampleObject.charData.charOption = this.formateCharOption(
-                  sampleIndex,
-              );
+              sampleObject.charData.charOption = this.formateCharOption(sampleIndex);
               const tempOption = sampleObject.charData.charOption;
-              if (
-                tempOption.series[0].data.length === 1 ||
-              sampleObject.onePoint
-              ) {
+              if (tempOption.series[0].data.length === 1 || sampleObject.onePoint) {
                 tempOption.series[0].showSymbol = true;
               } else {
                 tempOption.series[0].showSymbol = false;
@@ -638,6 +614,10 @@ export default {
       }
       let returnFlag = false;
       const seriesData = [];
+      const scalarTheme = CommonProperty.commonChartTheme[this.themeIndex];
+      const tooltipBgColor = scalarTheme.tooltipBgColor;
+      const tooltipFontColor = scalarTheme.tooltipFontColor;
+      const themeColorObj = CommonProperty.commonThemes[this.themeIndex];
       const oriData = sampleObject.charData.oriData;
       const runName = sampleObject.runNames;
       const curBackName = runName + this.backendString;
@@ -666,14 +646,10 @@ export default {
 
       if (curOriData) {
         if (sampleObject.log) {
-          dataObj.data = this.formateSmoothData(
-              curOriData.logData[this.curBenchX],
-          );
+          dataObj.data = this.formateSmoothData(curOriData.logData[this.curBenchX]);
           dataObjBackend.data = curOriData.logData[this.curBenchX];
         } else {
-          dataObj.data = this.formateSmoothData(
-              curOriData.valueData[this.curBenchX],
-          );
+          dataObj.data = this.formateSmoothData(curOriData.valueData[this.curBenchX]);
           dataObjBackend.data = curOriData.valueData[this.curBenchX];
         }
       } else {
@@ -697,14 +673,7 @@ export default {
           scale: true,
           nameGap: 30,
           minInterval: this.isActive === 0 ? 1 : 0,
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
           axisLabel: {
-            color: '#9EA4B3',
             interval: 0,
             formatter(value) {
               if (that.isActive === 2) {
@@ -744,18 +713,8 @@ export default {
           scale: true,
           // Logbase for very small values,default 10
           logBase: sampleObject.max < 1 && sampleObject.isEqual ? 0.1 : 10,
-          inverse:
-            sampleObject.log && sampleObject.max < 1 && sampleObject.isEqual
-              ? true
-              : false,
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
+          inverse: sampleObject.log && sampleObject.max < 1 && sampleObject.isEqual ? true : false,
           axisLabel: {
-            color: '#9EA4B3',
             formatter(value) {
               if (sampleObject.zoomDataTimer) {
                 clearTimeout(sampleObject.zoomDataTimer);
@@ -803,10 +762,9 @@ export default {
           axisPointer: {
             type: 'line',
           },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
+          backgroundColor: tooltipBgColor,
           textStyle: {
-            color: '#fff',
+            color: tooltipFontColor,
           },
           position: (point, params, dom, rect, size) => {
             const curDom = document.getElementById(sampleObject.domId);
@@ -860,9 +818,7 @@ export default {
                 if (curStep === null) {
                   curStep = curSerieOriData.stepData[parma.dataIndex][0];
                 } else {
-                  if (
-                    curSerieOriData.stepData[parma.dataIndex][0] === curStep
-                  ) {
+                  if (curSerieOriData.stepData[parma.dataIndex][0] === curStep) {
                     const sameRunIndex = [];
                     runArr.forEach((runName, index) => {
                       if (parma.seriesName === runName) {
@@ -873,10 +829,8 @@ export default {
                       sameRunIndex.forEach((sameIndex) => {
                         if (
                           detialArr[sameIndex] &&
-                          detialArr[sameIndex].value ===
-                            curSerieOriData.stepData[parma.dataIndex][1] &&
-                          detialArr[sameIndex].wallTime ===
-                            curSerieOriData.absData[parma.dataIndex][0]
+                          detialArr[sameIndex].value === curSerieOriData.stepData[parma.dataIndex][1] &&
+                          detialArr[sameIndex].wallTime === curSerieOriData.absData[parma.dataIndex][0]
                         ) {
                           addFlag = false;
                         }
@@ -888,10 +842,8 @@ export default {
                 }
                 if (
                   addFlag &&
-                  Math.ceil(parma.value[1] * 1000) / 1000 >=
-                    sampleObject.zoomData[0] &&
-                  Math.floor(parma.value[1] * 1000) / 1000 <=
-                    sampleObject.zoomData[1]
+                  Math.ceil(parma.value[1] * 1000) / 1000 >= sampleObject.zoomData[0] &&
+                  Math.floor(parma.value[1] * 1000) / 1000 <= sampleObject.zoomData[1]
                 ) {
                   dataCount++;
                   runArr.push(parma.seriesName);
@@ -904,24 +856,17 @@ export default {
                   strBody +=
                     `<tr><td style="border-radius:50%;width:15px;height:15px;vertical-align: middle;` +
                     `margin-right: 5px;background-color:${
-                      parma.color === that.thresholdColor &&
-                      sampleObject.charData.charOption.visualMap
+                      parma.color === that.thresholdColor && sampleObject.charData.charOption.visualMap
                         ? that.thresholdColor
                         : sampleObject.colors
                     };` +
                     `display:inline-block;"></td><td>${parma.seriesName}</td>` +
                     `<td>${that.formateYaxisValue(parma.value[1])}</td>` +
-                    `<td>${that.formateYaxisValue(
-                        curSerieOriData.stepData[parma.dataIndex][1],
-                    )}</td>` +
+                    `<td>${that.formateYaxisValue(curSerieOriData.stepData[parma.dataIndex][1])}</td>` +
                     `<td>${curSerieOriData.stepData[parma.dataIndex][0]}</td>` +
-                    `<td>${curSerieOriData.relativeData[
-                        parma.dataIndex
-                    ][0].toFixed(3)}${unit}</td>` +
+                    `<td>${curSerieOriData.relativeData[parma.dataIndex][0].toFixed(3)}${unit}</td>` +
                     `<td>${that.dealrelativeTime(
-                        new Date(
-                            curSerieOriData.absData[parma.dataIndex][0] * 1000,
-                        ).toString(),
+                        new Date(curSerieOriData.absData[parma.dataIndex][0] * 1000).toString(),
                     )}</td>` +
                     `</tr>`;
                 }
@@ -939,7 +884,7 @@ export default {
             iconStyle: {
               textPosition: 'top',
               textAlign: 'right',
-              borderColor: '#00A5A7',
+              borderColor: themeColorObj.themeColor,
             },
           },
           // Toolbox
@@ -949,21 +894,18 @@ export default {
               show: true,
               title: this.$t('scalar.fullScreen'),
               iconStyle: {
-                borderColor: sampleObject.fullScreen ? '#00A5A7' : '#6D7278',
+                borderColor: sampleObject.fullScreen ? themeColorObj.themeColor : themeColorObj.fullScreenIconActive,
               },
-              icon: CommonProperty.fullScreenIcon,
+              icon: CommonProperty.fullScreenIcon[this.$store.state.themeIndex],
               onclick() {
                 fullScreenFun(sampleIndex);
               },
             },
             myTool2: {
               show: true,
-              title:
-                sampleObject.max <= 0
-                  ? this.$t('scalar.noLog')
-                  : this.$t('scalar.toggleYaxisScale'),
+              title: sampleObject.max <= 0 ? this.$t('scalar.noLog') : this.$t('scalar.toggleYaxisScale'),
               iconStyle: {
-                borderColor: sampleObject.log ? '#00A5A7' : '#6D7278',
+                borderColor: sampleObject.log ? themeColorObj.themeColor : themeColorObj.fullScreenIconActive,
               },
               icon:
                 'path://M0 150 c0 -18 7 -20 85 -20 78 0 85 2 85 20 0 18 -7 20 -85 20 -78 0 -85 -2 ' +
@@ -1011,19 +953,13 @@ export default {
       if (sampleObject.charObj) {
         // Updating chart option
         if (sampleObject.updateFlag) {
-          sampleObject.charObj.setOption(
-              sampleObject.charData.charOption,
-              sampleObject.dataRemove,
-          );
+          sampleObject.charObj.setOption(sampleObject.charData.charOption, sampleObject.dataRemove);
           sampleObject.updateFlag = false;
           sampleObject.dataRemove = false;
         }
       } else {
         // Create chart
-        sampleObject.charObj = echarts.init(
-            document.getElementById(sampleObject.domId),
-            null,
-        );
+        sampleObject.charObj = echarts.init(document.getElementById(sampleObject.domId), echartsThemeName);
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
         this.setOnePoint(sampleObject);
         this.setRestore(sampleObject);
@@ -1043,16 +979,16 @@ export default {
       if (!sampleObject) {
         return;
       }
-
+      const themeColorObj = CommonProperty.commonThemes[this.themeIndex];
       // Background color of the refresh button
       sampleObject.fullScreen = !sampleObject.fullScreen;
       if (sampleObject.fullScreen) {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
-          '#00A5A7';
+          themeColorObj.themeColor;
         sampleObject.charData.charOption.grid.right = 80;
       } else {
         sampleObject.charData.charOption.toolbox.feature.myToolFullScreen.iconStyle.borderColor =
-          '#6D7278';
+          themeColorObj.fullScreenIconActive;
         sampleObject.charData.charOption.grid.right = 50;
       }
       sampleObject.updateFlag = true;
@@ -1127,17 +1063,11 @@ export default {
               const seriesData = sampleObject.charData.charOption.series;
               const oriIndexData = sampleObject.charData.oriData[index];
               if (sampleObject.log) {
-                seriesData[index * 2].data = this.formateSmoothData(
-                    oriIndexData.logData[this.curBenchX],
-                );
-                seriesData[index * 2 + 1].data =
-                  oriIndexData.logData[this.curBenchX];
+                seriesData[index * 2].data = this.formateSmoothData(oriIndexData.logData[this.curBenchX]);
+                seriesData[index * 2 + 1].data = oriIndexData.logData[this.curBenchX];
               } else {
-                seriesData[index * 2].data = this.formateSmoothData(
-                    oriIndexData.valueData[this.curBenchX],
-                );
-                seriesData[index * 2 + 1].data =
-                  oriIndexData.valueData[this.curBenchX];
+                seriesData[index * 2].data = this.formateSmoothData(oriIndexData.valueData[this.curBenchX]);
+                seriesData[index * 2 + 1].data = oriIndexData.valueData[this.curBenchX];
               }
             });
 
@@ -1245,9 +1175,7 @@ export default {
       if (error.response && error.response.data) {
         this.clearAllData();
       } else {
-        if (
-          !(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))
-        ) {
+        if (!(error.code === 'ECONNABORTED' && /^timeout/.test(error.message))) {
           // Clear data
           this.clearAllData();
         }
@@ -1301,7 +1229,7 @@ export default {
         return false;
       }
       let dataAddFlag = false;
-      const runColor = CommonProperty.commonColorArr[0];
+      const runColor = CommonProperty.commonColorArr[this.$store.state.themeIndex][0];
       oriData.tags.forEach((tagObj) => {
         if (!this.oriDataDictionaries[tagObj]) {
           this.oriDataDictionaries[tagObj] = true;
@@ -1476,15 +1404,11 @@ export default {
             if (index % 2 === 0) {
               if (log) {
                 singleItem.data = this.formateSmoothData(
-                    sampleObject.charData.oriData[index / 2].logData[
-                        this.curBenchX
-                    ],
+                    sampleObject.charData.oriData[index / 2].logData[this.curBenchX],
                 );
               } else {
                 singleItem.data = this.formateSmoothData(
-                    sampleObject.charData.oriData[index / 2].valueData[
-                        this.curBenchX
-                    ],
+                    sampleObject.charData.oriData[index / 2].valueData[this.curBenchX],
                 );
               }
             }
@@ -1570,12 +1494,14 @@ export default {
       if (sampleObject.max <= 0) {
         return;
       }
+      const themeColorObj = CommonProperty.commonThemes[this.themeIndex];
+
       this.yAxisScaleTimer = setTimeout(() => {
         const tempOption = sampleObject.charData.charOption;
         const tempOriData = sampleObject.charData.oriData;
         const log = !sampleObject.log;
         if (log) {
-          tempOption.toolbox.feature.myTool2.iconStyle.borderColor = '#00A5A7';
+          tempOption.toolbox.feature.myTool2.iconStyle.borderColor = themeColorObj.themeColor;
           tempOption.yAxis.type = 'log';
           // Logarithmic axis scale ascending, maximum scale 1
           if (sampleObject.max < 1 && sampleObject.isEqual) {
@@ -1583,22 +1509,16 @@ export default {
           }
         } else {
           tempOption.yAxis.type = 'value';
-          tempOption.toolbox.feature.myTool2.iconStyle.borderColor = '#666';
+          tempOption.toolbox.feature.myTool2.iconStyle.borderColor = themeColorObj.fullScreenIconActive;
           tempOption.yAxis.inverse = false;
         }
         tempOriData.forEach((originData, index) => {
           if (log) {
-            tempOption.series[index * 2].data = this.formateSmoothData(
-                tempOriData[index].logData[this.curBenchX],
-            );
-            tempOption.series[index * 2 + 1].data =
-              tempOriData[index].logData[this.curBenchX];
+            tempOption.series[index * 2].data = this.formateSmoothData(tempOriData[index].logData[this.curBenchX]);
+            tempOption.series[index * 2 + 1].data = tempOriData[index].logData[this.curBenchX];
           } else {
-            tempOption.series[index * 2].data = this.formateSmoothData(
-                tempOriData[index].valueData[this.curBenchX],
-            );
-            tempOption.series[index * 2 + 1].data =
-              tempOriData[index].valueData[this.curBenchX];
+            tempOption.series[index * 2].data = this.formateSmoothData(tempOriData[index].valueData[this.curBenchX]);
+            tempOption.series[index * 2 + 1].data = tempOriData[index].valueData[this.curBenchX];
           }
         });
         sampleObject.log = log;
@@ -1615,11 +1535,7 @@ export default {
           tempOption.series[0].showSymbol = false;
           sampleObject.onePoint = false;
         }
-        if (
-          tempOption.visualMap &&
-          tempOption.visualMap['pieces'] &&
-          tempOption.visualMap['pieces'].length > 0
-        ) {
+        if (tempOption.visualMap && tempOption.visualMap['pieces'] && tempOption.visualMap['pieces'].length > 0) {
           tempOption.visualMap = null;
           tempOption.series[0].markLine = null;
           sampleObject.charObj.setOption(tempOption, true);
@@ -1682,6 +1598,9 @@ export default {
 .cl-scalar-manage .el-dialog {
   border-radius: 4px;
 }
+.cl-scalar-manage .el-dialog .button-cancle {
+  background: var(--bg-color);
+}
 .cl-scalar-manage .el-dialog__header {
   padding: 15px 15px 10px;
   font-size: 14px;
@@ -1715,16 +1634,20 @@ export default {
   height: 32px;
   line-height: 32px;
   padding: 0 20px;
-  color: #00a5a7;
-  border: 1px solid #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
+  border: 1px solid var(--theme-color);
   border-radius: 2px;
+}
+.cl-scalar-manage .scalar-btn:hover {
+  background: var(--button-hover-color);
 }
 .cl-scalar-manage .borderspacing3 {
   border-spacing: 3px;
 }
 .cl-scalar-manage .scalar-bk {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
 }
@@ -1746,7 +1669,7 @@ export default {
 .cl-scalar-manage .cl-eval-operate-content {
   width: 100%;
   padding: 8px 32px 22px 32px;
-  background: #ffffff;
+  background: var(--bg-color);
 }
 .cl-scalar-manage .cl-eval-operate-content .tag-select-content {
   display: flex;
@@ -1766,7 +1689,7 @@ export default {
   flex: 1;
   text-align: right;
   font-size: 14px;
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
   min-width: 60px;
 }
@@ -1807,10 +1730,10 @@ export default {
   float: left;
 }
 .cl-scalar-manage .cl-eval-operate-content .checkbox-checked {
-  background-image: url("../../assets/images/mult-select.png");
+  background-image: url('../../assets/images/mult-select.png');
 }
 .cl-scalar-manage .cl-eval-operate-content .checkbox-unchecked {
-  background-image: url("../../assets/images/mult-unselect.png");
+  background-image: url('../../assets/images/mult-unselect.png');
 }
 .cl-scalar-manage .cl-eval-operate-content .checkbox-disabled {
   opacity: 0.2;
@@ -1833,11 +1756,11 @@ export default {
   display: block;
 }
 .cl-scalar-manage .cl-eval-slider-operate-content {
-  background: #ffffff;
+  background: var(--bg-color);
   padding: 0 32px 21px 32px;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid #e6ebf5;
+  border-bottom: 2px solid var(--border-color);
 }
 .cl-scalar-manage .cl-eval-slider-operate-content .xaxis-title {
   font-size: 14px;
@@ -1873,7 +1796,7 @@ export default {
   display: none;
 }
 .cl-scalar-manage .cl-eval-show-data-content {
-  background: #fff;
+  background: var(--bg-color);
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -1904,13 +1827,14 @@ export default {
 .cl-scalar-manage .cl-eval-show-data-content .chars-container {
   flex: 1;
   position: relative;
-  background-color: #edf0f5;
+  background-color: var(--echarts-border-change-color);
+  border-radius: 4px;
   padding: 5px;
 }
 .cl-scalar-manage .cl-eval-show-data-content .chartThreshold {
   height: 40px;
-  background-color: #edf0f5;
-  border-top: 1px solid #fff;
+  background-color: var(--echarts-border-change-color);
+  border-top: 1px solid var(--bg-color);
   display: flex;
   line-height: 40px;
 }
@@ -1919,7 +1843,7 @@ export default {
   text-align: left;
   padding-left: 5px;
   font-size: 14px;
-  color: #6c7280;
+  color: var(--step-trace-chart-label-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1929,7 +1853,7 @@ export default {
   text-align: right;
   padding-right: 10px;
   font-size: 12px;
-  color: #00a5a7;
+  color: var(--theme-color);
   flex-shrink: 0;
 }
 .cl-scalar-manage .cl-eval-show-data-content .chartThreshold .chartThresholdRight span {
@@ -1939,7 +1863,7 @@ export default {
   display: inline-block;
 }
 .cl-scalar-manage .cl-eval-show-data-content .tag-name {
-  color: #333;
+  color: var(--font-color);
   font-size: 16px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1953,7 +1877,7 @@ export default {
 .cl-scalar-manage .cl-eval-show-data-content .char-item-content {
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
 }
 .cl-scalar-manage .cl-eval-show-data-content .char-tip-table td {
   padding-left: 5px;
@@ -2022,13 +1946,14 @@ export default {
 }
 .cl-scalar-manage .fs16 {
   font-size: 14px;
-  color: #6c7280;
+  color: var(--icon-info-color);
   width: 180px;
 }
 
 .tooltip-show-content {
   max-width: 50%;
 }
+
 .cl-title-right {
   padding-right: 20px;
 }
@@ -2037,14 +1962,12 @@ export default {
   display: flex;
   margin-bottom: 10px;
 }
-
 .delDialog .delThresholdIcon {
   color: #e6a23c;
   font-size: 24px;
   width: 40px;
   margin-right: 10px;
 }
-
 .delDialog .delThresholdInfo {
   line-height: 24px;
   height: 24px;

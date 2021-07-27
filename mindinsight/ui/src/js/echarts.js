@@ -13,7 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {useEChartsTheme} from './useEChartsTheme';
+
 const echarts = require('echarts/lib/echarts');
+
+const themeIndex = localStorage.getItem('miTheme') ?? '0';
+
+export const echartsThemeName = 'MI_ECHARTS_THEME';
+
+// Register echarts theme
+echarts.registerTheme(echartsThemeName, useEChartsTheme(themeIndex));
 
 import {
   LineChart,
@@ -23,6 +32,7 @@ import {
   RadarChart,
   CustomChart,
   ScatterChart,
+  SankeyChart,
 } from 'echarts/charts';
 
 import {
@@ -43,6 +53,7 @@ echarts.use([
   RadarChart,
   CustomChart,
   ScatterChart,
+  SankeyChart,
   GridComponent,
   LegendComponent,
   TooltipComponent,

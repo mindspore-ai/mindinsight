@@ -60,7 +60,7 @@ limitations under the License.
              class="leftNoData">{{ $t('debugger.noWatchPoint') }}</div>
       </div>
       <div class="collapse-btn"
-           :class="{collapse:leftShow}"
+           :class="[leftShow?'collapse':'',`collapse-btn-${$store.state.themeIndex}`]"
            @click="collapseBtnClick">
       </div>
     </div>
@@ -1156,6 +1156,7 @@ export default {
               const [size, unit] = this.$parent.fileSizeConversion(this.curRowObj.bytes);
               this.curRowObj.oversized = unit === this.$parent.maxFileSize[1] && size > this.$parent.maxFileSize[0];
             }
+
             this.$nextTick(() => {
               this.dealLoading();
             });
@@ -1182,7 +1183,7 @@ export default {
 <style>
 .deb-tensor-wrap {
   height: 100%;
-  background-color: white;
+  background-color: var(--bg-color);
   position: relative;
   overflow: hidden;
 }
@@ -1194,7 +1195,6 @@ export default {
   width: 400px;
   padding-right: 25px;
   height: 100%;
-  background-color: white;
   position: relative;
   transition: width 0.2s;
   -moz-transition: width 0.2s;
@@ -1216,7 +1216,7 @@ export default {
   height: calc(100% - 50px);
 }
 .deb-tensor-wrap .deb-tensor-left .left-content-list {
-  border-top: 1px solid #f2f2f2;
+  border-top: 1px solid var(--table-border-color);
   padding-bottom: 10px;
 }
 .deb-tensor-wrap .deb-tensor-left .left-content-list > div {
@@ -1246,7 +1246,7 @@ export default {
   border-radius: 3px;
 }
 .deb-tensor-wrap .deb-tensor-left .left-content-list .icon-secondary {
-  background-color: #00a5a7;
+  background-color: var(--theme-color);
   margin-top: 8px;
 }
 .deb-tensor-wrap .deb-tensor-left .left-content-list .tensor-content {
@@ -1261,7 +1261,7 @@ export default {
 }
 .deb-tensor-wrap .deb-tensor-left .left-content-list .tensor-advice {
   width: 344px;
-  background-color: #f5f7fa;
+  background-color: var(--module-bg-color);
   margin-left: 15px;
   margin-top: 10px;
   padding: 10px;
@@ -1281,7 +1281,7 @@ export default {
   width: 6px;
   height: 6px;
   border-radius: 3px;
-  background-color: #00a5a7;
+  background-color: var(--theme-color);
   display: inline-block;
 }
 .deb-tensor-wrap .deb-tensor-left .left-content-list .advice-list-title .advice-content {
@@ -1292,12 +1292,12 @@ export default {
 }
 .deb-tensor-wrap .deb-tensor-left .leftNoData {
   text-align: center;
-  border-top: 1px solid #f2f2f2;
+  border-top: 1px solid var(--table-border-color);
   padding-top: 15px;
 }
 .deb-tensor-wrap .deb-tensor-left .collapse-btn {
   position: absolute;
-  right: 2px;
+  right: 4px;
   width: 31px;
   height: 100px;
   top: 50%;
@@ -1306,14 +1306,22 @@ export default {
   line-height: 86px;
   z-index: 1;
   text-align: center;
-  background-image: url('../assets/images/collapse-left.svg');
 }
-.deb-tensor-wrap .deb-tensor-left .collapse-btn.collapse {
-  background-image: url('../assets/images/collapse-right.svg');
+.deb-tensor-wrap .deb-tensor-left .collapse-btn-0 {
+  background-image: url('../assets/images/0/collapse-left.svg');
+}
+.deb-tensor-wrap .deb-tensor-left .collapse-btn-1 {
+  background-image: url('../assets/images/1/collapse-left.svg');
+}
+.deb-tensor-wrap .deb-tensor-left .collapse-btn-0.collapse {
+  background-image: url('../assets/images/0/collapse-right.svg');
+}
+.deb-tensor-wrap .deb-tensor-left .collapse-btn-1.collapse {
+  background-image: url('../assets/images/1/collapse-right.svg');
 }
 .deb-tensor-wrap .deb-tensor-left .deb-tensor-left-content {
   height: 100%;
-  border-right: 1px solid #ebeef5;
+  border-right: 1px solid var(--table-border-color);
   overflow: auto;
 }
 .deb-tensor-wrap .deb-tensor-left.collapse {
@@ -1401,16 +1409,19 @@ export default {
   float: left;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .custom-btn {
-  border: 1px solid #00a5a7;
+  border: 1px solid var(--theme-color);
   border-radius: 2px;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .green {
-  background-color: #00a5a7;
+  background-color: var(--theme-color);
   color: white;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .green:hover {
+  background-color: #33b7b9;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .white {
   background-color: white;
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-middle {
   float: right;
@@ -1422,7 +1433,7 @@ export default {
 .deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-middle .grident {
   display: inline-block;
   width: calc(100% - 70px);
-  background-image: linear-gradient(to right, #e37d29, #fff, #00a5a7);
+  background-image: linear-gradient(to right, #e37d29, var(--item-bg-color), var(--theme-color));
   text-align: center;
   color: transparent;
   border-radius: 10px;
@@ -1433,6 +1444,7 @@ export default {
   flex-shrink: 1;
   padding-right: 32px;
   flex-shrink: 0;
+  background-color: var(--image-sample-bg-color);
 }
 .deb-tensor-wrap .deb-tensor-right .deb-con-table .deb-compare-wrap {
   height: 100%;
@@ -1450,6 +1462,7 @@ export default {
   position: absolute;
   font-weight: bold;
   font-size: 14px;
+  margin: 5px 0 0 5px;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .graph-title .tip {
   font-size: 16px;
@@ -1463,6 +1476,13 @@ export default {
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph {
   width: calc(100% - 375px);
+  background-color: var(--graph-bg-color);
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container #graph0 > polygon {
+  fill: transparent;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container #graph0 text {
+  fill: var(--font-color);
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge path {
   stroke: #787878;
@@ -1473,15 +1493,15 @@ export default {
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.operator > ellipse {
   stroke: #e3aa00;
-  fill: #ffe794;
+  fill: var(--graph-aggregation-color);
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot > polygon {
   stroke: #4ea6e6;
-  fill: #c7f5f4;
+  fill: var(--graph-operator-color);
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot.current > polygon {
   stroke: #4ea6e6;
-  fill: #00a5a7;
+  fill: var(--theme-color);
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot.current text {
   fill: white;
@@ -1495,7 +1515,7 @@ export default {
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .cluster > polygon {
   stroke: #e4e7ed;
-  fill: #e9fcf9;
+  fill: var(--slot-bg-color);
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.selected polygon,
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.selected ellipse {
@@ -1512,7 +1532,7 @@ export default {
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info {
   width: 375px;
   height: 100%;
-  border-left: solid 2px #e4e7ed;
+  border-left: solid 2px var(--el-select-dropdown-border-color);
   padding-left: 20px;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-title {

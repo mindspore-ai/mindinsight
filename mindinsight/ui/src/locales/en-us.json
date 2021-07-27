@@ -26,7 +26,9 @@
     "caseMode": "Not case sensitive",
     "all": "All",
     "details": "Details",
-    "delete": "Delete"
+    "delete": "Delete",
+    "dark": "Dark Theme",
+    "light": "Light Theme"
   },
   "unit": {
     "KiB": "KiB",
@@ -94,7 +96,8 @@
     "sessionLimitNum": "A maximum of two sessions are allowed.",
     "sessionLists": "Existing Sessions List",
     "deleteSessionConfirm": "The session will be deleted. Are you sure you want to continue?",
-    "deleteSessionSuccess": "Session deleted."
+    "deleteSessionSuccess": "Session deleted.",
+    "dumpPath":"Dump Path"
   },
   "modelTraceback": {
     "summaryPath": "Summary Path",
@@ -298,7 +301,8 @@
     "flops": "FLOPs",
     "flopsS": "FLOPS",
     "flopsUtilization": "FLOPS Usage:",
-    "flopsUtilizationTitle": "FLOPS/Peak FLOPS"
+    "flopsUtilizationTitle": "FLOPS/Peak FLOPS",
+    "scopeLevelFlops":"Scope-level FLOPs(M)"
   },
   "profiling": {
     "titleText": "Profiling - Single-host",

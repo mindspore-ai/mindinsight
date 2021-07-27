@@ -131,12 +131,8 @@ export default {
         FLOPS_Utilization: 'FLOPS_Utilization (%)',
       },
       hostHeaderFilder: {
-        type_occurrences: `type_occurrences (${this.$t(
-            'profiling.countUnit',
-        )})`,
-        execution_frequency: `execution_frequency (${this.$t(
-            'profiling.countUnit',
-        )})`,
+        type_occurrences: `type_occurrences (${this.$t('profiling.countUnit')})`,
+        execution_frequency: `execution_frequency (${this.$t('profiling.countUnit')})`,
         percent: 'percent (%)',
         avg_execution_time: `avg_execution_time (${this.$t('profiling.unit')})`,
         total_compute_time: 'total_compute_time (ms)',

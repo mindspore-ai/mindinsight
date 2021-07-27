@@ -97,6 +97,7 @@ import 'slickgrid/lib/jquery.event.drag-2.3.0.js';
 import 'slickgrid/slick.core.js';
 import 'slickgrid/slick.dataview.js';
 import 'slickgrid/slick.grid.js';
+import CommonProperty from '@/common/common-property.js';
 export default {
   props: {
     // Table data
@@ -184,6 +185,7 @@ export default {
         {label: this.$t('components.scientificCounting'), value: 'science'},
       ],
       category: 'value', // value:Numerical notation      science:Scientific notation
+      gridTableThemeObj: CommonProperty.tensorThemes[this.$store.state.themeIndex],
     };
   },
   computed: {},
@@ -296,11 +298,11 @@ export default {
       if (!cell || !value || this.judgeDataType(value)) {
         return value;
       } else if (value < 0) {
-        return `<span class="table-item-span" style="background:rgba(227, 125, 41, ${
+        return `<span class="table-item-span" style="background:rgba(${this.gridTableThemeObj.negativeColor}, ${
           value / this.statistics.overall_min
         })">${value}</span>`;
       } else {
-        return `<span class="table-item-span" style="background:rgba(0, 165, 167, ${
+        return `<span class="table-item-span" style="background:rgba(${this.gridTableThemeObj.positiveColor}, ${
           value / this.statistics.overall_max
         })">${value}</span>`;
       }
@@ -420,7 +422,7 @@ export default {
     updateGrid() {
       this.$nextTick(() => {
         if (!this.gridObj) {
-          this.gridObj = new Slick.Grid(`#${this.itemId}`, this.formateArr, this.columnsData, this.optionObj);
+          this.gridObj = new window.Slick.Grid(`#${this.itemId}`, this.formateArr, this.columnsData, this.optionObj);
           this.columnsLength = this.columnsData.length;
         }
         this.gridObj.setData(this.formateArr, this.scrollTop);
@@ -652,7 +654,7 @@ export default {
   z-index: 200;
   width: 10px;
   height: 10px;
-  background: #fff;
+  background: var(--bg-color);
   cursor: pointer;
 }
 .cl-slickgrid-container .data-show-container .grid-item ::-webkit-scrollbar-button:horizontal:single-button:start {
@@ -763,6 +765,7 @@ export default {
 
 .ui-widget-content {
   background: none;
+  color: var(--grid-table-content-color);
 }
 
 .headerStyle {

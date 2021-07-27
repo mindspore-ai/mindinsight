@@ -246,7 +246,7 @@ limitations under the License.
 </template>
 
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import empty, {NO_DATA, LOADING_DATA} from '../../components/empty';
 import clusterCommOpDetails from '../../components/cluster-comm-op-details';
@@ -640,7 +640,7 @@ export default {
       const options = this.getEChartsOptions(chartData);
       this.$nextTick(() => {
         if (!this.chartInstance) {
-          this.chartInstance = echarts.init(this.$refs.commChart);
+          this.chartInstance = echarts.init(this.$refs.commChart, echartsThemeName);
         }
         this.chartInstance.setOption(options, true);
       });
@@ -802,11 +802,6 @@ export default {
           axisPointer: {
             type: 'shadow',
           },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
         },
         legend: {
           right: 70,
@@ -833,18 +828,8 @@ export default {
           nameTextStyle: {
             align: 'left',
             padding: [0, 5],
-            color: '#9EA4B3',
           },
           type: 'category',
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
-          axisLabel: {
-            color: '#9EA4B3',
-          },
         },
         yAxis: {
           name: this.$t('profilingCluster.timeTitle'),
@@ -852,21 +837,9 @@ export default {
           nameTextStyle: {
             align: 'right',
             padding: [0, 5],
-            color: '#9EA4B3',
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#E6EBF5',
-              width: 2,
-            },
-          },
-          axisLabel: {
-            color: '#9EA4B3',
           },
           splitLine: {
             lineStyle: {
-              color: ['#E6EBF5'],
-              width: 1,
               type: 'dashed',
             },
           },
@@ -912,14 +885,14 @@ export default {
   height: 27px;
 }
 .cl-comm .el-tabs__item .is-active {
-  color: #00a5a7;
+  color: var(--theme-color);
   font-weight: bold;
 }
 </style>
 <style scoped>
 .cl-comm {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   position: relative;
   padding: 0 32px;
 }
@@ -969,8 +942,8 @@ export default {
 }
 .comm-content .content-filter .el-button {
   padding: 7px 15px;
-  color: #00a5a7;
-  border-color: #00a5a7;
+  color: var(--theme-color);;
+  border-color: var(--theme-color);;
 }
 .comm-content .content-chart {
   height: 280px;
@@ -988,7 +961,7 @@ export default {
   flex-shrink: 0;
 }
 .content-table .table-button {
-  color: #00a5a7;
+  color: var(--theme-color);;
   cursor: pointer;
 }
 .comm-content .content-pagination {

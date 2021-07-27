@@ -29,8 +29,7 @@ export default {
   },
   methods: {
     editStep() {
-      if (this.metadata.state === this.state.running ||
-          this.metadata.state === this.state.sending) {
+      if (this.metadata.state === this.state.running || this.metadata.state === this.state.sending) {
         return;
       }
       this.isShowInp = true;
@@ -110,10 +109,7 @@ export default {
      * Initialize the condition
      */
     initCondition() {
-      if (
-        this.metadata.state === this.state.running ||
-        this.metadata.state === this.state.sending
-      ) {
+      if (this.metadata.state === this.state.running || this.metadata.state === this.state.sending) {
         return;
       }
       RequestService.queryConditions(this.sessionId).then((res) => {
@@ -210,11 +206,7 @@ export default {
                   this.origialTree = graph.nodes.map((val) => {
                     return {
                       label: val.name.split('/').pop(),
-                      leaf:
-                      val.type === 'name_scope' ||
-                      val.type === 'aggregation_scope'
-                        ? false
-                        : true,
+                      leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                       ...val,
                       showCheckbox: val.watched !== -1,
                     };
@@ -234,22 +226,10 @@ export default {
                   this.allGraphData = {};
                   d3.select('#graph svg').remove();
                   this.selectedNode.name = '';
-                  this.packageDataToObject(
-                      '',
-                      true,
-                      JSON.parse(JSON.stringify(graph.nodes)),
-                  );
-                  this.querySingleNode(
-                      JSON.parse(JSON.stringify(graph)),
-                      name,
-                      true,
-                  );
+                  this.packageDataToObject('', true, JSON.parse(JSON.stringify(graph.nodes)));
+                  this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
                 } else {
-                  this.querySingleNode(
-                      JSON.parse(JSON.stringify(graph)),
-                      name,
-                      true,
-                  );
+                  this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
                 }
                 if (graph.children) {
                   this.dealTreeData(graph.children, name);
@@ -298,8 +278,7 @@ export default {
       const data = this.$refs.tree.getCurrentNode();
       let name = this.$refs.tree.getCurrentKey();
       if (
-        (data &&
-          (data.type === 'name_scope' || data.type === 'aggregation_scope')) ||
+        (data && (data.type === 'name_scope' || data.type === 'aggregation_scope')) ||
         this.curLeafNodeName === null
       ) {
         name = this.curLeafNodeName;
@@ -324,10 +303,7 @@ export default {
                 this.dealTreeData(graph.children, name);
                 this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
               }
-              this.querySingleNode(
-                  JSON.parse(JSON.stringify(graph)),
-                  res.data.name,
-              );
+              this.querySingleNode(JSON.parse(JSON.stringify(graph)), res.data.name);
             } else if (ascend) {
               this.$message.success(this.$t('debugger.nextNodeTip'));
             } else {
@@ -343,15 +319,11 @@ export default {
      * Terminate current training
      */
     terminate() {
-      this.$confirm(
-          this.$t('debugger.ternimateConfirm'),
-          this.$t('public.notice'),
-          {
-            confirmButtonText: this.$t('public.sure'),
-            cancelButtonText: this.$t('public.cancel'),
-            type: 'warning',
-          },
-      ).then(
+      this.$confirm(this.$t('debugger.ternimateConfirm'), this.$t('public.notice'), {
+        confirmButtonText: this.$t('public.sure'),
+        cancelButtonText: this.$t('public.cancel'),
+        type: 'warning',
+      }).then(
           () => {
             if (this.trainId) {
               this.deleteSession();
@@ -434,12 +406,7 @@ export default {
         if (this.graphFiles.value === this.$t('debugger.all')) {
           if (data.name.includes('/')) {
             const graphName = data.name.split('/')[0];
-            this.queryAllTreeData(
-                data.name.replace(`${graphName}/`, ''),
-                true,
-                graphName,
-                true,
-            );
+            this.queryAllTreeData(data.name.replace(`${graphName}/`, ''), true, graphName, true);
           } else {
             this.queryAllTreeData(data.name, true, data.name, true);
           }
@@ -515,8 +482,7 @@ export default {
         }
         if (val.bytes) {
           const [value, unit] = this.fileSizeConversion(val.bytes);
-          val.oversized =
-            unit === this.maxFileSize[1] && value > this.maxFileSize[0];
+          val.oversized = unit === this.maxFileSize[1] && value > this.maxFileSize[0];
         }
       });
     },
@@ -551,8 +517,7 @@ export default {
           (nodeName !== this.currentNodeName && nodeName !== '') ||
           this.metadata.step !== metadata.step ||
           (this.metadata.state === this.state.waiting &&
-            (temState === this.state.sending ||
-              temState === this.state.running))
+            (temState === this.state.sending || temState === this.state.running))
         ) {
           if (nodeName) {
             if (this.metadata.state !== this.state.running) {
@@ -562,14 +527,8 @@ export default {
           }
           this.metadata.step = metadata.step;
 
-          let graphName =
-            this.graphFiles.value === this.$t('debugger.all')
-              ? ''
-              : this.graphFiles.value;
-          if (
-            this.graphFiles.value === this.$t('debugger.all') &&
-            this.selectedNode.name
-          ) {
+          let graphName = this.graphFiles.value === this.$t('debugger.all') ? '' : this.graphFiles.value;
+          if (this.graphFiles.value === this.$t('debugger.all') && this.selectedNode.name) {
             graphName = this.selectedNode.name.split('/')[0];
           }
           if (metadata.graph_name) {
@@ -610,16 +569,10 @@ export default {
         if (!(id && this.allGraphData[id])) return;
         const type = this.allGraphData[id].type;
         const ignoreType = ['name_scope', 'aggregation_scope'];
-        if (
-          !this.selectedNode.name.includes('more...') &&
-          !ignoreType.includes(type)
-        ) {
+        if (!this.selectedNode.name.includes('more...') && !ignoreType.includes(type)) {
           const name = path[0].replace('_unfold', '');
           if (this.graphFiles.value === this.$t('debugger.all')) {
-            this.retrieveTensorHistory(
-                {name: name.replace(`${name.split('/')[0]}/`, '')},
-                name.split('/')[0],
-            );
+            this.retrieveTensorHistory({name: name.replace(`${name.split('/')[0]}/`, '')}, name.split('/')[0]);
           } else {
             this.retrieveTensorHistory(
                 {
@@ -687,10 +640,7 @@ export default {
               ) {
                 const debTensor = this.$refs['deb-tensor'];
                 if (debTensor) {
-                  debTensor.updateGraphData(
-                      res.data.receive_tensor.graph_name,
-                      res.data.receive_tensor.tensor_name,
-                  );
+                  debTensor.updateGraphData(res.data.receive_tensor.graph_name, res.data.receive_tensor.tensor_name);
                   debTensor.tabChange(debTensor.gridType);
                 }
               }
@@ -748,9 +698,7 @@ export default {
                 } else if (this.metadata.state === this.state.running) {
                   msg = this.$t('debugger.stateMsg.running');
                 } else {
-                  msg = `${this.$t('debugger.backstageStatus')}${
-                    this.metadata.state
-                  }`;
+                  msg = `${this.$t('debugger.backstageStatus')}${this.metadata.state}`;
                 }
                 this.$message(msg);
               }, 500);
@@ -840,9 +788,7 @@ export default {
         return;
       }
       if ((item && item.id) || !item) {
-        const msg = item
-          ? this.$t('debugger.deleteWatchpointConfirm')
-          : this.$t('debugger.clearWatchpointConfirm');
+        const msg = item ? this.$t('debugger.deleteWatchpointConfirm') : this.$t('debugger.clearWatchpointConfirm');
         this.$confirm(msg, this.$t('public.notice'), {
           confirmButtonText: this.$t('public.sure'),
           cancelButtonText: this.$t('public.cancel'),
@@ -858,12 +804,7 @@ export default {
                 this.loadOriginalTree();
                 this.queryWatchPoints();
                 this.$message.success(this.$t('debugger.successDeleteWP'));
-                if (
-                  res &&
-                res.data &&
-                res.data.metadata &&
-                res.data.metadata.enable_recheck !== undefined
-                ) {
+                if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
                   this.enableRecheck = res.data.metadata.enable_recheck;
                 }
                 this.curWatchPointId = null;
@@ -959,10 +900,7 @@ export default {
           params.condition.params = [
             {
               name: item.param.name,
-              value:
-                item.param.type === 'BOOL'
-                  ? Boolean(item.param.value)
-                  : Number(item.param.value),
+              value: item.param.type === 'BOOL' ? Boolean(item.param.value) : Number(item.param.value),
             },
           ];
         }
@@ -979,12 +917,7 @@ export default {
               this.createWatchPointArr = [];
               this.createWPDialogVisible = false;
               this.$message.success(this.$t('debugger.successCreateWP'));
-              if (
-                res &&
-              res.data &&
-              res.data.metadata &&
-              res.data.metadata.enable_recheck !== undefined
-              ) {
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
                 this.enableRecheck = res.data.metadata.enable_recheck;
               }
 
@@ -1067,11 +1000,9 @@ export default {
       })[0];
 
       if (param.required_params && param.required_params.length) {
-        item.compositeParams.selections = item.compositeParams.options.filter(
-            (i) => {
-              return param.required_params.includes(i.name);
-            },
-        );
+        item.compositeParams.selections = item.compositeParams.options.filter((i) => {
+          return param.required_params.includes(i.name);
+        });
         item.compositeParams.selections.forEach((i) => {
           i.value = i.type === 'BOOL' ? true : '';
         });
@@ -1143,12 +1074,7 @@ export default {
           RequestService.updateWatchpoint(params, this.sessionId).then(
               (res) => {
                 this.defaultCheckedArr = checkedKeys;
-                if (
-                  res &&
-                res.data &&
-                res.data.metadata &&
-                res.data.metadata.enable_recheck !== undefined
-                ) {
+                if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
                   this.enableRecheck = res.data.metadata.enable_recheck;
                 }
               },
@@ -1161,12 +1087,7 @@ export default {
     },
     dealParentNode(node) {
       const parent = node.parent;
-      if (
-        parent &&
-        !parent.childNodes
-            .filter((val) => val.data.watched !== -1)
-            .find((val) => val.checked === false)
-      ) {
+      if (parent && !parent.childNodes.filter((val) => val.data.watched !== -1).find((val) => val.checked === false)) {
         parent.checked = true;
         parent.indeterminate = false;
         this.dealParentNode(parent);
@@ -1221,12 +1142,7 @@ export default {
         RequestService.updateWatchpoint(params, this.sessionId).then(
             (res) => {
               this.searchCheckedArr = checkedKeys;
-              if (
-                res &&
-              res.data &&
-              res.data.metadata &&
-              res.data.metadata.enable_recheck !== undefined
-              ) {
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
                 this.enableRecheck = res.data.metadata.enable_recheck;
               }
             },
@@ -1281,9 +1197,7 @@ export default {
         this.treeFlag = true;
         this.$nextTick(() => {
           setTimeout(() => {
-            const dom = document.querySelector(
-                '.el-tree-node.is-current.is-focusable',
-            );
+            const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom) {
               dom.scrollIntoView();
             }
@@ -1370,10 +1284,7 @@ export default {
       children.forEach((val) => {
         const node = this.$refs.searchTree.getNode(val.parentName);
         val.label = val.name.split('/').pop();
-        val.leaf =
-          val.type === 'name_scope' || val.type === 'aggregation_scope'
-            ? false
-            : true;
+        val.leaf = val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true;
         val.showCheckbox = val.watched !== -1;
         this.$refs.searchTree.append(val, node);
         node.expanded = true;
@@ -1427,11 +1338,7 @@ export default {
                 this.origialTree = res.data.graph.nodes.map((val) => {
                   return {
                     label: val.name.split('/').pop(),
-                    leaf:
-                    val.type === 'name_scope' ||
-                    val.type === 'aggregation_scope'
-                      ? false
-                      : true,
+                    leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                     ...val,
                   };
                 });
@@ -1448,9 +1355,7 @@ export default {
               if (res.data.devices && res.data.devices.length) {
                 this.devices = res.data.devices;
                 this.logicCard.value = this.devices[0].rank_id;
-                this.graphFiles.options = JSON.parse(
-                    JSON.stringify(this.devices[0].graph_names),
-                );
+                this.graphFiles.options = JSON.parse(JSON.stringify(this.devices[0].graph_names));
                 if (this.graphFiles.options.length > 1) {
                   this.graphFiles.options.unshift(this.$t('debugger.all'));
                 }
@@ -1475,30 +1380,19 @@ export default {
                 if (!this.trainId) {
                   this.metadata.total_step_num = 2147483648;
                 }
-                if (
-                  res &&
-                res.data &&
-                res.data.metadata &&
-                res.data.metadata.enable_recheck !== undefined
-                ) {
+                if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
                   this.enableRecheck = res.data.metadata.enable_recheck;
                 }
                 if (this.metadata.backend) {
                   this.version = this.metadata.backend;
                 }
-                if (
-                  !res.data.metadata.recommendation_confirmed &&
-                this.metadata.state === this.state.waiting
-                ) {
+                if (!res.data.metadata.recommendation_confirmed && this.metadata.state === this.state.waiting) {
                   this.recommendWatchPointDialog = true;
                 }
 
                 this.nodeName = this.metadata.node_name;
                 this.currentNodeName = this.nodeName;
-                if (
-                  this.metadata.state === this.state.pending ||
-                this.metadata.state === this.state.mismatch
-                ) {
+                if (this.metadata.state === this.state.pending || this.metadata.state === this.state.mismatch) {
                   this.loadingInstance.close();
                 }
                 if (this.pollInit) {
@@ -1560,11 +1454,7 @@ export default {
                 this.curNodeData = graph.nodes.map((val) => {
                   return {
                     label: val.name.split('/').pop(),
-                    leaf:
-                    val.type === 'name_scope' ||
-                    val.type === 'aggregation_scope'
-                      ? false
-                      : true,
+                    leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                     ...val,
                     showCheckbox: val.watched !== -1,
                   };
@@ -1600,24 +1490,12 @@ export default {
                     val.checked = false;
                   }
                 });
-                [
-                  ...new Set(
-                      curHalfCheckedKeys.concat(
-                          this.$refs.tree.getHalfCheckedKeys(),
-                      ),
-                  ),
-                ].forEach((val) => {
+                [...new Set(curHalfCheckedKeys.concat(this.$refs.tree.getHalfCheckedKeys()))].forEach((val) => {
                   this.$refs.tree.getNode(val).indeterminate = true;
                 });
                 this.selectedNode.name = node.data.name;
-                if (
-                  this.allGraphData[node.data.name] &&
-                !this.allGraphData[node.data.name].isUnfold
-                ) {
-                  this.dealGraphData(
-                      JSON.parse(JSON.stringify(graph.nodes)),
-                      node.data.name,
-                  );
+                if (this.allGraphData[node.data.name] && !this.allGraphData[node.data.name].isUnfold) {
+                  this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)), node.data.name);
                 } else {
                   this.selectNode(true);
                 }
@@ -1675,10 +1553,7 @@ export default {
             this.curNodeData = res.data.graph.nodes.map((val) => {
               return {
                 label: val.name.split('/').pop(),
-                leaf:
-                  val.type === 'name_scope' || val.type === 'aggregation_scope'
-                    ? false
-                    : true,
+                leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                 ...val,
                 showCheckbox: val.watched !== -1,
               };
@@ -1706,13 +1581,7 @@ export default {
                 node.indeterminate = true;
               }
             });
-            [
-              ...new Set(
-                  curHalfCheckedKeys.concat(
-                      this.$refs.searchTree.getHalfCheckedKeys(),
-                  ),
-              ),
-            ].forEach((val) => {
+            [...new Set(curHalfCheckedKeys.concat(this.$refs.searchTree.getHalfCheckedKeys()))].forEach((val) => {
               this.$refs.searchTree.getNode(val).indeterminate = true;
             });
           }
@@ -1726,15 +1595,13 @@ export default {
           set_recommended: value,
         },
       };
-      RequestService.setRecommendWatchPoints(params, this.sessionId).then(
-          (res) => {
-            if (res && res.data) {
-              if (value) {
-                this.queryWatchPoints(false);
-              }
-            }
-          },
-      );
+      RequestService.setRecommendWatchPoints(params, this.sessionId).then((res) => {
+        if (res && res.data) {
+          if (value) {
+            this.queryWatchPoints(false);
+          }
+        }
+      });
     },
     /**
      * Show data of current selected watchpoint
@@ -1790,9 +1657,7 @@ export default {
               if (focusLast) {
                 this.selectWatchPoint(this.watchPointArr.length - 1);
                 this.$nextTick(() => {
-                  const newWatchPointDom = document.querySelector(
-                      '#watch-point-list>li:last-child',
-                  );
+                  const newWatchPointDom = document.querySelector('#watch-point-list>li:last-child');
                   if (newWatchPointDom) {
                     newWatchPointDom.scrollIntoView();
                   }
@@ -1827,11 +1692,7 @@ export default {
       });
       // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
       node.childNodes.forEach((val) => {
-        if (
-          node.checked &&
-          !node.childNodes.find((val) => val.data.watched !== 2) &&
-          val.data.watched !== -1
-        ) {
+        if (node.checked && !node.childNodes.find((val) => val.data.watched !== 2) && val.data.watched !== -1) {
           val.checked = true;
         }
         if (val.data.watched === this.checkboxStatus.checked) {
@@ -1840,10 +1701,7 @@ export default {
         if (val.data.watched === this.checkboxStatus.indeterminate) {
           val.indeterminate = true;
         }
-        if (
-          val.data.type !== 'name_scope' &&
-          val.data.type !== 'aggregation_scope'
-        ) {
+        if (val.data.type !== 'name_scope' && val.data.type !== 'aggregation_scope') {
           val.isLeaf = true;
         }
       });
@@ -1854,18 +1712,14 @@ export default {
       this.$nextTick(() => {
         if (
           node.indeterminate &&
-          !node.childNodes
-              .filter((val) => val.data.watched !== -1)
-              .find((val) => val.checked === false)
+          !node.childNodes.filter((val) => val.data.watched !== -1).find((val) => val.checked === false)
         ) {
           node.indeterminate = false;
           node.checked = true;
           this.dealParentNode(node);
         }
         setTimeout(() => {
-          const dom = document.querySelector(
-              '.el-tree-node.is-current.is-focusable',
-          );
+          const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
           if (dom) {
             dom.scrollIntoView();
           }
@@ -1885,9 +1739,7 @@ export default {
           if (this.selectedNode.name) {
             if (this.graphFiles.value === this.$t('debugger.all')) {
               const arr = this.selectedNode.name.split('/');
-              condition.node_name = arr[1]
-                ? this.selectedNode.name.replace(`${arr[0]}/`, '')
-                : arr[0];
+              condition.node_name = arr[1] ? this.selectedNode.name.replace(`${arr[0]}/`, '') : arr[0];
               condition.graph_name = arr[0];
             } else {
               condition.node_name = this.selectedNode.name;
@@ -1935,9 +1787,7 @@ export default {
       } else if (this.radio1 === 'tree') {
         this.$nextTick(() => {
           setTimeout(() => {
-            const dom = document.querySelector(
-                '.el-tree-node.is-current.is-focusable',
-            );
+            const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom) {
               dom.scrollIntoView();
             }
@@ -1966,18 +1816,12 @@ export default {
               const tensorName = `slot: ${i.slot}, `;
               if (i.watch_points && i.watch_points.length) {
                 i.watch_points.forEach((j, key) => {
-                  let item = `${tensorName}${this.$t('debugger.watchPoint')} ${
-                    j.id
-                  }, `;
+                  let item = `${tensorName}${this.$t('debugger.watchPoint')} ${j.id}, `;
                   let params = [];
                   if (j.watch_condition) {
                     item += ` ${this.transCondition(j.watch_condition.id)}`;
-                    this.formateWatchpointParams(
-                        j.watch_condition.params || [],
-                    );
-                    params = JSON.parse(
-                        JSON.stringify(j.watch_condition.params),
-                    );
+                    this.formateWatchpointParams(j.watch_condition.params || []);
+                    params = JSON.parse(JSON.stringify(j.watch_condition.params));
                   }
                   obj.lists.push({
                     name: item,
@@ -1989,8 +1833,7 @@ export default {
                             .map((i) => {
                               return this.$t('debugger.checkTips')[i];
                             })
-                            .join('') +
-                          this.$t('debugger.checkTips').cannotCheck
+                            .join('') + this.$t('debugger.checkTips').cannotCheck
                         : '',
                   });
                 });
@@ -2010,10 +1853,7 @@ export default {
       if (this.selectedNode.name) {
         let selectedNodeName = this.selectedNode.name;
         if (this.graphFiles.value === this.$t('debugger.all')) {
-          selectedNodeName = selectedNodeName.replace(
-              `${selectedNodeName.split('/')[0]}/`,
-              '',
-          );
+          selectedNodeName = selectedNodeName.replace(`${selectedNodeName.split('/')[0]}/`, '');
         }
         this.expandKeys = [];
         let focused = false;
@@ -2075,25 +1915,16 @@ export default {
             if (res.data.metadata) {
               this.dealMetadata(res.data.metadata);
             }
-            this.retrieveTensorHistory(
-                {name: this.nodeName},
-                currentHit.graph_name,
-            );
+            this.retrieveTensorHistory({name: this.nodeName}, currentHit.graph_name);
             if (res.data && res.data.graph) {
               const graph = res.data.graph;
 
-              if (
-                this.graphFiles.value !== currentHit.graph_name &&
-              this.graphFiles.value !== this.$t('debugger.all')
-              ) {
+              if (this.graphFiles.value !== currentHit.graph_name
+                && this.graphFiles.value !== this.$t('debugger.all')) {
                 this.graphFiles.value = currentHit.graph_name;
                 this.resetAllData(graph, params.params.name);
               } else {
-                this.querySingleNode(
-                    JSON.parse(JSON.stringify(graph)),
-                    params.params.name,
-                    true,
-                );
+                this.querySingleNode(JSON.parse(JSON.stringify(graph)), params.params.name, true);
               }
               if (graph.children) {
                 this.dealTreeData(graph.children, name);
@@ -2127,11 +1958,7 @@ export default {
           watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
         },
       };
-      if (
-        this.graphFiles.value === this.$t('debugger.all') &&
-        graphName &&
-        name
-      ) {
+      if (this.graphFiles.value === this.$t('debugger.all') && graphName && name) {
         if (name !== graphName) {
           name = `${graphName}/${name}`;
           params.params.name = name;
@@ -2150,11 +1977,7 @@ export default {
                 this.resetAllData(graph, name);
                 this.isCurrentGraph = true;
               } else {
-                this.querySingleNode(
-                    JSON.parse(JSON.stringify(graph)),
-                    name,
-                    true,
-                );
+                this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
               }
               if (graph.children) {
                 this.dealTreeData(graph.children, name);
@@ -2176,8 +1999,7 @@ export default {
       if (children.nodes) {
         if (
           (children.nodes.length > this.nodesCountLimit &&
-            this.$refs.tree.getNode(children.scope_name).data.type ===
-              'name_scope') ||
+            this.$refs.tree.getNode(children.scope_name).data.type === 'name_scope') ||
           this.allGraphData[children.scope_name].maxChainNum > this.maxChainNum
         ) {
           return;
@@ -2192,11 +2014,7 @@ export default {
         data.forEach((val) => {
           const node = this.$refs.tree.getNode(children.scope_name);
           if (node.childNodes) {
-            if (
-              node.childNodes
-                  .map((value) => value.data.name)
-                  .indexOf(val.name) === -1
-            ) {
+            if (node.childNodes.map((value) => value.data.name).indexOf(val.name) === -1) {
               this.$refs.tree.append(val, node);
             }
           } else {
@@ -2212,10 +2030,7 @@ export default {
           if (val.data.watched === this.checkboxStatus.indeterminate) {
             val.indeterminate = true;
           }
-          if (
-            val.data.type !== 'name_scope' &&
-            val.data.type !== 'aggregation_scope'
-          ) {
+          if (val.data.type !== 'name_scope' && val.data.type !== 'aggregation_scope') {
             val.isLeaf = true;
           }
         });
@@ -2225,9 +2040,7 @@ export default {
         this.$refs.tree.setCurrentKey(name);
         this.$nextTick(() => {
           setTimeout(() => {
-            const dom = document.querySelector(
-                '.el-tree-node.is-current.is-focusable',
-            );
+            const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom) {
               dom.scrollIntoView();
             }
@@ -2243,10 +2056,7 @@ export default {
       this.origialTree = graph.nodes.map((val) => {
         return {
           label: val.name.split('/').pop(),
-          leaf:
-            val.type === 'name_scope' || val.type === 'aggregation_scope'
-              ? false
-              : true,
+          leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
           ...val,
           showCheckbox: val.watched !== -1,
         };
@@ -2264,11 +2074,7 @@ export default {
       this.firstFloorNodes = [];
       this.allGraphData = {};
       d3.select('#graph svg').remove();
-      this.packageDataToObject(
-          '',
-          true,
-          JSON.parse(JSON.stringify(graph.nodes)),
-      );
+      this.packageDataToObject('', true, JSON.parse(JSON.stringify(graph.nodes)));
       if (name) {
         this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
       } else {

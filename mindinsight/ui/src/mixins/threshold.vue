@@ -52,9 +52,7 @@ export default {
     getCache() {
       if (localStorage.getItem('thresholdCache')) {
         try {
-          this.thresholdLocal = JSON.parse(
-              localStorage.getItem('thresholdCache'),
-          );
+          this.thresholdLocal = JSON.parse(localStorage.getItem('thresholdCache'));
           this.clearCache();
         } catch (e) {
           localStorage.removeItem('thresholdCache');
@@ -70,19 +68,10 @@ export default {
      */
 
     clearCache() {
-      if (
-        this.thresholdLocal &&
-        this.thresholdLocal[this.decodeTrainingJobId]
-      ) {
-        if (
-          Object.keys(this.thresholdLocal[this.decodeTrainingJobId]).length ===
-          0
-        ) {
+      if (this.thresholdLocal && this.thresholdLocal[this.decodeTrainingJobId]) {
+        if (Object.keys(this.thresholdLocal[this.decodeTrainingJobId]).length === 0) {
           delete this.thresholdLocal[this.decodeTrainingJobId];
-          localStorage.setItem(
-              'thresholdCache',
-              JSON.stringify(this.thresholdLocal),
-          );
+          localStorage.setItem('thresholdCache', JSON.stringify(this.thresholdLocal));
         }
       }
     },
@@ -109,12 +98,9 @@ export default {
         let filtetArr = [];
         for (let i = 0; i < charData.length; i++) {
           if (
-            Math.ceil(charData[i][0] * 10000) / 10000 >=
-              xAxisObject.startValue &&
-            Math.floor(charData[i][0] * 10000) / 10000 <=
-              xAxisObject.endValue &&
-            Math.ceil(charData[i][1] * 10000) / 10000 >=
-              yAxisObject.startValue &&
+            Math.ceil(charData[i][0] * 10000) / 10000 >= xAxisObject.startValue &&
+            Math.floor(charData[i][0] * 10000) / 10000 <= xAxisObject.endValue &&
+            Math.ceil(charData[i][1] * 10000) / 10000 >= yAxisObject.startValue &&
             Math.floor(charData[i][1] * 10000) / 10000 <= yAxisObject.endValue
           ) {
             filtetArr.push(charData[i]);
@@ -193,9 +179,7 @@ export default {
         this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
       ) {
         const tempStorgeArr = JSON.parse(
-            JSON.stringify(
-                this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName],
-            ),
+            JSON.stringify(this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]),
         );
         let pieceStr = '';
         pieceStr = this.formatePieceStr(tempStorgeArr);
@@ -227,9 +211,7 @@ export default {
         this.thresholdLocal[this.decodeTrainingJobId] &&
         this.thresholdLocal[this.decodeTrainingJobId][sampleItem.tagName]
       ) {
-        delete this.thresholdLocal[this.decodeTrainingJobId][
-            sampleItem.tagName
-        ];
+        delete this.thresholdLocal[this.decodeTrainingJobId][sampleItem.tagName];
       }
       this.currentTagName = sampleItem.tagName;
       this.currentSample = sampleItem;
@@ -287,39 +269,24 @@ export default {
         } else if (isNaN(valueFirst) || isNaN(valueSec)) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
           isValidate = false;
-        } else if (
-          valueFirst.indexOf('Infinity') > -1 ||
-          valueSec.indexOf('Infinity') > -1
-        ) {
+        } else if (valueFirst.indexOf('Infinity') > -1 || valueSec.indexOf('Infinity') > -1) {
           this.thresholdErrorMsg = this.$t('scalar.placeHolderNumber');
           isValidate = false;
         } else {
           if (this.thresholdRelational === this.$t('scalar.or')) {
-            if (
-              filterConditionFirst === this.$t('scalar.greaterThan') &&
-              Number(valueFirst) < Number(valueSec)
-            ) {
+            if (filterConditionFirst === this.$t('scalar.greaterThan') && Number(valueFirst) < Number(valueSec)) {
               this.thresholdErrorMsg = this.$t('scalar.unreasonable');
               isValidate = false;
-            } else if (
-              filterConditionFirst === this.$t('scalar.lessThan') &&
-              Number(valueFirst) > Number(valueSec)
-            ) {
+            } else if (filterConditionFirst === this.$t('scalar.lessThan') && Number(valueFirst) > Number(valueSec)) {
               this.thresholdErrorMsg = this.$t('scalar.unreasonable');
               isValidate = false;
             }
           }
           if (this.thresholdRelational === this.$t('scalar.and')) {
-            if (
-              filterConditionFirst === this.$t('scalar.greaterThan') &&
-              Number(valueFirst) > Number(valueSec)
-            ) {
+            if (filterConditionFirst === this.$t('scalar.greaterThan') && Number(valueFirst) > Number(valueSec)) {
               this.thresholdErrorMsg = this.$t('scalar.unreasonable');
               isValidate = false;
-            } else if (
-              filterConditionFirst === this.$t('scalar.lessThan') &&
-              Number(valueFirst) < Number(valueSec)
-            ) {
+            } else if (filterConditionFirst === this.$t('scalar.lessThan') && Number(valueFirst) < Number(valueSec)) {
               this.thresholdErrorMsg = this.$t('scalar.unreasonable');
               isValidate = false;
             }
@@ -362,10 +329,7 @@ export default {
 
       // One filter condition
       if (chartPiecesTemp.length === 1) {
-        if (
-          !isNaN(chartPiecesTemp[0]['lt']) &&
-          isNaN(chartPiecesTemp[0]['gt'])
-        ) {
+        if (!isNaN(chartPiecesTemp[0]['lt']) && isNaN(chartPiecesTemp[0]['gt'])) {
           if (chartPiecesTemp[0]['lt'] <= sampleObject.zoomData[0]) {
             chartPiecesTemp = [];
           } else if (
@@ -377,10 +341,7 @@ export default {
             chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
             chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
           }
-        } else if (
-          !isNaN(chartPiecesTemp[0]['gt']) &&
-          isNaN(chartPiecesTemp[0]['lt'])
-        ) {
+        } else if (!isNaN(chartPiecesTemp[0]['gt']) && isNaN(chartPiecesTemp[0]['lt'])) {
           if (chartPiecesTemp[0]['gt'] >= sampleObject.zoomData[1]) {
             chartPiecesTemp = [];
           } else if (
@@ -392,10 +353,7 @@ export default {
             chartPiecesTemp[0]['lt'] = sampleObject.zoomData[1];
             chartPiecesTemp[0]['gt'] = sampleObject.zoomData[0];
           }
-        } else if (
-          !isNaN(chartPiecesTemp[0]['lt']) &&
-          !isNaN(chartPiecesTemp[0]['gt'])
-        ) {
+        } else if (!isNaN(chartPiecesTemp[0]['lt']) && !isNaN(chartPiecesTemp[0]['gt'])) {
           if (chartPiecesTemp[0]['gt'] >= sampleObject.zoomData[1]) {
             chartPiecesTemp = [];
           } else {
@@ -417,10 +375,7 @@ export default {
         const relationalArr = [];
         relationalArr[0] = chartPiecesTemp[0].lt || chartPiecesTemp[1].lt || 0;
         relationalArr[1] = chartPiecesTemp[0].gt || chartPiecesTemp[1].gt || 0;
-        if (
-          relationalArr[0] >= sampleObject.zoomData[1] ||
-          relationalArr[1] <= sampleObject.zoomData[0]
-        ) {
+        if (relationalArr[0] >= sampleObject.zoomData[1] || relationalArr[1] <= sampleObject.zoomData[0]) {
           chartPiecesTemp = [
             {
               gt: sampleObject.zoomData[0],
@@ -579,9 +534,7 @@ export default {
         if (this.thresholdSwitch) {
           this.originDataArr.forEach((sampleObject) => {
             if (this.multiSelectedTagNames[sampleObject.tagName]) {
-              this.thresholdLocal[this.decodeTrainingJobId][
-                  sampleObject.tagName
-              ] = chartPieces;
+              this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName] = chartPieces;
               sampleObject.pieceStr = pieceStr;
 
               if (sampleObject.charObj) {
@@ -590,16 +543,11 @@ export default {
             }
           });
         } else {
-          this.thresholdLocal[this.decodeTrainingJobId][
-              this.currentTagName
-          ] = chartPieces;
+          this.thresholdLocal[this.decodeTrainingJobId][this.currentTagName] = chartPieces;
           this.currentSample.pieceStr = pieceStr;
           this.setVisualMap(this.currentSample, chartPieces);
         }
-        localStorage.setItem(
-            'thresholdCache',
-            JSON.stringify(this.thresholdLocal),
-        );
+        localStorage.setItem('thresholdCache', JSON.stringify(this.thresholdLocal));
 
         this.thresholdDialogVisible = false;
       }
@@ -662,13 +610,9 @@ export default {
             if (
               this.thresholdLocal &&
               this.thresholdLocal[this.decodeTrainingJobId] &&
-              this.thresholdLocal[this.decodeTrainingJobId][
-                  sampleObject.tagName
-              ]
+              this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName]
             ) {
-              delete this.thresholdLocal[this.decodeTrainingJobId][
-                  sampleObject.tagName
-              ];
+              delete this.thresholdLocal[this.decodeTrainingJobId][sampleObject.tagName];
               sampleObject.pieceStr = '';
               const tempCharOption = sampleObject.charData.charOption;
               if (
@@ -678,8 +622,7 @@ export default {
               ) {
                 tempCharOption.visualMap = null;
                 tempCharOption.series[0].markLine = null;
-                tempCharOption.series[0].lineStyle['color'] =
-                  sampleObject.colors;
+                tempCharOption.series[0].lineStyle['color'] = sampleObject.colors;
               }
               if (sampleObject.charObj) {
                 sampleObject.charObj.setOption(tempCharOption, false);
@@ -693,9 +636,7 @@ export default {
           this.thresholdLocal[this.decodeTrainingJobId] &&
           this.thresholdLocal[this.decodeTrainingJobId][this.currentTagName]
         ) {
-          delete this.thresholdLocal[this.decodeTrainingJobId][
-              this.currentTagName
-          ];
+          delete this.thresholdLocal[this.decodeTrainingJobId][this.currentTagName];
           this.currentSample.pieceStr = '';
           const tempCharOption = this.currentSample.charData.charOption;
           if (
@@ -705,18 +646,13 @@ export default {
           ) {
             tempCharOption.visualMap = null;
             tempCharOption.series[0].markLine = null;
-            tempCharOption.series[0].lineStyle[
-                'color'
-            ] = this.currentSample.colors;
+            tempCharOption.series[0].lineStyle['color'] = this.currentSample.colors;
           }
           this.currentSample.charObj.setOption(tempCharOption, false);
         }
       }
       this.clearCache();
-      localStorage.setItem(
-          'thresholdCache',
-          JSON.stringify(this.thresholdLocal),
-      );
+      localStorage.setItem('thresholdCache', JSON.stringify(this.thresholdLocal));
       this.delThresholdVisible = false;
     },
   },

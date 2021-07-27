@@ -49,7 +49,7 @@ limitations under the License.
           <div id="helper-tips"></div>
         </div>
         <div class="collapse-btn"
-             :class="{collapse:collapse}"
+             :class="[collapse?'collapse':'',`collapse-btn-${$store.state.themeIndex}`]"
              @click="collapseLeft()">
         </div>
       </div>
@@ -123,10 +123,7 @@ export default {
   },
   watch: {},
   mounted() {
-    if (
-      this.$route.path === 'resource-utilization' ||
-      this.$route.path === '/profiling/memory-detail'
-    ) {
+    if (this.$route.path === 'resource-utilization' || this.$route.path === '/profiling/memory-detail') {
       this.tabData.activeName = this.tabData.tabPanes[1].name;
     }
     this.$nextTick(() => {
@@ -142,8 +139,7 @@ export default {
         this.curDashboardInfo.query.id = this.$route.query.id;
         this.curDashboardInfo.query.dir = this.$route.query.dir;
         this.curDashboardInfo.query.path = this.$route.query.path;
-        this.tabData.activeName =
-          this.$route.query.activePane || this.tabData.tabPanes[0].name;
+        this.tabData.activeName = this.$route.query.activePane || this.tabData.tabPanes[0].name;
         this.summaryPath = decodeURIComponent(this.$route.query.path);
         if (!isNaN(this.$route.query.deviceid)) {
           this.curDashboardInfo.curCardNum = this.$route.query.deviceid;
@@ -212,9 +208,7 @@ export default {
       const params = {
         train_id: this.curDashboardInfo.query.id,
         profile: this.curDashboardInfo.query.dir,
-        device_id: this.curDashboardInfo.curCardNum.toString()
-          ? this.curDashboardInfo.curCardNum.toString()
-          : '0',
+        device_id: this.curDashboardInfo.curCardNum.toString() ? this.curDashboardInfo.curCardNum.toString() : '0',
       };
       RequestService.queryDataOfProfileHelper(params)
           .then((resp) => {
@@ -223,11 +217,7 @@ export default {
               const helperDiv = document.getElementById('helper-tips');
               helperDiv.innerHTML = '';
               dataKeys.forEach((item) => {
-                if (
-                  !this.tipsArrayList.includes(item) &&
-                !this.moreParameter.includes(item) &&
-                resp.data[item]
-                ) {
+                if (!this.tipsArrayList.includes(item) && !this.moreParameter.includes(item) && resp.data[item]) {
                   this.$t(`profiling`)[item] = resp.data[item];
                 }
                 if (item.endsWith('type_label')) {
@@ -241,76 +231,37 @@ export default {
                 } else if (this.tipsArrayList.includes(item)) {
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
-                  const content = `${this.$t(`profiling`)[item].desc}`.replace(
-                      `{n1}`,
-                      resp.data[item][0],
-                  );
+                  const content = `${this.$t(`profiling`)[item].desc}`.replace(`{n1}`, resp.data[item][0]);
                   divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
               <div class="helper-content-style">${content}</div>`;
                   helperDiv.appendChild(divDom);
                 } else if (item === 'minddata_device_queue') {
                   const deviceEmpty =
-                  resp.data['minddata_device_queue'][0] >= 0
-                    ? resp.data['minddata_device_queue'][0]
-                    : '--';
+                  resp.data['minddata_device_queue'][0] >= 0 ? resp.data['minddata_device_queue'][0] : '--';
                   const deviceTotal =
-                  resp.data['minddata_device_queue'][1] >= 0
-                    ? resp.data['minddata_device_queue'][1]
-                    : '--';
+                  resp.data['minddata_device_queue'][1] >= 0 ? resp.data['minddata_device_queue'][1] : '--';
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
                   const content = `${this.$t(`profiling`)[item].desc}`
-                      .replace(
-                          `{n1}`,
-                          `<span class="nowrap-style"> ${deviceEmpty}</span>`,
-                      )
-                      .replace(
-                          `{n2}`,
-                          `<span class="nowrap-style"> ${deviceTotal}</span>`,
-                      )
-                      .replace(
-                          `{n3}`,
-                          `<span class="nowrap-style"> ${
-                            deviceTotal - deviceEmpty
-                          }</span>`,
-                      )
-                      .replace(
-                          `{n4}`,
-                          `<span class="nowrap-style"> ${deviceTotal}</span>`,
-                      );
+                      .replace(`{n1}`, `<span class="nowrap-style"> ${deviceEmpty}</span>`)
+                      .replace(`{n2}`, `<span class="nowrap-style"> ${deviceTotal}</span>`)
+                      .replace(`{n3}`, `<span class="nowrap-style"> ${deviceTotal - deviceEmpty}</span>`)
+                      .replace(`{n4}`, `<span class="nowrap-style"> ${deviceTotal}</span>`);
                   divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
               <div class="helper-content-style">${content}</div>`;
                   helperDiv.appendChild(divDom);
                 } else if (item === 'minddata_get_next_queue') {
                   const getNextEmpty =
-                  resp.data['minddata_get_next_queue'][0] >= 0
-                    ? resp.data['minddata_get_next_queue'][0]
-                    : '--';
+                  resp.data['minddata_get_next_queue'][0] >= 0 ? resp.data['minddata_get_next_queue'][0] : '--';
                   const getNextTotal =
-                  resp.data['minddata_get_next_queue'][1] >= 0
-                    ? resp.data['minddata_get_next_queue'][1]
-                    : '--';
+                  resp.data['minddata_get_next_queue'][1] >= 0 ? resp.data['minddata_get_next_queue'][1] : '--';
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
                   const content = `${this.$t(`profiling`)[item].desc}`
-                      .replace(
-                          `{n1}`,
-                          `<span class="nowrap-style"> ${getNextEmpty}</span>`,
-                      )
-                      .replace(
-                          `{n2}`,
-                          `<span class="nowrap-style"> ${getNextTotal}</span>`,
-                      )
-                      .replace(
-                          `{n3}`,
-                          `<span class="nowrap-style"> ${
-                            getNextTotal - getNextEmpty
-                          }</span>`,
-                      )
-                      .replace(
-                          `{n4}`,
-                          `<span class="nowrap-style"> ${getNextTotal}</span>`,
-                      );
+                      .replace(`{n1}`, `<span class="nowrap-style"> ${getNextEmpty}</span>`)
+                      .replace(`{n2}`, `<span class="nowrap-style"> ${getNextTotal}</span>`)
+                      .replace(`{n3}`, `<span class="nowrap-style"> ${getNextTotal - getNextEmpty}</span>`)
+                      .replace(`{n4}`, `<span class="nowrap-style"> ${getNextTotal}</span>`);
                   divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
               <div class="helper-content-style">${content}</div>`;
                   helperDiv.appendChild(divDom);
@@ -331,9 +282,7 @@ export default {
                     for (let i = 0; i < anchorList.length; i++) {
                       const desc = anchorContent.relpace(
                           anchorList[i],
-                          `<a target="_blank" href="${
-                            this.$t(`profiling`)[item].url[i]
-                          }">
+                          `<a target="_blank" href="${this.$t(`profiling`)[item].url[i]}">
                       ${anchorList[i]}</a>`,
                       );
                       anchorContent = desc;
@@ -428,7 +377,7 @@ export default {
 <style>
 .prof-wrap {
   height: 100%;
-  background: #fff;
+  background: var(--bg-color);
 }
 .prof-wrap .prof-head {
   height: 50px;
@@ -464,7 +413,7 @@ export default {
   height: 100%;
   overflow-y: auto;
   margin-left: 24px;
-  background: #edf0f5;
+  background: var(--module-bg-color);
   word-wrap: break-word;
 }
 .prof-wrap .prof-content .prof-content-left .helper .nowrap-style {
@@ -472,7 +421,7 @@ export default {
 }
 .prof-wrap .prof-content .prof-content-left .helper .cur-card {
   padding-bottom: 20px;
-  border-bottom: 1px solid #d9d9d9;
+  border-bottom: 1px solid var(--border-color);
 }
 .prof-wrap .prof-content .prof-content-left .helper .cur-card .card-select {
   width: calc(100% - 120px);
@@ -499,7 +448,7 @@ export default {
   height: 6px;
   margin-top: 6px;
   border-radius: 3px;
-  background-color: #00a5a7;
+  background-color: var(--theme-color);
 }
 .prof-wrap .prof-content .prof-content-left .helper .suggested-title {
   font-weight: bold;
@@ -530,7 +479,7 @@ export default {
   -webkit-line-clamp: 8;
 }
 .prof-wrap .prof-content .prof-content-left .content-icon {
-  color: #00a5a7;
+  color: var(--theme-color);
   padding-top: 3px;
 }
 .prof-wrap .prof-content .prof-content-left .content-style {
@@ -547,10 +496,18 @@ export default {
   line-height: 86px;
   z-index: 1;
   text-align: center;
-  background-image: url('../../assets/images/collapse-left.svg');
 }
-.prof-wrap .prof-content .prof-content-left .collapse-btn.collapse {
-  background-image: url('../../assets/images/collapse-right.svg');
+.prof-wrap .prof-content .prof-content-left .collapse-btn-0 {
+  background-image: url('../../assets/images/0/collapse-left.svg');
+}
+.prof-wrap .prof-content .prof-content-left .collapse-btn-1 {
+  background-image: url('../../assets/images/1/collapse-left.svg');
+}
+.prof-wrap .prof-content .prof-content-left .collapse-btn-0.collapse {
+  background-image: url('../../assets/images/0/collapse-right.svg');
+}
+.prof-wrap .prof-content .prof-content-left .collapse-btn-1.collapse {
+  background-image: url('../../assets/images/1/collapse-right.svg');
 }
 .prof-wrap .prof-content .prof-content-left.collapse {
   width: 0;

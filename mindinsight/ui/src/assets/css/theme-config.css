@@ -1,0 +1,179 @@
+/**
+ * Copyright 2021 Huawei Technologies Co., Ltd.All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+:root {
+  /* 1892A2 */
+  --theme-color: #00a5a7;
+  /* 141414 */
+  --bg-color: #fff;
+  /* The background color of each section of the kanban */
+  /* 2D2D2D */
+  --item-bg-color: #fff;
+  /* DDDDDD */
+  --font-color: #333;
+  /* 2D2D2D */
+  --module-bg-color: #edf0f5;
+  /* Kanban page background color */
+  /* 141414 */
+  --dashboard-bg-color: #edf0f5;
+  /* The shade color of the kanban board */
+  /* 0 0 0 0 #e5e5e5 */
+  --box-shadow-color: 0 1px 3px 0 #e5e5e5;
+  /* D2C7C7 */
+  --icon-info-color: #6c7280;
+  /* 4A4A4A */
+  --border-color: #d9d9d9;
+  /* c0c4cc */
+  --button-disabled-font-color: #c0c4cc;
+  /* 2E94FF */
+  --a-link-color: #3399ff;
+  /* 707070 */
+  --el-input-border-color: #dcdfe6;
+  /* DDDDDD */
+  --el-input-font-color: #606266;
+  /* 727272 */
+  --el-tooltip-bg-color: #fff;
+  /* 2D2D2D */
+  --el-select-dropdown-item-hover-bg-color: #f5f7fa;
+  /* 707070 */
+  --el-select-dropdown-border-color: #e4e7ed;
+  /* #ffffff */
+  --el-dialog-title: #303133;
+  /* #141414 */
+  --el-table-head-isgroup-bg-color: #f5f7fa;
+  /* #2D2D2D */
+  --el-tree-iscurrent-bg-color: #f0f7ff;
+  /* 3D3D3D */
+  --heatmap-content-color: #e6ebf5;
+  /* 2E3B25 */
+  --data-process-color: #e3f8eb;
+  /* 1C8A49 */
+  --data-process-title-color: #00a5a7;
+  /* 293044 */
+  --device-queue-op-color: #e1f2ff;
+  /* 005BB9 */
+  --device-queue-op-title-color: #6cbfff;
+  /* 4F3927 */
+  --get-next-color: #fef4dd;
+  /* BE550D */
+  --get-next-title-color: #fdca5a;
+  /* 2D2D2D */
+  --graph-bg-color: #f7faff;
+  /* 1892A2 */
+  --data-process-queue-num-color: #07a695;
+  /* 999999 */
+  --data-process-chart-data-color: #999999;
+  /* 005BB9 */
+  --operator-bar-bg-color: #cceded;
+  /* Tensor table content text */
+  /* DDDDDD */
+  --grid-table-content-color: #222222;
+  /* graph/data process */
+  /* 293f42 */
+  --graph-polygon-color: #8df1f2;
+  /* 264156 */
+  --graph-operator-color: #b8e0ff;
+  /* 524926 */
+  --graph-aggregation-color: #ffe794;
+  /* a0744d */
+  --graph-plain-color: #ffd0a6;
+  /* 3b4c49 */
+  --slot-bg-color: #e9fcf9;
+  /* 6c6d6f */
+  --data-process-operator-color: #e6ebf5;
+  /* ab8100 */
+  --repeat-dataset-polygon-stroke-color: #fdca5a;
+  /* 544b29 */
+  --repeat-dataset-polygon-fill-color: #fff2d4;
+  /* be550d */
+  --shuffle-dataset-polygon-stroke-color: #e37d29;
+  /* 4f3927 */
+  --shuffle-dataset-polygon-fill-color: #ffd0a6;
+  /* b33e55 */
+  --batch-dataset-polygon-stroke-color: #de504e;
+  /* 412c35 */
+  --batch-dataset-polygon-fill-color: #ffbcba;
+  /* 005bb9 */
+  --create-dataset-polygon-stroke-color: #4ea6e6;
+  /* 293044 */
+  --create-dataset-polygon-fill-color: #b8e0ff;
+  /* 707070 */
+  --edge-path-color: #a7a7a7;
+  /* Head component background color */
+  /* 084c56 */
+  --header-bg-min-color: #263d5f;
+  /* 04272c */
+  --header-bg-max-color: #16233b;
+  /* #DDDDDD */
+  --step-trace-chart-label-color: #6c7280;
+  /* #DDDDDD */
+  --step-trace-chart-text-color: #464950;
+  /* #2D2D2D */
+  --expand-table-before-bg-color: #f0fdfd;
+  /* #DDDDDD */
+  --table-font-color: #282b33;
+  /* #7F7F7F */
+  --table-border-color: #ebeef5;
+  /* #727272 */
+  --table-hover-color: #f5f7fa;
+  /* #2D2D2D */
+  --pagination-btn-color: #e6ebf5;
+  /* #ffffff */
+  --v-modal-bg-color: #000000;
+  /* #2D2D2D */
+  --scrollbar-thumb: #dfe7f5;
+  /* #141414 */
+  --scrollbar-track: #f5f5f5;
+  /* #141414 */
+  --graph-legend-bg-color: #f7faff;
+  /* #2D2D2D */
+  --graph-legend-scrollbar-thumb: #bac5cc;
+  /* #727272 */
+  --graph-legend-node-info-color: #fce8b2;
+  /* #141414 */
+  --graph-guide-content-bg-color: #c6c8cc;
+  /* #2D2D2D */
+  --graph-right-module-border-color: #ebeef5;
+  /* #2D2D2D */
+  --el-tag-bg-color: #f4f4f5;
+  /* #DDDDDD */
+  --el-tag-font-color: #909399;
+  /* #DDDDDD */
+  --el-tabs-item-color: #303133;
+  /* 2D2D2D */
+  --image-sample-bg-color: #f0f3fa;
+  /* rgba(127,127,127,0.12) */
+  --table-fixed-box-shadow-color: rgba(0, 0, 0, 0.12);
+  /* 444444 */
+  --select-scrollbar-thumb: #dfe7f5;
+  /* 707070 */
+  --item-split-line-color: #e6ebf5;
+  /* 152d30 */
+  --button-hover-color: #e9f7f7;
+  /* 666666 */
+  --table-success-row-bg-color: #f0f9eb;
+  /* #252525 */
+  --button-disabled-bg-color: #f5f5f6;
+  /* 5e646d */
+  --chart-inactive-font-color: #ccc;
+  /* #141414 */
+  --el-message-border-color:#ebeef5;
+  /* #252525 */
+  --el-select-disabled-bg-color:#f5f7fa;
+  /* rgba(74, 74, 74, 0.8) */
+  --echarts-tooltip-bg-color: rgba(50, 50, 50, 0.7);
+  /* #ddd */
+  --echarts-tooltip-font-color: #fff;
+}

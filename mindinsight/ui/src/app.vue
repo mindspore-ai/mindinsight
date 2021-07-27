@@ -66,7 +66,7 @@ export default {
 <style>
 #app {
   height: 100%;
-  background-color: #e7ecf2;
+  background-color: var(--module-bg-color);
   min-width: 1260px;
   min-height: 664px;
 }
@@ -100,7 +100,7 @@ export default {
 .cl-center {
   height: calc(100% - 64px);
   overflow: hidden;
-  color: #333;
+  color: var(--font-color);
 }
 
 .cl-center-height {
@@ -111,7 +111,7 @@ export default {
   height: 50px;
   line-height: 50px;
   display: flex;
-  background-color: #fff;
+  background-color: var(--bg-color);
 }
 
 .cl-title-left {

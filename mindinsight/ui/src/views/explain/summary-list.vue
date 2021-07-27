@@ -126,8 +126,8 @@ export default {
       // table filter condition
       summaryList: [],
       pagination: {
-        currentPage: null,
-        pageSize: null,
+        currentPage: null, // Init default value in created hook
+        pageSize: null, // Init default value in created hook
         pageSizes: [10, 20, 50],
         total: 0,
         layout: 'total, sizes, prev, pager, next, jumper',
@@ -227,8 +227,8 @@ export default {
     },
     currentPagesizeChange(pageSize) {
       this.pagination.pageSize = pageSize;
-      this.pagination.currentPage = 1;
       sessionStorage.setItem('XAIPageSize', pageSize);
+      this.pagination.currentPage = 1;
       this.currentPageChange();
     },
     currentPageChange() {
@@ -330,7 +330,7 @@ export default {
 #cl-summary-manage {
   height: 100%;
   width: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
 }
 #cl-summary-manage .no-data-page {
   width: 100%;
@@ -340,7 +340,6 @@ export default {
   align-items: center;
 }
 #cl-summary-manage .no-data-page .no-data-img {
-  background: #fff;
   text-align: center;
   height: 200px;
   width: 310px;
@@ -411,7 +410,7 @@ export default {
   cursor: not-allowed;
 }
 #cl-summary-manage .menu-item {
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 #cl-summary-manage .menu-item.operate-btn.first-btn {
@@ -423,7 +422,7 @@ export default {
   border: 1px solid #d4d4d4;
 }
 #cl-summary-manage #contextMenu ul {
-  background-color: #f7faff;
+  background-color: var(--bg-color);
   border-radius: 2px;
 }
 #cl-summary-manage #contextMenu ul li {
@@ -461,12 +460,12 @@ export default {
 #cl-summary-manage .details-data-list .el-table__row--level-0 td:first-child:after {
   width: 20px;
   height: 1px;
-  background: #ebeef5;
+  background: var(--table-border-color);
   z-index: 11;
   position: absolute;
   left: 0;
   bottom: -1px;
-  content: "";
+  content: '';
   display: block;
 }
 #cl-summary-manage .details-data-list .el-table__row--level-1 td {
@@ -476,13 +475,13 @@ export default {
 #cl-summary-manage .details-data-list .el-table__row--level-1 td:first-child::before {
   width: 42px;
   background: #f0fdfd;
-  border-right: 2px #00a5a7 solid;
+  border-right: 2px var(--theme-color) solid;
   z-index: 10;
   position: absolute;
   left: 0;
   top: -1px;
   bottom: 0px;
-  content: "";
+  content: '';
   display: block;
 }
 #cl-summary-manage .details-data-list .el-table__row--level-1:first-child td:first-child::before {

@@ -401,7 +401,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
 export default {
@@ -436,9 +436,18 @@ export default {
         resizeTimer: null, // Response delay of resize event
         colors: {
           // Colors of different types of data presentation
-          iteration_interval: ['#A6DD82', '#edf8e6'],
-          fp_and_bp: ['#6CBFFF', '#e2f2ff'],
-          tail: ['#fa8e5b', '#fff4de'],
+          iteration_interval: [
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactIterationIntervalStroke,
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactIterationIntervalFill,
+          ],
+          fp_and_bp: [
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactFpAndBpstroke,
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactFpAndBpFill,
+          ],
+          tail: [
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactTailStroke,
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactTailFill,
+          ],
           stream_parallel: ['#01a5a7', '#cceded'],
         },
         noData: true,
@@ -454,7 +463,7 @@ export default {
         data: [],
         noData: true,
         topN: [],
-        colorList: ['#6C92FA', '#6CBFFF', '#4EDED2', '#7ADFA0', '#A6DD82'],
+        colorList: CommonProperty.pieColorArr[this.$store.state.themeIndex],
         initOver: false, // Is initialization complete
       },
       timeLine: {
@@ -491,6 +500,7 @@ export default {
         },
         initOver: false, // Is initialization complete
       },
+      themeIndex: this.$store.state.themeIndex,
       isHeterogeneous: false,
     };
   },
@@ -589,11 +599,6 @@ export default {
       const option = {};
       option.tooltip = {
         trigger: 'item',
-        backgroundColor: 'rgba(50, 50, 50, 0.7)',
-        borderWidth: 0,
-        textStyle: {
-          color: '#fff',
-        },
         formatter: (params) => {
           return `${params.data.name}<br>${params.marker}${params.percent}%`;
         },
@@ -607,16 +612,12 @@ export default {
           data: this.pieChart.data,
           radius: '80%',
           label: {
-            normal: {
-              show: false,
-              positionL: 'inner',
-            },
+            show: false,
+            positionL: 'inner',
           },
           itemStyle: {
-            normal: {
-              color: function(params) {
-                return CommonProperty.pieColorArr[params.dataIndex];
-              },
+            color: (params) => {
+              return CommonProperty.pieColorArr[this.$store.state.themeIndex][params.dataIndex];
             },
           },
         },
@@ -624,7 +625,7 @@ export default {
       this.$nextTick(() => {
         const dom = document.getElementById('pieChart');
         if (dom) {
-          this.pieChart.chartDom = echarts.init(dom, null);
+          this.pieChart.chartDom = echarts.init(dom, echartsThemeName);
         } else {
           if (this.pieChart.chartDom) {
             this.pieChart.chartDom.clear();
@@ -710,12 +711,7 @@ export default {
           (res) => {
             this.svg.initOver = true;
             this.isHeterogeneous = res.data.is_heterogeneous;
-            if (
-              res &&
-            res.data &&
-            res.data.training_trace_graph &&
-            res.data.training_trace_graph.length
-            ) {
+            if (res && res.data && res.data.training_trace_graph && res.data.training_trace_graph.length) {
               this.svg.noData = false;
               this.removeTrace();
               this.$nextTick(() => {
@@ -859,7 +855,12 @@ export default {
       rect.setAttribute('y', item.startY + this.svg.rowPadding);
       rect.setAttribute('height', item.height);
       rect.setAttribute('width', this.svg.totalWidth);
-      rect.setAttribute('style', 'fill:#edf0f5;stroke:#E2E2E2;stroke-width:1');
+      rect.setAttribute(
+          'style',
+          `fill:${CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactContainerFill};stroke:${
+            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactContainerStroke
+          };stroke-width:1`,
+      );
       rectContainer.appendChild(rect);
 
       const temp = this.createRowContainer(item.data, item.startY + this.svg.rowPadding);
@@ -1009,7 +1010,7 @@ export default {
       );
       text.setAttribute('y', centerY - this.svg.fontSize / 2);
       text.setAttribute('font-size', this.svg.fontSize);
-      text.setAttribute('fill', 'black');
+      text.setAttribute('fill', CommonProperty.stepTraceThemes[this.themeIndex].reactFontColor);
 
       const startLine = document.createElementNS(this.svg.namespaceURI, 'line');
       startLine.setAttribute('x1', x1);
@@ -1256,7 +1257,7 @@ export default {
   height: 100%;
 }
 .pro-router-wrap > div > div {
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--border-color);
   border-radius: 1px;
 }
 .pro-router-wrap > div .title-wrap {
@@ -1278,7 +1279,7 @@ export default {
   cursor: pointer;
 }
 .pro-router-wrap > div .title-wrap .tip-icon .el-icon-warning:hover::before {
-  color: #00a5a7;
+  color: var(--theme-color);
 }
 .pro-router-wrap > div .title-wrap .view-detail {
   float: right;
@@ -1288,18 +1289,18 @@ export default {
   line-height: 24px;
 }
 .pro-router-wrap > div .title-wrap .view-detail a {
-  color: #00a5a7 !important;
+  color: var(--theme-color) !important;
   padding-right: 6px;
 }
 .pro-router-wrap > div .title-wrap .view-detail button {
-  color: #00a5a7;
+  color: var(--theme-color);
   border: none;
-  background-color: #fff;
+  background-color: var(--bg-color);
   cursor: pointer;
 }
 .pro-router-wrap > div .title-wrap .view-detail button.disabled {
   cursor: not-allowed;
-  color: #c0c4cc;
+  color: var(--button-disabled-font-color);
 }
 .pro-router-wrap > div .title-wrap::after {
   content: '';
@@ -1378,22 +1379,22 @@ export default {
   font-weight: bold;
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .data-process {
-  background-color: #e3f8eb;
+  background-color: var(--data-process-color);
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .data-process .title {
-  border-left: 2px solid #00a5a7;
+  border-left: 2px solid var(--data-process-title-color);
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .device_queue_op {
-  background-color: #e1f2ff;
+  background-color: var(--device-queue-op-color);
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .device_queue_op .title {
-  border-left: 2px solid #6cbfff;
+  border-left: 2px solid var(--device-queue-op-title-color);
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .get-next {
-  background-color: #fef4dd;
+  background-color: var(--get-next-color);
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .get-next .title {
-  border-left: 2px solid #fdca5a;
+  border-left: 2px solid var(--get-next-title-color);
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container {
   width: 20%;
@@ -1446,7 +1447,7 @@ export default {
 }
 .pro-router-wrap .pro-router-left .minddata .pipeline-container .queue-container .description .item .num {
   white-space: nowrap;
-  color: #07a695;
+  color: var(--data-process-queue-num-color);
 }
 .pro-router-wrap .pro-router-right {
   width: 400px;
@@ -1498,7 +1499,7 @@ export default {
   height: 20px;
 }
 .pro-router-wrap .pro-router-right .op-time-consume .time-list .item .time .bar {
-  background-color: #cceded;
+  background-color: var(--operator-bar-bg-color);
   top: 2px;
 }
 .pro-router-wrap .pro-router-right .op-time-consume .time-list .item .time .value {

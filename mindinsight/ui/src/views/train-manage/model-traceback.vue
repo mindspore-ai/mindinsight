@@ -154,7 +154,8 @@ limitations under the License.
                 </div>
               </div>
             </div>
-            <div class="left-scatters-container" v-show="!viewBigBtnDisabled">
+            <div class="left-scatters-container"
+                 v-show="!viewBigBtnDisabled">
               <Scatter ref="smallScatter"
                        :data="scatterChartData"
                        :yTitle="yTitle"
@@ -166,7 +167,7 @@ limitations under the License.
           </div>
         </div>
         <div class="collapse-btn"
-             :class="{collapse:collapse}"
+             :class="[collapse?'collapse':'','collapse-btn-' + themeIndex]"
              @click="collapseLeft()">
         </div>
       </div>
@@ -561,7 +562,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 
 import RequestService from '../../services/request-service';
 import CommonProperty from '@/common/common-property.js';
@@ -712,6 +713,7 @@ export default {
         epoch: 'epoch',
         learning_rate: 'learning_rate',
       },
+      themeIndex: this.$store.state.themeIndex,
     };
   },
   computed: {},
@@ -761,12 +763,7 @@ export default {
       RequestService.queryTargetsData(params)
           .then(
               (resp) => {
-                if (
-                  resp &&
-              resp.data &&
-              resp.data.targets &&
-              resp.data.targets.length
-                ) {
+                if (resp && resp.data && resp.data.targets && resp.data.targets.length) {
                   this.targetData = JSON.parse(JSON.stringify(resp.data.targets));
                   this.scatterData = JSON.parse(JSON.stringify(resp.data));
                   let targetName = '';
@@ -829,12 +826,7 @@ export default {
       if (!allData) {
         tempParam.limit = this.pagination.pageSize;
         tempParam.offset = this.pagination.currentPage - 1;
-        params.body = Object.assign(
-            params.body,
-            this.chartFilter,
-            tempParam,
-            this.tableFilter,
-        );
+        params.body = Object.assign(params.body, this.chartFilter, tempParam, this.tableFilter);
       } else {
         params.body = Object.assign(params.body, this.tableFilter);
       }
@@ -874,19 +866,13 @@ export default {
                           }
                           if (i.startsWith(this.replaceStr.userDefined)) {
                             this.labelObj.userDefined = this.valueName.userDefined;
-                            customized[i].label = customized[i].label.replace(
-                                this.replaceStr.userDefined,
-                                '[U]',
-                            );
+                            customized[i].label = customized[i].label.replace(this.replaceStr.userDefined, '[U]');
                             const userDefinedObject = {value: '', label: ''};
                             userDefinedObject.value = customized[i].label;
                             userDefinedObject.label = customized[i].label;
                             this.userOptions.push(userDefinedObject);
                           } else if (i.startsWith(this.replaceStr.metric)) {
-                            customized[i].label = customized[i].label.replace(
-                                this.replaceStr.metric,
-                                '[M]',
-                            );
+                            customized[i].label = customized[i].label.replace(this.replaceStr.metric, '[M]');
                             this.labelObj.metric = this.valueName.metric;
                             const metricObject = {value: '', label: ''};
                             metricObject.value = customized[i].label;
@@ -943,19 +929,15 @@ export default {
                       item !== this.labelValue.learning_rate &&
                       item !== this.labelValue.batch_size
                         ) {
-                          const haveItem = this.table.optionsNotInCheckbox.includes(
-                              item,
-                          );
+                          const haveItem = this.table.optionsNotInCheckbox.includes(item);
                           if (!haveItem) {
                             const otherType = {value: '', label: ''};
                             otherType.value = this.table.columnOptions[item].label;
                             otherType.label = this.table.columnOptions[item].label;
                             if (
                               otherType.value === this.labelValue.loss ||
-                          otherType.value ===
-                            this.$t('modelTraceback.network') ||
-                          otherType.value ===
-                            this.$t('modelTraceback.optimizer')
+                          otherType.value === this.$t('modelTraceback.network') ||
+                          otherType.value === this.$t('modelTraceback.optimizer')
                             ) {
                               otherType.disabled = true;
                             }
@@ -1081,17 +1063,11 @@ export default {
           item.model_lineage.editShow = true;
           item.model_lineage.isError = false;
           item.model_lineage.summary_dir = item.summary_dir;
-          item.model_lineage.remark = item.added_info.remark
-            ? item.added_info.remark
-            : '';
-          item.model_lineage.tag = item.added_info.tag
-            ? item.added_info.tag
-            : 0;
+          item.model_lineage.remark = item.added_info.remark ? item.added_info.remark : '';
+          item.model_lineage.tag = item.added_info.tag ? item.added_info.tag : 0;
           const modelData = JSON.parse(JSON.stringify(item.model_lineage));
           const byteNum = 1024;
-          modelData.model_size = parseFloat(
-              ((modelData.model_size || 0) / byteNum / byteNum).toFixed(2),
-          );
+          modelData.model_size = parseFloat(((modelData.model_size || 0) / byteNum / byteNum).toFixed(2));
           const keys = Object.keys(modelData.metric || {});
           if (keys.length) {
             keys.forEach((key) => {
@@ -1105,10 +1081,7 @@ export default {
           const udkeys = Object.keys(modelData.user_defined || {});
           if (udkeys.length) {
             udkeys.forEach((key) => {
-              if (
-                modelData.user_defined[key] ||
-                modelData.user_defined[key] === 0
-              ) {
+              if (modelData.user_defined[key] || modelData.user_defined[key] === 0) {
                 const temp = this.replaceStr.userDefined + key;
                 modelData[temp] = modelData.user_defined[key];
               }
@@ -1128,21 +1101,14 @@ export default {
       this.userDefinedList = [];
       // hyper list
       this.hyperList = [];
-      this.table.mandatoryColumn = Object.keys(this.table.columnOptions).filter(
-          (i) => {
-            return this.table.columnOptions[i].required;
-          },
-      );
-      this.table.optionalColumn = Object.keys(this.table.columnOptions).filter(
-          (i) => {
-            return !this.table.columnOptions[i].required;
-          },
-      );
+      this.table.mandatoryColumn = Object.keys(this.table.columnOptions).filter((i) => {
+        return this.table.columnOptions[i].required;
+      });
+      this.table.optionalColumn = Object.keys(this.table.columnOptions).filter((i) => {
+        return !this.table.columnOptions[i].required;
+      });
       const columnList = Object.keys(this.table.columnOptions).filter((i) => {
-        return (
-          !this.table.optionsNotInTable.includes(i) &&
-          this.table.columnOptions[i].selected
-        );
+        return !this.table.optionsNotInTable.includes(i) && this.table.columnOptions[i].selected;
       });
       const metricArray = [];
       const userDefinedArray = [];
@@ -1183,19 +1149,14 @@ export default {
      */
     initChart() {
       const chartAxis = Object.keys(this.table.columnOptions).filter((i) => {
-        return (
-          this.table.columnOptions[i].selected &&
-          !this.table.optionsNotInEchart.includes(i)
-        );
+        return this.table.columnOptions[i].selected && !this.table.optionsNotInEchart.includes(i);
       });
       const data = [];
       this.echart.showData.forEach((i, index) => {
         let item = {};
         item = {
           lineStyle: {
-            normal: {
-              color: CommonProperty.commonColorArr[index % 10],
-            },
+            color: CommonProperty.commonColorArr[this.themeIndex][index % 10],
           },
           value: [],
         };
@@ -1266,17 +1227,12 @@ export default {
         }
         parallelAxis.push(obj);
       });
+      const modelTracebackTheme = CommonProperty.modelTracebackChartTheme[this.themeIndex];
 
       const echartOption = {
-        backgroundColor: 'white',
         parallelAxis: parallelAxis,
         tooltip: {
           trigger: 'axis',
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
-          },
         },
         parallel: {
           top: 25,
@@ -1288,7 +1244,7 @@ export default {
             nameLocation: 'end',
             nameGap: 6,
             nameTextStyle: {
-              color: '#000000',
+              color: modelTracebackTheme.paralleAxisColor,
               fontSize: 14,
             },
             axisLine: {
@@ -1298,25 +1254,18 @@ export default {
             },
             axisTick: {
               lineStyle: {
-                color: '#6D7278',
+                color: modelTracebackTheme.axisLineColor,
               },
             },
             axisLabel: {
-              textStyle: {
-                fontSize: 10,
-                color: '#6C7280',
-              },
+              fontSize: 10,
+              color: '#6C7280',
             },
             areaSelectStyle: {
               width: 40,
             },
             tooltip: {
               show: true,
-              backgroundColor: 'rgba(50, 50, 50, 0.7)',
-              borderWidth: 0,
-              textStyle: {
-                color: '#fff',
-              },
             },
             realtime: false,
           },
@@ -1324,10 +1273,8 @@ export default {
         series: {
           type: 'parallel',
           lineStyle: {
-            normal: {
-              width: 1,
-              opacity: 1,
-            },
+            width: 1,
+            opacity: 1,
           },
           data: data,
         },
@@ -1337,7 +1284,7 @@ export default {
         this.echart.chart.off('axisareaselected', null);
         window.removeEventListener('resize', this.resizeChart, false);
       } else {
-        this.echart.chart = echarts.init(document.querySelector('#echart'));
+        this.echart.chart = echarts.init(document.querySelector('#echart'), echartsThemeName);
       }
       this.echart.chart.setOption(echartOption, true);
       window.addEventListener('resize', this.resizeChart, false);
@@ -1351,9 +1298,7 @@ export default {
       this.echart.chart.on('axisareaselected', (params) => {
         const key = params.parallelAxisId;
         if (
-          (this.keysOfMixed &&
-            this.keysOfMixed.length &&
-            this.keysOfMixed.includes(key)) ||
+          (this.keysOfMixed && this.keysOfMixed.length && this.keysOfMixed.includes(key)) ||
           this.keysOfListType.includes(key)
         ) {
           if (this.keysOfListType.includes(key)) {
@@ -1386,10 +1331,7 @@ export default {
         if (axisData && range.length === lineLength) {
           if (axisData && axisData.id === this.valueType.model_size) {
             const byteNum = 1024;
-            range = [
-              parseInt(range[0] * byteNum * byteNum, 0),
-              parseInt(range[1] * byteNum * byteNum, 0),
-            ];
+            range = [parseInt(range[0] * byteNum * byteNum, 0), parseInt(range[1] * byteNum * byteNum, 0)];
           }
           if (axisData.type === this.valueType.category) {
             const rangeData = {};
@@ -1411,18 +1353,9 @@ export default {
             };
           }
           const filterParams = {};
-          filterParams.body = Object.assign(
-              {},
-              this.chartFilter,
-              this.tableFilter,
-          );
+          filterParams.body = Object.assign({}, this.chartFilter, this.tableFilter);
           const tableParams = {};
-          tableParams.body = Object.assign(
-              {},
-              this.chartFilter,
-              this.tableFilter,
-              this.sortInfo,
-          );
+          tableParams.body = Object.assign({}, this.chartFilter, this.tableFilter, this.sortInfo);
           // Call the target interface, and pass in the frame selection parameters
           this.initLeftColumnData(filterParams);
           RequestService.queryLineagesData(filterParams)
@@ -1432,9 +1365,7 @@ export default {
                       this.errorData = false;
                       if (res.data.object.length) {
                         let customized = {};
-                        customized = JSON.parse(
-                            JSON.stringify(res.data.customized),
-                        );
+                        customized = JSON.parse(JSON.stringify(res.data.customized));
                         const customizedKeys = Object.keys(customized);
                         if (customizedKeys.length) {
                           this.setInitListValue();
@@ -1443,9 +1374,7 @@ export default {
                               this.keysOfIntValue.push(i);
                             } else if (customized[i].type === this.valueType.str) {
                               this.keysOfStringValue.push(i);
-                            } else if (
-                              customized[i].type === this.valueType.mixed
-                            ) {
+                            } else if (customized[i].type === this.valueType.mixed) {
                               // list of type mixed
                               this.keysOfMixed.push(i);
                               this.keysOfStringValue.push(i);
@@ -1676,16 +1605,14 @@ export default {
         } else if (importanceValue < smallerData && importanceValue > 0) {
           importanceValue = importanceValue.toExponential(4);
         } else {
-          importanceValue =
-            Math.round(importanceValue * Math.pow(10, 4)) / Math.pow(10, 4);
+          importanceValue = Math.round(importanceValue * Math.pow(10, 4)) / Math.pow(10, 4);
         }
         if (this.selectedBarArray.includes(name)) {
           this.barYAxisData.push(name);
           this.barSeriesData.push(importanceValue);
         }
       }
-      this.selectedAllBar =
-        barHyper.length > this.barYAxisData.length ? false : true;
+      this.selectedAllBar = barHyper.length > this.barYAxisData.length ? false : true;
       this.$nextTick(() => {
         this.setChartOfBar();
       });
@@ -1711,12 +1638,7 @@ export default {
           sorted_type: this.sortInfo.sorted_type,
         };
         const params = {};
-        params.body = Object.assign(
-            {},
-            tempParam,
-            this.tableFilter,
-            this.chartFilter || {},
-        );
+        params.body = Object.assign({}, tempParam, this.tableFilter, this.chartFilter || {});
         RequestService.queryLineagesData(params)
             .then(
                 (res) => {
@@ -1777,7 +1699,7 @@ export default {
 <style>
 .cl-model-traceback {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
 }
 
 .el-select-dropdown {
@@ -1795,7 +1717,7 @@ export default {
   height: 51px;
   line-height: 56px;
   padding: 0 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--table-border-color);
 }
 
 .traceback-tab-item {
@@ -1807,18 +1729,18 @@ export default {
   display: inline-block;
   list-style: none;
   font-size: 17px;
-  color: #303133;
+  color: var(--el-tabs-item-color);
   position: relative;
 }
 
 .item-active {
-  color: #00a5a7;
+  color: var(--theme-color);
   font-weight: bold;
-  border-bottom: 3px solid #00a5a7;
+  border-bottom: 3px solid var(--theme-color);
 }
 
 .traceback-tab-item:hover {
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 
@@ -1867,7 +1789,7 @@ export default {
 }
 
 .checked-color {
-  color: #00a5a7 !important;
+  color: var(--theme-color) !important;
 }
 
 .el-tag.el-tag--info .el-tag__close {
@@ -1917,7 +1839,7 @@ export default {
   height: calc(100% - 51px);
   overflow-y: auto;
   position: relative;
-  background: #fff;
+  background: var(--bg-color);
 }
 #model-traceback-con .no-data-page {
   display: flex;
@@ -1930,7 +1852,6 @@ export default {
   height: 282px !important;
 }
 #model-traceback-con .no-data-page .no-data-img {
-  background: #fff;
   text-align: center;
   height: 200px;
   width: 310px;
@@ -1964,42 +1885,42 @@ export default {
   display: table-cell !important;
 }
 #model-traceback-con .icon-border {
-  border: 1px solid #00a5a7 !important;
+  border: 1px solid var(--theme-color) !important;
 }
 #model-traceback-con #tag-dialog {
   z-index: 999;
-  border: 1px solid #d6c9c9;
+  border: 1px solid var(--border-color);
   position: fixed;
   width: 326px;
   height: 120px;
-  background-color: #efebeb;
+  background-color: var(--module-bg-color);
   right: 106px;
   border-radius: 4px;
 }
 #model-traceback-con .custom-btn {
-  border: 1px solid #00a5a7;
+  border: 1px solid var(--theme-color);
   border-radius: 2px;
-  background-color: white;
-  color: #00a5a7;
+  background-color: var(--bg-color);
+  color: var(--theme-color);
 }
 #model-traceback-con .custom-btn:hover {
-  color: #00a5a7;
-  background: #e9f7f7;
+  color: var(--theme-color);
+  background: var(--button-hover-color);
 }
 #model-traceback-con .disabled-btn-color {
   border-radius: 2px;
-  background-color: #f5f5f6;
-  border: 1px solid #dfe1e6;
+  background-color: var(--button-disabled-bg-color);
+  border: 1px solid var(--table-border-color);
   color: #adb0b8;
 }
 #model-traceback-con .abled-btn-color {
-  border: 1px solid #00a5a7;
-  color: #00a5a7;
-  background: white;
+  border: 1px solid var(--theme-color);
+  color: var(--theme-color);
+  background: var(--bg-color);
 }
 #model-traceback-con .abled-btn-color:hover {
-  color: #00a5a7;
-  background: #e9f7f7;
+  color: var(--theme-color);
+  background: var(--button-hover-color);
 }
 #model-traceback-con .icon-image {
   display: inline-block;
@@ -2036,7 +1957,7 @@ export default {
 #model-traceback-con .table-container i {
   font-size: 18px;
   margin: 0 2px;
-  color: #00a5a7;
+  color: var(--theme-color);
   cursor: pointer;
 }
 #model-traceback-con .table-container .el-icon-close {
@@ -2065,7 +1986,7 @@ export default {
 #model-traceback-con .tag-icon-container {
   width: 21px;
   height: 21px;
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--table-border-color);
   cursor: pointer;
   border-radius: 2px;
 }
@@ -2074,7 +1995,7 @@ export default {
 }
 #model-traceback-con .cl-model-left {
   width: 400px;
-  background: #edf0f5;
+  background: var(--module-bg-color);
   overflow-y: auto;
   margin: 6px 0px 10px 32px;
   padding: 10px 16px;
@@ -2131,8 +2052,8 @@ export default {
 }
 #model-traceback-con .cl-model-left .bar-module-container {
   height: 270px;
-  border-bottom: 1px solid #b9bcc1;
-  border-top: 1px solid #b9bcc1;
+  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
   padding: 10px 0;
   overflow: hidden;
 }
@@ -2181,7 +2102,7 @@ export default {
   width: 12px;
   height: 12px;
   cursor: pointer;
-  background-image: url("../../assets/images/full-screen.png");
+  background-image: url('../../assets/images/full-screen.png');
 }
 #model-traceback-con .cl-model-left .left-scatters-container {
   overflow: hidden;
@@ -2199,11 +2120,21 @@ export default {
   line-height: 86px;
   z-index: 1999;
   text-align: center;
-  background-image: url("../../assets/images/collapse-left.svg");
 }
 #model-traceback-con .cl-model-left .collapse-btn.collapse {
   left: -10px;
-  background-image: url("../../assets/images/collapse-right.svg");
+}
+#model-traceback-con .cl-model-left .collapse-btn-0 {
+  background-image: url('../../assets/images/0/collapse-left.svg');
+}
+#model-traceback-con .cl-model-left .collapse-btn-1 {
+  background-image: url('../../assets/images/1/collapse-left.svg');
+}
+#model-traceback-con .cl-model-left .collapse-btn-0.collapse {
+  background-image: url('../../assets/images/0/collapse-right.svg');
+}
+#model-traceback-con .cl-model-left .collapse-btn-1.collapse {
+  background-image: url('../../assets/images/1/collapse-right.svg');
 }
 #model-traceback-con .cl-model-right.collapse {
   width: 100% !important;
@@ -2218,7 +2149,7 @@ export default {
   width: 100%;
   flex: 1;
   width: calc(100% - 400px);
-  background-color: #fff;
+  background-color: var(--bg-color);
   -webkit-box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
   box-shadow: 0 1px 0 0 rgba(200, 200, 200, 0.5);
   overflow: hidden;
@@ -2262,7 +2193,6 @@ export default {
   width: 100%;
 }
 #model-traceback-con .cl-model-right .table-container {
-  background-color: white;
   height: calc(67% - 78px);
   padding: 6px 32px 0px;
   position: relative;

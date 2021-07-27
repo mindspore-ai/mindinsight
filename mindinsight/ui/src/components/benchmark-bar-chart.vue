@@ -19,7 +19,8 @@ limitations under the License.
 </template>
 
 <script type="text/javascript">
-import echarts from '../js/echarts';
+import echarts, {echartsThemeName} from '../js/echarts';
+import CommonProperty from '../common/common-property';
 
 export default {
   name: 'BenchmarkBarChart',
@@ -33,6 +34,7 @@ export default {
       firstInit: true, // Identification of the first load data
       limitCount: 20, // Limit number of bars
       legendLimit: 16, // Limit number of characters in legend
+      themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
 
@@ -124,21 +126,16 @@ export default {
     initEcharts() {
       const self = this;
       const dom = this.$refs.evaluationtDom;
-      const theme = self.theme;
 
       if (dom) {
-        self.echartInstance = echarts.init(dom, theme);
+        self.echartInstance = echarts.init(dom, echartsThemeName);
       }
       self.option = {
+        color: CommonProperty.XAIColorArr[this.themeIndex],
         tooltip: {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow',
-          },
-          backgroundColor: 'rgba(50, 50, 50, 0.7)',
-          borderWidth: 0,
-          textStyle: {
-            color: '#fff',
           },
           formatter(params) {
             const colon = self.$t('symbols.colon');
@@ -146,16 +143,20 @@ export default {
             if (params.length) {
               tipStr += `<div>${params[0].name}</div>`;
               params.forEach((param) => {
-                tipStr += `<div><span style="border-radius:50%;width:10px;height:10px;vertical-align:middle;` +
-                `margin-right:5px;background-color:${param.color};display:inline-block;">` +
-                `</span>${param.seriesName}${colon}<span>` +
-                `</span>${param.value}<span></span></div>`;
+                tipStr +=
+                  `<div><span style="border-radius:50%;width:10px;height:10px;vertical-align:middle;` +
+                  `margin-right:5px;background-color:${param.color};display:inline-block;">` +
+                  `</span>${param.seriesName}${colon}<span>` +
+                  `</span>${param.value}<span></span></div>`;
               });
             }
             return tipStr;
           },
         },
         legend: {
+          textStyle: {
+            color: CommonProperty.echartsTextStyle[this.themeIndex],
+          },
           orient: 'vertical',
           data: [],
           right: 10,
@@ -180,11 +181,6 @@ export default {
             formatter: (param) => {
               const tip = param.name;
               return tip;
-            },
-            backgroundColor: 'rgba(50, 50, 50, 0.7)',
-            borderWidth: 0,
-            textStyle: {
-              color: '#fff',
             },
           },
         },

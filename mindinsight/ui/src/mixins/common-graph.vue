@@ -38,6 +38,7 @@ export default {
       clickScope: {}, // Information about the node that is clicked for the first time.
       frameSpace: 25, // Distance between the namespace border and the internal node
       curColorIndex: 0,
+      themeIndex: this.$store.state.themeIndex,
       totalMemory: 16777216 * 2, // Memory size of the graph plug-in
       allGraphData: {}, // graph Original input data
       firstFloorNodes: [], // ID array of the first layer node.
@@ -143,29 +144,20 @@ export default {
       let name = nodeId;
       this.selectedNode.more =
         name.indexOf('more...') !== -1 &&
-        document
-            .querySelector(`#graph g[id="${name}"]`)
-            .attributes.class.value.indexOf('plain') === -1;
+        document.querySelector(`#graph g[id="${name}"]`).attributes.class.value.indexOf('plain') === -1;
 
       const unfoldFlag =
-        (nodeClass.includes('aggregation') ||
-          nodeClass.includes('cluster') ||
-          this.selectedNode.more) &&
-        (!this.clickScope.id ||
-          (this.clickScope.id && nodeId === this.clickScope.id));
+        (nodeClass.includes('aggregation') || nodeClass.includes('cluster') || this.selectedNode.more) &&
+        (!this.clickScope.id || (this.clickScope.id && nodeId === this.clickScope.id));
 
       if (this.selectedNode.more) {
         const changePage = name.includes('right') ? 1 : -1;
-        const parentId = document.querySelector(`#graph g[id="${name}"]`)
-            .parentNode.id;
+        const parentId = document.querySelector(`#graph g[id="${name}"]`).parentNode.id;
         name = parentId.replace('_unfold', '');
         this.allGraphData[name].index += changePage;
         this.allGraphData[name].index = Math.max(
             0,
-            Math.min(
-                this.allGraphData[name].index,
-                this.allGraphData[name].childIdsList.length - 1,
-            ),
+            Math.min(this.allGraphData[name].index, this.allGraphData[name].childIdsList.length - 1),
         );
         this.selectedNode.name = name;
       }
@@ -300,13 +292,11 @@ export default {
             } else if (event.type === 'wheel') {
               const wheelDelta = -event.deltaY;
               const rate = 1.2;
-              scale =
-              wheelDelta > 0
-                ? transformData.scale[0] * rate
-                : transformData.scale[0] / rate;
+              scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
 
               scale = Math.max(this.scaleRange[0], scale, this.graph.minScale);
               scale = Math.min(this.scaleRange[1], scale);
+
               change = {
                 x:
                 ((this.svg.size.left - this.graph.defaultPadding - event.x + this.graph.transform.x) /
@@ -330,12 +320,10 @@ export default {
             this.graph.transform.y = Math.max(this.graph.transform.y, minDistance);
             this.graph.transform.y = Math.min(
                 this.graph.size.height * scale + this.svg.size.height - minDistance,
-                this.graph.transform.y
+                this.graph.transform.y,
             );
 
-            tempStr =
-            `translate(${this.graph.transform.x},${this.graph.transform.y}) ` +
-            `scale(${this.graph.transform.k})`;
+            tempStr = `translate(${this.graph.transform.x},${this.graph.transform.y}) scale(${this.graph.transform.k})`;
             this.graph.dom.setAttribute('transform', tempStr);
             if (this.pageKey === 'graph') {
               this.setInsideBoxData();
@@ -556,11 +544,8 @@ export default {
      */
     packageGraphData() {
       const nodes = this.getChildNodesByName();
-      const initSetting =
-        'node[style="filled";fontsize="10px"];edge[fontsize="5px";];';
-      return `digraph {${initSetting}${this.packageNodes(
-          nodes,
-      )}${this.packageEdges(nodes)}}`;
+      const initSetting = 'node[style="filled";fontsize="10px"];edge[fontsize="5px";];';
+      return `digraph {${initSetting}${this.packageNodes(nodes)}${this.packageEdges(nodes)}}`;
     },
     /**
      * Encapsulates node data into dot data.
@@ -579,30 +564,23 @@ export default {
             `label="${name}";class="aggregation";` +
             `${
               node.isUnfold
-                ? `shape="polygon";width=${node.size[0]};` +
-                  `height=${node.size[1]};fixedsize=true;`
+                ? `shape="polygon";width=${node.size[0]};` + `height=${node.size[1]};fixedsize=true;`
                 : 'shape="octagon";'
             }];`;
         } else if (node.type === 'name_scope') {
-          const fillColor = CommonProperty.graphColorArrPhg[this.curColorIndex];
+          const fillColor = CommonProperty.graphColorArr[this.themeIndex][this.curColorIndex];
           this.curColorIndex = this.curColorIndex % 4;
           this.curColorIndex++;
           tempStr +=
             `<${node.name}>[id="${node.name}";fillcolor="${fillColor}";` +
             `shape="polygon";label="${name}";class="cluster";` +
-            `${
-              node.isUnfold
-                ? `width=${node.size[0]};height=${node.size[1]};fixedsize=true;`
-                : ''
-            }];`;
+            `${node.isUnfold ? `width=${node.size[0]};height=${node.size[1]};fixedsize=true;` : ''}];`;
         } else if (node.type === 'Const') {
           tempStr +=
             `<${node.name}>[id="${node.name}";label="${name}\n\n\n";` +
             `shape="circle";width="0.14";height="0.14";fixedsize=true;];`;
         } else {
-          tempStr +=
-            `<${node.name}>[id="${node.name}";shape="ellipse";` +
-            `label="${name}"];`;
+          tempStr += `<${node.name}>[id="${node.name}";shape="ellipse";` + `label="${name}"];`;
         }
         // A maximum of five virtual nodes can be displayed. Other virtual nodes are displayed in XXXmore.
         // The ID of the omitted aggregation node is analogNodesInput||analogNodeOutput^nodeId.
@@ -614,18 +592,13 @@ export default {
           let isConst = false;
           for (let i = 0; i < Math.min(5, keys.length); i++) {
             source = keys[i];
-            isConst = !!(
-              this.allGraphData[keys[i]] &&
-              this.allGraphData[keys[i]].type === 'Const'
-            );
+            isConst = !!(this.allGraphData[keys[i]] && this.allGraphData[keys[i]].type === 'Const');
             const nodeStr = isConst
               ? `shape="circle";width="0.14";height="0.14";fixedsize=true;` +
                 `label="${source.split('/').pop()}\n\n\n";`
               : `shape="Mrecord";label="${source.split('/').pop()}";`;
 
-            tempStr +=
-              `<${source}^${target}>[id="${source}^${target}";` +
-              `${nodeStr}class="plain"];`;
+            tempStr += `<${source}^${target}>[id="${source}^${target}";` + `${nodeStr}class="plain"];`;
           }
           if (keys.length > 5) {
             tempStr +=
@@ -638,18 +611,13 @@ export default {
           source = node.name;
           for (let i = 0; i < Math.min(5, keys.length); i++) {
             target = keys[i];
-            isConst = !!(
-              this.allGraphData[keys[i]] &&
-              this.allGraphData[keys[i]].type === 'Const'
-            );
+            isConst = !!(this.allGraphData[keys[i]] && this.allGraphData[keys[i]].type === 'Const');
             const nodeStr = isConst
               ? `shape="circle";width="0.14";height="0.14";fixedsize=true;` +
                 `label="${target.split('/').pop()}\n\n\n";`
               : `shape="Mrecord";label="${target.split('/').pop()}";`;
 
-            tempStr +=
-              `<${target}^${source}>[id="${target}^${source}";` +
-              `${nodeStr}class="plain";];`;
+            tempStr += `<${target}^${source}>[id="${target}^${source}";` + `${nodeStr}class="plain";];`;
           }
           if (keys.length > 5) {
             tempStr +=
@@ -675,9 +643,7 @@ export default {
       const analogNodesOutputId = `analogNodesOutputOf${name}`;
       let needAnalogInput = false;
       let needAnalogOutput = false;
-      const unfoldIndependentScope = name
-        ? this.allGraphData[name].independent_layout
-        : false;
+      const unfoldIndependentScope = name ? this.allGraphData[name].independent_layout : false;
       nodes.forEach((node) => {
         // No input cable is required for the aggregation node and nodes in the aggregation node without namescoope.
         // When only aggregation nodes are encapsulated, input cables do not need to be considered.
@@ -690,9 +656,7 @@ export default {
               // aggregation node. It can only connect to the outer namespace of the aggregation node.
               // If there is no namespace in the outer layer, you do not need to connect cables.
               // Other connections are normal.
-              const source =
-                this.findChildNamescope(key, name) ||
-                (key ? analogNodesInputId : '');
+              const source = this.findChildNamescope(key, name) || (key ? analogNodesInputId : '');
               let target = node.name;
               if (node.independent_layout) {
                 const list = node.name.split('/');
@@ -745,14 +709,9 @@ export default {
             Object.keys(node.output || {}).forEach((key) => {
               if (!node.output[key].independent_layout) {
                 const source = node.name;
-                const target =
-                  this.findChildNamescope(key, name) || analogNodesOutputId;
+                const target = this.findChildNamescope(key, name) || analogNodesOutputId;
                 if (source && target) {
-                  if (
-                    name &&
-                    !target.startsWith(`${name}/`) &&
-                    source !== name
-                  ) {
+                  if (name && !target.startsWith(`${name}/`) && source !== name) {
                     const obj = {
                       source: source,
                       target: analogNodesOutputId,
@@ -899,10 +858,7 @@ export default {
       let nodes = [];
       if (name) {
         const node = this.allGraphData[name];
-        const nameList =
-          node.type === 'aggregation_scope'
-            ? node.childIdsList[node.index]
-            : node.children;
+        const nameList = node.type === 'aggregation_scope' ? node.childIdsList[node.index] : node.children;
 
         nodes = nameList.map((i) => {
           return this.allGraphData[i];
@@ -1008,15 +964,12 @@ export default {
     dealNamescopeTempGraph(name) {
       if (!(name && this.allGraphData[name])) return;
       const type = this.allGraphData[name].type;
-      const classText =
-        type === 'aggregation_scope'
-          ? 'node cluster aggregation'
-          : 'node cluster';
+      const classText = type === 'aggregation_scope' ? 'node cluster aggregation' : 'node cluster';
       const idStr = '#graphTemp #graph0 ';
       let fillColor = type === 'aggregation_scope' ? '#fff2d4' : '#ffe4d6';
       const curColorIndex = (name.split('/').length - 1) % 4;
       if (type === 'name_scope') {
-        fillColor = CommonProperty.graphColorArrPhg[curColorIndex];
+        fillColor = CommonProperty.graphColorArr[this.themeIndex][curColorIndex];
       }
 
       const graphTemp = d3.select(idStr).node();
@@ -1037,20 +990,17 @@ export default {
               .node(),
       );
       // Move all the subnodes of the namespace to the created namespace node.
-      Array.prototype.forEach.call(
-          document.querySelector(idStr).querySelectorAll('g'),
-          (node) => {
-            if (node.id !== g.node().id) {
-            // The title of all virtual nodes needs to be reset.
-              if (Array.prototype.includes.call(node.classList, 'plain')) {
-                const title = node.querySelector('title');
-                title.textContent = title.textContent.split('^')[0];
-              }
-              node.setAttribute('transform', 'translate(0,0)');
-              g.node().appendChild(node);
-            }
-          },
-      );
+      Array.prototype.forEach.call(document.querySelector(idStr).querySelectorAll('g'), (node) => {
+        if (node.id !== g.node().id) {
+          // The title of all virtual nodes needs to be reset.
+          if (Array.prototype.includes.call(node.classList, 'plain')) {
+            const title = node.querySelector('title');
+            title.textContent = title.textContent.split('^')[0];
+          }
+          node.setAttribute('transform', 'translate(0,0)');
+          g.node().appendChild(node);
+        }
+      });
       // Add a rectangle to the created namespace node as the border of the namespace.
       g.insert('rect', 'title')
           .attr('style', `fill:${fillColor};`)
@@ -1072,9 +1022,7 @@ export default {
         const node = document.querySelector(`#graphTemp g[id="${name}"]`);
         const box = node.getBBox();
         const boxTemp = nodeTemp.getBBox();
-        const translateStr = `translate(${box.x - boxTemp.x},${
-          box.y - boxTemp.y
-        })`;
+        const translateStr = `translate(${box.x - boxTemp.x},${box.y - boxTemp.y})`;
         nodeTemp.setAttribute('transform', translateStr);
         node.parentNode.appendChild(nodeTemp);
         document.querySelector('#subgraphTemp svg').remove();
@@ -1090,9 +1038,7 @@ export default {
 
       this.generateIOBus(name);
       // Move the DOM station in graphTemp to subgraph, and then graphTemp continue to lay out the outer graph.
-      document
-          .querySelector('#subgraphTemp')
-          .appendChild(document.querySelector('#graphTemp svg'));
+      document.querySelector('#subgraphTemp').appendChild(document.querySelector('#graphTemp svg'));
       this.transplantChildrenDom(name);
       this.layoutController(name);
     },
@@ -1111,23 +1057,16 @@ export default {
       }
       nameList.forEach((i) => {
         const nodeData = this.allGraphData[i];
-        const flag =
-          (nodeData.type === 'name_scope' ||
-            nodeData.type === 'aggregation_scope') &&
-          nodeData.isUnfold;
+        const flag = (nodeData.type === 'name_scope' || nodeData.type === 'aggregation_scope') && nodeData.isUnfold;
         if (flag) {
           // Place the dom character string in graphTemp and then move it to the corresponding node of subgraphTemp.
           document.querySelector('#graphTemp').innerHTML = nodeData.html;
           const node = document.querySelector(`${idStr}g[id="${i}"]`);
-          const nodeTemp = document.querySelector(
-              `#graphTemp #graph0 g[id="${i}_unfold"]`,
-          );
+          const nodeTemp = document.querySelector(`#graphTemp #graph0 g[id="${i}_unfold"]`);
           if (node && nodeTemp) {
             const box = node.getBBox();
             const boxTemp = nodeTemp.getBBox();
-            const translateStr = `translate(${box.x - boxTemp.x},${
-              box.y - boxTemp.y
-            })`;
+            const translateStr = `translate(${box.x - boxTemp.x},${box.y - boxTemp.y})`;
             nodeTemp.setAttribute('transform', translateStr);
             node.parentNode.appendChild(nodeTemp);
             node.remove();
@@ -1139,9 +1078,7 @@ export default {
         }
       });
       if (name) {
-        this.allGraphData[name].html = document.querySelector(
-            `#subgraphTemp svg`,
-        ).outerHTML;
+        this.allGraphData[name].html = document.querySelector(`#subgraphTemp svg`).outerHTML;
       }
     },
     /**
@@ -1150,18 +1087,10 @@ export default {
      */
     generateIOBus(name) {
       if (d3.select(`#graphTemp g[id="analogNodesInputOf${name}"]`).size()) {
-        this.generateEdge(
-            {source: `${name}_unfold`, target: `analogNodesInputOf${name}`},
-            name,
-            'input',
-        );
+        this.generateEdge({source: `${name}_unfold`, target: `analogNodesInputOf${name}`}, name, 'input');
       }
       if (d3.select(`#graphTemp g[id="analogNodesOutputOf${name}"]`).size()) {
-        this.generateEdge(
-            {source: `analogNodesOutputOf${name}`, target: `${name}_unfold`},
-            name,
-            'output',
-        );
+        this.generateEdge({source: `analogNodesOutputOf${name}`, target: `${name}_unfold`}, name, 'output');
       }
     },
     /**
@@ -1173,11 +1102,8 @@ export default {
       const nodes = this.getChildNodesByName(name);
       const nodeStr = this.packageNodes(nodes, name);
       const edgeStr = this.packageEdges(nodes, name);
-      const initSetting =
-        `node[style="filled";fontsize="10px";];` + `edge[fontsize="5px";];`;
-      const dotStr =
-        `digraph {${initSetting}label="${name.split('/').pop()}";` +
-        `${nodeStr}${edgeStr}}`;
+      const initSetting = `node[style="filled";fontsize="10px";];` + `edge[fontsize="5px";];`;
+      const dotStr = `digraph {${initSetting}label="${name.split('/').pop()}";` + `${nodeStr}${edgeStr}}`;
       return dotStr;
     },
     /**
@@ -1192,13 +1118,7 @@ export default {
       const g = d3
           .select(`#graphTemp g#graph0${name ? ` g[id="${name}_unfold"]` : ''}`)
           .append('g')
-          .attr(
-              'id',
-              `${edge.source.replace('_unfold', '')}->${edge.target.replace(
-                  '_unfold',
-                  '',
-              )}`,
-          )
+          .attr('id', `${edge.source.replace('_unfold', '')}->${edge.target.replace('_unfold', '')}`)
           .attr('class', 'edge');
       g.append('title').text(text);
       // Because the edges need to be highlighted, marker requires one side of each side.
@@ -1218,15 +1138,9 @@ export default {
       g.append('path')
           .attr('stroke', 'rgb(167, 167, 167)')
           .attr('stroke-width', 1)
-          .attr(
-              'stroke-dasharray',
-              `${edge.edge_type === 'control' ? '5,2' : '0'}`,
-          )
+          .attr('stroke-dasharray', `${edge.edge_type === 'control' ? '5,2' : '0'}`)
           .attr('marker-end', `url(#${name + port}marker)`)
-          .attr(
-              'd',
-              `M${points[0].x},${points[0].y}L${points[1].x},${points[1].y}`,
-          );
+          .attr('d', `M${points[0].x},${points[0].y}L${points[1].x},${points[1].y}`);
       g.append('text')
           .attr('text-anchor', 'middle')
           .attr('font-family', 'Times,serif')
@@ -1243,14 +1157,8 @@ export default {
      * @return {Array} Coordinate array of the start point and end point of the edge.
      */
     getEdgePoints(edge, port) {
-      const source = d3
-          .select(`#graphTemp g[id="${edge.source}"]`)
-          .node()
-          .getBBox();
-      const target = d3
-          .select(`#graphTemp g[id="${edge.target}"]`)
-          .node()
-          .getBBox();
+      const source = d3.select(`#graphTemp g[id="${edge.source}"]`).node().getBBox();
+      const target = d3.select(`#graphTemp g[id="${edge.target}"]`).node().getBBox();
       source.points = this.getBoxPoints(source);
       target.points = this.getBoxPoints(target);
       // The input bus is at the top of the namespace, and the output bus is at the bottom of the namespace.
@@ -1421,10 +1329,7 @@ export default {
           let commonIndex = -1;
           // Find the same prefix.
           for (let i = 0; i < lengthMin; i++) {
-            if (
-              sourceList.slice(0, i + 1).join('/') ===
-              targetList.slice(0, i + 1).join('/')
-            ) {
+            if (sourceList.slice(0, i + 1).join('/') === targetList.slice(0, i + 1).join('/')) {
               commonIndex = i;
             }
           }
@@ -1449,12 +1354,7 @@ export default {
           for (let i = 0; i < list.length; i++) {
             const [sourceTemp, targetTemp] = list[i].split('->');
             // Remove the situation where the aggregation node and node are in the same namespace.
-            if (
-              !(
-                sourceTemp.startsWith(targetTemp + '/') ||
-                targetTemp.startsWith(sourceTemp + '/')
-              )
-            ) {
+            if (!(sourceTemp.startsWith(targetTemp + '/') || targetTemp.startsWith(sourceTemp + '/'))) {
               edgesList[`${sourceTemp}->${targetTemp}`] = {
                 source: sourceTemp,
                 target: targetTemp,
@@ -1550,10 +1450,7 @@ export default {
      */
     findStartUnfoldNode(data) {
       if (data && data.scope_name) {
-        if (
-          this.allGraphData[data.scope_name] &&
-          this.allGraphData[data.scope_name].isUnfold
-        ) {
+        if (this.allGraphData[data.scope_name] && this.allGraphData[data.scope_name].isUnfold) {
           if (
             data.nodes.some((node) => {
               return node.name === this.selectedNode.name;

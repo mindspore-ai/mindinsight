@@ -20,28 +20,28 @@ limitations under the License.
         {{$t("profilingCluster.memoryHeatMapTitle")}}
         <el-tooltip placement="right-start"
                     effect="light">
-        <div slot="content"
-             class="heatmap-tooltip-container">
-          <div class="cl-memory-heatmap-tip">
-            <div class="tip-title">
-              {{$t("profilingCluster.mainTipTitle")}}
-            </div>
-            <div class="tip-part">
-              {{$t("profilingCluster.mainTipPartOne")}}
-            </div>
-            <div class="tip-part">
-              {{$t("profilingCluster.mainTipPartTwo")}}
-            </div>
-            <div class="tip-part">
-              {{$t("profilingCluster.mainTipPartThree")}}
-            </div>
-            <div class="tip-part">
-              {{$t("profilingCluster.mainTipPartFour")}}
+          <div slot="content"
+               class="heatmap-tooltip-container">
+            <div class="cl-memory-heatmap-tip">
+              <div class="tip-title">
+                {{$t("profilingCluster.mainTipTitle")}}
+              </div>
+              <div class="tip-part">
+                {{$t("profilingCluster.mainTipPartOne")}}
+              </div>
+              <div class="tip-part">
+                {{$t("profilingCluster.mainTipPartTwo")}}
+              </div>
+              <div class="tip-part">
+                {{$t("profilingCluster.mainTipPartThree")}}
+              </div>
+              <div class="tip-part">
+                {{$t("profilingCluster.mainTipPartFour")}}
+              </div>
             </div>
           </div>
-        </div>
-        <i class="el-icon-info"></i>
-      </el-tooltip>
+          <i class="el-icon-info"></i>
+        </el-tooltip>
       </div>
       <div class="path-message">
         <span>{{$t('symbols.leftbracket')}}</span>
@@ -67,7 +67,7 @@ limitations under the License.
                  @change="getColorValue">
         <el-option v-for="(item, index) in granuLarityList"
                    :key="index"
-                   :value="item.label"
+                   :value="item.value"
                    :label="item.label">
         </el-option>
       </el-select>
@@ -77,7 +77,8 @@ limitations under the License.
            v-for="(item, itemIndex) in memoryHeatmapDataList"
            :key="itemIndex"
            :class="{'mt0': itemIndex < colNum}">
-        <div class="detail-content" :class="{'center': item.showCenter}">
+        <div class="detail-content"
+             :class="{'center': item.showCenter}">
           <div class="device-item"
                v-for="(deviceItem, deviceItemIndex) in item.data"
                :key="deviceItemIndex">
@@ -128,9 +129,9 @@ export default {
       summaryDir: this.$route.query.dir,
       memoryHeatmapInitOver: false, // init Heat map
       memoryHeatmapDataList: [], // Heat map data
-      colNum: 4, // column number
+      colNum: 4, // Column number
       granuLarityList: [], // Array of granularity
-      granuLarity: '0.1', // granuLarity value
+      granuLarity: '0.1', // GranuLarity value
       colorArr: [], // Array of color index
     };
   },
@@ -199,15 +200,16 @@ export default {
             resData.forEach((data) => {
               let arrayIndex;
               if (heatmapDataMap[data.host_ip] === undefined) {
-                // New host_ip
-                arrayIndex = heatmapDataArr.push({
+              // New host_ip
+                arrayIndex =
+                heatmapDataArr.push({
                   hostIp: data.host_ip,
                   data: [],
                   showCenter: true,
                 }) - 1;
                 heatmapDataMap[data.host_ip] = arrayIndex;
               } else {
-                // Exist host_ip
+              // Exist host_ip
                 arrayIndex = heatmapDataMap[data.host_ip];
               }
               const deviceId = data.device_id;
@@ -222,7 +224,7 @@ export default {
               };
             });
             heatmapDataArr.forEach((data) => {
-              // Avoid device_id incoherent
+            // Avoid device_id incoherent
               data.data = data.data.filter((item) => {
                 return item !== undefined;
               });
@@ -272,14 +274,16 @@ export default {
       const colorReg = /^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
       let colorStr = str.toLowerCase().slice(1);
       if (colorReg.test(colorStr)) {
-        let colorStrNew = '';
+        let colorStrNew = '#';
+        // 3: Process the three-digit color value into six digits
         if (colorStr.length === 3) {
           for (let i = 0; i < 3; i++) {
-            colorStrNew += colorStrNew.slice(i, i + 1).concat(colorStrNew.slice(i, i + 1));
+            colorStrNew += colorStr.slice(i, i + 1).concat(colorStr.slice(i, i + 1));
           }
           colorStr = colorStrNew;
         }
         const colorFormat = [];
+        // 6: Process six-bit color values
         for (let i = 0; i < 6; i += 2) {
           colorFormat.push(parseInt(`0x${colorStr.slice(i, i + 2)}`));
         }
@@ -299,13 +303,17 @@ export default {
         const colorSplit = rgb.replace(/(?:(|)|rgb|RGB)*/g, '').split(',');
         let hexStr = '';
         for (let i = 0; i < colorSplit.length; i++) {
+          // 16: RGB color conversion to hexadecimal
           let hexItem = Number(colorSplit[i]).toString(16);
+          // 10: Color value bits less than ten complement zero
           hexItem = hexItem < 10 ? `0${hexItem}` : hexItem;
+          // 0: An unsigned number with a size value of zero is represented by a zero character '0'
           if (hexItem === '0') {
             hexItem += hexItem;
           }
           hexStr += hexItem;
         }
+        // 6: Filter the color value with a length of six
         if (hexStr.length !== 6) {
           hexStr = rgb;
         }
@@ -313,9 +321,9 @@ export default {
       }
     },
     /**
-     * page turn memory
+     * Page turn memory
      * @param {Object} item Jump parameters
-     * @param {String} hostIP host ip
+     * @param {String} hostIP Host ip
      */
     jumpToMemory(item, hostIP) {
       this.$router.push({
@@ -338,7 +346,7 @@ export default {
       this.memoryHeatmapDataList.forEach((data) => {
         data.data.forEach((item) => {
           if (item.peakRatio !== maxPeakRatio) {
-            const colorIndex = Math.floor((item.peakRatio) / (+this.granuLarity));
+            const colorIndex = Math.floor(item.peakRatio / +this.granuLarity);
             item.background = this.colorArr[colorIndex].background;
           } else {
             item.background = this.colorArr[this.colorArr.length - 1].background;
@@ -368,7 +376,7 @@ export default {
   height: 100%;
   width: 100%;
   padding: 0 32px 24px 32px;
-  background: #fff;
+  background: var(--bg-color);
 }
 .cl-memory-heatmap .cl-cluster-title {
   height: 56px;
@@ -433,7 +441,7 @@ export default {
   margin-left: 30px;
   width: 100%;
   margin-top: 3px;
-  border-bottom: solid 1px #e6ebf5;
+  border-bottom: solid 1px var(--border-color);
   padding: 8px 0px;
 }
 .cl-memory-heatmap .content .legend-content {
@@ -485,7 +493,7 @@ export default {
 }
 .cl-memory-heatmap .heatmap-content .heatmap-item .detail-content {
   height: calc(100% - 28px);
-  background: #e6ebf5;
+  background: var(--heatmap-content-color);
   display: flex;
   flex-wrap: wrap;
   overflow-y: auto;
@@ -526,7 +534,7 @@ export default {
 .cl-memory-heatmap .heatmap-content .heatmap-item .info-content {
   margin-top: 10px;
   font-size: 16px;
-  color: #333;
+  color: var(--font-color);
   font-weight: 600;
   text-align: center;
 }

@@ -16,10 +16,10 @@ limitations under the License.
 <script>
 export default {
   /**
-  * The logic of transform object to string in 'dot' form
-  * @param {Object} object
-  * @return {String}
-  */
+   * The logic of transform object to string in 'dot' form
+   * @param {Object} object
+   * @return {String}
+   */
   objectToDot(object) {
     const keys = Object.keys(object);
     let attrTemp = '';
@@ -53,10 +53,10 @@ export default {
     return dotTemp;
   },
   /**
-  * The logic of transform object.subgraph to string in 'dot' form
-  * @param {Object} subgraph
-  * @return {String}
-  */
+   * The logic of transform object.subgraph to string in 'dot' form
+   * @param {Object} subgraph
+   * @return {String}
+   */
   subToDot(subgraph) {
     let subTemp = '';
     let arrowTemp = '';
@@ -84,11 +84,11 @@ export default {
     return [subTemp, arrowTemp];
   },
   /**
-  * The logic of transform 'next' of single item in object.nodes to string in 'dot' form
-  * @param {Object} object
-  * @param {Object} start
-  * @return {String}
-  */
+   * The logic of transform 'next' of single item in object.nodes to string in 'dot' form
+   * @param {Object} object
+   * @param {Object} start
+   * @return {String}
+   */
   nextToDot(object, start) {
     let arrowTemp = '';
     if (Array.isArray(object)) {
@@ -123,11 +123,11 @@ export default {
     return arrowTemp;
   },
   /**
-  * The logic of transform object.attr to string in 'dot' form
-  * @param {Object} object
-  * @param {String} title
-  * @return {String}
-  */
+   * The logic of transform object.attr to string in 'dot' form
+   * @param {Object} object
+   * @param {String} title
+   * @return {String}
+   */
   attrToDot(object, title) {
     const keys = Object.keys(object);
     if (keys.length === 0) {
@@ -148,10 +148,10 @@ export default {
     }
   },
   /**
-  * The logic of transform object.nodes to string in 'dot' form
-  * @param {Array} nodes
-  * @return {Array<string>}
-  */
+   * The logic of transform object.nodes to string in 'dot' form
+   * @param {Array} nodes
+   * @return {Array<string>}
+   */
   nodesToDot(nodes) {
     let nodesTemp = '';
     let arrowsTemp = '';
@@ -163,10 +163,10 @@ export default {
     return [nodesTemp, arrowsTemp];
   },
   /**
-  * The logic of transform object.mix to string in 'dot' form
-  * @param {Array} mix
-  * @return {Array<string>}
-  */
+   * The logic of transform object.mix to string in 'dot' form
+   * @param {Array} mix
+   * @return {Array<string>}
+   */
   mixToDot(mix) {
     let nodesTemp = '';
     let arrowsTemp = '';
@@ -174,7 +174,7 @@ export default {
       const keys = Object.keys(mix[i]);
       let attrTemp = '';
       let nodeTemp = '';
-      for (let j = 0; j <keys.length; j++) {
+      for (let j = 0; j < keys.length; j++) {
         if (keys[j] === 'nodes') {
           const tempArray = this.nodesToDot(mix[i].nodes);
           nodeTemp += tempArray[0];
@@ -188,10 +188,10 @@ export default {
     return [nodesTemp, arrowsTemp];
   },
   /**
-  * The logic of transform single item in object.nodes to string in 'dot' form
-  * @param {String} node
-  * @return {Array<string>}
-  */
+   * The logic of transform single item in object.nodes to string in 'dot' form
+   * @param {String} node
+   * @return {Array<string>}
+   */
   nodeToDot(node) {
     let nodeTemp = `<${node.name}>[`;
     let arrowTemp = '';

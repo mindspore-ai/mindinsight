@@ -320,9 +320,7 @@ export default {
       document.title = `${this.$t('metric.scoreSystem')}-MindInsight`;
       return;
     }
-    document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t(
-        'metric.scoreSystem',
-    )}-MindInsight`;
+    document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t('metric.scoreSystem')}-MindInsight`;
     this.maxHeight = this.$refs.xaiCon.clientHeight;
     this.getEvaluationData();
     window.addEventListener('resize', this.resizeCallback, false);
@@ -522,7 +520,7 @@ export default {
      */
     getEvaluationData() {
       const params = {
-        train_id: decodeURIComponent(this.trainId),
+        train_id: this.trainId,
       };
       RequestService.getEvaluation(params).then(
           (res) => {
@@ -615,8 +613,7 @@ export default {
             if (!fullDataDict[curMethod][curLabel]) {
               fullDataDict[curMethod][curLabel] = {};
               classScore.evaluations.forEach((evaluation) => {
-                fullDataDict[curMethod][curLabel][evaluation.metric] =
-                  evaluation.score;
+                fullDataDict[curMethod][curLabel][evaluation.metric] = evaluation.score;
                 if (!metricsDic[evaluation.metric]) {
                   metricsDic[evaluation.metric] = true;
                   classifyAllMetrics.push({
@@ -771,7 +768,7 @@ export default {
 <style>
 .cl-xai {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
   padding: 0px 32px;
   padding-bottom: 32px;
   display: flex;
@@ -829,6 +826,9 @@ export default {
 .cl-xai .el-table__footer tr td:nth-child(2) {
   text-align: center;
 }
+.cl-xai .el-table__fixed-footer-wrapper tbody td {
+  background: var(--el-table-head-isgroup-bg-color);
+}
 .cl-xai .el-tabs__item {
   font-size: 14px;
   color: #303133;
@@ -839,7 +839,7 @@ export default {
 .cl-xai .el-tabs__item span {
   font-weight: 500;
   font-size: 14px;
-  color: #303133;
+  color: var(--font-color);
 }
 .cl-xai .el-tabs__item span:hover {
   color: #00a5a7;
@@ -905,7 +905,7 @@ export default {
   overflow: hidden;
 }
 .cl-xai .comprehensiveEvaluation .evaluation-table-header th {
-  background: #f5f7fa;
+  background: var(--el-table-head-isgroup-bg-color);
 }
 .cl-xai .comprehensiveEvaluation td.columnHover {
   background: rgba(0, 165, 167, 0.05);
@@ -989,7 +989,6 @@ export default {
 .el-tooltip__popper .tooltip-container .tooltip-style .tooltip-title {
   font-size: 16px;
   font-weight: bold;
-  color: #333333;
 }
 .el-tooltip__popper .tooltip-container .tooltip-style .tooltip-content {
   line-height: 20px;

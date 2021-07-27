@@ -84,7 +84,7 @@ export default {
       const svgDom = document.querySelector('#graph svg').cloneNode(true);
       const style = document.createElement('style');
       svgDom.append(style);
-      style.outerHTML = CommonProperty.graphDownloadStyle;
+      style.outerHTML = CommonProperty.graphDownloadStyle[this.$store.state.themeIndex];
 
       svgDom.setAttribute('width', this.graph.size.width);
       svgDom.setAttribute('height', this.graph.size.height);

@@ -87,11 +87,11 @@ limitations under the License.
                       placement="top">
             <span class="select-disable">
               <i :title="$t('trainingDashboard.waitLoading')"
-                   class="el-icon-time"
-                   v-if="item.checked && item.loading==='NOT_IN_CACHE'"></i>
+                 class="el-icon-time"
+                 v-if="item.checked && item.loading==='NOT_IN_CACHE'"></i>
               <i :title="$t('trainingDashboard.loadingTip')"
-                   class="el-icon-loading"
-                   v-if="item.checked && item.loading==='CACHING'"></i>
+                 class="el-icon-loading"
+                 v-if="item.checked && item.loading==='CACHING'"></i>
               {{item.label}}</span>
           </el-tooltip>
         </span>
@@ -147,9 +147,7 @@ export default {
      * Initialize
      */
     init() {
-      this.itemId =
-        `${new Date().getTime()}` +
-        `${this.$store.state.multiSelectedGroupCount}`;
+      this.itemId = `${new Date().getTime()}` + `${this.$store.state.multiSelectedGroupCount}`;
       this.$store.commit('multiSelectedGroupComponentNum');
       this.$nextTick(() => {
         this.resizeCallback();
@@ -164,8 +162,7 @@ export default {
       const selectItemContent = this.$refs[this.itemId];
       if (selectItemContent) {
         this.overRowFlag =
-          selectItemContent.clientHeight <
-          selectItemContent.scrollHeight - this.perSelectItemMarginBottom;
+          selectItemContent.clientHeight < selectItemContent.scrollHeight - this.perSelectItemMarginBottom;
       }
     },
     /**
@@ -255,9 +252,7 @@ export default {
         });
         // Update the selected status of the Select All button
         if (this.isLimit && !itemSelectAll) {
-          itemSelectAll =
-            this.selectedNumber >= this.limitNum ||
-            this.selectedNumber >= this.checkListArr.length;
+          itemSelectAll = this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length;
         }
         this.operateSelectAll = itemSelectAll;
         this.$emit('selectedChange', this.multiSelectedItemNames);
@@ -268,12 +263,7 @@ export default {
      * @param {Object} listItem Current item object
      */
     listItemClick(listItem) {
-      if (
-        !listItem ||
-        (this.isLimit &&
-          this.selectedNumber >= this.limitNum &&
-          !listItem.checked)
-      ) {
+      if (!listItem || (this.isLimit && this.selectedNumber >= this.limitNum && !listItem.checked)) {
         return;
       }
       listItem.checked = !listItem.checked;
@@ -296,9 +286,7 @@ export default {
         }
       });
       if (this.isLimit && !itemSelectAll) {
-        itemSelectAll =
-          this.selectedNumber >= this.limitNum ||
-          this.selectedNumber >= this.checkListArr.length;
+        itemSelectAll = this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length;
       }
       this.operateSelectAll = itemSelectAll;
       // Return a dictionary containing selected items.
@@ -352,10 +340,7 @@ export default {
             listItem.show = false;
           }
         }
-        if (
-          this.selectedNumber >= this.limitNum ||
-          this.selectedNumber >= this.checkListArr.length
-        ) {
+        if (this.selectedNumber >= this.limitNum || this.selectedNumber >= this.checkListArr.length) {
           itemSelectAll = true;
         } else {
           itemSelectAll = false;
@@ -479,10 +464,10 @@ export default {
   float: left;
 }
 .cl-checklist-container .checkbox-checked {
-  background-image: url("../assets/images/mult-select.png");
+  background-image: url('../assets/images/mult-select.png');
 }
 .cl-checklist-container .checkbox-unchecked {
-  background-image: url("../assets/images/mult-unselect.png");
+  background-image: url('../assets/images/mult-unselect.png');
 }
 .cl-checklist-container .label-item {
   font-size: 14px;

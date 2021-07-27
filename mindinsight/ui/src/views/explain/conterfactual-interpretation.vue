@@ -338,9 +338,7 @@ export default {
   mounted() {
     if (!this.trainId) {
       this.$message.error(this.$t('trainingDashboard.invalidId'));
-      document.title = `${this.$t(
-          'explain.conterfactualInterpretation',
-      )}-MindInsight`;
+      document.title = `${this.$t('explain.conterfactualInterpretation')}-MindInsight`;
       return;
     }
     document.title = `${decodeURIComponent(this.trainId)}-${this.$t(
@@ -371,12 +369,7 @@ export default {
       };
       RequestService.queryTrainInfo(params).then(
           (res) => {
-            if (
-              !res ||
-            !res.data ||
-            !res.data.classes ||
-            !res.data.saliency
-            ) {
+            if (!res || !res.data || !res.data.classes || !res.data.saliency) {
               this.initOver = true;
               return;
             }
@@ -399,7 +392,8 @@ export default {
               this.minConfidence = res.data.saliency.min_confidence;
               this.getHOCData();
             }
-          }, () => {
+          },
+          () => {
             this.initOver = true;
           },
       );
@@ -471,9 +465,9 @@ export default {
       }
       const labelOptions = [];
       curData.inferences.forEach((inference, index) => {
-        const label = `${inference.label}${this.$t(
-            'symbols.leftbracket',
-        )}${inference.confidence.toFixed(3)}${this.$t('symbols.rightbracket')}`;
+        const label = `${inference.label}${this.$t('symbols.leftbracket')}${inference.confidence.toFixed(3)}${this.$t(
+            'symbols.rightbracket',
+        )}`;
         labelOptions.push({
           label: label,
           value: index,
@@ -484,19 +478,13 @@ export default {
       this.curImageData.oriData = curData;
       if (labelOptions.length) {
         this.curImageData.selectedLabel = labelOptions[0].value;
-        this.curImageData.curSampleData = this.curImageData.oriData.inferences[
-            this.curImageData.selectedLabel
-        ];
+        this.curImageData.curSampleData = this.curImageData.oriData.inferences[this.curImageData.selectedLabel];
       } else {
         this.curImageData.selectedLabel = '';
         this.curImageData.curSampleData = {};
       }
-      if (
-        this.curImageData.curSampleData.hoc_layers &&
-        this.curImageData.curSampleData.hoc_layers.length
-      ) {
-        this.curImageData.imageIndex =
-          this.curImageData.curSampleData.hoc_layers.length - 1;
+      if (this.curImageData.curSampleData.hoc_layers && this.curImageData.curSampleData.hoc_layers.length) {
+        this.curImageData.imageIndex = this.curImageData.curSampleData.hoc_layers.length - 1;
       } else {
         this.curImageData.imageIndex = 0;
       }
@@ -526,15 +514,9 @@ export default {
      */
     selectLableChange(value) {
       this.curImageData.selectedLabel = value;
-      this.curImageData.curSampleData = this.curImageData.oriData.inferences[
-          value
-      ];
-      if (
-        this.curImageData.curSampleData.hoc_layers &&
-        this.curImageData.curSampleData.hoc_layers.length
-      ) {
-        this.curImageData.imageIndex =
-          this.curImageData.curSampleData.hoc_layers.length - 1;
+      this.curImageData.curSampleData = this.curImageData.oriData.inferences[value];
+      if (this.curImageData.curSampleData.hoc_layers && this.curImageData.curSampleData.hoc_layers.length) {
+        this.curImageData.imageIndex = this.curImageData.curSampleData.hoc_layers.length - 1;
       } else {
         this.curImageData.imageIndex = 0;
       }
@@ -559,8 +541,7 @@ export default {
       this.resizeTimer = setTimeout(() => {
         const sampleContainer = this.$refs.sampleContainer;
         if (sampleContainer) {
-          this.widthBase =
-            (sampleContainer.clientHeight - this.textHeight) / this.partBase;
+          this.widthBase = (sampleContainer.clientHeight - this.textHeight) / this.partBase;
         }
       }, 300);
     },
@@ -612,7 +593,7 @@ export default {
 <style>
 .cl-hoc {
   height: 100%;
-  background-color: #fff;
+  background-color: var(--bg-color);
 }
 .cl-hoc .no-image-tip {
   width: 100%;
@@ -669,7 +650,7 @@ export default {
 }
 .cl-hoc .cl-hoc-con .cl-hoc-left {
   width: 440px;
-  background-color: #edf0f5;
+  background-color: var(--module-bg-color);
   margin-right: 20px;
   flex-shrink: 0;
   padding: 20px 24px;
@@ -697,12 +678,7 @@ export default {
   line-height: 32px;
   margin-bottom: 12px;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-left
-  .cl-left-top-container
-  .hoc-filter-container
-  .title-text {
+.cl-hoc .cl-hoc-con .cl-hoc-left .cl-left-top-container .hoc-filter-container .title-text {
   width: 100px;
   flex: 1;
 }
@@ -714,7 +690,7 @@ export default {
 .cl-hoc .cl-hoc-con .cl-hoc-left .cl-left-thumb {
   flex: 1;
   display: flex;
-  background-color: #fff;
+  background-color: var(--bg-color);
   flex-wrap: wrap;
   overflow: hidden;
   align-content: flex-start;
@@ -738,11 +714,11 @@ export default {
 .cl-hoc .cl-hoc-con .cl-hoc-left .cl-left-page {
   padding: 0 10px;
   flex-shrink: 0;
-  background-color: #fff;
+  background-color: var(--bg-color);
   text-align: right;
 }
 .cl-hoc .cl-hoc-con .cl-hoc-left .cl-left-page .el-pagination {
-  border-top: solid 1px #ccc;
+  border-top: solid 1px var(--border-color);
 }
 .cl-hoc .cl-hoc-con .cl-hoc-right {
   overflow: hidden;
@@ -759,33 +735,16 @@ export default {
   width: calc(50% - 10px);
   padding: 20px 24px;
   height: 100%;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-top
-  .cl-right-top-item
-  .cl-right-title {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-top .cl-right-top-item .cl-right-title {
   padding-bottom: 12px;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-top
-  .cl-right-top-item
-  .cl-right-title
-  .ori-image-title {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-top .cl-right-top-item .cl-right-title .ori-image-title {
   margin-bottom: 6px;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-top
-  .cl-right-top-item
-  .cl-right-title
-  .ori-tag-select-container {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-top .cl-right-top-item .cl-right-title .ori-tag-select-container {
   display: flex;
   font-size: 14px;
   line-height: 32px;
@@ -804,13 +763,7 @@ export default {
   overflow: hidden;
   padding-right: 10px;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-top
-  .cl-right-top-item
-  .cl-right-title
-  .cl-right-title-silde {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-top .cl-right-top-item .cl-right-title .cl-right-title-silde {
   display: flex;
   margin-top: 12px;
 }
@@ -823,23 +776,11 @@ export default {
   .cl-right-title-silde
   .cl-right-title-label {
   font-size: 14px;
-  color: #333333;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-top
-  .cl-right-top-item
-  .ori-image-container {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-top .cl-right-top-item .ori-image-container {
   height: calc(100% - 100px);
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-top
-  .cl-right-top-item
-  .ori-image-container
-  img {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-top .cl-right-top-item .ori-image-container img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -866,7 +807,7 @@ export default {
   height: calc(40% - 20px);
   overflow: hidden;
   margin-top: 20px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 20px 24px 24px 24px;
 }
@@ -878,47 +819,26 @@ export default {
   display: flex;
   overflow: hidden;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-footer
-  .cl-right-footer-con
-  .cl-right-arrowCon {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-footer .cl-right-footer-con .cl-right-arrowCon {
   height: 100%;
   width: 100%;
   overflow: hidden;
   justify-content: center;
   display: flex;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-footer
-  .cl-right-footer-con
-  .cl-right-footer-marquee {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-footer .cl-right-footer-con .cl-right-footer-marquee {
   display: flex;
   max-width: 100%;
   height: 100%;
   overflow-x: auto;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-footer
-  .cl-right-footer-con
-  .cl-right-footer-item {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-footer .cl-right-footer-con .cl-right-footer-item {
   width: auto;
   height: 100%;
   display: flex;
   position: relative;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-footer
-  .cl-right-footer-con
-  .cl-right-footer-item
-  .cl-right-footer-image {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-footer .cl-right-footer-con .cl-right-footer-item .cl-right-footer-image {
   cursor: pointer;
   float: left;
   width: 220px;
@@ -950,25 +870,13 @@ export default {
   height: 100%;
   object-fit: contain;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-footer
-  .cl-right-footer-con
-  .cl-right-footer-item
-  .cl-right-footer-title {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-footer .cl-right-footer-con .cl-right-footer-item .cl-right-footer-title {
   width: 220px;
   height: 30px;
   line-height: 30px;
   text-align: center;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-footer
-  .cl-right-footer-con
-  .cl-right-footer-item
-  .cl-right-footer-arrow {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-footer .cl-right-footer-con .cl-right-footer-item .cl-right-footer-arrow {
   float: left;
   width: 110px;
   height: 100%;
@@ -989,12 +897,7 @@ export default {
   font-size: 40px;
   color: #dcdfe6;
 }
-.cl-hoc
-  .cl-hoc-con
-  .cl-hoc-right
-  .cl-right-footer
-  .cl-right-footer-con
-  .itemActive {
+.cl-hoc .cl-hoc-con .cl-hoc-right .cl-right-footer .cl-right-footer-con .itemActive {
   border: 1px solid #00a5a7;
 }
 </style>
