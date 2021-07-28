@@ -755,7 +755,7 @@ def validate_param_type(condition_id, condition_param, param):
         param (dict): Condition parameter value.
     """
     if condition_param.type.name in (ValueTypeEnum.FLOAT64.name, ValueTypeEnum.INT64.name) \
-            and not isinstance(param.get("value"), (float, int)):
+            and (not isinstance(param.get("value"), (float, int)) or isinstance(param.get("value"), bool)):
         log.error("Number param should be given for condition: %s", condition_id)
         raise DebuggerParamValueError("Number param should be given.")
     if condition_param.type.name == ValueTypeEnum.BOOL.name \
