@@ -2111,7 +2111,6 @@ export default {
 .cl-graph-manage #graphs .image-noData {
   width: 100%;
   height: 100%;
-  background: #fff;
   position: absolute;
   top: 0;
   left: 0;

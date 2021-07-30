@@ -327,10 +327,10 @@
       "desc": "How Do I Use Profiler for Profiling?",
       "anchor": ["desc"],
       "url": [
-        "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/performance_profiling_ascend.html"
+        "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_ascend.html"
       ],
       "gpuUrl": [
-        "https://www.mindspore.cn/tutorial/training/en/master/advanced_use/performance_profiling_gpu.html"
+        "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_gpu.html"
       ]
     },
     "step_trace-proposer_type_label": {

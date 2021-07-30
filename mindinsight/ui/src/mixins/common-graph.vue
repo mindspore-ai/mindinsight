@@ -966,7 +966,8 @@ export default {
       const type = this.allGraphData[name].type;
       const classText = type === 'aggregation_scope' ? 'node cluster aggregation' : 'node cluster';
       const idStr = '#graphTemp #graph0 ';
-      let fillColor = type === 'aggregation_scope' ? '#fff2d4' : '#ffe4d6';
+      let fillColor =
+        type === 'aggregation_scope' ? CommonProperty.graphTheme[this.themeIndex].aggregationOpenColor : '#ffe4d6';
       const curColorIndex = (name.split('/').length - 1) % 4;
       if (type === 'name_scope') {
         fillColor = CommonProperty.graphColorArr[this.themeIndex][curColorIndex];
