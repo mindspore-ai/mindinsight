@@ -239,7 +239,16 @@ limitations under the License.
                :close-on-click-modal="false"
                class="flops-data-list">
       <div id="flopsChart"
+           v-if="flopsHasData"
            :style="{width:`${flopsChartWidth}px`,height:`${flopsChartHeight}px`}"></div>
+      <div class="image-noData"
+           v-else>
+        <div>
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+        </div>
+        <p>{{ flopsInit?$t("public.noData"):$t('public.dataLoading') }}</p>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -388,6 +397,8 @@ export default {
       flopsChartDom: null,
       flopsChartWidth: 800,
       flopsChartHeight: 540,
+      flopsHasData: false,
+      flopsInit: false,
     };
   },
   destroyed() {
@@ -402,68 +413,79 @@ export default {
   methods: {
     showFlopsDetails() {
       this.flopsDialogVisible = true;
+      this.flopsInit = false;
       const params = {
         train_id: this.train_id,
         device_id: this.currentCard,
       };
-      requestService.getFlopsScope(params).then((res) => {
-        if (res.data.data && res.data.max_scope_num) {
-          const nodes = res.data.data.nodes;
-          const links = res.data.data.links;
-          const maxScopeNum = res.data.max_scope_num;
-          let maxNodeNum = 0;
-          nodes.forEach((value) => {
-            if (!links.find((val) => val.source === value.name)) {
-              maxNodeNum++;
-            }
-          });
-          this.flopsChartWidth = 150 * maxScopeNum;
-          this.flopsChartHeight = 25 * maxNodeNum;
-          this.$nextTick(() => {
-            if (!this.flopsChartDom) {
-              this.flopsChartDom = echarts.init(document.querySelector('#flopsChart'), echartsThemeName);
-            }
-            this.flopsChartDom.setOption({
-              title: {
-                text: 'Sankey Diagram',
-              },
-              tooltip: {
-                trigger: 'item',
-                triggerOn: 'mousemove',
-                confine: true,
-              },
-              itemStyle: {
-                borderWidth: 1,
-              },
-              label: {
-                width: 100,
-                overflow: 'truncate',
-                ellipsis: '...',
-                color: CommonProperty.modelTracebackChartTheme[this.$store.state.themeIndex].batchSizeTextColor,
-              },
-              series: [
-                {
-                  type: 'sankey',
-                  data: nodes,
-                  links: links,
-                  emphasis: {
-                    focus: 'adjacency',
+      requestService.getFlopsScope(params).then(
+          (res) => {
+            this.flopsInit = true;
+            if (res.data.data && res.data.max_scope_num) {
+              const nodes = res.data.data.nodes || [];
+              const links = res.data.data.links || [];
+              this.flopsHasData = nodes.length ? true : false;
+              const maxScopeNum = res.data.max_scope_num;
+              let maxNodeNum = 0;
+              nodes.forEach((value) => {
+                if (!links.find((val) => val.source === value.name)) {
+                  maxNodeNum++;
+                }
+              });
+              this.flopsChartWidth = 150 * maxScopeNum;
+              this.flopsChartHeight = 25 * maxNodeNum;
+              this.$nextTick(() => {
+                if (!this.flopsChartDom) {
+                  this.flopsChartDom = echarts.init(document.querySelector('#flopsChart'), echartsThemeName);
+                }
+                this.flopsChartDom.setOption({
+                  title: {
+                    text: 'Sankey Diagram',
                   },
-                  nodeGap: 10,
-                  left: 0,
-                  right: 110,
-                  top: 30,
-                  bottom: 30,
-                  lineStyle: {
-                    curveness: 0.5,
-                    color: CommonProperty.commonChartTheme[this.$store.state.themeIndex].lineStyleColor,
+                  tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove',
+                    confine: true,
                   },
-                },
-              ],
-            });
-          });
-        }
-      });
+                  itemStyle: {
+                    borderWidth: 1,
+                  },
+                  label: {
+                    width: 100,
+                    overflow: 'truncate',
+                    ellipsis: '...',
+                    color: CommonProperty.modelTracebackChartTheme[this.$store.state.themeIndex].batchSizeTextColor,
+                  },
+                  series: [
+                    {
+                      type: 'sankey',
+                      data: nodes,
+                      links: links,
+                      emphasis: {
+                        focus: 'adjacency',
+                      },
+                      nodeGap: 10,
+                      left: 0,
+                      right: 110,
+                      top: 30,
+                      bottom: 30,
+                      lineStyle: {
+                        curveness: 0.5,
+                        color: CommonProperty.commonChartTheme[this.$store.state.themeIndex].lineStyleColor,
+                      },
+                    },
+                  ],
+                });
+              });
+            } else {
+              this.flopsHasData = false;
+            }
+          },
+          () => {
+            this.flopsInit = true;
+            this.flopsHasData = false;
+          },
+      );
     },
     getFlopsSummary() {
       const params = {
