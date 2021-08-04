@@ -1,3 +1,31 @@
+# MindInsight 1.4.0
+
+## MindInsight 1.4.0 Release Notes
+
+### Major Features and Improvements
+
+#### Build & Installation
+
+### API Change
+
+#### Backwards Compatible Change
+
+##### Python API
+
+##### Command Line Interface
+
+NA
+
+### Bug fixes
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei.
+
+Contributions of any kind are welcome!
+
 # MindInsight 1.3.0
 
 ## MindInsight 1.3.0 Release Notes
