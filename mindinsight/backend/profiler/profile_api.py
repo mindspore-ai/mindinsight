@@ -754,6 +754,30 @@ def get_flops_summary():
 
     return summary
 
+@BLUEPRINT.route("/profile/flops-scope", methods=["GET"])
+def get_flops_scope():
+    """
+    Get flops info of each scope.
+
+    Returns:
+        Response, the flops info of each scope.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/flops-scope
+    """
+    train_id = request.args.get("train_id")
+    profiler_dir_abs = validate_and_normalize_profiler_path(train_id, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    device_id = request.args.get("device_id", default='0')
+    to_int(device_id, 'device_id')
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'flops', profiler_dir_abs, device_id)
+    flops_scope_info = analyser.get_flops_scope()
+
+    return flops_scope_info
+
 
 @BLUEPRINT.route("/profile/search-cluster-communication", methods=["POST"])
 def get_cluster_communication_info():
