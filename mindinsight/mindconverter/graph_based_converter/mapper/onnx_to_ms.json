@@ -50,5 +50,6 @@
   "onnx::Sub": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.sub_mapper.SubMapper",
   "onnx::Tanh": "mindinsight.mindconverter.graph_based_converter.mapper.impl.nn.tanh_mapper.TanhMapper",
   "onnx::Transpose": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.transpose_mapper.TransposeMapper",
-  "onnx::Unsqueeze": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.expand_dims_mapper.ExpandDimsMapper"
+  "onnx::Unsqueeze": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.expand_dims_mapper.ExpandDimsMapper",
+  "onnx::Where": "mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.select_mapper.SelectMapper"
 }
