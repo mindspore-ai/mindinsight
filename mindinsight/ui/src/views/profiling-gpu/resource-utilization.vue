@@ -75,7 +75,7 @@ limitations under the License.
 </template>
 <script>
 import RequestService from '../../services/request-service';
-import echarts from '../../js/echarts';
+import echarts, {echartsThemeName} from '../../js/echarts';
 import CommonProperty from '../../common/common-property';
 export default {
   data() {
@@ -336,7 +336,7 @@ export default {
       this.$nextTick(() => {
         if (!this.deviceCpuChart.chartDom) {
           if (this.$refs.deviceCpuChart) {
-            this.deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart);
+            this.deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart, echartsThemeName);
           }
         }
         this.deviceCpuChart.chartDom.setOption(this.deviceCpuChart.option);
