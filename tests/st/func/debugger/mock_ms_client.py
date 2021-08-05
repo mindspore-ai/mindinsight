@@ -19,6 +19,7 @@ from time import sleep
 import grpc
 import numpy as np
 
+import mindinsight
 from mindinsight.debugger.proto.debug_grpc_pb2 import Metadata, WatchpointHit, Chunk, EventReply
 from mindinsight.debugger.proto.debug_grpc_pb2_grpc import EventListenerStub
 from mindinsight.domain.graph.proto import ms_graph_pb2
@@ -29,7 +30,7 @@ from tests.st.func.debugger.conftest import GRAPH_PROTO_FILE
 class MockDebuggerClient:
     """Mocked Debugger client."""
 
-    def __init__(self, hostname='localhost:50051', backend='Ascend', graph_num=1, ms_version='1.3.0'):
+    def __init__(self, hostname='localhost:50051', backend='Ascend', graph_num=1, ms_version=None):
         channel = grpc.insecure_channel(hostname)
         self.stub = EventListenerStub(channel)
         self.flag = True
@@ -39,7 +40,7 @@ class MockDebuggerClient:
         self._cur_node = ''
         self._backend = backend
         self._graph_num = graph_num
-        self._ms_version = ms_version
+        self._ms_version = ms_version if ms_version else mindinsight.__version__
 
     def _clean(self):
         """Clean cache."""
