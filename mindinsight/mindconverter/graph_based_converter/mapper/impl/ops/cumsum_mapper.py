@@ -71,7 +71,8 @@ class CumSumMapper(ONNXToMindSporeMapper):
                     ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
                 ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
                 ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
-                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: dict()
+                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: dict(),
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: dict()
             }
         }
         outputs_list = [f"opt_{{{variable_slot}}}"]

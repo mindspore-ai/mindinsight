@@ -81,6 +81,7 @@ class PoolMapper(ONNXToMindSporeMapper):
         kernel_shape = kwargs['raw_params']['kernel_shape']
         dilations = kwargs['raw_params'].get('dilations', (1, 1))
         strides = kwargs['raw_params']['strides']
+        ceil_mode = kwargs['raw_params'].get('ceil_mode', 0)
 
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
@@ -92,7 +93,7 @@ class PoolMapper(ONNXToMindSporeMapper):
         init_template_pad, construct_template_pad, paddings = \
             PoolMapper._generate_pad_init_and_construct(tensor_opt_shape, tensor_ipt_shape,
                                                         ms_opt_shape, variable_slot,
-                                                        kernel_shape, dilations, strides)
+                                                        kernel_shape, dilations, strides, ceil_mode)
 
         template = {
             variable_slot: {
@@ -121,7 +122,7 @@ class PoolMapper(ONNXToMindSporeMapper):
 
     @staticmethod
     def _generate_pad_init_and_construct(tensor_opt_shape, tensor_ipt_shape,
-                                         ms_opt_shape, variable_slot, kernel_shape, dilations, strides):
+                                         ms_opt_shape, variable_slot, kernel_shape, dilations, strides, ceil_mode):
         """Generate pad code in init and construct."""
         onnx_opt_shape = tensor_opt_shape[-len(ms_opt_shape):]
         onnx_ipt_shape = tensor_ipt_shape[-len(ms_opt_shape):]
@@ -143,7 +144,10 @@ class PoolMapper(ONNXToMindSporeMapper):
             paddings.append(zero_pad_single)
 
         for axis_diff in shape_diff:
-            paddings.append((int(axis_diff // 2), int(axis_diff // 2 + axis_diff % 2)))
+            if ceil_mode:
+                paddings.append((int(axis_diff // 2), int(axis_diff // 2 + axis_diff % 2)))
+            else:
+                paddings.append((int(axis_diff // 2 + axis_diff % 2), int(axis_diff // 2)))
 
         init_template_pad = f"self.pad_{{{variable_slot}}} = nn.Pad(paddings={{paddings}})"
         construct_template_pad = f"opt_{{{variable_slot}}} = self.pad_{{{variable_slot}}}" \
