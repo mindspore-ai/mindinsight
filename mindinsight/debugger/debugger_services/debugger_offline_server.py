@@ -18,6 +18,8 @@ from collections import defaultdict
 from importlib import import_module
 from multiprocessing import Process, Manager
 from threading import Event
+import os
+from pathlib import Path
 
 import mindinsight
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError
@@ -577,10 +579,52 @@ class DebuggerOfflineManager:
         """The check WatchPoint function work in another process."""
         log.info("Start checking WatchPointHit process.")
         res = self._dbg_service.check_watchpoints(step)
+        unsorted_hits = []
         for watchpoint_hit in res:
             hit_dict = convert_watchpointhit(watchpoint_hit)
-            hits.append(hit_dict)
+            unsorted_hits.append(hit_dict)
+        log.debug("Before sorting, unsorted_hits are: %s.", unsorted_hits)
+        # Sort the watchpointhits by timestamp
+        unsorted_hits.sort(key=lambda x: self.find_timestamp(x, step))
+        log.debug("After sorting, hits are: %s.", unsorted_hits)
+        hits.extend(unsorted_hits)
         log.info("Checking WatchPointHit process is finished.")
+
+    def find_timestamp(self, watchpointhit, step):
+        """
+        Return the time stamp of the watchpointhit.
+
+        Args:
+            watchpointhit (dict): The watchpointhit dict.
+
+        Returns:
+            int, the time stamp of the watchpointhit.
+        """
+        res = 0
+        name = watchpointhit['name']
+        slot = watchpointhit['slot']
+        iteration = step
+        rank_id = watchpointhit['rank_id']
+        root_graph_id = watchpointhit['root_graph_id']
+        dump_dir = self._data_loader.get_dump_dir()
+        rank_str = 'rank_' + str(rank_id)
+        iteration_path = os.path.join(dump_dir, rank_str, self._data_loader.get_net_name(),
+                                      str(root_graph_id), str(iteration))
+        # Find the pure node_name without scope
+        node_name = name.rsplit('/')[-1]
+        match_mask = f'*.{node_name}.*.output.{slot}.*'
+        tensor_files = Path(iteration_path).absolute().glob(match_mask)
+        log.debug("Find file in path: %s which matches the mask: %s.", iteration_path, match_mask)
+        for tensor_file in tensor_files:
+            try:
+                time_stamp = int(tensor_file.name.split('.')[4])
+                if time_stamp > res:
+                    res = time_stamp
+            except ValueError as err:
+                log.error("Can not find time_stamp in file: %s, the detail error is: %s.", tensor_file.name, err)
+                continue
+        log.debug("Time stamp is: %s.", res)
+        return res
 
 
 class CommandListener:
@@ -651,7 +695,9 @@ def convert_watchpointhit(watchpointhit):
                           'name': watchpointhit.name,
                           'parameters': param_list,
                           'slot': watchpointhit.slot,
-                          'watchpoint_id': watchpointhit.watchpoint_id}
+                          'watchpoint_id': watchpointhit.watchpoint_id,
+                          'root_graph_id': watchpointhit.root_graph_id
+                          }
     return watchpointhit_dict
 
 

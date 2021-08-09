@@ -49,10 +49,11 @@ def init_graph_handler():
     return graph_handler
 
 
-def init_watchpoint_hit_handler(value):
+def init_watchpoint_hit_handler(values):
     """Init WatchpointHitHandler."""
     wph_handler = WatchpointHitHandler()
-    wph_handler.put(value)
+    for value in values:
+        wph_handler.put(value)
 
     return wph_handler
 

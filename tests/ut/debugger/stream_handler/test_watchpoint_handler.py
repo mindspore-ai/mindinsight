@@ -174,21 +174,32 @@ class TestWatchpointHandler:
 
 class TestWatchpointHitHandler:
     """Test WatchpointHitHandler."""
-    watchpoint = Watchpoint(
+    watchpoint1 = Watchpoint(
         watch_condition={'condition': 'MAX_GT', 'param': 1},
         watchpoint_id=1
     )
-    value = {
+    value1 = {
         'tensor_proto': mock_tensor_proto(),
-        'watchpoint': watchpoint,
+        'watchpoint': watchpoint1,
         'node_name': 'Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92',
         'graph_name': 'kernel_graph_0',
     }
+    watchpoint2 = Watchpoint(
+        watch_condition={'condition': 'MIN_LT', 'param': 1},
+        watchpoint_id=2
+    )
+    value2 = {
+        'tensor_proto': mock_tensor_proto(),
+        'watchpoint': watchpoint2,
+        'node_name': 'Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op96',
+        'graph_name': 'kernel_graph_1',
+    }
+    values = [value1, value2]
 
     @classmethod
     def setup_class(cls):
         """Setup."""
-        cls.handler = init_watchpoint_hit_handler(cls.value)
+        cls.handler = init_watchpoint_hit_handler(cls.values)
         cls.tensor_hist = mock_tensor_history()
         cls.results_dir = os.path.join(os.path.dirname(__file__),
                                        '../expected_results/watchpoint')
@@ -196,12 +207,19 @@ class TestWatchpointHitHandler:
     @mock.patch('mindinsight.debugger.stream_cache.watchpoint.WatchpointHit')
     def test_put(self, mock_hit):
         """Test put."""
-        mock_hit.return_value = mock.MagicMock(
-            tensor_proto=self.value.get('tensor_proto'),
-            watchpoint=self.value.get('watchpoint'),
-            node_name=self.value.get('node_name')
-        )
-        WatchpointHitHandler().put(self.value)
+        # mock_hit.return_value = mock.MagicMock(
+        #     tensor_proto=self.value.get('tensor_proto'),
+        #     watchpoint=self.value.get('watchpoint'),
+        #     node_name=self.value.get('node_name')
+        # )
+        # WatchpointHitHandler().put(self.value)
+        for value in self.values:
+            mock_hit.return_value = mock.MagicMock(
+                tensor_proto=value.get('tensor_proto'),
+                watchpoint=value.get('watchpoint'),
+                node_name=value.get('node_name')
+            )
+            WatchpointHitHandler().put(value)
 
     @pytest.mark.parametrize("filter_condition, result_file", [
         (None, "watchpoint_hit_handler_get_0.json"),
@@ -219,6 +237,25 @@ class TestWatchpointHitHandler:
         self.handler.update_tensor_history(self.tensor_hist)
         for tensor_info in self.tensor_hist.get('tensor_history'):
             assert tensor_info['is_hit'] is False
+
+    @pytest.mark.parametrize("group_condition, result_file", [
+        ({'limit': 5, 'graph_id': 'kernel_graph_0'}, "watchpoint_hit_handler_group_by_graph.json"),
+        ({'limit': 5, 'watchpoint_id': 2}, "watchpoint_hit_handler_group_by_watchpoint.json"),
+        ({'limit': 1, 'focused_node': {'graph_name': 'kernel_graph_1',
+                                       'node_name': 'Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU'
+                                                    '/gradReLU/ReluGradV2-op96'}},
+         "watchpoint_hit_group_focused_node_0.json"),
+        ({'limit': 1, 'watchpoint_id': 1,
+          'focused_node': {'graph_name': 'kernel_graph_1',
+                           'node_name': 'Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU'
+                                        '/ReluGradV2-op96'}},
+         "watchpoint_hit_group_focused_node_1.json")
+    ])
+    def test_group_by(self, group_condition, result_file):
+        """Test group watchpointhits by group_condition"""
+        reply = self.handler.group_by(group_condition)
+        file_path = os.path.join(self.results_dir, result_file)
+        compare_result_with_file(reply, file_path)
 
 
 def test_validate_watch_condition_type_error():
