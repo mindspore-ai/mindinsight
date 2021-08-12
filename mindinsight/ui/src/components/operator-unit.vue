@@ -235,7 +235,7 @@ limitations under the License.
     </el-dialog>
     <el-dialog :title="$t('operator.scopeLevelFlops')"
                :visible.sync="flopsDialogVisible"
-               width="70%"
+               width="100%"
                :close-on-click-modal="false"
                class="flops-data-list">
       <div id="flopsChart"
@@ -1334,11 +1334,16 @@ export default {
   padding-top: 10px;
   overflow: auto;
 }
+.flops-data-list .el-dialog{
+  margin-top: 64px!important;
+  height: calc(100% - 64px);
+  margin-bottom: 0px;
+}
 .flops-data-list .el-dialog__body {
-  max-height: 600px;
   padding-top: 10px;
   overflow: auto;
   text-align: center;
+  height: calc(100% - 54px);
 }
 .details-data-list .el-dialog__body .details-data-title {
   margin-bottom: 20px;
