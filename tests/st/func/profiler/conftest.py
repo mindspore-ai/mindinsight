@@ -30,3 +30,5 @@ BASE_SUMMARY_DIR = os.path.realpath(os.path.join(RAW_DATA_BASE, "run_1"))
 # 3. Some new files have been added. For example, aicpu_intermediate_1.csv.
 # 4. It is recommended that the new mindinsight st ut test be based on this version of the performance file.
 BASE_SUMMARY_DIR_RUN_2 = os.path.realpath(os.path.join(RAW_DATA_BASE, "run_2"))
+BASE_SUMMARY_DIR_RUN_3 = os.path.realpath(os.path.join(RAW_DATA_BASE, "run_3"))
+BASE_SUMMARY_DIR_RUN_4 = os.path.realpath(os.path.join(RAW_DATA_BASE, "run_4"))

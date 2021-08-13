@@ -31,7 +31,19 @@ class ClusterAnalyser(BaseAnalyser):
     def __init__(self, cluster_profiler_dir, device_id):
         super().__init__(cluster_profiler_dir, device_id)
         self._cluster_profiler_dir = cluster_profiler_dir
+        self._target_dir_path = self._get_target_dir_path()
         self._cluster_rank_ids = self._get_cluster_rank_ids()
+
+    def _get_target_dir_path(self):
+        """Get the target directory path."""
+        target_dir_path = os.path.join(self._cluster_profiler_dir, 'profiler')
+        target_dir_path = validate_and_normalize_path(
+            target_dir_path, raise_key="Invalid profiler dir path.")
+        if not os.path.exists(target_dir_path):
+            log.error('Did not find cluster_profiler dir : %s', target_dir_path)
+            raise ProfilerDirNotFoundException(msg='Did not find cluster_profiler dir:{}'.format(target_dir_path))
+
+        return target_dir_path
 
     def _get_cluster_rank_ids(self):
         """Get the logical card number list in cluster training."""
@@ -74,30 +86,50 @@ class ClusterAnalyser(BaseAnalyser):
 
 class ClusterStepTraceAnalyser(ClusterAnalyser):
     """The analyser for analyzing the cluster step trace."""
-    _col_names = ['iteration_interval', 'fp_and_bp', 'tail']
-
     def __init__(self, cluster_profiler_dir, device_id):
         super().__init__(cluster_profiler_dir, device_id)
         self._none_sort_col_names = []
+        self._parallel_mode, self._stage_num, self._rank_size = \
+            self._get_parallel_context()
+        self._col_names = self._get_col_names()
         self._total_step_num = self._get_total_step_num()
+
+    def _get_parallel_context(self):
+        """Get the parallel mode from file name."""
+        parallel_mode = "data-parallel"
+        stage_num = 1
+        rank_size = 1
+        for filename in os.listdir(self._target_dir_path):
+            if filename.startswith('ascend_cluster_analyse'):
+                # the format of filename is
+                # 'ascend_cluster_analyse_{parallel-mode}_{stage_num}_{rank_size}_{rank_id}.csv'
+                parallel_mode = filename.split('_')[3]
+                stage_num = int(filename.split('_')[4])
+                rank_size = int(filename.split('_')[5])
+
+        return parallel_mode, stage_num, rank_size
+
+    def _get_col_names(self):
+        """Get the column names depends on parallel mode."""
+        col_names = ['iteration_interval', 'fp_and_bp', 'tail']
+        if self._parallel_mode == 'model-parallel':
+            col_names = ['iteration_interval', 'communication_alone', 'computation']
+        elif self._parallel_mode == 'pipeline-parallel':
+            col_names = ['iteration_interval', 'receive_alone', 'stage', 'communication_alone',
+                         'computation', 'collective_communication_alone']
+
+        return col_names
 
     def _get_total_step_num(self):
         """Get the num of train step."""
         total_step_num = 0
-        # take the data of one of the machines to get the total number of steps.
-        target_dir_path = os.path.join(self._cluster_profiler_dir, 'profiler')
-        target_dir_path = validate_and_normalize_path(
-            target_dir_path, raise_key="Invalid profiler dir path.")
-        if not os.path.exists(target_dir_path):
-            log.error('Did not find cluster_profiler dir : %s', target_dir_path)
-            raise ProfilerDirNotFoundException(msg='Did not find cluster_profiler dir:{}'.format(target_dir_path))
 
-        entries = os.scandir(target_dir_path)
+        entries = os.scandir(self._target_dir_path)
         for entry in entries:
             if entry.is_symlink():
                 continue
             if entry.is_file() and entry.name.startswith('step_trace_raw'):
-                file_path = os.path.join(target_dir_path, entry.name)
+                file_path = os.path.join(self._target_dir_path, entry.name)
                 with open(file_path, 'r') as src_file:
                     lines = src_file.readlines()
                 # The penultimate line represents the information of the last step
@@ -114,32 +146,28 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
             step_trace_info = self._get_step_trace_info(item, step_num)
             step_trace_info.append(item)
             cluster_step_trace_info.append(step_trace_info)
-        self._cluster_step_trace_info_size = len(cluster_step_trace_info)
+        self._cluster_info_size = len(cluster_step_trace_info)
         return cluster_step_trace_info
 
-    def _get_step_trace_info(self, device_id, step_num):
+    def _get_step_trace_info(self, rank_id, step_num):
         """Get step trace info."""
-        file_name = 'step_trace_raw_{}_detail_time.csv'.format(device_id)
+        file_name = 'step_trace_raw_{}_detail_time.csv'.format(rank_id)
         step_trace_file_path = \
-            os.path.join(self._cluster_profiler_dir, 'profiler', file_name)
+            os.path.join(self._target_dir_path, file_name)
         step_trace_file_path = validate_and_normalize_path(
             step_trace_file_path, raise_key="Invalid step trace file path.")
         if not os.path.exists(step_trace_file_path):
             log.error('Did not find the file: %s', step_trace_file_path)
             raise ProfilerFileNotFoundException(msg='Did not find the file:{}'.format(step_trace_file_path))
-        step_trace_info = list()
-        step_num = str(step_num)
+
         with open(step_trace_file_path, 'r') as src_file:
             lines = src_file.readlines()
             # when the step_num value is 0, it means the average value.
             # The last line of the step_trace_raw_{}_detail_time.csv records the average value.
-            if step_num == '0':
+            if step_num == 0:
                 step_trace_info = lines[-1].strip('\n').split(',')
             else:
-                for line in lines:
-                    line = line.strip('\n').split(',')
-                    if line[0] == step_num:
-                        step_trace_info = line
+                step_trace_info = lines[step_num].strip('\n').split(',')
         # step_trace_info[6]: iteration_interval time
         # step_trace_info[7]: fp_and_bp time
         # step_trace_info[8]: tail time
@@ -149,6 +177,47 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
         tail = float(step_trace_info[8])/1e5
         step_trace_info = [iteration_interval, fp_and_bp, tail]
         return step_trace_info
+
+    def _get_cluster_step_bottleneck_info(self, step_num, stage_id):
+        """Get cluster step bottleneck info."""
+        cluster_step_bottleneck_info = []
+        for rank_id in self._cluster_rank_ids:
+            cur_stage_id = int(int(rank_id) / int((self._rank_size / self._stage_num))) + 1
+            # If stage_id is 0 (default value), display all data.
+            if stage_id not in (0, cur_stage_id):
+                continue
+            step_bottleneck_info = self._get_step_bottleneck_info(rank_id, step_num)
+            step_bottleneck_info.append(rank_id)
+            cluster_step_bottleneck_info.append(step_bottleneck_info)
+        self._cluster_info_size = len(cluster_step_bottleneck_info)
+        return cluster_step_bottleneck_info
+
+    def _get_step_bottleneck_info(self, rank_id, step_num):
+        """Get cluster analyse info."""
+        file_name = f'ascend_cluster_analyse_{self._parallel_mode}_{self._stage_num}_{self._rank_size}_{rank_id}.csv'
+        step_bottleneck_file_path = \
+            os.path.join(self._target_dir_path, file_name)
+        step_bottleneck_file_path = validate_and_normalize_path(
+            step_bottleneck_file_path, raise_key="Invalid step trace file path.")
+        if not os.path.exists(step_bottleneck_file_path):
+            log.error('Did not find the file: %s', step_bottleneck_file_path)
+            raise ProfilerFileNotFoundException(msg='Did not find the file:{}'.format(step_bottleneck_file_path))
+
+        with open(step_bottleneck_file_path, 'r') as src_file:
+            lines = src_file.readlines()
+            # when the step_num value is 0, it means the average value.
+            # The last line of the ascend_cluster_analyse_xxx.csv records the average value.
+            if step_num == 0:
+                step_bottleneck_info = lines[-1].strip('\n').split(',')
+            else:
+                step_bottleneck_info = lines[step_num].strip('\n').split(',')
+
+        step_trace_info = self._get_step_trace_info(rank_id, step_num)
+        # Insert the step iteration_interval time into the cluster_bottleneck_info
+        step_bottleneck_info.insert(0, str(step_trace_info[0]))
+        step_bottleneck_info = list(map(float, step_bottleneck_info))
+
+        return step_bottleneck_info
 
     def _load(self):
         """Load data according to the parsed profiling files."""
@@ -163,8 +232,12 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
                 - step_id (int): The selected  step id.
         """
 
-        step_id = filter_condition.get("step_id", 0)
-        self._result = self._get_cluster_step_trace_info(step_id)
+        step_id = int(filter_condition.get("step_id", 0))
+        stage_id = int(filter_condition.get("stage_id", 0))
+        if self._parallel_mode == "data-parallel":
+            self._result = self._get_cluster_step_trace_info(step_id)
+        else:
+            self._result = self._get_cluster_step_bottleneck_info(step_id, stage_id)
 
     def _organize_query_result(self):
         """
@@ -174,18 +247,23 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
             dict, the query result.
         """
         result = list()
-        # item[0]:iteration_interval, item[1]:fp_and_bp, item[2]:tail, item[3]:rank_id
+        # item[:-1] info depends on parallel mode, item[-1]:rank_id
         for item in self._result:
-            step_trace_info = dict()
-            step_trace_info["step_trace_info"] = item[0:3]
-            step_trace_info["rank_id"] = item[3]
-            step_trace_info["profiler_dir"] = 'profiler'
-            result.append(step_trace_info)
+            info = dict()
+            if self._parallel_mode == "data-parallel":
+                info["step_trace_info"] = item[:-1]
+            else:
+                info["step_bottleneck_info"] = item[:-1]
+            info["rank_id"] = item[-1]
+            info["profiler_dir"] = 'profiler'
+            result.append(info)
 
         return {
             'total_step_num': self._total_step_num,
-            'step_trace': result,
-            'size': self._cluster_step_trace_info_size
+            'stage_num': self._stage_num,
+            'info': result,
+            'size': self._cluster_info_size,
+            'parallel-mode': self._parallel_mode
         }
 
 
