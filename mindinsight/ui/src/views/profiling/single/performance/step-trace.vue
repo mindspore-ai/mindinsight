@@ -15,7 +15,8 @@ limitations under the License.
 -->
 <template>
   <div class="step-trace">
-    <div class="step-trace-title">{{$t('profiling.stepTraceDetail')}}
+    <div :class="[`profiling-content-title${isGPU ? '-gpu' : ''}`, 'step-trace-title']">
+      {{$t('profiling.stepTraceDetail')}}
       <el-tooltip class="item"
                   effect="light"
                   :content="$t('profiling.defaultTip')"
@@ -103,37 +104,39 @@ limitations under the License.
           <p>{{svg.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
         </div>
       </div>
-      <template v-for="(item,key) in tabsArr">
-        <div :key="key"
-             class="chart-wrap"
-             :class="{'chart-show':key!==2 && !bp_end}"
-             v-if="!(key===2 && !bp_end)">
-          <div class="title">{{ item.name }}</div>
-          <div class="rate-wrap">
-            <div v-if="item.timeSummary[item.rate] !== undefined">
-              <span>{{item.timeLabel}}:</span>
-              {{item.timeSummary[item.rate]}}ms
+      <div class="chart-container">
+        <template v-for="(item,key) in tabsArr">
+          <div :key="key"
+               class="chart-wrap"
+               :class="{'chart-show':key!==2 && !bp_end}"
+               v-if="!(key===2 && !bp_end)">
+            <div class="title">{{ item.name }}</div>
+            <div class="rate-wrap">
+              <div v-if="item.timeSummary[item.rate] !== undefined">
+                <span>{{item.timeLabel}}:</span>
+                {{item.timeSummary[item.rate]}}ms
+              </div>
+              <div v-if="item.timeSummary[item.percent] !== undefined">
+                <span>{{item.rateLabel}}:</span>{{item.timeSummary[item.percent]}}
+              </div>
+              <div v-if="item.timeSummary.total_steps !== undefined">
+                <span>{{$t('profiling.stepNum')}}:</span>{{item.timeSummary.total_steps}}
+              </div>
             </div>
-            <div v-if="item.timeSummary[item.percent] !== undefined">
-              <span>{{item.rateLabel}}:</span>{{item.timeSummary[item.percent]}}
-            </div>
-            <div v-if="item.timeSummary.total_steps !== undefined">
-              <span>{{$t('profiling.stepNum')}}:</span>{{item.timeSummary.total_steps}}
+            <div class="chart"
+                 :id="item.id"
+                 v-show="!item.noData"></div>
+            <div class="image-noData"
+                 v-if="item.noData">
+              <div>
+                <img :src="require('@/assets/images/nodata.png')"
+                     alt="" />
+              </div>
+              <p>{{item.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
             </div>
           </div>
-          <div class="chart"
-               :id="item.id"
-               v-show="!item.noData"></div>
-          <div class="image-noData"
-               v-if="item.noData">
-            <div>
-              <img :src="require('@/assets/images/nodata.png')"
-                   alt="" />
-            </div>
-            <p>{{item.initOver?$t("public.noData"):$t("public.dataLoading")}}</p>
-          </div>
-        </div>
-      </template>
+        </template>
+      </div>
     </div>
     <div class="image-noData"
          v-if="tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData">
@@ -147,15 +150,22 @@ limitations under the License.
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
-import RequestService from '../../services/request-service';
-import CommonProperty from '../../common/common-property';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import RequestService from '@/services/request-service';
+import CommonProperty from '@/common/common-property';
+import {isInteger} from '@/js/utils';
 export default {
+  props: {
+    rankID: String,
+  },
   data() {
     return {
-      dir: this.$route.query.dir, // Summary path data
-      train_id: this.$route.query.id, // Training job id
-      relativePath: this.$route.query.path, // Relative path of summary log
+      isGPU: this.$route.path.includes('profiling-gpu'),
+      trainInfo: {
+        dir: this.$route.query.dir, // Summary path data
+        id: this.$route.query.id, // Training job id
+        path: this.$route.query.path, // Relative path of summary log
+      },
       fp_start: '--', // FP start operator
       bp_end: '--', // BP termination operator
       steps: {
@@ -205,7 +215,6 @@ export default {
         noData: true,
         initOver: false,
       },
-      deviceId: 0,
       radio: this.$t('profiling.iterationGap'),
       tabsArr: [
         // Detailed chart of data in step trace
@@ -247,18 +256,9 @@ export default {
   },
   watch: {
     // Monitor current card information
-    '$parent.curDashboardInfo': {
-      handler(newValue, oldValue) {
-        if (newValue.curCardNum || newValue.curCardNum === 0) {
-          this.dir = newValue.query.dir;
-          this.train_id = newValue.query.id;
-          this.deviceId = newValue.curCardNum;
-          this.relativePath = newValue.query.path;
-          if (this.train_id) {
-            document.title = `${decodeURIComponent(this.train_id)}-${this.$t('profiling.stepTrace')}-MindInsight`;
-          } else {
-            document.title = `${this.$t('profiling.stepTrace')}-MindInsight`;
-          }
+    rankID: {
+      handler(newValue) {
+        if (isInteger(newValue)) {
           this.svg.noData = true;
           this.svg.initOver = false;
           this.tabsArr.forEach((val) => {
@@ -266,20 +266,24 @@ export default {
             val.initOver = false;
           });
           this.init();
-        }
-        if (newValue.initOver) {
-          this.svg.initOver = true;
-          this.tabsArr.forEach((val) => {
-            val.initOver = true;
-          });
+        } else {
+          if (newValue === '') {
+            this.svg.initOver = true;
+            this.tabsArr.forEach((val) => {
+              val.initOver = true;
+            });
+          }
         }
       },
-      deep: true,
       immediate: true,
     },
   },
   computed: {},
   mounted() {
+    const id = this.trainInfo.id;
+    document.title = (id ? id + '-' : '') + `${this.$t('profiling.stepTrace')}-MindInsight`;
+    window.addEventListener('resize', this.resizeTrace, false);
+    window.addEventListener('resize', this.resizeEchart, false);
     // Collapse the left column to respond to events
     setTimeout(() => {
       this.$bus.$on('collapse', () => {
@@ -293,8 +297,6 @@ export default {
      * Initialization function
      */
     init() {
-      window.addEventListener('resize', this.resizeTrace, false);
-      window.addEventListener('resize', this.resizeEchart, false);
       if (this.charts.length) {
         this.charts.forEach((val) => {
           val.clear();
@@ -307,7 +309,6 @@ export default {
         disabled: true,
         label: this.$t('profiling.stepInputTip'),
       };
-
       this.queryTrainingTrace(0, true);
     },
     /**
@@ -351,9 +352,9 @@ export default {
      */
     getTimeInfo(id, type) {
       const params = {
-        dir: this.relativePath,
+        dir: this.trainInfo.path,
         type,
-        device_id: this.deviceId,
+        device_id: this.rankID,
       };
       RequestService.targetTimeInfo(params).then(
           (res) => {
@@ -496,9 +497,9 @@ export default {
      */
     queryTrainingTrace(step, init) {
       const params = {
-        dir: this.relativePath,
+        dir: this.trainInfo.path,
         type: step,
-        device_id: this.deviceId,
+        device_id: this.rankID,
       };
       RequestService.queryTrainingTrace(params).then(
           (res) => {
@@ -902,9 +903,7 @@ export default {
   height: 100%;
 }
 .step-trace .step-trace-title {
-  padding: 0 15px;
-  font-size: 18px;
-  font-weight: bold;
+  height: 32px;
 }
 .step-trace .step-trace-title .el-icon-question {
   cursor: pointer;
@@ -934,14 +933,13 @@ export default {
   background: var(--button-hover-color);
 }
 .step-trace .step-trace-title .show-average {
-  float: right;
-  margin-right: 20px;
+  position: absolute;
+  right: 36px;
 }
 .step-trace .step-message {
   height: 32px;
   line-height: 16px;
-  margin-top: 6px;
-  margin-left: 14px;
+  margin-top: 8px;
   overflow-y: auto;
 }
 .step-trace .step-padding-right {
@@ -956,12 +954,15 @@ export default {
   font-weight: bold;
 }
 .step-trace .pf-content-middle {
-  padding: 10px 15px 0;
-  height: calc(100% - 64px);
+  display: grid;
+  grid-template-rows: repeat(2, calc(50% - 10px));
+  gap: 20px;
+  padding-top: 10px;
+  height: calc(100% - 72px);
 }
 .step-trace .pf-content-middle #trace-container {
   width: 100%;
-  height: 50%;
+  height: 100%;
   border: 1px solid var(--border-color);
   overflow: auto;
 }
@@ -980,22 +981,22 @@ export default {
 .step-trace .pf-content-middle #trace-container .training-trace .content-mini {
   overflow: visible;
 }
+.step-trace .chart-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  height: 100%;
+}
 .step-trace .pf-content-middle .chart-wrap {
-  float: left;
-  height: calc(50% - 25px);
-  margin-top: 20px;
-  margin-right: 15px;
-  width: calc(33.3% - 10px);
+  height: 100%;
+  width: 100%;
   border: 1px solid var(--border-color);
-  padding: 30px 30px 0;
+  padding-top: 20px;
   border-radius: 1px;
   overflow: auto;
 }
-.step-trace .pf-content-middle .chart-wrap:last-child {
-  margin-right: 0;
-}
 .step-trace .pf-content-middle .chart-wrap .chart {
-  height: calc(100% - 85px);
+  height: calc(100% - 110px);
   min-height: 180px;
   min-width: 250px;
   overflow: hidden;

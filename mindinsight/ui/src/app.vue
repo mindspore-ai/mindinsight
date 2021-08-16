@@ -23,10 +23,8 @@ limitations under the License.
             @click="cancelWarmText"></span>
     </div>
     <Header></Header>
-    <div class="cl-center"
-         :class="showWarmText ? 'cl-center-height' : ''">
-
-      <router-view :key="$route.fullPath"></router-view>
+    <div :class="['cl-center', showWarmText ? 'cl-center-height' : '']">
+      <router-view></router-view>
     </div>
   </div>
 </template>
@@ -50,7 +48,6 @@ export default {
     /**
      * close the browser tip
      */
-
     cancelWarmText() {
       this.showWarmText = false;
     },

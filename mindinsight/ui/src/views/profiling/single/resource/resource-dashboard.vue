@@ -23,7 +23,7 @@ limitations under the License.
         <div class="detail-link"
              :class="{disabled:!cpuInfo.initOver || cpuInfo.noData}">
           <button :disabled="!cpuInfo.initOver || cpuInfo.noData"
-                  @click="jumpToCpuDetail">
+                  @click="viewDetail('cpu-utilization')">
             {{$t('profiling.viewDetail')}}
             <i class="el-icon-d-arrow-right"></i>
           </button>
@@ -78,7 +78,7 @@ limitations under the License.
         <div class="detail-link"
              :class="{disabled:!graphicsInitOver || noGraphicsDataFlag}">
           <button :disabled="!graphicsInitOver || noGraphicsDataFlag"
-                  @click="jumpToMemoryDetail">
+                  @click="viewDetail('memory-utilization')">
             {{$t('profiling.viewDetail')}}
             <i class="el-icon-d-arrow-right"></i>
           </button>
@@ -103,21 +103,21 @@ limitations under the License.
   </div>
 </template>
 <script>
-import RequestService from '../../services/request-service';
-import echarts, {echartsThemeName} from '../../js/echarts';
-import CommonProperty from '../../common/common-property';
+import RequestService from '@/services/request-service';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import CommonProperty from '@/common/common-property';
+import {isInteger} from '@/js/utils';
 export default {
+  props: {
+    rankID: String,
+  },
   data() {
     return {
-      // ------------------------common--------------------
-      queryData: {
-        dir: '',
-        id: '',
-        path: '',
-        activePane: '',
+      trainInfo: {
+        id: this.$route.query.id,
+        path: this.$route.query.path,
+        dir: this.$route.query.dir,
       },
-      summaryPath: '',
-      curCardNum: '',
       pageResizeTimer: null, // Timer for changing the window size
       firstInit: true, // First init of page
       numberLimit: 10, // Maximum length of a number displayed
@@ -213,35 +213,25 @@ export default {
   },
   watch: {
     // Listening card number
-    '$parent.curDashboardInfo.curCardNum': {
+    rankID: {
       handler(newValue) {
-        if (isNaN(newValue) || newValue === this.curCardNum || this.firstInit) {
-          return;
+        if (isInteger(newValue)) {
+          this.noGraphicsDataFlag = false;
+          this.graphicsInitOver = false;
+          this.init();
+        } else {
+          if (newValue === '') {
+            this.noGraphicsDataFlag = true;
+            this.graphicsInitOver = true;
+          }
         }
-        this.curCardNum = newValue;
-        this.noGraphicsDataFlag = false;
-        this.graphicsInitOver = false;
-        this.init();
       },
-      deep: true,
       immediate: true,
     },
   },
   mounted() {
     window.addEventListener('resize', this.resizeCallback, false);
     this.$bus.$on('collapse', this.resizeCallback);
-    this.queryData = {
-      dir: this.$route.query.dir,
-      id: this.$route.query.id,
-      path: this.$route.query.path,
-      activePane: this.$route.query.activePane,
-    };
-    if (this.$route.query && this.$route.query.path && !isNaN(this.$route.query.cardNum)) {
-      this.summaryPath = this.$route.query.path;
-      this.curCardNum = this.$route.query.cardNum;
-      this.init();
-    }
-    this.firstInit = false;
   },
   methods: {
     // ------------------common---------------------
@@ -268,32 +258,17 @@ export default {
     },
     // ----------------memory-----------------------------------
     /**
-     * Router to memory-detail
-     */
-    jumpToMemoryDetail() {
-      this.$router.push({
-        path: '/profiling/memory-detail',
-        query: {
-          dir: this.queryData.dir,
-          id: this.queryData.id,
-          cardNum: this.curCardNum,
-          path: this.queryData.path,
-          activePane: this.queryData.activePane,
-        },
-      });
-    },
-    /**
      * Obtains base memory information
      */
     getMemorySummary() {
-      if (!this.summaryPath || isNaN(this.curCardNum)) {
+      if (!this.trainInfo.path || !isInteger(this.rankID)) {
         this.noGraphicsDataFlag = true;
         this.graphicsInitOver = true;
         return;
       }
       const params = {
-        dir: this.summaryPath,
-        device_id: this.curCardNum,
+        dir: this.trainInfo.path,
+        device_id: this.rankID,
       };
       RequestService.queryMemorySummary(params)
           .then(
@@ -318,8 +293,8 @@ export default {
      */
     getMemoryGraphics() {
       const params = {
-        dir: this.summaryPath,
-        device_id: this.curCardNum,
+        dir: this.trainInfo.path,
+        device_id: this.rankID,
       };
       RequestService.queryMemoryGraphics(params).then(
           (res) => {
@@ -488,13 +463,13 @@ export default {
                     `<div>${that.$t('profiling.memory.curOperator')}` +
                     `${that.$t('symbols.colon')}${curData.name}</div>` +
                     `<div>${that.$t('profiling.memory.curOperatorMemorySize')}` +
-                    `${that.$t('symbols.colon')}${that.formmateNummber(curData.size)}</div>` +
+                    `${that.$t('symbols.colon')}${that.formatNumber(curData.size)}</div>` +
                     `<div>${that.$t('profiling.memory.curMemorySize')}` +
-                    `${that.$t('symbols.colon')}${that.formmateNummber(
+                    `${that.$t('symbols.colon')}${that.formatNumber(
                         that.currentGraphicsDic.lines[dataIndex],
                     )}</div>` +
                     `<div>${that.$t('profiling.memory.memoryChanged')}` +
-                    `${that.$t('symbols.colon')}${that.formmateNummber(curData.allocated)}</div>`;
+                    `${that.$t('symbols.colon')}${that.formatNumber(curData.allocated)}</div>`;
                 }
               }
             });
@@ -540,7 +515,7 @@ export default {
      * @param {Number} number
      * @return {String} Formatted number
      */
-    formmateNummber(number) {
+    formatNumber(number) {
       const digitMax = 10;
       const digitMin = 1;
       if (!isNaN(number) && number.toString().length > this.numberLimit) {
@@ -572,11 +547,11 @@ export default {
     queryCpuInfo() {
       const params = {
         params: {
-          profile: this.queryData.dir,
-          train_id: this.queryData.id,
+          profile: this.trainInfo.dir,
+          train_id: this.trainInfo.id,
         },
         body: {
-          device_id: this.curCardNum,
+          device_id: this.rankID,
           filter_condition: {},
         },
       };
@@ -657,46 +632,41 @@ export default {
           legend.push(item.name);
         }
       });
-      this.deviceCpuChart.cpuAvgUser = deviceInfo.user_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgSystem = deviceInfo.sys_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgIO = deviceInfo.io_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgFree = deviceInfo.idle_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
-      this.deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
-      this.deviceCpuChart.option.series = series;
-      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+      const deviceCpuChart = this.deviceCpuChart;
+      deviceCpuChart.cpuAvgUser = deviceInfo.user_utilization.avg_value;
+      deviceCpuChart.cpuAvgSystem = deviceInfo.sys_utilization.avg_value;
+      deviceCpuChart.cpuAvgIO = deviceInfo.io_utilization.avg_value;
+      deviceCpuChart.cpuAvgFree = deviceInfo.idle_utilization.avg_value;
+      deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
+      deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
+      // Echarts option
+      const deviceCpuChartOption = deviceCpuChart.option;
+      deviceCpuChartOption.series = series;
+      deviceCpuChartOption.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
           'symbols.leftbracket',
       )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
-      this.deviceCpuChart.option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
+      deviceCpuChartOption.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
           (val, index) => index + 1,
       );
-      this.deviceCpuChart.option.legend.data = legend;
-      this.deviceCpuChart.option.tooltip.formatter = (params) => {
+      deviceCpuChartOption.legend.data = legend;
+      deviceCpuChartOption.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
       };
       this.$nextTick(() => {
-        if (!this.deviceCpuChart.chartDom) {
+        if (!deviceCpuChart.chartDom) {
           if (this.$refs.deviceCpuChart) {
-            this.deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart, echartsThemeName);
+            deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart, echartsThemeName);
           }
         }
-        this.deviceCpuChart.chartDom.setOption(this.deviceCpuChart.option);
+        deviceCpuChart.chartDom.setOption(deviceCpuChartOption);
       });
     },
     /**
      * Router to memory-detail
+     * @param {string} path
      */
-    jumpToCpuDetail() {
-      this.$router.push({
-        path: '/profiling/cpu-detail',
-        query: {
-          dir: this.queryData.dir,
-          id: this.queryData.id,
-          cardNum: this.curCardNum,
-          path: this.queryData.path,
-          activePane: this.queryData.activePane,
-        },
-      });
+    viewDetail(path) {
+      this.$emit('viewDetail', path);
     },
   },
   destroyed() {
@@ -712,7 +682,7 @@ export default {
   },
 };
 </script>
-<style>
+<style scoped>
 .cl-resource-content {
   height: 100%;
   overflow-y: auto;
@@ -732,7 +702,7 @@ export default {
 }
 .cl-resource-content .dashboard-item .title-item .title-text {
   flex: 1;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   line-height: 24px;
 }

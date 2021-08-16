@@ -69,10 +69,10 @@ limitations under the License.
         <div class="router-container"
              :class="$route.path === '/profiling-gpu/profiling-dashboard'
            || $route.path === '/profiling-gpu/resource-utilization'?'dashboard':'detail'">
-          <router-view></router-view>
+          <router-view :rankID="curDashboardInfo.curCardNum"></router-view>
         </div>
         <div class="close"
-             @click="backToDdashboard"
+             @click="backToDashboard"
              v-if="$route.path !== '/profiling-gpu/profiling-dashboard'
             && $route.path !== '/profiling-gpu/resource-utilization'">
           <img src="@/assets/images/close-page.png">
@@ -139,13 +139,13 @@ export default {
         this.curDashboardInfo.query.dir = this.$route.query.dir;
         this.curDashboardInfo.query.path = this.$route.query.path;
         this.tabData.activeName = this.$route.query.activePane || this.tabData.tabPanes[0].name;
-        this.summaryPath = decodeURIComponent(this.$route.query.id);
+        this.summaryPath = this.$route.query.path;
         if (!isNaN(this.$route.query.deviceid)) {
           this.curDashboardInfo.curCardNum = this.$route.query.deviceid;
         }
         this.getDeviceList();
       } else {
-        this.curDashboardInfo.query.trainingJobId = '';
+        this.curDashboardInfo.query.id = '';
         this.curDashboardInfo.query.dir = '';
         this.curDashboardInfo.query.path = '';
         this.tabData.activeName = this.tabData.tabPanes[0].name;
@@ -188,7 +188,7 @@ export default {
                   this.curDashboardInfo.initOver = true;
                 }
               },
-              (error) => {
+              () => {
                 this.CardNumArr = [];
                 this.curDashboardInfo.curCardNum = '';
                 this.curDashboardInfo.initOver = true;
@@ -302,7 +302,7 @@ export default {
     /**
      * Router back to profiling-dashboard
      */
-    backToDdashboard() {
+    backToDashboard() {
       let path = '/profiling-gpu/profiling-dashboard';
       if (this.tabData.activeName === this.tabData.tabPanes[1].name) {
         path = '/profiling-gpu/resource-utilization';
@@ -358,6 +358,10 @@ export default {
 };
 </script>
 <style>
+.router-container .profiling-content-title-gpu {
+  font-size: 18px;
+  font-weight: bold;
+}
 .prof-wrap {
   height: 100%;
   background: var(--bg-color);

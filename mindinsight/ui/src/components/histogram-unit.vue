@@ -184,7 +184,7 @@ export default {
       const colorMin = histogramThemeObj.lineMinColor;
       const colorMax = histogramThemeObj.lineMaxColor;
       const oriData = this.oriData;
-      const colorArr = this.getGrientColor(colorMin, colorMax, oriData.seriesData.length);
+      const colorArr = this.getGradientColor(colorMin, colorMax, oriData.seriesData.length);
       const fullScreenFun = this.toggleFullScreen;
       const axisName = this.axisName;
       const that = this;
@@ -401,7 +401,7 @@ export default {
       const filter = this.fullData.filter((k) => k.step === value);
       if (filter.length) {
         if (this.axisName === 2) {
-          // 1000: s to ms 
+          // 1000: s to ms
           data = this.fullScreen ? this.dealrelativeTime(new Date(filter[0].wall_time * 1000).toString()) : [];
         } else if (this.axisName === 1) {
           data = this.formatNumber(filter[0].relative_time.toFixed(0));
@@ -686,7 +686,7 @@ export default {
      * @param {Number} step
      * @return {Array} Array of gradient color
      */
-    getGrientColor(startColor, endColor, step) {
+    getGradientColor(startColor, endColor, step) {
       const startRgb = this.formatColor(startColor);
       const endRgb = this.formatColor(endColor);
       const gapRgbR = (endRgb[0] - startRgb[0]) / step;

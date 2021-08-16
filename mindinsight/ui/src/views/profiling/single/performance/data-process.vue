@@ -15,7 +15,7 @@ limitations under the License.
 -->
 <template>
   <div class="data-process-wrap">
-    <div class="title">{{$t('profiling.minddataTitle')}}</div>
+    <div :class="[`profiling-content-title${isGPU ? '-gpu' : ''}`]">{{$t('profiling.minddataTitle')}}</div>
     <el-tabs v-model="activeName"
              @tab-click="handleClick">
       <el-tab-pane :label="$t('profiling.queueInfo')"
@@ -313,19 +313,26 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
-import RequestService from '../../services/request-service';
-import CommonProperty from '../../common/common-property';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import RequestService from '@/services/request-service';
+import CommonProperty from '@/common/common-property';
 import {select, selectAll, zoom} from 'd3';
 import {event as currentEvent} from 'd3-selection';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom};
+import {isInteger} from '@/js/utils';
 export default {
-  props: {},
+  props: {
+    rankID: String,
+  },
   data() {
     return {
-      dir: '', // Profiler path
-      currentCard: '', // Purrent card number
+      isGPU: this.$route.path.includes('profiling-gpu'),
+      trainInfo: {
+        path: this.$route.query.path,
+        dir: this.$route.query.dir,
+        id: this.$route.query.id,
+      },
       connectQueueChart: {
         // Connect queue chart object
         id: 'connect-queue',
@@ -419,33 +426,26 @@ export default {
     };
   },
   watch: {
-    '$parent.curDashboardInfo.curCardNum': {
+    rankID: {
       handler(newValue) {
-        if (newValue || newValue === 0) {
-          this.dir = this.$route.query.dir;
-          this.trainId = this.$route.query.id;
-          this.currentCard = newValue;
-          if (this.trainId) {
-            document.title = `${decodeURIComponent(this.trainId)}` + `-${this.$t('profiling.mindData')}-MindInsight`;
-          } else {
-            document.title = `${this.$t('profiling.mindData')}-MindInsight`;
-          }
+        if (isInteger(newValue)) {
           if (this.activeName === 'queueInfo') {
             this.init();
           } else if (this.activeName === 'pipeLine') {
             this.queryAverageRate();
           }
-        }
-        if (this.activeName === 'queueInfo' && this.$parent.curDashboardInfo.initOver) {
-          this.initOver = true;
+        } else {
+          if (newValue === '') {
+            this.initOver = true;
+          }
         }
       },
-      deep: true,
       immediate: true,
     },
   },
-  computed: {},
   mounted() {
+    const id = this.trainInfo.id;
+    document.title = (id ? id + '-' : '') + `${this.$t('profiling.mindData')}-MindInsight`;
     this.resizeDebounce = this.debounce(this.resizeCallback, 200);
     window.addEventListener('resize', this.resizeDebounce, false);
     setTimeout(() => {
@@ -522,10 +522,10 @@ export default {
      */
     queryMinddataOp(chart) {
       const params = {
-        profile: this.dir,
-        device_id: this.currentCard,
+        profile: this.trainInfo.dir,
+        device_id: this.rankID,
         type: chart.params,
-        train_id: this.trainId,
+        train_id: this.trainInfo.id,
       };
       RequestService.minddataOp(params).then(
           (res) => {
@@ -567,10 +567,10 @@ export default {
      */
     queryQueueInfo(chart) {
       const params = {
-        profile: this.dir,
-        device_id: this.currentCard,
+        profile: this.trainInfo.dir,
+        device_id: this.rankID,
         type: chart.params,
-        train_id: this.trainId,
+        train_id: this.trainInfo.id,
       };
       RequestService.queueInfo(params).then(
           (res) => {
@@ -621,8 +621,25 @@ export default {
         xAxis: {
           name: 'step',
           data: [],
+          axisLine: {
+            lineStyle: {
+              color: this.chartThemeObj.axisTextColor,
+            },
+          },
         },
-        yAxis: {},
+        yAxis: {
+          axisLine: {
+            lineStyle: {
+              color: this.chartThemeObj.axisTextColor,
+            },
+          },
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: this.chartThemeObj.splitLineColor,
+            },
+          },
+        },
         series: [],
         grid: {
           left: 50,
@@ -678,11 +695,11 @@ export default {
      */
     queryProcessSummary() {
       const params = {
-        profile: this.dir,
-        device_id: this.currentCard,
-        train_id: this.trainId,
+        profile: this.trainInfo.dir,
+        device_id: this.rankID,
+        train_id: this.trainInfo.id,
       };
-      this.connectQueueChart.deviceId = this.currentCard;
+      this.connectQueueChart.deviceId = this.deviceID;
       this.initOver = false;
       RequestService.queryProcessSummary(params).then(
           (res) => {
@@ -758,14 +775,14 @@ export default {
     queryAverageRate() {
       const params = {
         params: {
-          train_id: this.trainId,
-          profile: this.dir,
+          train_id: this.trainInfo.id,
+          profile: this.trainInfo.dir,
         },
         body: {
-          device_id: this.currentCard,
+          device_id: this.rankID,
         },
       };
-      this.averageRateChart.deviceId = this.currentCard;
+      this.averageRateChart.deviceId = this.rankID;
       this.initOver = false;
       RequestService.queryOpQueue(params).then(
           (res) => {
@@ -891,9 +908,9 @@ export default {
      */
     queryQueue(id) {
       const params = {
-        profile: this.dir,
-        train_id: this.trainId,
-        device_id: this.currentCard,
+        profile: this.trainInfo.dir,
+        train_id: this.trainInfo.id,
+        device_id: this.rankID,
         op_id: id,
       };
       RequestService.queryQueue(params).then((res) => {
@@ -1270,18 +1287,18 @@ export default {
 <style>
 .data-process-wrap {
   height: 100%;
-  padding: 0 16px;
 }
 .data-process-wrap .title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   text-align: left;
+  height: 24px;
 }
 .data-process-wrap .el-tabs.el-tabs--top {
-  height: calc(100% - 24px);
+  height: calc(100% - 30px);
 }
 .data-process-wrap .el-tabs__content {
-  height: calc(100% - 54px);
+  height: calc(100% - 45px);
 }
 .data-process-wrap .el-tabs__content > .el-tab-pane {
   height: 100%;
@@ -1392,12 +1409,13 @@ export default {
   height: 50%;
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap > .title {
-  margin-bottom: 15px;
+  margin-bottom: 8px;
   font-weight: bold;
   font-size: 16px;
+  line-height: 24px;
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content {
-  height: calc(100% - 31px);
+  height: calc(100% - 32px);
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap {
   float: left;
@@ -1412,7 +1430,9 @@ export default {
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap .title {
   font-size: 13px;
-  padding: 10px;
+  padding-left: 10px;
+  height: 37px;
+  line-height: 37px;
   font-weight: bold;
 }
 .data-process-wrap .data-process-bottom .queue-step-wrap .chart-content .chart-wrap .data-tips {

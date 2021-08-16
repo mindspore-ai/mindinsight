@@ -16,10 +16,8 @@ limitations under the License.
 <template>
   <div class="cl-memory-detail">
     <div class="memory-bk">
-      <div class="title-content">
-        <div class="title-text">
-          {{$t("profiling.memory.memoryDetailLink")}}
-        </div>
+      <div class="profiling-content-title">
+        {{$t("profiling.memory.memoryDetailLink")}}
       </div>
       <div class="main-content">
         <div class="top-content"
@@ -102,7 +100,7 @@ limitations under the License.
             <span>
               {{$t('profiling.memory.operatorMemoryAssign')}}
             </span>
-            <img src="../../assets/images/full-screen.png"
+            <img src="@/assets/images/full-screen.png"
                  :title="$t('graph.fullScreen')"
                  class="fullScreen-icon"
                  @click="toggleFullScreen">
@@ -193,14 +191,21 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
-import RequestService from '../../services/request-service';
-import CommonProperty from '../../common/common-property';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import RequestService from '@/services/request-service';
+import CommonProperty from '@/common/common-property';
+import {isInteger} from '@/js/utils';
 export default {
+  props: {
+    rankID: String,
+  },
   data() {
     return {
-      summaryPath: '', // Current summary path
-      curCardNum: null, // Current card number
+      trainInfo: {
+        id: this.$route.query.id,
+        dir: this.$route.query.dir,
+        path: this.$route.query.path,
+      },
       // Data related to the date overview
       overViewData: {
         currentCard: '-',
@@ -237,31 +242,38 @@ export default {
     };
   },
   watch: {
-    // Listening card number
-    '$parent.curDashboardInfo.curCardNum': {
+    rankID: {
       handler(newValue) {
-        if (isNaN(parseInt(newValue)) || newValue === this.curCardNum || this.firstInit) {
-          return;
+        if (isInteger(newValue)) {
+          this.overViewInitOver = false;
+          this.noGraphicsDataFlag = false;
+          this.graphicsInitOver = false;
+          this.breakdownsInitOver = false;
+          this.overViewData = {
+            currentCard: '-',
+            memoryAssign: '-',
+            memoryRelease: '-',
+            staticMemory: '-',
+            totalMemory: '-',
+            memoryPeak: '-',
+          };
+          this.curGraphId = '';
+          this.curSelectedPointIndex = 0;
+          this.currentBreakdownsData = [];
+          this.init();
+        } else {
+          if (newValue === '') {
+            this.overViewData = {
+              currentCard: '-',
+              memoryAssign: '-',
+              memoryRelease: '-',
+              staticMemory: '-',
+              totalMemory: '-',
+              memoryPeak: '-',
+            };
+          }
         }
-        this.curCardNum = newValue;
-        this.overViewInitOver = false;
-        this.noGraphicsDataFlag = false;
-        this.graphicsInitOver = false;
-        this.breakdownsInitOver = false;
-        this.overViewData = {
-          currentCard: '-',
-          memoryAssign: '-',
-          memoryRelease: '-',
-          staticMemory: '-',
-          totalMemory: '-',
-          memoryPeak: '-',
-        };
-        this.curGraphId = '';
-        this.curSelectedPointIndex = 0;
-        this.currentBreakdownsData = [];
-        this.init();
       },
-      deep: true,
       immediate: true,
     },
   },
@@ -303,7 +315,7 @@ export default {
      * Obtains base memory information
      */
     getMemorySummary() {
-      if (!this.summaryPath || isNaN(this.curCardNum)) {
+      if (!this.trainInfo.path || !isInteger(this.rankID)) {
         this.overViewInitOver = true;
         this.noGraphicsDataFlag = true;
         this.graphicsInitOver = true;
@@ -311,8 +323,8 @@ export default {
         return;
       }
       const params = {
-        dir: this.summaryPath,
-        device_id: this.curCardNum,
+        dir: this.trainInfo.path,
+        device_id: this.rankID,
       };
       RequestService.queryMemorySummary(params)
           .then(
@@ -352,8 +364,8 @@ export default {
      */
     getMemoryGraphics() {
       const params = {
-        dir: this.summaryPath,
-        device_id: this.curCardNum,
+        dir: this.trainInfo.path,
+        device_id: this.rankID,
       };
       RequestService.queryMemoryGraphics(params).then(
           (res) => {
@@ -398,8 +410,8 @@ export default {
         return;
       }
       const params = {
-        dir: this.summaryPath,
-        device_id: this.curCardNum,
+        dir: this.trainInfo.path,
+        device_id: this.rankID,
         graph_id: this.curGraphId,
         node_id: tempNodeData.node_id,
       };
@@ -724,20 +736,12 @@ export default {
     },
   },
   mounted() {
-    if (this.train_id) {
-      document.title = `${decodeURIComponent(this.train_id)}-${this.$t(
-          'profiling.memory.memoryDetailLink',
-      )}-MindInsight`;
-    } else {
-      document.title = `${this.$t('profiling.memory.memoryDetailLink')}-MindInsight`;
-    }
+    const id = this.trainInfo.id;
+    document.title = `${id ? id + '-' : ''}${this.$t(
+        'profiling.memory.memoryDetailLink',
+    )}-MindInsight`;
     window.addEventListener('resize', this.resizeCallback, false);
     this.$bus.$on('collapse', this.resizeCallback);
-    if (this.$route.query && this.$route.query.path && !isNaN(this.$route.query.cardNum)) {
-      this.summaryPath = this.$route.query.path;
-      this.curCardNum = this.$route.query.cardNum;
-      this.init();
-    }
     this.firstInit = false;
   },
 };
@@ -746,7 +750,6 @@ export default {
 .cl-memory-detail {
   width: 100%;
   height: 100%;
-  padding-left: 24px;
   display: flex;
 }
 .cl-memory-detail .top-content.full-screen {
@@ -776,7 +779,7 @@ export default {
 }
 
 .cl-memory-detail .title-content .title-text {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .cl-memory-detail .top-content .content-item {
@@ -786,7 +789,7 @@ export default {
 }
 
 .cl-memory-detail .main-content {
-  height: calc(100% - 44px);
+  height: calc(100% - 30px);
   overflow-y: auto;
 }
 

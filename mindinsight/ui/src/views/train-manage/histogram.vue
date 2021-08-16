@@ -950,7 +950,7 @@ export default {
       const colorMin = histogramThemeObj.lineMinColor;
       const colorMax = histogramThemeObj.lineMaxColor;
       const oriData = sampleObject.oriData;
-      const colorArr = this.getGrientColor(colorMin, colorMax, oriData.seriesData.length);
+      const colorArr = this.getGradientColor(colorMin, colorMax, oriData.seriesData.length);
       const fullScreenFun = this.toggleFullScreen;
       const curAxisName = this.curAxisName;
       const that = this;
@@ -1144,7 +1144,7 @@ export default {
         return hexStr;
       }
     },
-    getGrientColor(startColor, endColor, step) {
+    getGradientColor(startColor, endColor, step) {
       const startRgb = this.formatColor(startColor);
       const endRgb = this.formatColor(endColor);
       const gapRgbR = (endRgb[0] - startRgb[0]) / step;

@@ -412,14 +412,7 @@ export default {
       const profilerDir = row.profiler_dir;
       const trainId = row.train_id;
       const path = row.relative_path;
-      let router = '/profiling';
-      if (row.profiler_type === 'gpu') {
-        router = '/profiling-gpu';
-      } else if (row.profiler_type === 'cluster_ascend') {
-        router = '/cluster-dashboard';
-      } else if (row.profiler_type === 'cluster_gpu') {
-        router = '/cluster-dashboard';
-      }
+      const router = row.profiler_type === 'gpu' ? '/profiling-gpu' : '/profiling';
       this.$router.push({
         path: router,
         query: {
@@ -551,14 +544,7 @@ export default {
         const profilerDir = row.profiler_dir;
         const trainId = row.train_id;
         const path = row.relative_path;
-        let router = '/profiling';
-        if (row.profiler_type === 'gpu') {
-          router = '/profiling-gpu';
-        } else if (row.profiler_type === 'cluster_ascend') {
-          router = '/cluster-dashboard';
-        } else if (row.profiler_type === 'cluster_gpu') {
-          router = '/cluster-dashboard';
-        }
+        const router = row.profiler_type === 'gpu' ? '/profiling-gpu' : '/profiling';
         const routeUrl = this.$router.resolve({
           path: router,
           query: {

@@ -17,7 +17,7 @@ limitations under the License.
   <div class="performance-dashboard">
     <div class="container">
       <div class="header"
-           @click="jump('performance', performanceState === normalState)">
+           @click="jump('step-trace', performanceState === normalState)">
         <span class="title">{{ performanceChart.title }}</span>
         <span :class="{
                 'jump': true,
@@ -53,15 +53,12 @@ limitations under the License.
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
-import RequestService from '../../services/request-service';
-import empty, {NO_DATA, LOADING_DATA} from '../../components/empty';
-import {keepDecimalPlaces} from '../../js/utils';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import RequestService from '@/services/request-service';
+import empty, {NO_DATA, LOADING_DATA} from '@/components/empty';
+import {keepDecimalPlaces} from '@/js/utils';
 const DEFAULT_DECIMAL_PLACES = 4;
 export default {
-  props: {
-    activeName: String,
-  },
   components: {
     empty,
   },
@@ -137,15 +134,7 @@ export default {
      */
     jump(path, effective) {
       if (!effective) return;
-      this.$router.push({
-        path: `profiling-${path}`,
-        query: Object.assign(
-            {
-              activeName: this.activeName,
-            },
-            this.trainInfo,
-        ),
-      });
+      this.$emit('viewDetail', path);
     },
     /**
      * The logic of query performance info
@@ -314,8 +303,8 @@ export default {
   justify-content: space-between;
 }
 .performance-dashboard .header .title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: bold;
 }
 .performance-dashboard .header .jump {
   cursor: pointer;
