@@ -14,6 +14,7 @@
 # ============================================================================
 """Define common utils."""
 import os
+import re
 import stat
 import json
 import uuid
@@ -23,9 +24,10 @@ from typing import List, Tuple, Mapping
 
 import numpy as np
 
-from mindinsight.mindconverter.common.log import logger as log
+from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
-    CheckPointGenerationError, WeightMapGenerationError, ModelLoadingError, OnnxModelSaveError
+    CheckPointGenerationError, WeightMapGenerationError, ModelLoadingError, OnnxModelSaveError, \
+    ParamMissingError, BadParamError
 from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, FrameworkType, \
     TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION, ONNX_MODEL_SUFFIX, DTYPE_MAP, WRITE_FLAGS, RW_MODE_FOR_OWNER, \
     RWX_MODE_FOR_OWNER
@@ -384,3 +386,75 @@ def get_lib_notice_info():
            f"Current versions are: " \
            f"{get_third_part_lib_error_info(common_lib_list + tf_lib_list, current_lib_versions)}."
     return info
+
+
+def check_params_exist(params: list, config):
+    """Check params exist."""
+    miss_param_list = ''
+    for param in params:
+        if not config.get(param):
+            miss_param_list = ', '.join((miss_param_list, param)) if miss_param_list else param
+
+    if miss_param_list:
+        raise ParamMissingError(
+            f"Param(s) missing, {miss_param_list} is(are) required when using graph mode.", only_console=True)
+
+
+def extract_from_cli(file_config, check_params):
+    """Get params from CLI."""
+    check_params_exist(check_params, file_config)
+
+    if len(file_config['shape']) != len(file_config.get("input_nodes", [])):
+        raise BadParamError("`--shape` and `--input_nodes` must have the same length, "
+                            "and no redundant node in `--input_nodes`.", only_console=True)
+
+    input_nodes = dict()
+    for shape, node in zip(file_config['shape'], file_config['input_nodes']):
+        input_nodes[node] = shape
+    return input_nodes
+
+
+def extract_from_model(input_instances, file_config):
+    """Get params from model."""
+    node_with_dynamic_shape = list()
+    input_nodes = dict()
+
+    onnx = import_module("onnx")
+    pattern = re.compile(r"%(.+?)\[(.+?), (.+?)]")
+    for input_inst in input_instances:
+        value_info = onnx.helper.printable_value_info(input_inst)
+        output = re.findall(pattern, value_info)[0]
+
+        name, _, shape_str = output
+        shape_org = shape_str.split("x")
+        shape = [int(dim) for dim in shape_org if dim.isdigit()]
+        if len(shape) == len(shape_org):
+            input_nodes[name] = shape
+        else:
+            if not file_config.get("shape") or not file_config.get("input_nodes"):
+                log_console.warning(f"Static shape is required, but input `{name}` with shape {shape_org} is gotten. "
+                                    f"Use `--input_nodes` and `--shape` to set static shape.")
+            node_with_dynamic_shape.append(name)
+
+    if node_with_dynamic_shape:
+        input_nodes_cli = extract_from_cli(file_config, check_params=("shape", "input_nodes"))
+        for dynamic_name in node_with_dynamic_shape:
+            shape_from_cli = input_nodes_cli.get(dynamic_name)
+            if not shape_from_cli:
+                raise BadParamError(f"Input `{dynamic_name}` is not found in param `--input_nodes`.")
+            input_nodes[dynamic_name] = shape_from_cli
+    return input_nodes
+
+
+def extract_in_out_nodes(file_config, frame_type):
+    """Extract input_nodes and output_nodes."""
+    if frame_type == FrameworkType.ONNX.value:
+        onnx = import_module("onnx")
+        model = onnx.load(file_config["model_file"])
+        input_nodes = extract_from_model(model.graph.input, file_config)
+        output_nodes = [out.name for out in model.graph.output]
+    else:
+        check_params = ("shape", "input_nodes", "output_nodes")
+        input_nodes = extract_from_cli(file_config, check_params)
+        output_nodes = file_config["output_nodes"]
+    return input_nodes, output_nodes

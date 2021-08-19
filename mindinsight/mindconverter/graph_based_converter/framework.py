@@ -24,14 +24,14 @@ from mindinsight.mindconverter.graph_based_converter.common.global_context impor
 from mindinsight.mindconverter.graph_based_converter.common.mcgraph import ConverterGraph
 from mindinsight.mindconverter.graph_based_converter.common.utils import onnx_satisfied, \
     save_code_file_and_report, get_framework_type, check_dependency_integrity, \
-    get_third_part_lib_error_info, save_intermediate_graph
+    get_third_part_lib_error_info, save_intermediate_graph, extract_in_out_nodes
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import GraphInitError, FileSaveError, \
-    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, ParamMissingError, \
-    BadParamError, SubGraphSearchingError
+    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, \
+    SubGraphSearchingError
 from mindinsight.mindconverter.graph_based_converter.third_party_graph import GraphFactory
 
 check_common_dependency_integrity = partial(check_dependency_integrity,
@@ -243,24 +243,12 @@ def main_graph_base_converter(file_config):
 
     graph_path = file_config['model_file']
     frame_type = get_framework_type(graph_path)
-    if not file_config.get("shape"):
-        raise ParamMissingError("Param missing, `--shape` is required when using graph mode.", only_console=True)
-
-    check_params = ['input_nodes', 'output_nodes']
-    check_params_exist(check_params, file_config)
-
-    if len(file_config['shape']) != len(file_config.get("input_nodes", [])):
-        raise BadParamError("`--shape` and `--input_nodes` must have the same length, "
-                            "and no redundant node in `--input_nodes`.", only_console=True)
-
-    input_nodes = dict()
-    for shape, node in zip(file_config['shape'], file_config['input_nodes']):
-        input_nodes[node] = shape
+    input_nodes, output_nodes = extract_in_out_nodes(file_config, frame_type)
 
     if frame_type == FrameworkType.ONNX.value:
         graph_based_converter_onnx_to_ms(graph_path=graph_path,
                                          input_nodes=input_nodes,
-                                         output_nodes=file_config['output_nodes'],
+                                         output_nodes=output_nodes,
                                          output_folder=file_config['outfile_dir'],
                                          report_folder=file_config['report_dir'],
                                          query_result_folder=file_config.get("query_result_folder"))
@@ -268,7 +256,7 @@ def main_graph_base_converter(file_config):
     elif frame_type == FrameworkType.TENSORFLOW.value:
         graph_based_converter_tf_to_ms(graph_path=graph_path,
                                        input_nodes=input_nodes,
-                                       output_nodes=file_config['output_nodes'],
+                                       output_nodes=output_nodes,
                                        output_folder=file_config['outfile_dir'],
                                        report_folder=file_config['report_dir'],
                                        query_result_folder=file_config.get("query_result_folder"))
@@ -277,18 +265,6 @@ def main_graph_base_converter(file_config):
         error_msg = "Get UNSUPPORTED model."
         error = UnknownModelError(error_msg)
         raise error
-
-
-def check_params_exist(params: list, config):
-    """Check params exist."""
-    miss_param_list = ''
-    for param in params:
-        if not config.get(param) or not config[param]:
-            miss_param_list = ', '.join((miss_param_list, param)) if miss_param_list else param
-
-    if miss_param_list:
-        raise ParamMissingError(
-            f"Param(s) missing, {miss_param_list} is(are) required when using graph mode.", only_console=True)
 
 
 def get_ms_graph_from_onnx(graph_path: str, input_nodes: dict, output_nodes: List[str]):
