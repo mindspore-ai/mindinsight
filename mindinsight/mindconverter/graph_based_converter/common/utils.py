@@ -28,7 +28,7 @@ from mindinsight.mindconverter.common.log import logger as log, logger_console a
 from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
     CheckPointGenerationError, WeightMapGenerationError, ModelLoadingError, OnnxModelSaveError, \
     ParamMissingError, BadParamError
-from mindinsight.mindconverter.graph_based_converter.constant import SEPARATOR_IN_ONNX_OP, FrameworkType, \
+from mindinsight.mindconverter.graph_based_converter.constant import AUTO_DETECT_NODES, SEPARATOR_IN_ONNX_OP, FrameworkType, \
     TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION, ONNX_MODEL_SUFFIX, DTYPE_MAP, WRITE_FLAGS, RW_MODE_FOR_OWNER, \
     RWX_MODE_FOR_OWNER
 
@@ -448,7 +448,7 @@ def extract_from_model(input_instances, file_config):
 
 def extract_in_out_nodes(file_config, frame_type):
     """Extract input_nodes and output_nodes."""
-    if frame_type == FrameworkType.ONNX.value:
+    if frame_type == FrameworkType.ONNX.value and AUTO_DETECT_NODES:
         onnx = import_module("onnx")
         model = onnx.load(file_config["model_file"])
         input_nodes = extract_from_model(model.graph.input, file_config)

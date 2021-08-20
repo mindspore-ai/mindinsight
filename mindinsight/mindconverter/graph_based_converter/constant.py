@@ -19,6 +19,8 @@ import stat
 
 import numpy as np
 
+AUTO_DETECT_NODES = False
+
 SEPARATOR_IN_ONNX_OP = "::"
 SEPARATOR_IN_SCOPE = "/"
 SEPARATOR_BTW_NAME_AND_ID = "_"
