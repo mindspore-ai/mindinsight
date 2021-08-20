@@ -27,97 +27,38 @@ from mindinsight.profiler.common.validator.validate_path import validate_and_nor
 
 class ClusterAnalyser(BaseAnalyser):
     """The analyser for analyzing the cluster."""
-    _host_ips_mapping_filename = 'host_ips_mapping.txt'
 
     def __init__(self, cluster_profiler_dir, device_id):
         super().__init__(cluster_profiler_dir, device_id)
         self._cluster_profiler_dir = cluster_profiler_dir
-        self._host_ips_mapping_info = self._get_host_ips_mapping_info()
-        self._host_ips_dir = self._get_host_ips_dir()
-        self._host_device_rank_relation = self._get_host_device_rank_relation()
+        self._cluster_rank_ids = self._get_cluster_rank_ids()
 
-    def _get_host_ips_mapping_info(self):
-        """Get host ips mapping info."""
-        host_ips_mapping_info = list()
-        file_path = os.path.join(self._cluster_profiler_dir, self._host_ips_mapping_filename)
-        file_path = validate_and_normalize_path(
-            file_path, raise_key="Invalid file path.")
-        if not os.path.exists(file_path):
-            log.error('Did not find host_ips_mapping file: %s', file_path)
-            raise ProfilerDirNotFoundException(msg='Did not find host_ips_mapping:{}'.format(file_path))
-
-        with open(file_path, 'r') as src_file:
-            for line in src_file.readlines():
-                mapping_info = line.split()
-                if len(mapping_info) > 1:
-                    # mapping_info[0]:host_ip, mapping_info[1]:host_mapping_ip
-                    host_ips_mapping_info.append([mapping_info[0], mapping_info[1]])
-
-        return host_ips_mapping_info
-
-    def _get_host_ips_dir(self):
-        """Get host ips dir."""
-        host_ips_dir = []
-        target_dir_path = os.path.join(self._cluster_profiler_dir, 'cluster_profiler')
+    def _get_cluster_rank_ids(self):
+        """Get the logical card number list in cluster training."""
+        cluster_rank_ids = []
+        target_dir_path = os.path.join(self._cluster_profiler_dir, 'profiler')
         target_dir_path = validate_and_normalize_path(
-            target_dir_path, raise_key="Invalid cluster_profiler dir path.")
+            target_dir_path, raise_key="Invalid profiler dir path.")
         if not os.path.exists(target_dir_path):
-            log.error('Did not find cluster_profiler dir : %s', target_dir_path)
-            raise ProfilerDirNotFoundException(msg='Did not find cluster_profiler dir:{}'.format(target_dir_path))
-
-        entries = os.scandir(target_dir_path)
-        # host_mapping_id_index:1
-        host_mapping_ips = [i[1] for i in self._host_ips_mapping_info]
-        for entry in entries:
-            if entry.is_symlink():
-                continue
-            if entry.is_dir():
-                if entry.name in host_mapping_ips:
-                    host_ips_dir.append(entry.name)
-        return host_ips_dir
-
-    def _get_host_device_rank_relation(self):
-        """Get host_ip device_id rank_id relation."""
-        rank_table_file_path = self._get_rank_table_file_path()
-        if not os.path.exists(rank_table_file_path):
-            log.error('Did not find rank table file under %s', self._cluster_profiler_dir)
-            raise ProfilerFileNotFoundException(msg='Did not find rank table file')
-        with open(rank_table_file_path, 'r', encoding='utf-8') as file:
-            try:
-                relation_info = json.load(file)
-            except json.JSONDecodeError as err:
-                log.exception(err)
-        host_device_rank_relation = list()
-        servers_info = relation_info.get("server_list")
-        for server_info in servers_info:
-            server_id = server_info.get("server_id")
-            devices_info = server_info.get("device")
-            for device_info in devices_info:
-                device_id = device_info.get("device_id")
-                rank_id = device_info.get("rank_id")
-                host_device_rank_relation.append([server_id, device_id, rank_id])
-
-        host_ips_mapping_info = self._get_host_ips_mapping_info()
-        for item in host_device_rank_relation:
-            # host_ip_index:0,host_mapping_id_index:1
-            target_info = [i for i in host_ips_mapping_info if item[0] == i[0]]
-            # target_info is like:[[host_ip, host_mapping_ip]]
-            item[0] = target_info[0][1]
-
-        return host_device_rank_relation
-
-    def _get_rank_table_file_path(self):
-        """Get rank table file path."""
-        file_path = ''
-        target_dir_path = self._cluster_profiler_dir
+            log.error('Did not find profiler dir : %s', target_dir_path)
+            raise ProfilerDirNotFoundException(msg='Did not find profiler dir:{}'.format(target_dir_path))
         entries = os.scandir(target_dir_path)
         for entry in entries:
             if entry.is_symlink():
                 continue
-            if entry.is_file() and entry.name.endswith('.json'):
-                file_path = os.path.join(target_dir_path, entry.name)
-                break
-        return file_path
+            if entry.is_file() and entry.name.startswith('step_trace_raw'):
+                # index3：rank_id
+                rank_id = entry.name.split("_")[3]
+                if not rank_id.isdigit():
+                    log.error("The value of rank id should be a number.")
+                    raise TypeError("The value of rank id should be a number.")
+                cluster_rank_ids.append(int(rank_id))
+        cluster_rank_ids.sort()
+        # Judge whether the rank ids are continuous.
+        if (cluster_rank_ids[-1] - cluster_rank_ids[0]) != len(cluster_rank_ids) - 1:
+            log.warning("The rank ids are not continuous，"
+                        "please check for missing files. Rank ids: %s", cluster_rank_ids)
+        return cluster_rank_ids
 
     def _load(self):
         """Load data according to the parsed profiling files."""
@@ -144,8 +85,7 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
         """Get the num of train step."""
         total_step_num = 0
         # take the data of one of the machines to get the total number of steps.
-        host_ip_dir = self._host_ips_dir[0]
-        target_dir_path = os.path.join(self._cluster_profiler_dir, 'cluster_profiler', host_ip_dir, 'profiler')
+        target_dir_path = os.path.join(self._cluster_profiler_dir, 'profiler')
         target_dir_path = validate_and_normalize_path(
             target_dir_path, raise_key="Invalid profiler dir path.")
         if not os.path.exists(target_dir_path):
@@ -170,21 +110,18 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
     def _get_cluster_step_trace_info(self, step_num):
         """Get cluster step trace info."""
         cluster_step_trace_info = list()
-        for item in self._host_device_rank_relation:
-            # item[0]:host_ip, item[1]:device_id, item[2]:rank_id
-            step_trace_info = self._get_step_trace_info(item[0], item[1], step_num)
-            step_trace_info.append(item[0])
-            step_trace_info.append(item[1])
-            step_trace_info.append(item[2])
+        for item in self._cluster_rank_ids:
+            step_trace_info = self._get_step_trace_info(item, step_num)
+            step_trace_info.append(item)
             cluster_step_trace_info.append(step_trace_info)
         self._cluster_step_trace_info_size = len(cluster_step_trace_info)
         return cluster_step_trace_info
 
-    def _get_step_trace_info(self, host_ip, device_id, step_num):
+    def _get_step_trace_info(self, device_id, step_num):
         """Get step trace info."""
         file_name = 'step_trace_raw_{}_detail_time.csv'.format(device_id)
         step_trace_file_path = \
-            os.path.join(self._cluster_profiler_dir, 'cluster_profiler', host_ip, 'profiler', file_name)
+            os.path.join(self._cluster_profiler_dir, 'profiler', file_name)
         step_trace_file_path = validate_and_normalize_path(
             step_trace_file_path, raise_key="Invalid step trace file path.")
         if not os.path.exists(step_trace_file_path):
@@ -237,14 +174,11 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
             dict, the query result.
         """
         result = list()
-        # item[0]:iteration_interval, item[1]:fp_and_bp, item[2]:tail
-        # item[4]:host_ip, item[5]:device_id, item[6]:rank_id
+        # item[0]:iteration_interval, item[1]:fp_and_bp, item[2]:tail, item[3]:rank_id
         for item in self._result:
             step_trace_info = dict()
             step_trace_info["step_trace_info"] = item[0:3]
-            step_trace_info["host_ip"] = item[3]
-            step_trace_info["device_id"] = item[4]
-            step_trace_info["rank_id"] = item[5]
+            step_trace_info["rank_id"] = item[3]
             step_trace_info["profiler_dir"] = 'profiler'
             result.append(step_trace_info)
 
@@ -261,23 +195,21 @@ class ClusterMemoryAnalyser(ClusterAnalyser):
 
     def __init__(self, cluster_profiler_dir, device_id='0'):
         super().__init__(cluster_profiler_dir, device_id)
-        self._cluster_dir = os.path.join(cluster_profiler_dir, 'cluster_profiler')
+        self._cluster_dir = os.path.join(cluster_profiler_dir, 'profiler')
 
     def get_peak_memory(self):
         """Get peak memory for each device."""
         peak_mem_list = []
+        validate_and_normalize_path(self._cluster_dir,
+                                    raise_key='Invalid profiler directory {}.'.format(self._cluster_dir))
 
-        for host_map_ip, device_id, rank_id in self._host_device_rank_relation:
-            host_dir = os.path.join(self._cluster_dir, host_map_ip, 'profiler')
-            validate_and_normalize_path(host_dir, raise_key='Invalid host directory {}.'.format(host_map_ip))
-            file_path = self._get_memory_file_for_each_device(host_dir, device_id)
+        for rank_id in self._cluster_rank_ids:
+            file_path = self._get_memory_file_for_each_device(self._cluster_dir, rank_id)
             file_content = self._get_file_content(file_path)
             capacity = file_content.get('capacity')
             peak_mem = file_content.get('peak_mem')
 
             mem_dict = {
-                'host_ip': host_map_ip,
-                'device_id': device_id,
                 'rank_id': rank_id,
                 'capacity': capacity,
                 'peak_mem': peak_mem
@@ -315,17 +247,17 @@ class ClusterFlopsAnalyser(ClusterAnalyser):
 
     def __init__(self, cluster_profiler_dir, device_id='0'):
         super().__init__(cluster_profiler_dir, device_id)
-        self._cluster_dir = os.path.join(cluster_profiler_dir, 'cluster_profiler')
+        self._cluster_dir = os.path.join(cluster_profiler_dir, 'profiler')
 
     def get_flops(self):
         """Get flops for each device."""
         flops_info_list = []
         max_flops = 0
+        validate_and_normalize_path(self._cluster_dir,
+                                    raise_key='Invalid profiler directory {}.'.format(self._cluster_dir))
 
-        for host_map_ip, device_id, rank_id in self._host_device_rank_relation:
-            host_dir = os.path.join(self._cluster_dir, host_map_ip, 'profiler')
-            validate_and_normalize_path(host_dir, raise_key='Invalid host directory {}.'.format(host_map_ip))
-            file_path = self._get_flops_file_for_each_device(host_dir, device_id)
+        for rank_id in self._cluster_rank_ids:
+            file_path = self._get_flops_file_for_each_device(self._cluster_dir, rank_id)
 
             # Forward compatible. If flops file do not exist, return empty data.
             if not os.path.exists(file_path):
@@ -336,9 +268,7 @@ class ClusterFlopsAnalyser(ClusterAnalyser):
             max_flops = max(max_flops, file_content.get('FLOPs'))
 
             flops_dict = {
-                'host_ip': host_map_ip,
-                'device_id': device_id,
-                'rank_id': rank_id,
+                'rank_id': rank_id
             }
             flops_dict.update(file_content)
             flops_info_list.append(flops_dict)
@@ -404,9 +334,8 @@ class ClusterHcclAnalyser(ClusterAnalyser):
     def _get_total_step_num(self):
         """Get the num of train step."""
         total_step_num = 0
-        # Take the data of one of the machines to get the total number of steps.
-        host_ip_dir = self._host_ips_dir[0]
-        target_dir_path = os.path.join(self._cluster_profiler_dir, 'cluster_profiler', host_ip_dir, 'profiler')
+        # Take the data of one of the device to get the total number of steps.
+        target_dir_path = os.path.join(self._cluster_profiler_dir, 'profiler')
         target_dir_path = validate_and_normalize_path(
             target_dir_path, raise_key="Invalid profiler dir path.")
         if not os.path.exists(target_dir_path):
@@ -467,22 +396,19 @@ class ClusterHcclAnalyser(ClusterAnalyser):
     def _get_cluster_communication_info(self, step_num):
         """Get cluster communication info."""
         cluster_communication_info = list()
-        for item in self._host_device_rank_relation:
-            # item[0]:host_ip, item[1]:device_id, item[2]:rank_id
-            communication_info = self._get_communication_info(item[0], item[1], step_num)
-            communication_info.append(item[0])
-            communication_info.append(item[1])
-            communication_info.append(item[2])
+        for item in self._cluster_rank_ids:
+            communication_info = self._get_communication_info(item, step_num)
+            communication_info.append(item)
             cluster_communication_info.append(communication_info)
         self._cluster_communication_info_size = len(cluster_communication_info)
 
         return cluster_communication_info
 
-    def _get_communication_info(self, host_ip, device_id, step_num):
+    def _get_communication_info(self, device_id, step_num):
         """Get step trace info."""
         file_name = 'hccl_raw_{}.csv'.format(device_id)
         communication_file_path = \
-            os.path.join(self._cluster_profiler_dir, 'cluster_profiler', host_ip, 'profiler', file_name)
+            os.path.join(self._cluster_profiler_dir, 'profiler', file_name)
         communication_file_path = validate_and_normalize_path(
             communication_file_path, raise_key="Invalid  communication file path.")
         if not os.path.exists(communication_file_path):
@@ -534,13 +460,11 @@ class ClusterHcclAnalyser(ClusterAnalyser):
         """
         result = list()
         # item[0]:step_num, item[1]:communication_cost, item[2]:wait_cost, item[3]:link_info,
-        # item[4]:communication_operator_cost, item[5]:host_ip, item[6]:device_id, item[7]:rank_id,
+        # item[4]:communication_operator_cost, item[5]:rank_id
         for item in self._result:
             communication_info = dict()
             communication_info["communication_info"] = item[1:5]
-            communication_info["host_ip"] = item[5]
-            communication_info["device_id"] = item[6]
-            communication_info["rank_id"] = item[7]
+            communication_info["rank_id"] = item[5]
             result.append(communication_info)
 
         return {
