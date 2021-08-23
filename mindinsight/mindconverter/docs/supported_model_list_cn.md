@@ -37,3 +37,7 @@
 | EfficientNetB0~B7 | [脚本链接](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.15<br />脚本链接](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) <br />[TF2.3<br />脚本链接](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  | 已测试 | 已测试（TF1.15） 已测试（TF2.3）|
 | Unet | [脚本链接](https://github.com/milesial/Pytorch-UNet) | [脚本链接](https://github.com/zhixuhao/unet) | 由于算子`mindspore.ops.ResizeBilinear`在GPU上暂未实现，所以当运行在GPU设备上时，算子`mindspore.ops.ResizeBilinear`需要被替换为算子`mindspore.ops.ResizeNearestNeighbor` | 已测试 | 已测试 |
 | Bert | [脚本链接](https://huggingface.co/bert-base-uncased) | [脚本链接](https://github.com/google-research/bert) |  | 已测试 | 已测试 |
+|RetinaFace| [脚本链接](https://github.com/biubug6/Pytorch_Retinaface)|/| | 已测试 | / |
+|Yolov5s|[脚本链接](https://github.com/ultralytics/yolov5) | / | | 已测试 | / |
+|BigBird|[脚本链接](https://github.com/huggingface/transformers/tree/master/src/transformers/models/big_bird) | / | | 已测试 | / |
+|LayoutLM|[脚本链接](https://github.com/huggingface/transformers/tree/master/src/transformers/models/layoutlm) | / | | 已测试 | / |
