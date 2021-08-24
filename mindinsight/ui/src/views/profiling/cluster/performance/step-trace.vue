@@ -17,14 +17,8 @@ limitations under the License.
   <!-- cl-cluster-->
   <div class="cl-cluster">
     <div class="cl-cluster-bk">
-      <div class="cl-cluster-title">
-        <div class="cl-cluster-title-left">{{$t("profilingCluster.clusterStepView")}}</div>
-        <div class="path-message">
-          <span>{{$t('symbols.leftbracket')}}</span>
-          <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
-          <span>{{trainInfo.path}}</span>
-          <span>{{$t('symbols.rightbracket')}}</span>
-        </div>
+      <div class="profiling-content-title">
+        {{$t("profilingCluster.clusterStepView")}}
       </div>
       <div class="cl-step-filter">
         <label>{{stepTip}}</label>
@@ -95,10 +89,6 @@ limitations under the License.
       </div>
     </div>
 
-    <img src="@/assets/images/close-page.png"
-         class="cl-cluster-close"
-         @click="backToDashboard">
-
     <div class="no-data-img"
          v-show="!chartData.length">
       <div>
@@ -111,18 +101,16 @@ limitations under the License.
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
-import RequestService from '../../services/request-service';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import RequestService from '@/services/request-service';
 export default {
   data() {
     return {
       trainInfo: {
         id: this.$route.query.id,
-        // The parameter incoming has been encode, so use decode here
-        path: decodeURIComponent(this.$route.query.path),
+        path: this.$route.query.path,
         dir: this.$route.query.dir,
       },
-      activeName: this.$route.query.activeName,
       chartObj: null, // chart obj
       chartData: [], // chart data
       chartOption: {
@@ -204,15 +192,13 @@ export default {
     };
   },
   mounted() {
-    if (!this.trainInfo.id) {
+    const id = this.trainInfo.id;
+    if (!id) {
       this.$message.error(this.$t('trainingDashboard.invalidId'));
-      document.title = `${this.$t('profilingCluster.clusterView')}-MindInsight`;
       this.initOver = true;
       return;
     }
-    // const summaryPath = decodeURIComponent(this.trainInfo.path);
-    document.title = `${this.trainInfo.path}-${this.$t('profilingCluster.clusterView')}-MindInsight`;
-
+    document.title = (id ? id + '-' : '') + `${this.$t('profilingCluster.clusterView')}-MindInsight`;
     // adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
     this.chartOption.legend.data = Object.values(this.stepInfoCol);
@@ -228,17 +214,6 @@ export default {
     }
   },
   methods: {
-    backToDashboard() {
-      this.$router.push({
-        path: 'cluster-dashboard',
-        query: Object.assign(
-            {
-              activeName: this.activeName,
-            },
-            this.trainInfo,
-        ),
-      });
-    },
     /**
      *  initialize
      *  @param {Boolean} isInit whether get all data
@@ -289,7 +264,7 @@ export default {
               }
             }
           })
-          .catch((error) => {
+          .catch(() => {
             this.initOver = true;
             this.chartData = [];
             this.tableData = [];
@@ -304,9 +279,7 @@ export default {
       resData.forEach((item) => {
         const tableItem = {};
         tableItem.rank_id = item.rank_id;
-        tableItem.host_ip = item.host_ip;
         tableItem.profiler_dir = item.profiler_dir;
-        tableItem.device_id = item.device_id;
         const stepTraceInfo = item.step_trace_info;
         tableItem.iteration_interval = stepTraceInfo[0];
         tableItem.fp_and_bp = stepTraceInfo[1];
@@ -364,15 +337,9 @@ export default {
      */
 
     viewProfilingDetail(row) {
-      const path = this.$route.path.indexOf('profiling-gpu-cluster') > 0 ? '/profiling-gpu' : '/profiling';
       const routeUrl = this.$router.resolve({
-        path: path,
-        query: {
-          id: this.trainInfo.id + '/cluster_profiler/' + row.host_ip,
-          dir: row.profiler_dir,
-          path: this.trainInfo.path + '/cluster_profiler/' + row.host_ip,
-          deviceid: row.device_id.toString(),
-        },
+        path: '/profiling/single/performance',
+        query: Object.assign(this.trainInfo, {rankID: row.rank_id}),
       });
       window.open(routeUrl.href, '_blank');
     },
@@ -430,20 +397,11 @@ export default {
 .cl-cluster {
   height: 100%;
   background-color: var(--bg-color);
-  position: relative;
 }
 .cl-cluster .cl-cluster-bk {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0 32px 24px 32px;
-}
-.cl-cluster .cl-cluster-close {
-  object-fit: none;
-  position: absolute;
-  cursor: pointer;
-  top: 36px;
-  right: 24px;
 }
 .cl-cluster .no-data-img {
   background: var(--bg-color);
@@ -476,25 +434,6 @@ export default {
 .cl-cluster .thSpan {
   color: #d4d9e6;
   margin-right: 8px;
-}
-.cl-cluster .cl-cluster-title {
-  height: 56px;
-  line-height: 56px;
-  position: relative;
-  flex-shrink: 0;
-}
-.cl-cluster .cl-cluster-title .cl-cluster-title-left {
-  display: inline-block;
-  font-size: 20px;
-  font-weight: bold;
-  left: 0;
-}
-.cl-cluster .cl-cluster-title .path-message {
-  display: inline-block;
-  line-height: 20px;
-  padding: 18px 0;
-  font-weight: bold;
-  margin-left: 5px;
 }
 .cl-cluster .cl-cluster-chart {
   height: 280px;

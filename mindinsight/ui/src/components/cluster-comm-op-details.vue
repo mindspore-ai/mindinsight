@@ -103,7 +103,7 @@ const DEFAULT_DECIMAL_PLACES = 4;
 
 export default {
   props: {
-    rankID: String,
+    rankID: Number,
     dataset: Object,
   },
   data() {
@@ -114,7 +114,7 @@ export default {
       commSize: {label: this.$t('profilingCluster.commSize') + SIZE_UNIT, prop: 'commSize'},
       waitDur: {label: this.$t('profilingCluster.waitCost') + TIME_UNIT, prop: 'waitDur'},
       bandwidth: {label: this.$t('profilingCluster.bandWidth') + BAND_UNIT, prop: 'bandwidth'},
-      linkRel: {label:  this.$t('profilingCluster.linkRange'), prop: 'linkRel'},
+      linkRel: {label: this.$t('profilingCluster.linkRange'), prop: 'linkRel'},
       linkType: {label: this.$t('profilingCluster.linkType'), prop: 'linkType'},
       totalOperatorDataset: [],
       filterOperatorDataset: [],
@@ -126,7 +126,7 @@ export default {
         pageSize: null,
         pageSizes: [10, 20, 50],
       }, // Page info of operator list
-      searchOperatorStr: '', // String of filter 
+      searchOperatorStr: '', // String of filter
     };
   },
   created() {
@@ -152,7 +152,7 @@ export default {
           commDur: keepDecimalPlaces(operator[1], DEFAULT_DECIMAL_PLACES),
           waitDur: keepDecimalPlaces(operator[2], DEFAULT_DECIMAL_PLACES),
           linkInfo: operator[3],
-        })
+        });
       });
       this.searchOperatorStr = '';
       this.totalOperatorDataset = operatorDataset;
@@ -176,9 +176,9 @@ export default {
             commSize: keepDecimalPlaces(linkUnitInfo[1], DEFAULT_DECIMAL_PLACES),
             bandwidth: keepDecimalPlaces(linkUnitInfo[2], DEFAULT_DECIMAL_PLACES),
             linkType,
-          })
-        })
-      })
+          });
+        });
+      });
       this.displayLinkDataset = displayLinkDataset;
     },
     /**
@@ -208,7 +208,7 @@ export default {
     },
     /**
      * The logic of filter operator
-     * @param {Number} val
+     * @param {string} filterStr
      */
     filterOperator(filterStr) {
       this.filterOperatorDataset = this.totalOperatorDataset.filter((op) => {
@@ -223,8 +223,8 @@ export default {
     rankID() {
       setTimeout(() => {
         this.initOperatorTable();
-      }, 0)
-    }
+      }, 0);
+    },
   },
 };
 </script>

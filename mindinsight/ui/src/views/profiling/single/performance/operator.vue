@@ -15,14 +15,14 @@ limitations under the License.
 -->
 <template>
   <div class="operator">
-    <div class="operator-title">{{$t('profiling.operatorDetail')}}</div>
+    <div class="profiling-content-title">{{$t('profiling.operatorDetail')}}</div>
     <div class="cl-profiler">
       <el-tabs v-model="apiType"
                @tab-click="tabChange">
         <el-tab-pane label="AI CORE"
                      name="core">
           <operator-unit chartId="core-echarts"
-                         :currentCard="currentCard"
+                         :currentCard="rankID"
                          :opType="coreOpType"
                          :opSortCondition="coreOpSortCondition"
                          :search="coreSearch"
@@ -36,7 +36,7 @@ limitations under the License.
                      class="cpu-tab"
                      name="cpu">
           <operator-unit chartId="cpu-echarts"
-                         :currentCard="currentCard"
+                         :currentCard="rankID"
                          :opType="cpuOpType"
                          :opSortCondition="cpuOpSortCondition"
                          :search="cpuSearch"
@@ -49,7 +49,7 @@ limitations under the License.
                      class="cpu-tab"
                      name="host">
           <operator-unit chartId="host-echarts"
-                         :currentCard="currentCard"
+                         :currentCard="rankID"
                          :opType="hostType"
                          :opSortCondition="hostSortCondition"
                          :search="hostSearch"
@@ -64,13 +64,21 @@ limitations under the License.
   </div>
 </template>
 <script>
-import operatorUnit from '../../components/operator-unit.vue';
+import operatorUnit from '@/components/operator-unit.vue';
+import {isInteger} from '@/js/utils';
 export default {
   components: {operatorUnit},
+  props: {
+    rankID: String,
+  },
   data() {
     return {
+      trainInfo: {
+        id: this.$route.query.id,
+        path: this.$route.query.path,
+        dir: this.$route.query.dir,
+      }, // Complete train info
       apiType: 'core',
-      currentCard: '',
       coreOpType: {
         all: 'aicore_type',
         detail: 'aicore_detail',
@@ -204,20 +212,19 @@ export default {
     };
   },
   watch: {
-    '$parent.curDashboardInfo': {
-      handler(newValue, oldValue) {
-        if (newValue.curCardNum) {
-          this.currentCard = newValue.curCardNum;
+    rankID: {
+      handler(newValue) {
+        if (isInteger(newValue)) {
           this.initOver = false;
           this.$nextTick(() => {
             this.cardChange();
           });
-        }
-        if (newValue.initOver) {
-          this.initOver = true;
+        } else {
+          if (newValue === '') {
+            this.initOver = true;
+          }
         }
       },
-      deep: true,
       immediate: true,
     },
   },
@@ -234,7 +241,7 @@ export default {
     },
     tabChange() {
       const ref = this.$refs[this.apiType];
-      if (this.currentCard !== ref.coreCharts.device_id) {
+      if (this.rankID !== ref.coreCharts.device_id) {
         ref.getCoreTypeList();
       } else {
         this.$nextTick(() => {
@@ -244,11 +251,8 @@ export default {
     },
   },
   mounted() {
-    if (this.train_id) {
-      document.title = `${decodeURIComponent(this.train_id)}-${this.$t('profiling.operatorDetail')}-MindInsight`;
-    } else {
-      document.title = `${this.$t('profiling.operatorDetail')}-MindInsight`;
-    }
+    const id = this.trainInfo.id;
+    document.title = `${id ? id + '-' : ''}${this.$t('profiling.operatorDetail')}-MindInsight`;
   },
 };
 </script>
@@ -272,12 +276,12 @@ export default {
   padding: 0 15px;
   font-size: 18px;
   font-weight: bold;
+  height: 24px;
 }
 .operator .cl-profiler {
-  height: calc(100% - 24px);
+  height: calc(100% - 30px);
   overflow-y: auto;
   width: 100%;
-  padding: 0 16px;
   overflow: hidden;
 }
 .operator .cl-profiler .custom-label {

@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="data-process-wrap">
-    <div class="title">{{$t('profiling.cpuUtilization')}}</div>
+  <div class="cpu-utilization-wrap">
+    <div :class="[`profiling-content-title${isGPU ? '-gpu' : ''}`]">{{$t('profiling.cpuUtilization')}}</div>
     <div class="cpu-info"
          v-show="!cpuInfo.noData">
       <div class="step-filter">
@@ -136,19 +136,25 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
-import RequestService from '../../services/request-service';
-import initDot from '../../mixins/init-dot';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import RequestService from '@/services/request-service';
+import initDot from '@/mixins/init-dot';
 import {select, selectAll, zoom} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, zoom};
+import {isInteger} from '@/js/utils';
 export default {
-  props: {},
+  props: {
+    rankID: String,
+  },
   data() {
     return {
-      dir: '', // Profiler path
-      currentCard: '', // Current card number
-      trainId: '',
+      isGPU: this.$route.path.includes('profiling-gpu'),
+      trainInfo: {
+        id: this.$route.query.id,
+        dir: this.$route.query.dir,
+        path: this.$route.query.path,
+      },
       chartOptions: {
         grid: {
           left: 60,
@@ -274,7 +280,6 @@ export default {
         },
         stepArray: [],
         step: 0,
-        deviceId: null,
         stepTip: this.$t('profiling.cpuStepTip'),
         cpuStepInputTip: '',
         cpuInfoStr: {
@@ -294,26 +299,21 @@ export default {
     };
   },
   watch: {
-    '$parent.curDashboardInfo.curCardNum': {
+    rankID: {
       handler(newValue) {
-        if (newValue || newValue === 0) {
-          this.dir = this.$route.query.dir;
-          this.trainId = this.$route.query.id;
-          this.currentCard = newValue;
-          if (this.trainId) {
-            document.title =
-              `${decodeURIComponent(this.trainId)}` + `-${this.$t('profiling.cpuUtilization')}-MindInsight`;
-          } else {
-            document.title = `${this.$t('profiling.cpuUtilization')}-MindInsight`;
-          }
+        if (isInteger(newValue)) {
           this.cpuInfo.startStep.showStep = '';
           this.cpuInfo.startStep.step = '';
           this.cpuInfo.endStep.showStep = '';
           this.cpuInfo.endStep.step = '';
           this.queryCpuInfo(false, true);
+        } else {
+          if (newValue === '') {
+            this.cpuInfo.initOver = true;
+            this.cpuInfo.noData = true;
+          }
         }
       },
-      deep: true,
       immediate: true,
     },
   },
@@ -322,6 +322,8 @@ export default {
     Object.assign(this.deviceCpuChart.option, this.chartOptions);
     Object.assign(this.processCpuChart.option, this.chartOptions);
     Object.assign(this.operatorCpuChart.option, this.chartOptions);
+    const id = this.trainInfo.id;
+    document.title = (id ? id + '-' : '') + `-MindInsight`;
   },
   mounted() {
     this.resizeDebounce = this.debounce(this.resizeCallback, 200);
@@ -381,11 +383,11 @@ export default {
       return new Promise((resolve) => {
         const params = {
           params: {
-            train_id: this.trainId,
-            profile: this.dir,
+            train_id: this.trainInfo.id,
+            profile: this.trainInfo.dir,
           },
           body: {
-            device_id: this.currentCard,
+            device_id: this.rankID,
           },
         };
         RequestService.queryOpQueue(params).then((res) => {
@@ -552,14 +554,13 @@ export default {
      * @param {Boolean} isInitGraph whether init graph
      */
     queryCpuInfo(isFilter, isInitGraph) {
-      this.cpuInfo.deviceId = this.currentCard;
       const params = {
         params: {
-          profile: this.dir,
-          train_id: this.trainId,
+          profile: this.trainInfo.dir,
+          train_id: this.trainInfo.id,
         },
         body: {
-          device_id: this.currentCard,
+          device_id: this.rankID,
           filter_condition: {},
         },
       };
@@ -567,21 +568,25 @@ export default {
         params.body.filter_condition.start_step = this.cpuInfo.startStep.step;
         params.body.filter_condition.end_step = this.cpuInfo.endStep.step;
       }
-      this.cpuInfo.initOver = false;
+      const cpuInfo = this.cpuInfo;
+      cpuInfo.initOver = false;
       RequestService.getCpuUtilization(params).then(
           (res) => {
             this.cpuInfo.initOver = true;
             if (res && res.data) {
-              this.cpuInfo.noData = !res.data.step_total_num;
-              this.cpuInfo.step = res.data.step_total_num;
-              this.cpuInfo.stepArray = res.data.step_info;
-              this.cpuInfo.stepTip = this.$t('profiling.cpuStepTip', {max: this.cpuInfo.step});
-              this.cpuInfo.cpuStepInputTip = this.$t('profiling.cpuStepInputTip', {max: this.cpuInfo.step});
-              this.samplingInterval = res.data.sampling_interval;
-              this.deviceCpuChart.logicCores = res.data.cpu_processor_num;
-              const deviceInfo = res.data.device_info;
-              const processInfo = res.data.process_info;
-              const opInfo = res.data.op_info;
+              const data = res.data;
+              const totalStep = data.step_total_num;
+              cpuInfo.noData = !totalStep;
+              cpuInfo.step = totalStep;
+              cpuInfo.stepArray = data.step_info;
+              cpuInfo.stepTip = this.$t('profiling.cpuStepTip', {max: totalStep});
+              cpuInfo.cpuStepInputTip = this.$t('profiling.cpuStepInputTip', {max: totalStep});
+
+              this.samplingInterval = data.sampling_interval;
+              this.deviceCpuChart.logicCores = data.cpu_processor_num;
+              const deviceInfo = data.device_info;
+              const processInfo = data.process_info;
+              const opInfo = data.op_info;
               if (deviceInfo && processInfo && opInfo && this.samplingInterval) {
                 this.initDeviceCpu(deviceInfo);
                 this.initProcessCpu(processInfo);
@@ -598,17 +603,17 @@ export default {
                 }
               } else {
                 this.clearCpuChart();
-                this.cpuInfo.noData = true;
+                cpuInfo.noData = true;
               }
             } else {
               this.clearCpuChart();
-              this.cpuInfo.noData = true;
+              cpuInfo.noData = true;
             }
           },
           () => {
             this.clearCpuChart();
-            this.cpuInfo.noData = true;
-            this.cpuInfo.initOver = true;
+            cpuInfo.noData = true;
+            cpuInfo.initOver = true;
           },
       );
     },
@@ -630,50 +635,53 @@ export default {
      * filter step to view cpu info
      */
     viewStepFilter() {
-      const stepValidation = new RegExp('^[0-9]*[1-9][0-9]*$');
-      if (
-        stepValidation.test(this.cpuInfo.startStep.showStep) &&
-        stepValidation.test(this.cpuInfo.endStep.showStep) &&
-        this.cpuInfo.startStep.showStep <= this.cpuInfo.endStep.showStep &&
-        this.cpuInfo.endStep.showStep <= this.cpuInfo.step
-      ) {
-        this.cpuInfo.startStep.step = this.cpuInfo.startStep.showStep;
-        this.cpuInfo.endStep.step = this.cpuInfo.endStep.showStep;
-        this.queryCpuInfo(true, false);
-      } else if (
-        this.cpuInfo.endStep.showStep === '' &&
-        stepValidation.test(this.cpuInfo.startStep.showStep) &&
-        this.cpuInfo.startStep.showStep <= this.cpuInfo.step
-      ) {
-        this.cpuInfo.startStep.step = this.cpuInfo.startStep.showStep;
-        this.cpuInfo.endStep.step = this.cpuInfo.step;
-        this.cpuInfo.endStep.showStep = this.cpuInfo.step;
-        this.queryCpuInfo(true, false);
-      } else if (
-        this.cpuInfo.startStep.showStep === '' &&
-        stepValidation.test(this.cpuInfo.endStep.showStep) &&
-        this.cpuInfo.endStep.showStep <= this.cpuInfo.step
-      ) {
-        this.cpuInfo.startStep.step = 1;
-        this.cpuInfo.startStep.showStep = 1;
-        this.cpuInfo.endStep.step = this.cpuInfo.endStep.showStep;
-        this.queryCpuInfo(true, false);
-      } else if (this.cpuInfo.startStep.showStep === '' && this.cpuInfo.endStep.showStep === '') {
+      const {startStep, endStep, step} = this.cpuInfo;
+      const startShowStep = startStep.showStep;
+      const endShowStep = endStep.showStep;
+      const emptyStart = startShowStep === '';
+      const emptyEnd = endShowStep === '';
+      if (emptyStart && emptyEnd) {
         this.resetStepFilter();
-      } else {
-        this.cpuInfo.startStep.showStep = this.cpuInfo.startStep.step;
-        this.cpuInfo.endStep.showStep = this.cpuInfo.endStep.step;
-        this.$message.error(this.cpuInfo.cpuStepInputTip);
+        return;
       }
+      const endTemp = Number.isInteger(endShowStep)
+        ? endShowStep <= step ? endShowStep : false
+        : emptyEnd ? step : false;
+      if (!endTemp) {
+        // Unexpected end step
+        this.resolveWrongFilter(startStep, endStep);
+        return;
+      }
+      const startTemp = Number.isInteger(startShowStep)
+        ? startShowStep <= endTemp ? startShowStep : false
+        : emptyStart ? 1 : false;
+      if (!startTemp) {
+        // Unexpected start step
+        this.resolveWrongFilter(startStep, endStep);
+        return;
+      }
+      // Save filter state
+      startStep.step = startStep.showStep = startTemp;
+      endStep.step = endStep.showStep = endTemp;
+      this.queryCpuInfo(true, false);
+    },
+    /**
+     * The logic of resolve unexpected number of step filter
+     * @param {object} startStep Info of start step filter
+     * @param {object} endStep Info of ebd step filter
+     */
+    resolveWrongFilter(startStep, endStep) {
+      startStep.showStep = startStep.step;
+      endStep.showStep = endStep.step;
+      this.$message.error(this.cpuInfo.cpuStepInputTip);
     },
     /**
      * reset to view all cpu info
      */
     resetStepFilter() {
-      this.cpuInfo.startStep.showStep = '';
-      this.cpuInfo.startStep.step = '';
-      this.cpuInfo.endStep.showStep = '';
-      this.cpuInfo.endStep.step = '';
+      const {startStep, endStep} = this.cpuInfo;
+      startStep.step = startStep.showStep = '';
+      endStep.step = endStep.showStep = '';
       this.queryCpuInfo(false, false);
     },
     /**
@@ -683,20 +691,19 @@ export default {
      * @return {String}
      */
     formatCpuChartTip(params, stepArray) {
-      const data = params;
-      let str = '';
-      if (data && data.length) {
+      const tipInnerHTML = [];
+      if (params && params.length) {
         const colorArray = ['#c23531', '#2f4554', '#61a0a8', '#d48265'];
-        const index = data[0].dataIndex;
-        str += `step: ${stepArray[index]}`;
-        data.forEach((item, index) => {
-          str +=
-            `<br><span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
-            `${item.seriesName}: ${item.data}`;
+        const index = params[0].dataIndex;
+        tipInnerHTML.push(`step: ${stepArray[index]}`);
+        params.forEach((item, index) => {
+          tipInnerHTML.push(
+              `<span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
+              `${item.seriesName}: ${item.data}`,
+          );
         });
-        str += `</div>`;
       }
-      return str;
+      return tipInnerHTML.join('<br>');
     },
 
     /**
@@ -713,36 +720,38 @@ export default {
             type: 'line',
             name: this.cpuInfo.cpuInfoStr[val],
             data: info.metrics,
-            showSymbol: false,
+            showSymbol: info.metrics.length === 1,
           };
           series.push(item);
           legend.push(item.name);
         }
       });
-      this.deviceCpuChart.cpuAvgUser = deviceInfo.user_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgSystem = deviceInfo.sys_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgIO = deviceInfo.io_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgFree = deviceInfo.idle_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
-      this.deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
-      this.deviceCpuChart.option.series = series;
-      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+      // Data process
+      const deviceCpuChart = this.deviceCpuChart;
+      deviceCpuChart.cpuAvgUser = deviceInfo.user_utilization.avg_value;
+      deviceCpuChart.cpuAvgSystem = deviceInfo.sys_utilization.avg_value;
+      deviceCpuChart.cpuAvgIO = deviceInfo.io_utilization.avg_value;
+      deviceCpuChart.cpuAvgFree = deviceInfo.idle_utilization.avg_value;
+      deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
+      deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
+      // Chart option
+      const option = deviceCpuChart.option;
+      option.series = series;
+      option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
           'symbols.leftbracket',
       )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
-      this.deviceCpuChart.option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
-          (val, index) => index + 1,
-      );
-      this.deviceCpuChart.option.legend.data = legend;
-      this.deviceCpuChart.option.tooltip.formatter = (params) => {
+      option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((_v, i) => i + 1);
+      option.legend.data = legend;
+      option.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
       };
       this.$nextTick(() => {
-        if (!this.deviceCpuChart.chartDom) {
+        if (!deviceCpuChart.chartDom) {
           if (this.$refs.deviceCpuChart) {
-            this.deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart, echartsThemeName);
+            deviceCpuChart.chartDom = echarts.init(this.$refs.deviceCpuChart, echartsThemeName);
           }
         }
-        this.deviceCpuChart.chartDom.setOption(this.deviceCpuChart.option);
+        deviceCpuChart.chartDom.setOption(option);
       });
     },
     /**
@@ -759,32 +768,34 @@ export default {
             type: 'line',
             name: this.cpuInfo.cpuInfoStr[val],
             data: info.metrics,
-            showSymbol: false,
+            showSymbol: info.metrics.length === 1,
           };
           series.push(item);
           legend.push(item.name);
         }
       });
-      this.processCpuChart.cpuAvgUser = processInfo.user_utilization.avg_value;
-      this.processCpuChart.cpuAvgSystem = processInfo.sys_utilization.avg_value;
-      this.processCpuChart.option.series = series;
-      this.processCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+      // Data process
+      const processCpuChart = this.processCpuChart;
+      processCpuChart.cpuAvgUser = processInfo.user_utilization.avg_value;
+      processCpuChart.cpuAvgSystem = processInfo.sys_utilization.avg_value;
+      // Chart option
+      const option = processCpuChart.option;
+      option.series = series;
+      option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
           'symbols.leftbracket',
       )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
-      this.processCpuChart.option.xAxis.data = processInfo[Object.keys(processInfo)[0]].metrics.map(
-          (val, index) => index + 1,
-      );
-      this.processCpuChart.option.legend.data = legend;
-      this.processCpuChart.option.tooltip.formatter = (params) => {
+      option.xAxis.data = processInfo[Object.keys(processInfo)[0]].metrics.map((_v, i) => i + 1);
+      option.legend.data = legend;
+      option.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
       };
       this.$nextTick(() => {
-        if (!this.processCpuChart.chartDom) {
+        if (!processCpuChart.chartDom) {
           if (this.$refs.processCpuChart) {
-            this.processCpuChart.chartDom = echarts.init(this.$refs.processCpuChart, echartsThemeName);
+            processCpuChart.chartDom = echarts.init(this.$refs.processCpuChart, echartsThemeName);
           }
         }
-        this.processCpuChart.chartDom.setOption(this.processCpuChart.option);
+        processCpuChart.chartDom.setOption(option);
       });
     },
 
@@ -794,9 +805,10 @@ export default {
      * @param {Boolean} isClickNode
      */
     initOperatorCpu(opInfo, isClickNode) {
-      this.operatorCpuChart.opList = {};
+      const operatorCpuChart = this.operatorCpuChart;
+      operatorCpuChart.opList = {};
       opInfo.op_list.forEach((data) => {
-        this.operatorCpuChart.opList[data.op_id] = data;
+        operatorCpuChart.opList[data.op_id] = data;
       });
       if (isClickNode) {
         // Select first node as default node, and keep it in right style when page mounted
@@ -805,8 +817,8 @@ export default {
           this.clickEvent(node);
         }
       }
-      this.operatorCpuChart.cpuAvgTotalUser = opInfo.total_op_avg_value.user_utilization;
-      this.operatorCpuChart.cpuAvgTotalSystem = opInfo.total_op_avg_value.sys_utilization;
+      operatorCpuChart.cpuAvgTotalUser = opInfo.total_op_avg_value.user_utilization;
+      operatorCpuChart.cpuAvgTotalSystem = opInfo.total_op_avg_value.sys_utilization;
       this.updateOperatorCpuChart(this.selIndex);
     },
     /**
@@ -816,9 +828,11 @@ export default {
     updateOperatorCpuChart(opId) {
       const series = [];
       const legend = [];
-      if (this.operatorCpuChart.opList[opId]) {
-        const currentOpInfo = this.operatorCpuChart.opList[opId].metrics;
-        const numWorkers = this.operatorCpuChart.opList[opId].num_workers;
+      const operatorCpuChart = this.operatorCpuChart;
+      const operatorInfo = operatorCpuChart.opList[opId];
+      if (operatorInfo) {
+        const currentOpInfo = operatorInfo.metrics;
+        const numWorkers = operatorInfo.num_workers;
         if (currentOpInfo) {
           Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
             const info = currentOpInfo[val];
@@ -827,33 +841,34 @@ export default {
                 type: 'line',
                 name: this.cpuInfo.cpuInfoStr[val],
                 data: info.metrics,
-                showSymbol: false,
+                showSymbol: info.metrics.length === 1,
               };
               series.push(item);
               legend.push(item.name);
             }
           });
-          this.operatorCpuChart.cpuAvgOpUser = currentOpInfo.user_utilization.avg_value;
-          this.operatorCpuChart.cpuAvgOpSystem = currentOpInfo.sys_utilization.avg_value;
-          this.operatorCpuChart.processNumber = numWorkers;
-          this.operatorCpuChart.option.series = series;
-          this.operatorCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
+          // Data process
+          operatorCpuChart.cpuAvgOpUser = currentOpInfo.user_utilization.avg_value;
+          operatorCpuChart.cpuAvgOpSystem = currentOpInfo.sys_utilization.avg_value;
+          operatorCpuChart.processNumber = numWorkers;
+          // Chart option
+          const option = operatorCpuChart.option;
+          option.series = series;
+          option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
               'symbols.leftbracket',
           )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
-          this.operatorCpuChart.option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map(
-              (val, index) => index + 1,
-          );
-          this.operatorCpuChart.option.legend.data = legend;
-          this.operatorCpuChart.option.tooltip.formatter = (params) => {
+          option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map((_v, i) => i + 1);
+          option.legend.data = legend;
+          option.tooltip.formatter = (params) => {
             return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
           };
           this.$nextTick(() => {
-            if (!this.operatorCpuChart.chartDom) {
+            if (!operatorCpuChart.chartDom) {
               if (this.$refs.operatorCpuChart) {
-                this.operatorCpuChart.chartDom = echarts.init(this.$refs.operatorCpuChart, echartsThemeName);
+                operatorCpuChart.chartDom = echarts.init(this.$refs.operatorCpuChart, echartsThemeName);
               }
             }
-            this.operatorCpuChart.chartDom.setOption(this.operatorCpuChart.option);
+            operatorCpuChart.chartDom.setOption(option);
           });
         }
       }
@@ -867,16 +882,15 @@ export default {
 };
 </script>
 <style>
-.data-process-wrap {
+.cpu-utilization-wrap {
   height: 100%;
-  padding: 0 16px;
 }
-.data-process-wrap .title {
-  font-size: 18px;
+.cpu-utilization-wrap .title {
+  font-size: 16px;
   font-weight: bold;
   text-align: left;
 }
-.data-process-wrap .image-noData {
+.cpu-utilization-wrap .image-noData {
   width: 100%;
   height: calc(100% - 37px);
   display: flex;
@@ -884,22 +898,22 @@ export default {
   align-items: center;
   flex-direction: column;
 }
-.data-process-wrap .image-noData p {
+.cpu-utilization-wrap .image-noData p {
   font-size: 16px;
   padding-top: 10px;
 }
-.data-process-wrap .el-button {
+.cpu-utilization-wrap .el-button {
   border: 1px solid #00a5a7;
   border-radius: 2px;
   background-color: var(--bg-color);
   color: #00a5a7;
   padding: 7px 15px;
 }
-.data-process-wrap .el-button:hover {
+.cpu-utilization-wrap .el-button:hover {
   background: var(--button-hover-tip);
 }
 .cpu-info {
-  height: calc(100% - 24px);
+  height: calc(100% - 30px);
   display: flex;
   flex-direction: column;
 }

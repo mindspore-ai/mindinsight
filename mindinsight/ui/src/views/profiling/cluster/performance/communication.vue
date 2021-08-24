@@ -16,18 +16,35 @@ limitations under the License.
 <template>
   <!-- cl-cluster -->
   <div class="cl-comm">
-    <div class="comm-title">
-      <div class="first-level">
-        {{ $t('profilingCluster.clusterCommView') }}
-      </div>
-      <div class="second-level">
-        {{
-          $t('symbols.leftbracket') +
-            $t('trainingDashboard.summaryDirPath') +
-            trainInfo.path +
-            $t('symbols.rightbracket')
-        }}
-      </div>
+    <div class="profiling-content-title">
+      {{ $t('profilingCluster.clusterCommView') }}
+      <el-tooltip placement="bottom"
+                  effect="light">
+        <div slot="content"
+             class="comm-tooltip-container">
+          <div class="comm-tooltip-cell">
+            <span>{{ $t('profilingCluster.commCost') + $t('symbols.colon') }}</span>
+            <br>
+            <span>{{ $t('profilingCluster.commCostExplanation') }}</span>
+          </div>
+          <div class="comm-tooltip-cell">
+            <span>{{ $t('profilingCluster.waitCost') + $t('symbols.colon') }}</span>
+            <br>
+            <span>{{ $t('profilingCluster.waitCostExplanation') }}</span>
+          </div>
+          <div class="comm-tooltip-cell">
+            <span>{{ $t('profilingCluster.linkInfo') + $t('symbols.colon') }}</span>
+            <br>
+            <span>{{ $t('profilingCluster.linkInfoExplanation') }}</span>
+          </div>
+          <div class="comm-tooltip-cell">
+            <span>{{ $t('profilingCluster.linkType') + $t('symbols.colon') }}</span>
+            <br>
+            <span>{{ $t('profilingCluster.linkTypeExplanation') }}</span>
+          </div>
+        </div>
+        <i class="el-icon-info"></i>
+      </el-tooltip>
     </div>
 
     <el-tabs v-model="tab"
@@ -39,7 +56,7 @@ limitations under the License.
     </el-tabs>
 
     <div v-show="pageState === normalState && tab === tabNames[0]"
-         class="comm-content">
+         class="comm-content default-tab">
       <div class="content-filter">
         <label>{{ stepTip }}</label>
         <el-input class="step-input"
@@ -54,7 +71,6 @@ limitations under the License.
         <!-- Page Default Table -->
         <el-table :data="tableData"
                   height="100%"
-                  width="100%"
                   ref="table"
                   stripe
                   :default-sort="tableDefaultSort"
@@ -111,7 +127,7 @@ limitations under the License.
     </div>
 
     <div v-show="pageState === normalState && tab === tabNames[1]"
-         class="comm-content">
+         class="comm-content link-tab">
       <div class="content-filter">
         <span>{{ $t('profilingCluster.startID') }}</span>
         <el-input v-model="linkTable.filter.src_rank"
@@ -181,10 +197,6 @@ limitations under the License.
       <empty :state="pageState"></empty>
     </div>
 
-    <img src="@/assets/images/close-page.png"
-         class="comm-close"
-         @click="backToDashboard" />
-
     <el-dialog :title="linkInfo.title"
                :visible.sync="linkInfo.visible"
                width="960px">
@@ -246,11 +258,11 @@ limitations under the License.
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
-import RequestService from '../../services/request-service';
-import empty, {NO_DATA, LOADING_DATA} from '../../components/empty';
-import clusterCommOpDetails from '../../components/cluster-comm-op-details';
-import {keepDecimalPlaces} from '../../js/utils';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import RequestService from '@/services/request-service';
+import empty, {NO_DATA, LOADING_DATA} from '@/components/empty';
+import clusterCommOpDetails from '@/components/cluster-comm-op-details';
+import {keepDecimalPlaces} from '@/js/utils';
 
 const TIME_UNIT = '(ms)';
 
@@ -273,7 +285,7 @@ export default {
       tab: null, // Selected tab name
       trainInfo: {
         id: this.$route.query.id,
-        path: decodeURIComponent(this.$route.query.path),
+        path: this.$route.query.path,
         dir: this.$route.query.dir,
       }, // Complete train info
       activeName: this.$route.query.activeName, // Active name of cluster dashboard tab
@@ -428,7 +440,6 @@ export default {
     },
     /**
      *  The logic of change happen filter happened
-     *  @param {number} val
      */
     filterLinkTable() {
       this.linkTable.pageCondition.page = 1;
@@ -437,7 +448,6 @@ export default {
     },
     /**
      *  The logic of init link table
-     *  @param {number} val
      */
     initLinkTable() {
       const params = this.useLinkParams(true);
@@ -551,7 +561,6 @@ export default {
     },
     /**
      *  The logic of init page data
-     *  @param {Object} params
      */
     initPage() {
       this.pageCondition.page = 1;
@@ -670,12 +679,12 @@ export default {
     resizeCallback() {
       if (this.chartResizeTimer) {
         clearTimeout(this.chartResizeTimer);
-        this.chartResizeTimer = null;
       }
       this.chartResizeTimer = setTimeout(() => {
         if (this.chartInstance) {
           this.chartInstance.resize();
         }
+        this.chartResizeTimer = null;
       }, 200);
     },
     /**
@@ -888,45 +897,35 @@ export default {
   color: var(--theme-color);
   font-weight: bold;
 }
+.comm-tooltip-container {
+  padding: 10px;
+}
+.comm-tooltip-container .comm-tooltip-cell {
+  width: 100%;
+  line-height: 24px;
+}
+.comm-tooltip-container .comm-tooltip-cell span:first-of-type{
+  font-weight: bold;
+}
 </style>
 <style scoped>
 .cl-comm {
   height: 100%;
   background-color: var(--bg-color);
-  position: relative;
-  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
 }
 .cl-comm .el-select {
   width: 120px;
   margin: 0 20px;
 }
-.cl-comm .comm-close {
-  object-fit: none;
-  position: absolute;
-  cursor: pointer;
-  top: 36px;
-  right: 24px;
-}
-.cl-comm .comm-title {
-  height: 56px;
-  display: flex;
-}
-.comm-title .first-level {
-  font-size: 20px;
-  height: 100%;
-  line-height: 56px;
-  font-weight: bold;
-}
-.comm-title .second-level {
-  font-size: 14px;
-  height: 100%;
-  line-height: 62px;
-  font-weight: bold;
-}
 .cl-comm .comm-content {
-  height: calc(100% - 120px);
+  flex-grow: 1;
   display: flex;
+  justify-content: center;
+  width: 100%;
   flex-direction: column;
+  overflow: hidden;
 }
 .comm-content .content-filter {
   height: 32px;
@@ -942,8 +941,8 @@ export default {
 }
 .comm-content .content-filter .el-button {
   padding: 7px 15px;
-  color: var(--theme-color);;
-  border-color: var(--theme-color);;
+  color: var(--theme-color);
+  border-color: var(--theme-color);
 }
 .comm-content .content-chart {
   height: 280px;
@@ -951,17 +950,15 @@ export default {
   flex-shrink: 0;
 }
 .comm-content .content-table {
-  height: calc(100% - 300px - 79px);
+  height: calc(100% - 84px);
   margin-bottom: 10px;
-  flex-shrink: 0;
 }
 .comm-content .content-link-table {
-  height: calc(100% - 79px);
+  height: calc(100% - 84px);
   margin-bottom: 10px;
-  flex-shrink: 0;
 }
 .content-table .table-button {
-  color: var(--theme-color);;
+  color: var(--theme-color);
   cursor: pointer;
 }
 .comm-content .content-pagination {

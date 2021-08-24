@@ -79,53 +79,17 @@ export default new Router({
       component: () => import('./views/train-manage/compare-plate.vue'),
     },
     {
-      path: '/profiling',
-      component: () => import('./views/profiling/profiling.vue'),
-      redirect: '/profiling/profiling-dashboard',
-      children: [
-        {
-          path: 'profiling-dashboard',
-          component: () => import('./views/profiling/profiling-dashboard.vue'),
-        },
-        {
-          path: 'step-trace',
-          component: () => import('./views/profiling/step-trace.vue'),
-        },
-        {
-          path: 'operator',
-          component: () => import('./views/profiling/operator.vue'),
-        },
-        {
-          path: 'data-process',
-          component: () => import('./views/profiling/data-process.vue'),
-        },
-        {
-          path: 'memory-detail',
-          component: () => import('./views/profiling/memory-detail.vue'),
-        },
-        {
-          path: 'cpu-detail',
-          component: () => import('./views/profiling/cpu-detail.vue'),
-        },
-        {
-          path: 'resource-utilization',
-          component: () => import('./views/profiling/resource-utilization.vue'),
-        },
-      ],
-    },
-    {
       path: '/profiling-gpu',
       component: () => import('./views/profiling-gpu/profiling.vue'),
       redirect: '/profiling-gpu/profiling-dashboard',
       children: [
         {
           path: 'profiling-dashboard',
-          component: () =>
-            import('./views/profiling-gpu/profiling-dashboard.vue'),
+          component: () => import('./views/profiling-gpu/profiling-dashboard.vue'),
         },
         {
           path: 'data-process',
-          component: () => import('./views/profiling/data-process.vue'),
+          component: () => import('./views/profiling/single/performance/data-process.vue'),
         },
         {
           path: 'operator',
@@ -137,33 +101,13 @@ export default new Router({
         },
         {
           path: 'step-trace',
-          component: () => import('./views/profiling/step-trace.vue'),
+          component: () => import('./views/profiling/single/performance/step-trace.vue'),
         },
         {
           path: 'cpu-detail',
-          component: () => import('./views/profiling/cpu-detail.vue'),
+          component: () => import('./views/profiling/single/resource/cpu-utilization.vue'),
         },
       ],
-    },
-    {
-      path: '/cluster-dashboard',
-      component: () => import('./views/profiling/cluster-dashboard.vue'),
-    },
-    {
-      path: '/profiling-communication',
-      component: () => import('./views/profiling/profiling-comm.vue'),
-    },
-    {
-      path: '/profiling-performance',
-      component: () => import('./views/profiling/profiling-performance.vue'),
-    },
-    {
-      path: '/memory-heatmap',
-      component: () => import('./views/profiling/memory-heatmap.vue'),
-    },
-    {
-      path: '/flops-heatmap',
-      component: () => import('./views/profiling/flops-heatmap.vue'),
     },
     {
       path: '/debugger',
@@ -183,12 +127,90 @@ export default new Router({
     },
     {
       path: '/explain/conterfactual-interpretation',
-      component: () =>
-        import('./views/explain/conterfactual-interpretation.vue'),
+      component: () => import('./views/explain/conterfactual-interpretation.vue'),
     },
     {
       path: '/explain/xai-metric',
       component: () => import('./views/explain/xai-metric.vue'),
+    },
+    {
+      path: '/profiling',
+      component: () => import('./views/profiling/profiling-dashboard.vue'),
+      redirect: '/profiling/single',
+      children: [
+        {
+          path: 'single',
+          component: () => import('./views/profiling/single/single-dashboard.vue'),
+          redirect: '/profiling/single/performance',
+          children: [
+            // Dashboard
+            {
+              path: 'performance',
+              component: () => import('./views/profiling/single/performance/performance-dashboard.vue'),
+            },
+            {
+              path: 'resource',
+              component: () => import('./views/profiling/single/resource/resource-dashboard.vue'),
+            },
+            // Performance Details
+            {
+              path: 'step-trace',
+              component: () => import('./views/profiling/single/performance/step-trace.vue'),
+            },
+            {
+              path: 'data-process',
+              component: () => import('./views/profiling/single/performance/data-process.vue'),
+            },
+            {
+              path: 'operator',
+              component: () => import('./views/profiling/single/performance/operator.vue'),
+            },
+            // Resource Details
+            {
+              path: 'cpu-utilization',
+              component: () => import('./views/profiling/single/resource/cpu-utilization.vue'),
+            },
+            {
+              path: 'memory-utilization',
+              component: () => import('./views/profiling/single/resource/memory-utilization.vue'),
+            },
+          ],
+        },
+        {
+          path: 'cluster',
+          component: () => import('./views/profiling/cluster/cluster-dashboard.vue'),
+          redirect: '/profiling/cluster/performance',
+          children: [
+            // Dashboard
+            {
+              path: 'performance',
+              component: () => import('./views/profiling/cluster/performance/performance-dashboard.vue'),
+            },
+            {
+              path: 'resource',
+              component: () => import('./views/profiling/cluster/resource/resource-dashboard.vue'),
+            },
+            // Performance Details
+            {
+              path: 'step-trace',
+              component: () => import('./views/profiling/cluster/performance/step-trace.vue'),
+            },
+            {
+              path: 'communication',
+              component: () => import('./views/profiling/cluster/performance/communication.vue'),
+            },
+            // Resource Details
+            {
+              path: 'flops-heatmap',
+              component: () => import('./views/profiling/cluster/resource/flops-heatmap.vue'),
+            },
+            {
+              path: 'memory-heatmap',
+              component: () => import('./views/profiling/cluster/resource/memory-heatmap.vue'),
+            },
+          ],
+        },
+      ],
     },
   ],
 });
