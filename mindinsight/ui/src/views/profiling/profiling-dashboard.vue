@@ -67,6 +67,7 @@ export default {
   mounted() {
     let length = 0;
     this.tabs.forEach((t) => length += t.length);
+    // 10(px of en-us char), 20(px of zh-cn char), 40(padding) used to calculate the position of path label
     this.left = length * (this.$store.state.language === 'en-us' ? 10 : 20) + 40;
   },
   methods: {

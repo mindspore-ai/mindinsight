@@ -134,12 +134,14 @@ export default {
     },
     /**
      * On RankID changed
+     * @param {string} val
      */
     rankIDChanged(val) {
       this.rankID = val;
     },
     /**
      * View detail
+     * @param {string} path
      */
     viewDetail(path) {
       this.$router.push({

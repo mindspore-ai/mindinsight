@@ -99,6 +99,7 @@ export default {
     },
     /**
      * View detail
+     * @param {string} path
      */
     viewDetail(path) {
       this.$router.push({
