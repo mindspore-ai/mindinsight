@@ -43,7 +43,7 @@ limitations under the License.
             <span>{{ $t('profilingCluster.linkTypeExplanation') }}</span>
           </div>
         </div>
-        <i class="el-icon-info"></i>
+        <i class="el-icon-info comm-tip"></i>
       </el-tooltip>
     </div>
 
@@ -904,6 +904,9 @@ export default {
   width: 100%;
   line-height: 24px;
 }
+.comm-tooltip-container .comm-tooltip-cell span{
+  word-break: normal; 
+}
 .comm-tooltip-container .comm-tooltip-cell span:first-of-type{
   font-weight: bold;
 }
@@ -914,6 +917,9 @@ export default {
   background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
+}
+.cl-comm .comm-tip {
+  margin-left: 6px;
 }
 .cl-comm .el-select {
   width: 120px;

@@ -371,7 +371,7 @@ export default {
   },
 };
 </script>
-<style>
+<style scoped>
 .cl-resource-content {
   height: 100%;
 }
