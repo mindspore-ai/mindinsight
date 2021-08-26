@@ -259,7 +259,7 @@ limitations under the License.
             <div class="label">{{ $t('debugger.logicCard') }}</div>
             <el-select v-model="logicCard.value"
                        :disabled="!trainId || metadata.state === state.running || metadata.state === state.sending"
-                       @change="logicCardChange();searchWatchpointHits(true);">
+                       @change="logicCardChange();searchWatchpointHits(true,true);">
               <el-option v-for="item in logicCard.options"
                          :key="item"
                          :value="item">
@@ -270,7 +270,7 @@ limitations under the License.
             <div class="label">{{ $t('debugger.graphFile') }}</div>
             <el-select v-model="hitWpCondition.graphFile"
                        :disabled="metadata.state === state.running || metadata.state === state.sending"
-                       @change="searchWatchpointHits(true);">
+                       @change="searchWatchpointHits(true,true);">
               <el-option v-for="item in graphFiles.options"
                          :key="item"
                          :value="item">
@@ -281,7 +281,7 @@ limitations under the License.
             <div class="label">{{ $t('debugger.watchPoint') }}</div>
             <el-select v-model="hitWpCondition.watchPoint"
                        :disabled="metadata.state === state.running || metadata.state === state.sending"
-                       @change="searchWatchpointHits(true);">
+                       @change="searchWatchpointHits(true,true);">
               <el-option v-for="item in hitWatchPointArr"
                          :key="item"
                          :value="item">

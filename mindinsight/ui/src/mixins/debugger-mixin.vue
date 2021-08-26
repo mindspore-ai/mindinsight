@@ -1729,8 +1729,9 @@ export default {
     },
     /**
      * @param {Boolean} type  true: search watchpointhits false:query watchpointhits
+     * @param {Boolean} resetOffset  true: reset pagination offset
      */
-    searchWatchpointHits(type) {
+    searchWatchpointHits(type, resetOffset = false) {
       if (this.radio1 === 'hit') {
         const params = {};
         const condition = {
@@ -1763,6 +1764,7 @@ export default {
           condition.offset = this.pagination.currentPage - 1;
         }
         condition.limit = this.pagination.pageSize;
+        if (resetOffset) condition.offset = 0;
         params.group_condition = condition;
         RequestService.searchWatchpointHits(params, this.sessionId).then(
             (res) => {
