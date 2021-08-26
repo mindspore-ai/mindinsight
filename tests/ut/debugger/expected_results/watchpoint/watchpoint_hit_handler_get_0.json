@@ -1,7 +1,7 @@
 {
     "watch_point_hits": [
         {
-            "node_name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92",
+            "node_name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op96",
             "tensors": [
                 {
                     "slot": "0",
@@ -18,14 +18,14 @@
                     ]
                 }
             ],
-            "graph_name": "kernel_graph_0",
-            "graph_id": "kernel_graph_0",
+            "graph_name": "kernel_graph_1",
+            "graph_id": "kernel_graph_1",
             "watchpoint_id": [
                 1
             ]
         },
         {
-            "node_name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op96",
+            "node_name": "Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92",
             "tensors": [
                 {
                     "slot": "0",
@@ -42,8 +42,8 @@
                     ]
                 }
             ],
-            "graph_name": "kernel_graph_1",
-            "graph_id": "kernel_graph_1",
+            "graph_name": "kernel_graph_0",
+            "graph_id": "kernel_graph_0",
             "watchpoint_id": [
                 2
             ]

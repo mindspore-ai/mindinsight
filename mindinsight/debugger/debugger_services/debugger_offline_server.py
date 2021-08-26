@@ -612,15 +612,19 @@ class DebuggerOfflineManager:
                                       str(root_graph_id), str(iteration))
         # Find the pure node_name without scope
         node_name = name.rsplit('/')[-1]
-        match_mask = f'*.{node_name}.*.output.{slot}.*'
+        match_mask = f'*.{node_name}.*.output.{slot}.*.npy'
         tensor_files = Path(iteration_path).absolute().glob(match_mask)
         log.debug("Find file in path: %s which matches the mask: %s.", iteration_path, match_mask)
         for tensor_file in tensor_files:
             try:
-                time_stamp = int(tensor_file.name.split('.')[4])
+                file_name = tensor_file.name
+                node_name_location = file_name.find(node_name)
+                post_str = file_name[node_name_location+len(node_name):]
+                time_str = post_str.split('.')[3]
+                time_stamp = int(time_str)
                 if time_stamp > res:
                     res = time_stamp
-            except ValueError as err:
+            except (ValueError, TypeError, IndexError) as err:
                 log.error("Can not find time_stamp in file: %s, the detail error is: %s.", tensor_file.name, err)
                 continue
         log.debug("Time stamp is: %s.", res)

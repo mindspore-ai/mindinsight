@@ -529,6 +529,8 @@ class WatchpointHitHandler(StreamHandlerBase):
         if graph_id:
             log.debug("Filter by graph: %s", graph_id)
             watch_point_hits = self._filter_by_graph(graph_id, watch_point_hits)
+        else:
+            watch_point_hits.sort(key=lambda hit: int(hit['graph_id'].split("_")[-1]))
         if watchpoint_id:
             log.debug("Filter by watchpoint: %s.", watchpoint_id)
             watch_point_hits = self._filter_by_watchpoint(watchpoint_id, watch_point_hits)
@@ -549,6 +551,9 @@ class WatchpointHitHandler(StreamHandlerBase):
 
     def _filter_by_graph(self, graph_id, watch_point_hits):
         """Return the list of watchpoint hits filtered by graph_id."""
+        if not isinstance(graph_id, str):
+            log.error("Param graph_id is not a string.")
+            raise DebuggerParamValueError("Param graph_id is not a string.")
         log.debug("Filter by graph: %s.", graph_id)
         filtered_watchpoint_hits = []
         log.debug("Before filtering, watch_point_hits are: %s.", watch_point_hits)
@@ -560,6 +565,9 @@ class WatchpointHitHandler(StreamHandlerBase):
 
     def _filter_by_watchpoint(self, watchpoint_id, watch_point_hits):
         """Return the list of watchpoint hits filtered by watchpoint_id"""
+        if not isinstance(watchpoint_id, int):
+            log.error("Param watchpoint_id is not an integer.")
+            raise DebuggerParamValueError("Param watchpoint_id is not an integer.")
         log.debug("Filter by watchpoint: %s", watchpoint_id)
         log.debug("Before filtering, watch_point_hits are: %s.", watch_point_hits)
         filtered_watchpoint_hits = []
