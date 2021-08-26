@@ -405,6 +405,8 @@ class WatchpointHitHandler(StreamHandlerBase):
     def __init__(self):
         # dict of <ui node_name, dict of <slot, WatchpointHit>>,
         self._ordered_hits = []
+        # filtered results in self._ordered_hits
+        self._filtered_hits = []
         self._multi_graph_hits = {}
 
     @property
@@ -496,74 +498,139 @@ class WatchpointHitHandler(StreamHandlerBase):
 
                 - limit (int): The limit number of watchpoint hits each page.
                 - offset (int): The page offset.
-                - node_name (str): The node name.
-                - graph_name (str): The graph name.
+                - focused_node (dict): The focused node.
+                    If the specified node is hit, return the page where the node is located.
+
+                    - node_name (str): The retrieved node name.
+                    - graph_name (str): The retrieved graph name.
+                - graph_id (int): The graph id.
+                - watchpoint_id (int): The watchpoint id.
 
         Returns:
             dict, the watchpoint hit list.
         """
-        node_name = group_condition.get('node_name')
-        # get all watchpoint hit list
-        if node_name is None:
-            reply = self._get_by_offset(group_condition)
+        if not isinstance(group_condition, dict):
+            log.error("The parameter <group_condition> should be dict")
+            raise DebuggerParamTypeError("The parameter <group_condition> should be dict.")
+        log.debug("Group watch_point_hits by group_condition: %s.", group_condition)
+        limit = group_condition.get('limit', 0)
+        if not isinstance(limit, int) or limit <= 0:
+            log.error("Param 'limit' is invalid or absent. 'limit' should be a positive integer.")
+            raise DebuggerParamValueError("Param 'limit' is invalid or absent. 'limit' should be a positive integer.")
+        # Get all watch_point_hit info
+        watch_point_hits = []
+        for watch_point_hit in self._ordered_hits:
+            self._get_tensors(watch_point_hit, watch_point_hits)
+
+        graph_id = group_condition.get('graph_id')
+        watchpoint_id = group_condition.get('watchpoint_id')
+
+        # Filter by graph and watch_point
+        if graph_id:
+            log.debug("Filter by graph: %s", graph_id)
+            watch_point_hits = self._filter_by_graph(graph_id, watch_point_hits)
+        if watchpoint_id:
+            log.debug("Filter by watchpoint: %s.", watchpoint_id)
+            watch_point_hits = self._filter_by_watchpoint(watchpoint_id, watch_point_hits)
+
+        total = len(watch_point_hits)
+        focused_node = group_condition.get('focused_node')
+        if focused_node is None:
+            watch_point_hits = self._get_by_offset(group_condition, watch_point_hits)
         else:
-            reply = self._get_by_name(group_condition)
+            watch_point_hits = self._get_by_name(group_condition, watch_point_hits)
+        reply = {}
+        if watch_point_hits:
+            reply = {'offset': group_condition.get('offset', 0),
+                     'total': total,
+                     'watch_point_hits': watch_point_hits
+                     }
         return reply
 
-    def _get_by_offset(self, group_condition):
+    def _filter_by_graph(self, graph_id, watch_point_hits):
+        """Return the list of watchpoint hits filtered by graph_id."""
+        log.debug("Filter by graph: %s.", graph_id)
+        filtered_watchpoint_hits = []
+        log.debug("Before filtering, watch_point_hits are: %s.", watch_point_hits)
+        for watch_point_hit in watch_point_hits:
+            if watch_point_hit['graph_id'] == graph_id:
+                filtered_watchpoint_hits.append(watch_point_hit)
+        log.debug("Filtered watch_point_hits: %s", filtered_watchpoint_hits)
+        return filtered_watchpoint_hits
+
+    def _filter_by_watchpoint(self, watchpoint_id, watch_point_hits):
+        """Return the list of watchpoint hits filtered by watchpoint_id"""
+        log.debug("Filter by watchpoint: %s", watchpoint_id)
+        log.debug("Before filtering, watch_point_hits are: %s.", watch_point_hits)
+        filtered_watchpoint_hits = []
+        for watch_point_hit in watch_point_hits:
+            if watchpoint_id in watch_point_hit['watchpoint_id']:
+                filtered_watchpoint_hits.append(watch_point_hit)
+
+        log.debug("Filtered watch_point_hits: %s", filtered_watchpoint_hits)
+        return filtered_watchpoint_hits
+
+    def _get_by_offset(self, group_condition, watch_point_hits):
         """Return the list of watchpoint hits on the offset page."""
-        limit = group_condition.get('limit')
-        offset = group_condition.get('offset')
+        limit = group_condition.get('limit', 10)
+        offset = group_condition.get('offset', 0)
         if not isinstance(limit, int) or not isinstance(offset, int):
             log.error("Param limit or offset is not a integer")
             raise DebuggerParamValueError("Param limit or offset is not a integer")
-        watch_point_hits = []
 
-        total = len(self._ordered_hits)
+        total = len(watch_point_hits)
 
         if limit * offset >= total and offset != 0:
             log.error("Param offset out of bounds")
             raise DebuggerParamValueError("Param offset out of bounds")
 
         if total == 0:
-            return {}
+            return []
 
-        for watchpoint_hits in self._ordered_hits[(limit * offset): (limit * (offset + 1))]:
-            self._get_tensors(watchpoint_hits, watch_point_hits)
+        hits_in_offset = []
+        for hit in watch_point_hits[(limit * offset): (limit * (offset + 1))]:
+            hits_in_offset.append(hit)
 
-        return {
-            'watch_point_hits': watch_point_hits,
-            'offset': offset,
-            'total': total
-        }
+        return hits_in_offset
 
-    def _get_by_name(self, group_condition):
+    def _get_by_name(self, group_condition, watch_point_hits):
         """Return the list of watchpoint hits by the group condition."""
         limit = group_condition.get('limit')
-        if not isinstance(limit, int) or limit == 0:
-            log.error("Param limit is 0 or not a integer")
-            raise DebuggerParamValueError("Param limit is 0 or not a integer")
+        focused_node = group_condition.get('focused_node')
+        if not isinstance(focused_node, dict):
+            log.error("Param focused_node is not a dict.")
+            raise DebuggerParamValueError("Param focused_node is not a dict.")
 
-        index = self._multi_graph_hits.get((group_condition.get('graph_name'), group_condition.get('node_name')))
+        graph_name = focused_node.get('graph_name')
+        node_name = focused_node.get('node_name')
+        index = None
+        for i, watch_point_hit in enumerate(watch_point_hits):
+            if watch_point_hit['graph_name'] == graph_name and watch_point_hit['node_name'] == node_name:
+                index = i
+                break
+
         if index is not None:
             group_condition['offset'] = index//limit
-            return self._get_by_offset(group_condition)
 
-        return {}
+        return self._get_by_offset(group_condition, watch_point_hits)
 
     def get_watchpoint_hits(self):
         """Return the list of watchpoint hits."""
+        log.debug("Get watch_point_hits.")
         watch_point_hits = []
         for watchpoint_hits in self._ordered_hits:
             self._get_tensors(watchpoint_hits, watch_point_hits)
+        log.debug("Watch_point_hits: %s.", watch_point_hits)
 
         return {'watch_point_hits': watch_point_hits}
 
     def _get_tensors(self, watchpoint_hits, watch_point_hits):
         """Get the tensors info for the watchpoint_hits."""
+        log.debug("Get tensors for watch_point_hits.")
         tensors = []
         graph_name = None
         node_name = None
+        watchpoint_ids = []
         for slot, tensor_hits in watchpoint_hits.items():
             if graph_name is None:
                 graph_name = tensor_hits[0].graph_name
@@ -571,11 +638,17 @@ class WatchpointHitHandler(StreamHandlerBase):
                 node_name = tensor_hits[0].node_name
             tensor_info = self._get_tensor_hit_info(slot, tensor_hits)
             tensors.append(tensor_info)
+            for tensor_hit in tensor_hits:
+                watch_point = tensor_hit.watchpoint
+                watchpoint_id = watch_point['id']
+                watchpoint_ids.append(watchpoint_id)
 
         watch_point_hits.append({
             'node_name': node_name,
             'tensors': tensors,
-            'graph_name': graph_name
+            'graph_name': graph_name,
+            'graph_id': graph_name,
+            'watchpoint_id': watchpoint_ids
         })
 
     @staticmethod

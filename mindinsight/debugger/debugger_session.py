@@ -575,9 +575,14 @@ class DebuggerSession:
 
                 - limit (int): The limit of each page.
                 - offset (int): The offset of current page.
-                - node_name (str): The retrieved node name.
-                - graph_name (str): The retrieved graph name.
+                - focused_node (dict): The focused node.
+                    If the specified node is hit, return the page where the node is located.
+
+                    - node_name (str): The retrieved node name.
+                    - graph_name (str): The retrieved graph name.
                 - rank_id (int): The rank id.
+                - graph_id (int): The graph id.
+                - watchpoint_id (int): The watchpoint id.
 
         Returns:
             dict, watch point list or relative graph.
