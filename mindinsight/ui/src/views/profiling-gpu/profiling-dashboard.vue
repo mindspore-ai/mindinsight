@@ -827,6 +827,10 @@ export default {
         const prefix = value < 10 ? '0' : '';
         return prefix + value;
       };
+      const replacedPrefix = './';
+      let dir = this.summaryPath;
+      if (dir === replacedPrefix) dir = ' ';
+      if (dir.startsWith(replacedPrefix)) dir = dir.replace(replacedPrefix, '');
       const date = new Date();
       const year = date.getFullYear();
       const mouth = dealNumber(date.getMonth() + 1);
@@ -836,10 +840,7 @@ export default {
       const second = dealNumber(date.getSeconds());
       const millisecond = date.getMilliseconds();
       const timestamp = `${year}${mouth}${day}${hour}${minute}${second}${millisecond}`;
-      return (
-        `timeline_${this.trainingJobId}_${this.currentCard}` +
-        `_ScopeNumber=${this.timelineInfo.scopeNameNum}_${timestamp}.json`
-      );
+      return `timeline_${dir}_${this.currentCard}_scope-num-${this.timelineInfo.scopeNameNum}_${timestamp}.json`;
     },
     /**
      * Keep the number with n decimal places.
