@@ -258,7 +258,7 @@ limitations under the License.
           <div class="node-type">
             <div class="label">{{ $t('debugger.logicCard') }}</div>
             <el-select v-model="logicCard.value"
-                       :disabled="!trainId"
+                       :disabled="!trainId || metadata.state === state.running || metadata.state === state.sending"
                        @change="logicCardChange();searchWatchpointHits(true);">
               <el-option v-for="item in logicCard.options"
                          :key="item"
@@ -269,6 +269,7 @@ limitations under the License.
           <div class="node-type">
             <div class="label">{{ $t('debugger.graphFile') }}</div>
             <el-select v-model="hitWpCondition.graphFile"
+                       :disabled="metadata.state === state.running || metadata.state === state.sending"
                        @change="searchWatchpointHits(true);">
               <el-option v-for="item in graphFiles.options"
                          :key="item"
@@ -279,6 +280,7 @@ limitations under the License.
           <div class="node-type">
             <div class="label">{{ $t('debugger.watchPoint') }}</div>
             <el-select v-model="hitWpCondition.watchPoint"
+                       :disabled="metadata.state === state.running || metadata.state === state.sending"
                        @change="searchWatchpointHits(true);">
               <el-option v-for="item in hitWatchPointArr"
                          :key="item"
@@ -1127,9 +1129,7 @@ export default {
         if (hitArr.length > 1) {
           hitArr.unshift(this.$t('debugger.all'));
         }
-        if (!hitArr.find((val) => val === this.hitWpCondition.watchPoint)) {
-          this.hitWpCondition.watchPoint = hitArr.length > 0 ? hitArr[0] : '';
-        }
+        this.hitWpCondition.watchPoint = hitArr.length > 0 ? hitArr[0] : '';
         this.hitWatchPointArr = hitArr;
       },
     },
