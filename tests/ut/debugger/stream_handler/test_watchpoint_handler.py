@@ -181,8 +181,8 @@ class TestWatchpointHitHandler:
     value1 = {
         'tensor_proto': mock_tensor_proto(),
         'watchpoint': watchpoint1,
-        'node_name': 'Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92',
-        'graph_name': 'kernel_graph_0',
+        'node_name': 'Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op96',
+        'graph_name': 'kernel_graph_1',
     }
     watchpoint2 = Watchpoint(
         watch_condition={'condition': 'MIN_LT', 'param': 1},
@@ -191,8 +191,8 @@ class TestWatchpointHitHandler:
     value2 = {
         'tensor_proto': mock_tensor_proto(),
         'watchpoint': watchpoint2,
-        'node_name': 'Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op96',
-        'graph_name': 'kernel_graph_1',
+        'node_name': 'Gradients/Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/gradReLU/ReluGradV2-op92',
+        'graph_name': 'kernel_graph_0',
     }
     values = [value1, value2]
 
@@ -207,12 +207,6 @@ class TestWatchpointHitHandler:
     @mock.patch('mindinsight.debugger.stream_cache.watchpoint.WatchpointHit')
     def test_put(self, mock_hit):
         """Test put."""
-        # mock_hit.return_value = mock.MagicMock(
-        #     tensor_proto=self.value.get('tensor_proto'),
-        #     watchpoint=self.value.get('watchpoint'),
-        #     node_name=self.value.get('node_name')
-        # )
-        # WatchpointHitHandler().put(self.value)
         for value in self.values:
             mock_hit.return_value = mock.MagicMock(
                 tensor_proto=value.get('tensor_proto'),
@@ -239,6 +233,7 @@ class TestWatchpointHitHandler:
             assert tensor_info['is_hit'] is False
 
     @pytest.mark.parametrize("group_condition, result_file", [
+        ({'limit': 5}, "watchpoint_hit_handler_group_by_None.json"),
         ({'limit': 5, 'graph_id': 'kernel_graph_0'}, "watchpoint_hit_handler_group_by_graph.json"),
         ({'limit': 5, 'watchpoint_id': 2}, "watchpoint_hit_handler_group_by_watchpoint.json"),
         ({'limit': 1, 'focused_node': {'graph_name': 'kernel_graph_1',

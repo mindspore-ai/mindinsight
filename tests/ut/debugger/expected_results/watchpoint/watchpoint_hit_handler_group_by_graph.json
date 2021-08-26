@@ -9,9 +9,9 @@
                     "slot": "0",
                     "watch_points": [
                         {
-                            "id": 1,
+                            "id": 2,
                             "watch_condition": {
-                                "condition": "MAX_GT",
+                                "condition": "MIN_LT",
                                 "param": 1
                             },
                             "error_code": 0,
@@ -23,7 +23,7 @@
             "graph_name": "kernel_graph_0",
             "graph_id": "kernel_graph_0",
             "watchpoint_id": [
-                1
+                2
             ]
         }
     ]
