@@ -266,6 +266,26 @@ limitations under the License.
               </el-option>
             </el-select>
           </div>
+          <div class="node-type">
+            <div class="label">{{ $t('debugger.graphFile') }}</div>
+            <el-select v-model="hitWpCondition.graphFile"
+                       @change="searchWatchpointHits(true);">
+              <el-option v-for="item in graphFiles.options"
+                         :key="item"
+                         :value="item">
+              </el-option>
+            </el-select>
+          </div>
+          <div class="node-type">
+            <div class="label">{{ $t('debugger.watchPoint') }}</div>
+            <el-select v-model="hitWpCondition.watchPoint"
+                       @change="searchWatchpointHits(true);">
+              <el-option v-for="item in hitWatchPointArr"
+                         :key="item"
+                         :value="item">
+              </el-option>
+            </el-select>
+          </div>
           <div class="hit-list-wrap">
             <el-table class="watchpoint-table"
                       :data="watchPointHits"
@@ -1040,6 +1060,11 @@ export default {
         searchContent: '',
       },
       noOfflineGraph: false,
+      hitWpCondition: {
+        graphFile: '',
+        watchPoint: '',
+      },
+      hitWatchPointArr: [],
     };
   },
   components: {debuggerTensor, tree},
@@ -1095,6 +1120,18 @@ export default {
         }
       },
       deep: true,
+    },
+    'watchPointArr': {
+      handler(newValue, oldValue) {
+        const hitArr = this.watchPointArr.map((val) => val.id);
+        if (hitArr.length > 1) {
+          hitArr.unshift(this.$t('debugger.all'));
+        }
+        if (!hitArr.find((val) => val === this.hitWpCondition.watchPoint)) {
+          this.hitWpCondition.watchPoint = hitArr.length > 0 ? hitArr[0] : '';
+        }
+        this.hitWatchPointArr = hitArr;
+      },
     },
   },
   methods: {
@@ -2221,7 +2258,7 @@ export default {
   padding: 10px;
 }
 .deb-wrap .left-wrap .left .content .hit-list-wrap .watchpoint-table {
-  max-height: calc(100% - 45px);
+  max-height: calc(100% - 135px);
   overflow: auto;
   margin-top: 10px;
 }

@@ -1360,6 +1360,7 @@ export default {
                   this.graphFiles.options.unshift(this.$t('debugger.all'));
                 }
                 this.graphFiles.value = this.graphFiles.options[0];
+                this.hitWpCondition.graphFile = this.graphFiles.options[0];
                 this.logicCard.options = this.devices.map((val) => val.rank_id);
               }
               if (res.data.watch_points) {
@@ -1735,15 +1736,25 @@ export default {
         const condition = {
           rank_id: this.logicCard.value,
         };
+        if (this.hitWpCondition.graphFile!== this.$t('debugger.all')) {
+          condition.graph_id = this.hitWpCondition.graphFile;
+        }
+        if (this.hitWpCondition.watchPoint!== this.$t('debugger.all')) {
+          condition.watchpoint_id = this.hitWpCondition.watchPoint;
+        }
         if (type) {
           if (this.selectedNode.name) {
             if (this.graphFiles.value === this.$t('debugger.all')) {
               const arr = this.selectedNode.name.split('/');
-              condition.node_name = arr[1] ? this.selectedNode.name.replace(`${arr[0]}/`, '') : arr[0];
-              condition.graph_name = arr[0];
+              condition.focused_node = {
+                'node_name': arr[1] ? this.selectedNode.name.replace(`${arr[0]}/`, '') : arr[0],
+                'graph_name': arr[0],
+              };
             } else {
-              condition.node_name = this.selectedNode.name;
-              condition.graph_name = this.graphFiles.value;
+              condition.focused_node = {
+                'node_name': this.selectedNode.name,
+                'graph_name': this.graphFiles.value,
+              };
             }
           } else {
             condition.offset = this.pagination.currentPage - 1;
@@ -1852,13 +1863,13 @@ export default {
     focusWatchpointHit() {
       if (this.selectedNode.name) {
         let selectedNodeName = this.selectedNode.name;
-        if (this.graphFiles.value === this.$t('debugger.all')) {
-          selectedNodeName = selectedNodeName.replace(`${selectedNodeName.split('/')[0]}/`, '');
+        if (this.graphFiles.value !== this.$t('debugger.all')) {
+          selectedNodeName = `${this.graphFiles.value}/${selectedNodeName}`;
         }
         this.expandKeys = [];
         let focused = false;
         this.watchPointHits.forEach((val) => {
-          if (val.name === selectedNodeName) {
+          if (`${val.graph_name}/${val.name}` === selectedNodeName) {
             val.selected = true;
             focused = true;
             this.expandKeys.push(val.id);
