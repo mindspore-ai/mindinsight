@@ -600,15 +600,17 @@ class DebuggerSession:
         if not isinstance(rank_id, int):
             log.error("Parameter <rank_id> should be an integer, but got %s.", rank_id)
             raise DebuggerParamTypeError("Parameter <rank_id> should be an integer, but got {}.".format(rank_id))
-
+        multicard_graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH)
+        try:
+            multicard_graph_stream.get_graph_handler_by_rank_id(rank_id)
+        except ValueError:
+            log.error("Parameter <rank_id> %s is not valid.", rank_id)
+            raise DebuggerParamValueError("Parameter <rank_id> {} is not valid.".format(rank_id))
         reply = {}
         multi_watchpoint_hit_stream = self.cache_store.get_stream_handler(Streams.WATCHPOINT_HIT)
         if multi_watchpoint_hit_stream.check_rank_id(rank_id):
             watchpoint_hit_stream = multi_watchpoint_hit_stream.get_hit_handler_by_rank_id(rank_id)
             reply = watchpoint_hit_stream.group_by(group_condition)
-        else:
-            log.error("Parameter <rank_id> %s is not valid.", rank_id)
-            raise DebuggerParamValueError("Parameter <rank_id> {} is not valid.".format(rank_id))
 
         reply['outdated'] = self.cache_store.get_stream_handler(Streams.WATCHPOINT).is_recheckable()
         return reply
