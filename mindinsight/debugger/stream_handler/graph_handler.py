@@ -103,6 +103,10 @@ class MultiCardGraphHandler(StreamHandlerBase):
         """Clean cache."""
         self.__init__()
 
+    def validate_rank_id(self, rank_id):
+        """Judge if the rank_id is valid"""
+        return rank_id in self._graph_handlers
+
 
 class GraphHandler(StreamHandlerBase):
     """Metadata Handler."""

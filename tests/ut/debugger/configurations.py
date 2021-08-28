@@ -18,7 +18,7 @@ import os
 
 from google.protobuf import json_format
 
-from mindinsight.debugger.stream_handler.graph_handler import GraphHandler
+from mindinsight.debugger.stream_handler.graph_handler import GraphHandler, MultiCardGraphHandler
 from mindinsight.debugger.stream_handler.watchpoint_handler import WatchpointHitHandler
 from mindinsight.domain.graph.proto import ms_graph_pb2
 from tests.utils.tools import compare_result_with_file
@@ -47,6 +47,15 @@ def init_graph_handler():
     graph_handler.put({graph.name: graph})
 
     return graph_handler
+
+
+def init_multi_card_graph_handler():
+    """Init GraphHandler."""
+    graph = get_graph_proto()
+    multi_card_graph_handler = MultiCardGraphHandler()
+    multi_card_graph_handler.put({0: {graph.name: graph}, 1: {graph.name: graph}})
+
+    return multi_card_graph_handler
 
 
 def init_watchpoint_hit_handler(values):
@@ -131,6 +140,19 @@ def mock_tensor_history():
     }
 
     return tensor_history
+
+
+class WatchpointHit:
+    """Watchpoint hit structure."""
+    def __init__(self, name, slot, condition, watchpoint_id, parameters, error_code, rank_id, root_graph_id):
+        self.name = name
+        self.slot = slot
+        self.condition = condition
+        self.watchpoint_id = watchpoint_id
+        self.parameters = parameters
+        self.error_code = error_code
+        self.rank_id = rank_id
+        self.root_graph_id = root_graph_id
 
 
 def compare_debugger_result_with_file(res, expect_file, save=False):

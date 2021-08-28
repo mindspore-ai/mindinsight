@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@ import os
 
 import pytest
 
-from tests.ut.debugger.configurations import init_graph_handler, compare_debugger_result_with_file
+from tests.ut.debugger.configurations import init_graph_handler, init_multi_card_graph_handler, \
+    compare_debugger_result_with_file
 from tests.utils.tools import compare_result_with_file
 
 
@@ -120,3 +121,17 @@ class TestGraphHandler:
         """Test get tensor graph."""
         res = self.graph_handler.get_tensor_graph(tensor_name, None)
         compare_debugger_result_with_file(res, expect_file=os.path.join('graph', expect_file))
+
+
+class TestMultiCardGraphHandler:
+    """Test GraphHandler."""
+    @classmethod
+    def setup_class(cls):
+        """Init MultiCardGraphHandler for unittest."""
+        cls.multi_card_graph_handler = init_multi_card_graph_handler()
+
+    @pytest.mark.parametrize("rank_id, expect_res", [(0, True), (1, True), (2, False)])
+    def test_validate_rank_id(self, rank_id, expect_res):
+        """Test validate_rank_id."""
+        res = self.multi_card_graph_handler.validate_rank_id(rank_id)
+        assert res == expect_res
