@@ -187,7 +187,7 @@ class TestDebuggerGrpcServer:
         args[1].return_value = ('0', cmd.copy())
         res = self._server._deal_with_old_command()
         assert res == cmd.pop('view_cmd')
-        expect_received_view_cmd = {'node_info': cmd, 'wait_for_tensor': True}
+        expect_received_view_cmd = {'node_info': cmd, 'wait_for_tensor': True, 'view_cmd': res}
         assert getattr(self._server, '_received_view_cmd') == expect_received_view_cmd
 
     @mock.patch.object(DebuggerCache, 'get_command')

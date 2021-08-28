@@ -15,7 +15,7 @@
 """This module is aimed to provide with tensor detail info."""
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import Streams, create_view_event_from_tensor_basic_info
+from mindinsight.debugger.common.utils import Streams, create_view_event_from_tensor_basic_info, ViewCommandLevelEnum
 
 
 class TensorDetailInfo:
@@ -134,7 +134,8 @@ class TensorDetailInfo:
             return
         log.debug("Ask for tensor value for: %s", missing_tensors)
         view_cmd = create_view_event_from_tensor_basic_info(missing_tensors)
-        self._put_command({'view_cmd': view_cmd, 'tensor_name': tensor_name, 'graph_name': graph_name, 'stats': True})
+        self._put_command({'view_cmd': view_cmd, 'tensor_name': tensor_name, 'graph_name': graph_name, 'stats': True,
+                           'level': ViewCommandLevelEnum.STATS.value})
         log.debug("Send view cmd for tensor-graphs.")
 
     def get_tensor_watch_points(self, tensor_name, graph_name, rank_id=0):

@@ -20,12 +20,14 @@ from queue import Queue, Full, Empty
 
 import mindinsight
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import MAX_SINGLE_TENSOR_CACHE, get_ack_reply, ServerStatus, \
-    Streams, RunLevel, version_match, load_tensor
+from mindinsight.debugger.common.utils import MAX_SINGLE_TENSOR_CACHE_BYTES, get_ack_reply, ServerStatus, \
+    Streams, RunLevel, version_match, load_tensor, convert_tensor_stats, \
+    put_tensor_stats_in_cache, put_tensor_base_in_cache, get_tensor_value
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum, ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import debugger_server_wrap
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
 from mindinsight.domain.graph.proto.ms_graph_pb2 import GraphProto
+from mindinsight.debugger.proto.debug_grpc_pb2 import ViewCMD
 
 
 def debugger_wrap(func):
@@ -327,6 +329,13 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             return None
         self._received_view_cmd['node_info'] = event
         self._received_view_cmd['wait_for_tensor'] = True
+        self._received_view_cmd['view_cmd'] = view_cmd
+        level_dict = {
+            'stats': ViewCMD.Level.statistics,
+            'base': ViewCMD.Level.base
+        }
+        if event.get('level'):
+            view_cmd.view_cmd.level = level_dict.get(event.get('level'))
         return view_cmd
 
     def _deal_with_run_cmd(self, event):
@@ -461,8 +470,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         """Send tensors into DebuggerCache."""
         log.info("Received tensor.")
         tensor_contents = []
-        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
+        data_size = 0
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
+        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
         step = metadata_stream.step
         oversize = False
         node_info = self._received_view_cmd.get('node_info')
@@ -474,28 +484,63 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             load_tensor(load_info=load_info, step=step, request_iterator=request_iterator,
                         cache_store=self._cache_store, rank_id=0)
         else:
-            for tensor in request_iterator:
-                tensor_contents.append(tensor.tensor_content)
-                if len(tensor_contents) >= MAX_SINGLE_TENSOR_CACHE or oversize:
+            for tensor_proto in request_iterator:
+                tensor_contents.append(tensor_proto.tensor_content)
+                data_size += len(tensor_proto.tensor_content)
+                if data_size >= MAX_SINGLE_TENSOR_CACHE_BYTES or oversize:
                     oversize = True
                     tensor_contents = []
-                if tensor.finished:
-                    value = {'step': step,
-                             'tensor_proto': tensor,
-                             'tensor_contents': tensor_contents,
-                             'oversize': oversize,
-                             'stats': bool(node_info and node_info.get('stats'))
-                             }
+                if tensor_proto.finished:
+                    value = get_tensor_value(tensor_proto, tensor_contents, node_info, step, oversize, data_size)
                     update_flag = tensor_stream.put(value)
-                    if self._received_view_cmd.get('wait_for_tensor') and update_flag:
-                        # update_flag is used to avoid querying empty tensors again
-                        self._received_view_cmd['wait_for_tensor'] = False
-                        log.debug("Set wait for tensor flag to False.")
+                    self._update_state(update_flag)
                     tensor_contents = []
+                    data_size = 0
                     oversize = False
-                    continue
         reply = get_ack_reply()
         return reply
+
+    @debugger_wrap
+    def SendTensorBase(self, request_iterator, context):
+        """Send tensor base into DebuggerCache."""
+        log.info("Received tensor base.")
+        metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
+        cur_step = metadata_stream.step
+        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
+        tensor_protos = self._received_view_cmd.get('view_cmd').view_cmd.tensors
+        tensor_stats_list = []
+        for tensor_base in request_iterator:
+            tensor_stats_list.append(_convert_tensor_base(tensor_base))
+        update_data_flag = put_tensor_base_in_cache(tensor_stats_list, tensor_protos, cur_step, tensor_stream)
+        self._update_state(update_data_flag)
+        reply = get_ack_reply()
+        return reply
+
+    @debugger_wrap
+    def SendTensorStats(self, request_iterator, context):
+        """Send tensor stats into DebuggerCache."""
+        log.info("Received tensor base.")
+        metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
+        cur_step = metadata_stream.step
+        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
+        tensor_protos = self._received_view_cmd.get('view_cmd').view_cmd.tensors
+        tensor_stats_list = []
+        for tensor_summary in request_iterator:
+            tensor_stats_list.append({
+                'tensor_base': _convert_tensor_base(tensor_summary.tensor_base),
+                'tensor_stats': convert_tensor_stats(tensor_summary.statistics)
+            })
+        update_data_flag = put_tensor_stats_in_cache(tensor_stats_list, tensor_protos, cur_step, tensor_stream)
+        self._update_state(update_data_flag)
+        reply = get_ack_reply()
+        return reply
+
+    def _update_state(self, update_flag):
+        """Update wait_for_tensor state."""
+        if self._received_view_cmd.get('wait_for_tensor') and update_flag:
+            # update_flag is used to avoid querying empty tensors again
+            self._received_view_cmd['wait_for_tensor'] = False
+            log.debug("Set wait for tensor flag to False.")
 
     @debugger_wrap
     def SendWatchpointHits(self, request_iterator, context):
@@ -622,3 +667,13 @@ class HeartbeatListener(threading.Thread):
         self._running.clear()
         self.send()
         self.join()
+
+
+def _convert_tensor_base(tensor_data):
+    """Convert tensor object to dict."""
+    tensor_data_dict = {
+        'dtype': tensor_data.data_type,
+        'shape': tensor_data.shape,
+        'data_size': tensor_data.data_size
+    }
+    return tensor_data_dict

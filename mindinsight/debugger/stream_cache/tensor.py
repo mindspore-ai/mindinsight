@@ -20,9 +20,11 @@ import numpy as np
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import NUMPY_TYPE_MAP
+from mindinsight.debugger.common.utils import NUMPY_TYPE_MAP, MAX_SINGLE_TENSOR_CACHE_BYTES
 from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
 from mindinsight.utils.tensor import TensorUtils
+
+NPY_HEADER_LENGTH = 128
 
 
 class TensorStatusEnum(Enum):
@@ -139,9 +141,8 @@ class BaseTensor(ABC):
 
     def get_basic_info(self):
         """Return basic info about tensor info."""
-        tensor_value = self.value
-        if not self.shape:
-            value = tensor_value.tolist() if isinstance(tensor_value, np.ndarray) else tensor_value
+        if self.status == TensorStatusEnum.EMPTY.value:
+            value = None
         else:
             value = 'click to view'
         res = self._to_dict()
@@ -167,23 +168,27 @@ class OpTensor(BaseTensor):
     """
     max_number_data_show_on_ui = 100000
 
-    def __init__(self, tensor_proto, tensor_content, step=0):
+    def __init__(self, name, tensor_base=None, tensor_stats=None, tensor_content=None, step=0):
         # the type of tensor_proto is TensorProto
         super(OpTensor, self).__init__(step)
-        self._tensor_proto = tensor_proto
+        self._name = name
+        self._tensor_base = tensor_base
+        self._shape = tensor_base.get('shape') if tensor_base else []
         self._value = self.to_numpy(tensor_content)
-        # the npy file header is 128 bytes
-        self._download_size = self._value.nbytes + 128 if self._value is not None else 0
-        self._stats = None
+        self._download_size = tensor_base.get('data_size') + NPY_HEADER_LENGTH if tensor_base else 0
+        self._stats = tensor_stats
         self._tensor_comparison = None
-        self._status = TensorStatusEnum.EMPTY.value if self._value is None else TensorStatusEnum.CACHED.value
+        self._status = self.get_status()
 
     @property
     def name(self):
         """The property of tensor name."""
-        node_name = self._tensor_proto.node_name
-        slot = self._tensor_proto.slot
-        return ':'.join([node_name, slot])
+        return self._name
+
+    @property
+    def tensor_base(self):
+        """The property of tensor base."""
+        return self._tensor_base
 
     @property
     def step(self):
@@ -193,13 +198,12 @@ class OpTensor(BaseTensor):
     @property
     def dtype(self):
         """The property of tensor dtype."""
-        tensor_type = DataType.Name(self._tensor_proto.data_type)
-        return tensor_type
+        return DataType.Name(self._tensor_base.get('dtype') if self._tensor_base else 0)
 
     @property
     def shape(self):
         """The property of tensor shape."""
-        dims = list(self._tensor_proto.dims)
+        dims = list(self._shape)
         if dims == [0]:
             dims = []
         return dims
@@ -228,6 +232,13 @@ class OpTensor(BaseTensor):
     def tensor_comparison(self):
         """The property of tensor_comparison."""
         return self._tensor_comparison
+
+    def get_status(self):
+        """Set the tensor status."""
+        res = TensorStatusEnum.EMPTY.value if self.tensor_base is None or self.tensor_base.get(
+            'data_size') == 0 else TensorStatusEnum.OVERSIZE.value if self.tensor_base.get(
+                'data_size') >= MAX_SINGLE_TENSOR_CACHE_BYTES else TensorStatusEnum.UNCACHED.value
+        return res if self.value is None else TensorStatusEnum.CACHED.value
 
     def calculate_stats(self):
         """Calculate the tensor statistics."""
@@ -333,7 +344,7 @@ class ConstTensor(BaseTensor):
         self._value = self.generate_value_from_proto(const_proto.value)
         self._status = TensorStatusEnum.CACHED.value
         self._stats = None
-        self.calculate_stats()
+        self.tensor_base = None
 
     def set_step(self, step):
         """Set step value."""
@@ -427,6 +438,7 @@ class ConstTensor(BaseTensor):
         Returns:
             dict, overall statistics.
         """
+        self.calculate_stats()
         if self.empty or self.dtype == self._STRING_TYPE or self.dtype == self._DT_TYPE:
             log.debug("The tensor dtype is: %s, skip getting statistics.", self.dtype)
             return {}
