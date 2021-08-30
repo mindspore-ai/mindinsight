@@ -38,3 +38,7 @@ released version):
 | EfficientNetB0~B7 | [Link](https://github.com/lukemelas/EfficientNet-PyTorch) | [TF1.15Link](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) [TF2.3Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet.py) |  | TESTED | TESTED(TF1.15) TESTED(TF2.3) |
 | Unet | [Link](https://github.com/milesial/Pytorch-UNet) | [Link](https://github.com/zhixuhao/unet) | Due to Operator `mindspore.ops.ResizeBilinear` is not implemented on GPU device for now, operator `mindspore.ops.ResizeBilinear` should be replaced by operator `mindspore.ops.ResizeNearestNeighbor`, while running in GPU device | TESTED | TESTED |
 | Bert | [Link](https://huggingface.co/bert-base-uncased) | [Link](https://github.com/google-research/bert) |  | TESTED | TESTED |
+|RetinaFace| [Link](https://github.com/biubug6/Pytorch_Retinaface)|/| | TESTED | / |
+|Yolov5s|[Link](https://github.com/ultralytics/yolov5) | / | | TESTED | / |
+|BigBird|[Link](https://github.com/huggingface/transformers/tree/master/src/transformers/models/big_bird) | / | | TESTED | / |
+|LayoutLM|[Link](https://github.com/huggingface/transformers/tree/master/src/transformers/models/layoutlm) | / | | TESTED | / |

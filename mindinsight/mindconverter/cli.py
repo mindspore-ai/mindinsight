@@ -407,6 +407,7 @@ def _run(in_files, model_file, shape, input_nodes, output_nodes, out_dir, report
         report (str): The report file path.
     """
     if in_files:
+        log_console.warning("[DEPRECATED] AST conversion would be removed in following version.")
         files_config = {
             'root_path': in_files,
             'in_files': [],
