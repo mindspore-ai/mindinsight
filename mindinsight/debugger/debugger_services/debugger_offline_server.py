@@ -680,7 +680,7 @@ class DebuggerOfflineManager:
                                       str(root_graph_id), str(iteration))
         # Find the pure node_name without scope
         node_name = name.rsplit('/')[-1]
-        match_mask = f'*.{node_name}.*.output.{slot}.*.npy'
+        match_mask = f'*.{node_name}.*.output.{slot}*.npy'
         tensor_files = Path(iteration_path).absolute().glob(match_mask)
         log.debug("Find file in path: %s which matches the mask: %s.", iteration_path, match_mask)
         for tensor_file in tensor_files:
