@@ -31,7 +31,7 @@ class SessionManager:
     """The server manager of debugger."""
 
     ONLINE_TYPE = "ONLINE"
-    MAX_OFFLINE_SESSION_NUM = 2
+    MAX_OFFLINE_SESSION_NUM = settings.MAX_OFFLINE_DEBUGGER_SESSION_NUM
     ONLINE_SESSION_ID = "0"
     _instance = None
     _cls_lock = threading.Lock()

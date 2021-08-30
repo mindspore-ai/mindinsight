@@ -25,7 +25,8 @@ import mindinsight
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
-    RunLevel, MAX_SINGLE_TENSOR_CACHE, load_tensor
+    RunLevel, MAX_SINGLE_TENSOR_CACHE_BYTES, load_tensor, ViewCommandLevelEnum, convert_tensor_stats, \
+    put_tensor_base_in_cache, put_tensor_stats_in_cache, get_tensor_value
 from mindinsight.debugger.conditionmgr.condition import ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import DebuggerServerBase, debugger_server_wrap
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
@@ -286,7 +287,7 @@ class DebuggerOfflineManager:
         # as DbgServices hasn't support -1 yet, put empty tensor value into cache.
         if cur_step <= 0:
             log.info("Offline debugger not support to read initial weights yet.")
-            self._put_tensor_value_into_cache(cur_step, node_info, rank_id, view_cmd.tensors)
+            self._put_tensor_value_into_cache(cur_step, node_info, view_cmd.tensors)
             return
         iteration_id = cur_step - 1
         root_graph_id = self.get_root_graph_id(rank_id=rank_id,
@@ -302,8 +303,49 @@ class DebuggerOfflineManager:
                 is_output=True,
                 root_graph_id=root_graph_id
             ) for tensor_proto in tensor_protos]
+        if node_info.get('level') == ViewCommandLevelEnum.BASE.value:
+            self._read_tensor_base(cur_step, node_info, tensor_infos, tensor_protos)
+        elif node_info.get('level') == ViewCommandLevelEnum.STATS.value:
+            self._read_tensor_stats(cur_step, node_info, tensor_infos, tensor_protos)
+        else:
+            self._read_tensor_value(cur_step, node_info, tensor_infos, tensor_protos)
+
+    def _read_tensor_base(self, cur_step, node_info, tensor_infos, tensor_protos):
+        """Read tensor base from debugger service."""
         res = Manager().list()
-        read_tensor_process = Process(target=self._read_tensor_work, args=(tensor_infos, res,))
+        read_tensor_process = Process(target=self._read_tensor_base_work, args=(tensor_infos, res,))
+        read_tensor_process.start()
+        read_tensor_process.join()
+
+        rank_id = node_info.get('rank_id', 0)
+        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR). \
+            get_tensor_handler_by_rank_id(rank_id)
+
+        update_data_flag = put_tensor_base_in_cache(res, tensor_protos, cur_step, tensor_stream)
+
+        if update_data_flag:
+            self._send_update_msg(node_info)
+
+    def _read_tensor_stats(self, cur_step, node_info, tensor_infos, tensor_protos):
+        """Read tensor stats from debugger service."""
+        res = Manager().list()
+        read_tensor_process = Process(target=self._read_tensor_stats_work, args=(tensor_infos, res,))
+        read_tensor_process.start()
+        read_tensor_process.join()
+
+        rank_id = node_info.get('rank_id', 0)
+        tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR). \
+            get_tensor_handler_by_rank_id(rank_id)
+
+        update_data_flag = put_tensor_stats_in_cache(res, tensor_protos, cur_step, tensor_stream)
+
+        if update_data_flag:
+            self._send_update_msg(node_info)
+
+    def _read_tensor_value(self, cur_step, node_info, tensor_infos, tensor_protos):
+        """Read tensor value from debugger service."""
+        res = Manager().list()
+        read_tensor_process = Process(target=self._read_tensor_value_work, args=(tensor_infos, res,))
         read_tensor_process.start()
         read_tensor_process.join()
 
@@ -319,15 +361,41 @@ class DebuggerOfflineManager:
                 tensor_proto.ClearField('dims')
                 tensor_proto.dims.extend(tensor_data.get('shape'))
                 tensor_proto.data_type = tensor_data.get('dtype')
-        self._put_tensor_value_into_cache(cur_step, node_info, rank_id, tensor_protos)
+
+        self._put_tensor_value_into_cache(cur_step, node_info, tensor_protos)
         log.info("Put tensor value into cache.")
 
-    def _read_tensor_work(self, tensor_infos, res):
-        """The check WatchPoint function work in another process."""
-        log.info("Start read tensor process.")
+    def _read_tensor_base_work(self, tensor_infos, res):
+        """The read tensor base function work in another process."""
+        log.info("Start read tensor base process.")
+        for tensor_info in tensor_infos:
+            tensor_data_res = self._dbg_service.read_tensor_base([tensor_info])
+            tensor_data_dict = None
+            for tensor_data in tensor_data_res:
+                tensor_data_dict = _convert_tensor_base(tensor_data)
+            res.append(tensor_data_dict)
+        log.info("Reading tensor process is finished.")
+
+    def _read_tensor_stats_work(self, tensor_infos, res):
+        """The read tensor stats function work in another process."""
+        log.info("Start read tensor stats process.")
+        for tensor_info in tensor_infos:
+            tensor_data_res = self._dbg_service.read_tensor_stats([tensor_info])
+            tensor_data_dict = None
+            for tensor_data in tensor_data_res:
+                tensor_data_dict = {
+                    'tensor_base': _convert_tensor_base(tensor_data),
+                    'tensor_stats': convert_tensor_stats(tensor_data)
+                }
+            res.append(tensor_data_dict)
+        log.info("Reading tensor process is finished.")
+
+    def _read_tensor_value_work(self, tensor_infos, res):
+        """The read tensor value function work in another process."""
+        log.info("Start read tensor value process.")
         tensor_data_res = self._dbg_service.read_tensors(tensor_infos)
         for tensor_data in tensor_data_res:
-            tensor_data_dict = convert_tensor_data(tensor_data)
+            tensor_data_dict = _convert_tensor_value(tensor_data)
             res.append(tensor_data_dict)
         log.info("Reading tensor process is finished.")
 
@@ -336,8 +404,9 @@ class DebuggerOfflineManager:
         graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(rank_id)
         return graph_stream.get_root_graph_id(graph_name, node_name)
 
-    def _put_tensor_value_into_cache(self, cur_step, node_info, rank_id, tensor_protos):
+    def _put_tensor_value_into_cache(self, cur_step, node_info, tensor_protos):
         """Put tensor value into tensor cache."""
+        rank_id = node_info.get('rank_id', 0)
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR). \
             get_tensor_handler_by_rank_id(rank_id)
         update_data_flag = False
@@ -352,14 +421,10 @@ class DebuggerOfflineManager:
                     load_info['node_name'] = node_info.get('node_name')
                     load_tensor(load_info=load_info, step=cur_step, request_iterator=iter([tensor_proto]),
                                 cache_store=self._cache_store, rank_id=rank_id)
-                oversize = len(tensor_proto.tensor_content) > MAX_SINGLE_TENSOR_CACHE
-                value = {
-                    'step': cur_step,
-                    'tensor_proto': tensor_proto,
-                    'tensor_contents': [tensor_proto.tensor_content] if not oversize else [],
-                    'stats': node_info.get('stats', False),
-                    'oversize': oversize,
-                }
+                oversize = len(tensor_proto.tensor_content) > MAX_SINGLE_TENSOR_CACHE_BYTES
+                tensor_contents = [tensor_proto.tensor_content]
+                data_size = len(tensor_proto.tensor_content)
+                value = get_tensor_value(tensor_proto, tensor_contents, node_info, cur_step, oversize, data_size)
                 has_update = tensor_stream.put(value)
 
             except ValueError as err:
@@ -369,11 +434,14 @@ class DebuggerOfflineManager:
             if has_update:
                 update_data_flag = True
         if update_data_flag:
-            # send message to frontend
-            metadata = self._metadata_stream.get(['step', 'state'])
-            ret = {'receive_tensor': node_info.copy()}
-            ret.update(metadata)
-            self._cache_store.put_data(ret)
+            self._send_update_msg(node_info)
+
+    def _send_update_msg(self, node_info):
+        # send message to frontend.
+        metadata = self._metadata_stream.get(['step', 'state'])
+        ret = {'receive_tensor': node_info.copy()}
+        ret.update(metadata)
+        self._cache_store.put_data(ret)
 
     def _deal_with_run_cmd(self, event):
         """Deal with run cmd."""
@@ -705,7 +773,17 @@ def convert_watchpointhit(watchpointhit):
     return watchpointhit_dict
 
 
-def convert_tensor_data(tensor_data):
+def _convert_tensor_base(tensor_data):
+    """Convert tensor object to dict."""
+    tensor_data_dict = {
+        'dtype': tensor_data.dtype,
+        'shape': tensor_data.shape,
+        'data_size': tensor_data.data_size
+    }
+    return tensor_data_dict
+
+
+def _convert_tensor_value(tensor_data):
     """Convert tensor object to dict."""
     tensor_data_dict = {'dtype': tensor_data.dtype,
                         'shape': tensor_data.shape,

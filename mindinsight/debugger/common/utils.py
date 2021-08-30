@@ -22,9 +22,11 @@ import time
 
 import numpy as np
 
+from mindinsight.conf import settings
 from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
 from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
+from mindinsight.utils.tensor import Statistics
 
 # translate the MindSpore type to numpy type.
 NUMPY_TYPE_MAP = {
@@ -49,10 +51,14 @@ NUMPY_TYPE_MAP = {
 }
 
 MS_VERSION = '1.0.x'
-# The debugger need 2g memory space.
-MAX_CACHE_SPACE = 2 * 1024 * 1024 * 1024
+# The buffer is used for the MI side of the offline debugger, the unit is MB.
+BUFFER = 2 * 1024
+# The offline debugger need at least 2g memory space.
+MAX_CACHE_SPACE_MB = max(((settings.OFFLINE_DEBUGGER_MEM_LIMIT - BUFFER) // 3), 2 * 1024)
+MAX_MS_CACHE_SPACE_MB = settings.OFFLINE_DEBUGGER_MEM_LIMIT - BUFFER - MAX_CACHE_SPACE_MB
+MAX_CACHE_SPACE_BYTES = MAX_CACHE_SPACE_MB * 1024 * 1024
 # The debugger need to cache 2 tensors.
-MAX_SINGLE_TENSOR_CACHE = 1 * 1024 * 1024 * 1024
+MAX_SINGLE_TENSOR_CACHE_BYTES = 1024 * 1024 * 1024
 
 
 @enum.unique
@@ -93,6 +99,13 @@ class RunLevel(enum.Enum):
     NODE = "node"
     STEP = "step"
     RECHECK = "recheck"
+
+
+class ViewCommandLevelEnum(enum.Enum):
+    """Tensor status."""
+    BASE = "base"
+    STATS = "stats"
+    VALUE = 'value'
 
 
 def get_ack_reply(state=0):
@@ -259,3 +272,68 @@ def _write_tensor(file_path, value):
     """Write into temp file."""
     with open(file_path, 'ab') as fb:
         fb.write(value)
+
+
+def convert_tensor_stats(tensor_data):
+    """Convert tensor object to dict."""
+    tensor_stats = Statistics({'is_bool': tensor_data.is_bool,
+                               'max_value': tensor_data.max_value,
+                               'min_value': tensor_data.min_value,
+                               'avg_value': tensor_data.avg_value,
+                               'count': tensor_data.count,
+                               'neg_zero_count': tensor_data.neg_zero_count,
+                               'pos_zero_count': tensor_data.pos_zero_count,
+                               'zero_count': tensor_data.zero_count,
+                               'nan_count': tensor_data.nan_count,
+                               'neg_inf_count': tensor_data.neg_inf_count,
+                               'pos_inf_count': tensor_data.pos_inf_count})
+    return tensor_stats
+
+
+def put_tensor_stats_in_cache(tensor_stats_list, tensor_protos, cur_step, tensor_stream):
+    """Put tensor stats in cache."""
+    update_data_flag = False
+    for tensor_stats, tensor_proto in zip(tensor_stats_list, tensor_protos):
+        name = ':'.join([tensor_proto.node_name, tensor_proto.slot])
+        step = cur_step - 1 if tensor_proto.iter and cur_step > 0 else cur_step
+        if tensor_stats is None or tensor_stats.get("tensor_base", {}).get("data_size", 0) == 0:
+            has_update = tensor_stream.put_empty_tensor(name, step)
+        else:
+            has_update = tensor_stream.put_tensor_stats(name, step, tensor_stats.get("tensor_base"),
+                                                        tensor_stats.get("tensor_stats"))
+        if has_update:
+            update_data_flag = True
+    return update_data_flag
+
+
+def put_tensor_base_in_cache(tensor_base_list, tensor_protos, cur_step, tensor_stream):
+    """Put tensor base in cache."""
+    update_data_flag = False
+    for tensor_base, tensor_proto in zip(tensor_base_list, tensor_protos):
+        name = ':'.join([tensor_proto.node_name, tensor_proto.slot])
+        step = cur_step - 1 if tensor_proto.iter and cur_step > 0 else cur_step
+        if tensor_base is None:
+            has_update = tensor_stream.put_empty_tensor(name, step)
+        else:
+            has_update = tensor_stream.put_tensor_base(name, step, tensor_base)
+        if has_update:
+            update_data_flag = True
+    return update_data_flag
+
+
+def get_tensor_value(tensor_proto, tensor_contents, node_info, cur_step, oversize, data_size):
+    """Get tensor value."""
+    tensor_base = {
+        'dtype': tensor_proto.data_type,
+        'shape': tensor_proto.dims,
+        'data_size': data_size
+    }
+    value = {
+        'step': cur_step - 1 if tensor_proto.iter and cur_step > 0 else cur_step,
+        'name': ':'.join([tensor_proto.node_name, tensor_proto.slot]),
+        'tensor_base': tensor_base,
+        'tensor_contents': tensor_contents if not oversize else [],
+        'stats': bool(node_info and node_info.get('stats', False)),
+        'oversize': oversize
+    }
+    return value

@@ -28,6 +28,7 @@ import pytest
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_services.debugger_server_factory import \
     DebuggerServerFactory, DebuggerServerContext
+from mindinsight.debugger.debugger_services.debugger_offline_server import DebuggerOfflineManager
 from tests.st.func.debugger.utils import build_dump_file_structure
 from tests.st.func.debugger.debugger_services import mock_dbg_services
 
@@ -67,10 +68,10 @@ class TestDebuggerServerFactory:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    @mock.patch('mindinsight.debugger.debugger_services.debugger_offline_server.import_module')
-    def test_get_dbg_offline_server(self, mock_import):
+    @mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module')
+    def test_get_dbg_offline_server(self, mock_method):
         """Get debugger offline server"""
-        mock_import.return_value = mock_dbg_services
+        mock_method.return_value = mock_dbg_services
         context = DebuggerServerContext(dbg_mode='offline', dbg_dir=self._dbg_dir)
         server_obj = self._dbg_server_factory.get_debugger_server(DebuggerCache(), context)
         server_obj.start()

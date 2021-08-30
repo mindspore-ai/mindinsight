@@ -31,6 +31,9 @@ URL_PATH_PREFIX = ''
 ####################################
 DEBUGGER_PORT = 50051
 ENABLE_DEBUGGER = False
+# The unit is MB
+OFFLINE_DEBUGGER_MEM_LIMIT = 16 * 1024
+MAX_OFFLINE_DEBUGGER_SESSION_NUM = 2
 
 ####################################
 # Datavisual default settings.

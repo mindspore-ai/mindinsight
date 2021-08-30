@@ -22,7 +22,7 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
     DebuggerTensorHitError, DebuggerSetRecommendWatchpointsError, MindInsightException
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import ServerStatus, \
-    create_view_event_from_tensor_basic_info, Streams
+    create_view_event_from_tensor_basic_info, Streams, ViewCommandLevelEnum
 from mindinsight.debugger.conditionmgr.condition import ConditionContext
 from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.conditionmgr.recommender import recommend_watchpoints
@@ -400,7 +400,7 @@ class DebuggerSession:
             view_cmd = create_view_event_from_tensor_basic_info(missed_tensors)
             self.cache_store.put_command(
                 {'view_cmd': view_cmd, 'node_name': node_name, 'graph_name': graph_name, 'rank_id': rank_id,
-                 'stats': True})
+                 'stats': True, "level": ViewCommandLevelEnum.BASE.value})
             log.debug("Send view cmd.")
 
     def retrieve_tensor_value(self, name, detail, shape, graph_name=None, prev=False, rank_id=0):
@@ -425,7 +425,7 @@ class DebuggerSession:
     def _send_view_cmd(self, name, graph_name, rank_id, tensor_name, node_type):
         """Send view command."""
         tensor_basic_info = self.cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(
-            rank_id).get_missing_tensor_info(tensor_name, node_type, check_cache=True)
+            rank_id).get_missing_tensor_info(tensor_name, node_type)
         if tensor_basic_info:
             view_cmd = create_view_event_from_tensor_basic_info(tensor_basic_info)
             self.cache_store.put_command(

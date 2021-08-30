@@ -71,6 +71,54 @@ class PortAction(argparse.Action):
         setattr(namespace, self.dest, port)
 
 
+class SessionNumAction(argparse.Action):
+    """Session number action class definition."""
+
+    MIN_NUM = 1
+    MAX_NUM = 2
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from argparse.Action.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        sesson_num = values
+        if not self.MIN_NUM <= sesson_num <= self.MAX_NUM:
+            parser.error(f'{option_string} should be chosen from {self.MIN_NUM} to {self.MAX_NUM}')
+
+        setattr(namespace, self.dest, sesson_num)
+
+
+class MemLimitAction(argparse.Action):
+    """Memory limit action class definition."""
+
+    # The unit is MB
+    MIN_VALUE = 6 * 1024
+    # The limit for int32.
+    MAX_VALUE = 2147483647
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from argparse.Action.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        mem_limit = values
+        if not self.MIN_VALUE <= mem_limit <= self.MAX_VALUE:
+            parser.error(f'{option_string} should be chosen from {self.MIN_VALUE} to {self.MAX_VALUE}')
+
+        setattr(namespace, self.dest, mem_limit)
+
+
 class Hook(BaseHook):
     """Hook class definition."""
 
@@ -97,3 +145,19 @@ class Hook(BaseHook):
             help="""
                 Debugger port ranging from %s to %s. Default value is %s.
             """ % (PortAction.MIN_PORT, PortAction.MAX_PORT, settings.DEBUGGER_PORT))
+
+        parser.add_argument(
+            '--offline-debugger-mem-limit',
+            type=int,
+            action=MemLimitAction,
+            help="""
+                Debugger memory limit ranging from %s to %s MB. Default value is %s MB.
+            """ % (MemLimitAction.MIN_VALUE, MemLimitAction.MAX_VALUE, settings.OFFLINE_DEBUGGER_MEM_LIMIT))
+
+        parser.add_argument(
+            '--max-offline-debugger-session-num',
+            type=int,
+            action=SessionNumAction,
+            help="""
+                Max offline debugger session number ranging from %s to %s. Default value is %s.
+            """ % (SessionNumAction.MIN_NUM, SessionNumAction.MAX_NUM, settings.MAX_OFFLINE_DEBUGGER_SESSION_NUM))

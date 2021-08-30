@@ -42,6 +42,24 @@ def check_state(app_client, server_state='waiting'):
     assert flag is True
 
 
+def check_offline_dbg_server_state(app_client, session_id, server_state='waiting'):
+    """Check if the Server is ready."""
+    url = os.path.join(os.path.join('/v1/mindinsight/debugger/sessions/', session_id), 'retrieve')
+    body_data = {'mode': 'all'}
+    max_try_times = 30
+    count = 0
+    flag = False
+    while count < max_try_times:
+        res = get_request_result(app_client, url, body_data, full_url=True)
+        state = res.get('metadata', {}).get('state')
+        if state == server_state:
+            flag = True
+            break
+        count += 1
+        time.sleep(0.1)
+    assert flag is True
+
+
 def get_request_result(app_client, url, body_data, method='post', expect_code=200, full_url=False):
     """Get request result."""
     if not full_url:
@@ -58,20 +76,22 @@ def get_request_result(app_client, url, body_data, method='post', expect_code=20
     return res
 
 
-def send_and_compare_result(app_client, url, body_data, expect_file=None, method='post', full_url=False):
+def send_and_compare_result(app_client, url, body_data, expect_file=None, method='post', full_url=False,
+                            expect_file_dir='restful_results'):
     """Send and compare result."""
     res = get_request_result(app_client, url, body_data, method=method, full_url=full_url)
     delete_random_items(res)
     if expect_file:
-        real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, 'restful_results', expect_file)
+        real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, expect_file_dir, expect_file)
         compare_result_with_file(res, real_path)
 
 
-def send_and_save_result(app_client, url, body_data, file_path, method='post', full_url=False):
+def send_and_save_result(app_client, url, body_data, file_path, method='post', full_url=False,
+                         expect_file_dir='restful_results'):
     """Send and save result."""
     res = get_request_result(app_client, url, body_data, method=method, full_url=full_url)
     delete_random_items(res)
-    real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, 'restful_results', file_path)
+    real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, expect_file_dir, file_path)
     json.dump(res, open(real_path, 'w'))
 
 

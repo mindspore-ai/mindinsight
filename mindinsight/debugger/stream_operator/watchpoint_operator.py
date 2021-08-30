@@ -82,9 +82,11 @@ class WatchpointOperator:
 
         watch_nodes = get_basic_node_info(condition.supported_target_type.value, self._multi_card_graph_stream)
         watchpoint_stream = self._watchpoint_stream
-        watch_point_id = watchpoint_stream.create_watchpoint(self._condition_mgr, watch_condition, watch_nodes,
-                                                             params.get('watch_point_id'),
-                                                             self._device_stream.device_amount)
+        watch_point_id = watchpoint_stream.create_watchpoint(condition_mgr=self._condition_mgr,
+                                                             watch_condition=watch_condition,
+                                                             watch_nodes=watch_nodes,
+                                                             watch_point_id=params.get('watch_point_id'),
+                                                             device_amount=self._device_stream.device_amount)
         log.info("Create watchpoint %d", watch_point_id)
 
         metadata_stream.enable_recheck = watchpoint_stream.is_recheckable()

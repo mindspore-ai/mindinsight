@@ -27,7 +27,7 @@ from mindinsight.datavisual.data_transform.graph.node import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, DebuggerDownloadOverQueue, \
     DebuggerDownloadTensorNotExist
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import MAX_CACHE_SPACE, MAX_SINGLE_TENSOR_CACHE
+from mindinsight.debugger.common.utils import MAX_CACHE_SPACE_BYTES, MAX_SINGLE_TENSOR_CACHE_BYTES
 from mindinsight.debugger.stream_cache.tensor import OpTensor, ConstTensor, TensorStatusEnum, DownloadStatusEnum
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
 from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
@@ -43,7 +43,7 @@ class MemoryMgr:
 
     def __init__(self):
         self._memory_queue = OrderedDict()
-        self._remaining_cache_space = MAX_CACHE_SPACE
+        self._remaining_cache_space = MAX_CACHE_SPACE_BYTES
         self._lock = threading.Lock()
 
     @property
@@ -83,7 +83,7 @@ class MemoryMgr:
     @staticmethod
     def check_space(space):
         """Check if the space over allowed space."""
-        return space >= MAX_SINGLE_TENSOR_CACHE
+        return space >= MAX_SINGLE_TENSOR_CACHE_BYTES
 
 
 class DownloadMgr:
@@ -261,17 +261,54 @@ class TensorHandler(StreamHandlerBase):
     @staticmethod
     def _deal_with_tensor(value):
         """Deal with tensor from tensor proto."""
-        tensor_proto = value.get('tensor_proto')
-        tensor_proto.ClearField('tensor_content')
         step = value.get('step', 0)
-        if tensor_proto.iter and step > 0:
-            log.debug("Received previous tensor.")
-            step -= 1
         tensor_content = b''.join(value.get('tensor_contents'))
-        tensor = OpTensor(tensor_proto, tensor_content, step)
+        tensor = OpTensor(value.get('name'), value.get('tensor_base'), tensor_content=tensor_content, step=step)
         if value.get('oversize'):
             tensor.clean_tensor_value(oversize=True)
         return tensor
+
+    def put_empty_tensor(self, name, step):
+        """Put empty tensor into cache."""
+        cache_tensor = self._tensors.get(name)
+        if cache_tensor is None:
+            cache_tensor = {}
+            self._tensors[name] = cache_tensor
+        old_tensor = cache_tensor.get(step)
+        if old_tensor is None:
+            tensor = OpTensor(name, step=step)
+            cache_tensor[step] = tensor
+            return True
+        return False
+
+    def put_tensor_base(self, name, step, tensor_base):
+        """Put tensor base info."""
+        cache_tensor = self._tensors.get(name)
+        if cache_tensor is None:
+            cache_tensor = {}
+            self._tensors[name] = cache_tensor
+        old_tensor = cache_tensor.get(step)
+        if old_tensor is None or old_tensor.tensor_base != tensor_base:
+            tensor = OpTensor(name, tensor_base, step=step)
+            cache_tensor[step] = tensor
+            return True
+        return False
+
+    def put_tensor_stats(self, name, step, tensor_base, tensor_stats):
+        """Put tensor stats info."""
+        cache_tensor = self._tensors.get(name)
+        if cache_tensor is None:
+            cache_tensor = {}
+            self._tensors[name] = cache_tensor
+        old_tensor = cache_tensor.get(step)
+        if old_tensor is None:
+            tensor = OpTensor(name, tensor_base, tensor_stats=tensor_stats, step=step)
+            cache_tensor[step] = tensor
+            return True
+        if old_tensor.get_tensor_statistics() != TensorUtils.get_overall_statistic_dict(tensor_stats):
+            old_tensor.stats = tensor_stats
+            return True
+        return False
 
     def _put_tensors(self, tensor):
         """
@@ -345,7 +382,13 @@ class TensorHandler(StreamHandlerBase):
                 tensor_proto.ClearField('tensor_content')
                 tensor_proto.node_name = const_val.key
                 tensor_proto.slot = '0'
-                const_tensor = OpTensor(tensor_proto, tensor_value)
+                tensor_base = {
+                    'dtype': tensor_proto.data_type,
+                    'shape': tensor_proto.dims,
+                    'data_size': len(tensor_value)
+                }
+                name = ':'.join([tensor_proto.node_name, tensor_proto.slot])
+                const_tensor = OpTensor(name, tensor_base, tensor_content=tensor_value)
             else:
                 const_tensor = ConstTensor(const_val)
             self._const_vals[const_tensor.name] = const_tensor
@@ -389,7 +432,9 @@ class TensorHandler(StreamHandlerBase):
             log.error("No tensor named %s at the step %s", name, step)
             raise DebuggerParamValueError("No tensor named {}".format(name))
         tensor_info = tensor.get_full_info(shape)
-        self._update_has_prev_step_field(tensor_info, name, node_type, self.cur_step)
+        missing_tensors_info = self.get_missing_tensor_info(name, node_type, step, self._check_tensor_value)
+        if not missing_tensors_info and node_type == NodeTypeEnum.PARAMETER.value and step > 0:
+            tensor_info['has_prev_step'] = True
         res = {
             'tensor_value': tensor_info,
             'view_cmd': False
@@ -430,13 +475,13 @@ class TensorHandler(StreamHandlerBase):
 
         return None
 
-    def update_tensor_history(self, tensor_history, step=None):
+    def update_tensor_history(self, tensor_history, step):
         """
         Add tensor basic info in tensor_history.
 
         Args:
             tensor_history (dict): Tensor history, including a list of tensor name and type.
-            step (int): The step of tensor info. Default: None.
+            step (int): The step of tensor info.
 
         Returns:
             list[dict], the list of tensor basic info cache.
@@ -447,7 +492,10 @@ class TensorHandler(StreamHandlerBase):
             node_type = tensor_info.get('node_type')
             basic_info = self._get_basic_info(tensor_name, node_type, step)
             # add `has_prev_step` field to tensor basic info.
-            missing_tensors_info = self._update_has_prev_step_field(basic_info, tensor_name, node_type, step)
+            missing_tensors_info = self.get_missing_tensor_info(tensor_name, node_type, step,
+                                                                self._check_tensor_base)
+            if not missing_tensors_info and node_type == NodeTypeEnum.PARAMETER.value and step > 0:
+                basic_info['has_prev_step'] = True
             if basic_info:
                 tensor_info.update(basic_info)
             if missing_tensors_info:
@@ -455,70 +503,44 @@ class TensorHandler(StreamHandlerBase):
 
         return missed_tensors
 
-    def _update_has_prev_step_field(self, tensor_info, tensor_name, node_type, step=None, check_cache=False,
-                                    check_stats=False):
+    def get_missing_tensor_info(self, tensor_name, node_type, step=None, check_func=None):
         """Update has_prev_step field in tensor info."""
         if step is None:
             step = self._cur_step
-        missing_tensors_info = self.get_missing_tensor_info(tensor_name, node_type, step, check_cache=check_cache,
-                                                            check_stats=check_stats)
-        if not missing_tensors_info and node_type == NodeTypeEnum.PARAMETER.value and step > 0:
-            tensor_info['has_prev_step'] = True
-        return missing_tensors_info
-
-    def get_missing_tensor_info(self, tensor_name, node_type, step=None, cur=True, prev=True, check_cache=False,
-                                check_stats=False):
-        """
-        Get missing tensor infos.
-
-        Args:
-            tensor_name (str): The full name of Tensor.
-            node_type (str): The type of the relative node.
-            step (int): The step of tensor info. Default: None.
-            check_cache (bool): Whether to check the tensor value. Default: False.
-            check_stats (bool): Whether to check the tensor statistic. Default: False.
-            cur (bool): Whether to get the current tensor info. Default: True.
-            prev (bool): Whether to get the previous tensor info. Default: True.
-
-        Returns:
-            list, list of missing tensor basic information.
-        """
-        if step is None:
-            step = self._cur_step
+        if check_func is None:
+            check_func = self._check_tensor_value
         missing_tensors_info = []
-        # check the current step value is missing
-        if self._is_tensor_value_missing(tensor_name, step, check_cache, check_stats) and cur:
+        # check the current step tensor base is missing
+        if check_func(tensor_name, step):
             missing_tensors_info.append(TensorBasicInfo(full_name=tensor_name, node_type=node_type, iter=''))
-            log.debug("Add current step view cmd for %s", tensor_name)
+            log.debug("Add current step tensor base view cmd for %s", tensor_name)
         # check the previous step value is missing
-        if node_type == NodeTypeEnum.PARAMETER.value and \
-                self._is_tensor_value_missing(tensor_name, step - 1, check_cache, check_stats) and prev:
+        if node_type == NodeTypeEnum.PARAMETER.value and step > 0 and \
+                check_func(tensor_name, step - 1):
             missing_tensors_info.append(TensorBasicInfo(full_name=tensor_name, node_type=node_type, iter='prev'))
-            log.debug("Add previous view cmd for %s", tensor_name)
+            log.debug("Add previous step tensor base view cmd for %s", tensor_name)
         return missing_tensors_info
 
-    def _is_tensor_value_missing(self, tensor_name, step, check_cache=False, check_stats=False):
-        """
-        Get the status of tensor value of previous step.
-
-        Args:
-            tensor_name (str): Tensor name.
-            step (int): The step of the tensor.
-            check_cache (bool): Whether to check the tensor value. Default: False.
-
-        Returns:
-            Union[None, bool], the status of tensor value. If False, there is valid
-                tensor value. If True, the tensor value should be queried from client.
-                If None, ignore.
-        """
-        if step < 0:
-            return None
+    def _check_tensor_base(self, tensor_name, step):
+        """Check if tensor base info is in cache."""
         tensor = self._get_tensor(tensor_name, step=step)
-        res = bool(not tensor or tensor.status == TensorStatusEnum.EMPTY.value)
-        if check_cache:
-            res = bool(res or tensor.status == TensorStatusEnum.UNCACHED.value)
-        if check_stats:
-            res = bool(res or tensor.stats is None)
+        if tensor is not None and ((tensor.tensor_base and tensor.tensor_base.get(
+                'data_size') > 0) or tensor.status == TensorStatusEnum.OVERSIZE.value):
+            return False
+        return True
+
+    def _check_tensor_stats(self, tensor_name, step):
+        """Check if tensor stats is in cache."""
+        tensor = self._get_tensor(tensor_name, step=step)
+        if tensor is not None and (tensor.stats or tensor.status == TensorStatusEnum.OVERSIZE.value):
+            return False
+        return True
+
+    def _check_tensor_value(self, tensor_name, step):
+        """Check if tensor value is in cache."""
+        tensor = self._get_tensor(tensor_name, step=step)
+        res = bool(not tensor or tensor.status == TensorStatusEnum.OVERSIZE.value)
+        res = bool(res or tensor.status == TensorStatusEnum.UNCACHED.value)
         return res
 
     def get_valid_tensor_by_name(self, tensor_name, step, prev=False):
@@ -675,8 +697,10 @@ class TensorHandler(StreamHandlerBase):
         if tensor and (not tensor.empty or tensor.stats):
             res['statistics'] = tensor.get_tensor_statistics()
             res['shape'] = tensor.shape
-        missing_tensors = self._update_has_prev_step_field(res, tensor_name, node_type, step)
-        return res, missing_tensors
+        missing_tensors_info = self.get_missing_tensor_info(tensor_name, node_type, step, self._check_tensor_stats)
+        if not missing_tensors_info and node_type == NodeTypeEnum.PARAMETER.value and step > 0:
+            res['has_prev_step'] = True
+        return res, missing_tensors_info
 
     def load(self, tensor_name, graph_name, prev, node_type, tensor=None):
         """Load the tensor."""
@@ -688,7 +712,7 @@ class TensorHandler(StreamHandlerBase):
         if not tensor or tensor.status == TensorStatusEnum.EMPTY.value:
             log.error("No tensor named %s at the step %s", tensor_name, step)
             raise DebuggerParamValueError("No tensor named {}".format(tensor_name))
-        if tensor.download_size > MAX_CACHE_SPACE:
+        if tensor.download_size > MAX_CACHE_SPACE_BYTES:
             log.error("Tensor named %s at the step %s is too large to download.", tensor_name, step)
             raise DebuggerParamValueError(
                 "Tensor named {} at the step {} is too large to download.".format(tensor_name, step))

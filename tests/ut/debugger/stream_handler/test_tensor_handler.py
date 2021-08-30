@@ -62,7 +62,7 @@ class TestTensorHandler:
         def release_func(over_size=False):
             assert over_size is False
         memory_mgr.request(1, 1073741823, release_func)
-        assert memory_mgr.remaining_cache_space == 1073741825
+        assert memory_mgr.remaining_cache_space == 3936354305
 
     def test_oversize_tensor(self):
         """Test cache oversize tensor."""
@@ -71,7 +71,7 @@ class TestTensorHandler:
         def release_func(over_size=False):
             assert over_size is True
         memory_mgr.request(1, 1073741825, release_func)
-        assert memory_mgr.remaining_cache_space == 2147483648
+        assert memory_mgr.remaining_cache_space == 5010096128
 
     def test_release_memory(self):
         """Test release memory."""
@@ -81,5 +81,9 @@ class TestTensorHandler:
             assert over_size is False
         memory_mgr.request(1, 1073741823, release_func)
         memory_mgr.request(2, 1073741823, release_func)
-        memory_mgr.request(3, 2, release_func)
-        assert memory_mgr.remaining_cache_space == 1073741823
+        memory_mgr.request(3, 1073741823, release_func)
+        memory_mgr.request(4, 1073741823, release_func)
+        memory_mgr.request(5, 1073741823, release_func)
+        assert memory_mgr.remaining_cache_space == 715128836
+        memory_mgr.request(6, 1073741822, release_func)
+        assert memory_mgr.remaining_cache_space == 715128837

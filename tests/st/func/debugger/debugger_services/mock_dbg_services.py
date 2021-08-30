@@ -90,11 +90,27 @@ class DbgServices:
 
         return watch_hits
 
+    def read_tensor_base(self, info):
+        """Read tensor base info."""
+        info_list_inst = []
+        for _ in info:
+            tensor_data = TensorBaseData(4, [2, 2, 3], 48)
+            info_list_inst.append(tensor_data)
+        return info_list_inst
+
+    def read_tensor_stats(self, info):
+        """Read tensor stats info."""
+        info_list_inst = []
+        for _ in info:
+            tensor_data = TensorStatsData(4, [2, 2, 3], 48)
+            info_list_inst.append(tensor_data)
+        return info_list_inst
+
     def read_tensors(self, info):
         """Read tensor values."""
         value = np.asarray(list(range(12)), dtype=np.int32).tobytes()
         info_list_inst = []
-        for _ in range(info):
+        for _ in info:
             tensor_data = TensorData(value, len(value), 4, [2, 2, 3])
             info_list_inst.append(tensor_data)
         return info_list_inst
@@ -102,12 +118,13 @@ class DbgServices:
 
 class TensorInfo:
     """Tensor Information."""
-    def __init__(self, node_name, slot, iteration, device_id, is_parameter):
+    def __init__(self, node_name, slot, iteration, rank_id, is_output, root_graph_id):
         self.node_name = node_name
         self.slot = slot
         self.iteration = iteration
-        self.device_id = device_id
-        self.is_parameter = is_parameter
+        self.rank_id = rank_id
+        self.is_output = is_output
+        self.root_graph_id = root_graph_id
 
 
 class TensorData:
@@ -117,6 +134,33 @@ class TensorData:
         self.data_size = data_size
         self.dtype = dtype
         self.shape = shape
+
+
+class TensorStatsData:
+    """Tensor data structure."""
+    def __init__(self, dtype, shape, data_size):
+        self.dtype = dtype
+        self.shape = shape
+        self.data_size = data_size
+        self.is_bool = False
+        self.max_value = 11.0
+        self.min_value = 0.0
+        self.avg_value = 5.5
+        self.count = 12
+        self.neg_zero_count = 0.0
+        self.pos_zero_count = 11.0
+        self.zero_count = 1.0
+        self.nan_count = 0
+        self.neg_inf_count = 0
+        self.pos_inf_count = 0
+
+
+class TensorBaseData:
+    """Tensor data structure."""
+    def __init__(self, dtype, shape, data_size):
+        self.dtype = dtype
+        self.shape = shape
+        self.data_size = data_size
 
 
 class Parameter:
