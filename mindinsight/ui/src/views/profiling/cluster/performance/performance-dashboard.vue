@@ -148,13 +148,47 @@ export default {
         };
         RequestService.getClusterInfo(params)
             .then((res) => {
-              if (res?.data?.step_trace.length > 0) {
+              if (res?.data?.info?.length > 0) {
                 const chartData = [];
-                res.data.step_trace.forEach((item) => {
-                  const chartItem = [item.rank_id].concat(item.step_trace_info);
+                const parallelMode = res.data['parallel-mode'];
+                const parallelModes = {
+                  'data-parallel': {
+                    model: 'step_trace_info',
+                    dimensions: [
+                      this.$t('profilingCluster.rankID'),
+                      this.$t('profiling.iterationGapTime'),
+                      this.$t('profiling.fpBpTime'),
+                      this.$t('profiling.tailTime'),
+                    ],
+                  },
+                  'model-parallel': {
+                    model: 'step_bottleneck_info',
+                    dimensions: [
+                      this.$t('profilingCluster.rankID'),
+                      this.$t('profiling.iterationGapTime'),
+                      this.$t('profilingCluster.communicationAloneTime'),
+                      this.$t('profilingCluster.computationTime'),
+                    ],
+                  },
+                  'pipeline-parallel': {
+                    model: 'step_bottleneck_info',
+                    dimensions: [
+                      this.$t('profilingCluster.rankID'),
+                      this.$t('profiling.iterationGapTime'),
+                      this.$t('profilingCluster.receiveAloneTime'),
+                      this.$t('profilingCluster.stageTime'),
+                      this.$t('profilingCluster.communicationAloneTime'),
+                      this.$t('profilingCluster.computationTime'),
+                      this.$t('profilingCluster.collectiveCommunicationAlone'),
+                    ],
+                  },
+                };
+                res.data.info.forEach((item) => {
+                  const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
                   chartData.push(chartItem);
                 });
                 this.performanceChart.data = chartData;
+                this.performanceChart.dimensions = parallelModes[parallelMode].dimensions;
                 this.performanceState = this.normalState;
                 resolve(true);
               } else {
@@ -217,6 +251,7 @@ export default {
           axisPointer: {
             type: 'shadow',
           },
+          confine: true,
         },
         legend: {
           right: 70,

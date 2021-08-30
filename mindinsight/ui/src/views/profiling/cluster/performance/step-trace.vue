@@ -27,6 +27,14 @@ limitations under the License.
                   @clear="viewStepFilter"
                   v-model.number="step.showStep"></el-input>
         <el-button @click="viewStepFilter">{{$t("public.sure")}}</el-button>
+        <label>{{stageTip}}</label>
+        <el-select v-model="stageId"
+                   @change="queryStepTraceInfo(true,true)">
+          <el-option v-for="item in stageArr"
+                     :key="item"
+                     :label="item"
+                     :value="item"></el-option>
+        </el-select>
       </div>
       <div class="cl-cluster-chart"
            ref="clusterChart">
@@ -42,31 +50,20 @@ limitations under the License.
                            prop="rank_id"
                            :label="$t('profilingCluster.rankID')">
           </el-table-column>
-          <el-table-column prop="iteration_interval"
-                           sortable="custom">
-            <template slot="header">
-              <span class="thSpan">|</span>
-              <span :title="`${$t('profiling.iterationGapTime')}(ms)`">{{$t("profiling.iterationGapTime")}}(ms)</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="fp_and_bp"
-                           sortable="custom">
-            <template slot="header">
-              <span class="thSpan">|</span>
-              <span :title="`${$t('profiling.fpBpTime')}(ms)`">{{$t("profiling.fpBpTime")}}(ms)</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="tail"
-                           sortable="custom">
-            <template slot="header">
-              <span class="thSpan">|</span>
-              <span :title="`${$t('profiling.tailTime')}(ms)`">{{$t("profiling.tailTime")}}(ms)</span>
-            </template>
-          </el-table-column>
+          <template v-for="item in cols">
+            <el-table-column :prop="item"
+                             :key="item"
+                             sortable="custom">
+              <template slot="header">
+                <div :title="`${getHeaderField(item)}(ms)`"
+                     class="col-name">{{getHeaderField(item)}}(ms)</div>
+              </template>
+            </el-table-column>
+          </template>
           <el-table-column fixed="right"
                            width="180">
             <template slot="header">
-              <span class="thSpan">|</span>{{$t("summaryManage.operation")}}
+              {{$t("summaryManage.operation")}}
             </template>
             <template slot-scope="scope">
               <el-button type="text"
@@ -115,12 +112,12 @@ export default {
       chartData: [], // chart data
       chartOption: {
         // chart option
-        color: ['#6B92FA', '#6CBFFF', '#F6DF66'], // bar color
         tooltip: {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow',
           },
+          confine: true,
         },
         legend: {
           right: 70,
@@ -155,11 +152,7 @@ export default {
             },
           },
         },
-        series: [
-          {type: 'bar', barWidth: 8},
-          {type: 'bar', barWidth: 8},
-          {type: 'bar', barWidth: 8},
-        ],
+        series: [],
         dataZoom: [],
       },
       chartResizeTimer: null, // delay after the window size is changed
@@ -184,11 +177,10 @@ export default {
         showStep: '',
       },
       stepTip: this.$t('profiling.stepInputTip'),
-      stepInfoCol: {
-        iteration_interval: this.$t('profiling.iterationGapTime'),
-        fp_and_bp: this.$t('profiling.fpBpTime'),
-        tail: this.$t('profiling.tailTime'),
-      },
+      cols: [],
+      stageId: '',
+      stageArr: [],
+      stageTip: this.$t('profiling.stageTip'),
     };
   },
   mounted() {
@@ -201,7 +193,6 @@ export default {
     document.title = (id ? id + '-' : '') + `${this.$t('profilingCluster.clusterView')}-MindInsight`;
     // adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
-    this.chartOption.legend.data = Object.values(this.stepInfoCol);
     this.queryStepTraceInfo(true, true);
   },
   destroyed() {
@@ -214,6 +205,19 @@ export default {
     }
   },
   methods: {
+    getHeaderField(item) {
+      const headerFields = {
+        iteration_interval: this.$t('profiling.iterationGapTime'),
+        fp_and_bp: this.$t('profiling.fpBpTime'),
+        tail: this.$t('profiling.tailTime'),
+        communication_alone: this.$t('profilingCluster.communicationAloneTime'),
+        computation: this.$t('profilingCluster.computationTime'),
+        receive_alone: this.$t('profilingCluster.receiveAloneTime'),
+        stage: this.$t('profilingCluster.stageTime'),
+        collective_communication_alone: this.$t('profilingCluster.collectiveCommunicationAlone'),
+      };
+      return headerFields[item];
+    },
     /**
      *  initialize
      *  @param {Boolean} isInit whether get all data
@@ -233,24 +237,74 @@ export default {
         params.body.group_condition = this.group_condition;
       }
       if (this.step.filterStep !== '') {
-        params.body.filter_condition = {step_id: this.step.filterStep};
+        params.body.filter_condition.step_id = this.step.filterStep;
+      }
+      if (this.stageId !== '' && this.stageId !== this.$t('debugger.all')) {
+        params.body.filter_condition.stage_id = this.stageId;
       }
       RequestService.getClusterInfo(params)
           .then((res) => {
-            if (res && res.data && res.data.step_trace && res.data.step_trace.length) {
+            if (res && res.data && res.data.info && res.data.info.length) {
               this.initOver = true;
               this.step.maxStep = res.data.total_step_num;
               this.stepTip = this.$t('profiling.stepInputTip', {max: this.step.maxStep});
               this.totalCount = res.data.size;
+              this.stageArr = new Array(res.data.stage_num).fill().map((val, key) => key + 1);
+              if (this.stageArr.length > 1) this.stageArr.unshift(this.$t('debugger.all'));
+              if (!this.stageId) this.stageId = this.stageArr[0];
               const tempChartData = [];
+              const parallelMode = res.data['parallel-mode'];
+              const parallelModes = {
+                'data-parallel': {
+                  model: 'step_trace_info',
+                  dimensions: [
+                    this.$t('profilingCluster.rankID'),
+                    this.$t('profiling.iterationGapTime'),
+                    this.$t('profiling.fpBpTime'),
+                    this.$t('profiling.tailTime'),
+                  ],
+                  cols: ['iteration_interval', 'fp_and_bp', 'tail'],
+                },
+                'model-parallel': {
+                  model: 'step_bottleneck_info',
+                  dimensions: [
+                    this.$t('profilingCluster.rankID'),
+                    this.$t('profiling.iterationGapTime'),
+                    this.$t('profilingCluster.communicationAloneTime'),
+                    this.$t('profilingCluster.computationTime'),
+                  ],
+                  cols: ['iteration_interval', 'communication_alone', 'computation'],
+                },
+                'pipeline-parallel': {
+                  model: 'step_bottleneck_info',
+                  dimensions: [
+                    this.$t('profilingCluster.rankID'),
+                    this.$t('profiling.iterationGapTime'),
+                    this.$t('profilingCluster.receiveAloneTime'),
+                    this.$t('profilingCluster.stageTime'),
+                    this.$t('profilingCluster.communicationAloneTime'),
+                    this.$t('profilingCluster.computationTime'),
+                    this.$t('profilingCluster.collectiveCommunicationAlone'),
+                  ],
+                  cols: [
+                    'iteration_interval',
+                    'receive_alone',
+                    'stage',
+                    'communication_alone',
+                    'computation',
+                    'collective_communication_alone',
+                  ],
+                },
+              };
               if (isInit) {
-                res.data.step_trace.forEach((item) => {
-                  const chartItem = [item.rank_id].concat(item.step_trace_info);
+                res.data.info.forEach((item) => {
+                  const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
                   tempChartData.push(chartItem);
                 });
                 this.chartData = tempChartData;
-                this.initChart();
+                this.initChart(parallelModes[parallelMode].dimensions);
               }
+              this.cols = parallelModes[parallelMode].cols;
               if (isSort) {
                 this.$nextTick(() => {
                   const tableDom = this.$refs.table;
@@ -259,41 +313,35 @@ export default {
                   }
                 });
               } else {
-                const tempTableData = res.data.step_trace.slice(0, this.group_condition.limit);
-                this.initTable(tempTableData);
+                const tempTableData = res.data.info.slice(0, this.group_condition.limit);
+                this.tableData = [];
+                tempTableData.forEach((item) => {
+                  const tableItem = {};
+                  tableItem.rank_id = item.rank_id;
+                  tableItem.profiler_dir = item.profiler_dir;
+                  const stepTraceInfo = item[parallelModes[parallelMode].model];
+                  stepTraceInfo.forEach((val, key) => {
+                    tableItem[this.cols[key]] = stepTraceInfo[key];
+                  });
+                  this.tableData.push(tableItem);
+                });
               }
             }
           })
-          .catch(() => {
+          .catch((error) => {
             this.initOver = true;
             this.chartData = [];
             this.tableData = [];
           });
     },
     /**
-     *  init table data
-     *  @param {Array} resData response data
-     */
-    initTable(resData) {
-      this.tableData = [];
-      resData.forEach((item) => {
-        const tableItem = {};
-        tableItem.rank_id = item.rank_id;
-        tableItem.profiler_dir = item.profiler_dir;
-        const stepTraceInfo = item.step_trace_info;
-        tableItem.iteration_interval = stepTraceInfo[0];
-        tableItem.fp_and_bp = stepTraceInfo[1];
-        tableItem.tail = stepTraceInfo[2];
-        this.tableData.push(tableItem);
-      });
-    },
-    /**
      *  init chart
+     * @param {Array} dimensions
      */
-    initChart() {
+    initChart(dimensions) {
       this.chartOption.dataset = {
-        dimensions: ['rankID'].concat(Object.values(this.stepInfoCol)),
-        source: this.chartData,
+        dimensions,
+        source: [dimensions].concat(this.chartData),
       };
       const endValue = this.chartData.length > 25 ? 25 : this.chartData.length; // show bar numbers as default
       this.chartOption.dataZoom = [
@@ -307,6 +355,10 @@ export default {
           type: 'inside',
         },
       ];
+      this.chartOption.series = new Array(dimensions.length - 1).fill({
+        type: 'bar',
+        barWidth: 8,
+      });
       this.$nextTick(() => {
         if (!this.chartObj) {
           this.chartObj = echarts.init(this.$refs.clusterChart, echartsThemeName);
@@ -435,6 +487,10 @@ export default {
   color: #d4d9e6;
   margin-right: 8px;
 }
+.cl-cluster .col-name {
+  max-width: calc(100% - 25px);
+  vertical-align: middle;
+}
 .cl-cluster .cl-cluster-chart {
   height: 280px;
   margin-top: 5px;
@@ -462,5 +518,6 @@ export default {
   background-color: var(--bg-color);
   color: var(--theme-color);
   padding: 7px 15px;
+  margin-right: 20px;
 }
 </style>

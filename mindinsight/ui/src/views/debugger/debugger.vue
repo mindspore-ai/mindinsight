@@ -283,8 +283,9 @@ limitations under the License.
                        :disabled="metadata.state === state.running || metadata.state === state.sending"
                        @change="searchWatchpointHits(true,true);">
               <el-option v-for="item in hitWatchPointArr"
-                         :key="item"
-                         :value="item">
+                         :key="item.value"
+                         :label="item.label"
+                         :value="item.value">
               </el-option>
             </el-select>
           </div>
@@ -1124,12 +1125,20 @@ export default {
       deep: true,
     },
     'watchPointArr': {
-      handler(newValue, oldValue) {
-        const hitArr = this.watchPointArr.map((val) => val.id);
+      handler(newValue) {
+        const hitArr = newValue.map((val) => {
+          return {
+            label: this.getWatchPointContent(val),
+            value: val.id,
+          };
+        });
         if (hitArr.length > 1) {
-          hitArr.unshift(this.$t('debugger.all'));
+          hitArr.unshift({
+            label: this.$t('debugger.all'),
+            value: this.$t('debugger.all'),
+          });
         }
-        this.hitWpCondition.watchPoint = hitArr.length > 0 ? hitArr[0] : '';
+        this.hitWpCondition.watchPoint = hitArr.length > 0 ? hitArr[0].value : '';
         this.hitWatchPointArr = hitArr;
       },
     },
