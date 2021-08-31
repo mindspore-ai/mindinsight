@@ -905,7 +905,7 @@ export default {
   line-height: 24px;
 }
 .comm-tooltip-container .comm-tooltip-cell span{
-  word-break: normal; 
+  word-break: normal;
 }
 .comm-tooltip-container .comm-tooltip-cell span:first-of-type{
   font-weight: bold;
@@ -956,7 +956,7 @@ export default {
   flex-shrink: 0;
 }
 .comm-content .content-table {
-  height: calc(100% - 84px);
+  height: calc(100% - 383px);
   margin-bottom: 10px;
 }
 .comm-content .content-link-table {
