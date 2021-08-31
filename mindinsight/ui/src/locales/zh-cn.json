@@ -97,7 +97,7 @@
     "sessionLists": "目前存在的session列表",
     "deleteSessionConfirm": "此操作将删除当前session, 是否继续?",
     "deleteSessionSuccess": "删除session成功!",
-    "dumpPath":"Dump路径"
+    "dumpPath": "Dump路径"
   },
   "modelTraceback": {
     "summaryPath": "训练日志路径",
@@ -266,6 +266,7 @@
     "queryLoading": "正在加载图，请稍候。",
     "fullScreen": "全屏",
     "tooManyNodes": "节点太多，打开失败",
+    "openFail": "节点展开失败，可能原因如下：1.您的机器性能不足以绘制该节点的子节点；2.该节点中直接子节点数量超过1500；3.直接子节点连线关系过于复杂。",
     "inputNodeName": "请输入节点名称",
     "guide": "用户指南",
     "guideTitle1": "1/3 主要功能介绍",
@@ -300,7 +301,7 @@
     "flopsS": "每秒浮点运算次数",
     "flopsUtilization": "FLOPS利用率：",
     "flopsUtilizationTitle": "FLOPS/峰值FLOPS",
-    "scopeLevelFlops":"Scope层级FLOPs(M)"
+    "scopeLevelFlops": "Scope层级FLOPs(M)"
   },
   "profiling": {
     "rankID": "逻辑卡号",
@@ -646,7 +647,8 @@
     "tolerance": "容忍度",
     "curValue": "当前值",
     "compareToPre": "上一步对比",
-    "stepTip": "(0表示训练初始状态)",
+    "stepTip": "0表示训练初始状态",
+    "stepTipOffline": "（起始Step从1开始编号，注意Dump配置文件中的iteration字段的编号从0开始，两者概念不同。）",
     "toSummeryList": "返回训练列表",
     "clientIp": "训练端地址",
     "deviceId": "卡号",
@@ -878,8 +880,10 @@
       "cannotCheck": "无法检查。"
     },
     "stateTips": {
+      "waiting": "就绪",
       "running": "运行中",
-      "sending": "等待执行"
+      "sending": "等待命令执行",
+      "pending": "等待后台连接"
     },
     "stateMsg": {
       "running": "训练运行中",
@@ -905,7 +909,14 @@
     "downloadTip": "文件正在加载，大小约为{fileSize}，请稍候",
     "noOfflineGraphData": "计算图加载失败，这可能是由于summary目录下离线dump数据中的graphs文件缺失或损坏，请尝试重新dump数据。",
     "largeDataLoading": "张量数据较大，正在加载中...",
-    "overSize": "请求的张量过大，数值总大小超过1GiB,无法显示。"
+    "overSize": "请求的张量过大，数值总大小超过1GiB,无法显示。",
+    "state": "状态",
+    "stateInfo": {
+      "waiting": "就绪：等待用户操作。",
+      "running": "运行中：正在执行训练或检查监测点。若模型较大或检测数据较多，会需要更多时间，请耐心等候。",
+      "sending": "等待命令执行：前一个命令尚未完成，新命令正在等待前一条命令执行完毕。",
+      "pending": "等待后台连接：等待新训练连接或正在初始化调试环境。"
+    }
   },
   "explain": {
     "explain": "模型解释",

@@ -442,42 +442,68 @@ limitations under the License.
           <span class="content">
             {{ metadata.step !== undefined ? metadata.step : '--'}}
           </span>
+          <i class="el-icon-edit"
+             :class="{disabled:metadata.state === state.running || metadata.state === state.sending}"
+             v-if="trainId && !isShowInp"
+             :title="$t('debugger.inpStepTip',{total_step_num:metadata.total_step_num})"
+             @click="editStep"></i>
+          <el-tooltip class="item"
+                      effect="light"
+                      :content="$t('debugger.inputTip',{total_step_num:metadata.total_step_num})"
+                      placement="top-start"
+                      v-if="trainId && isShowInp">
+            <el-input v-model="newStep"
+                      type="text"
+                      @input="newStepChange"></el-input>
+          </el-tooltip>
+          <i class="el-icon-check"
+             v-if="trainId && isShowInp"
+             @click="saveStepValue"></i>
+          <i class="el-icon-close"
+             v-if="trainId && isShowInp"
+             @click="isShowInp=false"></i>
+          <el-tooltip class="tooltip"
+                      effect="light"
+                      :content="$t('debugger.stepTip') + (trainId ? $t('debugger.stepTipOffline') : '')"
+                      placement="top">
+            <i class="el-icon-info"></i>
+          </el-tooltip>
         </span>
-        {{ $t('debugger.stepTip')}}
-        <el-tooltip class="tooltip"
-                    effect="light"
-                    :content="$t('debugger.stateTips.running')"
-                    placement="top"
-                    v-show="metadata.state === state.running">
-          <i class="el-icon-loading"></i>
-        </el-tooltip>
-        <el-tooltip class="tooltip"
-                    effect="light"
-                    :content="$t('debugger.stateTips.sending')"
-                    placement="top"
-                    v-show="metadata.state === state.sending">
-          <i class="el-icon-time"></i>
-        </el-tooltip>
-        <i class="el-icon-edit"
-           :class="{disabled:metadata.state === state.running || metadata.state === state.sending}"
-           v-if="trainId && !isShowInp"
-           :title="$t('debugger.inpStepTip',{total_step_num:metadata.total_step_num})"
-           @click="editStep"></i>
-        <el-tooltip class="item"
-                    effect="light"
-                    :content="$t('debugger.inputTip',{total_step_num:metadata.total_step_num})"
-                    placement="top-start"
-                    v-if="trainId && isShowInp">
-          <el-input v-model="newStep"
-                    type="text"
-                    @input="newStepChange"></el-input>
-        </el-tooltip>
-        <i class="el-icon-check"
-           v-if="trainId && isShowInp"
-           @click="saveStepValue"></i>
-        <i class="el-icon-close"
-           v-if="trainId && isShowInp"
-           @click="isShowInp=false"></i>
+
+        <span class="item">{{$t('debugger.state') + $t('symbols.colon')}}
+          <span class="content">
+            <i class="el-icon-loading"
+               v-show="metadata.state === state.running"></i>
+            <i class="el-icon-time"
+               v-show="metadata.state === state.sending"></i>
+            {{ metadata.state ? $t('debugger.stateTips.' + metadata.state) : ''}}
+          </span>
+          <el-tooltip class="tooltip"
+                      effect="light"
+                      placement="right">
+            <div slot="content">
+              <div class="tooltip-item">
+                <div class="item">
+                  <span>1.</span>
+                  <span>{{$t('debugger.stateInfo.waiting')}}</span>
+                </div>
+                <div class="item">
+                  <span>2.</span>
+                  <span>{{$t('debugger.stateInfo.running')}}</span>
+                </div>
+                <div class="item">
+                  <span>3.</span>
+                  <span>{{$t('debugger.stateInfo.sending')}}</span>
+                </div>
+                <div class="item">
+                  <span>4.</span>
+                  <span>{{$t('debugger.stateInfo.pending')}}</span>
+                </div>
+              </div>
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
+        </span>
       </div>
       <div class="svg-wrap"
            :class="{collapse: collapseTable}">
@@ -2105,6 +2131,9 @@ export default {
 .deb-wrap .left-wrap .left .content .stack-search .el-input {
   width: calc(100% - 80px);
 }
+.deb-wrap .left-wrap .left .content .node-type .el-input__inner{
+  height: 32px!important;
+}
 .deb-wrap .left-wrap .left .content .search-conditions .select-wrap {
   padding: 10px 15px;
   font-size: 14px;
@@ -2415,9 +2444,6 @@ export default {
 .deb-wrap .right .header .host {
   margin-left: 25px;
 }
-.deb-wrap .right .header span.item .content {
-  color: var(--theme-color);
-}
 .deb-wrap .right .header .item + .item {
   margin-left: 15px;
 }
@@ -2447,6 +2473,13 @@ export default {
 .deb-wrap .right .header .tooltip {
   margin-left: 5px;
   cursor: pointer;
+}
+.tooltip-item .item {
+  display: flex;
+}
+.tooltip-item .item :first-child{
+  width: 20px;
+  flex-shrink: 0;
 }
 .deb-wrap .right .svg-wrap {
   height: 50%;
