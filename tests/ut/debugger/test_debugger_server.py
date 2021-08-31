@@ -28,12 +28,12 @@ import pytest
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerCompareTensorError, DebuggerCreateWatchPointError, DebuggerDeleteWatchPointError
-from mindinsight.debugger.common.utils import Streams
+from mindinsight.debugger.common.utils import Streams, ServerStatus
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_services.debugger_server_factory import DebuggerServerContext
 from mindinsight.debugger.debugger_session import DebuggerSession as DebuggerServer
 from mindinsight.debugger.stream_handler import GraphHandler, WatchpointHandler, MetadataHandler, \
-    TensorHandler, MultiCardGraphHandler
+    TensorHandler, MultiCardGraphHandler, MultiCardWatchpointHitHandler, WatchpointHitHandler
 from mindinsight.debugger.stream_operator import watchpoint_operator
 from tests.ut.debugger.configurations import compare_debugger_result_with_file, mock_tensor_history
 
@@ -241,3 +241,36 @@ class TestDebuggerServer:
         args[0].return_value = None
         res = self._server.delete_watchpoint(1)
         assert res == {'metadata': {'enable_recheck': True, 'state': 'waiting'}}
+
+    @mock.patch.object(MetadataHandler, 'state', ServerStatus.WAITING.value)
+    @mock.patch.object(WatchpointHitHandler, 'group_by')
+    @mock.patch.object(MultiCardWatchpointHitHandler, 'get_hit_handler_by_rank_id')
+    @mock.patch.object(MultiCardWatchpointHitHandler, 'check_rank_id')
+    @mock.patch.object(MultiCardGraphHandler, 'validate_rank_id')
+    def test_search_watchpoint_hits(self, *args):
+        """Test retrieve single watchpoint."""
+        args[0].return_value = True
+        args[1].return_value = True
+        args[2].return_value = WatchpointHitHandler()
+        args[3].return_value = {'watch_point_hits': 'mocked_watch_point_hits'}
+        res = self._server.search_watchpoint_hits({'rank_id': 0})
+        assert res == {'watch_point_hits': 'mocked_watch_point_hits', 'outdated': False}
+
+    @mock.patch.object(MetadataHandler, 'state', ServerStatus.WAITING.value)
+    @mock.patch.object(MultiCardGraphHandler, 'validate_rank_id')
+    def test_search_watchpoint_hits_error_rank_id(self, *args):
+        """Test retrieve single watchpoint."""
+        args[0].return_value = False
+        rank_id = 1
+        with pytest.raises(DebuggerParamValueError, match="Parameter <rank_id> {} is not valid.".format(rank_id)):
+            self._server.search_watchpoint_hits({'rank_id': rank_id})
+
+    @mock.patch.object(MetadataHandler, 'state', ServerStatus.WAITING.value)
+    @mock.patch.object(MultiCardWatchpointHitHandler, 'check_rank_id')
+    @mock.patch.object(MultiCardGraphHandler, 'validate_rank_id')
+    def test_search_watchpoint_hits_no_hits(self, *args):
+        """Test retrieve single watchpoint."""
+        args[0].return_value = True
+        args[1].return_value = False
+        res = self._server.search_watchpoint_hits({'rank_id': 0})
+        assert res == {'outdated': False}
