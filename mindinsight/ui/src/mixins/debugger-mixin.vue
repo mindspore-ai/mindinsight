@@ -640,8 +640,11 @@ export default {
               ) {
                 const debTensor = this.$refs['deb-tensor'];
                 if (debTensor) {
-                  debTensor.updateGraphData(res.data.receive_tensor.graph_name, res.data.receive_tensor.tensor_name);
-                  debTensor.tabChange(debTensor.gridType);
+                  if (res.data.receive_tensor.level === 'stats') {
+                    debTensor.updateGraphData(res.data.receive_tensor.graph_name, res.data.receive_tensor.tensor_name);
+                  } else if (res.data.receive_tensor.level === undefined) {
+                    debTensor.tabChange(debTensor.gridType);
+                  }
                 }
               }
 
@@ -700,7 +703,7 @@ export default {
                 } else {
                   msg = `${this.$t('debugger.backstageStatus')}${this.metadata.state}`;
                 }
-                this.$message(msg);
+                this.$message.success(msg);
               }, 500);
 
               this.metadata.state = res.data.metadata.state;
@@ -1737,10 +1740,10 @@ export default {
         const condition = {
           rank_id: this.logicCard.value,
         };
-        if (this.hitWpCondition.graphFile!== this.$t('debugger.all')) {
+        if (this.hitWpCondition.graphFile !== this.$t('debugger.all')) {
           condition.graph_id = this.hitWpCondition.graphFile;
         }
-        if (this.hitWpCondition.watchPoint!== this.$t('debugger.all')) {
+        if (this.hitWpCondition.watchPoint !== this.$t('debugger.all')) {
           condition.watchpoint_id = this.hitWpCondition.watchPoint;
         }
         if (type) {

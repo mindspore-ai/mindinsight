@@ -12926,8 +12926,8 @@
   color: var(--el-input-font-color);
   display: inline-block;
   font-size: inherit;
-  height: 32px!important;
-  line-height: 32px!important;
+  height: 32px;
+  line-height: 32px;
   outline: 0;
   padding: 0 15px;
   -webkit-transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);

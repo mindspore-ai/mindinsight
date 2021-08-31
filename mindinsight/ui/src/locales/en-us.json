@@ -97,7 +97,7 @@
     "sessionLists": "Existing Sessions List",
     "deleteSessionConfirm": "The session will be deleted. Are you sure you want to continue?",
     "deleteSessionSuccess": "Session deleted.",
-    "dumpPath":"Dump Path"
+    "dumpPath": "Dump Path"
   },
   "modelTraceback": {
     "summaryPath": "Summary Path",
@@ -268,6 +268,7 @@
     "queryLoading": "Loading... Please wait.",
     "fullScreen": "Full Screen",
     "tooManyNodes": "Too many nodes to open.",
+    "openFail": "Failed to expand the node. Possible causes are as follows: 1. The machine performance is too poor to draw subnodes of the node. 2. The number of direct subnodes under the node exceeds 1500. 3. The connections between direct subnodes are too complex. ",
     "inputNodeName": "Enter node name",
     "guide": "User Guide",
     "guideTitle1": "Introduction 1 of 3: Main Functions",
@@ -302,7 +303,7 @@
     "flopsS": "FLOPS",
     "flopsUtilization": "FLOPS Usage:",
     "flopsUtilizationTitle": "FLOPS/Peak FLOPS",
-    "scopeLevelFlops":"Scope-level FLOPs(M)"
+    "scopeLevelFlops": "Scope-level FLOPs(M)"
   },
   "profiling": {
     "rankID": "Rank ID",
@@ -647,7 +648,8 @@
     "tolerance": "Tolerance",
     "curValue": "Current Value",
     "compareToPre": "Compare with Previous Step",
-    "stepTip": "(The value 0 indicates the initial training state.)",
+    "stepTip": "The value 0 indicates the initial training state.",
+    "stepTipOffline": "(The starting Step is numbered from 1, and note that the numbering of the iteration field in the Dump configuration file starts from 0. The concepts of the two are different.)",
     "toSummeryList": "Go to Summary List",
     "clientIp": "Client IP",
     "deviceId": "Device ID",
@@ -883,8 +885,10 @@
       "cannotCheck": "check fails."
     },
     "stateTips": {
+      "waiting": "Ready",
       "running": "Running",
-      "sending": "To be executed"
+      "sending": "Waiting for command execution",
+      "pending": "Waiting for backend connection"
     },
     "stateMsg": {
       "running": "The training is running.",
@@ -910,7 +914,14 @@
     "downloadTip": "The file is being loaded. The file size is about {fileSize}. Please wait.",
     "noOfflineGraphData": "Failed to load the computational graph. This may be due to the missing or damaged graphs file in the offline dump data in the summary directory. Please try to dump the data again.",
     "largeDataLoading": "The tensor data is large and loading...",
-    "overSize": "The requested tensor is too large. The total value of the value exceeds 1GiB and cannot be displayed."
+    "overSize": "The requested tensor is too large. The total value of the value exceeds 1GiB and cannot be displayed.",
+    "state": "State",
+    "stateInfo": {
+      "waiting": "Ready: Waiting for user operation.",
+      "running": "Running: Training is being performed or watchpoints are being checked. If the model is large or the detection data is large, more time is required. Please wait patiently.",
+      "sending": "Waiting for command execution: The previous command has not been completed, and the new command is waiting for the previous command to be executed.",
+      "pending": "Waiting for backend connection: Waiting for a new training connection or initializing the debugger environment."
+    }
   },
   "explain": {
     "explain": "Model Explanation",
@@ -1035,6 +1046,7 @@
     "5054B083": "Failed to create the watchpoint. Do not use invalid rules.",
     "5054B202": "The debugger offline server module is not found",
     "5054B283": "A tensor is being downloaded. Please try again later.",
+    "5054B286": "The data_dump.json file of the dump data in the Summary directory is missing or damaged. Please check the integrity of the dump data in the directory.",
     "5054000C": "Insufficient memory, please try again after freeing memory."
   }
 }
