@@ -446,6 +446,7 @@
     "BPMessage": "BP termination operator:",
     "approximateTime": "Total duration ≈ ",
     "stepInputTip": "Steps (an integer ranging from 1 to {max})",
+    "stageTip": "Please select stage",
     "inputError": "Input parameter error. Please enter a positive integer ranging from 1 to {max}",
     "defaultTip": "Average value (default)",
     "downloadTimeline": "Download",
@@ -592,7 +593,12 @@
     "flopsTipPartOne": "This function provides the number of floating-point operations (FLOPS) data of each device in the cluster scenario in the form of heatmap.",
     "flopsTipPartTwo": "The heatmap reflects the relative size of FLOPs between devices. The color of the rectangle block corresponding to each device indicates the ratio of the current device FLOPs to the maximum FLOPs of all devices.",
     "flopsTipPartThree": "Granularity: indicates the granularity of the color values corresponding to the FLOPs data of different devices.",
-    "flopsTipPartFour": "You can also view the cluster overview of the training on the GUI, for example, the number of servers used in the training and the number of devices used by each server. You can click a device to go to the operator details page of the device."
+    "flopsTipPartFour": "You can also view the cluster overview of the training on the GUI, for example, the number of servers used in the training and the number of devices used by each server. You can click a device to go to the operator details page of the device.",
+    "communicationAloneTime": "Pure Communication Time",
+    "computationTime": "Computation Time",
+    "receiveAloneTime": "Pure Reception Time",
+    "stageTime": "Phase Time",
+    "collectiveCommunicationAlone": "Pure Collective Communication Time"
   },
   "components": {
     "summaryTitle": "Training Selection",

@@ -445,6 +445,7 @@
     "BPMessage": "反向终止算子：",
     "approximateTime": "总时长 ≈ ",
     "stepInputTip": "请输入step值（1~{max}的正整数，值为空时展示平均值）",
+    "stageTip": "请选择stage",
     "inputError": "输入参数异常，请输入一个1~{max}的正整数",
     "defaultTip": "默认展示平均值",
     "downloadTimeline": "下载",
@@ -591,7 +592,12 @@
     "flopsTipPartOne": "该功能以热力图的形式为用户提供集群场景下的每个设备的FLOPs(浮点运算次数)数据。",
     "flopsTipPartTwo": "热力图反映了设备之间FLOPs的相对大小，每个设备对应的矩形块颜色代表当前设备FLOPs与所有设备中最大FLOPs的比值。",
     "flopsTipPartThree": "粒度：代表划分不同设备FLOPs数据对应色值的粗细程度。",
-    "flopsTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几台服务器、每台服务器使用了几个设备。点击某个设备可以跳转到该设备的算子详情页面。"
+    "flopsTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几台服务器、每台服务器使用了几个设备。点击某个设备可以跳转到该设备的算子详情页面。",
+    "communicationAloneTime": "纯通信时间",
+    "computationTime": "计算时间",
+    "receiveAloneTime": "纯接收时间",
+    "stageTime": "阶段时间",
+    "collectiveCommunicationAlone": "纯集合通信时间"
   },
   "components": {
     "summaryTitle": "训练选择",
