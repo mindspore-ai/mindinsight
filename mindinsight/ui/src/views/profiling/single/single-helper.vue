@@ -91,7 +91,7 @@ export default {
             .then(
                 (res) => {
                   if (res?.data?.length > 0) {
-                    this.rankIDList = res.data;
+                    this.rankIDList = res.data.sort((a, b) => +a - +b);
                     this.rankID = isInteger(this.defaultRankID) ? (this.defaultRankID + '') : this.rankIDList[0];
                     resolve(true);
                   } else {
