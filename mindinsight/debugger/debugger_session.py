@@ -601,7 +601,7 @@ class DebuggerSession:
             log.error("Parameter <rank_id> should be an integer, but got %s.", rank_id)
             raise DebuggerParamTypeError("Parameter <rank_id> should be an integer, but got {}.".format(rank_id))
         multicard_graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH)
-        if multicard_graph_stream.validate_rank_id(rank_id):
+        if not multicard_graph_stream.validate_rank_id(rank_id):
             log.error("Parameter <rank_id> %s is not valid.", rank_id)
             raise DebuggerParamValueError("Parameter <rank_id> {} is not valid.".format(rank_id))
         reply = {}
