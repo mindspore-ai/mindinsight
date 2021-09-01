@@ -238,6 +238,11 @@ limitations under the License.
                width="100%"
                :close-on-click-modal="false"
                class="flops-data-list">
+      <div class="reset"
+           v-if="flopsChartDom">
+        <el-button size="mini"
+                   @click="reset">{{ $t('public.reset') }}</el-button>
+      </div>
       <div id="flopsChart"
            v-if="flopsHasData"
            :style="{width:`${flopsChartWidth}px`,height:`${flopsChartHeight}px`}"></div>
@@ -256,6 +261,18 @@ limitations under the License.
 import echarts, {echartsThemeName} from '../js/echarts';
 import requestService from '../services/request-service';
 import CommonProperty from '../common/common-property';
+
+const NODE_ACTIVE_OPACITY = 1;
+
+const NODE_INACTIVE_OPACITY = 0.1;
+
+const NODE_DEFAULT_OPACITY = 1;
+
+const LINK_ACTIVE_OPACITY = 0.6;
+
+const LINK_INACTIVE_OPACITY = 0.1;
+
+const LINK_DEFAULT_OPACITY = 0.2;
 
 export default {
   props: {
@@ -399,6 +416,8 @@ export default {
       flopsChartHeight: 540,
       flopsHasData: false,
       flopsInit: false,
+      activeFlopsNode: null,
+      activeFlopsLink: null,
     };
   },
   destroyed() {
@@ -411,6 +430,139 @@ export default {
     }
   },
   methods: {
+    reset() {
+      this.flopsChartDom.dispatchAction({
+        type: 'restore',
+      });
+    },
+    handleFlopsChartClick(params) {
+      const option = this.flopsChartDom.getOption().series[0];
+      let {data, links} = option;
+      if (params.name) {
+        // Click node
+        const name = params.name;
+        if (this.activeFlopsNode === name) {
+          // Click active node, clear highlight
+          this.activeFlopsNode = null;
+          data.forEach((item) => {
+            item.itemStyle.opacity = NODE_DEFAULT_OPACITY;
+            item.label.show = true;
+          });
+          links.forEach((link) => {
+            link.lineStyle.opacity = LINK_DEFAULT_OPACITY;
+          });
+        } else {
+          // Click inactive node, add highlight
+          this.activeFlopsNode = name;
+          const relativeNodes = new Set([name]);
+          links = links.map((link) => {
+            const {target, source} = link;
+            let opacity;
+            if (target === name) {
+              relativeNodes.add(source);
+              opacity = LINK_ACTIVE_OPACITY;
+            } else if (source === name) {
+              relativeNodes.add(target);
+              opacity = LINK_ACTIVE_OPACITY;
+            } else {
+              opacity = LINK_INACTIVE_OPACITY;
+            }
+            link.lineStyle = {opacity};
+            return link;
+          });
+          data = data.map((item) => {
+            const relative = relativeNodes.has(item.name);
+            item.itemStyle = {opacity: relative ? NODE_ACTIVE_OPACITY : NODE_INACTIVE_OPACITY};
+            item.label = {show: relative};
+            return item;
+          });
+        }
+        if (this.activeFlopsLink) this.activeFlopsLink = null;
+      } else {
+        // Click link
+        const {source, target} = params;
+        if (this.activeFlopsLink && this.activeFlopsLink.source === source && this.activeFlopsLink.target === target) {
+          // Click active link, clear highlight
+          this.activeFlopsLink = null;
+          data.forEach((item) => {
+            item.itemStyle.opacity = NODE_DEFAULT_OPACITY;
+            item.label.show = true;
+          });
+          links.forEach((link) => {
+            link.lineStyle.opacity = LINK_DEFAULT_OPACITY;
+          });
+        } else {
+          // Click inactive link, add highlight
+          this.activeFlopsLink = {source, target};
+          data = data.map((item) => {
+            const relative = item.name === source || item.name === target;
+            item.itemStyle = {opacity: relative ? NODE_ACTIVE_OPACITY : NODE_INACTIVE_OPACITY};
+            item.label = {show: relative};
+            return item;
+          });
+          let singleLink = false;
+          links = links.map((link) => {
+            let opacity;
+            if (singleLink) {
+              opacity = LINK_INACTIVE_OPACITY;
+            } else {
+              if (link.target === target && link.source === source) {
+                singleLink = true;
+                opacity = LINK_ACTIVE_OPACITY;
+              } else {
+                opacity = LINK_INACTIVE_OPACITY;
+              }
+            }
+            link.lineStyle = {opacity};
+            return link;
+          });
+        }
+        if (this.activeFlopsNode) this.activeFlopsNode = null;
+      }
+      this.flopsChartDom.setOption({
+        series: [{data, links}],
+      });
+    },
+    setFlopsChartOption(nodes, links) {
+      this.flopsChartDom.setOption({
+        title: {
+          text: 'Sankey Diagram',
+        },
+        tooltip: {
+          trigger: 'item',
+          triggerOn: 'mousemove',
+          confine: true,
+        },
+        itemStyle: {
+          borderWidth: 1,
+        },
+        label: {
+          width: 100,
+          overflow: 'truncate',
+          ellipsis: '...',
+          color: CommonProperty.modelTracebackChartTheme[this.$store.state.themeIndex].batchSizeTextColor,
+        },
+        series: [
+          {
+            type: 'sankey',
+            data: nodes,
+            links,
+            emphasis: {
+              focus: 'adjacency',
+            },
+            nodeGap: 10,
+            left: 0,
+            right: 110,
+            top: 30,
+            bottom: 30,
+            lineStyle: {
+              curveness: 0.5,
+              color: CommonProperty.commonChartTheme[this.$store.state.themeIndex].lineStyleColor,
+            },
+          },
+        ],
+      });
+    },
     showFlopsDetails() {
       this.flopsDialogVisible = true;
       this.flopsInit = false;
@@ -438,43 +590,9 @@ export default {
                 if (!this.flopsChartDom) {
                   this.flopsChartDom = echarts.init(document.querySelector('#flopsChart'), echartsThemeName);
                 }
-                this.flopsChartDom.setOption({
-                  title: {
-                    text: 'Sankey Diagram',
-                  },
-                  tooltip: {
-                    trigger: 'item',
-                    triggerOn: 'mousemove',
-                    confine: true,
-                  },
-                  itemStyle: {
-                    borderWidth: 1,
-                  },
-                  label: {
-                    width: 100,
-                    overflow: 'truncate',
-                    ellipsis: '...',
-                    color: CommonProperty.modelTracebackChartTheme[this.$store.state.themeIndex].batchSizeTextColor,
-                  },
-                  series: [
-                    {
-                      type: 'sankey',
-                      data: nodes,
-                      links: links,
-                      emphasis: {
-                        focus: 'adjacency',
-                      },
-                      nodeGap: 10,
-                      left: 0,
-                      right: 110,
-                      top: 30,
-                      bottom: 30,
-                      lineStyle: {
-                        curveness: 0.5,
-                        color: CommonProperty.commonChartTheme[this.$store.state.themeIndex].lineStyleColor,
-                      },
-                    },
-                  ],
+                this.setFlopsChartOption(nodes, links);
+                this.flopsChartDom.on('click', (params) => {
+                  this.handleFlopsChartClick(params.data);
                 });
               });
             } else {
@@ -1334,8 +1452,8 @@ export default {
   padding-top: 10px;
   overflow: auto;
 }
-.flops-data-list .el-dialog{
-  margin-top: 64px!important;
+.flops-data-list .el-dialog {
+  margin-top: 64px !important;
   height: calc(100% - 64px);
   margin-bottom: 0px;
 }
@@ -1344,6 +1462,9 @@ export default {
   overflow: auto;
   text-align: center;
   height: calc(100% - 54px);
+}
+.flops-data-list .reset {
+  text-align: right;
 }
 .details-data-list .el-dialog__body .details-data-title {
   margin-bottom: 20px;
@@ -1383,5 +1504,6 @@ export default {
 }
 #flopsChart {
   display: inline-block;
+  min-height: 90%;
 }
 </style>
