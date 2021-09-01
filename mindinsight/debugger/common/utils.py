@@ -52,10 +52,10 @@ NUMPY_TYPE_MAP = {
 
 MS_VERSION = '1.0.x'
 # The buffer is used for the MI side of the offline debugger, the unit is MB.
-BUFFER = 2 * 1024
+BUFFER_MS = 1024
 # The offline debugger need at least 2g memory space.
-MAX_CACHE_SPACE_MB = max(((settings.OFFLINE_DEBUGGER_MEM_LIMIT - BUFFER) // 3), 2 * 1024)
-MAX_MS_CACHE_SPACE_MB = settings.OFFLINE_DEBUGGER_MEM_LIMIT - BUFFER - MAX_CACHE_SPACE_MB
+MAX_CACHE_SPACE_MB = max(((settings.OFFLINE_DEBUGGER_MEM_LIMIT - BUFFER_MS) // 3), 2 * 1024)
+MAX_MS_CACHE_SPACE_MB = settings.OFFLINE_DEBUGGER_MEM_LIMIT - BUFFER_MS - MAX_CACHE_SPACE_MB
 MAX_CACHE_SPACE_BYTES = MAX_CACHE_SPACE_MB * 1024 * 1024
 # The debugger need to cache 2 tensors.
 MAX_SINGLE_TENSOR_CACHE_BYTES = 1024 * 1024 * 1024
@@ -224,9 +224,7 @@ def load_tensor(load_info, step, request_iterator, cache_store, rank_id):
     node_name, slot = load_info.get('tensor_name').rsplit(':', 1)
     _, node_name = node_name.rsplit('/', 1)
     # Carry 2 digit for timestamp to ensure remaining 12 digit after round method
-    timestamp_carry = 100
-    file_name = "{}.{}.0.0.{}.output.{}.NONE.npy".format(
-        load_info.get('node_type'), node_name, round(time.time() * timestamp_carry), slot)
+    file_name = get_download_file_name(load_info.get('node_type'), node_name, slot)
     file_path = os.path.join(temp_dir.name, file_name)
     tensor = next(request_iterator)
     header = _generate_npy_header(tensor)
@@ -235,12 +233,18 @@ def load_tensor(load_info, step, request_iterator, cache_store, rank_id):
     _write_tensor(file_path, tensor.tensor_content)
     for tensor in request_iterator:
         _write_tensor(file_path, tensor.tensor_content)
+    add_to_download_mgr(file_name, file_path, temp_dir, load_info, step, rank_id, cache_store)
+
+
+def add_to_download_mgr(file_name, file_path, temp_dir, load_info, step, rank_id, cache_store):
+    """Add the tensor info to download manager"""
     tensor_info = {
         "tensor_name": load_info.get("tensor_name"),
         "graph_name": load_info.get("graph_name"),
         "step": step,
         "rank_id": rank_id
     }
+    tensor_stream = cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(rank_id)
     tensor_stream.download_mgr.add(file_name, file_path, temp_dir, **tensor_info)
     metadata = cache_store.get_stream_handler(Streams.METADATA).get(['step', 'state'])
     ret = {
@@ -249,6 +253,14 @@ def load_tensor(load_info, step, request_iterator, cache_store, rank_id):
     }
     ret.update(metadata)
     cache_store.put_data(ret)
+
+
+def get_download_file_name(node_type, node_name, slot):
+    """Get file name."""
+    timestamp_carry = 100
+    file_name = "{}.{}.0.0.{}.output.{}.NONE.npy".format(node_type, node_name, round(time.time() * timestamp_carry),
+                                                         slot)
+    return file_name
 
 
 def _generate_npy_header(tensor_proto):

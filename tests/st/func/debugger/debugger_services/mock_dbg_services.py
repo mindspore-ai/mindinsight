@@ -44,16 +44,18 @@ class DbgServices:
         self.version = get_version()
         self.initialized = False
         self.is_sync = True
+        self.max_mem_usage = None
 
     def print_mes(self, mes):
         """Print message."""
         if self._verbose:
             log.info(mes)
 
-    def initialize(self, net_name, is_sync_mode):
+    def initialize(self, net_name, is_sync_mode, max_mem_usage):
         """Initialize."""
         self.print_mes(" Python Initialize dump_file_path: {}, is_sync: {}".format(net_name, is_sync_mode))
         self.initialized = True
+        self.max_mem_usage = max_mem_usage
 
     def add_watchpoint(self, watchpoint_id, watch_condition, check_node_list, parameter_list):
         """Add watchpoint."""

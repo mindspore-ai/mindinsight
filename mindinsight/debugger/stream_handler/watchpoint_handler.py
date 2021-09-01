@@ -887,7 +887,7 @@ def _get_error_list(error_code):
     Returns:
         list, the error list.
     """
-    all_error_list = ["nan", "inf", "no_prev_tensor"]
+    all_error_list = ["nan", "inf", "no_prev_tensor", "out_of_mem"]
     error_list = []
     for i, error_str in enumerate(all_error_list):
         error = (error_code >> i) & 1
