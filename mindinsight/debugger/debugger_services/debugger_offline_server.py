@@ -14,19 +14,19 @@
 # ============================================================================
 """Debugger Offline server."""
 import copy
+import re
 from collections import defaultdict
 from importlib import import_module
 from multiprocessing import Process, Manager
 from threading import Event
 import os
-from pathlib import Path
 
 import mindinsight
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
-    RunLevel, MAX_SINGLE_TENSOR_CACHE_BYTES, load_tensor, ViewCommandLevelEnum, convert_tensor_stats, \
-    put_tensor_base_in_cache, put_tensor_stats_in_cache, get_tensor_value
+    RunLevel, MAX_SINGLE_TENSOR_CACHE_BYTES, ViewCommandLevelEnum, convert_tensor_stats, put_tensor_base_in_cache, \
+    put_tensor_stats_in_cache, get_tensor_value, MAX_MS_CACHE_SPACE_MB, get_download_file_name, add_to_download_mgr
 from mindinsight.debugger.conditionmgr.condition import ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import DebuggerServerBase, debugger_server_wrap
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
@@ -135,7 +135,11 @@ class DebuggerOfflineManager:
         net_name = self._data_loader.get_net_name()
         dump_dir = self._data_loader.get_dump_dir()
         self._dbg_service = self._dbg_services_module.DbgServices(dump_dir)
-        self._dbg_service.initialize(net_name=net_name, is_sync_mode=is_sync)
+        try:
+            self._dbg_service.initialize(net_name=net_name, is_sync_mode=is_sync, max_mem_usage=MAX_MS_CACHE_SPACE_MB)
+        except TypeError:
+            log.warning("The MindSpore and MindInsight version are mismatched. Failed to enable memory limit.")
+            self._dbg_service.initialize(net_name=net_name, is_sync_mode=is_sync)
         self._cache_store.clean()
         self._command_listener.start()
         self._is_running_flag = True
@@ -419,8 +423,7 @@ class DebuggerOfflineManager:
                 if load_info is not None:
                     load_info['graph_name'] = node_info.get('graph_name')
                     load_info['node_name'] = node_info.get('node_name')
-                    load_tensor(load_info=load_info, step=cur_step, request_iterator=iter([tensor_proto]),
-                                cache_store=self._cache_store, rank_id=rank_id)
+                    self._load_tensor(tensor_proto.node_name, tensor_proto.slot, cur_step, rank_id, load_info)
                 oversize = len(tensor_proto.tensor_content) > MAX_SINGLE_TENSOR_CACHE_BYTES
                 tensor_contents = [tensor_proto.tensor_content]
                 data_size = len(tensor_proto.tensor_content)
@@ -674,18 +677,11 @@ class DebuggerOfflineManager:
         iteration = step
         rank_id = watchpointhit['rank_id']
         root_graph_id = watchpointhit['root_graph_id']
-        dump_dir = self._data_loader.get_dump_dir()
-        rank_str = 'rank_' + str(rank_id)
-        iteration_path = os.path.join(dump_dir, rank_str, self._data_loader.get_net_name(),
-                                      str(root_graph_id), str(iteration))
-        # Find the pure node_name without scope
+        tensor_files = self.find_tensor_file(name, slot, iteration, rank_id, root_graph_id)
         node_name = name.rsplit('/')[-1]
-        match_mask = f'*.{node_name}.*.output.{slot}*.npy'
-        tensor_files = Path(iteration_path).absolute().glob(match_mask)
-        log.debug("Find file in path: %s which matches the mask: %s.", iteration_path, match_mask)
         for tensor_file in tensor_files:
             try:
-                file_name = tensor_file.name
+                file_name = tensor_file
                 node_name_location = file_name.find(node_name)
                 post_str = file_name[node_name_location+len(node_name):]
                 time_str = post_str.split('.')[3]
@@ -693,10 +689,48 @@ class DebuggerOfflineManager:
                 if time_stamp > res:
                     res = time_stamp
             except (ValueError, TypeError, IndexError) as err:
-                log.error("Can not find time_stamp in file: %s, the detail error is: %s.", tensor_file.name, err)
+                log.error("Can not find time_stamp in file: %s, the detail error is: %s.", tensor_file, err)
                 continue
         log.debug("Time stamp is: %s.", res)
         return res
+
+    def find_tensor_file(self, name, slot, iteration, rank_id, root_graph_id):
+        """Find the tensor file."""
+        iteration_path = self.get_iteration_path(iteration, root_graph_id, rank_id)
+        # Find the pure node_name without scope
+        node_name = name.rsplit('/')[-1]
+        tensor_files = [fname for fname in os.listdir(iteration_path) if re.match(
+            r"[a-zA-Z]+\.{}\.[0-9]+\.[0-9]+\.[0-9]+\.output\.{}.*\.npy".format(node_name, slot), fname
+        )]
+        log.debug("Find %s files in path: %s.", len(tensor_files), iteration_path)
+        return tensor_files
+
+    def get_iteration_path(self, iteration, root_graph_id, rank_id):
+        """Get the path of tensors in current iteration."""
+        dump_dir = self._data_loader.get_dump_dir()
+        rank_str = 'rank_' + str(rank_id)
+        iteration_path = os.path.join(dump_dir, rank_str, self._data_loader.get_net_name(),
+                                      str(root_graph_id), str(iteration))
+        return iteration_path
+
+    def _load_tensor(self, name, slot, step, rank_id, load_info):
+        """Find and prepare the tensor."""
+        if load_info.get('prev') == 'prev':
+            step -= 1
+        root_graph_id = self.get_root_graph_id(rank_id=rank_id, graph_name=load_info.get("graph_name"),
+                                               node_name=load_info.get("node_name"))
+        iteration_path = self.get_iteration_path(step - 1, root_graph_id, rank_id)
+        tensor_files = self.find_tensor_file(name, slot, step - 1, rank_id, root_graph_id)
+        tensor_files.sort()
+        try:
+            file_path = os.path.join(iteration_path, tensor_files[-1])
+        except IndexError:
+            log.error("Can not find the file: name %s, in iteration %s, rank_id %s", name, step, rank_id)
+            raise DebuggerParamValueError
+
+        node_name = name.rsplit('/')[-1]
+        file_name = get_download_file_name(load_info.get("node_type"), node_name, slot)
+        add_to_download_mgr(file_name, file_path, None, load_info, step, rank_id, self._cache_store)
 
 
 class CommandListener:
