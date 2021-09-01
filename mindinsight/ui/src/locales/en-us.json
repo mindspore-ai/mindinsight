@@ -882,6 +882,7 @@
       "nan": "A tensor contains NaN, ",
       "inf": "A tensor contains +/-INF, ",
       "no_prev_tensor": "The previous step value cannot be found, ",
+      "out_of_mem": "The tensor size exceeds the memory limit, ",
       "cannotCheck": "check fails."
     },
     "stateTips": {
