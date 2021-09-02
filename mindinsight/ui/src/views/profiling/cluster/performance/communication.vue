@@ -73,7 +73,6 @@ limitations under the License.
                   height="100%"
                   ref="table"
                   stripe
-                  :default-sort="tableDefaultSort"
                   @sort-change="tableSortChange">
           <!-- Column 1 / rank_id -->
           <el-table-column width="120"
@@ -153,7 +152,6 @@ limitations under the License.
                   height="100%"
                   ref="table"
                   stripe
-                  :default-sort="linkDefaultSort"
                   @sort-change="linkTableSortChange">
           <!-- Column 1 / src_dst -->
           <el-table-column :prop="linkTableProps[0].prop"
@@ -292,7 +290,6 @@ export default {
       chartInstance: null, // chart instance
       chartResizeTimer: null, // delay after the window size is changed
       tableData: [], // Data of page default table
-      tableDefaultSort: null, // Default sort of page default chart
       tableProps: [
         {
           label: this.$t('profilingCluster.rankID'),
@@ -358,7 +355,6 @@ export default {
           prop: 'link_type',
         },
       ], // Link info table header label and column prop name
-      linkDefaultSort: null, // Default sort of link table
       linkTable: {
         tableData: [],
         sortCondition: {},
@@ -388,19 +384,6 @@ export default {
   created() {
     // Set default tab
     this.tab = this.tabNames[0];
-    // Set default sort of page default table and link table
-    this.tableDefaultSort = this.linkDefaultSort = {
-      prop: 'communication_cost',
-      order: 'descending',
-    };
-    this.sortCondition = {
-      name: 'communication_cost',
-      type: 'descending',
-    };
-    this.linkInfo.sortCondition = {
-      name: 'communication_cost',
-      type: 'descending',
-    };
   },
   mounted() {
     if (!this.trainInfo.id) {

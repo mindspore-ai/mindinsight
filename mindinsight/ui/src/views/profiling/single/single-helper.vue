@@ -80,6 +80,7 @@ export default {
     },
     /**
      * Init rankID list
+     * @return {Promise}
      */
     initRankIDList() {
       return new Promise((resolve) => {
