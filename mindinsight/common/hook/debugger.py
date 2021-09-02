@@ -151,7 +151,7 @@ class Hook(BaseHook):
             type=int,
             action=MemLimitAction,
             help="""
-                Debugger memory limit ranging from %s to %s MB. Default value is %s MB.
+                Offline debugger memory limit ranging from %s to %s MB. Default value is %s MB.
             """ % (MemLimitAction.MIN_VALUE, MemLimitAction.MAX_VALUE, settings.OFFLINE_DEBUGGER_MEM_LIMIT))
 
         parser.add_argument(

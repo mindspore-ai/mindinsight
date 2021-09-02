@@ -194,3 +194,12 @@ class MindInsightMemoryError(MindInsightException):
             GeneralErrors.MEMORY_ERROR,
             error_msg,
             http_code=400)
+
+
+class SettingValueError(MindInsightException):
+    """Setting value error."""
+    def __init__(self, error_msg):
+        super(SettingValueError, self).__init__(
+            GeneralErrors.SETTING_VALUE_ERROR,
+            error_msg,
+            http_code=400)

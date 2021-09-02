@@ -342,7 +342,7 @@ class ConstTensor(BaseTensor):
         super(ConstTensor, self).__init__()
         self._const_proto = const_proto
         self._value = self.generate_value_from_proto(const_proto.value)
-        self._status = TensorStatusEnum.CACHED.value
+        self._status = TensorStatusEnum.CACHED.value if self._value is not None else TensorStatusEnum.EMPTY.value
         self._stats = None
         self.tensor_base = None
 
