@@ -25,9 +25,16 @@ import psutil
 
 from mindinsight.conf import settings
 from mindinsight.utils.command import BaseCommand
-from mindinsight.utils.exceptions import PortNotAvailableError
+from mindinsight.utils.exceptions import PortNotAvailableError, SettingValueError
 from mindinsight.utils.hook import HookUtils
 from mindinsight.utils.hook import init
+
+MIN_SESSION_NUM = 1
+MAX_SESSION_NUM = 2
+# The unit is MB
+MIN_MEM_LIMIT_VALUE = 6 * 1024
+# The limit for int32.
+MAX_MEM_LIMIT_VALUE = 2147483647
 
 
 class WorkspaceAction(argparse.Action):
@@ -173,7 +180,8 @@ class Command(BaseCommand):
         try:
             self.check_port()
             self.check_debugger_port()
-        except PortNotAvailableError as error:
+            self.check_offline_debugger_setting()
+        except (PortNotAvailableError, SettingValueError) as error:
             self.console.error(error.message)
             self.logfile.error(error.message)
             sys.exit(1)
@@ -216,3 +224,16 @@ class Command(BaseCommand):
             raise PortNotAvailableError(f'Debugger-port {ip}:{debugger_port} is not available for MindInsight')
         except socket.error:
             return
+
+    def check_offline_debugger_setting(self):
+        """Check if the offline debugger setting is legal"""
+        mem_limit = settings.OFFLINE_DEBUGGER_MEM_LIMIT
+        session_num = settings.MAX_OFFLINE_DEBUGGER_SESSION_NUM
+        if mem_limit < MIN_MEM_LIMIT_VALUE or mem_limit > MAX_MEM_LIMIT_VALUE:
+            raise SettingValueError("Offline debugger memory limit should be ranging from {} to {} MB, but got {}. "
+                                    "Please check the environment variable MINDINSIGHT_OFFLINE_DEBUGGER_MEM_LIMIT"
+                                    .format(MIN_MEM_LIMIT_VALUE, MAX_MEM_LIMIT_VALUE, mem_limit))
+        if session_num < MIN_SESSION_NUM or session_num > MAX_SESSION_NUM:
+            raise SettingValueError("Max offline debugger session number should be ranging from {} to {}, but got {}. "
+                                    "Please check the environment variable MINDINSIGHT_MAX_OFFLINE_DEBUGGER_SESSION_NUM"
+                                    .format(MIN_SESSION_NUM, MAX_SESSION_NUM, session_num))

@@ -48,6 +48,7 @@ class GeneralErrors(Enum):
     URL_DECODE_ERROR = 10
     COMPUTING_RESOURCE_ERROR = 11
     MEMORY_ERROR = 12
+    SETTING_VALUE_ERROR = 13
 
 
 class ProfilerMgrErrors(Enum):

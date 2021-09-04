@@ -726,7 +726,8 @@ class DebuggerOfflineManager:
             file_path = os.path.join(iteration_path, tensor_files[-1])
         except IndexError:
             log.error("Can not find the file: name %s, in iteration %s, rank_id %s", name, step, rank_id)
-            raise DebuggerParamValueError
+            raise DebuggerParamValueError("Can not find the file: name {}, in iteration {}, rank_id {}".format(
+                name, step, rank_id))
 
         node_name = name.rsplit('/')[-1]
         file_name = get_download_file_name(load_info.get("node_type"), node_name, slot)
