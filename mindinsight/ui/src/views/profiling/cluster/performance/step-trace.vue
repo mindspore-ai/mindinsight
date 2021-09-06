@@ -29,7 +29,7 @@ limitations under the License.
         <el-button @click="viewStepFilter">{{$t("public.sure")}}</el-button>
         <label>{{stageTip}}</label>
         <el-select v-model="stageId"
-                   @change="queryStepTraceInfo(true,true)">
+                   @change="queryStepTraceInfo(true)">
           <el-option v-for="item in stageArr"
                      :key="item"
                      :label="item"
@@ -164,11 +164,7 @@ export default {
         offset: 0,
         limit: 10,
       },
-      sort_condition: {
-        // sort setting
-        name: 'iteration_interval',
-        type: 'descending',
-      },
+      sort_condition: {},
       totalCount: 0,
       step: {
         // step info
@@ -193,7 +189,7 @@ export default {
     document.title = (id ? id + '-' : '') + `${this.$t('profilingCluster.clusterView')}-MindInsight`;
     // adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
-    this.queryStepTraceInfo(true, true);
+    this.queryStepTraceInfo(true);
   },
   destroyed() {
     // remove the size of a window and change the listener
@@ -221,18 +217,16 @@ export default {
     /**
      *  initialize
      *  @param {Boolean} isInit whether get all data
-     *  @param {Boolean} isSort whether sort table
      */
 
-    queryStepTraceInfo(isInit, isSort) {
-      const params = {};
-      params.params = {
-        train_id: this.trainInfo.id,
+    queryStepTraceInfo(isInit) {
+      const params = {
+        params: {train_id: this.trainInfo.id},
+        body: {filter_condition: {}},
       };
-      params.body = {
-        sort_condition: this.sort_condition,
-        filter_condition: {},
-      };
+      if (this.sort_condition.type) {
+        params.body.sort_condition = this.sort_condition;
+      }
       if (!isInit) {
         params.body.group_condition = this.group_condition;
       }
@@ -305,27 +299,18 @@ export default {
                 this.initChart(parallelModes[parallelMode].dimensions);
               }
               this.cols = parallelModes[parallelMode].cols;
-              if (isSort) {
-                this.$nextTick(() => {
-                  const tableDom = this.$refs.table;
-                  if (tableDom) {
-                    tableDom.sort(this.sort_condition.name, this.sort_condition.type);
-                  }
+              const tempTableData = res.data.info.slice(0, this.group_condition.limit);
+              this.tableData = [];
+              tempTableData.forEach((item) => {
+                const tableItem = {};
+                tableItem.rank_id = item.rank_id;
+                tableItem.profiler_dir = item.profiler_dir;
+                const stepTraceInfo = item[parallelModes[parallelMode].model];
+                stepTraceInfo.forEach((val, key) => {
+                  tableItem[this.cols[key]] = stepTraceInfo[key];
                 });
-              } else {
-                const tempTableData = res.data.info.slice(0, this.group_condition.limit);
-                this.tableData = [];
-                tempTableData.forEach((item) => {
-                  const tableItem = {};
-                  tableItem.rank_id = item.rank_id;
-                  tableItem.profiler_dir = item.profiler_dir;
-                  const stepTraceInfo = item[parallelModes[parallelMode].model];
-                  stepTraceInfo.forEach((val, key) => {
-                    tableItem[this.cols[key]] = stepTraceInfo[key];
-                  });
-                  this.tableData.push(tableItem);
-                });
-              }
+                this.tableData.push(tableItem);
+              });
             }
           })
           .catch((error) => {
@@ -402,7 +387,7 @@ export default {
      */
     currentPageChange(val) {
       this.group_condition.offset = val - 1;
-      this.queryStepTraceInfo(false, false);
+      this.queryStepTraceInfo(false);
     },
     /**
      *  current page size change
@@ -411,7 +396,7 @@ export default {
     currentPageSizeChange(pageSize) {
       this.group_condition.offset = 0;
       this.group_condition.limit = pageSize;
-      this.queryStepTraceInfo(false, false);
+      this.queryStepTraceInfo(false);
     },
     /**
      *  table sort change
@@ -423,7 +408,7 @@ export default {
         type: column.order,
       };
       this.group_condition.offset = 0;
-      this.queryStepTraceInfo(true, false);
+      this.queryStepTraceInfo(true);
     },
     /**
      *  filter step to overview
@@ -432,11 +417,11 @@ export default {
       if (/^[0-9]*[1-9][0-9]*$/.test(this.step.showStep) && this.step.showStep <= this.step.maxStep) {
         this.step.filterStep = this.step.showStep;
         this.group_condition.offset = 0;
-        this.queryStepTraceInfo(true, false);
+        this.queryStepTraceInfo(true);
       } else if (this.step.showStep === '') {
         this.step.filterStep = '';
         this.group_condition.offset = 0;
-        this.queryStepTraceInfo(true, false); // show average data
+        this.queryStepTraceInfo(true); // show average data
       } else {
         this.step.showStep = this.step.filterStep;
         this.$message.error(this.$t('profiling.inputError').replace('{max}', this.step.maxStep));
