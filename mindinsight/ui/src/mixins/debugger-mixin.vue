@@ -1212,6 +1212,8 @@ export default {
      * Filter tree data by node name
      */
     filter() {
+      this.searchWord = this.searchWord.trim();
+      this.searchStackContent = this.searchStackContent.trim();
       this.treeFlag = this.searchWord === '' && this.nodeTypes.value === 'all' && this.searchStackContent === '';
       if (this.searchWord || this.nodeTypes.value !== 'all' || this.searchStackContent) {
         this.searchedWord = this.searchWord;
@@ -2102,6 +2104,7 @@ export default {
       this.queryStacks();
     },
     queryStacks() {
+      this.stacks.searchContent = this.stacks.searchContent.trim();
       const param = {
         offset: this.stacks.currentPage - 1,
         limit: this.stacks.pageSize.size,
