@@ -31,9 +31,9 @@ class TestClusterAnalyser:
     @classmethod
     def setup_class(cls):
         """Generate parsed files."""
-        cls.summary_dir = os.path.join(BASE_SUMMARY_DIR_RUN_2, 'normal_run')
-        cls.pipeline_parallel_data_dir = os.path.join(BASE_SUMMARY_DIR_RUN_4, 'normal_run')
-        cls.model_parallel_data_dir = os.path.join(BASE_SUMMARY_DIR_RUN_3, 'normal_run')
+        cls.summary_dir = os.path.join(BASE_SUMMARY_DIR_RUN_2, 'normal_run', 'profiler')
+        cls.pipeline_parallel_data_dir = os.path.join(BASE_SUMMARY_DIR_RUN_4, 'normal_run', 'profiler')
+        cls.model_parallel_data_dir = os.path.join(BASE_SUMMARY_DIR_RUN_3, 'normal_run', 'profiler')
 
     def setup_method(self):
         """Create analyser."""

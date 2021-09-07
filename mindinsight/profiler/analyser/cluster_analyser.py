@@ -36,7 +36,7 @@ class ClusterAnalyser(BaseAnalyser):
 
     def _get_target_dir_path(self):
         """Get the target directory path."""
-        target_dir_path = os.path.join(self._cluster_profiler_dir, 'profiler')
+        target_dir_path = self._cluster_profiler_dir
         target_dir_path = validate_and_normalize_path(
             target_dir_path, raise_key="Invalid profiler dir path.")
         if not os.path.exists(target_dir_path):
@@ -48,13 +48,7 @@ class ClusterAnalyser(BaseAnalyser):
     def _get_cluster_rank_ids(self):
         """Get the logical card number list in cluster training."""
         cluster_rank_ids = []
-        target_dir_path = os.path.join(self._cluster_profiler_dir, 'profiler')
-        target_dir_path = validate_and_normalize_path(
-            target_dir_path, raise_key="Invalid profiler dir path.")
-        if not os.path.exists(target_dir_path):
-            log.error('Did not find profiler dir : %s', target_dir_path)
-            raise ProfilerDirNotFoundException(msg='Did not find profiler dir:{}'.format(target_dir_path))
-        entries = os.scandir(target_dir_path)
+        entries = os.scandir(self._target_dir_path)
         for entry in entries:
             if entry.is_symlink():
                 continue
@@ -273,16 +267,13 @@ class ClusterMemoryAnalyser(ClusterAnalyser):
 
     def __init__(self, cluster_profiler_dir, device_id='0'):
         super().__init__(cluster_profiler_dir, device_id)
-        self._cluster_dir = os.path.join(cluster_profiler_dir, 'profiler')
 
     def get_peak_memory(self):
         """Get peak memory for each device."""
         peak_mem_list = []
-        validate_and_normalize_path(self._cluster_dir,
-                                    raise_key='Invalid profiler directory {}.'.format(self._cluster_dir))
 
         for rank_id in self._cluster_rank_ids:
-            file_path = self._get_memory_file_for_each_device(self._cluster_dir, rank_id)
+            file_path = self._get_memory_file_for_each_device(self._target_dir_path, rank_id)
             file_content = self._get_file_content(file_path)
             capacity = file_content.get('capacity')
             peak_mem = file_content.get('peak_mem')
@@ -325,17 +316,14 @@ class ClusterFlopsAnalyser(ClusterAnalyser):
 
     def __init__(self, cluster_profiler_dir, device_id='0'):
         super().__init__(cluster_profiler_dir, device_id)
-        self._cluster_dir = os.path.join(cluster_profiler_dir, 'profiler')
 
     def get_flops(self):
         """Get flops for each device."""
         flops_info_list = []
         max_flops = 0
-        validate_and_normalize_path(self._cluster_dir,
-                                    raise_key='Invalid profiler directory {}.'.format(self._cluster_dir))
 
         for rank_id in self._cluster_rank_ids:
-            file_path = self._get_flops_file_for_each_device(self._cluster_dir, rank_id)
+            file_path = self._get_flops_file_for_each_device(self._target_dir_path, rank_id)
 
             # Forward compatible. If flops file do not exist, return empty data.
             if not os.path.exists(file_path):
@@ -413,19 +401,13 @@ class ClusterHcclAnalyser(ClusterAnalyser):
         """Get the num of train step."""
         total_step_num = 0
         # Take the data of one of the device to get the total number of steps.
-        target_dir_path = os.path.join(self._cluster_profiler_dir, 'profiler')
-        target_dir_path = validate_and_normalize_path(
-            target_dir_path, raise_key="Invalid profiler dir path.")
-        if not os.path.exists(target_dir_path):
-            log.error('Did not find cluster_profiler dir : %s', target_dir_path)
-            raise ProfilerDirNotFoundException(msg='Did not find cluster_profiler dir:{}'.format(target_dir_path))
 
-        entries = os.scandir(target_dir_path)
+        entries = os.scandir(self._target_dir_path)
         for entry in entries:
             if entry.is_symlink():
                 continue
             if entry.is_file() and entry.name.startswith('hccl_raw'):
-                file_path = os.path.join(target_dir_path, entry.name)
+                file_path = os.path.join(self._target_dir_path, entry.name)
                 with open(file_path, 'r') as src_file:
                     lines = src_file.readlines()
                 # The first row is col_name, the last row is the average.
@@ -486,7 +468,7 @@ class ClusterHcclAnalyser(ClusterAnalyser):
         """Get step trace info."""
         file_name = 'hccl_raw_{}.csv'.format(device_id)
         communication_file_path = \
-            os.path.join(self._cluster_profiler_dir, 'profiler', file_name)
+            os.path.join(self._target_dir_path, file_name)
         communication_file_path = validate_and_normalize_path(
             communication_file_path, raise_key="Invalid  communication file path.")
         if not os.path.exists(communication_file_path):
@@ -509,6 +491,9 @@ class ClusterHcclAnalyser(ClusterAnalyser):
             communication_info[1] = float(communication_info[1])
             communication_info[2] = float(communication_info[2])
             communication_info[3] = json.loads(communication_info[3])
+        # Judge whether the communication operator information is recorded.
+        # If recorded, the length of communication_info is 5.
+        if len(communication_info) > 4:
             communication_info[4] = json.loads(communication_info[4])
 
         return communication_info
