@@ -1050,7 +1050,7 @@
     "5054B083": "Failed to create the watchpoint. Do not use invalid rules.",
     "5054B202": "The debugger offline server module is not found",
     "5054B283": "A tensor is being downloaded. Please try again later.",
-    "5054B286": "The data_dump.json file of the dump data in the Summary directory is missing or damaged. Please check the integrity of the dump data in the directory.",
+    "5054B286": "The .dump_metadata/data_dump.json file of the dump data in the Summary directory is missing or damaged. Please check the integrity of the dump data in the directory.",
     "5054000C": "Insufficient memory, please try again after freeing memory."
   }
 }
