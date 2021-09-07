@@ -1183,6 +1183,7 @@ export default {
      * @param {Object} callback Callback Function
      */
     searchNodesNames() {
+      this.searchBox.value = this.searchBox.value.trim();
       const params = {
         search: this.searchBox.value,
         train_id: this.trainJobID,

@@ -233,11 +233,24 @@ limitations under the License.
         </el-table-column>
       </el-table>
     </el-dialog>
-    <el-dialog :title="$t('operator.scopeLevelFlops')"
-               :visible.sync="flopsDialogVisible"
+    <el-dialog :visible.sync="flopsDialogVisible"
                width="100%"
                :close-on-click-modal="false"
                class="flops-data-list">
+      <span slot="title">
+        {{ $t('operator.scopeLevelFlops') }}
+        <el-tooltip class="item"
+                    effect="light"
+                    placement="top-start">
+          <div slot="content">
+            {{ $t('profiling.features')}}<br>
+            {{ $t('profiling.flopsScopeTipOne')}}<br>
+            {{ $t('profiling.flopsScopeTipTwo')}}<br>
+            {{ $t('profiling.flopsScopeTipThree')}}
+          </div>
+          <i class="el-icon-info"></i>
+        </el-tooltip>
+      </span>
       <div class="reset"
            v-if="flopsChartDom">
         <el-button size="mini"
@@ -834,11 +847,11 @@ export default {
         if (this.searchByNameInput) {
           if (!this.hasBarChart) {
             this.opAllTypeList.op_filter_condition[this.searchType] = {
-              partial_match_str_in: [this.searchByNameInput],
+              partial_match_str_in: [this.searchByNameInput.trim()],
             };
           } else {
             this.opAllTypeList.op_filter_condition[this.search.detail.type] = {
-              partial_match_str_in: [this.searchByNameInput],
+              partial_match_str_in: [this.searchByNameInput.trim()],
             };
           }
         } else {
@@ -850,7 +863,7 @@ export default {
         this.op_filter_condition = {};
         if (this.searchByTypeInput) {
           this.op_filter_condition[this.search.all.type] = {
-            partial_match_str_in: [this.searchByTypeInput],
+            partial_match_str_in: [this.searchByTypeInput.trim()],
           };
         } else {
           this.op_filter_condition = {};

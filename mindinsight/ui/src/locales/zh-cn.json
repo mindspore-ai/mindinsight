@@ -539,7 +539,10 @@
       "bpEnd": "后向"
     },
     "isHeterogeneous": "暂不支持异构训练场景",
-    "scopeNameNum": "展示算子ScopeName层数: "
+    "scopeNameNum": "展示算子ScopeName层数: ",
+    "flopsScopeTipOne":"节点移动：通过拖动scope节点，将其移动到指定位置。",
+    "flopsScopeTipTwo":"重置：将图形恢复到初始状态。",
+    "flopsScopeTipThree":"选中：点击选中某一个scope节点，其关联的父子节点长期高亮，再次点击可取消高亮。"
   },
   "profilingGPU": {
     "minddata_get_next_queue": {

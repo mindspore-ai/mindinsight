@@ -540,7 +540,10 @@
       "bpEnd": "Backward"
     },
     "isHeterogeneous": "Heterogeneous training scenarios are not supported temporarily.",
-    "scopeNameNum": "ScopeName Layer Counts: "
+    "scopeNameNum": "ScopeName Layer Counts: ",
+    "flopsScopeTipOne":"Node movement: Drag the scope node to move it to the specified position.",
+    "flopsScopeTipTwo":"Reset: Restore the graphics to the Initial state.",
+    "flopsScopeTipThree":"Selected: Click to select a scope node, and its associated parent and child nodes will be highlighted for a long time, and click again to cancel the highlighting."
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
