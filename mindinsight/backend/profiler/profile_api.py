@@ -651,12 +651,9 @@ def get_cluster_step_trace_info():
     Examples:
         >>>POST http://xxx/v1/mindinsight/profile/cluster-step-trace-summary
     """
-    train_id = get_train_id(request)
-    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
-    try:
-        cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
-    except ValidationError:
-        raise ParamValueError('Invalid cluster_profiler dir')
+    summary_dir = get_train_id(request)
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
 
     condition = request.stream.read()
     try:
@@ -668,7 +665,7 @@ def get_cluster_step_trace_info():
     to_int(device_id, 'device_id')
 
     analyser = AnalyserFactory.instance().get_analyser(
-        'cluster_step_trace', cluster_profiler_dir, device_id
+        'cluster_step_trace', profiler_dir_abs, device_id
     )
     step_trace_info = analyser.query(condition)
     return jsonify(step_trace_info)
@@ -688,15 +685,12 @@ def get_cluster_peak_memory():
     Examples:
         >>>GET http://xxx/v1/mindinsight/profile/cluster-peak-memory
     """
-    train_id = get_train_id(request)
-    if not train_id:
-        raise ParamValueError('No train id.')
-    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
-    cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
-    check_train_job_and_profiler_dir(cluster_profiler_dir)
+    summary_dir = get_train_id(request)
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
 
     analyser = AnalyserFactory.instance().get_analyser(
-        'cluster_memory', cluster_profiler_dir
+        'cluster_memory', profiler_dir_abs
     )
     peak_mem = analyser.get_peak_memory()
     return jsonify(peak_mem)
@@ -716,15 +710,12 @@ def get_cluster_flops():
     Examples:
         >>>GET http://xxx/v1/mindinsight/profile/cluster-flops
     """
-    train_id = get_train_id(request)
-    if not train_id:
-        raise ParamValueError('No train id.')
-    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
-    cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
-    check_train_job_and_profiler_dir(cluster_profiler_dir)
+    summary_dir = get_train_id(request)
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
 
     analyser = AnalyserFactory.instance().get_analyser(
-        'cluster_flops', cluster_profiler_dir
+        'cluster_flops', profiler_dir_abs
     )
     flops = analyser.get_flops()
     return jsonify(flops)
@@ -793,12 +784,9 @@ def get_cluster_communication_info():
     Examples:
         >>>POST http://xxx/v1/mindinsight/profile/search-cluster-communication
     """
-    train_id = get_train_id(request)
-    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
-    try:
-        cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
-    except ValidationError:
-        raise ParamValueError('Invalid cluster_profiler dir')
+    summary_dir = get_train_id(request)
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
 
     condition = request.stream.read()
     try:
@@ -810,7 +798,7 @@ def get_cluster_communication_info():
     to_int(device_id, 'device_id')
 
     analyser = AnalyserFactory.instance().get_analyser(
-        'cluster_hccl', cluster_profiler_dir, device_id
+        'cluster_hccl', profiler_dir_abs, device_id
     )
     communication_info = analyser.query(condition)
     return jsonify(communication_info)
@@ -830,12 +818,9 @@ def get_cluster_link_info():
     Examples:
         >>>POST http://xxx/v1/mindinsight/profile/search-cluster-link
     """
-    train_id = get_train_id(request)
-    cluster_profiler_dir = os.path.join(settings.SUMMARY_BASE_DIR, train_id)
-    try:
-        cluster_profiler_dir = validate_and_normalize_path(cluster_profiler_dir, 'cluster_profiler')
-    except ValidationError:
-        raise ParamValueError('Invalid cluster_profiler dir')
+    summary_dir = get_train_id(request)
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
 
     condition = request.stream.read()
     try:
@@ -847,7 +832,7 @@ def get_cluster_link_info():
     to_int(device_id, 'device_id')
 
     analyser = AnalyserFactory.instance().get_analyser(
-        'cluster_hccl', cluster_profiler_dir, device_id
+        'cluster_hccl', profiler_dir_abs, device_id
     )
     link_info = analyser.get_cluster_link_info(condition)
     return jsonify(link_info)
