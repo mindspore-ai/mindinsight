@@ -541,9 +541,9 @@
     },
     "isHeterogeneous": "Heterogeneous training scenarios are not supported temporarily.",
     "scopeNameNum": "ScopeName Layer Counts: ",
-    "flopsScopeTipOne":"Node movement: Drag the scope node to move it to the specified position.",
-    "flopsScopeTipTwo":"Reset: Restore the graphics to the Initial state.",
-    "flopsScopeTipThree":"Selected: Click to select a scope node, and its associated parent and child nodes will be highlighted for a long time, and click again to cancel the highlighting."
+    "flopsScopeTipOne": "Node movement: Drag the scope node to move it to the specified position.",
+    "flopsScopeTipTwo": "Reset: Restore the graphics to the Initial state.",
+    "flopsScopeTipThree": "Selected: Click to select a scope node, and its associated parent and child nodes will be highlighted for a long time, and click again to cancel the highlighting."
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
@@ -574,15 +574,15 @@
     "flopsHeatMapTitle": "FLOPs Heatmap Analysis",
     "opName": "Operator Name",
     "waitCost": "Waiting Duration",
-    "waitCostExplanation": "It can also be called synchronization time. Before communication between cards, synchronization will be carried out first to ensure that the two cards are synchronized before communication. The waiting time is calculated by counting the total time spent by all notify wait operators and subtracting the time spent by notify wait operators in RDMA link communication time.",
+    "waitCostExplanation": "Also known as synchronization time. Before the two devices communicate with each other, ensure that synchronization has been performed. The waiting time is the total time consumed by all the Notify Wait operators minus the time consumed by the Notify Wait operator during the RDMA link communication.",
     "commCost": "Communication Duration",
-    "commCostExplanation": "Indicates the communication time of the communication operator. If the communication takes too long, there may be a problem with a link. You can locate the specific link through the link bandwidth. The communication time is calculated by counting the total time-consuming of communication operators of SDMA link (communication within server) and RDMA link (communication between servers).",
+    "commCostExplanation": "Indicates the communication time of communication operators. If the communication takes a long time, a link may be faulty. You can locate the specific link based on the link bandwidth. The communication time is the total time consumed by communication operators of the SDMA link(intra-server communication) and RDMA link(inter-server communication).",
     "commPerformance": "Communication Performance",
     "linkInfo": "Link Information",
-    "linkInfoExplanation": "Let the card as the source card or destination card to display link information. Link information includes communication time, traffic, bandwidth (traffic divided by communication time) and link type.",
+    "linkInfoExplanation": "A device is used as source or destination device to display the link information. The link information includes the communication time, traffic, bandwidth(traffic divided by communication time), and link type.",
     "commSize": "Traffic",
     "linkType": "Link Type",
-    "linkTypeExplanation": "The link types include SDMA link (communication link within the server) and RDMA link (communication link between servers).",
+    "linkTypeExplanation": "Link types include the SDMA link(intra-server communication) and RDMA link(inter-server communication)",
     "linkRange": "Link Relationship",
     "bandWidth": "Bandwidth",
     "startID": "Source ID",
@@ -598,11 +598,11 @@
     "flopsTipPartTwo": "The heatmap reflects the relative size of FLOPs between devices. The color of the rectangle block corresponding to each device indicates the ratio of the current device FLOPs to the maximum FLOPs of all devices.",
     "flopsTipPartThree": "Granularity: indicates the granularity of the color values corresponding to the FLOPs data of different devices.",
     "flopsTipPartFour": "You can also view the cluster overview of the training on the GUI, for example, the number of servers used in the training and the number of devices used by each server. You can click a device to go to the operator details page of the device.",
-    "communicationAloneTime": "Pure Communication Time",
-    "computationTime": "Computation Time",
-    "receiveAloneTime": "Pure Reception Time",
-    "stageTime": "Phase Time",
-    "collectiveCommunicationAlone": "Pure Collective Communication Time"
+    "communicationAloneTime": "Communication time",
+    "computationTime": "Computation time",
+    "receiveAloneTime": "Receiving time",
+    "stageTime": "Stage time",
+    "collectiveCommunicationAlone": "Collective communication time"
   },
   "components": {
     "summaryTitle": "Training Selection",
@@ -652,7 +652,7 @@
     "curValue": "Current Value",
     "compareToPre": "Compare with Previous Step",
     "stepTip": "The value 0 indicates the initial training state.",
-    "stepTipOffline": "(The starting Step is numbered from 1, and note that the numbering of the iteration field in the Dump configuration file starts from 0. The concepts of the two are different.)",
+    "stepTipOffline": "(Steps are numbered from 1, Note that the iteration field in the dump configuration file is numbered from 0. The two concepts are different.)",
     "toSummeryList": "Go to Summary List",
     "clientIp": "Client IP",
     "deviceId": "Device ID",
@@ -921,10 +921,10 @@
     "overSize": "The requested tensor is too large. The total value of the value exceeds 1GiB and cannot be displayed.",
     "state": "State",
     "stateInfo": {
-      "waiting": "Ready: Waiting for user operation.",
-      "running": "Running: Training is being performed or watchpoints are being checked. If the model is large or the detection data is large, more time is required. Please wait patiently.",
-      "sending": "Waiting for command execution: The previous command has not been completed, and the new command is waiting for the previous command to be executed.",
-      "pending": "Waiting for backend connection: Waiting for a new training connection or initializing the debugger environment."
+      "waiting": "Ready: Waiting for user operations.",
+      "running": "Running: The training is in progress or watchpoints are being checked. It may take a long time if the model or data volume is too large. Please wait.",
+      "sending": "Waiting for command execution: A new command is waiting for the current command to be finished.",
+      "pending": "Waiting for backend connection: Waiting for a new training connection or the debugger environment is being initialized."
     }
   },
   "explain": {
@@ -1050,7 +1050,7 @@
     "5054B083": "Failed to create the watchpoint. Do not use invalid rules.",
     "5054B202": "The debugger offline server module is not found",
     "5054B283": "A tensor is being downloaded. Please try again later.",
-    "5054B286": "The .dump_metadata/data_dump.json file of the dump data in the Summary directory is missing or damaged. Please check the integrity of the dump data in the directory.",
+    "5054B286": "The .dump_metadata/data_dump.json file in the summary directory is missing or damaged. Please check the integrity of the dump data in the directory.",
     "5054000C": "Insufficient memory, please try again after freeing memory."
   }
 }
