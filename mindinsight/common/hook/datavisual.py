@@ -54,6 +54,8 @@ class SummaryBaseDirAction(argparse.Action):
             option_string (str): Option string for specific argument name.
         """
         summary_base_dir = os.path.realpath(values)
+        if not os.path.exists(summary_base_dir):
+            print('Warning: summary-base-dir does not exist')
         setattr(namespace, self.dest, summary_base_dir)
 
 
