@@ -551,6 +551,94 @@ limitations under the License.
             {{ $t('debugger.nextNode')}}
           </el-button>
         </div>
+        <!-- Legend -->
+        <div class="legend">
+          <div class="title">
+            {{ $t('graph.legend') }}
+            <img :src="require('@/assets/images/all-drop-down.png')"
+                 v-show="!showLegend"
+                 @click="showLegend = !showLegend"
+                 alt="" />
+            <img :src="require('@/assets/images/all-uptake.png')"
+                 v-show="showLegend"
+                 @click="showLegend = !showLegend"
+                 alt="" />
+          </div>
+          <div v-show="showLegend"
+               class="legend-content">
+            <div class="legend-item">
+              <div class="pic">
+                <img :src="require('@/assets/images/name-scope.svg')"
+                     alt="" />
+              </div>
+              <div class="legend-text"
+                   :title="$t('graph.nameSpace')">
+                {{ $t('graph.nameSpace') }}
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="pic">
+                <img :src="require('@/assets/images/polymetric.svg')"
+                     alt="" />
+              </div>
+              <div class="legend-text"
+                   :title="$t('graph.polymetric')">
+                {{ $t('graph.polymetric') }}
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="pic">
+                <img :src="require('@/assets/images/virtual-node.svg')"
+                     alt="" />
+              </div>
+              <div class="legend-text"
+                   :title="$t('graph.virtualNode')">
+                {{ $t('graph.virtualNode') }}
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="pic">
+                <img :src="require('@/assets/images/operator-node.svg')"
+                     alt="" />
+              </div>
+              <div class="legend-text"
+                   :title="$t('graph.operatorNode')">
+                {{ $t('graph.operatorNode') }}
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="pic">
+                <img :src="require('@/assets/images/constant-node.svg')"
+                     alt="" />
+              </div>
+              <div class="legend-text"
+                   :title="$t('graph.constantNode')">
+                {{ $t('graph.constantNode') }}
+              </div>
+            </div>
+            <br>
+            <div class="legend-item">
+              <div class="pic">
+                <img :src="require('@/assets/images/data-flow.png')"
+                     alt="" />
+              </div>
+              <div class="legend-text"
+                   :title="$t('graph.dataFlowEdge')">
+                {{ $t('graph.dataFlowEdge') }}
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="pic">
+                <img :src="require('@/assets/images/control-dep.png')"
+                     alt="" />
+              </div>
+              <div class="legend-text"
+                   :title="$t('graph.controllDepEdge')">
+                {{ $t('graph.controllDepEdge') }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="table-container"
            :class="{collapse: collapseTable}">
@@ -945,6 +1033,7 @@ export default {
   data() {
     return {
       leftShow: false,
+      showLegend: true,
       searchWord: '',
       searchedWord: '',
       searchStackContent: '',
@@ -2131,8 +2220,8 @@ export default {
 .deb-wrap .left-wrap .left .content .stack-search .el-input {
   width: calc(100% - 80px);
 }
-.deb-wrap .left-wrap .left .content .node-type .el-input__inner{
-  height: 32px!important;
+.deb-wrap .left-wrap .left .content .node-type .el-input__inner {
+  height: 32px !important;
 }
 .deb-wrap .left-wrap .left .content .search-conditions .select-wrap {
   padding: 10px 15px;
@@ -2477,7 +2566,7 @@ export default {
 .tooltip-item .item {
   display: flex;
 }
-.tooltip-item .item :first-child{
+.tooltip-item .item :first-child {
   width: 20px;
   flex-shrink: 0;
 }
@@ -2486,6 +2575,60 @@ export default {
   border-bottom: 1px solid var(--table-border-color);
   position: relative;
 }
+.deb-wrap .right .svg-wrap .legend {
+  width: 400px;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  background-color: var(--graph-legend-bg-color);
+  border: 1px solid var(--table-border-color);
+}
+.deb-wrap .right .svg-wrap .legend .title {
+  padding: 10px 0 10px 10px;
+  font-size: 14px;
+}
+.deb-wrap .right .svg-wrap .legend .title img {
+  float: right;
+  margin-right: 10px;
+  cursor: pointer;
+}
+.deb-wrap .right .svg-wrap .legend .legend-content {
+  padding: 0 10px;
+  border: 1px solid var(--table-border-color);
+}
+.deb-wrap .right .svg-wrap .legend .legend-item {
+  padding: 5px 0;
+  display: inline-block;
+  width: 50%;
+  font-size: 14px;
+  line-height: 20px;
+}
+.deb-wrap .right .svg-wrap .legend .legend-item .pic {
+  width: 45px;
+  text-align: center;
+  display: inline-block;
+  padding-left: 20px;
+  vertical-align: middle;
+}
+.deb-wrap .right .svg-wrap .legend .legend-item .pic img {
+  max-width: 45px;
+  max-height: 15px;
+  margin-left: -20px;
+  vertical-align: middle;
+}
+.deb-wrap .right .svg-wrap .legend .legend-item .legend-text {
+  display: inline-block;
+  padding-left: 20px;
+  width: calc(100% - 45px);
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.deb-wrap .right .svg-wrap .legend .legend-item .legend-text:hover {
+  cursor: default;
+}
+
 .deb-wrap .right .svg-wrap .btn-wrap {
   position: absolute;
   top: 10px;
