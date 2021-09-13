@@ -48,8 +48,10 @@ class ResizeMapper(ONNXToMindSporeMapper):
 
         # Get requested size for resize
         size = params["output_shape"][-2:]
+        # Get align_corners
+        align_corners = convert_bytes_string_to_string(params.get("coordinate_transformation_mode")) == "align_corners"
 
-        return {"size": tuple(size)}
+        return {"size": tuple(size), "align_corners": align_corners}
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
