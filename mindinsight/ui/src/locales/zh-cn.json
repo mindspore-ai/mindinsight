@@ -608,6 +608,7 @@
     "tagSelectTitle": "标签选择",
     "selectAll": "全选",
     "tagFilterPlaceHolder": "请输入需要的标签(支持正则表达式)",
+    "trainFilterPlaceHolder": "请输入需要的训练(支持正则表达式)",
     "open": "展开",
     "close": "折叠",
     "gridIncorrectDataError": "当前只支持最多二维数组的展示",

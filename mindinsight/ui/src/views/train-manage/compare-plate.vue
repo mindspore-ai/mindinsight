@@ -150,9 +150,11 @@ export default {
       componentsLabel: {
         summary: {
           title: this.$t('components.summaryTitle'),
+          placeholder: this.$t('components.trainFilterPlaceHolder'),
         },
         tag: {
           title: this.$t('components.tagSelectTitle'),
+          placeholder: this.$t('components.tagFilterPlaceHolder'),
         },
       },
       firstNum: 0, // First num

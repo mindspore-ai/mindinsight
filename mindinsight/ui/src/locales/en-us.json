@@ -609,6 +609,7 @@
     "tagSelectTitle": "Tag Selection",
     "selectAll": "All",
     "tagFilterPlaceHolder": "Enter tag (regular expression supported)",
+    "trainFilterPlaceHolder": "Enter training (regular expression supported)",
     "open": "More",
     "close": "Less",
     "gridIncorrectDataError": "A maximum of two-dimensionalarrays can be displayed.",
