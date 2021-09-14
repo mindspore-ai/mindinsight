@@ -55,7 +55,7 @@ limitations under the License.
 <script>
 import echarts, {echartsThemeName} from '@/js/echarts';
 import RequestService from '@/services/request-service';
-import empty, {NO_DATA, LOADING_DATA} from '@/components/empty';
+import empty, {NO_DATA, LOADING_DATA, HETEROGENEOUS} from '@/components/empty';
 import {keepDecimalPlaces} from '@/js/utils';
 const DEFAULT_DECIMAL_PLACES = 4;
 export default {
@@ -148,6 +148,10 @@ export default {
         };
         RequestService.getClusterInfo(params)
             .then((res) => {
+              if (typeof res.data === 'object' && res.data.is_heterogeneous) {
+                this.performanceState = HETEROGENEOUS;
+                return;
+              }
               if (res?.data?.info?.length > 0) {
                 const chartData = [];
                 const parallelMode = res.data['parallel-mode'];
@@ -342,11 +346,12 @@ export default {
   font-weight: bold;
 }
 .performance-dashboard .header .jump {
-  cursor: pointer;
+  cursor: not-allowed;
   color: var(--button-disabled-font-color);
   font-size: 12px;
 }
 .performance-dashboard .header .is-effective {
   color: var(--theme-color);
+  cursor: pointer;
 }
 </style>

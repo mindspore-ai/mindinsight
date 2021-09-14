@@ -32,8 +32,8 @@ limitations under the License.
             {{$t('profilingCluster.memoryHeatMapTitle')}}
           </div>
           <div class="detail-link"
-               :class="{disabled:!memoryHeatmapInitOver || !memoryHeatmapDataList.length}">
-            <button :disabled="!memoryHeatmapInitOver || !memoryHeatmapDataList.length"
+               :class="{disabled:isHeterogeneous || !memoryHeatmapInitOver || !memoryHeatmapDataList.length}">
+            <button :disabled="isHeterogeneous || !memoryHeatmapInitOver || !memoryHeatmapDataList.length"
                     @click="viewDetail('memory-heatmap')">
               {{$t('profiling.viewDetail')}}
               <i class="el-icon-d-arrow-right"></i>
@@ -46,7 +46,9 @@ limitations under the License.
             <div>
               <img :src="require('@/assets/images/nodata.png')" />
             </div>
-            <div v-if="memoryHeatmapInitOver && !memoryHeatmapDataList.length"
+            <div v-if="isHeterogeneous"
+                 class="noData-text">{{$t("profiling.isHeterogeneous")}}</div>
+            <div v-else-if="memoryHeatmapInitOver && !memoryHeatmapDataList.length"
                  class="noData-text">{{$t("public.noData")}}</div>
             <div v-else
                  class="noData-text">{{$t("public.dataLoading")}}</div>
@@ -144,6 +146,7 @@ export default {
       num: 8, // num of heatmap
       legendArrLength: 10, // Length of legend
       granularity: 0.1, // Granularity
+      isHeterogeneous: false,
     };
   },
   mounted() {
@@ -211,6 +214,11 @@ export default {
       };
       RequestService.getClusterPeakMemory(params)
           .then((res) => {
+            if (typeof res.data === 'object' && res.data.is_heterogeneous) {
+              this.isHeterogeneous = true;
+              this.memoryHeatmapInitOver = true;
+              return;
+            }
             if (!res || !res.data) {
               this.memoryHeatmapInitOver = true;
               return;
