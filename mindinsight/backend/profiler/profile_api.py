@@ -523,6 +523,13 @@ def get_memory_usage_summary():
         logger.info("Invalid device_type, Memory Usage only supports Ascend for now.")
         raise ParamValueError("Invalid device_type.")
 
+    # In heterogeneous training scene, do not display memory usage data.
+    cpu_op_type_file_name_prefix = "cpu_op_type_info_"
+    for item in os.listdir(profiler_dir_abs):
+        if cpu_op_type_file_name_prefix in item:
+            summary = {'is_heterogeneous': True}
+            return summary
+
     analyser = AnalyserFactory.instance().get_analyser(
         'memory_usage', profiler_dir_abs, device_id)
     summary = analyser.get_memory_usage_summary(device_type)
@@ -664,6 +671,13 @@ def get_cluster_step_trace_info():
     device_id = condition.get("device_id", "0")
     to_int(device_id, 'device_id')
 
+    # In heterogeneous training scene, do not display cluster step trace data.
+    cpu_op_type_file_name_prefix = "cpu_op_type_info_"
+    for item in os.listdir(profiler_dir_abs):
+        if cpu_op_type_file_name_prefix in item:
+            step_trace_info = {'is_heterogeneous': True}
+            return jsonify(step_trace_info)
+
     analyser = AnalyserFactory.instance().get_analyser(
         'cluster_step_trace', profiler_dir_abs, device_id
     )
@@ -688,6 +702,13 @@ def get_cluster_peak_memory():
     summary_dir = get_train_id(request)
     profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    # In heterogeneous training scene, do not display cluster memory usage data.
+    cpu_op_type_file_name_prefix = "cpu_op_type_info_"
+    for item in os.listdir(profiler_dir_abs):
+        if cpu_op_type_file_name_prefix in item:
+            peak_mem = {'is_heterogeneous': True}
+            return jsonify(peak_mem)
 
     analyser = AnalyserFactory.instance().get_analyser(
         'cluster_memory', profiler_dir_abs
