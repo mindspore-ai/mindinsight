@@ -76,8 +76,8 @@ limitations under the License.
           {{$t('profiling.memory.usedMemory')}}
         </div>
         <div class="detail-link"
-             :class="{disabled:!graphicsInitOver || noGraphicsDataFlag}">
-          <button :disabled="!graphicsInitOver || noGraphicsDataFlag"
+             :class="{disabled:isHeterogeneous || !graphicsInitOver || noGraphicsDataFlag}">
+          <button :disabled="isHeterogeneous || !graphicsInitOver || noGraphicsDataFlag"
                   @click="viewDetail('memory-utilization')">
             {{$t('profiling.viewDetail')}}
             <i class="el-icon-d-arrow-right"></i>
@@ -90,7 +90,9 @@ limitations under the License.
           <div>
             <img :src="require('@/assets/images/nodata.png')" />
           </div>
-          <div v-if="graphicsInitOver && noGraphicsDataFlag"
+          <div v-if="isHeterogeneous"
+               class="noData-text">{{$t("profiling.isHeterogeneous")}}</div>
+          <div v-else-if="graphicsInitOver && noGraphicsDataFlag"
                class="noData-text">{{$t("public.noData")}}</div>
           <div v-else
                class="noData-text">{{$t("public.dataLoading")}}</div>
@@ -209,6 +211,7 @@ export default {
         samplingInterval: 0,
       },
       themeIndex: this.$store.state.themeIndex, // Index of theme color
+      isHeterogeneous: false,
     };
   },
   watch: {
@@ -273,7 +276,11 @@ export default {
       RequestService.queryMemorySummary(params)
           .then(
               (res) => {
-                if (res && res.data && res.data.summary) {
+                if (res.data.is_heterogeneous) {
+                  this.isHeterogeneous = true;
+                  return;
+                }
+                if (res.data.summary) {
                   const resData = res.data.summary;
                   this.totalMemory = isNaN(resData.capacity) ? '-' : resData.capacity;
                 } else {
@@ -281,10 +288,11 @@ export default {
                 }
               },
               () => {
-                this.overViewInitOver = true;
+                return;
               },
           )
           .then(() => {
+            if (this.isHeterogeneous) return;
             this.getMemoryGraphics();
           });
     },

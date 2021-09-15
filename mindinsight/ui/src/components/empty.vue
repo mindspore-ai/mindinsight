@@ -21,7 +21,11 @@ limitations under the License.
 </template>
 
 <script>
-export const [NO_DATA, EMPTY_DATA, LOADING_DATA, COMING_SOON] = ['noData', 'emptyData', 'dataLoading', 'stayTuned'];
+export const [
+  NO_DATA, EMPTY_DATA, LOADING_DATA, COMING_SOON, HETEROGENEOUS,
+] = [
+  'noData', 'emptyData', 'dataLoading', 'stayTuned', 'heterogeneous',
+];
 export default {
   props: {
     state: {
@@ -35,6 +39,7 @@ export default {
       emptyData: this.$t('public.emptyData'),
       dataLoading: this.$t('public.dataLoading'),
       stayTuned: this.$t('public.stayTuned'),
+      heterogeneous: this.$t('profiling.isHeterogeneous'),
     };
   },
   computed: {
