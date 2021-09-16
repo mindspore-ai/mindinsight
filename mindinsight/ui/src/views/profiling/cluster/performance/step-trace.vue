@@ -19,6 +19,20 @@ limitations under the License.
     <div class="cl-cluster-bk">
       <div class="profiling-content-title">
         {{$t("profilingCluster.clusterStepView")}}
+        <el-tooltip class="item"
+                    effect="light"
+                    placement="top-start"
+                    v-if="tips.length">
+          <div slot="content"
+               class="step-trace-tooltip-contain">
+            <div v-for="(item,key) in tips"
+                 :key="key"
+                 class="step-trace-tooltip-contain-item">
+              <span class="label">{{item.label}}</span> {{ item.value }}
+            </div>
+          </div>
+          <i class="el-icon-info"></i>
+        </el-tooltip>
       </div>
       <div class="cl-step-filter">
         <label>{{stepTip}}</label>
@@ -177,6 +191,7 @@ export default {
       stageId: '',
       stageArr: [],
       stageTip: this.$t('profiling.stageTip'),
+      tips: [], // Proper noun explanation tips
     };
   },
   mounted() {
@@ -258,6 +273,20 @@ export default {
                     this.$t('profiling.tailTime'),
                   ],
                   cols: ['iteration_interval', 'fp_and_bp', 'tail'],
+                  tips: [
+                    {
+                      label: this.$t('profiling.iterationGapTime'),
+                      value: this.$t('profilingCluster.iterationGapTimeTip'),
+                    },
+                    {
+                      label: this.$t('profiling.fpBpTime'),
+                      value: this.$t('profilingCluster.fpBpTimeTip'),
+                    },
+                    {
+                      label: this.$t('profiling.tailTime'),
+                      value: this.$t('profilingCluster.tailTimeTip'),
+                    },
+                  ],
                 },
                 'model-parallel': {
                   model: 'step_bottleneck_info',
@@ -268,6 +297,20 @@ export default {
                     this.$t('profilingCluster.computationTime'),
                   ],
                   cols: ['iteration_interval', 'communication_alone', 'computation'],
+                  tips: [
+                    {
+                      label: this.$t('profiling.iterationGapTime'),
+                      value: this.$t('profilingCluster.iterationGapTimeTip'),
+                    },
+                    {
+                      label: this.$t('profilingCluster.communicationAloneTime'),
+                      value: this.$t('profilingCluster.communicationAloneTimeTip'),
+                    },
+                    {
+                      label: this.$t('profilingCluster.computationTime'),
+                      value: this.$t('profilingCluster.computationTimeTip'),
+                    },
+                  ],
                 },
                 'pipeline-parallel': {
                   model: 'step_bottleneck_info',
@@ -288,8 +331,35 @@ export default {
                     'computation',
                     'collective_communication_alone',
                   ],
+                  tips: [
+                    {
+                      label: this.$t('profiling.iterationGapTime'),
+                      value: this.$t('profilingCluster.iterationGapTimeTip'),
+                    },
+                    {
+                      label: this.$t('profilingCluster.receiveAloneTime'),
+                      value: this.$t('profilingCluster.receiveAloneTimeTip'),
+                    },
+                    {
+                      label: this.$t('profilingCluster.stageTime'),
+                      value: this.$t('profilingCluster.stageTimeTip'),
+                    },
+                    {
+                      label: this.$t('profilingCluster.communicationAloneTime'),
+                      value: this.$t('profilingCluster.communicationAloneTimeTip'),
+                    },
+                    {
+                      label: this.$t('profilingCluster.computationTime'),
+                      value: this.$t('profilingCluster.computationTimeTip'),
+                    },
+                    {
+                      label: this.$t('profilingCluster.collectiveCommunicationAlone'),
+                      value: this.$t('profilingCluster.collectiveCommunicationAloneTip'),
+                    },
+                  ],
                 },
               };
+              this.tips = parallelModes[parallelMode].tips;
               if (isInit) {
                 res.data.info.forEach((item) => {
                   const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
@@ -439,6 +509,14 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+.step-trace-tooltip-contain .step-trace-tooltip-contain-item {
+  line-height: 20px;
+  margin-bottom: 3px;
+}
+.step-trace-tooltip-contain .step-trace-tooltip-contain-item span.label {
+  font-weight: bold;
+  margin-right: 3px;
 }
 .cl-cluster .no-data-img {
   background: var(--bg-color);
