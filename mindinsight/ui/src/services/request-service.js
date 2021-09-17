@@ -336,6 +336,7 @@ export default {
       headers: {
         ignoreError: true,
       },
+      timeout: 0,
     });
   },
   retrieve(params, sessionId) {
