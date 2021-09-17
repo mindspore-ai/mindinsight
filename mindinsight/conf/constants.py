@@ -38,7 +38,9 @@ LOG_ROTATING_BACKUPCOUNT = 30
 HOST = '127.0.0.1'
 
 # Allow to support cross origin resource sharing(CORS) enable. Default is disable.
-# If enable CORS, `SUPPORT_REQUEST_METHODS` should enable 'OPTIONS' method.
+# You can follow these steps to enable CORS:
+# 1. Set ENABLE_CORS to True
+# 2. Install `Flask-Cors` by pip, `pip install Flask-Cors>=3.0.8`
 ENABLE_CORS = False
 
 SUPPORT_REQUEST_METHODS = {'POST', 'GET', 'PUT', 'DELETE'}

@@ -15,13 +15,13 @@
 """Web application module."""
 import os
 from importlib import import_module
+from copy import deepcopy
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException
 
 from flask import Flask
 from flask import request
 from flask import Response
-from flask_cors import CORS
 
 from mindinsight.conf import settings
 from mindinsight.utils.hook import HookUtils
@@ -49,11 +49,15 @@ def get_security_headers():
         'script-src': ["'self'", "'unsafe-eval'"]
     }
 
+    request_methods = deepcopy(settings.SUPPORT_REQUEST_METHODS)
+    if settings.ENABLE_CORS:
+        request_methods.add('OPTIONS')
+
     headers = {
         'X-Frame-Options': 'SAMEORIGIN',
         'X-XSS-Protection': '1; mode=block',
         'X-Content-Type-Options': 'nosniff',
-        'Access-Control-Allow-Methods': ', '.join(settings.SUPPORT_REQUEST_METHODS),
+        'Access-Control-Allow-Methods': ', '.join(request_methods),
         'Content-Security-Policy': '; '.join([
             f"{k} {' '.join(v)}" for k, v in content_security_policy.items()
         ]),
@@ -121,7 +125,8 @@ def create_app():
     app.config['JSON_SORT_KEYS'] = False
 
     if settings.ENABLE_CORS:
-        CORS(app, supports_credentials=True)
+        flask_cors = import_module('flask_cors')
+        flask_cors.CORS(app, supports_credentials=True)
 
     app.before_request(before_request)
 
