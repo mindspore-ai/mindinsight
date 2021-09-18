@@ -13,13 +13,59 @@
 # limitations under the License.
 # ============================================================================
 """The cpu base analyser."""
-from mindinsight.profiler.analyser.gpu_analyser import GpuAnalyser
+from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.validator import validate
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerRawFileException
 from mindinsight.profiler.common.log import logger as log
 
+class CpuAnalyser(BaseAnalyser):
+    """Cpu base analyser."""
+    _csv_file_to_analyse = ""
 
-class CpuOpTypeAnalyser(GpuAnalyser):
+    def _load(self):
+        """Load data according to the parsed CPU operator types file."""
+        op_type_file_path = os.path.join(
+            self._profiling_dir,
+            self._csv_file_to_analyse.format(self._device_id)
+        )
+        op_type_file_path = validate_and_normalize_path(
+            op_type_file_path, raise_key="Invalid op_type_file_path")
+        if not os.path.isfile(op_type_file_path):
+            logger.warning('The file <%s> does not exist.', op_type_file_path)
+            return
+
+        with open(op_type_file_path, 'r') as file:
+            csv_reader = csv.reader(file)
+            _ = next(csv_reader)
+            for info in csv_reader:
+                self._data.append(self._convert_field_type(info))
+
+    @staticmethod
+    def _convert_field_type(row):
+        """
+        Convert the field type to the specific type.
+
+        Args:
+            row (list): One row data from parsed data.
+
+        Returns:
+            list, the converted data.
+        """
+        return row
+
+    def _filter(self, filter_condition):
+        """
+        Filter the profiling data according to the filter condition.
+
+        Args:
+            filter_condition (dict): The filter condition.
+        """
+        def _inner_filter(item: list):
+            return self._default_filter(item, filter_condition)
+
+        self._result = list(filter(_inner_filter, self._data))
+
+class CpuOpTypeAnalyser(CpuAnalyser):
     """Cpu operation type analyser."""
     _col_names = validate.CPU_TYPE_COL
     _csv_file_to_analyse = 'cpu_op_type_info_{}.csv'
@@ -44,7 +90,7 @@ class CpuOpTypeAnalyser(GpuAnalyser):
             raise ProfilerRawFileException('failed to get HOST CPU operator type data.')
 
 
-class CpuOpInfoAnalyser(GpuAnalyser):
+class CpuOpInfoAnalyser(CpuAnalyser):
     """Cpu operation detail info analyser."""
     _col_names = validate.CPU_DETAIL_COL
     _csv_file_to_analyse = 'cpu_op_detail_info_{}.csv'
