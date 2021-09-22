@@ -248,7 +248,8 @@ limitations under the License.
     <el-dialog :title="opInfo.title"
                :visible.sync="opInfo.visible"
                width="960px">
-      <cluster-comm-op-details :rankID="opInfo.rankID"
+      <cluster-comm-op-details v-if="opInfo.visible"
+                               :rankID="opInfo.rankID"
                                :dataset="opInfo.dataset">
       </cluster-comm-op-details>
     </el-dialog>
