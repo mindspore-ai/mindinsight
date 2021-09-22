@@ -24,7 +24,8 @@ limitations under the License.
       </div>
       <!-- Total Operator -->
       <div class="content-container">
-        <el-table :data="displayOperatorDataset"
+        <el-table ref="table"
+                  :data="displayOperatorDataset"
                   @expand-change="onExpandTable"
                   height="100%">
           <!-- Single Operator Expand -->
@@ -127,6 +128,7 @@ export default {
         pageSizes: [10, 20, 50],
       }, // Page info of operator list
       searchOperatorStr: '', // String of filter
+      expandedRow: null,
     };
   },
   created() {
@@ -186,6 +188,11 @@ export default {
      * @param {Object} row
      */
     onExpandTable(row) {
+      if (row === this.expandedRow) {
+        return;
+      }
+      this.$refs.table.toggleRowExpansion(this.expandedRow, false);
+      this.expandedRow = row;
       this.initExpandTable(row.linkInfo);
     },
     /**
