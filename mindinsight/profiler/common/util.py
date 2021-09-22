@@ -39,9 +39,11 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
     """
     profiler_file_prefix = ["timeline_display", "output_op_compute_time"]
     gpu_profiler_file_prefix = ["gpu_op_detail_info", "gpu_activity_data", "gpu_op_type_info"]
+    cpu_profiler_file_prefix = ["cpu_op_detail_info", "cpu_op_type_info"]
 
     device_id_list = set()
     gpu_device_id_list = set()
+    cpu_device_id_list = set()
 
     depth = 0
     for _, _, filenames in os.walk(profiler_dir):
@@ -61,6 +63,8 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
                 device_id_list.add(device_num)
             elif device_num.isdigit() and '_'.join(items[:-1]) in gpu_profiler_file_prefix:
                 gpu_device_id_list.add(device_num)
+            elif device_num.isdigit() and '_'.join(items[:-1]) in cpu_profiler_file_prefix:
+                cpu_device_id_list.add(device_num)
         depth += 1
 
     if device_id_list:
@@ -69,6 +73,9 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
     elif gpu_device_id_list:
         result_list = sorted(list(gpu_device_id_list))
         profiler_type = "gpu"
+    elif cpu_device_id_list:
+        result_list = sorted(list(cpu_device_id_list))
+        profiler_type = "cpu"
     else:
         result_list = []
         profiler_type = ""
