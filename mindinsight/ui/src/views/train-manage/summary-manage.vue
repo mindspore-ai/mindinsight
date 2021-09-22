@@ -412,7 +412,18 @@ export default {
       const profilerDir = row.profiler_dir;
       const trainId = row.train_id;
       const path = row.relative_path;
-      const router = row.profiler_type === 'gpu' ? '/profiling-gpu' : '/profiling';
+      let router;
+      switch (row.profiler_type) {
+        case 'gpu':
+          router = '/profiling-gpu';
+          break;
+        case 'cpu':
+          router = '/profiling-cpu';
+          break;
+        default:
+          router = '/profiling';
+          break;
+      }
       this.$router.push({
         path: router,
         query: {
@@ -544,7 +555,18 @@ export default {
         const profilerDir = row.profiler_dir;
         const trainId = row.train_id;
         const path = row.relative_path;
-        const router = row.profiler_type === 'gpu' ? '/profiling-gpu' : '/profiling';
+        let router;
+        switch (row.profiler_type) {
+          case 'gpu':
+            router = '/profiling-gpu';
+            break;
+          case 'cpu':
+            router = '/profiling-cpu';
+            break;
+          default:
+            router = '/profiling';
+            break;
+        }
         const routeUrl = this.$router.resolve({
           path: router,
           query: {

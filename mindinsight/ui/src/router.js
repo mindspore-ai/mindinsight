@@ -79,6 +79,25 @@ export default new Router({
       component: () => import('./views/train-manage/compare-plate.vue'),
     },
     {
+      path: '/profiling-cpu',
+      component: () => import('./views/profiling-cpu/profiling-dashboard.vue'),
+      redirect: '/profiling-cpu/performance-dashboard',
+      children: [
+        {
+          path: 'performance-dashboard',
+          component: () => import('./views/profiling-cpu/performance-dashboard.vue'),
+        },
+        {
+          path: 'resource-dashboard',
+          component: () => import('./views/profiling-cpu/resource-dashboard.vue'),
+        },
+        {
+          path: 'operator',
+          component: () => import('./views/profiling-cpu/operator.vue'),
+        },
+      ],
+    },
+    {
       path: '/profiling-gpu',
       component: () => import('./views/profiling-gpu/profiling.vue'),
       redirect: '/profiling-gpu/profiling-dashboard',
