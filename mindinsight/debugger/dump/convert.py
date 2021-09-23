@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Parse tensor files from async dump structure."""
-
+import csv
 import os
 import stat
 import sys
@@ -28,7 +28,8 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
 PARSE_ARGS_FIELDS = ['dump_path', 'format', 'output_path', 'output_file_type',
                      'input', 'output', 'shape',
                      'custom_script_path', 'dump_version']
-
+CannTool = namedtuple("CannTool", ['utils', 'common', 'log', 'format_conversion',
+                                   'compare_error', 'compare_exception'])
 
 class ArgsParser(namedtuple("ArgsParser", PARSE_ARGS_FIELDS)):
     """Args Parser object."""
@@ -41,9 +42,9 @@ class ArgsParser(namedtuple("ArgsParser", PARSE_ARGS_FIELDS)):
         return super().__new__(cls, **new_kwargs)
 
 
-def load_hisi_tools(msaccucmp_path=None):
+def load_cann_tools(msaccucmp_path=None):
     """
-    Load HISI tools.
+    Load CANN tools.
 
     Args:
         msaccucmp_path (Path): The path object of msaccucmp.py path.
@@ -52,21 +53,32 @@ def load_hisi_tools(msaccucmp_path=None):
         tuple, the tuple of utils, common, shape_conversion module in toolkit package.
     """
     msaccucmp_path = get_msaccucmp_path(msaccucmp_path)
-    hisi_tool_path = msaccucmp_path.parent
-    if str(hisi_tool_path) not in sys.path:
-        sys.path.append(str(hisi_tool_path))
+    cann_tool_path = msaccucmp_path.parent
+    if str(cann_tool_path) not in sys.path:
+        sys.path.insert(0, str(cann_tool_path))
     try:
-        hisi_utils = import_module('utils')
-        hisi_common = import_module('common')
-        hisi_format_conversion = import_module('shape_conversion').FormatConversionMain
+        cann_utils = import_module('utils')
+        cann_common = import_module('common')
+        cann_format_conversion = import_module('shape_conversion').FormatConversionMain
+        cann_log = import_module('log')
     except ModuleNotFoundError:
-        raise ModuleNotFoundError(f'Failed to load HISI tools under {msaccucmp_path}')
-    return hisi_utils, hisi_common, hisi_format_conversion
+        raise ModuleNotFoundError(f'Failed to load CANN tools under {cann_tool_path}')
+    if not hasattr(cann_log, 'print_error_log'):
+        cann_log = cann_utils
+    try:
+        compare_error = import_module('compare_error')
+        cann_compare_error = compare_error.CompareError.MSACCUCMP_NONE_ERROR
+        cann_compare_exception = compare_error.CompareError
+    except ModuleNotFoundError:
+        cann_compare_error = cann_utils.VECTOR_COMPARISON_NONE_ERROR
+        cann_compare_exception = cann_utils.CompareError
+    return CannTool(cann_utils, cann_common, cann_log, cann_format_conversion,
+                    cann_compare_error, cann_compare_exception)
 
 
 def get_msaccucmp_path(msaccucmp_path=None):
     """
-    Get the Path of HISI msaccucmp file.
+    Get the Path of CANN msaccucmp file.
 
     Args:
         msaccucmp_path (str): The path of `msaccucmp.py` or `msaccucmp.pyc`. Default: None.
@@ -80,15 +92,17 @@ def get_msaccucmp_path(msaccucmp_path=None):
             raise FileNotFoundError(f"File {msaccucmp_path} doesn't exists. Please check the input value.")
         return msaccucmp_path
     # search msaccucmp file under $ASCEND_AICPU_PATH
-    ascend_aicpu_path = os.environ.get('ASCEND_AICPU_PATH')
-    if not ascend_aicpu_path:
-        raise FileNotFoundError("Failed to find $ASCEND_AICPU_PATH parameter in environment. Please make sure you have"
-                                "install run packages and set the environment correctly.")
-    ascend_aicpu_path = Path(ascend_aicpu_path).resolve()
-    msaccucmp_files = list(ascend_aicpu_path.rglob('msaccucmp.py*'))
+    ascend_toolkit_path = os.environ.get('ASCEND_TOOLKIT_PATH', '/usr/local/Ascend/')
+    ascend_toolkit_path = Path(ascend_toolkit_path).resolve()
+    msaccucmp_files = list(ascend_toolkit_path.rglob('msaccucmp.py*'))
     if not msaccucmp_files:
-        raise FileNotFoundError(f"Failed to find msaccucmp.py or msaccucmp.pyc file under {ascend_aicpu_path}. Please"
-                                f"make sure you have install toolkit package successfully.")
+        # the tools might be soft-link path
+        ascend_tool_path = (ascend_toolkit_path / "tools").resolve()
+        msaccucmp_files = list(ascend_tool_path.rglob('msaccucmp.py*'))
+        if not msaccucmp_files:
+            raise FileNotFoundError(f"Failed to find msaccucmp.py or msaccucmp.pyc file under {ascend_toolkit_path}. "
+                                    f"Please make sure you have installed toolkit package and set "
+                                    f"`ASCEND_TOOLKIT_PATH` in the environment correctly.")
     return msaccucmp_files[0]
 
 
@@ -99,7 +113,7 @@ class DumpRootDirConverter:
         self.data_loader = data_loader
         self.dump_data_dir = Path(data_loader.get_dump_dir())
         self.failed_summary_file = self.dump_data_dir.joinpath('convert_failed_files_summary.txt')
-        self._hisi_tools = load_hisi_tools(msaccucmp_path)
+        self._cann_tools = load_cann_tools(msaccucmp_path)
         self.check_async_dir()
 
     def check_async_dir(self):
@@ -116,7 +130,7 @@ class DumpRootDirConverter:
             self.failed_summary_file.unlink()
         for iter_path in source_iterations:
             dump_path = str(iter_path)
-            res = DirConvert(dump_path=dump_path, output_path=dump_path, hisi_tools=self._hisi_tools).convert()
+            res = DirConvert(dump_path=dump_path, output_path=dump_path, cann_tools=self._cann_tools).convert()
             failed_lines.extend(res)
         # add tensor format in file name
 
@@ -130,22 +144,23 @@ class DumpRootDirConverter:
             for line in failed_lines:
                 handler.write(line + '\n')
         self.failed_summary_file.chmod(stat.S_IRUSR)
-        hisi_utils = self._hisi_tools[0]
-        hisi_utils.print_info_log(f"Failed summary has saved to {str(self.failed_summary_file)}")
+        self._cann_tools.log.print_info_log(f"Failed summary has saved to {str(self.failed_summary_file)}")
 
 
 class DirConvert:
     """Convert the async dump data under one directory into host format."""
+    MAPPING_FILE_NAME = 'mapping.csv'
+    OP_DEBUG_TYPE = 'Opdebug'
 
-    def __init__(self, dump_path, output_path, target_format='NCHW', output_file_type='npy', hisi_tools=None):
+    def __init__(self, dump_path, output_path, target_format='NCHW', output_file_type='npy', cann_tools=None):
         self.args_parser = ArgsParser(dump_path=dump_path,
                                       format=target_format,
                                       output_path=output_path,
                                       output_file_type=output_file_type)
         self.output_path = Path(output_path).absolute()
         self.failed_file_path = self.output_path.joinpath('convert_failed_file_list.txt')
-        self.hisi_utils, self.hisi_common, self.hisi_format_conversion = load_hisi_tools() \
-            if hisi_tools is None else hisi_tools
+        self.cann_tools = load_cann_tools() if cann_tools is None else cann_tools
+        self.node_map = self._load_mapping_info()
 
     def _is_npy_target(self):
         """Check if the output_file type is npy."""
@@ -163,40 +178,62 @@ class DirConvert:
 
     def convert(self):
         """Convert async dump data of src_dir to target_format and saved in output_dir."""
-        conversion = self.hisi_format_conversion(self.args_parser)
+        conversion = self.cann_tools.format_conversion(self.args_parser)
         self.clean_old_files()
         failed_lines = []
         ret = conversion.convert_format()
         self.rename_generated_npy_file()
-        if ret != self.hisi_utils.VECTOR_COMPARISON_NONE_ERROR:
-            self.hisi_utils.print_info_log(
+        if ret != self.cann_tools.compare_error:
+            self.cann_tools.log.print_info_log(
                 f"Begin to convert failed operator in {str(self.failed_file_path)} one by one.")
             failed_lines = self.convert_failed_tensors()
         else:
-            self.hisi_utils.print_info_log(
+            self.cann_tools.log.print_info_log(
                 f"All tensor under {self.args_parser.dump_path} have been converted to {self.output_path} "
                 f"successfully.")
         return failed_lines
 
     def rename_generated_npy_file(self):
-        """Rename the npy file generated by HISI tool to MS file name format."""
+        """Rename the npy file generated by CANN tool to MS file name format."""
         # before change
         # file is {op_type}.{op_name_with_scope}.{task_id}.{stream_id}.{timestamp}.{tensor_type}.{slot}.{shape}.npy
+        # or
+        # {uuid}.{tensor_type}.{slot}.{shape}.npy
         # after change
         # file is {op_type}.{op_name}.{task_id}.{stream_id}.{timestamp}.{tensor_type}.{slot}.{format}.npy
         if not self._is_npy_target():
             return
-        self.hisi_utils.print_info_log(
+        self.cann_tools.log.print_info_log(
             f"Start to rename npy files under {self.output_path}")
         target_format = self.args_parser.format
         old_data_files = self.output_path.glob('*.npy')
         for file in old_data_files:
             name_splits = file.name.split('.')
-            name_splits[1] = name_splits[1].split('_')[-1]
+            node_type = name_splits[0]
+            if node_type == DirConvert.OP_DEBUG_TYPE:
+                continue
+            if node_type.isdigit() and self.node_map.get(node_type) is not None:
+                real_name_splits = self.node_map[node_type].split('.')
+                real_name_splits[1] = real_name_splits[1].split('_')[-1]
+                real_name_splits.extend(name_splits[1:])
+                name_splits = real_name_splits
+            else:
+                name_splits[1] = name_splits[1].split('_')[-1]
             name_splits[-2] = target_format
             new_file_name = '.'.join(name_splits)
             file.chmod(stat.S_IRUSR)
             file.rename(file.with_name(new_file_name))
+
+    def _load_mapping_info(self):
+        """Load node name mapping information."""
+        mapping_path = self.output_path / DirConvert.MAPPING_FILE_NAME
+        node_map = {}
+        if mapping_path.is_file():
+            with mapping_path.open('r') as handler:
+                csv_reader = csv.reader(handler, delimiter=',')
+                for row in csv_reader:
+                    node_map[row[0]] = row[1]
+        return node_map
 
     def convert_failed_tensors(self):
         """Convert failed tensors from failed txt."""
@@ -210,15 +247,17 @@ class DirConvert:
                 try:
                     self.convert_operator_by_failed_line(failed_line)
                 except (ValueError, OSError, AttributeError) as err:
-                    self.hisi_utils.print_error_log(f'Failed to convert {failed_line} to Host format. \n {str(err)}')
+                    self.cann_tools.log.print_error_log(f'Failed to convert {failed_line} to Host '
+                                                        f'format. \n {str(err)}')
                     failed_lines.append(failed_line)
-                except self.hisi_utils.CompareError as err:
-                    self.hisi_utils.print_error_log(f'Failed to convert {failed_line} to Host format. \n {str(err)}')
+                except self.cann_tools.compare_exception as err:
+                    self.cann_tools.log.print_error_log(f'Failed to convert {failed_line} to Host '
+                                                        f'format. \n {str(err)}')
                     failed_lines.append(failed_line)
                 failed_line = handler.readline().strip('\n')
         if failed_lines:
-            self.hisi_utils.print_error_log(f"Failed to convert: {failed_lines}")
-        self.hisi_utils.print_info_log("Finish convert failed operators to host format.")
+            self.cann_tools.log.print_error_log(f"Failed to convert: {failed_lines}")
+        self.cann_tools.log.print_info_log("Finish convert failed operators to host format.")
         return failed_lines
 
     def convert_operator_by_failed_line(self, failed_line):
@@ -226,7 +265,9 @@ class DirConvert:
         fields = failed_line.split(',')
         if len(fields) > 1:
             op_file = fields[0]
-            op_data = self.hisi_utils.parse_dump_file(op_file, self.args_parser.dump_version)
+            if os.path.basename(op_file).startswith(DirConvert.OP_DEBUG_TYPE):
+                return
+            op_data = self.cann_tools.utils.parse_dump_file(op_file, self.args_parser.dump_version)
             missing_tensors = fields[1:]
             for missing_tensor in missing_tensors:
                 tensor_type, idx = missing_tensor.split(':')
@@ -237,7 +278,7 @@ class DirConvert:
 
     def get_tensor_numpy_value(self, tensor):
         """Convert tensor from device format to host format."""
-        dump_data_array = self.hisi_utils.deserialize_dump_data_to_array(tensor)
+        dump_data_array = self.cann_tools.utils.deserialize_dump_data_to_array(tensor)
         array = dump_data_array.reshape(tensor.shape.dim)
         return array
 
@@ -260,12 +301,13 @@ class DirConvert:
         else:
             self._save_tensor_in_bin(op_name, tensor_type, idx, tensor, dump_data_array)
 
-    @staticmethod
-    def _remove_scope_in_op_name(op_name):
+    def _remove_scope_in_op_name(self, op_name):
         """Remove scope in operation name."""
         name_splits = op_name.split('.')
-        node_name = name_splits[1]
-        name_splits[1] = node_name.split('_')[-1]
+        node_type = name_splits[0]
+        if node_type.isdigit() and self.node_map.get(node_type) is not None:
+            name_splits = self.node_map[node_type].split('.')
+        name_splits[1] = name_splits[1].split('_')[-1]
         return '.'.join(name_splits)
 
     def _save_tensor_in_npy(self, op_name, tensor_type, idx, tensor, dump_data_array):
@@ -283,7 +325,7 @@ class DirConvert:
             op_name,
             tensor_type,
             idx,
-            self.hisi_common.get_format_string(tensor.format)
+            self.cann_tools.common.get_format_string(tensor.format)
         )
         out_path = os.path.join(self.args_parser.output_path, out_file_name)
         np.save(out_path, dump_data_array)
@@ -307,8 +349,8 @@ class DirConvert:
             op_name,
             tensor_type,
             idx,
-            self.hisi_utils.get_string_from_list(dump_data_array.shape, 'x'),
-            self.hisi_common.get_format_string(tensor.format),
+            self.cann_tools.utils.get_string_from_list(dump_data_array.shape, 'x'),
+            self.cann_tools.common.get_format_string(tensor.format),
         )
         out_path = os.path.join(self.args_parser.output_path, out_file_name)
         dump_data_array.tofile(out_path)
