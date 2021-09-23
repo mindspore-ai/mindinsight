@@ -305,8 +305,8 @@ export default {
             },
           },
           sort_condition: {
-            name: 'execution_frequency',
-            type: 'ascending',
+            name: 'avg_time',
+            type: 'descending',
           },
         },
       };

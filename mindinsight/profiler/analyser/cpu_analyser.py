@@ -13,10 +13,15 @@
 # limitations under the License.
 # ============================================================================
 """The cpu base analyser."""
+import csv
+import os
+
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.validator import validate
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerRawFileException
 from mindinsight.profiler.common.log import logger as log
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
+
 
 class CpuAnalyser(BaseAnalyser):
     """Cpu base analyser."""
@@ -31,7 +36,7 @@ class CpuAnalyser(BaseAnalyser):
         op_type_file_path = validate_and_normalize_path(
             op_type_file_path, raise_key="Invalid op_type_file_path")
         if not os.path.isfile(op_type_file_path):
-            logger.warning('The file <%s> does not exist.', op_type_file_path)
+            log.warning('The file <%s> does not exist.', op_type_file_path)
             return
 
         with open(op_type_file_path, 'r') as file:
