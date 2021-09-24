@@ -224,6 +224,7 @@ export default {
                   this.$t(`profiling`)[item] = resp.data[item];
                 }
                 if (item.endsWith('type_label')) {
+                  if (item === 'common-proposer_type_label') return;
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'suggested-items-style');
                   divDom.innerHTML = `<div class="helper-icon"></div>
@@ -269,31 +270,8 @@ export default {
               <div class="helper-content-style">${content}</div>`;
                   helperDiv.appendChild(divDom);
                 } else if (this.$t(`profiling`)[item].anchor) {
-                  if (this.$t(`profiling`)[item].anchor.length === 1) {
-                    const divDom = document.createElement('div');
-                    divDom.setAttribute('class', 'content-style');
-                    divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
-                <div class="helper-content-style">
-                <a target="_blank" href="${this.$t(`profiling`)[item].gpuUrl[0]}">
-                ${this.$t(`profiling`)[item].desc}</a></div>`;
-                    helperDiv.appendChild(divDom);
-                  } else {
-                    const divDom = document.createElement('div');
-                    divDom.setAttribute('class', 'content-style');
-                    const anchorList = this.$t(`profiling`)[item].anchor;
-                    let anchorContent = this.$t(`profiling`)[item].desc;
-                    for (let i = 0; i < anchorList.length; i++) {
-                      const desc = anchorContent.relpace(
-                          anchorList[i],
-                          `<a target="_blank" href="${this.$t(`profiling`)[item].gpuUrl[i]}">
-                      ${anchorList[i]}</a>`,
-                      );
-                      anchorContent = desc;
-                    }
-                    divDom.innerHTML = `<div class="content-icon el-icon-caret-right">
-                </div><div class="helper-content-style">${anchorContent}</div>`;
-                    helperDiv.appendChild(divDom);
-                  }
+                  // No cpu page, do nothing
+                  return;
                 } else {
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
