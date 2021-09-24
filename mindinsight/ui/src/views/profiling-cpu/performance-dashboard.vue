@@ -298,7 +298,7 @@ export default {
         },
         body: {
           op_type: 'cpu_op_type',
-          device_id: '0',
+          device_id: this.currentCard,
           filter_condition: {
             op_type: {
               not_in: [],
