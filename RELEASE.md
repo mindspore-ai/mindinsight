@@ -1,3 +1,57 @@
+# MindInsight 1.5.0
+
+## MindInsight 1.5.0 Release Notes
+
+### Major Features and Improvements
+
+#### Profiling
+
+- [STABLE] Unify performance data output path.
+- [STABLE] Analyse overlap time between communication operators and compution operators.
+
+#### MindConverter
+
+- [STABLE] Support migrating definition scripts and trained weights for object detection model(YOLOv5s), face detection model(RetinaFace), NLP model(BigBird) and document image understanding model(LayoutLM).(Ascend/GPU)
+- [STABLE] Optimize and improve the usability of the official documentation, describe the migration procedure in detail and supplement FAQs.(Ascend/GPU)
+
+#### Model Explanation
+
+#### Debugger
+
+- [STABLE] Add tensor memory control for offline debugger.(Ascend/GPU)
+- [STABLE] Support search on watchpoint hit nodes.(Ascend/GPU)
+- [STABLE] Guidance document for model precision problem locating, guidance document for model precision optimization.(Ascend/GPU)
+
+#### Build & Installation
+
+### API Change
+
+#### Backwards Compatible Change
+
+##### Python API
+
+##### Command Line Interface
+
+reviously, we don't set memory limit for offline debugger. In order to use offline debugger in limited environment, we provide with memory limit options when start MindInsight server.  View the [Offline Debugger Tutorial](https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.5/debugger_offline.html).
+
+New start command options:
+
+| Name                                    | Attribute | Description                                                                                                                                                                              | Type    | Default Value | Range                           |
+| --------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------- | ------------------------------- |
+| `-offline-debugger-mem-limit `        | Optional  | Specifies the maximum memory limit of a single offline debugger session. When the offline debugger cannot be executed due to insufficient memory, set it according to the device memory. | Integer | 16*1024       | 6*1024~The upper limit of int32 |
+| `--max-offline-debugger-session-num ` | Optional  | Specifies the maximum session number of the offline debugger. The session number refers to the amount of training jobs that can be debugged at the same time.                            | Integer | 2             | 1~2                             |
+
+### Bug fixes
+
+* Wrong sorting of cards displayed on the single page and cluster.[!11801](https://gitee.com/mindspore/mindspore/pulls/11801)
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei, Yufeng Lv, Maohua He, Chuting Liu.
+
+Contributions of any kind are welcome!
 # MindInsight 1.4.0
 
 ## MindInsight 1.4.0 Release Notes
