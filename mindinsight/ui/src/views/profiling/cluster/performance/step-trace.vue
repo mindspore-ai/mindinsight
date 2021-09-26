@@ -293,8 +293,8 @@ export default {
                   dimensions: [
                     this.$t('profilingCluster.rankID'),
                     this.$t('profiling.iterationGapTime'),
-                    this.$t('profilingCluster.communicationAloneTime'),
                     this.$t('profilingCluster.computationTime'),
+                    this.$t('profilingCluster.communicationAloneTime'),
                   ],
                   cols: ['iteration_interval', 'communication_alone', 'computation'],
                   tips: [
@@ -317,11 +317,11 @@ export default {
                   dimensions: [
                     this.$t('profilingCluster.rankID'),
                     this.$t('profiling.iterationGapTime'),
-                    this.$t('profilingCluster.receiveAloneTime'),
+                    this.$t('profilingCluster.computationTime'),
                     this.$t('profilingCluster.stageTime'),
                     this.$t('profilingCluster.communicationAloneTime'),
-                    this.$t('profilingCluster.computationTime'),
                     this.$t('profilingCluster.collectiveCommunicationAlone'),
+                    this.$t('profilingCluster.receiveAloneTime'),
                   ],
                   cols: [
                     'iteration_interval',
@@ -365,7 +365,18 @@ export default {
                   const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
                   tempChartData.push(chartItem);
                 });
-                this.chartData = tempChartData;
+                // sort
+                if (parallelMode === 'pipeline-parallel') {
+                  tempChartData.forEach((val) => {
+                    this.chartData.push([val[0], val[1], val[5], val[3], val[4], val[6], val[2]]);
+                  });
+                } else if (parallelMode === 'model-parallel') {
+                  tempChartData.forEach((val) => {
+                    this.chartData.push([val[0], val[1], val[3], val[2]]);
+                  });
+                } else {
+                  this.chartData = tempChartData;
+                }
                 this.initChart(parallelModes[parallelMode].dimensions);
               }
               this.cols = parallelModes[parallelMode].cols;
@@ -381,6 +392,18 @@ export default {
                 });
                 this.tableData.push(tableItem);
               });
+              if (parallelMode === 'pipeline-parallel') {
+                this.cols = [
+                  'iteration_interval',
+                  'computation',
+                  'stage',
+                  'communication_alone',
+                  'collective_communication_alone',
+                  'receive_alone',
+                ];
+              } else if (parallelMode === 'model-parallel') {
+                this.cols = ['iteration_interval', 'computation', 'communication_alone'];
+              }
             }
           })
           .catch((error) => {
