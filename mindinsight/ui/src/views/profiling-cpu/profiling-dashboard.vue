@@ -33,8 +33,7 @@ limitations under the License.
             <label>{{$t('profiling.curCard')}}</label>
             <el-select v-model="curDashboardInfo.curCardNum"
                        class="card-select"
-                       :placeholder="$t('public.select')"
-                       @change="selectValueChange">
+                       :placeholder="$t('public.select')">
               <el-option v-for="item in CardNumArr"
                          :key="item.value"
                          :label="item.value + $t('operator.card')"
@@ -159,14 +158,6 @@ export default {
       }
     },
     /**
-     * When card number changed,request data again.
-     */
-    selectValueChange() {
-      const helperDiv = document.getElementById('helper-tips');
-      helperDiv.innerHTML = '';
-      this.getDataOfProfileHelper();
-    },
-    /**
      * Get card number list
      */
     getDeviceList() {
@@ -187,7 +178,6 @@ export default {
                   if (this.curDashboardInfo.curCardNum === null) {
                     this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
                   }
-                  this.getDataOfProfileHelper();
                 } else {
                   this.CardNumArr = [];
                   this.curDashboardInfo.curCardNum = '';

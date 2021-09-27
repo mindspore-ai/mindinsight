@@ -33,7 +33,7 @@ limitations under the License.
               <img :src="require('@/assets/images/nodata.png')"
                    alt="" />
             </div>
-            <p>{{$t("public.noData")}}</p>
+            <p>{{$t("public.noSupport")}}</p>
           </div>
         </div>
       </div>
@@ -53,7 +53,7 @@ limitations under the License.
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p>{{$t("public.noSupport")}}</p>
         </div>
       </div>
     </div>
@@ -97,7 +97,7 @@ limitations under the License.
                 <span class="time">
                   <span class="bar"
                         :style="{width: item.time / pieChart.topN[0].time * 100 + '%'}"></span>
-                  <span class="value">{{item.time + $t('profiling.gpuunit')}}</span>
+                  <span class="value">{{item.time + $t('profiling.unit')}}</span>
                 </span>
               </li>
             </ul>
@@ -157,7 +157,7 @@ limitations under the License.
             <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
           </div>
-          <p>{{$t("public.noData")}}</p>
+          <p>{{$t("public.noSupport")}}</p>
         </div>
       </div>
     </div>

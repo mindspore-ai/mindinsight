@@ -4,6 +4,7 @@
     "browserWarning": "您当前的浏览器可能导致部分功能失效或不可使用，建议使用Chrome 65版本以上的浏览器。",
     "timeout": "超时，请重新请求。",
     "noData": "暂无数据",
+    "noSupport": "暂不支持",
     "emptyData": "无数据",
     "reset": "重置",
     "tagFilterPlaceHolder": "请输入需要的标签(支持正则表达式)",
