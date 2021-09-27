@@ -21,23 +21,25 @@ from typing import Dict
 from mindinsight.mindconverter.common.log import logger as log
 from mindinsight.mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
 
-CONFIG_JSON = "onnx_to_ms.json"
-OPERATION_TABLE = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)),
-    CONFIG_JSON
-)
-
-with open(OPERATION_TABLE) as file:
-    # Load mapping table which key is operation name in ONNX and
-    # value is corresponding module path.
-    TABLE = json.load(file)
-
 # Define global func name.
 GET_OP_NAME = "_operation_name_in_ms"
 GET_OP_PARAMS = "_convert_params"
 GET_OP_WEIGHTS = "_convert_trained_weights"
 GET_OP_SETTINGS = "_convert_settings"
 GET_OP_TEMPLATE = "_generate_snippet_template"
+
+
+def get_module_name(op_name):
+    """Get module_name."""
+    framework_file = op_name.split("::")[0]
+    config_json = f"{framework_file}_to_ms.json"
+    operation_table = os.path.join(os.path.abspath(os.path.dirname(__file__)), config_json)
+    module_name = None
+    if os.path.exists(operation_table):
+        with open(operation_table) as f:
+            table = json.load(f)
+        module_name = table.get(op_name)
+    return module_name
 
 
 class Mapper(metaclass=abc.ABCMeta):
@@ -85,8 +87,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         Returns:
             Tuple[str, dict, dict], operation name and params and settings.
         """
-        global TABLE
-        module_name = TABLE.get(op_name)
+        module_name = get_module_name(op_name)
 
         if not module_name:
             code_template, exchange_msg, outputs_list, outputs_mapping = cls._generate_snippet_template(
@@ -157,8 +158,26 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
         raise NotImplementedError
 
     @staticmethod
+    def _generate_exchange_msg(**kwargs):
+        """Generate exchange msg."""
+        exchange_msg = {
+            kwargs["variable_slot"]: {
+                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: kwargs.get("op"),
+                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
+                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
+                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
+                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
+                ExchangeMessageKeywords.VariableScope.value.ARGS.value: kwargs.get("args"),
+                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: kwargs.get("weights", dict()),
+                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value:
+                    kwargs.get("trainable_params", dict())
+            }
+        }
+        return exchange_msg
+
+    @staticmethod
     def _generate_snippet_template(**kwargs):
-        op = kwargs.get("operation").replace("onnx::", "onnx.")
+        op = kwargs.get("operation").replace("::", ".")
         args = kwargs.get("converted_params", dict())
         weights = kwargs.get("weights")
         trainable_params = kwargs.get("trainable_params", dict())
@@ -174,18 +193,8 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
                 TemplateKeywords.CONSTRUCT.value: [construct_template]
             }
         }
-        exchange_msg = {
-            variable_slot: {
-                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
-                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
-                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
-                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
-                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
-                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
-                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
-            }
-        }
+        exchange_msg = ONNXToMindSporeMapper._generate_exchange_msg(variable_slot=variable_slot, op=op, args=args,
+                                                                    weights=weights, trainable_params=trainable_params)
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping
@@ -219,18 +228,7 @@ class ONNXToMindSporeMapper(Mapper, abc.ABC):
                 TemplateKeywords.CONSTRUCT.value: [construct_template]
             }
         }
-        exchange_msg = {
-            variable_slot: {
-                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
-                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
-                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
-                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
-                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
-                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
-                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: dict(),
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: dict()
-            }
-        }
+        exchange_msg = ONNXToMindSporeMapper._generate_exchange_msg(variable_slot=variable_slot, op=op, args=args)
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping

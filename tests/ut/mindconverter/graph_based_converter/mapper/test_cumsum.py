@@ -17,7 +17,7 @@ from unittest import TestCase
 import numpy as np
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 from mindinsight.mindconverter.graph_based_converter.common.code_fragment import Fragment
-from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import NodeWeight
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import NodeWeight
 
 
 class TestCumSum(TestCase):

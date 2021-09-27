@@ -17,7 +17,7 @@ import numpy as np
 from mindinsight.mindconverter.graph_based_converter.common.utils import convert_bytes_string_to_string
 
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
-from mindinsight.mindconverter.graph_based_converter.mapper.impl.ops.conv_back_prop_input_mapper import \
+from mindinsight.mindconverter.graph_based_converter.mapper.onnx.ops.conv_back_prop_input_mapper import \
     ConvBackPropInputMapper
 
 
