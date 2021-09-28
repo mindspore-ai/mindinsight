@@ -32,7 +32,7 @@ limitations under the License.
       <div class="content-item">
         <div class="noData-content">
           <img :src="require('@/assets/images/nodata.png')" />
-          <p>{{$t("public.noData")}}</p>
+          <p>{{$t("public.noSupport")}}</p>
         </div>
       </div>
     </div>
@@ -55,7 +55,7 @@ limitations under the License.
           <div>
             <img :src="require('@/assets/images/nodata.png')" />
           </div>
-          <div class="noData-text">{{$t("public.noData")}}</div>
+          <p>{{$t("public.noSupport")}}</p>
         </div>
       </div>
     </div>
