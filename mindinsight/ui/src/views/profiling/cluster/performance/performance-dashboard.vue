@@ -153,7 +153,7 @@ export default {
                 return;
               }
               if (res?.data?.info?.length > 0) {
-                const chartData = [];
+                let chartData = [];
                 const parallelMode = res.data['parallel-mode'];
                 const parallelModes = {
                   'data-parallel': {
@@ -170,8 +170,8 @@ export default {
                     dimensions: [
                       this.$t('profilingCluster.rankID'),
                       this.$t('profiling.iterationGapTime'),
-                      this.$t('profilingCluster.communicationAloneTime'),
                       this.$t('profilingCluster.computationTime'),
+                      this.$t('profilingCluster.communicationAloneTime'),
                     ],
                   },
                   'pipeline-parallel': {
@@ -179,18 +179,31 @@ export default {
                     dimensions: [
                       this.$t('profilingCluster.rankID'),
                       this.$t('profiling.iterationGapTime'),
-                      this.$t('profilingCluster.receiveAloneTime'),
+                      this.$t('profilingCluster.computationTime'),
                       this.$t('profilingCluster.stageTime'),
                       this.$t('profilingCluster.communicationAloneTime'),
-                      this.$t('profilingCluster.computationTime'),
                       this.$t('profilingCluster.collectiveCommunicationAlone'),
+                      this.$t('profilingCluster.receiveAloneTime'),
                     ],
                   },
                 };
+                const tempChartData = [];
                 res.data.info.forEach((item) => {
                   const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
-                  chartData.push(chartItem);
+                  tempChartData.push(chartItem);
                 });
+                // sort
+                if (parallelMode === 'pipeline-parallel') {
+                  tempChartData.forEach((val) => {
+                    chartData.push([val[0], val[1], val[5], val[3], val[4], val[6], val[2]]);
+                  });
+                } else if (parallelMode === 'model-parallel') {
+                  tempChartData.forEach((val) => {
+                    chartData.push([val[0], val[1], val[3], val[2]]);
+                  });
+                } else {
+                  chartData = tempChartData;
+                }
                 this.performanceChart.data = chartData;
                 this.performanceChart.dimensions = parallelModes[parallelMode].dimensions;
                 this.performanceState = this.normalState;
