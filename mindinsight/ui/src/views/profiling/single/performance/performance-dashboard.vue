@@ -24,7 +24,7 @@ limitations under the License.
           <el-tooltip placement="bottom"
                       effect="light">
             <div slot="content"
-                  class="tooltip-container">
+                 class="tooltip-container">
               <div class="pro-dash-tooltip">
                 <div class="font-size-style">{{$t("profiling.features")}}</div>
                 <div>{{$t('profiling.iterationInfo')}}</div>
@@ -67,73 +67,73 @@ limitations under the License.
       </div>
       <div class="image-noData"
            v-if="svg.noData">
-            <div>
-              <img :src="require('@/assets/images/nodata.png')"
-                   alt="" />
-            </div>
-            <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
-            <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
-          </div>
+        <div>
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+        </div>
+        <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
+        <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
+      </div>
       <!-- Step trace SVG container -->
       <div class="item-content step-trace"
            v-show="!svg.noData">
-          <div id="trace"
-               class="training-trace"
-               :style="{height: svg.totalHeight + 'px'}">
-            <svg version="1.1"
-                 xmlns="http://www.w3.org/2000/svg"
-                 height="100%"
-                 width="100%">
-              <defs>
-                <marker id="marker_end"
-                        refX="5"
-                        refY="4"
-                        markerWidth="10"
-                        markerHeight="8"
-                        orient="auto">
-                  <path d="M1,1 L1,7 L9,4 z"
-                        fill="#6c7280"
-                        stroke="#6c7280"></path>
-                </marker>
-                <marker id="marker_start"
-                        refX="5"
-                        refY="4"
-                        markerWidth="10"
-                        markerHeight="8"
-                        orient="auto">
-                  <path d="M9,1 L9,7 L1,4 z"
-                        fill="#6c7280"
-                        stroke="#6c7280"></path>
-                </marker>
-              </defs>
-            </svg>
-          </div>
+        <div id="trace"
+             class="training-trace"
+             :style="{height: svg.totalHeight + 'px'}">
+          <svg version="1.1"
+               xmlns="http://www.w3.org/2000/svg"
+               height="100%"
+               width="100%">
+            <defs>
+              <marker id="marker_end"
+                      refX="5"
+                      refY="4"
+                      markerWidth="10"
+                      markerHeight="8"
+                      orient="auto">
+                <path d="M1,1 L1,7 L9,4 z"
+                      fill="#6c7280"
+                      stroke="#6c7280"></path>
+              </marker>
+              <marker id="marker_start"
+                      refX="5"
+                      refY="4"
+                      markerWidth="10"
+                      markerHeight="8"
+                      orient="auto">
+                <path d="M9,1 L9,7 L1,4 z"
+                      fill="#6c7280"
+                      stroke="#6c7280"></path>
+              </marker>
+            </defs>
+          </svg>
+        </div>
       </div>
     </div>
     <!-- Operator information display area -->
     <div class="dashboard-item">
       <div class="item-head">
-          <div class="title">{{ $t('profiling.rankOfOperator') }}</div>
-          <div class="view-detail">
-            <button @click="viewDetail('operator')"
-                    :disabled="pieChart.noData && pieChart.data.length === 0"
-                    :class="{disabled:pieChart.noData && pieChart.data.length === 0}">{{ $t('profiling.viewDetail') }}
-              <i class="el-icon-d-arrow-right"></i></button>
-          </div>
+        <div class="title">{{ $t('profiling.rankOfOperator') }}</div>
+        <div class="view-detail">
+          <button @click="viewDetail('operator')"
+                  :disabled="pieChart.noData && pieChart.data.length === 0"
+                  :class="{disabled:pieChart.noData && pieChart.data.length === 0}">{{ $t('profiling.viewDetail') }}
+            <i class="el-icon-d-arrow-right"></i></button>
+        </div>
       </div>
       <div class="image-noData"
            v-if="pieChart.noData">
-          <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
-          </div>
-          <p v-show="!pieChart.initOver">{{$t("public.dataLoading")}}</p>
-          <p v-show="pieChart.initOver">{{$t("public.noData")}}</p>
+        <div>
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+        </div>
+        <p v-show="!pieChart.initOver">{{$t("public.dataLoading")}}</p>
+        <p v-show="pieChart.initOver">{{$t("public.noData")}}</p>
       </div>
       <div class="item-content operator"
            v-if="pieChart.data.length">
-          <div>
-            <div id="pieChart"
+        <div>
+          <div id="pieChart"
                class="pie-chart"></div>
           <!-- Operator time consumption top5 -->
           <div class="time-list"
@@ -154,246 +154,260 @@ limitations under the License.
               </li>
             </ul>
           </div>
-          </div>
+        </div>
       </div>
     </div>
     <!-- Data Process -->
     <div class="dashboard-item">
       <div class="item-head">
-          <div class="title">{{ $t('profiling.mindData') }}</div>
-          <div class="tip-icon">
-            <el-tooltip placement="bottom"
-                        effect="light">
-              <div slot="content"
-                   class="tooltip-container">
-                <div class="pro-dash-tooltip">
-                  <div class="font-size-style">{{$t("profiling.features")}}</div>
-                  <div>{{$t('profiling.dataProcess')}}</div>
-                  <div>{{$t('profiling.dataProcessInfo')}}</div>
-                  <div>{{$t('profiling.analysisOne')}}</div>
-                  <div>{{$t('profiling.analysisTwo')}}</div>
-                  <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
-                  <br />
-                  <div v-show="deviceInfoShow || queueInfoShow"
-                       class="font-size-style">{{$t('profiling.statistics')}}</div>
-                  <div v-show="queueInfoShow">{{$t('profiling.chipInfo')}}
-                    <span>{{processSummary.get_next.empty}} / {{processSummary.get_next.total}}</span>
+        <div class="title">{{ $t('profiling.mindData') }}</div>
+        <div class="tip-icon">
+          <el-tooltip placement="bottom"
+                      effect="light">
+            <div slot="content"
+                 class="tooltip-container">
+              <div class="pro-dash-tooltip">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+                <div>{{$t('profiling.dataProcess')}}</div>
+                <div>{{$t('profiling.dataProcessInfo')}}</div>
+                <div>{{$t('profiling.analysisOne')}}</div>
+                <div>{{$t('profiling.analysisTwo')}}</div>
+                <div v-show="deviceInfoShow || queueInfoShow">{{$t('profiling.higherAnalysis')}}</div>
+                <br />
+                <div v-show="deviceInfoShow || queueInfoShow"
+                     class="font-size-style">{{$t('profiling.statistics')}}</div>
+                <div v-show="queueInfoShow">{{$t('profiling.chipInfo')}}
+                  <span>{{processSummary.get_next.empty}} / {{processSummary.get_next.total}}</span>
+                </div>
+                <div v-show="deviceInfoShow">
+                  <div>{{$t('profiling.hostIsEmpty')}}
+                    <span>{{processSummary.device.empty}} / {{processSummary.device.total}}</span>
                   </div>
-                  <div v-show="deviceInfoShow">
-                    <div>{{$t('profiling.hostIsEmpty')}}
-                      <span>{{processSummary.device.empty}} / {{processSummary.device.total}}</span>
-                    </div>
-                    <div>{{$t('profiling.hostIsFull')}}
-                      <span>{{processSummary.device.full}} / {{processSummary.device.total}}</span>
-                    </div>
+                  <div>{{$t('profiling.hostIsFull')}}
+                    <span>{{processSummary.device.full}} / {{processSummary.device.total}}</span>
                   </div>
                 </div>
               </div>
-              <i class="el-icon-info"></i>
-            </el-tooltip>
-          </div>
-          <div class="view-detail">
-            <button @click="viewDetail('data-process')"
-                    :disabled="processSummary.noData"
-                    :class="{disabled:processSummary.noData}">
-              {{ $t('profiling.viewDetail') }}
-              <i class="el-icon-d-arrow-right"></i></button>
-          </div>
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
+        </div>
+        <div class="view-detail">
+          <button @click="viewDetail('data-process')"
+                  :disabled="processSummary.noData"
+                  :class="{disabled:processSummary.noData}">
+            {{ $t('profiling.viewDetail') }}
+            <i class="el-icon-d-arrow-right"></i></button>
+        </div>
       </div>
       <div class="item-content data-prepare"
            v-show="!processSummary.noData">
-          <div class="cell-container data-process">
-            <div class="title">
-              {{$t('profiling.pipeline')}}
-            </div>
+        <div class="cell-container data-process">
+          <div class="title">
+            {{$t('profiling.pipeline')}}
           </div>
+        </div>
 
-          <div class="queue-container">
-            <div class="img">
-              <div class="edge">
-                <img src="@/assets/images/data-flow.png"
-                     alt="" />
-              </div>
-              <div class="icon">
-                <img src="@/assets/images/queue.svg"
-                     alt=""
-                     clickKey="connector_queue" />
-              </div>
-              <div class="edge">
-                <img src="@/assets/images/data-flow.png"
-                     alt="" />
-              </div>
+        <div class="queue-container">
+          <div class="img">
+            <div class="edge">
+              <img src="@/assets/images/data-flow.png"
+                   alt="" />
             </div>
-            <div class="title">{{$t('profiling.connectorQuene')}}</div>
-            <div class="description">
-              <div class="item"
-                   v-if="processSummary.device.empty || processSummary.device.empty === 0">
-                {{$t('profiling.queueTip2')}}
-                <span class="num">
-                  {{processSummary.device.empty}} / {{processSummary.device.total}}
-                </span>
-              </div>
-              <div class="item"
-                   v-if="processSummary.device.full || processSummary.device.full === 0">
-                {{$t('profiling.queueTip1')}}
-                <span class="num">
-                  {{processSummary.device.full}} / {{processSummary.device.total}}
-                </span>
-              </div>
+            <div class="icon">
+              <img src="@/assets/images/queue.svg"
+                   alt=""
+                   clickKey="connector_queue" />
+            </div>
+            <div class="edge">
+              <img src="@/assets/images/data-flow.png"
+                   alt="" />
             </div>
           </div>
+          <div class="title">{{$t('profiling.connectorQuene')}}</div>
+          <div class="description">
+            <div class="item"
+                 v-if="processSummary.device.empty || processSummary.device.empty === 0">
+              {{$t('profiling.queueTip2')}}
+              <span class="num">
+                {{processSummary.device.empty}} / {{processSummary.device.total}}
+              </span>
+            </div>
+            <div class="item"
+                 v-if="processSummary.device.full || processSummary.device.full === 0">
+              {{$t('profiling.queueTip1')}}
+              <span class="num">
+                {{processSummary.device.full}} / {{processSummary.device.total}}
+              </span>
+            </div>
+          </div>
+        </div>
 
-          <div class="cell-container device_queue_op"
-               clickKey="device_queue_op">
-            <div class="title">
-              {{$t('profiling.deviceQueueOp')}}
-            </div>
+        <div class="cell-container device_queue_op"
+             clickKey="device_queue_op">
+          <div class="title">
+            {{$t('profiling.deviceQueueOp')}}
           </div>
+        </div>
 
-          <div class="queue-container"
-               v-if="processSummary.count === processSummary.maxCount">
-            <div class="img">
-              <div class="edge">
-                <img src="@/assets/images/data-flow.png"
-                     alt="" />
-              </div>
-              <div class="icon">
-                <img src="@/assets/images/queue.svg"
-                     clickKey="data_queue"
-                     alt="" />
-              </div>
-              <div class="edge">
-                <img src="@/assets/images/data-flow.png"
-                     alt="" />
-              </div>
+        <div class="queue-container"
+             v-if="processSummary.count === processSummary.maxCount">
+          <div class="img">
+            <div class="edge">
+              <img src="@/assets/images/data-flow.png"
+                   alt="" />
             </div>
-            <div class="title">{{$t('profiling.dataQueue')}}</div>
-            <div class="description">
-              <div class="item"
-                   v-if="processSummary.get_next.empty || processSummary.get_next.empty === 0">
-                {{$t('profiling.queueTip2')}}
-                <span class="num">
-                  {{processSummary.get_next.empty}} / {{processSummary.get_next.total}}
-                </span>
-              </div>
-              <div class="item"
-                   v-if="processSummary.get_next.full || processSummary.get_next.full === 0">
-                {{$t('profiling.queueTip1')}}
-                <span class="num">
-                  {{processSummary.get_next.full}} / {{processSummary.get_next.total}}
-                </span>
-              </div>
+            <div class="icon">
+              <img src="@/assets/images/queue.svg"
+                   clickKey="data_queue"
+                   alt="" />
+            </div>
+            <div class="edge">
+              <img src="@/assets/images/data-flow.png"
+                   alt="" />
             </div>
           </div>
+          <div class="title">{{$t('profiling.dataQueue')}}</div>
+          <div class="description">
+            <div class="item"
+                 v-if="processSummary.get_next.empty || processSummary.get_next.empty === 0">
+              {{$t('profiling.queueTip2')}}
+              <span class="num">
+                {{processSummary.get_next.empty}} / {{processSummary.get_next.total}}
+              </span>
+            </div>
+            <div class="item"
+                 v-if="processSummary.get_next.full || processSummary.get_next.full === 0">
+              {{$t('profiling.queueTip1')}}
+              <span class="num">
+                {{processSummary.get_next.full}} / {{processSummary.get_next.total}}
+              </span>
+            </div>
+          </div>
+        </div>
 
-          <div class="cell-container get-next"
-               clickKey="get_next"
-               v-if="processSummary.count === processSummary.maxCount">
-            <div class="title">
-              {{$t('profiling.getData')}}
-            </div>
+        <div class="cell-container get-next"
+             clickKey="get_next"
+             v-if="processSummary.count === processSummary.maxCount">
+          <div class="title">
+            {{$t('profiling.getData')}}
           </div>
+        </div>
       </div>
       <div class="image-noData"
-             v-if="processSummary.noData">
-          <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
-          </div>
-          <p v-show="!processSummary.initOver">{{$t("public.dataLoading")}}</p>
-          <p v-show="processSummary.initOver">{{$t("public.noData")}}</p>
+           v-if="processSummary.noData">
+        <div>
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+        </div>
+        <p v-show="!processSummary.initOver">{{$t("public.dataLoading")}}</p>
+        <p v-show="processSummary.initOver">{{$t("public.noData")}}</p>
       </div>
     </div>
     <!-- Time line display area -->
     <div class="dashboard-item">
       <div class="item-head">
-          <div class="title">{{ $t('profiling.timeLine') }}</div>
-          <div class="tip-icon">
-            <el-tooltip placement="bottom"
-                        effect="light">
-              <div slot="content"
-                   class="tooltip-container">
-                <div class="pro-dash-tooltip">
-                  <div class="font-size-style">{{$t("profiling.features")}}</div>
-                  <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
-                  <div>{{$t("profiling.timelineTips.content11")}}</div>
-                  <div>{{$t("profiling.timelineTips.content12")}}</div>
-                  <div>{{$t("profiling.timelineTips.content13")}}</div>
-                  <div>{{$t("profiling.timelineTips.content14")}}</div>
-                  <br>
-                  <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
-                  <div>
-                    {{$t("profiling.timelineTips.content21.part1")}}
-                    <b>{{$t("profiling.timelineTips.content21.part2")}}</b>
-                    {{$t("profiling.timelineTips.content21.part3")}}
-                  </div>
-                  <div>{{$t("profiling.timelineTips.content22")}}</div>
-                  <div>
-                    {{$t("profiling.timelineTips.content23.part1")}}
-                    <b>{{$t("profiling.timelineTips.content23.part2")}}</b>
-                    {{$t("profiling.timelineTips.content23.part3")}}
-                    <b>{{$t("profiling.timelineTips.content23.part4")}}</b>
-                    {{$t("profiling.timelineTips.content23.part5")}}
-                    <b>{{$t("profiling.timelineTips.content23.part6")}}</b>
-                    {{$t("profiling.timelineTips.content23.part7")}}
-                  </div>
-                  <br>
-                  <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
-                  <div>{{$t("profiling.timelineTips.content31")}}</div>
-                  <div>{{$t("profiling.timelineTips.content32")}}</div>
+        <div class="title">{{ $t('profiling.timeLine') }}</div>
+        <div class="tip-icon">
+          <el-tooltip placement="bottom"
+                      effect="light">
+            <div slot="content"
+                 class="tooltip-container">
+              <div class="pro-dash-tooltip">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+                <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
+                <div>{{$t("profiling.timelineTips.content11")}}</div>
+                <div>{{$t("profiling.timelineTips.content12")}}</div>
+                <div>{{$t("profiling.timelineTips.content13")}}</div>
+                <div>{{$t("profiling.timelineTips.content14")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
+                <div>
+                  {{$t("profiling.timelineTips.content21.part1")}}
+                  <b>{{$t("profiling.timelineTips.content21.part2")}}</b>
+                  {{$t("profiling.timelineTips.content21.part3")}}
                 </div>
+                <div>{{$t("profiling.timelineTips.content22")}}</div>
+                <div>
+                  {{$t("profiling.timelineTips.content23.part1")}}
+                  <b>{{$t("profiling.timelineTips.content23.part2")}}</b>
+                  {{$t("profiling.timelineTips.content23.part3")}}
+                  <b>{{$t("profiling.timelineTips.content23.part4")}}</b>
+                  {{$t("profiling.timelineTips.content23.part5")}}
+                  <b>{{$t("profiling.timelineTips.content23.part6")}}</b>
+                  {{$t("profiling.timelineTips.content23.part7")}}
+                </div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
+                <div>{{$t("profiling.timelineTips.content31")}}</div>
+                <div>{{$t("profiling.timelineTips.content32")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineTips.title4")}}</div>
+                <div>{{$t("profiling.timelineTips.content41")}}</div>
+                <div class="indent">{{$t("profiling.timelineTips.content42")}}</div>
+                <div class="indent">{{$t("profiling.timelineTips.content43")}}</div>
+                <div class="indent">{{$t("profiling.timelineTips.content44")}}</div>
+                <div>{{$t("profiling.timelineTips.content45")}}</div>
+                <div>{{$t("profiling.timelineTips.content46")}}</div>
+                <div>{{$t("profiling.timelineTips.content47")}}</div>
+                <div>{{$t("profiling.timelineTips.content48")}}</div>
+                <div class="indent">{{$t("profiling.timelineTips.content49")}}</div>
+                <div class="indent">{{$t("profiling.timelineTips.content410")}}</div>
+                <div class="indent">{{$t("profiling.timelineTips.content411")}}</div>
+                <div class="indent">{{$t("profiling.timelineTips.content412")}}</div>
               </div>
-              <i class="el-icon-info"></i>
-            </el-tooltip>
-          </div>
-          <div class="view-detail">
-            <button @click="downloadTimelineFile()"
-                    v-show="!timeLine.waiting"
-                    :disabled="timeLine.disable"
-                    :class="{disabled:timeLine.disable}">{{ $t('profiling.downloadTimeline') }}
-            </button>
-            <div class="el-icon-loading loading-icon"
-                 v-show="timeLine.waiting"></div>
-          </div>
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
+        </div>
+        <div class="view-detail">
+          <button @click="downloadTimelineFile()"
+                  v-show="!timeLine.waiting"
+                  :disabled="timeLine.disable"
+                  :class="{disabled:timeLine.disable}">{{ $t('profiling.downloadTimeline') }}
+          </button>
+          <div class="el-icon-loading loading-icon"
+               v-show="timeLine.waiting"></div>
+        </div>
       </div>
       <!-- Time line detail -->
       <div class="item-content time-line"
-             v-if="!timelineInfo.noData">
-          <div class="info-line">
-            <span>{{$t('profiling.scopeNameNum')}}</span><span>
-              <el-select v-model="timelineInfo.scopeNameNum"
-                         :placeholder="$t('public.select')"
-                         class="scope-name"
-                         @change="queryTimeline">
-                <el-option v-for="item in timelineInfo.scopeNameNumArr"
-                           :key="item.value"
-                           :label="item.label"
-                           :value="item.value">
-                </el-option>
-              </el-select>
-            </span>
-          </div>
-          <div class="info-line">
-            <span>{{$t('profiling.opTotalTime')}}</span><span>{{timelineInfo.totalTime}}ms</span>
-          </div>
-          <div class="info-line">
-            <span>{{$t('profiling.streamNum')}}</span><span>{{timelineInfo.streamNum}}</span>
-          </div>
-          <div class="info-line">
-            <span>{{$t('profiling.opNum')}}</span><span>{{timelineInfo.opNum}}</span>
-          </div>
-          <div class="info-line">
-            <span>{{$t('profiling.opTimes')}}</span><span>{{timelineInfo.opTimes + $t('profiling.times')}}</span>
-          </div>
+           v-if="!timelineInfo.noData">
+        <div class="info-line">
+          <span>{{$t('profiling.scopeNameNum')}}</span><span>
+            <el-select v-model="timelineInfo.scopeNameNum"
+                       :placeholder="$t('public.select')"
+                       class="scope-name"
+                       @change="queryTimeline">
+              <el-option v-for="item in timelineInfo.scopeNameNumArr"
+                         :key="item.value"
+                         :label="item.label"
+                         :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+        <div class="info-line">
+          <span>{{$t('profiling.opTotalTime')}}</span><span>{{timelineInfo.totalTime}}ms</span>
+        </div>
+        <div class="info-line">
+          <span>{{$t('profiling.streamNum')}}</span><span>{{timelineInfo.streamNum}}</span>
+        </div>
+        <div class="info-line">
+          <span>{{$t('profiling.opNum')}}</span><span>{{timelineInfo.opNum}}</span>
+        </div>
+        <div class="info-line">
+          <span>{{$t('profiling.opTimes')}}</span><span>{{timelineInfo.opTimes + $t('profiling.times')}}</span>
+        </div>
       </div>
       <div class="image-noData"
-             v-if="timelineInfo.noData">
-          <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
-          </div>
-          <p v-show="!timelineInfo.initOver">{{$t("public.dataLoading")}}</p>
-          <p v-show="timelineInfo.initOver">{{$t("public.noData")}}</p>
+           v-if="timelineInfo.noData">
+        <div>
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+        </div>
+        <p v-show="!timelineInfo.initOver">{{$t("public.dataLoading")}}</p>
+        <p v-show="timelineInfo.initOver">{{$t("public.noData")}}</p>
       </div>
     </div>
   </div>
@@ -1230,6 +1244,9 @@ export default {
 .tooltip-container .pro-dash-tooltip .font-size-style {
   font-weight: bold;
   font-size: 16px;
+}
+.tooltip-container .pro-dash-tooltip .indent {
+  padding-left: 30px;
 }
 /* Step Trace */
 .single-performance-dashboard .step-trace {
