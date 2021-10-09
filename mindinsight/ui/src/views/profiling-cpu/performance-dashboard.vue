@@ -145,6 +145,20 @@ limitations under the License.
                   <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
                   <div>{{$t("profiling.timelineTips.content31")}}</div>
                   <div>{{$t("profiling.timelineTips.content32")}}</div>
+                  <br>
+                  <div class="font-style">{{$t("profiling.timelineTips.title4")}}</div>
+                  <div>{{$t("profiling.timelineTips.content41")}}</div>
+                  <div class="indent">{{$t("profiling.timelineTips.content42")}}</div>
+                  <div class="indent">{{$t("profiling.timelineTips.content43")}}</div>
+                  <div class="indent">{{$t("profiling.timelineTips.content44")}}</div>
+                  <div>{{$t("profiling.timelineTips.content45")}}</div>
+                  <div>{{$t("profiling.timelineTips.content46")}}</div>
+                  <div>{{$t("profiling.timelineTips.content47")}}</div>
+                  <div>{{$t("profiling.timelineTips.content48")}}</div>
+                  <div class="indent">{{$t("profiling.timelineTips.content49")}}</div>
+                  <div class="indent">{{$t("profiling.timelineTips.content410")}}</div>
+                  <div class="indent">{{$t("profiling.timelineTips.content411")}}</div>
+                  <div class="indent">{{$t("profiling.timelineTips.content412")}}</div>
                 </div>
               </div>
               <i class="el-icon-info"></i>
@@ -373,7 +387,9 @@ export default {
   font-weight: bold;
   font-size: 16px;
 }
-
+.tooltip-container .pro-dash-tooltip .indent {
+  padding-left: 30px;
+}
 .pro-router-wrap {
   height: 100%;
 }
