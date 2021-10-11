@@ -164,14 +164,15 @@ class MindConverterException(Exception):
         return decorator
 
     @classmethod
-    def check_except(cls, msg):
+    def check_except(cls, msg, added_except=None):
         """Check except."""
 
         def decorator(func):
             def _f(*args, **kwargs):
+                raise_from = cls.raise_from() + (added_except,) if added_except else cls.raise_from()
                 try:
                     output = func(*args, **kwargs)
-                except cls.raise_from() as e:
+                except raise_from as e:
                     error = cls(msg=msg)
                     error_code = e.error_code() if isinstance(e, MindConverterException) else None
                     error.root_exception_error_code = error_code

@@ -16,7 +16,6 @@
 import os
 import itertools
 import re
-import abc
 from importlib import import_module
 from collections import OrderedDict
 
@@ -25,6 +24,7 @@ import numpy as np
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.graph_based_converter.common.utils import fetch_output_from_onnx_model, build_feed_dict
 from mindinsight.mindconverter.graph_based_converter.common.global_context import GlobalContext
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import BaseNode, NodeOutputShape
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.optimizer import OnnxSimplify
 
 from mindinsight.mindconverter.graph_based_converter.constant import ONNX_TYPE_INT, ONNX_TYPE_INTS, ONNX_TYPE_STRING, \
@@ -186,39 +186,6 @@ class ParamsAttribute:
         """
         ret = self.attribute_dict.get(name)
         return ret
-
-
-class BaseNode(abc.ABC):
-    """Define the basic parameters required for node.
-
-    Args:
-        node_name (str): The name of the node.
-        op_type (str): The onnx ops.
-
-    """
-
-    def __init__(self, **kwargs):
-        self.name = kwargs.get('node_name')
-        self.op_type = kwargs.get('op_type')
-
-        self.precursor_onnx_node_dict = OrderedDict()
-        self.successor_onnx_node_dict = OrderedDict()
-
-    def get_name(self):
-        """Get node name."""
-        return self.name
-
-    def get_op(self):
-        """Get node op type."""
-        return self.op_type
-
-    def get_precursor_dict(self):
-        """Get node's precursor dict."""
-        return self.precursor_onnx_node_dict
-
-    def get_successor_dict(self):
-        """Get node's successor dict."""
-        return self.successor_onnx_node_dict
 
 
 class OnnxNode(BaseNode):
@@ -676,44 +643,3 @@ class OnnxDataLoader:
             eliminated_nodes = _traceback_precursor_nodes_until_shape_op(to_shape)
             self.dynamic_resize_node.append(nd_name)
             self.eliminated_nodes += eliminated_nodes
-
-
-class NodeWeight:
-    """Node weight struct."""
-
-    def __init__(self, weight_name, weight_value, weight_location):
-        self._weight_name = weight_name
-        self._weight_value = weight_value
-        self._weight_location = weight_location
-
-    @property
-    def name(self):
-        return self._weight_name
-
-    @property
-    def value(self):
-        return self._weight_value
-
-    @property
-    def location(self):
-        return self._weight_location
-
-
-class NodeOutputShape:
-    """Node output shape and its name."""
-    def __init__(self, node_opt_name, node_name, node_output_shape):
-        self._node_opt_name = node_opt_name
-        self._node_name = node_name
-        self._node_output_shape = node_output_shape
-
-    @property
-    def node_opt_name(self):
-        return self._node_opt_name
-
-    @property
-    def node_name(self):
-        return self._node_name
-
-    @property
-    def node_output_shape(self):
-        return self._node_output_shape

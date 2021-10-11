@@ -28,7 +28,7 @@ def get_area_heads_and_tails(nodes, dataloader):
 
     Args:
         nodes (dict): Node instances.
-        dataloader (OnnxDataLoader): Dataloader instance which holds the graph info.
+        dataloader (DataLoader): Dataloader instance which holds the graph info.
 
     Returns:
         tuple, corresponding head, input tensor, tail and output tensor of the area.
@@ -46,7 +46,7 @@ def get_area_heads_and_tails(nodes, dataloader):
             o_tsr2nodes[opt] = nd_obj
             output_tensors.add(opt)
         # Record input tensor.
-        for ipt in getattr(nd_obj, "input_name_list", None) or getattr(nd_obj, "inputs", None):
+        for ipt in getattr(nd_obj, "input_name_list", list()) or getattr(nd_obj, "inputs", list()):
             if ipt in dataloader.tensors_dict:
                 continue
             i_tsr2nodes[ipt] = nd_obj
@@ -119,7 +119,8 @@ class UserSelection:
         self.module_name = module_name
         if module_name not in GlobalContext().known_module_name:
             GlobalContext().known_module_name[self.fake_module_name] = module_name
-        self.nodes = {nd: dataloader.nodes_dict.get(nd) or merged_modules.get(nd) for nd in nodes}
+        self.nodes = {nd: dataloader.nodes_dict.get(nd) or merged_modules.get(nd) for nd in nodes if
+                      nd not in dataloader.constant_nodes}
         self.heads, self.inputs, self.tails, self.outputs = get_area_heads_and_tails(self.nodes, dataloader)
         self.start_rank, self.end_rank = get_area_rank(self.heads, self.tails, dataloader)
 
@@ -140,7 +141,7 @@ def _build_scope(selections, dataloader):
 
     Args:
         selections (list[UserSelection]): Selection instance.
-        dataloader (OnnxDataLoader): Dataloader instance.
+        dataloader (DataLoader): Dataloader instance.
 
     Returns:
         dict, node name and corresponding scope name.
@@ -152,15 +153,21 @@ def _build_scope(selections, dataloader):
         """Update hierarchical indexing."""
         nonlocal module_cnt
         previous_md = full_prefix.split("/")[-1]
+
+        full_md_name = "-".join((full_prefix.replace("/", "-"), cur_md_name))
+        for module_name, cnt in module_cnt.items():
+            if cnt.get(full_md_name) and module_name != previous_md:
+                module_cnt[module_name][full_md_name] -= 1
+
         if previous_md not in module_cnt:
             module_cnt[previous_md] = dict()
-            module_cnt[previous_md][cur_md_name] = 0
-            return module_cnt[previous_md][cur_md_name]
-        if cur_md_name not in module_cnt[previous_md]:
-            module_cnt[previous_md][cur_md_name] = 0
-            return module_cnt[previous_md][cur_md_name]
-        module_cnt[previous_md][cur_md_name] = module_cnt[previous_md][cur_md_name] + 1
-        return module_cnt[previous_md][cur_md_name]
+            module_cnt[previous_md][full_md_name] = 0
+            return module_cnt[previous_md][full_md_name]
+        if full_md_name not in module_cnt[previous_md]:
+            module_cnt[previous_md][full_md_name] = 0
+            return module_cnt[previous_md][full_md_name]
+        module_cnt[previous_md][full_md_name] = module_cnt[previous_md][full_md_name] + 1
+        return module_cnt[previous_md][full_md_name]
 
     def _hierarchically_update_scope(u_selection, added_prefix=None):
         """Build scope from top to bottom."""
@@ -208,7 +215,7 @@ def rebuild_name_scope_according_to_user_selections(dataloader, user_operations:
     Rebuild name scope for the IR nodes according to user's selections on UI.
 
     Args:
-        dataloader (OnnxDataLoader): Dataloader instance.
+        dataloader (DataLoader): Dataloader instance.
         user_operations (dict): User operations recorded in UI.
 
     Returns:
@@ -225,7 +232,7 @@ def rebuild_name_scope_according_to_user_selections(dataloader, user_operations:
         module_collection[sid] = slt
         selections.append(slt)
 
-    sorted_selections = sorted(selections)
+    sorted_selections = sorted(selections, key=lambda x: int(x.sid))
 
     name_scopes = _build_scope(sorted_selections, dataloader)
     return name_scopes

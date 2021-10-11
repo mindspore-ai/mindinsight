@@ -20,12 +20,11 @@ from mindinsight.mindconverter.common.exceptions import ModelLoadingError
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher.scope_name_rebuilder import \
     rebuild_name_scope_according_to_user_selections
-from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import Graph, NodeWeight, NodeOutputShape
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.input_node import InputNode
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_graph_node import OnnxGraphNode
 from mindinsight.mindconverter.graph_based_converter.third_party_graph.tf_graph_parser import TFGraphParser
-from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import OnnxDataLoader, \
-    NodeWeight, NodeOutputShape
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import OnnxDataLoader
 from mindinsight.mindconverter.graph_based_converter.sub_graph_searcher import generate_scope_name
 
 NONE_SCOPE_OP = {

@@ -86,8 +86,8 @@ class SelectMapper(ONNXToMindSporeMapper):
                 TemplateKeywords.CONSTRUCT.value: [construct_template]
             }
         }
-        exchange_msg = SelectMapper._generate_exchange_msg(variable_slot, op, args, weights, trainable_params,
-                                                           onnx_location_tensors)
+        exchange_msg = SelectMapper._generate_exchange_msg_select(variable_slot, op, args, weights, trainable_params,
+                                                                  onnx_location_tensors)
         outputs_list = [f"opt_{{{variable_slot}}}"]
         outputs_mapping = ((0, 0),)
         return template, exchange_msg, outputs_list, outputs_mapping
@@ -114,20 +114,10 @@ class SelectMapper(ONNXToMindSporeMapper):
         return init_template_list, construct_template
 
     @staticmethod
-    def _generate_exchange_msg(variable_slot, op, args, weights, trainable_params, onnx_location_tensors):
-        """Generate exchange_msg."""
-        exchange_msg = {
-            variable_slot: {
-                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
-                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
-                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
-                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
-                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
-                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
-                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: weights,
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: trainable_params
-            }
-        }
+    def _generate_exchange_msg_select(variable_slot, op, args, weights, trainable_params, onnx_location_tensors):
+        """Generate exchange_msg for select mapper."""
+        exchange_msg = SelectMapper._generate_exchange_msg(variable_slot=variable_slot, op=op, args=args,
+                                                           weights=weights, trainable_params=trainable_params)
         declared_key = ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value
         for onnx_location_tensor in onnx_location_tensors:
             value = onnx_location_tensor[2]

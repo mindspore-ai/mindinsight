@@ -17,6 +17,7 @@
 import copy
 from collections import OrderedDict
 
+from mindinsight.mindconverter.graph_based_converter.constant import MAIN_CLASS_NAME
 from mindinsight.mindconverter.graph_based_converter.generator.node_struct import NodeStruct
 from mindinsight.mindconverter.graph_based_converter.generator.scope_utils import Scope
 from mindinsight.mindconverter.graph_based_converter.common.utils import get_dict_key_by_value
@@ -491,7 +492,7 @@ class ModuleStruct:
     def class_name(self) -> str:
         """Return the class name for generating code of this module."""
         if self.pattern_id == -1:
-            return "Model"
+            return MAIN_CLASS_NAME
         if self._global_context.known_module_name.get("Module{}".format(self.pattern_id)) is not None:
             class_name = self._global_context.known_module_name.get("Module{}".format(self.pattern_id))
         else:
@@ -502,7 +503,7 @@ class ModuleStruct:
     def ms_var_name(self) -> str:
         """Return the variable name for generated code statement of this module."""
         if self.pattern_id == -1:
-            return "Model"
+            return MAIN_CLASS_NAME
         return f"{self.class_name}_{self.pattern_uid}".lower()
 
     @property

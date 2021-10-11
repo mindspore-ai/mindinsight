@@ -121,9 +121,11 @@ def _extract_model_name(model_path):
     Returns:
         str, name of Converted model.
     """
-
-    base_path = os.path.basename(model_path)
-    model_name = '.'.join(base_path.split('.')[:-1])
+    if isinstance(model_path, str) and model_path:
+        base_path = os.path.basename(model_path)
+        model_name = '.'.join(base_path.split('.')[:-1])
+    else:
+        model_name = 'model'
     return model_name
 
 
@@ -207,10 +209,10 @@ def graph_based_converter_tf_to_ms(graph_path: str,
 def convert_according_to_user_selections(graph_obj, output_folder: str, report_folder: str = None,
                                          user_operations: Mapping[str, Dict] = None):
     """
-    ONNX to MindSpore based on Graph.
+    X to MindSpore based on Graph.
 
     Args:
-        graph_obj (OnnxGraph): Onnx graph object.
+        graph_obj (Graph): Graph object.
         output_folder (str): Output folder.
         report_folder (str): Report output folder path.
         user_operations (dict): Record user's operations.

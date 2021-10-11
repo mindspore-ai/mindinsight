@@ -25,6 +25,9 @@ class ReportGenerator(metaclass=abc.ABCMeta):
         self._title = self._gen_title()
         self._extra = self._gen_extra()
         self._content = ''
+        self._num_unconverted_operator = 0
+        self._num_converted_operator = 0
+        self._unconverted_op_framework = ["onnx"]
 
     @staticmethod
     def _gen_title():
@@ -111,6 +114,20 @@ class ReportGenerator(metaclass=abc.ABCMeta):
 
         return unsupported_params_info
 
+    def _get_unconverted_operator(self, code_line, num_line):
+        """Get unconverted operator in code line."""
+        for unconverted_op_framework in self._unconverted_op_framework:
+            if f"{unconverted_op_framework}." in code_line:
+                self._num_unconverted_operator += 1
+                find_pattern = re.compile(f".*{unconverted_op_framework}.(.*?)[(].*[)]")
+                unconverted_operator = SEPARATOR_IN_ONNX_OP.join(
+                    (f'{unconverted_op_framework}', re.findall(find_pattern, code_line)[0]))
+                info_unconverted_line = self._gen_unconverted_operator_content(
+                    [f"{num_line + 1}", f"{code_line.index(f'{unconverted_op_framework}.') + 1}"],
+                    unconverted_operator
+                )
+                self._content = f"{NEW_LINE}".join((self._content, info_unconverted_line))
+
     def gen_report(self, code: str):
         """
         Generate report.
@@ -124,9 +141,6 @@ class ReportGenerator(metaclass=abc.ABCMeta):
         code_lines = code.split(NEW_LINE)
         num_all_lines = len(code_lines)
 
-        num_unconverted_operator = 0
-        num_converted_operator = 0
-        converted_operator = None
         self._content = self._extra['start']
         for num_line in range(0, num_all_lines):
             code_line = code_lines[num_line]
@@ -137,22 +151,13 @@ class ReportGenerator(metaclass=abc.ABCMeta):
                     f"Please check its parameters with your original model and MindSpore official documents."
                 self._content = f"{NEW_LINE}".join((self._content, warning_msg))
 
-            if 'onnx.' in code_line:
-                num_unconverted_operator += 1
-                unconverted_operator = SEPARATOR_IN_ONNX_OP.join(
-                    ('onnx', re.findall(r".*onnx.([a-zA-Z]+).*", code_line)[0]))
-                info_unconverted_line = self._gen_unconverted_operator_content(
-                    [f"{num_line + 1}", f"{code_line.index('onnx.') + 1}"],
-                    unconverted_operator
-                )
-                self._content = f"{NEW_LINE}".join((self._content,
-                                                    info_unconverted_line))
+            self._get_unconverted_operator(code_line, num_line)
 
             if 'P.' in code_line or 'nn.' in code_line:
                 converted_operator = re.findall(r".*(?:nn.|P.)(.*)[(]", code_line)
 
                 if converted_operator:
-                    num_converted_operator += 1
+                    self._num_converted_operator += 1
 
             info_unsupported_params = self._get_unsupported_params(
                 num_line,
@@ -165,7 +170,7 @@ class ReportGenerator(metaclass=abc.ABCMeta):
         self._content = f"{NEW_LINE}".join((self._content, self._extra['end']))
 
         converted_rate = \
-            num_converted_operator / (num_converted_operator + num_unconverted_operator)
+            self._num_converted_operator / (self._num_converted_operator + self._num_unconverted_operator)
         info_converted_rate = f"Converted Rate: {converted_rate * 100:.2f}%.{NEW_LINE}"
         self._content = f"{NEW_LINE}".join((self._content, info_converted_rate))
 

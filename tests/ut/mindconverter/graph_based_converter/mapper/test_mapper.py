@@ -15,7 +15,7 @@
 """Test all operator mappers on transformation from pytorch to mindspore."""
 import numpy as np
 import pytest
-from mindinsight.mindconverter.graph_based_converter.third_party_graph.onnx_utils import NodeWeight
+from mindinsight.mindconverter.graph_based_converter.third_party_graph.base import NodeWeight
 
 from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 
