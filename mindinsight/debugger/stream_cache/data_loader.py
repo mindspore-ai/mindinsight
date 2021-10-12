@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the DataLoader."""
+import os
 import json
 from collections import namedtuple
 from pathlib import Path
@@ -83,7 +84,8 @@ class DataLoader:
         self._rank_dirs = []
         rank_dirs = self._debugger_base_dir.glob('rank_*')
         for rank_dir in rank_dirs:
-            if not rank_dir.is_dir() or not is_valid_rank_dir_name(rank_dir.name):
+            if not rank_dir.is_dir() or not is_valid_rank_dir_name(rank_dir.name) \
+                    or not os.path.exists(os.path.join(rank_dir, ".dump_metadata")):
                 continue
             rank_id = int(rank_dir.name.split('_', 1)[-1])
             self._rank_dirs.append(RankDir(rank_id, rank_dir))
