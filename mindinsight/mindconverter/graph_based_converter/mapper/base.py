@@ -28,6 +28,14 @@ GET_OP_WEIGHTS = "_convert_trained_weights"
 GET_OP_SETTINGS = "_convert_settings"
 GET_OP_TEMPLATE = "_generate_snippet_template"
 
+def get_table(framework):
+    config_json = f"{framework}_to_ms.json"
+    operation_table = os.path.join(os.path.abspath(os.path.dirname(__file__)), config_json)
+    table = {}
+    if os.path.exists(operation_table):
+        with open(operation_table) as f:
+            table = json.load(f)
+    return table
 
 def get_module_name(op_name):
     """Get module_name."""

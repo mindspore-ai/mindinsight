@@ -16,4 +16,4 @@
 
 __all__ = ["ONNXToMindSporeMapper"]
 
-from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
+from mindinsight.mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper, get_table
