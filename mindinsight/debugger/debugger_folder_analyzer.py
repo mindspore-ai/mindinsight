@@ -28,7 +28,7 @@ class DebuggerFolderAnalyzer(FolderAnalyzer):
         update_info = {}
         if entry.is_dir():
             sub_relative_path = os.path.join(relative_path, entry.name)
-            entry_path = os.path.join(summary_base_dir, sub_relative_path)
+            entry_path = entry.path
             try:
                 subdir_entries = os.scandir(entry_path)
             except PermissionError:
@@ -37,7 +37,8 @@ class DebuggerFolderAnalyzer(FolderAnalyzer):
             subdir_entries = [subdir_entry for subdir_entry in subdir_entries if not subdir_entry.is_symlink()]
             subdir_entries = sorted(subdir_entries, key=lambda x: x.stat().st_mtime)
             for subdir_entry in subdir_entries:
-                if subdir_entry.is_dir() and is_valid_rank_dir_name(subdir_entry.name):
+                if subdir_entry.is_dir() and is_valid_rank_dir_name(subdir_entry.name) and \
+                        os.path.exists(os.path.join(subdir_entry.path, ".dump_metadata")):
                     update_info = {'dump_dir': sub_relative_path}
                     return update_info
         return update_info
