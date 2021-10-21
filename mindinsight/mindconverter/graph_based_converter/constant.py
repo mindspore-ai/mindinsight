@@ -19,7 +19,7 @@ import stat
 
 import numpy as np
 
-AUTO_DETECT_NODES = False
+AUTO_DETECT_NODES = True
 
 SEPARATOR_IN_ONNX_OP = "::"
 SEPARATOR_IN_SCOPE = "/"
