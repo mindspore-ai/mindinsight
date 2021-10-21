@@ -24,10 +24,11 @@ from mindinsight.mindconverter.graph_based_converter.common.global_context impor
 from mindinsight.mindconverter.graph_based_converter.common.mcgraph import ConverterGraph
 from mindinsight.mindconverter.graph_based_converter.common.utils import onnx_satisfied, \
     save_code_file_and_report, get_framework_type, check_dependency_integrity, \
-    get_third_part_lib_error_info, save_intermediate_graph, extract_in_out_nodes
+    get_third_part_lib_error_info, save_intermediate_graph, extract_in_out_nodes, \
+    generate_operator_scanning_report
 from mindinsight.mindconverter.graph_based_converter.constant import FrameworkType
 from mindinsight.mindconverter.graph_based_converter.generator import batch_add_nodes
-from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper
+from mindinsight.mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper, get_table
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import GraphInitError, FileSaveError, \
     BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, \
@@ -154,6 +155,7 @@ def graph_based_converter_onnx_to_ms(graph_path: str,
         GlobalContext.release()
         return
     graph_obj.build()
+    generate_operator_scanning_report(graph_obj, get_table('onnx'), 'onnx', report_folder)
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
     model_name = _extract_model_name(graph_path)
     log_console.info("Code saving begins.")

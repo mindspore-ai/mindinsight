@@ -20,14 +20,15 @@ import json
 import uuid
 from importlib import import_module
 from importlib.util import find_spec
-from typing import List, Tuple, Mapping
+from typing import List, Tuple, Mapping, Counter
 
 import numpy as np
 
 from mindinsight.mindconverter.common.log import logger as log, logger_console as log_console
 from mindinsight.mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
     CheckPointGenerationError, WeightMapGenerationError, ModelLoadingError, OnnxModelSaveError, \
-    ParamMissingError, BadParamError
+    ParamMissingError, BadParamError, NodeTypeNotSupport
+
 from mindinsight.mindconverter.graph_based_converter.constant import AUTO_DETECT_NODES, SEPARATOR_IN_ONNX_OP, FrameworkType, \
     TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION, ONNX_MODEL_SUFFIX, DTYPE_MAP, WRITE_FLAGS, RW_MODE_FOR_OWNER, \
     RWX_MODE_FOR_OWNER
@@ -458,3 +459,30 @@ def extract_in_out_nodes(file_config, frame_type):
         input_nodes = extract_from_cli(file_config, check_params)
         output_nodes = file_config["output_nodes"]
     return input_nodes, output_nodes
+
+def generate_operator_scanning_report(graph_obj, table, framework, out_folder: str):
+    """Scanning operators in ONNX graph and report the supported status"""
+    out_folder = os.path.realpath(out_folder)
+
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder, RWX_MODE_FOR_OWNER)
+
+    opertator_list = [framework + '::' + i.split('_')[0] for i in graph_obj.nodes_in_topological_order]
+    opertator_count = Counter(opertator_list)
+
+    out_path = os.path.join(out_folder, 'operator_scanning_report.csv')
+    supported_status = True
+    with open(out_path, 'w') as f:
+        f.write('operator_name, count, status\n')
+        for op, count in opertator_count.items():
+            status = 'Supported' if table.get(op, None) is not None \
+                     else 'Unsupported'
+            if status == 'Unsupported':
+                supported_status = False
+            f.write(f'{op}, {count}, {status}\n')
+    os.chmod(out_path, RW_MODE_FOR_OWNER)
+
+    if not supported_status:
+        error = NodeTypeNotSupport('Found unsupported operator, please check the detail report at: {}'.format(out_path))
+        log.error(str(error))
+        raise error
