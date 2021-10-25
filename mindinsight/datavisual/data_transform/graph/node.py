@@ -70,7 +70,7 @@ class Node:
             'proxy_output': self._proxy_output,
             'subnode_count': self.subnode_count,
             'independent_layout': self.independent_layout,
-            'stack_info': [source.to_dict() for source in self.stack]
+            'stack_info': self.stack_info
         }
 
     @property
@@ -227,6 +227,11 @@ class Node:
         dst_node.elem_types = src_node.elem_types
         dst_node.add_attr(src_node.attr)
         dst_node.stack = src_node.stack
+
+    @property
+    def stack_info(self):
+        """Return the stack info of the node."""
+        return [source.to_dict() for source in self.stack]
 
     def __str__(self):
         return f'<Node, name: {self.name}, type: {self.type}>'

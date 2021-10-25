@@ -136,7 +136,7 @@ class DebuggerGraph(MSGraph):
             condition (dict): Search condition. Default: None.
 
                 - activation_func (Union[str, list[str]): The target functions. Used when node_type
-                    is TargetTypeEnum.ACTIVATION.
+                  is TargetTypeEnum.ACTIVATION.
                 - search_range (list[Node]): The list of nodes to be searched from.
 
         Returns:
@@ -231,7 +231,8 @@ class DebuggerGraph(MSGraph):
                     'type': <node type>
                     'input': <input objects>,
                     'output': <output objects>,
-                    'slot': {'id': <slot id>}
+                    'slot': {'id': <slot id>},
+                    'stack_info': [<stack info>]
                     }
                 ]}
         """
@@ -255,7 +256,8 @@ class DebuggerGraph(MSGraph):
             'type': node.type,
             'input': {},
             'output': {},
-            'slots': [{'slot': str(slot)} for slot in range(node.output_nums)]
+            'slots': [{'slot': str(slot)} for slot in range(node.output_nums)],
+            'stack_info': node.stack_info
         }
         return node_info
 

@@ -22,7 +22,7 @@ import pytest
 from mindinsight.debugger.debugger_services.debugger_offline_server import DebuggerOfflineManager
 from mindinsight.conf import settings
 from tests.st.func.debugger.utils import check_offline_dbg_server_state, get_request_result, \
-    build_dump_file_structure, send_and_compare_result
+    build_dump_file_structure, send_and_compare_result, send_and_save_result
 from tests.st.func.debugger.debugger_services import mock_dbg_services
 
 
@@ -203,6 +203,9 @@ class TestAscendDebugger:
         url = os.path.join(os.path.join(self.base_url, session_id), 'tensor-graphs')
         get_request_result(app_client, url, body_data, method='GET', full_url=True)
         time.sleep(0.1)
+        if self.save_results:
+            send_and_save_result(app_client, url, body_data, expect_file, method='GET', full_url=True,
+                                 expect_file_dir=self.expect_file_dir)
         send_and_compare_result(app_client, url, body_data, expect_file, method='GET', full_url=True,
                                 expect_file_dir=self.expect_file_dir)
         self.stop_session(mock_method, app_client, session_id)
