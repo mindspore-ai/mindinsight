@@ -59,6 +59,9 @@ class TensorDetailInfo:
             dict, tensor graph, format is {'nodes': [Node object]}.
             The Node object = {
                 'graph_name': <graph_name>,
+                'full_name': <full node name>,
+                'type': <node type>,
+                'stack_info': [<stack_info>]
                 'name': <node name>,
                 'input': {<node name>: <Edge object>},
                 'output: {<node name>: <Edge object>},

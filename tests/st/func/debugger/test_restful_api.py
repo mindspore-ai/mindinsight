@@ -294,7 +294,6 @@ class TestAscendDebugger:
             send_and_compare_result(app_client, url, body_data, expect_file, method='get')
             send_terminate_cmd(app_client)
 
-
     @pytest.mark.level0
     @pytest.mark.env_single
     @pytest.mark.platform_x86_cpu
