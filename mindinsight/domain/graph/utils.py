@@ -16,6 +16,7 @@
 
 import os
 import stat
+from functools import cmp_to_key
 
 import xlsxwriter
 
@@ -521,11 +522,20 @@ class Toolkit:
             else:
                 source_mapping[key] = [operator]
 
+        def compare_op(op1, op2):
+            if op1.op_id.isdigit() and op2.op_id.isdigit():
+                return int(op1.op_id) - int(op2.op_id)
+            if op1.op_id < op2.op_id:
+                return -1
+            if op1.op_id > op2.op_id:
+                return 1
+            return 0
+
         row = 0
         indices = self._convert_column_indices(column_metas)
         for key in source_mapping:
             operators = source_mapping[key]
-            operators.sort(key=lambda x: int(x.op_id) if x.op_id.isdigit() else x.op_id)
+            operators.sort(key=cmp_to_key(compare_op))
 
             if len(operators) == 1:
                 worksheet.write(row + 1, indices.get('stack'), key, styles['content_wrapped_fmt'])
