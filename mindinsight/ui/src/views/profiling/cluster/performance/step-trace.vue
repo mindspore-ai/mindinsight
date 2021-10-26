@@ -366,6 +366,7 @@ export default {
                   tempChartData.push(chartItem);
                 });
                 // sort
+                this.chartData = [];
                 if (parallelMode === 'pipeline-parallel') {
                   tempChartData.forEach((val) => {
                     this.chartData.push([val[0], val[1], val[5], val[3], val[4], val[6], val[2]]);
