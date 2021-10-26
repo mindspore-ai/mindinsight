@@ -39,6 +39,9 @@ class SummaryWatcher:
     PB_FILENAME_REGEX = r'\.pb$'
     PROFILER_DIRECTORY_REGEX = r'^profiler'
     MAX_SUMMARY_DIR_COUNT = 999
+    SUMMARY_PB_BLACKLIST = {
+        "memory_usage_regex": r'^memory_usage_\d+\.pb$'
+    }
 
     # scan at most 20000 files/directories (approximately 1 seconds)
     # if overall is False in SummaryWatcher.list_summary_directories
@@ -309,7 +312,9 @@ class SummaryWatcher:
 
     def _is_valid_pattern_result(self, summary_pattern, pb_pattern, list_explain, entry):
         """Check the pattern result is valid."""
-        if summary_pattern is None and pb_pattern is None:
+        is_in_summary_pb_blacklist = self._check_by_blacklist(entry.name)
+        is_valid_pb = pb_pattern is not None and not is_in_summary_pb_blacklist
+        if summary_pattern is None and not is_valid_pb:
             return False
         if list_explain and not entry.name.endswith(EXPLAIN_SUMMARY_SUFFIX):
             return False
@@ -317,6 +322,13 @@ class SummaryWatcher:
             return False
 
         return True
+
+    def _check_by_blacklist(self, name):
+        """Check if the file is in blacklist."""
+        is_in_summary_pb_blacklist = False
+        for regex in self.SUMMARY_PB_BLACKLIST.values():
+            is_in_summary_pb_blacklist = is_in_summary_pb_blacklist or re.search(regex, name) is not None
+        return is_in_summary_pb_blacklist
 
     def is_summary_directory(self, summary_base_dir, relative_path):
         """
@@ -357,7 +369,8 @@ class SummaryWatcher:
                 return True
 
             pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
-            if pb_pattern is not None and entry.is_file():
+            is_in_summary_pb_blacklist = self._check_by_blacklist(entry.name)
+            if pb_pattern is not None and entry.is_file() and not is_in_summary_pb_blacklist:
                 return True
 
             if entry.is_dir():
