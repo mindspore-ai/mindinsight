@@ -72,7 +72,7 @@ limitations under the License.
                 </el-select>
               </div>
               <div class="node-type">
-                <div class="label">{{ $t('debugger.graphFile') }}</div>
+                <div class="label">{{ $t('debugger.graphName') }}</div>
                 <el-select v-model="graphFiles.value"
                            @change="queryGraphByFile">
                   <el-option v-for="item in graphFiles.options"
@@ -267,7 +267,7 @@ limitations under the License.
             </el-select>
           </div>
           <div class="node-type">
-            <div class="label">{{ $t('debugger.graphFile') }}</div>
+            <div class="label">{{ $t('debugger.graphName') }}</div>
             <el-select v-model="hitWpCondition.graphFile"
                        :disabled="metadata.state === state.running || metadata.state === state.sending"
                        @change="searchWatchpointHits(true,true);">

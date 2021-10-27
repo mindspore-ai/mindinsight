@@ -356,19 +356,19 @@
       "desc": "整机CPU利用率平均值为{n1}，可能影响数据处理性能，请用户关注。"
     },
     "minddata_pipeline-dataset_op": {
-      "desc": "对于算子{n1}，用户可以尝试调整num_parallel_workers参数。"
+      "desc": "对于算子{n1}，用户可以尝试增大或减小num_parallel_workers参数。"
     },
     "minddata_pipeline-generator_op": {
-      "desc": "对于算子{n1}，用户可以尝试调整num_parallel_workers参数或优化训练脚本，如果性能没有得到优化，可以尝试替换为MindRecordDataset算子。"
+      "desc": "对于算子{n1}，用户可以尝试增大或减小num_parallel_workers参数或优化训练脚本，如果性能没有得到优化，可以尝试替换为MindRecordDataset算子。"
     },
     "minddata_pipeline-map_op": {
-      "desc": "对于算子{n1}，用户可以尝试调整num_parallel_workers参数,如果使用的是Python的算子，可以尝试优化训练脚本。"
+      "desc": "对于算子{n1}，用户可以尝试增大或减小num_parallel_workers参数,如果使用的是Python的算子，可以尝试优化训练脚本。"
     },
     "minddata_pipeline-batch_op": {
       "desc": "对于算子{n1}，用户可以尝试增加prefetch_size大小。"
     },
     "minddata_warning_op": {
-      "desc": "经过上述判断，算子{n1}可能存在优化空间。"
+      "desc": "经过上述判断，{n1}可能存在优化空间，建议调整数据处理脚本逻辑。"
     },
     "minddata-proposer_type_label": {
       "desc": "迭代间隙性能分析"
@@ -477,18 +477,18 @@
       "content31": "您可以通过时间线信息分析流切分方法是否合理、迭代间隙和拖尾时间是否过长等；",
       "content32": "也可以具体定位到某个算子，查看分析它的执行时间。",
       "title4": "各种类型时间线的解释：",
-      "content41":"Process AI Core Op：在AI Core上执行的算子的时间线。",
-      "content42":"Step：训练迭代数。",
-      "content43":"Scope Name：算子的作用域，展示计算图中算子的层级结构。",
-      "content44":"Stream #ID：在该stream上执行的算子。",
-      "content45":"Process AI CPU Op：在AI CPU上运行的算子的时间线。",
-      "content46":"Process Communication Op：包含通信算子执行的时间线。",
-      "content47":"Process Host CPU Op：包含在Host CPU上执行的算子的时间线。",
-      "content48":"Process Op Overlap Analyse：所有计算算子与通信算子合并后的时间线，可用于分析通信时间占比。",
-      "content49":"Merged Computation Op：为所有计算（AI Core、AI CPU、Host CPU）算子合并后的时间线。",
-      "content410":"Merged Communication Op：为所有通信算子合并后的时间线。",
-      "content411":"Pure Communication Op：纯通信时间（通信算子的执行时间去除与计算算子时间重叠部分后的时间线）。",
-      "content412":"Free Time：空闲时间（既没有通信算子也没有计算算子在执行的时间线）。"
+      "content41": "Process AI Core Op：在AI Core上执行的算子的时间线。",
+      "content42": "Step：训练迭代数。",
+      "content43": "Scope Name：展示计算图中算子的层级结构。",
+      "content44": "Stream #ID：在该stream上执行的算子。",
+      "content45": "Process AI CPU Op：在AI CPU上运行的算子的时间线。",
+      "content46": "Process Communication Op：包含通信算子执行的时间线。",
+      "content47": "Process Host CPU Op：包含在Host CPU上执行的算子的时间线。",
+      "content48": "Process Op Overlap Analyse：所有计算算子与通信算子合并后的时间线，可用于分析通信时间占比。",
+      "content49": "Merged Computation Op：为所有计算（AI Core、AI CPU、Host CPU）算子合并后的时间线。",
+      "content410": "Merged Communication Op：为所有通信算子合并后的时间线。",
+      "content411": "Pure Communication Op：纯通信时间（通信算子的执行时间去除与计算算子时间重叠部分后的时间线）。",
+      "content412": "Free Time：空闲时间（既没有通信算子也没有计算算子在执行的时间线）。"
     },
     "countUnit": "次",
     "unit": "ms/次",
@@ -606,11 +606,11 @@
     "mainTipPartOne": "该功能以热力图的形式为用户提供集群场景下的内存使用概况，反映了集群内每张训练卡的内存峰值在训练卡最大可用内存中的占比。",
     "mainTipPartTwo": "内存峰值占比 = 内存峰值 / 训练卡最大可用内存值（内存峰值占比最大值为1）",
     "mainTipPartThree": "粒度：代表不同卡的内存峰值占比，在划分对应色值时的粗细程度。",
-    "mainTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几台服务器、每台服务器上使用了几张训练卡。点击某个训练卡可以跳转到该张卡的内存详情页面。",
+    "mainTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几张训练卡。点击某个训练卡可以跳转到该张卡的内存详情页面。",
     "flopsTipPartOne": "该功能以热力图的形式为用户提供集群场景下的每个设备的FLOPs(浮点运算次数)数据。",
     "flopsTipPartTwo": "热力图反映了设备之间FLOPs的相对大小，每个设备对应的矩形块颜色代表当前设备FLOPs与所有设备中最大FLOPs的比值。",
     "flopsTipPartThree": "粒度：代表划分不同设备FLOPs数据对应色值的粗细程度。",
-    "flopsTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几台服务器、每台服务器使用了几个设备。点击某个设备可以跳转到该设备的算子详情页面。",
+    "flopsTipPartFour": "您也可以在界面上看到该次训练的集群概况，比如该次训练使用了几个设备。点击某个设备可以跳转到该设备的算子详情页面。",
     "communicationAloneTime": "纯通信时间",
     "computationTime": "计算时间",
     "receiveAloneTime": "纯通信时间（仅包含Receive算子）",
@@ -714,7 +714,7 @@
     "curStatisticsLabel": "当前轮次：",
     "preStatisticsLabel": "上一个轮次：",
     "diffStatisticsLabel": "对比结果：",
-    "graphFile": "图文件",
+    "graphName": "图名称",
     "tensorDiagram": "张量关系图",
     "selectDetail": "单击张量选中，双击张量查看详情",
     "operator": "算子",
@@ -943,7 +943,12 @@
       "running": "运行中：正在执行训练或检查监测点。若模型较大或检测数据较多，会需要更多时间，请耐心等候。",
       "sending": "等待命令执行：前一个命令尚未完成，新命令正在等待前一条命令执行完毕。",
       "pending": "等待后台连接：等待新训练连接或正在初始化调试环境。"
-    }
+    },
+    "back": "回退",
+    "graphExecutionOrder": "图执行序",
+    "graphExecutionStep": "图执行轮次",
+    "hasData": "是否有数据",
+    "forward": "前进"
   },
   "explain": {
     "explain": "模型解释",
