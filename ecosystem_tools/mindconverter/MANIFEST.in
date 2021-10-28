@@ -1,0 +1,5 @@
+recursive-include mindconverter *
+recursive-exclude * .git
+recursive-exclude * .gitignore
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co] *.swp

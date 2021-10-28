@@ -1,0 +1,27 @@
+# MindInsight
+"mindinsight/mindinsight/lineagemgr/common/validator/model_parameter.py"               "unused-argument"
+"mindinsight/mindinsight/debugger/debugger_grpc_server.py"                             "unused-argument"
+"mindinsight/mindinsight/debugger/debugger_services/debugger_grpc_server.py"           "unused-argument"
+"mindinsight/mindinsight/optimizer/common/validator/optimizer_config.py"               "unused-argument"
+"mindinsight/mindinsight/backend/auth.py"                                              "unused-argument"
+
+# MindConverter
+"mindinsight/ecosystem_tools/mindconverter/mindconverter/forward_call.py"              "invalid-name"
+"mindinsight/ecosystem_tools/mindconverter/mindconverter/code_analysis.py"             "invalid-name"
+"mindinsight/ecosystem_tools/mindconverter/mindconverter/ast_edits.py"                 "invalid-name"
+
+# Tests
+"mindinsight/tests/st/func/lineagemgr/collection/model/test_model_lineage.py"          "protected-access"
+"mindinsight/tests/ut/datavisual/data_transform/test_data_loader.py"                   "protected-access"
+"mindinsight/tests/ut/datavisual/data_transform/test_data_manager.py"                  "protected-access"
+"mindinsight/tests/ut/datavisual/data_transform/test_events_data.py"                   "protected-access"
+"mindinsight/tests/ut/datavisual/data_transform/test_ms_data_loader.py"                "protected-access"
+"mindinsight/tests/ut/lineagemgr/summary/test_lineage_summary_analyze.py"              "protected-access"
+"mindinsight/tests/ut/lineagemgr/summary/test_lineage_summary_analyze.py"              "arguments-differ"
+"mindinsight/tests/ut/lineagemgr/querier/test_querier.py"                              "arguments-differ"
+"mindinsight/tests/ut/lineagemgr/summary/test_file_handler.py"                         "arguments-differ"
+"mindinsight/tests/ut/debugger/test_debugger_grpc_server.py"                           "protected-access"
+"mindinsight/tests/ut/debugger/test_debugger_server.py"                                "protected-access"
+"mindinsight/tests/ut/debugger/stream_operator/test_training_control_operator.py"      "protected-access"
+"mindinsight/tests/ut/explainer/manager/test_explain_manager.py"                       "protected-access"
+"mindinsight/tests/ut/backend/authentication/test_auth.py"                             "protected-access"

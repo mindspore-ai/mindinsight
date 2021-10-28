@@ -40,11 +40,11 @@ def get_version():
     Get version.
 
     Returns:
-        str, mindinsight version.
+        str, mindconverter version.
     """
     machinery = import_module('importlib.machinery')
-    module_path = os.path.join(os.path.dirname(__file__), 'mindinsight', '_version.py')
-    module_name = '__mindinsightversion__'
+    module_path = os.path.join(os.path.dirname(__file__), 'mindconverter', '_version.py')
+    module_name = '__mindconverterversion__'
 
     version_module = types.ModuleType(module_name)
     loader = machinery.SourceFileLoader(module_name, module_path)
@@ -83,9 +83,9 @@ def get_description():
     stdout, _ = process.communicate()
     if not process.returncode:
         git_version = stdout.decode().strip()
-        return 'mindinsight platform: %s, cpu: %s, git version: %s' % (os_info, cpu_info, git_version)
+        return 'mindconverter platform: %s, cpu: %s, git version: %s' % (os_info, cpu_info, git_version)
 
-    return 'mindinsight platform: %s, cpu: %s' % (os_info, cpu_info)
+    return 'mindconverter platform: %s, cpu: %s' % (os_info, cpu_info)
 
 
 def get_install_requires():
@@ -133,24 +133,11 @@ def run_script(script):
     return process.wait()
 
 
-def build_dependencies():
-    """Build dependencies."""
-    build_dir = os.path.join(os.path.dirname(__file__), 'build')
-
-    sys.stdout.write('building ui ...\n')
-    ui_script = os.path.join(build_dir, 'scripts', 'ui.sh')
-    rc = run_script(ui_script)
-    if rc:
-        sys.stdout.write('building ui failure\n')
-        sys.exit(1)
-
-
 class EggInfo(egg_info):
     """Egg info."""
 
     def run(self):
-        build_dependencies()
-        egg_info_dir = os.path.join(os.path.dirname(__file__), 'mindinsight.egg-info')
+        egg_info_dir = os.path.join(os.path.dirname(__file__), 'mindconverter.egg-info')
         shutil.rmtree(egg_info_dir, ignore_errors=True)
         super().run()
         update_permissions(egg_info_dir)
@@ -160,10 +147,10 @@ class BuildPy(build_py):
     """Build py files."""
 
     def run(self):
-        mindinsight_lib_dir = os.path.join(os.path.dirname(__file__), 'build', 'lib', 'mindinsight')
-        shutil.rmtree(mindinsight_lib_dir, ignore_errors=True)
+        mindconverter_lib_dir = os.path.join(os.path.dirname(__file__), 'build', 'lib', 'mindconverter')
+        shutil.rmtree(mindconverter_lib_dir, ignore_errors=True)
         super().run()
-        update_permissions(mindinsight_lib_dir)
+        update_permissions(mindconverter_lib_dir)
 
 
 class Install(install):
@@ -173,8 +160,8 @@ class Install(install):
         super().run()
         if sys.argv[-1] == 'install':
             pip = import_module('pip')
-            mindinsight_dir = os.path.join(os.path.dirname(pip.__path__[0]), 'mindinsight')
-            update_permissions(mindinsight_dir)
+            mindconverter_dir = os.path.join(os.path.dirname(pip.__path__[0]), 'mindconverter')
+            update_permissions(mindconverter_dir)
 
 
 if __name__ == '__main__':
@@ -184,7 +171,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     setup(
-        name='mindinsight',
+        name='mindconverter',
         version=get_version(),
         author='The MindSpore Authors',
         author_email='contact@mindspore.cn',
@@ -197,7 +184,7 @@ if __name__ == '__main__':
         description=get_description(),
         long_description=get_readme_content(),
         long_description_content_type="text/markdown",
-        packages=['mindinsight'],
+        packages=['mindconverter'],
         platforms=[get_platform()],
         include_package_data=True,
         cmdclass={
@@ -207,9 +194,7 @@ if __name__ == '__main__':
         },
         entry_points={
             'console_scripts': [
-                'mindinsight=mindinsight.utils.command:main',
-                'mindwizard=mindinsight.wizard.cli:cli_entry',
-                'mindoptimizer=mindinsight.optimizer.cli:cli_entry',
+                'mindconverter=mindconverter.cli:cli_entry',
             ],
         },
         python_requires='>=3.7',
@@ -232,5 +217,5 @@ if __name__ == '__main__':
             'Topic :: Software Development :: Libraries :: Python Modules',
         ],
         license='Apache 2.0',
-        keywords='mindinsight',
+        keywords='mindconverter',
     )

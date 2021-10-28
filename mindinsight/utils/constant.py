@@ -87,10 +87,6 @@ class DataVisualErrors(Enum):
     TENSOR_TOO_LARGE = 22
 
 
-class ScriptConverterErrors(Enum):
-    """Enum definition for mindconverter errors."""
-
-
 class WizardErrors(Enum):
     """Enum definition for mindwizard errors."""
 

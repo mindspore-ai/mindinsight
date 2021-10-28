@@ -16,33 +16,20 @@
 set -e
 
 SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
-
 PROJECT_BASEDIR=$(dirname "$SCRIPT_BASEDIR")
 
+
 write_checksum() {
-    cd "$PROJECT_BASEDIR/output" || exit
-    PACKAGE_LIST=$(ls mindinsight-*.whl) || exit
-    for PACKAGE_NAME in $PACKAGE_LIST; do
-        sha256sum -b "$PACKAGE_NAME" >"$PACKAGE_NAME.sha256"
+    cd output || exit
+    WHEEL_LIST=$(ls *.whl) || exit
+    for WHEEL_NAME in $WHEEL_LIST; do
+        sha256sum -b "$WHEEL_NAME" >"$WHEEL_NAME.sha256"
     done
+    cd .. || exit
 }
 
 build_wheel() {
-
-    cd "$PROJECT_BASEDIR" || exit
-
-    if [ $# -gt 0 ]; then
-        if [ "$1" = "clean" ]; then
-            echo "start cleaning mindinsight"
-            clean_files
-            echo "clean mindinsight done"
-        else
-            echo "unknown command: $1"
-        fi
-        exit
-    fi
-
-    echo "start building mindinsight"
+    echo "start building"
     clean_files
 
     if command -v python3 > /dev/null; then
@@ -70,15 +57,61 @@ build_wheel() {
 
     write_checksum
     clean_files
+}
+
+build_mindinsight() {
+    cd $PROJECT_BASEDIR || exit
+    build_wheel
+}
+
+build_mindconverter() {
+    cd $PROJECT_BASEDIR/ecosystem_tools/mindconverter || exit
+    build_wheel
+    mkdir -p $PROJECT_BASEDIR/output
+    cp output/*.whl $PROJECT_BASEDIR/output
+    cp output/*.whl.sha256 $PROJECT_BASEDIR/output
+    cd $PROJECT_BASEDIR || exit
+}
+
+build_entry() {
+    if [ $# -eq 0 ]; then
+        build_mindinsight
+        build_mindconverter
+        exit
+    fi
+
+    if [ "$1" = "clean" ]; then
+        echo "Cleaning starts"
+        cd $PROJECT_BASEDIR || exit
+        clean_files
+        cd $PROJECT_BASEDIR/ecosystem_tools/mindconverter || exit
+        clean_files
+        echo "Cleaning done"
+        exit
+    fi
+
+    if [ "$1" = "mindinsight" ]; then
+        build_mindinsight
+    elif [ "$1" = "mindconverter" ]; then
+        build_mindconverter
+    else
+        echo "unknown command: $1"
+        exit
+    fi
 
     echo "Build success, output directory is: $PROJECT_BASEDIR/output"
 }
 
 clean_files() {
-    cd "$PROJECT_BASEDIR" || exit
-    rm -rf build/lib
-    rm -rf build/bdist.*
-    rm -rf mindinsight.egg-info
+    rm -rf *.egg-info
+
+    if [ -d build ];then
+        rm -rf build/lib
+        rm -rf build/bdist.*
+        if [ "$(ls -A build)" = "" ]; then
+            rm -rf build
+        fi
+    fi
 }
 
 show_usage() {
@@ -87,8 +120,10 @@ show_usage() {
     echo "usage: build.sh [-h] [clean]"
     echo ""
     echo "options:"
-    echo "  -h          show this help message and exit"
-    echo "  clean       clean build files"
+    echo "  -h              show this help message and exit"
+    echo "  clean           clean build files"
+    echo "  mindinsight     build mindinsight"
+    echo "  mindconverter   build mindconverter"
 }
 
 check_opts() {
@@ -107,5 +142,4 @@ check_opts() {
 }
 
 check_opts "$@"
-
-build_wheel "$@"
+build_entry "$@"
