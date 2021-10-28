@@ -17,8 +17,8 @@ set -e
 
 SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
 
-PROJECT_DIR=$(realpath "$SCRIPT_BASEDIR/../../")
-ST_PATH="$PROJECT_DIR/tests/st"
+PROJECT_DIR=$(realpath "$SCRIPT_BASEDIR/../../../../../")
+ST_PATH="$PROJECT_DIR/tests/ecosystem_tools/mindconverter/tests/st"
 
 PYTEST_MARK=""
 
@@ -51,19 +51,11 @@ check_opts() {
     done
 }
 
-before_run_test() {
-    echo "Before run tests."
-    export PYTHONPATH=$PROJECT_DIR:$PYTHONPATH
-}
-
-after_run_test() {
-    echo "After run tests."
-    echo "End to run tests."
-}
-
 run_test() {
     echo "Start to run test."
     cd "$PROJECT_DIR" || exit
+
+    export PYTHONPATH=$PROJECT_DIR:$PYTHONPATH
 
     for dir in "$ST_PATH"/*; do
         if [ ! -d "$dir" ] || [ "$dir" = "$ST_PATH/__pycache__" ]; then
@@ -79,10 +71,8 @@ run_test() {
         done
     done
 
-    echo "Test all use cases success."
+    rm -f mindconverter.log
 }
 
 check_opts "$@"
-before_run_test
 run_test
-after_run_test

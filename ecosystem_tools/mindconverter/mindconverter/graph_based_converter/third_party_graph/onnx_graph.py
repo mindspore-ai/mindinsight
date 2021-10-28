@@ -92,8 +92,7 @@ class OnnxGraph(Graph):
         # tgt not in node_collection, then skip this edge.
         if src == tgt or src not in self._nodes_collection or tgt not in self._nodes_collection:
             if src not in self._nodes_collection:
-                MindConverterLogger.warning(
-                    "Graph construct a self-loop node %s. Ignored.", src)
+                MindConverterLogger.warning(f"Graph construct a self-loop node {src}. Ignored.")
                 return
         if tgt not in self._nodes_collection[src].successor_nodes:
             self._nodes_collection[src].successor_nodes.append(tgt)

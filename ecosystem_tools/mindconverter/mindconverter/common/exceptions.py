@@ -200,8 +200,8 @@ class MindConverterException(Exception):
                     if not isinstance(e, MindConverterException):
                         detail_info = cls.normalize_error_msg(str(e))
 
-                    MindConverterLogger.error(detail_info, console=False)
-                    MindConverterLogger.error(error)
+                    MindConverterLogger.error(detail_info)
+                    MindConverterLogger.error(error, console=False)
                     MindConverterLogger.exception(e, console=False)
                     MindConverterLogger.warning(get_lib_notice_info())
                     sys.exit(-1)

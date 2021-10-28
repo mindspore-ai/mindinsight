@@ -17,28 +17,17 @@ set -e
 
 SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
 
-PROJECT_DIR=$(realpath "$SCRIPT_BASEDIR/../../")
-UT_PATH="$PROJECT_DIR/tests/ut"
-
-before_run_test() {
-    echo "Before run tests."
-    export PYTHONPATH=$PROJECT_DIR:$PYTHONPATH
-}
-
-after_run_test() {
-    echo "After run tests."
-    echo "End to run test."
-}
+PROJECT_DIR=$(realpath "$SCRIPT_BASEDIR/../../../../../")
+UT_PATH="$PROJECT_DIR/tests/ecosystem_tools/mindconverter/tests/ut"
 
 run_test() {
     echo "Start to run test."
     cd "$PROJECT_DIR" || exit
 
+    export PYTHONPATH=$PROJECT_DIR/ecosystem_tools/mindconverter:$PYTHONPATH
     pytest "$UT_PATH"
 
-    echo "Test all use cases success."
+    rm -f mindconverter.log
 }
 
-before_run_test
 run_test
-after_run_test
