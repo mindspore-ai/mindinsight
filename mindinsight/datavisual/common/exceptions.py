@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -168,6 +168,15 @@ class TensorNotExistError(MindInsightException):
         super(TensorNotExistError, self).__init__(DataVisualErrors.TENSOR_NOT_EXIST,
                                                   error_msg,
                                                   http_code=400)
+
+
+class LandscapeNotExistError(MindInsightException):
+    """Unable to get tensor values based on a given condition."""
+    def __init__(self, error_detail):
+        error_msg = f'Landscape value does not exist. Detail: {error_detail}'
+        super(LandscapeNotExistError, self).__init__(DataVisualErrors.LANDSCAPE_NOT_EXIST,
+                                                     error_msg,
+                                                     http_code=400)
 
 
 class StepTensorDataNotInCacheError(MindInsightException):

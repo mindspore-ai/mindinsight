@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -215,7 +215,7 @@ class TensorProcessor(BaseProcessor):
             step_in_cache = True
             if value.error_code is not None:
                 raise TensorTooLargeError("Step: {}".format(tensor.step))
-            res_data = TensorUtils.get_specific_dims_data(value.ndarray, dims)
+            res_data = TensorUtils.get_specific_dims_data(value.tensor_value, dims)
             flatten_data = res_data.flatten().tolist()
             if len(flatten_data) > MAX_TENSOR_RESPONSE_DATA_SIZE:
                 raise ResponseDataExceedMaxValueError("the size of response data: {} exceed max value: {}."

@@ -66,7 +66,14 @@ class TestTrainTaskManager:
     def load_data(self):
         """Load data."""
         log_operation = LogOperations()
-        self._plugins_id_map = {'image': [], 'scalar': [], 'graph': [], 'histogram': [], 'tensor': []}
+        self._plugins_id_map = {
+            'image': [],
+            'scalar': [],
+            'graph': [],
+            'histogram': [],
+            'tensor': [],
+            'loss_landscape': []
+        }
         self._events_names = []
         self._train_id_list = []
 

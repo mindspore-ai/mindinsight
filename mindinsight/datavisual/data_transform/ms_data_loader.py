@@ -36,6 +36,7 @@ from mindinsight.datavisual.data_transform.histogram import Histogram
 from mindinsight.datavisual.data_transform.histogram_container import HistogramContainer
 from mindinsight.datavisual.data_transform.image_container import ImageContainer
 from mindinsight.datavisual.data_transform.tensor_container import TensorContainer, MAX_TENSOR_COUNT
+from mindinsight.datavisual.data_transform.loss_landscape_container import LossLandscapeContainer
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
 from mindinsight.datavisual.utils.tools import exception_no_raise_wrapper
@@ -484,6 +485,9 @@ class _SummaryParser(_Parser):
         elif plugin == PluginNameEnum.IMAGE.value:
             tensor_event_value = ImageContainer(tensor_event_value)
 
+        elif plugin == PluginNameEnum.LANDSCAPE.value:
+            tensor_event_value = LossLandscapeContainer(tensor_event_value)
+
         return tensor_event_value
 
     @staticmethod
@@ -502,7 +506,8 @@ class _SummaryParser(_Parser):
             'scalar_value': PluginNameEnum.SCALAR,
             'image': PluginNameEnum.IMAGE,
             'histogram': PluginNameEnum.HISTOGRAM,
-            'tensor': PluginNameEnum.TENSOR
+            'tensor': PluginNameEnum.TENSOR,
+            'loss_landscape': PluginNameEnum.LANDSCAPE
         }
         logger.debug("Start to parse event string. Event string len: %s.", len(event_str))
         event = summary_pb2.Event.FromString(event_str)
