@@ -1,0 +1,258 @@
+{
+  "config" :
+  {
+    "rankId" : 1,
+    "stageId" : 0,
+    "parallelType" : "auto_parallel",
+    "stageDevices" : [
+      {
+        "dim" : [
+          {
+            "size" : "0"
+          },
+          {
+            "size" : "1"
+          }
+        ]
+      }
+    ]
+  },
+  "graph" :
+  {
+    "node" : [
+      {
+        "name" : "1",
+        "opType" : "GetNext",
+        "scope" : "Default",
+        "attribute" : [
+          {
+            "name" : "shapes",
+            "value" :
+            {
+              "dtype" : "DT_TUPLE",
+              "values" : [
+                {
+                  "dtype" : "DT_TUPLE",
+                  "values" : [
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "32"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "3"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "224"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "224"
+                    }
+                  ]
+                },
+                {
+                  "dtype" : "DT_TUPLE",
+                  "values" : [
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "32"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "output_num",
+            "value" :
+            {
+              "dtype" : "DT_INT64",
+              "intVal" : "2"
+            }
+          },
+          {
+            "name" : "shared_name",
+            "value" :
+            {
+              "dtype" : "DT_STRING",
+              "strVal" : "a76a3f30-3303-11ec-8a8a-78b46a368c18"
+            }
+          },
+          {
+            "name" : "types",
+            "value" :
+            {
+              "dtype" : "DT_LIST",
+              "values" : [
+                {
+                  "dtype" : "DT_TYPE",
+                  "typeVal" :
+                  {
+                    "dataType" : "DT_BASE_FLOAT"
+                  }
+                },
+                {
+                  "dtype" : "DT_TYPE",
+                  "typeVal" :
+                  {
+                    "dataType" : "DT_BASE_INT"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "outputType" :
+        {
+          "dataType" : "DT_TUPLE",
+          "sequenceType" :
+          {
+            "elemTypes" : [
+              {
+                "dataType" : "DT_TENSOR",
+                "tensorType" :
+                {
+                  "elemType" : "DT_FLOAT32"
+                }
+              },
+              {
+                "dataType" : "DT_TENSOR",
+                "tensorType" :
+                {
+                  "elemType" : "DT_INT32"
+                }
+              }
+            ]
+          }
+        },
+        "fullName" : "Default/GetNext-op767"
+      },
+      {
+        "input" : [
+          {
+            "name" : "1",
+            "type" : "DATA_EDGE"
+          }
+        ],
+        "name" : "2",
+        "opType" : "Conv2D",
+        "scope" : "Default/conv1-Conv2d",
+        "attribute" : [
+          {
+            "name" : "pad_list",
+            "value" :
+            {
+              "dtype" : "DT_TUPLE",
+              "values" : [
+                {
+                  "dtype" : "DT_INT64",
+                  "intVal" : "2"
+                },
+                {
+                  "dtype" : "DT_INT64",
+                  "intVal" : "3"
+                },
+                {
+                  "dtype" : "DT_INT64",
+                  "intVal" : "2"
+                },
+                {
+                  "dtype" : "DT_INT64",
+                  "intVal" : "3"
+                }
+              ]
+            }
+          },
+          {
+            "name" : "gen_strategy",
+            "value" :
+            {
+              "dtype" : "DT_TUPLE",
+              "values" : [
+                {
+                  "dtype" : "DT_TUPLE",
+                  "values" : [
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "2"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "1"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "1"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "1"
+                    }
+                  ]
+                },
+                {
+                  "dtype" : "DT_TUPLE",
+                  "values" : [
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "1"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "1"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "1"
+                    },
+                    {
+                      "dtype" : "DT_INT64",
+                      "intVal" : "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name" : "group",
+            "value" :
+            {
+              "dtype" : "DT_INT64",
+              "intVal" : "1"
+            }
+          },
+          {
+            "name" : "stride",
+            "value" :
+            {
+              "dtype" : "DT_TUPLE",
+              "values" : [
+                {
+                  "dtype" : "DT_INT64",
+                  "intVal" : "1"
+                },
+                {
+                  "dtype" : "DT_INT64",
+                  "intVal" : "1"
+                },
+                {
+                  "dtype" : "DT_INT64",
+                  "intVal" : "2"
+                },
+                {
+                  "dtype" : "DT_INT64",
+                  "intVal" : "2"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "parameters" : [],
+    "constVals" : []
+  }
+}
