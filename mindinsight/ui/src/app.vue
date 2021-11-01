@@ -24,7 +24,7 @@ limitations under the License.
     </div>
     <Header></Header>
     <div :class="['cl-center', showWarmText ? 'cl-center-height' : '']">
-      <router-view></router-view>
+      <router-view :key="$route.path.split('/')[1]"></router-view>
     </div>
   </div>
 </template>

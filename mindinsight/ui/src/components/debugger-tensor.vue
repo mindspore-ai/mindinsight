@@ -78,7 +78,8 @@ limitations under the License.
           </div>
         </div>
       </div>
-      <div class="deb-compare-detail">
+      <div class="deb-compare-detail"
+           v-show="showTensorValue">
         <div v-for="(statistics,key) in statisticsArr"
              :key="key">
           <label v-if="key===0">
@@ -111,7 +112,8 @@ limitations under the License.
             {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
         </div>
       </div>
-      <div class="deb-con-slide">
+      <div class="deb-con-slide"
+           v-show="showTensorValue">
         <div class="deb-con-slide-right">
           <el-button size="mini"
                      class="custom-btn"
@@ -157,7 +159,8 @@ limitations under the License.
         </div>
       </div>
 
-      <div class="deb-con-table">
+      <div class="deb-con-table"
+           v-show="showTensorValue">
         <div class="deb-compare-wrap">
           <debuggerGridTable v-if="gridType==='value'"
                              :fullData="tensorValue"
@@ -183,6 +186,12 @@ limitations under the License.
                              gridType="compare"
                              @martixFilterChange="tensorFilterChange($event)">
           </debuggerGridTable>
+        </div>
+      </div>
+      <div class="collapse-btn-wrap">
+        <div class="collapse-btn"
+             :class="[!showTensorValue?'collapse':'',`collapse-btn-${$store.state.themeIndex}`]"
+             @click="foldTensorValue">
         </div>
       </div>
       <div class="deb-graph-container">
@@ -211,6 +220,16 @@ limitations under the License.
             </el-tooltip>
           </span>
         </div>
+        <div class="pre-step-graph">
+          <el-button size="mini"
+                     class="custom-btn"
+                     :disabled="currentTensorGraphIndex === 0"
+                     @click="backToPreGraph">{{$t('debugger.back')}}</el-button>
+          <el-button size="mini"
+                     class="custom-btn"
+                     :disabled="preTensorGraphs.length-1 === currentTensorGraphIndex"
+                     @click="goToForwardGraph">{{$t('debugger.forward')}}</el-button>
+        </div>
         <div id="tensor-graph"
              class="deb-graph"
              v-if="graphShow"></div>
@@ -220,34 +239,59 @@ limitations under the License.
         </div>
         <div class="deb-tensor-info">
           <div class="tensor">
-            <div class="tensor-title">{{$t('debugger.tensorMsg')}}</div>
-            <div class="tensor-detail">
-              <span>{{ $t('graph.name') + $t('symbols.colon') }} {{ statistics.name }}</span>
-              <span>{{ $t('debugger.max') }} {{ statistics.overall_max===undefined?'--':statistics.overall_max }}</span>
-              <span>{{ $t('debugger.min') }} {{ statistics.overall_min===undefined?'--':statistics.overall_min }}</span>
-              <span>{{ $t('debugger.mean') }}
-                {{ statistics.overall_avg===undefined?'--':statistics.overall_avg }}
-              </span>
-              <span>{{ $t('debugger.nan') }}
-                {{ statistics.overall_nan_count===undefined?'--':statistics.overall_nan_count }}
-              </span>
-              <span>{{ $t('debugger.negativeInf') }}
-                {{ statistics.overall_neg_inf_count===undefined?'--':statistics.overall_neg_inf_count }}
-              </span>
-              <span>{{ $t('debugger.inf') }}
-                {{ statistics.overall_pos_inf_count===undefined?'--': statistics.overall_pos_inf_count}}
-              </span>
-              <span>{{ $t('debugger.zero') }}
-                {{ statistics.overall_zero_count===undefined?'--': statistics.overall_zero_count}}</span>
-              <span>{{ $t('debugger.negativeNum') }}
-                {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
-              <span>{{ $t('debugger.positiveNum') }}
-                {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
-              <span>{{ $t('debugger.true') }}
-                {{ statistics.overall_true_count===undefined?'--':statistics.overall_true_count }}</span>
-              <span>{{ $t('debugger.false') }}
-                {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
-            </div>
+            <el-tabs v-model="activeName">
+              <el-tab-pane :label="$t('debugger.tensorMsg')"
+                           name="tensorMsg">
+                <div class="tensor-detail">
+                  <span>{{ $t('graph.name') + $t('symbols.colon') }} {{ statistics.name }}</span>
+                  <span>{{ $t('debugger.max') }}
+                    {{ statistics.overall_max===undefined?'--':statistics.overall_max }}</span>
+                  <span>{{ $t('debugger.min') }}
+                    {{ statistics.overall_min===undefined?'--':statistics.overall_min }}</span>
+                  <span>{{ $t('debugger.mean') }}
+                    {{ statistics.overall_avg===undefined?'--':statistics.overall_avg }}
+                  </span>
+                  <span>{{ $t('debugger.nan') }}
+                    {{ statistics.overall_nan_count===undefined?'--':statistics.overall_nan_count }}
+                  </span>
+                  <span>{{ $t('debugger.negativeInf') }}
+                    {{ statistics.overall_neg_inf_count===undefined?'--':statistics.overall_neg_inf_count }}
+                  </span>
+                  <span>{{ $t('debugger.inf') }}
+                    {{ statistics.overall_pos_inf_count===undefined?'--': statistics.overall_pos_inf_count}}
+                  </span>
+                  <span>{{ $t('debugger.zero') }}
+                    {{ statistics.overall_zero_count===undefined?'--': statistics.overall_zero_count}}</span>
+                  <span>{{ $t('debugger.negativeNum') }}
+                    {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
+                  <span>{{ $t('debugger.positiveNum') }}
+                    {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
+                  <span>{{ $t('debugger.true') }}
+                    {{ statistics.overall_true_count===undefined?'--':statistics.overall_true_count }}</span>
+                  <span>{{ $t('debugger.false') }}
+                    {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
+                </div>
+              </el-tab-pane>
+              <el-tab-pane :label="$t('debugger.stackInfo')"
+                           name="stack">
+                <div class="table-content">
+                  <ul class="stack-content">
+                    <li class="stack-item"
+                        v-show="nodeStackContent.length"
+                        v-for="(item, index) in nodeStackContent"
+                        :key="index">
+                      {{item.file_path ? item.file_path + ':' + item.line_no : ''}}
+                      <br v-if="item.file_path">
+                      {{item.code_line}}
+                    </li>
+                    <div class="noData-text"
+                         v-show="!nodeStackContent.length">
+                      {{$t("public.noData")}}
+                    </div>
+                  </ul>
+                </div>
+              </el-tab-pane>
+            </el-tabs>
           </div>
           <div class="watch-point">
             <div class="watchPoint-title">{{ $t('debugger.watchList') }}</div>
@@ -336,6 +380,13 @@ export default {
       loadingInstance: {},
       initOver: false,
       columnLimitNum: 1000, // Maximum number of columns is 1000
+      preTensorGraphs: [JSON.parse(JSON.stringify(this.row))],
+      activeName: 'tensorMsg',
+      showTensorValue: localStorage.getItem('showTensorValue')
+        ? JSON.parse(localStorage.getItem('showTensorValue'))
+        : true,
+      nodeStackContent: [],
+      currentTensorGraphIndex: 0,
     };
   },
   computed: {
@@ -354,15 +405,37 @@ export default {
     init() {
       this.loadingInstance = this.$loading(this.loadingOption);
       this.initOver = false;
+      if (!this.showTensorValue) this.initOver = true;
       if (this.curRowObj.type === 'value') {
         this.gridType = 'value';
-        this.viewValueDetail(this.curRowObj);
+        if (this.showTensorValue) this.viewValueDetail(this.curRowObj);
       } else {
         this.gridType = 'compare';
-        this.tensorComparisons(this.curRowObj);
+        if (this.showTensorValue) this.tensorComparisons(this.curRowObj);
       }
       this.getTensorGraphData(true);
       this.getTensorHitsData();
+    },
+    foldTensorValue() {
+      this.showTensorValue = !this.showTensorValue;
+      localStorage.setItem('showTensorValue', this.showTensorValue);
+      if (this.showTensorValue) {
+        if (this.gridType === 'compare') {
+          this.tensorComparisons(this.curRowObj, this.dims, true);
+        } else {
+          this.viewValueDetail(this.curRowObj, this.dims, true);
+        }
+      }
+    },
+    backToPreGraph() {
+      this.currentTensorGraphIndex--;
+      this.curRowObj = this.preTensorGraphs[this.currentTensorGraphIndex];
+      this.resetTensor();
+    },
+    goToForwardGraph() {
+      this.currentTensorGraphIndex++;
+      this.curRowObj = this.preTensorGraphs[this.currentTensorGraphIndex];
+      this.resetTensor();
     },
     getTensorGraphData(initPage) {
       const params = {
@@ -651,6 +724,8 @@ export default {
           nodes.on('click', null);
           nodes.on('dblclick', null);
           this.resetTensor();
+          this.preTensorGraphs.push(JSON.parse(JSON.stringify(this.curRowObj)));
+          this.currentTensorGraphIndex++;
         }
       });
 
@@ -845,12 +920,16 @@ export default {
         } else {
           this.rightDataShow = false;
         }
+        this.nodeStackContent = JSON.parse(
+            JSON.stringify(this.tensorGraphData[this.selectedNode.name.split(':')[0]].stack_info || []),
+        );
       } else {
         this.statisticsKeys.forEach((key) => {
           this.statistics[key] = '--';
         });
         this.rightDataShow = false;
         this.highLightEdges();
+        this.nodeStackContent = JSON.parse(JSON.stringify(this.selectedNode.stack_info || []));
       }
       this.$forceUpdate();
     },
@@ -1340,6 +1419,32 @@ export default {
   display: flex;
   flex-direction: column;
 }
+.deb-tensor-wrap .deb-tensor-right .collapse-btn-wrap {
+  height: 10px;
+  position: relative;
+}
+.deb-tensor-wrap .deb-tensor-right .collapse-btn {
+  position: absolute;
+  left: calc(50% - 50px);
+  top: -43px;
+  width: 31px;
+  height: 100px;
+  transform: rotate(90deg);
+  cursor: pointer;
+  z-index: 1;
+}
+.deb-tensor-wrap .deb-tensor-right .collapse-btn-0 {
+  background-image: url('../assets/images/0/collapse-left.svg');
+}
+.deb-tensor-wrap .deb-tensor-right .collapse-btn-1 {
+  background-image: url('../assets/images/1/collapse-left.svg');
+}
+.deb-tensor-wrap .deb-tensor-right .collapse-btn-0.collapse {
+  background-image: url('../assets/images/0/collapse-right.svg');
+}
+.deb-tensor-wrap .deb-tensor-right .collapse-btn-1.collapse {
+  background-image: url('../assets/images/1/collapse-right.svg');
+}
 .deb-tensor-wrap .deb-tensor-right .deb-con-title {
   height: 40px;
   line-height: 40px;
@@ -1463,6 +1568,11 @@ export default {
   font-weight: bold;
   font-size: 14px;
   margin: 5px 0 0 5px;
+}
+.deb-tensor-wrap .deb-tensor-right .deb-graph-container .pre-step-graph {
+  position: absolute;
+  right: 415px;
+  top: 15px;
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .graph-title .tip {
   font-size: 16px;
@@ -1588,6 +1698,30 @@ export default {
 }
 .deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point .watch-judgment {
   padding: 5px 0;
+}
+.deb-tensor-wrap
+  .deb-tensor-right
+  .deb-graph-container
+  .deb-tensor-info
+  .tensor
+  .table-content
+  .stack-content
+  .stack-item {
+  line-height: 18px;
+  padding: 5px 60px 5px 10px !important;
+  position: relative;
+  word-break: break-all;
+  border-bottom: 1px solid var(--table-border-color);
+}
+.deb-tensor-wrap
+  .deb-tensor-right
+  .deb-graph-container
+  .deb-tensor-info
+  .tensor
+  .table-content
+  .stack-content
+  .stack-item:hover {
+  background-color: var(--table-hover-color);
 }
 .deb-tensor-wrap .deb-tensor-right.collapse {
   width: calc(100% - 25px);

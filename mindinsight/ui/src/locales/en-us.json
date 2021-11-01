@@ -357,19 +357,19 @@
       "desc": "The average CPU usage of the entire system is {n1}, which may affect the data processing performance."
     },
     "minddata_pipeline-dataset_op": {
-      "desc": "For operator {n1}, you can adjust the num_parallel_workers parameter."
+      "desc": "For operator {n1}, you can try to increase or decrease the num_parallel_workers parameter."
     },
     "minddata_pipeline-generator_op": {
-      "desc": "For operator {n1}, you can adjust the num_parallel_workers parameter or optimize the training script. If the performance is not optimized, you can replace the operator with the MindRecordDataset operator."
+      "desc": "For operator {n1}, you can try to increase or decrease the num_parallel_workers parameter or optimize the training script. If the performance is not optimized, you can replace the operator with the MindRecordDataset operator."
     },
     "minddata_pipeline-map_op": {
-      "desc": "For operator {n1}, you can adjust the num_parallel_workers parameter. If the Python operator is used, you can optimize the training script."
+      "desc": "For operator {n1}, you can try to increase or decrease the num_parallel_workers parameter. If the Python operator is used, you can optimize the training script."
     },
     "minddata_pipeline-batch_op": {
       "desc": "For operator {n1}, you can increase the prefetch_size value."
     },
     "minddata_warning_op": {
-      "desc": "Based on the preceding determination, the operator {n1} can be optimized."
+      "desc": "Based on the preceding determination, {n1} can be optimized, and it is recommended to adjust the data processing script logic."
     },
     "minddata-proposer_type_label": {
       "desc": "Step interval profiling"
@@ -480,7 +480,7 @@
       "title4": "The detailed explanation of timeline:",
       "content41":"Process Device ID: the timeline of operators executed on AI Core.",
       "content42":"Step: training steps.",
-      "content43":"Scope Name: the scope of the operator shows the hierarchical structure of the operator in the calculation diagram.",
+      "content43":"Scope Name: the scope of the operator shows the hierarchical structure of the operator in the computation graph.",
       "content44":"Stream #ID: operators executed on the stream.",
       "content45":"Process AI CPU Op: the timeline of operators executed on AI CPU.",
       "content46":"Process Communication Op: contains the timeline for the execution of communication operators.",
@@ -607,11 +607,11 @@
     "mainTipPartOne": "This function provides users with memory usage overview in the cluster scenario in the form of heatmap. It reflects the proportion of the peak memory of each training device in the cluster to the maximum available memory of the training device.",
     "mainTipPartTwo": "Peak memory usage = Peak memory usage/Maximum available memory of the training device. The maximum peak memory usage is 1.",
     "mainTipPartThree": "Granularity: indicates the peak memory usage of different devices, that is, the granularity of the corresponding color value.",
-    "mainTipPartFour": "You can also view the cluster overview of the training on the GUI, for example, the number of servers used in the training and the number of training devices used on each server. You can click a training device to go to its memory details page.",
+    "mainTipPartFour": "You can also view the cluster overview of the training on the GUI, for example, the number of training devices used. You can click a training device to go to its memory details page.",
     "flopsTipPartOne": "This function provides the number of floating-point operations (FLOPS) data of each device in the cluster scenario in the form of heatmap.",
     "flopsTipPartTwo": "The heatmap reflects the relative size of FLOPs between devices. The color of the rectangle block corresponding to each device indicates the ratio of the current device FLOPs to the maximum FLOPs of all devices.",
     "flopsTipPartThree": "Granularity: indicates the granularity of the color values corresponding to the FLOPs data of different devices.",
-    "flopsTipPartFour": "You can also view the cluster overview of the training on the GUI, for example, the number of servers used in the training and the number of devices used by each server. You can click a device to go to the operator details page of the device.",
+    "flopsTipPartFour": "You can also view the cluster overview of the training on the GUI, for example, the number of devices used. You can click a device to go to the operator details page of the device.",
     "communicationAloneTime": "Communication time",
     "computationTime": "Computation time",
     "receiveAloneTime": "Communication time (only include the Receive operator)",
@@ -715,7 +715,7 @@
     "curStatisticsLabel": "Current Step:",
     "preStatisticsLabel": "Previous Step:",
     "diffStatisticsLabel": "Comparison Result:",
-    "graphFile": "Graph File",
+    "graphName": "Graph Name",
     "tensorDiagram": "Tensor Relationship Diagram",
     "selectDetail": "Select a tensor and double-click it to view details.",
     "operator": "Operator",
@@ -948,7 +948,12 @@
       "running": "Running: The training is in progress or watchpoints are being checked. It may take a long time if the model or data volume is too large. Please wait.",
       "sending": "Waiting for command execution: A new command is waiting for the current command to be finished.",
       "pending": "Waiting for backend connection: Waiting for a new training connection or the debugger environment is being initialized."
-    }
+    },
+    "back": "Back",
+    "graphExecutionOrder": "Graph execution sequence",
+    "graphExecutionStep": "Graph execution rounds",
+    "hasData": "Is there data",
+    "forward": "Forward"
   },
   "explain": {
     "explain": "Model Explanation",
