@@ -14,7 +14,6 @@
 # ============================================================================
 """Test DataLoader of offline debugger."""
 import os
-import time
 from unittest import mock
 
 import pytest
@@ -145,7 +144,7 @@ class TestAscendDebugger:
         send_and_compare_result(app_client, tensor_history_url, body_data, expect_file, full_url=True,
                                 expect_file_dir=self.expect_file_dir)
         # check full tensor history from poll data
-        self.check_poll_data(app_client, session_id, node_name)
+        self.check_poll_data(app_client, session_id, "node_name", node_name, 0)
         expect_file = 'retrieve_full_tensor_history.json'
         send_and_compare_result(app_client, tensor_history_url, body_data, expect_file, full_url=True,
                                 expect_file_dir=self.expect_file_dir)
@@ -166,16 +165,14 @@ class TestAscendDebugger:
         self.run_one_step(app_client, session_id)
         self.send_tensor_history(app_client, session_id, node_name)
         # check full tensor history from poll data
-        self.check_poll_data(app_client, session_id, node_name)
+        pos = self.check_poll_data(app_client, session_id, "node_name", node_name, 0)
         url = os.path.join(os.path.join(self.base_url, session_id), 'tensors')
         body_data = {
             'name': node_name + ':0',
             'detail': 'data'
         }
         get_request_result(app_client, url, body_data, method='GET', full_url=True)
-        # sleep 0.01 second to  wait the tensor update.
-        self.check_poll_data(app_client, session_id, node_name)
-        time.sleep(0.1)
+        self.check_poll_data(app_client, session_id, "tensor_name", body_data['name'], pos)
         expect_file = 'retrieve_tensor_value.json'
         send_and_compare_result(app_client, url, body_data, expect_file, method='get', full_url=True,
                                 expect_file_dir=self.expect_file_dir)
@@ -200,9 +197,10 @@ class TestAscendDebugger:
         self.run_one_step(app_client, session_id)
         self.send_tensor_history(app_client, session_id, node_name)
         check_offline_dbg_server_state(app_client, session_id)
+        pos = self.check_poll_data(app_client, session_id, "node_name", node_name, 0)
         url = os.path.join(os.path.join(self.base_url, session_id), 'tensor-graphs')
         get_request_result(app_client, url, body_data, method='GET', full_url=True)
-        time.sleep(0.1)
+        self.check_poll_data(app_client, session_id, "tensor_name", node_name + ":0", pos)
         if self.save_results:
             send_and_save_result(app_client, url, body_data, expect_file, method='GET', full_url=True,
                                  expect_file_dir=self.expect_file_dir)
@@ -249,9 +247,17 @@ class TestAscendDebugger:
         body_data = {'name': node_name, 'rank_id': 0}
         get_request_result(app_client, tensor_history_url, body_data, full_url=True)
 
-    def check_poll_data(self, app_client, session_id, node_name):
+    def check_poll_data(self, app_client, session_id, param_name, expect_result, pos):
         """Check poll data"""
         url = os.path.join(os.path.join(self.base_url, session_id), 'poll-data')
-        res = get_request_result(
-            app_client=app_client, url=url, body_data={'pos': 0}, method='get', full_url=True)
-        assert res.get('receive_tensor', {}).get('node_name') == node_name, 'Node name unmatched.'
+        i = 0
+        # The backend should response after no more than 2 requests.
+        max_retry_times = 2
+        while i < max_retry_times:
+            res = get_request_result(
+                app_client=app_client, url=url, body_data={'pos': pos}, method='get', full_url=True)
+            pos = res.get('metadata', {}).get('pos')
+            if res.get('receive_tensor', {}).get(param_name) == expect_result:
+                break
+            i += 1
+        return pos
