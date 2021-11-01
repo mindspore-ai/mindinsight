@@ -15,10 +15,10 @@ limitations under the License.
 -->
 <script>
 import RequestService from '@/services/request-service';
-import {basePath} from '@/services/fetcher';
-import {select, selectAll, zoom, dispatch} from 'd3';
+import { basePath } from '@/services/fetcher';
+import { select, selectAll, zoom, dispatch } from 'd3';
 import 'd3-graphviz';
-const d3 = {select, selectAll, zoom, dispatch};
+const d3 = { select, selectAll, zoom, dispatch };
 export default {
   data() {
     return {
@@ -63,18 +63,21 @@ export default {
         delete params.graph_name;
       }
       RequestService.control(params, this.sessionId).then(
-          (res) => {
-            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-              this.enableRecheck = res.data.metadata.enable_recheck;
-            }
-            this.queryTensorHistory();
-            if (this.radio1 === 'hit') {
-              this.searchWatchpointHits(true);
-            }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
+        (res) => {
+          if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+            this.enableRecheck = res.data.metadata.enable_recheck;
+          }
+          if (res.data.metadata?.state) {
+            this.metadata.state = res.data.metadata.state;
+          }
+          this.queryTensorHistory();
+          if (this.radio1 === 'hit') {
+            this.searchWatchpointHits(true);
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
     getSession() {
@@ -157,9 +160,9 @@ export default {
       }
       const maxStep = this.metadata.total_step_num;
       this.step = this.step
-          .toString()
-          .replace(/[^\.\d]/g, '')
-          .replace(/\./g, '');
+        .toString()
+        .replace(/[^\.\d]/g, '')
+        .replace(/\./g, '');
       this.step = Number(this.step);
       if (this.step === 0) {
         this.step = 1;
@@ -194,55 +197,55 @@ export default {
         params.params.graph_name = this.graphFiles.value;
       }
       RequestService.retrieve(params, this.sessionId).then(
-          (res) => {
-            if (res.data) {
-              if (res.data.metadata) {
-                this.dealMetadata(res.data.metadata);
+        (res) => {
+          if (res.data) {
+            if (res.data.metadata) {
+              this.dealMetadata(res.data.metadata);
+            }
+            if (res.data.graph) {
+              const graph = res.data.graph;
+              if (graph.nodes && !this.isCurrentGraph) {
+                this.node.childNodes = [];
+                this.origialTree = graph.nodes.map((val) => {
+                  return {
+                    label: val.name.split('/').pop(),
+                    leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
+                    ...val,
+                    showCheckbox: val.watched !== -1,
+                  };
+                });
+                this.resolve(this.origialTree);
+                // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
+                this.node.childNodes.forEach((val) => {
+                  if (val.data.watched === this.checkboxStatus.checked) {
+                    val.checked = true;
+                  }
+                  if (val.data.watched === this.checkboxStatus.indeterminate) {
+                    val.indeterminate = true;
+                  }
+                });
+                this.isCurrentGraph = true;
+                this.firstFloorNodes = [];
+                this.allGraphData = {};
+                d3.select('#graph svg').remove();
+                this.selectedNode.name = '';
+                this.packageDataToObject('', true, JSON.parse(JSON.stringify(graph.nodes)));
+                this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
+              } else {
+                this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
               }
-              if (res.data.graph) {
-                const graph = res.data.graph;
-                if (graph.nodes && !this.isCurrentGraph) {
-                  this.node.childNodes = [];
-                  this.origialTree = graph.nodes.map((val) => {
-                    return {
-                      label: val.name.split('/').pop(),
-                      leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
-                      ...val,
-                      showCheckbox: val.watched !== -1,
-                    };
-                  });
-                  this.resolve(this.origialTree);
-                  // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
-                  this.node.childNodes.forEach((val) => {
-                    if (val.data.watched === this.checkboxStatus.checked) {
-                      val.checked = true;
-                    }
-                    if (val.data.watched === this.checkboxStatus.indeterminate) {
-                      val.indeterminate = true;
-                    }
-                  });
-                  this.isCurrentGraph = true;
-                  this.firstFloorNodes = [];
-                  this.allGraphData = {};
-                  d3.select('#graph svg').remove();
-                  this.selectedNode.name = '';
-                  this.packageDataToObject('', true, JSON.parse(JSON.stringify(graph.nodes)));
-                  this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
-                } else {
-                  this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
-                }
-                if (graph.children) {
-                  this.dealTreeData(graph.children, name);
-                  this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
-                }
+              if (graph.children) {
+                this.dealTreeData(graph.children, name);
+                this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
               }
             }
-            this.loadingInstance.close();
-          },
-          (err) => {
-            this.showErrorMsg(err);
-            this.loadingInstance.close();
-          },
+          }
+          this.loadingInstance.close();
+        },
+        (err) => {
+          this.showErrorMsg(err);
+          this.loadingInstance.close();
+        }
       );
     },
     /**
@@ -264,10 +267,10 @@ export default {
         delete params.graph_name;
       }
       RequestService.control(params, this.sessionId).then(
-          (res) => {},
-          (err) => {
-            this.showErrorMsg(err);
-          },
+        (res) => {},
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
     /**
@@ -293,26 +296,26 @@ export default {
         delete params.graph_name;
       }
       RequestService.retrieveNodeByBfs(params).then(
-          (res) => {
-            if (res.data && res.data.graph && res.data.name) {
-              this.retrieveTensorHistory({name: res.data.name});
-              const graph = res.data.graph;
-              this.curLeafNodeName = res.data.name;
-              this.nodeName = res.data.name;
-              if (graph.children) {
-                this.dealTreeData(graph.children, name);
-                this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
-              }
-              this.querySingleNode(JSON.parse(JSON.stringify(graph)), res.data.name);
-            } else if (ascend) {
-              this.$message.success(this.$t('debugger.nextNodeTip'));
-            } else {
-              this.$message.success(this.$t('debugger.previousNodeTip'));
+        (res) => {
+          if (res.data && res.data.graph && res.data.name) {
+            this.retrieveTensorHistory({ name: res.data.name });
+            const graph = res.data.graph;
+            this.curLeafNodeName = res.data.name;
+            this.nodeName = res.data.name;
+            if (graph.children) {
+              this.dealTreeData(graph.children, name);
+              this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
             }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
+            this.querySingleNode(JSON.parse(JSON.stringify(graph)), res.data.name);
+          } else if (ascend) {
+            this.$message.success(this.$t('debugger.nextNodeTip'));
+          } else {
+            this.$message.success(this.$t('debugger.previousNodeTip'));
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
     /**
@@ -324,23 +327,23 @@ export default {
         cancelButtonText: this.$t('public.cancel'),
         type: 'warning',
       }).then(
-          () => {
-            if (this.trainId) {
-              this.deleteSession();
-            } else {
-              this.control(2);
-            }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
+        () => {
+          if (this.trainId) {
+            this.deleteSession();
+          } else {
+            this.control(2);
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
     /**
      * Table row add className
      * @return { String }
      */
-    tableRowClassName({row}) {
+    tableRowClassName({ row }) {
       if (row.is_hit) {
         return 'success-row';
       }
@@ -350,7 +353,7 @@ export default {
      * Table merged cells
      * @return { Object }
      */
-    objectSpanMethod({row, column, rowIndex, columnIndex}) {
+    objectSpanMethod({ row, column, rowIndex, columnIndex }) {
       let inputLength = 0;
       let outputLength = 0;
       if (this.tabs.activeName === 'tensor') {
@@ -388,9 +391,9 @@ export default {
      * Table header merged cells
      * @return { Object }
      */
-    discountHeaderStyle({row, column, rowIndex, columnIndex}) {
+    discountHeaderStyle({ row, column, rowIndex, columnIndex }) {
       if (rowIndex === 1) {
-        return {display: 'none'};
+        return { display: 'none' };
       }
     },
     /**
@@ -431,22 +434,22 @@ export default {
         params.graph_name = graphName;
       }
       RequestService.retrieveTensorHistory(params, this.sessionId).then(
-          (res) => {
-            if (res.data && res.data.metadata) {
-              this.dealMetadata(res.data.metadata);
+        (res) => {
+          if (res.data && res.data.metadata) {
+            this.dealMetadata(res.data.metadata);
+          }
+          if (data.name === this.nodeName) {
+            if (res.data && res.data.tensor_history) {
+              this.tableData = res.data.tensor_history;
+              this.dealTableData(this.tableData);
+            } else {
+              this.tableData = [];
             }
-            if (data.name === this.nodeName) {
-              if (res.data && res.data.tensor_history) {
-                this.tableData = res.data.tensor_history;
-                this.dealTableData(this.tableData);
-              } else {
-                this.tableData = [];
-              }
-            }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
     /**
@@ -572,13 +575,13 @@ export default {
         if (!this.selectedNode.name.includes('more...') && !ignoreType.includes(type)) {
           const name = path[0].replace('_unfold', '');
           if (this.graphFiles.value === this.$t('debugger.all')) {
-            this.retrieveTensorHistory({name: name.replace(`${name.split('/')[0]}/`, '')}, name.split('/')[0]);
+            this.retrieveTensorHistory({ name: name.replace(`${name.split('/')[0]}/`, '') }, name.split('/')[0]);
           } else {
             this.retrieveTensorHistory(
-                {
-                  name,
-                },
-                this.graphFiles.value,
+              {
+                name,
+              },
+              this.graphFiles.value
             );
           }
         }
@@ -597,73 +600,73 @@ export default {
         delete params.graph_name;
       }
       RequestService.pollData(params, this.sessionId).then(
-          (res) => {
-            if (res.data) {
-              if (res.data.metadata) {
-                this.dealMetadata(res.data.metadata);
-              }
-              let name = null;
-              if (this.selectedNode.name) {
-                name = this.selectedNode.name.replace('_unfold', '');
-              }
-              let graphName = this.graphFiles.value;
-              if (
-                res.data.receive_tensor &&
+        (res) => {
+          if (res.data) {
+            if (res.data.metadata) {
+              this.dealMetadata(res.data.metadata);
+            }
+            let name = null;
+            if (this.selectedNode.name) {
+              name = this.selectedNode.name.replace('_unfold', '');
+            }
+            let graphName = this.graphFiles.value;
+            if (
+              res.data.receive_tensor &&
               res.data.metadata &&
               res.data.metadata.step >= this.metadata.step &&
               res.data.receive_tensor.node_name === name
-              ) {
-                if (this.graphFiles.value === this.$t('debugger.all')) {
-                  graphName = name.split('/')[0];
-                  name = name.replace(`${graphName}/`, '');
-                }
-                this.retrieveTensorHistory(
-                    {
-                      name,
-                    },
-                    graphName,
-                );
+            ) {
+              if (this.graphFiles.value === this.$t('debugger.all')) {
+                graphName = name.split('/')[0];
+                name = name.replace(`${graphName}/`, '');
               }
-              if (res.data.receive_watchpoint_hits) {
-                this.radio1 = 'hit';
-                this.pagination.currentPage = 1;
-                this.watchPointHits = [];
-                this.pagination.total = 0;
-                this.searchWatchpointHits(true);
-              }
+              this.retrieveTensorHistory(
+                {
+                  name,
+                },
+                graphName
+              );
+            }
+            if (res.data.receive_watchpoint_hits) {
+              this.radio1 = 'hit';
+              this.pagination.currentPage = 1;
+              this.watchPointHits = [];
+              this.pagination.total = 0;
+              this.searchWatchpointHits(true);
+            }
 
-              if (
-                res.data.receive_tensor &&
+            if (
+              res.data.receive_tensor &&
               res.data.receive_tensor.graph_name &&
               res.data.receive_tensor.tensor_name &&
               this.tensorCompareFlag
-              ) {
-                const debTensor = this.$refs['deb-tensor'];
-                if (debTensor) {
-                  if (res.data.receive_tensor.level === 'stats') {
-                    debTensor.updateGraphData(res.data.receive_tensor.graph_name, res.data.receive_tensor.tensor_name);
-                  } else if (res.data.receive_tensor.level === undefined) {
-                    debTensor.tabChange(debTensor.gridType);
-                  }
+            ) {
+              const debTensor = this.$refs['deb-tensor'];
+              if (debTensor) {
+                if (res.data.receive_tensor.level === 'stats') {
+                  debTensor.updateGraphData(res.data.receive_tensor.graph_name, res.data.receive_tensor.tensor_name);
+                } else if (res.data.receive_tensor.level === undefined) {
+                  debTensor.tabChange(debTensor.gridType);
                 }
               }
+            }
 
-              if (res.data.tensor_file) {
-                if (this.downloadedTensor.name === res.data.node_name) {
-                  this.downloadTensor();
-                } else {
-                  this.downloadedTensor.name = res.data.node_name;
-                }
+            if (res.data.tensor_file) {
+              if (this.downloadedTensor.name === res.data.node_name) {
+                this.downloadTensor();
+              } else {
+                this.downloadedTensor.name = res.data.node_name;
               }
-              this.pollData();
             }
-          },
-          (err) => {
-            if (!err || (err && err.message !== 'routeJump')) {
-              this.initFail = true;
-              this.dialogVisible = true;
-            }
-          },
+            this.pollData();
+          }
+        },
+        (err) => {
+          if (!err || (err && err.message !== 'routeJump')) {
+            this.initFail = true;
+            this.dialogVisible = true;
+          }
+        }
       );
     },
     /**
@@ -692,29 +695,29 @@ export default {
         params.mode = 'pause';
       }
       RequestService.control(params, this.sessionId).then(
-          (res) => {
-            if (res.data && res.data.metadata) {
-              setTimeout(() => {
-                let msg = '';
-                if (this.metadata.state === this.state.sending) {
-                  msg = this.$t('debugger.stateMsg.sending');
-                } else if (this.metadata.state === this.state.running) {
-                  msg = this.$t('debugger.stateMsg.running');
-                } else {
-                  msg = `${this.$t('debugger.backstageStatus')}${this.metadata.state}`;
-                }
-                this.$message.success(msg);
-              }, 500);
-
-              this.metadata.state = res.data.metadata.state;
-              if (res.data.metadata.enable_recheck !== undefined) {
-                this.enableRecheck = res.data.metadata.enable_recheck;
+        (res) => {
+          if (res.data && res.data.metadata) {
+            setTimeout(() => {
+              let msg = '';
+              if (this.metadata.state === this.state.sending) {
+                msg = this.$t('debugger.stateMsg.sending');
+              } else if (this.metadata.state === this.state.running) {
+                msg = this.$t('debugger.stateMsg.running');
+              } else {
+                msg = `${this.$t('debugger.backstageStatus')}${this.metadata.state}`;
               }
+              this.$message.success(msg);
+            }, 500);
+
+            this.metadata.state = res.data.metadata.state;
+            if (res.data.metadata.enable_recheck !== undefined) {
+              this.enableRecheck = res.data.metadata.enable_recheck;
             }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
     /**
@@ -733,21 +736,21 @@ export default {
         return;
       }
       RequestService.recheckWatchPoints(this.sessionId).then(
-          (res) => {
-            if (res && res.data && res.data.metadata) {
-              if (res.data.metadata.enable_recheck !== undefined) {
-                this.enableRecheck = res.data.metadata.enable_recheck;
-                this.pagination.currentPage = 1;
-                this.watchPointHits = [];
-                this.pagination.total = 0;
-              }
-              if (res.data.metadata.state) {
-                this.metadata.state = res.data.metadata.state;
-              }
+        (res) => {
+          if (res && res.data && res.data.metadata) {
+            if (res.data.metadata.enable_recheck !== undefined) {
+              this.enableRecheck = res.data.metadata.enable_recheck;
+              this.pagination.currentPage = 1;
+              this.watchPointHits = [];
+              this.pagination.total = 0;
             }
-            this.$message.success(this.$t('debugger.recheckSuccess'));
-          },
-          (err) => {},
+            if (res.data.metadata.state) {
+              this.metadata.state = res.data.metadata.state;
+            }
+          }
+          this.$message.success(this.$t('debugger.recheckSuccess'));
+        },
+        (err) => {}
       );
     },
     /**
@@ -797,24 +800,24 @@ export default {
           cancelButtonText: this.$t('public.cancel'),
           type: 'warning',
         }).then(() => {
-          const params = {watch_point_id: item ? item.id : null};
+          const params = { watch_point_id: item ? item.id : null };
           RequestService.deleteWatchpoint(params, this.sessionId).then(
-              (res) => {
-                if (!item) {
-                  this.curWatchPointId = null;
-                  this.watchPointArr = [];
-                }
-                this.loadOriginalTree();
-                this.queryWatchPoints();
-                this.$message.success(this.$t('debugger.successDeleteWP'));
-                if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-                  this.enableRecheck = res.data.metadata.enable_recheck;
-                }
+            (res) => {
+              if (!item) {
                 this.curWatchPointId = null;
-              },
-              (err) => {
-                this.showErrorMsg(err);
-              },
+                this.watchPointArr = [];
+              }
+              this.loadOriginalTree();
+              this.queryWatchPoints();
+              this.$message.success(this.$t('debugger.successDeleteWP'));
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+                this.enableRecheck = res.data.metadata.enable_recheck;
+              }
+              this.curWatchPointId = null;
+            },
+            (err) => {
+              this.showErrorMsg(err);
+            }
           );
         });
       } else {
@@ -852,7 +855,7 @@ export default {
         }
 
         if (this.percentParams.includes(item.param.name)) {
-          const percentRange = {min: 0, max: 100};
+          const percentRange = { min: 0, max: 100 };
           if (inputValue < percentRange.min || inputValue > percentRange.max) {
             this.validPram = false;
             this.paramErrorMsg = this.$t('debugger.paramErrorMsg.percentError');
@@ -916,21 +919,21 @@ export default {
           });
         }
         RequestService.createWatchpoint(params, this.sessionId).then(
-            (res) => {
-              this.createWatchPointArr = [];
-              this.createWPDialogVisible = false;
-              this.$message.success(this.$t('debugger.successCreateWP'));
-              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-                this.enableRecheck = res.data.metadata.enable_recheck;
-              }
+          (res) => {
+            this.createWatchPointArr = [];
+            this.createWPDialogVisible = false;
+            this.$message.success(this.$t('debugger.successCreateWP'));
+            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+              this.enableRecheck = res.data.metadata.enable_recheck;
+            }
 
-              this.queryWatchPoints(true);
-            },
-            (err) => {
-              this.loadOriginalTree();
-              this.queryWatchPoints();
-              this.showErrorMsg(err);
-            },
+            this.queryWatchPoints(true);
+          },
+          (err) => {
+            this.loadOriginalTree();
+            this.queryWatchPoints();
+            this.showErrorMsg(err);
+          }
         );
       } else {
         this.createWatchPointArr = [];
@@ -1075,15 +1078,15 @@ export default {
             delete params.graph_name;
           }
           RequestService.updateWatchpoint(params, this.sessionId).then(
-              (res) => {
-                this.defaultCheckedArr = checkedKeys;
-                if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-                  this.enableRecheck = res.data.metadata.enable_recheck;
-                }
-              },
-              (err) => {
-                this.showErrorMsg(err);
-              },
+            (res) => {
+              this.defaultCheckedArr = checkedKeys;
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+                this.enableRecheck = res.data.metadata.enable_recheck;
+              }
+            },
+            (err) => {
+              this.showErrorMsg(err);
+            }
           );
         });
       }
@@ -1134,7 +1137,7 @@ export default {
           mode: check ? 1 : 0,
           graph_name: this.graphFiles.value,
           rank_id: this.logicCard.value,
-          search_pattern: {name: this.searchedWord},
+          search_pattern: { name: this.searchedWord },
         };
         if (this.graphFiles.value === this.$t('debugger.all')) {
           delete params.graph_name;
@@ -1143,15 +1146,15 @@ export default {
           params.search_pattern.node_category = this.nodeTypes.value;
         }
         RequestService.updateWatchpoint(params, this.sessionId).then(
-            (res) => {
-              this.searchCheckedArr = checkedKeys;
-              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-                this.enableRecheck = res.data.metadata.enable_recheck;
-              }
-            },
-            (err) => {
-              this.showErrorMsg(err);
-            },
+          (res) => {
+            this.searchCheckedArr = checkedKeys;
+            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+              this.enableRecheck = res.data.metadata.enable_recheck;
+            }
+          },
+          (err) => {
+            this.showErrorMsg(err);
+          }
         );
       });
     },
@@ -1233,55 +1236,55 @@ export default {
         }
         const loadingInstance = this.$loading(this.loadingOption);
         RequestService.search(params, this.sessionId).then(
-            (res) => {
-              loadingInstance.close();
-              if (res.data && res.data.nodes) {
-                this.searchTreeData = res.data.nodes;
-                this.searchHalfCheckedArr = [];
-                this.searchCheckedArr = [];
-                this.dealSearchResult(this.searchTreeData);
-                this.searchNode.childNodes = [];
-                const data = res.data.nodes.map((val) => {
-                  return {
-                    label: val.name.split('/').pop(),
-                    ...val,
-                    showCheckbox: val.watched !== -1,
-                  };
-                });
-                const currentData = JSON.parse(JSON.stringify(data));
-                currentData.forEach((val) => {
-                  val.nodes = [];
-                });
-                this.searchResolve(currentData);
-                // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
-                this.searchNode.childNodes.forEach((val) => {
-                  if (val.data.watched === this.checkboxStatus.indeterminate) {
-                    val.indeterminate = true;
-                  }
-                  if (val.data.watched === this.checkboxStatus.checked) {
-                    val.checked = true;
-                  }
-                  if (val.data.watched === this.checkboxStatus.unchecked) {
-                    val.checked = false;
-                  }
-                });
-                data.forEach((val, key) => {
-                  if (val.nodes && val.nodes.length) {
-                    val.nodes.forEach((value) => {
-                      value.parentName = val.name;
-                    });
-                    this.dealSearchTreeData(val.nodes);
-                  }
-                });
-                this.searchHalfCheckedArr.forEach((val) => {
-                  this.$refs.searchTree.getNode(val).indeterminate = true;
-                });
-              }
-            },
-            (err) => {
-              loadingInstance.close();
-              this.showErrorMsg(err);
-            },
+          (res) => {
+            loadingInstance.close();
+            if (res.data && res.data.nodes) {
+              this.searchTreeData = res.data.nodes;
+              this.searchHalfCheckedArr = [];
+              this.searchCheckedArr = [];
+              this.dealSearchResult(this.searchTreeData);
+              this.searchNode.childNodes = [];
+              const data = res.data.nodes.map((val) => {
+                return {
+                  label: val.name.split('/').pop(),
+                  ...val,
+                  showCheckbox: val.watched !== -1,
+                };
+              });
+              const currentData = JSON.parse(JSON.stringify(data));
+              currentData.forEach((val) => {
+                val.nodes = [];
+              });
+              this.searchResolve(currentData);
+              // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
+              this.searchNode.childNodes.forEach((val) => {
+                if (val.data.watched === this.checkboxStatus.indeterminate) {
+                  val.indeterminate = true;
+                }
+                if (val.data.watched === this.checkboxStatus.checked) {
+                  val.checked = true;
+                }
+                if (val.data.watched === this.checkboxStatus.unchecked) {
+                  val.checked = false;
+                }
+              });
+              data.forEach((val, key) => {
+                if (val.nodes && val.nodes.length) {
+                  val.nodes.forEach((value) => {
+                    value.parentName = val.name;
+                  });
+                  this.dealSearchTreeData(val.nodes);
+                }
+              });
+              this.searchHalfCheckedArr.forEach((val) => {
+                this.$refs.searchTree.getNode(val).indeterminate = true;
+              });
+            }
+          },
+          (err) => {
+            loadingInstance.close();
+            this.showErrorMsg(err);
+          }
         );
       }
     },
@@ -1335,89 +1338,98 @@ export default {
         mode: 'all',
       };
       RequestService.retrieve(params, this.sessionId).then(
-          (res) => {
-            this.initFail = false;
-            this.dialogVisible = false;
-            if (res.data) {
-              if (res.data.graph && res.data.graph.nodes) {
-                this.origialTree = res.data.graph.nodes.map((val) => {
-                  return {
-                    label: val.name.split('/').pop(),
-                    leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
-                    ...val,
-                  };
-                });
-                this.resolve(this.origialTree);
-                this.dealGraphData(JSON.parse(JSON.stringify(res.data.graph.nodes)));
-              } else if (res.data.metadata && res.data.metadata.state === this.state.waiting) {
-                if (this.trainId) {
-                  this.noOfflineGraph = true;
-                }
-                this.loadingInstance.close();
+        (res) => {
+          this.initFail = false;
+          this.dialogVisible = false;
+          if (res.data) {
+            if (res.data.graph && res.data.graph.nodes) {
+              this.origialTree = res.data.graph.nodes.map((val) => {
+                return {
+                  label: val.name.split('/').pop(),
+                  leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
+                  ...val,
+                };
+              });
+              this.resolve(this.origialTree);
+              this.dealGraphData(JSON.parse(JSON.stringify(res.data.graph.nodes)));
+            } else if (res.data.metadata && res.data.metadata.state === this.state.waiting) {
+              if (this.trainId) {
+                this.noOfflineGraph = true;
+              }
+              this.loadingInstance.close();
+              this.dialogVisible = true;
+              return;
+            }
+            if (res.data.devices && res.data.devices.length) {
+              this.devices = res.data.devices;
+              this.logicCard.value = this.devices[0].rank_id;
+              this.graphFiles.options = JSON.parse(JSON.stringify(this.devices[0].graph_names));
+              if (this.graphFiles.options.length > 1) {
+                this.graphFiles.options.unshift(this.$t('debugger.all'));
+              }
+              this.graphFiles.value = this.graphFiles.options[0];
+              if (res.data.metadata 
+                  && res.data.metadata.state === this.state.waiting 
+                  && this.trainId 
+                  && !this.graphFiles.value
+              ) {
+                this.noOfflineGraphName = true;
                 this.dialogVisible = true;
                 return;
               }
-              if (res.data.devices && res.data.devices.length) {
-                this.devices = res.data.devices;
-                this.logicCard.value = this.devices[0].rank_id;
-                this.graphFiles.options = JSON.parse(JSON.stringify(this.devices[0].graph_names));
-                if (this.graphFiles.options.length > 1) {
-                  this.graphFiles.options.unshift(this.$t('debugger.all'));
-                }
-                this.graphFiles.value = this.graphFiles.options[0];
-                this.hitWpCondition.graphFile = this.graphFiles.options[0];
-                this.logicCard.options = this.devices.map((val) => val.rank_id);
+              this.hitWpCondition.graphFile = this.graphFiles.options[0];
+              this.logicCard.options = this.devices.map((val) => val.rank_id);
+            }
+            if (res.data.watch_points) {
+              this.watchPointArr = res.data.watch_points.map((val) => {
+                return {
+                  id: val.id,
+                  condition: val.watch_condition.id,
+                  params: val.watch_condition.params || [],
+                  selected: false,
+                };
+              });
+            }
+            if (res.data.metadata) {
+              if (res.data.metadata.debugger_version) {
+                this.debuggerVersion = res.data.metadata.debugger_version;
               }
-              if (res.data.watch_points) {
-                this.watchPointArr = res.data.watch_points.map((val) => {
-                  return {
-                    id: val.id,
-                    condition: val.watch_condition.id,
-                    params: val.watch_condition.params || [],
-                    selected: false,
-                  };
-                });
+              this.metadata = res.data.metadata;
+              if (!this.trainId) {
+                this.metadata.total_step_num = 2147483648;
               }
-              if (res.data.metadata) {
-                if (res.data.metadata.debugger_version) {
-                  this.debuggerVersion = res.data.metadata.debugger_version;
-                }
-                this.metadata = res.data.metadata;
-                if (!this.trainId) {
-                  this.metadata.total_step_num = 2147483648;
-                }
-                if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-                  this.enableRecheck = res.data.metadata.enable_recheck;
-                }
-                if (this.metadata.backend) {
-                  this.version = this.metadata.backend;
-                }
-                if (!res.data.metadata.recommendation_confirmed && this.metadata.state === this.state.waiting) {
-                  this.recommendWatchPointDialog = true;
-                }
+              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+                this.enableRecheck = res.data.metadata.enable_recheck;
+              }
+              if (this.metadata.backend) {
+                this.version = this.metadata.backend;
+              }
+              if (!res.data.metadata.recommendation_confirmed && this.metadata.state === this.state.waiting) {
+                this.recommendWatchPointDialog = true;
+              }
 
-                this.nodeName = this.metadata.node_name;
-                this.currentNodeName = this.nodeName;
-                if (this.metadata.state === this.state.pending || this.metadata.state === this.state.mismatch) {
-                  this.loadingInstance.close();
-                }
-                if (this.pollInit) {
-                  this.pollData();
-                  this.pollInit = false;
-                }
-                if (this.devices && this.devices.length) {
-                  this.metadata.ip = this.devices[0].server_ip;
-                  this.metadata.device_name = this.devices[0].device_id;
-                }
+              this.nodeName = this.metadata.node_name;
+              this.currentNodeName = this.nodeName;
+              if (this.metadata.state === this.state.pending || this.metadata.state === this.state.mismatch) {
+                this.loadingInstance.close();
+              }
+              if (this.pollInit) {
+                this.pollData();
+                this.pollInit = false;
+              }
+              if (this.devices && this.devices.length) {
+                this.metadata.ip = this.devices[0].server_ip;
+                this.metadata.device_name = this.devices[0].device_id;
               }
             }
-          },
-          (err) => {
-            this.initFail = true;
-            this.dialogVisible = true;
-            this.loadingInstance.close();
-            this.showErrorMsg(err);
-          },
+          }
+        },
+        (err) => {
+          this.initFail = true;
+          this.dialogVisible = true;
+          this.loadingInstance.close();
+          this.showErrorMsg(err);
+        }
       );
     },
     /**
@@ -1451,70 +1463,70 @@ export default {
           delete params.params.graph_name;
         }
         RequestService.retrieve(params, this.sessionId).then(
-            (res) => {
-              if (res.data && res.data.metadata) {
-                this.dealMetadata(res.data.metadata);
+          (res) => {
+            if (res.data && res.data.metadata) {
+              this.dealMetadata(res.data.metadata);
+            }
+            if (res.data && res.data.graph) {
+              const graph = res.data.graph;
+              this.curNodeData = graph.nodes.map((val) => {
+                return {
+                  label: val.name.split('/').pop(),
+                  leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
+                  ...val,
+                  showCheckbox: val.watched !== -1,
+                };
+              });
+              if (this.curNodeData.length > this.nodesCountLimit) {
+                this.$message.error(this.$t('graph.tooManyNodes'));
+                this.loadingInstance.close();
+                node.loading = false;
+                return;
               }
-              if (res.data && res.data.graph) {
-                const graph = res.data.graph;
-                this.curNodeData = graph.nodes.map((val) => {
-                  return {
-                    label: val.name.split('/').pop(),
-                    leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
-                    ...val,
-                    showCheckbox: val.watched !== -1,
-                  };
-                });
-                if (this.curNodeData.length > this.nodesCountLimit) {
-                  this.$message.error(this.$t('graph.tooManyNodes'));
-                  this.loadingInstance.close();
-                  node.loading = false;
-                  return;
+              resolve(this.curNodeData);
+              // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
+              this.defaultCheckedArr = this.defaultCheckedArr.concat(
+                this.curNodeData
+                  .filter((val) => {
+                    return val.watched === this.checkboxStatus.checked;
+                  })
+                  .map((val) => val.name)
+              );
+              const halfSelectArr = this.curNodeData
+                .filter((val) => {
+                  return val.watched === this.checkboxStatus.indeterminate;
+                })
+                .map((val) => val.name);
+              node.childNodes.forEach((val) => {
+                if (halfSelectArr.indexOf(val.data.name) !== -1) {
+                  val.indeterminate = true;
+                  node.indeterminate = true;
                 }
-                resolve(this.curNodeData);
-                // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
-                this.defaultCheckedArr = this.defaultCheckedArr.concat(
-                    this.curNodeData
-                        .filter((val) => {
-                          return val.watched === this.checkboxStatus.checked;
-                        })
-                        .map((val) => val.name),
-                );
-                const halfSelectArr = this.curNodeData
-                    .filter((val) => {
-                      return val.watched === this.checkboxStatus.indeterminate;
-                    })
-                    .map((val) => val.name);
-                node.childNodes.forEach((val) => {
-                  if (halfSelectArr.indexOf(val.data.name) !== -1) {
-                    val.indeterminate = true;
-                    node.indeterminate = true;
-                  }
-                  if (val.data.watched === this.checkboxStatus.checked) {
-                    val.checked = true;
-                  } else if (val.data.watched === this.checkboxStatus.unchecked) {
-                    val.checked = false;
-                  }
-                });
-                [...new Set(curHalfCheckedKeys.concat(this.$refs.tree.getHalfCheckedKeys()))].forEach((val) => {
-                  this.$refs.tree.getNode(val).indeterminate = true;
-                });
-                this.selectedNode.name = node.data.name;
-                if (this.allGraphData[node.data.name] && !this.allGraphData[node.data.name].isUnfold) {
-                  this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)), node.data.name);
-                } else {
-                  this.selectNode(true);
+                if (val.data.watched === this.checkboxStatus.checked) {
+                  val.checked = true;
+                } else if (val.data.watched === this.checkboxStatus.unchecked) {
+                  val.checked = false;
                 }
+              });
+              [...new Set(curHalfCheckedKeys.concat(this.$refs.tree.getHalfCheckedKeys()))].forEach((val) => {
+                this.$refs.tree.getNode(val).indeterminate = true;
+              });
+              this.selectedNode.name = node.data.name;
+              if (this.allGraphData[node.data.name] && !this.allGraphData[node.data.name].isUnfold) {
+                this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)), node.data.name);
               } else {
-                this.selectedNode.name = node.data.name;
                 this.selectNode(true);
-                resolve([]);
               }
-            },
-            (err) => {
-              this.showErrorMsg(err);
+            } else {
+              this.selectedNode.name = node.data.name;
+              this.selectNode(true);
               resolve([]);
-            },
+            }
+          },
+          (err) => {
+            this.showErrorMsg(err);
+            resolve([]);
+          }
         );
       }
     },
@@ -1566,18 +1578,18 @@ export default {
             });
             resolve(this.curNodeData);
             this.searchCheckedArr = this.searchCheckedArr.concat(
-                this.curNodeData
-                    .filter((val) => {
-                      return val.watched === this.checkboxStatus.checked;
-                    })
-                    .map((val) => val.name),
+              this.curNodeData
+                .filter((val) => {
+                  return val.watched === this.checkboxStatus.checked;
+                })
+                .map((val) => val.name)
             );
             // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
             const halfSelectArr = this.curNodeData
-                .filter((val) => {
-                  return val.watched === this.checkboxStatus.indeterminate;
-                })
-                .map((val) => val.name);
+              .filter((val) => {
+                return val.watched === this.checkboxStatus.indeterminate;
+              })
+              .map((val) => val.name);
             node.childNodes.forEach((val) => {
               if (val.data.watched === this.checkboxStatus.checked) {
                 val.checked = true;
@@ -1649,31 +1661,31 @@ export default {
         delete params.graph_name;
       }
       RequestService.retrieve(params, this.sessionId).then(
-          (res) => {
-            if (res.data.watch_points) {
-              this.watchPointArr = res.data.watch_points.map((val) => {
-                return {
-                  id: val.id,
-                  condition: val.watch_condition.id,
-                  params: val.watch_condition.params || [],
-                  selected: false,
-                };
-              });
+        (res) => {
+          if (res.data.watch_points) {
+            this.watchPointArr = res.data.watch_points.map((val) => {
+              return {
+                id: val.id,
+                condition: val.watch_condition.id,
+                params: val.watch_condition.params || [],
+                selected: false,
+              };
+            });
 
-              if (focusLast) {
-                this.selectWatchPoint(this.watchPointArr.length - 1);
-                this.$nextTick(() => {
-                  const newWatchPointDom = document.querySelector('#watch-point-list>li:last-child');
-                  if (newWatchPointDom) {
-                    newWatchPointDom.scrollIntoView();
-                  }
-                });
-              }
+            if (focusLast) {
+              this.selectWatchPoint(this.watchPointArr.length - 1);
+              this.$nextTick(() => {
+                const newWatchPointDom = document.querySelector('#watch-point-list>li:last-child');
+                if (newWatchPointDom) {
+                  newWatchPointDom.scrollIntoView();
+                }
+              });
             }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
     /**
@@ -1753,13 +1765,13 @@ export default {
             if (this.graphFiles.value === this.$t('debugger.all')) {
               const arr = this.selectedNode.name.split('/');
               condition.focused_node = {
-                'node_name': arr[1] ? this.selectedNode.name.replace(`${arr[0]}/`, '') : arr[0],
-                'graph_name': arr[0],
+                node_name: arr[1] ? this.selectedNode.name.replace(`${arr[0]}/`, '') : arr[0],
+                graph_name: arr[0],
               };
             } else {
               condition.focused_node = {
-                'node_name': this.selectedNode.name,
-                'graph_name': this.graphFiles.value,
+                node_name: this.selectedNode.name,
+                graph_name: this.graphFiles.value,
               };
             }
           } else {
@@ -1772,35 +1784,35 @@ export default {
         if (resetOffset) condition.offset = 0;
         params.group_condition = condition;
         RequestService.searchWatchpointHits(params, this.sessionId).then(
-            (res) => {
-              if (res.data.metadata) {
-                this.dealMetadata(res.data.metadata);
-              }
-              this.hitsOutdated = res.data.outdated;
-              if (res.data && res.data.watch_point_hits) {
-                this.watchPointHits = [];
-                this.pagination.total = res.data.total;
-                this.pagination.currentPage = res.data.offset + 1;
-                this.dealWatchpointHits(res.data.watch_point_hits);
-              } else {
-                if (condition.node_name) {
-                  if (this.watchPointHits.length > 0) {
-                    this.watchPointHits.forEach((val) => {
-                      val.selected = false;
-                    });
-                  } else {
-                    this.searchWatchpointHits(false);
-                  }
+          (res) => {
+            if (res.data.metadata) {
+              this.dealMetadata(res.data.metadata);
+            }
+            this.hitsOutdated = res.data.outdated;
+            if (res.data && res.data.watch_point_hits) {
+              this.watchPointHits = [];
+              this.pagination.total = res.data.total;
+              this.pagination.currentPage = res.data.offset + 1;
+              this.dealWatchpointHits(res.data.watch_point_hits);
+            } else {
+              if (condition.node_name) {
+                if (this.watchPointHits.length > 0) {
+                  this.watchPointHits.forEach((val) => {
+                    val.selected = false;
+                  });
                 } else {
-                  this.pagination.currentPage = 1;
-                  this.watchPointHits = [];
-                  this.pagination.total = 0;
+                  this.searchWatchpointHits(false);
                 }
+              } else {
+                this.pagination.currentPage = 1;
+                this.watchPointHits = [];
+                this.pagination.total = 0;
               }
-            },
-            (err) => {
-              this.showErrorMsg(err);
-            },
+            }
+          },
+          (err) => {
+            this.showErrorMsg(err);
+          }
         );
       } else if (this.radio1 === 'tree') {
         this.$nextTick(() => {
@@ -1929,31 +1941,30 @@ export default {
       });
       this.watchPointHits = JSON.parse(JSON.stringify(this.watchPointHits));
       RequestService.retrieve(params, this.sessionId).then(
-          (res) => {
-            if (res.data.metadata) {
-              this.dealMetadata(res.data.metadata);
-            }
-            this.retrieveTensorHistory({name: this.nodeName}, currentHit.graph_name);
-            if (res.data && res.data.graph) {
-              const graph = res.data.graph;
+        (res) => {
+          if (res.data.metadata) {
+            this.dealMetadata(res.data.metadata);
+          }
+          this.retrieveTensorHistory({ name: this.nodeName }, currentHit.graph_name);
+          if (res.data && res.data.graph) {
+            const graph = res.data.graph;
 
-              if (this.graphFiles.value !== currentHit.graph_name
-                && this.graphFiles.value !== this.$t('debugger.all')) {
-                this.graphFiles.value = currentHit.graph_name;
-                this.resetAllData(graph, params.params.name);
-              } else {
-                this.querySingleNode(JSON.parse(JSON.stringify(graph)), params.params.name, true);
-              }
-              if (graph.children) {
-                this.dealTreeData(graph.children, name);
-                this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
-              }
+            if (this.graphFiles.value !== currentHit.graph_name && this.graphFiles.value !== this.$t('debugger.all')) {
+              this.graphFiles.value = currentHit.graph_name;
+              this.resetAllData(graph, params.params.name);
+            } else {
+              this.querySingleNode(JSON.parse(JSON.stringify(graph)), params.params.name, true);
             }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-            this.nodeName = temName;
-          },
+            if (graph.children) {
+              this.dealTreeData(graph.children, name);
+              this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
+            }
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+          this.nodeName = temName;
+        }
       );
     },
     /**
@@ -1985,27 +1996,27 @@ export default {
         params.params.graph_name = graphName;
       }
       RequestService.retrieve(params, this.sessionId).then(
-          (res) => {
-            if (res.data && res.data.metadata) {
-              this.dealMetadata(res.data.metadata);
+        (res) => {
+          if (res.data && res.data.metadata) {
+            this.dealMetadata(res.data.metadata);
+          }
+          if (res.data && res.data.graph) {
+            const graph = res.data.graph;
+            if (graph.nodes && !this.isCurrentGraph) {
+              this.resetAllData(graph, name);
+              this.isCurrentGraph = true;
+            } else {
+              this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
             }
-            if (res.data && res.data.graph) {
-              const graph = res.data.graph;
-              if (graph.nodes && !this.isCurrentGraph) {
-                this.resetAllData(graph, name);
-                this.isCurrentGraph = true;
-              } else {
-                this.querySingleNode(JSON.parse(JSON.stringify(graph)), name, true);
-              }
-              if (graph.children) {
-                this.dealTreeData(graph.children, name);
-                this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
-              }
+            if (graph.children) {
+              this.dealTreeData(graph.children, name);
+              this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
             }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
     /**
@@ -2111,23 +2122,23 @@ export default {
         key_word: encodeURIComponent(this.stacks.searchContent),
       };
       RequestService.queryStackList(param, this.sessionId).then(
-          (res) => {
-            if (res && res.data && res.data.stack_infos) {
-              this.stacks.total = res.data.total;
-              this.stacks.currentPage = res.data.offset + 1;
-              this.stacks.list = JSON.parse(JSON.stringify(res.data.stack_infos));
-            } else {
-              this.stacks.currentPage = 1;
-              this.stacks.total = 0;
-              this.stacks.list = [];
-            }
-          },
-          (error) => {
+        (res) => {
+          if (res && res.data && res.data.stack_infos) {
+            this.stacks.total = res.data.total;
+            this.stacks.currentPage = res.data.offset + 1;
+            this.stacks.list = JSON.parse(JSON.stringify(res.data.stack_infos));
+          } else {
             this.stacks.currentPage = 1;
             this.stacks.total = 0;
             this.stacks.list = [];
-            this.showErrorMsg(error);
-          },
+          }
+        },
+        (error) => {
+          this.stacks.currentPage = 1;
+          this.stacks.total = 0;
+          this.stacks.list = [];
+          this.showErrorMsg(error);
+        }
       );
     },
     loadTensor(tensor, prev = false) {
@@ -2138,24 +2149,24 @@ export default {
         prev: prev + '',
       };
       RequestService.loadTensor(param, this.sessionId).then(
-          (res) => {
-            if (res && res.data && res.data.node_name) {
-              const fileSize = this.fileSizeConversion(tensor.bytes);
-              this.$message(this.$t('debugger.downloadTip', {fileSize: fileSize.join('')}));
-              this.downloadedTensor.graph_name = tensor.graph_name;
-              this.downloadedTensor.prev = prev;
+        (res) => {
+          if (res && res.data && res.data.node_name) {
+            const fileSize = this.fileSizeConversion(tensor.bytes);
+            this.$message(this.$t('debugger.downloadTip', { fileSize: fileSize.join('') }));
+            this.downloadedTensor.graph_name = tensor.graph_name;
+            this.downloadedTensor.prev = prev;
 
-              if (this.downloadedTensor.name === res.data.node_name) {
-                this.downloadTensor();
-              } else {
-                this.downloadedTensor.name = res.data.node_name;
-              }
+            if (this.downloadedTensor.name === res.data.node_name) {
+              this.downloadTensor();
+            } else {
+              this.downloadedTensor.name = res.data.node_name;
             }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-            this.downloadedTensor = {};
-          },
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+          this.downloadedTensor = {};
+        }
       );
     },
     downloadTensor() {
