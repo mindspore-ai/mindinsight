@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -85,6 +85,7 @@ class DataVisualErrors(Enum):
     STEP_TENSOR_DATA_NOT_IN_CACHE = 20
     CRC_LENGTH_FAILED = 21
     TENSOR_TOO_LARGE = 22
+    LANDSCAPE_NOT_EXIST = 23
 
 
 class WizardErrors(Enum):

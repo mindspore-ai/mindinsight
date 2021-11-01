@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,13 +26,15 @@ from .log_generators.images_log_generator import ImagesLogGenerator
 from .log_generators.scalars_log_generator import ScalarsLogGenerator
 from .log_generators.histogram_log_generator import HistogramLogGenerator
 from .log_generators.tensor_log_generator import TensorLogGenerator
+from .log_generators.landscape_log_generator import LandscapeLogGenerator
 
 log_generators = {
     PluginNameEnum.GRAPH.value: GraphLogGenerator(),
     PluginNameEnum.IMAGE.value: ImagesLogGenerator(),
     PluginNameEnum.SCALAR.value: ScalarsLogGenerator(),
     PluginNameEnum.HISTOGRAM.value: HistogramLogGenerator(),
-    PluginNameEnum.TENSOR.value: TensorLogGenerator()
+    PluginNameEnum.TENSOR.value: TensorLogGenerator(),
+    PluginNameEnum.LANDSCAPE.value: LandscapeLogGenerator()
 }
 
 

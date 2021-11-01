@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ from mindinsight.datavisual.processors.images_processor import ImageProcessor
 from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
+from mindinsight.datavisual.processors.landscape_processor import LandscapeProcessor
 
 
 BLUEPRINT = Blueprint("train_visual", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
@@ -201,3 +202,34 @@ def init_module(app):
         app (Flask): The application obj.
     """
     app.register_blueprint(BLUEPRINT)
+
+
+@BLUEPRINT.route("/datavisual/landscape/intervals", methods=["GET"])
+def list_intervals():
+    """
+    Get the intervals.
+
+    Returns:
+        Response, which contains a JSON object.
+    """
+    train_id = get_train_id(request)
+    processor = LandscapeProcessor(DATA_MANAGER)
+    response = processor.list_intervals(train_id)
+    return jsonify(response)
+
+
+@BLUEPRINT.route("/datavisual/landscape/landscapes", methods=["GET"])
+def list_landscapes():
+    """
+    Get the loss landscape data.
+
+    Returns:
+        Response, which contains a JSON object.
+    """
+    train_ids = request.args.getlist('train_id')
+    landscape_type = request.args.get('type', 'interval')
+    interval_id = request.args.get('interval_id', 0)
+
+    processor = LandscapeProcessor(DATA_MANAGER)
+    response = processor.list_landscapes(train_ids, landscape_type, interval_id)
+    return jsonify(response)

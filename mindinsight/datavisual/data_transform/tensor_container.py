@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -75,7 +75,8 @@ class TensorContainer:
         # Original dims can not be pickled to transfer to other process, so tuple is used.
         self._dims = tuple(tensor_message.dims)
         self._data_type = tensor_message.data_type
-        self._np_array = self.get_ndarray(tensor_message.float_data)
+        self._empty = len(tensor_message.float_data) == 0
+        self._np_array = self.get_ndarray(tensor_message.float_data) if not self._empty else np.array([])
         self._error_code = None
         if self._np_array.size > MAX_TENSOR_COUNT:
             self._error_code = TENSOR_TOO_LARGE_ERROR
@@ -87,6 +88,10 @@ class TensorContainer:
         self._min = self._stats.min
         self._histogram = Histogram(tuple(original_buckets), self._max, self._min, self._count)
 
+    @property
+    def empty(self):
+        """Get size of tensor."""
+        return self._empty
 
     @property
     def size(self):
@@ -109,7 +114,7 @@ class TensorContainer:
         return self._data_type
 
     @property
-    def ndarray(self):
+    def tensor_value(self):
         """Get ndarray of tensor."""
         return self._np_array
 
