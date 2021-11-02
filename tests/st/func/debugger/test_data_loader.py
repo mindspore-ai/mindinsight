@@ -20,7 +20,7 @@ import pytest
 
 from mindinsight.debugger.stream_cache.data_loader import DataLoader
 from tests.st.func.debugger.conftest import GRAPH_PROTO_FILE
-from tests.st.func.debugger.utils import build_dump_file_structure
+from tests.st.func.debugger.utils import build_dump_file_structure, build_multi_net_dump_structure
 from tests.utils.tools import compare_result_with_file, compare_result_with_binary_file
 
 
@@ -30,21 +30,18 @@ class TestDataLoader:
     @classmethod
     def setup_class(cls):
         """Init TestDataLoader for DataLoader unittest."""
-        cls.debugger_tmp_dir, cls.dump_files_dir = build_dump_file_structure()
+        cls.debugger_tmp_dir = build_dump_file_structure()
         cls.expected_results_dir = os.path.join(os.path.dirname(__file__),
                                                 'expect_results/offline_debugger')
-        cls.dump_files_dir_ascend = os.path.join(cls.dump_files_dir,
+        cls.dump_files_dir_ascend = os.path.join(cls.debugger_tmp_dir,
                                                  'Ascend/sync')
         cls.data_loader_ascend = DataLoader(cls.dump_files_dir_ascend)
-        cls.data_loader_ascend.initialize()
-        cls.dump_files_dir_gpu = os.path.join(cls.dump_files_dir,
+        cls.dump_files_dir_gpu = os.path.join(cls.debugger_tmp_dir,
                                               'GPU/sync')
         cls.data_loader_gpu = DataLoader(cls.dump_files_dir_gpu)
-        cls.data_loader_gpu.initialize()
-        cls.dump_files_dir_ascend_async = os.path.join(cls.dump_files_dir,
+        cls.dump_files_dir_ascend_async = os.path.join(cls.debugger_tmp_dir,
                                                        'Ascend/async')
         cls.data_loader_ascend_async = DataLoader(cls.dump_files_dir_ascend_async)
-        cls.data_loader_ascend_async.initialize()
 
     @classmethod
     def teardown_class(cls):
@@ -85,9 +82,9 @@ class TestDataLoader:
     @pytest.mark.platform_x86_ascend_training
     def test_load_step_num_ascend(self):
         """Test load_step_num of ascend chip for offline-debugger."""
-        res = self.data_loader_ascend.load_step_number()
-        expected_result = {0: 4, 1: 4}
-        assert res == expected_result
+        res = self.data_loader_ascend.load_dumped_step()
+        expected_result = {0: {0: [0, 1, 2, 3]}, 1: {0: [0, 1, 2, 3]}}
+        self._compare_dumped_steps(res, expected_result)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -132,9 +129,9 @@ class TestDataLoader:
     @pytest.mark.platform_x86_ascend_training
     def test_load_step_num_gpu(self):
         """Test load_step_num of ascend chip for offline-debugger."""
-        res = self.data_loader_gpu.load_step_number()
-        expected_result = {0: 3, 1: 3}
-        assert res == expected_result
+        res = self.data_loader_gpu.load_dumped_step()
+        expected_result = {0: {0: [0, 1, 2]}, 1: {0: [0, 1, 2]}}
+        self._compare_dumped_steps(res, expected_result)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -144,6 +141,46 @@ class TestDataLoader:
     @pytest.mark.platform_x86_ascend_training
     def test_load_step_num_ascend_async(self):
         """Test load_step_num of ascend chip for offline-debugger."""
-        res = self.data_loader_ascend_async.load_step_number()
-        expected_result = {0: 3, 1: 3}
-        assert res == expected_result
+        res = self.data_loader_ascend_async.load_dumped_step()
+        expected_result = {0: {1: [0, 1, 2]}, 1: {1: [0, 1, 2]}}
+        self._compare_dumped_steps(res, expected_result)
+
+    @staticmethod
+    def _compare_dumped_steps(actual_res, expect_res):
+        """Compare dumped steps."""
+        for value in actual_res.values():
+            for step_ids in value.values():
+                step_ids.sort()
+        for value in expect_res.values():
+            for step_ids in value.values():
+                step_ids.sort()
+        assert actual_res == expect_res
+
+
+class TestMultiNetDataLoader:
+    """Test MultiNet DataLoader."""
+
+    @classmethod
+    def setup_class(cls):
+        """Init TestDataLoader for DataLoader unittest."""
+        cls.debugger_tmp_dir = build_multi_net_dump_structure()
+        cls.data_loader = DataLoader(cls.debugger_tmp_dir)
+
+    @classmethod
+    def teardown_class(cls):
+        """Run after test this class."""
+        if os.path.exists(cls.debugger_tmp_dir):
+            shutil.rmtree(cls.debugger_tmp_dir)
+
+    @pytest.mark.level
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    def test_get_graph_history(self):
+        """Test load graph history."""
+        res = self.data_loader.load_graph_history()
+        expect = {0: {0: [0, 2, 4], 3: [1, 3, 5, 6]},
+                  1: {0: [0, 2, 4], 3: [1, 3, 5, 6]}}
+        assert res == expect

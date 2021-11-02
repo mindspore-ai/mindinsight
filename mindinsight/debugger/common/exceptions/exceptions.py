@@ -300,3 +300,25 @@ class DebuggerJsonFileParseError(MindInsightException):
             message=DebuggerErrorMsg.DEBUGGER_JSON_FILE_PARSE_ERROR.value.format(msg),
             http_code=400
         )
+
+
+class DebuggerHistoryNotFoundError(MindInsightException):
+    """The graph history and graph file doesn't match."""
+
+    def __init__(self, msg):
+        super(DebuggerHistoryNotFoundError, self).__init__(
+            error=DebuggerErrors.DEBUGGER_HISTORY_NOT_FOUND_ERROR,
+            message=DebuggerErrorMsg.DEBUGGER_HISTORY_NOT_FOUND_ERROR.value.format(msg),
+            http_code=500
+        )
+
+
+class DebuggerHistoryValueError(MindInsightException):
+    """The dumped step id is not belong to relative graph history."""
+
+    def __init__(self, graph_id):
+        super(DebuggerHistoryValueError, self).__init__(
+            error=DebuggerErrors.DEBUGGER_STEP_VALUE_ERROR,
+            message=DebuggerErrorMsg.DEBUGGER_STEP_VALUE_ERROR.value.format(graph_id),
+            http_code=500
+        )

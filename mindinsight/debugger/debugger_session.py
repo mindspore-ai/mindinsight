@@ -28,6 +28,7 @@ from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.conditionmgr.recommender import recommend_watchpoints
 from mindinsight.debugger.debugger_cache import DebuggerCache
 from mindinsight.debugger.debugger_services.debugger_server_factory import DebuggerServerFactory
+from mindinsight.debugger.stream_operator.graph_runs_operator import GraphRunsOperator
 from mindinsight.debugger.stream_operator.tensor_detail_info import TensorDetailInfo
 from mindinsight.debugger.stream_operator.training_control_operator import TrainingControlOperator
 from mindinsight.debugger.stream_operator.watchpoint_operator import WatchpointOperator
@@ -576,10 +577,10 @@ class DebuggerSession:
                 - limit (int): The limit of each page.
                 - offset (int): The offset of current page.
                 - focused_node (dict): The focused node.
-                    If the specified node is hit, return the page where the node is located.
+                  If the specified node is hit, return the page where the node is located.
 
-                    - node_name (str): The retrieved node name.
-                    - graph_name (str): The retrieved graph name.
+                  - node_name (str): The retrieved node name.
+                  - graph_name (str): The retrieved graph name.
                 - rank_id (int): The rank id.
                 - graph_id (int): The graph id.
                 - watchpoint_id (int): The watchpoint id.
@@ -621,18 +622,34 @@ class DebuggerSession:
             params (dict): Params for create watchpoint.
 
                 - watch_condition (dict): The watch condition. The format is like:
-                    {
-                        "id": "tensor_too_large",
-                        "params": [
-                            {
-                                "name": "abs_mean_gt",
-                                "value": 1.1
-                            }
-                        ]
-                    }
 
-                    - id (str): Id of condition.
-                    - params (list[dict]): The list of param for this condition.
+                  ..code-block::
+                      {
+                          "id": "tensor_too_large",
+                          "params": [
+                              {
+                                  "name": "abs_mean_gt",
+                                  "value": 1.1
+                              }
+                          "id": "tensor_too_large",
+                          "params": [
+                              {
+                                  "name": "abs_mean_gt",
+                                  "value": 1.1
+                              }
+                          ]
+                      {
+                          "id": "tensor_too_large",
+                          "params": [
+                              {
+                                  "name": "abs_mean_gt",
+                                  "value": 1.1
+                              }
+                          ]
+                      }
+
+                  - id (str): Id of condition.
+                  - params (list[dict]): The list of param for this condition.
                 - watch_nodes (list[str]): The list of node names.
                 - watch_point_id (int): The id of watchpoint.
                 - search_pattern (dict): The search pattern.
@@ -654,7 +671,7 @@ class DebuggerSession:
                 - watch_point_id (int): The id of watchpoint.
                 - watch_nodes (list[str]): The list of node names.
                 - mode (int): The update operator on nodes. 0 for remove nodes from watch nodes.
-                    1 for add nodes to watch nodes.
+                  1 for add nodes to watch nodes.
                 - search_pattern (dict): The search pattern.
                 - graph_name (str): The relative graph_name of the watched node.
 
@@ -687,11 +704,11 @@ class DebuggerSession:
             params (dict): The control params.
 
                 - mode (str): Acceptable control command, including `continue`,
-                    `pause` and `terminate`.
+                  `pause` and `terminate`.
                 - level (str): The control granularity, `node` level or `step` level.
-                    Default: `step`.
+                  Default: `step`.
                 - steps (int): Specify the steps that training should run.
-                    Used when `level` is `step`.
+                  Used when `level` is `step`.
                 - name (str): Specify the name of the node. Used when `level` is `node`.
                 - graph_name (str): The graph name.
 
@@ -795,3 +812,24 @@ class DebuggerSession:
             limit=filter_condition.get('limit', 0),
             offset=filter_condition.get('offset', 0))
         return res
+
+    def get_graph_runs(self, rank_id):
+        """
+        Get graph runs info of specified rank.
+
+        Args:
+            rank_id (int): The rank id.
+
+        Returns:
+            dict, the graph runs. The format is like {'graph_runs': List[GraphRun]}
+            The GraphRun object = {
+                "count": int,
+                "graph_name": str,
+                "has_data": bool,
+                "sub_graph_names": List[str]
+            }
+        """
+        if self.cache_store.get_stream_handler(Streams.METADATA).state != ServerStatus.WAITING.value:
+            log.error("Failed to get tensor hits as the MindSpore is not in waiting state.")
+            return {}
+        return GraphRunsOperator(self.cache_store).get_graph_runs(rank_id)

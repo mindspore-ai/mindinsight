@@ -91,6 +91,7 @@ class Streams(enum.Enum):
     WATCHPOINT = 'watchpoint'
     WATCHPOINT_HIT = 'watchpoint_hit'
     DEVICE = 'device'
+    GRAPH_HISTORY = 'graph_history'
 
 
 class RunLevel(enum.Enum):

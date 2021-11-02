@@ -501,6 +501,20 @@ def get_stack_infos(session_id):
     return reply
 
 
+@BLUEPRINT.route("/debugger/sessions/<session_id>/ranks/<rank_id>/graph-runs", methods=["GET"])
+def get_graph_runs(session_id, rank_id):
+    """
+    Get stack infos.
+
+    Examples:
+        >>> GET /v1/mindsight/debugger/sessions/<session_id>/ranks/<rank_id>/graph-runs
+    """
+    session = SessionManager.get_instance().get_session(session_id)
+    rank_id = to_int(rank_id, 'rank_id')
+    reply = _wrap_reply(session.get_graph_runs, rank_id)
+    return reply
+
+
 def init_module(app):
     """
     Init module entry.

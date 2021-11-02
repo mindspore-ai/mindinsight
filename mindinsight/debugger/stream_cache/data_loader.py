@@ -13,8 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the DataLoader."""
+import csv
 import os
 import json
+import re
 from collections import namedtuple
 from pathlib import Path
 
@@ -33,6 +35,8 @@ class DataLoader:
     """The DataLoader object provides interface to load graphs and device information from base_dir."""
 
     DUMP_METADATA = '.dump_metadata'
+    EXECUTION_ORDER = 'execution_order'
+    GRAPHS = 'graphs'
 
     def __init__(self, base_dir):
         self._debugger_base_dir = Path(base_dir).absolute()
@@ -42,16 +46,16 @@ class DataLoader:
         self._is_sync = False
         self._device_target = "Ascend"
         self._net_name = ""
-        self.initialize()
+        self._initialize()
 
     @property
     def rank_dirs(self):
         """The property of RankDir."""
         return self._rank_dirs
 
-    def initialize(self):
+    def _initialize(self):
         """Initialize the data_mode and net_dir of DataLoader."""
-        self.load_rank_dirs()
+        self._load_rank_dirs()
         if not self._rank_dirs:
             log.error("No rank directory found under %s", str(self._debugger_base_dir))
             raise RankDirNotFound(str(self._debugger_base_dir))
@@ -79,7 +83,7 @@ class DataLoader:
         _set_net_name()
         _set_dump_mode_and_device_target()
 
-    def load_rank_dirs(self):
+    def _load_rank_dirs(self):
         """Load rank directories."""
         self._rank_dirs = []
         rank_dirs = self._debugger_base_dir.glob('rank_*')
@@ -104,7 +108,7 @@ class DataLoader:
         res = []
         for rank_dir in self._rank_dirs:
             rank_id, rank_path = rank_dir.rank_id, rank_dir.path
-            graphs_dir = rank_path / 'graphs'
+            graphs_dir = rank_path / self.GRAPHS
             if not graphs_dir.is_dir():
                 log.debug("Directory '%s' doesn't exist.", graphs_dir)
                 res.append({'rank_id': rank_id, 'graph_protos': []})
@@ -155,13 +159,34 @@ class DataLoader:
                 log.warning("Failed to load json file %s. %s", str(file), str(err))
                 return {}
 
-    def load_step_number(self):
+    def load_dumped_step(self):
         """
-        Load step number in the directory.
+        Load dumped step number in the directory.
 
         Returns:
-            dict, the total step number in each rank id. The format is like Dict[str, int].
+            dict, the dumped step info among all devices. The key is rank_id,
+            the value is like Dict[int, list[int]].
         """
+        def _load_iters_per_rank(net_dir):
+            res = {}
+            for graph_dir in net_dir.iterdir():
+                graph_id_str = graph_dir.name
+                if not graph_id_str.isdigit():
+                    log.warning("Invalid graph dir under net dir:%s", str(net_dir))
+                    continue
+                res[int(graph_id_str)] = _load_iters_per_graph(graph_dir)
+            return res
+
+        def _load_iters_per_graph(graph_dir):
+            iters = []
+            for iteration_dir in graph_dir.iterdir():
+                iter_id_str = iteration_dir.name
+                if not iter_id_str.isdigit():
+                    log.debug("Ignore iteration dir: %s", str(iteration_dir))
+                    continue
+                iters.append(int(iter_id_str))
+            return iters
+
         step_num = {}
         for rank_dir in self._rank_dirs:
             rank_id, rank_path = rank_dir.rank_id, rank_dir.path
@@ -169,18 +194,7 @@ class DataLoader:
             if not net_path.is_dir():
                 log.info("No net directory under rank dir: %s", str(rank_dir))
                 continue
-            max_step = -1
-            for graph_dir in net_path.iterdir():
-                if not graph_dir.name.isdigit():
-                    log.info("Invalid graph dir under net dir:%s", str(net_path))
-                    continue
-                for iteration_dir in graph_dir.iterdir():
-                    iteration_id = iteration_dir.name
-                    if not iteration_id.isdigit():
-                        log.info("Invalid iteration dir under graph dir:%s", str(graph_dir))
-                    max_step = max(int(iteration_id), max_step)
-                log.debug("Current max iteration number is %s", max_step)
-            step_num[rank_id] = max_step + 1
+            step_num[rank_id] = _load_iters_per_rank(net_path)
 
         return step_num
 
@@ -223,6 +237,45 @@ class DataLoader:
     def get_net_name(self):
         """Get net_name of the data."""
         return self._net_name
+
+    def load_graph_history(self):
+        """
+        Load graph history of all devices.
+
+        Returns:
+            dict, graph history. The key is rank id, the value is Dict[int, list[int]].
+        """
+        all_graph_history = {}
+        for rank_dir in self._rank_dirs:
+            execution_order_dir = rank_dir.path / self.EXECUTION_ORDER
+            if not execution_order_dir.is_dir():
+                log.warning("Execution order directory %s doesn't exist.", str(execution_order_dir))
+                continue
+            graph_history = {}
+            history_pattern = re.compile(r"ms_global_execution_order_graph_(?P<graph_id>\d+).csv")
+            for item in execution_order_dir.iterdir():
+                re_match = re.match(history_pattern, item.name)
+                if re_match:
+                    history = read_graph_history(item)
+                    graph_history[int(re_match.group('graph_id'))] = history
+            all_graph_history[rank_dir.rank_id] = graph_history
+        return all_graph_history
+
+
+def read_graph_history(file_path):
+    """
+    Load graph history from file.
+
+    Args:
+        file_path (str): File path contains the graph execution order info.
+
+    Returns:
+        list[int], the executed iteration ids of each graph.
+    """
+    with open(file_path, 'r') as handler:
+        csv_reader = csv.reader(handler)
+        history = [int(row[0]) for row in csv_reader]
+        return history
 
 
 def load_graph_from_file(graph_file_path):

@@ -177,7 +177,10 @@ class DebuggerOfflineManager:
         first_rank_info = device_stream.get()['devices'][0]
         self._metadata_stream.client_ip = first_rank_info.get('server_id')
         # get step number per device. dict(rank_id, step_num), may be increased with time goes by
-        step_num_per_rank = self._data_loader.load_step_number()
+        graph_history_stream = self._cache_store.get_stream_handler(Streams.GRAPH_HISTORY)
+        graph_history_stream.put(self._data_loader.load_graph_history())
+        graph_history_stream.put_dumped_step(self._data_loader.load_dumped_step())
+        step_num_per_rank = graph_history_stream.get_total_count()
         device_stream.add_step_num_info(step_num_per_rank)
         self._metadata_stream.max_step_num = max(step_num_per_rank.values()) if step_num_per_rank else 0
 

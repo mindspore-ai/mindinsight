@@ -39,8 +39,8 @@ class TestDebuggerServerFactory:
     @classmethod
     def setup_class(cls):
         """Setup class."""
-        cls.debugger_tmp_dir, cls.dump_files_dir = build_dump_file_structure()
-        cls._dbg_dir = os.path.join(cls.dump_files_dir, 'Ascend/sync')
+        cls.debugger_tmp_dir = build_dump_file_structure()
+        cls._dbg_dir = os.path.join(cls.debugger_tmp_dir, 'Ascend/sync')
         cls._dbg_server_factory = DebuggerServerFactory()
 
     @classmethod

@@ -13,6 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """Define the graph stream handler."""
+from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import List
+
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerNodeNotInGraphError, DebuggerGraphNotExistError
 from mindinsight.debugger.common.log import LOGGER as log
@@ -90,10 +94,10 @@ class MultiCardGraphHandler(StreamHandlerBase):
 
     def has_graph(self):
         """check if has graph"""
-        res = False
-        for graph_handler in self._graph_handlers:
-            res = res or graph_handler.graph
-        return res
+        for graph_handler in self._graph_handlers.values():
+            if graph_handler.graph_names:
+                return True
+        return False
 
     def register_graph_handler(self, rank_id, graph_handler):
         """Register graph handler."""
@@ -108,12 +112,19 @@ class MultiCardGraphHandler(StreamHandlerBase):
         return rank_id in self._graph_handlers
 
 
+@dataclass
+class RootGraph:
+    """The RootGraph data class."""
+    graph_name: str = ''
+    sub_graph_names: List[str] = field(default_factory=list)
+
+
 class GraphHandler(StreamHandlerBase):
     """Metadata Handler."""
 
     def __init__(self):
-        # dict of <graph_name, GraphProto object>
-        self._graph_proto = {}
+        # the key is root_graph_id, the value is RootGraph
+        self._root_graphs = defaultdict(RootGraph)
         # dict of <graph_name, DebuggerGraph object>
         self._graph = {}
         self._searched_node_list = {}
@@ -130,9 +141,9 @@ class GraphHandler(StreamHandlerBase):
         return self._whole_graph
 
     @property
-    def graph(self):
-        """The property of graph."""
-        return self._graph_proto
+    def root_graphs(self):
+        """The property of root graphs."""
+        return self._root_graphs
 
     @property
     def graph_names(self):
@@ -159,7 +170,6 @@ class GraphHandler(StreamHandlerBase):
         log.info("Put graph into cache.")
         sorted_value_list = self._sort_graph(value)
         for graph_name, graph_value in sorted_value_list:
-            self._graph_proto[graph_name] = graph_value
             # build sub graph
             graph = DebuggerGraph()
             graph.build_graph(graph_value)
@@ -169,10 +179,23 @@ class GraphHandler(StreamHandlerBase):
             for _, node in leaf_nodes.items():
                 self.graph_node_map[node.full_name] = graph_name
 
+        self._parse_root_graphs()
         # build whole graph
         graph = DebuggerMultiGraph()
         graph.add_graph(self._graph)
         self._whole_graph = graph
+
+    def _parse_root_graphs(self):
+        """Parse root graph infos."""
+        for graph_name, debugger_graph in self._graph.items():
+            root_graph_id = debugger_graph.root_graph_id
+            root_graph = self._root_graphs[root_graph_id]
+            if debugger_graph.is_root_graph:
+                log.info("Found root graph: %s", graph_name)
+                root_graph.graph_name = graph_name
+            else:
+                log.info("Found subgraph %s, the root_graph_id is %s", graph_name, root_graph_id)
+                root_graph.sub_graph_names.append(graph_name)
 
     def get(self, filter_condition=None):
         """
@@ -184,8 +207,8 @@ class GraphHandler(StreamHandlerBase):
                 - name (str): The full debug node name.
                 - graph_name (str): The relative graph_name of the node.
                 - single_node (bool): If True, return the graph from root
-                    to the specific node; else, return the sublayer of the
-                    graph. Default: False.
+                  to the specific node; else, return the sublayer of the
+                  graph. Default: False.
 
         Returns:
             dict, the metadata.
