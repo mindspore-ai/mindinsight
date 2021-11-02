@@ -27,8 +27,8 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerRawFileExc
 class MinddataProposer(Proposer):
     """The Minddata proposer."""
 
-    def __init__(self, profiling_dir, device_id):
-        super().__init__(profiling_dir, device_id)
+    def __init__(self, profiling_dir, rank_id):
+        super().__init__(profiling_dir, rank_id)
         self.__proposer_type = "minddata"
         self.__proposal_dict = OrderedDict()
 
@@ -45,7 +45,7 @@ class MinddataProposer(Proposer):
 
         Examples:
             >>> proposer_type = 'minddata'
-            >>> proposer = ProposerFactory.instance().get_proposer(proposer_type, self.profiling_dir, self.device_id)
+            >>> proposer = ProposerFactory.instance().get_proposer(proposer_type, self.profiling_dir, self.rank_id)
             >>> result = proposer.analyze(options)
         """
         self.minddata_outer_bounds_analyze()
@@ -56,7 +56,7 @@ class MinddataProposer(Proposer):
         """Get the proposals of minddata outer bounds."""
         minddata_dict = OrderedDict()
         minddata_analyser = AnalyserFactory.instance().get_analyser(
-            'minddata', self.profiling_path, self.device_id)
+            'minddata', self.profiling_path, self.rank_id)
         get_next_queue_info, _ = minddata_analyser.analyse_get_next_info(info_type="queue")
         device_queue_info, _ = minddata_analyser.analyse_device_queue_info(info_type="queue")
 
@@ -90,14 +90,14 @@ class MinddataProposer(Proposer):
 
     def minddata_cpu_utilization_proposal(self):
         """Get the proposals of minddata cpu utilization"""
-        filename = "minddata_cpu_utilization_{}.json".format(self.device_id)
+        filename = "minddata_cpu_utilization_{}.json".format(self.rank_id)
         file_path = os.path.join(self.profiling_path, filename)
         # Forward compatibility, it is reasonable that the file does not exist.
         if not os.path.exists(file_path):
             return
         minddata_cpu_utilization = OrderedDict()
         minddata_cpu_utilization_analyser = AnalyserFactory.instance().get_analyser(
-            'minddata_cpu_utilization', self.profiling_path, self.device_id)
+            'minddata_cpu_utilization', self.profiling_path, self.rank_id)
         try:
             idle_utilization_avg = minddata_cpu_utilization_analyser.get_idle_utilization_avg()
             # The maximum value of this cpu_activate_utilization_avg is 100%.

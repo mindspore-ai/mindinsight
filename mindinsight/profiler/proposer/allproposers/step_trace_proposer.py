@@ -23,8 +23,8 @@ from mindinsight.profiler.common.log import logger
 class StepTraceProposer(Proposer):
     """The step trace proposer."""
 
-    def __init__(self, profiling_dir, device_id):
-        super().__init__(profiling_dir, device_id)
+    def __init__(self, profiling_dir, rank_id):
+        super().__init__(profiling_dir, rank_id)
         self.__step_trace_iter_interval_threshold = 0.5
         self.__proposer_type = "step_trace"
         self.__proposal_dict = OrderedDict()
@@ -36,8 +36,8 @@ class StepTraceProposer(Proposer):
 
         Args:
             options (dict): options for proposer analysis.
-                - step_trace: include optional parameters for step trace，The dictionary key is iter_interval
-                  used to get the analyser options for iteration interval time.
+                step_trace: include optional parameters for step trace，The dictionary key is iter_interval
+                used to get the analyser options for iteration interval time.
 
         Returns:
             dict, the proposal from proposer instance，the dictionary key is a language internationalization
@@ -45,7 +45,7 @@ class StepTraceProposer(Proposer):
 
         Examples:
             >>> proposer_type = 'step_trace'
-            >>> proposer = ProposerFactory.instance().get_proposer(proposer_type, self.profiling_dir, self.device_id)
+            >>> proposer = ProposerFactory.instance().get_proposer(proposer_type, self.profiling_dir, self.rank_id)
             >>> result = proposer.analyze(options)
         """
         logger.info("The StepTraceProposer is running")

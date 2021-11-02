@@ -36,8 +36,8 @@ class MinddataPipelineProposer(Proposer):
     _dataset_op_label = 'minddata_pipeline-dataset_op'
     _batch_op_label = 'minddata_pipeline-batch_op'
 
-    def __init__(self, profiling_dir, device_id):
-        super().__init__(profiling_dir, device_id)
+    def __init__(self, profiling_dir, rank_id):
+        super().__init__(profiling_dir, rank_id)
         self.__proposer_type = "minddata_pipeline"
         self.__proposal_dict = OrderedDict()
 

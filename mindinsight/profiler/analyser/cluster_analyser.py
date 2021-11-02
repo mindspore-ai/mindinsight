@@ -180,13 +180,13 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
             # If stage_id is 0 (default value), display all data.
             if stage_id not in (0, cur_stage_id):
                 continue
-            step_bottleneck_info = self._get_step_bottleneck_info(rank_id, step_num)
+            step_bottleneck_info = self.get_step_bottleneck_info(rank_id, step_num)
             step_bottleneck_info.append(rank_id)
             cluster_step_bottleneck_info.append(step_bottleneck_info)
         self._cluster_info_size = len(cluster_step_bottleneck_info)
         return cluster_step_bottleneck_info
 
-    def _get_step_bottleneck_info(self, rank_id, step_num):
+    def get_step_bottleneck_info(self, rank_id, step_num):
         """Get cluster analyse info."""
         file_name = f'ascend_cluster_analyse_{self._parallel_mode}_{self._stage_num}_{self._rank_size}_{rank_id}.csv'
         step_bottleneck_file_path = \

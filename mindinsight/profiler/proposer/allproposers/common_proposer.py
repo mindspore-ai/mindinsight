@@ -22,8 +22,8 @@ from mindinsight.profiler.common.log import logger
 
 class CommonProposer(Proposer):
     """The common proposer."""
-    def __init__(self, profiling_dir, device_id):
-        super().__init__(profiling_dir, device_id)
+    def __init__(self, profiling_dir, rank_id):
+        super().__init__(profiling_dir, rank_id)
         self.__proposal_dict = OrderedDict()
         self.__proposal_dict["common-profiler_tutorial"] = None
 
