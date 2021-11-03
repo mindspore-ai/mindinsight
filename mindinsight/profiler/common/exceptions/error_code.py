@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ class ProfilerErrors(ProfilerMgrErrors):
     FILTER_CONDITION_ERROR = 6 | _ANALYSER_MASK
     COLUMN_NOT_SUPPORT_SORT_ERROR = 7 | _ANALYSER_MASK
     PIPELINE_OP_NOT_EXIST_ERROR = 8 | _ANALYSER_MASK
+    UNSUPPORTED_PARALLEL_TYPE_ERROR = 9 | _ANALYSER_MASK
+    WRONG_PARALLEL_STRATEGY_DATA_ERROR = 10 | _ANALYSER_MASK
 
 
 @unique
@@ -80,3 +82,5 @@ class ProfilerErrorMsg(Enum):
     SORT_CONDITION_ERROR = 'The sort_condition in search_condition error, {}'
     COLUMN_NOT_SUPPORT_SORT_ERROR = 'The column {} does not support to sort.'
     PIPELINE_OP_NOT_EXIST_ERROR = 'The minddata pipeline operator {} does not exist.'
+    UNSUPPORTED_PARALLEL_TYPE_ERROR = 'This parallel type is not supported. Detail: {}'
+    WRONG_PARALLEL_STRATEGY_DATA_ERROR = "The provided parallel strategy data is wrong. Detail: {}"

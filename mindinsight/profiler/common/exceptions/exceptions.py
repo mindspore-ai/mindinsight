@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -223,5 +223,27 @@ class ProfilerPipelineOpNotExistException(MindInsightException):
         super(ProfilerPipelineOpNotExistException, self).__init__(
             error=ProfilerErrors.PIPELINE_OP_NOT_EXIST_ERROR,
             message=ProfilerErrorMsg.PIPELINE_OP_NOT_EXIST_ERROR.value.format(msg),
+            http_code=400
+        )
+
+
+class UnsupportedParallelTypeException(MindInsightException):
+    """The provided parallel type is unsupported."""
+
+    def __init__(self, detail):
+        super(UnsupportedParallelTypeException, self).__init__(
+            error=ProfilerErrors.UNSUPPORTED_PARALLEL_TYPE_ERROR,
+            message=ProfilerErrorMsg.UNSUPPORTED_PARALLEL_TYPE_ERROR.value.format(detail),
+            http_code=400
+        )
+
+
+class WrongParallelStrategyDataException(MindInsightException):
+    """The provided parallel strategy data is failed."""
+
+    def __init__(self, detail):
+        super(WrongParallelStrategyDataException, self).__init__(
+            error=ProfilerErrors.WRONG_PARALLEL_STRATEGY_DATA_ERROR,
+            message=ProfilerErrorMsg.WRONG_PARALLEL_STRATEGY_DATA_ERROR.value.format(detail),
             http_code=400
         )
