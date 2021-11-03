@@ -947,7 +947,9 @@ limitations under the License.
       <span class="dialog-icon">
         <span class="el-icon-warning"></span>
       </span>
-      <span v-if="noOfflineGraph"
+      <span v-if="noOfflineGraphName"
+            class="dialog-content">{{ $t('debugger.noOfflineGraphName') }}</span>
+      <span v-else-if="noOfflineGraph"
             class="dialog-content">{{ $t('debugger.noOfflineGraphData') }}</span>
       <span v-else-if="initFail"
             class="dialog-content">{{ $t('debugger.debuggerError') }}</span>
@@ -1019,9 +1021,9 @@ limitations under the License.
   </div>
 </template>
 <script>
-import {select, selectAll, zoom, dispatch} from 'd3';
+import { select, selectAll, zoom, dispatch } from 'd3';
 import 'd3-graphviz';
-const d3 = {select, selectAll, zoom, dispatch};
+const d3 = { select, selectAll, zoom, dispatch };
 import RequestService from '@/services/request-service';
 import commonGraph from '../../mixins/common-graph.vue';
 import debuggerMixin from '../../mixins/debugger-mixin.vue';
@@ -1183,9 +1185,10 @@ export default {
         watchPoint: '',
       },
       hitWatchPointArr: [],
+      noOfflineGraphName: false,
     };
   },
-  components: {debuggerTensor, tree},
+  components: { debuggerTensor, tree },
   mounted() {
     document.title = `${this.$t('debugger.debugger')}-MindInsight`;
     this.nodeTypes.label = this.$t('debugger.nodeType');
@@ -1239,7 +1242,7 @@ export default {
       },
       deep: true,
     },
-    'watchPointArr': {
+    watchPointArr: {
       handler(newValue) {
         const hitArr = newValue.map((val) => {
           return {
@@ -1284,7 +1287,7 @@ export default {
     },
     logicCardChange() {
       this.graphFiles.options = JSON.parse(
-          JSON.stringify(this.devices.find((val) => val.rank_id === this.logicCard.value).graph_names),
+        JSON.stringify(this.devices.find((val) => val.rank_id === this.logicCard.value).graph_names)
       );
       if (this.graphFiles.options.length > 1) {
         this.graphFiles.options.unshift(this.$t('debugger.all'));
@@ -1312,51 +1315,51 @@ export default {
         delete params.params.graph_name;
       }
       RequestService.retrieve(params, this.sessionId).then(
-          (res) => {
-            if (res.data && res.data.metadata) {
-              this.dealMetadata(res.data.metadata);
-            }
-            if (res.data && res.data.graph) {
-              const graph = res.data.graph;
-              this.origialTree = res.data.graph.nodes.map((val) => {
-                return {
-                  label: val.name.split('/').pop(),
-                  leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
-                  ...val,
-                  showCheckbox: val.watched !== -1,
-                };
-              });
-              this.node.childNodes = [];
-              this.resolve(this.origialTree);
-              // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
-              this.defaultCheckedArr = this.origialTree
-                  .filter((val) => {
-                    return val.watched === this.checkboxStatus.checked;
-                  })
-                  .map((val) => val.name);
-              this.node.childNodes.forEach((val) => {
-                if (val.data.watched === this.checkboxStatus.indeterminate) {
-                  val.indeterminate = true;
-                }
-                if (val.data.watched === this.checkboxStatus.unchecked) {
-                  val.checked = false;
-                }
-                if (val.data.watched === this.checkboxStatus.checked) {
-                  val.checked = true;
-                }
-              });
-              this.firstFloorNodes = [];
-              this.allGraphData = {};
-              d3.select('#graph svg').remove();
-              this.selectedNode.name = '';
-              this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)));
-              this.tableData = [];
-            }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-            this.resolve([]);
-          },
+        (res) => {
+          if (res.data && res.data.metadata) {
+            this.dealMetadata(res.data.metadata);
+          }
+          if (res.data && res.data.graph) {
+            const graph = res.data.graph;
+            this.origialTree = res.data.graph.nodes.map((val) => {
+              return {
+                label: val.name.split('/').pop(),
+                leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
+                ...val,
+                showCheckbox: val.watched !== -1,
+              };
+            });
+            this.node.childNodes = [];
+            this.resolve(this.origialTree);
+            // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
+            this.defaultCheckedArr = this.origialTree
+              .filter((val) => {
+                return val.watched === this.checkboxStatus.checked;
+              })
+              .map((val) => val.name);
+            this.node.childNodes.forEach((val) => {
+              if (val.data.watched === this.checkboxStatus.indeterminate) {
+                val.indeterminate = true;
+              }
+              if (val.data.watched === this.checkboxStatus.unchecked) {
+                val.checked = false;
+              }
+              if (val.data.watched === this.checkboxStatus.checked) {
+                val.checked = true;
+              }
+            });
+            this.firstFloorNodes = [];
+            this.allGraphData = {};
+            d3.select('#graph svg').remove();
+            this.selectedNode.name = '';
+            this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)));
+            this.tableData = [];
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+          this.resolve([]);
+        }
       );
       this.filter();
     },
@@ -1398,15 +1401,15 @@ export default {
           delete params.graph_name;
         }
         RequestService.updateWatchpoint(params, this.sessionId).then(
-            (res) => {
-              this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
-              if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-                this.enableRecheck = res.data.metadata.enable_recheck;
-              }
-            },
-            (err) => {
-              this.showErrorMsg(err);
-            },
+          (res) => {
+            this.defaultCheckedArr = this.$refs.tree.getCheckedKeys();
+            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+              this.enableRecheck = res.data.metadata.enable_recheck;
+            }
+          },
+          (err) => {
+            this.showErrorMsg(err);
+          }
         );
       }
     },
@@ -1436,54 +1439,54 @@ export default {
         delete params.params.graph_name;
       }
       RequestService.retrieve(params, this.sessionId).then(
-          (res) => {
-            if (res.data && res.data.graph) {
-              const graph = res.data.graph;
-              this.origialTree = graph.nodes.map((val) => {
-                return {
-                  label: val.name.split('/').pop(),
-                  ...val,
-                  showCheckbox: val.watched !== -1,
-                };
-              });
-              this.node.childNodes = [];
-              this.curWatchPointId = id;
-              this.resolve(this.origialTree);
-              this.$refs.tree.getCheckedKeys().forEach((val) => {
-                this.$refs.tree.setChecked(val, false);
-              });
-              // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
-              this.defaultCheckedArr = this.origialTree
-                  .filter((val) => {
-                    return val.watched === this.checkboxStatus.checked;
-                  })
-                  .map((val) => val.name);
-              const halfSelectArr = this.origialTree
-                  .filter((val) => {
-                    return val.watched === this.checkboxStatus.indeterminate;
-                  })
-                  .map((val) => val.name);
-              this.node.childNodes.forEach((val) => {
-                if (halfSelectArr.indexOf(val.data.name) !== -1) {
-                  val.indeterminate = true;
-                }
-                if (val.data.watched === this.checkboxStatus.checked) {
-                  val.checked = true;
-                } else if (val.data.watched === this.checkboxStatus.unchecked) {
-                  val.checked = false;
-                }
-              });
-              this.tableData = [];
-              this.firstFloorNodes = [];
-              this.allGraphData = {};
-              d3.select('#graph svg').remove();
-              this.selectedNode.name = '';
-              this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)));
-            }
-          },
-          (err) => {
-            this.showErrorMsg(err);
-          },
+        (res) => {
+          if (res.data && res.data.graph) {
+            const graph = res.data.graph;
+            this.origialTree = graph.nodes.map((val) => {
+              return {
+                label: val.name.split('/').pop(),
+                ...val,
+                showCheckbox: val.watched !== -1,
+              };
+            });
+            this.node.childNodes = [];
+            this.curWatchPointId = id;
+            this.resolve(this.origialTree);
+            this.$refs.tree.getCheckedKeys().forEach((val) => {
+              this.$refs.tree.setChecked(val, false);
+            });
+            // watched 0:unchecked  1:indeterminate 2:checked -1:no checkbox
+            this.defaultCheckedArr = this.origialTree
+              .filter((val) => {
+                return val.watched === this.checkboxStatus.checked;
+              })
+              .map((val) => val.name);
+            const halfSelectArr = this.origialTree
+              .filter((val) => {
+                return val.watched === this.checkboxStatus.indeterminate;
+              })
+              .map((val) => val.name);
+            this.node.childNodes.forEach((val) => {
+              if (halfSelectArr.indexOf(val.data.name) !== -1) {
+                val.indeterminate = true;
+              }
+              if (val.data.watched === this.checkboxStatus.checked) {
+                val.checked = true;
+              } else if (val.data.watched === this.checkboxStatus.unchecked) {
+                val.checked = false;
+              }
+            });
+            this.tableData = [];
+            this.firstFloorNodes = [];
+            this.allGraphData = {};
+            d3.select('#graph svg').remove();
+            this.selectedNode.name = '';
+            this.dealGraphData(JSON.parse(JSON.stringify(graph.nodes)));
+          }
+        },
+        (err) => {
+          this.showErrorMsg(err);
+        }
       );
     },
 
@@ -1496,12 +1499,12 @@ export default {
       let param = '';
       if (item.params.length) {
         param = item.params
-            .map((i) => {
-              const name = this.transCondition(i.name);
-              const symbol = this.percentParams.includes(i.name) ? '%' : '';
-              return `${name} ${i.value + symbol}`;
-            })
-            .join(', ');
+          .map((i) => {
+            const name = this.transCondition(i.name);
+            const symbol = this.percentParams.includes(i.name) ? '%' : '';
+            return `${name} ${i.value + symbol}`;
+          })
+          .join(', ');
         param = `(${param})`;
       }
 
@@ -1527,7 +1530,7 @@ export default {
       this.initSvgSize(true);
       this.graph.dom = document.querySelector(`#graph #graph0`);
       const graphBox = this.graph.dom.getBBox();
-      this.graph.size = {width: graphBox.width, height: graphBox.height};
+      this.graph.size = { width: graphBox.width, height: graphBox.height };
       let transform = '';
       if (this.graph.dom.getAttribute('transform')) {
         // transform information of graph
@@ -1542,8 +1545,8 @@ export default {
       };
 
       this.graph.minScale = Math.min(
-          this.svg.size.width / 2 / this.graph.size.width,
-          this.svg.size.height / 2 / this.graph.size.height,
+        this.svg.size.width / 2 / this.graph.size.width,
+        this.svg.size.height / 2 / this.graph.size.height
       );
       this.initZooming();
       this.initContextMenu();
@@ -1564,46 +1567,46 @@ export default {
       const ignoreType = ['Parameter', 'Const', 'Depend', 'make_tuple', 'tuple_getitem', 'ControlDepend'];
 
       const dispatch = d3
-          .dispatch('start', 'contextmenu')
-          .on('start', (event) => {
-            this.contextmenu.dom.style.display = 'none';
-            this.contextmenu.point = {x: event.x, y: event.y};
-          })
-          .on('contextmenu', (target) => {
-            if (this.metadata.state !== this.state.waiting) {
-              return;
-            }
-            const svgRect = svgDom.getBoundingClientRect();
-            this.contextmenu.dom.style.left = `${this.contextmenu.point.x - svgRect.x}px`;
-            this.contextmenu.dom.style.top = `${this.contextmenu.point.y - svgRect.y}px`;
-            this.contextmenu.dom.style.display = 'block';
+        .dispatch('start', 'contextmenu')
+        .on('start', (event) => {
+          this.contextmenu.dom.style.display = 'none';
+          this.contextmenu.point = { x: event.x, y: event.y };
+        })
+        .on('contextmenu', (target) => {
+          if (this.metadata.state !== this.state.waiting) {
+            return;
+          }
+          const svgRect = svgDom.getBoundingClientRect();
+          this.contextmenu.dom.style.left = `${this.contextmenu.point.x - svgRect.x}px`;
+          this.contextmenu.dom.style.top = `${this.contextmenu.point.y - svgRect.y}px`;
+          this.contextmenu.dom.style.display = 'block';
 
-            this.selectedNode.name = target.name;
-            this.selectNode(false, true);
-          });
+          this.selectedNode.name = target.name;
+          this.selectNode(false, true);
+        });
 
       const nodes = d3.selectAll('g.node, g.cluster');
       nodes.on(
-          'contextmenu',
-          (target, index, nodesList) => {
-            event.preventDefault();
-            const node = this.allGraphData[nodesList[index].id.replace('_unfold', '')];
-            if (node) {
-              if (
-                !(
-                  this.version !== 'GPU' ||
+        'contextmenu',
+        (target, index, nodesList) => {
+          event.preventDefault();
+          const node = this.allGraphData[nodesList[index].id.replace('_unfold', '')];
+          if (node) {
+            if (
+              !(
+                this.version !== 'GPU' ||
                 ignoreType.includes(node.type) ||
                 node.type.endsWith('_scope') ||
                 node.type.endsWith('Summary')
-                )
-              ) {
-                setTimeout(() => {
-                  dispatch.call('contextmenu', this, node);
-                }, 10);
-              }
+              )
+            ) {
+              setTimeout(() => {
+                dispatch.call('contextmenu', this, node);
+              }, 10);
             }
-          },
-          true,
+          }
+        },
+        true
       );
 
       document.oncontextmenu = (event) => {
@@ -1636,14 +1639,14 @@ export default {
         delete params.graph_name;
       }
       RequestService.control(params, this.sessionId).then(
-          (res) => {
-            if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
-              this.enableRecheck = res.data.metadata.enable_recheck;
-            }
-          },
-          (error) => {
-            this.showErrorMsg(error);
-          },
+        (res) => {
+          if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
+            this.enableRecheck = res.data.metadata.enable_recheck;
+          }
+        },
+        (error) => {
+          this.showErrorMsg(error);
+        }
       );
     },
     /**
@@ -1707,34 +1710,34 @@ export default {
         }
       }
       RequestService.retrieve(params, this.sessionId)
-          .then(
-              (response) => {
-                if (response && response.data && response.data.graph) {
-                  const graph = response.data.graph;
-                  const nodes = JSON.parse(JSON.stringify(graph.nodes));
-                  this.nodeExpandLinkage(nodes, name);
-                  this.dealGraphData(nodes, name);
-                }
-              },
-              (error) => {
-                this.showErrorMsg(error);
-              },
-          )
-          .catch((error) => {
+        .then(
+          (response) => {
+            if (response && response.data && response.data.graph) {
+              const graph = response.data.graph;
+              const nodes = JSON.parse(JSON.stringify(graph.nodes));
+              this.nodeExpandLinkage(nodes, name);
+              this.dealGraphData(nodes, name);
+            }
+          },
+          (error) => {
+            this.showErrorMsg(error);
+          }
+        )
+        .catch((error) => {
           // A non-Google Chrome browser may not work properly.
-            if (error && error.includes('larger than maximum 65535 allowed')) {
-              this.$message.error(this.$t('graph.dataTooLarge'));
-            } else {
-              this.$bus.$emit('showWarmText', true);
-            }
+          if (error && error.includes('larger than maximum 65535 allowed')) {
+            this.$message.error(this.$t('graph.dataTooLarge'));
+          } else {
+            this.$bus.$emit('showWarmText', true);
+          }
 
-            if (name && this.allGraphData[name]) {
-              this.allGraphData[name].isUnfold = false;
-              this.allGraphData[name].children = [];
-              this.allGraphData[name].size = [];
-              this.allGraphData[name].html = '';
-            }
-          });
+          if (name && this.allGraphData[name]) {
+            this.allGraphData[name].isUnfold = false;
+            this.allGraphData[name].children = [];
+            this.allGraphData[name].size = [];
+            this.allGraphData[name].html = '';
+          }
+        });
     },
     /**
      * Process graph data
@@ -1824,13 +1827,13 @@ export default {
             this.graph.timer = setTimeout(() => {
               const name = path[0].replace('_unfold', '');
               if (this.graphFiles.value === this.$t('debugger.all')) {
-                this.retrieveTensorHistory({name: name.replace(`${name.split('/')[0]}/`, '')}, name.split('/')[0]);
+                this.retrieveTensorHistory({ name: name.replace(`${name.split('/')[0]}/`, '') }, name.split('/')[0]);
               } else {
                 this.retrieveTensorHistory(
-                    {
-                      name,
-                    },
-                    this.graphFiles.value,
+                  {
+                    name,
+                  },
+                  this.graphFiles.value
                 );
               }
             }, 500);
@@ -1927,8 +1930,8 @@ export default {
       this.graph.transform.y -= screenChange.y * (this.graph.size.height / graphObj.initHeight);
 
       this.graph.dom.setAttribute(
-          'transform',
-          `translate(${this.graph.transform.x},` + `${this.graph.transform.y}) scale(${this.graph.transform.k})`,
+        'transform',
+        `translate(${this.graph.transform.x},` + `${this.graph.transform.y}) scale(${this.graph.transform.k})`
       );
 
       const transitionTime = Math.min(Math.abs(screenChange.x) * 2, Math.abs(screenChange.y) * 2, needDelay ? 800 : 0);
@@ -2215,6 +2218,7 @@ export default {
 .deb-wrap .left-wrap .left .content .stack-search .label {
   display: inline-block;
   width: 80px;
+  white-space: nowrap;
 }
 .deb-wrap .left-wrap .left .content .node-type .el-select,
 .deb-wrap .left-wrap .left .content .stack-search .el-input {
