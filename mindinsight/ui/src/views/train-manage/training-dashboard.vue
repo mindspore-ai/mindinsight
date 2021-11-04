@@ -255,6 +255,29 @@ limitations under the License.
           </div>
         </div>
       </div>
+      <div class="cl-dashboard-con-up"
+           :class="(show3dGraph && !wrongPlugin) ? '' : 'no-data-hover'"
+           @click="jumpToLossAnalysis">
+        <div class="cl-dashboard-title"> {{$t("lossAnalysis.titleText")}}</div>
+        <div class="cl-module cover-container">
+          <div class="diagram-container"
+               v-show="show3dGraph && !wrongPlugin">
+            <diagram3D :oriData="diagramOriDate"
+                       :styleSetting="diagram3DSetting"
+                       ref="diagram3D"></diagram3D>
+          </div>
+          <div class="no-data-img"
+               key="no-chart-data"
+               v-show="!show3dGraph || wrongPlugin">
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+            <p class='no-data-text'>
+              {{$t("public.noData")}}
+            </p>
+          </div>
+          <div class="diagram-cover-item"></div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -268,6 +291,7 @@ import {select, selectAll, format, precisionRound} from 'd3';
 import 'd3-graphviz';
 const d3 = {select, selectAll, format, precisionRound};
 import gridTableComponents from '../../components/grid-table-simple';
+import diagram3D from '../../components/diagram-3D.vue';
 export default {
   data() {
     return {
@@ -329,6 +353,23 @@ export default {
         graph: false,
         dataMap: false,
       },
+      show3dGraph: false,
+      diagramOriDate: {},
+      diagram3DSetting: {
+        camera: JSON.parse(
+            JSON.stringify(CommonProperty.lossCommonStyle.camera),
+        ),
+        light: JSON.parse(JSON.stringify(CommonProperty.lossCommonStyle.light)),
+        line: JSON.parse(JSON.stringify(CommonProperty.lossCommonStyle.line)),
+        opacity: JSON.parse(
+            JSON.stringify(CommonProperty.lossCommonStyle.opacity),
+        ),
+        surface: {
+          colorscale: JSON.parse(
+              JSON.stringify(CommonProperty.lossColorscale[0]),
+          ),
+        },
+      },
       themeIndex: this.$store.state.themeIndex, // Index of theme color
     };
   },
@@ -349,6 +390,7 @@ export default {
   },
   components: {
     gridTableComponents,
+    diagram3D,
   },
   watch: {
     isReload(newVal) {
@@ -419,6 +461,8 @@ export default {
         if (elementItem) {
           elementItem.resizeView();
         }
+        const diagram = this.$refs.diagram3D;
+        if (diagram) diagram.resize();
       }, 500);
     },
 
@@ -443,6 +487,65 @@ export default {
       }
       this.queryDatasetGraph();
       this.queryTrainJobCacheState();
+      this.getEpochIntervals();
+    },
+    /**
+     * get Epoch Intervals
+     */
+
+    getEpochIntervals() {
+      const params = {
+        train_id: this.trainingJobId,
+      };
+      RequestService.queryEpochIntervals(params).then(
+          (res) => {
+            if (!res || !res.data) {
+              this.show3dGraph = false;
+              return;
+            }
+
+            const resArr = res.data.intervals;
+            if (resArr instanceof Array && resArr.length) {
+              const params = {
+                train_id: this.trainingJobId,
+                type: 'interval',
+                metadata: true,
+                interval_id: resArr[0].id,
+              };
+              this.getDataOfLossGraph(params);
+            }
+          },
+          () => {
+            this.diagramNewDataFlag = true;
+            this.show3dGraph = false;
+          },
+      );
+    },
+
+    getDataOfLossGraph(params) {
+      RequestService.queryLossGraph(params).then(
+          (resp) => {
+            if (resp && resp.data) {
+              if (resp.data.landscapes && resp.data.landscapes.length) {
+                this.show3dGraph = true;
+                this.diagramOriDate = JSON.parse(
+                    JSON.stringify(resp.data.landscapes[0]),
+                );
+                this.$nextTick(() => {
+                  const elementItem = this.$refs.diagram3D;
+                  if (elementItem) {
+                    elementItem.updateView(this.diagramNewDataFlag);
+                    this.diagramNewDataFlag = false;
+                  }
+                });
+              }
+            }
+          },
+          () => {
+            this.diagramNewDataFlag = true;
+            this.show3dGraph = false;
+          },
+      );
     },
 
     /**
@@ -581,6 +684,20 @@ export default {
         query: {
           train_id: this.trainingJobId,
           summaryPath: this.summaryPath,
+        },
+      });
+    },
+    /**
+     * Go to loss analysis.
+     */
+    jumpToLossAnalysis() {
+      if (!this.show3dGraph || this.wrongPlugin) {
+        return;
+      }
+      this.$router.push({
+        path: '/train-manage/loss-analysis',
+        query: {
+          train_id: this.trainingJobId,
         },
       });
     },
@@ -2053,6 +2170,11 @@ export default {
   margin: 0;
   height: calc(100% - 58px);
   padding: 0px 10px 10px 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, calc(50% - 5px));
+  gap: 10px;
+  overflow: auto;
 }
 .cl-dashboard .title-height {
   height: 30px;
@@ -2088,10 +2210,6 @@ export default {
   padding: 1.6vw;
   cursor: pointer;
   overflow: hidden;
-  height: calc(50% - 10px);
-  width: calc(33.3% - 10px);
-  margin: 5px;
-  float: left;
   border-radius: 3px;
   box-shadow: var(--box-shadow-color);
 }
@@ -2253,5 +2371,19 @@ export default {
 .cl-dashboard #dataMapGraph .edge polygon {
   fill: var(--edge-path-color);
   stroke: var(--edge-path-color);
+}
+.cl-dashboard .cover-container {
+  position: relative;
+}
+.cl-dashboard .cover-container .diagram-cover-item {
+  z-index: 9;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+.cl-dashboard-con-up .diagram-container {
+  height: 100%;
 }
 </style>

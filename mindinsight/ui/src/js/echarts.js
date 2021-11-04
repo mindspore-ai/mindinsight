@@ -42,7 +42,9 @@ import {
   ToolboxComponent,
   DataZoomComponent,
   VisualMapComponent,
+  MarkPointComponent,
   MarkLineComponent,
+  MarkAreaComponent,
 } from 'echarts/components';
 
 echarts.use([
@@ -60,7 +62,9 @@ echarts.use([
   ToolboxComponent,
   DataZoomComponent,
   VisualMapComponent,
+  MarkPointComponent,
   MarkLineComponent,
+  MarkAreaComponent,
 ]);
 
 export default echarts;

@@ -1,0 +1,52 @@
+.mi-title-top-level {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+.mi-title-top-level .title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.mi-title-second-level {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+.mi-title-second-level .title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.mi-title-third-level {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: bold;
+}
+.mi-title-third-level .title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.space-between {
+  justify-content: space-between;
+}
+
+.mi-common-full-page {
+  height: 100%;
+  padding: 0 32px 24px;
+  background-color: var(--bg-color);
+}
+.mi-common-content-page {
+  height: 100%;
+  background-color: var(--bg-color);
+}
+.mi-border-header {
+  border-bottom: 2px solid var(--item-split-line-color);
+}

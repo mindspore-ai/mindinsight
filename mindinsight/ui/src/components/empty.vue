@@ -59,6 +59,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-color: var(--bg-color);
 }
 .empty-container img {
   margin-bottom: 10px;

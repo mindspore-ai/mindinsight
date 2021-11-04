@@ -296,6 +296,10 @@ export default {
   themes: {
     '0': [
       {
+        key: '--conpoint-color',
+        value: '#000',
+      },
+      {
         key: '--theme-color',
         value: '#00a5a7',
       },
@@ -617,6 +621,10 @@ export default {
       },
     ],
     '1': [
+      {
+        key: '--conpoint-color',
+        value: '#ddd',
+      },
       {
         key: '--theme-color',
         value: '#1892A2',
@@ -1055,4 +1063,104 @@ export default {
       aggregationOpenColor: '#3c3831',
     },
   },
+  compareTracePointColor: {
+    '0': {
+      pointColor: '#000000',
+    },
+    '1': {
+      pointColor: '#dddddd',
+    },
+  },
+  compareTraceColorScale: [
+    [
+      'rgb(75, 41, 145)',
+      'rgb(135, 44, 162)',
+      'rgb(192, 54, 157)',
+      'rgb(234, 79, 136)',
+      'rgb(250, 120, 118)',
+      'rgb(246, 169, 122)',
+      'rgb(237, 217, 163)',
+    ],
+    [
+      'rgb(228, 241, 225)',
+      'rgb(180, 217, 204)',
+      'rgb(137, 192, 182)',
+      'rgb(99, 166, 160)',
+      'rgb(68, 140, 138)',
+      'rgb(40, 114, 116)',
+      'rgb(13, 88, 95)',
+    ],
+  ],
+  lossCommonStyle: {
+    camera: {
+      alpha: 20,
+      beta: -90,
+      distance: 200,
+      centerX: 0,
+      centerY: 0,
+      centerZ: 0,
+    },
+    light: {
+      alpha: 20,
+      beta: -90,
+      intensity: 1,
+    },
+    line: {
+      color: 'rgb(0, 0, 0)',
+      width: 5,
+    },
+    opacity: 0.7,
+  },
+  emptySurfaceSeries: {
+    type: 'surface',
+    name: 'emptyDataSurface',
+    wireframe: {
+      show: false,
+    },
+    shading: 'lambert',
+    itemStyle: {
+      opacity: 0.7,
+    },
+    data: [],
+  },
+  colorOptions: [
+    {
+      label: 'Jet',
+      value: 0,
+    },
+    {
+      label: 'Viridis',
+      value: 1,
+    },
+    {
+      label: 'RdBu',
+      value: 2,
+    },
+  ],
+  lossColorscale: [
+    [
+      'rgb(0,0,131)',
+      'rgb(0,60,170)',
+      'rgb(5,255,255)',
+      'rgb(255,255,0)',
+      'rgb(255,0,0)',
+      'rgb(128,0,0)',
+    ],
+    [
+      '#440154',
+      '#3e4979',
+      '#26838e',
+      '#1f9e89',
+      '#b5de2b',
+      '#fde725',
+    ],
+    [
+      'rgb(5,48,97)',
+      'rgb(67,147,195)',
+      'rgb(209,229,240)',
+      'rgb(253,219,199)',
+      'rgb(214,96,77)',
+      'rgb(103,0,31)',
+    ],
+  ],
 };

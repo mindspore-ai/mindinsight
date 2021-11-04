@@ -604,7 +604,7 @@ export default {
      */
     goToCompareAnalysis() {
       this.$router.push({
-        path: '/compare-plate',
+        path: '/compare-analysis',
       });
     },
     /**
