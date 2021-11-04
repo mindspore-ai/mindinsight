@@ -75,6 +75,7 @@ limitations under the License.
             <div>
               FLOPs{{$t('symbols.colon') + deviceItem.flops}}M
             </div>
+            <div>{{$t('profilingCluster.flopsRateLabel') + $t('symbols.colon') + deviceItem.FLOPs_norm}}</div>
           </div>
           <div class="color-item"
                :style="{background: deviceItem.background}"
@@ -91,7 +92,7 @@ limitations under the License.
 <script>
 import RequestService from '@/services/request-service';
 import Color from '@/common/common-property';
-import {getGradientColor} from '@/js/utils';
+import { getGradientColor } from '@/js/utils';
 export default {
   props: {},
   data() {
@@ -112,9 +113,9 @@ export default {
   computed: {},
   created() {
     this.granuLarityList = [
-      {label: '0.1', value: '0.1'},
-      {label: '0.05', value: '0.05'},
-      {label: '0.02', value: '0.02'},
+      { label: '0.1', value: '0.1' },
+      { label: '0.05', value: '0.05' },
+      { label: '0.02', value: '0.02' },
     ];
     this.getColorValue();
   },
@@ -161,28 +162,32 @@ export default {
         train_id: this.trainInfo.id,
       };
       RequestService.getClusterFlops(params)
-          .then((res) => {
-            if (!res.data) {
-              this.memoryHeatmapInitOver = true;
-              return;
-            }
-            const heatmapDataset = [];
-            res.data.forEach((data) => {
-              const peakMem = data.peak_mem;
-              heatmapDataset.push({
-                rankID: data.rank_id,
-                peakMem,
-                value: data.FLOPs_norm,
-                flops: data.FLOPs,
-                background: '',
-              });
-            });
-            this.memoryHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
-            this.changeBackground();
-          })
-          .catch(() => {
+        .then((res) => {
+          if (!res.data) {
             this.memoryHeatmapInitOver = true;
+            return;
+          }
+          const heatmapDataset = [];
+          res.data.forEach((data) => {
+            const peakMem = data.peak_mem;
+            heatmapDataset.push({
+              rankID: data.rank_id,
+              peakMem,
+              value: data.FLOPs_norm,
+              flops: data.FLOPs,
+              background: '',
+              FLOPs_norm: (Math.floor(data.FLOPs_norm * 1000) / 1000)
+                .toString()
+                .replace(/0+?$/, '')
+                .replace(/[.]$/, ''),
+            });
           });
+          this.memoryHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
+          this.changeBackground();
+        })
+        .catch(() => {
+          this.memoryHeatmapInitOver = true;
+        });
     },
     /**
      * Page turn memory
@@ -191,7 +196,7 @@ export default {
     jumpToMemory(rankID) {
       this.$router.push({
         path: '/profiling/single/operator',
-        query: Object.assign(this.trainInfo, {rankID}),
+        query: Object.assign(this.trainInfo, { rankID }),
       });
     },
     /**
