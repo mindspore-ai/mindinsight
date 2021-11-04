@@ -942,6 +942,7 @@
     "noOfflineGraphData": "Failed to load the computational graph. This may be due to the missing or damaged graphs file in the offline dump data in the summary directory. Please try to dump the data again.",
     "largeDataLoading": "The tensor data is large and loading...",
     "overSize": "The requested tensor is too large. The total value of the value exceeds 1GiB and cannot be displayed.",
+    "noOfflineGraphName": "Graph name is missing.",
     "state": "State",
     "stateInfo": {
       "waiting": "Ready: Waiting for user operations.",
