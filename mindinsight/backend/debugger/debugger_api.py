@@ -93,7 +93,7 @@ def poll_data(session_id):
     """
     pos = request.args.get('pos')
 
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).poll_data, pos)
+    reply = _wrap_reply(_session_manager.get_session(session_id).poll_data, pos)
 
     return reply
 
@@ -115,7 +115,7 @@ def search(session_id):
     node_category = request.args.get('node_category')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
     stack_pattern = _unquote_param(request.args.get('stack_info_key_word'))
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).search,
+    reply = _wrap_reply(_session_manager.get_session(session_id).search,
                         {'name': name,
                          'graph_name': graph_name,
                          'watch_point_id': watch_point_id,
@@ -143,7 +143,7 @@ def tensor_comparisons(session_id):
     graph_name = request.args.get('graph_name', '')
     tolerance = request.args.get('tolerance', '0')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).tensor_comparisons, name, shape,
+    reply = _wrap_reply(_session_manager.get_session(session_id).tensor_comparisons, name, shape,
                         detail, tolerance, rank_id, graph_name)
 
     return reply
@@ -163,7 +163,7 @@ def retrieve(session_id):
     body = _read_post_request(request)
     mode = body.get('mode')
     params = body.get('params')
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve, mode, params)
+    reply = _wrap_reply(_session_manager.get_session(session_id).retrieve, mode, params)
     return reply
 
 
@@ -182,7 +182,7 @@ def retrieve_tensor_history(session_id):
     name = body.get('name')
     graph_name = body.get('graph_name')
     rank_id = to_int(body.get('rank_id', 0), 'rank_id')
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve_tensor_history, name, graph_name,
+    reply = _wrap_reply(_session_manager.get_session(session_id).retrieve_tensor_history, name, graph_name,
                         rank_id)
     return reply
 
@@ -205,7 +205,7 @@ def retrieve_tensor_value(session_id):
     prev = bool(request.args.get('prev') == 'true')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
 
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve_tensor_value, name, detail,
+    reply = _wrap_reply(_session_manager.get_session(session_id).retrieve_tensor_value, name, detail,
                         shape, graph_name, prev, rank_id)
     return reply
 
@@ -226,7 +226,7 @@ def create_watchpoint(session_id):
     """
     params = _read_post_request(request)
     params['watch_condition'] = params.pop('condition', None)
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).create_watchpoint, params)
+    reply = _wrap_reply(_session_manager.get_session(session_id).create_watchpoint, params)
     return reply
 
 
@@ -245,7 +245,7 @@ def update_watchpoint(session_id):
         >>> POST http://xxxx/v1/mindinsight/debugger/sessions/xxxx/update-watchpoint
     """
     params = _read_post_request(request)
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).update_watchpoint, params)
+    reply = _wrap_reply(_session_manager.get_session(session_id).update_watchpoint, params)
     return reply
 
 
@@ -267,7 +267,7 @@ def delete_watchpoint(session_id):
 
     watch_point_id = body.get('watch_point_id')
 
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).delete_watchpoint, watch_point_id)
+    reply = _wrap_reply(_session_manager.get_session(session_id).delete_watchpoint, watch_point_id)
 
     return reply
 
@@ -287,7 +287,7 @@ def control(session_id):
         >>> POST http://xxxx/v1/mindinsight/debugger/sessions/xxxx/control
     """
     params = _read_post_request(request)
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).control, params)
+    reply = _wrap_reply(_session_manager.get_session(session_id).control, params)
 
     return reply
 
@@ -306,7 +306,7 @@ def recheck(session_id):
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/sessions/xxxx/recheck
     """
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).recheck)
+    reply = _wrap_reply(_session_manager.get_session(session_id).recheck)
 
     return reply
 
@@ -325,7 +325,7 @@ def retrieve_tensor_graph(session_id):
     tensor_name = request.args.get('tensor_name')
     graph_name = request.args.get('graph_name')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve_tensor_graph, tensor_name,
+    reply = _wrap_reply(_session_manager.get_session(session_id).retrieve_tensor_graph, tensor_name,
                         graph_name, rank_id)
     return reply
 
@@ -344,7 +344,7 @@ def retrieve_tensor_hits(session_id):
     tensor_name = request.args.get('tensor_name')
     graph_name = request.args.get('graph_name')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).retrieve_tensor_hits, tensor_name,
+    reply = _wrap_reply(_session_manager.get_session(session_id).retrieve_tensor_hits, tensor_name,
                         graph_name, rank_id)
     return reply
 
@@ -362,14 +362,14 @@ def search_watchpoint_hits(session_id):
     """
     body = _read_post_request(request)
     group_condition = body.get('group_condition')
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).search_watchpoint_hits, group_condition)
+    reply = _wrap_reply(_session_manager.get_session(session_id).search_watchpoint_hits, group_condition)
     return reply
 
 
 @BLUEPRINT.route("/debugger/sessions/<session_id>/condition-collections", methods=["GET"])
 def get_condition_collections(session_id):
     """Get condition collections."""
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).get_condition_collections)
+    reply = _wrap_reply(_session_manager.get_session(session_id).get_condition_collections)
     return reply
 
 
@@ -382,8 +382,7 @@ def set_recommended_watch_points(session_id):
         raise ParamMissError('requestBody')
 
     set_recommended = request_body.get('set_recommended')
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).set_recommended_watch_points,
-                        set_recommended)
+    reply = _wrap_reply(_session_manager.get_session(session_id).set_recommended_watch_points, set_recommended)
     return reply
 
 
@@ -403,7 +402,7 @@ def load(session_id):
     graph_name = body.get('graph_name')
     rank_id = to_int(body.get('rank_id', 0), 'rank_id')
     prev = bool(body.get('prev') == 'true')
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).load, name, prev, graph_name, rank_id)
+    reply = _wrap_reply(_session_manager.get_session(session_id).load, name, prev, graph_name, rank_id)
     return reply
 
 
@@ -422,8 +421,8 @@ def download(session_id):
     graph_name = request.args.get('graph_name')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
     prev = bool(request.args.get('prev') == 'true')
-    file_name, file_path, clean_func = SessionManager.get_instance().get_session(session_id).\
-        download(name, prev, graph_name, rank_id)
+    file_name, file_path, clean_func = _session_manager.get_session(session_id).download(name, prev, graph_name,
+                                                                                         rank_id)
 
     def file_send():
         with open(file_path, 'rb') as fb:
@@ -453,7 +452,7 @@ def create_session():
     body = _read_post_request(request)
     summary_dir = body.get('dump_dir')
     session_type = body.get('session_type')
-    reply = _wrap_reply(SessionManager.get_instance().create_session, session_type, summary_dir)
+    reply = _wrap_reply(_session_manager.create_session, session_type, summary_dir)
     return reply
 
 
@@ -465,7 +464,7 @@ def get_train_jobs():
     Examples:
         >>> GET http://xxxx/v1/mindinsight/debugger/sessions
     """
-    reply = _wrap_reply(SessionManager.get_instance().get_train_jobs)
+    reply = _wrap_reply(_session_manager.get_train_jobs)
     return reply
 
 
@@ -477,7 +476,7 @@ def delete_session(session_id):
     Examples:
         >>> POST http://xxxx/v1/mindinsight/debugger/xxx/delete-session
     """
-    reply = _wrap_reply(SessionManager.get_instance().delete_session, session_id)
+    reply = _wrap_reply(_session_manager.delete_session, session_id)
     return reply
 
 
@@ -497,7 +496,7 @@ def get_stack_infos(session_id):
         'limit': limit,
         'offset': offset
     }
-    reply = _wrap_reply(SessionManager.get_instance().get_session(session_id).get_stack_infos, filter_condition)
+    reply = _wrap_reply(_session_manager.get_session(session_id).get_stack_infos, filter_condition)
     return reply
 
 
@@ -509,10 +508,13 @@ def get_graph_runs(session_id, rank_id):
     Examples:
         >>> GET /v1/mindsight/debugger/sessions/<session_id>/ranks/<rank_id>/graph-runs
     """
-    session = SessionManager.get_instance().get_session(session_id)
+    session = _session_manager.get_session(session_id)
     rank_id = to_int(rank_id, 'rank_id')
     reply = _wrap_reply(session.get_graph_runs, rank_id)
     return reply
+
+
+_session_manager = SessionManager.get_instance()
 
 
 def init_module(app):
