@@ -176,10 +176,7 @@ export default {
               value: data.FLOPs_norm,
               flops: data.FLOPs,
               background: '',
-              FLOPs_norm: (Math.floor(data.FLOPs_norm * 1000) / 1000)
-                .toString()
-                .replace(/0+?$/, '')
-                .replace(/[.]$/, ''),
+              FLOPs_norm: Number(Math.floor(data.FLOPs_norm * 1000) / 1000),
             });
           });
           this.memoryHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
