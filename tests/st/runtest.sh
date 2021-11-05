@@ -61,10 +61,7 @@ after_run_test() {
     echo "End to run tests."
 }
 
-run_test() {
-    echo "Start to run test."
-    cd "$PROJECT_DIR" || exit
-
+run_mindinsight_test() {
     for dir in "$ST_PATH"/*; do
         if [ ! -d "$dir" ] || [ "$dir" = "$ST_PATH/__pycache__" ]; then
             continue
@@ -79,10 +76,32 @@ run_test() {
         done
     done
 
-    echo "Test all use cases success."
+    echo "Test mindinsight all use cases success."
+}
+
+run_mindconverter_test() {
+    cd "$PROJECT_DIR/tests/ecosystem_tools/mindconverter" || exit
+    bash tests/st/runtest.sh
+    echo "Test mindconverter all use cases success."
+}
+
+run_test() {
+    echo "Start to run test."
+    cd "$PROJECT_DIR" || exit
+
+    if [ $# -eq 0 ]; then
+        run_mindinsight_test
+        run_mindconverter_test
+    else
+        if  [ $1 == "mindinsight" ]; then
+            run_mindinsight_test
+        elif [ $1 == "mindconverter" ]; then
+            run_mindconverter_test
+        fi
+    fi
 }
 
 check_opts "$@"
 before_run_test
-run_test
+run_test "$@"
 after_run_test

@@ -512,8 +512,8 @@ class OnnxDataLoader:
                 self._parse_value_info()
                 self._parse_node_output_shape()
             except Exception as e:
-                log.error(str(e))
-                log.exception(e)
+                MindConverterLogger.error(str(e))
+                MindConverterLogger.exception(e, console=False)
                 raise e
 
         # 4. load external_data for initializer

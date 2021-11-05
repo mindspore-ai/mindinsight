@@ -16,6 +16,7 @@
 
 import os
 import sys
+import stat
 import time
 import logging
 import threading
@@ -69,6 +70,7 @@ class MindConverterLogger:
 
     def __init__(self):
         output_dir = os.environ.get('MINDCONVERTER_OUTPUT_DIR', os.getcwd())
+        os.makedirs(output_dir, mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR, exist_ok=True)
 
         self.console_logger = logging.getLogger(name='mindconverter.console')
         console_handler = logging.StreamHandler(sys.stdout)

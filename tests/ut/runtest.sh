@@ -30,15 +30,33 @@ after_run_test() {
     echo "End to run test."
 }
 
+run_mindinsight_test() {
+    pytest "$UT_PATH"
+    echo "Test mindinsight all use cases success."
+}
+
+run_mindconverter_test() {
+    cd "$PROJECT_DIR/tests/ecosystem_tools/mindconverter" || exit
+    bash tests/ut/runtest.sh
+    echo "Test mindconverter all use cases success."
+}
+
 run_test() {
     echo "Start to run test."
     cd "$PROJECT_DIR" || exit
 
-    pytest "$UT_PATH"
-
-    echo "Test all use cases success."
+    if [ $# -eq 0 ]; then
+        run_mindinsight_test
+        run_mindconverter_test
+    else
+        if  [ $1 == "mindinsight" ]; then
+            run_mindinsight_test
+        elif [ $1 == "mindconverter" ]; then
+            run_mindconverter_test
+        fi
+    fi
 }
 
 before_run_test
-run_test
+run_test "$@"
 after_run_test
