@@ -94,7 +94,7 @@ limitations under the License.
 <script>
 import RequestService from '@/services/request-service';
 import Color from '@/common/common-property';
-import {getGradientColor} from '@/js/utils';
+import { getGradientColor } from '@/js/utils';
 export default {
   props: {},
   data() {
@@ -113,9 +113,9 @@ export default {
   },
   created() {
     this.granuLarityList = [
-      {label: '0.1', value: '0.1'},
-      {label: '0.05', value: '0.05'},
-      {label: '0.02', value: '0.02'},
+      { label: '0.1', value: '0.1' },
+      { label: '0.05', value: '0.05' },
+      { label: '0.02', value: '0.02' },
     ];
     this.getColorValue();
   },
@@ -162,34 +162,28 @@ export default {
         train_id: this.trainInfo.id,
       };
       RequestService.getClusterPeakMemory(params)
-          .then((res) => {
-            if (!res.data) {
-              this.memoryHeatmapInitOver = true;
-              return;
-            }
-            const heatmapDataset = [];
-            res.data.forEach((data) => {
-              const {capacity} = data;
-              heatmapDataset.push({
-                rankID: data.rank_id,
-                peakMem: (Math.floor(data.peak_mem * 1000) / 1000)
-                  .toString()
-                  .replace(/0+?$/, '')
-                  .replace(/[.]$/, ''),
-                capacity,
-                peakRatio: (Math.floor(data.peak_mem / capacity * 1000) / 1000)
-                  .toString()
-                  .replace(/0+?$/, '')
-                  .replace(/[.]$/, ''),
-                background: '',
-              });
-            });
-            this.memoryHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
-            this.changeBackground();
-          })
-          .catch(() => {
+        .then((res) => {
+          if (!res.data) {
             this.memoryHeatmapInitOver = true;
+            return;
+          }
+          const heatmapDataset = [];
+          res.data.forEach((data) => {
+            const { capacity } = data;
+            heatmapDataset.push({
+              rankID: data.rank_id,
+              peakMem: Number(Math.floor(data.peak_mem * 1000) / 1000),
+              capacity,
+              peakRatio: Number(Math.floor((data.peak_mem / capacity) * 1000) / 1000),
+              background: '',
+            });
           });
+          this.memoryHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
+          this.changeBackground();
+        })
+        .catch(() => {
+          this.memoryHeatmapInitOver = true;
+        });
     },
     /**
      * Page turn memory
@@ -198,7 +192,7 @@ export default {
     jumpToMemory(rankID) {
       this.$router.push({
         path: '/profiling/single/memory-utilization',
-        query: Object.assign(this.trainInfo, {rankID}),
+        query: Object.assign(this.trainInfo, { rankID }),
       });
     },
     /**

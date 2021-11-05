@@ -195,10 +195,7 @@ export default {
               rankID: data.rank_id,
               flops: data.FLOPs,
               backgroundColor: this.legendArr[data.FLOPs_norm === 1 ? index - 1 : index].backgroundColor,
-              FLOPs_norm: (Math.floor(data.FLOPs_norm * 1000) / 1000)
-                .toString()
-                .replace(/0+?$/, '')
-                .replace(/[.]$/, ''),
+              FLOPs_norm: Number(Math.floor(data.FLOPs_norm * 1000) / 1000),
             });
           });
           this.flopsHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
@@ -236,15 +233,9 @@ export default {
             const { capacity } = data;
             heatmapDataset.push({
               rankID: data.rank_id,
-              peakMem: (Math.floor(data.peak_mem * 1000) / 1000)
-                .toString()
-                .replace(/0+?$/, '')
-                .replace(/[.]$/, ''),
+              peakMem: Number(Math.floor(data.peak_mem * 1000) / 1000),
               capacity,
-              peakRatio: (Math.floor(data.peak_mem / capacity * 1000) / 1000)
-                .toString()
-                .replace(/0+?$/, '')
-                .replace(/[.]$/, ''),
+              peakRatio: Number(Math.floor((data.peak_mem / capacity) * 1000) / 1000),
               backgroundColor: this.legendArr[index]
                 ? this.legendArr[index].backgroundColor
                 : this.legendArr.slice(-1).backgroundColor,
