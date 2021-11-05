@@ -580,6 +580,7 @@
     "host": "Host",
     "peakMem": "Peak Memory Usage",
     "capaCity": "Maximum Available Memory",
+    "maximumPeakRatio": "Maximum Peak Ratio",
     "unit": "KIB",
     "timeTitle": "time(ms)",
     "stepChartTitle": "Cluster Step Trace",
@@ -624,7 +625,8 @@
     "communicationAloneTimeTip":"the time period when only the communication operator is executed, and the calculation operator is not executed. If this part takes a long time, it means that the communication time-consuming has a greater impact on performance.",
     "receiveAloneTimeTip":"only the point-to-point (receive) communication operator is executed, and the calculation operator does not execute the time period. This time period reflects the asynchronous situation between the parallel stages of the Pipeline.",
     "computationTimeTip":"The total execution time of AICore operator, used to judge whether there is a slow card. The longer the time, the slower the execution speed of the corresponding card.",
-    "collectiveCommunicationAloneTip": "Only the time period during which other communication operators except the receive communication operator are executed, and the calculation operator does not execute. The greater the proportion of this time period, the need to consider whether the segmentation strategy of the operators in the stage can be adjusted to reduce the time-consuming duration of this time period."
+    "collectiveCommunicationAloneTip": "Only the time period during which other communication operators except the receive communication operator are executed, and the calculation operator does not execute. The greater the proportion of this time period, the need to consider whether the segmentation strategy of the operators in the stage can be adjusted to reduce the time-consuming duration of this time period.",
+    "flopsRateLabel":"the ratio of the current device FLOPs to the maximum FLOPs of all devices"
   },
   "components": {
     "summaryTitle": "Training Selection",

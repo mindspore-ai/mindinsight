@@ -55,26 +55,28 @@ limitations under the License.
           </div>
           <div class="dashboard-chart-content"
                v-show="memoryHeatmapDataList.length && memoryHeatmapInitOver">
-             <div class="heatmap-content">
-                <div class="heatmap-item"
-                      v-for="deviceItem in memoryHeatmapDataList"
-                      :key="deviceItem.rankID">
-                  <el-tooltip placement="top">
-                    <div slot="content">
-                      <div>
-                        {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem.toFixed(3)
+            <div class="heatmap-content">
+              <div class="heatmap-item"
+                   v-for="deviceItem in memoryHeatmapDataList"
+                   :key="deviceItem.rankID">
+                <el-tooltip placement="top">
+                  <div slot="content">
+                    <div>
+                      {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem
                           + $t('unit.GiB')}}
-                        <br>
-                        {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
+                      <br>
+                      {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
                           + $t('unit.GiB')}}
-                      </div>
+                      <br>
+                      {{$t('profilingCluster.maximumPeakRatio') + $t('symbols.colon') + deviceItem.peakRatio}}
                     </div>
-                    <div class="color-item"
-                          :style="{backgroundColor: deviceItem.backgroundColor}"></div>
-                  </el-tooltip>
-                  {{$t('profilingCluster.rankID') + deviceItem.rankID}}
-                </div>
-             </div>
+                  </div>
+                  <div class="color-item"
+                       :style="{backgroundColor: deviceItem.backgroundColor}"></div>
+                </el-tooltip>
+                {{$t('profilingCluster.rankID') + deviceItem.rankID}}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -107,16 +109,17 @@ limitations under the License.
                v-show="flopsHeatmapDataList.length && flopsHeatmapInitOver">
             <div class="heatmap-content">
               <div class="heatmap-item"
-                  v-for="deviceItem in flopsHeatmapDataList"
-                  :key="deviceItem.rankID">
+                   v-for="deviceItem in flopsHeatmapDataList"
+                   :key="deviceItem.rankID">
                 <el-tooltip placement="top">
                   <div slot="content">
                     <div>
                       FLOPs{{$t('symbols.colon') + deviceItem.flops}}M
                     </div>
+                    <div>{{$t('profilingCluster.flopsRateLabel') + $t('symbols.colon') + deviceItem.FLOPs_norm}}</div>
                   </div>
                   <div class="color-item"
-                      :style="{backgroundColor: deviceItem.backgroundColor}"></div>
+                       :style="{backgroundColor: deviceItem.backgroundColor}"></div>
                 </el-tooltip>
                 {{$t('profilingCluster.rankID') + deviceItem.rankID}}
               </div>
@@ -143,7 +146,7 @@ export default {
       flopsHeatmapInitOver: false, // The flops heatmap state
       flopsHeatmapDataList: [], // The flops heatmap data
       legendArr: [], // Legend
-      num: 8, // num of heatmap
+      num: 16, // num of heatmap
       legendArrLength: 10, // Length of legend
       granularity: 0.1, // Granularity
       isHeterogeneous: false,
@@ -180,30 +183,34 @@ export default {
         train_id: this.trainInfo.id,
       };
       RequestService.getClusterFlops(params)
-          .then((res) => {
-            if (!res || !res.data) {
-              this.flopsHeatmapInitOver = true;
-              return;
-            }
-            const heatmapDataset = [];
-            res.data.forEach((data) => {
-              const index = Math.floor(data.FLOPs_norm / this.granularity);
-              heatmapDataset.push({
-                rankID: data.rank_id,
-                flops: data.FLOPs,
-                backgroundColor: this.legendArr[data.FLOPs_norm === 1 ? index - 1 : index].backgroundColor,
-              });
+        .then((res) => {
+          if (!res || !res.data) {
+            this.flopsHeatmapInitOver = true;
+            return;
+          }
+          const heatmapDataset = [];
+          res.data.forEach((data) => {
+            const index = Math.floor(data.FLOPs_norm / this.granularity);
+            heatmapDataset.push({
+              rankID: data.rank_id,
+              flops: data.FLOPs,
+              backgroundColor: this.legendArr[data.FLOPs_norm === 1 ? index - 1 : index].backgroundColor,
+              FLOPs_norm: (Math.floor(data.FLOPs_norm * 1000) / 1000)
+                .toString()
+                .replace(/0+?$/, '')
+                .replace(/[.]$/, ''),
             });
-            this.flopsHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
-            this.flopsHeatmapDataList =
+          });
+          this.flopsHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
+          this.flopsHeatmapDataList =
             this.flopsHeatmapDataList.length > this.num
               ? this.flopsHeatmapDataList.slice(0, this.num)
               : this.flopsHeatmapDataList;
-            this.flopsHeatmapInitOver = true;
-          })
-          .catch(() => {
-            this.flopsHeatmapInitOver = true;
-          });
+          this.flopsHeatmapInitOver = true;
+        })
+        .catch(() => {
+          this.flopsHeatmapInitOver = true;
+        });
     },
     /**
      * The logic of get memory heatmap data
@@ -213,40 +220,46 @@ export default {
         train_id: this.trainInfo.id,
       };
       RequestService.getClusterPeakMemory(params)
-          .then((res) => {
-            if (typeof res.data === 'object' && res.data.is_heterogeneous) {
-              this.isHeterogeneous = true;
-              this.memoryHeatmapInitOver = true;
-              return;
-            }
-            if (!res || !res.data) {
-              this.memoryHeatmapInitOver = true;
-              return;
-            }
-            const heatmapDataset = [];
-            res.data.forEach((data) => {
-              const index = Math.floor(data.peak_mem / data.capacity / this.granularity);
-              const {capacity} = data;
-              const peakMem = data.peak_mem;
-              heatmapDataset.push({
-                rankID: data.rank_id,
-                peakMem,
-                capacity,
-                backgroundColor: this.legendArr[index]
+        .then((res) => {
+          if (typeof res.data === 'object' && res.data.is_heterogeneous) {
+            this.isHeterogeneous = true;
+            this.memoryHeatmapInitOver = true;
+            return;
+          }
+          if (!res || !res.data) {
+            this.memoryHeatmapInitOver = true;
+            return;
+          }
+          const heatmapDataset = [];
+          res.data.forEach((data) => {
+            const index = Math.floor(data.peak_mem / data.capacity / this.granularity);
+            const { capacity } = data;
+            heatmapDataset.push({
+              rankID: data.rank_id,
+              peakMem: (Math.floor(data.peak_mem * 1000) / 1000)
+                .toString()
+                .replace(/0+?$/, '')
+                .replace(/[.]$/, ''),
+              capacity,
+              peakRatio: (Math.floor(data.peak_mem / capacity * 1000) / 1000)
+                .toString()
+                .replace(/0+?$/, '')
+                .replace(/[.]$/, ''),
+              backgroundColor: this.legendArr[index]
                 ? this.legendArr[index].backgroundColor
                 : this.legendArr.slice(-1).backgroundColor,
-              });
             });
-            this.memoryHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
-            this.memoryHeatmapDataList =
+          });
+          this.memoryHeatmapDataList = heatmapDataset.sort((a, b) => a.rankID - b.rankID);
+          this.memoryHeatmapDataList =
             this.memoryHeatmapDataList.length > this.num
               ? this.memoryHeatmapDataList.slice(0, this.num)
               : this.memoryHeatmapDataList;
-            this.memoryHeatmapInitOver = true;
-          })
-          .catch(() => {
-            this.memoryHeatmapInitOver = true;
-          });
+          this.memoryHeatmapInitOver = true;
+        })
+        .catch(() => {
+          this.memoryHeatmapInitOver = true;
+        });
     },
   },
 };

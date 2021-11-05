@@ -73,11 +73,13 @@ limitations under the License.
         <el-tooltip placement="top">
           <div slot="content">
             <div>
-              {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem.toFixed(3)
+              {{$t('profilingCluster.peakMem') + $t('symbols.colon') + deviceItem.peakMem
                 + $t('unit.GiB')}}
               <br>
               {{$t('profilingCluster.capaCity') + $t('symbols.colon') + deviceItem.capacity
                 + $t('unit.GiB')}}
+              <br>
+              {{$t('profilingCluster.maximumPeakRatio') + $t('symbols.colon') + deviceItem.peakRatio}}
             </div>
           </div>
           <div class="color-item"
@@ -168,12 +170,17 @@ export default {
             const heatmapDataset = [];
             res.data.forEach((data) => {
               const {capacity} = data;
-              const peakMem = data.peak_mem;
               heatmapDataset.push({
                 rankID: data.rank_id,
-                peakMem,
+                peakMem: (Math.floor(data.peak_mem * 1000) / 1000)
+                  .toString()
+                  .replace(/0+?$/, '')
+                  .replace(/[.]$/, ''),
                 capacity,
-                peakRatio: peakMem / capacity,
+                peakRatio: (Math.floor(data.peak_mem / capacity * 1000) / 1000)
+                  .toString()
+                  .replace(/0+?$/, '')
+                  .replace(/[.]$/, ''),
                 background: '',
               });
             });
