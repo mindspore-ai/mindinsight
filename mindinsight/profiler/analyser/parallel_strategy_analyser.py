@@ -17,6 +17,8 @@
 from pathlib import Path
 
 from mindinsight.datavisual.proto_files.mindinsight_profiling_parallel_pb2 import ProfilingParallel
+from mindinsight.profiler.common.log import logger as log
+from mindinsight.profiler.common.exceptions.exceptions import NotFoundParallelStrategyDataException
 
 from .base_analyser import BaseAnalyser
 from .graph import GraphManager
@@ -28,9 +30,14 @@ class ParallelStrategyAnalyser(BaseAnalyser):
     def _load(self):
         """Load data according to the parsed profiling files."""
         path = Path(self._profiling_dir)
+        files = sorted(path.rglob("parallel_strategy*.pb"))
+        if not files:
+            log.error("The given profiling dir %s can not find parallel strategy file.", self._profiling_dir)
+            raise NotFoundParallelStrategyDataException()
+
         manager = None
         # TODO use multi thread or multi process to handle the pb file.
-        for file in sorted(path.rglob("parallel_strategy*.pb")):
+        for file in files:
             with file.open(mode='rb') as fp:
                 parallel = ProfilingParallel()
                 parallel.ParseFromString(fp.read())

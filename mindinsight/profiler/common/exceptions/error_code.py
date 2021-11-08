@@ -52,6 +52,7 @@ class ProfilerErrors(ProfilerMgrErrors):
     PIPELINE_OP_NOT_EXIST_ERROR = 8 | _ANALYSER_MASK
     UNSUPPORTED_PARALLEL_TYPE_ERROR = 9 | _ANALYSER_MASK
     WRONG_PARALLEL_STRATEGY_DATA_ERROR = 10 | _ANALYSER_MASK
+    NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR = 11 | _ANALYSER_MASK
 
 
 @unique
@@ -84,3 +85,4 @@ class ProfilerErrorMsg(Enum):
     PIPELINE_OP_NOT_EXIST_ERROR = 'The minddata pipeline operator {} does not exist.'
     UNSUPPORTED_PARALLEL_TYPE_ERROR = 'This parallel type is not supported. Detail: {}'
     WRONG_PARALLEL_STRATEGY_DATA_ERROR = "The provided parallel strategy data is wrong. Detail: {}"
+    NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR = "Can not find any parallel strategy data."
