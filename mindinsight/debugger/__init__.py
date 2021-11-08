@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,18 @@
 # limitations under the License.
 # ============================================================================
 """
-Debugger Module Introduction.
+Debugger Introduction.
 
-This module provides Python APIs to retrieve the debugger info and control the training process.
-The APIs can help users to understand the training process and find the bugs in training script.
+This module provides Python APIs to retrieve the debugger info. The APIs can
+help users to understand the training process and find the bugs in training
+script.
 """
+
+from mindinsight.debugger.api.conditions import \
+    Watchpoint, WatchpointHit, TensorTooLargeCondition
+from mindinsight.debugger.api.debugger_tensor import DebuggerTensor
+from mindinsight.debugger.api.dump_analyzer import DumpAnalyzer
+from mindinsight.debugger.api.node import Node
+
+__all__ = ["DumpAnalyzer", "Node", "DebuggerTensor", "Watchpoint",
+           "WatchpointHit", "TensorTooLargeCondition"]
