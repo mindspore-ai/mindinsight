@@ -252,7 +252,7 @@ class TestMinddataPipelineAnalyser:
         }
         condition = {
             'filter_condition': {
-                'threshold': [0.8, 0.2],
+                'threshold': [0.8, 0.6],
                 'is_display_op_detail': True
             }
         }
@@ -280,7 +280,7 @@ class TestMinddataPipelineAnalyser:
         }
         condition = {
             'filter_condition': {
-                'threshold': [0.8, 0.2],
+                'threshold': [0.8, 0.6],
                 'is_display_op_detail': True
             }
         }

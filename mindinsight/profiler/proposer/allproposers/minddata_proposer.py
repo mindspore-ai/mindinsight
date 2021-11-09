@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """The minddata proposer."""
+import math
 import os
 
 from collections import OrderedDict
@@ -23,6 +24,10 @@ from mindinsight.profiler.proposer.allproposers.base_proposer import Proposer
 from mindinsight.profiler.common.log import logger as log
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerRawFileException, ProfilerFileNotFoundException
 
+DATA_PROCESS_WARNING = 'data_process'
+DATA_TRANSMISSION_WARNING = 'data_transmission'
+DEVICE_QUEUE_WARNING = 'device_queue_warning'
+
 
 class MinddataProposer(Proposer):
     """The Minddata proposer."""
@@ -31,6 +36,7 @@ class MinddataProposer(Proposer):
         super().__init__(profiling_dir, device_id)
         self.__proposer_type = "minddata"
         self.__proposal_dict = OrderedDict()
+        self.empty_warning_threshold = int(MinddataAnalyser.DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD * 100)
 
     def analyze(self, options=None):
         """
@@ -73,19 +79,32 @@ class MinddataProposer(Proposer):
             full_batch = get_next_queue_info_summary.get("full_batch_count", 0)
             empty_batch = get_next_queue_info_summary.get("empty_batch_count", 0)
             total_batch = get_next_queue_info_summary.get("total_batch", 0)
-
+            device_queue_empty_rate = math.ceil(empty_batch / total_batch * 100)
             minddata_dict["minddata_device_queue"] = [empty_batch, total_batch, full_batch, total_batch]
             self.__proposal_dict.update(minddata_dict)
 
-        warning_op = list()
+        minddata_device_queue_rate = dict()
         for key, value in result.items():
             if isinstance(value, dict):
                 status = value.get("status")
                 if status == "warning":
-                    warning_op.append(key)
+                    if key == DATA_PROCESS_WARNING:
+                        minddata_device_queue_rate['empty_rate'] = device_queue_empty_rate
+                        minddata_device_queue_rate['empty_warning_threshold'] = \
+                            self.empty_warning_threshold
+                        break
+                    elif key == DATA_TRANSMISSION_WARNING:
+                        minddata_device_queue_rate['empty_rate'] = device_queue_empty_rate
+                        minddata_device_queue_rate['empty_warning_threshold'] = \
+                            self.empty_warning_threshold
+                        break
+                    elif key == DEVICE_QUEUE_WARNING:
+                        minddata_dict[key] = ['warning']
+                        self.__proposal_dict.update(minddata_dict)
+                        break
 
-        if warning_op:
-            minddata_dict["minddata_warning_op"] = [",".join(warning_op)]
+        if minddata_device_queue_rate:
+            minddata_dict["minddata_device_queue_rate"] = minddata_device_queue_rate
             self.__proposal_dict.update(minddata_dict)
 
     def minddata_cpu_utilization_proposal(self):

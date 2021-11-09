@@ -50,7 +50,7 @@ class TestTrainingTraceAnalyser:
 
             "summary": {"fp_and_bp": 0.0,
                         "fp_and_bp_percent": "0%",
-                        "iteration_interval": 0.0,
+                        "iteration_interval": 12.4321,
                         "iteration_interval_percent": "0%",
                         "tail": 0.0,
                         "tail_percent": "0%",

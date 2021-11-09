@@ -83,7 +83,7 @@ class MinddataPipelineProposer(Proposer):
         if pipeline_options:
             threshold = options.get('threshold')
         if threshold is None:
-            threshold = [0.8, 0.2]
+            threshold = [0.8, 0.6]
         if not isinstance(threshold, list) or len(threshold) != 2:
             raise ProfilerParamValueErrorException('The threshold is invalid.')
         return threshold
@@ -118,19 +118,24 @@ class MinddataPipelineProposer(Proposer):
             elif op_type == 'BatchOp':
                 batch_op_names.append(op_name)
 
+        # According to the execution order of data processing operators in the script, the op_names should be reversed.
         if all_op_names:
-            self.__proposal_dict[self._general_label] = ['/'.join(all_op_names)]
+            self.__proposal_dict[self._general_label] = ['/'.join(all_op_names[::-1])]
         if dataset_op_names:
             self.__proposal_dict[self._dataset_op_label] = [
-                '/'.join(dataset_op_names)
+                '/'.join(dataset_op_names[::-1])
             ]
         if generator_op_names:
             self.__proposal_dict[self._generator_op_label] = [
-                '/'.join(generator_op_names)
+                '/'.join(generator_op_names[::-1])
             ]
         if map_op_names:
-            self.__proposal_dict[self._map_op_label] = ['/'.join(map_op_names)]
+            self.__proposal_dict[self._map_op_label] = ['/'.join(map_op_names[::-1])]
         if batch_op_names:
             self.__proposal_dict[self._batch_op_label] = [
-                '/'.join(batch_op_names)
+                '/'.join(batch_op_names[::-1])
             ]
+        if self.__proposal_dict:
+            parent_id = pipeline_op_infos[0][-2]
+            if parent_id is None:
+                self.__proposal_dict = OrderedDict()
