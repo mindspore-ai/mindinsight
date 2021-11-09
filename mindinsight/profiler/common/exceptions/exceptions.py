@@ -247,3 +247,14 @@ class WrongParallelStrategyDataException(MindInsightException):
             message=ProfilerErrorMsg.WRONG_PARALLEL_STRATEGY_DATA_ERROR.value.format(detail),
             http_code=400
         )
+
+
+class NotFoundParallelStrategyDataException(MindInsightException):
+    """Can not find any parallel strategy data."""
+
+    def __init__(self):
+        super(NotFoundParallelStrategyDataException, self).__init__(
+            error=ProfilerErrors.NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR,
+            message=ProfilerErrorMsg.NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR.value,
+            http_code=400
+        )

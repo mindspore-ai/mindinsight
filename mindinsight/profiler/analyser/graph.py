@@ -452,11 +452,19 @@ class GraphManager:
     def add_graph(self, graph_proto, rank_id: str):
         """Add an original graph proto which is parsed from pb files."""
         if rank_id in self._rank_graphs:
-            raise WrongParallelStrategyDataException(f"The file with the same rank id was found. "
-                                                     f"There should be no file names with the same rank id.")
+            msg = f"The file with the same rank id({rank_id}) was found. " \
+                  f"There should be no file names with the same rank id."
+            logger.error(msg)
+            raise WrongParallelStrategyDataException(msg)
         graph = Graph()
         graph.build_graph(graph_proto=graph_proto, rank_id=rank_id)
         self._rank_graphs[rank_id] = graph
+
+        # If parallel type is data parallel, we can not get stage_devices from proto file.
+        if self._parallel_type == SupportedParallelType.DATA_PARALLEL.value:
+            if not self._stage_devices:
+                self._stage_devices[0] = list()
+            self._stage_devices[0].append(rank_id)
 
     def merge_graph(self):
         """Merge the same stage graphs into a merged graph."""
