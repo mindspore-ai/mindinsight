@@ -22,6 +22,7 @@ _DEBUGGER_GRAPH_ERROR = 0b00010 << 7
 _DEBUGGER_RUNNING_ERROR = 0b00011 << 7
 _DEBUGGER_SERVER_ERROR = 0b00100 << 7
 _DEBUGGER_SESSION_ERROR = 0b00101 << 7
+_DEBUGGER_HISTORY_ERROR = 0b00110 << 7
 
 
 @unique
@@ -58,6 +59,9 @@ class DebuggerErrors(DebuggerErrorCodes):
     DEBUGGER_RANK_DIR_NOT_FOUND = 5 | _DEBUGGER_SESSION_ERROR
     DEBUGGER_JSON_FILE_PARSE_ERROR = 6 | _DEBUGGER_SESSION_ERROR
 
+    DEBUGGER_HISTORY_NOT_FOUND_ERROR = 0 | _DEBUGGER_HISTORY_ERROR
+    DEBUGGER_STEP_VALUE_ERROR = 1 | _DEBUGGER_HISTORY_ERROR
+
 
 @unique
 class DebuggerErrorMsg(Enum):
@@ -89,3 +93,6 @@ class DebuggerErrorMsg(Enum):
     DEBUGGER_DOWNLOAD_TENSOR_NOT_EXIST = "No such tensor to download"
     DEBUGGER_RANK_DIR_NOT_FOUND = "No rank directory found under {}."
     DEBUGGER_JSON_FILE_PARSE_ERROR = "Failed to parse the json files. {}"
+
+    DEBUGGER_HISTORY_NOT_FOUND_ERROR = "The history of graph id: {} is not found."
+    DEBUGGER_STEP_VALUE_ERROR = "The dumped step value of graph {} is not the subset of graph history."

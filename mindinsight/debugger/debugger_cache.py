@@ -20,6 +20,7 @@ from mindinsight.debugger.common.utils import Streams
 from mindinsight.debugger.stream_handler import EventHandler, MetadataHandler, MultiCardGraphHandler, \
     MultiCardTensorHandler, WatchpointHandler, MultiCardWatchpointHitHandler
 from mindinsight.debugger.stream_handler.device_handler import DeviceHandler
+from mindinsight.debugger.stream_handler.graph_history_handler import GraphHistoryHandler
 
 STREAM_HANDLER_MAP = {
     Streams.COMMAND.value: EventHandler,
@@ -29,7 +30,8 @@ STREAM_HANDLER_MAP = {
     Streams.TENSOR.value: MultiCardTensorHandler,
     Streams.WATCHPOINT.value: WatchpointHandler,
     Streams.WATCHPOINT_HIT.value: MultiCardWatchpointHitHandler,
-    Streams.DEVICE.value: DeviceHandler
+    Streams.DEVICE.value: DeviceHandler,
+    Streams.GRAPH_HISTORY.value: GraphHistoryHandler
 }
 
 

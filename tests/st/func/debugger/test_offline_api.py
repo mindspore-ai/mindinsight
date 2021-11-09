@@ -21,8 +21,18 @@ import pytest
 from mindinsight.debugger.debugger_services.debugger_offline_server import DebuggerOfflineManager
 from mindinsight.conf import settings
 from tests.st.func.debugger.utils import check_offline_dbg_server_state, get_request_result, \
-    build_dump_file_structure, send_and_compare_result, send_and_save_result
+    build_dump_file_structure, send_and_compare_result, send_and_save_result, build_multi_net_dump_structure
 from tests.st.func.debugger.debugger_services import mock_dbg_services
+
+
+OFFLINE_BASE_DIR = '/v1/mindinsight/debugger/sessions'
+
+
+def stop_session(app_client, session_id):
+    """Stop session."""
+    url = os.path.join(OFFLINE_BASE_DIR, session_id, 'delete')
+    session_id = get_request_result(app_client=app_client, url=url, body_data={}, method='post', full_url=True)
+    return session_id
 
 
 class TestAscendDebugger:
@@ -32,8 +42,8 @@ class TestAscendDebugger:
     def setup_class(cls):
         """Setup class."""
         cls.save_results = False
-        cls.debugger_tmp_dir, cls.dump_files_dir = build_dump_file_structure()
-        settings.SUMMARY_BASE_DIR = cls.dump_files_dir
+        cls.debugger_tmp_dir = build_dump_file_structure()
+        settings.SUMMARY_BASE_DIR = cls.debugger_tmp_dir
         cls.dump_dir = "./GPU/sync"
         cls.base_url = '/v1/mindinsight/debugger/sessions/'
         cls.expect_file_dir = 'offline_debugger'
@@ -61,7 +71,7 @@ class TestAscendDebugger:
         check_offline_dbg_server_state(app_client, session_id)
         send_and_compare_result(app_client, url, body_data, expect_file, full_url=True,
                                 expect_file_dir=self.expect_file_dir)
-        self.stop_session(mock_method, app_client, session_id)
+        stop_session(app_client, session_id)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -93,7 +103,7 @@ class TestAscendDebugger:
         body_data = {'mode': 'watchpoint'}
         expect_file = 'create_and_delete_watchpoint.json'
         send_and_compare_result(app_client, url, body_data, expect_file, full_url=True)
-        self.stop_session(mock_method, app_client, session_id)
+        stop_session(app_client, session_id)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -122,7 +132,7 @@ class TestAscendDebugger:
         expect_file = 'search_unwatched_leaf_node.json'
         send_and_compare_result(app_client, url, body_data, expect_file, method='get', full_url=True,
                                 expect_file_dir=self.expect_file_dir)
-        self.stop_session(mock_method, app_client, session_id)
+        stop_session(app_client, session_id)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -148,7 +158,7 @@ class TestAscendDebugger:
         expect_file = 'retrieve_full_tensor_history.json'
         send_and_compare_result(app_client, tensor_history_url, body_data, expect_file, full_url=True,
                                 expect_file_dir=self.expect_file_dir)
-        self.stop_session(mock_method, app_client, session_id)
+        stop_session(app_client, session_id)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -176,7 +186,7 @@ class TestAscendDebugger:
         expect_file = 'retrieve_tensor_value.json'
         send_and_compare_result(app_client, url, body_data, expect_file, method='get', full_url=True,
                                 expect_file_dir=self.expect_file_dir)
-        self.stop_session(mock_method, app_client, session_id)
+        stop_session(app_client, session_id)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -206,9 +216,10 @@ class TestAscendDebugger:
                                  expect_file_dir=self.expect_file_dir)
         send_and_compare_result(app_client, url, body_data, expect_file, method='GET', full_url=True,
                                 expect_file_dir=self.expect_file_dir)
-        self.stop_session(mock_method, app_client, session_id)
+        stop_session(app_client, session_id)
 
     def create_session(self, mock_method, app_client):
+        """Create session."""
         mock_method.return_value = mock_dbg_services
         session_id = get_request_result(app_client=app_client, url='/v1/mindinsight/debugger/sessions',
                                         body_data={
@@ -216,12 +227,6 @@ class TestAscendDebugger:
                                             "dump_dir": self.dump_dir,
                                         },
                                         method='post', full_url=True)
-        return session_id
-
-    def stop_session(self, mock_method, app_client, session_id):
-        mock_method.return_value = mock_dbg_services
-        url = os.path.join(os.path.join(self.base_url, session_id), 'delete')
-        session_id = get_request_result(app_client=app_client, url=url, body_data={}, method='post', full_url=True)
         return session_id
 
     def create_watchpoint(self, app_client, session_id, condition, expect_id):
@@ -261,3 +266,43 @@ class TestAscendDebugger:
                 break
             i += 1
         return pos
+
+
+class TestMultiNetDebugger:
+    """Test debugger with multiple network."""
+
+    @classmethod
+    def setup_class(cls):
+        """Setup class."""
+        cls.save_results = False
+        cls.dump_dir = 'multi/dump'
+        cls.debugger_tmp_dir = build_multi_net_dump_structure(cls.dump_dir)
+        settings.SUMMARY_BASE_DIR = cls.debugger_tmp_dir
+        cls.base_url = '/v1/mindinsight/debugger/sessions/'
+        cls.expect_file_dir = 'offline_debugger'
+
+    def create_session(self, app_client):
+        """Create offline session."""
+        with mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module', return_value=mock_dbg_services):
+            session_id = get_request_result(app_client=app_client, url=OFFLINE_BASE_DIR,
+                                            body_data={
+                                                "session_type": "OFFLINE",
+                                                "dump_dir": self.dump_dir,
+                                            },
+                                            method='post', full_url=True)
+        return session_id
+
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    def test_get_run_graphs(self, app_client):
+        """Test retrieve when train_begin."""
+        session_id = self.create_session(app_client)
+        check_offline_dbg_server_state(app_client, session_id)
+        url = os.path.join(OFFLINE_BASE_DIR, session_id, 'ranks', '0', 'graph-runs')
+        expect_file = 'get_graph_runs.json'
+        send_and_compare_result(app_client, url, {}, expect_file, method='get', expect_file_dir='offline_debugger')
+        stop_session(app_client, session_id)

@@ -18,6 +18,7 @@ import os
 import shutil
 import tempfile
 import time
+from pathlib import Path
 
 from mindinsight.domain.graph.proto import ms_graph_pb2
 from tests.st.func.debugger.conftest import DEBUGGER_EXPECTED_RESULTS, DEBUGGER_BASE_URL, GRAPH_PROTO_FILE
@@ -114,40 +115,122 @@ def delete_random_items(res):
 
 def build_dump_file_structure():
     """Build the dump file structure."""
-    async_file_structure = {
-        "Ascend/async/rank_0": 3,
-        "Ascend/async/rank_1": 3
-    }
-
-    sync_file_structure = {
-        "Ascend/sync/rank_0": 4,
-        "Ascend/sync/rank_1": 4,
-        "GPU/sync/rank_0": 3,
-        "GPU/sync/rank_1": 3
-    }
-
     debugger_tmp_dir = tempfile.mkdtemp(suffix='debugger_tmp')
-    dump_files_dir = os.path.join(debugger_tmp_dir, 'dump_files')
-    shutil.copytree(os.path.join(os.path.dirname(__file__), 'dump_files'), dump_files_dir)
+    build_dump_structue(debugger_tmp_dir, 'Ascend/async', step_num=3, graph_id=1)
+    build_dump_structue(debugger_tmp_dir, 'Ascend/sync', step_num=4, graph_id=0)
+    build_dump_structue(debugger_tmp_dir, 'GPU/sync', step_num=3, graph_id=0)
+    return debugger_tmp_dir
 
-    for sub_dir, steps in async_file_structure.items():
-        for step in range(0, steps):
-            os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir, 'Lenet/1'), str(step)), exist_ok=True)
 
-    for sub_dir, steps in sync_file_structure.items():
-        for step in range(0, steps):
-            os.makedirs(os.path.join(os.path.join(dump_files_dir, sub_dir, 'Lenet/0'), str(step)),
-                        exist_ok=True)
-        graph_dir_path = os.path.join(os.path.join(dump_files_dir, sub_dir), 'graphs')
-        os.makedirs(graph_dir_path, exist_ok=True)
-        graph_path = os.path.join(graph_dir_path, 'ms_output_trace_code_graph_0.pb')
+def build_dump_structue(base_dir, dump_name, step_num, graph_id):
+    """Build the dump file structure."""
+    dump_dir = os.path.join(base_dir, dump_name)
+    gen = DumpStructureGenerator(dump_dir)
+    gen.generate(rank_num=2,
+                 root_graphs={graph_id: {}},
+                 history={},
+                 dump_steps={graph_id: list(range(step_num))})
+
+
+def build_multi_net_dump_structure(dump_name=None):
+    """Build the multi-net dump file structure."""
+    debugger_tmp_dir = tempfile.mkdtemp(suffix='debugger_tmp')
+    dump_dir = os.path.join(debugger_tmp_dir, dump_name) if dump_name else debugger_tmp_dir
+    gen = DumpStructureGenerator(dump_dir)
+    gen.generate(rank_num=2)
+    return debugger_tmp_dir
+
+
+def write_graph(model, dst_graph_file, graph_name=None, root_name=None):
+    """Write graph file."""
+    src_graph_proto = model.graph
+    if graph_name:
+        src_graph_proto.name = graph_name
+    if root_name:
+        src_graph_proto.root_name = root_name
+    dst_graph_str = model.SerializeToString()
+    with open(dst_graph_file, 'wb') as file_handler:
+        file_handler.write(dst_graph_str)
+
+
+class DumpStructureGenerator:
+    """Generate Dump structure."""
+
+    def __init__(self, dump_dir, sync=True):
+        self._dump_dir = Path(dump_dir)
+        self._dump_mode = 'sync' if sync else 'async'
+
+    def clean(self):
+        """Clean cache."""
+        if self._dump_dir.is_dir():
+            shutil.rmtree(self._dump_dir)
+
+    def generate(self, root_graphs=None, rank_num=1, history=None, dump_steps=None):
+        """Generate dump structure."""
+        for rank_id in range(rank_num):
+            rank_dir = self._dump_dir / f'rank_{rank_id}'
+            rank_dir.mkdir(parents=True)
+            self.generate_dump_metadata(rank_dir, self._dump_mode)
+            self.generate_graphs(rank_dir, root_graphs)
+            self.generate_execution(rank_dir, history)
+            self.generate_dump_steps(rank_dir, dump_steps)
+
+    @staticmethod
+    def generate_dump_metadata(rank_dir, dump_mode):
+        """Generate .dump_metadata dir."""
+        temp_metadata_dir = os.path.join(os.path.dirname(__file__), 'dump_files',
+                                         'Ascend', dump_mode, 'rank_0', '.dump_metadata')
+        shutil.copytree(temp_metadata_dir, rank_dir / '.dump_metadata')
+
+    @staticmethod
+    def generate_graphs(rank_dir, root_graphs):
+        """Generate graph dir."""
+        if root_graphs is None:
+            root_graphs = {0: {'graph_name': 'kernel_graph_0',
+                               'sub_graph_names': ['kernel_graph_1', 'kernel_graph_2']},
+                           3: {'graph_name': 'kernel_graph_3'}}
+        graph_dir = rank_dir / 'graphs'
+        graph_dir.mkdir()
         with open(GRAPH_PROTO_FILE, 'rb') as file_handler:
             content = file_handler.read()
-
         model = ms_graph_pb2.ModelProto()
         model.graph.ParseFromString(content)
-        model_str = model.SerializeToString()
-        with open(graph_path, 'wb') as file_handler:
-            file_handler.write(model_str)
+        # if graph_num is greater than 1, all graphs except last one are belong to root graph 0.
+        for graph_id, root_graph in root_graphs.items():
+            graph_file = graph_dir / f'ms_output_trace_code_graph_{graph_id}.pb'
+            if root_graph:
+                write_graph(model, graph_file, root_graph.get('graph_name'), str(graph_id))
+                for sub_graph_name in root_graph.get('sub_graph_names', []):
+                    sub_graph_id = sub_graph_name.split('_')[-1]
+                    graph_file = graph_dir / f'ms_output_trace_code_graph_{sub_graph_id}.pb'
+                    write_graph(model, graph_file, sub_graph_name, str(graph_id))
+            else:
+                write_graph(model, graph_file)
 
-    return debugger_tmp_dir, dump_files_dir
+    @staticmethod
+    def generate_execution(rank_dir, history):
+        """Generate execution directory."""
+        if history is None:
+            history = {0: [0, 2, 4],
+                       3: [1, 3, 5, 6]}
+        exec_dir = rank_dir / 'execution_order'
+        exec_dir.mkdir()
+        for graph_id, exec_counts in history.items():
+            file = exec_dir / f'ms_global_execution_order_graph_{graph_id}.csv'
+            with open(file, 'w') as handle:
+                for count in exec_counts:
+                    handle.write(str(count) + '\n')
+
+    @staticmethod
+    def generate_dump_steps(rank_dir, dump_steps=None):
+        """Generate dump steps."""
+        if dump_steps is None:
+            dump_steps = {0: [0, 4], 3: [1, 6]}
+        net_dir = rank_dir / 'Lenet'
+        net_dir.mkdir()
+        for graph_id, steps in dump_steps.items():
+            graph_dir = net_dir / str(graph_id)
+            graph_dir.mkdir()
+            for step in steps:
+                step_dir = graph_dir / str(step)
+                step_dir.mkdir()

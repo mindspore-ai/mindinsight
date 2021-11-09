@@ -78,7 +78,7 @@ def recommend_watchpoints(condition_mgr: ConditionMgr, multi_card_graph_stream, 
     """
     watch_points = []
 
-    if not multi_card_graph_stream.has_graph:
+    if not multi_card_graph_stream.has_graph():
         logger.warning("Given graph is None.")
         return watch_points
 
@@ -414,7 +414,7 @@ def _merge_nodes(leaf_nodes, graph):
 
 def _add_graph_name(nodes, graph_stream):
     """Add graph_name in node.name."""
-    if len(graph_stream.graph) > 1:
+    if len(graph_stream.graph_names) > 1:
         return nodes
     graph_name = graph_stream.graph_names[0]
     output_nodes = []

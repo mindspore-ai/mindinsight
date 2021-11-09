@@ -47,16 +47,25 @@ class DebuggerGraph(MSGraph):
     def __init__(self):
         super(DebuggerGraph, self).__init__()
         self._root_graph_id = None
+        self._is_root_graph = True
+        self._graph_id = None
 
     def _parse_data(self, proto_data):
         super(DebuggerGraph, self)._parse_data(proto_data)
         root_name = proto_data.root_name
+        graph_id_str = proto_data.name.split('_')[-1]
+        self._is_root_graph = graph_id_str == root_name
         self._root_graph_id = int(root_name) if root_name.isdigit() else 0
 
     @property
     def root_graph_id(self):
         """Get the root graph id of current graph."""
         return self._root_graph_id
+
+    @property
+    def is_root_graph(self):
+        """Return whether the graph is root graph."""
+        return self._is_root_graph
 
     @property
     def leaf_nodes(self):
