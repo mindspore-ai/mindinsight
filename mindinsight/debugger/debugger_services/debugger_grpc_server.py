@@ -408,6 +408,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def SendGraph(self, request_iterator, context):
         """Send graph into DebuggerCache."""
         log.info("Received graph.")
+        if self._old_run_cmd:
+            log.info("Clear old run command. %s", self._old_run_cmd)
+            self._old_run_cmd.clear()
         reply = get_ack_reply()
         if self._status == ServerStatus.MISMATCH:
             log.info("Mindspore and Mindinsight is unmatched, waiting for user to terminate the service.")
@@ -432,6 +435,9 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     def SendMultiGraphs(self, request_iterator, context):
         """Send graph into DebuggerCache."""
         log.info("Received multi_graphs.")
+        if self._old_run_cmd:
+            log.info("Clear old run command. %s", self._old_run_cmd)
+            self._old_run_cmd.clear()
         reply = get_ack_reply()
         if self._status == ServerStatus.MISMATCH:
             log.info("Mindspore and Mindinsight is unmatched, waiting for user to terminate the service.")
