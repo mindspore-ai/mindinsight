@@ -67,6 +67,10 @@ export default new Router({
       component: () => import('./views/train-manage/data-map.vue'),
     },
     {
+      path: '/train-manage/loss-analysis',
+      component: () => import('./views/train-manage/loss-analysis.vue'),
+    },
+    {
       path: '/model-traceback',
       component: () => import('./views/train-manage/model-traceback.vue'),
     },
@@ -75,8 +79,19 @@ export default new Router({
       component: () => import('./views/train-manage/data-traceback.vue'),
     },
     {
-      path: '/compare-plate',
-      component: () => import('./views/train-manage/compare-plate.vue'),
+      path: '/compare-analysis',
+      component: () => import('./views/train-manage/compare-analysis/compare-dashboard.vue'),
+      redirect: '/compare-analysis/scalar',
+      children: [
+        {
+          path: 'scalar',
+          component: () => import('./views/train-manage/compare-analysis/scalar-compare.vue'),
+        },
+        {
+          path: 'loss',
+          component: () => import('./views/train-manage/compare-analysis/loss-compare.vue'),
+        },
+      ],
     },
     {
       path: '/profiling-cpu',

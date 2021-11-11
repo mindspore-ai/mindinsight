@@ -392,6 +392,8 @@ export default {
 .cl-checklist-container .select-content .select-all {
   cursor: pointer;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 .cl-checklist-container .select-content .select-item-content {
   display: flex;

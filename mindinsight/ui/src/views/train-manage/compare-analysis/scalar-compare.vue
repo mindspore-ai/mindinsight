@@ -16,19 +16,16 @@ limitations under the License.
 <template>
   <div class="cl-compare-manage">
 
-    <div class="compare-bk">
-      <div class="cl-title cl-compare-title"
-           v-show="originDataArr.length>0">
-        <div class="cl-title-left">
-          {{$t("summaryManage.comparePlate")}}</div>
-      </div>
+    <empty v-if="!originDataArr.length"
+           :state="initOver ? 'noData' : 'dataLoading'"
+           :fontSize="16">
+    </empty>
 
+    <div v-else
+         class="compare-bk">
       <!--Operation area -->
-      <div class="cl-eval-operate-content"
-           v-show="originDataArr.length>0">
-
-        <!--Summary select-->
-        <div class="cl-eval-operate-component">
+      <div class="mi-border-header">
+        <div class="select-group-container">
           <multiSelectGroupComponents ref="summaryGroup"
                                       :checkListArr="summaryOperateList"
                                       :isLimit="true"
@@ -36,64 +33,46 @@ limitations under the License.
                                       @selectedChange="summarySelectedChanged"
                                       :componentsLabel="componentsLabel.summary"></multiSelectGroupComponents>
         </div>
-
-        <!--Tag select-->
-        <div class="cl-eval-operate-component">
+        <div class="select-group-container">
           <multiSelectGroupComponents ref="tagsGroup"
-                                      :checkListArr="tagOperateList"
-                                      @selectedChange="tagSelectedChanged"
-                                      :componentsLabel="componentsLabel.tag"></multiSelectGroupComponents>
+                                    :checkListArr="tagOperateList"
+                                    @selectedChange="tagSelectedChanged"
+                                    :componentsLabel="componentsLabel.tag"></multiSelectGroupComponents>
         </div>
-
-      </div>
-      <!-- Slider -->
-      <div class="cl-eval-slider-operate-content"
-           v-show="originDataArr.length>0">
-        <div class="xaxis-title">{{$t('scalar.xAxisTitle')}}</div>
-        <el-radio-group v-model="curAxisName"
-                        fill="#00A5A7"
-                        text-color="#FFFFFF"
-                        size="small "
-                        @change="timeTypeChange">
-          <el-radio-button :label="$t('scalar.step')">
-            {{$t('scalar.step')}}
-          </el-radio-button>
-          <el-radio-button :label="$t('scalar.relativeTime')">
-            {{$t('scalar.relativeTime') + $t('symbols.leftbracket') + 's' + $t('symbols.rightbracket')}}
-          </el-radio-button>
-          <el-radio-button :label="$t('scalar.absoluteTime')">
-            {{$t('scalar.absoluteTime')}}
-          </el-radio-button>
-        </el-radio-group>
-        <div class="xaxis-title">{{$t('scalar.smoothness')}}</div>
-        <el-slider v-model="smoothValue"
-                   :step="0.01"
-                   :max="0.99"
-                   @input="updataInputValue"></el-slider>
-
-        <el-input v-model="smoothValueNumber"
-                  class="w60"
-                  @input="smoothValueChange"
-                  @blur="smoothValueBlur"></el-input>
+        <!-- Slider -->
+        <div class="cl-eval-slider-operate-content">
+          <div class="xaxis-title">{{$t('scalar.xAxisTitle')}}</div>
+          <el-radio-group v-model="curAxisName"
+                          fill="#00A5A7"
+                          text-color="#FFFFFF"
+                          size="small "
+                          @change="timeTypeChange">
+            <el-radio-button :label="$t('scalar.step')">
+              {{$t('scalar.step')}}
+            </el-radio-button>
+            <el-radio-button :label="$t('scalar.relativeTime')">
+              {{$t('scalar.relativeTime') + $t('symbols.leftbracket') + 's' + $t('symbols.rightbracket')}}
+            </el-radio-button>
+            <el-radio-button :label="$t('scalar.absoluteTime')">
+              {{$t('scalar.absoluteTime')}}
+            </el-radio-button>
+          </el-radio-group>
+          <div class="xaxis-title">{{$t('scalar.smoothness')}}</div>
+          <el-slider v-model="smoothValue"
+                     :step="0.01"
+                     :max="0.99"
+                     @input="updateInputValue"></el-slider>
+          <el-input v-model="smoothValueNumber"
+                    class="w60"
+                    @input="smoothValueChange"
+                    @blur="smoothValueBlur"></el-input>
+        </div>
       </div>
       <!-- Content display -->
       <div class="cl-eval-show-data-content"
            ref="miDataShoeContent">
-        <!-- No data -->
-        <div class="image-noData"
-             v-if="!originDataArr.length">
-          <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
-          </div>
-          <div v-if="initOver"
-               class="noData-text">{{$t('public.noData')}}</div>
-          <div v-else
-               class="noData-text">{{$t("public.dataLoading")}}</div>
-        </div>
         <!-- Data -->
-        <div class="data-content"
-             v-if="originDataArr.length">
+        <div class="data-content">
           <div class="sample-content"
                v-for="sampleItem in originDataArr"
                :key="sampleItem.domId"
@@ -121,15 +100,13 @@ limitations under the License.
         <!-- page -->
 
       </div>
-      <div class="pagination-content"
-           v-if="originDataArr.length">
+      <div class="pagination-content">
         <el-pagination @current-change="currentPageChange"
                        :current-page="pageIndex + 1"
                        :page-size="pageNum"
                        layout="total, prev, pager, next, jumper"
                        :total="curFilterSamples.length">
         </el-pagination>
-
       </div>
 
     </div>
@@ -137,11 +114,12 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
-import RequestService from '../../services/request-service';
-import CommonProperty from '../../common/common-property';
-import multiSelectGroupComponents from '../../components/multiselect-group.vue';
-import autoUpdate from '../../mixins/auto-update.vue';
+import echarts, {echartsThemeName} from '@/js/echarts';
+import RequestService from '@/services/request-service';
+import CommonProperty from '@/common/common-property';
+import multiSelectGroupComponents from '@/components/multiselect-group.vue';
+import autoUpdate from '@/mixins/auto-update.vue';
+import empty from '@/components/empty.vue';
 
 export default {
   mixins: [autoUpdate],
@@ -218,7 +196,7 @@ export default {
     });
   },
   mounted() {
-    document.title = `${this.$t('summaryManage.comparePlate')}-MindInsight`;
+    document.title = `${this.$t('summaryManage.scalarComparison')}-MindInsight`;
     this.$nextTick(() => {
       // Adding a listener
       window.addEventListener('resize', this.resizeCallback, false);
@@ -869,7 +847,6 @@ export default {
         sampleObject.charObj.setOption(sampleObject.charData.charOption, true);
       }
     },
-
     /**
      * The logic of keep showSymbol right
      * @param {Object} sampleObject Chart object
@@ -918,7 +895,6 @@ export default {
         });
       }
     },
-
     /**
      * The logic of cal if point in zoom area
      * @param {Number} xStart
@@ -936,7 +912,6 @@ export default {
       const yEyist = newYStart <= yValue && yValue <= newYEnd;
       return xExist && yEyist;
     },
-
     /**
      * The logic of lose precision
      * @param {Number} number
@@ -962,7 +937,6 @@ export default {
         return number;
       }
     },
-
     /**
      * Enabling/Disabling full screen
      * @param {Number} sampleIndex Chart subscript
@@ -973,7 +947,6 @@ export default {
       if (!sampleObject) {
         return;
       }
-
       // Background color of the refresh button
       sampleObject.fullScreen = !sampleObject.fullScreen;
       if (sampleObject.fullScreen) {
@@ -984,7 +957,6 @@ export default {
         sampleObject.charData.charOption.grid.right = 10;
       }
       sampleObject.updateFlag = true;
-
       // Refresh icon display
       this.updateOrCreateChar(sampleIndex);
       setTimeout(() => {
@@ -993,12 +965,10 @@ export default {
         document.getElementById('view' + sampleObject.domId).scrollIntoView();
       }, 0);
     },
-
     /**
      * Update chart by tag
      * @param {Boolean} noPageDataNumChange No new data is added or deleted
      */
-
     updateTagInPage(noPageDataNumChange) {
       const curFilterSamples = [];
       this.originDataArr.forEach((sampleItem) => {
@@ -1009,12 +979,10 @@ export default {
       this.curFilterSamples = curFilterSamples;
       this.getCurPageDataArr(noPageDataNumChange);
     },
-
     /**
-     *
      * The time display type is changed
+     * @param {string} val
      */
-
     timeTypeChange(val) {
       if (this.axisBenchChangeTimer) {
         clearTimeout(this.axisBenchChangeTimer);
@@ -1060,7 +1028,6 @@ export default {
                 series[index * 2 + 1].data = sampleObject.charData.oriData[index].valueData[this.curBenchX];
               }
             });
-
             sampleObject.charData.charOption.xAxis.minInterval = this.isActive === 0 ? 1 : 0;
             sampleObject.updateFlag = true;
             sampleObject.charObj.clear();
@@ -1069,24 +1036,19 @@ export default {
         });
       }, 500);
     },
-
     /**
      * Page number change event
      * @param {Number} pageIndex (1~n)
      */
-
     currentPageChange(pageIndex) {
       this.pageIndex = pageIndex - 1;
-
       // Load the data on the current page
       this.getCurPageDataArr();
     },
-
     /**
      * The selected label is changed
-     * @param {Object} selectItemDict Dictionary containing the selected tags
+     * @param {Object} selectedItemDict Dictionary containing the selected tags
      */
-
     tagSelectedChanged(selectedItemDict) {
       if (!selectedItemDict) {
         return;
@@ -1096,12 +1058,10 @@ export default {
       this.pageIndex = 0;
       this.updateTagInPage();
     },
-
     /**
      * The selected label is changed
      * @param {Object} selectedItemDict Dictionary containing the selected summary
      */
-
     summarySelectedChanged(selectedItemDict) {
       if (!selectedItemDict) {
         return;
@@ -1115,7 +1075,6 @@ export default {
       }
       this.updateSummary();
     },
-
     /**
      * Update chart by summary
      */
@@ -1139,7 +1098,6 @@ export default {
           });
         }
       });
-
       setTimeout(() => {
         // Refresh the current page chart
         this.curPageArr.forEach((sampleObject) => {
@@ -1147,11 +1105,9 @@ export default {
         });
       }, 0);
     },
-
     /**
      *Window resize
      */
-
     resizeCallback() {
       if (this.isTimeReload) {
         this.autoUpdateSamples();
@@ -1160,7 +1116,6 @@ export default {
         clearTimeout(this.charResizeTimer);
         this.charResizeTimer = null;
       }
-
       this.charResizeTimer = setTimeout(() => {
         this.curPageArr.forEach((sampleItem) => {
           if (sampleItem.charObj) {
@@ -1169,22 +1124,18 @@ export default {
         });
       }, 500);
     },
-
     /**
      * Initialize the color array
      */
-
     initAvlColorArr() {
       const length = this.defColorCount;
       for (let i = 0; i < length; i++) {
         this.curAvlColorIndexArr.push(i);
       }
     },
-
     /**
      * Clear data
      */
-
     clearAllData() {
       this.summaryOperateList.forEach((summaryItem) => {
         this.curAvlColorIndexArr.unshift(summaryItem.colorIndex);
@@ -1198,12 +1149,10 @@ export default {
       this.oriDataDictionaries = {};
       this.curPageArr = [];
     },
-
     /**
      * Error
      * @param {Object} error Error object
      */
-
     requestErrorCallback(error) {
       if (!this.initOver) {
         this.initOver = true;
@@ -1214,12 +1163,11 @@ export default {
       }
       this.clearAllData();
     },
-
     /**
      * Delete the data that does not exist
-     * @param {Object} oriData Original summary and tag data
+     * @param {Object} oriData Original summary and tag data\
+     * @return {boolean}
      */
-
     removeNonexistentData(oriData) {
       if (!oriData) {
         return false;
@@ -1242,7 +1190,6 @@ export default {
           }
         });
       });
-
       // Delete the summary that does not exist
       const oldSummaryListLength = this.summaryOperateList.length;
       for (let i = oldSummaryListLength - 1; i >= 0; i--) {
@@ -1251,7 +1198,6 @@ export default {
           this.curAvlColorIndexArr.unshift(removeSummaryObj[0].colorIndex);
         }
       }
-
       // Delete the tag that does not exist
       const oldTagListLength = this.tagOperateList.length;
       for (let i = oldTagListLength - 1; i >= 0; i--) {
@@ -1260,13 +1206,10 @@ export default {
           this.tagOperateList.splice(i, 1);
         }
       }
-
       // Except the old data in the chart
       const oldSampleLength = this.originDataArr.length;
-
       for (let i = oldSampleLength - 1; i >= 0; i--) {
         const oldSample = this.originDataArr[i];
-
         const sameTagIndex = tagList.indexOf(oldSample.tagName);
         if (sameTagIndex === -1) {
           this.originDataArr.splice(i, 1);
@@ -1291,7 +1234,6 @@ export default {
           }
         }
       }
-
       return dataRemoveFlag;
     },
 
@@ -1313,9 +1255,7 @@ export default {
             return true;
           }
         });
-
         let summaryColor;
-
         if (sameSummaryIndex === -1) {
           const colorIndex = this.curAvlColorIndexArr.length
             ? this.curAvlColorIndexArr.shift()
@@ -1331,13 +1271,11 @@ export default {
         } else {
           summaryColor = this.summaryOperateList[sameSummaryIndex].color;
         }
-
         this.summaryOperateList.forEach((item) => {
           if (item.label === summaryObj.train_id) {
             item.loading = summaryObj.cache_status;
           }
         });
-
         summaryObj.plugins.scalar.forEach((tagObj) => {
           let sameTagIndex = -1;
           this.tagOperateList.some((tagItem, tagIndex) => {
@@ -1384,15 +1322,12 @@ export default {
           }
         });
       });
-
       return dataAddFlag;
     },
-
     /**
      * Updating all data
      * @param {Boolean} ignoreError Whether ignore error tip
      */
-
     updateAllData(ignoreError) {
       const params = {};
       params.offset = 0;
@@ -1403,13 +1338,11 @@ export default {
               this.$store.commit('setIsReload', false);
               this.isReloading = false;
             }
-
             // Fault tolerance processing
             if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
               if (res.toString() === 'false') {
                 return;
               }
-
               this.clearAllData();
               return;
             }
@@ -1420,19 +1353,15 @@ export default {
               this.clearAllData();
               return;
             }
-
             // Delete the data that does not exist
             const tagRemoveFlag = this.removeNonexistentData(data);
-
             // Check whether new data exists and add it to the page
             const tagAddFlag = this.checkNewDataAndComplete(data);
-
             this.$nextTick(() => {
               this.multiSelectedTagNames = this.$refs.tagsGroup.updateSelectedDic();
               this.multiSelectedSummaryNames = this.$refs.summaryGroup.updateSelectedDic();
               this.$refs.summaryGroup.$forceUpdate();
               this.$refs.tagsGroup.$forceUpdate();
-
               this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
               this.resizeCallback();
               if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
@@ -1444,11 +1373,9 @@ export default {
             this.$message.error(this.$t('public.dataError'));
           });
     },
-
     /**
      * Enable automatic refresh
      */
-
     autoUpdateSamples() {
       if (this.autoUpdateTimer) {
         clearInterval(this.autoUpdateTimer);
@@ -1459,24 +1386,20 @@ export default {
         this.updateAllData(true);
       }, this.timeReloadValue * 1000);
     },
-
     /**
      * Disable automatic refresh
      */
-
     stopUpdateSamples() {
       if (this.autoUpdateTimer) {
         clearInterval(this.autoUpdateTimer);
         this.autoUpdateTimer = null;
       }
     },
-
     /**
-     * Updata smoothness
-     * @param {String} value Slide value
+     * Update smoothness
+     * @param {string} val Slide value
      */
-
-    updataInputValue(val) {
+    updateInputValue(val) {
       if (this.firstNum === 0) {
         return;
       }
@@ -1490,7 +1413,6 @@ export default {
         this.setCharLineSmooth();
       }, 500);
     },
-
     smoothValueChange(val) {
       if (!isNaN(val)) {
         if (Number(val) === 0) {
@@ -1510,32 +1432,26 @@ export default {
         }
       }
     },
-
     smoothValueBlur() {
       this.smoothValueNumber = this.smoothValue;
     },
-
     /**
      * Format absolute time
      * @param {String} time String
      * @return {string} Str
      */
-
     dealrelativeTime(time) {
       const arr = time.split(' ');
       const str = arr[0] + ' ' + arr[1] + ' ' + arr[2] + ',' + ' ' + arr[4];
       return str;
     },
-
     /**
      * Setting the smoothness
      */
-
     setCharLineSmooth() {
       if (this.curPageArr.length < 1) {
         return;
       }
-
       // Update the smoothness of initialized data
       this.curPageArr.forEach((sampleObject) => {
         if (sampleObject.charObj) {
@@ -1558,13 +1474,11 @@ export default {
         }
       });
     },
-
     /**
      * Format smooth data
      * @param {Object} oriData
      * @return {Object} Data
      */
-
     formateSmoothData(oriData) {
       if (!oriData || oriData.length < 2) {
         return oriData;
@@ -1592,13 +1506,11 @@ export default {
       }
       return data;
     },
-
     /**
      * Format the value of the Y axis
      * @param {String} value Number y
      * @return {Number}
      */
-
     formateYaxisValue(value) {
       if (!value) {
         return value;
@@ -1612,12 +1524,10 @@ export default {
         return parseFloat(value.toFixed(3));
       }
     },
-
     /**
      * YAxis scale
      * @param {Number} sampleIndex Number
      */
-
     yAxisScale(sampleIndex) {
       const sampleObject = this.originDataArr[sampleIndex];
       if (!sampleObject) {
@@ -1648,14 +1558,11 @@ export default {
       sampleObject.log = log;
       sampleObject.updateFlag = true;
       sampleObject.charObj.clear();
-
       this.updateOrCreateChar(sampleIndex);
     },
-
     /**
      * Jump back to train dashboard
      */
-
     jumpToSummary() {
       this.$router.push({
         path: '/summary-manage',
@@ -1664,6 +1571,7 @@ export default {
   },
   components: {
     multiSelectGroupComponents,
+    empty,
   },
 };
 </script>
@@ -1684,6 +1592,13 @@ export default {
   display: flex;
   flex-direction: column;
 }
+.cl-compare-manage .select-group-container {
+  line-height: 32px;
+}
+.select-group-container .select-all {
+  display: flex;
+  align-items: center;
+}
 .cl-compare-manage .compare-bk .cl-compare-title {
   height: 56px;
   line-height: 56px;
@@ -1692,18 +1607,10 @@ export default {
   flex-shrink: 0;
   cursor: pointer;
 }
-.cl-compare-manage .cl-eval-operate-content {
-  width: 100%;
-  padding: 0px 32px 22px 32px;
-}
-.cl-compare-manage .cl-eval-operate-content .cl-eval-operate-component {
-  margin-top: 8px;
-}
 .cl-compare-manage .cl-eval-slider-operate-content {
-  padding: 0 32px 21px 32px;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid var(--item-split-line-color);
+  padding-bottom: 12px;
 }
 .cl-compare-manage .cl-eval-slider-operate-content .xaxis-title {
   font-size: 14px;
@@ -1765,7 +1672,7 @@ export default {
 }
 .cl-compare-manage .cl-eval-show-data-content .chars-container {
   flex: 1;
-  padding: 0 15px 0 15px;
+  padding-right: 15px;
   position: relative;
   background-color: var(--bg-color);
   border: 1px solid var(--echarts-border-color);
@@ -1832,13 +1739,5 @@ export default {
   display: inline-block;
   line-height: 20px;
   margin-left: 32px;
-}
-
-.tooltip-show-content {
-  max-width: 50%;
-}
-
-.cl-title-right {
-  padding-right: 20px;
 }
 </style>

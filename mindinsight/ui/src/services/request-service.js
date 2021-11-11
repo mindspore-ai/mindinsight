@@ -584,4 +584,33 @@ export default {
       url: 'v1/mindinsight/profile/flops-scope',
     });
   },
+  queryLossGraph(params) {
+    const trainIdsStr = params.train_id;
+    const trainIdsArr = trainIdsStr.split('&');
+    let requestStr = '';
+    trainIdsArr.forEach((item) => {
+      if (item) {
+        requestStr += `train_id=${(item)}&`;
+      }
+    });
+    requestStr += `type=${params.type}`;
+    if (params.metadata || params.metadata === false) {
+      requestStr += `&metadata=${params.metadata}`;
+    }
+    if (params.interval_id || params.interval_id === 0) {
+      requestStr += `&interval_id=${params.interval_id}`;
+    }
+    return axios({
+      method: 'get',
+      url: `v1/mindinsight/datavisual/landscape/landscapes?${requestStr}`,
+    });
+  },
+  queryEpochIntervals(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/datavisual/landscape/intervals',
+      params: params,
+    });
+  },
+
 };

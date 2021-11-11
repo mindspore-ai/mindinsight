@@ -22,6 +22,7 @@ import ElementUI from 'element-ui';
 import './assets/css/element.css';
 import './assets/css/reset.css';
 import './assets/css/theme-config.css';
+import './assets/css/public.css';
 import i18n from './i18n';
 import $ from 'jquery';
 import locale from 'element-ui/lib/locale/lang/en';
