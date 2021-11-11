@@ -254,6 +254,7 @@ class WatchpointHandler(StreamHandlerBase):
                         }
                     ]
                 }
+
                 - id (str): Id of condition.
                 - param (list[dict]): The list of param for this condition.
             watch_nodes (dict[list[NodeBasicInfo]]): The list of node basic info.
@@ -499,7 +500,7 @@ class WatchpointHitHandler(StreamHandlerBase):
                 - limit (int): The limit number of watchpoint hits each page.
                 - offset (int): The page offset.
                 - focused_node (dict): The focused node.
-                    If the specified node is hit, return the page where the node is located.
+                  If the specified node is hit, return the page where the node is located.
 
                     - node_name (str): The retrieved node name.
                     - graph_name (str): The retrieved graph name.
@@ -860,6 +861,7 @@ def set_default_param(condition_mgr, watch_condition):
                     }
                 ]
             }
+
             - id (str): Id of condition.
             - param (list[dict]): The list of param for this condition.
 
@@ -887,7 +889,7 @@ def _get_error_list(error_code):
     Returns:
         list, the error list.
     """
-    all_error_list = ["nan", "inf", "no_prev_tensor", "out_of_mem"]
+    all_error_list = ["nan", "inf", "no_prev_tensor", "out_of_mem", "no_history"]
     error_list = []
     for i, error_str in enumerate(all_error_list):
         error = (error_code >> i) & 1

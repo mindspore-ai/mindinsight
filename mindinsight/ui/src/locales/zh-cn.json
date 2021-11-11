@@ -912,6 +912,7 @@
       "inf": "张量中含有+/-INF，",
       "no_prev_tensor": "找不到上一个迭代的值，",
       "out_of_mem": "张量大小超出内存限制，",
+      "no_history": "图执行历史文件缺失，",
       "cannotCheck": "无法检查。"
     },
     "stateTips": {
