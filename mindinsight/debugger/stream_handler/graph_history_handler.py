@@ -51,16 +51,36 @@ class GraphHistoryHandler(StreamHandlerBase):
 
     def _check_dumped_step(self, dumped_step):
         """Check if all dumped step in is graph history."""
+        def _matched(dumped_steps, run_history):
+            step_set = set(dumped_steps)
+            run_set = set(run_history)
+            if step_set.issubset(run_set):
+                return True
+            # check if it is a data sink exception case
+            max_step_id = max(dumped_steps)
+            if max_step_id not in run_history and (max_step_id - 1) in run_history:
+                step_set.remove(max_step_id)
+                if step_set.issubset(run_set):
+                    msg = f"The dumped iteration {max_step_id} is not expected. It may be normal if " \
+                          f"the data is dumped in dataset sink mode and there is only AssignAdd operator " \
+                          f"in that directory. Otherwise, the dump structure is not correct."
+                    log.warning(msg)
+                    dumped_steps.remove(max_step_id)
+                    return True
+            return False
+
         for rank_id, value in dumped_step.items():
             graph_history = self.get(rank_id)
+            is_matched = True
             for root_graph_id, dumped_steps_per_graph in value.items():
                 whole_run_ids = graph_history.get_run_ids(root_graph_id)
                 if not whole_run_ids:
                     # in case there is no graph history file
                     log.warning("Graph History file of %s in rank_%s is empty.", root_graph_id, rank_id)
                     continue
-                if not set(dumped_steps_per_graph).issubset(set(whole_run_ids)):
-                    log.warning("Dumped step value of graph %s in rank_%s is not the subset of graph history. "
+                is_matched = is_matched and _matched(dumped_steps_per_graph, whole_run_ids)
+                if not is_matched:
+                    log.warning("Dumped step value of graph %s in rank_%s mismatch the graph history. "
                                 "Clear the history graph.", root_graph_id, rank_id)
                     graph_history.clear()
 

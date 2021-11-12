@@ -503,7 +503,7 @@ def get_stack_infos(session_id):
 @BLUEPRINT.route("/debugger/sessions/<session_id>/ranks/<rank_id>/graph-runs", methods=["GET"])
 def get_graph_runs(session_id, rank_id):
     """
-    Get stack infos.
+    Get graph runs.
 
     Examples:
         >>> GET /v1/mindsight/debugger/sessions/<session_id>/ranks/<rank_id>/graph-runs

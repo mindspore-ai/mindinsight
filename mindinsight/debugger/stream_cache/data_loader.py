@@ -250,6 +250,7 @@ class DataLoader:
             execution_order_dir = rank_dir.path / self.EXECUTION_ORDER
             if not execution_order_dir.is_dir():
                 log.warning("Execution order directory %s doesn't exist.", str(execution_order_dir))
+                all_graph_history[rank_dir.rank_id] = {}
                 continue
             graph_history = {}
             history_pattern = re.compile(r"ms_global_execution_order_graph_(?P<graph_id>\d+).csv")

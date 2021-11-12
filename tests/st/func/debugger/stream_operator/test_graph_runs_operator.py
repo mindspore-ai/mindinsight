@@ -74,8 +74,25 @@ class TestGraphRunsOperator:
         gen = DumpStructureGenerator(path)
         history = {0: [0, 2, 4],
                    3: [1, 3, 5, 6]}
-        steps = {0: [0, 1]}
+        steps = {0: [0, 1, 2]}
         gen.generate(history=history, dump_steps=steps)
         cache_store = self.get_cache_store(path)
         res = GraphRunsOperator(cache_store).get_graph_runs(0)
         assert res == {'graph_runs': []}
+        gen.clean()
+
+    def test_data_sink_exception(self):
+        """Test get graph run when graph history mismatch."""
+        path = os.path.join(self.debugger_tmp_dir, 'exception')
+        gen = DumpStructureGenerator(path)
+        history = {0: [0, 2, 4],
+                   3: [1, 3, 5, 6]}
+        steps = {0: [0, 2, 5]}
+        gen.generate(history=history, dump_steps=steps)
+        cache_store = self.get_cache_store(path)
+        res = GraphRunsOperator(cache_store).get_graph_runs(0)
+        real_path = os.path.join(DEBUGGER_EXPECTED_RESULTS, 'offline_debugger', 'get_graph_runs_exception.json')
+        if self.debug:
+            json.dump(res, open(real_path, 'w'))
+        compare_result_with_file(res, real_path)
+        gen.clean()
