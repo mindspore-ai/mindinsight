@@ -159,11 +159,27 @@ class DumpAnalyzer:
         """
 
     def list_affected_nodes(self, tensor):
-        """List the nodes that use given tensor as input."""
+        """
+        List the nodes that use given tensor as input.
+
+        Affected nodes is defined as the nodes use the given tensor as input. If
+        a node is affected by the given tensor, the node's output value is
+        likely to change when the given tensor changes.
+
+        Args:
+            tensor (DebuggerTensor): The tensor of which affected nodes will be
+                returned.
+
+        Returns:
+            Iterable[Node], the affected nodes of the given tensor.
+        """
 
     def get_input_nodes(self, node):
         """
-        Get the input nodes of this node.
+        Get the input nodes of the given node.
+
+        Args:
+            node (Node): The node of which input nodes will be returned.
 
         Returns:
             Iterable[Node], the input nodes of the given node.
@@ -172,6 +188,9 @@ class DumpAnalyzer:
     def get_output_nodes(self, node):
         """
         Get the nodes that use the output tensors of the given node.
+
+        Args:
+            node (Node): The node of which output nodes will be returned.
 
         Returns:
             Iterable[Node], the output nodes of this node.

@@ -159,6 +159,10 @@ class Watchpoint:
         """
         Check the watchpoint against the tensors.
 
+        Args:
+            error_on_no_value (bool): Whether report error when the tensor has
+                no value. Default: False.
+
         Returns:
             Iterable[WatchpointHit], the hits of the watchpoint.
         """

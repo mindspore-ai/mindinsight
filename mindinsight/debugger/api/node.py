@@ -52,6 +52,14 @@ class Node(ABC):
         """
         Get the input tensors of the node.
 
+        Args:
+            iterations (Iterable[int]): The iterations to which the returned
+                tensor should belong. Default: None, which means all
+                available iterations will be considered.
+            slots (Iterable[int]): The slots in which the returned tensors
+                should be. Default: None, which means all available slots will
+                be considered.
+
         Returns:
             Iterable[DebuggerTensor], the input tensors of the node.
         """
@@ -62,6 +70,12 @@ class Node(ABC):
             slots=None):
         """
         Get the output tensors of this node.
+
+        Args:
+            iterations (Iterable[int]): The iterations to which the returned
+                tensor should belong.
+            slots (Iterable[int]): The slots in which the returned tensors
+                should be.
 
         Returns:
             Iterable[DebuggerTensor], the output tensors of the node.
