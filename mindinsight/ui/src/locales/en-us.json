@@ -916,6 +916,7 @@
       "inf": "A tensor contains +/-INF, ",
       "no_prev_tensor": "The previous step value cannot be found, ",
       "out_of_mem": "The tensor size exceeds the memory limit, ",
+      "no_history": "Graph history file is not available, ",
       "cannotCheck": "check fails."
     },
     "stateTips": {
