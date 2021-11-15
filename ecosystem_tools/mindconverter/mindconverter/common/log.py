@@ -55,7 +55,8 @@ class MindConverterFormatter(logging.Formatter):
 class MindConverterLogger:
     """MindConverter logger for stdout."""
 
-    CONSOLE_FORMAT = '%(message)s'
+    CONSOLE_FORMAT = '[%(levelname)s] MI(%(process)d:%(thread)d,%(processName)s):%(asctime)s ' \
+                     '[MINDCONVERTER] %(message)s'
     LOGFILE_FORMAT = '[%(levelname)s] MI(%(process)d:%(thread)d,%(processName)s):%(asctime)s ' \
                      '[MINDCONVERTER] %(message)s'
 

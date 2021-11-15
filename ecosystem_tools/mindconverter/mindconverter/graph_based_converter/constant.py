@@ -59,7 +59,7 @@ WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_EXCL
 RW_MODE_FOR_OWNER = stat.S_IRUSR | stat.S_IWUSR
 RWX_MODE_FOR_OWNER = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
 
-MAIN_CLASS_NAME = "MainModel"
+MAIN_CLASS_NAME = "MindSporeModel"
 
 DTYPE_MAP = {
     1: np.float32,
